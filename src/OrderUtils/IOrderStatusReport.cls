@@ -60,10 +60,13 @@ Private Const ModuleName                            As String = "IOrderStatusRep
 ' Properties
 '@================================================================================
 
-Private Property Get OrderId() As String
+Public Property Get BrokerId() As String
 End Property
 
-Private Property Get Status() As OrderStatuses
+Public Property Get OrderId() As String
+End Property
+
+Public Property Get Status() As OrderStatuses
 End Property
 
 '@================================================================================

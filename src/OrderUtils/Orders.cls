@@ -30,6 +30,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Enumerable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -41,7 +43,7 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "Orders"
+Private Const ModuleName                        As String = "Orders"
 
 '@================================================================================
 ' Enums
@@ -55,26 +57,75 @@ Private Const ModuleName                As String = "Orders"
 ' Member variables
 '@================================================================================
 
-Private mOrders As Collection
+Private WithEvents mOrders                      As EnumerableCollection
+Attribute mOrders.VB_VarHelpID = -1
 
-Private mChangeListeners As Collection
+Private mCollectionChangeListeners              As New Listeners
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mOrders = New Collection
-Set mChangeListeners = New Collection
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
+Set mOrders = New EnumerableCollection
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' Enumerable Interface Members
 '@================================================================================
 
+Private Property Get Enumerable_Enumerator() As Enumerator
+Const ProcName As String = "Enumerable_Enumerator"
+On Error GoTo Err
+
+Set Enumerable_Enumerator = getEnumerator
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Function Enumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
+
+End Function
+
+Private Sub Enumerable_Remove(pCookie As Variant)
+
+End Sub
+
+Private Function Enumerable_Skip(ByVal numToSkip As Long, pCookie As Variant) As Boolean
+
+End Function
+
+Private Property Get Enumerable_UpdateSequence() As Long
+
+End Property
+
 '@================================================================================
-' XXXX Event Handlers
+' mOrders Event Handlers
 '@================================================================================
+
+Private Sub mOrders_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mOrders_CollectionChanged"
+On Error GoTo Err
+
+Set ev.Source = Me
+fireCollectionChanged ev
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -82,7 +133,6 @@ End Sub
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 Count = mOrders.Count
@@ -90,142 +140,151 @@ Count = mOrders.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Function Add(ByVal pOrder As Order) As Order
+Friend Function Add(ByVal pOrder As IOrder) As IOrder
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
-Set Add = pOrder
 mOrders.Add pOrder, pOrder.Id
-fireChange CollItemAdded, pOrder
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal Value As CollectionChangeListener)
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-
 On Error GoTo Err
 
-mChangeListeners.Add Value
+mCollectionChangeListeners.Add pListener
 
-gNotifyExistingCollectionMembers mOrders, Value, Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Clear()
-
+Public Sub Clear()
 Const ProcName As String = "Clear"
 On Error GoTo Err
 
-Set mOrders = New Collection
-fireChange CollCollectionCleared, Nothing
+mOrders.Clear
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function Contains(index As Variant) As Boolean
+Public Function Contains(ByVal pIndex As Variant) As Boolean
 Const ProcName As String = "Contains"
-Dim lOrder As Order
-On Error Resume Next
-Set lOrder = mOrders(index)
-If Not lOrder Is Nothing Then Contains = True
-End Function
-
-Public Function Item(index As Variant) As Order
-Attribute Item.VB_UserMemId = 0
-Const ProcName As String = "Item"
-
 On Error GoTo Err
 
-Set Item = mOrders(index)
+Contains = mOrders.Contains(pIndex)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function Item(pIndex As Variant) As IOrder
+Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
+Set Item = mOrders(pIndex)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mOrders.[_NewEnum]
+Set NewEnum = getEnumerator
 End Function
 
-Public Sub Remove( _
-                ByVal pOrder As Order)
-Const ProcName As String = "Remove"
+Public Sub NotifyChange(pOrder As IOrder)
+Const ProcName As String = "NotifyChange"
+On Error GoTo Err
 
+mOrders.NotifyChange pOrder.Id
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub Remove( _
+                ByVal pOrder As IOrder)
+Const ProcName As String = "Remove"
 On Error GoTo Err
 
 mOrders.Remove pOrder.Id
-fireChange CollItemRemoved, pOrder
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal Value As CollectionChangeListener)
-Dim i As Long
+Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-
 On Error GoTo Err
 
-For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is Value Then mChangeListeners.Remove i
-Next
+mCollectionChangeListeners.Remove pListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub fireChange( _
-                ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As Order)
-Dim listener As CollectionChangeListener
-Dim ev As CollectionChangeEventData
-Const ProcName As String = "fireChange"
-
+Private Sub fireCollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "fireCollectionChanged"
 On Error GoTo Err
 
-Set ev.Source = Me
-ev.changeType = changeType
-Set ev.AffectedItem = affectedObject
-For Each listener In mChangeListeners
-    listener.Change ev
+Dim lListener As CollectionChangeListener
+For Each lListener In mCollectionChangeListeners.CurrentListeners
+    lListener.Change ev
 Next
+
 RaiseEvent CollectionChanged(ev)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getEnumerator() As Enumerator
+Const ProcName As String = "getEnumerator"
+On Error GoTo Err
+
+Set getEnumerator = mOrders.Enumerator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 
 
 

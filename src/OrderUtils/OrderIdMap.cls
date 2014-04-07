@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "OrderIdMap"
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildIds                              As Collection
+Private mOrderIds                                   As Collection
 Private mBrokerIds                                  As Collection
 
 '@================================================================================
@@ -52,7 +52,7 @@ Private mBrokerIds                                  As Collection
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mTradeBuildIds = New Collection
+Set mOrderIds = New Collection
 Set mBrokerIds = New Collection
 End Sub
 
@@ -73,51 +73,51 @@ End Sub
 '@================================================================================
 
 Friend Sub Add( _
-                ByRef pTradeBuildId As String, _
+                ByRef pOrderId As String, _
                 ByRef pBrokerId As String)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
 On Error Resume Next
-mTradeBuildIds.Add pTradeBuildId, pBrokerId
-mBrokerIds.Add pBrokerId, pTradeBuildId
+mOrderIds.Add pOrderId, pBrokerId
+mBrokerIds.Add pBrokerId, pOrderId
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function GetBrokerId( _
-                ByRef pTradeBuildId As String) As String
+                ByRef pOrderId As String) As String
 Const ProcName As String = "GetBrokerId"
 
 On Error GoTo Err
 
 On Error Resume Next
-GetBrokerId = mBrokerIds.Item(pTradeBuildId)
+GetBrokerId = mBrokerIds.Item(pOrderId)
 On Error GoTo Err
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
                 
-Friend Function GetTradeBuildId( _
+Friend Function GetOrderId( _
                 ByRef pBrokerId As String) As String
-Const ProcName As String = "GetTradeBuildId"
+Const ProcName As String = "GetOrderId"
 
 On Error GoTo Err
 
 On Error Resume Next
-GetTradeBuildId = mTradeBuildIds.Item(pBrokerId)
+GetOrderId = mOrderIds.Item(pBrokerId)
 On Error GoTo Err
     
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
                 
 '@================================================================================

@@ -64,6 +64,9 @@ Private Const ModuleName                            As String = "IExecutionListe
 ' Methods
 '@================================================================================
 
+Public Sub NotifyExecution(ByRef ev As ExecutionEventData)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

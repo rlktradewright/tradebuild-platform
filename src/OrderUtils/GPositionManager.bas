@@ -32,9 +32,6 @@ Private Const ModuleName                            As String = "GPositionManage
 ' Member variables
 '@================================================================================
 
-Private mPositionManagers               As PositionManagers
-Private mPositionManagersSimulated      As PositionManagers
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -56,106 +53,29 @@ Private mPositionManagersSimulated      As PositionManagers
 '@================================================================================
 
 Public Function gCreatePositionManager( _
-                ByVal pKey As String, _
-                ByVal pWorkspace As WorkSpace) As PositionManager
+                ByVal pName As String, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pOrderSubmitter As IOrderSubmitter, _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pScopeName As String, _
+                ByVal pGroupName As String, _
+                ByVal pIsSimulated As Boolean, _
+                ByVal pMoneyManager As IMoneyManager) As PositionManager
 Const ProcName As String = "gCreatePositionManager"
-
 On Error GoTo Err
 
-Set gCreatePositionManager = New PositionManager
-gCreatePositionManager.Initialise pKey, pWorkspace
-mPositionManagers.Add gCreatePositionManager
+Dim lClr As BracketOrderRecoveryCtlr
+If pScopeName <> "" Then Set lClr = gGetBracketOrderRecoveryController(pScopeName)
+
+Dim lPm As New PositionManager
+lPm.Initialise pName, pContractFuture, pOrderSubmitter, pDataSource, lClr, pGroupName, pIsSimulated, pMoneyManager
+
+Set gCreatePositionManager = lPm
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function gCreatePositionManagerSimulated( _
-                ByVal pKey As String, _
-                ByVal pWorkspace As WorkSpace) As PositionManager
-Const ProcName As String = "gCreatePositionManagerSimulated"
-
-On Error GoTo Err
-
-Set gCreatePositionManagerSimulated = New PositionManager
-gCreatePositionManagerSimulated.Initialise pKey, pWorkspace
-mPositionManagersSimulated.Add gCreatePositionManagerSimulated
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function gGetPositionManager( _
-                ByVal pKey As String) As PositionManager
-Const ProcName As String = "gGetPositionManager"
-
-On Error GoTo Err
-
-On Error Resume Next
-Set gGetPositionManager = mPositionManagers.Item(pKey)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function gGetPositionManagersEnumerator() As Enumerator
-Const ProcName As String = "gGetPositionManagersEnumerator"
-On Error GoTo Err
-
-Set gGetPositionManagersEnumerator = mPositionManagers.Enumerator
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function gGetPositionManagerSimulated( _
-                ByVal pKey As String) As PositionManager
-Const ProcName As String = "gGetPositionManagerSimulated"
-
-On Error GoTo Err
-
-On Error Resume Next
-Set gGetPositionManagerSimulated = mPositionManagersSimulated.Item(pKey)
-On Error GoTo Err
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function gGetPositionManagersSimulatedEnumerator() As Enumerator
-Const ProcName As String = "gGetPositionManagersSimulatedEnumerator"
-On Error GoTo Err
-
-Set gGetPositionManagersSimulatedEnumerator = mPositionManagersSimulated.Enumerator
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function gInitialise()
-
-Const ProcName As String = "gInitialise"
-On Error GoTo Err
-
-Set mPositionManagers = New PositionManagers
-Set mPositionManagersSimulated = New PositionManagers
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gNextApplicationIndex() As Long
@@ -171,22 +91,8 @@ lNextApplicationIndex = lNextApplicationIndex + 1
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Public Sub gRemovePositionManager( _
-                ByVal pPositionManager As PositionManager)
-Const ProcName As String = "gRemovePositionManager"
-
-On Error GoTo Err
-
-mPositionManagers.Remove pPositionManager
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
 
 '@================================================================================
 ' Helper Functions

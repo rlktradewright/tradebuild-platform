@@ -64,6 +64,9 @@ Private Const ModuleName                            As String = "IOrderRecoveryA
 ' Methods
 '@================================================================================
 
+Public Sub FinishOrderRecovery()
+End Sub
+
 Public Sub StartOrderRecovery(ByVal pListener As IOrderRecoveryListener, ByVal pStartFrom As Date)
 End Sub
 

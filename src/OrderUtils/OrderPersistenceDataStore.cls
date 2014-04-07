@@ -43,18 +43,15 @@ Implements IOrderPersistenceDataStore
 
 Private Const ModuleName                            As String = "OrderPersistenceDataStore"
 
-Private Const KeyDataSeparator                      As String = ":"
 Private Const OrderInfoSession                      As String = "SESSION"
-Private Const TimestampSeparator                    As String = "  "
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mName                                       As String
-
 Private mRecoveryFilePath                           As String
 Private mScopeName                                  As String
+Private mOutputTS                                       As TextStream
 
 '@================================================================================
 ' Class Event Handlers
@@ -69,16 +66,17 @@ Set Enumerable_Enumerator = getEnumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function Enumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
-Dim lTS As TextStream
-
 Const ProcName As String = "Enumerable_NextItem"
 On Error GoTo Err
 
+Dim lTS As TextStream
 Set lTS = cookie
+
+Dim lLine As String
 If lTS Is Nothing Then
     Enumerable_NextItem = False
 ElseIf getNextLine(lTS, lLine) Then
@@ -91,7 +89,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub Enumerable_Remove(cookie As Variant)
@@ -103,7 +101,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Remove not supported"
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
@@ -115,7 +113,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Skip not supported"
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get Enumerable_UpdateSequence() As Long
@@ -126,43 +124,42 @@ End Property
 ' IOrderPersistenceDataStore Interface Members
 '@================================================================================
 
+Private Sub IOrderPersistenceDataStore_Clear()
+Const ProcName As String = "IOrderPersistenceDataStore_Clear"
+On Error GoTo Err
+
+Set mOutputTS = Nothing
+getCurrentPersistenceFile
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Function IOrderPersistenceDataStore_GetEnumeratorForScope(ByVal pScopeName As String) As Enumerator
 Const ProcName As String = "IOrderPersistenceDataStore_GetEnumeratorForScope"
 On Error GoTo Err
 
-On Error GoTo Err
-
-mScopeName = scopeName
+mScopeName = pScopeName
 Set IOrderPersistenceDataStore_GetEnumeratorForScope = getEnumerator
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IOrderPersistenceDataStore_SaveOrderInfo(ByVal pOrderInfo As String)
 Const ProcName As String = "IOrderPersistenceDataStore_SaveOrderInfo"
 On Error GoTo Err
 
-mTS.WriteLine orderInfo
+getCurrentPersistenceFile.WriteLine pOrderInfo
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub IOrderPersistenceDataStore_StartSession(ByVal pSessionId As String)
-Const ProcName As String = "IOrderPersistenceDataStore_StartSession"
-On Error GoTo Err
-
-createPersistenceFile SessionId
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -181,7 +178,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub Initialise(ByVal pRecoveryFilePath As String)
+Friend Sub Initialise(ByVal pRecoveryFilePath As String)
 mRecoveryFilePath = pRecoveryFilePath
 End Sub
 
@@ -189,52 +186,43 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub createPersistenceFile(SessionId As String)
-Const ProcName As String = "createPersistenceFile"
-Dim fso As New FileSystemObject
-
+Private Function getCurrentPersistenceFile() As TextStream
+Const ProcName As String = "getCurrentPersistenceFile"
 On Error GoTo Err
 
-If Not mTS Is Nothing Then mTS.Close
+Dim fso As New FileSystemObject
 
-Set mTS = fso.CreateTextFile(getRecoveryFileName(), True)
- 
-mTS.Write OrderInfoSession
-mTS.Write ": "
-mTS.WriteLine SessionId
+If mOutputTS Is Nothing Then Set mOutputTS = fso.CreateTextFile(getRecoveryFileName(), True)
+Set getCurrentPersistenceFile = mOutputTS
 
-Exit Sub
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function getEnumerator() As Enumerator
 Const ProcName As String = "getEnumerator"
 On Error GoTo Err
 
+Assert mScopeName <> "", "Scopename has not been set"
+
 Dim lTS As TextStream
-Dim lLine As String
-
-If mScopeName = "" Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Scopename has not been set"
-
-Set lTS = getPersistenceFile
-If Not lTS Is Nothing Then getNextLine lTS, lLine   ' first line is session id line so ignore it
+Set lTS = getPreviousPersistenceFile
 Set getEnumerator = CreateEnumerator(Me, lTS)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNextLine(ByVal pTs As TextStream, ByRef result As String) As Boolean
 Const ProcName As String = "getNextLine"
-
 On Error GoTo Err
 
-Do While Not mTS.AtEndOfStream
-    result = mTS.ReadLine
+Do While Not pTs.AtEndOfStream
+    result = pTs.ReadLine
     If result <> "" And Left$(result, 2) <> "//" Then
         getNextLine = True
         Exit Do
@@ -244,23 +232,23 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getPersistenceFile() As TextStream
-Dim fso As New FileSystemObject
-Const ProcName As String = "getPersistenceFile"
+Private Function getPreviousPersistenceFile() As TextStream
+Const ProcName As String = "getPreviousPersistenceFile"
 On Error GoTo Err
 
 On Error Resume Next
-Set getPersistenceFile = fso.OpenTextFile(getRecoveryFileName(), _
+Dim fso As New FileSystemObject
+Set getPreviousPersistenceFile = fso.OpenTextFile(getRecoveryFileName(), _
                         IOMode.ForReading, _
                         False)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getRecoveryFileName() As String
@@ -270,30 +258,6 @@ Else
     getRecoveryFileName = mRecoveryFilePath & "\OrderInfo.txt"
 End If
 End Function
-
-Private Sub handleFatalError( _
-                ByRef pProcName As String, _
-                Optional ByVal pFailpoint As String)
-Dim errNum As Long: errNum = Err.Number
-Dim errSource As String: errSource = Err.Source
-Dim errDesc As String: errDesc = Err.Description
-
-On Error GoTo Err
-
-' re-raise the error to get the calling procedure's procName into the source info
-errSource = errSource & vbCrLf & _
-            ProjectName & "." & _
-            ModuleName & ":" & _
-            pProcName & _
-            IIf(pFailpoint <> "", " At " & pFailpoint, "")
-
-Err.Raise errNum, errSource, errDesc
-
-' NB: will never get to here so no need for Exit Sub
-
-Err:
-mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
-End Sub
 
 
 

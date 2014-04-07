@@ -47,8 +47,8 @@ Private Const ModuleName                            As String = "OrderPersistenc
 '@================================================================================
 
 Private mTimestamp                                  As Date
-Private mKey                                        As String
-Private mData                                       As Object
+Private mPositionManagerName                        As String
+Private mData                                       As Variant
 Private mItemType                                   As String
 Private mProgId                                     As String
 
@@ -72,28 +72,12 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Let Timestamp(ByVal Value As Date)
-mTimestamp = Value
+Public Property Let Data(ByVal Value As Variant)
+gSetVariant mData, Value
 End Property
 
-Public Property Get Timestamp() As Date
-Timestamp = mTimestamp
-End Property
-
-Public Property Let Key(ByVal Value As String)
-mKey = Value
-End Property
-
-Public Property Get Key() As String
-Key = mKey
-End Property
-
-Public Property Let Data(ByVal Value As Object)
-Set mData = Value
-End Property
-
-Public Property Get Data() As Object
-Set Data = mData
+Public Property Get Data() As Variant
+gSetVariant Data, mData
 End Property
 
 Public Property Let ItemType(ByVal Value As String)
@@ -104,12 +88,28 @@ Public Property Get ItemType() As String
 ItemType = mItemType
 End Property
 
+Public Property Let PositionManagerName(ByVal Value As String)
+mPositionManagerName = Value
+End Property
+
+Public Property Get PositionManagerName() As String
+PositionManagerName = mPositionManagerName
+End Property
+
 Public Property Let ProgId(ByVal Value As String)
 mProgId = Value
 End Property
 
 Public Property Get ProgId() As String
 ProgId = mProgId
+End Property
+
+Public Property Let Timestamp(ByVal Value As Date)
+mTimestamp = Value
+End Property
+
+Public Property Get Timestamp() As Date
+Timestamp = mTimestamp
 End Property
 
 '@================================================================================
@@ -125,14 +125,17 @@ jb.BeginObject
 jb.EncodeName "$ProgID"
 jb.EncodeValue ProjectName & "." & ModuleName
 
+jb.EncodeName "PositionManagerName"
+jb.EncodeValue mPositionManagerName
+
 jb.EncodeName "Timestamp"
 jb.EncodeValue mTimestamp
 
-jb.EncodeName "Key"
-jb.EncodeValue mKey
-
 jb.EncodeName "ItemType"
 jb.EncodeValue mItemType
+
+jb.EncodeName "ProgId"
+jb.EncodeValue mProgId
 
 jb.EncodeName "Data"
 jb.EncodeValue mData

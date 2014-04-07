@@ -60,9 +60,27 @@ Private Const ModuleName                            As String = "IRecoverable"
 ' Properties
 '@================================================================================
 
+Public Property Get ProgId() As String
+End Property
+
+Public Property Get RecoveryData() As Variant
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub AddRecoverableObjectListener(ByVal pListener As IRecoverableObjectListener)
+End Sub
+
+Public Sub FinishRecovery()
+End Sub
+
+Public Sub LoadRecoveryData(ByVal pData As Variant)
+End Sub
+
+Public Sub RemoveRecoverableObjectListener(ByVal pListener As IRecoverableObjectListener)
+End Sub
 
 '@================================================================================
 ' Helper Functions

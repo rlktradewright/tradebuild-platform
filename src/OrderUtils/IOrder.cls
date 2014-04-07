@@ -60,111 +60,275 @@ Private Const ModuleName                            As String = "IOrder"
 ' Properties
 '@================================================================================
 
-Private Property Get Action() As TradeBuildSP.OrderActions
+Public Property Let Action(ByVal Value As OrderActions)
 End Property
 
-Private Property Get AllOrNone() As Boolean
+Public Property Get Action() As OrderActions
 End Property
 
-Private Property Get BlockOrder() As Boolean
+Public Property Let AllOrNone(ByVal Value As Boolean)
 End Property
 
-Private Property Let BrokerId(ByVal RHS As String)
+Public Property Get AllOrNone() As Boolean
 End Property
 
-Private Property Get BrokerId() As String
+Public Property Let AveragePrice(ByVal Value As Double)
 End Property
 
-Private Property Get Contract() As Contract
+Public Property Get AveragePrice() As Double
 End Property
 
-Private Property Get DiscretionaryAmount() As Double
+Public Property Let BlockOrder(ByVal Value As Boolean)
 End Property
 
-Private Property Get DisplaySize() As Long
+Public Property Get BlockOrder() As Boolean
 End Property
 
-Private Property Get ETradeOnly() As Boolean
+Public Property Let BrokerId(ByVal Value As String)
 End Property
 
-Private Property Get FirmQuoteOnly() As Boolean
+Public Property Get BrokerId() As String
 End Property
 
-Private Property Get GoodAfterTime() As Date
+Public Property Get ContextsName() As String
 End Property
 
-Private Property Get GoodAfterTimeTZ() As String
+Public Property Get ContractSpecifier() As IContractSpecifier
 End Property
 
-Private Property Get GoodTillDate() As Date
+Public Property Let DiscretionaryAmount(ByVal Value As Double)
 End Property
 
-Private Property Get GoodTillDateTZ() As String
+Public Property Get DiscretionaryAmount() As Double
 End Property
 
-Private Property Get Hidden() As Boolean
+Public Property Let DisplaySize(ByVal Value As Long)
 End Property
 
-Private Property Get IgnoreRegularTradingHours() As Boolean
+Public Property Get DisplaySize() As Long
 End Property
 
-Private Property Get LimitPrice() As Double
+Public Property Let ETradeOnly(ByVal Value As Boolean)
 End Property
 
-Private Property Get MinimumQuantity() As Long
+Public Property Get ETradeOnly() As Boolean
 End Property
 
-Private Property Get NbboPriceCap() As Double
+Public Property Let FillTime(ByVal Value As Date)
 End Property
 
-Private Property Get OrderType() As TradeBuildSP.OrderTypes
+Public Property Get FillTime() As Date
 End Property
 
-Private Property Get Origin() As TradeBuildSP.OrderOrigins
+Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
 End Property
 
-Private Property Get OriginatorRef() As String
+Public Property Get FirmQuoteOnly() As Boolean
 End Property
 
-Private Property Get OverrideConstraints() As Boolean
+Public Property Let GoodAfterTime(ByVal Value As Date)
 End Property
 
-Private Property Get ProviderProperties() As TWUtilities30.Parameters
+Public Property Get GoodAfterTime() As Date
 End Property
 
-Private Property Get Quantity() As Long
+Public Property Let GoodAfterTimeTZ(ByVal Value As String)
 End Property
 
-Private Property Get QuantityFilled() As Long
+Public Property Get GoodAfterTimeTZ() As String
 End Property
 
-Private Property Get QuantityRemaining() As Long
+Public Property Let GoodTillDate(ByVal Value As Date)
 End Property
 
-Private Property Get SettlingFirm() As String
+Public Property Get GoodTillDate() As Date
 End Property
 
-Private Property Get Status() As TradeBuildSP.OrderStatuses
+Public Property Let GoodTillDateTZ(ByVal Value As String)
 End Property
 
-Private Property Get SweepToFill() As Boolean
+Public Property Get GoodTillDateTZ() As String
 End Property
 
-Private Property Get TimeInForce() As TradeBuildSP.OrderTifs
+Public Property Get GroupName() As String
 End Property
 
-Private Property Get TradeBuildId() As String
+Public Property Let Hidden(ByVal Value As Boolean)
 End Property
 
-Private Property Get StopTriggerMethod() As TradeBuildSP.StopTriggerMethods
+Public Property Get Hidden() As Boolean
 End Property
 
-Private Property Get TriggerPrice() As Double
+Public Property Let Id(ByVal Value As String)
+End Property
+
+Public Property Get Id() As String
+End Property
+
+Public Property Let IgnoreRegularTradingHours(ByVal Value As Boolean)
+End Property
+
+Public Property Get IgnoreRegularTradingHours() As Boolean
+End Property
+
+Public Property Get IsActive() As Boolean
+End Property
+
+Public Property Get IsDirty() As Boolean
+End Property
+
+Public Property Let IsSimulated(ByVal Value As Boolean)
+End Property
+
+Public Property Get IsSimulated() As Boolean
+End Property
+
+Public Property Let LastFillPrice(ByVal Value As Double)
+End Property
+
+Public Property Get LastFillPrice() As Double
+End Property
+
+Public Property Let LimitPrice(ByVal Value As Double)
+End Property
+
+Public Property Get LimitPrice() As Double
+End Property
+
+Public Property Let MinimumQuantity(ByVal Value As Long)
+End Property
+
+Public Property Get MinimumQuantity() As Long
+End Property
+
+Public Property Let NbboPriceCap(ByVal Value As Double)
+End Property
+
+Public Property Get NbboPriceCap() As Double
+End Property
+
+Public Property Let Offset(ByVal Value As Long)
+End Property
+
+Public Property Get Offset() As Long
+End Property
+
+Public Property Get OrderContext() As OrderContext
+End Property
+
+Public Property Let OrderType(ByVal Value As OrderTypes)
+End Property
+
+Public Property Get OrderType() As OrderTypes
+End Property
+
+Public Property Let Origin(ByVal Value As OrderOrigins)
+End Property
+
+Public Property Get Origin() As OrderOrigins
+End Property
+
+Public Property Let OriginatorRef(ByVal Value As String)
+End Property
+
+Public Property Get OriginatorRef() As String
+End Property
+
+Public Property Let OverrideConstraints(ByVal Value As Boolean)
+End Property
+
+Public Property Get OverrideConstraints() As Boolean
+End Property
+
+Public Property Let PercentOffset(ByVal Value As Double)
+End Property
+
+Public Property Get PercentOffset() As Double
+End Property
+
+Public Property Let ProviderProperties(ByVal Value As Parameters)
+End Property
+
+Public Property Get ProviderProperties() As Parameters
+End Property
+
+Public Property Let Quantity(ByVal Value As Long)
+End Property
+
+Public Property Get Quantity() As Long
+End Property
+
+Public Property Let QuantityFilled(ByVal Value As Long)
+End Property
+
+Public Property Get QuantityFilled() As Long
+End Property
+
+Public Property Let QuantityRemaining(ByVal Value As Long)
+End Property
+
+Public Property Get QuantityRemaining() As Long
+End Property
+
+Public Property Let SettlingFirm(ByVal Value As String)
+End Property
+
+Public Property Get SettlingFirm() As String
+End Property
+
+Public Property Let Status(ByVal Value As OrderStatuses)
+End Property
+
+Public Property Get Status() As OrderStatuses
+End Property
+
+Public Property Let StopTriggerMethod(ByVal Value As OrderStopTriggerMethods)
+End Property
+
+Public Property Get StopTriggerMethod() As OrderStopTriggerMethods
+End Property
+
+Public Property Let SweepToFill(ByVal Value As Boolean)
+End Property
+
+Public Property Get SweepToFill() As Boolean
+End Property
+
+Public Property Let TimeInForce(ByVal Value As OrderTIFs)
+End Property
+
+Public Property Get TimeInForce() As OrderTIFs
+End Property
+
+Public Property Let TriggerPrice(ByVal Value As Double)
+End Property
+
+Public Property Get TriggerPrice() As Double
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub Initialise( _
+                ByVal pGroupName As String, _
+                ByVal pContextsName As String, _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pOrderContext As OrderContext)
+End Sub
+
+Public Function IsAttributeModifiable( _
+                ByVal pAttribute As OrderAttributes) As Boolean
+End Function
+
+Public Function IsModifiable() As Boolean
+End Function
+
+Public Sub NotifyFill(ByVal pExec As IExecutionReport)
+End Sub
+
+Public Sub SyncToOrderReport(ByVal pOrderReport As IOrderReport)
+End Sub
 
 '@================================================================================
 ' Helper Functions

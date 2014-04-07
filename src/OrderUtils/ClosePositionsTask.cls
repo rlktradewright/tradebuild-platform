@@ -52,13 +52,15 @@ Private mTaskContext                                As TaskContext
 Private WithEvents mOrderContexts                   As OrderContexts
 Attribute mOrderContexts.VB_VarHelpID = -1
 
-Private mBalancingOrderContext                      As OrderContext
+Private WithEvents mBalancingOrderContext           As OrderContext
 Private WithEvents mBalancingBracketOrder           As BracketOrder
 Attribute mBalancingBracketOrder.VB_VarHelpID = -1
 
-Private mflags                                      As ClosePositionsFlags
+Private mFlags                                      As ClosePositionsFlags
 
 Private mOrderContextsWasEnabled                    As Boolean
+
+Private mPositionManager                            As PositionManager
 
 '@================================================================================
 ' Class Event Handlers
@@ -69,6 +71,9 @@ Private mOrderContextsWasEnabled                    As Boolean
 '@================================================================================
 
 Private Sub ChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "ChangeListener_Change"
+On Error GoTo Err
+
 Dim lOrderContext As OrderContext
 Set lOrderContext = ev.Source
 If ev.changeType = OrderContextChangeTypes.OrderContextActiveStateChanged And _
@@ -76,6 +81,11 @@ If ev.changeType = OrderContextChangeTypes.OrderContextActiveStateChanged And _
 Then
     handleInactiveOrderContext lOrderContext
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -87,16 +97,21 @@ Private Sub Task_Cancel()
 End Sub
 
 Private Sub Task_Run()
-Dim lOrderContext As OrderContext
-Dim cancellingOrders As Boolean
-
 Const ProcName As String = "Task_Run"
 On Error GoTo Err
 
-If (mflags And ClosePositionsCancelOrders) = ClosePositionsCancelOrders Then
+Dim cancellingOrders As Boolean
+
+If Not mBalancingOrderContext.IsReady Then
+    mTaskContext.Suspend -1
+    Exit Sub
+End If
+
+If (mFlags And ClosePositionsCancelOrders) = ClosePositionsCancelOrders Then
     ' first need to tell each OrderContext to cancel any outstanding stuff
+    Dim lOrderContext As OrderContext
     For Each lOrderContext In mOrderContexts
-        If lOrderContext.Cancel And (mflags And ClosePositionsWaitForCancel) Then
+        If lOrderContext.Cancel And (mFlags And ClosePositionsWaitForCancel) Then
             cancellingOrders = True
         End If
     Next
@@ -106,14 +121,14 @@ mOrderContextsWasEnabled = mOrderContexts.Enabled
 mOrderContexts.Enabled = False  ' prevent any further orders being placed
                                 ' while the position is being closed
 
-If Not cancellingOrders And PositionSize <> 0 Then placeBalancingOrder
+If Not cancellingOrders And mPositionManager.PositionSize <> 0 Then placeBalancingOrder
 
 mTaskContext.Suspend -1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal Value As TaskContext)
@@ -133,15 +148,14 @@ Private Sub mBalancingBracketOrder_Completed()
 ' settling order
 
 Const ProcName As String = "mBalancingBracketOrder_Completed"
-
 On Error GoTo Err
 
-Dim oc As OrderContext
-
-For Each oc In mOrderContexts
-    oc.NotifyPositionCloseout mBalancingBracketOrder.EntryPrice, _
-                        mBalancingBracketOrder.StartTime
-Next
+'Dim oc As OrderContext
+'
+'For Each oc In mOrderContexts
+'    oc.NotifyPositionCloseout mBalancingBracketOrder.EntryPrice, _
+'                        mBalancingBracketOrder.StartTime
+'Next
 
 mOrderContexts.Enabled = mOrderContextsWasEnabled
 mTaskContext.Finish Empty, False
@@ -149,7 +163,25 @@ mTaskContext.Finish Empty, False
 Exit Sub
 
 Err:
-GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mBalancingOrderContext Event Handlers
+'@================================================================================
+
+Private Sub mBalancingOrderContext_Change(ev As ChangeEventData)
+Const ProcName As String = "mBalancingOrderContext_Change"
+On Error GoTo Err
+
+If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
+
+If mBalancingOrderContext.IsReady Then mTaskContext.Continue
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -157,7 +189,11 @@ End Sub
 '@================================================================================
 
 Private Sub mOrderContexts_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mOrderContexts_CollectionChanged"
+On Error GoTo Err
+
 Dim lOrderContext As OrderContext
+
 Select Case ev.changeType
 Case CollItemAdded
     Set lOrderContext = ev.AffectedItem
@@ -166,6 +202,11 @@ Case CollItemRemoved
     Set lOrderContext = ev.AffectedItem
     lOrderContext.RemoveChangeListener Me
 End Select
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -177,10 +218,11 @@ End Sub
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pOrderContexts As OrderContexts, _
+                ByVal pPositionManager As PositionManager, _
                 ByVal pFlags As ClosePositionsFlags)
-Set mOrderContexts = pOrderContexts
-mflags = pFlags
+Set mPositionManager = pPositionManager
+Set mOrderContexts = mPositionManager.OrderContexts
+mFlags = pFlags
 
 Set mBalancingOrderContext = mOrderContexts.Add("$balancing")
 End Sub
@@ -193,34 +235,33 @@ Private Sub handleInactiveOrderContext(ByVal pOrderContext As OrderContext)
 Const ProcName As String = "handleInactiveOrderContext"
 On Error GoTo Err
 
-Dim OrderContext As OrderContext
-Dim size As Long
-
 If pOrderContext Is mBalancingOrderContext Then
     'should now be net flat
     mOrderContexts.Enabled = True
     
-    If mEndSession Then
-        GLogMoneyManagement "Ending Session", mIsSimulated, Me
+    If mPositionManager.EndingSession Then
+        gLogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
     End If
     
     mOrderContexts.Enabled = mOrderContextsWasEnabled
     mTaskContext.Finish Empty, False
 
 Else
+    Dim Size As Long
     
+    Dim OrderContext As OrderContext
     For Each OrderContext In mOrderContexts
         If OrderContext.IsActive Then Exit Sub
-        size = size + OrderContext.size
+        Size = Size + OrderContext.Size
     Next
     
     ' If we get here, all OrderContexts must be complete.
     
     ' Now, if there is a net position, need to close it out
     
-    If size = 0 Then
-        If mEndSession Then
-            GLogMoneyManagement "Ending Session", mIsSimulated, Me
+    If Size = 0 Then
+        If mPositionManager.EndingSession Then
+            gLogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
         End If
         mOrderContexts.Enabled = mOrderContextsWasEnabled
         mTaskContext.Finish Empty, False
@@ -233,42 +274,48 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub placeBalancingOrder()
 Const ProcName As String = "placeBalancingOrder"
-
 On Error GoTo Err
 
-GLogOrder _
-        "Close positions at market: (Curr price=" & mDataSource.FormatPrice(mDataSource.TradePrice) & ")", _
-        mIsSimulated, _
+Dim lContract As IContract
+Set lContract = mPositionManager.DataSource.ContractFuture.Value
+
+gLogOrder _
+        "Close positions at market: (Curr price=" & _
+            FormatPrice(mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price, _
+                        lContract.Specifier.SecType, _
+                        lContract.TickSize) & ")", _
+        mPositionManager.IsSimulated, _
         Me
 
 mBalancingOrderContext.Enabled = True
-If mBalancingOrderContext.IsOrderTifValueSupported(TIFDay) Then mBalancingOrderContext.TimeInForce = TIFDay
-Set mBalancingBracketOrder = mBalancingOrderContext.CreateBracketOrder( _
-                            IIf(PositionSize < 0, ActionBuy, ActionSell), _
-                            Abs(PositionSize), _
-                            BracketEntryTypes.EntryOrderTypeMarket, _
+If mBalancingOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFDay) Then mBalancingOrderContext.TemplateOrder.TimeInForce = OrderTIFs.OrderTIFDay
+Set mBalancingBracketOrder = _
+                mBalancingOrderContext.CreateBracketOrder( _
+                            IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
+                            Abs(mPositionManager.PositionSize), _
+                            BracketEntryTypes.BracketEntryTypeMarket, _
+                            0#, _
                             0, _
+                            0#, _
+                            BracketStopLossTypes.BracketStopLossTypeNone, _
+                            0#, _
                             0, _
+                            0#, _
+                            BracketTargetTypes.BracketTargetTypeNone, _
+                            0#, _
                             0, _
-                            StopOrderTypes.StopOrderTypeNone, _
-                            0, _
-                            0, _
-                            0, _
-                            BracketTargetTypes.TargetOrderTypeNone, _
-                            0, _
-                            0, _
-                            0)
+                            0#)
 mBalancingOrderContext.ExecuteBracketOrder mBalancingBracketOrder
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

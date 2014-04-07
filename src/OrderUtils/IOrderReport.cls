@@ -60,190 +60,190 @@ Private Const ModuleName                            As String = "IOrderReport"
 ' Properties
 '@================================================================================
 
-Private Property Let action(ByVal Value As OrderActions)
+Public Property Let Action(ByVal Value As OrderActions)
 End Property
 
-Private Property Get action() As OrderActions
+Public Property Get Action() As OrderActions
 End Property
 
-Private Property Let allOrNone(ByVal Value As Boolean)
+Public Property Let AllOrNone(ByVal Value As Boolean)
 End Property
 
-Private Property Get allOrNone() As Boolean
+Public Property Get AllOrNone() As Boolean
 End Property
 
-Private Property Let blockOrder(ByVal Value As Boolean)
+Public Property Let BlockOrder(ByVal Value As Boolean)
 End Property
 
-Private Property Get blockOrder() As Boolean
+Public Property Get BlockOrder() As Boolean
 End Property
 
-Private Property Let brokerId(ByVal Value As String)
+Public Property Let BrokerId(ByVal Value As String)
 End Property
 
-Private Property Get brokerId() As String
+Public Property Get BrokerId() As String
 End Property
 
-Private Property Let ContractSpecifier(ByVal Value As ContractUtils27.ContractSpecifier)
+Public Property Let DiscretionaryAmount(ByVal Value As Double)
 End Property
 
-Private Property Get ContractSpecifier() As ContractUtils27.ContractSpecifier
+Public Property Get DiscretionaryAmount() As Double
 End Property
 
-Private Property Let discretionaryAmount(ByVal Value As Double)
+Public Property Let DisplaySize(ByVal Value As Long)
 End Property
 
-Private Property Get discretionaryAmount() As Double
+Public Property Get DisplaySize() As Long
 End Property
 
-Private Property Let displaySize(ByVal Value As Long)
+Public Property Let ETradeOnly(ByVal Value As Boolean)
 End Property
 
-Private Property Get displaySize() As Long
+Public Property Get ETradeOnly() As Boolean
 End Property
 
-Private Property Let eTradeOnly(ByVal Value As Boolean)
+Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
 End Property
 
-Private Property Get eTradeOnly() As Boolean
+Public Property Get FirmQuoteOnly() As Boolean
 End Property
 
-Private Property Let firmQuoteOnly(ByVal Value As Boolean)
+Public Property Let GoodAfterTime(ByVal Value As Date)
 End Property
 
-Private Property Get firmQuoteOnly() As Boolean
+Public Property Get GoodAfterTime() As Date
 End Property
 
-Private Property Let goodAfterTime(ByVal Value As Date)
+Public Property Let GoodAfterTimeTZ(ByVal Value As String)
 End Property
 
-Private Property Get goodAfterTime() As Date
+Public Property Get GoodAfterTimeTZ() As String
 End Property
 
-Private Property Let goodAfterTimeTZ(ByVal Value As String)
+Public Property Let GoodTillDate(ByVal Value As Date)
 End Property
 
-Private Property Get goodAfterTimeTZ() As String
+Public Property Get GoodTillDate() As Date
 End Property
 
-Private Property Let goodTillDate(ByVal Value As Date)
+Public Property Let GoodTillDateTZ(ByVal Value As String)
 End Property
 
-Private Property Get goodTillDate() As Date
+Public Property Get GoodTillDateTZ() As String
 End Property
 
-Private Property Let goodTillDateTZ(ByVal Value As String)
+Public Property Let Hidden(ByVal Value As Boolean)
 End Property
 
-Private Property Get goodTillDateTZ() As String
+Public Property Get Hidden() As Boolean
 End Property
 
-Private Property Let hidden(ByVal Value As Boolean)
+Public Property Let Id(ByVal Value As String)
 End Property
 
-Private Property Get hidden() As Boolean
+Public Property Get Id() As String
 End Property
 
-Private Property Let ignoreRegularTradingHours(ByVal Value As Boolean)
+Public Property Let IgnoreRegularTradingHours(ByVal Value As Boolean)
 End Property
 
-Private Property Get ignoreRegularTradingHours() As Boolean
+Public Property Get IgnoreRegularTradingHours() As Boolean
 End Property
 
-Private Property Let limitPrice(ByVal Value As Double)
+Public Property Let IsSimulated(ByVal Value As Boolean)
 End Property
 
-Private Property Get limitPrice() As Double
+Public Property Get IsSimulated() As Boolean
 End Property
 
-Private Property Let minimumQuantity(ByVal Value As Long)
+Public Property Let LimitPrice(ByVal Value As Double)
 End Property
 
-Private Property Get minimumQuantity() As Long
+Public Property Get LimitPrice() As Double
 End Property
 
-Private Property Let NbboPriceCap(ByVal Value As Double)
+Public Property Let MinimumQuantity(ByVal Value As Long)
 End Property
 
-Private Property Get NbboPriceCap() As Double
+Public Property Get MinimumQuantity() As Long
 End Property
 
-Private Property Let orderType(ByVal Value As OrderTypes)
+Public Property Let NbboPriceCap(ByVal Value As Double)
 End Property
 
-Private Property Get orderType() As OrderTypes
+Public Property Get NbboPriceCap() As Double
 End Property
 
-Private Property Let origin(ByVal Value As OrderOrigins)
+Public Property Let OrderType(ByVal Value As OrderTypes)
 End Property
 
-Private Property Get origin() As OrderOrigins
+Public Property Get OrderType() As OrderTypes
 End Property
 
-Private Property Let originatorRef(ByVal Value As String)
+Public Property Let Origin(ByVal Value As OrderOrigins)
 End Property
 
-Private Property Get originatorRef() As String
+Public Property Get Origin() As OrderOrigins
 End Property
 
-Private Property Let overrideConstraints(ByVal Value As Boolean)
+Public Property Let OriginatorRef(ByVal Value As String)
 End Property
 
-Private Property Get overrideConstraints() As Boolean
+Public Property Get OriginatorRef() As String
 End Property
 
-Private Property Let providerProperties(ByVal Value As TWUtilities30.Parameters)
+Public Property Let OverrideConstraints(ByVal Value As Boolean)
 End Property
 
-Private Property Get providerProperties() As TWUtilities30.Parameters
+Public Property Get OverrideConstraints() As Boolean
 End Property
 
-Private Property Let quantity(ByVal Value As Long)
+Public Property Let ProviderProperties(ByVal Value As Parameters)
 End Property
 
-Private Property Get quantity() As Long
+Public Property Get ProviderProperties() As Parameters
 End Property
 
-Private Property Let settlingFirm(ByVal Value As String)
+Public Property Let Quantity(ByVal Value As Long)
 End Property
 
-Private Property Get settlingFirm() As String
+Public Property Get Quantity() As Long
 End Property
 
-Private Property Let status(ByVal Value As OrderStatuses)
+Public Property Let SettlingFirm(ByVal Value As String)
 End Property
 
-Private Property Get status() As OrderStatuses
+Public Property Get SettlingFirm() As String
 End Property
 
-Private Property Let stopTriggerMethod(ByVal Value As StopTriggerMethods)
+Public Property Let Status(ByVal Value As OrderStatuses)
 End Property
 
-Private Property Get stopTriggerMethod() As StopTriggerMethods
+Public Property Get Status() As OrderStatuses
 End Property
 
-Private Property Let sweepToFill(ByVal Value As Boolean)
+Public Property Let StopTriggerMethod(ByVal Value As OrderStopTriggerMethods)
 End Property
 
-Private Property Get sweepToFill() As Boolean
+Public Property Get StopTriggerMethod() As OrderStopTriggerMethods
 End Property
 
-Private Property Let timeInForce(ByVal Value As OrderTifs)
+Public Property Let SweepToFill(ByVal Value As Boolean)
 End Property
 
-Private Property Get timeInForce() As OrderTifs
+Public Property Get SweepToFill() As Boolean
 End Property
 
-Private Property Let tradeBuildId(ByVal Value As String)
+Public Property Let TimeInForce(ByVal Value As OrderTIFs)
 End Property
 
-Private Property Get tradeBuildId() As String
+Public Property Get TimeInForce() As OrderTIFs
 End Property
 
-Private Property Let triggerPrice(ByVal Value As Double)
+Public Property Let TriggerPrice(ByVal Value As Double)
 End Property
 
-Private Property Get triggerPrice() As Double
+Public Property Get TriggerPrice() As Double
 End Property
 
 '@================================================================================

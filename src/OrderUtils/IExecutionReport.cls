@@ -78,7 +78,13 @@ End Property
 Public Property Get IsLiquidation() As Boolean
 End Property
 
+Public Property Get IsSimulated() As Boolean
+End Property
+
 Public Property Get BrokerId() As String
+End Property
+
+Public Property Let OrderId(ByVal Value As String)
 End Property
 
 Public Property Get OrderId() As String

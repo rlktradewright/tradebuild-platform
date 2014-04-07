@@ -64,6 +64,15 @@ Private Const ModuleName                            As String = "IOrderPersisten
 ' Methods
 '@================================================================================
 
+Public Sub Clear()
+End Sub
+
+Public Function GetEnumeratorForScope(ByVal pScopeName As String) As Enumerator
+End Function
+
+Public Sub SaveOrderInfo(ByVal pOrderInfo As String)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

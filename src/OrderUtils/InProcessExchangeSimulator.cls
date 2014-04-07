@@ -10,7 +10,7 @@ Attribute VB_Name = "InProcessExchangeSimulator"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '@================================================================================
@@ -34,7 +34,6 @@ Implements StateChangeListener
 ' Constants
 '@================================================================================
 
-
 Private Const ModuleName                As String = "InProcessExchangeSimulator"
 
 '@================================================================================
@@ -46,14 +45,13 @@ Private Const ModuleName                As String = "InProcessExchangeSimulator"
 '@================================================================================
 
 Private Type MarketTableEntry
-    Contract                As Contract
+    ContractSpec            As IContractSpecifier
     Bid                     As Double
     BidSize                 As Long
     Ask                     As Double
     AskSize                 As Long
     ActiveOrders            As EnumerableCollection
     PendingOrders           As EnumerableCollection
-    Clock                   As Clock
     SimulateExchangeDelays  As Boolean
     DataSource              As IMarketDataSource
 End Type
@@ -79,7 +77,9 @@ Attribute mTimerList.VB_VarHelpID = -1
     ' from pendingsubmit to submitted, the order is Added to this list
     ' with a random wait of between 200 and 500 millisecs.
 
-Private mNextBrokerOrderId              As Long
+Private mMarketDataManager              As IMarketDataManager
+Private mPrimaryContractStore           As IContractStore
+Private mSecondaryContractStore         As IContractStore
 
 '@================================================================================
 ' Class Event Handlers
@@ -87,11 +87,11 @@ Private mNextBrokerOrderId              As Long
 
 Private Sub Class_Initialize()
 ReDim mMarketTable(3) As MarketTableEntry
+ReDim mClientTable(3) As ClientTableEntry
+
 Set mAllOrders = New EnumerableCollection
 
 Set mTimerList = GetGlobalTimerList
-
-mNextBrokerOrderId = 1
 
 Randomize
 End Sub
@@ -110,7 +110,7 @@ On Error GoTo Err
 
 Dim lDataSource As IMarketDataSource
 
-Set lDataSource = ev.source
+Set lDataSource = ev.Source
 
 Select Case ev.Tick.TickType
 Case TickTypes.TickTypeAsk
@@ -141,14 +141,14 @@ End Sub
 
 Private Sub StateChangeListener_Change( _
                 ev As StateChangeEventData)
-Dim tli As TimerListItem
-Dim lOrder As SimulatorOrder
-
 Const ProcName As String = "StateChangeListener_Change"
-
 On Error GoTo Err
 
-Set tli = ev.source
+
+Dim tli As TimerListItem
+Set tli = ev.Source
+
+Dim lOrder As SimulatorOrder
 Set lOrder = tli.Data
 
 If ev.State = TimerListItemStates.TimerListItemStateExpired Then
@@ -174,23 +174,38 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let ClockRate( _
-                ByVal pClientId As Long, _
-                ByVal pRate As Single)
-Const ProcName As String = "ClockRate"
+Public Property Get PermittedOrderProperties() As IPermittedOrderProperties
+Const ProcName As String = "PermittedOrderProperties"
 On Error GoTo Err
 
-With mMarketTable(pClientId)
-    If .Clock Is Nothing Then
-        Set .Clock = CreateSimulatedClock(pRate, .Contract.TimezoneName)
-    Else
-        Dim latestTimestamp As Date
-        latestTimestamp = .Clock.Timestamp
-        Set .Clock = CreateSimulatedClock(pRate, .Contract.TimezoneName)
-        .Clock.SetTime latestTimestamp
-    End If
-    .SimulateExchangeDelays = (pRate <> 0)
-End With
+Dim lPermittedOrderProperties As New PermittedOrderProperties
+
+Dim lPermittedOrderattributes As OrderAttributes
+lPermittedOrderattributes = OrderAttributes.OrderAttAction + _
+                            OrderAttributes.OrderAttLimitPrice + _
+                            OrderAttributes.OrderAttOrderType + _
+                            OrderAttributes.OrderAttOriginatorRef + _
+                            OrderAttributes.OrderAttQuantity + _
+                            OrderAttributes.OrderAttStopTriggerMethod + _
+                            OrderAttributes.OrderAttTriggerPrice
+lPermittedOrderProperties.PermittedOrderAttributes = lPermittedOrderattributes
+
+Dim lPermittedOrderTifs As OrderTIFs
+lPermittedOrderTifs = OrderTIFDay
+lPermittedOrderProperties.PermittedOrderTifs = lPermittedOrderTifs
+
+Dim lPermittedOrderTypes As OrderTypes
+lPermittedOrderTypes = OrderTypes.OrderTypeMarket + _
+                        OrderTypes.OrderTypeLimit + _
+                        OrderTypes.OrderTypeStop + _
+                        OrderTypes.OrderTypeStopLimit
+lPermittedOrderProperties.PermittedOrderTypes = lPermittedOrderTypes
+
+Dim lPermittedOrderStopTriggerMethods As OrderStopTriggerMethods
+lPermittedOrderStopTriggerMethods = OrderStopTriggerDefault + OrderStopTriggerLast
+lPermittedOrderProperties.PermittedStopTriggerMethods = lPermittedOrderStopTriggerMethods
+
+Set PermittedOrderProperties = lPermittedOrderProperties
 
 Exit Property
 
@@ -198,31 +213,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub CancelOrder(ByVal Id As Long)
+Public Sub CancelOrder(ByVal Id As String)
 Const ProcName As String = "CancelOrder"
 On Error GoTo Err
 
-Dim lOrder As SimulatorOrder
-Dim PendingOrder As SimulatorOrder
 Dim relatedOrder As SimulatorOrder
 
-On Error Resume Next
-Set lOrder = mAllOrders(Id)
-On Error GoTo Err
+AssertArgument mAllOrders.Contains(Id), "Unknown order id " & Id
 
-AssertArgument Not lOrder Is Nothing, "Unknown order id " & Id
+Dim lOrder As SimulatorOrder
+Set lOrder = mAllOrders(Id)
 
 With mMarketTable(lOrder.MarketId)
-    
-    On Error Resume Next
-    Set PendingOrder = .PendingOrders(Id)
-    On Error GoTo Err
-    
-    If Not PendingOrder Is Nothing Then
+    If .PendingOrders.Contains(Id) Then
+        Dim lPendingOrder As SimulatorOrder
+        Set lPendingOrder = .PendingOrders(Id)
         If lOrder.ParentId <> "" Then
             Set relatedOrder = .PendingOrders(lOrder.ParentId)
             setCancelOrder relatedOrder
@@ -289,22 +299,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-''
-' Returns the <code>simulatorOrder</code> with the specified id.
-'
-' @return       rhe <code>simulatorOrder</code> whose encapsulated order has
-'               the id specified
-'
-' @param pId    the id of the <code>order</code> who's corresponding
-'               <code>simulatedOrder</code> is required
-'
-'@/
-Friend Function GetOrder( _
-                ByVal pId As String) As SimulatorOrder
-Const ProcName As String = "GetOrder"
+Public Function GetOcaGroup( _
+                ByVal pId As String) As String
+Const ProcName As String = "GetOcaGroup"
 On Error GoTo Err
 
-Set GetOrder = mAllOrders(pId)
+Dim lOrder As SimulatorOrder
+Set lOrder = mAllOrders(pId)
+GetOcaGroup = lOrder.OcaGroup
 
 Exit Function
 
@@ -312,7 +314,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub PlaceOrder( _
+Friend Sub Initialise(ByVal pMarketDataManager As IMarketDataManager, ByVal pPrimaryContractStore As IContractStore, ByVal pSecondaryContractStore As IContractStore)
+Set mMarketDataManager = pMarketDataManager
+Set mPrimaryContractStore = pPrimaryContractStore
+Set mSecondaryContractStore = pSecondaryContractStore
+End Sub
+
+Public Sub PlaceOrder( _
                 ByVal pOrder As IOrder, _
                 ByVal pParentId As String, _
                 ByVal pOcaGroup As String, _
@@ -320,11 +328,6 @@ Friend Sub PlaceOrder( _
                 ByVal pTransmit As Boolean)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
-
-Dim lOrder As SimulatorOrder
-Dim lSpecifier As ContractSpecifier
-Dim lPendingOrder As SimulatorOrder
-Dim lMarketId As Long
 
 AssertArgument pClientId >= 0 And pClientId <= UBound(mClientTable), "Invalid ClientId " & pClientId & " in order " & pOrder.Id
 AssertArgument mClientTable(pClientId).InUse, "Invalid ClientId " & pClientId & " in order " & pOrder.Id
@@ -342,72 +345,24 @@ Case Else
     Exit Sub
 End Select
 
-lMarketId = getMarketId(pOrder.Contract)
+Dim lSimulatorOrder As SimulatorOrder
 
-Set lSpecifier = pOrder.Contract.Specifier
-
-If mAllOrders.Contains(pOrder.Id) Then
-    Set lOrder = mAllOrders(pOrder.Id)
-    If pOrder.BrokerId <> "" Then
-        ' the order is being updated
-        lOrder.Order.SyncToOrder pOrder
-        Exit Sub
-    End If
-    
-    ' the order is being re-placed (typically re-placing a stop or target order
+If mAllOrders.Contains(pOrder.Id) And pOrder.BrokerId = "" Then
+    ' the order is being re-placed (typically re-placing a stoploss or target order
     ' after it was cancelled while trying to cancel a bracket order, but the entry
     ' order was subsequently filled)
     mAllOrders.Remove pOrder.Id
+    Set lSimulatorOrder = createSimulatorOrder(pOrder, pClientId, pParentId, pOcaGroup, pTransmit)
+ElseIf mAllOrders.Contains(pOrder.Id) Then
+    Set lSimulatorOrder = mAllOrders(pOrder.Id)
+    ' the order is being updated
+    gSyncToOrder lSimulatorOrder.Order, pOrder
+    lSimulatorOrder.Transmit = pTransmit
+Else
+    Set lSimulatorOrder = createSimulatorOrder(pOrder, pClientId, pParentId, pOcaGroup, pTransmit)
 End If
 
-pOrder.BrokerId = mNextBrokerOrderId
-mNextBrokerOrderId = mNextBrokerOrderId + 1
-Set lOrder = createSimulatorOrder(pOrder, pClientId, pParentId, pOcaGroup, lMarketId)
-mAllOrders.Add lOrder, pOrder.Id
-
-With mMarketTable(getMarketId(pOrder.Contract))
-    If Not pTransmit Then
-        .PendingOrders.Add lOrder, lOrder.Order.Id
-    Else
-        ' if this order was previously in the pending list, Remove
-        ' it now
-        If .PendingOrders.Contains(lOrder.Order.Id) Then .PendingOrders.Remove lOrder.Order.Id
-        
-        ' now see if there are any other pending orders related
-        ' to this one via pParentId or oca group
-        If lOrder.ParentId <> "" Then
-            Set lPendingOrder = .PendingOrders(lOrder.ParentId)
-            .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
-            .PendingOrders.Remove lPendingOrder.Order.Id
-            setSubmitOrder lPendingOrder
-            
-            ' find any other child orders
-            For Each lPendingOrder In .PendingOrders
-                If lPendingOrder.ParentId = lOrder.ParentId Then
-                    .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
-                    .PendingOrders.Remove lPendingOrder.Order.Id
-                    setSubmitOrder lPendingOrder
-                End If
-            Next
-        Else
-            ' find any child orders or related OCA orders
-            For Each lPendingOrder In .PendingOrders
-                If lPendingOrder.ParentId = lOrder.Order.Id Or _
-                    (lPendingOrder.OcaGroup = lOrder.OcaGroup And _
-                    lOrder.OcaGroup <> "") _
-                Then
-                    .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
-                    .PendingOrders.Remove lPendingOrder.Order.Id
-                    setSubmitOrder lPendingOrder
-                End If
-            Next
-                        
-        End If
-        
-        .ActiveOrders.Add lOrder, lOrder.Order.Id
-        setSubmitOrder lOrder
-    End If
-End With
+queueOrder lSimulatorOrder
 
 Exit Sub
 
@@ -415,16 +370,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
                     
-Friend Function RegisterClient( _
+Public Function RegisterClient( _
                 ByVal pListener As IOrderSubmissionListener) As Long
 Const ProcName As String = "RegisterClient"
 On Error GoTo Err
 
-Dim i As Long
 Dim lIndex As Long
-
 lIndex = -1
 
+Dim i As Long
 For i = 0 To UBound(mClientTable)
     If (Not mClientTable(i).InUse) Then
         lIndex = i
@@ -454,22 +408,44 @@ End Function
 ' Helper Functions
 '@================================================================================
 
+Private Function createExecId() As String
+Static sLastMillisecs As Long
+
+Dim lExecId As String: lExecId = String(23, "0")
+Dim dayHex As String: dayHex = Hex(CDbl(Date))
+Dim millisecs As Long: millisecs = Int(1000 * Timer)
+If millisecs <= sLastMillisecs Then
+    ' this can happen if more than one order is filled in the same tick
+    millisecs = sLastMillisecs + 1
+End If
+sLastMillisecs = millisecs
+
+Dim millisecsHex As String: millisecsHex = Hex(millisecs)
+Mid(lExecId, 9 - Len(dayHex), Len(dayHex)) = dayHex
+Mid(lExecId, 18 - Len(millisecsHex), Len(millisecsHex)) = millisecsHex
+Mid(lExecId, 9, 1) = "."
+Mid(lExecId, 18, 6) = ".01.01"
+
+createExecId = lExecId
+End Function
+
 Private Function createSimulatorOrder( _
                 ByVal pOrder As IOrder, _
                 ByVal pClientId As Long, _
                 ByVal pParentId As String, _
                 ByVal pOcaGroup As String, _
-                ByVal pMarketId As Long) As SimulatorOrder
+                ByVal pTransmit As Boolean) As SimulatorOrder
 Const ProcName As String = "createSimulatorOrder"
 On Error GoTo Err
 
+Static sNextBrokerOrderId As Long
+
+sNextBrokerOrderId = sNextBrokerOrderId + 1
+pOrder.BrokerId = CStr(sNextBrokerOrderId)
+
 Dim lOrder As New SimulatorOrder
-lOrder.Order = New Order
-lOrder.Order.SyncToOrder pOrder
-lOrder.ClientId = pClientId
-lOrder.MarketId = pMarketId
-lOrder.OcaGroup = pOcaGroup
-lOrder.ParentId = pParentId
+lOrder.Initialise Me, New Order, pClientId, pParentId, pOcaGroup, pTransmit, getMarketId(pOrder.ContractSpecifier)
+gSyncToOrder lOrder.Order, pOrder
 mAllOrders.Add lOrder, pOrder.Id
 
 Exit Function
@@ -483,17 +459,16 @@ delay = 200 + Fix(Rnd() * 300 + 1)
 End Function
 
 Private Function findMarketId( _
-                ByVal pContract As IContract) As Long
+                ByVal pContractSpec As IContractSpecifier) As Long
 Const ProcName As String = "findMarketId"
 On Error GoTo Err
 
-Dim i As Long
 Dim lIndex As Long
-
 lIndex = -1
 
+Dim i As Long
 For i = 0 To UBound(mMarketTable)
-    If mMarketTable(i).Contract.Specifier.Equals(pContract.Specifier) Then
+    If mMarketTable(i).ContractSpec.Equals(pContractSpec) Then
         lIndex = i
         Exit For
     End If
@@ -507,13 +482,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getMarketDataSource(ByVal pContract As IContract) As MarketDataSource
+Private Function getMarketDataSource(ByVal pContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "getMarketDataSource"
 On Error GoTo Err
 
-Dim lDataSource As MarketDataSource
+Dim lDataSource As IMarketDataSource
 
-Set lDataSource = gTB.ServiceProviders.MarketDataManager.CreateMarketDataSource(pContract, , MarketDataSourceOptUseExchangeTimeZone)
+Set lDataSource = mMarketDataManager.CreateMarketDataSource(FetchContract(pContractSpec, mPrimaryContractStore, mSecondaryContractStore), False)
 Assert Not lDataSource Is Nothing, "Can't create market data source"
 
 Set getMarketDataSource = lDataSource
@@ -525,15 +500,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getMarketId( _
-                ByVal pContract As IContract) As Long
+                ByVal pContractSpec As IContractSpecifier) As Long
 Const ProcName As String = "getMarketId"
 On Error GoTo Err
 
 Dim lIndex As Long
+lIndex = findMarketId(pContractSpec)
 
-lIndex = findMarketId(pContract)
-
-If lIndex = -1 Then lIndex = startMarket(pContract)
+If lIndex = -1 Then lIndex = startMarket(pContractSpec)
 
 getMarketId = lIndex
 
@@ -545,12 +519,11 @@ End Function
 
 Private Sub handleCreatedOrders(ByVal MarketId As Long)
 ' submits any orders which are still in the created state
-Dim lOrder As SimulatorOrder
 Const ProcName As String = "handleCreatedOrders"
-
 On Error GoTo Err
 
 With mMarketTable(MarketId)
+    Dim lOrder As SimulatorOrder
     For Each lOrder In .ActiveOrders
         If lOrder.Order.Status = OrderStatuses.OrderStatusCreated Then
             setSubmitOrder lOrder
@@ -565,12 +538,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub handlePendingSubmitOrders(ByVal MarketId As Long)
-Dim lOrder As SimulatorOrder
 Const ProcName As String = "handlePendingSubmitOrders"
-
 On Error GoTo Err
 
 With mMarketTable(MarketId)
+    Dim lOrder As SimulatorOrder
     For Each lOrder In .ActiveOrders
         If lOrder.Order.Status = OrderStatuses.OrderStatusPendingSubmit And lOrder.ParentId = "" Then
             setSubmitOrder lOrder
@@ -585,13 +557,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub handleRelatedOrders(ByVal pOrder As SimulatorOrder)
-Dim lOrder As SimulatorOrder
-
 Const ProcName As String = "handleRelatedOrders"
-
 On Error GoTo Err
 
 With mMarketTable(pOrder.MarketId)
+    Dim lOrder As SimulatorOrder
     For Each lOrder In .ActiveOrders
         If lOrder.ParentId = pOrder.Order.Id Then
             lOrder.ParentId = ""    ' detach the order from the parent
@@ -636,21 +606,20 @@ End Sub
 
 Private Sub matchOrder(ByVal pOrder As SimulatorOrder)
 Const ProcName As String = "matchOrder"
-
 On Error GoTo Err
 
 With mMarketTable(pOrder.ClientId)
     Select Case pOrder.Order.OrderType
     Case OrderTypes.OrderTypeMarket, _
         OrderTypes.OrderTypeStop
-        setFillOrder pOrder, IIf(pOrder.Order.action = OrderActions.OrderActionBuy, .Ask, .Bid), pOrder.Order.Quantity
+        setFillOrder pOrder, IIf(pOrder.Order.Action = OrderActions.OrderActionBuy, .Ask, .Bid), pOrder.Order.Quantity
     Case OrderTypes.OrderTypeLimit, _
         OrderTypes.OrderTypeStopLimit
-        If pOrder.Order.action = OrderActions.OrderActionBuy And _
+        If pOrder.Order.Action = OrderActions.OrderActionBuy And _
             pOrder.Order.LimitPrice >= .Ask _
         Then
             setFillOrder pOrder, .Ask, pOrder.Order.Quantity
-        ElseIf pOrder.Order.action = OrderActions.OrderActionSell And _
+        ElseIf pOrder.Order.Action = OrderActions.OrderActionSell And _
             pOrder.Order.LimitPrice <= .Bid _
         Then
             setFillOrder pOrder, .Bid, pOrder.Order.Quantity
@@ -667,21 +636,20 @@ End Sub
 Private Sub matchOrderTrade(ByVal pOrder As SimulatorOrder, _
                             ByVal Trade As Double)
 Const ProcName As String = "matchOrderTrade"
-
 On Error GoTo Err
 
 With mMarketTable(pOrder.ClientId)
     Select Case pOrder.Order.OrderType
     Case OrderTypes.OrderTypeMarket, _
         OrderTypes.OrderTypeStop
-        setFillOrder pOrder, IIf(pOrder.Order.action = OrderActions.OrderActionBuy, .Ask, .Bid), pOrder.Order.Quantity
+        setFillOrder pOrder, IIf(pOrder.Order.Action = OrderActions.OrderActionBuy, .Ask, .Bid), pOrder.Order.Quantity
     Case OrderTypes.OrderTypeLimit, _
         OrderTypes.OrderTypeStop
-        If pOrder.Order.action = OrderActions.OrderActionBuy And _
+        If pOrder.Order.Action = OrderActions.OrderActionBuy And _
             pOrder.Order.LimitPrice >= Trade _
         Then
             setFillOrder pOrder, pOrder.Order.LimitPrice, pOrder.Order.Quantity
-        ElseIf pOrder.Order.action = OrderActions.OrderActionSell And _
+        ElseIf pOrder.Order.Action = OrderActions.OrderActionSell And _
             pOrder.Order.LimitPrice <= Trade _
         Then
             setFillOrder pOrder, pOrder.Order.LimitPrice, pOrder.Order.Quantity
@@ -697,12 +665,19 @@ End Sub
 
 Private Sub notifyOrderStatus( _
                 ByVal pOrder As SimulatorOrder)
+Const ProcName As String = "notifyOrderStatus"
+On Error GoTo Err
 
 Dim lOrderStatusReport As New OrderStatusReport
 lOrderStatusReport.OrderId = pOrder.Order.Id
 lOrderStatusReport.Status = pOrder.Order.Status
 lOrderStatusReport.BrokerId = pOrder.Order.BrokerId
 mClientTable(pOrder.ClientId).Listener.NotifyOrderStatusReport lOrderStatusReport
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub pauseMarket(ByVal pHandle As Long)
@@ -729,15 +704,13 @@ Private Sub processAsk(ByVal Timestamp As Date, _
 Const ProcName As String = "processAsk"
 On Error GoTo Err
 
-Dim lOrder As SimulatorOrder
-
 With mMarketTable(mMarketId)
-    .Clock.SetTime Timestamp
     .Ask = Ask
     
     handleCreatedOrders mMarketId
     If Not .SimulateExchangeDelays Then handlePendingSubmitOrders mMarketId
 
+    Dim lOrder As SimulatorOrder
     For Each lOrder In .ActiveOrders
         If lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
             If lOrder.AtExchange Then
@@ -768,15 +741,13 @@ Private Sub processBid(ByVal Timestamp As Date, _
 Const ProcName As String = "processBid"
 On Error GoTo Err
 
-Dim lOrder As SimulatorOrder
-
 With mMarketTable(mMarketId)
-    .Clock.SetTime Timestamp
     .Bid = Bid
     
     handleCreatedOrders mMarketId
     If Not .SimulateExchangeDelays Then handlePendingSubmitOrders mMarketId
 
+    Dim lOrder As SimulatorOrder
     For Each lOrder In .ActiveOrders
         If lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
             If lOrder.AtExchange Then
@@ -801,6 +772,62 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub queueOrder(ByVal pSimulatedOrder As SimulatorOrder)
+Const ProcName As String = "queueOrder"
+On Error GoTo Err
+
+Dim lPendingOrder As SimulatorOrder
+
+With mMarketTable(pSimulatedOrder.MarketId)
+    If Not pSimulatedOrder.Transmit Then
+        .PendingOrders.Add pSimulatedOrder, pSimulatedOrder.Order.Id
+    Else
+        ' if this order was previously in the pending list, Remove
+        ' it now
+        If .PendingOrders.Contains(pSimulatedOrder.Order.Id) Then .PendingOrders.Remove pSimulatedOrder.Order.Id
+        
+        ' now see if there are any other pending orders related
+        ' to this one via pParentId or oca group
+        If pSimulatedOrder.ParentId <> "" Then
+            Set lPendingOrder = .PendingOrders(pSimulatedOrder.ParentId)
+            .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
+            .PendingOrders.Remove lPendingOrder.Order.Id
+            setSubmitOrder lPendingOrder
+            
+            ' find any other child orders
+            For Each lPendingOrder In .PendingOrders
+                If lPendingOrder.ParentId = pSimulatedOrder.ParentId Then
+                    .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
+                    .PendingOrders.Remove lPendingOrder.Order.Id
+                    setSubmitOrder lPendingOrder
+                End If
+            Next
+        Else
+            ' find any child orders or related OCA orders
+            For Each lPendingOrder In .PendingOrders
+                If lPendingOrder.ParentId = pSimulatedOrder.Order.Id Or _
+                    (lPendingOrder.OcaGroup = pSimulatedOrder.OcaGroup And _
+                    pSimulatedOrder.OcaGroup <> "") _
+                Then
+                    .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
+                    .PendingOrders.Remove lPendingOrder.Order.Id
+                    setSubmitOrder lPendingOrder
+                End If
+            Next
+                        
+        End If
+        
+        .ActiveOrders.Add pSimulatedOrder, pSimulatedOrder.Order.Id
+        setSubmitOrder pSimulatedOrder
+    End If
+End With
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+                    
 Private Sub restartMarket(ByVal pHandle As Long)
 Const ProcName As String = "restartMarket"
 On Error GoTo Err
@@ -817,7 +844,6 @@ End Sub
 
 Private Sub setCancelOrder(ByVal pOrder As SimulatorOrder)
 Const ProcName As String = "setCancelOrder"
-
 On Error GoTo Err
 
 If pOrder.Order.Status = OrderStatuses.OrderStatusCancelled Then Exit Sub
@@ -853,47 +879,33 @@ Private Sub setFillOrder(ByVal pOrder As SimulatorOrder, _
 Const ProcName As String = "setFillOrder"
 On Error GoTo Err
 
-Static sLastMillisecs As Long
-
-Dim lContractSpecifier As ContractSpecifier
-Dim lExecId As String
-Dim dayHex As String
-Dim millisecsHex As String
-Dim millisecs As Long
-Dim lFillPrice As Double
-Dim lFillSize As Long
-Dim lExec As Execution
-
 If pFillPrice = 0 Then Exit Sub ' can occur at start of Session before first Bid or offer
 
+Dim lFillPrice As Double
 lFillPrice = pFillPrice
+
+Dim lFillSize As Long
 lFillSize = pFillSize
 
-Set lContractSpecifier = mMarketTable(pOrder.ClientId).Contract.Specifier
+Dim lContractSpecifier As ContractSpecifier
+Set lContractSpecifier = mMarketTable(pOrder.ClientId).ContractSpec
 
+Dim lExec As Execution
 Set lExec = New Execution
 'lExec.contractSpecifier = lContractSpecifier
 lExec.AccountIdentifier = ""
 lExec.FillingExchange = lContractSpecifier.Exchange
-lExecId = String(23, "0")
-dayHex = Hex(CDbl(Date))
-millisecs = Int(1000 * Timer)
-If millisecs <= sLastMillisecs Then
-    ' this can happen if more than one order is filled in the same tick
-    millisecs = sLastMillisecs + 1
-End If
-sLastMillisecs = millisecs
-millisecsHex = Hex(millisecs)
-Mid(lExecId, 9 - Len(dayHex), Len(dayHex)) = dayHex
-Mid(lExecId, 18 - Len(millisecsHex), Len(millisecsHex)) = millisecsHex
-Mid(lExecId, 9, 1) = "."
-Mid(lExecId, 18, 6) = ".01.01"
-lExec.Id = lExecId
+
+lExec.Id = createExecId
+
 lExec.IsLiquidation = False
 lExec.BrokerId = pOrder.Order.BrokerId
 lExec.OrderId = pOrder.Order.Id
-lExec.action = pOrder.Order.action
-lExec.FillTime = mMarketTable(pOrder.ClientId).Clock.Timestamp
+lExec.Action = pOrder.Order.Action
+
+Dim lClock As Clock
+Set lClock = mMarketTable(pOrder.ClientId).DataSource.ClockFuture.Value
+lExec.FillTime = lClock.Timestamp
 
 'mMarketTable(pOrder.ClientId).OrderSubmitter.PreFill pOrder.Order.Id, _
 '                    lFillPrice, _
@@ -905,7 +917,7 @@ If lFillPrice = 0 Then lFillPrice = pFillPrice
 
 lExec.Price = lFillPrice
 lExec.Quantity = lFillSize
-lExec.TimezoneName = mMarketTable(pOrder.ClientId).Clock.TimeZone.DisplayName
+lExec.TimezoneName = lClock.TimeZone.DisplayName
 
 pOrder.Order.QuantityRemaining = pOrder.Order.QuantityRemaining - lFillSize
 If pOrder.Order.QuantityRemaining = 0 Then pOrder.Order.Status = OrderStatuses.OrderStatusFilled
@@ -1076,14 +1088,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function startMarket( _
-                ByVal pContract As IContract) As Long
+                ByVal pContractSpec As IContractSpecifier) As Long
 Const ProcName As String = "startMarket"
 On Error GoTo Err
 
 Dim lIndex As Long
-Dim lDataSource As MarketDataSource
+Dim lDataSource As IMarketDataSource
 
-Set lDataSource = getMarketDataSource(pContract)
+Set lDataSource = getMarketDataSource(pContractSpec)
 
 lIndex = lDataSource.Handle
 
@@ -1093,8 +1105,7 @@ End If
 
 With mMarketTable(lIndex)
     Set .ActiveOrders = New EnumerableCollection
-    Set .Clock = CreateSimulatedClock(1, pContract.TimezoneName)
-    Set .Contract = pContract
+    Set .ContractSpec = pContractSpec
     Set .PendingOrders = New EnumerableCollection
     Set .DataSource = lDataSource
     .DataSource.AddGenericTickListener Me
@@ -1115,10 +1126,9 @@ Const ProcName As String = "StopMarket"
 On Error GoTo Err
 
 With mMarketTable(pHandle)
-    Set .Contract = Nothing
+    Set .ContractSpec = Nothing
     Set .ActiveOrders = Nothing
     Set .PendingOrders = Nothing
-    Set .Clock = Nothing
     .SimulateExchangeDelays = False
     .Ask = 0
     .AskSize = 0
@@ -1143,8 +1153,6 @@ On Error GoTo Err
 Dim lOrder As SimulatorOrder
 
 With mMarketTable(pMarketId)
-    .Clock.SetTime pTimestamp
-    
     handleCreatedOrders pMarketId
     If Not .SimulateExchangeDelays Then handlePendingSubmitOrders pMarketId
 
@@ -1158,18 +1166,18 @@ With mMarketTable(pMarketId)
         Then
             Select Case lOrder.Order.OrderType
                 Case OrderTypes.OrderTypeStop
-                    If lOrder.Order.action = OrderActions.OrderActionBuy And _
+                    If lOrder.Order.Action = OrderActions.OrderActionBuy And _
                         pTrade >= lOrder.Order.TriggerPrice Then
                         setSubmitOrder lOrder
-                    ElseIf lOrder.Order.action = OrderActions.OrderActionSell And _
+                    ElseIf lOrder.Order.Action = OrderActions.OrderActionSell And _
                         pTrade <= lOrder.Order.TriggerPrice Then
                         setSubmitOrder lOrder
                     End If
                 Case OrderTypes.OrderTypeStopLimit
-                    If lOrder.Order.action = OrderActions.OrderActionBuy And _
+                    If lOrder.Order.Action = OrderActions.OrderActionBuy And _
                         pTrade >= lOrder.Order.TriggerPrice Then
                         setSubmitOrder lOrder
-                    ElseIf lOrder.Order.action = OrderActions.OrderActionSell And _
+                    ElseIf lOrder.Order.Action = OrderActions.OrderActionSell And _
                         pTrade <= lOrder.Order.TriggerPrice Then
                         setSubmitOrder lOrder
                     End If

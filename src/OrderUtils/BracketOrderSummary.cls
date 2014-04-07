@@ -47,10 +47,11 @@ Private Const ModuleName                As String = "BracketOrderSummary"
 ' Member variables
 '@================================================================================
 
-Private mWorkspaceName As String
-Private mTickerKey As String
+Private mContextsName                        As String
+Private mContextName                        As String
+Private mGroupName As String
 
-Private mState As BracketOrderStateCodes
+Private mState As BracketOrderStates
 Private mKey As String
 
 Private mDescription As String
@@ -65,17 +66,12 @@ Private mCancelTime As Date
 
 Private mEntryOrderId As String
 Attribute mEntryOrderId.VB_VarHelpID = -1
-Private mStopOrderId As String
-Attribute mStopOrderId.VB_VarHelpID = -1
+Private mStopLossOrderId As String
+Attribute mStopLossOrderId.VB_VarHelpID = -1
 Private mTargetOrderId As String
 Attribute mTargetOrderId.VB_VarHelpID = -1
 Private mCloseoutOrderId As String
 Attribute mCloseoutOrderId.VB_VarHelpID = -1
-
-Private mMaxProfit As Currency
-Private mProfitNotificationThreshold As Currency
-Private mLossNotificationThreshold As Currency
-Private mDrawdownNotificationThreshold As Currency
 
 Private mCreationTime As Date
 
@@ -106,90 +102,99 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Let cancelPrice(ByVal value As Double)
-If mCancelPrice <> value Then setDirty
-mCancelPrice = value
+Public Property Let CancelPrice(ByVal Value As Double)
+If mCancelPrice <> Value Then setDirty
+mCancelPrice = Value
 End Property
 
-Public Property Get cancelPrice() As Double
-cancelPrice = mCancelPrice
+Public Property Get CancelPrice() As Double
+CancelPrice = mCancelPrice
 End Property
 
-Public Property Let CancelTime(ByVal value As Date)
-If mCancelTime <> value Then setDirty
-mCancelTime = value
+Public Property Let CancelTime(ByVal Value As Date)
+If mCancelTime <> Value Then setDirty
+mCancelTime = Value
 End Property
 
 Public Property Get CancelTime() As Date
 CancelTime = mCancelTime
 End Property
 
-Public Property Let CloseoutOrderId(ByVal value As String)
-If CloseoutOrderId <> value Then setDirty
-mCloseoutOrderId = value
+Public Property Let CloseoutOrderId(ByVal Value As String)
+If CloseoutOrderId <> Value Then setDirty
+mCloseoutOrderId = Value
 End Property
 
 Public Property Get CloseoutOrderId() As String
 CloseoutOrderId = mCloseoutOrderId
 End Property
 
-Public Property Let CreationTime(ByVal value As Date)
-If mCreationTime <> value Then setDirty
-mCreationTime = value
+Public Property Let ContextName(ByVal Value As String)
+If mContextName <> Value Then setDirty
+mContextName = Value
+End Property
+
+Public Property Get ContextName() As String
+ContextName = mContextName
+End Property
+
+Public Property Let ContextsName(ByVal Value As String)
+If mContextsName <> Value Then setDirty
+mContextsName = Value
+End Property
+
+Public Property Get ContextsName() As String
+ContextsName = mContextsName
+End Property
+
+Public Property Let CreationTime(ByVal Value As Date)
+If mCreationTime <> Value Then setDirty
+mCreationTime = Value
 End Property
 
 Public Property Get CreationTime() As Date
 CreationTime = mCreationTime
 End Property
 
-Public Property Let CumBuyPrice(ByVal value As Double)
-If mCumBuyPrice <> value Then setDirty
-mCumBuyPrice = value
+Public Property Let CumBuyPrice(ByVal Value As Double)
+If mCumBuyPrice <> Value Then setDirty
+mCumBuyPrice = Value
 End Property
 
 Public Property Get CumBuyPrice() As Double
 CumBuyPrice = mCumBuyPrice
 End Property
 
-Public Property Let CumSellPrice(ByVal value As Double)
-If mCumSellPrice <> value Then setDirty
-mCumSellPrice = value
+Public Property Let CumSellPrice(ByVal Value As Double)
+If mCumSellPrice <> Value Then setDirty
+mCumSellPrice = Value
 End Property
 
 Public Property Get CumSellPrice() As Double
 CumSellPrice = mCumSellPrice
 End Property
 
-Public Property Let Description(ByVal value As String)
-If mDescription <> value Then setDirty
-mDescription = value
+Public Property Let Description(ByVal Value As String)
+If mDescription <> Value Then setDirty
+mDescription = Value
 End Property
 
 Public Property Get Description() As String
 Description = mDescription
 End Property
 
-Public Property Let DrawdownNotificationThreshold(ByVal value As Currency)
-If mDrawdownNotificationThreshold <> value Then setDirty
-mDrawdownNotificationThreshold = value
-End Property
-
-Public Property Get DrawdownNotificationThreshold() As Currency
-DrawdownNotificationThreshold = mDrawdownNotificationThreshold
-End Property
-
-Public Property Let EntryOrderId(ByVal value As String)
-If mEntryOrderId <> value Then setDirty
-mEntryOrderId = value
+Public Property Let EntryOrderId(ByVal Value As String)
+If mEntryOrderId <> Value Then setDirty
+mEntryOrderId = Value
 End Property
 
 Public Property Get EntryOrderId() As String
 EntryOrderId = mEntryOrderId
 End Property
 
-Public Property Let EntryReason(ByVal value As String)
-If mEntryReason <> value Then setDirty
-mEntryReason = value
+Public Property Let EntryReason(ByVal Value As String)
+If mEntryReason <> Value Then setDirty
+mEntryReason = Value
 End Property
 
 Public Property Get EntryReason() As String
@@ -200,121 +205,85 @@ Public Property Get IsDirty() As Boolean
 IsDirty = mIsDirty
 End Property
 
-Public Property Let Key(ByVal value As String)
-If mKey <> value Then setDirty
-mKey = value
+Public Property Let GroupName(ByVal Value As String)
+If mGroupName <> Value Then setDirty
+mGroupName = Value
+End Property
+
+Public Property Get GroupName() As String
+GroupName = mGroupName
+End Property
+
+Public Property Let Key(ByVal Value As String)
+If mKey <> Value Then setDirty
+mKey = Value
 End Property
 
 Public Property Get Key() As String
 Key = mKey
 End Property
 
-Public Property Let LossNotificationThreshold(ByVal value As Currency)
-If mLossNotificationThreshold <> value Then setDirty
-mLossNotificationThreshold = value
-End Property
-
-Public Property Get LossNotificationThreshold() As Currency
-LossNotificationThreshold = mLossNotificationThreshold
-End Property
-
-Public Property Let MaxProfit(ByVal value As Currency)
-If mMaxProfit <> value Then setDirty
-mMaxProfit = value
-End Property
-
-Public Property Get MaxProfit() As Currency
-MaxProfit = mMaxProfit
-End Property
-
-Public Property Let PreventUnprotectedPosition(ByVal value As Boolean)
-If mPreventUnprotectedPosition <> value Then setDirty
-mPreventUnprotectedPosition = value
+Public Property Let PreventUnprotectedPosition(ByVal Value As Boolean)
+If mPreventUnprotectedPosition <> Value Then setDirty
+mPreventUnprotectedPosition = Value
 End Property
 
 Public Property Get PreventUnprotectedPosition() As Boolean
 PreventUnprotectedPosition = mPreventUnprotectedPosition
 End Property
 
-Public Property Let ProfitNotificationThreshold(ByVal value As Currency)
-If mProfitNotificationThreshold <> value Then setDirty
-mProfitNotificationThreshold = value
+Public Property Let Size(ByVal Value As Long)
+If mSize <> Value Then setDirty
+mSize = Value
 End Property
 
-Public Property Get ProfitNotificationThreshold() As Currency
-ProfitNotificationThreshold = mProfitNotificationThreshold
+Public Property Get Size() As Long
+Size = mSize
 End Property
 
-Public Property Let size(ByVal value As Long)
-If mSize <> value Then setDirty
-mSize = value
+Public Property Let State(ByVal Value As BracketOrderStates)
+If mState <> Value Then setDirty
+mState = Value
 End Property
 
-Public Property Get size() As Long
-size = mSize
-End Property
-
-Public Property Let State(ByVal value As BracketOrderStateCodes)
-If mState <> value Then setDirty
-mState = value
-End Property
-
-Public Property Get State() As BracketOrderStateCodes
+Public Property Get State() As BracketOrderStates
 State = mState
 End Property
 
-Public Property Let StopOrderId(ByVal value As String)
-If mStopOrderId <> value Then setDirty
-mStopOrderId = value
+Public Property Let StopLossOrderId(ByVal Value As String)
+If mStopLossOrderId <> Value Then setDirty
+mStopLossOrderId = Value
 End Property
 
-Public Property Get StopOrderId() As String
-StopOrderId = mStopOrderId
+Public Property Get StopLossOrderId() As String
+StopLossOrderId = mStopLossOrderId
 End Property
 
-Public Property Let StopReason(ByVal value As String)
-If mStopReason <> value Then setDirty
-mStopReason = value
+Public Property Let StopReason(ByVal Value As String)
+If mStopReason <> Value Then setDirty
+mStopReason = Value
 End Property
 
 Public Property Get StopReason() As String
 StopReason = mStopReason
 End Property
 
-Public Property Let TargetOrderId(ByVal value As String)
-If mTargetOrderId <> value Then setDirty
-mTargetOrderId = value
+Public Property Let TargetOrderId(ByVal Value As String)
+If mTargetOrderId <> Value Then setDirty
+mTargetOrderId = Value
 End Property
 
 Public Property Get TargetOrderId() As String
 TargetOrderId = mTargetOrderId
 End Property
 
-Public Property Let TargetReason(ByVal value As String)
-If mTargetReason <> value Then setDirty
-mTargetReason = value
+Public Property Let TargetReason(ByVal Value As String)
+If mTargetReason <> Value Then setDirty
+mTargetReason = Value
 End Property
 
 Public Property Get TargetReason() As String
 TargetReason = mTargetReason
-End Property
-
-Public Property Let TickerKey(ByVal value As String)
-If mTickerKey <> value Then setDirty
-mTickerKey = value
-End Property
-
-Public Property Get TickerKey() As String
-TickerKey = mTickerKey
-End Property
-
-Public Property Let WorkspaceName(ByVal value As String)
-If mWorkspaceName <> value Then setDirty
-mWorkspaceName = value
-End Property
-
-Public Property Get WorkspaceName() As String
-WorkspaceName = mWorkspaceName
 End Property
 
 '@================================================================================
@@ -343,6 +312,12 @@ jb.EncodeValue mCancelTime
 jb.EncodeName "CloseoutOrderId"
 jb.EncodeValue mCloseoutOrderId
 
+jb.EncodeName "ContextName"
+jb.EncodeValue mContextName
+
+jb.EncodeName "ContextsName"
+jb.EncodeValue mContextsName
+
 jb.EncodeName "CreationTime"
 jb.EncodeValue mCreationTime
 
@@ -355,9 +330,6 @@ jb.EncodeValue mCumSellPrice
 jb.EncodeName "Description"
 jb.EncodeValue mDescription
 
-jb.EncodeName "DrawdownNotificationThreshold"
-jb.EncodeValue mDrawdownNotificationThreshold
-
 jb.EncodeName "EntryOrderId"
 jb.EncodeValue mEntryOrderId
 
@@ -367,17 +339,11 @@ jb.EncodeValue mEntryReason
 jb.EncodeName "Key"
 jb.EncodeValue mKey
 
-jb.EncodeName "LossNotificationThreshold"
-jb.EncodeValue mLossNotificationThreshold
-
-jb.EncodeName "MaxProfit"
-jb.EncodeValue mMaxProfit
+jb.EncodeName "ContextsName"
+jb.EncodeValue mContextsName
 
 jb.EncodeName "PreventUnprotectedPosition"
 jb.EncodeValue mPreventUnprotectedPosition
-
-jb.EncodeName "ProfitNotificationThreshold"
-jb.EncodeValue mProfitNotificationThreshold
 
 jb.EncodeName "Size"
 jb.EncodeValue mSize
@@ -385,8 +351,8 @@ jb.EncodeValue mSize
 jb.EncodeName "State"
 jb.EncodeValue mState
 
-jb.EncodeName "StopOrderId"
-jb.EncodeValue mStopOrderId
+jb.EncodeName "StopLossOrderId"
+jb.EncodeValue mStopLossOrderId
 
 jb.EncodeName "StopReason"
 jb.EncodeValue mStopReason
@@ -397,11 +363,8 @@ jb.EncodeValue mTargetOrderId
 jb.EncodeName "TargetReason"
 jb.EncodeValue mTargetReason
 
-jb.EncodeName "TickerKey"
-jb.EncodeValue mTickerKey
-
-jb.EncodeName "WorkspaceName"
-jb.EncodeValue mWorkspaceName
+jb.EncodeName "GroupName"
+jb.EncodeValue mGroupName
 
 jb.EndObject
 

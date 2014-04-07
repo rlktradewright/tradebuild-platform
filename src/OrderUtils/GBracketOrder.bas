@@ -70,6 +70,9 @@ Public Enum OpActions
     ' This Action cancels a previously set timeout.
     ActCancelTimeout
 
+    ' This Action logs the state transition.
+    ActLog
+
 End Enum
 
 Public Enum OpConditions
@@ -215,11 +218,124 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function gBracketOrderStatesToString(ByVal pState As BracketOrderStates) As String
+If pState = SpecialStates.StateError Then
+    gBracketOrderStatesToString = "$ERROR$"
+    Exit Function
+End If
+Select Case pState
+Case BracketOrderStateCreated
+    gBracketOrderStatesToString = "Created"
+Case BracketOrderStateSubmitted
+    gBracketOrderStatesToString = "Submitted"
+Case BracketOrderStateCancelling
+    gBracketOrderStatesToString = "Cancelling"
+Case BracketOrderStateClosingOut
+    gBracketOrderStatesToString = "Closing out"
+Case BracketOrderStateClosed
+    gBracketOrderStatesToString = "Closed"
+Case BracketOrderStateAwaitingOtherOrderCancel
+    gBracketOrderStatesToString = "Awaiting other order cancel"
+Case Else
+    AssertArgument False, "Invalid state"
+End Select
+End Function
+
 Public Function gNextApplicationIndex() As Long
 Static lNextApplicationIndex As Long
 
 gNextApplicationIndex = lNextApplicationIndex
 lNextApplicationIndex = lNextApplicationIndex + 1
+End Function
+
+Public Function gOpActionsToString(ByVal pAction As OpActions) As String
+If pAction = SpecialActions.NoAction Then
+    gOpActionsToString = "None"
+    Exit Function
+End If
+
+Select Case pAction
+Case ActPlaceOrders
+    gOpActionsToString = "Place orders"
+Case ActCancelOrders
+    gOpActionsToString = "Cancel orders"
+Case ActCancelStopOrder
+    gOpActionsToString = "Cancel stop-loss order"
+Case ActCancelTargetOrder
+    gOpActionsToString = "Cancel target order"
+Case ActResubmitStopOrder
+    gOpActionsToString = "Resubmit stop-loss order"
+Case ActResubmitTargetOrder
+    gOpActionsToString = "Resubmit target order"
+Case ActResubmitStopAndTargetOrders
+    gOpActionsToString = "Resubmit stop-loss and target orders"
+Case ActPlaceCloseoutOrder
+    gOpActionsToString = "Place closeout order"
+Case ActAlarm
+    gOpActionsToString = "Invoke alarm"
+Case ActCompletionActions
+    gOpActionsToString = "Do completion actions"
+Case ActSetTimeout
+    gOpActionsToString = "Set timeout"
+Case ActCancelTimeout
+    gOpActionsToString = "Cancel timeout"
+Case ActLog
+    gOpActionsToString = "Log"
+Case Else
+    AssertArgument False, "Invalid action " & CStr(pAction)
+End Select
+End Function
+
+Public Function gOpConditionsToString(ByVal pCondition As OpConditions) As String
+If pCondition = SpecialConditions.NoConditions Then
+    gOpConditionsToString = "None"
+    Exit Function
+End If
+
+If pCondition = SpecialConditions.AllConditions Then
+    gOpConditionsToString = "None"
+    Exit Function
+End If
+
+Dim s As String
+If pCondition And CondNoFillCancellation Then s = "{No-fill cancellation} "
+If pCondition And CondStopOrderCancelled Then s = s & "{Stop-loss order cancelled} "
+If pCondition And CondTargetOrderCancelled Then s = s & "{Target order cancelled} "
+If pCondition And CondStopOrderExists Then s = s & "{Stop-loss order exists} "
+If pCondition And CondTargetOrderExists Then s = s & "{Target order exists} "
+If pCondition And CondSizeNonZero Then s = s & "{Size non-zero} "
+If pCondition And CondProtected Then s = s & "{Protected} "
+
+gOpConditionsToString = s
+End Function
+
+Public Function gOpStimuliToString(ByVal pStimulus As OpStimuli) As String
+Select Case pStimulus
+Case StimExecute
+    gOpStimuliToString = "Execute"
+Case StimCancelIfNoFill
+    gOpStimuliToString = "Cancel if no fill"
+Case StimCancelEvenIfFill
+    gOpStimuliToString = "Cancel even if filled"
+Case StimCloseout
+    gOpStimuliToString = "Closeout"
+Case StimAllOrdersComplete
+    gOpStimuliToString = "All orders complete"
+Case StimEntryOrderCancelled
+    gOpStimuliToString = "Entry order cancelled"
+Case StimStopOrderCancelled
+    gOpStimuliToString = "Stop-loss order cancelled"
+Case StimCloseoutOrderCancelled
+    gOpStimuliToString = "Closeout order cancelled"
+Case StimTargetOrderCancelled
+    gOpStimuliToString = "Target order cancelled"
+Case StimEntryOrderFill
+    gOpStimuliToString = "Entry order fill"
+Case StimTimeoutExpired
+    gOpStimuliToString = "Timeout expired"
+Case Else
+    AssertArgument False, "Invalid stimulus"
+End Select
 End Function
 
 '@================================================================================
@@ -236,48 +352,48 @@ Private Sub buildStateTable()
 ' fills have occurred. Since the orders have not yet been placed, we
 ' merely cancel the orders. do any tidying up and set the state to closed.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCreated, _
+            BracketOrderStates.BracketOrderStateCreated, _
             OpStimuli.StimCancelIfNoFill, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosed, _
+            BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActCancelOrders, OpActions.ActCompletionActions
             
 ' The application requests that the bracket order be cancelled even if
 ' fills have occurred. Since the orders have not yet been placed, we
-' merely cancel the BracketOrderStateCodesorders. do any tidying up and set the state to closed.
+' merely cancel the BracketOrderStatesorders. do any tidying up and set the state to closed.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCreated, _
+            BracketOrderStates.BracketOrderStateCreated, _
             OpStimuli.StimCancelEvenIfFill, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosed, _
+            BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActCancelOrders, OpActions.ActCompletionActions
             
 ' The application requests that the bracket order be executed, and it is not
 ' protected. We do that and go to submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCreated, _
+            BracketOrderStates.BracketOrderStateCreated, _
             OpStimuli.StimExecute, _
             SpecialConditions.NoConditions, _
             OpConditions.CondProtected, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpActions.ActPlaceOrders
 
 ' The application requests that the bracket order be executed: it is
 ' protected and there is a stop order. We do that and go to submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCreated, _
+            BracketOrderStates.BracketOrderStateCreated, _
             OpStimuli.StimExecute, _
             OpConditions.CondProtected Or OpConditions.CondStopOrderExists, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpActions.ActPlaceOrders
 
 ' The application requests that the bracket order be executed: it is
 ' protected and there is NO stop order. This is a programming error!
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCreated, _
+            BracketOrderStates.BracketOrderStateCreated, _
             OpStimuli.StimExecute, _
             OpConditions.CondProtected, _
             OpConditions.CondStopOrderExists, _
@@ -291,50 +407,50 @@ mTableBuilder.AddStateTableEntry _
 
 ' TWS tells us that the entry order has been filled. Nothing to do here.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimEntryOrderFill, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted
+            BracketOrderStates.BracketOrderStateSubmitted
 
 ' All orders have been completed, so we set the state to closed and do any
 ' tidying up.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimAllOrdersComplete, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosed, _
+            BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActCompletionActions
 
 ' The application requests that the bracket order be cancelled provided no fills
 ' have occurred. But a fill has already occurred, so we do nothing.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimCancelIfNoFill, _
             OpConditions.CondSizeNonZero, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted
+            BracketOrderStates.BracketOrderStateSubmitted
 
 ' The application requests that the bracket order be cancelled provided no fills
 ' have occurred. No fills have already occurred, so we cancel all the orders
 ' and enter the cancelling state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimCancelIfNoFill, _
             SpecialConditions.NoConditions, _
             OpConditions.CondSizeNonZero, _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelOrders
 
 ' The application requests that the bracket order be cancelled even if fills
 ' have occurred. We cancel all the orders and enter the cancelling state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimCancelEvenIfFill, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelOrders
 
 ' We are notified that the entry order has been cancelled (for example it
@@ -342,11 +458,11 @@ mTableBuilder.AddStateTableEntry _
 ' There has been no fill, so we cancel the stop and target orders (not
 ' really necessary, since TWS should do this, but just in case...).
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimEntryOrderCancelled, _
             SpecialConditions.NoConditions, _
             OpConditions.CondSizeNonZero, _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelStopOrder, OpActions.ActCancelTargetOrder
 
 ' We are notified that the entry order has been cancelled (for example the
@@ -358,11 +474,11 @@ mTableBuilder.AddStateTableEntry _
 ' unprotected position, so as this is a protected bracket order, go into
 ' closing out state to negate the unprotected position.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimEntryOrderCancelled, _
             OpConditions.CondSizeNonZero Or OpConditions.CondProtected, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActCancelStopOrder, OpActions.ActCancelTargetOrder
 
 ' We are notified that the entry order has been cancelled (for example the
@@ -371,14 +487,14 @@ mTableBuilder.AddStateTableEntry _
 ' There has been a fill. The cancellation will have caused the stop and/or
 ' target orders to be cancelled as well (though we haven't been notified of
 ' this yet), but we cancel them anyway just in case. We'll be left with an
-' unprotected position, but since this is NOT a protected bracket order
-' plex, go into Cancelling state.
+' unprotected position, but since this is NOT a protected bracket order,
+' go into Cancelling state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimEntryOrderCancelled, _
             OpConditions.CondSizeNonZero, _
             OpConditions.CondProtected, _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelStopOrder, OpActions.ActCancelTargetOrder
 
 ' We are notified that the stop order has been cancelled, and there is no target
@@ -388,11 +504,11 @@ mTableBuilder.AddStateTableEntry _
 ' because the entry order could be filled before being cancelled, and closing out
 ' will prevent an unprotected position.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimStopOrderCancelled, _
             OpConditions.CondProtected, _
             OpConditions.CondTargetOrderExists, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActCancelOrders
 
 ' We are notified that the stop order has been cancelled, and there is no target
@@ -400,11 +516,11 @@ mTableBuilder.AddStateTableEntry _
 ' has cancelled it at TWS. We can't tell which of these is the case, so we
 ' cancel all orders and, as this is NOT a protected bracket order, go into cancelling state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimStopOrderCancelled, _
             SpecialConditions.NoConditions, _
             OpConditions.CondTargetOrderExists Or OpConditions.CondProtected, _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelOrders
 
 ' We are notified that the stop order has been cancelled, and there IS a target
@@ -413,35 +529,25 @@ mTableBuilder.AddStateTableEntry _
 ' tell which of these is the case, so, as this is a protected bracket order, we enter
 ' the 'awaiting other order cancel' state and set a timeout.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimStopOrderCancelled, _
             OpConditions.CondTargetOrderExists Or OpConditions.CondProtected, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpActions.ActSetTimeout
 
 ' We are notified that the stop order has been cancelled, and there IS a target
 ' order. This could be because it has been rejected by TWS, or because the user
 ' has cancelled it at TWS, or because the target order has been filled. We can't
 ' tell which of these is the case, but, as this is NOT a protected bracket order, we
-' don't care so we cancel the target order and enter the cancelling state.
+' don't care so we do nothing and enter the cancelling state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimStopOrderCancelled, _
             OpConditions.CondTargetOrderExists, _
             OpConditions.CondProtected, _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
-            OpActions.ActCancelTargetOrder
-
-' We are notified that the target order has been cancelled, and this is NOT a
-' protected bracket order. Cancel all orders and go into cancelling state.
-mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
-            OpStimuli.StimTargetOrderCancelled, _
-            SpecialConditions.NoConditions, _
-            OpConditions.CondProtected, _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
-            OpActions.ActCancelOrders
+            BracketOrderStates.BracketOrderStateCancelling, _
+            SpecialActions.NoAction
 
 ' We are notified that the target order has been cancelled, and there IS a
 ' stop order. This could be because it has been rejected by TWS, or because the
@@ -450,21 +556,34 @@ mTableBuilder.AddStateTableEntry _
 ' a protected bracket order, we enter the 'awaiting other order cancel' state
 ' and set a timeout.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimTargetOrderCancelled, _
             OpConditions.CondStopOrderExists Or OpConditions.CondProtected, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpActions.ActSetTimeout
+
+' We are notified that the target order has been cancelled, and there IS a stop
+' order. This could be because it has been rejected by TWS, or because the user
+' has cancelled it at TWS, or because the stop order has been filled. We can't
+' tell which of these is the case, but, as this is NOT a protected bracket order, we
+' don't care so we do nothing and enter the cancelling state.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateSubmitted, _
+            OpStimuli.StimTargetOrderCancelled, _
+            SpecialConditions.NoConditions, _
+            OpConditions.CondProtected, _
+            BracketOrderStates.BracketOrderStateCancelling, _
+            SpecialActions.NoAction
 
 ' The application has requested that the bracket order be closed out. So cancel any
 ' outstanding orders and go to closing out state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimCloseout, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActCancelOrders
             
 '=======================================================================
@@ -475,58 +594,58 @@ mTableBuilder.AddStateTableEntry _
 ' there have been no fills. Since it is already being cancelled, there is
 ' nothing to do.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimCancelIfNoFill, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateCancelling
+            BracketOrderStates.BracketOrderStateCancelling
 
 ' The application has requested that the bracket order be cancelled, even if
 ' there have already been fills. Since it is already being cancelled, there
 ' is nothing to do.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimCancelEvenIfFill, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateCancelling
+            BracketOrderStates.BracketOrderStateCancelling
 
 ' All orders have now been completed, so do any tidying up and go to the
 ' closed state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimAllOrdersComplete, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosed, _
+            BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActCompletionActions
 
 ' We are notified that the entry order has been cancelled. Now we just need
 ' to wait for any other orders to be cancelled.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateCancelling
+            BracketOrderStates.BracketOrderStateCancelling
 
 ' We are notified that the stop order has been cancelled. Now we just need
 ' to wait for any other orders to be cancelled.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimStopOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateCancelling
+            BracketOrderStates.BracketOrderStateCancelling
 
 ' We are notified that the target order has been cancelled. Now we just need
 ' to wait for any other orders to be cancelled.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimTargetOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateCancelling
+            BracketOrderStates.BracketOrderStateCancelling
 
 ' The entry order has been unexpectedly filled (this occurred between the
 ' time that we requested TWS to cancel the order and TWS's cancellation
@@ -535,11 +654,11 @@ mTableBuilder.AddStateTableEntry _
 ' been some fills, we just continue with the cancellation by re-requesting
 ' cancellation of any outstanding orders.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             SpecialConditions.NoConditions, _
             OpConditions.CondNoFillCancellation, _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelOrders
 
 ' The entry order has been unexpectedly filled (this occurred between the
@@ -549,11 +668,11 @@ mTableBuilder.AddStateTableEntry _
 ' been no fills. There now has been a fill. There are no stop or target orders,
 ' so we just return to the submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation, _
             OpConditions.CondStopOrderExists + OpConditions.CondTargetOrderExists, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted
+            BracketOrderStates.BracketOrderStateSubmitted
 
 ' The entry order has been unexpectedly filled (this occurred between the
 ' time that we requested TWS to cancel the order and TWS's cancellation
@@ -563,11 +682,11 @@ mTableBuilder.AddStateTableEntry _
 ' order, and the stop order has not been cancelled, so we just return to the
 ' submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderExists, _
             OpConditions.CondStopOrderCancelled + OpConditions.CondTargetOrderExists, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted
+            BracketOrderStates.BracketOrderStateSubmitted
 
 ' The entry order has been unexpectedly filled (this occurred between the
 ' time that we requested TWS to cancel the order and TWS's cancellation
@@ -577,11 +696,11 @@ mTableBuilder.AddStateTableEntry _
 ' order, and the stop order has been cancelled, so we resubmit the stop order
 ' and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderCancelled, _
             OpConditions.CondTargetOrderExists, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpActions.ActResubmitStopOrder
 
 ' The entry order has been unexpectedly filled (this occurred between the
@@ -592,11 +711,11 @@ mTableBuilder.AddStateTableEntry _
 ' order, and the tartget order has not been cancelled, so we return to the
 ' submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondTargetOrderExists, _
             OpConditions.CondTargetOrderCancelled + OpConditions.CondStopOrderExists, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted
+            BracketOrderStates.BracketOrderStateSubmitted
 
 ' The entry order has been unexpectedly filled (this occurred between the
 ' time that we requested TWS to cancel the order and TWS's cancellation
@@ -605,11 +724,11 @@ mTableBuilder.AddStateTableEntry _
 ' been no fills. There now has been a fill. There is a stop order and a target
 ' order, but neither has been cancelled, so we return to the submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderExists + OpConditions.CondTargetOrderExists, _
             OpConditions.CondStopOrderCancelled + OpConditions.CondTargetOrderCancelled, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted
+            BracketOrderStates.BracketOrderStateSubmitted
 
 ' The entry order has been unexpectedly filled (this occurred between the
 ' time that we requested TWS to cancel the order and TWS's cancellation
@@ -619,11 +738,11 @@ mTableBuilder.AddStateTableEntry _
 ' order, and the stop order has been cancelled but not the target order, so we
 ' resubmit the stop order and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderCancelled + OpConditions.CondTargetOrderExists, _
             OpConditions.CondTargetOrderCancelled, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpActions.ActResubmitStopOrder
 
 ' The entry order has been unexpectedly filled (this occurred between the
@@ -634,11 +753,11 @@ mTableBuilder.AddStateTableEntry _
 ' order, and the target order has been cancelled, so we resubmit the target
 ' order and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondTargetOrderCancelled, _
             OpConditions.CondStopOrderExists, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpActions.ActResubmitTargetOrder
 
 ' The entry order has been unexpectedly filled (this occurred between the
@@ -649,11 +768,11 @@ mTableBuilder.AddStateTableEntry _
 ' order, and the target order has been cancelled but not the stop order, so we
 ' resubmit the target order and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderExists + OpConditions.CondTargetOrderCancelled, _
             OpConditions.CondStopOrderCancelled, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpActions.ActResubmitTargetOrder
 
 ' The entry order has been unexpectedly filled (this occurred between the
@@ -664,14 +783,31 @@ mTableBuilder.AddStateTableEntry _
 ' order, and both have been cancelled, so we resubmit both the stop order and
 ' the target order, and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateCancelling, _
+            BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderCancelled + OpConditions.CondTargetOrderCancelled, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateSubmitted, _
+            BracketOrderStates.BracketOrderStateSubmitted, _
             OpActions.ActResubmitStopAndTargetOrders
             
             
+'=======================================================================
+'                       State:      BracketOrderStateClosed
+'=======================================================================
+
+' The bracket order has been completed but something unexpected happens. Just
+' swallow it! An example of this is when an order has been rejected by TWS
+' but not removed by the user: a cancellation notification may arrive up
+' to several hours later (possibly when the market closes?).
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosed, _
+            SpecialStimuli.StimulusAll, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
+            BracketOrderStates.BracketOrderStateClosed, _
+            OpActions.ActLog
+            
+
 '=======================================================================
 '                       State:      BracketOrderStateAwaitingOtherOrderCancel
 '=======================================================================
@@ -680,48 +816,48 @@ mTableBuilder.AddStateTableEntry _
 ' a fill notification has arrived, and we take the view that no such will
 ' arrive. Closeout the bracket order.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpStimuli.StimTimeoutExpired, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActPlaceCloseoutOrder
 
 ' The application has requested that the bracket order be closed out. Place the
 ' closeut order and go to closing out state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpStimuli.StimCloseout, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
-            OpActions.ActCancelOrders
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpActions.ActPlaceCloseoutOrder
             
 ' A stop order cancellation has occurred. Enter closing out state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpStimuli.StimStopOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             SpecialActions.NoAction
 
 ' A target order cancellation has occurred. Enter closing out state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpStimuli.StimTargetOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             SpecialActions.NoAction
 
 ' All orders have completed. We are done, so go to the closed state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpStimuli.StimAllOrdersComplete, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosed, _
+            BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActCompletionActions
 
 
@@ -731,78 +867,78 @@ mTableBuilder.AddStateTableEntry _
 
 ' A state timeout has occurred. This can simply be ignored.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpStimuli.StimTimeoutExpired, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActPlaceCloseoutOrder
 
 ' The entry order has been cancelled, nothing for us to do.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimEntryOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut
+            BracketOrderStates.BracketOrderStateClosingOut
 
 ' The entry order has been unexpectedly filled (this occurred between the
 ' time that we requested TWS to cancel the orders and TWS's cancellation
 ' request arriving at the IB servers or the exchange). There is nothing for
 ' us to do.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimEntryOrderFill, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut
+            BracketOrderStates.BracketOrderStateClosingOut
 
 ' The stop order has been cancelled, nothing for us to do.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimStopOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut
+            BracketOrderStates.BracketOrderStateClosingOut
 
 ' The target order has been cancelled, nothing for us to do.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimTargetOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut
+            BracketOrderStates.BracketOrderStateClosingOut
 
 ' All orders have completed, and we are left with a non-zero Size. So submit
 ' a closeout order to reduce the Size to zero. Stay in this state awaiting the
 ' next 'all orders complete' stimulus.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimAllOrdersComplete, _
             OpConditions.CondSizeNonZero, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActPlaceCloseoutOrder
 
 ' All orders have completed, and we are left with a zero Size. We are done,
 ' so go to the closed state.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimAllOrdersComplete, _
             SpecialConditions.NoConditions, _
             OpConditions.CondSizeNonZero, _
-            BracketOrderStateCodes.BracketOrderStateClosed, _
+            BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActCompletionActions
 
 ' The closeout order has been cancelled (presumably it has been rejected
 ' by TWS). This is a serious situation since we are left with an unprotected
 ' position, so raise an alarm.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStateCodes.BracketOrderStateClosingOut, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimCloseoutOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStateCodes.BracketOrderStateClosed, _
+            BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActAlarm, OpActions.ActCompletionActions
 
 mTableBuilder.StateTableComplete

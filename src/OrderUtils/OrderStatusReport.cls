@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "OrderStatusReport"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -23,6 +23,8 @@ Option Explicit
 '@================================================================================
 
 Implements IOrderStatusReport
+Implements JSONable
+Implements Stringable
 
 '@================================================================================
 ' Events
@@ -71,6 +73,22 @@ IOrderStatusReport_Status = mStatus
 End Property
 
 '@================================================================================
+' JSONable Interface Members
+'@================================================================================
+
+Private Function JSONable_ToJSON() As String
+JSONable_ToJSON = ToJSON
+End Function
+
+'@================================================================================
+' Stringable Interface Members
+'@================================================================================
+
+Private Function Stringable_ToString() As String
+Stringable_ToString = ToJSON
+End Function
+
+'@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
 
@@ -78,12 +96,24 @@ End Property
 ' Properties
 '@================================================================================
 
+Public Property Let BrokerId(ByVal Value As String)
+mBrokerId = Value
+End Property
+
 Public Property Get BrokerId() As String
 BrokerId = mBrokerId
 End Property
 
+Public Property Let OrderId(ByVal Value As String)
+mOrderId = Value
+End Property
+
 Public Property Get OrderId() As String
 OrderId = mOrderId
+End Property
+
+Public Property Let Status(ByVal Value As OrderStatuses)
+mStatus = Value
 End Property
 
 Public Property Get Status() As OrderStatuses
@@ -94,14 +124,36 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
-                ByVal pOrderId As String, _
-                ByVal pBrokerId As String, _
-                ByVal pStatus As OrderStatuses)
-mOrderId = pOrderId
-mBrokerId = pBrokerId
-mStatus = pStatus
-End Sub
+Public Function ToJSON() As String
+Dim jb As JSONBuilder
+Const ProcName As String = "ToJSON"
+On Error GoTo Err
+
+Set jb = New JSONBuilder
+
+jb.BeginObject
+
+jb.EncodeName "$ProgID"
+jb.EncodeValue ProjectName & "." & ModuleName
+
+jb.EncodeName "BrokerId"
+jb.EncodeValue mBrokerId
+
+jb.EncodeName "OrderId"
+jb.EncodeValue mOrderId
+
+jb.EncodeName "Status"
+jb.EncodeValue mStatus
+
+jb.EndObject
+
+ToJSON = jb.JSONString
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions

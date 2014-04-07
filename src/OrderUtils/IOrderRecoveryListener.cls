@@ -64,6 +64,18 @@ Private Const ModuleName                            As String = "IOrderRecoveryL
 ' Methods
 '@================================================================================
 
+Public Sub EndExecutionReports()
+End Sub
+
+Public Sub EndOrderReports()
+End Sub
+
+Public Sub NotifyExecutionReport(ByVal pExecutionReport As IExecutionReport)
+End Sub
+
+Public Sub NotifyOrderReport(ByVal pOrderReport As IOrderReport)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

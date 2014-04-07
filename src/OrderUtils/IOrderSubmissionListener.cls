@@ -64,6 +64,27 @@ Private Const ModuleName                            As String = "IOrderSubmissio
 ' Methods
 '@================================================================================
 
+Public Sub NotifyError( _
+                ByVal pOrderId As String, _
+                ByVal pErrorCode As Long, _
+                ByVal pErrorMsg As String)
+End Sub
+
+Public Sub NotifyExecutionReport( _
+                ByVal pExecutionReport As IExecutionReport)
+
+End Sub
+
+Public Sub NotifyOrderReport( _
+                ByVal pOrderReport As IOrderReport)
+
+End Sub
+
+Public Sub NotifyOrderStatusReport( _
+                ByVal pOrderStatusReport As IOrderStatusReport)
+
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

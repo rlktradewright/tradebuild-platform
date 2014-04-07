@@ -64,6 +64,9 @@ Private Const ModuleName                            As String = "IRecoverableObj
 ' Methods
 '@================================================================================
 
+Public Sub NotifyRecoveryDataChanged(ev As RecoveryDataChangedEventData)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

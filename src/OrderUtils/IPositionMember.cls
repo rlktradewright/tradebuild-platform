@@ -60,6 +60,9 @@ Private Const ModuleName                            As String = "IPositionMember
 ' Properties
 '@================================================================================
 
+Public Property Get PositionManagerName() As String
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

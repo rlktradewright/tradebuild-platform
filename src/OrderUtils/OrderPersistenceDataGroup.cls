@@ -48,8 +48,6 @@ Private Const ModuleName                            As String = "OrderPersistenc
 
 Private mOrderPersistenceItems                      As EnumerableCollection
 
-Private mPositionManagerItem                        As OrderPersistenceItem
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -70,7 +68,7 @@ End Sub
 ' Enumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As TWUtilities30.Enumerator
+Private Property Get Enumerable_Enumerator() As Enumerator
 Const ProcName As String = "Enumerable_Enumerator"
 On Error GoTo Err
 
@@ -79,7 +77,7 @@ Set Enumerable_Enumerator = mOrderPersistenceItems.Enumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function Enumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
@@ -102,7 +100,7 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Get Enumerator() As TWUtilities30.Enumerator
+Public Property Get Enumerator() As Enumerator
 Const ProcName As String = "Enumerator"
 
 On Error GoTo Err
@@ -112,27 +110,23 @@ Set Enumerator = mOrderPersistenceItems.Enumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub Add(ByRef pItem As OrderPersistenceItem)
+Friend Sub Add(ByVal pItem As OrderPersistenceItem)
 Const ProcName As String = "Add"
 On Error GoTo Err
-If TypeOf pItem.Data Is PositionManagerSummary Then
-    'we only want to keep the latest of these
-    Set mPositionManagerItem = pItem
-Else
-    mOrderPersistenceItems.Add pItem
-End If
+
+mOrderPersistenceItems.Add pItem
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

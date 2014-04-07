@@ -46,17 +46,22 @@ Private Const ModuleName                            As String = "PositionManager
 ' Member variables
 '@================================================================================
 
-Private mCumBuyPrice As Double
-Private mCumSellPrice As Double
+Private mCumBuyPrice                                As Double
+Private mCumSellPrice                               As Double
+                
+Private mProfitLastFlat                             As Currency
 
-Private mProfitLastFlat As Currency
+Private mProfitLastTrade                            As Currency
+Private mDrawdownLastTrade                          As Currency
 
-Private mProfitLastTrade As Currency
-Private mDrawdownLastTrade As Currency
+Private mTradingSessionStartTime                    As Date
 
-Private mTradingSessionStartTime As Date
+Private mName                                       As String
+Private mGroupName                                  As String
 
-Private mWorkspaceName As String
+Private mContract                                   As IContract
+
+Private mIsSimulated                                As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -74,76 +79,92 @@ End Function
 ' XXXX Event Handlers
 '@================================================================================
 
-Public Property Let ContractSpecSummary(ByVal value As ContractSpecSummary)
-Set mContractSpecSummary = value
+Public Property Let Contract(ByVal Value As IContract)
+Set mContract = Value
 End Property
 
-Public Property Get ContractSpecSummary() As ContractSpecSummary
-Set ContractSpecSummary = mContractSpecSummary
+Public Property Get Contract() As IContract
+Set Contract = mContract
 End Property
 
-Public Property Let CumBuyPrice(ByVal value As Double)
-mCumBuyPrice = value
+Public Property Let CumBuyPrice(ByVal Value As Double)
+mCumBuyPrice = Value
 End Property
 
 Public Property Get CumBuyPrice() As Double
 CumBuyPrice = mCumBuyPrice
 End Property
 
-Public Property Let CumSellPrice(ByVal value As Double)
-mCumSellPrice = value
+Public Property Let CumSellPrice(ByVal Value As Double)
+mCumSellPrice = Value
 End Property
 
 Public Property Get CumSellPrice() As Double
 CumSellPrice = mCumSellPrice
 End Property
 
-Public Property Let DrawdownLastTrade(ByVal value As Currency)
-mDrawdownLastTrade = value
+Public Property Let DrawdownLastTrade(ByVal Value As Currency)
+mDrawdownLastTrade = Value
 End Property
 
 Public Property Get DrawdownLastTrade() As Currency
 DrawdownLastTrade = mDrawdownLastTrade
 End Property
 
-Public Property Let ProfitIncrementTicks(ByVal value As Long)
-mProfitIncrementTicks = value
+Public Property Let GroupName(ByVal Value As String)
+mGroupName = Value
 End Property
 
-Public Property Get ProfitIncrementTicks() As Long
-ProfitIncrementTicks = mProfitIncrementTicks
+Public Property Get GroupName() As String
+GroupName = mGroupName
 End Property
 
-Public Property Let ProfitLastFlat(ByVal value As Currency)
-mProfitLastFlat = value
+Public Property Let IsSimulated(ByVal Value As Boolean)
+mIsSimulated = Value
+End Property
+
+Public Property Get IsSimulated() As Boolean
+IsSimulated = mIsSimulated
+End Property
+
+Public Property Let Name(ByVal Value As String)
+mName = Value
+End Property
+
+Public Property Get Name() As String
+Name = mName
+End Property
+
+'Public Property Let ProfitIncrementTicks(ByVal Value As Long)
+'mProfitIncrementTicks = Value
+'End Property
+'
+'Public Property Get ProfitIncrementTicks() As Long
+'ProfitIncrementTicks = mProfitIncrementTicks
+'End Property
+
+Public Property Let ProfitLastFlat(ByVal Value As Currency)
+mProfitLastFlat = Value
 End Property
 
 Public Property Get ProfitLastFlat() As Currency
 ProfitLastFlat = mProfitLastFlat
 End Property
 
-Public Property Let ProfitLastTrade(ByVal value As Currency)
-mProfitLastTrade = value
+Public Property Let ProfitLastTrade(ByVal Value As Currency)
+mProfitLastTrade = Value
 End Property
 
 Public Property Get ProfitLastTrade() As Currency
 ProfitLastTrade = mProfitLastTrade
 End Property
 
-Public Property Let TradingSessionStartTime(ByVal value As Date)
-mTradingSessionStartTime = value
+Public Property Let TradingSessionStartTime(ByVal Value As Date)
+mTradingSessionStartTime = Value
 End Property
 
 Public Property Get TradingSessionStartTime() As Date
 TradingSessionStartTime = mTradingSessionStartTime
-End Property
-
-Public Property Let WorkspaceName(ByVal value As String)
-mWorkspaceName = value
-End Property
-
-Public Property Get WorkspaceName() As String
-WorkspaceName = mWorkspaceName
 End Property
 
 '@================================================================================
@@ -166,11 +187,23 @@ jb.EncodeValue ProjectName & "." & ModuleName
 jb.EncodeName "TradingSessionStartTime"
 jb.EncodeValue mTradingSessionStartTime
 
+jb.EncodeName "Contract"
+jb.EncodeValue mContract
+
 jb.EncodeName "CumBuyPrice"
 jb.EncodeValue mCumBuyPrice
 
 jb.EncodeName "CumSellPrice"
 jb.EncodeValue mCumSellPrice
+
+jb.EncodeName "GroupName"
+jb.EncodeValue mGroupName
+
+jb.EncodeName "IsSimulated"
+jb.EncodeValue mIsSimulated
+
+jb.EncodeName "Name"
+jb.EncodeValue mName
 
 jb.EncodeName "ProfitLastFlat"
 jb.EncodeValue mProfitLastFlat
@@ -180,12 +213,6 @@ jb.EncodeValue mProfitLastTrade
 
 jb.EncodeName "DrawdownLastTrade"
 jb.EncodeValue mDrawdownLastTrade
-
-jb.EncodeName "ProfitIncrementTicks"
-jb.EncodeValue mProfitIncrementTicks
-
-jb.EncodeName "WorkspaceName"
-jb.EncodeValue mWorkspaceName
 
 jb.EndObject
 

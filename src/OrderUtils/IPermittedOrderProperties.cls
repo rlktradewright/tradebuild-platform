@@ -69,7 +69,7 @@ End Property
 Public Property Get PermittedOrderTypes() As OrderTypes
 End Property
 
-Public Property Get PermittedStopTriggerMethods() As StopTriggerMethods
+Public Property Get PermittedStopTriggerMethods() As OrderStopTriggerMethods
 End Property
 
 '@================================================================================
