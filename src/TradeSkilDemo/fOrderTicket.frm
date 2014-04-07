@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#250.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#188.0#0"; "TradingUI27.ocx"
 Begin VB.Form fOrderTicket 
    BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6135
@@ -10,7 +10,7 @@ Begin VB.Form fOrderTicket
    ScaleHeight     =   6135
    ScaleWidth      =   8745
    StartUpPosition =   3  'Windows Default
-   Begin TradeBuildUI26.OrderTicket OrderTicket1 
+   Begin TradingUI27.OrderTicket OrderTicket1 
       Height          =   6135
       Left            =   0
       TabIndex        =   0
@@ -54,7 +54,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Private Const ModuleName                As String = "fOrderTicket"
+Private Const ModuleName                        As String = "fOrderTicket"
 
 '================================================================================
 ' Enums
@@ -68,6 +68,8 @@ Private Const ModuleName                As String = "fOrderTicket"
 ' Member variables
 '================================================================================
 
+Private mAppInstanceConfig                      As ConfigurationSection
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -76,25 +78,8 @@ Private Sub Form_Initialize()
 InitCommonControls
 End Sub
 
-Private Sub Form_Load()
-
-Const ProcName As String = "Form_Load"
-
-On Error GoTo Err
-
-Me.left = CLng(gAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
-Me.Top = CLng(gAppInstanceConfig.GetSetting(ConfigSettingOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
 Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
-
 On Error GoTo Err
 
 updateSettings
@@ -107,10 +92,9 @@ End Sub
 
 Private Sub Form_Unload(cancel As Integer)
 Const ProcName As String = "Form_Unload"
-
 On Error GoTo Err
 
-OrderTicket1.Finish
+OrderTicket1.Clear
 
 Exit Sub
 
@@ -124,7 +108,6 @@ End Sub
 
 Private Sub OrderTicket1_CaptionChanged(ByVal caption As String)
 Const ProcName As String = "OrderTicket1_CaptionChanged"
-
 On Error GoTo Err
 
 Me.caption = caption
@@ -141,34 +124,52 @@ End Sub
 
 Public Property Let Ticker(ByVal value As Ticker)
 Const ProcName As String = "Ticker"
-
 On Error GoTo Err
 
-OrderTicket1.Ticker = value
+If value.IsTickReplay Then
+    OrderTicket1.Clear
+    Exit Property
+End If
+
+If value.State <> MarketDataSourceStateRunning Then Exit Property
+OrderTicket1.SetOrderContexts value.PositionManager.OrderContexts.DefaultOrderContext, value.PositionManagerSimulated.OrderContexts.DefaultOrderContext
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Sub showOrderPlex( _
-                ByVal value As OrderPlex, _
-                ByVal selectedOrderNumber As Long)
-Const ProcName As String = "showOrderPlex"
-
+Friend Sub Initialise(ByVal pAppInstanceConfig As ConfigurationSection)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-OrderTicket1.showOrderPlex value, selectedOrderNumber
+Set mAppInstanceConfig = pAppInstanceConfig
+Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
+Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub ShowBracketOrder( _
+                ByVal value As IBracketOrder, _
+                ByVal selectedOrderNumber As Long)
+Const ProcName As String = "ShowBracketOrder"
+On Error GoTo Err
+
+OrderTicket1.ShowBracketOrder value, selectedOrderNumber
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -180,15 +181,15 @@ Const ProcName As String = "updateSettings"
 
 On Error GoTo Err
 
-If Not gAppInstanceConfig Is Nothing Then
-    gAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionOrderTicket
-    gAppInstanceConfig.SetSetting ConfigSettingOrderTicketLeft, Me.left / Screen.TwipsPerPixelX
-    gAppInstanceConfig.SetSetting ConfigSettingOrderTicketTop, Me.Top / Screen.TwipsPerPixelY
+If Not mAppInstanceConfig Is Nothing Then
+    mAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionOrderTicket
+    mAppInstanceConfig.SetSetting ConfigSettingOrderTicketLeft, Me.left / Screen.TwipsPerPixelX
+    mAppInstanceConfig.SetSetting ConfigSettingOrderTicketTop, Me.Top / Screen.TwipsPerPixelY
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

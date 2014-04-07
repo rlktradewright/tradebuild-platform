@@ -18,29 +18,32 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "TradeSkilDemo26"
+Public Const ProjectName                            As String = "TradeSkilDemo27"
 Private Const ModuleName                            As String = "GMain"
 
 Public Const AppName                                As String = "TradeSkil Demo Edition"
 
-Public Const ConfigFileVersion                      As String = "1.2"
+Public Const ConfigFileVersion                      As String = "1.3"
 
 Public Const ConfigSectionApplication               As String = "Application"
 Public Const ConfigSectionChart                     As String = "Chart"
 Public Const ConfigSectionCharts                    As String = "Charts"
 Public Const ConfigSectionConfigEditor              As String = "ConfigEditor"
+Public Const ConfigSectionContract                  As String = "Contract"
 Public Const ConfigSectionDefaultStudyConfigs       As String = "DefaultStudyConfigs"
 Public Const ConfigSectionChartStyles               As String = "/ChartStyles"
+Public Const ConfigSectionHistoricCharts            As String = "HistoricCharts"
 Public Const ConfigSectionMainForm                  As String = "MainForm"
 Public Const ConfigSectionMultiChart                As String = "MultiChart"
 Public Const ConfigSectionOrderTicket               As String = "OrderTicket"
 Public Const ConfigSectionTickerGrid                As String = "TickerGrid"
 
-Public Const ConfigSettingHeight                    As String = ".Height"
-Public Const ConfigSettingLeft                      As String = ".Left"
-Public Const ConfigSettingTop                       As String = ".Top"
-Public Const ConfigSettingWidth                     As String = ".Width"
-Public Const ConfigSettingWindowstate               As String = ".Windowstate"
+Public Const ConfigSettingHistorical                As String = "&Historical"
+Public Const ConfigSettingHeight                    As String = "&Height"
+Public Const ConfigSettingLeft                      As String = "&Left"
+Public Const ConfigSettingTop                       As String = "&Top"
+Public Const ConfigSettingWidth                     As String = "&Width"
+Public Const ConfigSettingWindowstate               As String = "&Windowstate"
 
 Public Const ConfigSettingCurrentChartStyle         As String = "&CurrentChartStyle"
 Public Const ConfigSettingCurrentHistChartStyle     As String = "&CurrentHistChartStyle"
@@ -64,7 +67,10 @@ Public Const ConfigSettingOrderTicketTop            As String = ConfigSectionOrd
 
 Private Const DefaultAppInstanceConfigName          As String = "Default Config"
 
-Public Const InitialChartStyleName                  As String = "Application default"
+Public Const ChartStyleNameAppDefault               As String = "Application default"
+Public Const ChartStyleNameBlack                    As String = "Black"
+Public Const ChartStyleNameDarkBlueFade             As String = "Dark blue fade"
+Public Const ChartStyleNameGoldFade                 As String = "Gold fade"
 
 Public Const LB_SETHORZEXTENT                       As Long = &H194
 
@@ -87,15 +93,14 @@ Public Const WindowStateNormal                      As String = "Normal"
 
 Private mIsInDev                                    As Boolean
 
-Public gConfigStore                                  As ConfigurationStore
-Public gAppInstanceConfig                           As ConfigurationSection
-
-Private mStudyPickerForm                            As fStudyPicker
-Private mMainForm                                   As fTradeSkilDemo
+Public mConfigStore                                 As ConfigurationStore
+'Public gAppInstanceConfig                           As ConfigurationSection
 
 Private mEditConfig                                 As Boolean
 
 Private mFatalErrorHandler                          As FatalErrorHandler
+
+Private mMainForm                                   As fTradeSkilDemo
 
 '@================================================================================
 ' Class Event Handlers
@@ -131,7 +136,7 @@ Set gCommandLineParser = clp
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get gMainForm() As fTradeSkilDemo
@@ -141,38 +146,6 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Sub gHandleFatalError()
-On Error Resume Next    ' ignore any further errors that might arise
-
-' kill off any timers
-TerminateTWUtilities
-
-MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
-        "Please email the log file located at" & vbCrLf & vbCrLf & _
-        "     " & DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
-        "to support@tradewright.com", _
-        vbCritical, _
-        "Fatal error"
-
-' At this point, we don't know what state things are in, so it's not feasible to return to
-' the caller. All we can do is terminate abruptly.
-'
-' Note that normally one would use the End statement to terminate a VB6 program abruptly. But
-' the TWUtilities component interferes with the End statement's processing and may prevent
-' proper shutdown, so we use the TWUtilities component's EndProcess method instead.
-'
-' However if we are running in the development environment, then we call End because the
-' EndProcess method kills the entire development environment as well which can have undesirable
-' side effects if other components are also loaded.
-
-If mIsInDev Then
-    End
-Else
-    EndProcess
-End If
-
-End Sub
 
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
@@ -204,77 +177,153 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Function gLoadMainForm( _
+                ByVal pAppInstanceConfig As ConfigurationSection, _
+                Optional ByVal pPrevMainForm As fTradeSkilDemo, _
+                Optional ByVal pSplash As fSplash) As Boolean
+Const ProcName As String = "loadMainForm"
+On Error GoTo Err
+
+Dim lMainForm As New fTradeSkilDemo
+
+LogMessage "Configuring TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
+Dim lTradeBuildAPI As TradeBuildAPI
+Set lTradeBuildAPI = configureTradeBuild(mConfigStore, pAppInstanceConfig)
+
+If lTradeBuildAPI Is Nothing Then
+    LogMessage "Failed to configure TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
+    gLoadMainForm = False
+    Exit Function
+End If
+
+LogMessage "Successfully configured TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
+LogMessage "Loading main form for config: " & pAppInstanceConfig.InstanceQualifier
+
+lMainForm.Initialise lTradeBuildAPI, mConfigStore, pAppInstanceConfig, pSplash, pPrevMainForm
+
+LogMessage "Main form initialised successfully"
+
+Set mMainForm = lMainForm
+gLoadMainForm = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub gModelessMsgBox( _
                 ByVal prompt As String, _
                 ByVal buttons As MsgBoxStyles, _
                 Optional ByVal title As String)
 Const ProcName As String = "gModelessMsgBox"
-Dim lMsgBox As New fMsgBox
-
-
 On Error GoTo Err
 
-lMsgBox.initialise prompt, buttons, title
-
+Dim lMsgBox As New fMsgBox
+lMsgBox.Initialise prompt, buttons, title
 lMsgBox.Show vbModeless, gMainForm
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gSetPermittedServiceProviderRoles()
-Const ProcName As String = "gSetPermittedServiceProviderRoles"
+Public Property Get gPermittedServiceProviderRoles() As ServiceProviderRoles
+gPermittedServiceProviderRoles = ServiceProviderRoles.SPRoleRealtimeData Or _
+                                ServiceProviderRoles.SPRoleContractDataPrimary Or _
+                                ServiceProviderRoles.SPRoleContractDataSecondary Or _
+                                ServiceProviderRoles.SPRoleOrderPersistence Or _
+                                ServiceProviderRoles.SPRoleOrderSubmissionLive Or _
+                                ServiceProviderRoles.SPRoleOrderSubmissionSimulated Or _
+                                ServiceProviderRoles.SPRoleHistoricalDataInput Or _
+                                ServiceProviderRoles.SPRoleTickfileInput
+End Property
 
+Public Sub gSaveSettings()
+Const ProcName As String = "gSaveSettings"
 On Error GoTo Err
 
-TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeData Or _
-                                                ServiceProviderRoles.SPPrimaryContractData Or _
-                                                ServiceProviderRoles.SPSecondaryContractData Or _
-                                                ServiceProviderRoles.SPBrokerLive Or _
-                                                ServiceProviderRoles.SPBrokerSimulated Or _
-                                                ServiceProviderRoles.SPHistoricalDataInput Or _
-                                                ServiceProviderRoles.SPTickfileInput
+If mConfigStore.Dirty Then
+    LogMessage "Saving configuration"
+    mConfigStore.Save
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gShowStudyPicker( _
-                ByVal chartMgr As ChartManager, _
-                ByVal title As String)
-Const ProcName As String = "gShowStudyPicker"
-
+Public Function gShowConfigEditor( _
+                ByVal pConfigStore As ConfigurationStore, _
+                ByVal pCurrAppInstanceConfig As ConfigurationSection, _
+                Optional ByVal pParentForm As Form) As ConfigurationSection
+Const ProcName As String = "gShowConfigEditor"
 On Error GoTo Err
 
-If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
-mStudyPickerForm.initialise chartMgr, title
-mStudyPickerForm.Show vbModeless
+Dim lConfigEditor As New fConfigEditor
+   
+lConfigEditor.Initialise pConfigStore, pCurrAppInstanceConfig
+lConfigEditor.Show vbModal, pParentForm
 
-Exit Sub
+Set gShowConfigEditor = lConfigEditor.selectedAppConfig
+
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
-Public Sub gSyncStudyPicker( _
-                ByVal chartMgr As ChartManager, _
-                ByVal title As String)
-Const ProcName As String = "gSyncStudyPicker"
-
+Public Function gShowSplashScreen() As Form
+Const ProcName As String = "gShowSplashScreen"
 On Error GoTo Err
 
-If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.initialise chartMgr, title
+Dim lSplash As New fSplash
+lSplash.Show vbModeless
+lSplash.Refresh
+Set gShowSplashScreen = lSplash
+SetWindowLong lSplash.hWnd, GWL_EXSTYLE, GetWindowLong(lSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
+SetWindowPos lSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
 
-Exit Sub
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+'Public Sub gShowStudyPicker( _
+'                ByVal chartMgr As ChartManager, _
+'                ByVal title As String)
+'Const ProcName As String = "gShowStudyPicker"
+'
+'On Error GoTo Err
+'
+'If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
+'mStudyPickerForm.Initialise chartMgr, title
+'mStudyPickerForm.Show vbModeless, mMainForm
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
+
+'Public Sub gSyncStudyPicker( _
+'                ByVal chartMgr As ChartManager, _
+'                ByVal title As String)
+'Const ProcName As String = "gSyncStudyPicker"
+'
+'On Error GoTo Err
+'
+'If mStudyPickerForm Is Nothing Then Exit Sub
+'mStudyPickerForm.Initialise chartMgr, title
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 Public Sub gUnloadMainForm()
 Const ProcName As String = "gUnloadMainForm"
@@ -290,29 +339,25 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gUnsyncStudyPicker()
-Const ProcName As String = "gUnsyncStudyPicker"
-
-On Error GoTo Err
-
-If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.initialise Nothing, "Study picker"
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
+'Public Sub gUnsyncStudyPicker()
+'Const ProcName As String = "gUnsyncStudyPicker"
+'
+'On Error GoTo Err
+'
+'If mStudyPickerForm Is Nothing Then Exit Sub
+'mStudyPickerForm.Initialise Nothing, "Study picker"
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 Public Sub Main()
 Const ProcName As String = "Main"
-
-Dim lSplash As fSplash
-
-
 On Error GoTo Err
 
 Debug.Print "Running in development environment: " & CStr(inDev)
@@ -330,24 +375,43 @@ SetupDefaultLogging Command
 TaskConcurrency = 20
 TaskQuantumMillisecs = 32
 
-Set lSplash = showSplashScreen
+Dim lSplash As fSplash
+Set lSplash = gShowSplashScreen
 
-gSetPermittedServiceProviderRoles
-
-If Not getConfigFile Then
+Set mConfigStore = getConfigStore
+If mConfigStore Is Nothing Then
     LogMessage "Program exiting at user request"
+    Unload lSplash
     TerminateTWUtilities
-ElseIf Not getAppInstanceConfig Then
-    LogMessage "Program exiting at user request"
-    TerminateTWUtilities
-ElseIf Not Configure Then
-    LogMessage "Program exiting at user request"
-    TerminateTWUtilities
-Else
-    loadMainForm mEditConfig
+    Exit Sub
 End If
 
-Unload lSplash
+loadChartStyles mConfigStore
+    
+Dim lAppInstanceConfig As ConfigurationSection
+Set lAppInstanceConfig = getAppInstanceConfig(mConfigStore)
+If lAppInstanceConfig Is Nothing Then
+    LogMessage "Program exiting at user request"
+    Unload lSplash
+    TerminateTWUtilities
+    Exit Sub
+End If
+
+If Not gLoadMainForm(lAppInstanceConfig, , lSplash) Then
+    LogMessage "Program exiting at user request"
+    Unload lSplash
+    TerminateTWUtilities
+    Exit Sub
+End If
+
+Do While Forms.Count > 0
+    Wait 50
+Loop
+
+gSaveSettings
+
+TerminateTWUtilities
+
 Exit Sub
 
 Err:
@@ -357,6 +421,7 @@ If Err.Number = ErrorCodes.ErrSecurityException Then
                 "The program will close", _
             vbCritical, _
             "Attention"
+    TerminateTWUtilities
     Exit Sub
 End If
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
@@ -366,19 +431,16 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function Configure() As Boolean
-Const ProcName As String = "Configure"
-Dim userResponse As Long
-
-
+Private Function configureTradeBuild( _
+                ByVal pConfigStore As ConfigurationStore, _
+                ByRef pAppInstanceConfig As ConfigurationSection) As TradeBuildAPI
+Const ProcName As String = "configureTradeBuild"
 On Error GoTo Err
 
-LogMessage "Loading configuration: loading chart styles"
-ChartStylesManager.LoadFromConfig gConfigStore.AddPrivateConfigurationSection(ConfigSectionChartStyles)
-    
-If ConfigureTradeBuild(gConfigStore, gAppInstanceConfig.InstanceQualifier) Then
-    Configure = True
-Else
+Dim lTradeBuildAPI As TradeBuildAPI
+Set lTradeBuildAPI = CreateTradeBuildAPIFromConfig(pAppInstanceConfig, pAppInstanceConfig.InstanceQualifier, gPermittedServiceProviderRoles)
+Do While lTradeBuildAPI Is Nothing
+    Dim userResponse As Long
     userResponse = MsgBox("The configuration cannot be loaded. Would you like to " & vbCrLf & _
             "manually correct the configuration?" & vbCrLf & vbCrLf & _
             "Click Yes to manually correct the configuration." & vbCrLf & vbCrLf & _
@@ -388,124 +450,130 @@ Else
             "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
             "You may amend the default configuration by going to the " & vbCrLf & _
             "Configuration tab when the program has started." & vbCrLf & vbCrLf & _
-            "Click Cancel to exit the program.", _
+            "Click Cancel to exit.", _
             vbYesNoCancel Or vbQuestion, _
             "Attention!")
     If userResponse = vbYes Then
-        mEditConfig = True
-        Configure = True
+        LogMessage "User editing app instance configuration: " & pAppInstanceConfig.InstanceQualifier
+        Set pAppInstanceConfig = gShowConfigEditor(pConfigStore, pAppInstanceConfig)
     ElseIf userResponse = vbNo Then
         LogMessage "Creating a new default app instance configuration"
-        Set gAppInstanceConfig = AddAppInstanceConfig(gConfigStore, _
+        Set pAppInstanceConfig = AddAppInstanceConfig(pConfigStore, _
                             DefaultAppInstanceConfigName, _
                             ConfigFlagIncludeDefaultBarFormatterLibrary Or _
                                 ConfigFlagIncludeDefaultStudyLibrary Or _
                                 ConfigFlagSetAsDefault)
-        Configure = True
     Else
-        Configure = False
+        Exit Do
     End If
-End If
+        
+    Set lTradeBuildAPI = CreateTradeBuildAPIFromConfig(pAppInstanceConfig, pAppInstanceConfig.InstanceQualifier, gPermittedServiceProviderRoles)
+Loop
+
+Assert lTradeBuildAPI.StartServiceProviders, "Error while starting service providers"
+Set configureTradeBuild = lTradeBuildAPI
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function createNewConfigFile() As ConfigurationStore
-Const ProcName As String = "createNewConfigFile"
+Private Function createNewConfigStore() As ConfigurationStore
+Const ProcName As String = "createNewConfigStore"
 On Error GoTo Err
 
 LogMessage "Creating a new default configuration file"
-Set createNewConfigFile = GetDefaultConfigurationStore(Command, ConfigFileVersion, True, ConfigFileOptionFirstArg)
-InitialiseConfigFile createNewConfigFile
-AddAppInstanceConfig createNewConfigFile, _
+
+Dim lConfigStore As ConfigurationStore
+Set lConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, True, ConfigFileOptionFirstArg)
+InitialiseConfigFile lConfigStore
+AddAppInstanceConfig lConfigStore, _
                     DefaultAppInstanceConfigName, _
                     ConfigFlagIncludeDefaultBarFormatterLibrary Or _
                         ConfigFlagIncludeDefaultStudyLibrary Or _
-                        ConfigFlagSetAsDefault
+                        ConfigFlagSetAsDefault, _
+                    gPermittedServiceProviderRoles
+lConfigStore.Save
+
+Set createNewConfigStore = lConfigStore
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getAppInstanceConfig() As Boolean
+Private Function getAppInstanceConfig(ByVal pConfigStore As ConfigurationStore) As ConfigurationSection
 Const ProcName As String = "getAppInstanceConfig"
-Dim configName As String
-
-
 On Error GoTo Err
 
+Dim lAppInstanceConfig As ConfigurationSection
+
+Dim configName As String
 If gCommandLineParser.Switch(SwitchConfig) Then configName = gCommandLineParser.SwitchValue(SwitchConfig)
 
 If configName = "" Then
     LogMessage "Named app instance config not specified - trying default app instance config", LogLevelDetail
     configName = "(Default)"
-    Set gAppInstanceConfig = GetDefaultAppInstanceConfig(gConfigStore)
-    If gAppInstanceConfig Is Nothing Then
+    Set lAppInstanceConfig = GetDefaultAppInstanceConfig(pConfigStore)
+    If lAppInstanceConfig Is Nothing Then
         LogMessage "No default app instance config defined", LogLevelDetail
     Else
-        LogMessage "Using default app instance config: " & gAppInstanceConfig.InstanceQualifier, LogLevelDetail
+        LogMessage "Using default app instance config: " & lAppInstanceConfig.InstanceQualifier, LogLevelDetail
     End If
 Else
     LogMessage "Getting app instance config with name '" & configName & "'", LogLevelDetail
-    Set gAppInstanceConfig = ConfigUtils.getAppInstanceConfig(gConfigStore, configName)
-    If gAppInstanceConfig Is Nothing Then
+    Set lAppInstanceConfig = ConfigUtils.getAppInstanceConfig(pConfigStore, configName)
+    If lAppInstanceConfig Is Nothing Then
         LogMessage "App instance config '" & configName & "' not found"
     Else
         LogMessage "App instance config '" & configName & "' located", LogLevelDetail
     End If
 End If
 
-If gAppInstanceConfig Is Nothing Then
+If lAppInstanceConfig Is Nothing Then
     MsgBox "The required app instance configuration does not exist: " & _
             configName & "." & vbCrLf & vbCrLf & _
             "The program will close.", _
             vbCritical, _
             "Error"
-    getAppInstanceConfig = False
-Else
-    getAppInstanceConfig = True
 End If
+
+Set getAppInstanceConfig = lAppInstanceConfig
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getConfigFile() As Boolean
-Const ProcName As String = "getConfigFile"
+Private Function getConfigStore() As ConfigurationStore
+Const ProcName As String = "getConfigStore"
+On Error GoTo Err
 
 On Error Resume Next
-Set gConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, False, ConfigFileOptionFirstArg)
+
+Dim lConfigStore As ConfigurationStore
+Set lConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, False, ConfigFileOptionFirstArg)
 
 If Err.Number = ErrorCodes.ErrIllegalStateException Then
     On Error GoTo Err
-    
-    getConfigFile = queryReplaceConfigFile
-ElseIf gConfigStore Is Nothing Then
+    If queryReplaceConfigFile Then Set lConfigStore = createNewConfigStore
+ElseIf lConfigStore Is Nothing Then
     On Error GoTo Err
-    
-    getConfigFile = queryCreateNewConfigFile
-ElseIf IsValidConfigurationFile(gConfigStore) Then
+    If queryCreateNewConfigFile Then Set lConfigStore = createNewConfigStore
+ElseIf Not IsValidConfigurationFile(lConfigStore) Then
     On Error GoTo Err
-    getConfigFile = True
-Else
-    On Error GoTo Err
-    
-    getConfigFile = queryReplaceConfigFile
+    If queryReplaceConfigFile Then Set lConfigStore = createNewConfigStore
 End If
 
-
+Set getConfigStore = lConfigStore
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function inDev() As Boolean
@@ -518,24 +586,12 @@ inDev = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub loadMainForm( _
-                ByVal showConfigEditor As Boolean)
-Const ProcName As String = "loadMainForm"
-
-On Error GoTo Err
-
-LogMessage "Loading main form"
-If mMainForm Is Nothing Then Set mMainForm = New fTradeSkilDemo
-mMainForm.initialise showConfigEditor
-mMainForm.Show
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+Private Sub loadChartStyles(ByVal pConfigStore As ConfigurationStore)
+LogMessage "Loading configuration: loading chart styles"
+ChartStylesManager.LoadFromConfig pConfigStore.AddPrivateConfigurationSection(ConfigSectionChartStyles)
 End Sub
 
 Private Function queryCreateNewConfigFile() As Boolean
@@ -543,7 +599,7 @@ Const ProcName As String = "queryCreateNewConfigFile"
 On Error GoTo Err
 
 Dim userResponse As Long
-LogMessage "The configuration file format does not exist."
+LogMessage "The configuration file does not exist."
 userResponse = MsgBox("The configuration file does not exist." & vbCrLf & vbCrLf & _
         "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
         "The default configuration will connect to TWS running on the " & vbCrLf & _
@@ -557,14 +613,13 @@ userResponse = MsgBox("The configuration file does not exist." & vbCrLf & vbCrLf
         vbYesNo Or vbQuestion, _
         "Attention!")
 If userResponse = vbYes Then
-    Set gConfigStore = createNewConfigFile
     queryCreateNewConfigFile = True
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function queryReplaceConfigFile() As Boolean
@@ -591,26 +646,22 @@ userResponse = MsgBox("The configuration file is not the correct format for this
         vbYesNo Or vbQuestion, _
         "Attention!")
 If userResponse = vbYes Then
-    Set gConfigStore = createNewConfigFile
     queryReplaceConfigFile = True
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function showCommandLineOptions() As Boolean
 Const ProcName As String = "showCommandLineOptions"
-
-
-
 On Error GoTo Err
 
 If gCommandLineParser.Switch("?") Then
     MsgBox vbCrLf & _
-            "tradeskildemo26 [configfile] " & vbCrLf & _
+            "tradeskildemo27 [configfile] " & vbCrLf & _
             "                [/config:configtoload] " & vbCrLf & _
             "                [/log:filename] " & vbCrLf & _
             "                [/loglevel:levelName]" & vbCrLf & _
@@ -637,22 +688,6 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function showSplashScreen() As Form
-Dim lSplash As New fSplash
-Const ProcName As String = "showSplashScreen"
-On Error GoTo Err
-
-lSplash.Show vbModeless
-lSplash.Refresh
-Set showSplashScreen = lSplash
-SetWindowLong lSplash.hWnd, GWL_EXSTYLE, GetWindowLong(lSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
-SetWindowPos lSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function

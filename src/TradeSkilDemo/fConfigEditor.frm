@@ -13,7 +13,7 @@ Begin VB.Form fConfigEditor
    ScaleWidth      =   10215
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin TradeSkilDemo26.ConfigManager ConfigManager1 
+   Begin TradeSkilDemo27.ConfigManager ConfigManager1 
       Height          =   4095
       Left            =   120
       TabIndex        =   0
@@ -103,29 +103,8 @@ Private mConfig                                     As ConfigurationSection
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Form_Load()
-Const ProcName As String = "Form_Load"
-
-On Error GoTo Err
-
-Set mConfig = gAppInstanceConfig
-
-Me.left = CLng(mConfig.GetSetting(ConfigSettingConfigEditorLeft, 0)) * Screen.TwipsPerPixelX
-Me.Top = CLng(mConfig.GetSetting(ConfigSettingConfigEditorTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
-
-ConfigManager1.initialise gConfigStore, App.ProductName, ConfigFileVersion
-
-CurrentConfigNameText = mConfig.InstanceQualifier
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
 Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
-
 On Error GoTo Err
 
 updateSettings
@@ -136,12 +115,12 @@ If UnloadMode = vbFormControlMenu Then
 
 End If
 
-If ConfigManager1.changesPending Then
+If ConfigManager1.ChangesPending Then
     If MsgBox("Apply outstanding changes?" & vbCrLf & _
             "If you click No, your changes to this configuration item will be lost", _
             vbYesNo Or vbQuestion, _
             "Attention!") = vbYes Then
-        ConfigManager1.applyPendingChanges
+        ConfigManager1.ApplyPendingChanges
     End If
 End If
 
@@ -166,7 +145,6 @@ End Sub
 
 Private Sub ConfigManager1_SelectedItemChanged()
 Const ProcName As String = "ConfigManager1_SelectedItemChanged"
-
 On Error GoTo Err
 
 checkOkToLoadConfiguration
@@ -179,11 +157,10 @@ End Sub
 
 Private Sub ConfigureButton_Click()
 Const ProcName As String = "ConfigureButton_Click"
-
 On Error GoTo Err
 
 updateSettings
-If Not gMainForm.LoadConfig(ConfigManager1.selectedAppConfig) Then Me.Hide
+Me.Hide
 
 Exit Sub
 
@@ -199,9 +176,35 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Get selectedAppConfig() As ConfigurationSection
+Set selectedAppConfig = ConfigManager1.selectedAppConfig
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pConfigStore As ConfigurationStore, _
+                ByVal pCurrAppInstanceConfig As ConfigurationSection)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mConfig = pCurrAppInstanceConfig
+
+Me.left = CLng(mConfig.GetSetting(ConfigSettingConfigEditorLeft, 0)) * Screen.TwipsPerPixelX
+Me.Top = CLng(mConfig.GetSetting(ConfigSettingConfigEditorTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+
+ConfigManager1.Initialise pConfigStore, App.ProductName, ConfigFileVersion, gPermittedServiceProviderRoles, ConfigFlags.ConfigFlagIncludeDefaultBarFormatterLibrary Or ConfigFlags.ConfigFlagIncludeDefaultStudyLibrary
+
+CurrentConfigNameText = mConfig.InstanceQualifier
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
+End Sub
 
 '@================================================================================
 ' Helper Functions
@@ -209,7 +212,6 @@ End Sub
 
 Private Sub checkOkToLoadConfiguration()
 Const ProcName As String = "checkOkToLoadConfiguration"
-
 On Error GoTo Err
 
 If Not ConfigManager1.selectedAppConfig Is Nothing Then
@@ -223,12 +225,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
-
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then
@@ -240,7 +241,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

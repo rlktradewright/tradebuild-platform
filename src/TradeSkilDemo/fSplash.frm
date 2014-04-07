@@ -2,11 +2,11 @@ VERSION 5.00
 Begin VB.Form fSplash 
    Appearance      =   0  'Flat
    BackColor       =   &H80000005&
-   BorderStyle     =   3  'Fixed Dialog
+   BorderStyle     =   0  'None
    Caption         =   "Form1"
    ClientHeight    =   6240
-   ClientLeft      =   45
-   ClientTop       =   435
+   ClientLeft      =   0
+   ClientTop       =   0
    ClientWidth     =   7035
    ControlBox      =   0   'False
    LinkTopic       =   "Form1"
@@ -14,32 +14,18 @@ Begin VB.Form fSplash
    MinButton       =   0   'False
    ScaleHeight     =   6240
    ScaleWidth      =   7035
+   ShowInTaskbar   =   0   'False
    StartUpPosition =   2  'CenterScreen
-   Begin VB.TextBox LogText 
-      Appearance      =   0  'Flat
-      BackColor       =   &H00000000&
-      BorderStyle     =   0  'None
-      ForeColor       =   &H00FFFFFF&
-      Height          =   975
-      Left            =   0
-      Locked          =   -1  'True
-      MultiLine       =   -1  'True
-      TabIndex        =   3
-      TabStop         =   0   'False
-      Top             =   5280
-      Width           =   7095
-   End
    Begin VB.PictureBox Picture1 
-      Align           =   1  'Align Top
       BackColor       =   &H00ECECDE&
       BorderStyle     =   0  'None
-      Height          =   1455
-      Left            =   0
-      ScaleHeight     =   1455
-      ScaleWidth      =   7035
+      Height          =   1445
+      Left            =   15
+      ScaleHeight     =   1440
+      ScaleWidth      =   7005
       TabIndex        =   0
-      Top             =   0
-      Width           =   7035
+      Top             =   15
+      Width           =   7005
       Begin VB.Label VersionLabel 
          Alignment       =   2  'Center
          BackColor       =   &H00FFFFFF&
@@ -82,13 +68,39 @@ Begin VB.Form fSplash
          Width           =   6975
       End
    End
-   Begin VB.Image Image1 
-      Height          =   3855
+   Begin VB.TextBox LogText 
+      Appearance      =   0  'Flat
+      BackColor       =   &H00000000&
+      BorderStyle     =   0  'None
+      ForeColor       =   &H00FFFFFF&
+      Height          =   975
+      Left            =   15
+      Locked          =   -1  'True
+      MultiLine       =   -1  'True
+      TabIndex        =   3
+      TabStop         =   0   'False
+      Top             =   5255
+      Width           =   7005
+   End
+   Begin VB.PictureBox Picture2 
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
+      Height          =   6240
       Left            =   0
-      Picture         =   "fSplash.frx":0000
-      Stretch         =   -1  'True
-      Top             =   1440
-      Width           =   7095
+      ScaleHeight     =   6210
+      ScaleWidth      =   7005
+      TabIndex        =   4
+      Top             =   0
+      Width           =   7035
+      Begin VB.Image Image2 
+         Height          =   3795
+         Left            =   0
+         Picture         =   "fSplash.frx":0000
+         Stretch         =   -1  'True
+         Top             =   1460
+         Width           =   7005
+      End
    End
 End
 Attribute VB_Name = "fSplash"
@@ -158,7 +170,7 @@ Private Sub LogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As TWUtilities30.LogRecord)
+Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
 Const ProcName As String = "LogListener_Notify"
 On Error GoTo Err
 
@@ -178,7 +190,7 @@ LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -209,7 +221,7 @@ formatLogRecord = formatter.FormatRecord(Logrec)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

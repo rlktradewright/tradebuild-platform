@@ -63,13 +63,17 @@ End Sub
 ' mUnhandledErrorHandler Event Handlers
 '@================================================================================
 
-Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEventData)
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
 
-gHandleFatalError
+On Error Resume Next    ' ignore any further errors that might arise
 
-' Tell TWUtilities that we've now handled this unhandled error. Not actually
-' needed here because gHandleFatalError never returns anyway
-UnhandledErrorHandler.Handled = True
+MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
+        "Please email the log file located at" & vbCrLf & vbCrLf & _
+        "     " & DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
+        "to support@tradewright.com", _
+        vbCritical, _
+        "Fatal error"
+
 End Sub
 
 '@================================================================================

@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.0#0"; "TWControls10.ocx"
+Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#11.1#0"; "TWControls40.ocx"
 Begin VB.UserControl SPConfigurer 
    ClientHeight    =   12750
    ClientLeft      =   0
@@ -15,19 +15,42 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   60
-      Top             =   8880
+      TabIndex        =   62
+      Top             =   9000
       Width           =   4815
+      Begin VB.TextBox InputTickfilePathText 
+         Height          =   285
+         Left            =   960
+         TabIndex        =   67
+         Top             =   360
+         Width           =   3375
+      End
+      Begin VB.CommandButton InputPathChooserButton 
+         Caption         =   "..."
+         Height          =   375
+         Left            =   4320
+         TabIndex        =   66
+         Top             =   360
+         Width           =   495
+      End
       Begin VB.CheckBox TfInputEnabledCheck 
          Caption         =   "Enabled"
          Height          =   255
          Left            =   0
-         TabIndex        =   61
+         TabIndex        =   63
          Top             =   0
          Width           =   2535
       End
+      Begin VB.Label Label20 
+         Caption         =   "Input path"
+         Height          =   375
+         Left            =   0
+         TabIndex        =   65
+         Top             =   360
+         Width           =   975
+      End
    End
-   Begin TWControls10.TWImageCombo OptionCombo 
+   Begin TWControls40.TWImageCombo OptionCombo 
       Height          =   330
       Left            =   4320
       TabIndex        =   0
@@ -53,13 +76,13 @@ Begin VB.UserControl SPConfigurer
       Left            =   10080
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   50
+      TabIndex        =   52
       Top             =   4080
       Width           =   4815
       Begin MSDataGridLib.DataGrid ParamsGrid 
          Height          =   1455
          Left            =   960
-         TabIndex        =   53
+         TabIndex        =   55
          Top             =   720
          Width           =   3855
          _ExtentX        =   6800
@@ -129,7 +152,7 @@ Begin VB.UserControl SPConfigurer
       Begin VB.TextBox ProgIdText 
          Height          =   285
          Left            =   960
-         TabIndex        =   28
+         TabIndex        =   30
          Top             =   360
          Width           =   3855
       End
@@ -137,7 +160,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Enabled"
          Height          =   255
          Left            =   0
-         TabIndex        =   27
+         TabIndex        =   29
          Top             =   0
          Width           =   2535
       End
@@ -145,7 +168,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Parameters"
          Height          =   255
          Left            =   0
-         TabIndex        =   52
+         TabIndex        =   54
          Top             =   720
          Width           =   1575
       End
@@ -153,7 +176,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Prog ID"
          Height          =   255
          Left            =   0
-         TabIndex        =   51
+         TabIndex        =   53
          Top             =   360
          Width           =   735
       End
@@ -163,7 +186,7 @@ Begin VB.UserControl SPConfigurer
       Enabled         =   0   'False
       Height          =   375
       Left            =   5280
-      TabIndex        =   29
+      TabIndex        =   31
       Top             =   3480
       Width           =   975
    End
@@ -173,13 +196,13 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   49
+      TabIndex        =   51
       Top             =   6480
       Width           =   4815
-      Begin TWControls10.TWImageCombo TickfileGranularityCombo 
+      Begin TWControls40.TWImageCombo TickfileGranularityCombo 
          Height          =   330
          Left            =   960
-         TabIndex        =   25
+         TabIndex        =   27
          Top             =   840
          Width           =   3375
          _ExtentX        =   5953
@@ -196,18 +219,18 @@ Begin VB.UserControl SPConfigurer
          MouseIcon       =   "SPConfigurer.ctx":001C
          Text            =   ""
       End
-      Begin VB.CommandButton PathChooserButton 
+      Begin VB.CommandButton OutputPathChooserButton 
          Caption         =   "..."
          Height          =   375
          Left            =   4320
-         TabIndex        =   24
+         TabIndex        =   26
          Top             =   360
          Width           =   495
       End
-      Begin VB.TextBox TickfilePathText 
+      Begin VB.TextBox OutputTickfilePathText 
          Height          =   285
          Left            =   960
-         TabIndex        =   23
+         TabIndex        =   25
          Top             =   360
          Width           =   3375
       End
@@ -215,7 +238,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Enabled"
          Height          =   255
          Left            =   0
-         TabIndex        =   22
+         TabIndex        =   24
          Top             =   0
          Width           =   2535
       End
@@ -223,7 +246,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Granularity"
          Height          =   255
          Left            =   0
-         TabIndex        =   62
+         TabIndex        =   64
          Top             =   840
          Width           =   855
       End
@@ -231,7 +254,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Output path"
          Height          =   375
          Left            =   0
-         TabIndex        =   59
+         TabIndex        =   61
          Top             =   360
          Width           =   975
       End
@@ -242,14 +265,14 @@ Begin VB.UserControl SPConfigurer
       Left            =   10080
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   48
+      TabIndex        =   50
       Top             =   6480
       Width           =   4815
       Begin VB.CheckBox BrEnabledCheck 
          Caption         =   "Enabled"
          Height          =   255
          Left            =   0
-         TabIndex        =   26
+         TabIndex        =   28
          Top             =   0
          Width           =   2535
       End
@@ -259,7 +282,7 @@ Begin VB.UserControl SPConfigurer
       Enabled         =   0   'False
       Height          =   375
       Left            =   6360
-      TabIndex        =   30
+      TabIndex        =   32
       Top             =   3480
       Width           =   975
    End
@@ -269,14 +292,14 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   43
+      TabIndex        =   45
       Top             =   4080
       Visible         =   0   'False
       Width           =   4815
       Begin VB.TextBox QtConnectRetryIntervalText 
          Height          =   285
          Left            =   960
-         TabIndex        =   20
+         TabIndex        =   22
          Text            =   "10"
          Top             =   1800
          Width           =   1335
@@ -284,7 +307,7 @@ Begin VB.UserControl SPConfigurer
       Begin VB.TextBox QtProviderKeyText 
          Height          =   285
          Left            =   960
-         TabIndex        =   19
+         TabIndex        =   21
          Top             =   1440
          Width           =   1335
       End
@@ -292,7 +315,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Keep connection"
          Height          =   255
          Left            =   2520
-         TabIndex        =   21
+         TabIndex        =   23
          Top             =   0
          Value           =   1  'Checked
          Width           =   1935
@@ -301,7 +324,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Enabled"
          Height          =   255
          Left            =   0
-         TabIndex        =   15
+         TabIndex        =   17
          Top             =   0
          Width           =   2535
       End
@@ -310,14 +333,14 @@ Begin VB.UserControl SPConfigurer
          IMEMode         =   3  'DISABLE
          Left            =   960
          PasswordChar    =   "*"
-         TabIndex        =   18
+         TabIndex        =   20
          Top             =   1080
          Width           =   1335
       End
       Begin VB.TextBox QtPortText 
          Height          =   285
          Left            =   960
-         TabIndex        =   17
+         TabIndex        =   19
          Text            =   "16240"
          Top             =   720
          Width           =   1335
@@ -325,7 +348,7 @@ Begin VB.UserControl SPConfigurer
       Begin VB.TextBox QtServerText 
          Height          =   285
          Left            =   960
-         TabIndex        =   16
+         TabIndex        =   18
          Top             =   360
          Width           =   1335
       End
@@ -333,7 +356,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Connection retry interval"
          Height          =   375
          Left            =   0
-         TabIndex        =   58
+         TabIndex        =   60
          Top             =   1800
          Width           =   975
       End
@@ -341,7 +364,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Provider key"
          Height          =   255
          Left            =   0
-         TabIndex        =   57
+         TabIndex        =   59
          Top             =   1440
          Width           =   975
       End
@@ -349,7 +372,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Password"
          Height          =   255
          Left            =   0
-         TabIndex        =   46
+         TabIndex        =   48
          Top             =   1080
          Width           =   735
       End
@@ -357,7 +380,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Port"
          Height          =   255
          Left            =   0
-         TabIndex        =   45
+         TabIndex        =   47
          Top             =   720
          Width           =   615
       End
@@ -365,7 +388,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   44
+         TabIndex        =   46
          Top             =   360
          Width           =   615
       End
@@ -376,11 +399,29 @@ Begin VB.UserControl SPConfigurer
       Left            =   0
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   37
+      TabIndex        =   39
       Top             =   6480
       Visible         =   0   'False
       Width           =   4815
-      Begin TWControls10.TWImageCombo DbTypeCombo 
+      Begin VB.CheckBox DbUseAsyncWritesCheck 
+         Caption         =   "Use async writes"
+         Height          =   255
+         Left            =   2520
+         TabIndex        =   16
+         Top             =   720
+         Value           =   1  'Checked
+         Width           =   1935
+      End
+      Begin VB.CheckBox DBUseAsyncReadsCheck 
+         Caption         =   "Use async reads"
+         Height          =   255
+         Left            =   2520
+         TabIndex        =   15
+         Top             =   360
+         Value           =   1  'Checked
+         Width           =   1935
+      End
+      Begin TWControls40.TWImageCombo DbTypeCombo 
          Height          =   330
          Left            =   960
          TabIndex        =   11
@@ -442,7 +483,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Database"
          Height          =   255
          Left            =   0
-         TabIndex        =   42
+         TabIndex        =   44
          Top             =   1080
          Width           =   975
       End
@@ -450,7 +491,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   41
+         TabIndex        =   43
          Top             =   360
          Width           =   975
       End
@@ -458,7 +499,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "DB Type"
          Height          =   255
          Left            =   0
-         TabIndex        =   40
+         TabIndex        =   42
          Top             =   720
          Width           =   975
       End
@@ -466,7 +507,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Username"
          Height          =   255
          Left            =   0
-         TabIndex        =   39
+         TabIndex        =   41
          Top             =   1440
          Width           =   975
       End
@@ -474,7 +515,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Password"
          Height          =   255
          Left            =   0
-         TabIndex        =   38
+         TabIndex        =   40
          Top             =   1800
          Width           =   975
       End
@@ -485,11 +526,11 @@ Begin VB.UserControl SPConfigurer
       Left            =   0
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   33
+      TabIndex        =   35
       Top             =   4080
       Visible         =   0   'False
       Width           =   4815
-      Begin TWControls10.TWImageCombo TwsLogLevelCombo 
+      Begin TWControls40.TWImageCombo TwsLogLevelCombo 
          Height          =   330
          Left            =   3480
          TabIndex        =   8
@@ -568,7 +609,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "TWS Log Level"
          Height          =   375
          Left            =   2520
-         TabIndex        =   56
+         TabIndex        =   58
          Top             =   360
          Width           =   975
       End
@@ -576,7 +617,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Connection retry interval"
          Height          =   375
          Left            =   0
-         TabIndex        =   55
+         TabIndex        =   57
          Top             =   1800
          Width           =   975
       End
@@ -584,7 +625,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Provider key"
          Height          =   255
          Left            =   0
-         TabIndex        =   54
+         TabIndex        =   56
          Top             =   1440
          Width           =   975
       End
@@ -592,7 +633,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Client id"
          Height          =   255
          Left            =   0
-         TabIndex        =   36
+         TabIndex        =   38
          Top             =   1080
          Width           =   615
       End
@@ -600,7 +641,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Port"
          Height          =   255
          Left            =   0
-         TabIndex        =   35
+         TabIndex        =   37
          Top             =   720
          Width           =   615
       End
@@ -608,7 +649,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   34
+         TabIndex        =   36
          Top             =   360
          Width           =   615
       End
@@ -618,7 +659,7 @@ Begin VB.UserControl SPConfigurer
       ItemData        =   "SPConfigurer.ctx":0070
       Left            =   120
       List            =   "SPConfigurer.ctx":0072
-      TabIndex        =   31
+      TabIndex        =   33
       Top             =   120
       Width           =   2055
    End
@@ -640,7 +681,7 @@ Begin VB.UserControl SPConfigurer
       BackStyle       =   0  'Transparent
       Height          =   615
       Left            =   2280
-      TabIndex        =   47
+      TabIndex        =   49
       Top             =   720
       Width           =   1935
    End
@@ -668,7 +709,7 @@ Begin VB.UserControl SPConfigurer
       ForeColor       =   &H00FE8100&
       Height          =   255
       Left            =   2400
-      TabIndex        =   32
+      TabIndex        =   34
       Top             =   240
       Width           =   4815
    End
@@ -716,11 +757,10 @@ Implements CollectionChangeListener
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuildUI26"
 Private Const ModuleName                    As String = "SPConfigurer1"
 
-Private Const AccessModeReadOnly            As String = "Read only"
-Private Const AccessModeWriteOnly           As String = "Write only"
+Private Const RoleInput                     As String = "INPUT"
+Private Const RoleOutput                    As String = "OUTPUT"
 
 Private Const AttributeNameServiceProviderEnabled As String = "Enabled"
 Private Const AttributeNameServiceProviderProgId As String = "ProgId"
@@ -747,10 +787,11 @@ Private Const PropertyNameTbDbType          As String = "Database Type"
 Private Const PropertyNameTbDbName          As String = "Database Name"
 Private Const PropertyNameTbUserName        As String = "User Name"
 Private Const PropertyNameTbPassword        As String = "Password"
-Private Const PropertyNameTbAccessMode      As String = "Access Mode"
 Private Const PropertyNameTbRole            As String = "Role"
+Private Const PropertyNameTbUseSynchronousWrites As String = "Use Synchronous Writes"
+Private Const PropertyNameTbUseSynchronousReads As String = "Use Synchronous Reads"
 
-Private Const PropertyNameTfAccessMode      As String = "Access Mode"
+Private Const PropertyNameTfRole            As String = "Role"
 Private Const PropertyNameTfTickfilePath    As String = "Tickfile Path"
 Private Const PropertyNameTfTickfileGranularity As String = "Tickfile Granularity"
 
@@ -771,9 +812,9 @@ Private Const SpOptionCustomOrders          As String = "Custom"
 Private Const SpOptionCustomRealtimeData    As String = "Custom"
 Private Const SpOptionCustomTickData        As String = "Custom"
 
-Private Const SpOptionQtBarData             As String = "QuoteTracker"
-Private Const SpOptionQtRealtimeData        As String = "QuoteTracker"
-Private Const SpOptionQtTickData            As String = "QuoteTracker"
+'Private Const SpOptionQtBarData             As String = "QuoteTracker"
+'Private Const SpOptionQtRealtimeData        As String = "QuoteTracker"
+'Private Const SpOptionQtTickData            As String = "QuoteTracker"
 
 Private Const SpOptionTbBarData             As String = "TradeBuild Database"
 Private Const SpOptionTbContractData        As String = "TradeBuild Database"
@@ -818,7 +859,7 @@ Private mCustomParams               As Parameters
 
 Private mReadOnly                   As Boolean
 
-Private mSPs           As ServiceProviders
+Private mPermittedServiceProviderRoles As ServiceProviderRoles
 
 '@================================================================================
 ' Class Event Handlers
@@ -826,7 +867,7 @@ Private mSPs           As ServiceProviders
 
 Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 UserControl.Width = OutlineBox.Width
@@ -857,13 +898,13 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_InitProperties()
-UserControl.backColor = UserControl.Ambient.backColor
-UserControl.foreColor = UserControl.Ambient.foreColor
+UserControl.BackColor = UserControl.Ambient.BackColor
+UserControl.ForeColor = UserControl.Ambient.ForeColor
 End Sub
 
 Private Sub UserControl_LostFocus()
 Const ProcName As String = "UserControl_LostFocus"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkForOutstandingUpdates
@@ -875,8 +916,8 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-UserControl.backColor = UserControl.Ambient.backColor
-UserControl.foreColor = UserControl.Ambient.foreColor
+UserControl.BackColor = UserControl.Ambient.BackColor
+UserControl.ForeColor = UserControl.Ambient.ForeColor
 End Sub
 
 Private Sub UserControl_Resize()
@@ -889,9 +930,9 @@ End Sub
 '@================================================================================
 
 Private Sub CollectionChangeListener_Change( _
-                ev As TWUtilities30.CollectionChangeEventData)
+                ev As CollectionChangeEventData)
 Const ProcName As String = "CollectionChangeListener_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ev.Source Is mCustomParams Then
@@ -902,7 +943,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -911,7 +952,7 @@ End Sub
 
 Private Sub ApplyButton_Click()
 Const ProcName As String = "ApplyButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 applyProperties
@@ -926,7 +967,7 @@ End Sub
 
 Private Sub BrEnabledCheck_Click()
 Const ProcName As String = "BrEnabledCheck_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton True
@@ -941,7 +982,7 @@ End Sub
 Private Sub CancelButton_Click()
 Dim index As Long
 Const ProcName As String = "CancelButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton False
@@ -957,9 +998,7 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub CategoryList_Click()
-
 Const ProcName As String = "CategoryList_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 If CategoryList.ListIndex = -1 Then
@@ -977,23 +1016,23 @@ hideSpOptions
 mCurrCategory = CategoryList.Text
 
 Select Case mCurrCategory
-Case mSPs.SPNameRealtimeData
+Case SPNameRealtimeData
     setupRealtimeDataSP
-Case mSPs.SPNamePrimaryContractData
+Case SPNameContractDataPrimary
     setupPrimaryContractDataSP
-Case mSPs.SPNameSecondryContractData
+Case SPNameContractDataSecondary
     setupSecondaryContractDataSP
-Case mSPs.SPNameHistoricalDataInput
+Case SPNameHistoricalDataInput
     setupHistoricalDataInputSP
-Case mSPs.SPNameHistoricalDataOutput
+Case SPNameHistoricalDataOutput
     setupHistoricalDataOutputSP
-Case mSPs.SPNameBrokerLive
+Case SPNameOrderSubmissionLive
     setupBrokerLiveSP
-Case mSPs.SPNameBrokerSimulated
+Case SPNameOrderSubmissionSimulated
     setupBrokerSimulatedSP
-Case mSPs.SPNameTickfileInput
+Case SPNameTickfileInput
     setupTickfileInputSP
-Case mSPs.SPNameTickfileOutput
+Case SPNameTickfileOutput
     setupTickfileOutputSP
 End Select
 
@@ -1010,7 +1049,7 @@ End Sub
 
 Private Sub DbDatabaseText_Change()
 Const ProcName As String = "DbDatabaseText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidDbProperties
@@ -1024,7 +1063,7 @@ End Sub
 
 Private Sub DbEnabledCheck_Click()
 Const ProcName As String = "DbEnabledCheck_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidDbProperties
@@ -1038,7 +1077,7 @@ End Sub
 
 Private Sub DbPasswordText_Change()
 Const ProcName As String = "DbPasswordText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidDbProperties
@@ -1052,7 +1091,6 @@ End Sub
 
 Private Sub DbServerText_Change()
 Const ProcName As String = "DbServerText_Change"
-Dim failpoint As String
 On Error GoTo Err
 
 enableApplyButton isValidDbProperties
@@ -1066,7 +1104,33 @@ End Sub
 
 Private Sub DbTypeCombo_Click()
 Const ProcName As String = "DbTypeCombo_Click"
-Dim failpoint As String
+
+On Error GoTo Err
+
+enableApplyButton isValidDbProperties
+enableCancelButton True
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub DBUseAsyncReadsCheck_Click()
+Const ProcName As String = "DBUseAsyncReadsCheck_Click"
+On Error GoTo Err
+
+enableApplyButton isValidDbProperties
+enableCancelButton True
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub DbUseAsyncWritesCheck_Click()
+Const ProcName As String = "DbUseAsyncWritesCheck_Click"
 On Error GoTo Err
 
 enableApplyButton isValidDbProperties
@@ -1080,7 +1144,6 @@ End Sub
 
 Private Sub DbUsernameText_Change()
 Const ProcName As String = "DbUsernameText_Change"
-Dim failpoint As String
 On Error GoTo Err
 
 enableApplyButton isValidDbProperties
@@ -1092,9 +1155,33 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub InputPathChooserButton_Click()
+Const ProcName As String = "InputPathChooserButton_Click"
+On Error GoTo Err
+
+InputTickfilePathText.Text = ChoosePath(InputTickfilePathText.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub InputTickfilePathText_Change()
+Const ProcName As String = "InputTickfilePathText_Change"
+On Error GoTo Err
+
+enableApplyButton True
+enableCancelButton True
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub OptionCombo_Click()
 Const ProcName As String = "OptionCombo_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 hideSpOptions
@@ -1129,16 +1216,24 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub PathChooserButton_Click()
-Dim f As New fPathChooser
-Const ProcName As String = "PathChooserButton_Click"
-Dim failpoint As String
+Private Sub OutputPathChooserButton_Click()
+Const ProcName As String = "OutputPathChooserButton_Click"
 On Error GoTo Err
 
-f.path = TickfilePathText.Text
-f.Show vbModal
-If Not f.cancelled Then TickfilePathText.Text = f.path
-Unload f
+OutputTickfilePathText.Text = ChoosePath(OutputTickfilePathText.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub OutputTickfilePathText_Change()
+Const ProcName As String = "OutputTickfilePathText_Change"
+On Error GoTo Err
+
+enableApplyButton True
+enableCancelButton True
 
 Exit Sub
 
@@ -1148,7 +1243,7 @@ End Sub
 
 Private Sub ProgIdText_Change()
 Const ProcName As String = "ProgIdText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidCustomProperties
@@ -1162,7 +1257,7 @@ End Sub
 
 Private Sub QtEnabledCheck_Click()
 Const ProcName As String = "QtEnabledCheck_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidQtProperties
@@ -1176,7 +1271,7 @@ End Sub
 
 Private Sub QtPasswordText_Change()
 Const ProcName As String = "QtPasswordText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidQtProperties
@@ -1190,7 +1285,7 @@ End Sub
 
 Private Sub QtPortText_Change()
 Const ProcName As String = "QtPortText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidQtProperties
@@ -1204,7 +1299,7 @@ End Sub
 
 Private Sub QtServerText_Change()
 Const ProcName As String = "QtServerText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidQtProperties
@@ -1218,7 +1313,7 @@ End Sub
 
 Private Sub TfInputEnabledCheck_Click()
 Const ProcName As String = "TfInputEnabledCheck_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton True
@@ -1232,7 +1327,7 @@ End Sub
 
 Private Sub TfOutputEnabledCheck_Click()
 Const ProcName As String = "TfOutputEnabledCheck_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton True
@@ -1257,23 +1352,9 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub TickfilePathText_Change()
-Const ProcName As String = "TickfilePathText_Change"
-Dim failpoint As String
-On Error GoTo Err
-
-enableApplyButton True
-enableCancelButton True
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
 Private Sub TWSClientIdText_Change()
 Const ProcName As String = "TWSClientIdText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidTwsProperties
@@ -1287,7 +1368,7 @@ End Sub
 
 Private Sub TwsConnectRetryIntervalText_Change()
 Const ProcName As String = "TwsConnectRetryIntervalText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidTwsProperties
@@ -1301,7 +1382,7 @@ End Sub
 
 Private Sub TwsEnabledCheck_Click()
 Const ProcName As String = "TwsEnabledCheck_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidTwsProperties
@@ -1315,7 +1396,7 @@ End Sub
 
 Private Sub TWSPortText_Change()
 Const ProcName As String = "TWSPortText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidTwsProperties
@@ -1329,7 +1410,7 @@ End Sub
 
 Private Sub TwsKeepConnectionCheck_Click()
 Const ProcName As String = "TwsKeepConnectionCheck_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidTwsProperties
@@ -1343,7 +1424,7 @@ End Sub
 
 Private Sub TwsProviderKeyText_Change()
 Const ProcName As String = "TwsProviderKeyText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidTwsProperties
@@ -1357,7 +1438,7 @@ End Sub
 
 Private Sub TWSServerText_Change()
 Const ProcName As String = "TWSServerText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 enableApplyButton isValidTwsProperties
@@ -1379,7 +1460,7 @@ End Sub
 
 Public Property Get dirty() As Boolean
 Const ProcName As String = "dirty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 dirty = ApplyButton.Enabled
@@ -1387,7 +1468,7 @@ dirty = ApplyButton.Enabled
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -1396,7 +1477,7 @@ End Property
 
 Public Sub applyChanges()
 Const ProcName As String = "applyChanges"
-Dim failpoint As String
+
 On Error GoTo Err
 
 applyProperties
@@ -1406,19 +1487,19 @@ enableCancelButton False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Initialise( _
-                ByVal configdata As ConfigurationSection, _
-                Optional ByVal readonly As Boolean)
+                ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
+                ByVal pConfigdata As ConfigurationSection, _
+                Optional ByVal pReadonly As Boolean)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
 On Error GoTo Err
 
-Set mSPs = TradeBuildAPI.ServiceProviders
+mPermittedServiceProviderRoles = pPermittedServiceProviderRoles
 
-mReadOnly = readonly
+mReadOnly = pReadonly
 
 checkForOutstandingUpdates
 
@@ -1437,14 +1518,14 @@ If mCustomParams Is Nothing Then
     mCustomParams.AddCollectionChangeListener Me
 End If
 
-loadConfig configdata
+loadConfig pConfigdata
 
 If mReadOnly Then disableControls
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1453,7 +1534,7 @@ End Sub
 
 Private Sub applyBrProperties()
 Const ProcName As String = "applyBrProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If BrEnabledCheck = vbChecked Then
@@ -1465,14 +1546,14 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub applyCustomProperties()
 Dim param As Parameter
 
 Const ProcName As String = "applyCustomProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If CustomEnabledCheck = vbChecked Then
@@ -1482,18 +1563,18 @@ Else
 End If
 
 For Each param In mCustomParams
-    setProperty mCurrProps, param.name, param.value
+    setProperty mCurrProps, param.name, param.Value
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub applyDbProperties()
 Const ProcName As String = "applyDbProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If DbEnabledCheck = vbChecked Then
@@ -1506,36 +1587,38 @@ setProperty mCurrProps, PropertyNameTbDbType, DbTypeCombo
 setProperty mCurrProps, PropertyNameTbDbName, DbDatabaseText
 setProperty mCurrProps, PropertyNameTbUserName, DbUsernameText
 setProperty mCurrProps, PropertyNameTbPassword, DbPasswordText
+setProperty mCurrProps, PropertyNameTbUseSynchronousReads, CStr(DBUseAsyncReadsCheck.Value = vbUnchecked)
+setProperty mCurrProps, PropertyNameTbUseSynchronousWrites, CStr(DbUseAsyncWritesCheck.Value = vbUnchecked)
 
-If mCurrCategory = mSPs.SPNameHistoricalDataInput Or _
-    mCurrCategory = mSPs.SPNameTickfileInput _
+If mCurrCategory = SPNameHistoricalDataInput Or _
+    mCurrCategory = SPNameTickfileInput _
 Then
-    setProperty mCurrProps, PropertyNameTbAccessMode, AccessModeReadOnly
+    setProperty mCurrProps, PropertyNameTbRole, RoleInput
 End If
 
-If mCurrCategory = mSPs.SPNameHistoricalDataOutput Or _
-    mCurrCategory = mSPs.SPNameTickfileOutput _
+If mCurrCategory = SPNameHistoricalDataOutput Or _
+    mCurrCategory = SPNameTickfileOutput _
 Then
-    setProperty mCurrProps, PropertyNameTbAccessMode, AccessModeWriteOnly
+    setProperty mCurrProps, PropertyNameTbRole, RoleOutput
 End If
 
-If mCurrCategory = mSPs.SPNamePrimaryContractData Then
+If mCurrCategory = SPNameContractDataPrimary Then
     setProperty mCurrProps, PropertyNameTbRole, RolePrimary
 End If
 
-If mCurrCategory = mSPs.SPNameSecondryContractData Then
+If mCurrCategory = SPNameContractDataSecondary Then
     setProperty mCurrProps, PropertyNameTbRole, RoleSecondary
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub applyProperties()
 Const ProcName As String = "applyProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mCurrSP Is Nothing Then
@@ -1571,12 +1654,12 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub applyQtProperties()
 Const ProcName As String = "applyQtProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If QtEnabledCheck = vbChecked Then
@@ -1598,12 +1681,12 @@ setProperty mCurrProps, PropertyNameQtConnectionRetryInterval, QtConnectRetryInt
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub applyTfInputProperties()
 Const ProcName As String = "applyTfInputProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If TfInputEnabledCheck = vbChecked Then
@@ -1612,17 +1695,18 @@ Else
     mCurrSP.SetAttribute AttributeNameServiceProviderEnabled, "False"
 End If
 
-setProperty mCurrProps, PropertyNameTfAccessMode, AccessModeReadOnly
+setProperty mCurrProps, PropertyNameTfRole, RoleInput
+setProperty mCurrProps, PropertyNameTfTickfilePath, InputTickfilePathText
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub applyTfOutputProperties()
 Const ProcName As String = "applyTfOutputProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If TfOutputEnabledCheck = vbChecked Then
@@ -1631,19 +1715,19 @@ Else
     mCurrSP.SetAttribute AttributeNameServiceProviderEnabled, "False"
 End If
 
-setProperty mCurrProps, PropertyNameTfAccessMode, AccessModeWriteOnly
-setProperty mCurrProps, PropertyNameTfTickfilePath, TickfilePathText
+setProperty mCurrProps, PropertyNameTfRole, RoleOutput
+setProperty mCurrProps, PropertyNameTfTickfilePath, OutputTickfilePathText
 setProperty mCurrProps, PropertyNameTfTickfileGranularity, TickfileGranularityCombo.Text
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub applyTwsProperties()
 Const ProcName As String = "applyTwsProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If TwsEnabledCheck = vbChecked Then
@@ -1663,23 +1747,23 @@ setProperty mCurrProps, PropertyNameTwsProviderKey, TwsProviderKeyText
 setProperty mCurrProps, PropertyNameTwsConnectionRetryInterval, TwsConnectRetryIntervalText
 setProperty mCurrProps, PropertyNameTwsLogLevel, TwsLogLevelCombo
 
-If mCurrCategory = mSPs.SPNamePrimaryContractData Then
+If mCurrCategory = SPNameContractDataPrimary Then
     setProperty mCurrProps, PropertyNameTbRole, RolePrimary
 End If
 
-If mCurrCategory = mSPs.SPNameSecondryContractData Then
+If mCurrCategory = SPNameContractDataSecondary Then
     setProperty mCurrProps, PropertyNameTbRole, RoleSecondary
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub checkForOutstandingUpdates()
 Const ProcName As String = "checkForOutstandingUpdates"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ApplyButton.Enabled Then
@@ -1694,12 +1778,12 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub clearProperties()
 Const ProcName As String = "clearProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrProps.RemoveAllChildren
@@ -1707,12 +1791,12 @@ mCurrProps.RemoveAllChildren
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createNewSp()
 Const ProcName As String = "createNewSp"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mCurrSPsList Is Nothing Then
@@ -1725,12 +1809,12 @@ Set mCurrProps = mCurrSP.AddConfigurationSection(ConfigNameProperties)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub deleteSp()
 Const ProcName As String = "deleteSp"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrSPsList.RemoveConfigurationSection ConfigNameServiceProvider & "(" & mCurrSP.InstanceQualifier & ")"
@@ -1740,12 +1824,12 @@ Set mCurrProps = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub disableControls()
 Const ProcName As String = "disableControls"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CancelButton.Enabled = False
@@ -1754,13 +1838,13 @@ ApplyButton.Enabled = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub enableApplyButton( _
                 ByVal enable As Boolean)
 Const ProcName As String = "enableApplyButton"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mReadOnly Then Exit Sub
@@ -1775,13 +1859,13 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub enableCancelButton( _
                 ByVal enable As Boolean)
 Const ProcName As String = "enableCancelButton"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mReadOnly Then Exit Sub
@@ -1796,7 +1880,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 'Private Function findProperty( _
@@ -1816,7 +1900,7 @@ Private Function findSp( _
                 ByVal name As String) As Boolean
 Dim sp As ConfigurationSection
 Const ProcName As String = "findSp"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mCurrSP = Nothing
@@ -1834,13 +1918,13 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getProperty( _
                 ByVal name As String) As String
 Const ProcName As String = "getProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -1849,12 +1933,12 @@ getProperty = mCurrProps.GetSetting("." & ConfigNameProperty & "(" & name & ")")
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub hideSpOptions()
 Const ProcName As String = "hideSpOptions"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mCurrOptionsPic Is Nothing Then
@@ -1865,12 +1949,12 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function isValidCustomProperties() As Boolean
 Const ProcName As String = "isValidCustomProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ProgIdText = "" Then
@@ -1884,12 +1968,12 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isValidDbProperties() As Boolean
 Const ProcName As String = "isValidDbProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If DbDatabaseText = "" Then
@@ -1902,12 +1986,12 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isValidQtProperties() As Boolean
 Const ProcName As String = "isValidQtProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not IsInteger(QtPortText, 1024) Then
@@ -1918,12 +2002,12 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isValidTwsProperties() As Boolean
 Const ProcName As String = "isValidTwsProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not IsInteger(TWSPortText, 1) Then
@@ -1936,14 +2020,12 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub loadConfig( _
                 ByVal configdata As ConfigurationSection)
-                
 Const ProcName As String = "loadConfig"
-Dim failpoint As String
 On Error GoTo Err
 
 Set mConfig = configdata
@@ -1954,32 +2036,32 @@ On Error GoTo Err
 
 CategoryList.Clear
 
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
-    CategoryList.addItem mSPs.SPNameRealtimeData
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleRealtimeData Then
+    CategoryList.AddItem SPNameRealtimeData
 End If
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPPrimaryContractData Then
-    CategoryList.addItem mSPs.SPNamePrimaryContractData
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataPrimary Then
+    CategoryList.AddItem SPNameContractDataPrimary
 End If
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPSecondaryContractData Then
-    CategoryList.addItem mSPs.SPNameSecondryContractData
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataSecondary Then
+    CategoryList.AddItem SPNameContractDataSecondary
 End If
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataInput Then
-    CategoryList.addItem mSPs.SPNameHistoricalDataInput
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataInput Then
+    CategoryList.AddItem SPNameHistoricalDataInput
 End If
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataOutput Then
-    CategoryList.addItem mSPs.SPNameHistoricalDataOutput
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataOutput Then
+    CategoryList.AddItem SPNameHistoricalDataOutput
 End If
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerLive Then
-    CategoryList.addItem mSPs.SPNameBrokerLive
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionLive Then
+    CategoryList.AddItem SPNameOrderSubmissionLive
 End If
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerSimulated Then
-    CategoryList.addItem mSPs.SPNameBrokerSimulated
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionSimulated Then
+    CategoryList.AddItem SPNameOrderSubmissionSimulated
 End If
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileInput Then
-    CategoryList.addItem mSPs.SPNameTickfileInput
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileInput Then
+    CategoryList.AddItem SPNameTickfileInput
 End If
-If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
-    CategoryList.addItem mSPs.SPNameTickfileOutput
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileOutput Then
+    CategoryList.AddItem SPNameTickfileOutput
 End If
 
 If CategoryList.ListCount > 0 Then CategoryList.ListIndex = 0
@@ -1987,7 +2069,7 @@ If CategoryList.ListCount > 0 Then CategoryList.ListIndex = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1995,88 +2077,88 @@ Private Sub setProgId()
 Dim progId As String
 
 Const ProcName As String = "setProgId"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If CategoryList.ListIndex = -1 Then Exit Sub
 
 Select Case mCurrCategory
-Case mSPs.SPNameRealtimeData
+Case SPNameRealtimeData
     Select Case OptionCombo.Text
-    Case SpOptionQtRealtimeData
-        progId = mSPs.SPProgIdQtRealtimeData
+'    Case SpOptionQtRealtimeData
+'        progId = SPProgIdQtRealtimeData
     Case SpOptionTwsRealtimeData
-        progId = mSPs.SPProgIdTwsRealtimeData
+        progId = SPProgIdTwsRealtimeData
     Case SpOptionCustomRealtimeData
         progId = ProgIdText
     End Select
-Case mSPs.SPNamePrimaryContractData
+Case SPNameContractDataPrimary
     Select Case OptionCombo.Text
     Case SpOptionTbContractData
-        progId = mSPs.SPProgIdTbContractData
+        progId = SPProgIdTbContractData
     Case SpOptionTwsContractData
-        progId = mSPs.SPProgIdTwsContractData
+        progId = SPProgIdTwsContractData
     Case SpOptionCustomContractData
         progId = ProgIdText
     End Select
-Case mSPs.SPNameSecondryContractData
+Case SPNameContractDataSecondary
     Select Case OptionCombo.Text
     Case SpOptionTbContractData
-        progId = mSPs.SPProgIdTbContractData
+        progId = SPProgIdTbContractData
     Case SpOptionTwsContractData
-        progId = mSPs.SPProgIdTwsContractData
+        progId = SPProgIdTwsContractData
     Case SpOptionCustomContractData
         progId = ProgIdText
     End Select
-Case mSPs.SPNameHistoricalDataInput
+Case SPNameHistoricalDataInput
     Select Case OptionCombo.Text
-    Case SpOptionQtBarData
-        progId = mSPs.SPProgIdQtBarData
+'    Case SpOptionQtBarData
+'        progId = SPProgIdQtBarData
     Case SpOptionTbBarData
-        progId = mSPs.SPProgIdTbBarData
+        progId = SPProgIdTbBarData
     Case SpOptionTwsBarData
-        progId = mSPs.SPProgIdTwsBarData
+        progId = SPProgIdTwsBarData
     Case SpOptionCustomBarData
         progId = ProgIdText
     End Select
-Case mSPs.SPNameHistoricalDataOutput
+Case SPNameHistoricalDataOutput
     Select Case OptionCombo.Text
     Case SpOptionTbBarData
-        progId = mSPs.SPProgIdTbBarData
+        progId = SPProgIdTbBarData
     Case SpOptionCustomBarData
         progId = ProgIdText
     End Select
-Case mSPs.SPNameBrokerLive
+Case SPNameOrderSubmissionLive
     Select Case OptionCombo.Text
     Case SpOptionTwsOrders
-        progId = mSPs.SPProgIdTwsOrders
+        progId = SPProgIdTwsOrders
     Case SpOptionCustomOrders
         progId = ProgIdText
     End Select
-Case mSPs.SPNameBrokerSimulated
+Case SPNameOrderSubmissionSimulated
     Select Case OptionCombo.Text
     Case SpOptionTbOrders
-        progId = mSPs.SPProgIdTbOrders
+        progId = SPProgIdTbOrders
     Case SpOptionCustomOrders
         progId = ProgIdText
     End Select
-Case mSPs.SPNameTickfileInput
+Case SPNameTickfileInput
     Select Case OptionCombo.Text
     Case SpOptionTbTickData
-        progId = mSPs.SPProgIdTbTickData
-    Case SpOptionQtTickData
-        progId = mSPs.SPProgIdQtTickData
+        progId = SPProgIdTbTickData
+'    Case SpOptionQtTickData
+'        progId = SPProgIdQtTickData
     Case SpOptionFileTickData
-        progId = mSPs.SPProgIdFileTickData
+        progId = SPProgIdFileTickData
     Case SpOptionCustomTickData
         progId = ProgIdText
     End Select
-Case mSPs.SPNameTickfileOutput
+Case SPNameTickfileOutput
     Select Case OptionCombo.Text
     Case SpOptionTbTickData
-        progId = mSPs.SPProgIdTbTickData
+        progId = SPProgIdTbTickData
     Case SpOptionFileTickData
-        progId = mSPs.SPProgIdFileTickData
+        progId = SPProgIdFileTickData
     Case SpOptionCustomTickData
         progId = ProgIdText
     End Select
@@ -2087,46 +2169,46 @@ mCurrSP.SetAttribute AttributeNameServiceProviderProgId, progId
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub setProperty( _
                 ByVal props As ConfigurationSection, _
                 ByVal name As String, _
-                ByVal value As String)
+                ByVal Value As String)
 Const ProcName As String = "setProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
-props.SetSetting "." & ConfigNameProperty & "(" & name & ")", value
+props.SetSetting "." & ConfigNameProperty & "(" & name & ")", Value
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupBrProperties()
 Const ProcName As String = "setupBrProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
-BrEnabledCheck.value = vbUnchecked
-BrEnabledCheck.value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
+BrEnabledCheck.Value = vbUnchecked
+BrEnabledCheck.Value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupBrokerLiveSP()
 Dim progId As String
     
 Const ProcName As String = "setupBrokerLiveSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Broker options (live orders)"
@@ -2137,7 +2219,7 @@ OptionCombo.ComboItems.Add , , SpOptionTwsOrders
 OptionCombo.ComboItems.Add , , SpOptionCustomOrders
 
 On Error Resume Next
-findSp mSPs.SPNameBrokerLive
+findSp SPNameOrderSubmissionLive
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2147,7 +2229,7 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTwsOrders
+Case SPProgIdTwsOrders
     OptionCombo.Text = SpOptionTwsOrders
     
     setupTwsProperties
@@ -2160,7 +2242,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2168,7 +2250,7 @@ Private Sub setupBrokerSimulatedSP()
 Dim progId As String
     
 Const ProcName As String = "setupBrokerSimulatedSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Broker options (simulated orders)"
@@ -2179,7 +2261,7 @@ OptionCombo.ComboItems.Add , , SpOptionTbOrders
 OptionCombo.ComboItems.Add , , SpOptionCustomOrders
 
 On Error Resume Next
-findSp mSPs.SPNameBrokerSimulated
+findSp SPNameOrderSubmissionSimulated
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2189,7 +2271,7 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTbOrders
+Case SPProgIdTbOrders
     OptionCombo.Text = SpOptionTbOrders
     
     setupBrProperties
@@ -2202,7 +2284,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2211,11 +2293,11 @@ Dim prop As ConfigurationSection
 Dim da As DataAdapter
 
 Const ProcName As String = "setupCustomProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
-CustomEnabledCheck.value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+CustomEnabledCheck.Value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
 ProgIdText = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 
 mCustomParams.RemoveCollectionChangeListener Me
@@ -2224,7 +2306,7 @@ Set mCustomParams = New Parameters
 
 For Each prop In mCurrProps
     mCustomParams.SetParameterValue prop.InstanceQualifier, _
-                                    prop.value
+                                    prop.Value
 Next
 
 On Error GoTo Err
@@ -2238,23 +2320,23 @@ mCustomParams.AddCollectionChangeListener Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub setupDbProperties()
 Const ProcName As String = "setupDbProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
-DbEnabledCheck.value = vbUnchecked
+DbEnabledCheck.Value = vbUnchecked
 DbServerText = ""
 DbTypeCombo = ""
 DbDatabaseText = ""
 DbUsernameText = ""
 DbPasswordText = ""
-DbEnabledCheck.value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+DbEnabledCheck.Value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
 DbServerText = getProperty(PropertyNameTbServer)
 DbTypeCombo = getProperty(PropertyNameTbDbType)
 DbDatabaseText = getProperty(PropertyNameTbDbName)
@@ -2264,14 +2346,14 @@ DbPasswordText = getProperty(PropertyNameTbPassword)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupHistoricalDataInputSP()
 Dim progId As String
     
 Const ProcName As String = "setupHistoricalDataInputSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Historical bar data retrieval source options"
@@ -2279,12 +2361,12 @@ OptionLabel = "Select historical bar data source"
 OptionCombo.ComboItems.Clear
 OptionCombo.ComboItems.Add , , SpOptionNotConfigured
 OptionCombo.ComboItems.Add , , SpOptionTbBarData
-OptionCombo.ComboItems.Add , , SpOptionQtBarData
+'OptionCombo.ComboItems.Add , , SpOptionQtBarData
 OptionCombo.ComboItems.Add , , SpOptionTwsBarData
 OptionCombo.ComboItems.Add , , SpOptionCustomBarData
 
 On Error Resume Next
-findSp mSPs.SPNameHistoricalDataInput
+findSp SPNameHistoricalDataInput
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2294,18 +2376,18 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTwsBarData
+Case SPProgIdTwsBarData
     OptionCombo.Text = SpOptionTwsBarData
     
     setupTwsProperties
-Case mSPs.SPProgIdTbBarData
+Case SPProgIdTbBarData
     OptionCombo.Text = SpOptionTbBarData
     
     setupDbProperties
-Case mSPs.SPProgIdQtBarData
-    OptionCombo.Text = SpOptionQtBarData
-    
-    setupQtProperties
+'Case SPProgIdQtBarData
+'    OptionCombo.Text = SpOptionQtBarData
+'
+'    setupQtProperties
 Case Else
     OptionCombo.Text = SpOptionCustomBarData
     
@@ -2315,7 +2397,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2323,7 +2405,7 @@ Private Sub setupHistoricalDataOutputSP()
 Dim progId As String
     
 Const ProcName As String = "setupHistoricalDataOutputSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Historical bar data storage options"
@@ -2331,11 +2413,10 @@ OptionLabel = "Select historical bar data source"
 OptionCombo.ComboItems.Clear
 OptionCombo.ComboItems.Add , , SpOptionNotConfigured
 OptionCombo.ComboItems.Add , , SpOptionTbBarData
-OptionCombo.ComboItems.Add , , SpOptionTwsBarData
 OptionCombo.ComboItems.Add , , SpOptionCustomBarData
 
 On Error Resume Next
-findSp mSPs.SPNameHistoricalDataOutput
+findSp SPNameHistoricalDataOutput
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2345,7 +2426,7 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTbBarData
+Case SPProgIdTbBarData
     OptionCombo.Text = SpOptionTbBarData
     
     setupDbProperties
@@ -2358,7 +2439,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2366,7 +2447,7 @@ Private Sub setupPrimaryContractDataSP()
 Dim progId As String
     
 Const ProcName As String = "setupPrimaryContractDataSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Primary contract data source options"
@@ -2378,7 +2459,7 @@ OptionCombo.ComboItems.Add , , SpOptionTwsContractData
 OptionCombo.ComboItems.Add , , SpOptionCustomContractData
 
 On Error Resume Next
-findSp mSPs.SPNamePrimaryContractData
+findSp SPNameContractDataPrimary
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2388,11 +2469,11 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTwsContractData
+Case SPProgIdTwsContractData
     OptionCombo.Text = SpOptionTwsContractData
     
     setupTwsProperties
-Case mSPs.SPProgIdTbContractData
+Case SPProgIdTbContractData
     OptionCombo.Text = SpOptionTbContractData
     
     setupDbProperties
@@ -2405,7 +2486,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2413,19 +2494,19 @@ Private Sub setupRealtimeDataSP()
 Dim progId As String
 
 Const ProcName As String = "setupRealtimeDataSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Realtime data source options"
 OptionLabel = "Select realtime data source"
 OptionCombo.ComboItems.Clear
 OptionCombo.ComboItems.Add , , SpOptionNotConfigured
-OptionCombo.ComboItems.Add , , SpOptionQtRealtimeData
+'OptionCombo.ComboItems.Add , , SpOptionQtRealtimeData
 OptionCombo.ComboItems.Add , , SpOptionTwsRealtimeData
 OptionCombo.ComboItems.Add , , SpOptionCustomRealtimeData
 
 On Error Resume Next
-findSp mSPs.SPNameRealtimeData
+findSp SPNameRealtimeData
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2435,14 +2516,14 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTwsRealtimeData
+Case SPProgIdTwsRealtimeData
     OptionCombo.Text = SpOptionTwsRealtimeData
     
     setupTwsProperties
-Case mSPs.SPProgIdQtRealtimeData
-    OptionCombo.Text = SpOptionQtRealtimeData
-
-    setupQtProperties
+'Case SPProgIdQtRealtimeData
+'    OptionCombo.Text = SpOptionQtRealtimeData
+'
+'    setupQtProperties
 Case Else
     OptionCombo.Text = SpOptionCustomRealtimeData
     
@@ -2452,18 +2533,18 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub setupQtProperties()
 Const ProcName As String = "setupQtProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
-QtEnabledCheck.value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
-QtKeepConnectionCheck.value = IIf(getProperty(PropertyNameQtKeepConnection) = "True", vbChecked, vbUnchecked)
+QtEnabledCheck.Value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+QtKeepConnectionCheck.Value = IIf(getProperty(PropertyNameQtKeepConnection) = "True", vbChecked, vbUnchecked)
 QtServerText = getProperty(PropertyNameQtServer)
 QtPortText = getProperty(PropertyNameQtPort)
 QtPasswordText = getProperty(PropertyNameQtPassword)
@@ -2473,14 +2554,14 @@ QtConnectRetryIntervalText = getProperty(PropertyNameQtConnectionRetryInterval)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupSecondaryContractDataSP()
 Dim progId As String
     
 Const ProcName As String = "setupSecondaryContractDataSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Secondary contract data source options"
@@ -2492,7 +2573,7 @@ OptionCombo.ComboItems.Add , , SpOptionTwsContractData
 OptionCombo.ComboItems.Add , , SpOptionCustomContractData
 
 On Error Resume Next
-findSp mSPs.SPNameSecondryContractData
+findSp SPNameContractDataSecondary
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2502,11 +2583,11 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTwsContractData
+Case SPProgIdTwsContractData
     OptionCombo.Text = SpOptionTwsContractData
     
     setupTwsProperties
-Case mSPs.SPProgIdTbContractData
+Case SPProgIdTbContractData
     OptionCombo.Text = SpOptionTbContractData
     
     setupDbProperties
@@ -2519,44 +2600,44 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub setupTfInputProperties()
 Const ProcName As String = "setupTfInputProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
-TfInputEnabledCheck.value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+TfInputEnabledCheck.Value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupTfOutputProperties()
 Const ProcName As String = "setupTfOutputProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
-TfOutputEnabledCheck.value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
-TickfilePathText.Text = getProperty(PropertyNameTfTickfilePath)
+TfOutputEnabledCheck.Value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+OutputTickfilePathText.Text = getProperty(PropertyNameTfTickfilePath)
 TickfileGranularityCombo.Text = getProperty(PropertyNameTfTickfileGranularity)
 If TickfileGranularityCombo.Text = "" Then TickfileGranularityCombo.Text = TickfileGranularityExecution
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupTickfileInputSP()
 Dim progId As String
 
 Const ProcName As String = "setupTickfileInputSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Tickfile replay data source options"
@@ -2565,11 +2646,11 @@ OptionCombo.ComboItems.Clear
 OptionCombo.ComboItems.Add , , SpOptionNotConfigured
 OptionCombo.ComboItems.Add , , SpOptionTbTickData
 OptionCombo.ComboItems.Add , , SpOptionFileTickData
-OptionCombo.ComboItems.Add , , SpOptionQtTickData
+'OptionCombo.ComboItems.Add , , SpOptionQtTickData
 OptionCombo.ComboItems.Add , , SpOptionCustomTickData
 
 On Error Resume Next
-findSp mSPs.SPNameTickfileInput
+findSp SPNameTickfileInput
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2579,18 +2660,18 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTbTickData
+Case SPProgIdTbTickData
     OptionCombo.Text = SpOptionTbTickData
     
     setupDbProperties
-Case mSPs.SPProgIdFileTickData
+Case SPProgIdFileTickData
     OptionCombo.Text = SpOptionFileTickData
     
     setupTfInputProperties
-Case mSPs.SPProgIdQtTickData
-    OptionCombo.Text = SpOptionQtTickData
-
-    setupQtProperties
+'Case SPProgIdQtTickData
+'    OptionCombo.Text = SpOptionQtTickData
+'
+'    setupQtProperties
 Case Else
     OptionCombo.Text = SpOptionCustomTickData
     
@@ -2600,7 +2681,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2608,7 +2689,7 @@ Private Sub setupTickfileOutputSP()
 Dim progId As String
 
 Const ProcName As String = "setupTickfileOutputSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CategoryLabel = "Tickfile storage options"
@@ -2620,7 +2701,7 @@ OptionCombo.ComboItems.Add , , SpOptionFileTickData
 OptionCombo.ComboItems.Add , , SpOptionCustomTickData
 
 On Error Resume Next
-findSp mSPs.SPNameTickfileOutput
+findSp SPNameTickfileOutput
 progId = mCurrSP.GetAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo Err
 
@@ -2630,11 +2711,11 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case mSPs.SPProgIdTbTickData
+Case SPProgIdTbTickData
     OptionCombo.Text = SpOptionTbTickData
     
     setupDbProperties
-Case mSPs.SPProgIdFileTickData
+Case SPProgIdFileTickData
     OptionCombo.Text = SpOptionFileTickData
     
     setupTfOutputProperties
@@ -2647,26 +2728,26 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub setupTwsProperties()
 Dim twsLogLevel As String
 Const ProcName As String = "setupTwsProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
-TwsEnabledCheck.value = vbUnchecked
-TwsKeepConnectionCheck.value = vbUnchecked
+TwsEnabledCheck.Value = vbUnchecked
+TwsKeepConnectionCheck.Value = vbUnchecked
 TWSServerText = ""
 TWSPortText = ""
 TWSClientIdText = ""
 TwsProviderKeyText = ""
 TwsConnectRetryIntervalText = ""
-TwsEnabledCheck.value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
-TwsKeepConnectionCheck.value = IIf(getProperty(PropertyNameTwsKeepConnection) = "True", vbChecked, vbUnchecked)
+TwsEnabledCheck.Value = IIf(mCurrSP.GetAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+TwsKeepConnectionCheck.Value = IIf(getProperty(PropertyNameTwsKeepConnection) = "True", vbChecked, vbUnchecked)
 TWSServerText = getProperty(PropertyNameTwsServer)
 TWSPortText = getProperty(PropertyNameTwsPort)
 TWSClientIdText = getProperty(PropertyNameTwsClientId)
@@ -2682,25 +2763,25 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showSpOptions()
 Const ProcName As String = "showSpOptions"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case mCurrCategory
-Case mSPs.SPNameRealtimeData
+Case SPNameRealtimeData
     Select Case OptionCombo.Text
-    Case SpOptionQtRealtimeData
-        Set mCurrOptionsPic = QtOptionsPicture
+'    Case SpOptionQtRealtimeData
+'        Set mCurrOptionsPic = QtOptionsPicture
     Case SpOptionTwsRealtimeData
         Set mCurrOptionsPic = TwsOptionsPicture
     Case SpOptionCustomRealtimeData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case mSPs.SPNamePrimaryContractData
+Case SPNameContractDataPrimary
     Select Case OptionCombo.Text
     Case SpOptionTbContractData
         Set mCurrOptionsPic = DbOptionsPicture
@@ -2709,7 +2790,7 @@ Case mSPs.SPNamePrimaryContractData
     Case SpOptionCustomContractData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case mSPs.SPNameSecondryContractData
+Case SPNameContractDataSecondary
     Select Case OptionCombo.Text
     Case SpOptionTbContractData
         Set mCurrOptionsPic = DbOptionsPicture
@@ -2718,50 +2799,50 @@ Case mSPs.SPNameSecondryContractData
     Case SpOptionCustomContractData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case mSPs.SPNameHistoricalDataInput
+Case SPNameHistoricalDataInput
     Select Case OptionCombo.Text
     Case SpOptionTbBarData
         Set mCurrOptionsPic = DbOptionsPicture
-    Case SpOptionQtBarData
-        Set mCurrOptionsPic = QtOptionsPicture
+'    Case SpOptionQtBarData
+'        Set mCurrOptionsPic = QtOptionsPicture
     Case SpOptionTwsBarData
         Set mCurrOptionsPic = TwsOptionsPicture
     Case SpOptionCustomBarData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case mSPs.SPNameHistoricalDataOutput
+Case SPNameHistoricalDataOutput
     Select Case OptionCombo.Text
     Case SpOptionTbBarData
         Set mCurrOptionsPic = DbOptionsPicture
     Case SpOptionCustomBarData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case mSPs.SPNameBrokerLive
+Case SPNameOrderSubmissionLive
     Select Case OptionCombo.Text
     Case SpOptionTwsOrders
         Set mCurrOptionsPic = TwsOptionsPicture
     Case SpOptionCustomOrders
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case mSPs.SPNameBrokerSimulated
+Case SPNameOrderSubmissionSimulated
     Select Case OptionCombo.Text
     Case SpOptionTbOrders
         Set mCurrOptionsPic = BrOptionsPicture
     Case SpOptionCustomOrders
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case mSPs.SPNameTickfileInput
+Case SPNameTickfileInput
     Select Case OptionCombo.Text
     Case SpOptionTbTickData
         Set mCurrOptionsPic = DbOptionsPicture
-    Case SpOptionQtTickData
-        Set mCurrOptionsPic = QtOptionsPicture
+'    Case SpOptionQtTickData
+'        Set mCurrOptionsPic = QtOptionsPicture
     Case SpOptionFileTickData
         Set mCurrOptionsPic = TfInputOptionsPicture
     Case SpOptionCustomTickData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case mSPs.SPNameTickfileOutput
+Case SPNameTickfileOutput
     Select Case OptionCombo.Text
     Case SpOptionTbTickData
         Set mCurrOptionsPic = DbOptionsPicture
@@ -2784,6 +2865,6 @@ OptionCombo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

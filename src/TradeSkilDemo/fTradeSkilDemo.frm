@@ -2,10 +2,10 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#256.4#0"; "TradeBuildUI2-6.ocx"
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.1#0"; "TWControls10.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#215.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
 Begin VB.Form fTradeSkilDemo 
-   Caption         =   "TradeSkil Demo Edition Version 2.6"
+   Caption         =   "TradeSkil Demo Edition Version 2.7"
    ClientHeight    =   9960
    ClientLeft      =   225
    ClientTop       =   345
@@ -23,7 +23,7 @@ Begin VB.Form fTradeSkilDemo
       Picture         =   "fTradeSkilDemo.frx":0152
       ScaleHeight     =   240
       ScaleWidth      =   240
-      TabIndex        =   0
+      TabIndex        =   1
       ToolTipText     =   "Show features"
       Top             =   9345
       Width           =   240
@@ -38,7 +38,7 @@ Begin VB.Form fTradeSkilDemo
       Picture         =   "fTradeSkilDemo.frx":082E
       ScaleHeight     =   240
       ScaleWidth      =   240
-      TabIndex        =   24
+      TabIndex        =   26
       ToolTipText     =   "Hide features"
       Top             =   5070
       Width           =   240
@@ -53,7 +53,7 @@ Begin VB.Form fTradeSkilDemo
       Picture         =   "fTradeSkilDemo.frx":0F0A
       ScaleHeight     =   240
       ScaleWidth      =   240
-      TabIndex        =   59
+      TabIndex        =   56
       ToolTipText     =   "Show controls"
       Top             =   440
       Width           =   240
@@ -68,7 +68,7 @@ Begin VB.Form fTradeSkilDemo
       Picture         =   "fTradeSkilDemo.frx":15E6
       ScaleHeight     =   240
       ScaleWidth      =   240
-      TabIndex        =   58
+      TabIndex        =   55
       ToolTipText     =   "Hide controls"
       Top             =   440
       Width           =   240
@@ -76,7 +76,7 @@ Begin VB.Form fTradeSkilDemo
    Begin TabDlg.SSTab FeaturesSSTAB 
       Height          =   4455
       Left            =   4320
-      TabIndex        =   6
+      TabIndex        =   8
       Top             =   5040
       Width           =   12255
       _ExtentX        =   21616
@@ -86,6 +86,15 @@ Begin VB.Form fTradeSkilDemo
       Style           =   1
       TabsPerRow      =   6
       TabHeight       =   520
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Segoe UI"
+         Size            =   9
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       TabCaption(0)   =   "&1. Orders"
       TabPicture(0)   =   "fTradeSkilDemo.frx":1B70
       Tab(0).ControlEnabled=   -1  'True
@@ -108,8 +117,11 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(1)   =   "fTradeSkilDemo.frx":1B8C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LiveExecutionsSummary"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
+      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).ControlCount=   3
       TabCaption(2)   =   "&3. Log"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BA8
@@ -121,7 +133,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Order  Ticket"
          Height          =   495
          Left            =   11160
-         TabIndex        =   7
+         TabIndex        =   9
          Top             =   840
          Width           =   975
       End
@@ -131,7 +143,7 @@ Begin VB.Form fTradeSkilDemo
          Locked          =   -1  'True
          MultiLine       =   -1  'True
          ScrollBars      =   2  'Vertical
-         TabIndex        =   53
+         TabIndex        =   50
          TabStop         =   0   'False
          ToolTipText     =   "Status messages"
          Top             =   120
@@ -150,7 +162,7 @@ Begin VB.Form fTradeSkilDemo
          EndProperty
          Height          =   495
          Left            =   11160
-         TabIndex        =   10
+         TabIndex        =   12
          Top             =   3510
          Width           =   975
       End
@@ -159,7 +171,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   11160
-         TabIndex        =   9
+         TabIndex        =   11
          Top             =   2040
          Width           =   975
       End
@@ -168,20 +180,20 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   11160
-         TabIndex        =   8
+         TabIndex        =   10
          Top             =   1440
          Width           =   975
       End
       Begin MSComctlLib.TabStrip OrdersSummaryTabStrip 
          Height          =   375
          Left            =   120
-         TabIndex        =   50
+         TabIndex        =   48
          Top             =   3720
-         Width           =   1575
-         _ExtentX        =   2778
+         Width           =   4215
+         _ExtentX        =   7435
          _ExtentY        =   661
          MultiRow        =   -1  'True
-         Style           =   1
+         Style           =   2
          Placement       =   1
          _Version        =   393216
          BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
@@ -197,29 +209,38 @@ Begin VB.Form fTradeSkilDemo
                ImageVarType    =   2
             EndProperty
          EndProperty
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "Segoe UI"
+            Size            =   9
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
       End
-      Begin TradeBuildUI26.OrdersSummary LiveOrdersSummary 
+      Begin TradingUI27.OrdersSummary LiveOrdersSummary 
          Height          =   3615
          Left            =   120
-         TabIndex        =   51
+         TabIndex        =   7
          Top             =   120
          Width           =   10935
          _ExtentX        =   19288
          _ExtentY        =   6376
       End
-      Begin TradeBuildUI26.OrdersSummary SimulatedOrdersSummary 
+      Begin TradingUI27.OrdersSummary SimulatedOrdersSummary 
          Height          =   3615
          Left            =   120
-         TabIndex        =   52
+         TabIndex        =   49
          Top             =   120
          Width           =   10935
          _ExtentX        =   19288
          _ExtentY        =   6376
       End
-      Begin TradeBuildUI26.ExecutionsSummary LiveExecutionsSummary 
+      Begin TradingUI27.ExecutionsSummary LiveExecutionsSummary 
          Height          =   3615
          Left            =   -74880
-         TabIndex        =   55
+         TabIndex        =   52
          Top             =   120
          Width           =   11955
          _ExtentX        =   21087
@@ -228,10 +249,10 @@ Begin VB.Form fTradeSkilDemo
       Begin MSComctlLib.TabStrip ExecutionsSummaryTabStrip 
          Height          =   375
          Left            =   -74880
-         TabIndex        =   56
+         TabIndex        =   53
          Top             =   3720
-         Width           =   1575
-         _ExtentX        =   2778
+         Width           =   1695
+         _ExtentX        =   2990
          _ExtentY        =   661
          MultiRow        =   -1  'True
          Style           =   1
@@ -250,11 +271,20 @@ Begin VB.Form fTradeSkilDemo
                ImageVarType    =   2
             EndProperty
          EndProperty
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "Segoe UI"
+            Size            =   9
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
       End
-      Begin TradeBuildUI26.ExecutionsSummary SimulatedExecutionsSummary 
+      Begin TradingUI27.ExecutionsSummary SimulatedExecutionsSummary 
          Height          =   3615
          Left            =   -74880
-         TabIndex        =   57
+         TabIndex        =   54
          Top             =   120
          Width           =   11995
          _ExtentX        =   21167
@@ -264,7 +294,7 @@ Begin VB.Form fTradeSkilDemo
    Begin MSComctlLib.TabStrip ControlsTabStrip 
       Height          =   580
       Left            =   120
-      TabIndex        =   54
+      TabIndex        =   51
       Top             =   120
       Width           =   4095
       _ExtentX        =   7223
@@ -293,11 +323,20 @@ Begin VB.Form fTradeSkilDemo
             ImageVarType    =   2
          EndProperty
       EndProperty
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Segoe UI"
+         Size            =   9
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
    End
    Begin TabDlg.SSTab ControlsSSTab 
       Height          =   9015
       Left            =   120
-      TabIndex        =   35
+      TabIndex        =   34
       Top             =   480
       Width           =   4095
       _ExtentX        =   7223
@@ -307,6 +346,15 @@ Begin VB.Form fTradeSkilDemo
       Tabs            =   5
       TabsPerRow      =   5
       TabHeight       =   2
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Segoe UI"
+         Size            =   9
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       TabCaption(0)   =   "Tab 0"
       TabPicture(0)   =   "fTradeSkilDemo.frx":1BC4
       Tab(0).ControlEnabled=   -1  'True
@@ -319,84 +367,67 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(1)   =   "fTradeSkilDemo.frx":1BE0
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Label18"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "Label22"
-      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "Label1"
-      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "LiveChartTimeframeSelector"
-      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "NumHistoryBarsText"
-      Tab(1).Control(4).Enabled=   0   'False
       Tab(1).Control(5)=   "SessionOnlyCheck"
-      Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "ChartButton"
-      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).Control(7)=   "Frame1"
-      Tab(1).Control(7).Enabled=   0   'False
       Tab(1).Control(8)=   "LiveChartStylesCombo"
-      Tab(1).Control(8).Enabled=   0   'False
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BFC
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Frame2"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "HistContractSearch"
-      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).Control(2)=   "HistSessionOnlyCheck"
-      Tab(2).Control(2).Enabled=   0   'False
       Tab(2).Control(3)=   "NumHistBarsText"
-      Tab(2).Control(3).Enabled=   0   'False
       Tab(2).Control(4)=   "HistTimeframeSelector"
-      Tab(2).Control(4).Enabled=   0   'False
       Tab(2).Control(5)=   "ToDatePicker"
-      Tab(2).Control(5).Enabled=   0   'False
       Tab(2).Control(6)=   "FromDatePicker"
-      Tab(2).Control(6).Enabled=   0   'False
       Tab(2).Control(7)=   "HistChartStylesCombo"
-      Tab(2).Control(7).Enabled=   0   'False
       Tab(2).Control(8)=   "Label8"
-      Tab(2).Control(8).Enabled=   0   'False
       Tab(2).Control(9)=   "Label3"
-      Tab(2).Control(9).Enabled=   0   'False
       Tab(2).Control(10)=   "Label2"
-      Tab(2).Control(10).Enabled=   0   'False
       Tab(2).Control(11)=   "Label4"
-      Tab(2).Control(11).Enabled=   0   'False
       Tab(2).Control(12)=   "Label5"
-      Tab(2).Control(12).Enabled=   0   'False
       Tab(2).ControlCount=   13
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":1C18
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "SkipReplayButton"
-      Tab(3).Control(1)=   "PlayTickFileButton"
-      Tab(3).Control(2)=   "PauseReplayButton"
-      Tab(3).Control(3)=   "StopReplayButton"
+      Tab(3).Control(0)=   "Label20"
+      Tab(3).Control(1)=   "ReplayContractLabel"
+      Tab(3).Control(2)=   "ReplayProgressLabel"
+      Tab(3).Control(3)=   "ReplayProgressBar"
       Tab(3).Control(4)=   "ReplaySpeedCombo"
-      Tab(3).Control(5)=   "SelectTickfilesButton"
-      Tab(3).Control(6)=   "ClearTickfileListButton"
-      Tab(3).Control(7)=   "TickfileList"
-      Tab(3).Control(7).Enabled=   0   'False
-      Tab(3).Control(8)=   "ReplayProgressBar"
-      Tab(3).Control(9)=   "ReplayProgressLabel"
-      Tab(3).Control(10)=   "ReplayContractLabel"
-      Tab(3).Control(11)=   "Label20"
-      Tab(3).ControlCount=   12
+      Tab(3).Control(5)=   "StopReplayButton"
+      Tab(3).Control(6)=   "PauseReplayButton"
+      Tab(3).Control(7)=   "PlayTickFileButton"
+      Tab(3).Control(8)=   "TickfileOrganiser1"
+      Tab(3).ControlCount=   9
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1C34
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label6"
+      Tab(4).Control(0)=   "ConfigEditorButton"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "ConfigEditorButton"
+      Tab(4).Control(2)=   "Label6"
       Tab(4).ControlCount=   3
+      Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
+         Height          =   2520
+         Left            =   -74880
+         TabIndex        =   66
+         Top             =   360
+         Width           =   3930
+         _ExtentX        =   6932
+         _ExtentY        =   4445
+      End
       Begin VB.Frame Frame2 
          Caption         =   "Change chart styles"
          Height          =   1335
          Left            =   -74880
-         TabIndex        =   66
+         TabIndex        =   62
          Top             =   7560
          Width           =   3855
          Begin VB.PictureBox Picture2 
@@ -405,14 +436,14 @@ Begin VB.Form fTradeSkilDemo
             Left            =   60
             ScaleHeight     =   975
             ScaleWidth      =   3735
-            TabIndex        =   67
+            TabIndex        =   63
             Top             =   240
             Width           =   3735
             Begin VB.CommandButton ChangeHistChartStylesButton 
                Caption         =   "Change ALL historical chart styles"
                Height          =   495
                Left            =   480
-               TabIndex        =   68
+               TabIndex        =   64
                Top             =   480
                Width           =   2775
             End
@@ -420,16 +451,16 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Click this button to change the style of all existing historical charts to the style selected above."
                Height          =   495
                Left            =   120
-               TabIndex        =   69
+               TabIndex        =   65
                Top             =   0
                Width           =   3495
             End
          End
       End
-      Begin TWControls10.TWImageCombo LiveChartStylesCombo 
+      Begin TWControls40.TWImageCombo LiveChartStylesCombo 
          Height          =   330
          Left            =   -73080
-         TabIndex        =   14
+         TabIndex        =   16
          Top             =   1800
          Width           =   2055
          _ExtentX        =   3625
@@ -450,7 +481,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Change chart styles"
          Height          =   1335
          Left            =   -74880
-         TabIndex        =   16
+         TabIndex        =   18
          Top             =   3600
          Width           =   3855
          Begin VB.PictureBox Picture1 
@@ -459,14 +490,14 @@ Begin VB.Form fTradeSkilDemo
             Left            =   60
             ScaleHeight     =   975
             ScaleWidth      =   3735
-            TabIndex        =   62
+            TabIndex        =   58
             Top             =   240
             Width           =   3735
             Begin VB.CommandButton ChangeLiveChartStylesButton 
                Caption         =   "Change ALL live chart styles"
                Height          =   495
                Left            =   480
-               TabIndex        =   64
+               TabIndex        =   60
                Top             =   480
                Width           =   2775
             End
@@ -474,25 +505,25 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Click this button to change the style of all existing live charts to the style selected above."
                Height          =   495
                Left            =   120
-               TabIndex        =   63
+               TabIndex        =   59
                Top             =   0
                Width           =   3495
             End
          End
       End
-      Begin TradeBuildUI26.ContractSearch LiveContractSearch 
+      Begin TradingUI27.ContractSearch LiveContractSearch 
          Height          =   5415
          Left            =   120
-         TabIndex        =   60
+         TabIndex        =   0
          Top             =   360
          Width           =   3855
          _ExtentX        =   6800
          _ExtentY        =   9551
       End
-      Begin TradeBuildUI26.ContractSearch HistContractSearch 
+      Begin TradingUI27.ContractSearch HistContractSearch 
          Height          =   4455
          Left            =   -74880
-         TabIndex        =   23
+         TabIndex        =   25
          Top             =   3000
          Width           =   3855
          _ExtentX        =   6800
@@ -502,7 +533,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Show config editor"
          Height          =   375
          Left            =   -72840
-         TabIndex        =   33
+         TabIndex        =   32
          Top             =   2280
          Width           =   1575
       End
@@ -510,39 +541,29 @@ Begin VB.Form fTradeSkilDemo
          Height          =   285
          Left            =   -74640
          Locked          =   -1  'True
-         TabIndex        =   32
+         TabIndex        =   31
          TabStop         =   0   'False
          Top             =   1260
          Width           =   3375
-      End
-      Begin VB.CommandButton SkipReplayButton 
-         Caption         =   "S&kip"
-         Enabled         =   0   'False
-         Height          =   495
-         Left            =   -72360
-         TabIndex        =   30
-         ToolTipText     =   "Pause tickfile replay"
-         Top             =   3240
-         Width           =   615
       End
       Begin VB.CommandButton PlayTickFileButton 
          Caption         =   "&Play"
          Enabled         =   0   'False
          Height          =   495
-         Left            =   -73800
+         Left            =   -73080
          TabIndex        =   28
          ToolTipText     =   "Start or resume tickfile replay"
-         Top             =   3240
+         Top             =   3480
          Width           =   615
       End
       Begin VB.CommandButton PauseReplayButton 
          Caption         =   "P&ause"
          Enabled         =   0   'False
          Height          =   495
-         Left            =   -73080
+         Left            =   -72360
          TabIndex        =   29
          ToolTipText     =   "Pause tickfile replay"
-         Top             =   3240
+         Top             =   3480
          Width           =   615
       End
       Begin VB.CommandButton StopReplayButton 
@@ -550,9 +571,9 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -71640
-         TabIndex        =   31
+         TabIndex        =   30
          ToolTipText     =   "Stop tickfile replay"
-         Top             =   3240
+         Top             =   3480
          Width           =   615
       End
       Begin VB.ComboBox ReplaySpeedCombo 
@@ -562,41 +583,14 @@ Begin VB.Form fTradeSkilDemo
          List            =   "fTradeSkilDemo.frx":1C6E
          Style           =   2  'Dropdown List
          TabIndex        =   27
-         Top             =   2760
+         Top             =   3000
          Width           =   2775
-      End
-      Begin VB.CommandButton SelectTickfilesButton 
-         Caption         =   "..."
-         Height          =   375
-         Left            =   -72120
-         TabIndex        =   25
-         ToolTipText     =   "Select tickfile(s)"
-         Top             =   360
-         Width           =   495
-      End
-      Begin VB.CommandButton ClearTickfileListButton 
-         Caption         =   "X"
-         Enabled         =   0   'False
-         Height          =   375
-         Left            =   -71520
-         TabIndex        =   26
-         ToolTipText     =   "Clear tickfile list"
-         Top             =   360
-         Width           =   495
-      End
-      Begin VB.ListBox TickfileList 
-         Height          =   1815
-         Left            =   -74880
-         TabIndex        =   44
-         TabStop         =   0   'False
-         Top             =   840
-         Width           =   3855
       End
       Begin VB.CheckBox HistSessionOnlyCheck 
          Caption         =   "Session only"
          Height          =   375
          Left            =   -72240
-         TabIndex        =   19
+         TabIndex        =   21
          Top             =   1200
          Value           =   1  'Checked
          Width           =   1215
@@ -605,7 +599,7 @@ Begin VB.Form fTradeSkilDemo
          Alignment       =   1  'Right Justify
          Height          =   285
          Left            =   -72000
-         TabIndex        =   18
+         TabIndex        =   20
          Text            =   "500"
          Top             =   840
          Width           =   975
@@ -614,7 +608,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Selected tickers"
          Height          =   1215
          Left            =   120
-         TabIndex        =   38
+         TabIndex        =   37
          Top             =   6000
          Width           =   3615
          Begin VB.PictureBox Picture3 
@@ -623,15 +617,15 @@ Begin VB.Form fTradeSkilDemo
             Left            =   240
             ScaleHeight     =   855
             ScaleWidth      =   3255
-            TabIndex        =   39
+            TabIndex        =   38
             Top             =   240
             Width           =   3255
-            Begin VB.CommandButton Chart1Button 
+            Begin VB.CommandButton ChartButton1 
                Caption         =   "Chart"
                Enabled         =   0   'False
                Height          =   375
                Left            =   0
-               TabIndex        =   1
+               TabIndex        =   2
                Top             =   0
                Width           =   975
             End
@@ -640,7 +634,7 @@ Begin VB.Form fTradeSkilDemo
                Enabled         =   0   'False
                Height          =   375
                Left            =   1080
-               TabIndex        =   4
+               TabIndex        =   5
                Top             =   480
                Width           =   975
             End
@@ -649,7 +643,7 @@ Begin VB.Form fTradeSkilDemo
                Enabled         =   0   'False
                Height          =   375
                Left            =   2160
-               TabIndex        =   3
+               TabIndex        =   4
                Top             =   0
                Width           =   975
             End
@@ -658,7 +652,7 @@ Begin VB.Form fTradeSkilDemo
                Enabled         =   0   'False
                Height          =   375
                Left            =   1080
-               TabIndex        =   2
+               TabIndex        =   3
                Top             =   0
                Width           =   975
             End
@@ -669,7 +663,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   375
          Left            =   -72000
-         TabIndex        =   15
+         TabIndex        =   17
          Top             =   2280
          Width           =   975
       End
@@ -677,7 +671,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Session only"
          Height          =   375
          Left            =   -72240
-         TabIndex        =   13
+         TabIndex        =   15
          Top             =   1320
          Value           =   1  'Checked
          Width           =   1215
@@ -686,24 +680,24 @@ Begin VB.Form fTradeSkilDemo
          Alignment       =   1  'Right Justify
          Height          =   285
          Left            =   -72000
-         TabIndex        =   12
+         TabIndex        =   14
          Text            =   "500"
          Top             =   840
          Width           =   975
       End
-      Begin TradeBuildUI26.TimeframeSelector LiveChartTimeframeSelector 
+      Begin TradingUI27.TimeframeSelector LiveChartTimeframeSelector 
          Height          =   330
          Left            =   -73080
-         TabIndex        =   11
+         TabIndex        =   13
          Top             =   360
          Width           =   2055
          _ExtentX        =   3625
          _ExtentY        =   582
       End
-      Begin TradeBuildUI26.TimeframeSelector HistTimeframeSelector 
+      Begin TradingUI27.TimeframeSelector HistTimeframeSelector 
          Height          =   330
          Left            =   -73080
-         TabIndex        =   17
+         TabIndex        =   19
          Top             =   360
          Width           =   2055
          _ExtentX        =   3625
@@ -712,7 +706,7 @@ Begin VB.Form fTradeSkilDemo
       Begin MSComCtl2.DTPicker ToDatePicker 
          Height          =   375
          Left            =   -73080
-         TabIndex        =   21
+         TabIndex        =   23
          Top             =   2040
          Width           =   2055
          _ExtentX        =   3625
@@ -720,13 +714,13 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   70254595
+         Format          =   66453507
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
          Height          =   375
          Left            =   -73080
-         TabIndex        =   20
+         TabIndex        =   22
          Top             =   1560
          Width           =   2055
          _ExtentX        =   3625
@@ -734,13 +728,13 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   70254595
+         Format          =   66453507
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
          Height          =   135
          Left            =   -74880
-         TabIndex        =   46
+         TabIndex        =   44
          Top             =   4440
          Visible         =   0   'False
          Width           =   3855
@@ -750,10 +744,10 @@ Begin VB.Form fTradeSkilDemo
          BorderStyle     =   1
          Appearance      =   0
       End
-      Begin TWControls10.TWImageCombo HistChartStylesCombo 
+      Begin TWControls40.TWImageCombo HistChartStylesCombo 
          Height          =   330
          Left            =   -73080
-         TabIndex        =   22
+         TabIndex        =   24
          Top             =   2520
          Width           =   2055
          _ExtentX        =   3625
@@ -774,7 +768,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Style"
          Height          =   375
          Left            =   -74880
-         TabIndex        =   65
+         TabIndex        =   61
          Top             =   2520
          Width           =   1455
       End
@@ -782,7 +776,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Style"
          Height          =   375
          Left            =   -74880
-         TabIndex        =   61
+         TabIndex        =   57
          Top             =   1800
          Width           =   1455
       End
@@ -790,21 +784,21 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Current configuration is:"
          Height          =   375
          Left            =   -74640
-         TabIndex        =   49
+         TabIndex        =   47
          Top             =   960
          Width           =   2295
       End
       Begin VB.Label ReplayProgressLabel 
          Height          =   255
          Left            =   -74880
-         TabIndex        =   48
+         TabIndex        =   46
          Top             =   4200
          Width           =   3855
       End
       Begin VB.Label ReplayContractLabel 
          Height          =   975
          Left            =   -74880
-         TabIndex        =   47
+         TabIndex        =   45
          Top             =   4680
          Width           =   3855
       End
@@ -812,15 +806,15 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Replay speed"
          Height          =   375
          Left            =   -74880
-         TabIndex        =   45
-         Top             =   2760
+         TabIndex        =   43
+         Top             =   3000
          Width           =   1095
       End
       Begin VB.Label Label3 
          Caption         =   "Number of history bars"
          Height          =   495
          Left            =   -74880
-         TabIndex        =   43
+         TabIndex        =   42
          Top             =   840
          Width           =   1455
       End
@@ -828,7 +822,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Timeframe"
          Height          =   255
          Left            =   -74880
-         TabIndex        =   42
+         TabIndex        =   41
          Top             =   360
          Width           =   735
       End
@@ -836,7 +830,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "From"
          Height          =   255
          Left            =   -74880
-         TabIndex        =   41
+         TabIndex        =   40
          Top             =   1560
          Width           =   855
       End
@@ -844,7 +838,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "To"
          Height          =   255
          Left            =   -74880
-         TabIndex        =   40
+         TabIndex        =   39
          Top             =   2040
          Width           =   855
       End
@@ -852,7 +846,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Number of history bars"
          Height          =   375
          Left            =   -74880
-         TabIndex        =   37
+         TabIndex        =   36
          Top             =   840
          Width           =   1335
       End
@@ -860,7 +854,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Timeframe"
          Height          =   255
          Left            =   -74880
-         TabIndex        =   36
+         TabIndex        =   35
          Top             =   360
          Width           =   735
       End
@@ -869,7 +863,7 @@ Begin VB.Form fTradeSkilDemo
       Align           =   2  'Align Bottom
       Height          =   375
       Left            =   0
-      TabIndex        =   34
+      TabIndex        =   33
       Top             =   9585
       Width           =   16665
       _ExtentX        =   29395
@@ -894,25 +888,27 @@ Begin VB.Form fTradeSkilDemo
          EndProperty
       EndProperty
    End
-   Begin TradeBuildUI26.TickerGrid TickerGrid1 
+   Begin TradingUI27.TickerGrid TickerGrid1 
       Height          =   4815
       Left            =   4320
-      TabIndex        =   5
+      TabIndex        =   6
       Top             =   120
       Width           =   12255
       _ExtentX        =   21616
       _ExtentY        =   8493
       AllowUserReordering=   3
-      RowSizingMode   =   1
+      BackColorFixed  =   16053492
       Rows            =   100
       RowBackColorOdd =   16316664
       RowBackColorEven=   15658734
-      HighLight       =   0
+      GridLineWidth   =   0
+      GridColorFixed  =   14737632
+      ForeColorFixed  =   10526880
       BeginProperty FontFixed {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
+         Name            =   "Segoe UI"
+         Size            =   9
          Charset         =   0
-         Weight          =   400
+         Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
          Strikethrough   =   0   'False
@@ -926,9 +922,6 @@ Begin VB.Form fTradeSkilDemo
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      FocusRect       =   0
-      FillStyle       =   1
-      Cols            =   24
    End
 End
 Attribute VB_Name = "fTradeSkilDemo"
@@ -949,6 +942,7 @@ Option Explicit
 '================================================================================
 
 Implements LogListener
+Implements StateChangeListener
 
 '================================================================================
 ' Events
@@ -996,23 +990,31 @@ End Enum
 ' Member variables
 '================================================================================
 
-Private WithEvents mTradeBuildAPI               As TradeBuildAPI
+Private WithEvents mTradeBuildAPI                   As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 
-Private WithEvents mTickers                     As Tickers
+Private WithEvents mTickers                         As Tickers
 Attribute mTickers.VB_VarHelpID = -1
 
-Private WithEvents mTickfileManager             As TickFileManager
-Attribute mTickfileManager.VB_VarHelpID = -1
+Private WithEvents mReplayController                As ReplayController
+Attribute mReplayController.VB_VarHelpID = -1
+Private WithEvents mTickfileReplayTC                As TaskController
+Attribute mTickfileReplayTC.VB_VarHelpID = -1
 
-Private WithEvents mCurrentClock                As Clock
-Attribute mCurrentClock.VB_VarHelpID = -1
+Private mControlsHidden                             As Boolean
+Private mFeaturesHidden                             As Boolean
 
-Private mConfigEditor                           As fConfigEditor
-Attribute mConfigEditor.VB_VarHelpID = -1
+Private mClockDisplay                               As ClockDisplay
 
-Private mControlsHidden                         As Boolean
-Private mFeaturesHidden                         As Boolean
+Private mAppInstanceConfig                          As ConfigurationSection
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mChartForms                                 As New ChartForms
+
+Private mSplash                                     As fSplash
+Private mPreviousMainForm                           As fTradeSkilDemo
 
 '================================================================================
 ' Form Event Handlers
@@ -1021,19 +1023,18 @@ Private mFeaturesHidden                         As Boolean
 Private Sub Form_Initialize()
 ' ensure we get the Windows XP look and feel if running on XP
 InitCommonControls
-
-Set mTradeBuildAPI = TradeBuildAPI
-
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
-
 On Error GoTo Err
 
 setupLogging
 
-setCurrentClock getDefaultClock
+Set mClockDisplay = New ClockDisplay
+mClockDisplay.Initialise StatusBar1.Panels("datetime"), StatusBar1.Panels("timezone")
+mClockDisplay.SetClock getDefaultClock
 
 setupReplaySpeedCombo
 
@@ -1041,22 +1042,16 @@ FromDatePicker.value = DateAdd("m", -1, Now)
 FromDatePicker.value = Empty    ' clear the checkbox
 ToDatePicker.value = Now
 
-SendMessage TickfileList.hWnd, LB_SETHORZEXTENT, 2000, 0
-
-LogMessage "Main form loaded successfully", LogLevelDetail
-
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub Form_QueryUnload( _
                 cancel As Integer, _
                 UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
-
 On Error GoTo Err
 
 updateInstanceSettings
@@ -1065,16 +1060,14 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub Form_Resize()
 Const ProcName As String = "Form_Resize"
+On Error GoTo Err
+
 Static prevHeight As Long
 Static prevWidth As Long
-
-
-On Error GoTo Err
 
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
 
@@ -1094,46 +1087,39 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub Form_Terminate()
-TerminateTWUtilities
-End Sub
-
 Private Sub Form_Unload(cancel As Integer)
 Const ProcName As String = "Form_Unload"
-Dim lTicker As Ticker
-Dim f As Form
-
-
 On Error GoTo Err
 
-LogMessage "Unloading program"
+LogMessage "Unloading main form"
 
-Set mCurrentClock = Nothing
+LogMessage "Shutting down clock"
+mClockDisplay.Finish
 
+LogMessage "Finishing UI controls"
 finishUIControls
 
+LogMessage "Closing charts and market depth forms"
+closeChartsAndMarketDepthForms
+
+LogMessage "Closing other forms"
+Dim f As Form
 For Each f In Forms
-    If Not f Is Me Then Unload f
+    If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then Unload f
 Next
 
 LogMessage "Stopping tickers"
-If Not mTickers Is Nothing Then
-    For Each lTicker In mTickers
-        lTicker.StopTicker
-    Next
-End If
+If Not mTickers Is Nothing Then mTickers.Finish
 
-saveSettings
-
+LogMessage "Removing service providers"
 mTradeBuildAPI.ServiceProviders.RemoveAll
 
-killLogging
+killLoggingForThisForm
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 '================================================================================
@@ -1144,8 +1130,7 @@ Private Sub LogListener_Finish()
 'nothing to do
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As TWUtilities30.LogRecord)
-
+Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
 Const ProcName As String = "LogListener_Notify"
 On Error GoTo Err
 
@@ -1165,7 +1150,53 @@ LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' StateChangeListener Interface Members
+'================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+OrderTicketButton.Enabled = Not (getSelectedDataSource Is Nothing)
+OrderTicket1Button.Enabled = OrderTicketButton.Enabled
+
+Dim lDataSource As IMarketDataSource
+Set lDataSource = ev.Source
+
+Select Case ev.State
+Case MarketDataSourceStates.MarketDataSourceStateCreated
+
+Case MarketDataSourceStates.MarketDataSourceStateReady
+    If lDataSource Is getSelectedDataSource Then mClockDisplay.SetClockFuture lDataSource.ClockFuture
+Case MarketDataSourceStates.MarketDataSourceStateRunning
+    If lDataSource Is getSelectedDataSource Then
+        MarketDepthButton.Enabled = True
+        ChartButton.Enabled = True
+        ChartButton1.Enabled = True
+    End If
+    
+Case MarketDataSourceStates.MarketDataSourceStatePaused
+
+Case MarketDataSourceStates.MarketDataSourceStateStopped
+    If getSelectedDataSource Is Nothing Then
+        StopTickerButton.Enabled = False
+        MarketDepthButton.Enabled = False
+        ChartButton.Enabled = False
+        ChartButton1.Enabled = False
+    Else
+        mClockDisplay.SetClockFuture getSelectedDataSource.ClockFuture
+    End If
+    
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -1176,9 +1207,9 @@ Private Sub CancelOrderPlexButton_Click()
 Const ProcName As String = "CancelOrderPlexButton_Click"
 On Error GoTo Err
 
-Dim op As OrderPlex
+Dim op As IBracketOrder
 
-If OrdersSummaryTabStrip.SelectedItem.index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
+If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
     Set op = LiveOrdersSummary.SelectedItem
 Else
     Set op = SimulatedOrdersSummary.SelectedItem
@@ -1220,11 +1251,9 @@ End Sub
 
 Private Sub ChartButton_Click()
 Const ProcName As String = "ChartButton_Click"
-
 On Error GoTo Err
 
 Dim lTicker As Ticker
-
 For Each lTicker In TickerGrid1.SelectedTickers
     createChart lTicker
 Next
@@ -1235,16 +1264,13 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
-Private Sub Chart1Button_Click()
-Const ProcName As String = "Chart1Button_Click"
-Dim lTicker As Ticker
-
-
+Private Sub ChartButton1_Click()
+Const ProcName As String = "ChartButton1_Click"
 On Error GoTo Err
 
+Dim lTicker As Ticker
 For Each lTicker In TickerGrid1.SelectedTickers
     createChart lTicker
 Next
@@ -1255,38 +1281,14 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub ClearTickfileListButton_Click()
-Const ProcName As String = "ClearTickfileListButton_Click"
-
-On Error GoTo Err
-
-TickfileList.Clear
-ClearTickfileListButton.Enabled = False
-mTickfileManager.ClearTickfileSpecifiers
-PlayTickFileButton.Enabled = False
-PauseReplayButton.Enabled = False
-SkipReplayButton.Enabled = False
-StopReplayButton.Enabled = False
-ChartButton.Enabled = False
-Chart1Button.Enabled = False
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub ClosePositionsButton_Click()
 Const ProcName As String = "ClosePositionsButton_Click"
-
 On Error GoTo Err
 
 If Not mTradeBuildAPI.ClosingPositions Then
-    If OrdersSummaryTabStrip.SelectedItem.index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
+    If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
         mTradeBuildAPI.CloseAllPositions PositionTypeLive, _
                                         ClosePositionCancelOrders Or ClosePositionWaitForCancel
     Else
@@ -1299,26 +1301,28 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub ConfigEditorButton_Click()
 Const ProcName As String = "ConfigEditorButton_Click"
-
 On Error GoTo Err
 
-showConfigEditor
+Dim lNewAppInstanceConfig As ConfigurationSection
+Set lNewAppInstanceConfig = gShowConfigEditor(mConfigStore, mAppInstanceConfig, Me)
+
+If lNewAppInstanceConfig Is Nothing Then Exit Sub
+
+gSaveSettings
+gLoadMainForm lNewAppInstanceConfig, Me, gShowSplashScreen
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub ControlsSSTab_Click(PreviousTab As Integer)
 Const ProcName As String = "ControlsSSTab_Click"
-
 On Error GoTo Err
 
 Select Case ControlsSSTab.Tab
@@ -1331,11 +1335,9 @@ Case ControlsTabIndexNumbers.ControlsTabIndexLiveCharts
     If TickerGrid1.SelectedTickers.Count > 0 Then ChartButton.Default = True
 Case ControlsTabIndexNumbers.ControlsTabIndexTickers
     LiveContractSearch.SetFocus
-    If TickerGrid1.SelectedTickers.Count > 0 Then Chart1Button.Default = True
+    If TickerGrid1.SelectedTickers.Count > 0 Then ChartButton1.Default = True
 Case ControlsTabIndexNumbers.ControlsTabIndexTickfileReplay
-    If mTickfileManager Is Nothing Then
-        SelectTickfilesButton.Default = True
-    Else
+    If Not mReplayController Is Nothing Then
         If PlayTickFileButton.Enabled Then
             PlayTickFileButton.Default = True
         ElseIf StopReplayButton.Enabled Then
@@ -1348,27 +1350,23 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub ControlsTabStrip_Click()
 Const ProcName As String = "ControlsTabStrip_Click"
-
 On Error GoTo Err
 
 ControlsSSTab.SetFocus
-ControlsSSTab.Tab = ControlsTabStrip.SelectedItem.index - 1
+ControlsSSTab.Tab = ControlsTabStrip.SelectedItem.Index - 1
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub FeaturesSSTAB_Click(PreviousTab As Integer)
 Const ProcName As String = "FeaturesSSTAB_Click"
-
 On Error GoTo Err
 
 Select Case FeaturesSSTAB.Tab
@@ -1386,12 +1384,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub HideControlsPicture_Click()
 Const ProcName As String = "HideControlsPicture_Click"
-
 On Error GoTo Err
 
 hideControls
@@ -1400,12 +1396,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub HideFeaturesPicture_Click()
 Const ProcName As String = "HideFeaturesPicture_Click"
-
 On Error GoTo Err
 
 hideFeatures
@@ -1414,24 +1408,22 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub HistChartStylesCombo_Click()
 Const ProcName As String = "HistChartStylesCombo_Change"
 On Error GoTo Err
 
-gAppInstanceConfig.SetSetting ConfigSettingAppCurrentHistChartStyle, HistChartStylesCombo.Text
+mAppInstanceConfig.SetSetting ConfigSettingAppCurrentHistChartStyle, HistChartStylesCombo.Text
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub HistContractSearch_Action()
 Const ProcName As String = "HistContractSearch_Action"
-
 On Error GoTo Err
 
 createHistoricCharts HistContractSearch.SelectedContracts
@@ -1440,42 +1432,37 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub HistContractSearch_NoContracts()
 Const ProcName As String = "HistContractSearch_NoContracts"
-
 On Error GoTo Err
 
-MsgBox "No contracts found", vbExclamation, "Attention"
+gModelessMsgBox "No contracts found", vbExclamation, "Attention"
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub LiveChartStylesCombo_Click()
 Const ProcName As String = "LiveChartStylesCombo_Change"
 On Error GoTo Err
 
-gAppInstanceConfig.SetSetting ConfigSettingAppCurrentChartStyle, LiveChartStylesCombo.Text
+mAppInstanceConfig.SetSetting ConfigSettingAppCurrentChartStyle, LiveChartStylesCombo.Text
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub LiveContractSearch_Action()
 Const ProcName As String = "LiveContractSearch_Action"
-
 On Error GoTo Err
 
-mTickers.StartTickersFromContracts TickerOptOrdersAreLive + TickerOptUseExchangeTimeZone, _
-                                    LiveContractSearch.SelectedContracts
+mTickers.StartTickers CreateFuture(LiveContractSearch.SelectedContracts), MarketDataSourceOptUseExchangeTimeZone
 
 Exit Sub
 
@@ -1488,7 +1475,7 @@ Const ProcName As String = "LiveContractSearch_NoContracts"
 
 On Error GoTo Err
 
-MsgBox "No contracts found", vbExclamation, "Attention"
+gModelessMsgBox "No contracts found", vbExclamation, "Attention"
 
 Exit Sub
 
@@ -1526,11 +1513,9 @@ End Sub
 
 Private Sub MarketDepthButton_Click()
 Const ProcName As String = "MarketDepthButton_Click"
-Dim lTicker As Ticker
-
-
 On Error GoTo Err
 
+Dim lTicker As Ticker
 For Each lTicker In TickerGrid1.SelectedTickers
     showMarketDepthForm lTicker
 Next
@@ -1549,19 +1534,19 @@ Const ProcName As String = "ModifyOrderPlexButton_Click"
 
 On Error GoTo Err
 
-If OrdersSummaryTabStrip.SelectedItem.index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
+If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
     If LiveOrdersSummary.SelectedItem Is Nothing Then
         ModifyOrderPlexButton.Enabled = False
     ElseIf LiveOrdersSummary.IsSelectedItemModifiable Then
         getOrderTicket.Show vbModeless, Me
-        getOrderTicket.showOrderPlex LiveOrdersSummary.SelectedItem, LiveOrdersSummary.SelectedOrderIndex
+        getOrderTicket.ShowBracketOrder LiveOrdersSummary.SelectedItem, LiveOrdersSummary.SelectedOrderIndex
     End If
 Else
     If SimulatedOrdersSummary.SelectedItem Is Nothing Then
         ModifyOrderPlexButton.Enabled = False
     ElseIf SimulatedOrdersSummary.IsSelectedItemModifiable Then
         getOrderTicket.Show vbModeless, Me
-        getOrderTicket.showOrderPlex SimulatedOrdersSummary.SelectedItem, SimulatedOrdersSummary.SelectedOrderIndex
+        getOrderTicket.ShowBracketOrder SimulatedOrdersSummary.SelectedItem, SimulatedOrdersSummary.SelectedOrderIndex
     End If
 End If
 
@@ -1607,9 +1592,9 @@ Static currIndex As Long
 
 On Error GoTo Err
 
-If OrdersSummaryTabStrip.SelectedItem.index = currIndex Then Exit Sub
+If OrdersSummaryTabStrip.SelectedItem.Index = currIndex Then Exit Sub
 
-Select Case OrdersSummaryTabStrip.SelectedItem.index
+Select Case OrdersSummaryTabStrip.SelectedItem.Index
 Case OrdersTabIndexNumbers.OrdersTabIndexLive
     LiveOrdersSummary.Visible = True
     SimulatedOrdersSummary.Visible = False
@@ -1631,11 +1616,11 @@ Const ProcName As String = "OrderTicket1Button_Click"
 
 On Error GoTo Err
 
-If getSelectedTicker Is Nothing Then
-    MsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
+If getSelectedDataSource Is Nothing Then
+    gModelessMsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
 Else
     getOrderTicket.Show vbModeless, Me
-    getOrderTicket.Ticker = getSelectedTicker
+    getOrderTicket.Ticker = getSelectedDataSource
 End If
 
 Exit Sub
@@ -1650,11 +1635,11 @@ Const ProcName As String = "OrderTicketButton_Click"
 
 On Error GoTo Err
 
-If getSelectedTicker Is Nothing Then
-    MsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
+If getSelectedDataSource Is Nothing Then
+    gModelessMsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
 Else
     getOrderTicket.Show vbModeless, Me
-    getOrderTicket.Ticker = getSelectedTicker
+    getOrderTicket.Ticker = getSelectedDataSource
 End If
 
 Exit Sub
@@ -1672,7 +1657,7 @@ On Error GoTo Err
 PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
 LogMessage "Tickfile replay paused"
-mTickfileManager.PauseReplay
+mReplayController.PauseReplay
 
 Exit Sub
 
@@ -1683,74 +1668,62 @@ End Sub
 
 Private Sub PlayTickFileButton_Click()
 Const ProcName As String = "PlayTickFileButton_Click"
-
 On Error GoTo Err
 
 PlayTickFileButton.Enabled = False
-SelectTickfilesButton.Enabled = False
-ClearTickfileListButton.Enabled = False
 PauseReplayButton.Enabled = True
-SkipReplayButton.Enabled = True
 StopReplayButton.Enabled = True
 ReplayProgressBar.Visible = True
 
-If mTickfileManager.Ticker Is Nothing Then
-    mTickfileManager.ReplayProgressEventIntervalMillisecs = 250
-    LogMessage "Tickfile replay started"
-Else
-    LogMessage "Tickfile replay resumed"
-End If
-mTickfileManager.ReplaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
+If mReplayController Is Nothing Then
+    TickfileOrganiser1.Enabled = False
+    
+    Dim lTickfileDataManager As TickfileDataManager
 
-mTickfileManager.StartReplay
+    Set lTickfileDataManager = CreateTickDataManager(TickfileOrganiser1.TickFileSpecifiers, _
+                                                mTradeBuildAPI.TickfileStoreInput, _
+                                                mTradeBuildAPI.ContractStorePrimary, _
+                                                mTradeBuildAPI.ContractStoreSecondary, _
+                                                MarketDataSourceOptUseExchangeTimeZone, _
+                                                , _
+                                                , _
+                                                CInt(ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)), _
+                                                250)
+    SimulatedOrdersSummary.Initialise lTickfileDataManager
+    SimulatedOrdersSummary.MonitorPositions mTradeBuildAPI.PositionManagersSimulated
+    
+    Set mReplayController = lTickfileDataManager.ReplayController
+    
+    Dim lTickers As Tickers
+    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, , mTradeBuildAPI.OrderSubmitterSimulated, , mTradeBuildAPI.PositionManagersSimulated)
+    
+    Dim i As Long
+    For i = 1 To TickfileOrganiser1.TickfileCount
+        Dim lTicker As Ticker
+        Set lTicker = lTickers.CreateTicker(mReplayController.TickStream(i - 1).ContractFuture, False)
+        TickerGrid1.AddTickerFromDataSource lTicker
+    Next
+    
+    LogMessage "Tickfile replay started"
+    Set mTickfileReplayTC = mReplayController.StartReplay
+ElseIf mReplayController.ReplayInProgress Then
+    LogMessage "Tickfile replay resumed"
+    mReplayController.ResumeReplay
+End If
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub ReplaySpeedCombo_Click()
 Const ProcName As String = "ReplaySpeedCombo_Click"
-
 On Error GoTo Err
 
-If Not mTickfileManager Is Nothing Then
-    mTickfileManager.ReplaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
+If Not mReplayController Is Nothing Then
+    mReplayController.ReplaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
 End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub SelectTickfilesButton_Click()
-Const ProcName As String = "SelectTickfilesButton_Click"
-
-
-Dim tickfiles As TickFileSpecifiers
-Dim tfs As TickfileSpecifier
-Dim userCancelled As Boolean
-
-
-On Error GoTo Err
-
-Set tickfiles = SelectTickfiles(userCancelled)
-If userCancelled Then Exit Sub
-
-Set mTickfileManager = mTickers.CreateTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone)
-
-mTickfileManager.TickFileSpecifiers = tickfiles
-
-TickfileList.Clear
-For Each tfs In tickfiles
-    TickfileList.AddItem tfs.filename
-Next
-checkOkToStartReplay
-ClearTickfileListButton.Enabled = True
 
 Exit Sub
 
@@ -1775,7 +1748,6 @@ End Sub
 
 Private Sub showFeaturesPicture_Click()
 Const ProcName As String = "showFeaturesPicture_Click"
-
 On Error GoTo Err
 
 showFeatures
@@ -1784,12 +1756,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub SimulatedOrdersSummary_Click()
 Const ProcName As String = "SimulatedOrdersSummary_Click"
-
 On Error GoTo Err
 
 setOrdersSelection SimulatedOrdersSummary
@@ -1798,63 +1768,47 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub SkipReplayButton_Click()
-Const ProcName As String = "SkipReplayButton_Click"
-
-On Error GoTo Err
-
-LogMessage "Tickfile skipped"
-mTickfileManager.SkipTickfile
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub StopReplayButton_Click()
 Const ProcName As String = "StopReplayButton_Click"
-
 On Error GoTo Err
 
 PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
-SkipReplayButton.Enabled = True
 StopReplayButton.Enabled = False
-SelectTickfilesButton.Enabled = True
-ClearTickfileListButton.Enabled = True
 ChartButton.Enabled = False
-Chart1Button.Enabled = False
-mTickfileManager.Ticker.StopTicker
+ChartButton1.Enabled = False
+mReplayController.StopReplay
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub StopTickerButton_Click()
 Const ProcName As String = "StopTickerButton_Click"
-
 On Error GoTo Err
 
-TickerGrid1.stopSelectedTickers
+Dim lTickers As SelectedTickers
+Set lTickers = TickerGrid1.SelectedTickers
+
+TickerGrid1.StopSelectedTickers
+
+Dim lTicker As IMarketDataSource
+For Each lTicker In lTickers
+    lTicker.Finish
+Next
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
-Private Sub TickerGrid1_SelectionChanged()
-Const ProcName As String = "TickerGrid1_SelectionChanged"
-
+Private Sub TickerGrid1_TickerSelectionChanged()
+Const ProcName As String = "TickerGrid1_TickerSelectionChanged"
 On Error GoTo Err
 
 handleSelectedTickers
@@ -1863,246 +1817,160 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
-Private Sub TickerGrid1_TickerStarted(ByVal row As Long)
-Const ProcName As String = "TickerGrid1_TickerStarted"
-
+Private Sub TickfileOrganiser1_TickfileCountChanged()
+Const ProcName As String = "TickfileOrganiser1_TickfileCountChanged"
 On Error GoTo Err
 
-TickerGrid1.deselectSelectedTickers
-TickerGrid1.selectTicker row
-handleSelectedTickers
+If TickfileOrganiser1.TickfileCount = 0 Then
+    PlayTickFileButton.Enabled = False
+    PauseReplayButton.Enabled = False
+    StopReplayButton.Enabled = False
+    ChartButton.Enabled = False
+    ChartButton1.Enabled = False
+Else
+    PlayTickFileButton.Enabled = True
+End If
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mCurrentClock Event Handlers
+' mFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub mCurrentClock_Tick()
-Const ProcName As String = "mCurrentClock_Tick"
-
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-displayTime
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-'================================================================================
-' mTickers Event Handlers
-'================================================================================
-
-Private Sub mTickers_StateChange( _
-                ev As StateChangeEventData)
-Const ProcName As String = "mTickers_StateChange"
-Dim lTicker As Ticker
-
-
-On Error GoTo Err
-
-OrderTicketButton.Enabled = Not (getSelectedTicker Is Nothing)
-OrderTicket1Button.Enabled = OrderTicketButton.Enabled
-
-Set lTicker = ev.Source
-
-Select Case ev.state
-Case TickerStateCreated
-Case TickerStateStarting
-
-Case TickerStateReady
-    If lTicker Is getSelectedTicker Then setCurrentClock lTicker.Clock
-Case TickerStateRunning
-    If lTicker Is getSelectedTicker Then
-        MarketDepthButton.Enabled = True
-        ChartButton.Enabled = True
-        Chart1Button.Enabled = True
-    End If
+If ev.Future.IsFaulted Then
+    LogMessage "Order recovery failed"
+ElseIf ev.Future.IsAvailable Then
+    LogMessage "Order recovery completed    "
+    loadAppInstanceConfig
     
-Case TickerStatePaused
-
-Case TickerStateClosing
-
-Case TickerStateStopped
-    If getSelectedTicker Is Nothing Then
-        StopTickerButton.Enabled = False
-        MarketDepthButton.Enabled = False
-        ChartButton.Enabled = False
-        Chart1Button.Enabled = False
-    Else
-        setCurrentClock getSelectedTicker.Clock
-    End If
+    Me.Show vbModeless
     
-End Select
+    If Not mSplash Is Nothing Then
+        Unload mSplash
+        Set mSplash = Nothing
+    End If
+    If Not mPreviousMainForm Is Nothing Then
+        Unload mPreviousMainForm
+        Set mPreviousMainForm = Nothing
+    End If
+End If
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mTickfileManager Event Handlers
+' mReplayController Event Handlers
 '================================================================================
 
-Private Sub mTickfileManager_QueryReplayNextTickfile( _
-                ByVal tickfileIndex As Long, _
-                ByVal tickfileName As String, _
-                ByVal TickfileSizeBytes As Long, _
-                ByVal pContract As Contract, _
-                continueMode As ReplayContinueModes)
-Const ProcName As String = "mTickfileManager_QueryReplayNextTickfile"
-
+Private Sub mReplayController_ReplayProgress( _
+                ByVal pTickfileTimestamp As Date, _
+                ByVal pEventsPlayed As Long, _
+                ByVal pPercentComplete As Long)
+Const ProcName As String = "mReplayController_ReplayProgress"
 On Error GoTo Err
 
-If tickfileIndex <> 0 Then setCurrentClock getDefaultClock
-
-ReplayProgressBar.Min = 0
-ReplayProgressBar.Max = 100
-ReplayProgressBar.value = 0
-TickfileList.ListIndex = tickfileIndex - 1
-ReplayContractLabel.caption = Replace(pContract.Specifier.ToString, vbCrLf, "; ")
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTickfileManager_ReplayCompleted()
-Const ProcName As String = "mTickfileManager_ReplayCompleted"
-
-On Error GoTo Err
-
-MarketDepthButton.Enabled = False
-PlayTickFileButton.Enabled = True
-PauseReplayButton.Enabled = False
-SkipReplayButton.Enabled = False
-StopReplayButton.Enabled = False
-
-SelectTickfilesButton.Enabled = True
-ClearTickfileListButton.Enabled = True
-ReplayProgressBar.value = 0
-ReplayProgressBar.Visible = False
-ReplayContractLabel.caption = ""
-ReplayProgressLabel.caption = ""
-
-LogMessage "Tickfile replay completed"
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTickfileManager_ReplayProgress( _
-                ByVal tickfileTimestamp As Date, _
-                ByVal eventsPlayed As Long, _
-                ByVal percentComplete As Single)
-Const ProcName As String = "mTickfileManager_ReplayProgress"
-
-On Error GoTo Err
-
-ReplayProgressBar.value = percentComplete
-ReplayProgressLabel.caption = tickfileTimestamp & _
+ReplayProgressBar.value = pPercentComplete
+ReplayProgressLabel.caption = pTickfileTimestamp & _
                                 "  Processed " & _
-                                eventsPlayed & _
+                                pEventsPlayed & _
                                 " events"
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
-Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As Ticker)
-Const ProcName As String = "mTickfileManager_TickerAllocated"
+'================================================================================
+' mTickers Event Handlers
+'================================================================================
 
+Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mTickers_CollectionChanged"
 On Error GoTo Err
 
-pTicker.DOMEventsRequired = DOMProcessedEvents
+If ev.ChangeType <> CollItemAdded Then Exit Sub
+
+Dim lTicker As Ticker
+Set lTicker = ev.AffectedItem
+TickerGrid1.AddTickerFromDataSource lTicker
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
+'================================================================================
+' mTickfileReplayTC Event Handlers
+'================================================================================
+
+Private Sub mTickfileReplayTC_Completed(ev As TaskCompletionEventData)
+Const ProcName As String = "mTickfileReplayTC_Completed"
+On Error GoTo Err
+
+Set mReplayController = Nothing
+
+MarketDepthButton.Enabled = False
+PlayTickFileButton.Enabled = True
+PauseReplayButton.Enabled = False
+StopReplayButton.Enabled = False
+
+ReplayProgressBar.value = 0
+ReplayProgressBar.Visible = False
+ReplayContractLabel.caption = ""
+ReplayProgressLabel.caption = ""
+
+TickfileOrganiser1.Enabled = True
+
+LogMessage "Tickfile replay completed"
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
 ' mTradeBuildAPI Event Handlers
 '================================================================================
 
-' fires when an unrecoverable error has occurred in TradeBuild.
-Private Sub mTradeBuildAPI_Error( _
-                ByRef ev As ErrorEventData)
-Const ProcName As String = "mTradeBuildAPI_Error"
-On Error Resume Next    ' ignore any further errors
-
-' TradeBuild will have already logged the error so no need for us to do it
-gHandleFatalError
-
-End Sub
-
 Private Sub mTradeBuildAPI_Notification( _
                 ByRef ev As NotificationEventData)
 Const ProcName As String = "mTradeBuildAPI_Notification"
-Dim spError As ServiceProviderError
-
-
 On Error GoTo Err
 
-Select Case ev.eventCode
-Case ApiNotifyCodes.ApiNotifyInvalidRequest
-    LogMessage "Request failed: " & _
-                ev.eventMessage & vbCrLf
-    gModelessMsgBox "Request failed: " & _
-                ev.eventMessage & vbCrLf, _
-                MsgBoxExclamation, _
-                "Attention"
-Case ApiNotifyCodes.ApiNotifyOrderRejected
-    LogMessage "Order rejected: " & _
-                ev.eventMessage & vbCrLf
-    gModelessMsgBox "Order rejected: " & _
-                ev.eventMessage & vbCrLf, _
-                MsgBoxExclamation, _
-                "Attention"
-Case ApiNotifyCodes.ApiNotifyOrderDeferred
-    LogMessage "Order deferred: " & _
-                ev.eventMessage & vbCrLf
-    gModelessMsgBox "Order deferred: " & _
-                ev.eventMessage & vbCrLf, _
-                MsgBoxExclamation, _
-                "Attention"
+Select Case ev.EventCode
 Case ApiNotifyCodes.ApiNotifyServiceProviderError
+    Dim spError As ServiceProviderError
     Set spError = mTradeBuildAPI.GetServiceProviderError
     LogMessage "Error from " & _
                         spError.ServiceProviderName & _
-                        ": code " & spError.errorCode & _
+                        ": code " & spError.ErrorCode & _
                         ": " & spError.Message
 
+Case Else
+    LogMessage "Notification: code=" & ev.EventCode & "; source=" & TypeName(ev.Source) & ": " & _
+                ev.EventMessage & vbCrLf
 End Select
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 '================================================================================
@@ -2113,68 +1981,36 @@ End Sub
 ' Methods
 '================================================================================
 
-Public Sub initialise( _
-                ByVal editConfig As Boolean)
+Friend Sub Initialise( _
+                ByVal pTradeBuildAPI As TradeBuildAPI, _
+                ByVal pConfigStore As ConfigurationStore, _
+                ByVal pAppInstanceConfig As ConfigurationSection, _
+                ByVal pSplash As fSplash, _
+                ByVal pPreviousMainForm As fTradeSkilDemo)
 Const ProcName As String = "initialise"
-
 On Error GoTo Err
 
-Set mConfigEditor = New fConfigEditor
+Set mTradeBuildAPI = pTradeBuildAPI
+Set mConfigStore = pConfigStore
+Set mAppInstanceConfig = pAppInstanceConfig
+Set mSplash = pSplash
+Set mPreviousMainForm = pPreviousMainForm
 
-If editConfig Then
-    ' show the configuration editor and don't attempt any other configuration
-    showConfigEditor
-    Exit Sub
-End If
+LogMessage "Loading configuration: " & mAppInstanceConfig.InstanceQualifier
 
-loadAppInstanceConfig
+mAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionApplication
+
+Set mTickers = mTradeBuildAPI.Tickers
+
+LogMessage "Recovering orders from last session"
+StartOrderRecoverySession mTradeBuildAPI.SessionName
+mFutureWaiter.Add CreateFutureFromTask(mTradeBuildAPI.RecoverOrders())
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Public Function LoadConfig( _
-                ByVal configToLoad As TWUtilities30.ConfigurationSection) As Boolean
-Const ProcName As String = "LoadConfig"
-
-
-
-On Error GoTo Err
-
-updateInstanceSettings
-saveSettings
-
-finishUIControls
-
-closeChartsAndMarketDepthForms
-
-CurrentConfigNameText.Text = ""
-Me.caption = gAppTitle
-
-mTradeBuildAPI.EndSession
-
-gSetPermittedServiceProviderRoles
-
-Set gAppInstanceConfig = configToLoad
-
-If ConfigureTradeBuild(gConfigStore, gAppInstanceConfig.InstanceQualifier) Then
-    Unload mConfigEditor
-    loadAppInstanceConfig
-    Set mConfigEditor = New fConfigEditor
-    LoadConfig = True
-Else
-    MsgBox "The configuration cannot be loaded", _
-            vbExclamation, _
-            "Attention!"
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
 
 Public Sub MakeVisible()
 Const ProcName As String = "MakeVisible"
@@ -2187,7 +2023,7 @@ If Not mControlsHidden Then ControlsTabStrip.Tabs(1).Selected = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -2200,26 +2036,26 @@ Const ProcName As String = "applyInstanceSettings"
 On Error GoTo Err
 
 LogMessage "Loading configuration: positioning main form"
-Select Case gAppInstanceConfig.GetSetting(ConfigSettingMainFormWindowstate, WindowStateNormal)
+Select Case mAppInstanceConfig.GetSetting(ConfigSettingMainFormWindowstate, WindowStateNormal)
 Case WindowStateMaximized
     Me.WindowState = FormWindowStateConstants.vbMaximized
 Case WindowStateMinimized
     Me.WindowState = FormWindowStateConstants.vbMinimized
 Case WindowStateNormal
-    Me.left = CLng(gAppInstanceConfig.GetSetting(ConfigSettingMainFormLeft, 0)) * Screen.TwipsPerPixelX
-    Me.Top = CLng(gAppInstanceConfig.GetSetting(ConfigSettingMainFormTop, 0)) * Screen.TwipsPerPixelY
-    Me.Width = CLng(gAppInstanceConfig.GetSetting(ConfigSettingMainFormWidth, Me.Width / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
-    Me.Height = CLng(gAppInstanceConfig.GetSetting(ConfigSettingMainFormHeight, Me.Height / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+    Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormLeft, 0)) * Screen.TwipsPerPixelX
+    Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormTop, 0)) * Screen.TwipsPerPixelY
+    Me.Width = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormWidth, Me.Width / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
+    Me.Height = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormHeight, Me.Height / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 End Select
 
-mControlsHidden = CBool(gAppInstanceConfig.GetSetting(ConfigSettingMainFormControlsHidden, CStr(False)))
+mControlsHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingMainFormControlsHidden, CStr(False)))
 If mControlsHidden Then
     hideControls
 Else
     showControls
 End If
 
-mFeaturesHidden = CBool(gAppInstanceConfig.GetSetting(ConfigSettingMainFormFeaturesHidden, CStr(False)))
+mFeaturesHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingMainFormFeaturesHidden, CStr(False)))
 If mFeaturesHidden Then
     hideFeatures
 Else
@@ -2229,135 +2065,115 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub checkOkToStartReplay()
-Const ProcName As String = "checkOkToStartReplay"
-
-On Error GoTo Err
-
-If TickfileList.ListCount <> 0 Then
-    PlayTickFileButton.Enabled = True
-Else
-    PlayTickFileButton.Enabled = False
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub clearSelectedTickers()
 Const ProcName As String = "clearSelectedTickers"
-
 On Error GoTo Err
 
-TickerGrid1.deselectSelectedTickers
+TickerGrid1.DeselectSelectedTickers
 handleSelectedTickers
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub closeChartsAndMarketDepthForms()
 Const ProcName As String = "closeChartsAndMarketDepthForms"
-Dim f As Form
-
 On Error GoTo Err
 
+mChartForms.Finish
+
+Dim f As Form
 For Each f In Forms
-    If TypeOf f Is fChart Or TypeOf f Is fMarketDepth Then Unload f
+    If TypeOf f Is fMarketDepth Then Unload f
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createChart(ByVal pTicker As Ticker)
 Const ProcName As String = "createChart"
-Dim chartForm As fChart
-Dim tp As TimePeriod
-
-
 On Error GoTo Err
 
-If Not pTicker.state = TickerStateRunning Then Exit Sub
+If Not pTicker.State = MarketDataSourceStateRunning Then Exit Sub
 
-Set tp = LiveChartTimeframeSelector.TimeframeDesignator
-Set chartForm = New fChart
-chartForm.showChart pTicker, _
-                    tp, _
-                    CreateChartSpecifier(CLng(NumHistoryBarsText.Text), Not (SessionOnlyCheck = vbChecked)), _
-                    ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text)
-                    
-chartForm.Show vbModeless
+Dim tp As TimePeriod
+Set tp = LiveChartTimeframeSelector.TimePeriod
+
+mChartForms.Add pTicker, _
+                tp, _
+                pTicker.Timeframes, _
+                mTradeBuildAPI.BarFormatterLibManager, _
+                mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator, _
+                mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & pTicker.Key & ")"), _
+                CreateChartSpecifier(CLng(NumHistoryBarsText.Text), Not (SessionOnlyCheck = vbChecked)), _
+                ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text)
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errDesc As String: errDesc = Err.Description
-Dim errSource As String: errSource = Err.Source
-
-Unload chartForm
-
-On Error GoTo ErrErr
-Err.Raise errNumber, errSource, errDesc
-ErrErr:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createChartFromConfig( _
-                ByVal chartConfig As ConfigurationSection)
+                ByVal pChartConfig As ConfigurationSection)
 Const ProcName As String = "createChartFromConfig"
-Dim chartForm As fChart
-
 On Error GoTo Err
 
-Set chartForm = New fChart
-If chartForm.LoadFromConfig(chartConfig) Then
-    chartForm.Show vbModeless
-Else
-    Unload chartForm
+Dim lTicker As Ticker
+Set lTicker = mTickers.GetTicker(pChartConfig.InstanceQualifier)
+
+If Not mChartForms.AddFromConfig(lTicker, _
+                    lTicker.Timeframes, _
+                    mTradeBuildAPI.BarFormatterLibManager, _
+                    mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator, _
+                    pChartConfig) Then
+    'pchartConfig.Remove
 End If
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errDesc As String: errDesc = Err.Description
-Dim errSource As String: errSource = Err.Source
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
-Unload chartForm
+Private Sub createHistoricalChartFromConfig( _
+                ByVal pChartConfig As ConfigurationSection)
+Const ProcName As String = "createHistoricalChartFromConfig"
+On Error GoTo Err
 
-On Error GoTo ErrErr
-Err.Raise errNumber, errSource, errDesc
-ErrErr:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+Dim lContract As IContract
+Set lContract = LoadContractFromConfig(pChartConfig.GetConfigurationSection(ConfigSectionContract))
+
+If Not mChartForms.AddHistoricFromConfig(CreateFuture(lContract), _
+                    mTradeBuildAPI.StudyLibraryManager.CreateStudyManager, _
+                    mTradeBuildAPI.HistoricalDataStoreInput, _
+                    mTradeBuildAPI.BarFormatterLibManager, _
+                    pChartConfig) Then
+    'pchartConfig.Remove
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createHistoricCharts( _
-                ByVal pContracts As Contracts)
+                ByVal pContracts As IContracts)
 Const ProcName As String = "createHistoricCharts"
-Dim lTicker As Ticker
-Dim fromDate As Date
-Dim toDate As Date
-Dim chartForm As fChart
-Dim lContract As Contract
-
-
 On Error GoTo Err
 
+Dim lContract As IContract
 For Each lContract In pContracts
-    Set lTicker = mTickers.Add(TickerOptions.TickerOptUseExchangeTimeZone)
-    lTicker.LoadTicker lContract.Specifier
-    
+    Dim fromDate As Date
     If IsNull(FromDatePicker.value) Then
         fromDate = CDate(0)
     Else
@@ -2365,6 +2181,7 @@ For Each lContract In pContracts
                     TimeSerial(FromDatePicker.Hour, FromDatePicker.Minute, 0)
     End If
     
+    Dim toDate As Date
     If IsNull(ToDatePicker.value) Then
         toDate = Now
     Else
@@ -2372,41 +2189,29 @@ For Each lContract In pContracts
                     TimeSerial(ToDatePicker.Hour, ToDatePicker.Minute, 0)
     End If
     
-    Set chartForm = New fChart
-    chartForm.showChart lTicker, _
-                        HistTimeframeSelector.TimeframeDesignator, _
+    Dim lConfig As ConfigurationSection
+    Set lConfig = mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
+    SaveContractToConfig lContract, lConfig.AddConfigurationSection(ConfigSectionContract)
+    
+    mChartForms.AddHistoric HistTimeframeSelector.TimePeriod, _
+                        CreateFuture(lContract), _
+                        mTradeBuildAPI.StudyLibraryManager.CreateStudyManager, _
+                        mTradeBuildAPI.HistoricalDataStoreInput, _
+                        mTradeBuildAPI.BarFormatterLibManager, _
+                        lConfig, _
                         CreateChartSpecifier(CLng(NumHistBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), fromDate, toDate), _
                         ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text)
-    chartForm.Show vbModeless
-    chartForm.Visible = True
 
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub displayTime()
-Const ProcName As String = "displayTime"
-Dim theTime As Date
-
-On Error GoTo Err
-
-theTime = mCurrentClock.TimeStamp
-StatusBar1.Panels("datetime") = FormatDateTime(theTime, vbShortDate) & _
-                Format(theTime, " hh:mm:ss")
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub finishUIControls()
 Const ProcName As String = "finishUIControls"
-
 On Error GoTo Err
 
 LiveOrdersSummary.Finish
@@ -2418,188 +2223,119 @@ TickerGrid1.Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
-Static formatter As LogFormatter
-
 On Error GoTo Err
 
+Static formatter As LogFormatter
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)
 formatLogRecord = formatter.FormatRecord(Logrec)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Private Function getAppDefaultChartStyle() As ChartStyle
-Const ProcName As String = "getAppDefaultChartStyle"
-Dim lDefaultRegionStyle As ChartRegionStyle
-Dim lxAxisRegionStyle As ChartRegionStyle
-Dim lDefaultYAxisRegionStyle As ChartRegionStyle
-Dim lCrosshairLineStyle As LineStyle
-Dim lCursorTextStyle As TextStyle
-Dim lFont As StdFont
-
-On Error GoTo Err
-
-ReDim GradientFillColors(1) As Long
-
-Set lCursorTextStyle = New TextStyle
-lCursorTextStyle.Align = AlignBoxTopCentre
-lCursorTextStyle.Box = True
-lCursorTextStyle.BoxFillWithBackgroundColor = True
-lCursorTextStyle.BoxStyle = LineInvisible
-lCursorTextStyle.BoxThickness = 0
-lCursorTextStyle.Color = &H80&
-lCursorTextStyle.PaddingX = 2
-lCursorTextStyle.PaddingY = 0
-Set lFont = New StdFont
-lFont.name = "Courier New"
-lFont.Bold = True
-lFont.Size = 8
-lCursorTextStyle.Font = lFont
-
-Set lDefaultRegionStyle = GetDefaultChartRegionStyle.Clone
-GradientFillColors(0) = RGB(192, 192, 192)
-GradientFillColors(1) = RGB(248, 248, 248)
-lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
-lDefaultRegionStyle.YCursorTextStyle = lCursorTextStyle
-    
-Set lxAxisRegionStyle = lDefaultRegionStyle.Clone
-lxAxisRegionStyle.HasGrid = False
-lxAxisRegionStyle.HasGridText = True
-GradientFillColors(0) = RGB(230, 236, 207)
-GradientFillColors(1) = RGB(222, 236, 215)
-lxAxisRegionStyle.BackGradientFillColors = GradientFillColors
-    
-Set lDefaultYAxisRegionStyle = lDefaultRegionStyle.Clone
-GradientFillColors(0) = RGB(234, 246, 254)
-GradientFillColors(1) = RGB(226, 246, 255)
-lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
-lDefaultYAxisRegionStyle.HasGrid = False
-    
-Set lCrosshairLineStyle = New LineStyle
-lCrosshairLineStyle.Color = &H7F
-
-Set getAppDefaultChartStyle = ChartStylesManager.Add(InitialChartStyleName, _
-                                                    ChartStylesManager.DefaultStyle, _
-                                                    lDefaultRegionStyle, _
-                                                    lxAxisRegionStyle, _
-                                                    lDefaultYAxisRegionStyle, _
-                                                    lCrosshairLineStyle, _
-                                                    lCursorTextStyle)
-
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getDefaultClock() As Clock
 Const ProcName As String = "getDefaultClock"
-Static lClock As Clock
-
 On Error GoTo Err
 
-If lClock Is Nothing Then Set lClock = GetClock("") ' create a clock running local time
-Set getDefaultClock = lClock
+Static sClock As Clock
+If sClock Is Nothing Then Set sClock = GetClock("") ' create a clock running local time
+Set getDefaultClock = sClock
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getOrderTicket() As fOrderTicket
 Const ProcName As String = "getOrderTicket"
-Static lOrderTicket As fOrderTicket
-
 On Error GoTo Err
 
-If lOrderTicket Is Nothing Then
-    Set lOrderTicket = New fOrderTicket
+Static sOrderTicket As fOrderTicket
+
+If sOrderTicket Is Nothing Then
+    Set sOrderTicket = New fOrderTicket
+    sOrderTicket.Initialise mAppInstanceConfig
 End If
-Set getOrderTicket = lOrderTicket
+Set getOrderTicket = sOrderTicket
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getSelectedTicker() As Ticker
-Const ProcName As String = "getSelectedTicker"
-
+Private Function getSelectedDataSource() As IMarketDataSource
+Const ProcName As String = "getSelectedDataSource"
 On Error GoTo Err
 
-If TickerGrid1.SelectedTickers.Count = 1 Then Set getSelectedTicker = TickerGrid1.SelectedTickers.Item(1)
+If TickerGrid1.SelectedTickers.Count = 1 Then Set getSelectedDataSource = TickerGrid1.SelectedTickers.Item(1)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub handleSelectedTickers()
 Const ProcName As String = "handleSelectedTickers"
-Dim lTicker As Ticker
-
-
 On Error GoTo Err
 
 If TickerGrid1.SelectedTickers.Count = 0 Then
     StopTickerButton.Enabled = False
     ChartButton.Enabled = False
-    Chart1Button.Enabled = False
+    ChartButton1.Enabled = False
     MarketDepthButton.Enabled = False
     OrderTicketButton.Enabled = False
     OrderTicket1Button.Enabled = False
-    setCurrentClock getDefaultClock
+    mClockDisplay.SetClock getDefaultClock
 Else
     StopTickerButton.Enabled = True
-    ChartButton.Enabled = True
-    Chart1Button.Enabled = True
-    MarketDepthButton.Enabled = True
+    
+    ChartButton.Enabled = False
+    ChartButton1.Enabled = False
+    MarketDepthButton.Enabled = False
+    OrderTicketButton.Enabled = False
+    OrderTicket1Button.Enabled = False
     
     If ControlsSSTab.Tab = ControlsTabIndexNumbers.ControlsTabIndexLiveCharts Then
         ChartButton.Default = True
     ElseIf ControlsSSTab.Tab = ControlsTabIndexNumbers.ControlsTabIndexTickers Then
-        Chart1Button.Default = True
+        ChartButton1.Default = True
     End If
     
-    Set lTicker = getSelectedTicker
-    If Not lTicker Is Nothing Then
-        If lTicker.state = TickerStateRunning Then
-            setCurrentClock lTicker.Clock
+    Dim lDataSource As IMarketDataSource
+    Set lDataSource = getSelectedDataSource
+    If lDataSource Is Nothing Then
+        mClockDisplay.SetClock getDefaultClock
+    ElseIf lDataSource.State = MarketDataSourceStateRunning Then
+        mClockDisplay.SetClockFuture lDataSource.ClockFuture
+        ChartButton.Enabled = True
+        ChartButton1.Enabled = True
+        Dim lContract As IContract
+        Set lContract = lDataSource.ContractFuture.value
+        If lContract.Specifier.SecType <> SecTypeIndex Then
             OrderTicketButton.Enabled = True
             OrderTicket1Button.Enabled = True
-            getOrderTicket.Ticker = lTicker
-        Else
-            setCurrentClock getDefaultClock
-            
-            OrderTicketButton.Enabled = False
-            OrderTicket1Button.Enabled = False
-            ChartButton.Enabled = False
-            Chart1Button.Enabled = False
-            MarketDepthButton.Enabled = False
+            MarketDepthButton.Enabled = True
+            getOrderTicket.Ticker = lDataSource
         End If
     Else
-        setCurrentClock getDefaultClock
-        OrderTicketButton.Enabled = False
-        OrderTicket1Button.Enabled = False
+        mClockDisplay.SetClock getDefaultClock
     End If
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub hideControls()
@@ -2618,7 +2354,7 @@ Me.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub hideFeatures()
@@ -2636,11 +2372,11 @@ Me.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub killLogging()
-Const ProcName As String = "killLogging"
+Private Sub killLoggingForThisForm()
+Const ProcName As String = "killLoggingForThisForm"
 
 On Error GoTo Err
 
@@ -2649,19 +2385,20 @@ GetLogger("log").RemoveLogListener Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub loadAppInstanceConfig()
 Const ProcName As String = "loadAppInstanceConfig"
-
-
-
 On Error GoTo Err
 
-LogMessage "Loading configuration: " & gAppInstanceConfig.InstanceQualifier
+LogMessage "Loading configuration: " & mAppInstanceConfig.InstanceQualifier
 
-Set mTickers = mTradeBuildAPI.Tickers
+LogMessage "Loading configuration: Setting up tickfile organiser"
+setupTickfileOrganiser
+
+LogMessage "Loading configuration: Setting up contract search"
+setupContractSearch
 
 LogMessage "Loading configuration: Setting up ticker grid"
 setupTickerGrid
@@ -2675,47 +2412,43 @@ setupExecutionSummaries
 LogMessage "Loading configuration: Setting up timeframeselectors"
 setupTimeframeSelectors
 
-LogMessage "Recovering orders from last session"
-mTradeBuildAPI.RecoverOrders gAppInstanceConfig.InstanceQualifier
-
 applyInstanceSettings
 
-LogMessage "Loading configuration: starting tickers"
-TickerGrid1.LoadFromConfig gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionTickerGrid)
+LogMessage "Loading configuration: loading tickers into ticker grid"
+TickerGrid1.LoadFromConfig mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionTickerGrid)
 
 LogMessage "Loading configuration: loading default study configurations"
-LoadDefaultStudyConfigurationsFromConfig gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionDefaultStudyConfigs)
+LoadDefaultStudyConfigurationsFromConfig mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionDefaultStudyConfigs)
 
 LogMessage "Loading configuration: setting current chart style"
 setCurrentChartStyles
 
-LogMessage "Loading configuration: starting charts"
-Dim chartConfig As ConfigurationSection
-For Each chartConfig In gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts)
-    createChartFromConfig chartConfig
-Next
+LogMessage "Loading configuration: creating charts"
+startCharts
+
+LogMessage "Loading configuration: creating historical charts"
+startHistoricalCharts
 
 FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexOrders
 
-LogMessage "Loaded configuration: " & gAppInstanceConfig.InstanceQualifier
-CurrentConfigNameText = gAppInstanceConfig.InstanceQualifier
+LogMessage "Loaded configuration: " & mAppInstanceConfig.InstanceQualifier
+CurrentConfigNameText = mAppInstanceConfig.InstanceQualifier
 Me.caption = gAppTitle & _
-            " - " & gAppInstanceConfig.InstanceQualifier
+            " - " & mAppInstanceConfig.InstanceQualifier
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub loadStyleComboItems(ByVal pComboItems As ComboItems)
-Dim lStyle As ChartStyle
-
 Const ProcName As String = "loadStyleComboItems"
 On Error GoTo Err
 
 pComboItems.Clear
 
+Dim lStyle As ChartStyle
 For Each lStyle In ChartStylesManager
     pComboItems.Add , lStyle.name, lStyle.name
 Next
@@ -2723,7 +2456,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Resize()
@@ -2782,44 +2515,19 @@ SimulatedExecutionsSummary.Width = FeaturesSSTAB.Width - 120 - 120
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub saveSettings()
-Const ProcName As String = "saveSettings"
-
-On Error GoTo Err
-
-If gConfigStore.dirty Then
-    LogMessage "Saving configuration"
-    gConfigStore.Save
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setAllChartStyles(ByVal pStyleName As String, ByVal pHistorical As Boolean)
-Dim f As Object
-Dim lChart As fChart
-
 Const ProcName As String = "setAllChartStyles"
 On Error GoTo Err
 
-For Each f In Forms
-    If TypeOf f Is fChart Then
-        Set lChart = f
-        If (lChart.IsHistorical And pHistorical) Or _
-           Not (lChart.IsHistorical Or pHistorical) Then lChart.Style = ChartStylesManager.Item(pStyleName)
-    End If
-Next
+mChartForms.SetStyle ChartStylesManager.Item(pStyleName), pHistorical
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setChartButtonTooltip()
@@ -2829,75 +2537,48 @@ Dim tp As TimePeriod
 
 On Error GoTo Err
 
-Set tp = LiveChartTimeframeSelector.TimeframeDesignator
+Set tp = LiveChartTimeframeSelector.TimePeriod
 
-ChartButton.ToolTipText = "Show " & _
-                        tp.ToString & _
-                        " chart"
-Chart1Button.ToolTipText = ChartButton.ToolTipText
+ChartButton.ToolTipText = "Show " & tp.ToString & " chart"
+ChartButton1.ToolTipText = ChartButton.ToolTipText
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setCurrentChartStyle( _
                 ByVal pComboItems As ComboItems, _
                 ByVal pConfigSettingName As String)
-Dim lStyleName As String
-
 Const ProcName As String = "setCurrentChartStyle"
 On Error GoTo Err
 
-lStyleName = gAppInstanceConfig.GetSetting(pConfigSettingName, "")
+loadStyleComboItems pComboItems
+
+Dim lStyleName As String
+lStyleName = mAppInstanceConfig.GetSetting(pConfigSettingName, "")
+
 If ChartStylesManager.Contains(lStyleName) Then
     pComboItems.Item(lStyleName).Selected = True
-ElseIf ChartStylesManager.Contains(InitialChartStyleName) Then
-    pComboItems.Item(InitialChartStyleName).Selected = True
 Else
-    pComboItems.Item(getAppDefaultChartStyle.name).Selected = True
-    gAppInstanceConfig.SetSetting pConfigSettingName, InitialChartStyleName
+    If Not ChartStylesManager.Contains(ChartStyleNameAppDefault) Then setupChartStyles pComboItems
+    pComboItems.Item(ChartStyleNameAppDefault).Selected = True
+    mAppInstanceConfig.SetSetting pConfigSettingName, ChartStyleNameAppDefault
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setCurrentChartStyles()
 Const ProcName As String = "setCurrentChartStyles"
 On Error GoTo Err
 
-loadStyleComboItems LiveChartStylesCombo.ComboItems
-loadStyleComboItems HistChartStylesCombo.ComboItems
-
-If gAppInstanceConfig Is Nothing Then
-    LiveChartStylesCombo.ComboItems.Item(getAppDefaultChartStyle.name).Selected = True
-    HistChartStylesCombo.ComboItems.Item(getAppDefaultChartStyle.name).Selected = True
-Else
-    gAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionApplication
-    
-    setCurrentChartStyle LiveChartStylesCombo.ComboItems, ConfigSettingAppCurrentChartStyle
-    setCurrentChartStyle HistChartStylesCombo.ComboItems, ConfigSettingAppCurrentHistChartStyle
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub setCurrentClock( _
-                ByVal pClock As Clock)
-Const ProcName As String = "setCurrentClock"
-
-On Error GoTo Err
-
-Set mCurrentClock = pClock
-StatusBar1.Panels("timezone") = mCurrentClock.TimeZone.StandardName
-displayTime
+setCurrentChartStyle LiveChartStylesCombo.ComboItems, ConfigSettingAppCurrentChartStyle
+setCurrentChartStyle HistChartStylesCombo.ComboItems, ConfigSettingAppCurrentHistChartStyle
 
 Exit Sub
 
@@ -2908,7 +2589,7 @@ End Sub
 Private Sub setOrdersSelection( _
                 ByVal pOrdersSummary As OrdersSummary)
 Const ProcName As String = "setOrdersSelection"
-Dim selection As OrderPlex
+Dim selection As IBracketOrder
 
 
 On Error GoTo Err
@@ -2943,7 +2624,284 @@ End If
 Exit Sub
 
 Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setupChartStyles(ByVal pComboItems As ComboItems)
+Const ProcName As String = "setupChartStyles"
+On Error GoTo Err
+
+setupChartStyleAppDefault
+pComboItems.Add , ChartStyleNameAppDefault, ChartStyleNameAppDefault
+
+setupChartStyleBlack
+pComboItems.Add , ChartStyleNameBlack, ChartStyleNameBlack
+
+setupChartStyleDarkBlueFade
+pComboItems.Add , ChartStyleNameDarkBlueFade, ChartStyleNameDarkBlueFade
+
+setupChartStyleGoldFade
+pComboItems.Add , ChartStyleNameGoldFade, ChartStyleNameGoldFade
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setupChartStyleAppDefault()
+Const ProcName As String = "setupChartStyleAppDefault"
+On Error GoTo Err
+
+If ChartStylesManager.Contains(ChartStyleNameAppDefault) Then Exit Sub
+
+Dim lCursorTextStyle As New TextStyle
+lCursorTextStyle.Align = AlignBoxTopCentre
+lCursorTextStyle.Box = True
+lCursorTextStyle.BoxFillWithBackgroundColor = True
+lCursorTextStyle.BoxStyle = LineInvisible
+lCursorTextStyle.BoxThickness = 0
+lCursorTextStyle.Color = &H80&
+lCursorTextStyle.PaddingX = 2
+lCursorTextStyle.PaddingY = 0
+
+Dim lFont As New StdFont
+lFont.name = "Courier New"
+lFont.Bold = True
+lFont.Size = 8
+lCursorTextStyle.Font = lFont
+
+Dim lDefaultRegionStyle As ChartRegionStyle
+Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = RGB(192, 192, 192)
+GradientFillColors(1) = RGB(248, 248, 248)
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.XGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.YGridLineStyle.Color = &HD0D0D0
+    
+Dim lxAxisRegionStyle As ChartRegionStyle
+Set lxAxisRegionStyle = GetDefaultChartXAxisRegionStyle.Clone
+lxAxisRegionStyle.XCursorTextStyle = lCursorTextStyle
+GradientFillColors(0) = RGB(230, 236, 207)
+GradientFillColors(1) = RGB(222, 236, 215)
+lxAxisRegionStyle.BackGradientFillColors = GradientFillColors
+    
+Dim lDefaultYAxisRegionStyle As ChartRegionStyle
+Set lDefaultYAxisRegionStyle = GetDefaultChartYAxisRegionStyle.Clone
+lDefaultYAxisRegionStyle.YCursorTextStyle = lCursorTextStyle
+GradientFillColors(0) = RGB(234, 246, 254)
+GradientFillColors(1) = RGB(226, 246, 255)
+lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+    
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = &H7F
+
+ChartStylesManager.Add ChartStyleNameAppDefault, _
+                        ChartStylesManager.DefaultStyle, _
+                        lDefaultRegionStyle, _
+                        lxAxisRegionStyle, _
+                        lDefaultYAxisRegionStyle, _
+                        lCrosshairLineStyle
+
+
+Exit Sub
+
+Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setupChartStyleBlack()
+Const ProcName As String = "setupChartStyleBlack"
+On Error GoTo Err
+
+If ChartStylesManager.Contains(ChartStyleNameBlack) Then Exit Sub
+
+Dim lCursorTextStyle As New TextStyle
+lCursorTextStyle.Align = AlignBoxTopCentre
+lCursorTextStyle.Box = True
+lCursorTextStyle.BoxFillWithBackgroundColor = True
+lCursorTextStyle.BoxStyle = LineInvisible
+lCursorTextStyle.BoxThickness = 0
+lCursorTextStyle.Color = vbRed
+lCursorTextStyle.PaddingX = 2
+lCursorTextStyle.PaddingY = 0
+
+Dim lFont As StdFont
+Set lFont = New StdFont
+lFont.name = "Courier New"
+lFont.Bold = True
+lFont.Size = 8
+lCursorTextStyle.Font = lFont
+
+Dim lDefaultRegionStyle As ChartRegionStyle
+Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = &H202020
+GradientFillColors(1) = &H202020
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+
+lDefaultRegionStyle.XGridLineStyle.Color = &H303030
+lDefaultRegionStyle.YGridLineStyle.Color = &H303030
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &H303030
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &H303030
+    
+Dim lxAxisRegionStyle As ChartRegionStyle
+Set lxAxisRegionStyle = GetDefaultChartXAxisRegionStyle.Clone
+GradientFillColors(0) = RGB(0, 0, 0)
+GradientFillColors(1) = RGB(0, 0, 0)
+lxAxisRegionStyle.BackGradientFillColors = GradientFillColors
+lxAxisRegionStyle.XCursorTextStyle = lCursorTextStyle
+
+Dim lGridTextStyle As New TextStyle
+lGridTextStyle.Box = True
+lGridTextStyle.BoxFillWithBackgroundColor = True
+lGridTextStyle.BoxStyle = LineInvisible
+lGridTextStyle.Color = &HD0D0D0
+lxAxisRegionStyle.XGridTextStyle = lGridTextStyle
+    
+Dim lDefaultYAxisRegionStyle As ChartRegionStyle
+Set lDefaultYAxisRegionStyle = GetDefaultChartYAxisRegionStyle.Clone
+GradientFillColors(0) = RGB(0, 0, 0)
+GradientFillColors(1) = RGB(0, 0, 0)
+lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+lDefaultYAxisRegionStyle.YCursorTextStyle = lCursorTextStyle
+lDefaultYAxisRegionStyle.YGridTextStyle = lGridTextStyle
+    
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = &H80&
+
+ChartStylesManager.Add ChartStyleNameBlack, _
+                        ChartStylesManager.Item(ChartStyleNameAppDefault), _
+                        lDefaultRegionStyle, _
+                        lxAxisRegionStyle, _
+                        lDefaultYAxisRegionStyle, _
+                        lCrosshairLineStyle
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setupChartStyleDarkBlueFade()
+Const ProcName As String = "setupChartStyleDarkBlueFade"
+On Error GoTo Err
+
+If ChartStylesManager.Contains(ChartStyleNameDarkBlueFade) Then Exit Sub
+
+Dim lDefaultRegionStyle As ChartRegionStyle
+Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = &H643232
+GradientFillColors(1) = &H804040
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+    
+lDefaultRegionStyle.XGridLineStyle.Color = &H505050
+lDefaultRegionStyle.YGridLineStyle.Color = &H505050
+    
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &H505050
+    
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &H505050
+
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = vbRed
+
+ChartStylesManager.Add ChartStyleNameDarkBlueFade, _
+                        ChartStylesManager.Item(ChartStyleNameAppDefault), _
+                        lDefaultRegionStyle, _
+                        , _
+                        , _
+                        lCrosshairLineStyle
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setupChartStyleGoldFade()
+Const ProcName As String = "setupChartStyleGoldFade"
+On Error GoTo Err
+
+If ChartStylesManager.Contains(ChartStyleNameGoldFade) Then Exit Sub
+
+Dim lCursorTextStyle As New TextStyle
+lCursorTextStyle.Align = AlignBoxTopCentre
+lCursorTextStyle.Box = True
+lCursorTextStyle.BoxFillWithBackgroundColor = True
+lCursorTextStyle.BoxStyle = LineInvisible
+lCursorTextStyle.BoxThickness = 0
+lCursorTextStyle.Color = &H80&
+lCursorTextStyle.PaddingX = 2
+lCursorTextStyle.PaddingY = 0
+
+Dim lFont As New StdFont
+lFont.name = "Courier New"
+lFont.Bold = True
+lFont.Size = 8
+lCursorTextStyle.Font = lFont
+
+Dim lDefaultRegionStyle As ChartRegionStyle
+Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = &H82DFE6
+GradientFillColors(1) = &HEBFAFB
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+    
+lDefaultRegionStyle.XGridLineStyle.Color = &HE0E0E0
+lDefaultRegionStyle.YGridLineStyle.Color = &HE0E0E0
+    
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &HE0E0E0
+    
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &HE0E0E0
+
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = 127
+
+ChartStylesManager.Add ChartStyleNameGoldFade, _
+                        ChartStylesManager.Item(ChartStyleNameAppDefault), _
+                        lDefaultRegionStyle, _
+                        , _
+                        , _
+                        lCrosshairLineStyle
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setupContractSearch()
+Const ProcName As String = "setupContractSearch"
+On Error GoTo Err
+
+LiveContractSearch.Initialise mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary
+LiveContractSearch.IncludeHistoricalContracts = False
+
+HistContractSearch.Initialise mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary
+HistContractSearch.IncludeHistoricalContracts = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupExecutionSummaries()
@@ -2952,8 +2910,7 @@ Const ProcName As String = "setupExecutionSummaries"
 On Error GoTo Err
 
 If mTradeBuildAPI.AllOrdersSimulated Then
-    SimulatedExecutionsSummary.Simulated = True
-    SimulatedExecutionsSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    SimulatedExecutionsSummary.MonitorExecutions mTradeBuildAPI.DefaultWorkSpace.Executions
     SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top + ExecutionsSummaryTabStrip.Height - SimulatedExecutionsSummary.Top
     SimulatedExecutionsSummary.Visible = True
     
@@ -2961,13 +2918,11 @@ If mTradeBuildAPI.AllOrdersSimulated Then
     
     ExecutionsSummaryTabStrip.Visible = False
 Else
-    SimulatedExecutionsSummary.Simulated = True
-    SimulatedExecutionsSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    SimulatedExecutionsSummary.MonitorExecutions mTradeBuildAPI.DefaultWorkSpace.ExecutionsSimulated
     SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
     
-    LiveExecutionsSummary.Simulated = False
     LiveExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
-    LiveExecutionsSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    LiveExecutionsSummary.MonitorExecutions mTradeBuildAPI.DefaultWorkSpace.Executions
     
     ExecutionsSummaryTabStrip.Visible = True
     ExecutionsSummaryTabStrip.Tabs.Item(ExecutionsTabIndexLive).Selected = True
@@ -2976,12 +2931,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupLogging()
 Const ProcName As String = "setupLogging"
-
 On Error GoTo Err
 
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
@@ -2989,19 +2943,14 @@ GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupOrderSummaries()
 Const ProcName As String = "setupOrderSummaries"
-
 On Error GoTo Err
 
 If mTradeBuildAPI.AllOrdersSimulated Then
-    SimulatedOrdersSummary.Finish
-    SimulatedOrdersSummary.Simulated = True
-    SimulatedOrdersSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     SimulatedOrdersSummary.Height = OrdersSummaryTabStrip.Top + OrdersSummaryTabStrip.Height - SimulatedOrdersSummary.Top
     SimulatedOrdersSummary.Visible = True
     
@@ -3010,15 +2959,11 @@ If mTradeBuildAPI.AllOrdersSimulated Then
     OrdersSummaryTabStrip.Visible = False
     OrdersSummaryTabStrip.Tabs.Item(OrdersTabIndexSimulated).Selected = True
 Else
-    SimulatedOrdersSummary.Finish
-    SimulatedOrdersSummary.Simulated = True
-    SimulatedOrdersSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     SimulatedOrdersSummary.Height = OrdersSummaryTabStrip.Top - SimulatedOrdersSummary.Top
     
-    LiveOrdersSummary.Finish
-    LiveOrdersSummary.Simulated = False
+    LiveOrdersSummary.Initialise mTradeBuildAPI.MarketDataManager
+    LiveOrdersSummary.MonitorPositions mTradeBuildAPI.PositionManagersLive
     LiveOrdersSummary.Height = OrdersSummaryTabStrip.Top - SimulatedOrdersSummary.Top
-    LiveOrdersSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     
     OrdersSummaryTabStrip.Visible = True
     OrdersSummaryTabStrip.Tabs.Item(OrdersTabIndexLive).Selected = True
@@ -3027,7 +2972,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupReplaySpeedCombo()
@@ -3035,45 +2980,48 @@ Const ProcName As String = "setupReplaySpeedCombo"
 
 On Error GoTo Err
 
-ReplaySpeedCombo.AddItem "10 Second intervals"
-ReplaySpeedCombo.ItemData(0) = -10000
-ReplaySpeedCombo.AddItem "5 Second intervals"
-ReplaySpeedCombo.ItemData(1) = -5000
-ReplaySpeedCombo.AddItem "1 Second intervals"
-ReplaySpeedCombo.ItemData(2) = -1000
-ReplaySpeedCombo.AddItem "0.5 second intervals"
-ReplaySpeedCombo.ItemData(3) = -500
 ReplaySpeedCombo.AddItem "Continuous"
-ReplaySpeedCombo.ItemData(4) = 0
+ReplaySpeedCombo.ItemData(0) = 0
 ReplaySpeedCombo.AddItem "Actual speed"
-ReplaySpeedCombo.ItemData(5) = 1
+ReplaySpeedCombo.ItemData(1) = 1
 ReplaySpeedCombo.AddItem "2x Actual speed"
-ReplaySpeedCombo.ItemData(6) = 2
+ReplaySpeedCombo.ItemData(2) = 2
 ReplaySpeedCombo.AddItem "4x Actual speed"
-ReplaySpeedCombo.ItemData(7) = 4
+ReplaySpeedCombo.ItemData(3) = 4
 ReplaySpeedCombo.AddItem "8x Actual speed"
-ReplaySpeedCombo.ItemData(8) = 8
+ReplaySpeedCombo.ItemData(4) = 8
 
 ReplaySpeedCombo.Text = "Actual speed"
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupTickerGrid()
 Const ProcName As String = "setupTickerGrid"
-
 On Error GoTo Err
 
-TickerGrid1.Finish
-TickerGrid1.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+TickerGrid1.Initialise mTickers
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setupTickfileOrganiser()
+Const ProcName As String = "setupTickfileOrganiser"
+On Error GoTo Err
+
+TickfileOrganiser1.Initialise mTradeBuildAPI.TickfileStoreInput, mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary
+TickfileOrganiser1.Enabled = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupTimeframeSelectors()
@@ -3083,30 +3031,17 @@ Const ProcName As String = "setupTimeframeSelectors"
 
 On Error GoTo Err
 
-LiveChartTimeframeSelector.initialise   ' use the default settings built-in to the control
-LiveChartTimeframeSelector.selectTimeframe GetTimePeriod(5, TimePeriodMinute)
-HistTimeframeSelector.initialise
-HistTimeframeSelector.selectTimeframe GetTimePeriod(5, TimePeriodMinute)
+LiveChartTimeframeSelector.Initialise mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator     ' use the default settings built-in to the control
+LiveChartTimeframeSelector.SelectTimeframe GetTimePeriod(5, TimePeriodMinute)
+HistTimeframeSelector.Initialise mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator
+HistTimeframeSelector.SelectTimeframe GetTimePeriod(5, TimePeriodMinute)
 
 setChartButtonTooltip
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub showConfigEditor()
-Const ProcName As String = "showConfigEditor"
-
-On Error GoTo Err
-
-mConfigEditor.Show vbModeless
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showControls()
@@ -3125,7 +3060,7 @@ HideControlsPicture.Visible = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showFeatures()
@@ -3143,18 +3078,16 @@ HideFeaturesPicture.Visible = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
 Const ProcName As String = "showMarketDepthForm"
-Dim mktDepthForm As fMarketDepth
-
-
 On Error GoTo Err
 
-If Not pTicker.state = TickerStateRunning Then Exit Sub
+If Not pTicker.State = MarketDataSourceStateRunning Then Exit Sub
 
+Dim mktDepthForm As fMarketDepth
 Set mktDepthForm = New fMarketDepth
 mktDepthForm.numberOfRows = 100
 mktDepthForm.Ticker = pTicker
@@ -3163,38 +3096,67 @@ mktDepthForm.Show vbModeless
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub startCharts()
+Const ProcName As String = "startCharts"
+On Error GoTo Err
+
+Dim chartConfig As ConfigurationSection
+For Each chartConfig In mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts)
+    createChartFromConfig chartConfig
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub startHistoricalCharts()
+Const ProcName As String = "startHistoricalCharts"
+On Error GoTo Err
+
+Dim chartConfig As ConfigurationSection
+For Each chartConfig In mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts)
+    createHistoricalChartFromConfig chartConfig
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updateInstanceSettings()
 Const ProcName As String = "updateInstanceSettings"
-
 On Error GoTo Err
 
-If Not gAppInstanceConfig Is Nothing Then
-    gAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionMainForm
+If Not mAppInstanceConfig Is Nothing Then
+    mAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionMainForm
     Select Case Me.WindowState
     Case FormWindowStateConstants.vbMaximized
-        gAppInstanceConfig.SetSetting ConfigSettingMainFormWindowstate, WindowStateMaximized
+        mAppInstanceConfig.SetSetting ConfigSettingMainFormWindowstate, WindowStateMaximized
     Case FormWindowStateConstants.vbMinimized
-        gAppInstanceConfig.SetSetting ConfigSettingMainFormWindowstate, WindowStateMinimized
+        mAppInstanceConfig.SetSetting ConfigSettingMainFormWindowstate, WindowStateMinimized
     Case FormWindowStateConstants.vbNormal
-        gAppInstanceConfig.SetSetting ConfigSettingMainFormWindowstate, WindowStateNormal
-        gAppInstanceConfig.SetSetting ConfigSettingMainFormLeft, Me.left / Screen.TwipsPerPixelX
-        gAppInstanceConfig.SetSetting ConfigSettingMainFormTop, Me.Top / Screen.TwipsPerPixelY
-        gAppInstanceConfig.SetSetting ConfigSettingMainFormWidth, Me.Width / Screen.TwipsPerPixelX
-        gAppInstanceConfig.SetSetting ConfigSettingMainFormHeight, Me.Height / Screen.TwipsPerPixelY
+        mAppInstanceConfig.SetSetting ConfigSettingMainFormWindowstate, WindowStateNormal
+        mAppInstanceConfig.SetSetting ConfigSettingMainFormLeft, Me.left / Screen.TwipsPerPixelX
+        mAppInstanceConfig.SetSetting ConfigSettingMainFormTop, Me.Top / Screen.TwipsPerPixelY
+        mAppInstanceConfig.SetSetting ConfigSettingMainFormWidth, Me.Width / Screen.TwipsPerPixelX
+        mAppInstanceConfig.SetSetting ConfigSettingMainFormHeight, Me.Height / Screen.TwipsPerPixelY
     End Select
     
-    gAppInstanceConfig.SetSetting ConfigSettingMainFormControlsHidden, CStr(mControlsHidden)
-    gAppInstanceConfig.SetSetting ConfigSettingMainFormFeaturesHidden, CStr(mFeaturesHidden)
+    mAppInstanceConfig.SetSetting ConfigSettingMainFormControlsHidden, CStr(mControlsHidden)
+    mAppInstanceConfig.SetSetting ConfigSettingMainFormFeaturesHidden, CStr(mFeaturesHidden)
     
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

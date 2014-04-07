@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.0#0"; "TWControls10.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#11.1#0"; "TWControls40.ocx"
 Begin VB.Form fMsgBox 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
@@ -14,7 +14,7 @@ Begin VB.Form fMsgBox
    ScaleWidth      =   4680
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin TWControls10.TWModelessMsgBox TWModelessMsgBox1 
+   Begin TWControls40.TWModelessMsgBox TWModelessMsgBox1 
       Height          =   1500
       Left            =   0
       TabIndex        =   0
@@ -94,20 +94,19 @@ End Sub
 ' Methods
 '@================================================================================
 
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal prompt As String, _
                 ByVal buttons As MsgBoxStyles, _
                 Optional ByVal title As String)
 Const ProcName As String = "initialise"
-
 On Error GoTo Err
 
-TWModelessMsgBox1.initialise prompt, buttons, title
+TWModelessMsgBox1.Initialise prompt, buttons, title
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
