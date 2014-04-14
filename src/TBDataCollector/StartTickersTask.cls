@@ -168,7 +168,6 @@ Set lTicker = ev.AffectedItem
 If mWriteBars Then
     Dim lBarWriter As HistDataWriter
     Set lBarWriter = RecordHistoricalBars( _
-                                    mStudyLibraryManager, _
                                     lTicker, _
                                     mHistDataStore, _
                                     HistDataWriteOptionUpdateLatestBar + _
