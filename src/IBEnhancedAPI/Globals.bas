@@ -666,7 +666,7 @@ Case "AET"
     gTwsTimezoneNameToStandardTimeZoneName = "AUS Eastern Standard Time"
 Case "CTT"
     gTwsTimezoneNameToStandardTimeZoneName = "Central Standard Time"
-Case "GMT"
+Case "GMT", "GB"
     gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
 Case "EST"
     gTwsTimezoneNameToStandardTimeZoneName = "Eastern Standard Time"
@@ -675,7 +675,8 @@ Case "Pacific/Pitcairn"
 Case "MET"
     gTwsTimezoneNameToStandardTimeZoneName = "Romance Standard Time"
 Case Else
-    AssertArgument False, "Unrecognised timezone: " & pTimeZoneId
+    logMessage "Unrecognised timezone: " & pTimeZoneId, LogLevelSevere
+    gTwsTimezoneNameToStandardTimeZoneName = ""
 End Select
 
 Exit Function
