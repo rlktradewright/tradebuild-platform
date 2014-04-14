@@ -645,7 +645,7 @@ Public Function StartServiceProviders() As Boolean
 Const ProcName As String = "StartServiceProviders"
 On Error GoTo Err
 
-StartServiceProviders = ServiceProviders.StartServiceProviders
+StartServiceProviders = ServiceProviders.StartServiceProviders(mStudyLibraryManager)
 If Not mMarketDataSourcesConfig Is Nothing Then MarketDataManager.LoadFromConfig mMarketDataSourcesConfig
 
 If Not ServiceProviders.OrderSubmitterFactoryLive Is Nothing Then Set mOrderSubmitterLive = CreateOrderSubmitter(ServiceProviders.OrderSubmitterFactoryLive, mOrderSubmissionListenerLive)

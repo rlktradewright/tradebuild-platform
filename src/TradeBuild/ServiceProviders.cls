@@ -578,7 +578,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function StartServiceProviders() As Boolean
+Friend Function StartServiceProviders(ByVal pStudyLibraryManager As StudyLibraryManager) As Boolean
 Const ProcName As String = "StartServiceProviders"
 On Error GoTo Err
 
@@ -615,7 +615,7 @@ Else
     Set mOrderRecoveryAgent = createOrderRecoveryAgent
     Set mOrderSubmitterFactoryLive = createOrderSubmitterFactoryLive
     Set mOrderSubmitterFactorySimulated = createOrderSubmitterFactorySimulated
-    Set mMarketDataManager = createMarketDataManager
+    Set mMarketDataManager = createMarketDataManager(pStudyLibraryManager)
     Set mTickfileStoreInput = createTickfileStoreInput
     Set mTickfileStoreOutput = createTickfileStoreOutput
     
@@ -798,7 +798,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
                             
-Private Function createMarketDataManager() As IMarketDataManager
+Private Function createMarketDataManager(ByVal pStudyLibraryManager As StudyLibraryManager) As IMarketDataManager
 Const ProcName As String = "createMarketDataManager"
 On Error GoTo Err
 
@@ -806,7 +806,7 @@ Dim lMarketDataFactory As IMarketDataFactory
 Set lMarketDataFactory = GetMarketDataFactory
 If lMarketDataFactory Is Nothing Then Exit Function
 
-Set createMarketDataManager = CreateRealtimeDataManager(GetMarketDataFactory, tb.MarketDataSourceOptions, tb.DefaultStateChangeListener, tb.NumberOfMarketDepthRows)
+Set createMarketDataManager = CreateRealtimeDataManager(GetMarketDataFactory, pStudyLibraryManager, tb.MarketDataSourceOptions, tb.DefaultStateChangeListener, tb.NumberOfMarketDepthRows)
 
 Exit Function
 
