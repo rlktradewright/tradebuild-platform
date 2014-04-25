@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "EnhancedAPI"
+Attribute VB_Name = "EnhancedIBAPI"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "EnhancedAPI"
+Private Const ModuleName                            As String = "EnhancedIBAPI"
 
 '@================================================================================
 ' Member variables
@@ -70,26 +70,25 @@ Public Function GetClient( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
-                ByVal pConnectionRetryIntervalSecs As Long, _
-                ByVal pDeferConnection As Boolean, _
-                ByVal pConnectionStateListener As ITwsConnectionStateListener, _
-                ByVal pProgramErrorHandler As ProgramErrorListener, _
-                ByVal pApiErrorListener As ErrorListener, _
-                ByVal pApiNotificationListener As NotificationListener) As Client
+                Optional ByVal pConnectionRetryIntervalSecs As Long = 10, _
+                Optional ByVal pDeferConnection As Boolean = False, _
+                Optional ByVal pConnectionStateListener As ITwsConnectionStateListener, _
+                Optional ByVal pProgramErrorHandler As ProgramErrorListener, _
+                Optional ByVal pApiErrorListener As ErrorListener, _
+                Optional ByVal pApiNotificationListener As NotificationListener) As Client
 Const ProcName As String = "GetClient"
 On Error GoTo Err
 
-Dim lKey As String
-
 If pServer = "" Then pServer = "127.0.0.1"
 
+Dim lKey As String
 lKey = generateTwsKey(pServer, pPort, pClientId)
 
 If Not mClientCollection.Contains(lKey) Then
     Set GetClient = New Client
-    mClientCollection.Add gGetClient, lKey
+    mClientCollection.Add GetClient, lKey
     
-    GetClient.Initialise pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pDeferConnection, pConnectionStateListener, pProgramErrorHandler, pApiErrorListener, pApiNotificationListener
+    GetClient.Initialise Me, pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pDeferConnection, pConnectionStateListener, pProgramErrorHandler, pApiErrorListener, pApiNotificationListener
 Else
     Set GetClient = mClientCollection(lKey)
 End If
@@ -100,8 +99,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub gReleaseClient(ByVal pClient As Client)
-Const ProcName As String = "gReleaseClient"
+Friend Sub ReleaseClient(ByVal pClient As Client)
+Const ProcName As String = "ReleaseClient"
 On Error GoTo Err
 
 mClientCollection.Remove generateTwsKey(pClient.Server, pClient.Port, pClient.ClientId)
@@ -115,6 +114,16 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function generateTwsKey( _
+                ByVal pServer As String, _
+                ByVal pPort As Long, _
+                ByVal pClientId As Long) As String
+generateTwsKey = pServer & vbNullChar & pPort & vbNullChar & pClientId
+End Function
+
+
+
 
 
 
