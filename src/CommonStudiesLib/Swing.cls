@@ -521,11 +521,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get swingHighPoint(Optional ByVal ref As Long) As SValue
-Const ProcName As String = "swingHighPoint"
+Public Property Get SwingHighPoint(Optional ByVal ref As Long) As SwingPoint
+Const ProcName As String = "SwingHighPoint"
 On Error GoTo Err
 
-swingHighPoint = mSwingHighCache.GetSValue(ref)
+SwingHighPoint = mSwingHighCache.GetValue(ref)
 
 Exit Property
 
@@ -533,15 +533,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get swingHigh(Optional ByVal ref As Long) As SValue
-Dim sh As SwingPoint
-Const ProcName As String = "swingHigh"
+Public Property Get SwingHigh(Optional ByVal ref As Long) As SValue
+Const ProcName As String = "SwingHigh"
 On Error GoTo Err
 
-sh = mSwingHighCache.GetValue(ref)
-swingHigh.BarNumber = sh.BarNumber
-swingHigh.Timestamp = sh.Timestamp
-swingHigh.Value = sh.Value
+SwingHigh = mSwingHighCache.GetSValue(ref)
 
 Exit Property
 
@@ -549,11 +545,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get swingLowPoint(Optional ByVal ref As Long) As SValue
-Const ProcName As String = "swingLowPoint"
+Public Property Get SwingLowPoint(Optional ByVal ref As Long) As SwingPoint
+Const ProcName As String = "SwingLowPoint"
 On Error GoTo Err
 
-swingLowPoint = mSwingLowCache.GetSValue(ref)
+SwingLowPoint = mSwingLowCache.GetValue(ref)
 
 Exit Property
 
@@ -561,15 +557,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get swingLow(Optional ByVal ref As Long) As SValue
-Dim sh As SwingPoint
-Const ProcName As String = "swingLow"
+Public Property Get SwingLow(Optional ByVal ref As Long) As SValue
+Const ProcName As String = "SwingLow"
 On Error GoTo Err
 
-sh = mSwingLowCache.GetValue(ref)
-swingLow.BarNumber = sh.BarNumber
-swingLow.Timestamp = sh.Timestamp
-swingLow.Value = sh.Value
+SwingLow = mSwingLowCache.GetSValue(ref)
 
 Exit Property
 
@@ -578,14 +570,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Swing(Optional ByVal ref As Long) As SValue
-Dim sh As SwingPoint
 Const ProcName As String = "Swing"
 On Error GoTo Err
 
-sh = mSwingCache.GetValue(ref)
-Swing.BarNumber = sh.BarNumber
-Swing.Timestamp = sh.Timestamp
-Swing.Value = sh.Value
+Swing = mSwingCache.GetSValue(ref)
 
 Exit Property
 
@@ -593,15 +581,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get SwingPoint(Optional ByVal ref As Long) As SValue
-Dim sh As SwingPoint
+Public Property Get SwingPoint(Optional ByVal ref As Long) As SwingPoint
 Const ProcName As String = "SwingPoint"
 On Error GoTo Err
 
-sh = mSwingCache.GetValue(ref)
-Swing.BarNumber = sh.BarNumber
-Swing.Timestamp = sh.Timestamp
-Swing.Value = sh
+SwingPoint = mSwingCache.GetValue(ref)
 
 Exit Property
 
@@ -643,10 +627,10 @@ mTrend = TrendUnknown
 If mSwingHighCache.Count < 2 Then Exit Sub
 If mSwingLowCache.Count < 2 Then Exit Sub
 
-latestSwingLow = swingLow(0).Value
-prevSwingLow = swingLow(-1).Value
-latestSwingHigh = swingHigh(0).Value
-prevSwingHigh = swingHigh(-1).Value
+latestSwingLow = SwingLow(0).Value
+prevSwingLow = SwingLow(-1).Value
+latestSwingHigh = SwingHigh(0).Value
+prevSwingHigh = SwingHigh(-1).Value
 
 If (mSwingHigh.Value > latestSwingHigh Or latestSwingHigh > prevSwingHigh) And _
     mSwingLow.Value >= latestSwingLow And latestSwingLow >= prevSwingLow Then
@@ -792,9 +776,9 @@ Select Case UCase$(valueName)
 Case UCase$(SwingValueSwingPoint)
     getStudyValue = Swing(ref)
 Case UCase$(SwingValueSwingHighPoint)
-    getStudyValue = swingHigh(ref)
+    getStudyValue = SwingHigh(ref)
 Case UCase$(SwingValueSwingLowPoint)
-    getStudyValue = swingLow(ref)
+    getStudyValue = SwingLow(ref)
 Case UCase$(SwingValueSwingLine)
     getStudyValue = mSwingLineCache.GetSValue(ref)
 Case UCase$(SwingValueSwingHighLine)
