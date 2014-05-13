@@ -55,7 +55,9 @@ Private mExchange                                   As String
 
 Private mCurrencyCode                               As String
 Private mLocalSymbol                                As String
+Private mTradingClass                               As String
 Private mPrimaryExch                                As String   ' pick a non-aggregate (ie not the SMART Exchange) Exchange that the contract trades on.  DO NOT SET TO SMART.
+
 Private mIncludeExpired                             As Boolean  ' can not be set to true for orders.
 
 Private mSecIdType                                  As String   ' CUSIP;SEDOL;ISIN;RIC
@@ -209,6 +211,14 @@ End Property
 
 Public Property Get Symbol() As String
 Symbol = mSymbol
+End Property
+
+Public Property Let TradingClass(ByVal Value As String)
+mTradingClass = Value
+End Property
+
+Public Property Get TradingClass() As String
+TradingClass = mTradingClass
 End Property
 
 Public Property Let UnderComp(ByRef Value As TwsUnderComp)

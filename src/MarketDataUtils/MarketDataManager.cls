@@ -47,6 +47,7 @@ End Type
 Private Const ModuleName                            As String = "MarketDataManager"
 
 Private Const ConfigSectionMarketDataSource         As String = "MarketDataSource"
+Private Const ConfigSettingUseLocalTimeForStudies   As String = "&UseLocalTimeForStudies"
 
 '@================================================================================
 ' Member variables
@@ -54,6 +55,8 @@ Private Const ConfigSectionMarketDataSource         As String = "MarketDataSourc
 
 Private mFactory                                    As IMarketDataFactory
 Attribute mFactory.VB_VarHelpID = -1
+
+Private mStudyLibManager                            As StudyLibraryManager
 
 Private mDataSourceBaseTable()                      As DataSourceBaseTableEntry
 Private mNextDataSourceBaseTableIndex               As Long
@@ -102,6 +105,7 @@ Friend Function CreateMarketDataSource( _
                 ByVal pStateChangeListener As StateChangeListener, _
                 ByVal pIsRecoverable As Boolean, _
                 ByVal pIsTickReplay As Boolean, _
+                ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pIndexToUse As Long = NullIndex) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
@@ -113,8 +117,12 @@ Dim lDataSource As New MarketDataSource
 If Not pStateChangeListener Is Nothing Then lDataSource.AddStateChangeListener pStateChangeListener
 
 Dim lConfig As ConfigurationSection
-If pIsRecoverable Then Set lConfig = getConfigSection(pKey)
-lDataSource.Initialise Me, pKey, pContractFuture, pIndexToUse, pIsTickReplay, lConfig
+If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStudies)
+
+Dim lStudyManager As StudyManager
+If Not mStudyLibManager Is Nothing Then Set lStudyManager = mStudyLibManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies)
+
+lDataSource.Initialise Me, pKey, pContractFuture, lStudyManager, pIndexToUse, pIsTickReplay, lConfig
 
 mDataSources.Add lDataSource, pKey
 
@@ -193,12 +201,14 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pFactory As IMarketDataFactory, _
+                ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pOptions As MarketDataSourceOptions, _
                 ByVal pNumberOfMarketDepthRows As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mFactory = pFactory
+Set mStudyLibManager = pStudyLibManager
 mOptions = pOptions
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 
@@ -228,7 +238,8 @@ For Each lCs In mConfig
                                 lCs.InstanceQualifier, _
                                 Nothing, _
                                 True, _
-                                False
+                                False, _
+                                lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False")
     End If
 Next
 
@@ -376,7 +387,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getConfigSection( _
-                ByVal pKey As String) As ConfigurationSection
+                ByVal pKey As String, _
+                ByVal pUseLocalTimeForStudies As Boolean) As ConfigurationSection
 Const ProcName As String = "getConfigSection"
 On Error GoTo Err
 
@@ -384,6 +396,7 @@ If mConfig Is Nothing Then Exit Function
 
 Dim lConfig As ConfigurationSection
 Set lConfig = mConfig.AddConfigurationSection(ConfigSectionMarketDataSource & "(" & pKey & ")")
+lConfig.SetSetting ConfigSettingUseLocalTimeForStudies, pUseLocalTimeForStudies
 
 Set getConfigSection = lConfig
 

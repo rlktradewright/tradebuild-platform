@@ -101,7 +101,7 @@ Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
-SetClock ev.Future.value
+SetClock ev.Future.Value
 
 Exit Sub
 

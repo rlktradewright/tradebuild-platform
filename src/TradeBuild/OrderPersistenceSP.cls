@@ -22,8 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ICommonServiceProvider
-Implements IOrderPersistenceServiceProvider
+Implements IServiceProvider
+Implements IOrderPersistenceSP
 
 '@================================================================================
 ' Events
@@ -49,7 +49,7 @@ Private Const RecoveryFilePath                      As String = "RecoveryFilePat
 ' Member variables
 '@================================================================================
 
-Private mCommonServiceConsumer                      As ICommonServiceConsumer
+Private mServiceProviderManager                     As IServiceProviderManager
 
 Private mHandle                                     As Long
 Private mName                                       As String
@@ -60,13 +60,17 @@ Private mRecoveryFilePath                           As String
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+mRecoveryFilePath = ApplicationSettingsFolder
+End Sub
+
 '@================================================================================
-' ICommonServiceProvider Interface Members
+' IServiceProvider Interface Members
 '@================================================================================
 
-Private Property Get ICommonServiceProvider_Details() As ServiceProviderDetails
-Dim details As ServiceProviderDetails
-With details
+Private Property Get IServiceProvider_Details() As ServiceProviderDetails
+Dim Details As ServiceProviderDetails
+With Details
     .Comments = App.Comments
     .EXEName = App.EXEName
     .FileDescription = App.FileDescription
@@ -79,54 +83,57 @@ With details
     .VersionMinor = App.Minor
     .VersionRevision = App.Revision
 End With
-ICommonServiceProvider_Details = details
+IServiceProvider_Details = Details
 End Property
 
-Private Sub ICommonServiceProvider_Link( _
-                ByVal CommonServiceConsumer As ICommonServiceConsumer, ByVal Handle As Long, ByVal params As Parameters)
+Private Sub IServiceProvider_Link( _
+                ByVal ServiceProviderManager As IServiceProviderManager, _
+                ByVal Handle As Long, _
+                ByVal Params As Parameters, _
+                ByVal pSessionID As String)
 Dim param As Parameter
 
-Set mCommonServiceConsumer = CommonServiceConsumer
+Set mServiceProviderManager = ServiceProviderManager
 mHandle = Handle
-mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.OrderPersistence
+mServiceProviderManager.RegisterServiceProvider mHandle, _
+                            ServiceProviderRoles.SPRoleOrderPersistence
 
-For Each param In params
-    Select Case UCase$(param.name)
+For Each param In Params
+    Select Case UCase$(param.Name)
     Case UCase$(RecoveryFilePath)
-        mRecoveryFilePath = param.Value
+        If param.Value <> "" Then mRecoveryFilePath = param.Value
     End Select
 Next
 
 End Sub
 
-Private Property Get ICommonServiceProvider_name() As String
-ICommonServiceProvider_name = mName
+Private Property Get IServiceProvider_Name() As String
+IServiceProvider_Name = mName
 End Property
 
-Private Property Let ICommonServiceProvider_name(ByVal Value As String)
+Private Property Let IServiceProvider_Name(ByVal Value As String)
 mName = Value
 End Property
 
-Private Sub ICommonServiceProvider_Terminate()
+Private Sub IServiceProvider_Terminate()
 
 End Sub
 
 '@================================================================================
-' IOrderPersistenceServiceProvider Interface Members
+' IOrderPersistenceSP Interface Members
 '@================================================================================
 
-Private Property Get IOrderPersistenceServiceProvider_OrderPersistenceDataStore() As IOrderPersistenceDataStore
-Const ProcName As String = "IOrderPersistenceServiceProvider_OrderPersistenceDataStore"
+Private Function IOrderPersistenceSP_GetOrderPersistenceDataStore() As IOrderPersistenceDataStore
+Const ProcName As String = "IOrderPersistenceSP_GetOrderPersistenceDataStore"
 On Error GoTo Err
 
-Set IOrderPersistenceServiceProvider_OrderPersistenceDataStore = OrderPersistenceDataStore
+Set IOrderPersistenceSP_GetOrderPersistenceDataStore = OrderPersistenceDataStore
 
-Exit Property
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Property
+End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -140,7 +147,7 @@ Public Property Get OrderPersistenceDataStore() As IOrderPersistenceDataStore
 Const ProcName As String = "OrderPersistenceDataStore"
 On Error GoTo Err
 
-Set OrderPersistenceDataStore = CreateOrderPersistenceDataStore(mRecoveryFilePath)
+Set OrderPersistenceDataStore = createOrderPersistenceDataStore(mRecoveryFilePath)
 
 Exit Property
 

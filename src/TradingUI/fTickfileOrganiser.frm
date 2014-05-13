@@ -1,13 +1,17 @@
 VERSION 5.00
 Begin VB.Form fTickfileOrganiser 
+   BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Tickfile Organiser"
    ClientHeight    =   4215
    ClientLeft      =   60
-   ClientTop       =   450
+   ClientTop       =   330
    ClientWidth     =   7890
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
    ScaleHeight     =   4215
    ScaleWidth      =   7890
+   ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
       Height          =   4065

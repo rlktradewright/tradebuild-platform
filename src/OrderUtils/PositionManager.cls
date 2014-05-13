@@ -57,6 +57,8 @@ Private Const ModuleName                        As String = "PositionManager"
 ' Member variables
 '@================================================================================
 
+Private mOrderManager                           As OrderManager
+
 Private mContractFuture                         As IFuture
 Private mOrderSubmitter                         As IOrderSubmitter
 Private mMoneyManager                           As IMoneyManager
@@ -372,7 +374,19 @@ Private Sub IRecoverable_LoadRecoveryData(ByVal pData As Variant)
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
-LoadRecoveryData pData
+Dim lSummary As PositionManagerSummary
+Set lSummary = pData
+
+init lSummary.Name, lSummary.GroupName, lSummary.IsSimulated, CreateFuture(lSummary.Contract)
+mCumBuyPrice = lSummary.CumBuyPrice
+mCumSellPrice = lSummary.CumSellPrice
+mDrawdownLastTrade = lSummary.DrawdownLastTrade
+mProfitLastFlat = lSummary.ProfitLastFlat
+mProfitLastTrade = lSummary.ProfitLastTrade
+mInitialSessionStartTime = lSummary.TradingSessionStartTime
+
+mIsInitialised = True
+
 
 Exit Sub
 
@@ -1005,7 +1019,7 @@ End If
 Set mBracketOrderRecoveryController = pBracketOrderRecoveryCtlr
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
 
-Set mOrderContexts = gCreateOrderContexts(mName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+Set mOrderContexts = mOrderManager.CreateOrderContexts(mName, mContractFuture, mOrderSubmitter, mDataSource, mGroupName, mIsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 
 Exit Sub
 
@@ -1032,6 +1046,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
+                ByVal pOrderManager As OrderManager, _
                 ByVal pName As String, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pOrderSubmitter As IOrderSubmitter, _
@@ -1049,6 +1064,7 @@ AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter Is Nothing"
 AssertArgument Not pDataSource Is Nothing, "pDataSource is nothing"
 
+PreInitialise pOrderManager
 Set mOrderSubmitter = pOrderSubmitter
 mOrderSubmitter.AddOrderSubmissionListener Me
 mOrderSubmitter.AddStateChangeListener Me
@@ -1080,27 +1096,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub LoadRecoveryData(ByVal pData As Variant)
-Const ProcName As String = "LoadRecoveryData"
-On Error GoTo Err
-
-Dim lSummary As PositionManagerSummary
-Set lSummary = pData
-
-init lSummary.Name, lSummary.GroupName, lSummary.IsSimulated, CreateFuture(lSummary.Contract)
-mCumBuyPrice = lSummary.CumBuyPrice
-mCumSellPrice = lSummary.CumSellPrice
-mDrawdownLastTrade = lSummary.DrawdownLastTrade
-mProfitLastFlat = lSummary.ProfitLastFlat
-mProfitLastTrade = lSummary.ProfitLastTrade
-mInitialSessionStartTime = lSummary.TradingSessionStartTime
-
-mIsInitialised = True
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Sub PreInitialise(ByVal pOrderManager As OrderManager)
+Set mOrderManager = pOrderManager
 End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
@@ -1492,9 +1489,9 @@ mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
 
 If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
-    Set mOrderContexts = gGetOrderContexts(mName)
+    Set mOrderContexts = mOrderManager.GetOrderContexts(mName)
     If mOrderContexts Is Nothing Then _
-        Set mOrderContexts = gCreateOrderContexts(pName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+        Set mOrderContexts = mOrderManager.CreateOrderContexts(pName, mContractFuture, mOrderSubmitter, mDataSource, mGroupName, mIsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 End If
 
 If mContractFuture.IsAvailable Then

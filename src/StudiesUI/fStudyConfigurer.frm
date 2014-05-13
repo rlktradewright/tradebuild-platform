@@ -1,13 +1,17 @@
 VERSION 5.00
 Begin VB.Form fStudyConfigurer 
+   BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Configure a Study"
    ClientHeight    =   5805
    ClientLeft      =   60
-   ClientTop       =   450
+   ClientTop       =   330
    ClientWidth     =   13560
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
    ScaleHeight     =   5805
    ScaleWidth      =   13560
+   ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
       Height          =   5655

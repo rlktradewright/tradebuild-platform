@@ -105,6 +105,9 @@ End Property
 Public Property Get State() As MarketDataSourceStates
 End Property
 
+Public Property Get StudyBase() As IStudyBase
+End Property
+
 Public Property Get Timestamp() As Date
 End Property
 

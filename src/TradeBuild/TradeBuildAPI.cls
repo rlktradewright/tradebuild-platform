@@ -50,6 +50,8 @@ Private mMarketDataSourceOptions                    As MarketDataSourceOptions
 Private mNumberOfMarketDepthRows                    As Long
 
 Private mDefaultStateChangeListener                 As StateChangeListener
+
+Private mOrderManager                               As New OrderManager
 Private mOrderSubmissionListenerLive                As IOrderSubmissionListener
 Private mOrderSubmissionListenerSimulated           As IOrderSubmissionListener
 Private mPositionManagersLive                       As PositionManagers
@@ -601,7 +603,7 @@ On Error GoTo Err
 Assert Not ServiceProviders.MarketDataManager Is Nothing, "No realtime data service provider is configured"
 Assert Not ServiceProviders.OrderPersistenceDataStore Is Nothing, "No order persistence service provider is configured"
 Assert mScopeName <> "", "No scope name has been supplied"
-Set RecoverOrders = RecoverOrdersFromPreviousSession(mScopeName, _
+Set RecoverOrders = mOrderManager.RecoverOrdersFromPreviousSession(mScopeName, _
                                                     mPositionManagersLive, _
                                                     ServiceProviders.OrderPersistenceDataStore, _
                                                     ServiceProviders.OrderRecoveryAgent, _
@@ -645,7 +647,7 @@ Public Function StartServiceProviders() As Boolean
 Const ProcName As String = "StartServiceProviders"
 On Error GoTo Err
 
-StartServiceProviders = ServiceProviders.StartServiceProviders(mStudyLibraryManager)
+StartServiceProviders = ServiceProviders.StartServiceProviders(mStudyLibraryManager, mSessionName)
 If Not mMarketDataSourcesConfig Is Nothing Then MarketDataManager.LoadFromConfig mMarketDataSourcesConfig
 
 If Not ServiceProviders.OrderSubmitterFactoryLive Is Nothing Then Set mOrderSubmitterLive = CreateOrderSubmitter(ServiceProviders.OrderSubmitterFactoryLive, mOrderSubmissionListenerLive)
@@ -655,6 +657,7 @@ If Not ServiceProviders.MarketDataManager Is Nothing Then
     Set mWorkspaces = New WorkSpaces
     
     mWorkspaces.Initialise Me, _
+                        mOrderManager, _
                         mOrderSubmitterLive, _
                         mOrderSubmitterSimulated, _
                         mPositionManagersLive, _
@@ -725,7 +728,6 @@ Const ProcName As String = "Init"
 On Error GoTo Err
 
 mSessionName = GenerateGUIDString
-If mScopeName <> "" Then StartOrderRecoverySession mSessionName
 
 Set mServiceProviders = New ServiceProviders
 mServiceProviders.TradeBuildAPI = Me

@@ -46,7 +46,6 @@ Private Const ModuleName                            As String = "TwsContractDeta
 
 Private mSummary                                    As TwsContract
 Private mMarketName                                 As String
-Private mTradingClass                               As String
 Private mMinTick                                    As Double
 Private mPriceMagnifier                             As Long
 Private mOrderTypes                                 As String
@@ -60,6 +59,11 @@ Private mSubcategory                                As String
 Private mTimeZoneId                                 As String
 Private mTradingHours                               As String
 Private mLiquidHours                                As String
+
+Private mEvRule                                     As String
+Private mEvMultiplier                               As Double
+
+Private mSecIdList()                                As TwsTagValue  ' CUSIP/ISIN/etc.
 
 '@================================================================================
 ' Class Event Handlers
@@ -91,6 +95,22 @@ End Property
 
 Public Property Get ContractMonth() As String
 ContractMonth = mContractMonth
+End Property
+
+Public Property Let EvRule(ByVal Value As String)
+mEvRule = Value
+End Property
+
+Public Property Get EvRule() As String
+EvRule = mEvRule
+End Property
+
+Public Property Let EvMultiplier(ByVal Value As Double)
+mEvMultiplier = Value
+End Property
+
+Public Property Get EvMultiplier() As Double
+EvMultiplier = mEvMultiplier
 End Property
 
 Public Property Let Industry(ByVal Value As String)
@@ -149,6 +169,14 @@ Public Property Get PriceMagnifier() As Long
 PriceMagnifier = mPriceMagnifier
 End Property
 
+Public Property Let SecIdList(ByRef Value() As TwsTagValue)
+mSecIdList = Value
+End Property
+
+Public Property Get SecIdList() As TwsTagValue()
+SecIdList = mSecIdList
+End Property
+
 Public Property Let Subcategory(ByVal Value As String)
 mSubcategory = Value
 End Property
@@ -171,14 +199,6 @@ End Property
 
 Public Property Get TimeZoneId() As String
 TimeZoneId = mTimeZoneId
-End Property
-
-Public Property Let TradingClass(ByVal Value As String)
-mTradingClass = Value
-End Property
-
-Public Property Get TradingClass() As String
-TradingClass = mTradingClass
 End Property
 
 Public Property Let TradingHours(ByVal Value As String)

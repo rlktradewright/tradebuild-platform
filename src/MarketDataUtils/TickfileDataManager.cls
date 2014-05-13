@@ -117,11 +117,12 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
-Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource(pContractFuture, pIsRecoverable, pKey, pStateChangeListener)
+Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener)
 
 Exit Function
 
@@ -217,6 +218,7 @@ Public Function CreateMarketDataSource( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
@@ -232,7 +234,7 @@ Dim lTickStream As ITickStream
 Set lTickStream = mTickStreams(GetObjectKey(pContractFuture))
 
 Dim lDataSource As New MarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, False, True, lTickStream.StreamId)
+Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, False, True, pUseLocalTimeForStudies, lTickStream.StreamId)
 
 Set CreateMarketDataSource = lDataSource
 
@@ -269,6 +271,7 @@ End Function
 Friend Sub Initialise( _
                 ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
+                ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pPrimaryContractStore As IContractStore, _
                 ByVal pSecondaryContractStore As IContractStore, _
                 ByVal pOptions As MarketDataSourceOptions, _
@@ -289,7 +292,7 @@ Set mDefaultStateChangeListener = pDefaultStateChangeListener
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 
 Set mDataManager = New MarketDataManager
-mDataManager.Initialise Me, pOptions, pNumberOfMarketDepthRows
+mDataManager.Initialise Me, pStudyLibManager, pOptions, pNumberOfMarketDepthRows
 
 Set mReplayController = CreateTickfileReplayController(pTickfileSpecifiers, pTickfileStore, mPrimaryContractStore, mSecondaryContractStore, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
 

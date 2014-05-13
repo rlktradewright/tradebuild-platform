@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Public Const ProjectName                        As String = "IBAPI964"
+Public Const ProjectName                        As String = "IBAPI970"
 Private Const ModuleName                        As String = "Globals"
 
 Public Const InvalidEnumValue                   As String = "*ERR*"
@@ -41,27 +41,42 @@ Public Const MaxCallersExecutionsRequestId      As Long = BaseContractRequestId 
 Public Const MaxCallersContractRequestId        As Long = BaseOrderId - BaseContractRequestId - 1
 Public Const MaxCallersOrderId                  As Long = &H7FFFFFFF - BaseOrderId - 1
 
-Public Const MIN_SERVER_VER_REAL_TIME_BARS             As Long = 34
-Public Const MIN_SERVER_VER_SCALE_ORDERS               As Long = 35
-Public Const MIN_SERVER_VER_SNAPSHOT_MKT_DATA          As Long = 35
-Public Const MIN_SERVER_VER_SSHORT_COMBO_LEGS          As Long = 35
-Public Const MIN_SERVER_VER_WHAT_IF_ORDERS             As Long = 36
-Public Const MIN_SERVER_VER_CONTRACT_CONID             As Long = 37
-Public Const MIN_SERVER_VER_PTA_ORDERS                 As Long = 39
-Public Const MIN_SERVER_VER_FUNDAMENTAL_DATA           As Long = 40
-Public Const MIN_SERVER_VER_UNDER_COMP                 As Long = 40
-Public Const MIN_SERVER_VER_CONTRACT_DATA_CHAIN        As Long = 40
-Public Const MIN_SERVER_VER_SCALE_ORDERS2              As Long = 40
-Public Const MIN_SERVER_VER_ALGO_ORDERS                As Long = 41
-Public Const MIN_SERVER_VER_EXECUTION_DATA_CHAIN       As Long = 42
-Public Const MIN_SERVER_VER_NOT_HELD                   As Long = 44
-Public Const MIN_SERVER_VER_SEC_ID_TYPE                As Long = 45
-Public Const MIN_SERVER_VER_PLACE_ORDER_CONID          As Long = 46
-Public Const MIN_SERVER_VER_REQ_MKT_DATA_CONID         As Long = 47
-Public Const MIN_SERVER_VER_REQ_CALC_IMPLIED_VOLAT     As Long = 49
-Public Const MIN_SERVER_VER_REQ_CALC_OPTION_PRICE      As Long = 50
-Public Const MIN_SERVER_VER_CANCEL_CALC_IMPLIED_VOLAT  As Long = 50
-Public Const MIN_SERVER_VER_CANCEL_CALC_OPTION_PRICE   As Long = 50
+'Public Const MIN_SERVER_VER_REAL_TIME_BARS              As Long = 34
+'Public Const MIN_SERVER_VER_SCALE_ORDERS                As Long = 35
+'Public Const MIN_SERVER_VER_SNAPSHOT_MKT_DATA           As Long = 35
+'Public Const MIN_SERVER_VER_SSHORT_COMBO_LEGS           As Long = 35
+'Public Const MIN_SERVER_VER_WHAT_IF_ORDERS              As Long = 36
+'Public Const MIN_SERVER_VER_CONTRACT_CONID              As Long = 37
+'Public Const MIN_SERVER_VER_PTA_ORDERS                  As Long = 39
+'Public Const MIN_SERVER_VER_FUNDAMENTAL_DATA            As Long = 40
+'Public Const MIN_SERVER_VER_UNDER_COMP                  As Long = 40
+'Public Const MIN_SERVER_VER_CONTRACT_DATA_CHAIN         As Long = 40
+'Public Const MIN_SERVER_VER_SCALE_ORDERS2               As Long = 40
+'Public Const MIN_SERVER_VER_ALGO_ORDERS                 As Long = 41
+'Public Const MIN_SERVER_VER_EXECUTION_DATA_CHAIN        As Long = 42
+'Public Const MIN_SERVER_VER_NOT_HELD                    As Long = 44
+'Public Const MIN_SERVER_VER_SEC_ID_TYPE                 As Long = 45
+'Public Const MIN_SERVER_VER_PLACE_ORDER_CONID           As Long = 46
+'Public Const MIN_SERVER_VER_REQ_MKT_DATA_CONID          As Long = 47
+'Public Const MIN_SERVER_VER_REQ_CALC_IMPLIED_VOLAT      As Long = 49
+'Public Const MIN_SERVER_VER_REQ_CALC_OPTION_PRICE       As Long = 50
+'Public Const MIN_SERVER_VER_CANCEL_CALC_IMPLIED_VOLAT   As Long = 50
+'Public Const MIN_SERVER_VER_CANCEL_CALC_OPTION_PRICE    As Long = 50
+'Public Const MIN_SERVER_VER_SSHORTX_OLD                 As Long = 51
+'Public Const MIN_SERVER_VER_SSHORTX                     As Long = 52
+'Public Const MIN_SERVER_VER_REQ_GLOBAL_CANCEL           As Long = 53
+'Public Const MIN_SERVER_VER_HEDGE_ORDERS                As Long = 54
+'Public Const MIN_SERVER_VER_REQ_MARKET_DATA_TYPE        As Long = 55
+'Public Const MIN_SERVER_VER_OPT_OUT_SMART_ROUTING       As Long = 56
+'Public Const MIN_SERVER_VER_SMART_COMBO_ROUTING_PARAMS  As Long = 57
+'Public Const MIN_SERVER_VER_DELTA_NEUTRAL_CONID         As Long = 58
+Public Const MIN_SERVER_VER_SCALE_ORDERS3               As Long = 60
+Public Const MIN_SERVER_VER_ORDER_COMBO_LEGS_PRICE      As Long = 61
+Public Const MIN_SERVER_VER_TRAILING_PERCENT            As Long = 62
+Public Const MIN_SERVER_VER_DELTA_NEUTRAL_OPEN_CLOSE    As Long = 66
+Public Const MIN_SERVER_VER_ACCT_SUMMARY                As Long = 67
+Public Const MIN_SERVER_VER_TRADING_CLASS               As Long = 68
+Public Const MIN_SERVER_VER_SCALE_TABLE                 As Long = 69
 
 '================================================================================
 ' Enums
@@ -87,8 +102,8 @@ Public Enum TwsSocketInMsgTypes
     ORDER_STATUS = 3
     ERR_MSG = 4
     OPEN_ORDER = 5
-    ACCT_Value = 6
-    PORTFOLIO_Value = 7
+    ACCT_VALUE = 6
+    PORTFOLIO_VALUE = 7
     ACCT_UPDATE_TIME = 8
     NEXT_VALID_ID = 9
     CONTRACT_DATA = 10
@@ -115,6 +130,12 @@ Public Enum TwsSocketInMsgTypes
     EXECUTION_DATA_END = 55
     DELTA_NEUTRAL_VALIDATION = 56
     TICK_SNAPSHOT_END = 57
+    MARKET_DATA_TYPE = 58
+    COMMISSION_REPORT = 59
+    POSITION = 61
+    POSITION_END = 62
+    ACCOUNT_SUMMARY = 63
+    ACCOUNT_SUMMARY_END = 64
     MAX_SOCKET_INMSG
 End Enum
 
@@ -147,6 +168,18 @@ Public Enum TwsSocketOutMsgTypes
     REQ_CURRENT_TIME = 49
     REQ_REAL_TIME_BARS = 50
     CANCEL_REAL_TIME_BARS = 51
+    REQ_FUNDAMENTAL_DATA = 52
+    CANCEL_FUNDAMENTAL_DATA = 53
+    REQ_CALC_IMPLIED_VOLAT = 54
+    REQ_CALC_OPTION_PRICE = 55
+    CANCEL_CALC_IMPLIED_VOLAT = 56
+    CANCEL_CALC_OPTION_PRICE = 57
+    REQ_GLOBAL_CANCEL = 58
+    REQ_MARKET_DATA_TYPE = 59
+    REQ_POSITIONS = 61
+    REQ_ACCOUNT_SUMMARY = 62
+    CANCEL_ACCOUNT_SUMMARY = 63
+    CANCEL_POSITIONS = 64
 End Enum
 
 '================================================================================
@@ -191,6 +224,18 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Function gContractHasExpired(ByVal pContract As TwsContract) As Boolean
+If pContract.Sectype = TwsSecTypeCash Or _
+    pContract.Sectype = TwsSecTypeIndex Or _
+    pContract.Sectype = TwsSecTypeStock _
+Then
+    gContractHasExpired = False
+    Exit Function
+End If
+    
+gContractHasExpired = contractExpiryToDate(pContract) < Now
+End Function
 
 Public Function gFormatBuffer( _
                 ByRef pBuffer() As Byte, _
@@ -267,6 +312,18 @@ If Len(pDateString) > 17 Then
 Else
     pTimezoneName = ""
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
+Public Function gGetDateFromUnixSystemTime(ByVal pSystemTime As Double) As Date
+Const ProcName As String = "gGetDateFromUnixSystemTime"
+On Error GoTo Err
+
+gGetDateFromUnixSystemTime = CDate((2209161600000@ + pSystemTime) / (86400000@))
 
 Exit Function
 
@@ -370,9 +427,9 @@ Case ERR_MSG
     gInputMessageIdToString = "ERR_MSG"
 Case OPEN_ORDER
     gInputMessageIdToString = "OPEN_ORDER"
-Case ACCT_Value
+Case ACCT_VALUE
     gInputMessageIdToString = "ACCT_Value"
-Case PORTFOLIO_Value
+Case PORTFOLIO_VALUE
     gInputMessageIdToString = "PORTFOLIO_Value"
 Case ACCT_UPDATE_TIME
     gInputMessageIdToString = "ACCT_UPDATE_TIME"
@@ -555,9 +612,9 @@ Case ERR_MSG
     gSocketInMsgTypeToString = "Error message       "
 Case OPEN_ORDER
     gSocketInMsgTypeToString = "Open Order          "
-Case ACCT_Value
+Case ACCT_VALUE
     gSocketInMsgTypeToString = "Account Value       "
-Case PORTFOLIO_Value
+Case PORTFOLIO_VALUE
     gSocketInMsgTypeToString = "Portfolio Value     "
 Case ACCT_UPDATE_TIME
     gSocketInMsgTypeToString = "Account update Time "
@@ -646,6 +703,40 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
+Public Function gTwsHedgeTypeFromString(ByVal pValue As String) As TwsHedgeTypes
+Select Case UCase$(pValue)
+Case ""
+    gTwsHedgeTypeFromString = TwsHedgeTypeNone
+Case "D", "DELTA"
+    gTwsHedgeTypeFromString = TwsHedgeTypeDelta
+Case "B", "BETA"
+    gTwsHedgeTypeFromString = TwsHedgeTypeBeta
+Case "F"
+    gTwsHedgeTypeFromString = TwsHedgeTypeFX
+Case "P", "PAIR"
+    gTwsHedgeTypeFromString = TwsHedgeTypePair
+Case Else
+    AssertArgument False, "Value is not a valid Hedge Type"
+End Select
+End Function
+
+Public Function gTwsHedgeTypeToString(ByVal pValue As TwsHedgeTypes) As String
+Select Case pValue
+Case TwsHedgeTypeNone
+    gTwsHedgeTypeToString = ""
+Case TwsHedgeTypeDelta
+    gTwsHedgeTypeToString = "D"
+Case TwsHedgeTypeBeta
+    gTwsHedgeTypeToString = "B"
+Case TwsHedgeTypeFX
+    gTwsHedgeTypeToString = "F"
+Case TwsHedgeTypePair
+    gTwsHedgeTypeToString = "P"
+Case Else
+    AssertArgument False, "Value is not a valid Hedge Type"
+End Select
+End Function
+
 Public Function gTwsOptionRightFromString(ByVal Value As String) As TwsOptionRights
 Select Case UCase$(Value)
 Case "", "?"
@@ -655,7 +746,7 @@ Case "CALL", "C"
 Case "PUT", "P"
     gTwsOptionRightFromString = TwsOptRightPut
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Option Right"
+    AssertArgument False, "Value is not a valid Option Right"
 End Select
 End Function
 
@@ -984,4 +1075,23 @@ End Function
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Function contractExpiryToDate( _
+                ByVal pContract As TwsContract) As Date
+Const ProcName As String = "contractExpiryToDate"
+On Error GoTo Err
+
+If Len(pContract.Expiry) = 8 Then
+    contractExpiryToDate = CDate(Left$(pContract.Expiry, 4) & "/" & Mid$(pContract.Expiry, 5, 2) & "/" & Right$(pContract.Expiry, 2))
+ElseIf Len(pContract.Expiry) = 6 Then
+    contractExpiryToDate = CDate(Left$(pContract.Expiry, 4) & "/" & Mid$(pContract.Expiry, 5, 2) & "/" & "01")
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
+
 

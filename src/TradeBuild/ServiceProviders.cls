@@ -578,7 +578,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function StartServiceProviders(ByVal pStudyLibraryManager As StudyLibraryManager) As Boolean
+Friend Function StartServiceProviders(ByVal pStudyLibraryManager As StudyLibraryManager, ByVal pSessionID As String) As Boolean
 Const ProcName As String = "StartServiceProviders"
 On Error GoTo Err
 
@@ -595,7 +595,7 @@ For i = 0 To mMaxSPIndex
     Set lServiceProvider = mServiceProviders(i).SPObject
     
     On Error Resume Next
-    lServiceProvider.Link Me, i, mServiceProviders(i).Params
+    lServiceProvider.Link Me, i, mServiceProviders(i).Params, pSessionID
     If Err.Number <> 0 Then lErrorOccurred = True
     Err.Clear
     On Error GoTo Err

@@ -237,11 +237,7 @@ On Error GoTo Err
 Set mTwsAPI = pTwsAPI
 Set mContractCache = pContractCache
 
-If mTwsAPI.SerialiseContractDetailsRequests Then
-    mMaxConcurrentRequests = 1
-Else
-    mMaxConcurrentRequests = MaxConcurrentContractDetailsRequests
-End If
+mMaxConcurrentRequests = MaxConcurrentContractDetailsRequests
 
 gLog "Max concurrent contract details requests", ModuleName, ProcName, CStr(mMaxConcurrentRequests), LogLevelDetail
 

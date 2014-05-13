@@ -51,6 +51,8 @@ Private mGroupName                      As String
 Private mContextsName                   As String
 Private mName                           As String
 
+Private mSessionName                    As String
+
 Private mContractFuture                 As IFuture
 Private mContract                       As IContract
 Private mDataSource                     As IMarketDataSource
@@ -764,6 +766,7 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pName As String, _
+                ByVal pSessionName As String, _
                 ByVal pContextsName As String, _
                 ByVal pGroupName As String, _
                 ByVal pIsSimulated As Boolean, _
@@ -779,6 +782,7 @@ On Error GoTo Err
 
 mGroupName = pGroupName
 mName = pName
+mSessionName = pSessionName
 mContextsName = pContextsName
 mGroupName = pGroupName
 mIsSimulated = pIsSimulated
@@ -1290,7 +1294,7 @@ On Error GoTo Err
 
 Static currID As Long
 currID = currID + 1
-nextKey = gSessionName & "/" & mContextsName & "/" & mName & "/" & currID
+nextKey = mSessionName & "/" & mContextsName & "/" & mName & "/" & currID
 
 Exit Function
 

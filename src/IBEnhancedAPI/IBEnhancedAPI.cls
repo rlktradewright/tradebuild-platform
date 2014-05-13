@@ -96,8 +96,9 @@ Public Function GetClient( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
-                Optional ByVal pConnectionRetryIntervalSecs As Long = 10, _
-                Optional ByVal pDeferConnection As Boolean = False, _
+                Optional ByVal pSessionID As String, _
+                Optional ByVal pConnectionRetryIntervalSecs As Long = 60, _
+                Optional ByVal pDeferConnection As Boolean, _
                 Optional ByVal pConnectionStateListener As ITwsConnectionStateListener, _
                 Optional ByVal pProgramErrorHandler As ProgramErrorListener, _
                 Optional ByVal pApiErrorListener As ErrorListener, _
@@ -105,7 +106,9 @@ Public Function GetClient( _
 Const ProcName As String = "GetClient"
 On Error GoTo Err
 
-Set GetClient = gGetClient(pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pDeferConnection, pConnectionStateListener, pProgramErrorHandler, pApiErrorListener, pApiNotificationListener)
+If pSessionID = "" Then pSessionID = GenerateGUIDString
+
+Set GetClient = gGetClient(pSessionID, pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pDeferConnection, pConnectionStateListener, pProgramErrorHandler, pApiErrorListener, pApiNotificationListener)
 
 Exit Function
 

@@ -62,6 +62,8 @@ Private Const DefaultOrderContextName           As String = "$default"
 ' Member variables
 '@================================================================================
 
+Private mOrderManager                           As OrderManager
+
 Private mContractFuture                         As IFuture
 Private mDataSource                             As IMarketDataSource
 Private mOrderSubmitter                         As IOrderSubmitter
@@ -293,7 +295,7 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = New OrderContext
-Add.Initialise pName, mName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture
+Add.Initialise pName, mOrderManager.SessionName, mName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture
  
 mOrderContexts.Add Add, pName
 Add.PermittedOrderProperties = mPermittedOrderProperties
@@ -343,7 +345,8 @@ For Each OrderContext In mOrderContexts
     OrderContext.Finish
 Next
 
-gRemoveorderContexts Me
+mOrderManager.RemoveorderContexts Me
+Set mOrderManager = Nothing
 
 Exit Sub
 
@@ -353,6 +356,7 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pName As String, _
+                ByVal pOrderManager As OrderManager, _
                 ByVal pGroupName As String, _
                 ByVal pIsSimulated As Boolean, _
                 ByVal pContractFuture As IFuture, _
@@ -366,6 +370,7 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mName = pName
+Set mOrderManager = pOrderManager
 mGroupName = pGroupName
 
 mIsSimulated = pIsSimulated

@@ -61,6 +61,8 @@ Private Const OrderInfoData                         As String = "DATA"
 ' Member variables
 '@================================================================================
 
+Private mOrderManager                               As OrderManager
+
 Private mDataStore                                  As IOrderPersistenceDataStore
 Private mMarketDataManager                          As IMarketDataManager
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
@@ -233,7 +235,7 @@ lOpItem.PositionManagerName = lPositionMemberObj.PositionManagerName
 lOpItem.ProgId = lRecoverableObj.ProgId
 lOpItem.Timestamp = GetTimestamp
 
-mDataStore.SaveOrderInfo lOpItem.ToJSON
+mDataStore.SaveOrderInfo mScopeName, lOpItem.ToJSON
 
 Exit Sub
 
@@ -264,6 +266,12 @@ Static sInMemoryStoreEn As Enumerator
 Dim OpItem As OrderPersistenceItem
 
 If mState = RecoveryStateStarting Then
+    If mRecoveryAgent Is Nothing Or mOrderSubmitterFactory Is Nothing Then
+        mTaskContext.Finish mPositionManagers, False
+        gLog "No order recovery undertaken - order submitter factory and/or order recovery agent is not configured", ProcName, ModuleName
+        Exit Sub
+    End If
+
     gLog "Persisted order info processing started", ProcName, ModuleName
     mProcessingPersistedData = True
     Set sDataStoreEn = mDataStore.GetEnumeratorForScope(mScopeName)
@@ -302,7 +310,7 @@ ElseIf mState = RecoveryStateCreatingOrderContexts Then
         End If
     Else
         Set sInMemoryStoreEn = mInMemoryStore.Enumerator
-        mDataStore.Clear
+        mDataStore.Clear mScopeName
         
         On Error GoTo ErrWithRestoreData
         
@@ -325,7 +333,7 @@ ElseIf mState = RecoveryStateProcessingInfo Then
         gLog "Processing persisted order info", pMsgQualifier:=opItemJSON, pModName:=ModuleName, pProcName:=ProcName, pLogLevel:=LogLevelDetail
     
         If processOrderPersistenceItem(OpItem) Then
-            mDataStore.SaveOrderInfo opItemJSON
+            mDataStore.SaveOrderInfo mScopeName, opItemJSON
         End If
     Else
         mProcessingPersistedData = False
@@ -381,7 +389,7 @@ If Not mDataStore Is Nothing Then
     OpItem.ItemType = OrderInfoDelete
     OpItem.PositionManagerName = pPositionManagerName
     OpItem.Timestamp = GetTimestamp
-    mDataStore.SaveOrderInfo OpItem.ToJSON
+    mDataStore.SaveOrderInfo mScopeName, OpItem.ToJSON
 End If
 
 Exit Sub
@@ -391,6 +399,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function RecoverOrders( _
+                ByVal pOrderManager As OrderManager, _
                 ByVal pPositionManagers As PositionManagers, _
                 ByVal pScopeName As String, _
                 ByVal pDataStore As IOrderPersistenceDataStore, _
@@ -406,12 +415,11 @@ Static sCalled As Boolean
 Assert Not sCalled, "RecoverOrders has already been called in this session for this scope, and cannot not be called again"
 AssertArgument Not pPositionManagers Is Nothing, "pPositionManagers Is Nothing"
 AssertArgument Not pDataStore Is Nothing, "pDataStore Is Nothing"
-AssertArgument Not pRecoveryAgent Is Nothing, "pRecoveryAgent Is Nothing"
 AssertArgument Not pMarketDataManager Is Nothing, "pMarketDataManager Is Nothing"
-AssertArgument Not pOrderSubmitterFactory Is Nothing, "pOrderSubmitterFacory Is Nothing"
 
 sCalled = True
 
+Set mOrderManager = pOrderManager
 Set mPositionManagers = pPositionManagers
 mScopeName = pScopeName
 Set mDataStore = pDataStore
@@ -459,9 +467,11 @@ Dim lSummary As PositionManagerSummary
 Set lSummary = pOpItem.Data
 
 Dim lPm As New PositionManager
+lPm.PreInitialise mOrderManager
 
 Dim lRecoverable As IRecoverable
-lPm.LoadRecoveryData lSummary
+Set lRecoverable = lPm
+lRecoverable.LoadRecoveryData lSummary
 
 Dim lContract As IContract
 Set lContract = lPm.ContractFuture.Value
@@ -753,10 +763,10 @@ On Error GoTo Err
 Dim lSummary As PositionManagerSummary
 Set lSummary = pOpi.Data
 
-Dim lPm As IRecoverable
-Set lPm = GetPositionManager(pOpi.PositionManagerName)
+Dim lRecoverable As IRecoverable
+Set lRecoverable = GetPositionManager(pOpi.PositionManagerName)
 
-lPm.LoadRecoveryData lSummary
+lRecoverable.LoadRecoveryData lSummary
 
 Exit Sub
 
@@ -777,7 +787,7 @@ If sRestored Then HandleUnexpectedError pProcName, ProjectName, ModuleName, , , 
 
 sRestored = True
 
-mDataStore.Clear
+mDataStore.Clear mScopeName
 
 Dim en As Enumerator
 Set en = mInMemoryStore.Enumerator
@@ -785,7 +795,7 @@ Set en = mInMemoryStore.Enumerator
 Do While en.MoveNext
     Dim lOpItem As OrderPersistenceItem
     Set lOpItem = en.Current
-    mDataStore.SaveOrderInfo lOpItem.ToJSON
+    mDataStore.SaveOrderInfo mScopeName, lOpItem.ToJSON
 Loop
 
 HandleUnexpectedError pProcName, ProjectName, ModuleName, , , , lErrNum, lErrMsg, lErrSource

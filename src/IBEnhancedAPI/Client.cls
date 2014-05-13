@@ -49,6 +49,8 @@ Private Const ModuleName                            As String = "Client"
 ' Member variables
 '@================================================================================
 
+Private mSessionID                                  As String
+
 Private mTwsAPI                                     As TwsAPI
 
 Private mServer                                     As String
@@ -230,6 +232,10 @@ Public Property Get Port() As Long
 Port = mPort
 End Property
 
+Friend Property Get SessionID() As String
+SessionID = mSessionID
+End Property
+
 Public Property Get Server() As String
 Server = mServer
 End Property
@@ -392,6 +398,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
+                ByVal pSessionID As String, _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
@@ -404,6 +411,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+mSessionID = pSessionID
 mServer = pServer
 mPort = pPort
 mClientId = pClientId

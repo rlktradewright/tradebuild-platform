@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin VB.Form fTickStreamSpecifier 
-   BorderStyle     =   3  'Fixed Dialog
+   BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Tickstream specifier"
    ClientHeight    =   4455
    ClientLeft      =   45
-   ClientTop       =   435
+   ClientTop       =   315
    ClientWidth     =   7665
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False

@@ -105,7 +105,7 @@ Private mAccumulatedVolume                          As Long
 Private mFromSessionStart                           As Date
 
 Private mTwsContractDetails                         As TwsContractDetails
-Private mTwsTimezone                                As TimeZone
+'Private mTwsTimezone                                As TimeZone
 
 Private mListener                                   As IBarFetchListener
 Private mFetcher                                    As HistoricalDataFetcher
@@ -273,7 +273,7 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, CreateFuture(mTargetContract), mContractCache)
 ElseIf TypeOf ev.Future.Value Is TwsContractDetails Then
     Set mTwsContractDetails = ev.Future.Value
-    Set mTwsTimezone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(mTwsContractDetails.TimeZoneId))
+    'Set mTwsTimezone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(mTwsContractDetails.TimeZoneId))
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
     mState = RetrievingBars
     mTaskContext.Continue
@@ -437,8 +437,11 @@ Private Function convertTwsDateStringToTimestamp(ByVal pTwsDateString As String)
 Const ProcName As String = "convertTwsDateStringToTimestamp"
 On Error GoTo Err
 
+'convertTwsDateStringToTimestamp = ConvertDateUTCToTZ( _
+'                                        ConvertDateTzToUTC(TwsDateStringToDate(pTwsDateString), mTwsTimezone), _
+'                                        mTargetTimezone)
 convertTwsDateStringToTimestamp = ConvertDateUTCToTZ( _
-                                        ConvertDateTzToUTC(TwsDateStringToDate(pTwsDateString), mTwsTimezone), _
+                                        ConvertDateLocalToUTC(TwsDateStringToDate(pTwsDateString)), _
                                         mTargetTimezone)
 
 Exit Function

@@ -134,7 +134,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pOutputMonitor As IBarOutputMonitor, _
@@ -152,11 +151,8 @@ mOptions = pOptions
 
 Set mBarWriter = gCreateBufferedBarWriter(pHistDataStore, pOutputMonitor, mDataSource.ContractFuture)
 
-Dim lStudyBase As IStudyBase
-Set lStudyBase = CreateTickDataStudyBaseFromMarketDataSource(pStudyLibManager.CreateStudyManagerWithSessionFuture(mDataSource.SessionFuture), mDataSource)
-
 Dim lTask As New TimeframeSetupTask
-lTask.Initialise pHistDataStore, mBarWriter, pOutputMonitor, pDataSource.ContractFuture, pDataSource.ClockFuture, lStudyBase, pOptions, pSaveIntervalSeconds
+lTask.Initialise pHistDataStore, mBarWriter, pOutputMonitor, pDataSource.ContractFuture, pDataSource.ClockFuture, pDataSource.StudyBase, pOptions, pSaveIntervalSeconds
 
 Set mTimeframeSetupTC = StartTask(lTask, PriorityNormal)
 

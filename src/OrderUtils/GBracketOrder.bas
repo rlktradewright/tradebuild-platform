@@ -242,10 +242,10 @@ End Select
 End Function
 
 Public Function gNextApplicationIndex() As Long
-Static lNextApplicationIndex As Long
+Static sNextApplicationIndex As Long
 
-gNextApplicationIndex = lNextApplicationIndex
-lNextApplicationIndex = lNextApplicationIndex + 1
+gNextApplicationIndex = sNextApplicationIndex
+sNextApplicationIndex = sNextApplicationIndex + 1
 End Function
 
 Public Function gOpActionsToString(ByVal pAction As OpActions) As String

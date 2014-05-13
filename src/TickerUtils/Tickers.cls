@@ -35,8 +35,6 @@ Private Const ModuleName                    As String = "Tickers"
 
 Private Const ConfigSectionTicker           As String = "Ticker"
 
-Private Const ConfigSettingUseLocalTimeForStudies As String = "&UseLocalTimeForStudies"
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -52,9 +50,11 @@ Private Const ConfigSettingUseLocalTimeForStudies As String = "&UseLocalTimeForS
 Private WithEvents mTickers                 As EnumerableCollection
 Attribute mTickers.VB_VarHelpID = -1
 
-Private mStudyLibraryManager                As StudyLibraryManager
+Private mOrderManager                       As OrderManager
 Private mMarketDataManager                  As IMarketDataManager
 Private mHistDataStore                      As IHistoricalDataStore
+
+Private mStudyLibraryManager                As StudyLibraryManager
 
 Private mOrderSubmitterLive                 As IOrderSubmitter
 Private mOrderSubmitterSimulated            As IOrderSubmitter
@@ -103,11 +103,16 @@ End Property
 ' IMarketDataManager Interface Members
 '@================================================================================
 
-Private Function IMarketDataManager_CreateMarketDataSource(ByVal pContractFuture As IFuture, ByVal pIsRecoverable As Boolean, Optional ByVal pkey As String, Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+Private Function IMarketDataManager_CreateMarketDataSource( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pIsRecoverable As Boolean, _
+                Optional ByVal pkey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
+                Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
-Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pkey, pStateChangeListener)
+Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pkey, pUseLocalTimeForStudies, pStateChangeListener)
 
 Exit Function
 
@@ -200,6 +205,10 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
+Public Property Get OrderManager() As OrderManager
+Set OrderManager = mOrderManager
+End Property
+
 Friend Property Get OrderSubmitterLive() As IOrderSubmitter
 Set OrderSubmitterLive = mOrderSubmitterLive
 End Property
@@ -232,20 +241,20 @@ Public Function CreateTicker( _
                 ByVal pContractFuture As IFuture, _
                 Optional ByVal pIsRecoverable As Boolean = True, _
                 Optional ByVal pkey As String, _
-                Optional ByVal pStateChangeListener As StateChangeListener, _
-                Optional ByVal pUseLocalTimeForStudies As Boolean) As Ticker
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
+                Optional ByVal pStateChangeListener As StateChangeListener) As Ticker
 Const ProcName As String = "CreateTicker"
 On Error GoTo Err
 
 If pkey = "" Then pkey = GenerateGUIDString
 
 Dim lDataSource As IMarketDataSource
-Set lDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, pIsRecoverable, pkey, pStateChangeListener)
+Set lDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, pIsRecoverable, pkey, pUseLocalTimeForStudies, pStateChangeListener)
 
 Set CreateTicker = New Ticker
-CreateTicker.Initialise mStudyLibraryManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies), lDataSource, mHistDataStore, Me, Nothing
+CreateTicker.Initialise lDataSource, mHistDataStore, Me, Nothing
                 
-If pIsRecoverable And Not mConfig Is Nothing Then addTickerToConfig pkey, pUseLocalTimeForStudies
+If pIsRecoverable And Not mConfig Is Nothing Then addTickerToConfig pkey
 
 mTickers.Add CreateTicker, pkey
 
@@ -298,6 +307,7 @@ Friend Sub Initialise( _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pStudyLibraryManager As StudyLibraryManager, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pOrderManager As OrderManager, _
                 ByVal pOrderSubmitterLive As IOrderSubmitter, _
                 ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
                 ByVal pPositionManagersLive As PositionManagers, _
@@ -311,6 +321,8 @@ On Error GoTo Err
 Set mMarketDataManager = pMarketDataManager
 Set mStudyLibraryManager = pStudyLibraryManager
 Set mHistDataStore = pHistDataStore
+
+Set mOrderManager = pOrderManager
 Set mOrderSubmitterLive = pOrderSubmitterLive
 Set mOrderSubmitterSimulated = pOrderSubmitterSimulated
 If pPositionManagersLive Is Nothing Then
@@ -360,8 +372,7 @@ For Each lCs In mConfig
     
     Dim lTicker As Ticker
     Set lTicker = New Ticker
-    lTicker.Initialise mStudyLibraryManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, CBool(lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False"))), _
-                        lDataSource, mHistDataStore, Me, lPositionManager
+    lTicker.Initialise lDataSource, mHistDataStore, Me, lPositionManager
                 
     mTickers.Add lTicker, lKey
 Next
@@ -498,8 +509,7 @@ End Function
 '@================================================================================
 
 Private Function addTickerToConfig( _
-                ByVal pTickerKey As String, _
-                ByVal pUseLocalTimeForStudies As Boolean) As ConfigurationSection
+                ByVal pTickerKey As String) As ConfigurationSection
 Const ProcName As String = "addTickerToConfig"
 On Error GoTo Err
 
@@ -507,7 +517,6 @@ If mConfig Is Nothing Then Exit Function
 
 Dim lCs As ConfigurationSection
 Set lCs = mConfig.AddConfigurationSection(ConfigSectionTicker & "(" & pTickerKey & ")")
-lCs.SetSetting ConfigSettingUseLocalTimeForStudies, CStr(pUseLocalTimeForStudies)
 
 Exit Function
 

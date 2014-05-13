@@ -64,7 +64,21 @@ Private Const ModuleName                            As String = "IAccountDataCon
 ' Methods
 '@================================================================================
 
+Public Sub EndAccountSummary(ByVal pRequestId As Long)
+End Sub
+
 Public Sub EndAcccountValue(ByVal pAccountName As String)
+End Sub
+
+Public Sub EndPosition()
+End Sub
+
+Public Sub NotifyAccountSummary( _
+                ByVal pRequestId As Long, _
+                ByVal pAccount As String, _
+                ByVal pTag As String, _
+                ByVal pValue As String, _
+                ByVal pCurrency As String)
 End Sub
 
 Public Sub NotifyAccountValue( _
@@ -76,6 +90,13 @@ Public Sub NotifyAccountValue( _
 End Sub
 
 Public Sub NotifyAccountTime(ByVal pTimeStamp As String)
+End Sub
+
+Public Sub NotifyPosition( _
+                ByVal pAccount As String, _
+                ByVal pContract As TwsContract, _
+                ByVal pPosition As Long, _
+                ByVal pAverageCost As Double)
 End Sub
 
 Public Sub NotifyPortfolioUpdate( _

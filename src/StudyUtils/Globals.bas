@@ -21,6 +21,13 @@ Option Explicit
 
 Public Const ProjectName                        As String = "StudyUtils27"
 
+Public Const AskInputName                           As String = "Ask"
+Public Const BidInputName                           As String = "Bid"
+Public Const OpenInterestInputName                   As String = "Open interest"
+Public Const TickVolumeInputName                     As String = "Tick Volume"
+Public Const TradeInputName                          As String = "Trade"
+Public Const VolumeInputName                         As String = "Total Volume"
+
 Public Const AttributeNameEnabled               As String = "Enabled"
 Public Const AttributeNameStudyLibraryBuiltIn   As String = "BuiltIn"
 Public Const AttributeNameStudyLibraryProgId    As String = "ProgId"
@@ -40,13 +47,6 @@ Public Const ConstTimeBarsParamVolPerBar           As String = "Volume per bar"
 
 Public Const ConstMomentumBarsStudyName            As String = "Constant momentum bars"
 Public Const ConstMomentumBarsParamTicksPerBar     As String = "Ticks move per bar"
-
-Public Const AskInputName                           As String = "Ask"
-Public Const BidInputName                           As String = "Bid"
-Public Const OpenInterestInputName                  As String = "Open interest"
-Public Const TickVolumeInputName                    As String = "Tick Volume"
-Public Const TradeInputName                         As String = "Trade"
-Public Const VolumeInputName                        As String = "Total Volume"
 
 Public Const DefaultStudyValueNameStr           As String = "$DEFAULT"
 Public Const MovingAverageStudyValueNameStr     As String = "MA"

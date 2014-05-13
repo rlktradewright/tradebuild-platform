@@ -68,6 +68,7 @@ Private mkeepConnection As Boolean
 Private mProviderKey As String
 Private mConnectionRetryIntervalSecs As Long
 
+Private mSessionID                      As String
 Private mClient As Client
 Private mContractStore As IContractStore
 
@@ -132,16 +133,16 @@ End Property
 Private Sub IServiceProvider_Link( _
                 ByVal pServiceProviderManager As IServiceProviderManager, _
                 ByVal pHandle As Long, _
-                ByVal pParams As Parameters)
+                ByVal pParams As Parameters, _
+                ByVal pSessionId As String)
 Const ProcName As String = "IServiceProvider_Link"
-Dim param As Parameter
-
-
 On Error GoTo Err
 
 Set mServiceProviderManager = pServiceProviderManager
 mHandle = pHandle
+mSessionID = pSessionId
 
+Dim param As Parameter
 For Each param In pParams
     Select Case UCase$(param.Name)
     Case UCase$(ParamNameClientId)
@@ -207,7 +208,7 @@ Const ProcName As String = "IContractSP_GetContractStore"
 On Error GoTo Err
 
 If mClient Is Nothing Then
-    Set mClient = GetClient(mServer, mPort, mClientID, mConnectionRetryIntervalSecs, , Me)
+    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, , Me)
     Set mContractStore = mClient.GetContractStore
 End If
 

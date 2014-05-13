@@ -1,14 +1,18 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#150.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#217.0#0"; "TradingUI27.ocx"
 Begin VB.Form fMarketDepth 
+   BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Market Depth"
    ClientHeight    =   5895
    ClientLeft      =   375
-   ClientTop       =   510
+   ClientTop       =   390
    ClientWidth     =   4335
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
    ScaleHeight     =   5895
    ScaleWidth      =   4335
+   ShowInTaskbar   =   0   'False
    Begin VB.CommandButton CentreButton 
       Caption         =   "Centre"
       Height          =   375
@@ -44,7 +48,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements IMarketDataErrorListener
+Implements ErrorListener
 
 '================================================================================
 ' Events
@@ -120,26 +124,14 @@ Set mTicker = Nothing
 End Sub
 
 '================================================================================
-' IMarketDataErrorListener Interface Members
+' ErrorListener Interface Members
 '================================================================================
 
-Private Sub IMarketDataErrorListener_NotifyMarketDataError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDataError"
+Private Sub ErrorListener_Notify(ev As ErrorEventData)
+Const ProcName As String = "ErrorListener_Notify"
 On Error GoTo Err
 
-
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IMarketDataErrorListener_NotifyMarketDepthError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDepthError"
-On Error GoTo Err
-
-gModelessMsgBox "Market depth is not available: " & pErrorMessage, MsgBoxExclamation, "Attention"
+gModelessMsgBox "Market depth is not available: " & ev.ErrorMessage, MsgBoxExclamation, "Attention"
 Unload Me
 
 Exit Sub
@@ -147,6 +139,7 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
 '================================================================================
 ' Form Control Event Handlers
 '================================================================================
@@ -191,11 +184,11 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let numberOfRows(ByVal value As Long)
+Public Property Let numberOfRows(ByVal Value As Long)
 Const ProcName As String = "numberOfRows"
 On Error GoTo Err
 
-DOMDisplay1.numberOfRows = value
+DOMDisplay1.numberOfRows = Value
 
 Exit Property
 
@@ -203,15 +196,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Ticker(ByVal value As Ticker)
+Public Property Let Ticker(ByVal Value As Ticker)
 Const ProcName As String = "Ticker"
 On Error GoTo Err
 
-Set mTicker = value
+Set mTicker = Value
 mTicker.AddErrorListener Me
 
 Dim lContract As IContract
-Set lContract = mTicker.ContractFuture.value
+Set lContract = mTicker.ContractFuture.Value
 mCaption = "Market depth for " & _
             lContract.Specifier.LocalSymbol & _
             " on " & _

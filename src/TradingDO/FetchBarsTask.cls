@@ -147,6 +147,7 @@ If Err.Number = 3265 Then   ' "Item cannot be found in the collection correspond
     Static sRetryCount As Long
     
     If sRetryCount < 5 Then
+        Set mInstrument = Nothing
         sRetryCount = sRetryCount + 1
         mTaskContext.Suspend 10
         Exit Sub

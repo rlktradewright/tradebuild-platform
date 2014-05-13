@@ -1,14 +1,18 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
+   BorderStyle     =   5  'Sizable ToolWindow
    ClientHeight    =   6780
    ClientLeft      =   60
-   ClientTop       =   450
+   ClientTop       =   330
    ClientWidth     =   12525
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
    ScaleHeight     =   6780
    ScaleWidth      =   12525
+   ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin TradingUI27.MultiChart MultiChart1 
       Align           =   1  'Align Top

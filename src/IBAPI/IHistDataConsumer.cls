@@ -76,7 +76,11 @@ Public Sub NotifyError( _
                 ByVal pErrorMsg As String)
 End Sub
 
-Public Sub StartHistData(ByRef pStartInfo As TwsHistDataStartInfo)
+Public Sub StartHistData( _
+                ByVal pRequestId As Long, _
+                ByVal pStartDate As String, _
+                ByVal pEndDate As String, _
+                ByVal pBarCount As Long)
 End Sub
 
 '@================================================================================

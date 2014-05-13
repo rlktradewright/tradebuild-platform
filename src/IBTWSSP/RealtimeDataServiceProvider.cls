@@ -57,6 +57,7 @@ Private Const ModuleName                As String = "RealtimeDataServiceProvider
 '================================================================================
 
 
+Private mSessionID                      As String
 Private mClient                         As Client
 Attribute mClient.VB_VarHelpID = -1
 
@@ -107,7 +108,7 @@ Const ProcName As String = "IRealtimeDataSP_GetMarketDataFactory"
 On Error GoTo Err
 
 If mClient Is Nothing Then
-    Set mClient = GetClient(mServer, mPort, mClientID, mConnectionRetryIntervalSecs, , Me)
+    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, , Me)
     mClient.SetTwsLogLevel mTwsLogLevel
 End If
 
@@ -144,14 +145,19 @@ End Property
 Private Sub IServiceProvider_Link( _
                 ByVal pServiceProviderManager As IServiceProviderManager, _
                 ByVal pHandle As Long, _
-                ByVal pParams As Parameters)
-Dim param As Parameter
+                ByVal pParams As Parameters, _
+                ByVal pSessionId As String)
+Const ProcName As String = "IServiceProvider_Link"
+On Error GoTo Err
 
 Set mServiceProviderManager = pServiceProviderManager
 mHandle = pHandle
+mSessionID = pSessionId
+
 mServiceProviderManager.RegisterServiceProvider mHandle, _
                             ServiceProviderRoles.SPRoleRealtimeData
 
+Dim param As Parameter
 For Each param In pParams
     Select Case UCase$(param.Name)
     Case UCase$(ParamNameClientId)
@@ -171,6 +177,10 @@ For Each param In pParams
     End Select
 Next
 
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IServiceProvider_Name(ByVal RHS As String)

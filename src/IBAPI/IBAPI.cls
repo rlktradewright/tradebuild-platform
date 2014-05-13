@@ -114,6 +114,14 @@ Public Enum TwsFADataTypes
     TwsFAAccountAliases
 End Enum
 
+Public Enum TwsHedgeTypes
+    TwsHedgeTypeNone
+    TwsHedgeTypeDelta
+    TwsHedgeTypeBeta
+    TwsHedgeTypeFX
+    TwsHedgeTypePair
+End Enum
+
 Public Enum TwsLogLevels
     TwsLogLevelSystem = 1
     TwsLogLevelError
@@ -284,13 +292,6 @@ Public Type TwsBar
     HasGaps                 As Boolean
 End Type
 
-Public Type TwsHistDataStartInfo
-    RequestId               As Long
-    StartDate               As String
-    EndDate                 As String
-    BarCount                As Long
-End Type
-
 Public Type TwsTagValue
     Tag                     As String
     Value                   As String
@@ -349,6 +350,30 @@ Const ProcName As String = "TwsDateStringToDate"
 On Error GoTo Err
 
 TwsDateStringToDate = gGetDate(pDateString, pTimezoneName)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
+Public Function TwsHedgeTypeFromString(ByVal pValue As String) As TwsHedgeTypes
+Const ProcName As String = "TwsHedgeTypeFromString"
+On Error GoTo Err
+
+TwsHedgeTypeFromString = gTwsHedgeTypeFromString(pValue)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
+Public Function TwsHedgeTypeToString(ByVal pValue As TwsHedgeTypes) As String
+Const ProcName As String = "TwsHedgeTypeToString"
+On Error GoTo Err
+
+TwsHedgeTypeToString = gTwsHedgeTypeToString(pValue)
 
 Exit Function
 

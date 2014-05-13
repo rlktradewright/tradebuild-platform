@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements DeferredAction
 Implements IGenericTickListener
 Implements IMarketDataErrorListener
 Implements StateChangeListener
@@ -33,6 +34,11 @@ Implements StateChangeListener
 '@================================================================================
 ' Enums
 '@================================================================================
+
+Private Enum DeferredActions
+    DeferredActionNotifyCurrentMarketDataTickValues
+    DeferredActionNotifyCurrentMarketDataQuoteValues
+End Enum
 
 '@================================================================================
 ' Types
@@ -132,6 +138,30 @@ mDataSources.Initialise Me
 
 Set mSessionFutureBuilder = New FutureBuilder
 Set mSessionFuture = mSessionFutureBuilder.Future
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' DeferredAction Interface Members
+'@================================================================================
+
+Private Sub DeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "DeferredAction_Run"
+On Error GoTo Err
+
+Dim lData As DeferredNotificationActionData
+lData = Data
+
+Select Case lData.Action
+Case DeferredActionNotifyCurrentMarketDataTickValues
+    doNotifyCurrentMarketDataTickValues lData.Listener, lData.DataSource
+Case DeferredActionNotifyCurrentMarketDataQuoteValues
+    doNotifyCurrentMarketDataQuoteValues lData.Listener, lData.DataSource
+End Select
 
 Exit Sub
 
@@ -538,19 +568,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener, ByVal pDataSource As MarketDataSource)
-Const ProcName As String = "NotifyCurrentMarketDataTickValues"
+Friend Sub NotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener, ByVal pDataSource As MarketDataSource)
+Const ProcName As String = "NotifyCurrentMarketDataQuoteValues"
 On Error GoTo Err
 
-FireTick pListener, mBidTick, pDataSource
-FireTick pListener, mAskTick, pDataSource
-FireTick pListener, mTradeTick, pDataSource
-FireTick pListener, mVolumeTick, pDataSource
-FireTick pListener, mHighTick, pDataSource
-FireTick pListener, mLowTick, pDataSource
-FireTick pListener, mOpenTick, pDataSource
-FireTick pListener, mCloseTick, pDataSource
-FireTick pListener, mOpenInterestTick, pDataSource
+Dim lData As DeferredNotificationActionData
+lData.Action = DeferredActionNotifyCurrentMarketDataQuoteValues
+Set lData.DataSource = pDataSource
+Set lData.Listener = pListener
+
+DeferAction Me, lData
 
 Exit Sub
 
@@ -558,40 +585,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener, ByVal pDataSource As MarketDataSource)
-Const ProcName As String = "NotifyCurrentMarketDataQuoteValues"
+Friend Sub NotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener, ByVal pDataSource As MarketDataSource)
+Const ProcName As String = "NotifyCurrentMarketDataTickValues"
 On Error GoTo Err
 
-Dim ev As QuoteEventData
+Dim lData As DeferredNotificationActionData
+lData.Action = DeferredActionNotifyCurrentMarketDataTickValues
+Set lData.DataSource = pDataSource
+Set lData.Listener = pListener
 
-Set ev.Source = pDataSource
-
-ev.Quote = GetCurrentQuote(TickTypeAsk)
-pListener.Ask ev
-
-ev.Quote = GetCurrentQuote(TickTypeBid)
-pListener.Bid ev
-
-ev.Quote = GetCurrentQuote(TickTypeHighPrice)
-pListener.High ev
-
-ev.Quote = GetCurrentQuote(TickTypeLowPrice)
-pListener.Low ev
-
-ev.Quote = GetCurrentQuote(TickTypeOpenPrice)
-pListener.SessionOpen ev
-
-ev.Quote = GetCurrentQuote(TickTypeOpenInterest)
-pListener.OpenInterest ev
-
-ev.Quote = GetCurrentQuote(TickTypeClosePrice)
-pListener.PreviousClose ev
-
-ev.Quote = GetCurrentQuote(TickTypeTrade)
-pListener.Trade ev
-
-ev.Quote = GetCurrentQuote(TickTypeVolume)
-pListener.Volume ev
+DeferAction Me, lData
 
 Exit Sub
 
@@ -693,6 +696,67 @@ If mNumberOfMarketDepthSubscriptions = 0 Then
     Set mDepthTickStream = Nothing
     mDOMManager.Reset
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub doNotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener, ByVal pDataSource As MarketDataSource)
+Const ProcName As String = "doNotifyCurrentMarketDataQuoteValues"
+On Error GoTo Err
+
+Dim ev As QuoteEventData
+
+Set ev.Source = pDataSource
+
+ev.Quote = GetCurrentQuote(TickTypeAsk)
+pListener.Ask ev
+
+ev.Quote = GetCurrentQuote(TickTypeBid)
+pListener.Bid ev
+
+ev.Quote = GetCurrentQuote(TickTypeHighPrice)
+pListener.High ev
+
+ev.Quote = GetCurrentQuote(TickTypeLowPrice)
+pListener.Low ev
+
+ev.Quote = GetCurrentQuote(TickTypeOpenPrice)
+pListener.SessionOpen ev
+
+ev.Quote = GetCurrentQuote(TickTypeOpenInterest)
+pListener.OpenInterest ev
+
+ev.Quote = GetCurrentQuote(TickTypeClosePrice)
+pListener.PreviousClose ev
+
+ev.Quote = GetCurrentQuote(TickTypeTrade)
+pListener.Trade ev
+
+ev.Quote = GetCurrentQuote(TickTypeVolume)
+pListener.Volume ev
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub doNotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener, ByVal pDataSource As MarketDataSource)
+Const ProcName As String = "doNotifyCurrentMarketDataTickValues"
+On Error GoTo Err
+
+FireTick pListener, mBidTick, pDataSource
+FireTick pListener, mAskTick, pDataSource
+FireTick pListener, mTradeTick, pDataSource
+FireTick pListener, mVolumeTick, pDataSource
+FireTick pListener, mHighTick, pDataSource
+FireTick pListener, mLowTick, pDataSource
+FireTick pListener, mOpenTick, pDataSource
+FireTick pListener, mCloseTick, pDataSource
+FireTick pListener, mOpenInterestTick, pDataSource
 
 Exit Sub
 

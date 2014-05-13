@@ -242,50 +242,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateTickDataStudyBase( _
-                ByVal pStudyManager As StudyManager, _
-                ByVal pTickStream As ITickStream, _
-                ByVal pContractFuture As IFuture) As IStudyBase
-Const ProcName As String = "CreateTickDataStudyBase"
-On Error GoTo Err
-
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-AssertArgument Not pTickStream Is Nothing, "pTickStream Is Nothing"
-AssertArgument Not pContractFuture Is Nothing, "pContractFuture Is Nothing"
-
-Dim lStudyBase As New TickDataStudyBase
-lStudyBase.Initialise pStudyManager, pContractFuture
-pTickStream.AddGenericTickListener lStudyBase
-
-Set CreateTickDataStudyBase = lStudyBase
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function CreateTickDataStudyBaseFromMarketDataSource( _
-                ByVal pStudyManager As StudyManager, _
-                ByVal pDataSource As IMarketDataSource) As IStudyBase
-Const ProcName As String = "CreateTickDataStudyBaseFromMarketDataSource"
-On Error GoTo Err
-
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-AssertArgument Not pDataSource Is Nothing, "pDataSource is nothing"
-
-Dim lStudyBase As New TickDataStudyBase
-lStudyBase.Initialise pStudyManager, pDataSource.ContractFuture
-pDataSource.AddGenericTickListener lStudyBase
-
-Set CreateTickDataStudyBaseFromMarketDataSource = lStudyBase
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Function CreateStudyPoint( _
                 ByVal X As Date, _
                 ByVal Y As Double) As StudyPoint

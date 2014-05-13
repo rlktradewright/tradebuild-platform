@@ -71,6 +71,7 @@ Public Function CreateMarketDataSource( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
 End Function
 

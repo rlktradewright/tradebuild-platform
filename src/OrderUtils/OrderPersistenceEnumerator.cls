@@ -10,7 +10,7 @@ Attribute VB_Name = "OrderPersistenceEnumerator"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -21,6 +21,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements Enumerable
 
 '@================================================================================
 ' Events
@@ -44,13 +46,75 @@ Private Const ModuleName                            As String = "OrderPersistenc
 ' Member variables
 '@================================================================================
 
+Private mTS                                         As TextStream
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' Enumerable Interface Members
 '@================================================================================
+
+Private Property Get Enumerable_Enumerator() As Enumerator
+Const ProcName As String = "Enumerable_Enumerator"
+On Error GoTo Err
+
+Set Enumerable_Enumerator = GetEnumerator(Me)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Function Enumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
+Const ProcName As String = "Enumerable_NextItem"
+On Error GoTo Err
+
+Dim lLine As String
+If mTS Is Nothing Then
+    Enumerable_NextItem = False
+ElseIf getNextLine(lLine) Then
+    Item = lLine
+    Enumerable_NextItem = True
+Else
+    Enumerable_NextItem = False
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub Enumerable_Remove(cookie As Variant)
+Const ProcName As String = "Enumerable_Remove"
+On Error GoTo Err
+
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Remove not supported"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
+Const ProcName As String = "Enumerable_Skip"
+On Error GoTo Err
+
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Skip not supported"
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Property Get Enumerable_UpdateSequence() As Long
+
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -64,9 +128,43 @@ Private Const ModuleName                            As String = "OrderPersistenc
 ' Methods
 '@================================================================================
 
+Friend Function GetEnumerator() As Enumerator
+Const ProcName As String = "GetEnumerator"
+On Error GoTo Err
+
+Set GetEnumerator = CreateEnumerator(Me)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Sub Initialise(ByVal pTS As TextStream)
+Set mTS = pTS
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function getNextLine(ByRef result As String) As Boolean
+Const ProcName As String = "getNextLine"
+On Error GoTo Err
+
+Do While Not mTS.AtEndOfStream
+    result = mTS.ReadLine
+    If result <> "" And Left$(result, 2) <> "//" Then
+        getNextLine = True
+        Exit Do
+    End If
+Loop
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 
 

@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin VB.Form fTimeframeSpecifier 
-   BorderStyle     =   3  'Fixed Dialog
+   BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Specify a timeframe"
    ClientHeight    =   1095
    ClientLeft      =   45
-   ClientTop       =   435
+   ClientTop       =   315
    ClientWidth     =   3585
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False

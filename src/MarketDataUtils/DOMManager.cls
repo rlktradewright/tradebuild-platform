@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements DeferredAction
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -29,6 +31,11 @@ Option Explicit
 '@================================================================================
 ' Enums
 '@================================================================================
+
+Private Enum DeferredActions
+    DeferredActionsNotifyCurrentMarketDepthValues
+    DeferredActionsNotifyCurrentDom
+End Enum
 
 '@================================================================================
 ' Types
@@ -56,7 +63,7 @@ Private mMaxAskPricesIndex                          As Long
 Private mBidPrices()                                As PriceTableEntry
 Private mMaxBidPricesIndex                          As Long
 
-Private mDataSources                              As DataSources
+Private mDataSources                                As DataSources
 
 Private mPrevTradePrice                             As Double
 
@@ -65,8 +72,28 @@ Private mPrevTradePrice                             As Double
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' DeferredAction Interface Members
 '@================================================================================
+
+Private Sub DeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "DeferredAction_Run"
+On Error GoTo Err
+
+Dim lData As DeferredNotificationActionData
+lData = Data
+
+Select Case lData.Action
+Case DeferredActionsNotifyCurrentMarketDepthValues
+    doNotifyCurrentMarketDepthValues lData.Listener, lData.DataSource
+Case DeferredActionsNotifyCurrentDom
+    doNotifyCurrentDOM lData.Listener, lData.DataSource
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -94,16 +121,12 @@ Friend Sub NotifyCurrentDOM( _
 Const ProcName As String = "NotifyCurrentDOM"
 On Error GoTo Err
 
-If pDataSource.CurrentTick(TickTypeTrade).Price <> 0# Then
-    Dim ev As MarketDepthEventData
-    Set ev.Source = pDataSource
-    ev.Price = pDataSource.CurrentTick(TickTypeTrade).Price
-    ev.Size = pDataSource.CurrentTick(TickTypeTrade).Size
-    ev.Type = DOMTrade
-    pListener.SetMarketDepthCell ev
-End If
-notifyDOMSide DOMSides.DOMBid, mBidPrices, mMaxBidPricesIndex, pListener, pDataSource
-notifyDOMSide DOMSides.DOMAsk, mAskPrices, mMaxAskPricesIndex, pListener, pDataSource
+Dim lData As DeferredNotificationActionData
+lData.Action = DeferredActionsNotifyCurrentDom
+Set lData.DataSource = pDataSource
+Set lData.Listener = pListener
+
+DeferAction Me, lData
 
 Exit Sub
 
@@ -117,8 +140,12 @@ Friend Sub NotifyCurrentMarketDepthValues( _
 Const ProcName As String = "NotifyCurrentMarketDepthValues"
 On Error GoTo Err
 
-notifyMarketDepthValues mBidPrices, mMaxBidPricesIndex, pListener, pDataSource, DOMBid
-notifyMarketDepthValues mAskPrices, mMaxAskPricesIndex, pListener, pDataSource, DOMAsk
+Dim lData As DeferredNotificationActionData
+lData.Action = DeferredActionsNotifyCurrentMarketDepthValues
+Set lData.DataSource = pDataSource
+Set lData.Listener = pListener
+
+DeferAction Me, lData
 
 Exit Sub
 
@@ -211,6 +238,44 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Friend Sub doNotifyCurrentDOM( _
+                ByVal pListener As IMarketDepthListener, _
+                ByVal pDataSource As MarketDataSource)
+Const ProcName As String = "doNotifyCurrentDOM"
+On Error GoTo Err
+
+If pDataSource.CurrentTick(TickTypeTrade).Price <> 0# Then
+    Dim ev As MarketDepthEventData
+    Set ev.Source = pDataSource
+    ev.Price = pDataSource.CurrentTick(TickTypeTrade).Price
+    ev.Size = pDataSource.CurrentTick(TickTypeTrade).Size
+    ev.Type = DOMTrade
+    pListener.SetMarketDepthCell ev
+End If
+notifyDOMSide DOMSides.DOMBid, mBidPrices, mMaxBidPricesIndex, pListener, pDataSource
+notifyDOMSide DOMSides.DOMAsk, mAskPrices, mMaxAskPricesIndex, pListener, pDataSource
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub doNotifyCurrentMarketDepthValues( _
+                ByVal pListener As IRawMarketDepthListener, _
+                ByVal pDataSource As MarketDataSource)
+Const ProcName As String = "doNotifyCurrentMarketDepthValues"
+On Error GoTo Err
+
+notifyMarketDepthValues mBidPrices, mMaxBidPricesIndex, pListener, pDataSource, DOMBid
+notifyMarketDepthValues mAskPrices, mMaxAskPricesIndex, pListener, pDataSource, DOMAsk
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub initialisePriceTables(ByVal pNumberOfRows As Long)
 ReDim mAskPrices(pNumberOfRows - 1) As PriceTableEntry

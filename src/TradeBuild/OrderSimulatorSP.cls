@@ -108,7 +108,8 @@ End Property
 Private Sub IServiceProvider_Link( _
                 ByVal ServiceProviderManager As IServiceProviderManager, _
                 ByVal Handle As Long, _
-                ByVal Params As Parameters)
+                ByVal Params As Parameters, _
+                ByVal pSessionID As String)
 Const ProcName As String = "IServiceProvider_Link"
 On Error GoTo Err
 

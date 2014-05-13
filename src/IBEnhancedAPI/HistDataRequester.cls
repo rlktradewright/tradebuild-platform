@@ -145,11 +145,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IHistDataConsumer_StartHistData(pStartInfo As TwsHistDataStartInfo)
+Private Sub IHistDataConsumer_StartHistData(ByVal pRequestId As Long, ByVal pStartDate As String, ByVal pEndDate As String, ByVal pBarCount As Long)
 Const ProcName As String = "IHistDataConsumer_StartHistData"
 On Error GoTo Err
 
-' nothing to do
+
 
 Exit Sub
 

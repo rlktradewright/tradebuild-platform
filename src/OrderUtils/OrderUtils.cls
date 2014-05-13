@@ -441,28 +441,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateOrderContexts( _
-                ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
-                Optional ByVal pDataSource As IMarketDataSource, _
-                Optional ByVal pGroupName As String, _
-                Optional ByVal pIsSimulated As Boolean, _
-                Optional ByVal pOrderAuthoriser As IOrderAuthoriser, _
-                Optional ByVal pAccumulatedBracketOrders As BracketOrders, _
-                Optional ByVal pAccumulatedOrders As Orders, _
-                Optional ByVal pSimulatedClock As Clock) As OrderContexts
-Const ProcName As String = "CreateOrderContexts"
-On Error GoTo Err
-
-Set CreateOrderContexts = gCreateOrderContexts(pName, pGroupName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClock)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Function CreateOrderPersistenceDataStore(ByVal pRecoveryFilePath As String) As IOrderPersistenceDataStore
 Const ProcName As String = "CreateOrderPersistenceDataStore"
 On Error GoTo Err
@@ -471,60 +449,6 @@ Dim lDataStore As OrderPersistenceDataStore
 Set lDataStore = New OrderPersistenceDataStore
 lDataStore.Initialise pRecoveryFilePath
 Set CreateOrderPersistenceDataStore = lDataStore
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function CreatePositionManager( _
-                ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
-                ByVal pDataSource As IMarketDataSource, _
-                Optional ByVal pGroupName As String, _
-                Optional ByVal pIsSimulated As Boolean, _
-                Optional ByVal pMoneyManager As IMoneyManager) As PositionManager
-Const ProcName As String = "CreatePositionManager"
-On Error GoTo Err
-
-Set CreatePositionManager = gCreatePositionManager(pName, pContractFuture, pOrderSubmitter, pDataSource, "", pGroupName, pIsSimulated, pMoneyManager)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function CreateRecoverablePositionManager( _
-                ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
-                ByVal pDataSource As IMarketDataSource, _
-                ByVal pScopeName As String, _
-                Optional ByVal pGroupName As String, _
-                Optional ByVal pIsSimulated As Boolean, _
-                Optional ByVal pMoneyManager As IMoneyManager) As PositionManager
-Const ProcName As String = "CreateRecoverablePositionManager"
-On Error GoTo Err
-
-Assert pScopeName <> "", "pScopeName must be supplied"
-
-Set CreateRecoverablePositionManager = gCreatePositionManager(pName, pContractFuture, pOrderSubmitter, pDataSource, pScopeName, pGroupName, pIsSimulated, pMoneyManager)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function GetOrderContexts( _
-                ByVal pName As String) As OrderContexts
-Const ProcName As String = "GetOrderContexts"
-On Error GoTo Err
-
-Set GetOrderContexts = gGetOrderContexts(pName)
 
 Exit Function
 
@@ -639,49 +563,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Public Function RecoverOrdersFromPreviousSession( _
-                ByVal pScopeName As String, _
-                ByVal pPositionManagers As PositionManagers, _
-                ByVal pDataStore As IOrderPersistenceDataStore, _
-                ByVal pRecoveryAgent As IOrderRecoveryAgent, _
-                ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
-                Optional ByVal pCookie As Variant) As TaskController
-Const ProcName As String = "RecoverOrders"
-On Error GoTo Err
-
-Set RecoverOrdersFromPreviousSession = gGetBracketOrderRecoveryController(pScopeName).RecoverOrders(pPositionManagers, pScopeName, pDataStore, pRecoveryAgent, pMarketDataManager, pOrderSubmitterFactory, pCookie)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Sub RemoveorderContexts(ByVal pOrderContexts As OrderContexts)
-Const ProcName As String = "RemoveorderContexts"
-On Error GoTo Err
-
-gRemoveorderContexts pOrderContexts
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub StartOrderRecoverySession(ByVal pSessionName As String)
-Const ProcName As String = "StartOrderRecoverySession"
-On Error GoTo Err
-
-gStartOrderRecoverySession pSessionName
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Helper Functions

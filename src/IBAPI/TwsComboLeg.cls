@@ -44,19 +44,24 @@ Private Const ModuleName                            As String = "TwsComboLeg"
 ' Member variables
 '@================================================================================
 
-Private mConId                                        As Long
-Private mRatio                                        As Long
-Private mAction                                       As TwsOrderActions
-Private mExchange                                     As String
-Private mOpenClose                                    As TwsLegOpenCloseCodes
+Private mConId                                      As Long
+Private mRatio                                      As Long
+Private mAction                                     As TwsOrderActions
+Private mExchange                                   As String
+Private mOpenClose                                  As TwsLegOpenCloseCodes
 
 ' for stock legs when doing short sale
-Private mShortSaleSlot                                As TwsShortSaleSlotCodes
-Private mDesignatedLocation                           As String
+Private mShortSaleSlot                              As TwsShortSaleSlotCodes
+Private mDesignatedLocation                         As String
+Private mExemptCode                                 As Long
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+mExemptCode = -1
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -100,6 +105,14 @@ End Property
 
 Public Property Get Exchange() As String
 Exchange = mExchange
+End Property
+
+Public Property Let ExemptCode(ByVal Value As Long)
+mExemptCode = Value
+End Property
+
+Public Property Get ExemptCode() As Long
+ExemptCode = mExemptCode
 End Property
 
 Public Property Let OpenClose(ByVal Value As TwsLegOpenCloseCodes)

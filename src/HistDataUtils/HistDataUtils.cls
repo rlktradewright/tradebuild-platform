@@ -140,7 +140,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function RecordHistoricalBars( _
-                ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pOptions As HistDataWriteOptions, _
@@ -150,7 +149,7 @@ Const ProcName As String = "RecordHistoricalBars"
 On Error GoTo Err
 
 Dim lWriter As New HistDataWriter
-lWriter.Initialise pStudyLibManager, pDataSource, pHistDataStore, pOutputMonitor, pOptions, pSaveIntervalSeconds
+lWriter.Initialise pDataSource, pHistDataStore, pOutputMonitor, pOptions, pSaveIntervalSeconds
 Set RecordHistoricalBars = lWriter
 
 Exit Function

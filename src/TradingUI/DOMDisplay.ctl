@@ -61,7 +61,6 @@ Private Const ModuleName                As String = "DOMDisplay"
 Private Const ScrollbarWidth As Long = 370  ' value discovered by trial and error!
 
 Private Const DeferredCommandCentre     As String = "Centre"
-Private Const DeferredCommandResize     As String = "Resize"
 
 '@================================================================================
 ' Enums
@@ -126,8 +125,6 @@ On Error GoTo Err
 
 Initialise
 
-DeferAction Me, DeferredCommandResize, 200
-
 Exit Sub
 
 Err:
@@ -181,12 +178,10 @@ Const ProcName As String = "DeferredAction_Run"
 On Error GoTo Err
 
 If Data = DeferredCommandCentre Then
-    If mInitialPrice <> 0 Then Exit Sub
+    If mInitialPrice = 0 Then Exit Sub
     If mFirstCentreDone Then Exit Sub
     
     centreRow mInitialPrice
-ElseIf Date = DeferredCommandResize Then
-    resize
 End If
 
 Exit Sub
@@ -230,7 +225,6 @@ End Sub
 '@================================================================================
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
@@ -600,7 +594,6 @@ If mInitialPrice = 0 Then
     centreRow mInitialPrice
 ElseIf Not mFirstCentreDone And ev.Type = DOMTrade Then
     centreRow ev.Price
-    mFirstCentreDone = True
 End If
 
 setDOMCell ev
@@ -634,7 +627,7 @@ If mInitialPrice <> 0 Then
     
     ' set off a timer before centring the display - otherwise it centres
     ' before the first resize
-    DeferAction Me, DeferredCommandCentre, 10
+    DeferAction Me, DeferredCommandCentre   ', 10
 End If
 
 mDataSource.AddMarketDepthListener Me

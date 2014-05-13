@@ -44,9 +44,43 @@ Private Const ModuleName                            As String = "TwsScannerSubsc
 ' Member variables
 '@================================================================================
 
+Public NumberOfRows                                 As Long
+Public Instrument                                   As String
+Public LocationCode                                 As String
+Public ScanCode                                     As String
+Public AbovePrice                                   As Double
+Public BelowPrice                                   As Double
+Public AboveVolume                                  As Long
+Public AverageOptionVolumeAbove                     As Long
+Public MarketCapAbove                               As Double
+Public MarketCapBelow                               As Double
+Public MoodyRatingAbove                             As String
+Public MoodyRatingBelow                             As String
+Public SpRatingAbove                                As String
+Public SpRatingBelow                                As String
+Public MaturityDateAbove                            As String
+Public MaturityDateBelow                            As String
+Public CouponRateAbove                              As Double
+Public CouponRateBelow                              As Double
+Public ExcludeConvertible                           As String
+Public ScannerSettingPairs                          As String
+Public StockTypeFilter                              As String
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+NumberOfRows = NO_ROW_NUMBER_SPECIFIED
+AbovePrice = MaxDouble
+BelowPrice = MaxDouble
+AboveVolume = MaxLong
+AverageOptionVolumeAbove = MaxLong
+MarketCapAbove = MaxDouble
+MarketCapBelow = MaxDouble
+CouponRateAbove = MaxDouble
+CouponRateBelow = MaxDouble
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -59,6 +93,10 @@ Private Const ModuleName                            As String = "TwsScannerSubsc
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get NO_ROW_NUMBER_SPECIFIED() As Long
+NO_ROW_NUMBER_SPECIFIED = -1
+End Property
 
 '@================================================================================
 ' Methods

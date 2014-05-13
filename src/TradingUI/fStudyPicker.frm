@@ -1,11 +1,11 @@
 VERSION 5.00
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#105.0#0"; "StudiesUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#163.0#0"; "StudiesUI27.ocx"
 Begin VB.Form fStudyPicker 
-   BorderStyle     =   3  'Fixed Dialog
+   BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Form1"
    ClientHeight    =   4350
    ClientLeft      =   45
-   ClientTop       =   435
+   ClientTop       =   315
    ClientWidth     =   8700
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False

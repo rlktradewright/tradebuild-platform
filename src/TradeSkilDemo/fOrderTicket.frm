@@ -1,14 +1,17 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#188.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#217.0#0"; "TradingUI27.ocx"
 Begin VB.Form fOrderTicket 
-   BorderStyle     =   1  'Fixed Single
+   BorderStyle     =   4  'Fixed ToolWindow
    ClientHeight    =   6135
    ClientLeft      =   45
-   ClientTop       =   435
+   ClientTop       =   315
    ClientWidth     =   8745
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
    ScaleHeight     =   6135
    ScaleWidth      =   8745
+   ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin TradingUI27.OrderTicket OrderTicket1 
       Height          =   6135
@@ -122,17 +125,24 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let Ticker(ByVal value As Ticker)
+Public Property Let Ticker(ByVal Value As Ticker)
 Const ProcName As String = "Ticker"
 On Error GoTo Err
 
-If value.IsTickReplay Then
+If Value.IsTickReplay Then
     OrderTicket1.Clear
     Exit Property
 End If
 
-If value.State <> MarketDataSourceStateRunning Then Exit Property
-OrderTicket1.SetOrderContexts value.PositionManager.OrderContexts.DefaultOrderContext, value.PositionManagerSimulated.OrderContexts.DefaultOrderContext
+If Value.State <> MarketDataSourceStateRunning Then Exit Property
+
+Dim lLiveContext As OrderContext
+If Value.IsLiveOrdersEnabled Then Set lLiveContext = Value.PositionManager.OrderContexts.DefaultOrderContext
+
+Dim lSimContext As OrderContext
+If Value.IsSimulatedOrdersEnabled Then Set lSimContext = Value.PositionManagerSimulated.OrderContexts.DefaultOrderContext
+
+OrderTicket1.SetOrderContexts lLiveContext, lSimContext
 
 Exit Property
 
@@ -159,12 +169,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ShowBracketOrder( _
-                ByVal value As IBracketOrder, _
+                ByVal Value As IBracketOrder, _
                 ByVal selectedOrderNumber As Long)
 Const ProcName As String = "ShowBracketOrder"
 On Error GoTo Err
 
-OrderTicket1.ShowBracketOrder value, selectedOrderNumber
+OrderTicket1.ShowBracketOrder Value, selectedOrderNumber
 
 Exit Sub
 

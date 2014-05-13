@@ -54,6 +54,8 @@ Private mDataSourceBaseRef                          As WeakReference
 
 Private mContractFuture                             As IFuture
 
+Private mStudyBase                                  As TickDataStudyBase
+
 Private mGenericTickListeners                       As Listeners
 Private mMarketDepthListeners                       As Listeners
 Private mPriceChangeListeners                       As Listeners
@@ -518,6 +520,10 @@ Private Sub IMarketDataSource_StopMarketDepth()
 StopMarketDepth
 End Sub
 
+Public Property Get IMarketDataSource_StudyBase() As IStudyBase
+Set IMarketDataSource_StudyBase = StudyBase
+End Property
+
 Private Property Get IMarketDataSource_Timestamp() As Date
 Const ProcName As String = "IMarketDataSource_Timestamp"
 On Error GoTo Err
@@ -674,6 +680,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get StudyBase() As IStudyBase
+Set StudyBase = mStudyBase
 End Property
 
 Friend Property Get SubscribedToMarketData() As Boolean
@@ -1030,6 +1040,9 @@ On Error GoTo Err
 
 If Not mSubscribedToMarketData Then Exit Sub
 
+' studies must be updated before notifying other listeners
+If Not mStudyBase Is Nothing Then mStudyBase.NotifyTick pTick
+
 Dim ev As GenericTickEventData
 Set ev.Source = Me
 ev.StreamId = mStreamId
@@ -1050,6 +1063,7 @@ Friend Sub Initialise( _
                 ByVal pMarketDataManager As MarketDataManager, _
                 ByVal pKey As String, _
                 ByVal pContractFuture As IFuture, _
+                ByVal pStudyManager As StudyManager, _
                 ByVal pIndexToUse As Long, _
                 ByVal pIsTickReplay As Boolean, _
                 ByVal pConfig As ConfigurationSection)
@@ -1072,11 +1086,17 @@ Else
     mFutureWaiter.Add mContractFuture
 End If
 
+If Not pStudyManager Is Nothing Then
+    Set mStudyBase = New TickDataStudyBase
+    mStudyBase.Initialise pStudyManager, mContractFuture
+End If
+
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
 Public Sub NotifyCurrentDOM( _
                 ByVal pListener As IMarketDepthListener)
 Const ProcName As String = "NotifyCurrentDOM"

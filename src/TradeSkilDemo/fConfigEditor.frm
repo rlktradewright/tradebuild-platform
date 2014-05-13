@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin VB.Form fConfigEditor 
-   BorderStyle     =   3  'Fixed Dialog
+   BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Configuration editor"
    ClientHeight    =   5175
    ClientLeft      =   45
-   ClientTop       =   435
+   ClientTop       =   315
    ClientWidth     =   10215
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
@@ -99,6 +99,8 @@ Private Const ModuleName                            As String = "fConfigEditor"
 
 Private mConfig                                     As ConfigurationSection
 
+Private mSelectedAppConfig                          As ConfigurationSection
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -160,6 +162,7 @@ Const ProcName As String = "ConfigureButton_Click"
 On Error GoTo Err
 
 updateSettings
+Set mSelectedAppConfig = ConfigManager1.selectedAppConfig
 Me.Hide
 
 Exit Sub
@@ -177,7 +180,15 @@ End Sub
 '@================================================================================
 
 Friend Property Get selectedAppConfig() As ConfigurationSection
-Set selectedAppConfig = ConfigManager1.selectedAppConfig
+Const ProcName As String = "SelectedAppConfig"
+On Error GoTo Err
+
+Set selectedAppConfig = mSelectedAppConfig
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

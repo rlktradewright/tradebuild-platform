@@ -42,6 +42,12 @@ End Enum
 ' Types
 '@================================================================================
 
+Public Type DeferredNotificationActionData
+    Action              As Long
+    Listener            As Object
+    DataSource          As MarketDataSource
+End Type
+
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -74,6 +80,7 @@ Private Const ModuleName                            As String = "MarketDataUtils
 
 Public Function CreateRealtimeDataManager( _
                 ByVal pMarketDataFactory As IMarketDataFactory, _
+                Optional ByVal pStudyLibManager As StudyLibraryManager, _
                 Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
                 Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
                 Optional ByVal pNumberOfMarketDepthRows As Long = 20) As IMarketDataManager
@@ -83,8 +90,31 @@ On Error GoTo Err
 AssertArgument Not pMarketDataFactory Is Nothing, "pMarketDataFactory is Nothing"
 
 Dim rtm As New RealTimeDataManager
-rtm.Initialise pMarketDataFactory, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows
+rtm.Initialise pMarketDataFactory, pStudyLibManager, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows
 Set CreateRealtimeDataManager = rtm
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateTickDataStudyBase( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pTickStream As ITickStream, _
+                ByVal pContractFuture As IFuture) As IStudyBase
+Const ProcName As String = "CreateTickDataStudyBase"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+AssertArgument Not pTickStream Is Nothing, "pTickStream Is Nothing"
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture Is Nothing"
+
+Dim lStudyBase As New TickDataStudyBase
+lStudyBase.Initialise pStudyManager, pContractFuture
+pTickStream.AddGenericTickListener lStudyBase
+
+Set CreateTickDataStudyBase = lStudyBase
 
 Exit Function
 
@@ -95,6 +125,7 @@ End Function
 Public Function CreateTickDataManager( _
                 ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
+                Optional ByVal pStudyLibManager As StudyLibraryManager, _
                 Optional ByVal pPrimaryContractStore As IContractStore, _
                 Optional ByVal pSecondaryContractStore As IContractStore, _
                 Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
@@ -108,7 +139,7 @@ Const ProcName As String = "CreateTickDataManager"
 On Error GoTo Err
 
 Dim lTickDataManager As New TickfileDataManager
-lTickDataManager.Initialise pTickfileSpecifiers, pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
+lTickDataManager.Initialise pTickfileSpecifiers, pTickfileStore, pStudyLibManager, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
 
 Set CreateTickDataManager = lTickDataManager
 

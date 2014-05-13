@@ -1,11 +1,11 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#11.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
 Begin VB.Form fMsgBox 
-   BorderStyle     =   3  'Fixed Dialog
+   BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Form1"
    ClientHeight    =   3090
    ClientLeft      =   45
-   ClientTop       =   435
+   ClientTop       =   315
    ClientWidth     =   4680
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
@@ -45,7 +45,7 @@ Option Explicit
 '@================================================================================
 
 Event Result( _
-                ByVal value As MsgBoxResults)
+                ByVal Value As MsgBoxResults)
                 
 '@================================================================================
 ' Enums
@@ -77,8 +77,8 @@ Private Const ModuleName                    As String = "fMsgBox"
 ' Control Event Handlers
 '@================================================================================
 
-Private Sub TWModelessMsgBox1_Result(ByVal value As MsgBoxResults)
-RaiseEvent Result(value)
+Private Sub TWModelessMsgBox1_Result(ByVal Value As MsgBoxResults)
+RaiseEvent Result(Value)
 Unload Me
 End Sub
 

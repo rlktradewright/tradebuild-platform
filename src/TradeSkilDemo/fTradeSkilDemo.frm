@@ -1,8 +1,8 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#215.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#217.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.7"
@@ -116,11 +116,11 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1B8C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "LiveExecutionsSummary"
+      Tab(1).Control(0)=   "SimulatedExecutionsSummary"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(2)=   "LiveExecutionsSummary"
       Tab(1).Control(2).Enabled=   0   'False
       Tab(1).ControlCount=   3
       TabCaption(2)   =   "&3. Log"
@@ -366,53 +366,53 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1BE0
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label18"
-      Tab(1).Control(1)=   "Label22"
-      Tab(1).Control(2)=   "Label1"
-      Tab(1).Control(3)=   "LiveChartTimeframeSelector"
+      Tab(1).Control(0)=   "LiveChartStylesCombo"
+      Tab(1).Control(1)=   "Frame1"
+      Tab(1).Control(2)=   "ChartButton"
+      Tab(1).Control(3)=   "SessionOnlyCheck"
       Tab(1).Control(4)=   "NumHistoryBarsText"
-      Tab(1).Control(5)=   "SessionOnlyCheck"
-      Tab(1).Control(6)=   "ChartButton"
-      Tab(1).Control(7)=   "Frame1"
-      Tab(1).Control(8)=   "LiveChartStylesCombo"
+      Tab(1).Control(5)=   "LiveChartTimeframeSelector"
+      Tab(1).Control(6)=   "Label1"
+      Tab(1).Control(7)=   "Label22"
+      Tab(1).Control(8)=   "Label18"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BFC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Frame2"
-      Tab(2).Control(1)=   "HistContractSearch"
-      Tab(2).Control(2)=   "HistSessionOnlyCheck"
-      Tab(2).Control(3)=   "NumHistBarsText"
-      Tab(2).Control(4)=   "HistTimeframeSelector"
-      Tab(2).Control(5)=   "ToDatePicker"
+      Tab(2).Control(0)=   "Label5"
+      Tab(2).Control(1)=   "Label4"
+      Tab(2).Control(2)=   "Label2"
+      Tab(2).Control(3)=   "Label3"
+      Tab(2).Control(4)=   "Label8"
+      Tab(2).Control(5)=   "HistChartStylesCombo"
       Tab(2).Control(6)=   "FromDatePicker"
-      Tab(2).Control(7)=   "HistChartStylesCombo"
-      Tab(2).Control(8)=   "Label8"
-      Tab(2).Control(9)=   "Label3"
-      Tab(2).Control(10)=   "Label2"
-      Tab(2).Control(11)=   "Label4"
-      Tab(2).Control(12)=   "Label5"
+      Tab(2).Control(7)=   "ToDatePicker"
+      Tab(2).Control(8)=   "HistTimeframeSelector"
+      Tab(2).Control(9)=   "NumHistBarsText"
+      Tab(2).Control(10)=   "HistSessionOnlyCheck"
+      Tab(2).Control(11)=   "HistContractSearch"
+      Tab(2).Control(12)=   "Frame2"
       Tab(2).ControlCount=   13
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":1C18
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(2)=   "ReplayProgressLabel"
-      Tab(3).Control(3)=   "ReplayProgressBar"
+      Tab(3).Control(0)=   "TickfileOrganiser1"
+      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(2)=   "PauseReplayButton"
+      Tab(3).Control(3)=   "StopReplayButton"
       Tab(3).Control(4)=   "ReplaySpeedCombo"
-      Tab(3).Control(5)=   "StopReplayButton"
-      Tab(3).Control(6)=   "PauseReplayButton"
-      Tab(3).Control(7)=   "PlayTickFileButton"
-      Tab(3).Control(8)=   "TickfileOrganiser1"
+      Tab(3).Control(5)=   "ReplayProgressBar"
+      Tab(3).Control(6)=   "ReplayProgressLabel"
+      Tab(3).Control(7)=   "ReplayContractLabel"
+      Tab(3).Control(8)=   "Label20"
       Tab(3).ControlCount=   9
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1C34
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ConfigEditorButton"
+      Tab(4).Control(0)=   "Label6"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "Label6"
+      Tab(4).Control(2)=   "ConfigEditorButton"
       Tab(4).ControlCount=   3
       Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
          Height          =   2520
@@ -714,7 +714,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   66453507
+         Format          =   66125827
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -728,7 +728,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   66453507
+         Format          =   66125827
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -1038,9 +1038,9 @@ mClockDisplay.SetClock getDefaultClock
 
 setupReplaySpeedCombo
 
-FromDatePicker.value = DateAdd("m", -1, Now)
-FromDatePicker.value = Empty    ' clear the checkbox
-ToDatePicker.value = Now
+FromDatePicker.Value = DateAdd("m", -1, Now)
+FromDatePicker.Value = Empty    ' clear the checkbox
+ToDatePicker.Value = Now
 
 Exit Sub
 
@@ -1096,8 +1096,7 @@ LogMessage "Unloading main form"
 LogMessage "Shutting down clock"
 mClockDisplay.Finish
 
-LogMessage "Finishing UI controls"
-finishUIControls
+shutdown
 
 LogMessage "Closing charts and market depth forms"
 closeChartsAndMarketDepthForms
@@ -1110,9 +1109,6 @@ Next
 
 LogMessage "Stopping tickers"
 If Not mTickers Is Nothing Then mTickers.Finish
-
-LogMessage "Removing service providers"
-mTradeBuildAPI.ServiceProviders.RemoveAll
 
 killLoggingForThisForm
 
@@ -1313,6 +1309,7 @@ Set lNewAppInstanceConfig = gShowConfigEditor(mConfigStore, mAppInstanceConfig, 
 If lNewAppInstanceConfig Is Nothing Then Exit Sub
 
 gSaveSettings
+shutdown
 gLoadMainForm lNewAppInstanceConfig, Me, gShowSplashScreen
 
 Exit Sub
@@ -1682,6 +1679,7 @@ If mReplayController Is Nothing Then
 
     Set lTickfileDataManager = CreateTickDataManager(TickfileOrganiser1.TickFileSpecifiers, _
                                                 mTradeBuildAPI.TickfileStoreInput, _
+                                                mTradeBuildAPI.StudyLibraryManager, _
                                                 mTradeBuildAPI.ContractStorePrimary, _
                                                 mTradeBuildAPI.ContractStoreSecondary, _
                                                 MarketDataSourceOptUseExchangeTimeZone, _
@@ -1882,7 +1880,7 @@ Private Sub mReplayController_ReplayProgress( _
 Const ProcName As String = "mReplayController_ReplayProgress"
 On Error GoTo Err
 
-ReplayProgressBar.value = pPercentComplete
+ReplayProgressBar.Value = pPercentComplete
 ReplayProgressLabel.caption = pTickfileTimestamp & _
                                 "  Processed " & _
                                 pEventsPlayed & _
@@ -1929,7 +1927,7 @@ PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
 StopReplayButton.Enabled = False
 
-ReplayProgressBar.value = 0
+ReplayProgressBar.Value = 0
 ReplayProgressBar.Visible = False
 ReplayContractLabel.caption = ""
 ReplayProgressLabel.caption = ""
@@ -2003,7 +2001,6 @@ mAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionApplication
 Set mTickers = mTradeBuildAPI.Tickers
 
 LogMessage "Recovering orders from last session"
-StartOrderRecoverySession mTradeBuildAPI.SessionName
 mFutureWaiter.Add CreateFutureFromTask(mTradeBuildAPI.RecoverOrders())
 
 Exit Sub
@@ -2174,7 +2171,7 @@ On Error GoTo Err
 Dim lContract As IContract
 For Each lContract In pContracts
     Dim fromDate As Date
-    If IsNull(FromDatePicker.value) Then
+    If IsNull(FromDatePicker.Value) Then
         fromDate = CDate(0)
     Else
         fromDate = DateSerial(FromDatePicker.Year, FromDatePicker.Month, FromDatePicker.Day) + _
@@ -2182,7 +2179,7 @@ For Each lContract In pContracts
     End If
     
     Dim toDate As Date
-    If IsNull(ToDatePicker.value) Then
+    If IsNull(ToDatePicker.Value) Then
         toDate = Now
     Else
         toDate = DateSerial(ToDatePicker.Year, ToDatePicker.Month, ToDatePicker.Day) + _
@@ -2311,21 +2308,21 @@ Else
         ChartButton1.Default = True
     End If
     
-    Dim lDataSource As IMarketDataSource
-    Set lDataSource = getSelectedDataSource
-    If lDataSource Is Nothing Then
+    Dim lTicker As Ticker
+    Set lTicker = getSelectedDataSource
+    If lTicker Is Nothing Then
         mClockDisplay.SetClock getDefaultClock
-    ElseIf lDataSource.State = MarketDataSourceStateRunning Then
-        mClockDisplay.SetClockFuture lDataSource.ClockFuture
+    ElseIf lTicker.State = MarketDataSourceStateRunning Then
+        mClockDisplay.SetClockFuture lTicker.ClockFuture
         ChartButton.Enabled = True
         ChartButton1.Enabled = True
         Dim lContract As IContract
-        Set lContract = lDataSource.ContractFuture.value
-        If lContract.Specifier.SecType <> SecTypeIndex Then
+        Set lContract = lTicker.ContractFuture.Value
+        If (lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled) And lContract.Specifier.SecType <> SecTypeIndex Then
             OrderTicketButton.Enabled = True
             OrderTicket1Button.Enabled = True
             MarketDepthButton.Enabled = True
-            getOrderTicket.Ticker = lDataSource
+            getOrderTicket.Ticker = lTicker
         End If
     Else
         mClockDisplay.SetClock getDefaultClock
@@ -3087,11 +3084,32 @@ On Error GoTo Err
 
 If Not pTicker.State = MarketDataSourceStateRunning Then Exit Sub
 
-Dim mktDepthForm As fMarketDepth
-Set mktDepthForm = New fMarketDepth
+Dim mktDepthForm As New fMarketDepth
 mktDepthForm.numberOfRows = 100
 mktDepthForm.Ticker = pTicker
+
 mktDepthForm.Show vbModeless
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub shutdown()
+Const ProcName As String = "Shutdown"
+On Error GoTo Err
+
+Static sAlreadyShutdown As Boolean
+If sAlreadyShutdown Then Exit Sub
+
+sAlreadyShutdown = True
+
+LogMessage "Finishing UI controls"
+finishUIControls
+
+LogMessage "Removing service providers"
+mTradeBuildAPI.ServiceProviders.RemoveAll
 
 Exit Sub
 

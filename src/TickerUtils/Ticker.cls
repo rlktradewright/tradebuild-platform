@@ -84,8 +84,6 @@ Private Const ModuleName As String = "Ticker"
 ' Member variables
 '@================================================================================
 
-Private mStudyManager               As StudyManager
-
 Private mDataSource                 As IMarketDataSource
 
 Private mHistDataStore              As IHistoricalDataStore
@@ -324,6 +322,10 @@ End Sub
 Private Sub IMarketDataSource_StopMarketDepth()
 StopMarketDepth
 End Sub
+
+Private Property Get IMarketDataSource_StudyBase() As IStudyBase
+Set IMarketDataSource_StudyBase = StudyBase
+End Property
 
 Private Property Get IMarketDataSource_Timestamp() As Date
 IMarketDataSource_Timestamp = Timestamp
@@ -617,6 +619,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get IsLiveOrdersEnabled() As Boolean
+IsLiveOrdersEnabled = Not getTickers.OrderSubmitterLive Is Nothing
+End Property
+
 Public Property Get IsMarketDataRequested() As Boolean
 Const ProcName As String = "IsMarketDataRequested"
 On Error GoTo Err
@@ -633,12 +639,16 @@ Public Property Get IsMarketDepthRequested() As Boolean
 Const ProcName As String = "IsMarketDepthRequested"
 On Error GoTo Err
 
-IsMarketDepthRequested = mDataSource.IsMarketDataRequested
+IsMarketDepthRequested = mDataSource.IsMarketDepthRequested
 
 Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IsSimulatedOrdersEnabled() As Boolean
+IsSimulatedOrdersEnabled = Not getTickers.OrderSubmitterSimulated Is Nothing
 End Property
 
 Public Property Get IsTickReplay() As Boolean
@@ -714,7 +724,7 @@ Assert Not getTickers.OrderSubmitterLive Is Nothing, "No order submitter exists 
 
 If mPositionManager Is Nothing Then
     If getTickers.ScopeName = "" Then
-        Set mPositionManager = CreatePositionManager(GenerateGUIDString, _
+        Set mPositionManager = getTickers.OrderManager.CreatePositionManager(GenerateGUIDString, _
                                                     mDataSource.ContractFuture, _
                                                     getTickers.OrderSubmitterLive, _
                                                     mDataSource, _
@@ -722,7 +732,7 @@ If mPositionManager Is Nothing Then
                                                     False, _
                                                     getTickers.MoneyManager)
     Else
-        Set mPositionManager = CreateRecoverablePositionManager(GenerateGUIDString, _
+        Set mPositionManager = getTickers.OrderManager.CreateRecoverablePositionManager(GenerateGUIDString, _
                                                     mDataSource.ContractFuture, _
                                                     getTickers.OrderSubmitterLive, _
                                                     mDataSource, _
@@ -749,7 +759,7 @@ On Error GoTo Err
 Assert Not getTickers.OrderSubmitterSimulated Is Nothing, "No order submitter exists for simulated orders"
 
 If mPositionManagerSimulated Is Nothing Then
-    Set mPositionManagerSimulated = CreatePositionManager(GenerateGUIDString, _
+    Set mPositionManagerSimulated = getTickers.OrderManager.CreatePositionManager(GenerateGUIDString, _
                                                         mDataSource.ContractFuture, _
                                                         getTickers.OrderSubmitterSimulated, _
                                                         mDataSource, _
@@ -807,8 +817,7 @@ Public Property Get StudyBase() As IStudyBase
 Const ProcName As String = "StudyBase"
 On Error GoTo Err
 
-If mStudyBase Is Nothing Then Set mStudyBase = CreateTickDataStudyBaseFromMarketDataSource(mStudyManager, mDataSource)
-Set StudyBase = mStudyBase
+Set StudyBase = mDataSource.StudyBase
 
 Exit Property
 
@@ -1079,7 +1088,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
-                ByVal pStudyManager As StudyManager, _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pTickers As Tickers, _
@@ -1087,7 +1095,6 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mStudyManager = pStudyManager
 Set mDataSource = pDataSource
 Set mHistDataStore = pHistDataStore
 

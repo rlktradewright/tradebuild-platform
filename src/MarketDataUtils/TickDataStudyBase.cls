@@ -65,6 +65,22 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 '@================================================================================
 
 '@================================================================================
+' IGenericTickListener Interface Members
+'@================================================================================
+
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
+On Error GoTo Err
+
+NotifyTick ev.Tick
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' IStudyBase Interface Members
 '@================================================================================
 
@@ -75,33 +91,6 @@ End Property
 Private Property Get IStudyBase_StudyManager() As StudyManager
 Set IStudyBase_StudyManager = StudyManager
 End Property
-
-'@================================================================================
-' IGenericTickListener Interface Members
-'@================================================================================
-
-Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
-Const ProcName As String = "IGenericTickListener_NotifyTick"
-On Error GoTo Err
-
-Select Case ev.Tick.TickType
-Case TickTypeBid
-    mStudyManager.NotifyInput mInputHandleBid, ev.Tick.Price, ev.Tick.Timestamp
-Case TickTypeAsk
-    mStudyManager.NotifyInput mInputHandleAsk, ev.Tick.Price, ev.Tick.Timestamp
-Case TickTypeTrade
-    mStudyManager.NotifyInput mInputHandleTrade, ev.Tick.Price, ev.Tick.Timestamp
-Case TickTypeVolume
-    mStudyManager.NotifyInput mInputHandleVolume, ev.Tick.Size, ev.Tick.Timestamp
-Case TickTypeOpenInterest
-    mStudyManager.NotifyInput mInputHandleOpenInterest, ev.Tick.Size, ev.Tick.Timestamp
-End Select
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' mFutureWaiter Event Handlers
@@ -167,41 +156,64 @@ End If
 
 Set mStudyInputHandler = mStudyManager.CreateStudyInputHandler(lName)
 mInputHandleBid = mStudyManager.AddInput(mStudyInputHandler, _
-                        Globals.BidInputName, _
+                        InputNameBid, _
                         "Bid prices", _
                         StudyInputTypes.InputTypeReal, _
                         False, _
                         lTickSize)
 mInputHandleAsk = mStudyManager.AddInput(mStudyInputHandler, _
-                        Globals.AskInputName, _
+                        InputNameAsk, _
                         "Ask prices", _
                         StudyInputTypes.InputTypeReal, _
                         False, _
                         lTickSize)
 mInputHandleOpenInterest = mStudyManager.AddInput(mStudyInputHandler, _
-                        Globals.OpenInterestInputName, _
+                        InputNameOpenInterest, _
                         "OpenInterest", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
                         1)
 mInputHandleTickVolume = mStudyManager.AddInput(mStudyInputHandler, _
-                        Globals.TickVolumeInputName, _
+                        InputNameTickVolume, _
                         "Tick Volume", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
                         1)
 mInputHandleTrade = mStudyManager.AddInput(mStudyInputHandler, _
-                        Globals.TradeInputName, _
+                        InputNameTrade, _
                         "Trade prices", _
                         StudyInputTypes.InputTypeReal, _
                         True, _
                         lTickSize)
 mInputHandleVolume = mStudyManager.AddInput(mStudyInputHandler, _
-                        Globals.VolumeInputName, _
+                        InputNameVolume, _
                         "Volume", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
                         1)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyTick(pTick As GenericTick)
+Const ProcName As String = "NotifyTick"
+On Error GoTo Err
+
+Select Case pTick.TickType
+Case TickTypeBid
+    mStudyManager.NotifyInput mInputHandleBid, pTick.Price, pTick.Timestamp
+Case TickTypeAsk
+    mStudyManager.NotifyInput mInputHandleAsk, pTick.Price, pTick.Timestamp
+Case TickTypeTrade
+    mStudyManager.NotifyInput mInputHandleTrade, pTick.Price, pTick.Timestamp
+Case TickTypeVolume
+    mStudyManager.NotifyInput mInputHandleVolume, pTick.Size, pTick.Timestamp
+Case TickTypeOpenInterest
+    mStudyManager.NotifyInput mInputHandleOpenInterest, pTick.Size, pTick.Timestamp
+End Select
 
 Exit Sub
 

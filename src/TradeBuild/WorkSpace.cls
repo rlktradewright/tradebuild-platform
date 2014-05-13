@@ -185,6 +185,7 @@ Friend Sub Initialise( _
                 ByVal pName As String, _
                 ByVal pScopeName As String, _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
+                ByVal pOrderManager As OrderManager, _
                 ByVal pOrderSubmitterLive As IOrderSubmitter, _
                 ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
                 ByVal pPositionManagersLive As PositionManagers, _
@@ -197,6 +198,7 @@ mName = pName
 Set mTickers = CreateTickers(pTradeBuildAPI.ServiceProviders.MarketDataManager, _
                             pTradeBuildAPI.StudyLibraryManager, _
                             pTradeBuildAPI.ServiceProviders.HistoricalDataStoreInput, _
+                            pOrderManager, _
                             pOrderSubmitterLive, _
                             pOrderSubmitterSimulated, _
                             pPositionManagersLive, _

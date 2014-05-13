@@ -181,7 +181,7 @@ Public Function gLoadMainForm( _
                 ByVal pAppInstanceConfig As ConfigurationSection, _
                 Optional ByVal pPrevMainForm As fTradeSkilDemo, _
                 Optional ByVal pSplash As fSplash) As Boolean
-Const ProcName As String = "loadMainForm"
+Const ProcName As String = "gLoadMainForm"
 On Error GoTo Err
 
 Dim lMainForm As New fTradeSkilDemo
@@ -375,16 +375,15 @@ SetupDefaultLogging Command
 TaskConcurrency = 20
 TaskQuantumMillisecs = 32
 
-Dim lSplash As fSplash
-Set lSplash = gShowSplashScreen
-
 Set mConfigStore = getConfigStore
 If mConfigStore Is Nothing Then
     LogMessage "Program exiting at user request"
-    Unload lSplash
     TerminateTWUtilities
     Exit Sub
 End If
+
+Dim lSplash As fSplash
+Set lSplash = gShowSplashScreen
 
 loadChartStyles mConfigStore
     

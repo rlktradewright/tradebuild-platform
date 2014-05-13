@@ -76,7 +76,8 @@ End Property
 Public Sub Link( _
     ByVal pManager As IServiceProviderManager, _
     ByVal pHandle As Long, _
-    ByVal pParameters As Parameters)
+    ByVal pParameters As Parameters, _
+    ByVal pSessionID As String)
 End Sub
 
 Public Sub Terminate()
