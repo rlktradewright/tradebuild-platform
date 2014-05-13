@@ -66,6 +66,7 @@ Case TimePeriodMonth
 Case TimePeriodYear
 Case TimePeriodTickMovement
 Case TimePeriodTickVolume
+Case TimePeriodVolume
 Case Else
     ITimePeriodValidator_IsSupportedTimePeriodUnit = False
 End Select
@@ -95,7 +96,7 @@ Case TimePeriodYear
 Case TimePeriodTickMovement
     If pTimePeriod.Length > 1000 Then ITimePeriodValidator_IsValidTimePeriod = False
 Case TimePeriodTickVolume
-    ITimePeriodValidator_IsValidTimePeriod = False
+    If pTimePeriod.Length > 100000 Then ITimePeriodValidator_IsValidTimePeriod = False
 Case TimePeriodVolume
 
 Case Else
