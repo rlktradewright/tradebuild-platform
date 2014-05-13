@@ -141,7 +141,8 @@ Case TimePeriodSecond, _
         TimePeriodMonth, _
         TimePeriodYear, _
         TimePeriodVolume, _
-        TimePeriodTickMovement
+        TimePeriodTickMovement, _
+        TimePeriodTickVolume
 Case Else
         AssertArgument False, "Time period units not supported"
 End Select
