@@ -252,7 +252,7 @@ On Error GoTo Err
 If mDataObj.RuleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
 
 If Name <> "" Then
-    Dim instrmnt As instrument
+    Dim instrmnt As Instrument
     Set instrmnt = mDB.InstrumentFactory.LoadByName(value.ExchangeName & "/" & _
                                                     value.Name & "/" & _
                                                     Name)
@@ -761,7 +761,8 @@ Case TimePeriodSecond, _
     TimePeriodMonth, _
     TimePeriodYear, _
     TimePeriodVolume, _
-    TimePeriodTickMovement
+    TimePeriodTickMovement, _
+    TimePeriodTickVolume
 Case Else
     AssertArgument False, "Bar time unit not supported"
 End Select
@@ -813,7 +814,8 @@ Case TimePeriodSecond, _
     TimePeriodMonth, _
     TimePeriodYear, _
     TimePeriodVolume, _
-    TimePeriodTickMovement
+    TimePeriodTickMovement, _
+    TimePeriodTickVolume
 Case Else
     AssertArgument False, "Bar time unit not supported"
 End Select
