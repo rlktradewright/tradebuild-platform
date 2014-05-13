@@ -132,6 +132,10 @@ Public Property Get BuiltInStudyLibraryProgId() As String
 BuiltInStudyLibraryProgId = BuiltInStudyLibProgId
 End Property
 
+Public Property Get ConstTickVolumeBarsStudyName() As String
+ConstTickVolumeBarsStudyName = Globals.ConstTickVolumeBarsStudyName
+End Property
+
 Public Property Get ConstTimeBarsStudyName() As String
 ConstTimeBarsStudyName = Globals.ConstTimeBarsStudyName
 End Property
@@ -148,8 +152,8 @@ Public Property Get ConstVolumeBarsStudyName() As String
 ConstVolumeBarsStudyName = Globals.ConstVolumeBarsStudyName
 End Property
 
-Public Property Get ConstTimeBarsParamVolPerBar() As String
-ConstTimeBarsParamVolPerBar = Globals.ConstTimeBarsParamVolPerBar
+Public Property Get ConstVolumeBarsParamVolPerBar() As String
+ConstVolumeBarsParamVolPerBar = Globals.ConstVolumeBarsParamVolPerBar
 End Property
 
 Public Property Get ConstMomentumBarsStudyName() As String
@@ -207,7 +211,7 @@ Case TimePeriodSecond, _
 Case TimePeriodTickMovement
     Set CreateBarStudy = setupConstantMomentumBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
 Case TimePeriodTickVolume
-    'setupConstantTickBarsStudies
+    Set CreateBarStudy = setupConstantTickVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
 Case TimePeriodVolume
     Set CreateBarStudy = setupConstantVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
 End Select
@@ -355,6 +359,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function setupConstantTickVolumeBarsStudy( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pStudyBase As IStudyBase, _
+                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+Const ProcName As String = "setupConstantTickVolumeBarsStudy"
+On Error GoTo Err
+
+Dim lParams As New Parameters
+lParams.SetParameterValue ConstTickVolumeBarsParamTicksPerBar, pTimePeriod.Length
+
+Set setupConstantTickVolumeBarsStudy = setupBarsStudy(ConstTickVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function setupConstantTimeBarsStudy( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pStudyBase As IStudyBase, _
@@ -383,7 +405,7 @@ Const ProcName As String = "setupConstantVolumeBarsStudy"
 On Error GoTo Err
 
 Dim lParams As New Parameters
-lParams.SetParameterValue ConstTimeBarsParamVolPerBar, pTimePeriod.Length
+lParams.SetParameterValue ConstVolumeBarsParamVolPerBar, pTimePeriod.Length
 
 Set setupConstantVolumeBarsStudy = setupBarsStudy(ConstVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
 

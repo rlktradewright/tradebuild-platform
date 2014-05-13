@@ -189,7 +189,7 @@ tfs.TickfileFormatID = inFormats(0).FormalID
 Dim tfSpecs As New TickFileSpecifiers
 tfSpecs.Add tfs
 
-Set mDataManager = CreateTickDataManager(tfSpecs, mTickfileStore, client.ContractStore, , MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments + MarketDataSourceOptUseExchangeTimeZone, , , Speed)
+Set mDataManager = CreateTickDataManager(tfSpecs, mTickfileStore, Nothing, client.ContractStore, , MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments + MarketDataSourceOptUseExchangeTimeZone, , , Speed)
 Set mController = mDataManager.ReplayController
 
 Set mDataSource = mDataManager.CreateMarketDataSource(mController.TickStream(0).ContractFuture, False)

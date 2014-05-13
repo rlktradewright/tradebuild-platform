@@ -70,6 +70,7 @@ addStudyName AccDistName
 addStudyName AtrName
 addStudyName BbName
 addStudyName ConstMomentumBarsName
+addStudyName ConstTickVolBarsName
 addStudyName ConstTimeBarsName
 addStudyName ConstVolBarsName
 addStudyName DoncName
@@ -103,6 +104,8 @@ Case UCase$(BbName), UCase$(BbShortName)
     Set IStudyLibrary_createStudy = New BollingerBands
 Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
     Set IStudyLibrary_createStudy = New ConstMomentumBars
+Case UCase$(ConstTickVolBarsName), UCase$(ConstTickVolBarsShortName)
+    Set IStudyLibrary_createStudy = New ConstTickVolumeBars
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
     Set IStudyLibrary_createStudy = New ConstTimeBars
 Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
@@ -163,6 +166,8 @@ Case UCase$(BbName), UCase$(BbShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GBollingerBands.defaultParameters
 Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GConstMomentumBars.defaultParameters
+Case UCase$(ConstTickVolBarsName), UCase$(ConstTickVolBarsShortName)
+    Set IStudyLibrary_getStudyDefaultParameters = GConstTickVolumeBars.defaultParameters
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GConstTimeBars.defaultParameters
 Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
@@ -211,6 +216,8 @@ Case UCase$(BbName), UCase$(BbShortName)
     Set IStudyLibrary_getStudyDefinition = GBollingerBands.StudyDefinition
 Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
     Set IStudyLibrary_getStudyDefinition = GConstMomentumBars.StudyDefinition
+Case UCase$(ConstTickVolBarsName), UCase$(ConstTickVolBarsShortName)
+    Set IStudyLibrary_getStudyDefinition = GConstTickVolumeBars.StudyDefinition
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
     Set IStudyLibrary_getStudyDefinition = GConstTimeBars.StudyDefinition
 Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
@@ -284,14 +291,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function IStudyLibrary_setStudyDefaultParameters( _
+Private Function IStudyLibrary_SetStudyDefaultParameters( _
                 ByVal name As String, _
                 ByVal params As Parameters) As Boolean
 
-Const ProcName As String = "IStudyLibrary_setStudyDefaultParameters"
+Const ProcName As String = "IStudyLibrary_SetStudyDefaultParameters"
 On Error GoTo Err
 
-IStudyLibrary_setStudyDefaultParameters = True
+IStudyLibrary_SetStudyDefaultParameters = True
 
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
@@ -302,6 +309,8 @@ Case UCase$(BbName), UCase$(BbShortName)
     GBollingerBands.defaultParameters = params
 Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
     GConstMomentumBars.defaultParameters = params
+Case UCase$(ConstTickVolBarsName), UCase$(ConstTickVolBarsShortName)
+    GConstTickVolumeBars.defaultParameters = params
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
     GConstTimeBars.defaultParameters = params
 Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
@@ -329,7 +338,7 @@ Case UCase$(StochName), UCase$(StochShortName)
 Case UCase$(SwingName), UCase$(SwingShortName)
     GSwing.defaultParameters = params
 Case Else
-    IStudyLibrary_setStudyDefaultParameters = False
+    IStudyLibrary_SetStudyDefaultParameters = False
 End Select
 
 Exit Function

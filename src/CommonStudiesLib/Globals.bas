@@ -34,6 +34,9 @@ Public Const ConstMomentumBarsShortName As String = "CM Bars"
 Public Const ConstTimeBarsName As String = "Constant time bars"
 Public Const ConstTimeBarsShortName As String = "Bars"
 
+Public Const ConstTickVolBarsName As String = "Constant tick volume bars"
+Public Const ConstTickVolBarsShortName As String = "CTV Bars"
+
 Public Const ConstVolBarsName As String = "Constant volume bars"
 Public Const ConstVolBarsShortName As String = "CV Bars"
 

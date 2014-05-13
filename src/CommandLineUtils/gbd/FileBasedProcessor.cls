@@ -154,6 +154,7 @@ lTickfileSpecs.Add lTickfileSpec
 Dim lTickDataManager As TickfileDataManager
 Set lTickDataManager = CreateTickDataManager(lTickfileSpecs, _
                                             mTB.TickfileStoreInput, _
+                                            mTB.StudyLibraryManager, _
                                             mTB.ContractStorePrimary, _
                                             , _
                                             MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments, _

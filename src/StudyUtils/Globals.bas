@@ -38,12 +38,15 @@ Public Const BuiltInStudyLibName                As String = "BuiltIn"
 Public Const ConfigNameStudyLibraries           As String = "StudyLibraries"
 Public Const ConfigNameStudyLibrary             As String = "StudyLibrary"
 
+Public Const ConstTickVolumeBarsStudyName       As String = "Constant Tick Volume bars"
+Public Const ConstTickVolumeBarsParamTicksPerBar   As String = "Ticks per bar"
+
 Public Const ConstTimeBarsStudyName                As String = "Constant time bars"
 Public Const ConstTimeBarsParamBarLength           As String = "Bar length"
 Public Const ConstTimeBarsParamTimeUnits           As String = "Time units"
 
-Public Const ConstVolumeBarsStudyName              As String = "Constant Volume bars"
-Public Const ConstTimeBarsParamVolPerBar           As String = "Volume per bar"
+Public Const ConstVolumeBarsStudyName           As String = "Constant Volume bars"
+Public Const ConstVolumeBarsParamVolPerBar      As String = "Volume per bar"
 
 Public Const ConstMomentumBarsStudyName            As String = "Constant momentum bars"
 Public Const ConstMomentumBarsParamTicksPerBar     As String = "Ticks move per bar"

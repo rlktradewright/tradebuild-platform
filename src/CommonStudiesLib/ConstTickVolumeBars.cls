@@ -61,7 +61,7 @@ Private mStudyFoundation As StudyFoundation
 
 Private mSessionFuture As IFuture
 
-Private mMovementPerBar As Long
+Private mTradesPerBar As Long
 
 Private mBarsBuilder As BarsBuilder
 
@@ -305,7 +305,7 @@ sv.BarStartTime = Bar.Timestamp
 sv.Timestamp = Bar.Timestamp
 
 Select Case UCase$(valueName)
-Case UCase$(ConstMomentumBarsValueBar)
+Case UCase$(ConstTickVolumeBarsValueBar)
     Set sv.Value = Bar
 Case UCase$(BarValueOpen)
         sv.Value = Bar.OpenValue
@@ -348,13 +348,13 @@ If IsEmpty(ev.sVal.Value) Then Exit Sub
 mTimestamp = ev.sVal.Timestamp
 
 ev.valueName = UCase$(ev.valueName)
-If ev.valueName = ConstMomentumBarsInputPriceUcase Then
+If ev.valueName = ConstTickVolumeBarsInputPriceUcase Then
     mBarsBuilder.notifyValue ev.sVal
-ElseIf ev.valueName = ConstMomentumBarsInputTotalVolumeUcase Then
+ElseIf ev.valueName = ConstTickVolumeBarsInputTotalVolumeUcase Then
     mBarsBuilder.NotifyVolume ev.sVal
-ElseIf ev.valueName = ConstMomentumBarsInputTickVolumeUcase Then
+ElseIf ev.valueName = ConstTickVolumeBarsInputTickVolumeUcase Then
     mBarsBuilder.IncrementTickVolume ev.sVal.Value
-ElseIf ev.valueName = ConstMomentumBarsInputOpenInterestUcase Then
+ElseIf ev.valueName = ConstTickVolumeBarsInputOpenInterestUcase Then
     mBarsBuilder.NotifyOpenInterest ev.sVal
 Else
     AssertArgument False, "Invalid input Value name: " & ev.valueName
@@ -387,18 +387,18 @@ On Error GoTo Err
 
 For Each param In params
     Select Case UCase$(param.name)
-    Case UCase$(ConstMomentumBarsParamTicksPerBar)
-        mMovementPerBar = param.Value
+    Case UCase$(ConstTickVolumeBarsParamTicksPerBar)
+        mTradesPerBar = param.Value
     End Select
 Next
 
 Set mBarsFutureBuilder = New FutureBuilder
 If mSessionFuture.IsAvailable Then
-    setupBars CreateBarsBuilder(GetTimePeriod(mMovementPerBar, TimePeriodTickMovement), _
+    setupBars CreateBarsBuilder(GetTimePeriod(mTradesPerBar, TimePeriodTickVolume), _
                                         mSessionFuture.Value, _
                                         mPriceTickSize)
 Else
-    mFutureWaiter.Add CreateBarsBuilderFuture(GetTimePeriod(mMovementPerBar, TimePeriodTickMovement), _
+    mFutureWaiter.Add CreateBarsBuilderFuture(GetTimePeriod(mTradesPerBar, TimePeriodTickVolume), _
                                         mSessionFuture, _
                                         mPriceTickSize)
 End If
@@ -413,7 +413,7 @@ Private Function customStudyDefinition() As StudyDefinition
 Const ProcName As String = "customStudyDefinition"
 On Error GoTo Err
 
-Set customStudyDefinition = GConstMomentumBars.StudyDefinition
+Set customStudyDefinition = GConstTickVolumeBars.StudyDefinition
 
 Exit Function
 
@@ -464,7 +464,7 @@ evOut.sVal.Timestamp = mTimestamp
 
 If mBar.BarChanged Then
     Set evOut.sVal.Value = mBar
-    evOut.valueName = ConstMomentumBarsValueBar
+    evOut.valueName = ConstTickVolumeBarsValueBar
     mStudyFoundation.notifyValue evOut
 End If
 
@@ -756,7 +756,7 @@ Private Function IStudy_NumberOfCachedValues( _
 Const ProcName As String = "IStudy_NumberOfCachedValues"
 On Error GoTo Err
 
-If valueName = "" Or valueName = ConstMomentumBarsValueBar Then
+If valueName = "" Or valueName = ConstTickVolumeBarsValueBar Then
     If mBars Is Nothing Then
         IStudy_NumberOfCachedValues = 0
     Else
@@ -803,14 +803,14 @@ Private Sub IStudy_SetInputTicksize( _
 Const ProcName As String = "IStudy_SetInputTicksize"
 On Error GoTo Err
 
-If UCase$(inputName) = UCase$(ConstMomentumBarsInputPrice) Then
+If UCase$(inputName) = UCase$(ConstTickVolumeBarsInputPrice) Then
     mPriceTickSize = tickSize
     If Not mBarsBuilder Is Nothing Then
         ' this can happen if this study is set up before the tick size is
         ' known
         mBarsBuilder.tickSize = mPriceTickSize
     End If
-ElseIf UCase$(inputName) = UCase$(ConstMomentumBarsInputTotalVolume) Then
+ElseIf UCase$(inputName) = UCase$(ConstTickVolumeBarsInputTotalVolume) Then
     mVolumeTickSize = tickSize
 End If
 
