@@ -78,6 +78,7 @@ Case TimePeriodMonth
 Case TimePeriodYear
 Case TimePeriodTickMovement
 Case TimePeriodTickVolume
+Case TimePeriodVolume
 Case Else
     ITimePeriodValidator_IsSupportedTimePeriodUnit = False
 End Select
