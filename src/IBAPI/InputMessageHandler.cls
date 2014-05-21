@@ -1258,7 +1258,7 @@ With lOrder
         .FaProfile = mReader.GetString("FA Profile")
     End If
     
-    If pVersion >= 8 Then .GoodAfterTime = mReader.GetString("Good till date")
+    If pVersion >= 8 Then .GoodTillDate = mReader.GetString("Good till date")
     
     If pVersion >= 9 Then
         .Rule80A = mReader.GetString("Rule80A")
@@ -1296,16 +1296,25 @@ With lOrder
         If pVersion = 11 Then
             .DeltaNeutralOrderType = IIf(mReader.GetLong("DeltaNeutralOrderType") = 0, TwsOrderTypes.TwsOrderTypeNone, TwsOrderTypes.TwsOrderTypeMarket)
         Else ' pVersion 12 and up
-            .DeltaNeutralOrderType = gTwsOrderTypeFromString(mReader.GetString("DeltaNeutralOrderType"))
-            .DeltaNeutralAuxPrice = mReader.GetDouble("DeltaNeutralAuxPrice")
-            If pVersion >= 27 And .DeltaNeutralOrderType <> TwsOrderTypes.TwsOrderTypeNone Then
+            Dim lDeltaNeutralOrderType As String
+            lDeltaNeutralOrderType = mReader.GetString("DeltaNeutralOrderType")
+            .DeltaNeutralOrderType = gTwsOrderTypeFromString(lDeltaNeutralOrderType)
+            .DeltaNeutralAuxPrice = mReader.GetDoubleMax("DeltaNeutralAuxPrice")
+            
+            ' NB: the commented-out line below is incorrect because TWS actually sends the
+            ' following fields even when it sends 'NONE' for DeltaNeutralOrderType
+            'If pVersion >= 27 And .DeltaNeutralOrderType <> TwsOrderTypes.TwsOrderTypeNone Then
+            If pVersion >= 27 And lDeltaNeutralOrderType <> "" Then
                 .DeltaNeutralConId = mReader.GetLong("DeltaNeutralConId")
                 .DeltaNeutralSettlingFirm = mReader.GetString("DeltaNeutralSettlingFirm")
                 .DeltaNeutralClearingAccount = mReader.GetString("DeltaNeutralClearingAccount")
                 .DeltaNeutralClearingIntent = mReader.GetString("DeltaNeutralClearingIntent")
             End If
 
-            If pVersion >= 31 And .DeltaNeutralOrderType <> TwsOrderTypes.TwsOrderTypeNone Then
+            ' NB: the commented-out line below is incorrect because TWS actually sends the
+            ' following fields even when it sends 'NONE' for DeltaNeutralOrderType
+            'If pVersion >= 31 And .DeltaNeutralOrderType <> TwsOrderTypes.TwsOrderTypeNone Then
+            If pVersion >= 31 And lDeltaNeutralOrderType <> "" Then
                 .DeltaNeutralOpenClose = mReader.GetString("DeltaNeutralOpenClose")
                 .DeltaNeutralShortSale = mReader.GetBoolean("DeltaNeutralShortSale")
                 .DeltaNeutralShortSaleSlot = mReader.GetLong("DeltaNeutralShortSaleSlot")
