@@ -75,7 +75,7 @@ mDestBars.Add mSourceBars.Bar(mIndex), _
                 mSourceBars.Bar(mIndex).Timestamp
 mBarsBuilder.FireBarAdded mSourceBars.Bar(mIndex)
 
-If mEt.ElapsedTimeMicroseconds > 50000 Then
+If mEt.ElapsedTimeMicroseconds > 250000 Then
     mTaskContext.Progress 100 * mIndex / mNumberToAppend, Empty
     mEt.StartTiming
 End If

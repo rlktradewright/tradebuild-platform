@@ -483,6 +483,18 @@ Case DELTA_NEUTRAL_VALIDATION
     gInputMessageIdToString = "DELTA_NEUTRAL_VALIDATION"
 Case TICK_SNAPSHOT_END
     gInputMessageIdToString = "TICK_SNAPSHOT_END"
+Case MARKET_DATA_TYPE
+    gInputMessageIdToString = "MARKET_DATA_TYPE"
+Case COMMISSION_REPORT
+    gInputMessageIdToString = "COMMISSION_REPORT"
+Case POSITION
+    gInputMessageIdToString = "POSITION"
+Case POSITION_END
+    gInputMessageIdToString = "POSITION_END"
+Case ACCOUNT_SUMMARY
+    gInputMessageIdToString = "ACCOUNT_SUMMARY"
+Case ACCOUNT_SUMMARY_END
+    gInputMessageIdToString = "ACCOUNT_SUMMARY_END"
 Case Else
     gInputMessageIdToString = "?????"
 End Select
@@ -668,6 +680,18 @@ Case DELTA_NEUTRAL_VALIDATION
     gSocketInMsgTypeToString = "Delta neutral validn"
 Case TICK_SNAPSHOT_END
     gSocketInMsgTypeToString = "Tick snapshot end   "
+Case MARKET_DATA_TYPE
+    gSocketInMsgTypeToString = "Market data type"
+Case COMMISSION_REPORT
+    gSocketInMsgTypeToString = "Commission report"
+Case POSITION
+    gSocketInMsgTypeToString = "Position"
+Case POSITION_END
+    gSocketInMsgTypeToString = "Position end"
+Case ACCOUNT_SUMMARY
+    gSocketInMsgTypeToString = "Account summary"
+Case ACCOUNT_SUMMARY_END
+    gSocketInMsgTypeToString = "Account summary end"
 Case Else
     gSocketInMsgTypeToString = "Msg type " & Format(Value, "00                  ")
 End Select

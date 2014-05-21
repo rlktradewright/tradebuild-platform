@@ -50,6 +50,9 @@ Private mSessionName                                As String
 
 Private mRecoveryControllers                        As New EnumerableCollection
 
+Private mPositionManagersLive                       As New PositionManagers
+Private mPositionManagersSimulated                  As New PositionManagers
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -77,6 +80,14 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get PositionManagersLive() As PositionManagers
+Set PositionManagersLive = mPositionManagersLive
+End Property
+
+Public Property Get PositionManagersSimulated() As PositionManagers
+Set PositionManagersSimulated = mPositionManagersSimulated
+End Property
 
 Friend Property Get SessionName() As String
 SessionName = mSessionName
@@ -169,7 +180,6 @@ End Function
 
 Public Function RecoverOrdersFromPreviousSession( _
                 ByVal pScopeName As String, _
-                ByVal pPositionManagers As PositionManagers, _
                 ByVal pDataStore As IOrderPersistenceDataStore, _
                 ByVal pRecoveryAgent As IOrderRecoveryAgent, _
                 ByVal pMarketDataManager As IMarketDataManager, _
@@ -178,7 +188,7 @@ Public Function RecoverOrdersFromPreviousSession( _
 Const ProcName As String = "RecoverOrdersFromPreviousSession"
 On Error GoTo Err
 
-Set RecoverOrdersFromPreviousSession = getBracketOrderRecoveryController(pScopeName).RecoverOrders(Me, pPositionManagers, pScopeName, pDataStore, pRecoveryAgent, pMarketDataManager, pOrderSubmitterFactory, pCookie)
+Set RecoverOrdersFromPreviousSession = getBracketOrderRecoveryController(pScopeName).RecoverOrders(Me, mPositionManagersLive, pScopeName, pDataStore, pRecoveryAgent, pMarketDataManager, pOrderSubmitterFactory, pCookie)
 
 Exit Function
 
@@ -215,11 +225,30 @@ Private Function createPosnManager( _
 Const ProcName As String = "createPosnManager"
 On Error GoTo Err
 
-Dim lClr As BracketOrderRecoveryCtlr
-If pScopeName <> "" Then Set lClr = getBracketOrderRecoveryController(pScopeName)
+Dim lPm As PositionManager
 
-Dim lPm As New PositionManager
-lPm.Initialise Me, pName, pContractFuture, pOrderSubmitter, pDataSource, lClr, pGroupName, pIsSimulated, pMoneyManager
+If pIsSimulated Then
+    If mPositionManagersSimulated.Contains(pName) Then Set lPm = mPositionManagersSimulated.Item(pName)
+Else
+    If mPositionManagersLive.Contains(pName) Then Set lPm = mPositionManagersLive.Item(pName)
+End If
+
+If Not lPm Is Nothing Then
+    AssertArgument lPm.GroupName = pGroupName, "Position manager of this name already exists with a different groupname"
+    AssertArgument lPm.IsSimulated = pIsSimulated, "Position manager of this name already exists with a different IsSimulated property"
+Else
+    Dim lClr As BracketOrderRecoveryCtlr
+    If pScopeName <> "" Then Set lClr = getBracketOrderRecoveryController(pScopeName)
+    
+    Set lPm = New PositionManager
+    lPm.Initialise Me, pName, pContractFuture, pOrderSubmitter, pDataSource, lClr, pGroupName, pIsSimulated, pMoneyManager
+    
+    If pIsSimulated Then
+        mPositionManagersSimulated.Add lPm
+    Else
+        mPositionManagersLive.Add lPm
+    End If
+End If
 
 Set createPosnManager = lPm
 

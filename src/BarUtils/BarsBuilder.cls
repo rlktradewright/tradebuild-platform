@@ -440,9 +440,10 @@ ElseIf mBarTimePeriod.Units = TimePeriodTickMovement Then
     End If
     mCurrentBar.NotifyValue Value.Value
 ElseIf mBarTimePeriod.Units = TimePeriodTickVolume Then
-    mCurrentBar.NotifyValue Value.Value
     If mCurrentBar.TickVolume >= mBarTimePeriod.Length Then
         createNewBar Value.Timestamp, Value.Value, 0, 0
+    Else
+        mCurrentBar.NotifyValue Value.Value
     End If
 ElseIf Value.Timestamp >= mBarEndTime Then
     createNewBar Value.Timestamp, Value.Value, 0, 0

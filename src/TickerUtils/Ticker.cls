@@ -741,7 +741,6 @@ If mPositionManager Is Nothing Then
                                                     False, _
                                                     getTickers.MoneyManager)
     End If
-    getTickers.PositionManagersLive.Add mPositionManager
 End If
 
 Set PositionManager = mPositionManager
@@ -766,7 +765,6 @@ If mPositionManagerSimulated Is Nothing Then
                                                         getTickers.Name & "(simulated)", _
                                                         True, _
                                                         getTickers.MoneyManager)
-    getTickers.PositionManagersSimulated.Add mPositionManagerSimulated
 End If
 
 Set PositionManagerSimulated = mPositionManagerSimulated

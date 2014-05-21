@@ -286,6 +286,7 @@ ElseIf mState = RecoveryStateExtractingInfo Then
         mState = RecoveryStateCreatingOrderContexts
         If mInMemoryStore.StoreIsEmpty Then
             mProcessingPersistedData = False
+            mDataStore.Clear mScopeName
             mTaskContext.Finish mPositionManagers, False
             gLog "Order recovery completed - nothing to recover", ProcName, ModuleName
             Exit Sub

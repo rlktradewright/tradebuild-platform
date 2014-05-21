@@ -222,8 +222,6 @@ Public Function CreateTradeBuildAPI( _
                 Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
                 Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
                 Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
-                Optional ByVal pPositionManagersLive As PositionManagers, _
-                Optional ByVal pPositionManagersSimulated As PositionManagers, _
                 Optional ByVal pMarketDataSourceOptions As MarketDataSourceOptions = MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone, _
                 Optional ByVal pNumberOfMarketDepthRows As Long = 20) As TradeBuildAPI
 Const ProcName As String = "CreateTradeBuildAPI"
@@ -235,8 +233,6 @@ CreateTradeBuildAPI.Initialise pScopeName, _
                                 pDefaultStateChangeListener, _
                                 pOrderSubmissionListenerLive, _
                                 pOrderSubmissionListenerSimulated, _
-                                pPositionManagersLive, _
-                                pPositionManagersSimulated, _
                                 pMarketDataSourceOptions, _
                                 pNumberOfMarketDepthRows
 
@@ -256,9 +252,7 @@ Public Function CreateTradeBuildAPIFromConfig( _
                                 SPRoleRealtimeData, _
                 Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
                 Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
-                Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
-                Optional ByVal pPositionManagersLive As PositionManagers, _
-                Optional ByVal pPositionManagersSimulated As PositionManagers) As TradeBuildAPI
+                Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener) As TradeBuildAPI
 Const ProcName As String = "CreateTradeBuildAPIFromConfig"
 On Error GoTo Err
 
@@ -271,9 +265,7 @@ CreateTradeBuildAPIFromConfig.InitialiseFromConfig _
                 pPermittedServiceProviderRoles, _
                 pDefaultStateChangeListener, _
                 pOrderSubmissionListenerLive, _
-                pOrderSubmissionListenerSimulated, _
-                pPositionManagersLive, _
-                pPositionManagersSimulated
+                pOrderSubmissionListenerSimulated
 
 Exit Function
 
@@ -291,8 +283,6 @@ Public Function CreateTradeBuildAPIWithDefaultProviders( _
                 Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
                 Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
                 Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
-                Optional ByVal pPositionManagersLive As PositionManagers, _
-                Optional ByVal pPositionManagersSimulated As PositionManagers, _
                 Optional ByVal pTwsServer As String, _
                 Optional ByVal pTwsPort As Long = 7496, _
                 Optional ByVal pTwsClientId As Long = -1, _
@@ -310,8 +300,6 @@ CreateTradeBuildAPIWithDefaultProviders.InitialiseWithDefaultProviders _
                 pDefaultStateChangeListener, _
                 pOrderSubmissionListenerLive, _
                 pOrderSubmissionListenerSimulated, _
-                pPositionManagersLive, _
-                pPositionManagersSimulated, _
                 pTwsServer, _
                 pTwsPort, _
                 pTwsClientId, _
@@ -534,11 +522,11 @@ End Sub
 Private Sub setProperty( _
                 ByVal props As ConfigurationSection, _
                 ByVal Name As String, _
-                ByVal Value As String)
+                ByVal value As String)
 Const ProcName As String = "setProperty"
 On Error GoTo Err
 
-props.SetSetting "." & ConfigSectonProperty & "(" & Name & ")", Value
+props.SetSetting "." & ConfigSectonProperty & "(" & Name & ")", value
 
 Exit Sub
 

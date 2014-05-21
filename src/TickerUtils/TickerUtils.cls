@@ -71,8 +71,6 @@ Public Function CreateTickers( _
                 Optional ByVal pOrderManager As OrderManager, _
                 Optional ByVal pOrderSubmitterLive As IOrderSubmitter, _
                 Optional ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
-                Optional ByVal pPositionManagersLive As PositionManagers, _
-                Optional ByVal pPositionManagersSimulated As PositionManagers, _
                 Optional ByVal pName As String, _
                 Optional ByVal pScopeName As String, _
                 Optional ByVal pMoneyManager As IMoneyManager) As Tickers
@@ -84,7 +82,7 @@ AssertArgument Not pStudyLibraryManager Is Nothing, "pStudyLibraryManager is Not
 
 If pName = "" Then pName = GenerateGUIDString
 Set CreateTickers = New Tickers
-CreateTickers.Initialise pMarketDataManager, pStudyLibraryManager, pHistDataStore, pOrderManager, pOrderSubmitterLive, pOrderSubmitterSimulated, pPositionManagersLive, pPositionManagersSimulated, pName, pScopeName, pMoneyManager
+CreateTickers.Initialise pMarketDataManager, pStudyLibraryManager, pHistDataStore, pOrderManager, pOrderSubmitterLive, pOrderSubmitterSimulated, pName, pScopeName, pMoneyManager
 
 Exit Function
 

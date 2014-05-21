@@ -564,7 +564,7 @@ Else
 End If
 
 'If lContract.Multiplier <> 1# Then lContract.Multiplier = lContract.Multiplier / lContractDetails.PriceMagnifier
-'lContractDetails.MinTick = lContractDetails.MinTick * lContractDetails.PriceMagnifier
+lContractDetails.MinTick = lContractDetails.MinTick * lContractDetails.PriceMagnifier
     
 If pVersion >= 4 Then lContractDetails.UnderConId = mReader.GetLong("UnderConId")
 
@@ -1294,18 +1294,18 @@ With lOrder
         .Volatility = mReader.GetDouble("Volatility")
         .VolatilityType = mReader.GetLong("VolatilityType")
         If pVersion = 11 Then
-            .DeltaNeutralOrderType = IIf(mReader.GetLong("DeltaNeutralOrderType") = 0, "NONE", "MKT")
+            .DeltaNeutralOrderType = IIf(mReader.GetLong("DeltaNeutralOrderType") = 0, TwsOrderTypes.TwsOrderTypeNone, TwsOrderTypes.TwsOrderTypeMarket)
         Else ' pVersion 12 and up
             .DeltaNeutralOrderType = gTwsOrderTypeFromString(mReader.GetString("DeltaNeutralOrderType"))
             .DeltaNeutralAuxPrice = mReader.GetDouble("DeltaNeutralAuxPrice")
-            If pVersion >= 27 And .DeltaNeutralOrderType <> "" Then
+            If pVersion >= 27 And .DeltaNeutralOrderType <> TwsOrderTypes.TwsOrderTypeNone Then
                 .DeltaNeutralConId = mReader.GetLong("DeltaNeutralConId")
                 .DeltaNeutralSettlingFirm = mReader.GetString("DeltaNeutralSettlingFirm")
                 .DeltaNeutralClearingAccount = mReader.GetString("DeltaNeutralClearingAccount")
                 .DeltaNeutralClearingIntent = mReader.GetString("DeltaNeutralClearingIntent")
             End If
 
-            If pVersion >= 31 And .DeltaNeutralOrderType <> "" Then
+            If pVersion >= 31 And .DeltaNeutralOrderType <> TwsOrderTypes.TwsOrderTypeNone Then
                 .DeltaNeutralOpenClose = mReader.GetString("DeltaNeutralOpenClose")
                 .DeltaNeutralShortSale = mReader.GetBoolean("DeltaNeutralShortSale")
                 .DeltaNeutralShortSaleSlot = mReader.GetLong("DeltaNeutralShortSaleSlot")
@@ -1392,8 +1392,8 @@ With lOrder
     End If
     
     If pVersion >= 24 Then
-        .HedgeType = mReader.GetString("HedgeType")
-        If .HedgeType <> "" Then .HedgeParam = mReader.GetString("HedgeParam")
+        .HedgeType = gTwsHedgeTypeFromString(mReader.GetString("HedgeType"))
+        If .HedgeType <> TwsHedgeTypes.TwsHedgeTypeNone Then .HedgeParam = mReader.GetString("HedgeParam")
     End If
     
     If pVersion >= 25 Then .OptOutSmartRouting = mReader.GetBoolean("OptOutSmartRouting")

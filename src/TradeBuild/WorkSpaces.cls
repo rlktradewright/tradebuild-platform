@@ -63,9 +63,6 @@ Private mOrderManager                   As OrderManager
 Private mOrderSubmitterLive             As IOrderSubmitter
 Private mOrderSubmitterSimulated        As IOrderSubmitter
 
-Private mPositionManagersLive           As PositionManagers
-Private mPositionManagersSimulated      As PositionManagers
-
 Private mMoneyManager                   As IMoneyManager
 
 Private mConfig                         As ConfigurationSection
@@ -112,8 +109,6 @@ Add.Initialise Name, _
                 mOrderManager, _
                 mOrderSubmitterLive, _
                 mOrderSubmitterSimulated, _
-                mPositionManagersLive, _
-                mPositionManagersSimulated, _
                 mMoneyManager
 mWorkspaces.Add Add, Name
 
@@ -159,8 +154,6 @@ Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pOrderSubmitterLive As IOrderSubmitter, _
                 ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
-                ByVal pPositionManagersLive As PositionManagers, _
-                ByVal pPositionManagersSimulated As PositionManagers, _
                 ByVal pMoneyManager As IMoneyManager)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -169,8 +162,6 @@ Set mTradeBuildAPIRef = CreateWeakReference(pTradeBuildAPI)
 Set mOrderManager = pOrderManager
 Set mOrderSubmitterLive = pOrderSubmitterLive
 Set mOrderSubmitterSimulated = pOrderSubmitterSimulated
-Set mPositionManagersLive = pPositionManagersLive
-Set mPositionManagersSimulated = pPositionManagersSimulated
 Set mMoneyManager = pMoneyManager
 mScopeName = pTradeBuildAPI.ScopeName
 
@@ -193,7 +184,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Friend Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 

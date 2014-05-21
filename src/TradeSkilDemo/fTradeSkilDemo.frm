@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#217.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#219.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.7"
@@ -116,11 +116,11 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1B8C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(0)=   "LiveExecutionsSummary"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "LiveExecutionsSummary"
+      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
       Tab(1).Control(2).Enabled=   0   'False
       Tab(1).ControlCount=   3
       TabCaption(2)   =   "&3. Log"
@@ -366,53 +366,53 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1BE0
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "LiveChartStylesCombo"
-      Tab(1).Control(1)=   "Frame1"
-      Tab(1).Control(2)=   "ChartButton"
-      Tab(1).Control(3)=   "SessionOnlyCheck"
+      Tab(1).Control(0)=   "Label18"
+      Tab(1).Control(1)=   "Label22"
+      Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(3)=   "LiveChartTimeframeSelector"
       Tab(1).Control(4)=   "NumHistoryBarsText"
-      Tab(1).Control(5)=   "LiveChartTimeframeSelector"
-      Tab(1).Control(6)=   "Label1"
-      Tab(1).Control(7)=   "Label22"
-      Tab(1).Control(8)=   "Label18"
+      Tab(1).Control(5)=   "SessionOnlyCheck"
+      Tab(1).Control(6)=   "ChartButton"
+      Tab(1).Control(7)=   "Frame1"
+      Tab(1).Control(8)=   "LiveChartStylesCombo"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BFC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label5"
-      Tab(2).Control(1)=   "Label4"
-      Tab(2).Control(2)=   "Label2"
-      Tab(2).Control(3)=   "Label3"
-      Tab(2).Control(4)=   "Label8"
-      Tab(2).Control(5)=   "HistChartStylesCombo"
+      Tab(2).Control(0)=   "Frame2"
+      Tab(2).Control(1)=   "HistContractSearch"
+      Tab(2).Control(2)=   "HistSessionOnlyCheck"
+      Tab(2).Control(3)=   "NumHistBarsText"
+      Tab(2).Control(4)=   "HistTimeframeSelector"
+      Tab(2).Control(5)=   "ToDatePicker"
       Tab(2).Control(6)=   "FromDatePicker"
-      Tab(2).Control(7)=   "ToDatePicker"
-      Tab(2).Control(8)=   "HistTimeframeSelector"
-      Tab(2).Control(9)=   "NumHistBarsText"
-      Tab(2).Control(10)=   "HistSessionOnlyCheck"
-      Tab(2).Control(11)=   "HistContractSearch"
-      Tab(2).Control(12)=   "Frame2"
+      Tab(2).Control(7)=   "HistChartStylesCombo"
+      Tab(2).Control(8)=   "Label8"
+      Tab(2).Control(9)=   "Label3"
+      Tab(2).Control(10)=   "Label2"
+      Tab(2).Control(11)=   "Label4"
+      Tab(2).Control(12)=   "Label5"
       Tab(2).ControlCount=   13
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":1C18
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "TickfileOrganiser1"
-      Tab(3).Control(1)=   "PlayTickFileButton"
-      Tab(3).Control(2)=   "PauseReplayButton"
-      Tab(3).Control(3)=   "StopReplayButton"
+      Tab(3).Control(0)=   "Label20"
+      Tab(3).Control(1)=   "ReplayContractLabel"
+      Tab(3).Control(2)=   "ReplayProgressLabel"
+      Tab(3).Control(3)=   "ReplayProgressBar"
       Tab(3).Control(4)=   "ReplaySpeedCombo"
-      Tab(3).Control(5)=   "ReplayProgressBar"
-      Tab(3).Control(6)=   "ReplayProgressLabel"
-      Tab(3).Control(7)=   "ReplayContractLabel"
-      Tab(3).Control(8)=   "Label20"
+      Tab(3).Control(5)=   "StopReplayButton"
+      Tab(3).Control(6)=   "PauseReplayButton"
+      Tab(3).Control(7)=   "PlayTickFileButton"
+      Tab(3).Control(8)=   "TickfileOrganiser1"
       Tab(3).ControlCount=   9
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1C34
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label6"
+      Tab(4).Control(0)=   "ConfigEditorButton"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "ConfigEditorButton"
+      Tab(4).Control(2)=   "Label6"
       Tab(4).ControlCount=   3
       Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
          Height          =   2520
@@ -1688,12 +1688,12 @@ If mReplayController Is Nothing Then
                                                 CInt(ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)), _
                                                 250)
     SimulatedOrdersSummary.Initialise lTickfileDataManager
-    SimulatedOrdersSummary.MonitorPositions mTradeBuildAPI.PositionManagersSimulated
+    SimulatedOrdersSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersSimulated
     
     Set mReplayController = lTickfileDataManager.ReplayController
     
     Dim lTickers As Tickers
-    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, , mTradeBuildAPI.OrderSubmitterSimulated, , mTradeBuildAPI.PositionManagersSimulated)
+    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, mTradeBuildAPI.OrderManager, , mTradeBuildAPI.OrderSubmitterSimulated)
     
     Dim i As Long
     For i = 1 To TickfileOrganiser1.TickfileCount
@@ -2959,12 +2959,15 @@ Else
     SimulatedOrdersSummary.Height = OrdersSummaryTabStrip.Top - SimulatedOrdersSummary.Top
     
     LiveOrdersSummary.Initialise mTradeBuildAPI.MarketDataManager
-    LiveOrdersSummary.MonitorPositions mTradeBuildAPI.PositionManagersLive
-    LiveOrdersSummary.Height = OrdersSummaryTabStrip.Top - SimulatedOrdersSummary.Top
+    LiveOrdersSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersLive
+    LiveOrdersSummary.Height = SimulatedOrdersSummary.Height
     
     OrdersSummaryTabStrip.Visible = True
     OrdersSummaryTabStrip.Tabs.Item(OrdersTabIndexLive).Selected = True
 End If
+
+SimulatedOrdersSummary.Initialise mTradeBuildAPI.MarketDataManager
+SimulatedOrdersSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersSimulated
 
 Exit Sub
 

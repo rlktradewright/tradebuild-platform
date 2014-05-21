@@ -54,8 +54,6 @@ Private mDefaultStateChangeListener                 As StateChangeListener
 Private mOrderManager                               As New OrderManager
 Private mOrderSubmissionListenerLive                As IOrderSubmissionListener
 Private mOrderSubmissionListenerSimulated           As IOrderSubmissionListener
-Private mPositionManagersLive                       As PositionManagers
-Private mPositionManagersSimulated                  As PositionManagers
 Private mOrderSubmitterLive                         As IOrderSubmitter
 Private mOrderSubmitterSimulated                    As IOrderSubmitter
 
@@ -276,12 +274,8 @@ Public Property Get NumberOfMarketDepthRows() As Long
 NumberOfMarketDepthRows = mNumberOfMarketDepthRows
 End Property
 
-Public Property Get PositionManagersLive() As PositionManagers
-Set PositionManagersLive = mPositionManagersLive
-End Property
-
-Public Property Get PositionManagersSimulated() As PositionManagers
-Set PositionManagersSimulated = mPositionManagersSimulated
+Public Property Get OrderManager() As OrderManager
+Set OrderManager = mOrderManager
 End Property
 
 Public Property Get ServiceProviders() As ServiceProviders
@@ -397,8 +391,6 @@ Friend Sub Initialise( _
                 ByVal pDefaultStateChangeListener As StateChangeListener, _
                 ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
                 ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
-                ByVal pPositionManagersLive As PositionManagers, _
-                ByVal pPositionManagersSimulated As PositionManagers, _
                 ByVal pMarketDataSourceOptions As MarketDataSourceOptions, _
                 ByVal pNumberOfMarketDepthRows As Long)
 Const ProcName As String = "Initialise"
@@ -417,11 +409,6 @@ Set mDefaultStateChangeListener = pDefaultStateChangeListener
 Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
 Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
 
-Set mPositionManagersLive = pPositionManagersLive
-If mPositionManagersLive Is Nothing Then Set mPositionManagersLive = New PositionManagers
-Set mPositionManagersSimulated = pPositionManagersSimulated
-If mPositionManagersSimulated Is Nothing Then Set mPositionManagersSimulated = New PositionManagers
-
 Exit Sub
 
 Err:
@@ -434,9 +421,7 @@ Friend Sub InitialiseFromConfig( _
                 ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
                 ByVal pDefaultStateChangeListener As StateChangeListener, _
                 ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
-                ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
-                ByVal pPositionManagersLive As PositionManagers, _
-                ByVal pPositionManagersSimulated As PositionManagers)
+                ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener)
 Const ProcName As String = "InitialiseFromConfig"
 On Error GoTo Err
 
@@ -454,11 +439,6 @@ mServiceProviders.PermittedServiceProviderRoles = pPermittedServiceProviderRoles
 Set mDefaultStateChangeListener = pDefaultStateChangeListener
 Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
 Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
-
-Set mPositionManagersLive = pPositionManagersLive
-If mPositionManagersLive Is Nothing Then Set mPositionManagersLive = New PositionManagers
-Set mPositionManagersSimulated = pPositionManagersSimulated
-If mPositionManagersSimulated Is Nothing Then Set mPositionManagersSimulated = New PositionManagers
 
 Dim lInitialisedOk As Boolean
 lInitialisedOk = True
@@ -496,8 +476,6 @@ Friend Sub InitialiseWithDefaultProviders( _
                 ByVal pDefaultStateChangeListener As StateChangeListener, _
                 ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
                 ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
-                ByVal pPositionManagersLive As PositionManagers, _
-                ByVal pPositionManagersSimulated As PositionManagers, _
                 ByVal pTwsServer As String, _
                 ByVal pTwsPort As Long, _
                 ByVal pClientId As Long, _
@@ -517,11 +495,6 @@ mScopeName = pScopeName
 Set mDefaultStateChangeListener = pDefaultStateChangeListener
 Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
 Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
-
-Set mPositionManagersLive = pPositionManagersLive
-If mPositionManagersLive Is Nothing Then Set mPositionManagersLive = New PositionManagers
-Set mPositionManagersSimulated = pPositionManagersSimulated
-If mPositionManagersSimulated Is Nothing Then Set mPositionManagersSimulated = New PositionManagers
 
 mServiceProviders.ConfigureDefaultServiceProviders pPermittedServiceProviderRoles, _
                                                     pTwsServer, _
@@ -604,7 +577,6 @@ Assert Not ServiceProviders.MarketDataManager Is Nothing, "No realtime data serv
 Assert Not ServiceProviders.OrderPersistenceDataStore Is Nothing, "No order persistence service provider is configured"
 Assert mScopeName <> "", "No scope name has been supplied"
 Set RecoverOrders = mOrderManager.RecoverOrdersFromPreviousSession(mScopeName, _
-                                                    mPositionManagersLive, _
                                                     ServiceProviders.OrderPersistenceDataStore, _
                                                     ServiceProviders.OrderRecoveryAgent, _
                                                     ServiceProviders.MarketDataManager, _
@@ -660,8 +632,6 @@ If Not ServiceProviders.MarketDataManager Is Nothing Then
                         mOrderManager, _
                         mOrderSubmitterLive, _
                         mOrderSubmitterSimulated, _
-                        mPositionManagersLive, _
-                        mPositionManagersSimulated, _
                         Nothing
                         
     If Not mTradeBuildConfig Is Nothing Then mWorkspaces.LoadFromConfig mTradeBuildConfig.AddPrivateConfigurationSection(ConfigSectionWorkspaces)

@@ -62,9 +62,6 @@ Private mName                               As String
 Private mScopeName                          As String
 Private mMoneyManager                       As IMoneyManager
 
-Private mPositionManagersLive               As PositionManagers
-Private mPositionManagersSimulated          As PositionManagers
-
 Private mConfig                             As ConfigurationSection
 
 '@================================================================================
@@ -217,14 +214,6 @@ Friend Property Get OrderSubmitterSimulated() As IOrderSubmitter
 Set OrderSubmitterSimulated = mOrderSubmitterSimulated
 End Property
 
-Public Property Get PositionManagersLive() As PositionManagers
-Set PositionManagersLive = mPositionManagersLive
-End Property
-
-Public Property Get PositionManagersSimulated() As PositionManagers
-Set PositionManagersSimulated = mPositionManagersSimulated
-End Property
-
 Public Property Get ScopeName() As String
 ScopeName = mScopeName
 End Property
@@ -310,8 +299,6 @@ Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pOrderSubmitterLive As IOrderSubmitter, _
                 ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
-                ByVal pPositionManagersLive As PositionManagers, _
-                ByVal pPositionManagersSimulated As PositionManagers, _
                 ByVal pName As String, _
                 ByVal pScopeName As String, _
                 ByVal pMoneyManager As IMoneyManager)
@@ -325,16 +312,6 @@ Set mHistDataStore = pHistDataStore
 Set mOrderManager = pOrderManager
 Set mOrderSubmitterLive = pOrderSubmitterLive
 Set mOrderSubmitterSimulated = pOrderSubmitterSimulated
-If pPositionManagersLive Is Nothing Then
-    Set mPositionManagersLive = New PositionManagers
-Else
-    Set mPositionManagersLive = pPositionManagersLive
-End If
-If pPositionManagersSimulated Is Nothing Then
-    Set mPositionManagersSimulated = New PositionManagers
-Else
-    Set mPositionManagersSimulated = pPositionManagersSimulated
-End If
 
 mName = pName
 mScopeName = pScopeName
@@ -362,8 +339,8 @@ For Each lCs In mConfig
     gLogger.Log "Loading ticker: " & lKey, ProcName, ModuleName
     
     Dim lPositionManager As PositionManager
-    If mPositionManagersLive.Contains(lKey) Then
-        Set lPositionManager = mPositionManagersLive.Item(lKey)
+    If mOrderManager.PositionManagersLive.Contains(lKey) Then
+        Set lPositionManager = mOrderManager.PositionManagersLive.Item(lKey)
         If lPositionManager.IsFinished Then Set lPositionManager = Nothing
     End If
     
