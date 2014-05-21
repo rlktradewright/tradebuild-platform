@@ -142,7 +142,6 @@ End Property
 Friend Property Let TimePeriod( _
                 ByVal Value As TimePeriod)
 Const ProcName As String = "TimePeriod"
-
 On Error GoTo Err
 
 If mTimePeriodSet Then Err.Raise ErrorCodes.ErrIllegalStateException, , "TimePeriod has already been set"
@@ -166,7 +165,6 @@ End Property
 Friend Property Let VerticalGridTimePeriod( _
                 ByVal Value As TimePeriod)
 Const ProcName As String = "VerticalGridTimePeriod"
-
 On Error GoTo Err
 
 If mVerticalGridTimePeriodSet Then Err.Raise ErrorCodes.ErrIllegalStateException, , "verticalGridTimePeriod has already been set"
@@ -205,7 +203,6 @@ End Property
 Public Function Add( _
                 ByVal Timestamp As Date) As Period
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
 If mFinished Then
@@ -270,7 +267,6 @@ End Function
 
 Public Function Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
@@ -286,12 +282,10 @@ Friend Function GetXFromTimestamp( _
                 ByVal Timestamp As Date, _
                 Optional ByVal forceNewPeriod As Boolean, _
                 Optional ByVal duplicateNumber As Long) As Double
-Dim lPeriod As Period
-Dim periodEndtime As Date
-
 Const ProcName As String = "GetXFromTimestamp"
-
 On Error GoTo Err
+
+Dim lPeriod As Period
 
 Select Case TimePeriod.Units
 Case TimePeriodNone, _
@@ -318,6 +312,7 @@ Case TimePeriodNone, _
         End If
     End If
     
+    Dim periodEndtime As Date
     periodEndtime = BarEndTime(lPeriod.Timestamp, _
                             TimePeriod, _
                             mSessionStartTime)
@@ -351,9 +346,7 @@ Set mChartRef = Nothing
 End Sub
 
 Friend Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
-
 Const ProcName As String = "IsTimeInSession"
-
 On Error GoTo Err
 
 IsTimeInSession = mSession.IsTimeInSession(Timestamp)
@@ -368,7 +361,6 @@ Public Function Item( _
                 ByVal index As Variant) As Period
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
@@ -391,7 +383,6 @@ Friend Function ItemDup( _
                 ByVal index As Date, _
                 ByVal duplicateNumber As Long) As Period
 Const ProcName As String = "ItemDup"
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
@@ -410,7 +401,6 @@ Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
 Const ProcName As String = "NewEnum"
-
 On Error GoTo Err
 
 Set NewEnum = mPeriods.Enumerator
@@ -424,7 +414,6 @@ End Function
 Friend Sub Remove( _
                 ByVal index As Variant)
 Const ProcName As String = "Remove"
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
@@ -447,7 +436,6 @@ Friend Sub RemoveDup( _
                 ByVal index As Date, _
                 ByVal duplicateNumber As Long)
 Const ProcName As String = "RemoveDup"
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
@@ -467,9 +455,7 @@ End Sub
 '================================================================================
 
 Private Sub calcVerticalGridParams()
-
 Const ProcName As String = "calcVerticalGridParams"
-
 On Error GoTo Err
 
 Select Case mTimePeriod.Units
@@ -565,13 +551,12 @@ Private Function createNewPeriod( _
 Const ProcName As String = "createNewPeriod"
 On Error GoTo Err
 
-Dim duplicateNumber As Long
-Dim lPeriod As Period
-
-Set lPeriod = New Period
+Dim lPeriod As New Period
 mCurrentPeriodNumber = mCurrentPeriodNumber + 1
 lPeriod.PeriodNumber = mCurrentPeriodNumber
 lPeriod.Timestamp = pPeriodStart
+
+Dim duplicateNumber As Long
 mPeriods.Add lPeriod, generateKey(pPeriodStart, duplicateNumber)
 
 Set createNewPeriod = lPeriod
@@ -639,10 +624,9 @@ Private Function generateKey( _
                 ByVal Timestamp As Date, _
                 ByVal duplicateNumber As Long) As String
 Const ProcName As String = "generateKey"
-
 On Error GoTo Err
 
-generateKey = Format(Timestamp, "yyyymmddhhnnss") & "." & duplicateNumber
+generateKey = FormatTimestamp(Timestamp, TimestampDateAndTimeISO8601) & "." & duplicateNumber
 
 Exit Function
 
@@ -657,8 +641,8 @@ Const ProcName As String = "getPeriodLabels"
 On Error GoTo Err
 
 Dim lGridLineTime As Date
-Dim lUnits As TimePeriodUnits
 
+Dim lUnits As TimePeriodUnits
 lUnits = getTimePeriodUnits
 
 Select Case lUnits
