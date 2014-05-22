@@ -64,6 +64,8 @@ Private mMoneyManager                       As IMoneyManager
 
 Private mConfig                             As ConfigurationSection
 
+Private mCollectionChangeListeners          As New Listeners
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -118,7 +120,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IMarketDataManager_DataSources() As EnumerableCollection
-Set IMarketDataManager_DataSources = Tickers
+Set IMarketDataManager_DataSources = mTickers
 End Property
 
 Private Sub IMarketDataManager_Finish()
@@ -177,8 +179,7 @@ Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
 Const ProcName As String = "mTickers_CollectionChanged"
 On Error GoTo Err
 
-Set ev.Source = Me
-RaiseEvent CollectionChanged(ev)
+fireCollectionChange ev.changeType, ev.AffectedItem
 
 Exit Sub
 
@@ -218,13 +219,21 @@ Public Property Get ScopeName() As String
 ScopeName = mScopeName
 End Property
 
-Public Property Get Tickers() As EnumerableCollection
-Set Tickers = mTickers
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub AddCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Const ProcName As String = "AddCollectionChangeListener"
+On Error GoTo Err
+
+mCollectionChangeListeners.Add pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Function CreateTicker( _
                 ByVal pContractFuture As IFuture, _
@@ -363,14 +372,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function RefreshPriceChange( _
-                ByVal Listener As IPriceChangeListener) As TaskController
+                ByVal listener As IPriceChangeListener) As TaskController
 Const ProcName As String = "RefreshPriceChange"
 On Error GoTo Err
 
 Dim pcrt As New PriceChangeRefreshTask
 
 If mTickers.Count = 0 Then Exit Function
-pcrt.Initialise mTickers, Listener
+pcrt.Initialise mTickers, listener
 Set RefreshPriceChange = StartTask(pcrt, PriorityNormal)
 
 Exit Function
@@ -380,14 +389,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
                 
 Public Function RefreshQuotes( _
-                ByVal Listener As IQuoteListener) As TaskController
+                ByVal listener As IQuoteListener) As TaskController
 Const ProcName As String = "RefreshQuotes"
 On Error GoTo Err
 
 Dim qrt As New QuotesRefreshTask
 
 If mTickers.Count = 0 Then Exit Function
-qrt.Initialise mTickers, Listener
+qrt.Initialise mTickers, listener
 Set RefreshQuotes = StartTask(qrt, PriorityNormal)
 
 Exit Function
@@ -412,7 +421,7 @@ Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeLis
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
-mTickers.RemoveCollectionChangeListener pListener
+mCollectionChangeListeners.Remove pListener
 
 Exit Sub
 
@@ -501,6 +510,28 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub fireCollectionChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As Ticker)
+Const ProcName As String = "fireCollectionChange"
+On Error GoTo Err
+
+Dim ev As CollectionChangeEventData
+Set ev.Source = Me
+ev.changeType = changeType
+Set ev.AffectedItem = affectedObject
+
+Dim listener As CollectionChangeListener
+For Each listener In mCollectionChangeListeners
+    listener.Change ev
+Next
+RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
 
