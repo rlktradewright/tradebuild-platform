@@ -57,6 +57,7 @@ Private Const ModuleName                As String = "WorkSpace"
 Private mName                           As String
 
 Private mTickers                        As Tickers
+Attribute mTickers.VB_VarHelpID = -1
 Private mBracketOrders                  As BracketOrders
 Private mBracketOrdersSimulated         As BracketOrders
 Private mExecutions                     As Executions
@@ -69,6 +70,8 @@ Private mConfig                         As ConfigurationSection
 '@================================================================================
 
 Private Sub Class_Initialize()
+mTickers.AddCollectionChangeListener Me
+
 Set mBracketOrders = New BracketOrders
 Set mBracketOrdersSimulated = New BracketOrders
 
@@ -86,7 +89,6 @@ End Sub
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
 Const ProcName As String = "CollectionChangeListener_Change"
-
 On Error GoTo Err
 
 If TypeOf ev.Source Is Tickers Then
@@ -202,7 +204,7 @@ Set mTickers = CreateTickers(pTradeBuildAPI.ServiceProviders.MarketDataManager, 
                             pName, _
                             pScopeName, _
                             pMoneyManager)
-mTickers.Tickers.AddCollectionChangeListener Me
+mTickers.AddCollectionChangeListener Me
 
 Exit Sub
 
