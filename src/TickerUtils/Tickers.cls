@@ -522,7 +522,7 @@ ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
 
 Dim listener As CollectionChangeListener
-For Each listener In mCollectionChangeListeners
+For Each listener In mCollectionChangeListeners.CurrentListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
