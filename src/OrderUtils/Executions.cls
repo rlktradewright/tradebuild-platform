@@ -113,6 +113,7 @@ Const ProcName As String = "mExecutions_CollectionChanged"
 On Error GoTo Err
 
 Set ev.Source = Me
+If ev.changeType = CollCollectionCleared Then Set ev.AffectedItem = Nothing
 fireCollectionChanged ev
 
 Exit Sub

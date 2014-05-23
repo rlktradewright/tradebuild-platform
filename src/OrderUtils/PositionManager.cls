@@ -1031,7 +1031,7 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-checkInitialised
+If IsFinished Then Exit Sub
 
 Assert Not mRecovering, "Invalid call to Finish during recovery"
 
