@@ -675,36 +675,36 @@ Private Function setupTwsServiceProviders( _
 Const ProcName As String = "setupTwsServiceProviders"
 On Error GoTo Err
 
+setupTwsServiceProviders = True
+
+On Error Resume Next
+
 Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(switchValue, ",")
 
-setupTwsServiceProviders = True
-
-Dim port As String
-port = 7496
-
-Dim clientId As String
-clientId = &H7A92DC3F
-
-On Error Resume Next
 Dim server As String
 server = clp.Arg(0)
-port = clp.Arg(1)
-clientId = clp.Arg(2)
-On Error GoTo 0
 
-If port <> "" Then
-    If Not IsInteger(port, 0) Then
-        gCon.WriteErrorLine "Error: port must be a positive integer"
-        setupTwsServiceProviders = False
-    End If
+Dim port As String
+port = clp.Arg(1)
+
+Dim clientId As String
+clientId = clp.Arg(2)
+
+On Error GoTo Err
+
+If port = "" Then
+    port = 7496
+ElseIf Not IsInteger(port, 0) Then
+    gCon.WriteErrorLine "Error: port must be an integer > 0"
+    setupTwsServiceProviders = False
 End If
     
-If clientId <> "" Then
-    If Not IsInteger(clientId) Then
-        gCon.WriteErrorLine "Error: clientId must be an integer"
-        setupTwsServiceProviders = False
-    End If
+If clientId = "" Then
+    clientId = &H7A92DC3F
+ElseIf Not IsInteger(clientId, 0) Then
+    gCon.WriteErrorLine "Error: clientId must be an integer >= 0"
+    setupTwsServiceProviders = False
 End If
     
 If setupTwsServiceProviders Then
