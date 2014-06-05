@@ -875,6 +875,9 @@ Friend Sub Initialise( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long)
+AssertArgument pPort > 0, "Port must be > 0"
+AssertArgument pClientId >= 0, "ClientID must be >= 0"
+
 If pServer = "" Then pServer = "127.0.0.1"
 mServer = pServer
 mPort = pPort
