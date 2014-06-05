@@ -94,10 +94,14 @@ If TypeOf ev.Source Is Tickers Then
     Set lTicker = ev.AffectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
-        lTicker.PositionManager.OrderContexts.AddCollectionChangeListener Me
-        lTicker.PositionManagerSimulated.OrderContexts.AddCollectionChangeListener Me
-        lTicker.Executions.AddCollectionChangeListener Me
-        lTicker.ExecutionsSimulated.AddCollectionChangeListener Me
+        If lTicker.IsLiveOrdersEnabled Then
+            lTicker.PositionManager.OrderContexts.AddCollectionChangeListener Me
+            lTicker.Executions.AddCollectionChangeListener Me
+        End If
+        If lTicker.IsSimulatedOrdersEnabled Then
+            lTicker.PositionManagerSimulated.OrderContexts.AddCollectionChangeListener Me
+            lTicker.ExecutionsSimulated.AddCollectionChangeListener Me
+        End If
     Case CollectionChangeTypes.CollItemRemoved
         ' no need to do anything here
     End Select
