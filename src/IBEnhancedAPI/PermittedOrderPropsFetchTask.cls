@@ -156,27 +156,37 @@ For i = 0 To UBound(lOrderTypesStr)
             "DEACTEOD", _
             "FOK", _
             "HPENNY", _
+            "IBDARK", _
+            "IMB", _
             "LARGE", _
-            "LTH"
+            "LTH", _
+            "NGCOMB"
         Case "NONALGO", _
             "OCA", _
             "OPG", _
             "OPGREROUT", _
             "PAON", _
+            "PEGBENCH", _
             "PEGMID", _
             "POSTONLY", _
             "PREOPGRTH", _
             "RELSTK", _
+            "RPI", _
             "RTHIGNOPG", _
             "SCALE", _
+            "SCALEODD", _
             "SCALERST", _
             "SMARTSTG"
-        Case "SOI", _
+        Case "SNAPMID", _
+            "SNAPMKT", _
+            "SNAPREL", _
+            "SOI", _
             "TIMEPRIO", _
             "TRAILLIT", _
             "TRAILMIT", _
             "VOLAT", _
             "WHATIF"
+
             ' not sure what these signify
         Case Else
             If lOrderTypesStr(i) <> "" Then
