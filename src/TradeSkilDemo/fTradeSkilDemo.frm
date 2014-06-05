@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#219.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#221.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.7"
@@ -714,7 +714,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   66125827
+         Format          =   20709379
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -728,7 +728,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   66125827
+         Format          =   20709379
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -2104,12 +2104,16 @@ If Not pTicker.State = MarketDataSourceStateRunning Then Exit Sub
 Dim tp As TimePeriod
 Set tp = LiveChartTimeframeSelector.TimePeriod
 
+Dim lConfig As ConfigurationSection
+Set lConfig = mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
+lConfig.SetSetting ConfigSettingDataSourceKey, pTicker.Key
+
 mChartForms.Add pTicker, _
                 tp, _
                 pTicker.Timeframes, _
                 mTradeBuildAPI.BarFormatterLibManager, _
                 mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator, _
-                mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & pTicker.Key & ")"), _
+                lConfig, _
                 CreateChartSpecifier(CLng(NumHistoryBarsText.Text), Not (SessionOnlyCheck = vbChecked)), _
                 ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text)
 
@@ -2124,8 +2128,15 @@ Private Sub createChartFromConfig( _
 Const ProcName As String = "createChartFromConfig"
 On Error GoTo Err
 
+Dim lTickerKey As String
+lTickerKey = pChartConfig.GetSetting(ConfigSettingDataSourceKey, "")
+
 Dim lTicker As Ticker
-Set lTicker = mTickers.GetTicker(pChartConfig.InstanceQualifier)
+If lTickerKey = "" Then
+    Set lTicker = mTickers.GetTicker(pChartConfig.InstanceQualifier)
+Else
+    Set lTicker = mTickers.GetTicker(lTickerKey)
+End If
 
 If Not mChartForms.AddFromConfig(lTicker, _
                     lTicker.Timeframes, _

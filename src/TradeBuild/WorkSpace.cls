@@ -70,8 +70,6 @@ Private mConfig                         As ConfigurationSection
 '@================================================================================
 
 Private Sub Class_Initialize()
-mTickers.AddCollectionChangeListener Me
-
 Set mBracketOrders = New BracketOrders
 Set mBracketOrdersSimulated = New BracketOrders
 
@@ -127,7 +125,7 @@ ElseIf TypeOf ev.Source Is BracketOrders Then
         ' is active or not
     End Select
 ElseIf TypeOf ev.Source Is Executions Then
-    Dim lExec As Execution
+    Dim lExec As IExecutionReport
     Set lExec = ev.AffectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded

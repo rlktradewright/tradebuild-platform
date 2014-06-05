@@ -1344,7 +1344,6 @@ If needExistingBracketOrders Then
     SaveRecoveryInfo
 Else
     DeleteRecoveryInfo
-    doFinish
 End If
 
 Exit Sub

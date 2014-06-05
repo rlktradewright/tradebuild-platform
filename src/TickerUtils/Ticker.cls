@@ -724,7 +724,7 @@ Assert Not getTickers.OrderSubmitterLive Is Nothing, "No order submitter exists 
 
 If mPositionManager Is Nothing Then
     If getTickers.ScopeName = "" Then
-        Set mPositionManager = getTickers.OrderManager.CreatePositionManager(GenerateGUIDString, _
+        Set mPositionManager = getTickers.OrderManager.CreatePositionManager(mKey, _
                                                     mDataSource.ContractFuture, _
                                                     getTickers.OrderSubmitterLive, _
                                                     mDataSource, _
@@ -732,7 +732,7 @@ If mPositionManager Is Nothing Then
                                                     False, _
                                                     getTickers.MoneyManager)
     Else
-        Set mPositionManager = getTickers.OrderManager.CreateRecoverablePositionManager(GenerateGUIDString, _
+        Set mPositionManager = getTickers.OrderManager.CreateRecoverablePositionManager(mKey, _
                                                     mDataSource.ContractFuture, _
                                                     getTickers.OrderSubmitterLive, _
                                                     mDataSource, _

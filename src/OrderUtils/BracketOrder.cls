@@ -2179,7 +2179,6 @@ SaveRecoveryInfo    ' ensure the BracketOrder is recorded before
                     
 handleStimulus OpStimuli.StimExecute
 
-SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -3222,12 +3221,13 @@ Private Function handleStimulus(ByVal pStimulus As OpStimuli) As Variant
 Const ProcName As String = "handleStimulus"
 On Error GoTo Err
 
-Dim currState As BracketOrderStates
-currState = mStateEngine.State
+Dim lPrevState As BracketOrderStates
+lPrevState = mStateEngine.State
 
 Dim lActions() As OpActions
 lActions = mStateEngine.NotifyStimulus(pStimulus)
 mSummary.State = State
+SaveRecoveryInfo
 
 Dim lConditions As OpConditions
 lConditions = mStateEngine.Conditions
@@ -3238,15 +3238,15 @@ For i = 0 To UBound(lActions)
     lActionsString = lActionsString & gOpActionsToString(lActions(i)) & IIf(i = UBound(lActions), "", ",")
 Next
 
-gLog "Handling bracket order stimulus: prior state=" & gBracketOrderStatesToString(currState) & _
+gLog "Handling bracket order stimulus: prior state=" & gBracketOrderStatesToString(lPrevState) & _
                 "; stimulus=" & gOpStimuliToString(pStimulus) & _
                 "; conditions=" & gOpConditionsToString(lConditions) & _
                 "; new state=" & gBracketOrderStatesToString(mStateEngine.State) & _
                 "; actions=" & lActionsString, _
             ProcName, ModuleName
 
-handleStimulus = doActions(lActions, currState, pStimulus)
-If mStateEngine.State <> currState Then
+handleStimulus = doActions(lActions, lPrevState, pStimulus)
+If State <> lPrevState Then
     fireChange BracketOrderChangeTypes.BracketOrderStateChanged
     fireStateChange mStateEngine.State
 End If

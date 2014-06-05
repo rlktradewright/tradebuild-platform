@@ -34,10 +34,10 @@ Public Const ConfigSectionDefaultStudyConfigs       As String = "DefaultStudyCon
 Public Const ConfigSectionChartStyles               As String = "/ChartStyles"
 Public Const ConfigSectionHistoricCharts            As String = "HistoricCharts"
 Public Const ConfigSectionMainForm                  As String = "MainForm"
-Public Const ConfigSectionMultiChart                As String = "MultiChart"
 Public Const ConfigSectionOrderTicket               As String = "OrderTicket"
 Public Const ConfigSectionTickerGrid                As String = "TickerGrid"
 
+Public Const ConfigSettingDataSourceKey             As String = "&DataSourceKey"
 Public Const ConfigSettingHistorical                As String = "&Historical"
 Public Const ConfigSettingHeight                    As String = "&Height"
 Public Const ConfigSettingLeft                      As String = "&Left"
