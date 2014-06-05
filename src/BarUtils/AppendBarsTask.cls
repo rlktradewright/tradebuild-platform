@@ -70,6 +70,13 @@ Private Sub Task_run()
 Const ProcName As String = "Task_run"
 On Error GoTo Err
 
+' do this here to allow for the case mNumberToAppend=0
+If mIndex > mNumberToAppend Then
+    mTaskContext.Progress 100, Empty
+    mTaskContext.Finish Empty, False
+    Exit Sub
+End If
+
 mDestBars.Add mSourceBars.Bar(mIndex), _
                 mDestBars.CurrentBarNumber + 1, _
                 mSourceBars.Bar(mIndex).Timestamp
@@ -81,12 +88,6 @@ If mEt.ElapsedTimeMicroseconds > 250000 Then
 End If
 
 mIndex = mIndex + 1
-
-If mIndex > mNumberToAppend Then
-    mTaskContext.Progress 100, Empty
-    mTaskContext.Finish Empty, False
-    Exit Sub
-End If
 
 Exit Sub
 
