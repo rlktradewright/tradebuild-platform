@@ -63,14 +63,13 @@ Private mTB                                         As TradeBuildAPI
 '@================================================================================
 
 Public Sub Main()
-Dim clp As CommandLineParser
-
 On Error GoTo Err
 
 InitialiseTWUtilities
 
 Set gCon = GetConsole
 
+Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(Command)
 
 If clp.Switch("?") Or _
@@ -299,38 +298,36 @@ End Function
 
 Private Function setupTwsServiceProvider( _
                 ByVal switchValue As String) As Boolean
-Dim clp As CommandLineParser
-Dim server As String
-Dim port As String
-Dim clientId As String
-
 On Error GoTo Err
 
+Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(switchValue, ",")
 
 setupTwsServiceProvider = True
 
-port = 7496
-clientId = -1
-
 On Error Resume Next
+Dim server As String
 server = clp.Arg(0)
-port = clp.Arg(1)
-clientId = clp.Arg(2)
-On Error GoTo 0
 
-If port <> "" Then
-    If Not IsInteger(port, 0) Then
-        gCon.WriteErrorLine "Error: port must be a positive integer"
+Dim port As String
+port = clp.Arg(1)
+
+Dim clientId As String
+clientId = clp.Arg(2)
+On Error GoTo Err
+
+If port = "" Then
+    port = "7496"
+ElseIf Not IsInteger(port, 1) Then
+        gCon.WriteErrorLine "Error: port must be a positive integer > 0"
         setupTwsServiceProvider = False
-    End If
 End If
     
-If clientId <> "" Then
-    If Not IsInteger(clientId) Then
-        gCon.WriteErrorLine "Error: clientId must be an integer"
+If clientId = "" Then
+    clientId = "1952361208"
+ElseIf Not IsInteger(clientId, 0) Then
+        gCon.WriteErrorLine "Error: clientId must be an integer >= 0"
         setupTwsServiceProvider = False
-    End If
 End If
     
 If setupTwsServiceProvider Then
