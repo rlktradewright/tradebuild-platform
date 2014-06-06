@@ -302,7 +302,7 @@ For i = 0 To UBound(mTimeframeTable)
             ") written in " & _
             mTimeframeTable(i).Writes & " database writes"
 Next
-logMessage s, ProcName, , LogLevelDetail
+logMessage s, ProcName
 
 mParent.BarWriterFinished Me
 Set mParent = Nothing

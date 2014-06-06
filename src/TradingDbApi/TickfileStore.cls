@@ -102,7 +102,7 @@ Private Sub ITickfileStore_Finish()
 Const ProcName As String = "ITickfileStore_Finish"
 On Error GoTo Err
 
-
+Finish
 
 Exit Sub
 
@@ -191,17 +191,17 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-Dim lReader As New TickfileReader
-For Each lReader In mReaders
+Do While mReaders.Count > 0
+    Dim lReader As TickfileReader
+    Set lReader = mReaders(1)
     lReader.Finish
-Next
-mReaders.Clear
+Loop
 
-Dim lWriter As TickfileWriter
-For Each lWriter In mWriters
+Do While mWriters.Count > 0
+    Dim lWriter As TickfileWriter
+    Set lWriter = mWriters(1)
     lWriter.Finish
-Next
-mWriters.Clear
+Loop
 
 Exit Sub
 

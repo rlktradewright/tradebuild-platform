@@ -248,11 +248,12 @@ For Each lFetchBuilder In mFetchBuilders
 Next
 mFetchBuilders.Clear
 
-Dim lWriter As BarWriter
-For Each lWriter In mWriters
+Do While mWriters.Count > 0
+    Dim lWriter As BarWriter
+    Set lWriter = mWriters(1)
     lWriter.Finish
-Next
-mWriters.Clear
+Loop
+
 
 Exit Sub
 
