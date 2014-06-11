@@ -122,7 +122,7 @@ End Sub
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-gLogger.Log "MarketDataSource terminated (" & mKey & ")", ProcName, ModuleName
+gLogger.Log "MarketDataSource terminated (" & mKey & ")", ProcName, ModuleName, LogLevelDetail
 End Sub
 
 '@================================================================================
