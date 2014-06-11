@@ -121,6 +121,8 @@ For Each lTimeframeHandler In mTimeframeHandlers
     End If
 Next
 
+Set mDataSource = Nothing
+
 gLogger.Log "HistDataWriter finished" & s, ProcName, ModuleName
 
 mTimeframeHandlers.Clear
