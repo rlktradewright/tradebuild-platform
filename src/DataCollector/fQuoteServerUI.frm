@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.Form fDataCollectorUI 
    Caption         =   "TradeBuild Data Collector Version 2.7"
    ClientHeight    =   4230
@@ -97,9 +97,9 @@ Begin VB.Form fDataCollectorUI
       TabCaption(2)   =   "Configuration"
       TabPicture(2)   =   "fQuoteServerUI.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label4"
+      Tab(2).Control(0)=   "ConfigDetailsButton"
       Tab(2).Control(1)=   "ConfigNameText"
-      Tab(2).Control(2)=   "ConfigDetailsButton"
+      Tab(2).Control(2)=   "Label4"
       Tab(2).ControlCount=   3
       Begin VB.CommandButton ConfigDetailsButton 
          Caption         =   "Details..."
@@ -511,8 +511,6 @@ On Error GoTo Err
 LogMessage "Data Collector program exiting"
 GetLogger("log").RemoveLogListener Me
 
-TerminateTWUtilities
-
 Exit Sub
 
 Err:
@@ -796,7 +794,6 @@ Set tli = ev.Source
 If Not tli Is Nothing Then
     If ev.State = TimerListItemStates.TimerListItemStateExpired Then
         switchDataLightOff tli.Data
-        Set mTickers(tli.Data).tli = Nothing
     End If
 End If
 
@@ -1069,9 +1066,9 @@ End If
 Set mTickers(index).Ticker = pTicker
 Set mTickers(index).tli = Nothing
 
-If index > ShortNameText.UBound Then
+If index > ShortNameText.ubound Then
     Dim i As Long
-    For i = ShortNameText.UBound + 1 To index
+    For i = ShortNameText.ubound + 1 To index
         Load ShortNameText(i)
         ShortNameText(i).Left = ShortNameText(i - 5).Left
         ShortNameText(i).Top = ShortNameText(i - 5).Top + mLineSpacing
@@ -1199,7 +1196,7 @@ Const ProcName As String = "clearTickers"
 On Error GoTo Err
 
 Dim i As Long
-For i = 0 To ShortNameText.UBound
+For i = 0 To ShortNameText.ubound
     ShortNameText(i).Text = ""
     DataLightLabel(i).BackColor = vbButtonFace
 Next
@@ -1429,7 +1426,7 @@ Const ProcName As String = "setupTickerScroll"
 On Error GoTo Err
 
 Dim totalLines As Long
-totalLines = (ShortNameText.UBound + 5) / 5
+totalLines = (ShortNameText.ubound + 5) / 5
 
 Dim linesPerpage As Single
 linesPerpage = TickersContainerPicture.Height / mLineSpacing
@@ -1505,6 +1502,14 @@ LogMessage message
 
 mDataCollector.StopCollection
 
+Dim i As Long
+For i = 0 To UBound(mTickers)
+    If Not mTickers(i).Ticker Is Nothing Then
+        Set mTickers(i).Ticker = Nothing
+        switchDataLightOff i
+    End If
+Next
+
 Exit Sub
 
 Err:
@@ -1540,6 +1545,12 @@ Private Sub switchDataLightOff( _
                 ByVal index As Long)
 Const ProcName As String = "switchDataLightOff"
 On Error GoTo Err
+
+If Not mTickers(index).tli Is Nothing Then
+    mTickers(index).tli.RemoveStateChangeListener Me
+    mTickers(index).tli.Cancel
+    Set mTickers(index).tli = Nothing
+End If
 
 DataLightLabel(index).BackColor = vbButtonFace
 DataLightLabel(index).Refresh
