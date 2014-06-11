@@ -97,8 +97,23 @@ End If
 End Function
 
 Friend Sub ReleaseHandle(ByVal pHandle As Long)
-mHandles(pHandle).Next = mNextFreeHandlesIndex
-mNextFreeHandlesIndex = pHandle
+' we maintain the free list so that lower indexes are
+' reallocated first
+If mNextFreeHandlesIndex = NullIndex Then
+    mHandles(pHandle).Next = NullIndex
+    mNextFreeHandlesIndex = pHandle
+Else
+    Dim lCurrFreeIndex As Long
+    lCurrFreeIndex = mNextFreeHandlesIndex
+    
+    Dim lPrevFreeIndex As Long
+    Do While pHandle > lCurrFreeIndex And lCurrFreeIndex <> NullIndex
+        lPrevFreeIndex = lCurrFreeIndex
+        lCurrFreeIndex = mHandles(lCurrFreeIndex).Next
+    Loop
+    mHandles(lPrevFreeIndex).Next = pHandle
+    mHandles(pHandle).Next = lCurrFreeIndex
+End If
 End Sub
 
 '@================================================================================

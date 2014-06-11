@@ -121,7 +121,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Class_Terminate()
-gReleaseHandle mHandle
+Const ProcName As String = "Class_Terminate"
+gLogger.Log "MarketDataSource terminated (" & mKey & ")", ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -614,6 +615,7 @@ ErrorMessage = mErrorMessage
 End Property
 
 Public Property Get Handle() As Long
+checkNotFinished
 Handle = mHandle
 End Property
 
@@ -856,6 +858,18 @@ Set mQuoteListeners = Nothing
 Set mRawMarketDepthListeners = Nothing
 Set mStateChangeListeners = Nothing
 Set mErrorListeners = Nothing
+
+Set mStudyBase = Nothing
+
+Dim s As String
+If mContractFuture.IsAvailable Then
+    Dim lContract As IContract
+    Set lContract = mContractFuture.Value
+    s = lContract.Specifier.ToString
+End If
+
+gReleaseHandle mHandle
+gLogger.Log "MarketDataSource finished (" & mKey & ")", ProcName, ModuleName, , s
 
 Exit Sub
 
