@@ -189,21 +189,21 @@ With mMarketDataTable(lIndex)
         .PrevBidValid = validPrice(lTick.Price, .PrevBid, "bid", .ContractDetails)
         If Not .PrevBidValid Then Exit Sub
         lTick.TickType = TickTypeBid
-        If lTick.Size = 0 And .PrevBidSize <> 0 Then lTick.Size = .PrevBidSize
+        If lTick.Size = 0 And .PrevBidSize <> MaxLong Then lTick.Size = .PrevBidSize
         .PrevBid = lTick.Price
         If lTick.Size <> 0 Then .PrevBidSize = lTick.Size
     Case TwsTickTypes.TwsTickAsk
         .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .ContractDetails)
         If Not .PrevAskValid Then Exit Sub
         lTick.TickType = TickTypeAsk
-        If lTick.Size = 0 And .PrevAskSize <> 0 Then lTick.Size = .PrevAskSize
+        If lTick.Size = 0 And .PrevAskSize <> MaxLong Then lTick.Size = .PrevAskSize
         .PrevAsk = lTick.Price
         If lTick.Size <> 0 Then .PrevAskSize = lTick.Size
     Case TwsTickTypes.TwsTickLast
         .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .ContractDetails)
         If Not .PrevTradeValid Then Exit Sub
         lTick.TickType = TickTypeTrade
-        If lTick.Size = 0 And .PrevTradeSize <> 0 Then lTick.Size = .PrevTradeSize
+        If lTick.Size = 0 And .PrevTradeSize <> MaxLong Then lTick.Size = .PrevTradeSize
         .PrevTrade = lTick.Price
         If lTick.Size <> 0 Then .PrevTradeSize = lTick.Size
     Case TwsTickTypes.TwsTickHigh
