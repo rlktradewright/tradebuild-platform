@@ -65,6 +65,7 @@ Private Const ModuleName                            As String = "IPositionMgmtSt
 '@================================================================================
 
 Public Sub Start( _
+                ByVal pContext As TradingContext, _
                 ByVal pBracketOrder As IBracketOrder)
 End Sub
 

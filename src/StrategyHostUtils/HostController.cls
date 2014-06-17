@@ -45,12 +45,12 @@ Private Const ModuleName                            As String = "HostController"
 ' Member variables
 '@================================================================================
 
-Private mDataSource                                 As IMarketDataSource
-Private mPositionManager                            As PositionManager
-Private mPositionManagerSimulated                   As PositionManager
+Private mTicker                                     As Ticker
 
 Private mStrategy                                   As IStrategy
-Private mStrategyParams                             As Parameters
+Private mStopStrategyFactory                        As IPosnMgmtStrtgyFactory
+
+Private mParams                                     As Parameters
 
 '@================================================================================
 ' Class Event Handlers
@@ -72,7 +72,7 @@ Friend Sub InitialisationContextIsReady(ByVal pContext As InitialisationContext)
 Const ProcName As String = "InitialisationContextIsReadyContextIsReady"
 On Error GoTo Err
 
-mStrategy.Initialise pContext
+mStrategy.Initialise pContext, mParams, mStopStrategyFactory
 
 Exit Sub
 
@@ -85,7 +85,7 @@ Const ProcName As String = "InitialisationCompleted"
 On Error GoTo Err
 
 Dim lTradingContext As New TradingContext
-lTradingContext.Initialise Me, mStrategy, mDataSource, mPositionManager, mPositionManagerSimulated
+lTradingContext.Initialise Me, mStrategy, mTicker
 mStrategy.Start lTradingContext
 
 Exit Sub
@@ -94,25 +94,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub Initialise( _
+Public Function Initialise( _
                 ByVal pStrategy As IStrategy, _
-                ByVal pDataSource As IMarketDataSource, _
-                ByVal pPositionManager As PositionManager, _
-                ByVal pPositionManagerSimulated As PositionManager, _
-                ByVal pTimeframes As Timeframes, _
-                ByVal pStudyManager As StudyManager)
+                ByVal pStopStrategyFactory As IPosnMgmtStrtgyFactory) As Parameters
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mStrategy = pStrategy
-Set mStrategyParams = pStrategy.Parameters
+Set Initialise = mergeParameters(pStrategy.DefaultParameters, pStopStrategyFactory.DefaultParameters)
 
-Set mDataSource = pDataSource
-Set mPositionManager = pPositionManager
-Set mPositionManagerSimulated = pPositionManagerSimulated
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Sub Start(ByVal pTicker As Ticker, _
+                ByVal pParams As Parameters)
+Const ProcName As String = "Start"
+On Error GoTo Err
+
+Set mTicker = pTicker
+Set mParams = pParams
 
 Dim lContext As New InitialisationContext
-lContext.Initialise Me, pDataSource, pTimeframes, pStudyManager
+lContext.Initialise Me, mTicker
 
 Exit Sub
 
@@ -120,8 +126,32 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
+Private Function mergeParameters(ByVal pParams1 As Parameters, ByVal pParams2 As Parameters) As Parameters
+Const ProcName As String = "mergeParameters"
+On Error GoTo Err
 
+Const DefaultValue As String = "***$Default$***"
+
+Dim lParams As New Parameters
+
+Dim lParam As Parameter
+For Each lParam In pParams1
+    lParams.SetParameterValue lParam.Name, lParam.Value
+Next
+
+For Each lParam In pParams2
+    If lParams.GetParameterValue(lParam.Name, DefaultValue) = DefaultValue Then lParams.SetParameterValue lParam.Name, lParam.Value
+Next
+
+Set mergeParameters = lParams
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function

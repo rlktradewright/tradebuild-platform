@@ -61,7 +61,7 @@ Private Const ModuleName                    As String = "IStrategy"
 ' Properties
 '@================================================================================
 
-Public Property Get Parameters() As Parameters
+Public Property Get DefaultParameters() As Parameters
 End Property
 
 '@================================================================================
@@ -78,7 +78,9 @@ End Property
 '   The parameters for this <code>Strategy</code>.
 '@/
 Public Sub Initialise( _
-                ByVal pInitialisationContext As InitialisationContext)
+                ByVal pInitialisationContext As InitialisationContext, _
+                ByVal pParams As Parameters, _
+                ByVal pStopStrategyFactory As IPosnMgmtStrtgyFactory)
 End Sub
 
 ''

@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "InitialisationC
 ' Member variables
 '@================================================================================
 
-Private mDataSource                                 As IMarketDataSource
+Private mTicker                                     As Ticker
 Private mContract                                   As IContract
 Private mSession                                    As Session
 Private mTimeframes                                 As Timeframes
@@ -120,7 +120,7 @@ Public Property Get IsTickReplay() As Boolean
 Const ProcName As String = "IsTickReplay"
 On Error GoTo Err
 
-IsTickReplay = mDataSource.IsTickReplay
+IsTickReplay = mTicker.IsTickReplay
 
 Exit Property
 
@@ -247,19 +247,17 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pHostController As HostController, _
-                ByVal pDataSource As IMarketDataSource, _
-                ByVal pTimeframes As Timeframes, _
-                ByVal pStudyManager As StudyManager)
+                ByVal pTicker As Ticker)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mHostController = pHostController
-Set mDataSource = pDataSource
-Set mTimeframes = pTimeframes
-Set mStudyManager = pStudyManager
+Set mTicker = pTicker
+Set mTimeframes = mTicker.Timeframes
+Set mStudyManager = mTicker.StudyBase.StudyManager
 
-mFutureWaiter.Add mDataSource.ContractFuture
-mFutureWaiter.Add mDataSource.SessionFuture
+mFutureWaiter.Add mTicker.ContractFuture
+mFutureWaiter.Add mTicker.SessionFuture
 
 Exit Sub
 

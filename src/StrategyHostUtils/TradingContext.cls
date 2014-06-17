@@ -46,7 +46,7 @@ Private Const ModuleName                            As String = "TradingContext"
 ' Member variables
 '@================================================================================
 
-Private mDataSource                                 As IMarketDataSource
+Private mTicker                                     As Ticker
 Private mPositionManager                            As PositionManager
 Private mPositionManagerSimulated                   As PositionManager
 Private mTimeframes                                 As Timeframes
@@ -58,6 +58,8 @@ Private mTradeReasonLogger                          As Logger
 Private mTickNumber                                 As Long
 
 Private mStrategy                                   As IStrategy
+
+Private mPositionMgmgtStrategies                    As New EnumerableCollection
 
 Private mReceivedFirstBidAndAsk                     As Boolean
 
@@ -95,6 +97,11 @@ If ev.Tick.TickType = TickTypeAsk Then sGotFirstAsk = True
 If ev.Tick.TickType = TickTypeBid Then sGotFirstBid = True
 If sGotFirstAsk And sGotFirstBid Then mReceivedFirstBidAndAsk = True
 
+Dim lPMStrategy As IPositionMgmtStrategy
+For Each lPMStrategy In mPositionMgmgtStrategies
+    lPMStrategy.NotifyTick ev.Tick.TickType
+Next
+
 mStrategy.NotifyTick ev.Tick.TickType
 
 Exit Sub
@@ -115,7 +122,7 @@ Public Property Get AskQuote() As Quote
 Const ProcName As String = "AskQuote"
 On Error GoTo Err
 
-AskQuote = mDataSource.CurrentQuote(TickTypeAsk)
+AskQuote = mTicker.CurrentQuote(TickTypeAsk)
 
 Exit Property
 
@@ -127,7 +134,7 @@ Public Property Get BidQuote() As Quote
 Const ProcName As String = "BidQuote"
 On Error GoTo Err
 
-BidQuote = mDataSource.CurrentQuote(TickTypeBid)
+BidQuote = mTicker.CurrentQuote(TickTypeBid)
 
 Exit Property
 
@@ -139,7 +146,19 @@ Public Property Get CloseQuote() As Quote
 Const ProcName As String = "CloseQuote"
 On Error GoTo Err
 
-CloseQuote = mDataSource.CurrentQuote(TickTypeClosePrice)
+CloseQuote = mTicker.CurrentQuote(TickTypeClosePrice)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Contract() As IContract
+Const ProcName As String = "Contract"
+On Error GoTo Err
+
+Set Contract = mTicker.ContractFuture.Value
 
 Exit Property
 
@@ -175,7 +194,7 @@ Public Property Get HighQuote() As Quote
 Const ProcName As String = "HighQuote"
 On Error GoTo Err
 
-HighQuote = mDataSource.CurrentQuote(TickTypeHighPrice)
+HighQuote = mTicker.CurrentQuote(TickTypeHighPrice)
 
 Exit Property
 
@@ -187,7 +206,7 @@ Public Property Get LowQuote() As Quote
 Const ProcName As String = "LowQuote"
 On Error GoTo Err
 
-LowQuote = mDataSource.CurrentQuote(TickTypeLowPrice)
+LowQuote = mTicker.CurrentQuote(TickTypeLowPrice)
 
 Exit Property
 
@@ -199,7 +218,7 @@ Public Property Get OpenQuote() As Quote
 Const ProcName As String = "OpenQuote"
 On Error GoTo Err
 
-OpenQuote = mDataSource.CurrentQuote(TickTypeOpenPrice)
+OpenQuote = mTicker.CurrentQuote(TickTypeOpenPrice)
 
 Exit Property
 
@@ -244,7 +263,7 @@ Public Property Get Timestamp() As Date
 Const ProcName As String = "Timestamp"
 On Error GoTo Err
 
-Timestamp = mDataSource.Timestamp
+Timestamp = mTicker.Timestamp
 
 Exit Property
 
@@ -256,7 +275,7 @@ Public Property Get TradeQuote() As Quote
 Const ProcName As String = "TradeQuote"
 On Error GoTo Err
 
-TradeQuote = mDataSource.CurrentQuote(TickTypeTrade)
+TradeQuote = mTicker.CurrentQuote(TickTypeTrade)
 
 Exit Property
 
@@ -268,7 +287,7 @@ Public Property Get VolumeQuote() As Quote
 Const ProcName As String = "VolumeQuote"
 On Error GoTo Err
 
-VolumeQuote = mDataSource.CurrentQuote(TickTypeVolume)
+VolumeQuote = mTicker.CurrentQuote(TickTypeVolume)
 
 Exit Property
 
@@ -307,7 +326,7 @@ Public Sub ApplyPositionManagementStrategy( _
 Const ProcName As String = "ApplyPositionManagementStrategy"
 On Error GoTo Err
 
-pStrategy.Start pBracketOrder
+pStrategy.Start Me, pBracketOrder
 
 Exit Sub
 
@@ -318,18 +337,40 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pHostController As HostController, _
                 ByVal pStrategy As IStrategy, _
-                ByVal pDataSource As IMarketDataSource, _
-                ByVal pPositionManager As PositionManager, _
-                ByVal pPositionManagerSimulated As PositionManager)
+                ByVal pTicker As Ticker)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mHostController = pHostController
 Set mStrategy = pStrategy
-Set mDataSource = pDataSource
-mDataSource.AddGenericTickListener Me
-Set mPositionManager = pPositionManager
-Set mPositionManagerSimulated = pPositionManagerSimulated
+Set mTicker = pTicker
+mTicker.AddGenericTickListener Me
+Set mPositionManager = mTicker.PositionManager
+Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub StartTickData(ByVal pStrategy As IPositionMgmtStrategy)
+Const ProcName As String = "StartTickData"
+On Error GoTo Err
+
+If Not mPositionMgmgtStrategies.Contains(pStrategy) Then mPositionMgmgtStrategies.Add pStrategy
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub StopTickData(ByVal pStrategy As IPositionMgmtStrategy)
+Const ProcName As String = "StopTickData"
+On Error GoTo Err
+
+mPositionMgmgtStrategies.Remove pStrategy
 
 Exit Sub
 
