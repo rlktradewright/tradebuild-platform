@@ -319,12 +319,17 @@ Then
     validInput = False
 End If
 
-If validInput Then
+If Not validInput Then
+    gCon.WriteErrorLine inString
+Else
+    'Dim lInstr As Instrument
+    'Dim scb As New SimpleConditionBuilder
+    '
+    'scb.addTerm "shortname", CondOpEqual, shortname
+    'Set lInstr = gDb.InstrumentFactory.LoadByQuery(scb.conditionString)
+    
     Dim lInstr As Instrument
-    Dim scb As New SimpleConditionBuilder
-
-    scb.addTerm "shortname", CondOpEqual, shortname
-    Set lInstr = gDb.InstrumentFactory.LoadByQuery(scb.conditionString)
+    Set lInstr = gDb.InstrumentFactory.LoadByName(gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name)
     If lInstr Is Nothing Then
         Set lInstr = gDb.InstrumentFactory.MakeNew
     ElseIf Not gUpdate Then
@@ -376,30 +381,32 @@ If validInput Then
     Else
         Dim lErr As ErrorItem
         For Each lErr In lInstr.ErrorList
-            Select Case lErr.ruleId
+            Select Case lErr.RuleId
             Case BusinessRuleIds.BusRuleInstrumentNameValid
-                gCon.WriteErrorLine "Line " & lineNumber & " name invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & ": name invalid: " & "" & name & ""
             Case BusinessRuleIds.BusRuleInstrumentOptionRightvalid
-                gCon.WriteErrorLine "Line " & lineNumber & " right invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & ": right invalid"
             Case BusinessRuleIds.BusRuleInstrumentShortNameValid
-                gCon.WriteErrorLine "Line " & lineNumber & " shortname invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & ": shortname invalid"
             Case BusinessRuleIds.BusRuleInstrumentStrikePriceValid
-                gCon.WriteErrorLine "Line " & lineNumber & " strike invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & ": strike invalid"
             Case BusinessRuleIds.BusRuleInstrumentSymbolValid
-                gCon.WriteErrorLine "Line " & lineNumber & " symbol invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & ": symbol invalid"
             Case BusinessRuleIds.BusRuleInstrumentTickSizeValid
-                gCon.WriteErrorLine "Line " & lineNumber & " ticksize invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & ": ticksize invalid"
             Case BusinessRuleIds.BusRuleInstrumentTickValueValid
-                gCon.WriteErrorLine "Line " & lineNumber & " tickvalue invalid"
+                gCon.WriteErrorLine "Line; " & lineNumber & ": tickvalue invalid"
             End Select
         Next
+        gCon.WriteErrorLine inString
     End If
 End If
         
 Exit Sub
 
 Err:
-gCon.WriteErrorLine Err.Description
+gCon.WriteErrorLine Err.Description & " when processing:"
+gCon.WriteErrorLine inString
 End Sub
 
 Private Function setupDb( _
