@@ -510,8 +510,8 @@ With pTwsContractDetails
                                                 Mid$(.Expiry, 5, 2) & "/" & _
                                                 Right$(.Expiry, 2))
         End If
-        lBuilder.Multiplier = .Multiplier
     End With
+    lBuilder.Multiplier = .Summary.Multiplier / .PriceMagnifier
     lBuilder.Description = .LongName
     lBuilder.TickSize = .MinTick
     lBuilder.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(.TimeZoneId)
