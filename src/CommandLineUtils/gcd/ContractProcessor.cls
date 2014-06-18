@@ -84,24 +84,6 @@ gCon.WriteErrorLine VariantToString(logrec.Data)
 End Sub
 
 '@================================================================================
-' mContracts Event Handlers
-'@================================================================================
-
-Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
-gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid contract spec " & mContractSpec.ToString
-mDone = True
-End Sub
-
-Private Sub mContracts_NoMoreContractDetails()
-mDone = True
-End Sub
-
-Private Sub mContracts_Notification(ev As NotificationEventData)
-gCon.WriteErrorLine "Line " & mLineNumber & ": Notification: " & ev.EventMessage
-mDone = True
-End Sub
-
-'@================================================================================
 ' mFutureWaiter Event Handlers
 '@================================================================================
 
@@ -145,10 +127,10 @@ Set mTB = pTB
 End Sub
 
 Public Sub process( _
-                ByVal contractSpec As ContractSpecifier, _
+                ByVal contractSpec As IContractSpecifier, _
                 ByVal lineNumber As Long, _
                 ByVal nametemplate As String)
-Dim lContract As Contract
+Dim lContract As IContract
 
 mDone = False
 
