@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFlxGrd.ocx"
 Begin VB.UserControl OrdersSummary 
    Alignable       =   -1  'True
@@ -260,7 +260,8 @@ Private mFirstBracketOrderGridRowIndex                      As Long
 Private mLetterWidth                                        As Single
 Private mDigitWidth                                         As Single
 
-Private mMonitoredPositions                                 As EnumerableCollection
+Private mPositionManagersCollection                         As New EnumerableCollection
+Private mMonitoredPositions                                 As New EnumerableCollection
     
 Private mIsEditing                                          As Boolean
 Private mEditedBracketOrder                                 As IBracketOrder
@@ -290,8 +291,6 @@ Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
 Dim widthString As String
-
-Set mMonitoredPositions = New EnumerableCollection
 
 widthString = "ABCDEFGH IJKLMNOP QRST UVWX YZ"
 mLetterWidth = UserControl.TextWidth(widthString) / Len(widthString)
@@ -733,27 +732,43 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
+Set mMarketDataManager = Nothing
+
 Dim i As Long
 For i = 0 To mMaxBracketOrderGridMappingTableIndex
     If Not mBracketOrderGridMappingTable(i).BracketOrder Is Nothing Then
         mBracketOrderGridMappingTable(i).BracketOrder.RemoveChangeListener Me
         mBracketOrderGridMappingTable(i).ProfitCalculator.RemoveProfitListener Me
         Set mBracketOrderGridMappingTable(i).BracketOrder = Nothing
+        Set mBracketOrderGridMappingTable(i).ProfitCalculator = Nothing
+        mBracketOrderGridMappingTable(i).CloseoutGridOffset = 0
+        mBracketOrderGridMappingTable(i).EntryGridOffset = 0
+        mBracketOrderGridMappingTable(i).GridIndex = 0
+        mBracketOrderGridMappingTable(i).IsExpanded = False
+        mBracketOrderGridMappingTable(i).secType = SecTypeNone
+        mBracketOrderGridMappingTable(i).StopGridOffset = 0
+        mBracketOrderGridMappingTable(i).TargetGridOffset = 0
+        mBracketOrderGridMappingTable(i).TickSize = 0#
     End If
 Next
 
-Dim en As Enumerator
-Set en = mMonitoredPositions.Enumerator
-Do While en.MoveNext
-    Dim lPm As PositionManager
-    Set lPm = en.Current
-    If Not lPm.IsFinished Then
-        lPm.RemoveChangeListener Me
-        lPm.RemoveProfitListener Me
-        lPm.BracketOrders.RemoveCollectionChangeListener Me
-    End If
-    en.Remove
-Loop
+mMaxBracketOrderGridMappingTableIndex = 0
+mMaxPositionManagerGridMappingTableIndex = 0
+mFirstBracketOrderGridRowIndex = 0
+
+Dim lPositionManager As PositionManager
+For Each lPositionManager In mMonitoredPositions
+    lPositionManager.RemoveProfitListener Me
+    lPositionManager.RemoveChangeListener Me
+    lPositionManager.BracketOrders.RemoveCollectionChangeListener Me
+Next
+mMonitoredPositions.Clear
+
+Dim lPositionManagers As PositionManagers
+For Each lPositionManagers In mPositionManagersCollection
+    lPositionManagers.RemoveCollectionChangeListener Me
+Next
+mPositionManagersCollection.Clear
 
 BracketOrderGrid.Clear
 
@@ -768,7 +783,11 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 AssertArgument Not pMarketDataManager Is Nothing, "pMarketDataManager must be supplied"
+
+Finish
+
 Set mMarketDataManager = pMarketDataManager
+
 setupBracketOrderGrid
 
 Exit Sub
@@ -785,13 +804,12 @@ On Error GoTo Err
 Assert Not mMarketDataManager Is Nothing, "Initialise method has not been called"
 
 pPositionManagers.AddCollectionChangeListener Me
+mPositionManagersCollection.Add pPositionManagers
 
 Dim lPositionManager As PositionManager
 For Each lPositionManager In pPositionManagers
     mMonitoredPositions.Add lPositionManager
 
-    Dim lBracketOrder As IBracketOrder
-    
     If lPositionManager.BracketOrders.Count <> 0 Or lPositionManager.PositionSize <> 0 Or lPositionManager.PendingPositionSize <> 0 Then
         showPositionManagerEntry lPositionManager
     End If
@@ -799,6 +817,7 @@ For Each lPositionManager In pPositionManagers
     lPositionManager.AddProfitListener Me
     
     Dim lAnyActiveBracketOrders As Boolean
+    Dim lBracketOrder As IBracketOrder
     For Each lBracketOrder In lPositionManager.BracketOrders
         addBracketOrder lBracketOrder
         If lBracketOrder.State = BracketOrderStateClosed Then
