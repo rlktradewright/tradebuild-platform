@@ -415,7 +415,7 @@ Then
     ' the ticker has been stopped before the chart has been closed,
     ' so remove the chart from the config and close it
     MultiChart1.Finish
-    mConfig.Remove
+    If Not mConfig Is Nothing Then mConfig.Remove
     Set mConfig = Nothing
     Unload Me
 End If
