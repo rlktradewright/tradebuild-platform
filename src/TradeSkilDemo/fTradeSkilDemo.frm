@@ -98,29 +98,31 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Orders"
       TabPicture(0)   =   "fTradeSkilDemo.frx":1B70
       Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "SimulatedOrdersSummary"
+      Tab(0).Control(0)=   "TickfileOrdersSummary"
       Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "LiveOrdersSummary"
+      Tab(0).Control(1)=   "SimulatedOrdersSummary"
       Tab(0).Control(1).Enabled=   0   'False
-      Tab(0).Control(2)=   "OrdersSummaryTabStrip"
+      Tab(0).Control(2)=   "LiveOrdersSummary"
       Tab(0).Control(2).Enabled=   0   'False
-      Tab(0).Control(3)=   "ModifyOrderPlexButton"
+      Tab(0).Control(3)=   "OrdersSummaryTabStrip"
       Tab(0).Control(3).Enabled=   0   'False
-      Tab(0).Control(4)=   "CancelOrderPlexButton"
+      Tab(0).Control(4)=   "ModifyOrderPlexButton"
       Tab(0).Control(4).Enabled=   0   'False
-      Tab(0).Control(5)=   "ClosePositionsButton"
+      Tab(0).Control(5)=   "CancelOrderPlexButton"
       Tab(0).Control(5).Enabled=   0   'False
-      Tab(0).Control(6)=   "OrderTicket1Button"
+      Tab(0).Control(6)=   "ClosePositionsButton"
       Tab(0).Control(6).Enabled=   0   'False
-      Tab(0).ControlCount=   7
+      Tab(0).Control(7)=   "OrderTicket1Button"
+      Tab(0).Control(7).Enabled=   0   'False
+      Tab(0).ControlCount=   8
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1B8C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "LiveExecutionsSummary"
+      Tab(1).Control(0)=   "SimulatedExecutionsSummary"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(2)=   "LiveExecutionsSummary"
       Tab(1).Control(2).Enabled=   0   'False
       Tab(1).ControlCount=   3
       TabCaption(2)   =   "&3. Log"
@@ -197,7 +199,7 @@ Begin VB.Form fTradeSkilDemo
          Placement       =   1
          _Version        =   393216
          BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
-            NumTabs         =   2
+            NumTabs         =   3
             BeginProperty Tab1 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
                Caption         =   "Live"
                Object.ToolTipText     =   "Show live orders"
@@ -206,6 +208,11 @@ Begin VB.Form fTradeSkilDemo
             BeginProperty Tab2 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
                Caption         =   "Simulated"
                Object.ToolTipText     =   "Show simulated orders"
+               ImageVarType    =   2
+            EndProperty
+            BeginProperty Tab3 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
+               Caption         =   "Tickfile"
+               Object.ToolTipText     =   "Show tickfile orders"
                ImageVarType    =   2
             EndProperty
          EndProperty
@@ -290,6 +297,15 @@ Begin VB.Form fTradeSkilDemo
          _ExtentX        =   21167
          _ExtentY        =   6376
       End
+      Begin TradingUI27.OrdersSummary TickfileOrdersSummary 
+         Height          =   3615
+         Left            =   120
+         TabIndex        =   67
+         Top             =   120
+         Width           =   10935
+         _ExtentX        =   19288
+         _ExtentY        =   6376
+      End
    End
    Begin MSComctlLib.TabStrip ControlsTabStrip 
       Height          =   580
@@ -366,53 +382,62 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1BE0
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label18"
-      Tab(1).Control(1)=   "Label22"
-      Tab(1).Control(2)=   "Label1"
-      Tab(1).Control(3)=   "LiveChartTimeframeSelector"
+      Tab(1).Control(0)=   "LiveChartStylesCombo"
+      Tab(1).Control(1)=   "Frame1"
+      Tab(1).Control(2)=   "ChartButton"
+      Tab(1).Control(3)=   "SessionOnlyCheck"
       Tab(1).Control(4)=   "NumHistoryBarsText"
-      Tab(1).Control(5)=   "SessionOnlyCheck"
-      Tab(1).Control(6)=   "ChartButton"
-      Tab(1).Control(7)=   "Frame1"
-      Tab(1).Control(8)=   "LiveChartStylesCombo"
+      Tab(1).Control(5)=   "LiveChartTimeframeSelector"
+      Tab(1).Control(6)=   "Label1"
+      Tab(1).Control(7)=   "Label22"
+      Tab(1).Control(8)=   "Label18"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BFC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Frame2"
-      Tab(2).Control(1)=   "HistContractSearch"
-      Tab(2).Control(2)=   "HistSessionOnlyCheck"
-      Tab(2).Control(3)=   "NumHistBarsText"
-      Tab(2).Control(4)=   "HistTimeframeSelector"
-      Tab(2).Control(5)=   "ToDatePicker"
+      Tab(2).Control(0)=   "Label5"
+      Tab(2).Control(1)=   "Label4"
+      Tab(2).Control(2)=   "Label2"
+      Tab(2).Control(3)=   "Label3"
+      Tab(2).Control(4)=   "Label8"
+      Tab(2).Control(5)=   "HistChartStylesCombo"
       Tab(2).Control(6)=   "FromDatePicker"
-      Tab(2).Control(7)=   "HistChartStylesCombo"
-      Tab(2).Control(8)=   "Label8"
-      Tab(2).Control(9)=   "Label3"
-      Tab(2).Control(10)=   "Label2"
-      Tab(2).Control(11)=   "Label4"
-      Tab(2).Control(12)=   "Label5"
+      Tab(2).Control(7)=   "ToDatePicker"
+      Tab(2).Control(8)=   "HistTimeframeSelector"
+      Tab(2).Control(9)=   "NumHistBarsText"
+      Tab(2).Control(10)=   "HistSessionOnlyCheck"
+      Tab(2).Control(11)=   "HistContractSearch"
+      Tab(2).Control(12)=   "Frame2"
       Tab(2).ControlCount=   13
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":1C18
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(2)=   "ReplayProgressLabel"
-      Tab(3).Control(3)=   "ReplayProgressBar"
+      Tab(3).Control(0)=   "TickfileOrganiser1"
+      Tab(3).Control(0).Enabled=   0   'False
+      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(1).Enabled=   0   'False
+      Tab(3).Control(2)=   "PauseReplayButton"
+      Tab(3).Control(2).Enabled=   0   'False
+      Tab(3).Control(3)=   "StopReplayButton"
+      Tab(3).Control(3).Enabled=   0   'False
       Tab(3).Control(4)=   "ReplaySpeedCombo"
-      Tab(3).Control(5)=   "StopReplayButton"
-      Tab(3).Control(6)=   "PauseReplayButton"
-      Tab(3).Control(7)=   "PlayTickFileButton"
-      Tab(3).Control(8)=   "TickfileOrganiser1"
+      Tab(3).Control(4).Enabled=   0   'False
+      Tab(3).Control(5)=   "ReplayProgressBar"
+      Tab(3).Control(5).Enabled=   0   'False
+      Tab(3).Control(6)=   "ReplayProgressLabel"
+      Tab(3).Control(6).Enabled=   0   'False
+      Tab(3).Control(7)=   "ReplayContractLabel"
+      Tab(3).Control(7).Enabled=   0   'False
+      Tab(3).Control(8)=   "Label20"
+      Tab(3).Control(8).Enabled=   0   'False
       Tab(3).ControlCount=   9
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1C34
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ConfigEditorButton"
+      Tab(4).Control(0)=   "Label6"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "Label6"
+      Tab(4).Control(2)=   "ConfigEditorButton"
       Tab(4).ControlCount=   3
       Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
          Height          =   2520
@@ -714,7 +739,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20709379
+         Format          =   67305475
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -728,7 +753,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20709379
+         Format          =   67305475
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -980,6 +1005,7 @@ End Enum
 Private Enum OrdersTabIndexNumbers
     OrdersTabIndexLive = 1
     OrdersTabIndexSimulated
+    OrderTabIndexTickfile
 End Enum
 
 '================================================================================
@@ -1595,11 +1621,18 @@ Select Case OrdersSummaryTabStrip.SelectedItem.Index
 Case OrdersTabIndexNumbers.OrdersTabIndexLive
     LiveOrdersSummary.Visible = True
     SimulatedOrdersSummary.Visible = False
+    TickfileOrdersSummary.Visible = False
     setOrdersSelection LiveOrdersSummary
 Case OrdersTabIndexNumbers.OrdersTabIndexSimulated
     LiveOrdersSummary.Visible = False
     SimulatedOrdersSummary.Visible = True
+    TickfileOrdersSummary.Visible = False
     setOrdersSelection SimulatedOrdersSummary
+Case OrdersTabIndexNumbers.OrderTabIndexTickfile
+    LiveOrdersSummary.Visible = False
+    SimulatedOrdersSummary.Visible = False
+    TickfileOrdersSummary.Visible = True
+    setOrdersSelection TickfileOrdersSummary
 End Select
 
 Exit Sub
@@ -1687,13 +1720,15 @@ If mReplayController Is Nothing Then
                                                 , _
                                                 CInt(ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)), _
                                                 250)
-    SimulatedOrdersSummary.Initialise lTickfileDataManager
-    SimulatedOrdersSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersSimulated
+    TickfileOrdersSummary.Initialise lTickfileDataManager
+    
+    Dim lOrderManager As New OrderManager
+    TickfileOrdersSummary.MonitorPositions lOrderManager.PositionManagersSimulated
     
     Set mReplayController = lTickfileDataManager.ReplayController
     
     Dim lTickers As Tickers
-    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, mTradeBuildAPI.OrderManager, , mTradeBuildAPI.OrderSubmitterSimulated)
+    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, lOrderManager, , mTradeBuildAPI.OrderSubmitterSimulated)
     
     Dim i As Long
     For i = 1 To TickfileOrganiser1.TickfileCount
@@ -2105,8 +2140,11 @@ Dim tp As TimePeriod
 Set tp = LiveChartTimeframeSelector.TimePeriod
 
 Dim lConfig As ConfigurationSection
-Set lConfig = mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
-lConfig.SetSetting ConfigSettingDataSourceKey, pTicker.Key
+
+If Not pTicker.IsTickReplay Then
+    Set lConfig = mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
+    lConfig.SetSetting ConfigSettingDataSourceKey, pTicker.Key
+End If
 
 mChartForms.Add pTicker, _
                 tp, _
@@ -2597,9 +2635,6 @@ End Sub
 Private Sub setOrdersSelection( _
                 ByVal pOrdersSummary As OrdersSummary)
 Const ProcName As String = "setOrdersSelection"
-Dim selection As IBracketOrder
-
-
 On Error GoTo Err
 
 If pOrdersSummary.IsEditing Then
@@ -2609,6 +2644,7 @@ End If
 
 pOrdersSummary.Default = False
 
+Dim selection As IBracketOrder
 Set selection = pOrdersSummary.SelectedItem
 
 If selection Is Nothing Then

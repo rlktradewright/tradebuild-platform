@@ -209,11 +209,12 @@ If mBarSpecifier.ToDate = 0 Then
     End If
     
     Dim lTimestamp As Date
+    lTimestamp = lClock.Timestamp
         
     If IsContractExpired(lContract) Then
-        lTimestamp = GetSessionTimes(lContract.ExpiryDate + lContract.SessionEndTime, lContract.SessionStartTime, lContract.SessionEndTime).EndTime
-    Else
-        lTimestamp = lClock.Timestamp
+        Dim lExpiryTimestamp As Date
+        lExpiryTimestamp = GetSessionTimes(lContract.ExpiryDate + lContract.SessionEndTime, lContract.SessionStartTime, lContract.SessionEndTime).EndTime
+        If lExpiryTimestamp < lTimestamp Then lTimestamp = lExpiryTimestamp
     End If
     
     Dim lSessionStartTime As Date
