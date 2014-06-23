@@ -88,7 +88,7 @@ Private mDataSource                 As IMarketDataSource
 
 Private mHistDataStore              As IHistoricalDataStore
 
-Private mTickersRef                 As WeakReference
+Private mTickers                    As Tickers
 
 Private mTimeframes                 As Timeframes
 
@@ -620,7 +620,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsLiveOrdersEnabled() As Boolean
-IsLiveOrdersEnabled = Not getTickers.OrderSubmitterLive Is Nothing
+IsLiveOrdersEnabled = Not mTickers.OrderSubmitterLive Is Nothing
 End Property
 
 Public Property Get IsMarketDataRequested() As Boolean
@@ -648,7 +648,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsSimulatedOrdersEnabled() As Boolean
-IsSimulatedOrdersEnabled = Not getTickers.OrderSubmitterSimulated Is Nothing
+IsSimulatedOrdersEnabled = Not mTickers.OrderSubmitterSimulated Is Nothing
 End Property
 
 Public Property Get IsTickReplay() As Boolean
@@ -720,26 +720,26 @@ Public Property Get PositionManager() As PositionManager
 Const ProcName As String = "PositionManager"
 On Error GoTo Err
 
-Assert Not getTickers.OrderSubmitterLive Is Nothing, "No order submitter exists for live orders"
+Assert Not mTickers.OrderSubmitterLive Is Nothing, "No order submitter exists for live orders"
 
 If mPositionManager Is Nothing Then
-    If getTickers.ScopeName = "" Then
-        Set mPositionManager = getTickers.OrderManager.CreatePositionManager(mKey, _
+    If mTickers.ScopeName = "" Then
+        Set mPositionManager = mTickers.OrderManager.CreatePositionManager(mKey, _
                                                     mDataSource.ContractFuture, _
-                                                    getTickers.OrderSubmitterLive, _
+                                                    mTickers.OrderSubmitterLive, _
                                                     mDataSource, _
-                                                    getTickers.Name, _
+                                                    mTickers.Name, _
                                                     False, _
-                                                    getTickers.MoneyManager)
+                                                    mTickers.MoneyManager)
     Else
-        Set mPositionManager = getTickers.OrderManager.CreateRecoverablePositionManager(mKey, _
+        Set mPositionManager = mTickers.OrderManager.CreateRecoverablePositionManager(mKey, _
                                                     mDataSource.ContractFuture, _
-                                                    getTickers.OrderSubmitterLive, _
+                                                    mTickers.OrderSubmitterLive, _
                                                     mDataSource, _
-                                                    getTickers.ScopeName, _
-                                                    getTickers.Name, _
+                                                    mTickers.ScopeName, _
+                                                    mTickers.Name, _
                                                     False, _
-                                                    getTickers.MoneyManager)
+                                                    mTickers.MoneyManager)
     End If
 End If
 
@@ -755,16 +755,16 @@ Public Property Get PositionManagerSimulated() As PositionManager
 Const ProcName As String = "PositionManagerSimulated"
 On Error GoTo Err
 
-Assert Not getTickers.OrderSubmitterSimulated Is Nothing, "No order submitter exists for simulated orders"
+Assert Not mTickers.OrderSubmitterSimulated Is Nothing, "No order submitter exists for simulated orders"
 
 If mPositionManagerSimulated Is Nothing Then
-    Set mPositionManagerSimulated = getTickers.OrderManager.CreatePositionManager(GenerateGUIDString, _
+    Set mPositionManagerSimulated = mTickers.OrderManager.CreatePositionManager(GenerateGUIDString, _
                                                         mDataSource.ContractFuture, _
-                                                        getTickers.OrderSubmitterSimulated, _
+                                                        mTickers.OrderSubmitterSimulated, _
                                                         mDataSource, _
-                                                        getTickers.Name & "(simulated)", _
+                                                        mTickers.Name & "(simulated)", _
                                                         True, _
-                                                        getTickers.MoneyManager)
+                                                        mTickers.MoneyManager)
 End If
 
 Set PositionManagerSimulated = mPositionManagerSimulated
@@ -1046,10 +1046,12 @@ End If
 
 Set mStudyBase = Nothing
 
-getTickers.RemoveNoFinish Me
+mTickers.RemoveNoFinish Me
 If pRemoveFromConfig Then RemoveFromConfig
 
 mDataSource.Finish
+
+Set mTickers = Nothing
 
 gLogger.Log "Ticker is finished", ProcName, ModuleName
 
@@ -1104,7 +1106,7 @@ mDataSource.AddQuoteListener Me
 mDataSource.AddRawMarketDepthListener Me
 mDataSource.AddStateChangeListener Me
 
-Set mTickersRef = CreateWeakReference(pTickers)
+Set mTickers = pTickers
 Set mPositionManager = pPositionManager
 
 mKey = mDataSource.Key
@@ -1255,7 +1257,7 @@ Const ProcName As String = "RemoveFromConfig"
 On Error GoTo Err
 
 mDataSource.RemoveFromConfig
-getTickers.RemoveTickerFromConfig Me
+mTickers.RemoveTickerFromConfig Me
 
 Exit Sub
 
@@ -1647,19 +1649,6 @@ If mDataSource.ContractFuture.IsAvailable Then
     Set lContract = mDataSource.ContractFuture.Value
     Set getContractSpec = lContract.Specifier
 End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function getTickers() As Tickers
-Const ProcName As String = "getTickers"
-
-On Error GoTo Err
-
-Set getTickers = mTickersRef.Target
 
 Exit Function
 
