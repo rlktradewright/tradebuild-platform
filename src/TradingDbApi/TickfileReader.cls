@@ -530,7 +530,7 @@ Else
     With mInputTickfileSpecifier
         If .EntireSession Then
             Dim st As SessionTimes
-            st = GetSessionTimes(.FromDate, _
+            st = GetSessionTimes(.FromDate + mContract.SessionStartTime + 1# / 86400#, _
                                 mContract.SessionStartTime, _
                                 mContract.SessionEndTime)
             .FromDate = st.StartTime
