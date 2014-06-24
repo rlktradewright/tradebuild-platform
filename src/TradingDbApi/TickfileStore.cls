@@ -191,17 +191,17 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-Do While mReaders.Count > 0
-    Dim lReader As TickfileReader
-    Set lReader = mReaders(1)
+Dim lReader As TickfileReader
+For Each lReader In mReaders
     lReader.Finish
-Loop
+Next
+mReaders.Clear
 
-Do While mWriters.Count > 0
-    Dim lWriter As TickfileWriter
-    Set lWriter = mWriters(1)
+Dim lWriter As TickfileWriter
+For Each lWriter In mWriters
     lWriter.Finish
-Loop
+Next
+mWriters.Clear
 
 Exit Sub
 

@@ -90,6 +90,7 @@ Private Sub ITickfileWriter_Finish()
 Const ProcName As String = "ITickfileWriter_Finish"
 On Error GoTo Err
 
+mParent.TickfileWriterFinished Me
 Finish
 
 Exit Sub
@@ -256,7 +257,7 @@ If Not mTickWriter Is Nothing Then
     Set mTickWriter = Nothing
 End If
 
-mParent.TickfileWriterFinished Me
+Set mParent = Nothing
 
 Exit Sub
 
