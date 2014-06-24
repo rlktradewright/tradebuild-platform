@@ -118,11 +118,11 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1B8C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(0)=   "LiveExecutionsSummary"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "LiveExecutionsSummary"
+      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
       Tab(1).Control(2).Enabled=   0   'False
       Tab(1).ControlCount=   3
       TabCaption(2)   =   "&3. Log"
@@ -382,62 +382,62 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1BE0
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "LiveChartStylesCombo"
-      Tab(1).Control(1)=   "Frame1"
-      Tab(1).Control(2)=   "ChartButton"
-      Tab(1).Control(3)=   "SessionOnlyCheck"
+      Tab(1).Control(0)=   "Label18"
+      Tab(1).Control(1)=   "Label22"
+      Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(3)=   "LiveChartTimeframeSelector"
       Tab(1).Control(4)=   "NumHistoryBarsText"
-      Tab(1).Control(5)=   "LiveChartTimeframeSelector"
-      Tab(1).Control(6)=   "Label1"
-      Tab(1).Control(7)=   "Label22"
-      Tab(1).Control(8)=   "Label18"
+      Tab(1).Control(5)=   "SessionOnlyCheck"
+      Tab(1).Control(6)=   "ChartButton"
+      Tab(1).Control(7)=   "Frame1"
+      Tab(1).Control(8)=   "LiveChartStylesCombo"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BFC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label5"
-      Tab(2).Control(1)=   "Label4"
-      Tab(2).Control(2)=   "Label2"
-      Tab(2).Control(3)=   "Label3"
-      Tab(2).Control(4)=   "Label8"
-      Tab(2).Control(5)=   "HistChartStylesCombo"
+      Tab(2).Control(0)=   "Frame2"
+      Tab(2).Control(1)=   "HistContractSearch"
+      Tab(2).Control(2)=   "HistSessionOnlyCheck"
+      Tab(2).Control(3)=   "NumHistBarsText"
+      Tab(2).Control(4)=   "HistTimeframeSelector"
+      Tab(2).Control(5)=   "ToDatePicker"
       Tab(2).Control(6)=   "FromDatePicker"
-      Tab(2).Control(7)=   "ToDatePicker"
-      Tab(2).Control(8)=   "HistTimeframeSelector"
-      Tab(2).Control(9)=   "NumHistBarsText"
-      Tab(2).Control(10)=   "HistSessionOnlyCheck"
-      Tab(2).Control(11)=   "HistContractSearch"
-      Tab(2).Control(12)=   "Frame2"
+      Tab(2).Control(7)=   "HistChartStylesCombo"
+      Tab(2).Control(8)=   "Label8"
+      Tab(2).Control(9)=   "Label3"
+      Tab(2).Control(10)=   "Label2"
+      Tab(2).Control(11)=   "Label4"
+      Tab(2).Control(12)=   "Label5"
       Tab(2).ControlCount=   13
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":1C18
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "TickfileOrganiser1"
+      Tab(3).Control(0)=   "Label20"
       Tab(3).Control(0).Enabled=   0   'False
-      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(1)=   "ReplayContractLabel"
       Tab(3).Control(1).Enabled=   0   'False
-      Tab(3).Control(2)=   "PauseReplayButton"
+      Tab(3).Control(2)=   "ReplayProgressLabel"
       Tab(3).Control(2).Enabled=   0   'False
-      Tab(3).Control(3)=   "StopReplayButton"
+      Tab(3).Control(3)=   "ReplayProgressBar"
       Tab(3).Control(3).Enabled=   0   'False
       Tab(3).Control(4)=   "ReplaySpeedCombo"
       Tab(3).Control(4).Enabled=   0   'False
-      Tab(3).Control(5)=   "ReplayProgressBar"
+      Tab(3).Control(5)=   "StopReplayButton"
       Tab(3).Control(5).Enabled=   0   'False
-      Tab(3).Control(6)=   "ReplayProgressLabel"
+      Tab(3).Control(6)=   "PauseReplayButton"
       Tab(3).Control(6).Enabled=   0   'False
-      Tab(3).Control(7)=   "ReplayContractLabel"
+      Tab(3).Control(7)=   "PlayTickFileButton"
       Tab(3).Control(7).Enabled=   0   'False
-      Tab(3).Control(8)=   "Label20"
+      Tab(3).Control(8)=   "TickfileOrganiser1"
       Tab(3).Control(8).Enabled=   0   'False
       Tab(3).ControlCount=   9
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1C34
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label6"
+      Tab(4).Control(0)=   "ConfigEditorButton"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "ConfigEditorButton"
+      Tab(4).Control(2)=   "Label6"
       Tab(4).ControlCount=   3
       Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
          Height          =   2520
@@ -739,7 +739,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   67305475
+         Format          =   67239939
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -753,7 +753,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   67305475
+         Format          =   67239939
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -1292,12 +1292,7 @@ Private Sub ChartButton1_Click()
 Const ProcName As String = "ChartButton1_Click"
 On Error GoTo Err
 
-Dim lTicker As Ticker
-For Each lTicker In TickerGrid1.SelectedTickers
-    createChart lTicker
-Next
-
-clearSelectedTickers
+ChartButton_Click
 
 Exit Sub
 
@@ -1495,7 +1490,6 @@ End Sub
 
 Private Sub LiveContractSearch_NoContracts()
 Const ProcName As String = "LiveContractSearch_NoContracts"
-
 On Error GoTo Err
 
 gModelessMsgBox "No contracts found", vbExclamation, "Attention"
@@ -1508,7 +1502,6 @@ End Sub
 
 Private Sub LiveChartTimeframeSelector_Click()
 Const ProcName As String = "LiveChartTimeframeSelector_Click"
-
 On Error GoTo Err
 
 setChartButtonTooltip
@@ -1517,12 +1510,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub LiveOrdersSummary_SelectionChanged()
 Const ProcName As String = "LiveOrdersSummary_SelectionChanged"
-
 On Error GoTo Err
 
 setOrdersSelection LiveOrdersSummary
@@ -1531,7 +1522,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub MarketDepthButton_Click()
@@ -1549,12 +1539,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub ModifyOrderPlexButton_Click()
 Const ProcName As String = "ModifyOrderPlexButton_Click"
-
 On Error GoTo Err
 
 If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
@@ -1577,12 +1565,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub NumHistBarsText_Validate(cancel As Boolean)
 Const ProcName As String = "NumHistBarsText_Validate"
-
 On Error GoTo Err
 
 If Not IsInteger(NumHistBarsText.Text, 0, 2000) Then cancel = True
@@ -1591,12 +1577,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub NumHistoryBarsText_Validate(cancel As Boolean)
 Const ProcName As String = "NumHistoryBarsText_Validate"
-
 On Error GoTo Err
 
 If Not IsInteger(NumHistoryBarsText.Text, 0, 2000) Then cancel = True
@@ -1605,16 +1589,13 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub OrdersSummaryTabStrip_Click()
 Const ProcName As String = "OrdersSummaryTabStrip_Click"
-Static currIndex As Long
-
-
 On Error GoTo Err
 
+Static currIndex As Long
 If OrdersSummaryTabStrip.SelectedItem.Index = currIndex Then Exit Sub
 
 Select Case OrdersSummaryTabStrip.SelectedItem.Index
@@ -1623,16 +1604,19 @@ Case OrdersTabIndexNumbers.OrdersTabIndexLive
     SimulatedOrdersSummary.Visible = False
     TickfileOrdersSummary.Visible = False
     setOrdersSelection LiveOrdersSummary
+    currIndex = OrdersTabIndexNumbers.OrdersTabIndexLive
 Case OrdersTabIndexNumbers.OrdersTabIndexSimulated
     LiveOrdersSummary.Visible = False
     SimulatedOrdersSummary.Visible = True
     TickfileOrdersSummary.Visible = False
     setOrdersSelection SimulatedOrdersSummary
+    currIndex = OrdersTabIndexNumbers.OrdersTabIndexSimulated
 Case OrdersTabIndexNumbers.OrderTabIndexTickfile
     LiveOrdersSummary.Visible = False
     SimulatedOrdersSummary.Visible = False
     TickfileOrdersSummary.Visible = True
     setOrdersSelection TickfileOrdersSummary
+    currIndex = OrdersTabIndexNumbers.OrderTabIndexTickfile
 End Select
 
 Exit Sub
@@ -1643,45 +1627,30 @@ End Sub
 
 Private Sub OrderTicket1Button_Click()
 Const ProcName As String = "OrderTicket1Button_Click"
-
 On Error GoTo Err
 
-If getSelectedDataSource Is Nothing Then
-    gModelessMsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
-Else
-    getOrderTicket.Show vbModeless, Me
-    getOrderTicket.Ticker = getSelectedDataSource
-End If
+setupOrderTicket
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub OrderTicketButton_Click()
 Const ProcName As String = "OrderTicketButton_Click"
-
 On Error GoTo Err
 
-If getSelectedDataSource Is Nothing Then
-    gModelessMsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
-Else
-    getOrderTicket.Show vbModeless, Me
-    getOrderTicket.Ticker = getSelectedDataSource
-End If
+setupOrderTicket
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub PauseReplayButton_Click()
 Const ProcName As String = "PauseReplayButton_Click"
-
 On Error GoTo Err
 
 PlayTickFileButton.Enabled = True
@@ -1693,7 +1662,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub PlayTickFileButton_Click()
@@ -1767,7 +1735,6 @@ End Sub
 
 Private Sub ShowControlsPicture_Click()
 Const ProcName As String = "ShowControlsPicture_Click"
-
 On Error GoTo Err
 
 showControls
@@ -2046,7 +2013,6 @@ End Sub
 
 Public Sub MakeVisible()
 Const ProcName As String = "MakeVisible"
-
 On Error GoTo Err
 
 Me.Show
@@ -2064,7 +2030,6 @@ End Sub
 
 Private Sub applyInstanceSettings()
 Const ProcName As String = "applyInstanceSettings"
-
 On Error GoTo Err
 
 LogMessage "Loading configuration: positioning main form"
@@ -2386,7 +2351,6 @@ End Sub
 
 Private Sub hideControls()
 Const ProcName As String = "hideControls"
-
 On Error GoTo Err
 
 ControlsSSTab.Visible = False
@@ -2405,7 +2369,6 @@ End Sub
 
 Private Sub hideFeatures()
 Const ProcName As String = "hideFeatures"
-
 On Error GoTo Err
 
 FeaturesSSTAB.Visible = False
@@ -2423,7 +2386,6 @@ End Sub
 
 Private Sub killLoggingForThisForm()
 Const ProcName As String = "killLoggingForThisForm"
-
 On Error GoTo Err
 
 GetLogger("log").RemoveLogListener Me
@@ -2507,11 +2469,9 @@ End Sub
 
 Private Sub Resize()
 Const ProcName As String = "Resize"
-Dim left As Long
-
-
 On Error GoTo Err
 
+Dim left As Long
 If mControlsHidden Then
     left = ShowControlsPicture.Width + 60
 Else
@@ -2578,11 +2538,9 @@ End Sub
 
 Private Sub setChartButtonTooltip()
 Const ProcName As String = "setChartButtonTooltip"
-Dim tp As TimePeriod
-
-
 On Error GoTo Err
 
+Dim tp As TimePeriod
 Set tp = LiveChartTimeframeSelector.TimePeriod
 
 ChartButton.ToolTipText = "Show " & tp.ToString & " chart"
@@ -2950,7 +2908,6 @@ End Sub
 
 Private Sub setupExecutionSummaries()
 Const ProcName As String = "setupExecutionSummaries"
-
 On Error GoTo Err
 
 If mTradeBuildAPI.AllOrdersSimulated Then
@@ -3022,9 +2979,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub setupOrderTicket()
+Const ProcName As String = "setupOrderTicket"
+On Error GoTo Err
+
+If getSelectedDataSource Is Nothing Then
+    gModelessMsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
+Else
+    getOrderTicket.Show vbModeless, Me
+    getOrderTicket.Ticker = getSelectedDataSource
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub setupReplaySpeedCombo()
 Const ProcName As String = "setupReplaySpeedCombo"
-
 On Error GoTo Err
 
 ReplaySpeedCombo.AddItem "Continuous"
@@ -3073,11 +3046,10 @@ End Sub
 
 Private Sub setupTimeframeSelectors()
 Const ProcName As String = "setupTimeframeSelectors"
-' now set up the timeframe selectors, which depends on what timeframes the historical data service
-' provider supports (it obtains this info from TradeBuild)
-
 On Error GoTo Err
 
+' now set up the timeframe selectors, which depends on what timeframes the historical data service
+' provider supports (it obtains this info from TradeBuild)
 LiveChartTimeframeSelector.Initialise mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator     ' use the default settings built-in to the control
 LiveChartTimeframeSelector.SelectTimeframe GetTimePeriod(5, TimePeriodMinute)
 HistTimeframeSelector.Initialise mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator
@@ -3093,7 +3065,6 @@ End Sub
 
 Private Sub showControls()
 Const ProcName As String = "showControls"
-
 On Error GoTo Err
 
 mControlsHidden = False
@@ -3112,7 +3083,6 @@ End Sub
 
 Private Sub showFeatures()
 Const ProcName As String = "showFeatures"
-
 On Error GoTo Err
 
 mFeaturesHidden = False
