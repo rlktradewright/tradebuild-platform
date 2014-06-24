@@ -468,9 +468,11 @@ lIndex = -1
 
 Dim i As Long
 For i = 0 To UBound(mMarketTable)
-    If mMarketTable(i).ContractSpec.Equals(pContractSpec) Then
-        lIndex = i
-        Exit For
+    If Not mMarketTable(i).ContractSpec Is Nothing Then
+        If pContractSpec.Equals(mMarketTable(i).ContractSpec) Then
+            lIndex = i
+            Exit For
+        End If
     End If
 Next
 
