@@ -683,6 +683,11 @@ On Error GoTo Err
 
 Dim lOrderSubmitter As IOrderSubmitter
 If Not pFactory Is Nothing Then
+    If TypeOf pFactory Is OrderSimulatorSP Then
+        Dim l As OrderSimulatorSP
+        Set l = pFactory
+        l.Initialise Me.MarketDataManager, Me.ContractStorePrimary, Me.ContractStoreSecondary
+    End If
     Set lOrderSubmitter = pFactory.CreateOrderSubmitter(pListener)
 End If
 Set CreateOrderSubmitter = lOrderSubmitter
