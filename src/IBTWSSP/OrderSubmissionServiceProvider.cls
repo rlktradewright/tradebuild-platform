@@ -73,8 +73,6 @@ Private mServiceProviderManager          As IServiceProviderManager
 
 Private mTwsLogLevel                    As TwsLogLevels
 
-Private mOrderSubmitters                As Collection
-
 Private mOrderRecoveryListener          As IOrderRecoveryListener
 Private mStartRecoveryFrom              As Date
 
@@ -83,8 +81,6 @@ Private mStartRecoveryFrom              As Date
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mOrderSubmitters = New Collection
-
 mName = OrderSubmissionSPName
 
 mClientID = -1
@@ -174,8 +170,8 @@ Private Sub IServiceProvider_Terminate()
 Const ProcName As String = "IServiceProvider_Terminate"
 On Error GoTo Err
 logMessage "Order Submission Service Provider terminating", "IServiceProvider_Terminate"
-finishSubmitters
 If Not mClient Is Nothing Then mClient.Finish
+Set mClient = Nothing
 Set mServiceProviderManager = Nothing
 Exit Sub
 Err:
@@ -332,56 +328,9 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub orderSubmitterFinished( _
-                ByVal pOrderSubmitter As OrderSubmitter)
-Const ProcName As String = "orderSubmitterFinished"
-Dim i As Long
-Dim submitter As OrderSubmitter
-
-On Error GoTo Err
-
-i = 1
-For Each submitter In mOrderSubmitters
-    If submitter Is pOrderSubmitter Then
-        mOrderSubmitters.Remove i
-        Exit For
-    End If
-    i = i + 1
-Next
-
-If mOrderSubmitters.Count = 0 And _
-    Not mkeepConnection _
-Then
-    Set mClient = Nothing
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 '===============================================================================
 ' Helper Functions
 '================================================================================
-
-Private Sub finishSubmitters()
-Const ProcName As String = "finishSubmitters"
-Dim lSubmitter As IOrderSubmitter
-
-On Error GoTo Err
-
-For Each lSubmitter In mOrderSubmitters
-    lSubmitter.Finish
-Next
-
-If Not mClient Is Nothing Then Set mClient = Nothing
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 Private Sub logMessage( _
                 ByRef pMsg As String, _
