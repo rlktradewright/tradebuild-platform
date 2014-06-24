@@ -418,6 +418,12 @@ Private Function getTick() As Boolean
 Const ProcName As String = "getTick"
 On Error GoTo Err
 
+If mTickStream Is Nothing Then
+    ' tick reader has been Finished (eg because TickfileStore has been finished)
+    noMoreTicks
+    Exit Function
+End If
+
 Dim tick As GenericTick
 Do While mTickStream.GetNextTick(tick)
     If tick.TimeStamp >= mInputTickfileSpecifier.FromDate Then
