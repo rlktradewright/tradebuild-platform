@@ -361,7 +361,12 @@ If mTicksPlayed = 0 Then Exit Sub
 Dim lTimestamp As Date
 lTimestamp = mClock.Timestamp
 'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Notify progress: " & FormatTimestamp(lTimestamp, TimestampDateAndTimeISO8601)
-mTickfileReplayController.NotifyProgress lTimestamp, mTicksPlayed, IIf(mSingleSource, mPlayers(0).Player.ReplayProgressPercent, 0)
+
+If mSingleSource Then
+    mTickfileReplayController.NotifyProgress lTimestamp, mTicksPlayed, mPlayers(0).Player.ReplayProgressPercent
+Else
+    mTickfileReplayController.NotifyProgress lTimestamp, mTicksPlayed, 0
+End If
 
 Exit Sub
 
