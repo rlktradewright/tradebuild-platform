@@ -448,6 +448,8 @@ lOrder.Initialise Me, New Order, pClientId, pParentId, pOcaGroup, pTransmit, get
 gSyncToOrder lOrder.Order, pOrder
 mAllOrders.Add lOrder, pOrder.Id
 
+Set createSimulatorOrder = lOrder
+
 Exit Function
 
 Err:
@@ -1094,11 +1096,10 @@ Private Function startMarket( _
 Const ProcName As String = "startMarket"
 On Error GoTo Err
 
-Dim lIndex As Long
 Dim lDataSource As IMarketDataSource
-
 Set lDataSource = getMarketDataSource(pContractSpec)
 
+Dim lIndex As Long
 lIndex = lDataSource.Handle
 
 If lIndex > UBound(mMarketTable) Then
