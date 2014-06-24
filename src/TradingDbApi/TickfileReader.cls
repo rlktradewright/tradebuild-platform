@@ -420,7 +420,6 @@ On Error GoTo Err
 
 If mTickStream Is Nothing Then
     ' tick reader has been Finished (eg because TickfileStore has been finished)
-    noMoreTicks
     Exit Function
 End If
 
