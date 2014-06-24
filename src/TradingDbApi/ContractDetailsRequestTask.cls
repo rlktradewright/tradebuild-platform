@@ -94,7 +94,7 @@ Const ProcName As String = "IContractFetchListener_FetchCancelled"
 On Error GoTo Err
 
 If mContractsFutureBuilder.Future.IsPending Then mContractsFutureBuilder.Cancel
-If Not mListener Is Nothing Then mListener.NotifyContract pCookie, pCookie
+If Not mListener Is Nothing Then mListener.FetchCancelled pCookie
 
 Exit Sub
 
