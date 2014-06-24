@@ -432,6 +432,8 @@ Public Function CreateInProcessExchangeSimulator( _
 Const ProcName As String = "CreateInProcessExchangeSimulator"
 On Error GoTo Err
 
+AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore is Nothing"
+
 Set CreateInProcessExchangeSimulator = New InProcessExchangeSimulator
 CreateInProcessExchangeSimulator.Initialise pMarketDataManager, pPrimaryContractStore, pSecondaryContractStore
 
