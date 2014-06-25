@@ -87,7 +87,7 @@ Const ProcName As String = "IOrderSubmissionListener_NotifyError"
 On Error GoTo Err
 
 Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners
+For Each lListener In mOrderSubmissionListeners.CurrentListeners
     lListener.NotifyError pOrderId, pErrorCode, pErrorMsg
 Next
 
@@ -102,7 +102,7 @@ Const ProcName As String = "IOrderSubmissionListener_NotifyExecutionReport"
 On Error GoTo Err
 
 Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners
+For Each lListener In mOrderSubmissionListeners.CurrentListeners
     lListener.NotifyExecutionReport pExecutionReport
 Next
 
@@ -117,7 +117,7 @@ Const ProcName As String = "IOrderSubmissionListener_NotifyOrderReport"
 On Error GoTo Err
 
 Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners
+For Each lListener In mOrderSubmissionListeners.CurrentListeners
     lListener.NotifyOrderReport pOrderReport
 Next
 
@@ -132,7 +132,7 @@ Const ProcName As String = "IOrderSubmissionListener_NotifyOrderStatusReport"
 On Error GoTo Err
 
 Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners
+For Each lListener In mOrderSubmissionListeners.CurrentListeners
     lListener.NotifyOrderStatusReport pOrderStatusReport
 Next
 
@@ -286,20 +286,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
-Dim EntryOrder As IOrder
-Dim Stoporder As IOrder
-Dim TargetOrder As IOrder
-Dim Transmit As Boolean
-Dim OcaGroup As String
-
 Const ProcName As String = "IOrderSubmitter_ExecuteBracketOrder"
 On Error GoTo Err
 
+Dim EntryOrder As IOrder
 Set EntryOrder = pBracketOrder.EntryOrder
+
+Dim Stoporder As IOrder
 Set Stoporder = pBracketOrder.StopLossOrder
+
+Dim TargetOrder As IOrder
 Set TargetOrder = pBracketOrder.TargetOrder
 
 If Not EntryOrder Is Nothing Then
+    Dim Transmit As Boolean
     Transmit = True
     If Not Stoporder Is Nothing Then
         If Stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then Transmit = False
@@ -310,6 +310,7 @@ If Not EntryOrder Is Nothing Then
         
     PlaceOrder EntryOrder, "", "", Transmit
     
+    Dim OcaGroup As String
     OcaGroup = GenerateTextID
 
     If Not Stoporder Is Nothing Then
