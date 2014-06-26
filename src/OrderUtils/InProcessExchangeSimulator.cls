@@ -667,16 +667,64 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub NotifyOrderReport( _
+                ByVal pOrder As IOrder, _
+                ByVal pClientId As Long)
+Const ProcName As String = "notifyOrderReport"
+On Error GoTo Err
+
+Dim lOrderReport As New OrderReport
+lOrderReport.Action = pOrder.BrokerId
+lOrderReport.AllOrNone = pOrder.AllOrNone
+lOrderReport.BlockOrder = pOrder.BlockOrder
+lOrderReport.BrokerId = pOrder.BrokerId
+lOrderReport.DiscretionaryAmount = pOrder.DiscretionaryAmount
+lOrderReport.DisplaySize = pOrder.DisplaySize
+lOrderReport.ETradeOnly = pOrder.ETradeOnly
+lOrderReport.FirmQuoteOnly = pOrder.FirmQuoteOnly
+lOrderReport.GoodAfterTime = pOrder.GoodAfterTime
+lOrderReport.GoodAfterTimeTZ = pOrder.GoodAfterTimeTZ
+lOrderReport.GoodTillDate = pOrder.GoodTillDate
+lOrderReport.GoodTillDateTZ = pOrder.GoodTillDateTZ
+lOrderReport.Hidden = pOrder.Hidden
+lOrderReport.Id = pOrder.Id
+lOrderReport.IgnoreRegularTradingHours = pOrder.IgnoreRegularTradingHours
+lOrderReport.IsSimulated = pOrder.IsSimulated
+lOrderReport.LimitPrice = pOrder.LimitPrice
+lOrderReport.MinimumQuantity = pOrder.MinimumQuantity
+lOrderReport.NbboPriceCap = pOrder.NbboPriceCap
+lOrderReport.OrderType = pOrder.OrderType
+lOrderReport.Origin = pOrder.Origin
+lOrderReport.OriginatorRef = pOrder.OriginatorRef
+lOrderReport.OverrideConstraints = pOrder.OverrideConstraints
+lOrderReport.ProviderProperties = pOrder.ProviderProperties
+lOrderReport.Quantity = pOrder.Quantity
+lOrderReport.SettlingFirm = pOrder.SettlingFirm
+lOrderReport.Status = pOrder.Status
+lOrderReport.StopTriggerMethod = pOrder.StopTriggerMethod
+lOrderReport.SweepToFill = pOrder.SweepToFill
+lOrderReport.TimeInForce = pOrder.TimeInForce
+lOrderReport.TriggerPrice = pOrder.TriggerPrice
+
+mClientTable(pClientId).Listener.NotifyOrderReport lOrderReport
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub notifyOrderStatus( _
-                ByVal pOrder As SimulatorOrder)
+                ByVal pOrder As IOrder, _
+                ByVal pClientId As LoadPictureColorConstants)
 Const ProcName As String = "notifyOrderStatus"
 On Error GoTo Err
 
 Dim lOrderStatusReport As New OrderStatusReport
-lOrderStatusReport.OrderId = pOrder.Order.Id
-lOrderStatusReport.Status = pOrder.Order.Status
-lOrderStatusReport.BrokerId = pOrder.Order.BrokerId
-mClientTable(pOrder.ClientId).Listener.NotifyOrderStatusReport lOrderStatusReport
+lOrderStatusReport.OrderId = pOrder.Id
+lOrderStatusReport.Status = pOrder.Status
+lOrderStatusReport.BrokerId = pOrder.BrokerId
+mClientTable(pClientId).Listener.NotifyOrderStatusReport lOrderStatusReport
 
 Exit Sub
 
@@ -929,8 +977,8 @@ If pOrder.Order.QuantityRemaining = 0 Then pOrder.Order.Status = OrderStatuses.O
 lExec.IsSimulated = True
 mClientTable(pOrder.ClientId).Listener.NotifyExecutionReport lExec
 
-
-notifyOrderStatus pOrder
+NotifyOrderReport pOrder.Order, pOrder.ClientId
+notifyOrderStatus pOrder.Order, pOrder.ClientId
 
 handleRelatedOrders pOrder
 
@@ -948,8 +996,17 @@ Private Sub setOrderStatus( _
                 ByVal pOrder As SimulatorOrder, _
                 ByVal pStatus As OrderStatuses)
 
+Const ProcName As String = "setOrderStatus"
+On Error GoTo Err
+
 pOrder.Order.Status = pStatus
-notifyOrderStatus pOrder
+NotifyOrderReport pOrder.Order, pOrder.ClientId
+notifyOrderStatus pOrder.Order, pOrder.ClientId
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 'Private Sub setPendingCancelOrder(order as simulatororder)
@@ -999,7 +1056,7 @@ End Sub
 'End Sub
 
 Private Sub setRejectOrder( _
-                ByVal pOrder As Order, _
+                ByVal pOrder As IOrder, _
                 ByVal pErrorCode As Long, _
                 ByVal pReason As String, _
                 ByVal pClientId As Long)
@@ -1010,7 +1067,7 @@ On Error GoTo Err
 pOrder.Status = OrderStatuses.OrderStatusRejected
 
 mClientTable(pClientId).Listener.NotifyError pOrder.Id, pErrorCode, "Order rejected - reason: " & pReason
-notifyOrderStatus pOrder
+notifyOrderStatus pOrder, pClientId
 
 Exit Sub
 
@@ -1088,7 +1145,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Function startMarket( _
@@ -1153,12 +1209,11 @@ Private Sub processTrade(ByVal pTimestamp As Date, _
 Const ProcName As String = "processTrade"
 On Error GoTo Err
 
-Dim lOrder As SimulatorOrder
-
 With mMarketTable(pMarketId)
     handleCreatedOrders pMarketId
     If Not .SimulateExchangeDelays Then handlePendingSubmitOrders pMarketId
 
+    Dim lOrder As SimulatorOrder
     For Each lOrder In .ActiveOrders
         If lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
             If lOrder.AtExchange Then
