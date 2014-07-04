@@ -758,9 +758,11 @@ mFirstBracketOrderGridRowIndex = 0
 
 Dim lPositionManager As PositionManager
 For Each lPositionManager In mMonitoredPositions
-    lPositionManager.RemoveProfitListener Me
-    lPositionManager.RemoveChangeListener Me
-    lPositionManager.BracketOrders.RemoveCollectionChangeListener Me
+    If Not lPositionManager.IsFinished Then
+        lPositionManager.RemoveProfitListener Me
+        lPositionManager.RemoveChangeListener Me
+        lPositionManager.BracketOrders.RemoveCollectionChangeListener Me
+    End If
 Next
 mMonitoredPositions.Clear
 
