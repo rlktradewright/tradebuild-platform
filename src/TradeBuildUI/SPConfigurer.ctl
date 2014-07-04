@@ -1434,11 +1434,11 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get dirty() As Boolean
-Const ProcName As String = "dirty"
+Public Property Get Dirty() As Boolean
+Const ProcName As String = "Dirty"
 On Error GoTo Err
 
-dirty = ApplyButton.Enabled
+Dirty = ApplyButton.Enabled
 
 Exit Property
 
@@ -1468,7 +1468,8 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-mCustomParams.RemoveCollectionChangeListener Me
+Set ParamsGrid.DataSource = Nothing
+If Not mCustomParams Is Nothing Then mCustomParams.RemoveCollectionChangeListener Me
 
 Exit Sub
 
