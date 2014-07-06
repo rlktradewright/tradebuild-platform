@@ -1468,8 +1468,12 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-Set ParamsGrid.DataSource = Nothing
-If Not mCustomParams Is Nothing Then mCustomParams.RemoveCollectionChangeListener Me
+If Not mCustomParams Is Nothing Then
+    Set ParamsGrid.DataSource = Nothing
+    mCustomParams.RemoveCollectionChangeListener Me
+End If
+
+Set mCurrOptionsPic = Nothing
 
 Exit Sub
 
@@ -1495,15 +1499,6 @@ Set mCurrSP = Nothing
 Set mCurrProps = Nothing
 mCurrCategory = ""
 mCurrSpOption = ""
-
-Dim da As DataAdapter
-If mCustomParams Is Nothing Then
-    Set mCustomParams = New Parameters
-    Set da = New DataAdapter
-    Set da.object = mCustomParams
-    Set ParamsGrid.DataSource = da
-    mCustomParams.AddCollectionChangeListener Me
-End If
 
 loadConfig pConfigdata
 
@@ -1853,19 +1848,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-'Private Function findProperty( _
-'                ByVal name As String) As ConfigurationSection
-'Dim prop As ConfigurationSection
-'
-'name = UCase$(name)
-'For Each prop In mCurrProps.childItems
-'    If UCase$(prop.getAttribute(AttributeNamePropertyName)) = name Then
-'        Set findProperty = prop
-'        Exit Function
-'    End If
-'Next
-'End Function
 
 Private Function findSp( _
                 ByVal name As String) As Boolean
@@ -2462,7 +2444,7 @@ End If
 Select Case progId
 Case SPProgIdTwsRealtimeData
     OptionCombo.Text = SpOptionTwsRealtimeData
-    
+
     setupTwsProperties
 'Case SPProgIdQtRealtimeData
 '    OptionCombo.Text = SpOptionQtRealtimeData
@@ -2470,7 +2452,7 @@ Case SPProgIdTwsRealtimeData
 '    setupQtProperties
 Case Else
     OptionCombo.Text = SpOptionCustomRealtimeData
-    
+
     setupCustomProperties
 End Select
 
@@ -2478,7 +2460,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub setupQtProperties()
