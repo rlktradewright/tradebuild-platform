@@ -615,7 +615,8 @@ ErrorMessage = mErrorMessage
 End Property
 
 Public Property Get Handle() As Long
-checkNotFinished
+' we don't call checkNotFinished because the application may handle
+' the StateChange event when Finish is called and need the handle then
 Handle = mHandle
 End Property
 
