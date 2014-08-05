@@ -670,12 +670,12 @@ Case "GMT", "GB"
     gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
 Case "EST", "EST5EDT"
     gTwsTimezoneNameToStandardTimeZoneName = "Eastern Standard Time"
-Case "Pacific/Pitcairn"
+Case "PST", "Pacific/Pitcairn"
     gTwsTimezoneNameToStandardTimeZoneName = "Pacific Standard Time"
 Case "MET"
     gTwsTimezoneNameToStandardTimeZoneName = "Romance Standard Time"
 Case Else
-    logMessage "Unrecognised timezone: " & pTimeZoneId, LogLevelSevere
+    gLog "Unrecognised timezone: " & pTimeZoneId, ModuleName, ProcName, , LogLevelSevere
     gTwsTimezoneNameToStandardTimeZoneName = ""
 End Select
 
