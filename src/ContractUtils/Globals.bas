@@ -912,6 +912,7 @@ addExchangeCode "MATIF"
 addExchangeCode "MEFF"
 addExchangeCode "MEFFRV"
 addExchangeCode "MEXI"
+addExchangeCode "MIAX"
 addExchangeCode "MONEP"
 addExchangeCode "MXT"
 
