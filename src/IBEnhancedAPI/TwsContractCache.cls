@@ -71,6 +71,7 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 If pContractDetails.Summary.Sectype = TwsSecTypeCombo Then Exit Sub
+If Not IsValidExchangeCode(pContractDetails.Summary.Exchange) Then Exit Sub
 
 Dim lSpec As IContractSpecifier
 With pContractDetails.Summary
