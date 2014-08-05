@@ -958,24 +958,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-'Public Sub NotifyPositionCloseout( _
-'                ByVal pPrice As Double, _
-'                ByVal pTimestamp As Date)
-'Const ProcName As String = "NotifyCloseout"
-'On Error GoTo Err
-'
-'Dim lBracketOrder As BracketOrder
-'
-'For Each lBracketOrder In mClosedBracketOrders
-'    lBracketOrder.NotifyCloseout pPrice, pTimestamp
-'Next
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError  ProcName, ModuleName
-'End Sub
-
 Friend Function NotifyBracketOrderClosed( _
                 ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "NotifyBracketOrderClosed"
