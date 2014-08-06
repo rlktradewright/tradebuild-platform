@@ -64,7 +64,7 @@ Private Const ModuleName                            As String = "IOrderSubmitter
 ' Methods
 '@================================================================================
 
-Public Function CreateOrderSubmitter(ByVal pOrderSubmissionListener As IOrderSubmissionListener) As IOrderSubmitter
+Public Function CreateOrderSubmitter() As IOrderSubmitter
 End Function
 
 '@================================================================================
