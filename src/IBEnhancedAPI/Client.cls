@@ -209,7 +209,7 @@ End Sub
 '@================================================================================
 
 Private Function IOrderSubmitterFactory_CreateOrderSubmitter() As IOrderSubmitter
-Set IOrderSubmitterFactory_CreateOrderSubmitter = GetOrderSubmitter
+Set IOrderSubmitterFactory_CreateOrderSubmitter = CreateOrderSubmitter
 End Function
 
 '@================================================================================
