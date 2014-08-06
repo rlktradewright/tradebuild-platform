@@ -389,7 +389,7 @@ Set lOrderSubmitter = New OrderSubmitter
 lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer(mTwsAPI), getContractDetailsRequester(mTwsAPI)
 
 AddTwsConnectionStateListener lOrderSubmitter
-Set GetOrderSubmitter = lOrderSubmitter
+Set CreateOrderSubmitter = lOrderSubmitter
 
 Exit Function
 
