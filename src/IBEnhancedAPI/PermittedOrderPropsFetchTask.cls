@@ -150,6 +150,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "COND", _
             "CONDORDER", _
             "CONSCOST", _
+            "DARKONLY", _
             "DARKPOLL", _
             "DEACT", _
             "DEACTDIS", _
@@ -161,7 +162,8 @@ For i = 0 To UBound(lOrderTypesStr)
             "LARGE", _
             "LTH", _
             "NGCOMB"
-        Case "NONALGO", _
+        Case "NODARK", _
+            "NONALGO", _
             "OCA", _
             "OPG", _
             "OPGREROUT", _
