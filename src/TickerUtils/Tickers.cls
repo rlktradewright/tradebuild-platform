@@ -56,8 +56,8 @@ Private mHistDataStore                      As IHistoricalDataStore
 
 Private mStudyLibraryManager                As StudyLibraryManager
 
-Private mOrderSubmitterLive                 As IOrderSubmitter
-Private mOrderSubmitterSimulated            As IOrderSubmitter
+Private mOrderSubmitterFactoryLive          As IOrderSubmitterFactory
+Private mOrderSubmitterFactorySimulated     As IOrderSubmitterFactory
 Private mName                               As String
 Private mScopeName                          As String
 Private mMoneyManager                       As IMoneyManager
@@ -208,11 +208,11 @@ Set OrderManager = mOrderManager
 End Property
 
 Friend Property Get OrderSubmitterLive() As IOrderSubmitter
-Set OrderSubmitterLive = mOrderSubmitterLive
+Set OrderSubmitterLive = mOrderSubmitterFactoryLive.CreateOrderSubmitter
 End Property
 
 Friend Property Get OrderSubmitterSimulated() As IOrderSubmitter
-Set OrderSubmitterSimulated = mOrderSubmitterSimulated
+Set OrderSubmitterSimulated = mOrderSubmitterFactorySimulated.CreateOrderSubmitter
 End Property
 
 Public Property Get ScopeName() As String
