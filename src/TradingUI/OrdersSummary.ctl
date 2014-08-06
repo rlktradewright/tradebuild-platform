@@ -446,9 +446,9 @@ Const ProcName As String = "CollectionChangeListener_Change"
 On Error GoTo Err
 
 If TypeOf ev.Source Is BracketOrders Then
-    Dim lBracketOrder As IBracketOrder
-    
     If IsEmpty(ev.AffectedItem) Then Exit Sub
+    
+    Dim lBracketOrder As IBracketOrder
     Set lBracketOrder = ev.AffectedItem
     
     Select Case ev.changeType
@@ -461,7 +461,7 @@ If TypeOf ev.Source Is BracketOrders Then
             End If
         Next
     
-        addBracketOrder lBracketOrder
+        addBracketOrder lBracketOrder, lPm
     Case CollItemRemoved
         Dim lBracketOrderIndex As Long
         lBracketOrderIndex = findBracketOrderTableIndex(lBracketOrder)
@@ -817,11 +817,12 @@ For Each lPositionManager In pPositionManagers
     End If
     
     lPositionManager.AddProfitListener Me
+    lPositionManager.BracketOrders.AddCollectionChangeListener Me
     
     Dim lAnyActiveBracketOrders As Boolean
     Dim lBracketOrder As IBracketOrder
     For Each lBracketOrder In lPositionManager.BracketOrders
-        addBracketOrder lBracketOrder
+        addBracketOrder lBracketOrder, lPositionManager
         If lBracketOrder.State = BracketOrderStateClosed Then
             contractBracketOrderEntry findBracketOrderTableIndex(lBracketOrder)
         Else
@@ -843,12 +844,12 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub addBracketOrder(ByVal pBracketOrder As IBracketOrder)
+Private Sub addBracketOrder(ByVal pBracketOrder As IBracketOrder, ByVal pPositionManager As PositionManager)
 Const ProcName As String = "addBracketOrder"
 On Error GoTo Err
 
 pBracketOrder.AddChangeListener Me
-displayBracketOrder pBracketOrder
+displayBracketOrder pBracketOrder, pPositionManager
 
 Exit Sub
 
@@ -1078,7 +1079,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub displayBracketOrder(ByVal pBracketOrder As IBracketOrder)
+Private Sub displayBracketOrder(ByVal pBracketOrder As IBracketOrder, ByVal pPositionManager As PositionManager)
 Const ProcName As String = "displayBracketOrder"
 On Error GoTo Err
 
@@ -1105,7 +1106,7 @@ With mBracketOrderGridMappingTable(lIndex)
         BracketOrderGrid.TextMatrix(.GridIndex, BracketOrderGridBracketOrderColumns.CurrencyCode) = pBracketOrder.Contract.Specifier.CurrencyCode
         
         Dim lDataSource As IMarketDataSource
-        Set lDataSource = mMarketDataManager.CreateMarketDataSource(CreateFuture(pBracketOrder.Contract), False)
+        Set lDataSource = mMarketDataManager.CreateMarketDataSource(pPositionManager.ContractFuture, False)
         lDataSource.StartMarketData
         Set .ProfitCalculator = CreateBracketProfitCalculator(pBracketOrder, lDataSource)
         .ProfitCalculator.AddProfitListener Me
