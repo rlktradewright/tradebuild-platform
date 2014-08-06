@@ -207,12 +207,12 @@ Public Property Get OrderManager() As OrderManager
 Set OrderManager = mOrderManager
 End Property
 
-Friend Property Get OrderSubmitterLive() As IOrderSubmitter
-Set OrderSubmitterLive = mOrderSubmitterFactoryLive.CreateOrderSubmitter
+Friend Property Get OrderSubmitterFactoryLive() As IOrderSubmitterFactory
+Set OrderSubmitterFactoryLive = mOrderSubmitterFactoryLive
 End Property
 
-Friend Property Get OrderSubmitterSimulated() As IOrderSubmitter
-Set OrderSubmitterSimulated = mOrderSubmitterFactorySimulated.CreateOrderSubmitter
+Friend Property Get OrderSubmitterFactorySimulated() As IOrderSubmitterFactory
+Set OrderSubmitterFactorySimulated = mOrderSubmitterFactorySimulated
 End Property
 
 Public Property Get ScopeName() As String

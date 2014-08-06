@@ -620,7 +620,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsLiveOrdersEnabled() As Boolean
-IsLiveOrdersEnabled = Not mTickers.OrderSubmitterLive Is Nothing
+IsLiveOrdersEnabled = Not mTickers.OrderSubmitterFactoryLive Is Nothing
 End Property
 
 Public Property Get IsMarketDataRequested() As Boolean
@@ -648,7 +648,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsSimulatedOrdersEnabled() As Boolean
-IsSimulatedOrdersEnabled = Not mTickers.OrderSubmitterSimulated Is Nothing
+IsSimulatedOrdersEnabled = Not mTickers.OrderSubmitterFactorySimulated Is Nothing
 End Property
 
 Public Property Get IsTickReplay() As Boolean
@@ -720,22 +720,20 @@ Public Property Get PositionManager() As PositionManager
 Const ProcName As String = "PositionManager"
 On Error GoTo Err
 
-Assert Not mTickers.OrderSubmitterLive Is Nothing, "No order submitter exists for live orders"
+Assert Not mTickers.OrderSubmitterFactoryLive Is Nothing, "No order submitter factory exists for live orders"
 
 If mPositionManager Is Nothing Then
     If mTickers.ScopeName = "" Then
         Set mPositionManager = mTickers.OrderManager.CreatePositionManager(mKey, _
-                                                    mDataSource.ContractFuture, _
-                                                    mTickers.OrderSubmitterLive, _
                                                     mDataSource, _
+                                                    mTickers.OrderSubmitterFactoryLive, _
                                                     mTickers.Name, _
                                                     False, _
                                                     mTickers.MoneyManager)
     Else
         Set mPositionManager = mTickers.OrderManager.CreateRecoverablePositionManager(mKey, _
-                                                    mDataSource.ContractFuture, _
-                                                    mTickers.OrderSubmitterLive, _
                                                     mDataSource, _
+                                                    mTickers.OrderSubmitterFactoryLive, _
                                                     mTickers.ScopeName, _
                                                     mTickers.Name, _
                                                     False, _
@@ -755,13 +753,12 @@ Public Property Get PositionManagerSimulated() As PositionManager
 Const ProcName As String = "PositionManagerSimulated"
 On Error GoTo Err
 
-Assert Not mTickers.OrderSubmitterSimulated Is Nothing, "No order submitter exists for simulated orders"
+Assert Not mTickers.OrderSubmitterFactorySimulated Is Nothing, "No order submitter factory exists for simulated orders"
 
 If mPositionManagerSimulated Is Nothing Then
     Set mPositionManagerSimulated = mTickers.OrderManager.CreatePositionManager(GenerateGUIDString, _
-                                                        mDataSource.ContractFuture, _
-                                                        mTickers.OrderSubmitterSimulated, _
                                                         mDataSource, _
+                                                        mTickers.OrderSubmitterFactorySimulated, _
                                                         mTickers.Name & "(simulated)", _
                                                         True, _
                                                         mTickers.MoneyManager)
