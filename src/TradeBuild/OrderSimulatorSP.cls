@@ -187,7 +187,7 @@ End Function
 ' IOrderSubmitterFactory Interface Members
 '@================================================================================
 
-Private Function IOrderSubmitterFactory_CreateOrderSubmitter(ByVal pOrderSubmissionListener As IOrderSubmissionListener) As IOrderSubmitter
+Private Function IOrderSubmitterFactory_CreateOrderSubmitter() As IOrderSubmitter
 Const ProcName As String = "IOrderSubmitterFactory_CreateOrderSubmitter"
 On Error GoTo Err
 
@@ -195,8 +195,6 @@ Dim lOrderSubmitter As New SimulatedOrderSubmitter
 lOrderSubmitter.Initialise getOrderSimulator
 
 Set IOrderSubmitterFactory_CreateOrderSubmitter = lOrderSubmitter
-
-If Not pOrderSubmissionListener Is Nothing Then IOrderSubmitterFactory_CreateOrderSubmitter.AddOrderSubmissionListener pOrderSubmissionListener
 
 Exit Function
 

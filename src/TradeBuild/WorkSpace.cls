@@ -190,8 +190,8 @@ Friend Sub Initialise( _
                 ByVal pScopeName As String, _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
                 ByVal pOrderManager As OrderManager, _
-                ByVal pOrderSubmitterLive As IOrderSubmitter, _
-                ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
+                ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
+                ByVal pOrderSubmitterFactorySimulated As IOrderSubmitterFactory, _
                 ByVal pMoneyManager As IMoneyManager)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -201,8 +201,8 @@ Set mTickers = CreateTickers(pTradeBuildAPI.ServiceProviders.MarketDataManager, 
                             pTradeBuildAPI.StudyLibraryManager, _
                             pTradeBuildAPI.ServiceProviders.HistoricalDataStoreInput, _
                             pOrderManager, _
-                            pOrderSubmitterLive, _
-                            pOrderSubmitterSimulated, _
+                            pOrderSubmitterFactoryLive, _
+                            pOrderSubmitterFactorySimulated, _
                             pName, _
                             pScopeName, _
                             pMoneyManager)

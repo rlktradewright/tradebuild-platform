@@ -52,10 +52,6 @@ Private mNumberOfMarketDepthRows                    As Long
 Private mDefaultStateChangeListener                 As StateChangeListener
 
 Private mOrderManager                               As New OrderManager
-Private mOrderSubmissionListenerLive                As IOrderSubmissionListener
-Private mOrderSubmissionListenerSimulated           As IOrderSubmissionListener
-Private mOrderSubmitterLive                         As IOrderSubmitter
-Private mOrderSubmitterSimulated                    As IOrderSubmitter
 
 Private mServiceProviderError                       As ServiceProviderError
 
@@ -172,14 +168,6 @@ End Property
 
 Public Property Get MarketDataManager() As IMarketDataManager
 Set MarketDataManager = ServiceProviders.MarketDataManager
-End Property
-
-Public Property Get OrderSubmitterLive() As IOrderSubmitter
-Set OrderSubmitterLive = mOrderSubmitterLive
-End Property
-
-Public Property Get OrderSubmitterSimulated() As IOrderSubmitter
-Set OrderSubmitterSimulated = mOrderSubmitterSimulated
 End Property
 
 Public Property Get OrderSubmitterFactoryLive() As IOrderSubmitterFactory
@@ -389,8 +377,6 @@ Friend Sub Initialise( _
                 ByVal pScopeName As String, _
                 ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
                 ByVal pDefaultStateChangeListener As StateChangeListener, _
-                ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
-                ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
                 ByVal pMarketDataSourceOptions As MarketDataSourceOptions, _
                 ByVal pNumberOfMarketDepthRows As Long)
 Const ProcName As String = "Initialise"
@@ -406,8 +392,6 @@ mServiceProviders.PermittedServiceProviderRoles = pPermittedServiceProviderRoles
 mMarketDataSourceOptions = pMarketDataSourceOptions
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 Set mDefaultStateChangeListener = pDefaultStateChangeListener
-Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
-Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
 
 Exit Sub
 
@@ -419,9 +403,7 @@ Friend Sub InitialiseFromConfig( _
                 ByVal pTradeBuildConfig As ConfigurationSection, _
                 ByVal pScopeName As String, _
                 ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
-                ByVal pDefaultStateChangeListener As StateChangeListener, _
-                ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
-                ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener)
+                ByVal pDefaultStateChangeListener As StateChangeListener)
 Const ProcName As String = "InitialiseFromConfig"
 On Error GoTo Err
 
@@ -437,8 +419,6 @@ mScopeName = pScopeName
 
 mServiceProviders.PermittedServiceProviderRoles = pPermittedServiceProviderRoles
 Set mDefaultStateChangeListener = pDefaultStateChangeListener
-Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
-Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
 
 Dim lInitialisedOk As Boolean
 lInitialisedOk = True
@@ -474,8 +454,6 @@ Friend Sub InitialiseWithDefaultProviders( _
                 ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
                 ByVal pScopeName As String, _
                 ByVal pDefaultStateChangeListener As StateChangeListener, _
-                ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
-                ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
                 ByVal pTwsServer As String, _
                 ByVal pTwsPort As Long, _
                 ByVal pClientId As Long, _
@@ -493,8 +471,6 @@ logMessage "Initialising TradeBuild with default providers", ProcName
 mScopeName = pScopeName
 
 Set mDefaultStateChangeListener = pDefaultStateChangeListener
-Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
-Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
 
 mServiceProviders.ConfigureDefaultServiceProviders pPermittedServiceProviderRoles, _
                                                     pTwsServer, _
@@ -622,16 +598,16 @@ On Error GoTo Err
 StartServiceProviders = ServiceProviders.StartServiceProviders(mStudyLibraryManager, mSessionName)
 If Not mMarketDataSourcesConfig Is Nothing Then MarketDataManager.LoadFromConfig mMarketDataSourcesConfig
 
-If Not ServiceProviders.OrderSubmitterFactoryLive Is Nothing Then Set mOrderSubmitterLive = CreateOrderSubmitter(ServiceProviders.OrderSubmitterFactoryLive, mOrderSubmissionListenerLive)
-If Not ServiceProviders.OrderSubmitterFactorySimulated Is Nothing Then Set mOrderSubmitterSimulated = CreateOrderSubmitter(ServiceProviders.OrderSubmitterFactorySimulated, mOrderSubmissionListenerSimulated)
+initialiseSimulatedOrderSubmitterFactory ServiceProviders.OrderSubmitterFactoryLive
+initialiseSimulatedOrderSubmitterFactory ServiceProviders.OrderSubmitterFactorySimulated
 
 If Not ServiceProviders.MarketDataManager Is Nothing Then
     Set mWorkspaces = New WorkSpaces
     
     mWorkspaces.Initialise Me, _
                         mOrderManager, _
-                        mOrderSubmitterLive, _
-                        mOrderSubmitterSimulated, _
+                        ServiceProviders.OrderSubmitterFactoryLive, _
+                        ServiceProviders.OrderSubmitterFactorySimulated, _
                         Nothing
                         
     If Not mTradeBuildConfig Is Nothing Then mWorkspaces.LoadFromConfig mTradeBuildConfig.AddPrivateConfigurationSection(ConfigSectionWorkspaces)
@@ -675,28 +651,23 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function CreateOrderSubmitter( _
-                ByVal pFactory As IOrderSubmitterFactory, _
-                ByVal pListener As IOrderSubmissionListener) As IOrderSubmitter
-Const ProcName As String = "CreateOrderSubmitter"
+Private Sub initialiseSimulatedOrderSubmitterFactory( _
+                ByVal pFactory As IOrderSubmitterFactory)
+Const ProcName As String = "initialiseSimulatedOrderSubmitterFactory"
 On Error GoTo Err
 
-Dim lOrderSubmitter As IOrderSubmitter
-If Not pFactory Is Nothing Then
-    If TypeOf pFactory Is OrderSimulatorSP Then
-        Dim l As OrderSimulatorSP
-        Set l = pFactory
-        l.Initialise Me.MarketDataManager, Me.ContractStorePrimary, Me.ContractStoreSecondary
-    End If
-    Set lOrderSubmitter = pFactory.CreateOrderSubmitter(pListener)
-End If
-Set CreateOrderSubmitter = lOrderSubmitter
+If pFactory Is Nothing Then Exit Sub
+If Not TypeOf pFactory Is OrderSimulatorSP Then Exit Sub
+    
+Dim l As OrderSimulatorSP
+Set l = pFactory
+l.Initialise Me.MarketDataManager, Me.ContractStorePrimary, Me.ContractStoreSecondary
 
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 Private Sub Init()
 Const ProcName As String = "Init"

@@ -220,8 +220,6 @@ Public Function CreateTradeBuildAPI( _
                                 SPRoleContractDataPrimary + _
                                 SPRoleRealtimeData, _
                 Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
-                Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
-                Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
                 Optional ByVal pMarketDataSourceOptions As MarketDataSourceOptions = MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone, _
                 Optional ByVal pNumberOfMarketDepthRows As Long = 20) As TradeBuildAPI
 Const ProcName As String = "CreateTradeBuildAPI"
@@ -231,8 +229,6 @@ Set CreateTradeBuildAPI = New TradeBuildAPI
 CreateTradeBuildAPI.Initialise pScopeName, _
                                 pPermittedServiceProviderRoles, _
                                 pDefaultStateChangeListener, _
-                                pOrderSubmissionListenerLive, _
-                                pOrderSubmissionListenerSimulated, _
                                 pMarketDataSourceOptions, _
                                 pNumberOfMarketDepthRows
 
@@ -250,9 +246,7 @@ Public Function CreateTradeBuildAPIFromConfig( _
                                 SPRoleHistoricalDataInput + _
                                 SPRoleContractDataPrimary + _
                                 SPRoleRealtimeData, _
-                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
-                Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
-                Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener) As TradeBuildAPI
+                Optional ByVal pDefaultStateChangeListener As StateChangeListener) As TradeBuildAPI
 Const ProcName As String = "CreateTradeBuildAPIFromConfig"
 On Error GoTo Err
 
@@ -263,9 +257,7 @@ CreateTradeBuildAPIFromConfig.InitialiseFromConfig _
                 pConfig.AddConfigurationSection(ConfigSectionTradeBuild), _
                 pScopeName, _
                 pPermittedServiceProviderRoles, _
-                pDefaultStateChangeListener, _
-                pOrderSubmissionListenerLive, _
-                pOrderSubmissionListenerSimulated
+                pDefaultStateChangeListener
 
 Exit Function
 
@@ -281,8 +273,6 @@ Public Function CreateTradeBuildAPIWithDefaultProviders( _
                                 SPRoleRealtimeData, _
                 Optional ByVal pScopeName As String, _
                 Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
-                Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
-                Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
                 Optional ByVal pTwsServer As String, _
                 Optional ByVal pTwsPort As Long = 7496, _
                 Optional ByVal pTwsClientId As Long = -1, _
@@ -298,8 +288,6 @@ CreateTradeBuildAPIWithDefaultProviders.InitialiseWithDefaultProviders _
                 pScopeName, _
                 pPermittedServiceProviderRoles, _
                 pDefaultStateChangeListener, _
-                pOrderSubmissionListenerLive, _
-                pOrderSubmissionListenerSimulated, _
                 pTwsServer, _
                 pTwsPort, _
                 pTwsClientId, _

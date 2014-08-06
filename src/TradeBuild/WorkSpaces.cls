@@ -60,8 +60,8 @@ Private mCollectionChangeListeners      As Listeners
 Private mTradeBuildAPIRef               As WeakReference
 Private mOrderManager                   As OrderManager
 
-Private mOrderSubmitterLive             As IOrderSubmitter
-Private mOrderSubmitterSimulated        As IOrderSubmitter
+Private mOrderSubmitterFactoryLive      As IOrderSubmitter
+Private mOrderSubmitterFactorySimulated As IOrderSubmitter
 
 Private mMoneyManager                   As IMoneyManager
 
@@ -107,8 +107,8 @@ Add.Initialise Name, _
                 mScopeName, _
                 mTradeBuildAPIRef.Target, _
                 mOrderManager, _
-                mOrderSubmitterLive, _
-                mOrderSubmitterSimulated, _
+                mOrderSubmitterFactoryLive, _
+                mOrderSubmitterFactorySimulated, _
                 mMoneyManager
 mWorkspaces.Add Add, Name
 
@@ -152,16 +152,16 @@ End Function
 Friend Sub Initialise( _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
                 ByVal pOrderManager As OrderManager, _
-                ByVal pOrderSubmitterLive As IOrderSubmitter, _
-                ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
+                ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
+                ByVal pOrderSubmitterFactorySimulated As IOrderSubmitterFactory, _
                 ByVal pMoneyManager As IMoneyManager)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mTradeBuildAPIRef = CreateWeakReference(pTradeBuildAPI)
 Set mOrderManager = pOrderManager
-Set mOrderSubmitterLive = pOrderSubmitterLive
-Set mOrderSubmitterSimulated = pOrderSubmitterSimulated
+Set mOrderSubmitterFactoryLive = pOrderSubmitterFactoryLive
+Set mOrderSubmitterFactorySimulated = pOrderSubmitterFactorySimulated
 Set mMoneyManager = pMoneyManager
 mScopeName = pTradeBuildAPI.ScopeName
 
