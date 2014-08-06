@@ -60,8 +60,8 @@ Private mCollectionChangeListeners      As Listeners
 Private mTradeBuildAPIRef               As WeakReference
 Private mOrderManager                   As OrderManager
 
-Private mOrderSubmitterFactoryLive      As IOrderSubmitter
-Private mOrderSubmitterFactorySimulated As IOrderSubmitter
+Private mOrderSubmitterFactoryLive      As IOrderSubmitterFactory
+Private mOrderSubmitterFactorySimulated As IOrderSubmitterFactory
 
 Private mMoneyManager                   As IMoneyManager
 
