@@ -1001,6 +1001,71 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub notifyOpenOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "notifyOpenOrder"
+On Error GoTo Err
+
+Dim lOrderReport As IOrderReport
+Dim lTimezoneName As String
+
+Set lOrderReport = New OrderReport
+
+With lOrderReport
+    .Action = gTwsOrderActionToOrderAction(pOrder.Action)
+    .AllOrNone = pOrder.AllOrNone
+    .BlockOrder = pOrder.BlockOrder
+    .BrokerId = pOrder.BlockOrder
+    .DiscretionaryAmount = pOrder.DiscretionaryAmount
+    .DisplaySize = pOrder.DisplaySize
+    .ETradeOnly = pOrder.ETradeOnly
+    .FirmQuoteOnly = pOrder.FirmQuoteOnly
+    .GoodAfterTime = pOrder.GoodAfterTime
+    .GoodAfterTimeTZ = pOrder.GoodAfterTimeTZ
+    .GoodTillDate = pOrder.GoodTillDate
+    .GoodTillDateTZ = pOrder.GoodTillDateTZ
+    .Hidden = pOrder.Hidden
+    .Id = pOrder.Id
+    .IgnoreRegularTradingHours = pOrder.IgnoreRegularTradingHours
+    .LimitPrice = pOrder.LimitPrice
+    .MinimumQuantity = pOrder.MinimumQuantity
+    .NbboPriceCap = pOrder.NbboPriceCap
+    .OrderType = pOrder.OrderType
+    .Origin = pOrder.Origin
+    .OriginatorRef = pOrder.OriginatorRef
+    .OverrideConstraints = pOrder.OverrideConstraints
+    .Quantity = pOrder.Quantity
+    .SettlingFirm = pOrder.SettlingFirm
+    .Status = pOrder.Status
+    .StopTriggerMethod = pOrder.StopTriggerMethod
+    .SweepToFill = pOrder.SweepToFill
+    .TimeInForce = pOrder.TimeInForce
+    .TriggerPrice = pOrder.TriggerPrice
+End With
+
+NotifyOrderReport lOrderReport
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub notifyStatus(ByVal pOrder As IOrder, ByVal pStatus As OrderStatuses)
+Const ProcName As String = "notifyStatus"
+On Error GoTo Err
+
+Dim statusRpt As New OrderStatusReport
+statusRpt.OrderId = pOrder.Id
+statusRpt.BrokerId = pOrder.BrokerId
+statusRpt.Status = pStatus
+NotifyOrderStatusReport statusRpt
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub placeAnOrder( _
                 ByVal pOrder As IOrder, _
                 ByVal pContract As TwsContract, _
@@ -1024,14 +1089,8 @@ Assert pOrder.Quantity <> 0, "Order has zero quantity"
 mOrderPlacer.PlaceOrder Me, pOrder, pContract, pTransmit, pParentId, pOcaGroup
 
 If pOrder.Status = OrderStatusCreated Then
-    Dim statusRpt As New OrderStatusReport
-    statusRpt.OrderId = pOrder.Id
-    statusRpt.BrokerId = pOrder.BrokerId
-    statusRpt.Status = OrderStatusPendingSubmit
-    Dim lListener As IOrderSubmissionListener
-    For Each lListener In mOrderSubmissionListeners.CurrentListeners
-        lListener.NotifyOrderStatusReport statusRpt
-    Next
+    notifyOpenOrder pOrder
+    notifyStatus pOrder, OrderStatusPendingSubmit
 End If
 
 Exit Sub

@@ -106,9 +106,13 @@ Case 161
     ' Since this can be a race situation, where TWS has cancelled an order but the
     ' notification hasn't arrived via the API, and the application also tries to cancel,
     ' we just ignore it.
-    gLog "Ignored error 161 from TWS: " & pErrorMsg, ModuleName, ProcName
+    gLog "Ignored error 161 from TWS (" & pOrderId & "): " & pErrorMsg, ModuleName, ProcName
 Case 202
     notifyStatus pOrderId, OrderStatuses.OrderStatusCancelled
+Case 451
+    ' TWS sends this when it is unable to transmit the order as requested, typically because
+    ' the order value exceeds some restriction
+    gLog "Ignored error 451 from TWS (" & pOrderId & "): " & pErrorMsg, ModuleName, ProcName
 Case Else
     If Not mKnownOrders.IsCancelled(pOrderId, mTwsAPI.ClientId) Then
         GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).BrokerId, pErrorCode, pErrorMsg
