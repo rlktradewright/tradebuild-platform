@@ -208,8 +208,8 @@ End Sub
 ' IOrderSubmitterFactory Interface Members
 '@================================================================================
 
-Private Function IOrderSubmitterFactory_CreateOrderSubmitter(ByVal pOrderSubmissionListener As IOrderSubmissionListener) As IOrderSubmitter
-Set IOrderSubmitterFactory_CreateOrderSubmitter = GetOrderSubmitter(pOrderSubmissionListener)
+Private Function IOrderSubmitterFactory_CreateOrderSubmitter() As IOrderSubmitter
+Set IOrderSubmitterFactory_CreateOrderSubmitter = GetOrderSubmitter
 End Function
 
 '@================================================================================
@@ -550,19 +550,17 @@ Private Function getOrderPlacer( _
 Const ProcName As String = "getOrderPlacer"
 On Error GoTo Err
 
-Dim lOrderPlacer As OrderPlacer
+Static sOrderPlacer As OrderPlacer
 
-If Not pApi.OrderInfoConsumer Is Nothing Then
-    Assert TypeOf pApi.OrderInfoConsumer Is OrderPlacer, "Tws is already configured with an incompatible IOrderInfoConsumer"
-    Set lOrderPlacer = pApi.OrderInfoConsumer
-Else
-    Set lOrderPlacer = New OrderPlacer
-    lOrderPlacer.Initialise pApi
-    pApi.OrderInfoConsumer = lOrderPlacer
-    AddTwsConnectionStateListener lOrderPlacer
+If sOrderPlacer Is Nothing Then
+    Assert pApi.OrderInfoConsumer Is Nothing, "Tws is already configured with an incompatible IOrderInfoConsumer"
+    Set sOrderPlacer = New OrderPlacer
+    sOrderPlacer.Initialise pApi
+    pApi.OrderInfoConsumer = sOrderPlacer
+    AddTwsConnectionStateListener sOrderPlacer
 End If
 
-Set getOrderPlacer = lOrderPlacer
+Set getOrderPlacer = sOrderPlacer
 
 Exit Function
 
