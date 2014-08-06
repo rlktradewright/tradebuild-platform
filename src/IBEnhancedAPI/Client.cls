@@ -379,14 +379,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetOrderSubmitter(Optional ByVal pOrderSubmissionListener As IOrderSubmissionListener) As OrderSubmitter
-Const ProcName As String = "GetOrderSubmitter"
+Public Function CreateOrderSubmitter() As IOrderSubmitter
+Const ProcName As String = "CreateOrderSubmitter"
 On Error GoTo Err
 
 Dim lOrderSubmitter As OrderSubmitter
 
 Set lOrderSubmitter = New OrderSubmitter
-lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer(mTwsAPI), pOrderSubmissionListener, getContractDetailsRequester(mTwsAPI)
+lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer(mTwsAPI), getContractDetailsRequester(mTwsAPI)
 
 AddTwsConnectionStateListener lOrderSubmitter
 Set GetOrderSubmitter = lOrderSubmitter

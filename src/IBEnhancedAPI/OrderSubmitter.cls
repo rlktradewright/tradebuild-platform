@@ -586,13 +586,11 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pOrderPlacer As OrderPlacer, _
-                ByVal pOrderSubmissionListener As IOrderSubmissionListener, _
                 ByVal pContractRequester As ContractDetailsRequester)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mOrderPlacer = pOrderPlacer
-If Not pOrderSubmissionListener Is Nothing Then AddOrderSubmissionListener pOrderSubmissionListener
 Set mTwsAPI = pTwsAPI
 If mTwsAPI.ConnectionState = TwsConnConnected Then
     setState OrderSubmitterStateReady
