@@ -306,8 +306,8 @@ Friend Sub Initialise( _
                 ByVal pStudyLibraryManager As StudyLibraryManager, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pOrderManager As OrderManager, _
-                ByVal pOrderSubmitterLive As IOrderSubmitter, _
-                ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
+                ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
+                ByVal pOrderSubmitterFactorySimulated As IOrderSubmitterFactory, _
                 ByVal pName As String, _
                 ByVal pScopeName As String, _
                 ByVal pMoneyManager As IMoneyManager)
@@ -319,8 +319,8 @@ Set mStudyLibraryManager = pStudyLibraryManager
 Set mHistDataStore = pHistDataStore
 
 Set mOrderManager = pOrderManager
-Set mOrderSubmitterLive = pOrderSubmitterLive
-Set mOrderSubmitterSimulated = pOrderSubmitterSimulated
+Set mOrderSubmitterFactoryLive = pOrderSubmitterFactoryLive
+Set mOrderSubmitterFactorySimulated = pOrderSubmitterFactorySimulated
 
 mName = pName
 mScopeName = pScopeName
