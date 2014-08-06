@@ -126,16 +126,15 @@ End Function
 
 Public Function CreatePositionManager( _
                 ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
                 ByVal pDataSource As IMarketDataSource, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 Optional ByVal pGroupName As String, _
                 Optional ByVal pIsSimulated As Boolean, _
                 Optional ByVal pMoneyManager As IMoneyManager) As PositionManager
 Const ProcName As String = "CreatePositionManager"
 On Error GoTo Err
 
-Set CreatePositionManager = createPosnManager(pName, pContractFuture, pOrderSubmitter, pDataSource, "", pGroupName, pIsSimulated, pMoneyManager)
+Set CreatePositionManager = createPosnManager(pName, pOrderSubmitterFactory, pDataSource, "", pGroupName, pIsSimulated, pMoneyManager)
 
 Exit Function
 
@@ -145,9 +144,8 @@ End Function
 
 Public Function CreateRecoverablePositionManager( _
                 ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
                 ByVal pDataSource As IMarketDataSource, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 ByVal pScopeName As String, _
                 Optional ByVal pGroupName As String, _
                 Optional ByVal pIsSimulated As Boolean, _
@@ -157,7 +155,7 @@ On Error GoTo Err
 
 Assert pScopeName <> "", "pScopeName must be supplied"
 
-Set CreateRecoverablePositionManager = createPosnManager(pName, pContractFuture, pOrderSubmitter, pDataSource, pScopeName, pGroupName, pIsSimulated, pMoneyManager)
+Set CreateRecoverablePositionManager = createPosnManager(pName, pOrderSubmitterFactory, pDataSource, pScopeName, pGroupName, pIsSimulated, pMoneyManager)
 
 Exit Function
 
@@ -215,8 +213,7 @@ End Sub
 
 Private Function createPosnManager( _
                 ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pScopeName As String, _
                 ByVal pGroupName As String, _
@@ -241,7 +238,7 @@ Else
     If pScopeName <> "" Then Set lClr = getBracketOrderRecoveryController(pScopeName)
     
     Set lPm = New PositionManager
-    lPm.Initialise Me, pName, pContractFuture, pOrderSubmitter, pDataSource, lClr, pGroupName, pIsSimulated, pMoneyManager
+    lPm.Initialise Me, pName, pOrderSubmitterFactory, pDataSource, lClr, pGroupName, pIsSimulated, pMoneyManager
     
     If pIsSimulated Then
         mPositionManagersSimulated.Add lPm

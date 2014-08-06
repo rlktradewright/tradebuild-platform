@@ -1048,8 +1048,7 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pRecoveryController As BracketOrderRecoveryCtlr, _
                 ByVal pGroupName As String, _
@@ -1060,12 +1059,11 @@ On Error GoTo Err
 
 Assert Not mIsInitialised, "PositionManager is already initialised"
 Assert pName <> "", "A name must be supplied"
-AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
-AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter Is Nothing"
+AssertArgument Not pOrderSubmitterFactory Is Nothing, "pOrderSubmitterFactory Is Nothing"
 AssertArgument Not pDataSource Is Nothing, "pDataSource is nothing"
 
 PreInitialise pOrderManager
-Set mOrderSubmitter = pOrderSubmitter
+Set mOrderSubmitter = pOrderSubmitterFactory.CreateOrderSubmitter
 mOrderSubmitter.AddOrderSubmissionListener Me
 mOrderSubmitter.AddStateChangeListener Me
 
@@ -1084,7 +1082,7 @@ End If
     
 Set mMoneyManager = pMoneyManager
 
-init pName, pGroupName, pIsSimulated, pContractFuture
+init pName, pGroupName, pIsSimulated, mDataSource.ContractFuture
 
 If Not mSession Is Nothing Then checkSetupNewSession
 
