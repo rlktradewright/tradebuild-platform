@@ -109,7 +109,6 @@ Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
 Dim lDataSource As IMarketDataSource
-
 Set lDataSource = ev.Source
 
 Select Case ev.Tick.TickType
@@ -143,7 +142,6 @@ Private Sub StateChangeListener_Change( _
                 ev As StateChangeEventData)
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
-
 
 Dim tli As TimerListItem
 Set tli = ev.Source
@@ -179,31 +177,24 @@ Const ProcName As String = "PermittedOrderProperties"
 On Error GoTo Err
 
 Dim lPermittedOrderProperties As New PermittedOrderProperties
-
-Dim lPermittedOrderattributes As OrderAttributes
-lPermittedOrderattributes = OrderAttributes.OrderAttAction + _
+lPermittedOrderProperties.PermittedOrderAttributes = _
+                            OrderAttributes.OrderAttAction + _
                             OrderAttributes.OrderAttLimitPrice + _
                             OrderAttributes.OrderAttOrderType + _
                             OrderAttributes.OrderAttOriginatorRef + _
                             OrderAttributes.OrderAttQuantity + _
                             OrderAttributes.OrderAttStopTriggerMethod + _
                             OrderAttributes.OrderAttTriggerPrice
-lPermittedOrderProperties.PermittedOrderAttributes = lPermittedOrderattributes
 
-Dim lPermittedOrderTifs As OrderTIFs
-lPermittedOrderTifs = OrderTIFDay
-lPermittedOrderProperties.PermittedOrderTifs = lPermittedOrderTifs
+lPermittedOrderProperties.PermittedOrderTifs = OrderTIFDay
 
-Dim lPermittedOrderTypes As OrderTypes
-lPermittedOrderTypes = OrderTypes.OrderTypeMarket + _
+lPermittedOrderProperties.PermittedOrderTypes = _
+                        OrderTypes.OrderTypeMarket + _
                         OrderTypes.OrderTypeLimit + _
                         OrderTypes.OrderTypeStop + _
                         OrderTypes.OrderTypeStopLimit
-lPermittedOrderProperties.PermittedOrderTypes = lPermittedOrderTypes
 
-Dim lPermittedOrderStopTriggerMethods As OrderStopTriggerMethods
-lPermittedOrderStopTriggerMethods = OrderStopTriggerDefault + OrderStopTriggerLast
-lPermittedOrderProperties.PermittedStopTriggerMethods = lPermittedOrderStopTriggerMethods
+lPermittedOrderProperties.PermittedStopTriggerMethods = OrderStopTriggerDefault + OrderStopTriggerLast
 
 Set PermittedOrderProperties = lPermittedOrderProperties
 
@@ -612,7 +603,7 @@ Private Sub matchOrder(ByVal pOrder As SimulatorOrder)
 Const ProcName As String = "matchOrder"
 On Error GoTo Err
 
-With mMarketTable(pOrder.ClientId)
+With mMarketTable(pOrder.MarketId)
     Select Case pOrder.Order.OrderType
     Case OrderTypes.OrderTypeMarket, _
         OrderTypes.OrderTypeStop
@@ -642,7 +633,7 @@ Private Sub matchOrderTrade(ByVal pOrder As SimulatorOrder, _
 Const ProcName As String = "matchOrderTrade"
 On Error GoTo Err
 
-With mMarketTable(pOrder.ClientId)
+With mMarketTable(pOrder.MarketId)
     Select Case pOrder.Order.OrderType
     Case OrderTypes.OrderTypeMarket, _
         OrderTypes.OrderTypeStop
@@ -995,7 +986,6 @@ End Sub
 Private Sub setOrderStatus( _
                 ByVal pOrder As SimulatorOrder, _
                 ByVal pStatus As OrderStatuses)
-
 Const ProcName As String = "setOrderStatus"
 On Error GoTo Err
 
@@ -1061,7 +1051,6 @@ Private Sub setRejectOrder( _
                 ByVal pReason As String, _
                 ByVal pClientId As Long)
 Const ProcName As String = "setRejectOrder"
-
 On Error GoTo Err
 
 pOrder.Status = OrderStatuses.OrderStatusRejected
@@ -1077,7 +1066,6 @@ End Sub
 
 Private Sub setSubmitOrder(pOrder As SimulatorOrder)
 Const ProcName As String = "setSubmitOrder"
-
 On Error GoTo Err
 
 Select Case pOrder.Order.OrderType
