@@ -564,7 +564,7 @@ With mMarketTable(pOrder.MarketId)
             ' now set the status if necessary
             Select Case lOrder.Order.OrderType
             Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
-                If mMarketTable(pOrder.ClientId).SimulateExchangeDelays Then
+                If .SimulateExchangeDelays Then
                     setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
                     mTimerList.Add(pOrder, _
                                     delay, _
@@ -931,7 +931,7 @@ Dim lFillSize As Long
 lFillSize = pFillSize
 
 Dim lContractSpecifier As ContractSpecifier
-Set lContractSpecifier = mMarketTable(pOrder.ClientId).ContractSpec
+Set lContractSpecifier = mMarketTable(pOrder.MarketId).ContractSpec
 
 Dim lExec As Execution
 Set lExec = New Execution
@@ -947,7 +947,7 @@ lExec.OrderId = pOrder.Order.Id
 lExec.Action = pOrder.Order.Action
 
 Dim lClock As Clock
-Set lClock = mMarketTable(pOrder.ClientId).DataSource.ClockFuture.Value
+Set lClock = mMarketTable(pOrder.MarketId).DataSource.ClockFuture.Value
 lExec.FillTime = lClock.Timestamp
 
 'mMarketTable(pOrder.ClientId).OrderSubmitter.PreFill pOrder.Order.Id, _
@@ -1080,7 +1080,7 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
             ' this is a parent order, a free standing order, or part of an oca group.
             ' We want to move it to status submitted, either at the next tick or
             ' using exchange submission delay
-            If mMarketTable(pOrder.ClientId).SimulateExchangeDelays Then
+            If mMarketTable(pOrder.MarketId).SimulateExchangeDelays Then
                 setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
                 mTimerList.Add(pOrder, _
                                 delay, _
@@ -1112,7 +1112,7 @@ Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
     Case OrderStatuses.OrderStatusPreSubmitted
         ' this case occurs when the condition for the order to be triggered
         ' has been reached
-        If mMarketTable(pOrder.ClientId).SimulateExchangeDelays Then
+        If mMarketTable(pOrder.MarketId).SimulateExchangeDelays Then
             setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
             mTimerList.Add(pOrder, _
                             delay, _

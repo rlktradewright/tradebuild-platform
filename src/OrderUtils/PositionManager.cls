@@ -293,8 +293,10 @@ Else
     
     lExec.GroupName = mGroupName
     lExec.PositionManagerName = mName
-    lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
-    lExec.SaveRecoveryInfo
+    If Not mBracketOrderRecoveryController Is Nothing Then
+        lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
+        lExec.SaveRecoveryInfo
+    End If
     
     mExecutions.Add lExec
     mOrders.Item(lExec.OrderId).NotifyFill lExec
