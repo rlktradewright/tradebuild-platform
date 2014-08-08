@@ -1670,7 +1670,10 @@ Public Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Assert Not mIsInitialised, "Order is already initialised"
+If mIsInitialised Then Assert pGroupName = mGroupName And _
+                            pContextsName = mContextsName And _
+                            pContractSpec.Equals(mContractSpecifier) And _
+                            pOrderContext Is mOrderContext, "Attempt to change initialisation values"
 
 mGroupName = pGroupName
 mContextsName = pContextsName
