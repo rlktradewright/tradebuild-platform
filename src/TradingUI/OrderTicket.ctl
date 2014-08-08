@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.UserControl OrderTicket 
    ClientHeight    =   6195
    ClientLeft      =   0
@@ -1432,13 +1432,13 @@ Public Sub SetOrderContexts( _
 Const ProcName As String = "SetOrderContexts"
 On Error GoTo Err
 
-AssertArgument (Not pLiveOrderContext Is Nothing) Or (Not pSimulatedOrderContext Is Nothing)
+AssertArgument Not (pLiveOrderContext Is Nothing And pSimulatedOrderContext Is Nothing), "Both LiveOrderContext and SimulatedOrderContext are Nothing"
 
 Set mLiveOrderContext = pLiveOrderContext
 Set mSimulatedOrderContext = pSimulatedOrderContext
 
-If Not mLiveOrderContext Is Nothing Then AssertArgument Not mLiveOrderContext.IsSimulated
-If Not mSimulatedOrderContext Is Nothing Then AssertArgument mSimulatedOrderContext.IsSimulated
+If Not mLiveOrderContext Is Nothing Then AssertArgument Not mLiveOrderContext.IsSimulated, "LiveOrderContext is simulated"
+If Not mSimulatedOrderContext Is Nothing Then AssertArgument mSimulatedOrderContext.IsSimulated, "SimulatedOrderContext is not simulated"
 
 If Not mLiveOrderContext Is Nothing And Not mSimulatedOrderContext Is Nothing Then AssertArgument gGetContractFromContractFuture(mSimulatedOrderContext.ContractFuture).Specifier.Equals(gGetContractFromContractFuture(mLiveOrderContext.ContractFuture).Specifier), "Live and Simulated order contexts must use the same contract"
 
