@@ -489,7 +489,7 @@ Set lDataSource = mMarketDataManager.CreateMarketDataSource(lPm.ContractFuture, 
 lDataSource.StartMarketData
 
 lPm.AddRecoverableObjectListener Me
-lPm.CompleteRecoveryInitialisation mOrderSubmitterFactory.CreateOrderSubmitter(lPm), lDataSource, Me
+lPm.CompleteRecoveryInitialisation mOrderSubmitterFactory.CreateOrderSubmitter, lDataSource, Me
 
 lPm.StartRecovery
 
