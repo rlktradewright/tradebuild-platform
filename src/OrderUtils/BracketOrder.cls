@@ -2224,6 +2224,7 @@ mSummary.ContextName = mContextName
 Set mContract = pContract
 Set mDataSource = pDataSource
 Set mOrderSubmitter = pOrderSubmitter
+mIsSimulated = pIsSimulated
 
 Set mTimerList = mOrderContext.TimerList
 
