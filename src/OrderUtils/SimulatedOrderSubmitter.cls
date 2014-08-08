@@ -8,9 +8,9 @@ BEGIN
 END
 Attribute VB_Name = "SimulatedOrderSubmitter"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '@================================================================================
@@ -185,8 +185,8 @@ Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    mSimulator.CancelOrder EntryOrder.BrokerId  ' should automatically cancel the other orders
-                                                    ' if they have parentid set
+    mSimulator.CancelOrder EntryOrder.Id        ' should automatically cancel the other orders
+                                                ' if they have parentid set
     IOrderSubmitter_CancelBracketOrder = True
 End Select
 
@@ -202,7 +202,7 @@ If Not Stoporder Is Nothing Then
         Case OrderStatuses.OrderStatusFilled, _
             OrderStatuses.OrderStatusCancelling, _
             OrderStatuses.OrderStatusCancelled
-            mSimulator.CancelOrder Stoporder.BrokerId
+            mSimulator.CancelOrder Stoporder.Id
             IOrderSubmitter_CancelBracketOrder = True
         End Select
     End Select
@@ -220,7 +220,7 @@ If Not TargetOrder Is Nothing Then
         Case OrderStatuses.OrderStatusFilled, _
             OrderStatuses.OrderStatusCancelling, _
             OrderStatuses.OrderStatusCancelled
-            mSimulator.CancelOrder TargetOrder.BrokerId
+            mSimulator.CancelOrder TargetOrder.Id
             IOrderSubmitter_CancelBracketOrder = True
         End Select
     End Select
@@ -251,7 +251,7 @@ Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusCancelled
     Assert True, "Stop order state invalid for cancellation"
 Case Else
-    mSimulator.CancelOrder Stoporder.BrokerId
+    mSimulator.CancelOrder Stoporder.Id
 End Select
 
 Exit Sub
@@ -276,7 +276,7 @@ Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusCancelled
     Assert True, "Target order state invalid for cancellation"
 Case Else
-    mSimulator.CancelOrder TargetOrder.BrokerId
+    mSimulator.CancelOrder TargetOrder.Id
 End Select
 
 Exit Sub
@@ -321,13 +321,13 @@ If Not EntryOrder Is Nothing Then
         
         If Stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then
             ' note that AUTOSTP orders will be sent when the entry order is filled
-            PlaceOrder Stoporder, EntryOrder.id, OcaGroup, Transmit
+            PlaceOrder Stoporder, EntryOrder.Id, OcaGroup, Transmit
         End If
     End If
     
     If Not TargetOrder Is Nothing Then
         If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
-            PlaceOrder TargetOrder, EntryOrder.id, OcaGroup, True
+            PlaceOrder TargetOrder, EntryOrder.Id, OcaGroup, True
         End If
     End If
     
@@ -509,7 +509,7 @@ Set lStoporder = pBracketOrder.StopLossOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 'lStoporder.BrokerId = ""     ' force a new id to be allocated
 If Not pBracketOrder.TargetOrder Is Nothing Then
-    PlaceOrder lStoporder, "", mSimulator.GetOcaGroup(lTargetOrder.id), True
+    PlaceOrder lStoporder, "", mSimulator.GetOcaGroup(lTargetOrder.Id), True
 Else
     PlaceOrder lStoporder, "", "", True
 End If
@@ -531,7 +531,7 @@ Set lStoporder = pBracketOrder.StopLossOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 'lTargetOrder.BrokerId = ""   ' force a new id to be allocated
 If Not pBracketOrder.StopLossOrder Is Nothing Then
-    PlaceOrder lTargetOrder, "", mSimulator.GetOcaGroup(lStoporder.id), True
+    PlaceOrder lTargetOrder, "", mSimulator.GetOcaGroup(lStoporder.Id), True
 Else
     PlaceOrder lTargetOrder, "", "", True
 End If
