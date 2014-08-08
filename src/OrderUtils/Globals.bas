@@ -1084,6 +1084,9 @@ On Error GoTo Err
 With pTargetOrder
     .Initialise .GroupName, pSourceOrder.ContextsName, pSourceOrder.ContractSpecifier, pSourceOrder.OrderContext
     
+    ' do this first because modifiability of other attributes may depend on the OrderType
+    If .IsAttributeModifiable(OrderAttOrderType) Then .OrderType = pSourceOrder.OrderType
+    
     .Action = pSourceOrder.Action
     If .IsAttributeModifiable(OrderAttAllOrNone) Then .AllOrNone = pSourceOrder.AllOrNone
     .AveragePrice = pSourceOrder.AveragePrice
@@ -1107,7 +1110,6 @@ With pTargetOrder
     If .IsAttributeModifiable(OrderAttMinimumQuantity) Then .MinimumQuantity = pSourceOrder.MinimumQuantity
     If .IsAttributeModifiable(OrderAttNBBOPriceCap) Then .NbboPriceCap = pSourceOrder.NbboPriceCap
     .Offset = pSourceOrder.Offset
-    If .IsAttributeModifiable(OrderAttOrderType) Then .OrderType = pSourceOrder.OrderType
     If .IsAttributeModifiable(OrderAttOrigin) Then .Origin = pSourceOrder.Origin
     If .IsAttributeModifiable(OrderAttOriginatorRef) Then .OriginatorRef = pSourceOrder.OriginatorRef
     If .IsAttributeModifiable(OrderAttOverrideConstraints) Then .OverrideConstraints = pSourceOrder.OverrideConstraints

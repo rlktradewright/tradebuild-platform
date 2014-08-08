@@ -77,6 +77,12 @@ Private mSimulatorRef                           As WeakReference
 
 Private mTransmit                               As Boolean
 
+''
+' If true, indicates that the <code>order</code> is completed and can
+' be deleted from the relevant collection
+'@/
+Private mIsFinished                             As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -93,56 +99,89 @@ Private mTransmit                               As Boolean
 ' Properties
 '@================================================================================
 
-Friend Property Let AtExchange(ByVal value As Boolean)
-mAtExchange = value
+Friend Property Let AtExchange(ByVal Value As Boolean)
+mAtExchange = Value
 End Property
 
 Friend Property Get AtExchange() As Boolean
 AtExchange = mAtExchange
 End Property
 
-Friend Property Let ClientId(ByVal value As Long)
-mClientId = value
+Friend Property Let ClientId(ByVal Value As Long)
+mClientId = Value
 End Property
 
 Friend Property Get ClientId() As Long
 ClientId = mClientId
 End Property
 
+Friend Property Let IsFinished(ByVal Value As Boolean)
+mIsFinished = Value
+End Property
+
+Friend Property Get IsFinished() As Boolean
+IsFinished = mIsFinished
+End Property
+
+Friend Function IsInSameOcaGroupAs(ByVal pOrder As SimulatorOrder) As Boolean
+IsInSameOcaGroupAs = (mOrder.Id <> pOrder.Order.Id And _
+                    mOcaGroup <> "" And _
+                    mOcaGroup = pOrder.OcaGroup)
+End Function
+
+Friend Function IsParentOf(ByVal pOrder As SimulatorOrder) As Boolean
+IsParentOf = (mOrder.Id = pOrder.ParentId)
+End Function
+
+Friend Function IsRelatedTo(ByVal pOrder As SimulatorOrder) As Boolean
+If pOrder.Order.Id = mOrder.Id Then
+    ' same order
+    IsRelatedTo = False
+Else
+    IsRelatedTo = IsParentOf(pOrder) Or IsSiblingOf(pOrder) Or IsInSameOcaGroupAs(pOrder)
+End If
+End Function
+
+Friend Function IsSiblingOf(ByVal pOrder As SimulatorOrder) As Boolean
+IsSiblingOf = (mOrder.Id <> pOrder.Order.Id And _
+                mParentId <> "" And _
+                mParentId = pOrder.ParentId)
+End Function
+
 Friend Property Get MarketId() As Long
 MarketId = mMarketId
 End Property
 
-Friend Property Let OcaGroup(ByVal value As String)
-mOcaGroup = value
+Friend Property Let OcaGroup(ByVal Value As String)
+mOcaGroup = Value
 End Property
 
 Friend Property Get OcaGroup() As String
 OcaGroup = mOcaGroup
 End Property
 
-Friend Property Let Order(ByVal value As IOrder)
-Set mOrder = value
+Friend Property Let Order(ByVal Value As IOrder)
+Set mOrder = Value
 End Property
 
 Friend Property Get Order() As IOrder
 Set Order = mOrder
 End Property
 
-Friend Property Let ParentId(ByVal value As String)
-mParentId = value
+Friend Property Let ParentId(ByVal Value As String)
+mParentId = Value
 End Property
 
 Friend Property Get ParentId() As String
 ParentId = mParentId
 End Property
 
-Friend Property Let Transmit(ByVal value As Boolean)
+Friend Property Let Transmit(ByVal Value As Boolean)
 Const ProcName As String = "Transmit"
 On Error GoTo Err
 
-Assert Not (mTransmit And Not value), "pTransmit cannot be set fron True to False"
-mTransmit = value
+Assert Not (mTransmit And Not Value), "pTransmit cannot be set fron True to False"
+mTransmit = Value
 
 Exit Property
 
