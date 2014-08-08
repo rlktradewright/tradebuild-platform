@@ -458,6 +458,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function CreateSimulatedOrderSubmitter( _
+                ByVal pSimulator As InProcessExchangeSimulator) As IOrderSubmitter
+Const ProcName As String = "CreateSimulatedOrderSubmitter"
+On Error GoTo Err
+
+Dim lSubmitter As New SimulatedOrderSubmitter
+lSubmitter.Initialise pSimulator
+Set CreateSimulatedOrderSubmitter = lSubmitter
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function OrderActionFromString(ByVal Value As String) As OrderActions
 Const ProcName As String = "OrderActionFromString"
 On Error GoTo Err
