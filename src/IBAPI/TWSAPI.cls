@@ -500,7 +500,7 @@ With pContract
     mWriter.AddString IIf(.Exchange = "", "*", .Exchange), "Exchange"
     mWriter.AddString .PrimaryExch, "PrimaryExch"
     mWriter.AddString .CurrencyCode, "Currency"
-    mWriter.AddString .LocalSymbol, "Local Symbol"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
     If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
 End With
 
@@ -544,7 +544,7 @@ With pContract
     mWriter.AddString IIf(.Exchange = "", "*", .Exchange), "Exchange"
     mWriter.AddString .PrimaryExch, "PrimaryExch"
     mWriter.AddString .CurrencyCode, "Currency"
-    mWriter.AddString .LocalSymbol, "Local Symbol"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
     If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
 End With
 
@@ -844,7 +844,7 @@ mWriter.AddString gTwsOptionRightToString(pContract.OptRight), "Right"
 mWriter.AddString IIf(pContract.Multiplier = 0, "", pContract.Multiplier), "Multiplier"
 mWriter.AddString pContract.Exchange, "Exchange"
 mWriter.AddString pContract.CurrencyCode, "Currency"
-mWriter.AddString pContract.LocalSymbol, "LocalSymbol"
+mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
 If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "TradingClass"
 
 mWriter.AddString pExerciseAction, "ExerciseAction"
@@ -960,7 +960,7 @@ With pContract
                                                         ' Exchange is SMART and there are SMART routers in more
                                                         ' than one country (eg try IBM in Tws)
     mWriter.AddString .CurrencyCode, "Currency"
-    mWriter.AddString .LocalSymbol, "Local Symbol"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
     If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
     mWriter.AddString .SecIdType, "Sec id type"
     mWriter.AddString .SecId, "Sec id"
@@ -1452,7 +1452,7 @@ mWriter.AddString gTwsSecTypeToShortString(pContract.Sectype), "Sectype"
 mWriter.AddString pContract.Exchange, "Exchange"
 mWriter.AddString pContract.PrimaryExch, "PrimaryExch"
 mWriter.AddString pContract.CurrencyCode, "Currency"
-mWriter.AddString pContract.LocalSymbol, "LocalSymbol"
+mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
 mWriter.Send
 
 Exit Sub
@@ -1671,7 +1671,7 @@ mWriter.AddString IIf(pContract.Multiplier = 0, "", pContract.Multiplier), "Mult
 mWriter.AddString pContract.Exchange, "Exchange"
 mWriter.AddString pContract.PrimaryExch, "PrimaryExch"
 mWriter.AddString pContract.CurrencyCode, "Currency"
-mWriter.AddString pContract.LocalSymbol, "LocalSymbol"
+mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
 If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "TradingClass"
 mWriter.AddString pBarSize, "BarSize"   ' this parameter is not currently used
 mWriter.AddString pWhatToShow, "WhatToShow"
@@ -1880,7 +1880,7 @@ With pContract
     mWriter.AddString IIf(.Exchange = "", "*", .Exchange), "Exchange"
     mWriter.AddString .CurrencyCode, "Currency"
     
-    mWriter.AddString .LocalSymbol, "Local Symbol"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
     If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
     mWriter.AddBoolean True, "Include expired"
     mWriter.AddString .SecIdType, "SecIdType"
@@ -1908,7 +1908,7 @@ Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pRequest.contract.Trad
 Dim lTwsId As Long
 lTwsId = getTwsHistRequestIdFromCallersRequestId(pRequestId)
 
-gLog "Requesting historical data for: " & pRequest.contract.LocalSymbol & _
+gLog "Requesting historical data for: " & UCase$(pRequest.contract.LocalSymbol) & _
             "; id=" & lTwsId & _
             "; barsize=" & pRequest.BarSizeSetting & _
             "; endTime=" & pRequest.EndDateTime & _
@@ -1933,7 +1933,7 @@ With pRequest.contract
     
     Dim lExpired  As Boolean
     lExpired = gContractHasExpired(pRequest.contract)
-    mWriter.AddString IIf(lExpired, "", .LocalSymbol), "Local Symbol"
+    mWriter.AddString IIf(lExpired, "", UCase$(.LocalSymbol)), "Local Symbol"
     mWriter.AddString .TradingClass, "Trading Class"
     mWriter.AddString IIf(lExpired, 1, 0), "Include expired"   ' can't include expired for non-expiring contracts
     
@@ -1999,7 +1999,7 @@ With pContract
     mWriter.AddString .Exchange, "Exchange"
     mWriter.AddString .PrimaryExch, "Primary Exchange"
     mWriter.AddString .CurrencyCode, "Currency"
-    mWriter.AddString .LocalSymbol, "Local Symbol"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
     If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
     
     ' Add combo legs for BAG requests
@@ -2074,7 +2074,7 @@ With pContract
     If mServerVersion >= 15 Then mWriter.AddString IIf(.Multiplier = 0, "", CStr(.Multiplier)), "Multiplier"
     mWriter.AddString .Exchange, "Exchange"
     mWriter.AddString .CurrencyCode, "Currency"
-    mWriter.AddString .LocalSymbol, "Local Symbol"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
     If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "Trading Class"
     If mServerVersion >= 19 Then mWriter.AddString pNumberOfRows, "Num rows"
 End With
