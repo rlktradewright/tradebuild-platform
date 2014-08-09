@@ -348,9 +348,12 @@ For Each lCs In mConfig
     gLogger.Log "Loading ticker: " & lKey, ProcName, ModuleName
     
     Dim lPositionManager As PositionManager
-    If mOrderManager.PositionManagersLive.Contains(lKey) Then
-        Set lPositionManager = mOrderManager.PositionManagersLive.Item(lKey)
-        If lPositionManager.IsFinished Then Set lPositionManager = Nothing
+    Set lPositionManager = mOrderManager.GetPositionManager(lKey, False)
+    If Not lPositionManager Is Nothing Then
+        If lPositionManager.IsFinished Then
+            Set lPositionManager = Nothing
+            mOrderManager.RemovePositionManager lPositionManager
+        End If
     End If
     
     Dim lDataSource As IMarketDataSource
