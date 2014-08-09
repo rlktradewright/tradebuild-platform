@@ -101,7 +101,7 @@ End Property
 Public Function CreateOrderContexts( _
                 ByVal pName As String, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
+                ByVal pOrderSubmitter As IOrderSubmitter, _
                 Optional ByVal pDataSource As IMarketDataSource, _
                 Optional ByVal pGroupName As String, _
                 Optional ByVal pIsSimulated As Boolean, _
@@ -113,10 +113,10 @@ Const ProcName As String = "CreateOrderContexts"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
-AssertArgument Not pOrderSubmitterFactory Is Nothing, "pOrderSubmitterFactory is Nothing"
+AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is Nothing"
 
 Set CreateOrderContexts = New OrderContexts
-CreateOrderContexts.Initialise pName, Me, pGroupName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitterFactory, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture
+CreateOrderContexts.Initialise pName, Me, pGroupName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture
 If pIsSimulated Then
     mOrderContextsCollectionSimulated.Add CreateOrderContexts, pName
 Else

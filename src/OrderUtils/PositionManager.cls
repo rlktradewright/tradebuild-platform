@@ -748,7 +748,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get OrderSubmitter() As IOrderSubmitter
+Public Property Get OrderSubmitter() As IOrderSubmitter
 Set OrderSubmitter = mOrderSubmitter
 End Property
 
@@ -874,6 +874,18 @@ Const ProcName As String = "AddChangeListener"
 On Error GoTo Err
 
 mChangeListeners.Add pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
+Const ProcName As String = "AddOrderSubmissionListener"
+On Error GoTo Err
+
+mOrderSubmitter.AddOrderSubmissionListener pListener
 
 Exit Sub
 
@@ -1112,6 +1124,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
+Const ProcName As String = "RemoveOrderSubmissionListener"
+On Error GoTo Err
+
+mOrderSubmitter.RemoveOrderSubmissionListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub RemoveProfitListener(ByVal pListener As IProfitListener)
 Const ProcName As String = "RemoveProfitListener"
 On Error GoTo Err
@@ -1307,8 +1331,7 @@ Set mOrderContexts = Nothing
 Set mMoneyManager = Nothing
 
 If Not mOrderSubmitter Is Nothing Then
-    mOrderSubmitter.RemoveStateChangeListener Me
-    mOrderSubmitter.RemoveOrderSubmissionListener Me
+    mOrderSubmitter.Finish
     Set mOrderSubmitter = Nothing
 End If
 

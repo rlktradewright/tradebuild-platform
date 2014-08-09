@@ -358,6 +358,8 @@ Const ProcName As String = "IOrderSubmitter_Finish"
 On Error GoTo Err
 
 Set mSimulator = Nothing
+mOrderSubmissionListeners.Clear
+mStateChangeListeners.Clear
 
 Exit Sub
 

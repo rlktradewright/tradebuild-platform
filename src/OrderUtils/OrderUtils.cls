@@ -425,17 +425,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateInProcessExchangeSimulator( _
+Public Function CreateSimulatedOrderSubmitterFactory( _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pPrimaryContractStore As IContractStore, _
-                Optional ByVal pSecondaryContractStore As IContractStore) As InProcessExchangeSimulator
+                Optional ByVal pSecondaryContractStore As IContractStore) As IOrderSubmitterFactory
 Const ProcName As String = "CreateInProcessExchangeSimulator"
 On Error GoTo Err
 
 AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore is Nothing"
 
-Set CreateInProcessExchangeSimulator = New InProcessExchangeSimulator
-CreateInProcessExchangeSimulator.Initialise pMarketDataManager, pPrimaryContractStore, pSecondaryContractStore
+Dim lFactory As New SimOrderSubmitterFactory
+lFactory.Initialise pMarketDataManager, pPrimaryContractStore, pSecondaryContractStore
+Set CreateSimulatedOrderSubmitterFactory = lFactory
 
 Exit Function
 
@@ -451,21 +452,6 @@ Dim lDataStore As OrderPersistenceDataStore
 Set lDataStore = New OrderPersistenceDataStore
 lDataStore.Initialise pRecoveryFilePath
 Set CreateOrderPersistenceDataStore = lDataStore
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function CreateSimulatedOrderSubmitter( _
-                ByVal pSimulator As InProcessExchangeSimulator) As IOrderSubmitter
-Const ProcName As String = "CreateSimulatedOrderSubmitter"
-On Error GoTo Err
-
-Dim lSubmitter As New SimulatedOrderSubmitter
-lSubmitter.Initialise pSimulator
-Set CreateSimulatedOrderSubmitter = lSubmitter
 
 Exit Function
 

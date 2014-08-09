@@ -286,6 +286,10 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
+Public Property Get OrderSubmitter() As IOrderSubmitter
+Set OrderSubmitter = mOrderSubmitter
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -338,6 +342,8 @@ Const ProcName As String = "Finish"
 On Error GoTo Err
 
 Set mDataSource = Nothing
+
+mOrderSubmitter.Finish
 Set mOrderSubmitter = Nothing
 
 Dim OrderContext As OrderContext
@@ -345,7 +351,7 @@ For Each OrderContext In mOrderContexts
     OrderContext.Finish
 Next
 
-mOrderManager.RemoveorderContexts Me
+mOrderManager.RemoveOrderContexts Me
 Set mOrderManager = Nothing
 
 Exit Sub
@@ -361,7 +367,7 @@ Friend Sub Initialise( _
                 ByVal pIsSimulated As Boolean, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pDataSource As IMarketDataSource, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
+                ByVal pOrderSubmitter As IOrderSubmitter, _
                 ByVal pOrderAuthoriser As IOrderAuthoriser, _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
                 ByVal pAccumulatedOrders As Orders, _
@@ -376,7 +382,7 @@ mGroupName = pGroupName
 mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
 Set mDataSource = pDataSource
-Set mOrderSubmitter = pOrderSubmitterFactory.CreateOrderSubmitter
+Set mOrderSubmitter = pOrderSubmitter
 Set pOrderAuthoriser = pOrderAuthoriser
 Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
 Set mAccumulatedOrders = pAccumulatedOrders

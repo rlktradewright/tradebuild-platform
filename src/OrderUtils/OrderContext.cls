@@ -212,6 +212,10 @@ Friend Property Get Name() As String
 Name = mName
 End Property
 
+Public Property Get OrderSubmitter() As IOrderSubmitter
+Set OrderSubmitter = mOrderSubmitter
+End Property
+
 Public Property Get PendingSize() As Long
 Const ProcName As String = "PendingSize"
 On Error GoTo Err

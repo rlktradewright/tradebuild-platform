@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "SimulatedOrderSubmitterFactory"
+Attribute VB_Name = "SimOrderSubmitterFactory"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -21,6 +21,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IOrderSubmitterFactory
 
 '@================================================================================
 ' Events
@@ -38,19 +40,37 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "SimulatedOrderSubmitterFactory"
+Private Const ModuleName                            As String = "SimOrderSubmitterFactory"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mMarketDataManager                          As IMarketDataManager
+Private mPrimaryContractStore                       As IContractStore
+Private mSecondaryContractStore                     As IContractStore
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' IOrderSubmitterFactory Interface Members
 '@================================================================================
+
+Private Function IOrderSubmitterFactory_CreateOrderSubmitter() As IOrderSubmitter
+Const ProcName As String = "IOrderSubmitterFactory_CreateOrderSubmitter"
+On Error GoTo Err
+
+Dim lSubmitter As New SimulatedOrderSubmitter
+lSubmitter.Initialise getOrderSimulator
+Set IOrderSubmitterFactory_CreateOrderSubmitter = lSubmitter
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -64,9 +84,35 @@ Private Const ModuleName                            As String = "SimulatedOrderS
 ' Methods
 '@================================================================================
 
+Friend Sub Initialise( _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore)
+Set mMarketDataManager = pMarketDataManager
+Set mPrimaryContractStore = pPrimaryContractStore
+Set mSecondaryContractStore = pSecondaryContractStore
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function getOrderSimulator() As InProcessExchangeSimulator
+Const ProcName As String = "getOrderSimulator"
+On Error GoTo Err
+
+Static sSimulator As InProcessExchangeSimulator
+If sSimulator Is Nothing Then
+    Set sSimulator = New InProcessExchangeSimulator
+    sSimulator.Initialise mMarketDataManager, mPrimaryContractStore, mSecondaryContractStore
+End If
+Set getOrderSimulator = sSimulator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 
 
