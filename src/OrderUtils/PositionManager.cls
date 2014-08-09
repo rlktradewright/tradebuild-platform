@@ -1488,7 +1488,7 @@ mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
 
 If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
-    Set mOrderContexts = mOrderManager.GetOrderContexts(mName)
+    Set mOrderContexts = mOrderManager.GetOrderContexts(mName, mIsSimulated)
     If mOrderContexts Is Nothing Then _
         Set mOrderContexts = mOrderManager.CreateOrderContexts(pName, mContractFuture, mOrderSubmitter, mDataSource, mGroupName, mIsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 End If

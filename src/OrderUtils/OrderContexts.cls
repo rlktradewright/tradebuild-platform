@@ -361,7 +361,7 @@ Friend Sub Initialise( _
                 ByVal pIsSimulated As Boolean, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pDataSource As IMarketDataSource, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 ByVal pOrderAuthoriser As IOrderAuthoriser, _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
                 ByVal pAccumulatedOrders As Orders, _
@@ -376,7 +376,7 @@ mGroupName = pGroupName
 mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
 Set mDataSource = pDataSource
-Set mOrderSubmitter = pOrderSubmitter
+Set mOrderSubmitter = pOrderSubmitterFactory.CreateOrderSubmitter
 Set pOrderAuthoriser = pOrderAuthoriser
 Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
 Set mAccumulatedOrders = pAccumulatedOrders

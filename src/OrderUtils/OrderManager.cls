@@ -44,7 +44,8 @@ Private Const ModuleName                            As String = "OrderManager"
 ' Member variables
 '@================================================================================
 
-Private mOrderContextsCollection                    As New EnumerableCollection
+Private mOrderContextsCollectionLive                As New EnumerableCollection
+Private mOrderContextsCollectionSimulated           As New EnumerableCollection
 
 Private mSessionName                                As String
 
@@ -81,14 +82,6 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get PositionManagersLive() As PositionManagers
-Set PositionManagersLive = mPositionManagersLive
-End Property
-
-Public Property Get PositionManagersSimulated() As PositionManagers
-Set PositionManagersSimulated = mPositionManagersSimulated
-End Property
-
 Friend Property Get SessionName() As String
 SessionName = mSessionName
 End Property
@@ -100,7 +93,7 @@ End Property
 Public Function CreateOrderContexts( _
                 ByVal pName As String, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pOrderSubmitter As IOrderSubmitter, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 Optional ByVal pDataSource As IMarketDataSource, _
                 Optional ByVal pGroupName As String, _
                 Optional ByVal pIsSimulated As Boolean, _
@@ -112,11 +105,15 @@ Const ProcName As String = "CreateOrderContexts"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
-AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is Nothing"
+AssertArgument Not pOrderSubmitterFactory Is Nothing, "pOrderSubmitterFactory is Nothing"
 
 Set CreateOrderContexts = New OrderContexts
-CreateOrderContexts.Initialise pName, Me, pGroupName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture
-mOrderContextsCollection.Add CreateOrderContexts, pName
+CreateOrderContexts.Initialise pName, Me, pGroupName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitterFactory, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture
+If pIsSimulated Then
+    mOrderContextsCollectionSimulated.Add CreateOrderContexts, pName
+Else
+    mOrderContextsCollectionLive.Add CreateOrderContexts, pName
+End If
 
 Exit Function
 
@@ -164,11 +161,34 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetOrderContexts( _
-                ByVal pName As String) As OrderContexts
+                ByVal pName As String, _
+                ByVal pIsSimulated As Boolean) As OrderContexts
 Const ProcName As String = "GetOrderContexts"
 On Error GoTo Err
 
-If mOrderContextsCollection.Contains(pName) Then Set GetOrderContexts = mOrderContextsCollection.Item(pName)
+If pIsSimulated Then
+    If mOrderContextsCollectionSimulated.Contains(pName) Then Set GetOrderContexts = mOrderContextsCollectionSimulated.Item(pName)
+Else
+    If mOrderContextsCollectionLive.Contains(pName) Then Set GetOrderContexts = mOrderContextsCollectionLive.Item(pName)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetPositionManager( _
+                ByVal pName As String, _
+                ByVal pIsSimulated As Boolean) As OrderContexts
+Const ProcName As String = "GetPositionManager"
+On Error GoTo Err
+
+If pIsSimulated Then
+    If mPositionManagersSimulated.Contains(pName) Then Set GetPositionManager = mPositionManagersSimulated.Item(pName)
+Else
+    If mPositionManagersLive.Contains(pName) Then Set GetPositionManager = mPositionManagersLive.Item(pName)
+End If
 
 Exit Function
 
@@ -194,16 +214,36 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub RemoveorderContexts(ByVal pOrderContexts As OrderContexts)
-Const ProcName As String = "RemoveorderContexts"
+Public Sub RemoveOrderContexts(ByVal pOrderContexts As OrderContexts)
+Const ProcName As String = "RemoveOrderContexts"
 On Error GoTo Err
 
-mOrderContextsCollection.Remove pOrderContexts.Name
+If pOrderContexts.IsSimulated Then
+    mOrderContextsCollectionSimulated.Remove pOrderContexts.Name
+Else
+    mOrderContextsCollectionLive.Remove pOrderContexts.Name
+End If
 
 Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub RemovePositionManager(ByVal pPositionManager As PositionManager)
+Const ProcName As String = "RemovePositionManager"
+On Error GoTo Err
+
+If pPositionManager.IsSimulated Then
+    mPositionManagersSimulated.Remove pPositionManager
+Else
+    mPositionManagersLive.Remove pPositionManager
+End If
+
+Exit Sub
+
+Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

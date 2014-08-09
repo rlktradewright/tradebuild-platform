@@ -212,7 +212,6 @@ Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
 Const ProcName As String = "NewEnum"
-
 On Error GoTo Err
 
 Set NewEnum = getEnumerator
@@ -268,7 +267,6 @@ Const ProcName As String = "fireCollectionChanged"
 On Error GoTo Err
 
 Dim lListener As CollectionChangeListener
-
 For Each lListener In mCollectionChangeListeners.CurrentListeners
     lListener.Change ev
 Next
