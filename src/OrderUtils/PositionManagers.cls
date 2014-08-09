@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "PositionManagers"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -145,7 +145,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function Add(ByVal pPositionManager As PositionManager) As PositionManager
+Friend Function Add(ByVal pPositionManager As PositionManager) As PositionManager
 Const ProcName As String = "Add"
 On Error GoTo Err
 

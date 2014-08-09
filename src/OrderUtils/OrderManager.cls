@@ -82,6 +82,14 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get PositionManagersLive() As PositionManagers
+Set PositionManagersLive = mPositionManagersLive
+End Property
+
+Public Property Get PositionManagersSimulated() As PositionManagers
+Set PositionManagersSimulated = mPositionManagersSimulated
+End Property
+
 Friend Property Get SessionName() As String
 SessionName = mSessionName
 End Property
