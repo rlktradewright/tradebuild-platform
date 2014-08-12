@@ -598,9 +598,6 @@ On Error GoTo Err
 StartServiceProviders = ServiceProviders.StartServiceProviders(mStudyLibraryManager, mSessionName)
 If Not mMarketDataSourcesConfig Is Nothing Then MarketDataManager.LoadFromConfig mMarketDataSourcesConfig
 
-initialiseSimulatedOrderSubmitterFactory ServiceProviders.OrderSubmitterFactoryLive
-initialiseSimulatedOrderSubmitterFactory ServiceProviders.OrderSubmitterFactorySimulated
-
 If Not ServiceProviders.MarketDataManager Is Nothing Then
     Set mWorkspaces = New WorkSpaces
     
@@ -650,24 +647,6 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Sub initialiseSimulatedOrderSubmitterFactory( _
-                ByVal pFactory As IOrderSubmitterFactory)
-Const ProcName As String = "initialiseSimulatedOrderSubmitterFactory"
-On Error GoTo Err
-
-If pFactory Is Nothing Then Exit Sub
-If Not TypeOf pFactory Is OrderSimulatorSP Then Exit Sub
-    
-Dim l As OrderSimulatorSP
-Set l = pFactory
-l.Initialise Me.MarketDataManager, Me.ContractStorePrimary, Me.ContractStoreSecondary
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 Private Sub Init()
 Const ProcName As String = "Init"

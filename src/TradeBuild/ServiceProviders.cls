@@ -612,11 +612,13 @@ Else
     Set mHistDataStoreOutput = createHistoricalDataStoreOutput
     Set mOrderPersistenceDataStore = createOrderPersistenceDataStore
     Set mOrderRecoveryAgent = createOrderRecoveryAgent
-    Set mOrderSubmitterFactoryLive = createOrderSubmitterFactoryLive
-    Set mOrderSubmitterFactorySimulated = createOrderSubmitterFactorySimulated
     Set mMarketDataManager = createMarketDataManager(pStudyLibraryManager)
     Set mTickfileStoreInput = createTickfileStoreInput
     Set mTickfileStoreOutput = createTickfileStoreOutput
+    
+    ' do these last as simulator needs MarketDataManager and ContractStores
+    Set mOrderSubmitterFactoryLive = createOrderSubmitterFactoryLive
+    Set mOrderSubmitterFactorySimulated = createOrderSubmitterFactorySimulated
     
     gLogger.Log "Service providers started successfully", ProcName, ModuleName
     StartServiceProviders = True
@@ -855,6 +857,12 @@ Dim lSp As IOrderSubmissionSP
 
 Set lSp = GetServiceProviderByRole(SPRoleOrderSubmissionLive)
 If lSp Is Nothing Then Exit Function
+
+If TypeOf lSp Is OrderSimulatorSP Then
+    Dim lOrderSimulatorSP As OrderSimulatorSP
+    Set lOrderSimulatorSP = lSp
+    lOrderSimulatorSP.Initialise Me.MarketDataManager, Me.ContractStorePrimary, Me.ContractStoreSecondary
+End If
 
 Set createOrderSubmitterFactoryLive = lSp.GetOrderSubmitterFactory
 
