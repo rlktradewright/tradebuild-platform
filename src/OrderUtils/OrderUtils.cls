@@ -429,7 +429,7 @@ Public Function CreateSimulatedOrderSubmitterFactory( _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pPrimaryContractStore As IContractStore, _
                 Optional ByVal pSecondaryContractStore As IContractStore) As IOrderSubmitterFactory
-Const ProcName As String = "CreateInProcessExchangeSimulator"
+Const ProcName As String = "CreateSimulatedOrderSubmitterFactory"
 On Error GoTo Err
 
 AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore is Nothing"
