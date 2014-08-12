@@ -433,7 +433,6 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmission
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionSimulated Then
     Dim lOrderSimulatorSP As New OrderSimulatorSP
-    lOrderSimulatorSP.Initialise Me.MarketDataManager, Me.ContractStorePrimary, Me.ContractStoreSecondary
     AddSP lOrderSimulatorSP, Nothing, ""
 
 End If
@@ -873,6 +872,12 @@ Dim lSp As IOrderSubmissionSP
 
 Set lSp = GetServiceProviderByRole(SPRoleOrderSubmissionSimulated)
 If lSp Is Nothing Then Exit Function
+
+If TypeOf lSp Is OrderSimulatorSP Then
+    Dim lOrderSimulatorSP As OrderSimulatorSP
+    Set lOrderSimulatorSP = lSp
+    lOrderSimulatorSP.Initialise Me.MarketDataManager, Me.ContractStorePrimary, Me.ContractStoreSecondary
+End If
 
 Set createOrderSubmitterFactorySimulated = lSp.GetOrderSubmitterFactory
 

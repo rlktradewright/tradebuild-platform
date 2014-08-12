@@ -31,7 +31,6 @@ Option Explicit
 '@================================================================================
 
 Implements IServiceProvider
-Implements IOrderSubmitterFactory
 Implements IOrderSubmissionSP
 
 '@================================================================================
@@ -125,7 +124,7 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Private Property Let IServiceProvider_Name(ByVal Value As String)
+Private Property Let IServiceProvider_Name(ByVal value As String)
 
 Const ProcName As String = "IServiceProvider_Name"
 On Error GoTo Err
@@ -175,26 +174,7 @@ Private Function IOrderSubmissionSP_GetOrderSubmitterFactory() As IOrderSubmitte
 Const ProcName As String = "IOrderSubmissionSP_GetOrderSubmitterFactory"
 On Error GoTo Err
 
-Set IOrderSubmissionSP_GetOrderSubmitterFactory = Me
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-'@================================================================================
-' IOrderSubmitterFactory Interface Members
-'@================================================================================
-
-Private Function IOrderSubmitterFactory_CreateOrderSubmitter() As IOrderSubmitter
-Const ProcName As String = "IOrderSubmitterFactory_CreateOrderSubmitter"
-On Error GoTo Err
-
-Dim lOrderSubmitter As New SimulatedOrderSubmitter
-lOrderSubmitter.Initialise getOrderSimulator
-
-Set IOrderSubmitterFactory_CreateOrderSubmitter = lOrderSubmitter
+Set IOrderSubmissionSP_GetOrderSubmitterFactory = CreateSimulatedOrderSubmitterFactory(mMarketDataManager, mPrimaryContractStore, mSecondaryContractStore)
 
 Exit Function
 
@@ -210,8 +190,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Let Name(ByVal Value As String)
-mName = Value
+Public Property Let Name(ByVal value As String)
+mName = value
 End Property
 
 Public Property Get Name() As String
@@ -231,18 +211,4 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function getOrderSimulator() As InProcessExchangeSimulator
-Const ProcName As String = "getOrderSimulator"
-On Error GoTo Err
-
-Static sSimulator As InProcessExchangeSimulator
-If sSimulator Is Nothing Then Set sSimulator = CreateInProcessExchangeSimulator(mMarketDataManager, mPrimaryContractStore, mSecondaryContractStore)
-Set getOrderSimulator = sSimulator
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
