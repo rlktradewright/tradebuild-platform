@@ -143,23 +143,21 @@ Private Sub StateChangeListener_Change( _
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
+If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
+
 Dim tli As TimerListItem
 Set tli = ev.Source
 
 Dim lOrder As SimulatorOrder
 Set lOrder = tli.Data
 
-If ev.State = TimerListItemStates.TimerListItemStateExpired Then
-    Select Case lOrder.Order.Status
-    Case OrderStatuses.OrderStatusSubmitted
-        lOrder.AtExchange = True
-        matchOrder lOrder
-    Case OrderStatuses.OrderStatusCancelling
-        setCancelOrder lOrder
-    End Select
-Else
-    Assert True, "Unexpected TimerListItem status"
-End If
+Select Case lOrder.Order.Status
+Case OrderStatuses.OrderStatusSubmitted
+    lOrder.AtExchange = True
+    matchOrder lOrder
+Case OrderStatuses.OrderStatusCancelling
+    setCancelOrder lOrder
+End Select
 
 Exit Sub
 
@@ -213,75 +211,15 @@ Public Sub CancelOrder(ByVal Id As String)
 Const ProcName As String = "CancelOrder"
 On Error GoTo Err
 
-Dim relatedOrder As SimulatorOrder
-
 AssertArgument mAllOrders.Contains(Id), "Unknown order id " & Id
 
 Dim lOrder As SimulatorOrder
 Set lOrder = mAllOrders(Id)
 
 With mMarketTable(lOrder.MarketId)
-    If .PendingOrders.Contains(Id) Then
-        Dim lPendingOrder As SimulatorOrder
-        Set lPendingOrder = .PendingOrders(Id)
-        If lOrder.ParentId <> "" Then
-            Set relatedOrder = .PendingOrders(lOrder.ParentId)
-            setCancelOrder relatedOrder
-            
-            For Each relatedOrder In .PendingOrders
-                If relatedOrder.ParentId = lOrder.ParentId And _
-                    relatedOrder.Order.Id <> lOrder.Order.Id _
-                Then
-                    setCancelOrder relatedOrder
-                End If
-            Next
-        Else
-            For Each relatedOrder In .PendingOrders
-                If relatedOrder.ParentId = lOrder.Order.Id Or _
-                    (relatedOrder.OcaGroup = lOrder.OcaGroup And _
-                    lOrder.OcaGroup <> "" And _
-                    relatedOrder.Order.Id <> lOrder.Order.Id) _
-                Then
-                    setCancelOrder relatedOrder
-                End If
-            Next
-        End If
-    Else
-        On Error Resume Next
-        Set lOrder = .ActiveOrders(Id)
-        On Error GoTo Err
-        
-        If lOrder Is Nothing Then Exit Sub
-        
-        If lOrder.ParentId <> "" Then
-            On Error Resume Next
-            Set relatedOrder = .ActiveOrders(lOrder.ParentId)
-            On Error GoTo Err
-            If Not relatedOrder Is Nothing Then
-                setCancelOrder relatedOrder
-            End If
-            For Each relatedOrder In .ActiveOrders
-                If relatedOrder.ParentId = lOrder.ParentId And _
-                    relatedOrder.Order.Id <> lOrder.Order.Id _
-                Then
-                    setCancelOrder relatedOrder
-                End If
-            Next
-        Else
-            For Each relatedOrder In .ActiveOrders
-                If relatedOrder.ParentId = lOrder.Order.Id Or _
-                    (relatedOrder.OcaGroup = lOrder.OcaGroup And _
-                    lOrder.OcaGroup <> "" And _
-                    relatedOrder.Order.Id <> lOrder.Order.Id) _
-                  Then
-                    setCancelOrder relatedOrder
-                End If
-            Next
-        End If
-    End If
-
+    cancelRelatedOrders .PendingOrders.Enumerator, lOrder
+    cancelRelatedOrders .ActiveOrders.Enumerator, lOrder
     setCancelOrder lOrder
-
 End With
 
 Exit Sub
@@ -398,6 +336,26 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub cancelRelatedOrders(ByVal en As Enumerator, ByVal pOrder As SimulatorOrder)
+Const ProcName As String = "cancelRelatedOrders"
+On Error GoTo Err
+
+Do While en.MoveNext
+    Dim lOrder As SimulatorOrder
+    Set lOrder = en.Current
+    If lOrder.IsFinished Then
+        en.Remove
+    ElseIf pOrder.IsRelatedTo(lOrder) Then
+        setCancelOrder lOrder
+    End If
+Loop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function createExecId() As String
 Static sLastMillisecs As Long
@@ -558,38 +516,27 @@ On Error GoTo Err
 With mMarketTable(pOrder.MarketId)
     Dim lOrder As SimulatorOrder
     For Each lOrder In .ActiveOrders
-        If lOrder.ParentId = pOrder.Order.Id Then
+        If pOrder.IsParentOf(lOrder) Then
             lOrder.ParentId = ""    ' detach the order from the parent
             
             ' now set the status if necessary
             Select Case lOrder.Order.OrderType
             Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
                 If .SimulateExchangeDelays Then
-                    setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
-                    mTimerList.Add(pOrder, _
+                    setOrderStatus lOrder, OrderStatuses.OrderStatusSubmitted
+                    mTimerList.Add(lOrder, _
                                     delay, _
                                     ExpiryTimeUnits.ExpiryTimeUnitMilliseconds).AddStateChangeListener Me
                 Else
                     pOrder.AtExchange = True
-                    setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
+                    setOrderStatus lOrder, OrderStatuses.OrderStatusSubmitted
                 End If
             Case Else
                 ' the order status must remain unchanged
             End Select
         End If
-        If lOrder.ParentId = pOrder.ParentId And _
-            lOrder.Order.Id <> pOrder.Order.Id And _
-            lOrder.ParentId <> "" _
-        Then
-            setCancelOrder lOrder
-        End If
-        If lOrder.OcaGroup = pOrder.OcaGroup And _
-            pOrder.OcaGroup <> "" And _
-            lOrder.Order.Id <> pOrder.Order.Id _
-        Then
-            setCancelOrder lOrder
-        End If
-        
+        If pOrder.IsSiblingOf(lOrder) Then setCancelOrder lOrder
+        If pOrder.IsInSameOcaGroupAs(lOrder) Then setCancelOrder lOrder
     Next
 End With
 
@@ -665,7 +612,7 @@ Const ProcName As String = "notifyOrderReport"
 On Error GoTo Err
 
 Dim lOrderReport As New OrderReport
-lOrderReport.Action = pOrder.BrokerId
+lOrderReport.Action = pOrder.Action
 lOrderReport.AllOrNone = pOrder.AllOrNone
 lOrderReport.BlockOrder = pOrder.BlockOrder
 lOrderReport.BrokerId = pOrder.BrokerId
@@ -753,9 +700,14 @@ With mMarketTable(mMarketId)
     handleCreatedOrders mMarketId
     If Not .SimulateExchangeDelays Then handlePendingSubmitOrders mMarketId
 
-    Dim lOrder As SimulatorOrder
-    For Each lOrder In .ActiveOrders
-        If lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
+    Dim en As Enumerator
+    Set en = .ActiveOrders.Enumerator
+    Do While en.MoveNext
+        Dim lOrder As SimulatorOrder
+        Set lOrder = en.Current
+        If lOrder.IsFinished Then
+            en.Remove
+        ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
             If lOrder.AtExchange Then
                 matchOrder lOrder
             End If
@@ -769,7 +721,7 @@ With mMarketTable(mMarketId)
                 setCancelOrder lOrder
             End If
         End If
-    Next
+    Loop
 End With
 
 Exit Sub
@@ -790,9 +742,14 @@ With mMarketTable(mMarketId)
     handleCreatedOrders mMarketId
     If Not .SimulateExchangeDelays Then handlePendingSubmitOrders mMarketId
 
-    Dim lOrder As SimulatorOrder
-    For Each lOrder In .ActiveOrders
-        If lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
+    Dim en As Enumerator
+    Set en = .ActiveOrders.Enumerator
+    Do While en.MoveNext
+        Dim lOrder As SimulatorOrder
+        Set lOrder = en.Current
+        If lOrder.IsFinished Then
+            en.Remove
+        ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
             If lOrder.AtExchange Then
                 matchOrder lOrder
             End If
@@ -806,7 +763,68 @@ With mMarketTable(mMarketId)
                 setCancelOrder lOrder
             End If
         End If
-    Next
+    Loop
+End With
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processTrade(ByVal pTimestamp As Date, _
+                ByVal pMarketId As Long, _
+                ByVal pTrade As Double)
+Const ProcName As String = "processTrade"
+On Error GoTo Err
+
+With mMarketTable(pMarketId)
+    handleCreatedOrders pMarketId
+    If Not .SimulateExchangeDelays Then handlePendingSubmitOrders pMarketId
+
+    Dim en As Enumerator
+    Set en = .ActiveOrders.Enumerator
+    Do While en.MoveNext
+        Dim lOrder As SimulatorOrder
+        Set lOrder = en.Current
+        If lOrder.IsFinished Then
+            en.Remove
+        ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
+            If lOrder.AtExchange Then
+                matchOrderTrade lOrder, pTrade
+            End If
+        ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusPreSubmitted And _
+            lOrder.ParentId = "" _
+        Then
+            Select Case lOrder.Order.OrderType
+                Case OrderTypes.OrderTypeStop
+                    If lOrder.Order.Action = OrderActions.OrderActionBuy And _
+                        pTrade >= lOrder.Order.TriggerPrice Then
+                        setSubmitOrder lOrder
+                    ElseIf lOrder.Order.Action = OrderActions.OrderActionSell And _
+                        pTrade <= lOrder.Order.TriggerPrice Then
+                        setSubmitOrder lOrder
+                    End If
+                Case OrderTypes.OrderTypeStopLimit
+                    If lOrder.Order.Action = OrderActions.OrderActionBuy And _
+                        pTrade >= lOrder.Order.TriggerPrice Then
+                        setSubmitOrder lOrder
+                    ElseIf lOrder.Order.Action = OrderActions.OrderActionSell And _
+                        pTrade <= lOrder.Order.TriggerPrice Then
+                        setSubmitOrder lOrder
+                    End If
+            End Select
+        ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusCancelling Then
+            If lOrder.AtExchange Then
+                matchOrder lOrder
+                If lOrder.Order.Status = OrderStatuses.OrderStatusCancelling Then
+                    setCancelOrder lOrder
+                End If
+            ElseIf Not .SimulateExchangeDelays Then
+                setCancelOrder lOrder
+            End If
+        End If
+    Loop
 End With
 
 Exit Sub
@@ -819,46 +837,31 @@ Private Sub queueOrder(ByVal pSimulatedOrder As SimulatorOrder)
 Const ProcName As String = "queueOrder"
 On Error GoTo Err
 
-Dim lPendingOrder As SimulatorOrder
-
 With mMarketTable(pSimulatedOrder.MarketId)
+    ' if this order was previously queued, remove
+    ' it now
+    If .PendingOrders.Contains(pSimulatedOrder.Order.Id) Then .PendingOrders.Remove pSimulatedOrder.Order.Id
+    If .ActiveOrders.Contains(pSimulatedOrder.Order.Id) Then .ActiveOrders.Remove pSimulatedOrder.Order.Id
+    
     If Not pSimulatedOrder.Transmit Then
         .PendingOrders.Add pSimulatedOrder, pSimulatedOrder.Order.Id
     Else
-        ' if this order was previously in the pending list, Remove
-        ' it now
-        If .PendingOrders.Contains(pSimulatedOrder.Order.Id) Then .PendingOrders.Remove pSimulatedOrder.Order.Id
-        
-        ' now see if there are any other pending orders related
+        ' submit any other pending orders related
         ' to this one via pParentId or oca group
-        If pSimulatedOrder.ParentId <> "" Then
-            Set lPendingOrder = .PendingOrders(pSimulatedOrder.ParentId)
-            .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
-            .PendingOrders.Remove lPendingOrder.Order.Id
-            setSubmitOrder lPendingOrder
-            
-            ' find any other child orders
-            For Each lPendingOrder In .PendingOrders
-                If lPendingOrder.ParentId = pSimulatedOrder.ParentId Then
-                    .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
-                    .PendingOrders.Remove lPendingOrder.Order.Id
-                    setSubmitOrder lPendingOrder
-                End If
-            Next
-        Else
-            ' find any child orders or related OCA orders
-            For Each lPendingOrder In .PendingOrders
-                If lPendingOrder.ParentId = pSimulatedOrder.Order.Id Or _
-                    (lPendingOrder.OcaGroup = pSimulatedOrder.OcaGroup And _
-                    pSimulatedOrder.OcaGroup <> "") _
-                Then
-                    .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
-                    .PendingOrders.Remove lPendingOrder.Order.Id
-                    setSubmitOrder lPendingOrder
-                End If
-            Next
-                        
-        End If
+        Dim en As Enumerator
+        Set en = .PendingOrders.Enumerator
+        Do While en.MoveNext
+            Dim lPendingOrder As SimulatorOrder
+            Set lPendingOrder = en.Current
+            If lPendingOrder.IsFinished Then
+                en.Remove
+            ElseIf pSimulatedOrder.IsParentOf(lPendingOrder) Or _
+                    lPendingOrder.IsRelatedTo(pSimulatedOrder) Then
+                .ActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
+                en.Remove
+                setSubmitOrder lPendingOrder
+            End If
+        Loop
         
         .ActiveOrders.Add pSimulatedOrder, pSimulatedOrder.Order.Id
         setSubmitOrder pSimulatedOrder
@@ -894,7 +897,7 @@ If pOrder.Order.Status = OrderStatuses.OrderStatusCancelled Then Exit Sub
 Select Case pOrder.Order.Status
 Case OrderStatuses.OrderStatusSubmitted, OrderStatuses.OrderStatusPreSubmitted
     setOrderStatus pOrder, OrderStatuses.OrderStatusCancelling
-    If mMarketTable(pOrder.ClientId).SimulateExchangeDelays Then
+    If mMarketTable(pOrder.MarketId).SimulateExchangeDelays Then
         mTimerList.Add(pOrder, _
                             delay, _
                             ExpiryTimeUnits.ExpiryTimeUnitMilliseconds).AddStateChangeListener Me
@@ -904,7 +907,7 @@ Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusPendingSubmit, _
         OrderStatuses.OrderStatusRejected
     setOrderStatus pOrder, OrderStatuses.OrderStatusCancelled
-    mMarketTable(pOrder.ClientId).ActiveOrders.Remove pOrder.Order.Id
+    pOrder.IsFinished = True
 End Select
 
 Exit Sub
@@ -935,7 +938,7 @@ Set lContractSpecifier = mMarketTable(pOrder.MarketId).ContractSpec
 
 Dim lExec As Execution
 Set lExec = New Execution
-'lExec.contractSpecifier = lContractSpecifier
+lExec.IsSimulated = True
 lExec.AccountIdentifier = ""
 lExec.FillingExchange = lContractSpecifier.Exchange
 
@@ -950,22 +953,18 @@ Dim lClock As Clock
 Set lClock = mMarketTable(pOrder.MarketId).DataSource.ClockFuture.Value
 lExec.FillTime = lClock.Timestamp
 
-'mMarketTable(pOrder.ClientId).OrderSubmitter.PreFill pOrder.Order.Id, _
-'                    lFillPrice, _
-'                    lFillSize
-                    
 If lFillSize > pOrder.Order.QuantityRemaining Then lFillSize = pOrder.Order.QuantityRemaining
 If lFillSize < 1 Then lFillSize = pFillSize
 If lFillPrice = 0 Then lFillPrice = pFillPrice
 
 lExec.Price = lFillPrice
 lExec.Quantity = lFillSize
+lExec.SecurityName = lContractSpecifier.LocalSymbol
 lExec.TimezoneName = lClock.TimeZone.DisplayName
 
 pOrder.Order.QuantityRemaining = pOrder.Order.QuantityRemaining - lFillSize
 If pOrder.Order.QuantityRemaining = 0 Then pOrder.Order.Status = OrderStatuses.OrderStatusFilled
 
-lExec.IsSimulated = True
 mClientTable(pOrder.ClientId).Listener.NotifyExecutionReport lExec
 
 NotifyOrderReport pOrder.Order, pOrder.ClientId
@@ -973,9 +972,7 @@ notifyOrderStatus pOrder.Order, pOrder.ClientId
 
 handleRelatedOrders pOrder
 
-If pOrder.Order.QuantityRemaining = 0 Then
-    mMarketTable(pOrder.MarketId).ActiveOrders.Remove pOrder.Order.Id
-End If
+If pOrder.Order.QuantityRemaining = 0 Then pOrder.IsFinished = True
 
 Exit Sub
 
@@ -998,52 +995,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-'Private Sub setPendingCancelOrder(order as simulatororder)
-'If order.status = "pendingcancel" Then Exit Sub
-'order.status = "pendingcancel"
-'RaiseEvent OrderStatus(gettime, _
-'                        order.id, _
-'                        "pendingcancel", _
-'                        0, _
-'                        order.quantity, _
-'                        0, _
-'                        order.permId, _
-'                        order.parentId, _
-'                        0, _
-'                        order.clientId)
-'If mSimulateExchangeDelays Then
-'    mTimerList.AddTimer delay, ExpiryTimeUnits.RelativeMilliseconds, order
-'End If
-'End Sub
-
-'Private Sub setPendingSubmitOrder(order as simulatororder)
-'order.status = "pendingsubmit"
-'RaiseEvent OrderStatus(gettime, _
-'                        order.id, _
-'                        "pendingsubmit", _
-'                        0, _
-'                        order.quantity, _
-'                        0, _
-'                        0, _
-'                        order.parentId, _
-'                        0, _
-'                        order.clientId)
-'End Sub
-
-'Private Sub setPresubmitOrder(order as simulatororder)
-'order.status = "presubmitted"
-'RaiseEvent OrderStatus(gettime, _
-'                        order.id, _
-'                        "presubmitted", _
-'                        0, _
-'                        order.quantity, _
-'                        0, _
-'                        0, _
-'                        order.parentId, _
-'                        0, _
-'                        order.clientId)
-'End Sub
 
 Private Sub setRejectOrder( _
                 ByVal pOrder As IOrder, _
@@ -1183,62 +1134,6 @@ With mMarketTable(pHandle)
     .BidSize = 0
     .DataSource.StopMarketData
     Set .DataSource = Nothing
-End With
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processTrade(ByVal pTimestamp As Date, _
-                ByVal pMarketId As Long, _
-                ByVal pTrade As Double)
-Const ProcName As String = "processTrade"
-On Error GoTo Err
-
-With mMarketTable(pMarketId)
-    handleCreatedOrders pMarketId
-    If Not .SimulateExchangeDelays Then handlePendingSubmitOrders pMarketId
-
-    Dim lOrder As SimulatorOrder
-    For Each lOrder In .ActiveOrders
-        If lOrder.Order.Status = OrderStatuses.OrderStatusSubmitted Then
-            If lOrder.AtExchange Then
-                matchOrderTrade lOrder, pTrade
-            End If
-        ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusPreSubmitted And _
-            lOrder.ParentId = "" _
-        Then
-            Select Case lOrder.Order.OrderType
-                Case OrderTypes.OrderTypeStop
-                    If lOrder.Order.Action = OrderActions.OrderActionBuy And _
-                        pTrade >= lOrder.Order.TriggerPrice Then
-                        setSubmitOrder lOrder
-                    ElseIf lOrder.Order.Action = OrderActions.OrderActionSell And _
-                        pTrade <= lOrder.Order.TriggerPrice Then
-                        setSubmitOrder lOrder
-                    End If
-                Case OrderTypes.OrderTypeStopLimit
-                    If lOrder.Order.Action = OrderActions.OrderActionBuy And _
-                        pTrade >= lOrder.Order.TriggerPrice Then
-                        setSubmitOrder lOrder
-                    ElseIf lOrder.Order.Action = OrderActions.OrderActionSell And _
-                        pTrade <= lOrder.Order.TriggerPrice Then
-                        setSubmitOrder lOrder
-                    End If
-            End Select
-        ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusCancelling Then
-            If lOrder.AtExchange Then
-                matchOrder lOrder
-                If lOrder.Order.Status = OrderStatuses.OrderStatusCancelling Then
-                    setCancelOrder lOrder
-                End If
-            ElseIf Not .SimulateExchangeDelays Then
-                setCancelOrder lOrder
-            End If
-        End If
-    Next
 End With
 
 Exit Sub
