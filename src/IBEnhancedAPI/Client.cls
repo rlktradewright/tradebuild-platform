@@ -208,9 +208,13 @@ End Sub
 ' IOrderSubmitterFactory Interface Members
 '@================================================================================
 
-Private Function IOrderSubmitterFactory_CreateOrderSubmitter() As IOrderSubmitter
+Private Function IOrderSubmitterFactory_CreateOrderSubmitter(Optional ByVal pDataSource As IMarketDataSource) As IOrderSubmitter
 Set IOrderSubmitterFactory_CreateOrderSubmitter = CreateOrderSubmitter
 End Function
+
+Private Property Get IOrderSubmitterFactory_NeedsDataSource() As Boolean
+IOrderSubmitterFactory_NeedsDataSource = False
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
