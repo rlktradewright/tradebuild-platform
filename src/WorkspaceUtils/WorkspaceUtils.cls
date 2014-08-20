@@ -64,6 +64,27 @@ Private Const ModuleName                            As String = "WorkspaceUtils"
 ' Methods
 '@================================================================================
 
+Public Function CreateWorkspaces( _
+                ByVal pScopeName As String, _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pOrderManager As OrderManager, _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                ByVal pHistoricalDataStore As IHistoricalDataStore, _
+                Optional ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
+                Optional ByVal pOrderSubmitterFactorySimulated As IOrderSubmitterFactory, _
+                Optional ByVal pMoneyManager As IMoneyManager) As WorkSpaces
+Const ProcName As String = "CreateWorkspaces"
+On Error GoTo Err
+
+Set CreateWorkspaces = New WorkSpaces
+CreateWorkspaces.Initialise pScopeName, pMarketDataManager, pOrderManager, pStudyLibraryManager, pHistoricalDataStore, pOrderSubmitterFactoryLive, pOrderSubmitterFactorySimulated, pMoneyManager
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

@@ -188,7 +188,9 @@ End Property
 Friend Sub Initialise( _
                 ByVal pName As String, _
                 ByVal pScopeName As String, _
-                ByVal pTradeBuildAPI As TradeBuildAPI, _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                ByVal pHistoricalDataStore As IHistoricalDataStore, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
                 ByVal pOrderSubmitterFactorySimulated As IOrderSubmitterFactory, _
@@ -197,9 +199,9 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mName = pName
-Set mTickers = CreateTickers(pTradeBuildAPI.ServiceProviders.MarketDataManager, _
-                            pTradeBuildAPI.StudyLibraryManager, _
-                            pTradeBuildAPI.ServiceProviders.HistoricalDataStoreInput, _
+Set mTickers = CreateTickers(pMarketDataManager, _
+                            pStudyLibraryManager, _
+                            pHistoricalDataStore, _
                             pOrderManager, _
                             pOrderSubmitterFactoryLive, _
                             pOrderSubmitterFactorySimulated, _

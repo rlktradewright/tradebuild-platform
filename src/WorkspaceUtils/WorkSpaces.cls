@@ -57,8 +57,11 @@ Private Const ModuleName                As String = "WorkSpaces"
 
 Private mWorkspaces                     As EnumerableCollection
 Private mCollectionChangeListeners      As Listeners
-Private mTradeBuildAPIRef               As WeakReference
+
+Private mMarketDataManager              As IMarketDataManager
 Private mOrderManager                   As OrderManager
+Private mStudyLibraryManager            As StudyLibraryManager
+Private mHistoricalDataStore            As IHistoricalDataStore
 
 Private mOrderSubmitterFactoryLive      As IOrderSubmitterFactory
 Private mOrderSubmitterFactorySimulated As IOrderSubmitterFactory
@@ -105,7 +108,9 @@ On Error GoTo Err
 Set Add = New WorkSpace
 Add.Initialise Name, _
                 mScopeName, _
-                mTradeBuildAPIRef.Target, _
+                mMarketDataManager, _
+                mStudyLibraryManager, _
+                mHistoricalDataStore, _
                 mOrderManager, _
                 mOrderSubmitterFactoryLive, _
                 mOrderSubmitterFactorySimulated, _
@@ -129,7 +134,7 @@ On Error GoTo Err
 
 mCollectionChangeListeners.Add pListener
 
-gNotifyExistingCollectionMembers mWorkspaces, pListener, Me
+'gNotifyExistingCollectionMembers mWorkspaces, pListener, Me
 
 Exit Sub
 
@@ -150,20 +155,25 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
-                ByVal pTradeBuildAPI As TradeBuildAPI, _
+                ByVal pScopeName As String, _
+                ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderManager As OrderManager, _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                ByVal pHistoricalDataStore As IHistoricalDataStore, _
                 ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
                 ByVal pOrderSubmitterFactorySimulated As IOrderSubmitterFactory, _
                 ByVal pMoneyManager As IMoneyManager)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mTradeBuildAPIRef = CreateWeakReference(pTradeBuildAPI)
 Set mOrderManager = pOrderManager
+Set mMarketDataManager = pMarketDataManager
+Set mStudyLibraryManager = pStudyLibraryManager
+Set mHistoricalDataStore = pHistoricalDataStore
 Set mOrderSubmitterFactoryLive = pOrderSubmitterFactoryLive
 Set mOrderSubmitterFactorySimulated = pOrderSubmitterFactorySimulated
 Set mMoneyManager = pMoneyManager
-mScopeName = pTradeBuildAPI.ScopeName
+mScopeName = pScopeName
 
 Exit Sub
 
@@ -184,24 +194,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
 Assert Not pConfig Is Nothing, "pConfig Is Nothing"
 
-gLogger.Log "Loading workspaces from config", ProcName, ModuleName
+gLog "Loading workspaces from config", ModuleName, ProcName
 
 Set mConfig = pConfig
 
 Dim lCs As ConfigurationSection
 For Each lCs In mConfig
-    gLogger.Log "Loading workspace: " & lCs.InstanceQualifier, ProcName, ModuleName
-    Dim lWorkspace As WorkSpace
-    Set lWorkspace = Add(lCs.InstanceQualifier)
+    gLog "Loading workspace: " & lCs.InstanceQualifier, ModuleName, ProcName
+    Add lCs.InstanceQualifier
 Next
 
-gLogger.Log "Workspaces loaded from config", ProcName, ModuleName
+gLog "Workspaces loaded from config", ModuleName, ProcName
 
 Exit Sub
 

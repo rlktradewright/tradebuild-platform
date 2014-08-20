@@ -29,6 +29,9 @@ Option Explicit
 Public Const ProjectName                            As String = "WorkspaceUtils"
 Private Const ModuleName                            As String = "Globals"
 
+Public Const ConfigSectionTickers                   As String = "Tickers"
+Public Const ConfigSectionWorkspace                 As String = "Workspace"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -101,6 +104,44 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+'Public Function gNotifyExistingCollectionMembers( _
+'                ByVal pCollection As Variant, _
+'                ByVal pListener As CollectionChangeListener, _
+'                ByVal pSource As Object)
+'Const ProcName As String = "gNotifyExistingCollectionMembers"
+'On Error GoTo Err
+'
+'Dim lItem As Variant
+'If VarType(pCollection) And vbArray = vbArray Then
+'    For Each lItem In pCollection
+'        notifyCollectionMember lItem, pSource, pListener
+'    Next
+'ElseIf Not IsObject(pCollection) Then
+'    AssertArgument False, "pCollection argument must be an array or a VB6 collection or must implement Enumerable"
+'ElseIf TypeOf pCollection Is Collection Then
+'    For Each lItem In pCollection
+'        notifyCollectionMember lItem, pSource, pListener
+'    Next
+'ElseIf TypeOf pCollection Is Enumerable Then
+'    Dim enColl As Enumerable
+'    Set enColl = pCollection
+'
+'    Dim en As Enumerator
+'    Set en = enColl.Enumerator
+'
+'    Do While en.MoveNext
+'        notifyCollectionMember en.Current, pSource, pListener
+'    Loop
+'Else
+'     AssertArgument False, "pCollection argument must be an array or a VB6 collection or must implement Enumerable"
+'End If
+'
+'Exit Function
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Function
 
 '@================================================================================
 ' Helper Functions
