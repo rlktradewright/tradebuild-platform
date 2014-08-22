@@ -59,6 +59,8 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mFutureBuilder                              As New FutureBuilder
 
+Private mContractCache                              As TwsContractCache
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -75,19 +77,155 @@ Private Sub IContractDetailsConsumer_EndContractDetails(ByVal pRequestId As Long
 Const ProcName As String = "IContractDetailsConsumer_EndContractDetails"
 On Error GoTo Err
 
-Dim i As Long
-Dim lOrderTypesStr() As String
-Dim lOrderType As TwsOrderTypes
+processEnd
 
-Dim lPermittedOrderAttributes As OrderAttributes
-Dim lPermittedOrderTypes As OrderTypes
-Dim lPermittedOrderTifs As OrderTIFs
-Dim lPermittedStopTriggerMethods As OrderStopTriggerMethods
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
+Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
+On Error GoTo Err
+
+Assert Not pContractDetails Is Nothing, "Contract not uniquely specified"
+Set mContractDetails = pContractDetails
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+Const ProcName As String = "IContractDetailsConsumer_NotifyError"
+On Error GoTo Err
+
+mTaskContext.Error pErrorCode, pErrorMsg
+mFutureBuilder.Fail pErrorCode, pErrorMsg, ""
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' Task Interface Members
+'@================================================================================
+
+Private Sub Task_Cancel()
+
+End Sub
+
+Private Sub Task_Run()
+Const ProcName As String = "Task_Run"
+On Error GoTo Err
+
+If mContractSpec Is Nothing Then
+    mTaskContext.Suspend -1
+    Exit Sub
+End If
+
+Set mContractDetails = mContractCache.Item(mContractSpec)
+
+If Not mContractDetails Is Nothing Then
+    gLogger.Log "TwsContractDetails retrieved from cache for IContract: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+    processEnd
+    Exit Sub
+End If
+
+mContractRequester.RequestContractDetails mContractSpec, Me
+mTaskContext.Suspend -1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
+End Property
+
+Private Property Get Task_TaskName() As String
+Task_TaskName = mTaskContext.Name
+End Property
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsCancelled Then
+    mTaskContext.Finish Empty, True
+    mFutureBuilder.Cancel
+ElseIf ev.Future.IsFaulted Then
+    mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+    mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+Else
+    Dim lContract As IContract
+    Set lContract = ev.Future.Value
+    Set mContractSpec = lContract.Specifier
+    mTaskContext.Continue
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+Friend Property Get Future() As IFuture
+Set Future = mFutureBuilder.Future
+End Property
+
+'@================================================================================
+' Methods
+'@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractCache As TwsContractCache, _
+                ByVal pCookie As Variant)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+mFutureWaiter.Add pContractFuture
+Set mContractRequester = pContractRequester
+Set mContractCache = pContractCache
+mFutureBuilder.Cookie = pCookie
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Sub processEnd()
+Const ProcName As String = "processEnd"
+On Error GoTo Err
 
 Assert Not mContractDetails Is Nothing, "Failed to retrieve contract details"
 
+Dim lOrderTypesStr() As String
 lOrderTypesStr = Split(mContractDetails.OrderTypes, ",")
 
+Dim lPermittedOrderAttributes As OrderAttributes
 lPermittedOrderAttributes = OrderAttributes.OrderAttBlockOrder
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttMinimumQuantity
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttNBBOPriceCap
@@ -103,7 +241,11 @@ lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAt
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttTriggerPrice
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttStopTriggerMethod
 
+Dim lPermittedOrderTypes As OrderTypes
+Dim lPermittedOrderTifs As OrderTIFs
+Dim i As Long
 For i = 0 To UBound(lOrderTypesStr)
+    Dim lOrderType As TwsOrderTypes
     lOrderType = gTwsOrderTypeToOrderType(TwsOrderTypeFromString(lOrderTypesStr(i)))
     
     If lOrderType <> OrderTypeNone Then
@@ -198,6 +340,7 @@ For i = 0 To UBound(lOrderTypesStr)
     End If
 Next
 
+Dim lPermittedStopTriggerMethods As OrderStopTriggerMethods
 lPermittedStopTriggerMethods = OrderStopTriggerMethods.OrderStopTriggerBidAsk Or _
                                 OrderStopTriggerMethods.OrderStopTriggerDefault Or _
                                 OrderStopTriggerMethods.OrderStopTriggerDoubleBidAsk Or _
@@ -221,129 +364,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
-Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
-On Error GoTo Err
-
-Assert Not pContractDetails Is Nothing, "Contract not uniquely specified"
-Set mContractDetails = pContractDetails
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
-Const ProcName As String = "IContractDetailsConsumer_NotifyError"
-On Error GoTo Err
-
-mTaskContext.Error pErrorCode, pErrorMsg
-mFutureBuilder.Fail pErrorCode, pErrorMsg, ""
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' Task Interface Members
-'@================================================================================
-
-Private Sub Task_Cancel()
-
-End Sub
-
-Private Sub Task_Run()
-Const ProcName As String = "Task_Run"
-On Error GoTo Err
-
-If mContractSpec Is Nothing Then
-    mTaskContext.Suspend -1
-    Exit Sub
-End If
-
-mContractRequester.RequestContractDetails mContractSpec, Me
-mTaskContext.Suspend -1
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Property Let Task_TaskContext(ByVal Value As TaskContext)
-Set mTaskContext = Value
-End Property
-
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.Name
-End Property
-
-'@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If ev.Future.IsCancelled Then
-    mTaskContext.Finish Empty, True
-    mFutureBuilder.Cancel
-ElseIf ev.Future.IsFaulted Then
-    mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-    mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-Else
-    Dim lContract As IContract
-    Set lContract = ev.Future.Value
-    Set mContractSpec = lContract.Specifier
-    mTaskContext.Continue
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' Properties
-'@================================================================================
-
-Friend Property Get Future() As IFuture
-Set Future = mFutureBuilder.Future
-End Property
-
-'@================================================================================
-' Methods
-'@================================================================================
-
-Friend Sub Initialise( _
-                ByVal pContractFuture As IFuture, _
-                ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pCookie As Variant)
-Const ProcName As String = "Initialise"
-On Error GoTo Err
-
-mFutureWaiter.Add pContractFuture
-Set mContractRequester = pContractRequester
-mFutureBuilder.Cookie = pCookie
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-
 
 
 

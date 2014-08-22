@@ -63,6 +63,7 @@ Private mOrderPlacer                                As OrderPlacer
 Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
 Private mContractRequester                          As ContractDetailsRequester
+Private mContractCache                              As TwsContractCache
 
 Private mState                                      As OrderSubmitterStates
 Private mStateChangeListeners                       As Listeners
@@ -560,7 +561,7 @@ On Error GoTo Err
 
 Dim lFetchTask As New PermittedOrderPropsFetchTask
 
-lFetchTask.Initialise pContractFuture, mContractRequester, pCookie
+lFetchTask.Initialise pContractFuture, mContractRequester, mContractCache, pCookie
 StartTask lFetchTask, PriorityLow, , pCookie
 Set FetchPermittedOrderProperties = lFetchTask.Future
 
@@ -586,7 +587,8 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pOrderPlacer As OrderPlacer, _
-                ByVal pContractRequester As ContractDetailsRequester)
+                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractCache As TwsContractCache)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -598,6 +600,7 @@ Else
     setState OrderSubmitterStateNotReady
 End If
 Set mContractRequester = pContractRequester
+Set mContractCache = pContractCache
 
 Exit Sub
 

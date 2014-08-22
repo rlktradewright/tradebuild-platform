@@ -256,16 +256,15 @@ Const ProcName As String = "RequestContractDetails"
 On Error GoTo Err
 
 Dim lIndex As Long
-
 lIndex = allocateEntry
 Set mRequests(lIndex).Contract = gContractSpecToTwsContract(pContractSpecifier)
 Set mRequests(lIndex).Requester = pRequester
 
 queueEntry lIndex
 
-RequestContractDetails = lIndex
-
 Schedule
+
+RequestContractDetails = lIndex
 
 Exit Function
 

@@ -135,6 +135,7 @@ End Function
 
 Public Function gFetchContracts( _
                 ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractCache As TwsContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
                 ByVal pCookie As Variant, _
@@ -144,7 +145,7 @@ On Error GoTo Err
 
 Dim lFetchTask As New ContractDetailsRequestTask
 
-lFetchTask.Initialise pContractRequester, pContractSpecifier, pListener, pCookie, pReturnTwsContracts
+lFetchTask.Initialise pContractRequester, pContractCache, pContractSpecifier, pListener, pCookie, pReturnTwsContracts
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching contract details for", ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
 
 StartTask lFetchTask, PriorityLow

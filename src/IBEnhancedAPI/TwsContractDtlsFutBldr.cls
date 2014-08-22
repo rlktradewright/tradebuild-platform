@@ -216,17 +216,7 @@ If pContract.Specifier.Sectype = SecTypeCombo Then
     lTask.Initialise mContractRequester, pContract.Specifier
     Set mTaskController = StartTask(lTask, PriorityNormal)
 Else
-    Dim lTwsContract As TwsContractDetails
-    Set lTwsContract = mContractCache.Item(pContract.Specifier)
-    
-    If Not lTwsContract Is Nothing Then
-        gLogger.Log "TwsContractDetails retrieved from cache for IContract: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
-        mFutureBuilder.Value = lTwsContract
-        mFutureBuilder.Complete
-        Set mSelfRef = Nothing
-    Else
-        mFutureWaiter.Add gFetchContracts(mContractRequester, pContract.Specifier, Nothing, Empty, True)
-    End If
+    mFutureWaiter.Add gFetchContracts(mContractRequester, mContractCache, pContract.Specifier, Nothing, Empty, True)
 End If
 
 Exit Sub

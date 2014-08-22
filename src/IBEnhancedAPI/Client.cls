@@ -326,7 +326,7 @@ On Error GoTo Err
 Static sContractDetailsFetcher As ContractDetailsFetcher
 If sContractDetailsFetcher Is Nothing Then
     Set sContractDetailsFetcher = New ContractDetailsFetcher
-    sContractDetailsFetcher.Initialise getContractDetailsRequester(mTwsAPI)
+    sContractDetailsFetcher.Initialise getContractDetailsRequester(mTwsAPI), mContractCache
 End If
 
 Set GetContractStore = sContractDetailsFetcher
@@ -390,7 +390,7 @@ On Error GoTo Err
 Dim lOrderSubmitter As OrderSubmitter
 
 Set lOrderSubmitter = New OrderSubmitter
-lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer(mTwsAPI), getContractDetailsRequester(mTwsAPI)
+lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer(mTwsAPI), getContractDetailsRequester(mTwsAPI), mContractCache
 
 AddTwsConnectionStateListener lOrderSubmitter
 Set CreateOrderSubmitter = lOrderSubmitter

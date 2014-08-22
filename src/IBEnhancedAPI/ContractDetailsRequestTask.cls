@@ -74,6 +74,8 @@ Private mReturnTwsContracts                         As Boolean
 
 Private mTwsContracts                               As EnumerableCollection
 
+Private mContractCache                              As TwsContractCache
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -100,18 +102,7 @@ On Error GoTo Err
 
 requestCompleted pRequestId
 mNumOutstandingRequests = mNumOutstandingRequests - 1
-If mNumOutstandingRequests = 0 Then
-    If mReturnTwsContracts Then
-        mContractsFutureBuilder.Value = mTwsContracts
-        mContractsFutureBuilder.Complete
-    Else
-        mContractsFutureBuilder.Value = mContractsBuilder.Contracts
-        mContractsFutureBuilder.Complete
-    End If
-    
-    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
-    mTaskContext.Finish Empty, False
-End If
+If mNumOutstandingRequests = 0 Then processEnd
 
 Exit Sub
 
@@ -123,19 +114,7 @@ Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pC
 Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
-If IsValidExchangeCode(pContractDetails.Summary.Exchange) Then
-    If mReturnTwsContracts Then
-        mTwsContracts.Add pContractDetails
-    Else
-        Dim lContract As IContract
-        Set lContract = gTwsContractDetailsToContract(pContractDetails)
-        
-        mContractsBuilder.Add lContract
-        If Not mListener Is Nothing Then mListener.NotifyContract mCookie, lContract
-    End If
-Else
-    gLog "Unknown Exchange code received from Tws", pMsgQualifier:=pContractDetails.Summary.Exchange, pModName:=ModuleName, pProcName:=ProcName
-End If
+processContract pContractDetails
 
 Exit Sub
 
@@ -238,6 +217,16 @@ If mContractSpecifier.Sectype = SecTypeNone Then
                                                     mContractSpecifier.Expiry))
 
 Else
+    Dim lTwsContract As TwsContractDetails
+    Set lTwsContract = mContractCache.Item(mContractSpecifier)
+    
+    If Not lTwsContract Is Nothing Then
+        gLogger.Log "TwsContractDetails retrieved from cache for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        processContract lTwsContract
+        processEnd
+        Exit Sub
+    End If
+    
     mRequestId = requestContracts(mContractSpecifier)
 End If
 
@@ -287,6 +276,7 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractCache As TwsContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
                 ByVal pCookie As Variant, _
@@ -295,6 +285,7 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContractRequester = pContractRequester
+Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
 Set mListener = pListener
 
@@ -340,6 +331,51 @@ mTaskContext.Finish Nothing, True
 
 mContractsFutureBuilder.Cancel
 If Not mListener Is Nothing Then mListener.FetchCancelled mCookie
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processContract(ByVal pContractDetails As TwsContractDetails)
+Const ProcName As String = "processContract"
+On Error GoTo Err
+
+If IsValidExchangeCode(pContractDetails.Summary.Exchange) Then
+    If mReturnTwsContracts Then
+        mTwsContracts.Add pContractDetails
+    Else
+        Dim lContract As IContract
+        Set lContract = gTwsContractDetailsToContract(pContractDetails)
+        
+        mContractsBuilder.Add lContract
+        If Not mListener Is Nothing Then mListener.NotifyContract mCookie, lContract
+    End If
+Else
+    gLog "Unknown Exchange code received from Tws", pMsgQualifier:=pContractDetails.Summary.Exchange, pModName:=ModuleName, pProcName:=ProcName
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processEnd()
+Const ProcName As String = "processEnd"
+On Error GoTo Err
+
+If mReturnTwsContracts Then
+    mContractsFutureBuilder.Value = mTwsContracts
+    mContractsFutureBuilder.Complete
+Else
+    mContractsFutureBuilder.Value = mContractsBuilder.Contracts
+    mContractsFutureBuilder.Complete
+End If
+
+If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+mTaskContext.Finish Empty, False
 
 Exit Sub
 

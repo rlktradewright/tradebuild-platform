@@ -47,6 +47,7 @@ Private Const ModuleName                            As String = "ContractDetails
 '@================================================================================
 
 Private mContractRequester                          As ContractDetailsRequester
+Private mContractCache                              As TwsContractCache
 Private mContractsFutures                           As New EnumerableCollection
 
 '@================================================================================
@@ -107,7 +108,7 @@ Public Function FetchContracts( _
 Const ProcName As String = "FetchContracts"
 On Error GoTo Err
 
-Set FetchContracts = gFetchContracts(mContractRequester, pContractSpecifier, pListener, pCookie, False)
+Set FetchContracts = gFetchContracts(mContractRequester, mContractCache, pContractSpecifier, pListener, pCookie, False)
 mContractsFutures.Add FetchContracts
 
 Exit Function
@@ -134,8 +135,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pContractRequester As ContractDetailsRequester)
+                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractCache As TwsContractCache)
 Set mContractRequester = pContractRequester
+Set mContractCache = pContractCache
 End Sub
 
 Public Function Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
