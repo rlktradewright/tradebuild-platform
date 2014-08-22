@@ -4,9 +4,9 @@ path %path%;E:\Projects\Tools
 set tbversion="27"
 call makedll SessionUtils
 call makedll ContractUtils compat
-call makedll TickUtils
 call makedll BarUtils
 call makedll StudyUtils
+call makedll TickUtils
 
 
 call makedll TickfileUtils
@@ -21,6 +21,7 @@ call makedll TradingDbApi
 call makedll MarketDataUtils
 call makedll OrderUtils
 call makedll TickerUtils
+call makedll WorkspaceUtils
 
 
 call makeocx ChartSkil compat

@@ -2,11 +2,11 @@ vb6 /m SessionUtils\SessionUtils.vbp
 if errorlevel 1 pause
 vb6 /m ContractUtils\ContractUtils.vbp
 if errorlevel 1 pause
-vb6 /m TickUtils\TickUtils.vbp
-if errorlevel 1 pause
 vb6 /m BarUtils\BarUtils.vbp
 if errorlevel 1 pause
 vb6 /m StudyUtils\StudyUtils.vbp
+if errorlevel 1 pause
+vb6 /m TickUtils\TickUtils.vbp
 if errorlevel 1 pause
 
 vb6 /m TickfileUtils\TickfileUtils.vbp
@@ -26,7 +26,8 @@ vb6 /m OrderUtils\OrderUtils.vbp
 if errorlevel 1 pause
 vb6 /m TickerUtils\TickerUtils.vbp
 if errorlevel 1 pause
-
+vb6 /m WorkspaceUtils\WorkspaceUtils.vbp
+if errorlevel 1 pause
 
 vb6 /m ChartSkil\ChartSkil.vbp
 if errorlevel 1 pause
