@@ -198,20 +198,6 @@ mReplayProgressEventInterval = pReplayProgressEventInterval
 mSingleSource = pSingleSource
 End Sub
 
-Friend Sub NotifyNoMoreTicks(ByVal pPlayer As TickfilePlayer)
-Const ProcName As String = "NotifyNoMoreTicks"
-On Error GoTo Err
-
-mPlayers(getPlayerIndex(pPlayer)).UTCTimestamp = MaxDate
-mNumberOfTicksAwaited = mNumberOfTicksAwaited - 1
-schedule
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Friend Sub NotifyTick(ByRef pTick As GenericTick, ByVal pPlayer As TickfilePlayer)
 Const ProcName As String = "NotifyTick"
 On Error GoTo Err
@@ -326,9 +312,9 @@ If mBaseSimulatedTimeUTC = 0 Then
     mBaseRealTimeUTC = lCurrTime
 End If
 
-Dim delayMillisecs As Long
+Dim delayMillisecs As Currency
 If mReplaySpeed > 0 Then
-    delayMillisecs = CLng(((mPlayers(pIndex).UTCTimestamp - mBaseSimulatedTimeUTC) - _
+    delayMillisecs = CCur(((mPlayers(pIndex).UTCTimestamp - mBaseSimulatedTimeUTC) - _
                 mReplaySpeed * (lCurrTime - mBaseRealTimeUTC)) * 86400# * 1000# / CDbl(mReplaySpeed))
 Else
     delayMillisecs = -mReplaySpeed
@@ -337,7 +323,10 @@ End If
 '' adjust to allow for overheads
 'delayMillisecs = delayMillisecs - 2
 
-If delayMillisecs < 5 Then
+If delayMillisecs > &H7FFFFFFF Then
+    ' the delay is more than 28 days! We can't handle this so don't
+    ' dispatch the tick
+ElseIf delayMillisecs < 5 Then
     ' process immediately
     'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Delay 0"
     fireTick pIndex
@@ -395,7 +384,7 @@ If Not mPlayers(pIndex).Player Is Nothing Then
     mPlayers(pIndex).UTCTimestamp = MaxDate
     mTicksPlayed = mTicksPlayed + 1
     
-    mNumberOfTicksAwaited = 1
+    mNumberOfTicksAwaited = mNumberOfTicksAwaited + 1
 End If
 
 Exit Sub

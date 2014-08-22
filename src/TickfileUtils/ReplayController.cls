@@ -266,7 +266,10 @@ mTickScheduler.Initialise Me, mReplaySpeed, mReplayProgressEventInterval, IIf(mT
 Dim i As Long
 For i = 0 To UBound(mPlayers)
     Set mPlayers(i) = SetupTickfilePlayer(mTickfileSpecifiers(i + 1), mTickScheduler)
-    If Not mPlayers(i) Is Nothing Then mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted + 1
+    If Not mPlayers(i) Is Nothing Then
+        mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted + 1
+        mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
+    End If
 Next
 
 Exit Sub
@@ -320,6 +323,8 @@ End Sub
 Friend Sub NotifyTickfileCompleted(ByVal pPlayer As TickfilePlayer, ByRef ev As TickfileEventData, ByVal pEventsPlayed As Long)
 Const ProcName As String = "NotifyReplayComplete"
 On Error GoTo Err
+
+mTickScheduler.RemovePlayer pPlayer
 
 mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted - 1
 If mNumberOfPlayersNotCompleted = 0 Then
@@ -492,6 +497,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function getNextStreamId() As Long
+Static sNextStreamId As Long
+getNextStreamId = sNextStreamId
+sNextStreamId = sNextStreamId + 1
+End Function
+
 Private Function SetupTickfilePlayer( _
                 ByRef pTickfileSpecifier As TickfileSpecifier, _
                 ByVal pTickScheduler As TickScheduler) As TickfilePlayer
@@ -499,7 +510,7 @@ Const ProcName As String = "SetupTickfilePlayer"
 On Error GoTo Err
 
 Dim lStreamId As Long
-lStreamId = gGetNextStreamId
+lStreamId = getNextStreamId
 
 Dim lTickfilePlayer As TickfilePlayer
 Set lTickfilePlayer = New TickfilePlayer

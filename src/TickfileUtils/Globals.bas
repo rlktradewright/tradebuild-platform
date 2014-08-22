@@ -387,11 +387,11 @@ Case Else
 End Select
 End Sub
 
-Public Function gGetNextStreamId() As Long
-Static sNextStreamId As Long
-gGetNextStreamId = sNextStreamId
-sNextStreamId = sNextStreamId + 1
-End Function
+'Public Function gGetNextStreamId() As Long
+'Static sNextStreamId As Long
+'gGetNextStreamId = sNextStreamId
+'sNextStreamId = sNextStreamId + 1
+'End Function
 
 Public Function gGetTickfileEventData( _
                 ByVal pSource As Object, _

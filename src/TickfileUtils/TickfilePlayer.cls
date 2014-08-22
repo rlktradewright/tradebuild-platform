@@ -256,7 +256,7 @@ ElseIf mState = PendingFireTick Then
     mTaskContext.Suspend -1
 ElseIf mState = Finished Then
     mTickfileState = TickfileStates.TickfileStateNotPlaying
-    mTickScheduler.NotifyNoMoreTicks Me
+    'mTickScheduler.NotifyNoMoreTicks Me
     mTaskContext.Finish Empty, False
 Else
     Assert True, "Invalid state"
@@ -605,7 +605,7 @@ If mContract Is Nothing Then Exit Sub
 If mClock Is Nothing Then Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
 
 If mFirstTickTimeUTC = 0 Then
-    mTickfileReplayController.NotifyReady Me
+    If mTickStreamBuilder.TickStream.State = TickStreamStateRunning Then mTickfileReplayController.NotifyReady Me
     Exit Sub
 End If
 

@@ -251,6 +251,18 @@ Private Property Get IMarketDataSource_PriceChange() As PriceChange
 IMarketDataSource_PriceChange = PriceChange
 End Property
 
+Private Property Let IMarketDataSource_PriorityTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "IMarketDataSource_PriorityTickListener"
+On Error GoTo Err
+
+PriorityTickListener = pListener
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Private Sub IMarketDataSource_Refresh()
 Refresh
 End Sub
@@ -777,6 +789,18 @@ Const ProcName As String = "PriceChange"
 On Error GoTo Err
 
 PriceChange = mDataSource.PriceChange
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let PriorityTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "PriorityTickListener"
+On Error GoTo Err
+
+mDataSource.PriorityTickListener = pListener
 
 Exit Property
 

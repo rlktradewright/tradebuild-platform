@@ -93,6 +93,9 @@ End Property
 Public Property Get Options() As MarketDataSourceOptions
 End Property
 
+Public Property Let PriorityTickListener(ByVal Value As IGenericTickListener)
+End Property
+
 Public Property Get Key() As String
 End Property
 
