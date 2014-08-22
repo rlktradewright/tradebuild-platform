@@ -775,8 +775,10 @@ On Error GoTo Err
 RaiseEvent KeyUp(KeyCode, Shift)
 
 Select Case KeyCode
-Case vbKeyDelete
-    StopSelectedTickers
+'Case vbKeyDelete
+'   Let the application handle this as it may want to Finish them as well
+'   as stopping them
+'    StopSelectedTickers
 Case vbKeyInsert
     insertBlankRow TickerGrid.Row
 Case vbKeyUp

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#217.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#235.0#0"; "TradingUI27.ocx"
 Begin VB.Form fOrderTicket 
    BorderStyle     =   4  'Fixed ToolWindow
    ClientHeight    =   6135
@@ -73,16 +73,27 @@ Private Const ModuleName                        As String = "fOrderTicket"
 
 Private mAppInstanceConfig                      As ConfigurationSection
 
+Private mTicker                                 As Ticker
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
 
-Private Sub Form_Initialize()
-InitCommonControls
+Private Sub Form_Activate()
+Const ProcName As String = "Form_Activate"
+On Error GoTo Err
+
+Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
+Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
-Const ProcName As String = "Form_QueryUnload"
+Private Sub Form_Deactivate()
+Const ProcName As String = "Form_Deactivate"
 On Error GoTo Err
 
 updateSettings
@@ -93,10 +104,15 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub Form_Unload(cancel As Integer)
+Private Sub Form_Initialize()
+InitCommonControls
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
 Const ProcName As String = "Form_Unload"
 On Error GoTo Err
 
+Set mTicker = Nothing
 OrderTicket1.Clear
 
 Exit Sub
@@ -121,6 +137,30 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+Private Sub OrderTicket1_NeedLiveOrderContext()
+Const ProcName As String = "OrderTicket1_NeedLiveOrderContext"
+On Error GoTo Err
+
+OrderTicket1.SetLiveOrderContext mTicker.PositionManager.OrderContexts.DefaultOrderContext
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub OrderTicket1_NeedSimulatedOrderContext()
+Const ProcName As String = "OrderTicket1_NeedSimulatedOrderContext"
+On Error GoTo Err
+
+OrderTicket1.SetSimulatedOrderContext mTicker.PositionManagerSimulated.OrderContexts.DefaultOrderContext
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
 '================================================================================
 ' Properties
 '================================================================================
@@ -129,20 +169,23 @@ Public Property Let Ticker(ByVal Value As Ticker)
 Const ProcName As String = "Ticker"
 On Error GoTo Err
 
-If Value.IsTickReplay Then
-    OrderTicket1.Clear
-    Exit Property
-End If
-
 If Value.State <> MarketDataSourceStateRunning Then Exit Property
 
-Dim lLiveContext As OrderContext
-If Value.IsLiveOrdersEnabled Then Set lLiveContext = Value.PositionManager.OrderContexts.DefaultOrderContext
+If Not mTicker Is Nothing Then
+    If mTicker Is Value Then Exit Property
+End If
 
-Dim lSimContext As OrderContext
-If Value.IsSimulatedOrdersEnabled Then Set lSimContext = Value.PositionManagerSimulated.OrderContexts.DefaultOrderContext
+OrderTicket1.Clear
 
-OrderTicket1.SetOrderContexts lLiveContext, lSimContext
+Set mTicker = Value
+
+If mTicker.IsLiveOrdersEnabled And mTicker.IsSimulatedOrdersEnabled Then
+    OrderTicket1.SetMode OrderTicketModeLiveAndSimulated
+ElseIf mTicker.IsSimulatedOrdersEnabled Then
+    OrderTicket1.SetMode OrderTicketModeSimulatedOnly
+ElseIf mTicker.IsLiveOrdersEnabled Then
+    OrderTicket1.SetMode OrderTicketModeLiveOnly
+End If
 
 Exit Property
 
@@ -159,8 +202,6 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mAppInstanceConfig = pAppInstanceConfig
-Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
-Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 
 Exit Sub
 
@@ -174,6 +215,7 @@ Friend Sub ShowBracketOrder( _
 Const ProcName As String = "ShowBracketOrder"
 On Error GoTo Err
 
+OrderTicket1.Clear
 OrderTicket1.ShowBracketOrder Value, selectedOrderNumber
 
 Exit Sub
@@ -188,7 +230,6 @@ End Sub
 
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
-
 On Error GoTo Err
 
 If Not mAppInstanceConfig Is Nothing Then

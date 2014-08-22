@@ -105,7 +105,7 @@ Private mSelectedAppConfig                          As ConfigurationSection
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
 On Error GoTo Err
 
@@ -113,7 +113,7 @@ updateSettings
 
 If UnloadMode = vbFormControlMenu Then
     Me.Hide
-    cancel = True
+    Cancel = True
 
 End If
 
@@ -130,7 +130,18 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
 
+Private Sub Form_Unload(Cancel As Integer)
+Const ProcName As String = "Form_Unload"
+On Error GoTo Err
+
+ConfigManager1.Finish
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -214,7 +225,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 '@================================================================================

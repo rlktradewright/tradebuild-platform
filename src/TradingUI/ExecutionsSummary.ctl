@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.UserControl ExecutionsSummary 
    ClientHeight    =   3810
    ClientLeft      =   0
@@ -72,13 +72,13 @@ Private Const ExecutionsTimeWidth = 23
 '@================================================================================
 
 Private Enum ExecutionsColumns
-    ExecId = 1
-    OrderId
+    Time = 1
     Action
     Quantity
     Symbol
     Price
-    Time
+    ExecId
+    OrderId
 End Enum
 
 '@================================================================================
@@ -89,7 +89,8 @@ End Enum
 ' Member variables
 '@================================================================================
 
-Private mMonitoredExecutions            As Collection
+Private mExecutionsCollection                               As New EnumerableCollection
+Private mPositionManagersCollection                         As New EnumerableCollection
 
 '@================================================================================
 ' UserControl Event Handlers
@@ -97,21 +98,18 @@ Private mMonitoredExecutions            As Collection
 
 Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
-
 On Error GoTo Err
-
-Set mMonitoredExecutions = New Collection
 
 ExecutionsList.Left = 0
 ExecutionsList.Top = 0
 
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.ExecId, , "Exec Id"
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.OrderId, , "ID"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Time, , "Time"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Action, , "Action"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Quantity, , "Quant"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Symbol, , "Symb"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Price, , "Price"
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Time, , "Time"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.ExecId, , "Exec Id"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.OrderId, , "ID"
 
 ExecutionsList.SortKey = ExecutionsColumns.Time - 1
 ExecutionsList.SortOrder = lvwDescending
@@ -120,12 +118,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
-
 End Sub
 
 Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
-
 On Error GoTo Err
 
 ExecutionsList.Height = UserControl.Height
@@ -156,7 +152,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
-
 End Sub
 
 Private Sub UserControl_Terminate()
@@ -174,13 +169,18 @@ On Error GoTo Err
 
 If ev.changeType <> CollItemAdded Then Exit Sub
 
-addExecution ev.AffectedItem
+If TypeOf ev.AffectedItem Is IExecutionReport Then
+    addExecution ev.AffectedItem
+ElseIf TypeOf ev.AffectedItem Is PositionManager Then
+    Dim lPm As PositionManager
+    Set lPm = ev.AffectedItem
+    MonitorExecutions lPm.Executions
+End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 '@================================================================================
@@ -189,7 +189,6 @@ End Sub
 
 Private Sub ExecutionsList_ColumnClick(ByVal columnHeader As columnHeader)
 Const ProcName As String = "ExecutionsList_ColumnClick"
-
 On Error GoTo Err
 
 If ExecutionsList.SortKey = columnHeader.index - 1 Then
@@ -219,7 +218,6 @@ End Sub
 
 Public Sub Clear()
 Const ProcName As String = "Clear"
-
 On Error GoTo Err
 
 ExecutionsList.ListItems.Clear
@@ -234,13 +232,17 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-Dim i As Long
-For i = mMonitoredExecutions.Count To 1 Step -1
-    Dim lExecs As Executions
-    Set lExecs = mMonitoredExecutions(i)
+Dim lExecs As Executions
+For Each lExecs In mExecutionsCollection
     lExecs.RemoveCollectionChangeListener Me
-    mMonitoredExecutions.Remove i
 Next
+mExecutionsCollection.Clear
+
+Dim lPms As PositionManagers
+For Each lPms In mPositionManagersCollection
+    lPms.RemoveCollectionChangeListener Me
+Next
+mPositionManagersCollection.Clear
 
 Clear
 
@@ -256,11 +258,30 @@ Const ProcName As String = "MonitorExecutions"
 On Error GoTo Err
 
 pExecutions.AddCollectionChangeListener Me
-mMonitoredExecutions.Add pExecutions
+mExecutionsCollection.Add pExecutions
 
-Dim lExec As Execution
+Dim lExec As IExecutionReport
 For Each lExec In pExecutions
     addExecution lExec
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+                
+Public Sub MonitorPositions( _
+                ByVal pPositionManagers As PositionManagers)
+Const ProcName As String = "MonitorPosition"
+On Error GoTo Err
+
+pPositionManagers.AddCollectionChangeListener Me
+mPositionManagersCollection.Add pPositionManagers
+
+Dim lPm As PositionManager
+For Each lPm In pPositionManagers
+    MonitorExecutions lPm.Executions
 Next
 
 Exit Sub
@@ -273,7 +294,7 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub addExecution(ByVal pExec As Execution)
+Private Sub addExecution(ByVal pExec As IExecutionReport)
 Const ProcName As String = "addExecution"
 On Error GoTo Err
 
@@ -283,7 +304,7 @@ Set lListItem = ExecutionsList.ListItems(pExec.Id)
 On Error GoTo Err
 
 If lListItem Is Nothing Then
-    Set lListItem = ExecutionsList.ListItems.Add(, pExec.Id, pExec.Id)
+    Set lListItem = ExecutionsList.ListItems.Add(, pExec.Id, pExec.FillTime)
 End If
 
 lListItem.SubItems(ExecutionsColumns.Action - 1) = IIf(pExec.Action = OrderActionBuy, "BUY", "SELL")
@@ -291,7 +312,7 @@ lListItem.SubItems(ExecutionsColumns.OrderId - 1) = pExec.BrokerId
 lListItem.SubItems(ExecutionsColumns.Price - 1) = pExec.Price
 lListItem.SubItems(ExecutionsColumns.Quantity - 1) = pExec.Quantity
 lListItem.SubItems(ExecutionsColumns.Symbol - 1) = pExec.SecurityName
-lListItem.SubItems(ExecutionsColumns.Time - 1) = pExec.FillTime
+lListItem.SubItems(ExecutionsColumns.ExecId - 1) = pExec.Id
 
 Exit Sub
 

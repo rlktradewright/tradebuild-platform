@@ -112,10 +112,10 @@ Event SelectionChanged()
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "OrdersSummary"
+Private Const ModuleName                    As String = "OrdersSummary"
 
-Private Const RowDataBracketOrderBase As Long = &H100
-Private Const RowDataPositionManagerBase As Long = &H1000000
+Private Const RowDataBracketOrderBase       As Long = &H100
+Private Const RowDataPositionManagerBase    As Long = &H1000000
 
 '@================================================================================
 ' Enums
@@ -125,81 +125,72 @@ Private Enum BracketOrderGridColumns
     Symbol
     ExpandIndicator
     OtherColumns    ' keep this entry last
-End Enum
+    
+    'BracketOrder Columns
+    BracketCreationTime = OtherColumns
+    BracketSize
+    BracketProfit
+    BracketMaxProfit
+    BracketDrawdown
+    BracketCurrencyCode
+    
+    'Position Columns
+    PositionExchange = OtherColumns
+    PositionSize
+    PositionProfit
+    PositionMaxProfit
+    PositionDrawdown
+    PositionCurrencyCode
 
-Private Enum BracketOrderGridBracketOrderColumns
-    CreationTime = BracketOrderGridColumns.OtherColumns
-    Size
-    Profit
-    MaxProfit
-    Drawdown
-    CurrencyCode
-End Enum
-
-Private Enum BracketOrderGridPositionColumns
-    Exchange = BracketOrderGridColumns.OtherColumns
-    Size
-    Profit
-    MaxProfit
-    Drawdown
-    CurrencyCode
-End Enum
-
-Private Enum BracketOrderGridOrderColumns
-    OrderMode = BracketOrderGridColumns.OtherColumns
-    Action
-    Quantity
+    'Order Columns
+    OrderMode = OtherColumns
+    OrderAction
+    OrderQuantity
     OrderType
-    Price
-    AuxPrice
-    Status
-    Size
-    QuantityRemaining
-    AveragePrice
-    LastFillTime
-    LastFillPrice
-    Id
-    BrokerId
+    OrderPrice
+    OrderAuxPrice
+    OrderStatus
+    OrderSize
+    OrderQuantityRemaining
+    OrderAveragePrice
+    OrderLastFillTime
+    OrderLastFillPrice
+    OrderId
+    OrderBrokerId
 End Enum
 
 Private Enum BracketOrderGridColumnWidths
     ExpandIndicatorWidth = 3
     SymbolWidth = 15
-End Enum
 
-Private Enum BracketOrderGridBracketOrderColumnWidths
-    CreationTimeWidth = 15
-    SizeWidth = 6
-    ProfitWidth = 9
-    MaxProfitWidth = 9
-    DrawdownWidth = 9
-    CurrencyCodeWidth = 4
-End Enum
+    BracketCreationTimeWidth = 15
+    BracketSizeWidth = 6
+    BracketProfitWidth = 9
+    BracketMaxProfitWidth = 9
+    BracketDrawdownWidth = 9
+    BracketCurrencyCodeWidth = 4
 
-Private Enum BracketOrderGridPositionColumnWidths
-    ExchangeWidth = 9
-    SizeWidth = 6
-    ProfitWidth = 9
-    MaxProfitWidth = 9
-    DrawdownWidth = 9
-    CurrencyCodeWidth = 5
-End Enum
+    PositionExchangeWidth = 9
+    PositionSizeWidth = 6
+    PositionProfitWidth = 9
+    PositionMaxProfitWidth = 9
+    PositionDrawdownWidth = 9
+    PositionCurrencyCodeWidth = 5
 
-Private Enum BracketOrderGridOrderColumnWidths
     OrderModeWidth = 9
-    SizeWidth = 6
-    AveragePriceWidth = 9
-    StatusWidth = 13
-    ActionWidth = 4
-    QuantityWidth = 6
-    QuantityRemainingWidth = 5
+    OrderSizeWidth = 6
+    OrderAveragePriceWidth = 9
+    OrderStatusWidth = 13
+    OrderActionWidth = 4
+    OrderQuantityWidth = 6
+    OrderQuantityRemainingWidth = 5
     OrderTypeWidth = 5
-    PriceWidth = 9
-    AuxPriceWidth = 9
-    LastFillTimeWidth = 15
-    LastFillPriceWidth = 9
-    IdWidth = 40
-    BrokerIdWidth = 11
+    OrderPriceWidth = 9
+    OrderAuxPriceWidth = 9
+    OrderLastFillTimeWidth = 15
+    OrderLastFillPriceWidth = 9
+    OrderIdWidth = 40
+    OrderBrokerIdWidth = 11
 End Enum
 
 '@================================================================================
@@ -219,7 +210,7 @@ Private Type BracketOrderGridMappingEntry
     ' offset from gridIndex of line in OrdersGrid relating to
     ' the corresponding order: -1 means  it's not in the grid
     EntryGridOffset     As Long
-    StopGridOffset      As Long
+    StopLossGridOffset  As Long
     TargetGridOffset    As Long
     CloseoutGridOffset  As Long
     TickSize            As Double
@@ -243,9 +234,7 @@ End Type
 
 Private mMarketDataManager                                  As IMarketDataManager
 
-Private mSelectedBracketOrderGridRow                        As Long
 Private mSelectedBracketOrder                               As IBracketOrder
-Private mSelectedOrderIndex                                 As Long
 
 Private mBracketOrderGridMappingTable()                     As BracketOrderGridMappingEntry
 Private mMaxBracketOrderGridMappingTableIndex               As Long
@@ -264,8 +253,6 @@ Private mPositionManagersCollection                         As New EnumerableCol
 Private mMonitoredPositions                                 As New EnumerableCollection
     
 Private mIsEditing                                          As Boolean
-Private mEditedBracketOrder                                 As IBracketOrder
-Private mEditedOrderIndex                                   As Long
 Private mEditedCol                                          As Long
 
 '@================================================================================
@@ -337,42 +324,41 @@ Const ProcName As String = "ChangeListener_Change"
 On Error GoTo Err
 
 If TypeOf ev.Source Is IBracketOrder Then
-    Dim lBracketOrderChangeType As BracketOrderChangeTypes
     Dim lBracketOrder As IBracketOrder
-    Dim lBracketOrderIndex As Long
-    
     Set lBracketOrder = ev.Source
     
-    lBracketOrderIndex = findBracketOrderTableIndex(lBracketOrder)
+    Dim lBracketOrderIndex As Long
+    lBracketOrderIndex = findBracketOrderGridMappingIndex(lBracketOrder)
     
     With mBracketOrderGridMappingTable(lBracketOrderIndex)
     
+        Dim lBracketOrderChangeType As BracketOrderChangeTypes
         lBracketOrderChangeType = ev.changeType
         
         Select Case lBracketOrderChangeType
         Case BracketOrderChangeTypes.BracketOrderCreated
             
         Case BracketOrderChangeTypes.BracketOrderCompleted
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
             If lBracketOrder.Size = 0 Then lBracketOrder.RemoveChangeListener Me
         Case BracketOrderChangeTypes.BracketOrderSelfCancelled
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
             If lBracketOrder.Size = 0 Then lBracketOrder.RemoveChangeListener Me
         Case BracketOrderChangeTypes.BracketOrderEntryOrderChanged
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .EntryGridOffset, lBracketOrder.EntryOrder, .secType, .TickSize
         Case BracketOrderChangeTypes.BracketOrderStopOrderChanged
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
-            displayOrderValues .GridIndex + .StopGridOffset, lBracketOrder.StopLossOrder, .secType, .TickSize
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
+            displayOrderValues .GridIndex + .StopLossGridOffset, lBracketOrder.StopLossOrder, .secType, .TickSize
         Case BracketOrderChangeTypes.BracketOrderTargetOrderChanged
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .TargetGridOffset, lBracketOrder.TargetOrder, .secType, .TickSize
         Case BracketOrderChangeTypes.BracketOrderCloseoutOrderCreated
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
             If .TargetGridOffset >= 0 Then
                 .CloseoutGridOffset = .TargetGridOffset + 1
-            ElseIf .StopGridOffset >= 0 Then
-                .CloseoutGridOffset = .StopGridOffset + 1
+            ElseIf .StopLossGridOffset >= 0 Then
+                .CloseoutGridOffset = .StopLossGridOffset + 1
             ElseIf .EntryGridOffset >= 0 Then
                 .CloseoutGridOffset = .EntryGridOffset + 1
             Else
@@ -387,15 +373,15 @@ If TypeOf ev.Source Is IBracketOrder Then
                                     .secType, _
                                     .TickSize
         Case BracketOrderChangeTypes.BracketOrderCloseoutOrderChanged
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .CloseoutGridOffset, lBracketOrder.CloseoutOrder, .secType, .TickSize
         Case BracketOrderChangeTypes.BracketOrderSizeChanged
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
-            BracketOrderGrid.TextMatrix(.GridIndex, BracketOrderGridBracketOrderColumns.Size) = lBracketOrder.Size
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
+            GridColumn(.GridIndex, BracketSize) = lBracketOrder.Size
         Case BracketOrderChangeTypes.BracketOrderStateChanged
-            If lBracketOrder Is mEditedBracketOrder Then endEdit
+            If lBracketOrder Is mSelectedBracketOrder Then endEdit
             If lBracketOrder.State = BracketOrderStates.BracketOrderStateSubmitted Then
-                BracketOrderGrid.TextMatrix(.GridIndex, BracketOrderGridBracketOrderColumns.CreationTime) = formattedTime(lBracketOrder.CreationTime)
+                GridColumn(.GridIndex, BracketCreationTime) = formattedTime(lBracketOrder.CreationTime)
             End If
             If lBracketOrder.State <> BracketOrderStates.BracketOrderStateCreated And _
                 lBracketOrder.State <> BracketOrderStates.BracketOrderStateSubmitted _
@@ -403,8 +389,7 @@ If TypeOf ev.Source Is IBracketOrder Then
                 ' the bracket order is now in a state where it can't be modified.
                 ' If it's the currently selected bracket order, make it not so.
                 If lBracketOrder Is mSelectedBracketOrder Then
-                    invertEntryColors mSelectedBracketOrderGridRow
-                    mSelectedBracketOrderGridRow = -1
+                    invertEntryColors getBracketOrderGridIndex(mSelectedBracketOrder)
                     Set mSelectedBracketOrder = Nothing
                     RaiseEvent SelectionChanged
                 End If
@@ -412,20 +397,18 @@ If TypeOf ev.Source Is IBracketOrder Then
         End Select
     End With
 ElseIf TypeOf ev.Source Is PositionManager Then
-    Dim pmChangeType As PositionManagerChangeTypes
     Dim pm As PositionManager
-    Dim pmIndex As Long
-    
     Set pm = ev.Source
+    
+    Dim pmChangeType As PositionManagerChangeTypes
     pmChangeType = ev.changeType
-    
-    
     Select Case pmChangeType
     Case PositionManagerChangeTypes.PositionSizeChanged
-        pmIndex = findPositionManagerTableIndex(pm)
+        Dim pmIndex As Long
+        pmIndex = findPositionManagerGridMappingIndex(pm)
         showPositionManagerEntry pm
-        BracketOrderGrid.TextMatrix(mPositionManagerGridMappingTable(pmIndex).GridIndex, _
-                                BracketOrderGridPositionColumns.Size) = pm.PositionSize
+        GridColumn(mPositionManagerGridMappingTable(pmIndex).GridIndex, _
+                                PositionSize) = pm.PositionSize
     End Select
 End If
 
@@ -442,7 +425,7 @@ End Sub
 '@================================================================================
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
-Const ProcName As String = "CollectionChangeListener_Change"
+0 Const ProcName As String = "CollectionChangeListener_Change"
 On Error GoTo Err
 
 If TypeOf ev.Source Is BracketOrders Then
@@ -464,7 +447,7 @@ If TypeOf ev.Source Is BracketOrders Then
         addBracketOrder lBracketOrder, lPm
     Case CollItemRemoved
         Dim lBracketOrderIndex As Long
-        lBracketOrderIndex = findBracketOrderTableIndex(lBracketOrder)
+        lBracketOrderIndex = findBracketOrderGridMappingIndex(lBracketOrder)
         lBracketOrder.RemoveChangeListener Me
         mBracketOrderGridMappingTable(lBracketOrderIndex).ProfitCalculator.RemoveProfitListener Me
         Set mBracketOrderGridMappingTable(lBracketOrderIndex).ProfitCalculator = Nothing
@@ -506,7 +489,7 @@ If TypeOf ev.Source Is BracketProfitCalculator Then
     Set lBracketOrder = lProfitCalculator.BracketOrder
     
     Dim lBracketOrderIndex As Long
-    lBracketOrderIndex = findBracketOrderTableIndex(lBracketOrder)
+    lBracketOrderIndex = findBracketOrderGridMappingIndex(lBracketOrder)
     rowIndex = mBracketOrderGridMappingTable(lBracketOrderIndex).GridIndex
     
     Dim lBOProfitType As ProfitTypes
@@ -514,11 +497,11 @@ If TypeOf ev.Source Is BracketProfitCalculator Then
     
     Select Case lBOProfitType
     Case ProfitTypes.ProfitTypeProfit
-        displayProfitValue ev.ProfitAmount, rowIndex, BracketOrderGridBracketOrderColumns.Profit
+        displayProfitValue ev.ProfitAmount, rowIndex, BracketProfit
     Case ProfitTypes.ProfitTypeMaxProfit
-        displayProfitValue ev.ProfitAmount, rowIndex, BracketOrderGridBracketOrderColumns.MaxProfit
+        displayProfitValue ev.ProfitAmount, rowIndex, BracketMaxProfit
     Case ProfitTypes.ProfitTypeDrawdown
-        displayProfitValue -ev.ProfitAmount, rowIndex, BracketOrderGridBracketOrderColumns.Drawdown
+        displayProfitValue -ev.ProfitAmount, rowIndex, BracketDrawdown
     End Select
 
 ElseIf TypeOf ev.Source Is PositionManager Then
@@ -528,7 +511,7 @@ ElseIf TypeOf ev.Source Is PositionManager Then
     showPositionManagerEntry lPositionManager
     
     Dim lPositionManagerIndex As Long
-    lPositionManagerIndex = findPositionManagerTableIndex(lPositionManager)
+    lPositionManagerIndex = findPositionManagerGridMappingIndex(lPositionManager)
     rowIndex = mPositionManagerGridMappingTable(lPositionManagerIndex).GridIndex
     
     Dim lPMProfitType As ProfitTypes
@@ -536,11 +519,11 @@ ElseIf TypeOf ev.Source Is PositionManager Then
     
     Select Case lPMProfitType
     Case ProfitTypes.ProfitTypeSessionProfit
-        displayProfitValue ev.ProfitAmount, rowIndex, BracketOrderGridPositionColumns.Profit
+        displayProfitValue ev.ProfitAmount, rowIndex, PositionProfit
     Case ProfitTypes.ProfitTypeSessionMaxProfit
-        displayProfitValue ev.ProfitAmount, rowIndex, BracketOrderGridPositionColumns.MaxProfit
+        displayProfitValue ev.ProfitAmount, rowIndex, PositionMaxProfit
     Case ProfitTypes.ProfitTypeSessionDrawdown
-        displayProfitValue -ev.ProfitAmount, rowIndex, BracketOrderGridPositionColumns.Drawdown
+        displayProfitValue -ev.ProfitAmount, rowIndex, PositionDrawdown
     Case ProfitTypes.ProfitTypeTradeProfit
     Case ProfitTypes.ProfitTypeTradeMaxProfit
     Case ProfitTypes.ProfitTypeTradeDrawdown
@@ -581,74 +564,85 @@ Private Sub BracketOrderGrid_Click()
 Const ProcName As String = "BracketOrderGrid_Click"
 On Error GoTo Err
 
-Dim lRow As Long
-Dim lRowdata As Long
-Dim op As IBracketOrder
-Dim index As Long
-Dim selectedOrder As IOrder
+Dim lSelectionChanged As Boolean
 
-lRow = BracketOrderGrid.Row
-
-If BracketOrderGrid.MouseCol = BracketOrderGridColumns.Symbol Then
+If BracketOrderGrid.MouseCol = Symbol Then
     RaiseEvent Click
     Exit Sub
 End If
 
-If BracketOrderGrid.MouseCol = BracketOrderGridColumns.ExpandIndicator Then
+If BracketOrderGrid.MouseCol = ExpandIndicator Then
     expandOrContract
     adjustEditBox
-Else
-
-    invertEntryColors mSelectedBracketOrderGridRow
-    
-    mSelectedBracketOrderGridRow = -1
-    
-    BracketOrderGrid.Row = lRow
-    lRowdata = BracketOrderGrid.RowData(lRow)
-    If lRowdata < RowDataPositionManagerBase And _
-        lRowdata >= RowDataBracketOrderBase _
-    Then
-        index = lRowdata - RowDataBracketOrderBase
-        Set op = mBracketOrderGridMappingTable(index).BracketOrder
-        If op.State = BracketOrderStates.BracketOrderStateCreated Or _
-            op.State = BracketOrderStates.BracketOrderStateSubmitted _
-        Then
-            
-            mSelectedBracketOrderGridRow = lRow
-            Set mSelectedBracketOrder = op
-            invertEntryColors mSelectedBracketOrderGridRow
-            
-            mSelectedOrderIndex = mSelectedBracketOrderGridRow - mBracketOrderGridMappingTable(index).GridIndex
-            If mSelectedOrderIndex <> 0 Then
-                Set selectedOrder = op.Order(mSelectedOrderIndex)
-                If selectedOrder.IsModifiable Then
-                    If (BracketOrderGrid.MouseCol = BracketOrderGridOrderColumns.Price And _
-                            selectedOrder.IsAttributeModifiable(OrderAttributes.OrderAttLimitPrice)) Or _
-                        (BracketOrderGrid.MouseCol = BracketOrderGridOrderColumns.AuxPrice And _
-                            selectedOrder.IsAttributeModifiable(OrderAttributes.OrderAttTriggerPrice)) Or _
-                        (BracketOrderGrid.MouseCol = BracketOrderGridOrderColumns.Quantity And _
-                        selectedOrder.IsAttributeModifiable(OrderAttributes.OrderAttQuantity)) _
-                    Then
-                        mIsEditing = True
-                        Set mEditedBracketOrder = op
-                        mEditedOrderIndex = mSelectedOrderIndex
-                        mEditedCol = BracketOrderGrid.MouseCol
-                        BracketOrderGrid.col = mEditedCol
-                        
-                        EditText.Text = BracketOrderGrid.Text
-                        EditText.SelStart = 0
-                        EditText.SelLength = Len(EditText.Text)
-                        EditText.Visible = True
-                        EditText.SetFocus
-                                                
-                        adjustEditBox
-                    
-                    End If
-                End If
-            End If
-        End If
-    End If
+    RaiseEvent Click
+    Exit Sub
 End If
+
+BracketOrderGrid.col = BracketOrderGrid.MouseCol
+
+Dim lBracketOrder As IBracketOrder
+Set lBracketOrder = getSelectedBracketOrder
+
+If Not mSelectedBracketOrder Is Nothing Then
+    invertEntryColors getBracketOrderGridIndex(mSelectedBracketOrder)
+    Set mSelectedBracketOrder = Nothing
+    lSelectionChanged = True
+End If
+
+If lBracketOrder Is Nothing Then
+    RaiseEvent Click
+    If lSelectionChanged Then RaiseEvent SelectionChanged
+    Exit Sub
+End If
+
+If lBracketOrder.State <> BracketOrderStates.BracketOrderStateCreated And _
+    lBracketOrder.State <> BracketOrderStates.BracketOrderStateSubmitted _
+Then
+    RaiseEvent Click
+    If lSelectionChanged Then RaiseEvent SelectionChanged
+    Exit Sub
+End If
+
+Set mSelectedBracketOrder = lBracketOrder
+lSelectionChanged = True
+invertEntryColors getBracketOrderGridIndex(mSelectedBracketOrder)
+
+Dim lSelectedOrder As IOrder
+Set lSelectedOrder = getSelectedOrder
+    
+If lSelectedOrder Is Nothing Then
+    RaiseEvent Click
+    RaiseEvent SelectionChanged
+    Exit Sub
+End If
+
+If Not lSelectedOrder.IsModifiable Then
+    RaiseEvent Click
+    RaiseEvent SelectionChanged
+    Exit Sub
+End If
+
+If (BracketOrderGrid.col = OrderPrice And _
+        lSelectedOrder.IsAttributeModifiable(OrderAttributes.OrderAttLimitPrice)) Or _
+    (BracketOrderGrid.col = OrderAuxPrice And _
+        lSelectedOrder.IsAttributeModifiable(OrderAttributes.OrderAttTriggerPrice)) Or _
+    (BracketOrderGrid.col = OrderQuantity And _
+        lSelectedOrder.IsAttributeModifiable(OrderAttributes.OrderAttQuantity)) _
+Then
+    mIsEditing = True
+    mEditedCol = BracketOrderGrid.col
+    BracketOrderGrid.col = mEditedCol
+    
+    EditText.Text = BracketOrderGrid.Text
+    EditText.SelStart = 0
+    EditText.SelLength = Len(EditText.Text)
+    EditText.Visible = True
+    EditText.SetFocus
+                            
+    adjustEditBox
+
+End If
+    
 RaiseEvent Click
 RaiseEvent SelectionChanged
 
@@ -701,13 +695,12 @@ Public Property Get IsSelectedItemModifiable() As Boolean
 Const ProcName As String = "IsSelectedItemModifiable"
 On Error GoTo Err
 
-Dim selectedOrder As IOrder
+If mSelectedBracketOrder Is Nothing Then Exit Property
 
-If mSelectedOrderIndex = 0 Then Exit Property
-
-Set selectedOrder = mSelectedBracketOrder.Order(mSelectedOrderIndex)
-If Not selectedOrder Is Nothing Then
-    IsSelectedItemModifiable = selectedOrder.IsModifiable
+Dim lSelectedOrder As IOrder
+Set lSelectedOrder = getSelectedOrder
+If Not lSelectedOrder Is Nothing Then
+    IsSelectedItemModifiable = lSelectedOrder.IsModifiable
 End If
 
 Exit Property
@@ -721,7 +714,7 @@ Set SelectedItem = mSelectedBracketOrder
 End Property
 
 Public Property Get SelectedOrderIndex() As Long
-SelectedOrderIndex = mSelectedOrderIndex
+SelectedOrderIndex = getBracketOrderGridIndex(mSelectedBracketOrder)
 End Property
 
 '@================================================================================
@@ -746,7 +739,7 @@ For i = 0 To mMaxBracketOrderGridMappingTableIndex
         mBracketOrderGridMappingTable(i).GridIndex = 0
         mBracketOrderGridMappingTable(i).IsExpanded = False
         mBracketOrderGridMappingTable(i).secType = SecTypeNone
-        mBracketOrderGridMappingTable(i).StopGridOffset = 0
+        mBracketOrderGridMappingTable(i).StopLossGridOffset = 0
         mBracketOrderGridMappingTable(i).TargetGridOffset = 0
         mBracketOrderGridMappingTable(i).TickSize = 0#
     End If
@@ -816,6 +809,7 @@ For Each lPositionManager In pPositionManagers
         showPositionManagerEntry lPositionManager
     End If
     
+    lPositionManager.AddChangeListener Me
     lPositionManager.AddProfitListener Me
     lPositionManager.BracketOrders.AddCollectionChangeListener Me
     
@@ -824,13 +818,13 @@ For Each lPositionManager In pPositionManagers
     For Each lBracketOrder In lPositionManager.BracketOrders
         addBracketOrder lBracketOrder, lPositionManager
         If lBracketOrder.State = BracketOrderStateClosed Then
-            contractBracketOrderEntry findBracketOrderTableIndex(lBracketOrder)
+            contractBracketOrderEntry findBracketOrderGridMappingIndex(lBracketOrder)
         Else
             lAnyActiveBracketOrders = True
         End If
     Next
     
-    If Not lAnyActiveBracketOrders Then contractPositionManagerEntry findPositionManagerTableIndex(lPositionManager)
+    If Not lAnyActiveBracketOrders Then contractPositionManagerEntry findPositionManagerGridMappingIndex(lPositionManager)
     
 Next
 
@@ -859,33 +853,42 @@ End Sub
 
 Private Function addBracketOrderEntryToBracketOrderGrid( _
                 ByVal pSymbol As String, _
-                ByVal BracketOrderTableIndex As Long) As Long
+                ByVal pBracketOrderGridMappingIndex As Long, _
+                ByVal pPositionManagerGridIndex As Long) As Long
 Const ProcName As String = "addBracketOrderEntryToBracketOrderGrid"
 On Error GoTo Err
 
-Dim index As Long
-index = addEntryToBracketOrderGrid(pSymbol, False)
+Dim lPrevRow As Long
+lPrevRow = BracketOrderGrid.Row
+Dim lPrevCol As Long
+lPrevCol = BracketOrderGrid.col
 
-BracketOrderGrid.RowData(index) = BracketOrderTableIndex + RowDataBracketOrderBase
+Dim index As Long
+index = addEntryToBracketOrderGrid(pPositionManagerGridIndex + 1, pSymbol, True)
+
+BracketOrderGrid.RowData(index) = pBracketOrderGridMappingIndex + RowDataBracketOrderBase
 
 BracketOrderGrid.Row = index
-BracketOrderGrid.col = BracketOrderGridColumns.ExpandIndicator
+BracketOrderGrid.col = ExpandIndicator
 BracketOrderGrid.CellPictureAlignment = MSFlexGridLib.AlignmentSettings.flexAlignCenterCenter
 Set BracketOrderGrid.CellPicture = BracketOrderImageList.ListImages("Contract").Picture
 
-BracketOrderGrid.col = BracketOrderGridBracketOrderColumns.Profit
+BracketOrderGrid.col = BracketProfit
 BracketOrderGrid.CellBackColor = &HC0C0C0
 BracketOrderGrid.CellForeColor = vbWhite
 
-BracketOrderGrid.col = BracketOrderGridBracketOrderColumns.MaxProfit
+BracketOrderGrid.col = BracketMaxProfit
 BracketOrderGrid.CellBackColor = &HC0C0C0
 BracketOrderGrid.CellForeColor = vbWhite
 
-BracketOrderGrid.col = BracketOrderGridBracketOrderColumns.Drawdown
+BracketOrderGrid.col = BracketDrawdown
 BracketOrderGrid.CellBackColor = &HC0C0C0
 BracketOrderGrid.CellForeColor = vbWhite
 
 addBracketOrderEntryToBracketOrderGrid = index
+
+BracketOrderGrid.Row = lPrevRow
+BracketOrderGrid.col = lPrevCol
 
 Exit Function
 
@@ -894,6 +897,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
                 
 Private Function addEntryToBracketOrderGrid( _
+                ByVal pStartIndex As Long, _
                 ByVal pSymbol As String, _
                 Optional ByVal pBefore As Boolean, _
                 Optional ByVal pIndex As Long = -1) As Long
@@ -902,17 +906,19 @@ On Error GoTo Err
 
 Dim i As Long
 
+If pStartIndex = 0 Then pStartIndex = mFirstBracketOrderGridRowIndex
+
 If pIndex < 0 Then
-    For i = mFirstBracketOrderGridRowIndex To BracketOrderGrid.Rows - 1
+    For i = pStartIndex To BracketOrderGrid.Rows - 1
         If (pBefore And _
-            BracketOrderGrid.TextMatrix(i, BracketOrderGridColumns.Symbol) >= pSymbol) Or _
-            BracketOrderGrid.TextMatrix(i, BracketOrderGridColumns.Symbol) = "" _
+            GridColumn(i, Symbol) >= pSymbol) Or _
+            GridColumn(i, Symbol) = "" _
         Then
             pIndex = i
             Exit For
         ElseIf (Not pBefore And _
-            BracketOrderGrid.TextMatrix(i, BracketOrderGridColumns.Symbol) > pSymbol) Or _
-            BracketOrderGrid.TextMatrix(i, BracketOrderGridColumns.Symbol) = "" _
+            GridColumn(i, Symbol) > pSymbol) Or _
+            GridColumn(i, Symbol) = "" _
         Then
             pIndex = i
             Exit For
@@ -922,8 +928,8 @@ If pIndex < 0 Then
     If pIndex < 0 Then
         BracketOrderGrid.addItem ""
         pIndex = BracketOrderGrid.Rows - 1
-    ElseIf BracketOrderGrid.TextMatrix(pIndex, BracketOrderGridColumns.Symbol) = "" Then
-        BracketOrderGrid.TextMatrix(pIndex, BracketOrderGridColumns.Symbol) = pSymbol
+    ElseIf GridColumn(pIndex, Symbol) = "" Then
+        GridColumn(pIndex, Symbol) = pSymbol
     Else
         BracketOrderGrid.addItem "", pIndex
     End If
@@ -931,7 +937,7 @@ Else
     BracketOrderGrid.addItem "", pIndex
 End If
 
-BracketOrderGrid.TextMatrix(pIndex, BracketOrderGridColumns.Symbol) = pSymbol
+GridColumn(pIndex, Symbol) = pSymbol
 If pIndex < BracketOrderGrid.Rows - 1 Then
     ' this new entry has displaced one or more existing entries so
     ' the BracketOrderGridMappingTable and PositionManageGridMappingTable indexes
@@ -946,6 +952,7 @@ If pIndex < BracketOrderGrid.Rows - 1 Then
             mPositionManagerGridMappingTable(i).GridIndex = mPositionManagerGridMappingTable(i).GridIndex + 1
         End If
     Next
+    If pIndex <= BracketOrderGrid.Row Then BracketOrderGrid.Row = BracketOrderGrid.Row + 1
 End If
 
 addEntryToBracketOrderGrid = pIndex
@@ -967,11 +974,11 @@ Private Sub addOrderEntryToBracketOrderGrid( _
 Const ProcName As String = "addOrderEntryToBracketOrderGrid"
 On Error GoTo Err
 
-pIndex = addEntryToBracketOrderGrid(pSymbol, False, pIndex)
+pIndex = addEntryToBracketOrderGrid(0, pSymbol, False, pIndex)
 
 BracketOrderGrid.RowData(pIndex) = pBracketOrderTableIndex + RowDataBracketOrderBase
 
-BracketOrderGrid.TextMatrix(pIndex, BracketOrderGridOrderColumns.OrderMode) = pOrderMode
+GridColumn(pIndex, OrderMode) = pOrderMode
 
 displayOrderValues pIndex, pOrder, pSecType, pTickSize
 
@@ -986,18 +993,17 @@ Private Sub adjustEditBox()
 Const ProcName As String = "adjustEditBox"
 On Error GoTo Err
 
-Dim opIndex As Long
+If Not mIsEditing Then Exit Sub
 
-If mIsEditing Then
-    opIndex = findBracketOrderTableIndex(mEditedBracketOrder)
-    BracketOrderGrid.Row = mBracketOrderGridMappingTable(opIndex).GridIndex + mEditedOrderIndex
-    BracketOrderGrid.col = mEditedCol
-    
-    EditText.Move BracketOrderGrid.Left + BracketOrderGrid.CellLeft + 8, _
-                BracketOrderGrid.Top + BracketOrderGrid.Celltop + 8, _
-                BracketOrderGrid.CellWidth - 16, _
-                BracketOrderGrid.CellHeight - 16
-End If
+'Dim opIndex As Long
+'opIndex = findBracketOrderGridMappingIndex(mSelectedBracketOrder)
+'BracketOrderGrid.Row = mBracketOrderGridMappingTable(opIndex).GridIndex + mEditedOrderIndex
+'BracketOrderGrid.col = mEditedCol
+
+EditText.Move BracketOrderGrid.Left + BracketOrderGrid.CellLeft + 8, _
+            BracketOrderGrid.Top + BracketOrderGrid.Celltop + 8, _
+            BracketOrderGrid.CellWidth - 16, _
+            BracketOrderGrid.CellHeight - 16
 
 Exit Sub
 
@@ -1015,14 +1021,14 @@ Dim lIndex As Long
 
 With mBracketOrderGridMappingTable(index)
     
-    If mIsEditing And .BracketOrder Is mEditedBracketOrder Then endEdit
+    If mIsEditing And .BracketOrder Is mSelectedBracketOrder Then endEdit
     
     If .EntryGridOffset >= 0 Then
         lIndex = .GridIndex + .EntryGridOffset
         BracketOrderGrid.rowHeight(lIndex) = 0
     End If
-    If .StopGridOffset >= 0 Then
-        lIndex = .GridIndex + .StopGridOffset
+    If .StopLossGridOffset >= 0 Then
+        lIndex = .GridIndex + .StopLossGridOffset
         BracketOrderGrid.rowHeight(lIndex) = 0
     End If
     If .TargetGridOffset >= 0 Then
@@ -1035,11 +1041,19 @@ With mBracketOrderGridMappingTable(index)
     End If
     
     If Not preserveCurrentExpandedState Then
+        Dim lPrevRow As Long
+        lPrevRow = BracketOrderGrid.Row
+        Dim lPrevCol As Long
+        lPrevCol = BracketOrderGrid.col
+        
         .IsExpanded = False
         BracketOrderGrid.Row = .GridIndex
-        BracketOrderGrid.col = BracketOrderGridColumns.ExpandIndicator
+        BracketOrderGrid.col = ExpandIndicator
         BracketOrderGrid.CellPictureAlignment = MSFlexGridLib.AlignmentSettings.flexAlignCenterCenter
         Set BracketOrderGrid.CellPicture = BracketOrderImageList.ListImages("Expand").Picture
+        
+        BracketOrderGrid.Row = lPrevRow
+        BracketOrderGrid.col = lPrevCol
     End If
 End With
 
@@ -1055,23 +1069,32 @@ Private Sub contractPositionManagerEntry(ByVal index As Long)
 Const ProcName As String = "contractPositionManagerEntry"
 On Error GoTo Err
 
-Dim i As Long
-Dim lSymbol As String
-Dim lOpEntryIndex As Long
+Dim lPrevRow As Long
+lPrevRow = BracketOrderGrid.Row
+Dim lPrevCol As Long
+lPrevCol = BracketOrderGrid.col
 
 mPositionManagerGridMappingTable(index).IsExpanded = False
 BracketOrderGrid.Row = mPositionManagerGridMappingTable(index).GridIndex
-BracketOrderGrid.col = BracketOrderGridColumns.ExpandIndicator
+BracketOrderGrid.col = ExpandIndicator
 BracketOrderGrid.CellPictureAlignment = MSFlexGridLib.AlignmentSettings.flexAlignCenterCenter
 Set BracketOrderGrid.CellPicture = BracketOrderImageList.ListImages("Expand").Picture
 
-lSymbol = BracketOrderGrid.TextMatrix(mPositionManagerGridMappingTable(index).GridIndex, BracketOrderGridColumns.Symbol)
+Dim lSymbol As String
+lSymbol = GridColumn(mPositionManagerGridMappingTable(index).GridIndex, Symbol)
+
+Dim i As Long
 i = mPositionManagerGridMappingTable(index).GridIndex + 1
-Do While BracketOrderGrid.TextMatrix(i, BracketOrderGridColumns.Symbol) = lSymbol
+Do While GridColumn(i, Symbol) = lSymbol And gridRowIsBracketOrder(i)
     BracketOrderGrid.rowHeight(i) = 0
-    lOpEntryIndex = BracketOrderGrid.RowData(i) - RowDataBracketOrderBase
-    i = contractBracketOrderEntry(lOpEntryIndex, True) + 1
+    
+    Dim lBracketOrderIndex As Long
+    lBracketOrderIndex = getBracketOrderGridMappingIndexFromRowIndex(i)
+    i = contractBracketOrderEntry(lBracketOrderIndex, True) + 1
 Loop
+
+BracketOrderGrid.Row = lPrevRow
+BracketOrderGrid.col = lPrevCol
 
 Exit Sub
 
@@ -1087,27 +1110,29 @@ Dim lSymbol As String
 lSymbol = pBracketOrder.Contract.Specifier.LocalSymbol
 
 Dim lIndex As Long
-lIndex = findBracketOrderTableIndex(pBracketOrder)
+lIndex = findBracketOrderGridMappingIndex(pBracketOrder)
 
 With mBracketOrderGridMappingTable(lIndex)
     If .BracketOrder Is Nothing Then
         
         .IsExpanded = True
         .EntryGridOffset = -1
-        .StopGridOffset = -1
+        .StopLossGridOffset = -1
         .TargetGridOffset = -1
         .CloseoutGridOffset = -1
         
         Set .BracketOrder = pBracketOrder
         .TickSize = pBracketOrder.Contract.TickSize
         .secType = pBracketOrder.Contract.Specifier.secType
-        .GridIndex = addBracketOrderEntryToBracketOrderGrid(pBracketOrder.Contract.Specifier.LocalSymbol, lIndex)
-        BracketOrderGrid.TextMatrix(.GridIndex, BracketOrderGridBracketOrderColumns.CreationTime) = formattedTime(pBracketOrder.CreationTime)
-        BracketOrderGrid.TextMatrix(.GridIndex, BracketOrderGridBracketOrderColumns.CurrencyCode) = pBracketOrder.Contract.Specifier.CurrencyCode
+        .GridIndex = addBracketOrderEntryToBracketOrderGrid( _
+                                pBracketOrder.Contract.Specifier.LocalSymbol, _
+                                lIndex, _
+                                mPositionManagerGridMappingTable(findPositionManagerGridMappingIndex(pPositionManager)).GridIndex)
+        GridColumn(.GridIndex, BracketCreationTime) = formattedTime(pBracketOrder.CreationTime)
+        GridColumn(.GridIndex, BracketCurrencyCode) = pBracketOrder.Contract.Specifier.CurrencyCode
         
         Dim lDataSource As IMarketDataSource
-        Set lDataSource = mMarketDataManager.CreateMarketDataSource(pPositionManager.ContractFuture, False)
-        lDataSource.StartMarketData
+        Set lDataSource = pPositionManager.DataSource
         Set .ProfitCalculator = CreateBracketProfitCalculator(pBracketOrder, lDataSource)
         .ProfitCalculator.AddProfitListener Me
         
@@ -1127,11 +1152,11 @@ With mBracketOrderGridMappingTable(lIndex)
         Set lOrder = pBracketOrder.StopLossOrder
         If Not lOrder Is Nothing Then
             If .EntryGridOffset >= 0 Then
-                .StopGridOffset = .EntryGridOffset + 1
+                .StopLossGridOffset = .EntryGridOffset + 1
             Else
-                .StopGridOffset = 1
+                .StopLossGridOffset = 1
             End If
-            addOrderEntryToBracketOrderGrid .GridIndex + .StopGridOffset, _
+            addOrderEntryToBracketOrderGrid .GridIndex + .StopLossGridOffset, _
                                     lSymbol, _
                                     lOrder, _
                                     lIndex, _
@@ -1142,8 +1167,8 @@ With mBracketOrderGridMappingTable(lIndex)
         
         Set lOrder = pBracketOrder.TargetOrder
         If Not lOrder Is Nothing Then
-            If .StopGridOffset >= 0 Then
-                .TargetGridOffset = .StopGridOffset + 1
+            If .StopLossGridOffset >= 0 Then
+                .TargetGridOffset = .StopLossGridOffset + 1
             ElseIf .EntryGridOffset >= 0 Then
                 .TargetGridOffset = .EntryGridOffset + 1
             Else
@@ -1174,19 +1199,19 @@ Private Sub displayOrderValues( _
 Const ProcName As String = "displayOrderValues"
 On Error GoTo Err
 
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.Action) = OrderActionToString(pOrder.Action)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.AuxPrice) = FormatPrice(pOrder.TriggerPrice, pSecType, pTickSize)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.AveragePrice) = FormatPrice(pOrder.AveragePrice, pSecType, pTickSize)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.Id) = pOrder.Id
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.LastFillPrice) = FormatPrice(pOrder.LastFillPrice, pSecType, pTickSize)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.LastFillTime) = formattedTime(pOrder.FillTime)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.OrderType) = OrderTypeToShortString(pOrder.OrderType)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.Price) = FormatPrice(pOrder.LimitPrice, pSecType, pTickSize)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.Quantity) = pOrder.Quantity
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.QuantityRemaining) = pOrder.QuantityRemaining
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.Size) = IIf(pOrder.QuantityFilled <> 0, pOrder.QuantityFilled, 0)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.Status) = OrderStatusToString(pOrder.Status)
-BracketOrderGrid.TextMatrix(pGridIndex, BracketOrderGridOrderColumns.BrokerId) = pOrder.BrokerId
+GridColumn(pGridIndex, OrderAction) = OrderActionToString(pOrder.Action)
+GridColumn(pGridIndex, OrderAuxPrice) = FormatPrice(pOrder.TriggerPrice, pSecType, pTickSize)
+GridColumn(pGridIndex, OrderAveragePrice) = FormatPrice(pOrder.AveragePrice, pSecType, pTickSize)
+GridColumn(pGridIndex, OrderId) = pOrder.Id
+GridColumn(pGridIndex, OrderLastFillPrice) = FormatPrice(pOrder.LastFillPrice, pSecType, pTickSize)
+GridColumn(pGridIndex, OrderLastFillTime) = formattedTime(pOrder.FillTime)
+GridColumn(pGridIndex, OrderType) = OrderTypeToShortString(pOrder.OrderType)
+GridColumn(pGridIndex, OrderPrice) = FormatPrice(pOrder.LimitPrice, pSecType, pTickSize)
+GridColumn(pGridIndex, OrderQuantity) = pOrder.Quantity
+GridColumn(pGridIndex, OrderQuantityRemaining) = pOrder.QuantityRemaining
+GridColumn(pGridIndex, OrderSize) = IIf(pOrder.QuantityFilled <> 0, pOrder.QuantityFilled, 0)
+GridColumn(pGridIndex, OrderStatus) = OrderStatusToString(pOrder.Status)
+GridColumn(pGridIndex, OrderBrokerId) = pOrder.BrokerId
 
 Exit Sub
 
@@ -1201,6 +1226,11 @@ Private Sub displayProfitValue( _
 Const ProcName As String = "displayProfitValue"
 On Error GoTo Err
 
+Dim lPrevRow As Long
+lPrevRow = BracketOrderGrid.Row
+Dim lPrevCol As Long
+lPrevCol = BracketOrderGrid.col
+
 BracketOrderGrid.Row = pRowIndex
 BracketOrderGrid.col = pColIndex
 BracketOrderGrid.Text = Format(pProfit, "0.00")
@@ -1209,6 +1239,9 @@ If pProfit >= 0 Then
 Else
     BracketOrderGrid.CellForeColor = CNegativeProfitColor
 End If
+
+BracketOrderGrid.Row = lPrevRow
+BracketOrderGrid.col = lPrevCol
 
 Exit Sub
 
@@ -1223,8 +1256,6 @@ On Error GoTo Err
 EditText.Text = ""
 EditText.Visible = False
 mIsEditing = False
-Set mEditedBracketOrder = Nothing
-mEditedOrderIndex = -1
 mEditedCol = -1
 BracketOrderGrid.SetFocus
 
@@ -1238,21 +1269,19 @@ Private Sub expandOrContract()
 Const ProcName As String = "expandOrContract"
 On Error GoTo Err
 
-Dim RowData As Long
 Dim index As Long
 Dim expanded As Boolean
 
-RowData = BracketOrderGrid.RowData(BracketOrderGrid.MouseRow)
-If RowData >= RowDataPositionManagerBase Then
-    index = RowData - RowDataPositionManagerBase
+If gridRowIsPositionManager(BracketOrderGrid.Row) Then
+    index = getPositionManagerGridMappingIndexFromRowIndex(BracketOrderGrid.Row)
     expanded = mPositionManagerGridMappingTable(index).IsExpanded
     If expanded Then
         contractPositionManagerEntry index
     Else
         expandPositionManagerEntry index
     End If
-ElseIf RowData >= RowDataBracketOrderBase Then
-    index = RowData - RowDataBracketOrderBase
+ElseIf gridRowIsBracketOrder(BracketOrderGrid.Row) Then
+    index = getBracketOrderGridMappingIndexFromRowIndex(BracketOrderGrid.Row)
     expanded = mBracketOrderGridMappingTable(index).IsExpanded
     If BracketOrderGrid.Row <> mBracketOrderGridMappingTable(index).GridIndex Then
         ' clicked on an order entry
@@ -1263,8 +1292,6 @@ ElseIf RowData >= RowDataBracketOrderBase Then
     Else
         expandBracketOrderEntry index
     End If
-Else
-    Exit Sub
 End If
 
 Exit Sub
@@ -1287,8 +1314,8 @@ With mBracketOrderGridMappingTable(index)
         lIndex = .GridIndex + .EntryGridOffset
         If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.rowHeight(lIndex) = -1
     End If
-    If .StopGridOffset >= 0 Then
-        lIndex = .GridIndex + .StopGridOffset
+    If .StopLossGridOffset >= 0 Then
+        lIndex = .GridIndex + .StopLossGridOffset
         If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.rowHeight(lIndex) = -1
     End If
     If .TargetGridOffset >= 0 Then
@@ -1301,11 +1328,19 @@ With mBracketOrderGridMappingTable(index)
     End If
     
     If Not preserveCurrentExpandedState Then
+        Dim lPrevRow As Long
+        lPrevRow = BracketOrderGrid.Row
+        Dim lPrevCol As Long
+        lPrevCol = BracketOrderGrid.col
+        
         .IsExpanded = True
         BracketOrderGrid.Row = .GridIndex
-        BracketOrderGrid.col = BracketOrderGridColumns.ExpandIndicator
+        BracketOrderGrid.col = ExpandIndicator
         BracketOrderGrid.CellPictureAlignment = MSFlexGridLib.AlignmentSettings.flexAlignCenterCenter
         Set BracketOrderGrid.CellPicture = BracketOrderImageList.ListImages("Contract").Picture
+    
+        BracketOrderGrid.Row = lPrevRow
+        BracketOrderGrid.col = lPrevRow
     End If
 End With
 
@@ -1321,23 +1356,32 @@ Private Sub expandPositionManagerEntry(ByVal index As Long)
 Const ProcName As String = "expandPositionManagerEntry"
 On Error GoTo Err
 
-Dim i As Long
-Dim lSymbol As String
-Dim lOpEntryIndex As Long
+Dim lPrevRow As Long
+lPrevRow = BracketOrderGrid.Row
+Dim lPrevCol As Long
+lPrevCol = BracketOrderGrid.col
 
 mPositionManagerGridMappingTable(index).IsExpanded = True
 BracketOrderGrid.Row = mPositionManagerGridMappingTable(index).GridIndex
-BracketOrderGrid.col = BracketOrderGridColumns.ExpandIndicator
+BracketOrderGrid.col = ExpandIndicator
 BracketOrderGrid.CellPictureAlignment = MSFlexGridLib.AlignmentSettings.flexAlignCenterCenter
 Set BracketOrderGrid.CellPicture = BracketOrderImageList.ListImages("Contract").Picture
 
-lSymbol = BracketOrderGrid.TextMatrix(mPositionManagerGridMappingTable(index).GridIndex, BracketOrderGridColumns.Symbol)
+Dim lSymbol As String
+lSymbol = GridColumn(mPositionManagerGridMappingTable(index).GridIndex, Symbol)
+
+Dim i As Long
 i = mPositionManagerGridMappingTable(index).GridIndex + 1
-Do While BracketOrderGrid.TextMatrix(i, BracketOrderGridColumns.Symbol) = lSymbol
+Do While GridColumn(i, Symbol) = lSymbol And gridRowIsBracketOrder(i)
     BracketOrderGrid.rowHeight(i) = -1
-    lOpEntryIndex = BracketOrderGrid.RowData(i) - RowDataBracketOrderBase
-    i = expandBracketOrderEntry(lOpEntryIndex, True) + 1
+    
+    Dim lBracketOrderIndex As Long
+    lBracketOrderIndex = getBracketOrderGridMappingIndexFromRowIndex(i)
+    i = expandBracketOrderEntry(lBracketOrderIndex, True) + 1
 Loop
+
+BracketOrderGrid.Row = lPrevRow
+BracketOrderGrid.col = lPrevCol
 
 Exit Sub
 
@@ -1345,8 +1389,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function findBracketOrderTableIndex(ByVal pBracketOrder As IBracketOrder) As Long
-Const ProcName As String = "findBracketOrderTableIndex"
+Private Function findBracketOrderGridMappingIndex(ByVal pBracketOrder As IBracketOrder) As Long
+ Const ProcName As String = "findBracketOrderGridMappingIndex"
 On Error GoTo Err
 
 Dim lBracketOrderIndex As Long
@@ -1356,7 +1400,7 @@ Do While lBracketOrderIndex > UBound(mBracketOrderGridMappingTable)
 Loop
 If lBracketOrderIndex > mMaxBracketOrderGridMappingTableIndex Then mMaxBracketOrderGridMappingTableIndex = lBracketOrderIndex
 
-findBracketOrderTableIndex = lBracketOrderIndex
+findBracketOrderGridMappingIndex = lBracketOrderIndex
 
 Exit Function
 
@@ -1364,8 +1408,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function findPositionManagerTableIndex(ByVal pm As PositionManager) As Long
-Const ProcName As String = "findPositionManagerTableIndex"
+Private Function findPositionManagerGridMappingIndex(ByVal pm As PositionManager) As Long
+Const ProcName As String = "findPositionManagerGridMappingIndex"
 On Error GoTo Err
 
 Dim pmIndex As Long
@@ -1376,7 +1420,7 @@ Do While pmIndex > UBound(mPositionManagerGridMappingTable)
 Loop
 If pmIndex > mMaxPositionManagerGridMappingTableIndex Then mMaxPositionManagerGridMappingTableIndex = pmIndex
 
-findPositionManagerTableIndex = pmIndex
+findPositionManagerGridMappingIndex = pmIndex
 
 Exit Function
 
@@ -1390,6 +1434,85 @@ formattedTime = IIf(pTime = 0, _
                     IIf(Int(pTime) = Int(Now), _
                         FormatTimestamp(pTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs), _
                         FormatTimestamp(pTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)))
+End Function
+
+Private Function getBracketOrderGridIndex(ByVal pBracketOrder) As Long
+getBracketOrderGridIndex = mBracketOrderGridMappingTable(findBracketOrderGridMappingIndex(pBracketOrder)).GridIndex
+End Function
+
+Private Function getBracketOrderGridMappingIndexFromRowIndex(ByVal pRowIndex As Long) As Long
+getBracketOrderGridMappingIndexFromRowIndex = BracketOrderGrid.RowData(pRowIndex) - RowDataBracketOrderBase
+End Function
+
+Private Function getPositionManagerGridMappingIndexFromRowIndex(ByVal pRowIndex As Long) As Long
+getPositionManagerGridMappingIndexFromRowIndex = BracketOrderGrid.RowData(pRowIndex) - RowDataPositionManagerBase
+End Function
+
+Private Function getSelectedOrder() As IOrder
+Const ProcName As String = "getSelectedOrder"
+On Error GoTo Err
+
+Dim lIndex As Long
+lIndex = getSelectedBracketOrderGridMappingIndex
+If lIndex = NullIndex Then Exit Function
+
+Dim lOrderOffset As Long
+lOrderOffset = BracketOrderGrid.Row - mBracketOrderGridMappingTable(lIndex).GridIndex
+            
+Select Case lOrderOffset
+Case mBracketOrderGridMappingTable(lIndex).EntryGridOffset
+    Set getSelectedOrder = mBracketOrderGridMappingTable(lIndex).BracketOrder.EntryOrder
+Case mBracketOrderGridMappingTable(lIndex).StopLossGridOffset
+    Set getSelectedOrder = mBracketOrderGridMappingTable(lIndex).BracketOrder.StopLossOrder
+Case mBracketOrderGridMappingTable(lIndex).TargetGridOffset
+    Set getSelectedOrder = mBracketOrderGridMappingTable(lIndex).BracketOrder.TargetOrder
+Case mBracketOrderGridMappingTable(lIndex).CloseoutGridOffset
+    Set getSelectedOrder = mBracketOrderGridMappingTable(lIndex).BracketOrder.CloseoutOrder
+Case Else
+    Set getSelectedOrder = Nothing
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getSelectedBracketOrder() As IBracketOrder
+Dim lIndex As Long
+lIndex = getSelectedBracketOrderGridMappingIndex
+If lIndex = NullIndex Then Exit Function
+
+Set getSelectedBracketOrder = mBracketOrderGridMappingTable(lIndex).BracketOrder
+End Function
+
+Private Function getSelectedBracketOrderGridMappingIndex() As Long
+getSelectedBracketOrderGridMappingIndex = NullIndex
+
+If Not gridRowIsBracketOrder(BracketOrderGrid.Row) Then Exit Function
+
+getSelectedBracketOrderGridMappingIndex = getBracketOrderGridMappingIndexFromRowIndex(BracketOrderGrid.Row)
+End Function
+
+Private Property Let GridColumn(ByVal pRowIndex As Long, ByVal pColumnIndex As Long, ByVal value As String)
+BracketOrderGrid.TextMatrix(pRowIndex, pColumnIndex) = value
+End Property
+
+Private Property Get GridColumn(ByVal pRowIndex As Long, ByVal pColumnIndex As Long) As String
+GridColumn = BracketOrderGrid.TextMatrix(pRowIndex, pColumnIndex)
+End Property
+
+Private Function gridRowIsBracketOrder(ByVal pRowIndex As Long) As Boolean
+gridRowIsBracketOrder = (BracketOrderGrid.RowData(pRowIndex) >= RowDataBracketOrderBase And _
+                            BracketOrderGrid.RowData(pRowIndex) < RowDataPositionManagerBase)
+End Function
+
+Private Function gridRowIsOrder(ByVal pRowIndex As Long) As Boolean
+gridRowIsOrder = (BracketOrderGrid.RowData(pRowIndex) < RowDataBracketOrderBase)
+End Function
+
+Private Function gridRowIsPositionManager(ByVal pRowIndex As Long) As Boolean
+gridRowIsPositionManager = (BracketOrderGrid.RowData(pRowIndex) >= RowDataPositionManagerBase)
 End Function
 
 Private Sub handleEditingTerminationKey(ByVal KeyCode As Long)
@@ -1413,16 +1536,19 @@ Private Sub invertEntryColors(ByVal rowNumber As Long)
 Const ProcName As String = "invertEntryColors"
 On Error GoTo Err
 
-Dim lForeColor As Long
-Dim lBackColor As Long
-Dim i As Long
-
 If rowNumber < 0 Then Exit Sub
+
+Dim lPrevRow As Long
+lPrevRow = BracketOrderGrid.Row
+Dim lPrevCol As Long
+lPrevCol = BracketOrderGrid.col
 
 BracketOrderGrid.Row = rowNumber
 
-For i = BracketOrderGridColumns.OtherColumns To BracketOrderGrid.Cols - 1
+Dim i As Long
+For i = OtherColumns To BracketOrderGrid.Cols - 1
     BracketOrderGrid.col = i
+    Dim lForeColor As Long
     lForeColor = IIf(BracketOrderGrid.CellForeColor = 0, BracketOrderGrid.ForeColor, BracketOrderGrid.CellForeColor)
     If lForeColor = SystemColorConstants.vbWindowText Then
         BracketOrderGrid.CellForeColor = SystemColorConstants.vbHighlightText
@@ -1432,6 +1558,7 @@ For i = BracketOrderGridColumns.OtherColumns To BracketOrderGrid.Cols - 1
         BracketOrderGrid.CellForeColor = IIf((lForeColor Xor &HFFFFFF) = 0, 1, lForeColor Xor &HFFFFFF)
     End If
     
+    Dim lBackColor As Long
     lBackColor = IIf(BracketOrderGrid.CellBackColor = 0, BracketOrderGrid.BackColor, BracketOrderGrid.CellBackColor)
     If lBackColor = SystemColorConstants.vbWindowBackground Then
         BracketOrderGrid.CellBackColor = SystemColorConstants.vbHighlight
@@ -1442,11 +1569,13 @@ For i = BracketOrderGridColumns.OtherColumns To BracketOrderGrid.Cols - 1
     End If
 Next
 
+BracketOrderGrid.Row = lPrevRow
+BracketOrderGrid.col = lPrevCol
+
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub setupBracketOrderGrid()
@@ -1454,7 +1583,7 @@ Const ProcName As String = "setupBracketOrderGrid"
 On Error GoTo Err
 
 With BracketOrderGrid
-    mSelectedBracketOrderGridRow = -1
+    Set mSelectedBracketOrder = Nothing
     
     .Redraw = False
     .AllowUserResizing = flexResizeBoth
@@ -1464,40 +1593,40 @@ With BracketOrderGrid
     .FixedRows = 3
     ' .FixedCols = 1
     
-    setupBracketOrderGridColumn 0, BracketOrderGridColumns.ExpandIndicator, BracketOrderGridColumnWidths.ExpandIndicatorWidth, "", True, MSFlexGridLib.AlignmentSettings.flexAlignCenterCenter
-    setupBracketOrderGridColumn 0, BracketOrderGridColumns.Symbol, BracketOrderGridColumnWidths.SymbolWidth, "Symbol", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 0, ExpandIndicator, BracketOrderGridColumnWidths.ExpandIndicatorWidth, "", True, MSFlexGridLib.AlignmentSettings.flexAlignCenterCenter
+    setupBracketOrderGridColumn 0, Symbol, BracketOrderGridColumnWidths.SymbolWidth, "Symbol", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
     
-    setupBracketOrderGridColumn 0, BracketOrderGridPositionColumns.CurrencyCode, BracketOrderGridPositionColumnWidths.CurrencyCodeWidth, "Curr", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
-    setupBracketOrderGridColumn 0, BracketOrderGridPositionColumns.Drawdown, BracketOrderGridPositionColumnWidths.DrawdownWidth, "Drawdown", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 0, BracketOrderGridPositionColumns.Exchange, BracketOrderGridPositionColumnWidths.ExchangeWidth, "Exchange", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
-    setupBracketOrderGridColumn 0, BracketOrderGridPositionColumns.MaxProfit, BracketOrderGridPositionColumnWidths.MaxProfitWidth, "Max", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 0, BracketOrderGridPositionColumns.Profit, BracketOrderGridPositionColumnWidths.ProfitWidth, "Profit", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 0, BracketOrderGridPositionColumns.Size, BracketOrderGridPositionColumnWidths.SizeWidth, "Size", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 0, PositionCurrencyCode, PositionCurrencyCodeWidth, "Curr", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 0, PositionDrawdown, PositionDrawdownWidth, "Drawdown", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 0, PositionExchange, PositionExchangeWidth, "Exchange", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 0, PositionMaxProfit, PositionMaxProfitWidth, "Max", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 0, PositionProfit, PositionProfitWidth, "Profit", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 0, PositionSize, PositionSizeWidth, "Size", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
     
-    setupBracketOrderGridColumn 1, BracketOrderGridBracketOrderColumns.CreationTime, BracketOrderGridBracketOrderColumnWidths.CreationTimeWidth, "Creation Time", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 1, BracketOrderGridBracketOrderColumns.CurrencyCode, BracketOrderGridBracketOrderColumnWidths.CurrencyCodeWidth, "Curr", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
-    setupBracketOrderGridColumn 1, BracketOrderGridBracketOrderColumns.Drawdown, BracketOrderGridBracketOrderColumnWidths.DrawdownWidth, "Drawdown", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 1, BracketOrderGridBracketOrderColumns.MaxProfit, BracketOrderGridBracketOrderColumnWidths.MaxProfitWidth, "Max", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 1, BracketOrderGridBracketOrderColumns.Profit, BracketOrderGridBracketOrderColumnWidths.ProfitWidth, "Profit", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 1, BracketOrderGridBracketOrderColumns.Size, BracketOrderGridBracketOrderColumnWidths.SizeWidth, "Size", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 1, BracketCreationTime, BracketCreationTimeWidth, "Creation Time", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 1, BracketCurrencyCode, BracketCurrencyCodeWidth, "Curr", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 1, BracketDrawdown, BracketDrawdownWidth, "Drawdown", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 1, BracketMaxProfit, BracketMaxProfitWidth, "Max", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 1, BracketProfit, BracketProfitWidth, "Profit", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 1, BracketSize, BracketSizeWidth, "Size", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
     
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.Action, BracketOrderGridOrderColumnWidths.ActionWidth, "Action", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.AuxPrice, BracketOrderGridOrderColumnWidths.AuxPriceWidth, "Trigger", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.AveragePrice, BracketOrderGridOrderColumnWidths.AveragePriceWidth, "Avg fill", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.Id, BracketOrderGridOrderColumnWidths.IdWidth, "Id", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.LastFillPrice, BracketOrderGridOrderColumnWidths.LastFillPriceWidth, "Last fill", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.LastFillTime, BracketOrderGridOrderColumnWidths.LastFillTimeWidth, "Last fill time", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.OrderType, BracketOrderGridOrderColumnWidths.OrderTypeWidth, "Type", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.Price, BracketOrderGridOrderColumnWidths.PriceWidth, "Price", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.Quantity, BracketOrderGridOrderColumnWidths.QuantityWidth, "Qty", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.QuantityRemaining, BracketOrderGridOrderColumnWidths.QuantityRemainingWidth, "Rem", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.Size, BracketOrderGridOrderColumnWidths.SizeWidth, "Size", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.Status, BracketOrderGridOrderColumnWidths.StatusWidth, "Status", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.OrderMode, BracketOrderGridOrderColumnWidths.OrderModeWidth, "Mode", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
-    setupBracketOrderGridColumn 2, BracketOrderGridOrderColumns.BrokerId, BracketOrderGridOrderColumnWidths.BrokerIdWidth, "Broker Id", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 2, OrderAction, OrderActionWidth, "Action", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 2, OrderAuxPrice, OrderAuxPriceWidth, "Trigger", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 2, OrderAveragePrice, OrderAveragePriceWidth, "Avg fill", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 2, OrderId, OrderIdWidth, "Id", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 2, OrderLastFillPrice, OrderLastFillPriceWidth, "Last fill", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 2, OrderLastFillTime, OrderLastFillTimeWidth, "Last fill time", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 2, OrderType, OrderTypeWidth, "Type", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 2, OrderPrice, OrderPriceWidth, "Price", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 2, OrderQuantity, OrderQuantityWidth, "Qty", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 2, OrderQuantityRemaining, OrderQuantityRemainingWidth, "Rem", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 2, OrderSize, OrderSizeWidth, "Size", False, MSFlexGridLib.AlignmentSettings.flexAlignRightCenter
+    setupBracketOrderGridColumn 2, OrderStatus, OrderStatusWidth, "Status", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 2, OrderMode, OrderModeWidth, "Mode", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
+    setupBracketOrderGridColumn 2, OrderBrokerId, OrderBrokerIdWidth, "Broker Id", True, MSFlexGridLib.AlignmentSettings.flexAlignLeftCenter
     
     .MergeCells = flexMergeFree
-    .MergeCol(BracketOrderGridColumns.Symbol) = True
+    .MergeCol(Symbol) = True
     .SelectionMode = flexSelectionByRow
     .HighLight = flexHighlightAlways
     .FocusRect = flexFocusNone
@@ -1562,14 +1691,19 @@ Const ProcName As String = "showPositionManagerEntry"
 On Error GoTo Err
 
 Dim lIndex As Long
-lIndex = findPositionManagerTableIndex(pPositionManager)
+lIndex = findPositionManagerGridMappingIndex(pPositionManager)
 
 If mPositionManagerGridMappingTable(lIndex).GridIndex <> 0 Then Exit Sub
+
+Dim lPrevRow As Long
+lPrevRow = BracketOrderGrid.Row
+Dim lPrevCol As Long
+lPrevCol = BracketOrderGrid.col
 
 With mPositionManagerGridMappingTable(lIndex)
     Dim lContractSpec As IContractSpecifier
     Set lContractSpec = gGetContractFromContractFuture(pPositionManager.ContractFuture).Specifier
-    .GridIndex = addEntryToBracketOrderGrid(lContractSpec.LocalSymbol, True)
+    .GridIndex = addEntryToBracketOrderGrid(0, lContractSpec.LocalSymbol, True)
     BracketOrderGrid.RowData(.GridIndex) = lIndex + RowDataPositionManagerBase
     BracketOrderGrid.Row = .GridIndex
     BracketOrderGrid.col = 1
@@ -1578,14 +1712,17 @@ With mPositionManagerGridMappingTable(lIndex)
     BracketOrderGrid.CellBackColor = &HC0C0C0
     BracketOrderGrid.CellForeColor = vbWhite
     BracketOrderGrid.CellFontBold = True
-    BracketOrderGrid.TextMatrix(.GridIndex, BracketOrderGridPositionColumns.Exchange) = lContractSpec.Exchange
-    BracketOrderGrid.TextMatrix(.GridIndex, BracketOrderGridPositionColumns.CurrencyCode) = lContractSpec.CurrencyCode
-    BracketOrderGrid.TextMatrix(.GridIndex, BracketOrderGridPositionColumns.Size) = pPositionManager.PositionSize
-    BracketOrderGrid.col = BracketOrderGridColumns.ExpandIndicator
+    GridColumn(.GridIndex, PositionExchange) = lContractSpec.Exchange
+    BracketOrderGrid.TextMatrix(.GridIndex, PositionCurrencyCode) = lContractSpec.CurrencyCode
+    BracketOrderGrid.TextMatrix(.GridIndex, PositionSize) = pPositionManager.PositionSize
+    BracketOrderGrid.col = ExpandIndicator
     BracketOrderGrid.CellPictureAlignment = MSFlexGridLib.AlignmentSettings.flexAlignCenterCenter
     Set BracketOrderGrid.CellPicture = BracketOrderImageList.ListImages("Contract").Picture
     .IsExpanded = True
 End With
+
+BracketOrderGrid.Row = lPrevRow
+BracketOrderGrid.col = lPrevCol
 
 Exit Sub
 
@@ -1597,23 +1734,23 @@ Private Sub updateBracketOrder()
 Const ProcName As String = "updateBracketOrder"
 On Error GoTo Err
 
-Dim orderNumber As Long
-Dim Price As Double
+Dim lPrice As Double
 
 If Not EditText.Visible Then Exit Sub
 
-orderNumber = mSelectedBracketOrderGridRow - mBracketOrderGridMappingTable(BracketOrderGrid.RowData(BracketOrderGrid.Row) - RowDataBracketOrderBase).GridIndex
-If BracketOrderGrid.col = BracketOrderGridOrderColumns.Price Then
-    If ParsePrice(EditText.Text, mSelectedBracketOrder.Contract.Specifier.secType, mSelectedBracketOrder.Contract.TickSize, Price) Then
-        mSelectedBracketOrder.SetNewOrderPrice orderNumber, Price
+Dim lOrder As IOrder
+Set lOrder = getSelectedOrder
+If BracketOrderGrid.col = OrderPrice Then
+    If ParsePrice(EditText.Text, mSelectedBracketOrder.Contract.Specifier.secType, mSelectedBracketOrder.Contract.TickSize, lPrice) Then
+        lOrder.LimitPrice = lPrice
     End If
-ElseIf BracketOrderGrid.col = BracketOrderGridOrderColumns.AuxPrice Then
-    If ParsePrice(EditText.Text, mSelectedBracketOrder.Contract.Specifier.secType, mSelectedBracketOrder.Contract.TickSize, Price) Then
-        mSelectedBracketOrder.SetNewOrderTriggerPrice orderNumber, Price
+ElseIf BracketOrderGrid.col = OrderAuxPrice Then
+    If ParsePrice(EditText.Text, mSelectedBracketOrder.Contract.Specifier.secType, mSelectedBracketOrder.Contract.TickSize, lPrice) Then
+        lOrder.TriggerPrice = lPrice
     End If
-ElseIf BracketOrderGrid.col = BracketOrderGridOrderColumns.Quantity Then
-    If IsNumeric(EditText.Text) Then
-        mSelectedBracketOrder.SetNewQuantity EditText.Text
+ElseIf BracketOrderGrid.col = OrderQuantity Then
+    If IsInteger(EditText.Text, 0) Then
+        lOrder.Quantity = CLng(EditText.Text)
     End If
 End If
     

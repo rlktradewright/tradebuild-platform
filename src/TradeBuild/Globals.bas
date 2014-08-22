@@ -19,10 +19,10 @@ Public Const ConfigSectionProperties                As String = "Properties"
 Public Const ConfigSectonProperty                   As String = "Property"
 Public Const ConfigSectionServiceProvider           As String = "ServiceProvider"
 Public Const ConfigSectionServiceProviders          As String = "ServiceProviders"
-Public Const ConfigSectionTickers                   As String = "Tickers"
+'Public Const ConfigSectionTickers                   As String = "Tickers"
 Public Const ConfigSectionTradeBuild                As String = "TradeBuild"
 Public Const ConfigSectionWorkspaces                As String = "Workspaces"
-Public Const ConfigSectionWorkspace                 As String = "Workspace"
+'Public Const ConfigSectionWorkspace                 As String = "Workspace"
 
 Public Const ConfigSettingNoImpliedTrades           As String = "&NoImpliedTrades"
 Public Const ConfigSettingNoVolumeAdjustments       As String = "&NoVolumeAdjustments"
@@ -193,49 +193,6 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
-
-Public Function gNotifyExistingCollectionMembers( _
-                ByVal pCollection As Variant, _
-                ByVal pListener As CollectionChangeListener, _
-                ByVal pSource As Object)
-Dim lItem As Variant
-
-Const ProcName As String = "gNotifyExistingCollectionMembers"
-
-On Error GoTo Err
-
-If VarType(pCollection) And vbArray = vbArray Then
-    For Each lItem In pCollection
-        notifyCollectionMember lItem, pSource, pListener
-    Next
-ElseIf Not IsObject(pCollection) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "pCollection argument must be an array or a VB6 collection or must implement Enumerable"
-ElseIf TypeOf pCollection Is Collection Then
-    For Each lItem In pCollection
-        notifyCollectionMember lItem, pSource, pListener
-    Next
-ElseIf TypeOf pCollection Is Enumerable Then
-    Dim enColl As Enumerable
-    Dim en As Enumerator
-    
-    Set enColl = pCollection
-    Set en = enColl.Enumerator
-    
-    Do While en.MoveNext
-        notifyCollectionMember en.Current, pSource, pListener
-    Loop
-Else
-     AssertArgument False, "pCollection argument must be an array or a VB6 collection or must implement Enumerable"
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-
-End Function
 
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
 If IsObject(pSource) Then

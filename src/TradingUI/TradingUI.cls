@@ -69,6 +69,13 @@ Public Enum MultiChartChangeTypes
     MultiChartPeriodLengthChanged
 End Enum
 
+Public Enum OrderTicketModes
+    OrderTicketModeNone
+    OrderTicketModeLiveOnly
+    OrderTicketModeSimulatedOnly
+    OrderTicketModeLiveAndSimulated
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================

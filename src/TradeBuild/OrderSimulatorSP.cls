@@ -174,7 +174,7 @@ Private Function IOrderSubmissionSP_GetOrderSubmitterFactory() As IOrderSubmitte
 Const ProcName As String = "IOrderSubmissionSP_GetOrderSubmitterFactory"
 On Error GoTo Err
 
-Set IOrderSubmissionSP_GetOrderSubmitterFactory = CreateSimulatedOrderSubmitterFactory(mMarketDataManager, mPrimaryContractStore, mSecondaryContractStore)
+Set IOrderSubmissionSP_GetOrderSubmitterFactory = New SimOrderSubmitterFactory
 
 Exit Function
 

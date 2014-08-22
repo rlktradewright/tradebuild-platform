@@ -94,13 +94,14 @@ Public Const WindowStateNormal                      As String = "Normal"
 Private mIsInDev                                    As Boolean
 
 Public mConfigStore                                 As ConfigurationStore
-'Public gAppInstanceConfig                           As ConfigurationSection
 
 Private mEditConfig                                 As Boolean
 
 Private mFatalErrorHandler                          As FatalErrorHandler
 
 Private mMainForm                                   As fTradeSkilDemo
+
+Private mConfigEditor                               As fConfigEditor
 
 '@================================================================================
 ' Class Event Handlers
@@ -255,6 +256,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub gUnloadConfigEditor()
+If Not mConfigEditor Is Nothing Then
+    Unload mConfigEditor
+    Set mConfigEditor = Nothing
+End If
+End Sub
+
 Public Function gShowConfigEditor( _
                 ByVal pConfigStore As ConfigurationStore, _
                 ByVal pCurrAppInstanceConfig As ConfigurationSection, _
@@ -262,12 +270,13 @@ Public Function gShowConfigEditor( _
 Const ProcName As String = "gShowConfigEditor"
 On Error GoTo Err
 
-Dim lConfigEditor As New fConfigEditor
-   
-lConfigEditor.Initialise pConfigStore, pCurrAppInstanceConfig
-lConfigEditor.Show vbModal, pParentForm
-
-Set gShowConfigEditor = lConfigEditor.selectedAppConfig
+If mConfigEditor Is Nothing Then
+    Set mConfigEditor = New fConfigEditor
+       
+    mConfigEditor.Initialise pConfigStore, pCurrAppInstanceConfig
+End If
+mConfigEditor.Show vbModal, pParentForm
+Set gShowConfigEditor = mConfigEditor.selectedAppConfig
 
 Exit Function
 
@@ -408,6 +417,8 @@ Do While Forms.Count > 0
 Loop
 
 gSaveSettings
+
+LogMessage "Application exiting"
 
 TerminateTWUtilities
 

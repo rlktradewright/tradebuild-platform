@@ -746,6 +746,8 @@ Implements IGenericTickListener
 '@================================================================================
 
 Event CaptionChanged(ByVal caption As String)
+Event NeedSimulatedOrderContext()
+Event NeedLiveOrderContext()
 
 '@================================================================================
 ' Constants
@@ -807,6 +809,8 @@ Attribute mBracketOrder.VB_VarHelpID = -1
 Private mCurrentBracketOrderIndex                       As BracketIndexes
 
 Private mInvalidControls(2)                             As Control
+
+Private mMode                                           As OrderTicketModes
 
 '@================================================================================
 ' Form Event Handlers
@@ -1279,7 +1283,7 @@ Private Sub SimulateOrdersCheck_Click()
 Const ProcName As String = "SimulateOrdersCheck_Click"
 On Error GoTo Err
 
-setActiveOrderContext chooseLiveOrSimulatedOrderContext
+chooseOrderContext
 
 Exit Sub
 
@@ -1426,33 +1430,67 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetOrderContexts( _
-                ByVal pLiveOrderContext As OrderContext, _
-                ByVal pSimulatedOrderContext As OrderContext)
-Const ProcName As String = "SetOrderContexts"
+Public Sub SetLiveOrderContext( _
+                ByVal pOrderContext As OrderContext)
+Const ProcName As String = "SetLiveOrderContext"
 On Error GoTo Err
 
-AssertArgument Not (pLiveOrderContext Is Nothing And pSimulatedOrderContext Is Nothing), "Both LiveOrderContext and SimulatedOrderContext are Nothing"
+AssertArgument mMode = OrderTicketModeLiveOnly Or mMode = OrderTicketModeLiveAndSimulated, "LiveOrderContext invalid in this mode"
+AssertArgument Not pOrderContext Is Nothing, "LiveOrderContext is Nothing"
+AssertArgument Not pOrderContext.IsSimulated, "LiveOrderContext is simulated"
+If Not mSimulatedOrderContext Is Nothing Then AssertArgument gGetContractFromContractFuture(mSimulatedOrderContext.ContractFuture).Specifier.Equals(gGetContractFromContractFuture(pOrderContext.ContractFuture).Specifier), "Live and Simulated order contexts must use the same contract"
 
-Set mLiveOrderContext = pLiveOrderContext
-Set mSimulatedOrderContext = pSimulatedOrderContext
+Set mLiveOrderContext = pOrderContext
 
-If Not mLiveOrderContext Is Nothing Then AssertArgument Not mLiveOrderContext.IsSimulated, "LiveOrderContext is simulated"
-If Not mSimulatedOrderContext Is Nothing Then AssertArgument mSimulatedOrderContext.IsSimulated, "SimulatedOrderContext is not simulated"
+setActiveOrderContext mLiveOrderContext
 
-If Not mLiveOrderContext Is Nothing And Not mSimulatedOrderContext Is Nothing Then AssertArgument gGetContractFromContractFuture(mSimulatedOrderContext.ContractFuture).Specifier.Equals(gGetContractFromContractFuture(mLiveOrderContext.ContractFuture).Specifier), "Live and Simulated order contexts must use the same contract"
+Exit Sub
 
-If mLiveOrderContext Is Nothing Then
-    SimulateOrdersCheck.value = vbChecked
-    SimulateOrdersCheck.Visible = False
-ElseIf mSimulatedOrderContext Is Nothing Then
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetMode(ByVal pMode As OrderTicketModes)
+Const ProcName As String = "SetMode"
+On Error GoTo Err
+
+mMode = pMode
+
+Select Case mMode
+Case OrderTicketModeLiveOnly
     SimulateOrdersCheck.value = vbUnchecked
     SimulateOrdersCheck.Visible = False
-Else
+Case OrderTicketModeSimulatedOnly
+    SimulateOrdersCheck.value = vbChecked
+    SimulateOrdersCheck.Visible = False
+Case OrderTicketModeLiveAndSimulated
+    SimulateOrdersCheck.value = vbUnchecked
     SimulateOrdersCheck.Visible = True
-End If
+Case Else
+    AssertArgument False, "Invalid mode"
+End Select
 
-setActiveOrderContext chooseLiveOrSimulatedOrderContext
+chooseOrderContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetSimulatedOrderContext( _
+                ByVal pOrderContext As OrderContext)
+Const ProcName As String = "SetSimulatedOrderContext"
+On Error GoTo Err
+
+AssertArgument mMode = OrderTicketModeSimulatedOnly Or mMode = OrderTicketModeLiveAndSimulated, "SimulatedOrderContext invalid in this mode"
+AssertArgument Not pOrderContext Is Nothing, "SimulatedOrderContext is Nothing"
+AssertArgument pOrderContext.IsSimulated, "SimulatedOrderContext is not simulated"
+If Not mLiveOrderContext Is Nothing Then AssertArgument gGetContractFromContractFuture(pOrderContext.ContractFuture).Specifier.Equals(gGetContractFromContractFuture(mLiveOrderContext.ContractFuture).Specifier), "Live and Simulated order contexts must use the same contract"
+
+Set mSimulatedOrderContext = pOrderContext
+
+setActiveOrderContext mSimulatedOrderContext
 
 Exit Sub
 
@@ -1470,9 +1508,11 @@ clearBracketOrder
 
 Set mBracketOrder = pBracketOrder
 If mBracketOrder.IsSimulated Then
-    SetOrderContexts Nothing, mBracketOrder.OrderContext
+    SetSimulatedOrderContext mBracketOrder.OrderContext
+    SetMode OrderTicketModeSimulatedOnly
 Else
-    SetOrderContexts mBracketOrder.OrderContext, Nothing
+    SetLiveOrderContext mBracketOrder.OrderContext
+    SetMode OrderTicketModeLiveOnly
 End If
 
 Dim EntryOrder As IOrder
@@ -1567,9 +1607,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function chooseLiveOrSimulatedOrderContext() As OrderContext
-Set chooseLiveOrSimulatedOrderContext = IIf(SimulateOrdersCheck.value = vbUnchecked, mLiveOrderContext, mSimulatedOrderContext)
-End Function
+Private Sub chooseOrderContext()
+Const ProcName As String = "chooseOrderContext"
+On Error GoTo Err
+
+If SimulateOrdersCheck.value = vbUnchecked Then
+    If mLiveOrderContext Is Nothing Then
+        RaiseEvent NeedLiveOrderContext
+    Else
+        setActiveOrderContext mLiveOrderContext
+    End If
+Else
+    If mSimulatedOrderContext Is Nothing Then
+        RaiseEvent NeedSimulatedOrderContext
+    Else
+        setActiveOrderContext mSimulatedOrderContext
+    End If
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub clearBracketOrder()
 Const ProcName As String = "clearBracketOrder"

@@ -24,6 +24,7 @@ Begin VB.Form fTickStreamSpecifier
    End
    Begin VB.CommandButton OkButton 
       Caption         =   "Ok"
+      Default         =   -1  'True
       Enabled         =   0   'False
       Height          =   495
       Left            =   6840
@@ -46,7 +47,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
 Option Explicit
 
 ''
@@ -105,7 +105,8 @@ End Sub
 
 Private Sub CancelButton_Click()
 mCancelled = True
-Unload Me
+Me.Hide
+'Unload Me
 End Sub
 
 Private Sub OKButton_Click()
@@ -115,6 +116,7 @@ On Error GoTo Err
 Screen.MousePointer = vbHourglass
 mCancelled = False
 TickStreamSpecifier1.Load
+TickStreamSpecifier1.SetFocus
 
 Exit Sub
 

@@ -57,6 +57,8 @@ Public Const WindowStateMaximized                   As String = "Maximized"
 Public Const WindowStateMinimized                   As String = "Minimized"
 Public Const WindowStateNormal                      As String = "Normal"
 
+Public Const NullIndex                              As Long = -1
+
 '@================================================================================
 ' Member variables
 '@================================================================================

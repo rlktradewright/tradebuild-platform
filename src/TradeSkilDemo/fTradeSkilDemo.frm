@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#221.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#235.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.7"
@@ -118,13 +118,11 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1B8C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "LiveExecutionsSummary"
-      Tab(1).Control(0).Enabled=   0   'False
-      Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
-      Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
-      Tab(1).Control(2).Enabled=   0   'False
-      Tab(1).ControlCount=   3
+      Tab(1).Control(0)=   "TickfileExecutionsSummary"
+      Tab(1).Control(1)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(2)=   "ExecutionsSummaryTabStrip"
+      Tab(1).Control(3)=   "LiveExecutionsSummary"
+      Tab(1).ControlCount=   4
       TabCaption(2)   =   "&3. Log"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BA8
       Tab(2).ControlEnabled=   0   'False
@@ -258,23 +256,28 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -74880
          TabIndex        =   53
          Top             =   3720
-         Width           =   1695
-         _ExtentX        =   2990
+         Width           =   4215
+         _ExtentX        =   7435
          _ExtentY        =   661
          MultiRow        =   -1  'True
-         Style           =   1
+         Style           =   2
          Placement       =   1
          _Version        =   393216
          BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
-            NumTabs         =   2
+            NumTabs         =   3
             BeginProperty Tab1 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
                Caption         =   "Live"
-               Object.ToolTipText     =   "Show live orders"
+               Object.ToolTipText     =   "Show live executions"
                ImageVarType    =   2
             EndProperty
             BeginProperty Tab2 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
                Caption         =   "Simulated"
-               Object.ToolTipText     =   "Show simulated orders"
+               Object.ToolTipText     =   "Show simulated executions"
+               ImageVarType    =   2
+            EndProperty
+            BeginProperty Tab3 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
+               Caption         =   "Tickfile"
+               Object.ToolTipText     =   "Show executions against tickfiles"
                ImageVarType    =   2
             EndProperty
          EndProperty
@@ -304,6 +307,15 @@ Begin VB.Form fTradeSkilDemo
          Top             =   120
          Width           =   10935
          _ExtentX        =   19288
+         _ExtentY        =   6376
+      End
+      Begin TradingUI27.ExecutionsSummary TickfileExecutionsSummary 
+         Height          =   3615
+         Left            =   -74880
+         TabIndex        =   68
+         Top             =   120
+         Width           =   11955
+         _ExtentX        =   21087
          _ExtentY        =   6376
       End
    End
@@ -413,23 +425,14 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(3)   =   "fTradeSkilDemo.frx":1C18
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(1).Enabled=   0   'False
       Tab(3).Control(2)=   "ReplayProgressLabel"
-      Tab(3).Control(2).Enabled=   0   'False
       Tab(3).Control(3)=   "ReplayProgressBar"
-      Tab(3).Control(3).Enabled=   0   'False
       Tab(3).Control(4)=   "ReplaySpeedCombo"
-      Tab(3).Control(4).Enabled=   0   'False
       Tab(3).Control(5)=   "StopReplayButton"
-      Tab(3).Control(5).Enabled=   0   'False
       Tab(3).Control(6)=   "PauseReplayButton"
-      Tab(3).Control(6).Enabled=   0   'False
       Tab(3).Control(7)=   "PlayTickFileButton"
-      Tab(3).Control(7).Enabled=   0   'False
       Tab(3).Control(8)=   "TickfileOrganiser1"
-      Tab(3).Control(8).Enabled=   0   'False
       Tab(3).ControlCount=   9
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1C34
@@ -739,7 +742,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   67239939
+         Format          =   67305475
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -753,7 +756,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   67239939
+         Format          =   67305475
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -979,6 +982,10 @@ Implements StateChangeListener
     
 Private Const ModuleName                    As String = "fTradeSkilDemo"
 
+Private Const ExecutionsTabCaptionLive      As String = "Live"
+Private Const ExecutionsTabCaptionSimulated As String = "Simulated"
+Private Const ExecutionsTabCaptionTickfile  As String = "Tickfile"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -989,11 +996,6 @@ Private Enum ControlsTabIndexNumbers
     ControlsTabIndexHistoricalCharts
     ControlsTabIndexTickfileReplay
     ControlsTabIndexConfig
-End Enum
-
-Private Enum ExecutionsTabIndexNumbers
-    ExecutionsTabIndexLive = 1
-    ExecutionsTabIndexSimulated
 End Enum
 
 Private Enum FeaturesTabIndexNumbers
@@ -1075,7 +1077,7 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_QueryUnload( _
-                cancel As Integer, _
+                Cancel As Integer, _
                 UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
 On Error GoTo Err
@@ -1113,11 +1115,17 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub Form_Unload(cancel As Integer)
+Private Sub Form_Unload(Cancel As Integer)
 Const ProcName As String = "Form_Unload"
 On Error GoTo Err
 
 LogMessage "Unloading main form"
+
+LogMessage "Stopping tickfile replay"
+' prevent event handler being fired on completion, which would
+' reload the form again
+Set mTickfileReplayTC = Nothing
+stopTickfileReplay
 
 LogMessage "Shutting down clock"
 mClockDisplay.Finish
@@ -1127,10 +1135,16 @@ shutdown
 LogMessage "Closing charts and market depth forms"
 closeChartsAndMarketDepthForms
 
+LogMessage "Closing config editor form"
+gUnloadConfigEditor
+
 LogMessage "Closing other forms"
 Dim f As Form
 For Each f In Forms
-    If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then Unload f
+    If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then
+        LogMessage "Closing form: caption=" & f.caption & "; type=" & TypeName(f)
+        Unload f
+    End If
 Next
 
 LogMessage "Stopping tickers"
@@ -1233,10 +1247,12 @@ Dim op As IBracketOrder
 
 If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
     Set op = LiveOrdersSummary.SelectedItem
-Else
+ElseIf OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexSimulated Then
     Set op = SimulatedOrdersSummary.SelectedItem
+Else
+    Set op = TickfileOrdersSummary.SelectedItem
 End If
-If Not op Is Nothing Then op.cancel True
+If Not op Is Nothing Then op.Cancel True
 
 CancelOrderPlexButton.Enabled = False
 ModifyOrderPlexButton.Enabled = False
@@ -1381,6 +1397,34 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub ExecutionsSummaryTabStrip_Click()
+Const ProcName As String = "ExecutionsSummaryTabStrip_Click"
+On Error GoTo Err
+
+Static currIndex As Long
+If ExecutionsSummaryTabStrip.SelectedItem.Index = currIndex Then Exit Sub
+
+Select Case ExecutionsSummaryTabStrip.SelectedItem.caption
+Case ExecutionsTabCaptionLive
+    LiveExecutionsSummary.Visible = True
+    SimulatedExecutionsSummary.Visible = False
+    TickfileExecutionsSummary.Visible = False
+Case ExecutionsTabCaptionSimulated
+    LiveExecutionsSummary.Visible = False
+    SimulatedExecutionsSummary.Visible = True
+    TickfileExecutionsSummary.Visible = False
+Case ExecutionsTabCaptionTickfile
+    LiveExecutionsSummary.Visible = False
+    SimulatedExecutionsSummary.Visible = False
+    TickfileExecutionsSummary.Visible = True
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub FeaturesSSTAB_Click(PreviousTab As Integer)
@@ -1545,20 +1589,21 @@ Private Sub ModifyOrderPlexButton_Click()
 Const ProcName As String = "ModifyOrderPlexButton_Click"
 On Error GoTo Err
 
+Dim os As OrdersSummary
+
 If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
-    If LiveOrdersSummary.SelectedItem Is Nothing Then
-        ModifyOrderPlexButton.Enabled = False
-    ElseIf LiveOrdersSummary.IsSelectedItemModifiable Then
-        getOrderTicket.Show vbModeless, Me
-        getOrderTicket.ShowBracketOrder LiveOrdersSummary.SelectedItem, LiveOrdersSummary.SelectedOrderIndex
-    End If
+    Set os = LiveOrdersSummary
+ElseIf OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexSimulated Then
+    Set os = SimulatedOrdersSummary
 Else
-    If SimulatedOrdersSummary.SelectedItem Is Nothing Then
-        ModifyOrderPlexButton.Enabled = False
-    ElseIf SimulatedOrdersSummary.IsSelectedItemModifiable Then
-        getOrderTicket.Show vbModeless, Me
-        getOrderTicket.ShowBracketOrder SimulatedOrdersSummary.SelectedItem, SimulatedOrdersSummary.SelectedOrderIndex
-    End If
+    Set os = TickfileOrdersSummary
+End If
+
+If os.SelectedItem Is Nothing Then
+    ModifyOrderPlexButton.Enabled = False
+ElseIf os.IsSelectedItemModifiable Then
+    getOrderTicket.Show vbModeless, Me
+    getOrderTicket.ShowBracketOrder os.SelectedItem, os.SelectedOrderIndex
 End If
 
 Exit Sub
@@ -1567,11 +1612,11 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub NumHistBarsText_Validate(cancel As Boolean)
+Private Sub NumHistBarsText_Validate(Cancel As Boolean)
 Const ProcName As String = "NumHistBarsText_Validate"
 On Error GoTo Err
 
-If Not IsInteger(NumHistBarsText.Text, 0, 2000) Then cancel = True
+If Not IsInteger(NumHistBarsText.Text, 0, 2000) Then Cancel = True
 
 Exit Sub
 
@@ -1579,11 +1624,11 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub NumHistoryBarsText_Validate(cancel As Boolean)
+Private Sub NumHistoryBarsText_Validate(Cancel As Boolean)
 Const ProcName As String = "NumHistoryBarsText_Validate"
 On Error GoTo Err
 
-If Not IsInteger(NumHistoryBarsText.Text, 0, 2000) Then cancel = True
+If Not IsInteger(NumHistoryBarsText.Text, 0, 2000) Then Cancel = True
 
 Exit Sub
 
@@ -1692,11 +1737,12 @@ If mReplayController Is Nothing Then
     
     Dim lOrderManager As New OrderManager
     TickfileOrdersSummary.MonitorPositions lOrderManager.PositionManagersSimulated
+    TickfileExecutionsSummary.MonitorPositions lOrderManager.PositionManagersSimulated
     
     Set mReplayController = lTickfileDataManager.ReplayController
     
     Dim lTickers As Tickers
-    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, lOrderManager, , mTradeBuildAPI.OrderSubmitterSimulated)
+    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, lOrderManager, , mTradeBuildAPI.OrderSubmitterFactorySimulated)
     
     Dim i As Long
     For i = 1 To TickfileOrganiser1.TickfileCount
@@ -1758,8 +1804,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub SimulatedOrdersSummary_Click()
-Const ProcName As String = "SimulatedOrdersSummary_Click"
+Private Sub SimulatedOrdersSummary_SelectionChanged()
+Const ProcName As String = "SimulatedOrdersSummary_SelectionChanged"
 On Error GoTo Err
 
 setOrdersSelection SimulatedOrdersSummary
@@ -1774,12 +1820,7 @@ Private Sub StopReplayButton_Click()
 Const ProcName As String = "StopReplayButton_Click"
 On Error GoTo Err
 
-PlayTickFileButton.Enabled = True
-PauseReplayButton.Enabled = False
-StopReplayButton.Enabled = False
-ChartButton.Enabled = False
-ChartButton1.Enabled = False
-mReplayController.StopReplay
+stopTickfileReplay
 
 Exit Sub
 
@@ -1791,15 +1832,22 @@ Private Sub StopTickerButton_Click()
 Const ProcName As String = "StopTickerButton_Click"
 On Error GoTo Err
 
-Dim lTickers As SelectedTickers
-Set lTickers = TickerGrid1.SelectedTickers
+StopSelectedTickers
 
-TickerGrid1.StopSelectedTickers
+Exit Sub
 
-Dim lTicker As IMarketDataSource
-For Each lTicker In lTickers
-    lTicker.Finish
-Next
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub TickerGrid1_KeyUp(KeyCode As Integer, Shift As Integer)
+Const ProcName As String = "TickerGrid1_KeyUp"
+On Error GoTo Err
+
+Select Case KeyCode
+Case vbKeyDelete
+    StopSelectedTickers
+End Select
 
 Exit Sub
 
@@ -1812,6 +1860,18 @@ Const ProcName As String = "TickerGrid1_TickerSelectionChanged"
 On Error GoTo Err
 
 handleSelectedTickers
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub TickfileOrdersSummary_SelectionChanged()
+Const ProcName As String = "SimulatedOrdersSummary_SelectionChanged"
+On Error GoTo Err
+
+setOrdersSelection TickfileOrdersSummary
 
 Exit Sub
 
@@ -2086,7 +2146,10 @@ mChartForms.Finish
 
 Dim f As Form
 For Each f In Forms
-    If TypeOf f Is fMarketDepth Then Unload f
+    If TypeOf f Is fMarketDepth Then
+        LogMessage "Closing form: caption=" & f.caption & "; type=" & TypeName(f)
+        Unload f
+    End If
 Next
 
 Exit Sub
@@ -2336,7 +2399,6 @@ Else
             OrderTicketButton.Enabled = True
             OrderTicket1Button.Enabled = True
             MarketDepthButton.Enabled = True
-            getOrderTicket.Ticker = lTicker
         End If
     Else
         mClockDisplay.SetClock getDefaultClock
@@ -2503,7 +2565,8 @@ If OrderTicket1Button.left >= 0 Then
     ClosePositionsButton.left = FeaturesSSTAB.Width - CancelOrderPlexButton.Width - 120
     
     LiveOrdersSummary.Width = ModifyOrderPlexButton.left - 120 - 120
-    SimulatedOrdersSummary.Width = ModifyOrderPlexButton.left - 120 - 120
+    SimulatedOrdersSummary.Width = LiveOrdersSummary.Width
+    TickfileOrdersSummary.Width = LiveOrdersSummary.Width
 Else
     OrderTicket1Button.left = FeaturesSSTAB.Width - OrderTicket1Button.Width - 120 - SSTabInactiveControlAdjustment
     ModifyOrderPlexButton.left = FeaturesSSTAB.Width - ModifyOrderPlexButton.Width - 120 - SSTabInactiveControlAdjustment
@@ -2511,7 +2574,8 @@ Else
     ClosePositionsButton.left = FeaturesSSTAB.Width - CancelOrderPlexButton.Width - 120 - SSTabInactiveControlAdjustment
     
     LiveOrdersSummary.Width = ModifyOrderPlexButton.left + SSTabInactiveControlAdjustment - 120 - 120
-    SimulatedOrdersSummary.Width = ModifyOrderPlexButton.left + SSTabInactiveControlAdjustment - 120 - 120
+    SimulatedOrdersSummary.Width = LiveOrdersSummary.Width
+    TickfileOrdersSummary.Width = LiveOrdersSummary.Width
 End If
 
 LogText.Width = FeaturesSSTAB.Width - 120 - 120
@@ -2910,23 +2974,36 @@ Private Sub setupExecutionSummaries()
 Const ProcName As String = "setupExecutionSummaries"
 On Error GoTo Err
 
+Do While ExecutionsSummaryTabStrip.Tabs.Count > 0
+    ExecutionsSummaryTabStrip.Tabs.Remove 1
+Loop
+
 If mTradeBuildAPI.AllOrdersSimulated Then
-    SimulatedExecutionsSummary.MonitorExecutions mTradeBuildAPI.DefaultWorkSpace.Executions
-    SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top + ExecutionsSummaryTabStrip.Height - SimulatedExecutionsSummary.Top
+    SimulatedExecutionsSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersLive
     SimulatedExecutionsSummary.Visible = True
-    
-    LiveExecutionsSummary.Visible = False
-    
-    ExecutionsSummaryTabStrip.Visible = False
+    ExecutionsSummaryTabStrip.Tabs.Add 1, , ExecutionsTabCaptionSimulated
 Else
-    SimulatedExecutionsSummary.MonitorExecutions mTradeBuildAPI.DefaultWorkSpace.ExecutionsSimulated
-    SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
-    
-    LiveExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
-    LiveExecutionsSummary.MonitorExecutions mTradeBuildAPI.DefaultWorkSpace.Executions
-    
+    SimulatedExecutionsSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersSimulated
+    SimulatedExecutionsSummary.Visible = False
+    LiveExecutionsSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersLive
+    LiveExecutionsSummary.Visible = True
+    ExecutionsSummaryTabStrip.Tabs.Add 1, , ExecutionsTabCaptionLive
+    ExecutionsSummaryTabStrip.Tabs.Add 2, , ExecutionsTabCaptionSimulated
+End If
+
+If Not mTradeBuildAPI.TickfileStoreInput Is Nothing Then
+    TickfileExecutionsSummary.Visible = False
+    ExecutionsSummaryTabStrip.Tabs.Add ExecutionsSummaryTabStrip.Tabs.Count + 1, , ExecutionsTabCaptionTickfile
+End If
+
+If ExecutionsSummaryTabStrip.Tabs.Count = 1 Then
+    ExecutionsSummaryTabStrip.Visible = False
+    SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top + ExecutionsSummaryTabStrip.Height - SimulatedExecutionsSummary.Top
+Else
     ExecutionsSummaryTabStrip.Visible = True
-    ExecutionsSummaryTabStrip.Tabs.Item(ExecutionsTabIndexLive).Selected = True
+    SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
+    LiveExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
+    TickfileExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
 End If
 
 Exit Sub
@@ -3165,6 +3242,46 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub StopSelectedTickers()
+Const ProcName As String = "StopSelectedTickers"
+On Error GoTo Err
+
+Dim lTickers As SelectedTickers
+Set lTickers = TickerGrid1.SelectedTickers
+
+TickerGrid1.StopSelectedTickers
+
+Dim lTicker As IMarketDataSource
+For Each lTicker In lTickers
+    lTicker.Finish
+Next
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub stopTickfileReplay()
+Const ProcName As String = "stopTickfileReplay"
+On Error GoTo Err
+
+PlayTickFileButton.Enabled = True
+PauseReplayButton.Enabled = False
+StopReplayButton.Enabled = False
+ChartButton.Enabled = False
+ChartButton1.Enabled = False
+If Not mReplayController Is Nothing Then
+    mReplayController.StopReplay
+    Set mReplayController = Nothing
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub updateInstanceSettings()

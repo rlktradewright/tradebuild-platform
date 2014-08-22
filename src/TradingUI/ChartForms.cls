@@ -166,9 +166,10 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-Dim lChartForm As fChart
-For Each lChartForm In mChartForms
-    Unload lChartForm
+Dim f As fChart
+For Each f In mChartForms
+    gLogger.Log "Closing form: caption=" & f.caption & "; type=" & TypeName(f), ProcName, ModuleName
+    Unload f
 Next
 mChartForms.Clear
 

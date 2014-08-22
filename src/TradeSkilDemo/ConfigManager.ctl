@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#29.0#0"; "TradeBuildUI27.ocx"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#105.0#0"; "StudiesUI27.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#82.1#0"; "TradeBuildUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#167.0#0"; "StudiesUI27.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -277,7 +277,7 @@ Const ProcName As String = "ChangeListener_Change"
 On Error GoTo Err
 
 If ev.Source Is mConfigStore Then
-    Select Case ev.changeType
+    Select Case ev.ChangeType
     Case ConfigChangeTypes.ConfigClean
         SaveConfigButton.Enabled = False
         SaveConfigMenu.Enabled = False
@@ -599,13 +599,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+mConfigStore.RemoveChangeListener Me
+SPConfigurer1.Finish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Function Initialise( _
                 ByVal pConfigFile As ConfigurationStore, _
                 ByVal pApplicationName As String, _
                 ByVal pExpectedConfigFileVersion As String, _
                 ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
                 ByVal pFlags As ConfigFlags) As Boolean
-Const ProcName As String = "initialise"
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 LogMessage "Initialising ConfigManager", LogLevelDetail
@@ -667,6 +680,7 @@ Public Sub SaveConfigFile( _
 Const ProcName As String = "SaveConfigFile"
 On Error GoTo Err
 
+LogMessage "Saving configuration"
 mConfigStore.Save filename
 
 Exit Sub
@@ -707,7 +721,7 @@ If MsgBox("Do you want to delete this configuration?" & vbCrLf & _
         vbYesNo Or vbQuestion, _
         "Attention!") = vbYes Then
     RemoveAppInstanceConfig mConfigStore, mCurrAppConfig.InstanceQualifier
-    ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.index
+    ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.Index
     If mCurrAppConfig Is mDefaultAppConfig Then Set mDefaultAppConfig = Nothing
     Set mCurrAppConfig = Nothing
     If mCurrConfigNode Is mDefaultConfigNode Then Set mDefaultConfigNode = Nothing

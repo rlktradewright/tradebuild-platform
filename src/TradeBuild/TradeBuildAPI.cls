@@ -65,8 +65,6 @@ Private mWorkspaces                                 As WorkSpaces
 
 Private mDefaultWorkSpace                           As WorkSpace
 Private mTickers                                    As Tickers
-Private mExecutions                                 As Executions
-Private mExecutionsSimulated                        As Executions
 
 Private WithEvents mClosePositionsTC                As TaskController
 Attribute mClosePositionsTC.VB_VarHelpID = -1
@@ -223,30 +221,6 @@ Const ProcName As String = "DefaultWorkSpace"
 On Error GoTo Err
 
 Set DefaultWorkSpace = mDefaultWorkSpace
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get Executions() As Executions
-Const ProcName As String = "Executions"
-On Error GoTo Err
-
-Set Executions = mExecutions
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get ExecutionsSimulated() As Executions
-Const ProcName As String = "ExecutionsSimulated"
-On Error GoTo Err
-
-Set ExecutionsSimulated = mExecutionsSimulated
 
 Exit Property
 
@@ -599,13 +573,14 @@ StartServiceProviders = ServiceProviders.StartServiceProviders(mStudyLibraryMana
 If Not mMarketDataSourcesConfig Is Nothing Then MarketDataManager.LoadFromConfig mMarketDataSourcesConfig
 
 If Not ServiceProviders.MarketDataManager Is Nothing Then
-    Set mWorkspaces = New WorkSpaces
-    
-    mWorkspaces.Initialise Me, _
+    Set mWorkspaces = CreateWorkspaces(mScopeName, _
+                        Me.MarketDataManager, _
                         mOrderManager, _
-                        ServiceProviders.OrderSubmitterFactoryLive, _
-                        ServiceProviders.OrderSubmitterFactorySimulated, _
-                        Nothing
+                        Me.StudyLibraryManager, _
+                        Me.HistoricalDataStoreInput, _
+                        Me.OrderSubmitterFactoryLive, _
+                        Me.OrderSubmitterFactorySimulated, _
+                        Nothing)
                         
     If Not mTradeBuildConfig Is Nothing Then mWorkspaces.LoadFromConfig mTradeBuildConfig.AddPrivateConfigurationSection(ConfigSectionWorkspaces)
     
@@ -616,8 +591,6 @@ If Not ServiceProviders.MarketDataManager Is Nothing Then
     End If
     
     Set mTickers = DefaultWorkSpace.Tickers
-    Set mExecutions = DefaultWorkSpace.Executions
-    Set mExecutionsSimulated = DefaultWorkSpace.ExecutionsSimulated
 End If
 
 Exit Function

@@ -40,7 +40,7 @@ Begin VB.UserControl TickStreamSpecifier
       Height          =   735
       Left            =   2880
       TabIndex        =   18
-      Top             =   0
+      Top             =   2880
       Width           =   3735
       Begin VB.PictureBox Picture2 
          BorderStyle     =   0  'None
@@ -57,7 +57,7 @@ Begin VB.UserControl TickStreamSpecifier
             Left            =   720
             List            =   "TickStreamSpecifier.ctx":0002
             Style           =   2  'Dropdown List
-            TabIndex        =   1
+            TabIndex        =   9
             Top             =   0
             Width           =   2775
          End
@@ -73,16 +73,16 @@ Begin VB.UserControl TickStreamSpecifier
    End
    Begin VB.Frame Frame3 
       Caption         =   "Dates/Times"
-      Height          =   2895
+      Height          =   2775
       Left            =   2880
       TabIndex        =   10
-      Top             =   720
+      Top             =   0
       Width           =   3735
       Begin VB.PictureBox Picture3 
          BorderStyle     =   0  'None
-         Height          =   2535
+         Height          =   2415
          Left            =   120
-         ScaleHeight     =   2535
+         ScaleHeight     =   2415
          ScaleWidth      =   3495
          TabIndex        =   11
          Top             =   240
@@ -90,14 +90,14 @@ Begin VB.UserControl TickStreamSpecifier
          Begin VB.TextBox ToDateText 
             Height          =   285
             Left            =   2160
-            TabIndex        =   3
+            TabIndex        =   2
             Top             =   120
             Width           =   1260
          End
          Begin VB.TextBox FromDateText 
             Height          =   285
             Left            =   480
-            TabIndex        =   2
+            TabIndex        =   1
             Top             =   120
             Width           =   1260
          End
@@ -105,7 +105,7 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "Complete sessions"
             Height          =   255
             Left            =   480
-            TabIndex        =   4
+            TabIndex        =   3
             Top             =   480
             Value           =   1  'Checked
             Width           =   2775
@@ -115,23 +115,23 @@ Begin VB.UserControl TickStreamSpecifier
             Enabled         =   0   'False
             Height          =   375
             Left            =   480
-            TabIndex        =   5
+            TabIndex        =   4
             Top             =   720
             Value           =   1  'Checked
             Width           =   2895
          End
          Begin VB.Frame SessionTimesFrame 
             Caption         =   "Session times"
-            Height          =   1335
+            Height          =   1215
             Left            =   0
             TabIndex        =   12
             Top             =   1200
             Width           =   3495
             Begin VB.PictureBox Picture4 
                BorderStyle     =   0  'None
-               Height          =   810
+               Height          =   930
                Left            =   120
-               ScaleHeight     =   810
+               ScaleHeight     =   930
                ScaleWidth      =   3285
                TabIndex        =   13
                Top             =   240
@@ -141,7 +141,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Enabled         =   0   'False
                   Height          =   255
                   Left            =   0
-                  TabIndex        =   6
+                  TabIndex        =   5
                   Top             =   0
                   Value           =   -1  'True
                   Width           =   1695
@@ -151,8 +151,8 @@ Begin VB.UserControl TickStreamSpecifier
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   2520
-                  TabIndex        =   9
-                  Top             =   240
+                  TabIndex        =   8
+                  Top             =   600
                   Width           =   660
                End
                Begin VB.TextBox CustomFromTimeText 
@@ -160,8 +160,8 @@ Begin VB.UserControl TickStreamSpecifier
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   2520
-                  TabIndex        =   8
-                  Top             =   0
+                  TabIndex        =   7
+                  Top             =   360
                   Width           =   660
                End
                Begin VB.OptionButton UseCustomTimesOption 
@@ -169,9 +169,9 @@ Begin VB.UserControl TickStreamSpecifier
                   Enabled         =   0   'False
                   Height          =   615
                   Left            =   0
-                  TabIndex        =   7
+                  TabIndex        =   6
                   Top             =   240
-                  Width           =   2055
+                  Width           =   1815
                End
                Begin VB.Label Label11 
                   Alignment       =   1  'Right Justify
@@ -179,7 +179,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Height          =   255
                   Left            =   1920
                   TabIndex        =   15
-                  Top             =   240
+                  Top             =   600
                   Width           =   495
                End
                Begin VB.Label Label10 
@@ -188,7 +188,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Height          =   255
                   Left            =   1920
                   TabIndex        =   14
-                  Top             =   0
+                  Top             =   360
                   Width           =   495
                End
             End
@@ -289,6 +289,18 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 ' Form Event Handlers
 '@================================================================================
 
+Private Sub UserControl_EnterFocus()
+Const ProcName As String = "UserControl_EnterFocus"
+On Error GoTo Err
+
+ContractSpecBuilder1.SetFocus
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub UserControl_Resize()
 UserControl.Height = 4200
 UserControl.Width = 6720
@@ -316,7 +328,7 @@ Else
     UseExchangeTimezoneCheck.Enabled = True
 End If
 adjustCustomTimeFieldAttributes
-checkReady
+checkReady True
 
 Exit Sub
 
@@ -328,6 +340,7 @@ Private Sub ContractSpecBuilder1_NotReady()
 Const ProcName As String = "ContractSpecBuilder1_NotReady"
 On Error GoTo Err
 
+checkReady True
 RaiseEvent NotReady
 
 Exit Sub
@@ -340,7 +353,7 @@ Private Sub ContractSpecBuilder1_Ready()
 Const ProcName As String = "ContractSpecBuilder1_Ready"
 On Error GoTo Err
 
-checkReady
+checkReady True
 
 Exit Sub
 
@@ -352,7 +365,20 @@ Private Sub CustomFromTimeText_Change()
 Const ProcName As String = "CustomFromTimeText_Change"
 On Error GoTo Err
 
-checkReady
+checkReady False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub CustomFromTimeText_GotFocus()
+Const ProcName As String = "CustomFromTimeText_GotFocus"
+On Error GoTo Err
+
+CustomFromTimeText.SelStart = 0
+CustomFromTimeText.SelLength = Len(CustomFromTimeText.Text)
 
 Exit Sub
 
@@ -360,11 +386,61 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub CustomFromTimeText_Validate(Cancel As Boolean)
+Const ProcName As String = "CustomFromTimeText_Validate"
+On Error GoTo Err
+
+checkReady True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub CustomToTimeText_Change()
 Const ProcName As String = "CustomToTimeText_Change"
 On Error GoTo Err
 
-checkReady
+checkReady False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub CustomToTimeText_GotFocus()
+Const ProcName As String = "CustomToTimeText_GotFocus"
+On Error GoTo Err
+
+CustomToTimeText.SelStart = 0
+CustomToTimeText.SelLength = Len(CustomToTimeText.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub CustomToTimeText_Validate(Cancel As Boolean)
+Const ProcName As String = "CustomToTimeText_Validate"
+On Error GoTo Err
+
+checkReady True
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub FormatCombo_GotFocus()
+Const ProcName As String = "FormatCombo_GotFocus"
+On Error GoTo Err
+
+FormatCombo.SelStart = 0
+FormatCombo.SelLength = Len(FormatCombo.Text)
 
 Exit Sub
 
@@ -376,7 +452,32 @@ Private Sub FromDateText_Change()
 Const ProcName As String = "FromDateText_Change"
 On Error GoTo Err
 
-checkReady
+checkReady False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub FromDateText_GotFocus()
+Const ProcName As String = "FromDateText_GotFocus"
+On Error GoTo Err
+
+FromDateText.SelStart = 0
+FromDateText.SelLength = Len(FromDateText.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub FromDateText_Validate(Cancel As Boolean)
+Const ProcName As String = "FromDateText_Validate"
+On Error GoTo Err
+
+checkReady True
 
 Exit Sub
 
@@ -388,7 +489,32 @@ Private Sub ToDateText_Change()
 Const ProcName As String = "ToDateText_Change"
 On Error GoTo Err
 
-checkReady
+checkReady False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ToDateText_GotFocus()
+Const ProcName As String = "ToDateText_GotFocus"
+On Error GoTo Err
+
+ToDateText.SelStart = 0
+ToDateText.SelLength = Len(ToDateText.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub ToDateText_Validate(Cancel As Boolean)
+Const ProcName As String = "ToDateText_Validate"
+On Error GoTo Err
+
+checkReady True
 
 Exit Sub
 
@@ -401,7 +527,7 @@ Const ProcName As String = "UseContractTimesOption_Click"
 On Error GoTo Err
 
 adjustCustomTimeFieldAttributes
-checkReady
+checkReady True
 
 Exit Sub
 
@@ -414,7 +540,7 @@ Const ProcName As String = "UseCustomTimesOption_Click"
 On Error GoTo Err
 
 adjustCustomTimeFieldAttributes
-checkReady
+checkReady True
 
 Exit Sub
 
@@ -433,9 +559,9 @@ On Error GoTo Err
 Screen.MousePointer = vbDefault
 
 If ev.Future.IsFaulted <> 0 Then
-    ErrorLabel.Caption = ev.Future.ErrorMessage
+    ErrorLabel.caption = ev.Future.ErrorMessage
 ElseIf ev.Future.IsCancelled <> 0 Then
-    ErrorLabel.Caption = "Contracts fetch cancelled"
+    ErrorLabel.caption = "Contracts fetch cancelled"
 Else
     Set mContracts = ev.Future.value
     processContracts
@@ -474,10 +600,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Load()
-Const ProcName As String = "load"
+Const ProcName As String = "Load"
 On Error GoTo Err
 
-ErrorLabel.Caption = ""
+ErrorLabel.caption = ""
 
 Screen.MousePointer = vbHourglass
 
@@ -493,7 +619,7 @@ Exit Sub
 Err:
 Screen.MousePointer = vbDefault
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    ErrorLabel.Caption = Err.Description
+    ErrorLabel.caption = Err.Description
     Exit Sub
 End If
 gHandleUnexpectedError ProcName, ModuleName
@@ -519,28 +645,54 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function checkOk() As Boolean
+Private Function checkOk(ByRef pMessage As String) As Boolean
 Const ProcName As String = "checkOk"
 On Error GoTo Err
 
-If FormatCombo.ListCount = 0 Then Exit Function
+If FormatCombo.ListCount = 0 Then
+    pMessage = "No formats available"
+    Exit Function
+End If
 
-If Not ContractSpecBuilder1.IsReady Then Exit Function
+If Not ContractSpecBuilder1.IsReady Then
+    pMessage = "Contract specifier invalid"
+    Exit Function
+End If
 
-If Not IsDate(FromDateText.Text) Then Exit Function
-If CompleteSessionCheck.value = vbUnchecked And Not IsDate(ToDateText.Text) Then Exit Function
-If CompleteSessionCheck.value = vbChecked And _
-    ToDateText.Text <> "" And _
-    Not IsDate(ToDateText.Text) Then Exit Function
+If Not IsDate(FromDateText.Text) Then
+    pMessage = "'From' is not a valid datetime"
+    Exit Function
+End If
+
+If ToDateText.Text <> "" And Not IsDate(ToDateText.Text) Then
+    pMessage = "'To' is not a valid datetime"
+    Exit Function
+End If
+
 If IsDate(ToDateText.Text) Then
-    If CDate(FromDateText.Text) > CDate(ToDateText.Text) Then Exit Function
+    If CDate(FromDateText.Text) > CDate(ToDateText.Text) Then
+        pMessage = "'From' cannot be later than 'To'"
+        Exit Function
+    End If
 End If
 
 If UseCustomTimesOption Then
-    If Not IsDate(CustomFromTimeText) Then Exit Function
-    If Not IsDate(CustomToTimeText) Then Exit Function
-    If CDbl(CDate(CustomFromTimeText)) >= 1# Then Exit Function
-    If CDbl(CDate(CustomToTimeText)) >= 1# Then Exit Function
+    If Not IsDate(CustomFromTimeText) Then
+        pMessage = "Custom 'From' is not a valid time"
+        Exit Function
+    End If
+    If Not IsDate(CustomToTimeText) Then
+        pMessage = "Custom 'To' is not a valid time"
+        Exit Function
+    End If
+    If CDbl(CDate(CustomFromTimeText)) >= 1# Then
+        pMessage = "Custom 'From' must be a time only"
+        Exit Function
+    End If
+    If CDbl(CDate(CustomToTimeText)) >= 1# Then
+        pMessage = "Custom 'To' must be a time only"
+        Exit Function
+    End If
 End If
 
 checkOk = True
@@ -552,13 +704,16 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
-Private Sub checkReady()
+Private Sub checkReady(ByVal pShowErrors As Boolean)
 Const ProcName As String = "checkReady"
 On Error GoTo Err
 
-If checkOk Then
+Dim lMsg As String
+If checkOk(lMsg) Then
+    ErrorLabel.caption = ""
     RaiseEvent Ready
 Else
+    If pShowErrors Then ErrorLabel.caption = lMsg
     RaiseEvent NotReady
 End If
 
@@ -639,7 +794,7 @@ Private Sub processContracts()
 On Error GoTo Err
 
 If mContracts.Count = 0 Then
-    ErrorLabel.Caption = "No contracts meet this specification"
+    ErrorLabel.caption = "No contracts meet this specification"
     Exit Sub
 End If
 
@@ -649,7 +804,7 @@ If mSecType <> SecurityTypes.SecTypeFuture And _
 Then
     If mContracts.Count > 1 Then
         ' don't see how this can happen, but just in case!
-        ErrorLabel.Caption = "More than one contract meets this specification"
+        ErrorLabel.caption = "More than one contract meets this specification"
         Exit Sub
     End If
 End If
@@ -678,7 +833,7 @@ RaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
 Exit Sub
 
 Err:
-ErrorLabel.Caption = Err.Description
+ErrorLabel.caption = Err.Description
 
 End Sub
 

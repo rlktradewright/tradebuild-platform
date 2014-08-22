@@ -167,14 +167,18 @@ Private Sub AddTickstreamsButton_Click()
 Const ProcName As String = "AddTickstreamsButton_Click"
 On Error GoTo Err
 
-Dim lTickstreamSpecifier As New fTickStreamSpecifier
+Static sTickstreamSpecifier As fTickStreamSpecifier
 
-lTickstreamSpecifier.Initialise mTickfileStore, mPrimaryContractStore, mSecondaryContractStore
-lTickstreamSpecifier.Show vbModal
+If sTickstreamSpecifier Is Nothing Then
+    Set sTickstreamSpecifier = New fTickStreamSpecifier
+    sTickstreamSpecifier.Initialise mTickfileStore, mPrimaryContractStore, mSecondaryContractStore
+End If
 
-If lTickstreamSpecifier.cancelled Then Exit Sub
+sTickstreamSpecifier.Show vbModal
 
-TickfileListManager1.AddTickfileSpecifiers lTickstreamSpecifier.TickfileSpecifiers
+If sTickstreamSpecifier.cancelled Then Exit Sub
+
+TickfileListManager1.AddTickfileSpecifiers sTickstreamSpecifier.TickfileSpecifiers
 
 Exit Sub
 

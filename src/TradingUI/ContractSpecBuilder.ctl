@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#11.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
    ClientHeight    =   3330
@@ -255,7 +255,6 @@ End Sub
 
 Private Sub UserControl_EnterFocus()
 Const ProcName As String = "UserControl_EnterFocus"
-
 On Error GoTo Err
 
 If Not mModeAdvanced Then
@@ -275,12 +274,7 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_Initialize()
-Dim exchangeCodes() As String
-Dim currDescs() As CurrencyDescriptor
-Dim i As Long
-
 Const ProcName As String = "UserControl_Initialize"
-
 On Error GoTo Err
 
 mReady = False
@@ -296,13 +290,17 @@ TypeCombo.ComboItems.Add , , SecTypeToString(SecurityTypes.SecTypeIndex)
 RightCombo.ComboItems.Add , , OptionRightToString(OptionRights.OptCall)
 RightCombo.ComboItems.Add , , OptionRightToString(OptionRights.OptPut)
 
+Dim exchangeCodes() As String
 exchangeCodes = GetExchangeCodes
 
 ExchangeCombo.ComboItems.Add , , ""
+
+Dim i As Long
 For i = 0 To UBound(exchangeCodes)
     ExchangeCombo.ComboItems.Add , , exchangeCodes(i)
 Next
 
+Dim currDescs() As CurrencyDescriptor
 currDescs = GetCurrencyDescriptors
 
 CurrencyCombo.ComboItems.Add , , ""
@@ -318,7 +316,6 @@ End Sub
 
 Private Sub UserControl_InitProperties()
 On Error Resume Next
-
 setLabelsBackColor
 
 BackColor = PropDfltBackColor
@@ -327,7 +324,6 @@ ModeAdvanced = PropDfltModeAdvanced
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-
 On Error Resume Next
 
 setLabelsBackColor
@@ -354,7 +350,6 @@ End Sub
 
 Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
-
 On Error GoTo Err
 
 resize
@@ -391,7 +386,6 @@ End Sub
 
 Private Sub CurrencyCombo_Change()
 Const ProcName As String = "CurrencyCombo_Change"
-
 On Error GoTo Err
 
 handleCurrencyComboChange
@@ -404,7 +398,6 @@ End Sub
 
 Private Sub CurrencyCombo_Click()
 Const ProcName As String = "CurrencyCombo_Click"
-
 On Error GoTo Err
 
 handleCurrencyComboChange
@@ -415,9 +408,21 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub CurrencyCombo_GotFocus()
+Const ProcName As String = "CurrencyCombo_GotFocus"
+On Error GoTo Err
+
+CurrencyCombo.SelStart = 0
+CurrencyCombo.SelLength = Len(CurrencyCombo.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub ExchangeCombo_Change()
 Const ProcName As String = "ExchangeCombo_Change"
-
 On Error GoTo Err
 
 checkIfValid
@@ -430,10 +435,22 @@ End Sub
 
 Private Sub ExchangeCombo_Click()
 Const ProcName As String = "ExchangeCombo_Click"
-
 On Error GoTo Err
 
 checkIfValid
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub ExchangeCombo_GotFocus()
+Const ProcName As String = "ExchangeCombo_GotFocus"
+On Error GoTo Err
+
+ExchangeCombo.SelStart = 0
+ExchangeCombo.SelLength = Len(ExchangeCombo.Text)
 
 Exit Sub
 
@@ -443,10 +460,22 @@ End Sub
 
 Private Sub ExpiryText_Change()
 Const ProcName As String = "ExpiryText_Change"
-
 On Error GoTo Err
 
 checkIfValid
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub ExpiryText_GotFocus()
+Const ProcName As String = "ExpiryText_GotFocus"
+On Error GoTo Err
+
+ExpiryText.SelStart = 0
+ExpiryText.SelLength = Len(ExpiryText.Text)
 
 Exit Sub
 
@@ -456,7 +485,6 @@ End Sub
 
 Private Sub LocalSymbolText_Change()
 Const ProcName As String = "LocalSymbolText_Change"
-
 On Error GoTo Err
 
 checkIfValid
@@ -467,9 +495,21 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub LocalSymbolText_GotFocus()
+Const ProcName As String = "LocalSymbolText_GotFocus"
+On Error GoTo Err
+
+LocalSymbolText.SelStart = 0
+LocalSymbolText.SelLength = Len(LocalSymbolText.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub RightCombo_Change()
 Const ProcName As String = "RightCombo_Change"
-
 On Error GoTo Err
 
 checkIfValid
@@ -482,10 +522,22 @@ End Sub
 
 Private Sub RightCombo_Click()
 Const ProcName As String = "RightCombo_Click"
-
 On Error GoTo Err
 
 checkIfValid
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub RightCombo_GotFocus()
+Const ProcName As String = "RightCombo_GotFocus"
+On Error GoTo Err
+
+RightCombo.SelStart = 0
+RightCombo.SelLength = Len(RightCombo.Text)
 
 Exit Sub
 
@@ -495,10 +547,22 @@ End Sub
 
 Private Sub StrikePriceText_Change()
 Const ProcName As String = "StrikePriceText_Change"
-
 On Error GoTo Err
 
 checkIfValid
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub StrikePriceText_GotFocus()
+Const ProcName As String = "StrikePriceText_GotFocus"
+On Error GoTo Err
+
+StrikePriceText.SelStart = 0
+StrikePriceText.SelLength = Len(StrikePriceText.Text)
 
 Exit Sub
 
@@ -508,7 +572,6 @@ End Sub
 
 Private Sub SymbolText_Change()
 Const ProcName As String = "SymbolText_Change"
-
 On Error GoTo Err
 
 checkIfValid
@@ -519,9 +582,21 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub SymbolText_GotFocus()
+Const ProcName As String = "SymbolText_GotFocus"
+On Error GoTo Err
+
+SymbolText.SelStart = 0
+SymbolText.SelLength = Len(SymbolText.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub TypeCombo_Change()
 Const ProcName As String = "TypeCombo_Change"
-
 On Error GoTo Err
 
 handleTypeComboChange
@@ -534,10 +609,22 @@ End Sub
 
 Private Sub TypeCombo_Click()
 Const ProcName As String = "TypeCombo_Click"
-
 On Error GoTo Err
 
 handleTypeComboChange
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub TypeCombo_GotFocus()
+Const ProcName As String = "TypeCombo_GotFocus"
+On Error GoTo Err
+
+TypeCombo.SelStart = 0
+TypeCombo.SelLength = Len(TypeCombo.Text)
 
 Exit Sub
 
@@ -576,7 +663,6 @@ End Property
 Public Property Let ContractSpecifier( _
                 ByVal value As IContractSpecifier)
 Const ProcName As String = "ContractSpecifier"
-
 On Error GoTo Err
 
 If value Is Nothing Then
@@ -600,7 +686,6 @@ End Property
 
 Public Property Get ContractSpecifier() As IContractSpecifier
 Const ProcName As String = "contractSpecifier"
-
 On Error GoTo Err
 
 Set ContractSpecifier = CreateContractSpecifier( _
@@ -622,7 +707,6 @@ End Property
 Public Property Let ForeColor( _
                 ByVal value As OLE_COLOR)
 Const ProcName As String = "foreColor"
-
 On Error GoTo Err
 
 LocalSymbolText.ForeColor = value
@@ -859,7 +943,7 @@ If mModeAdvanced Then
     
     AdvancedButton.Top = 8 * rowHeight
     AdvancedButton.Left = UserControl.Width - AdvancedButton.Width
-    AdvancedButton.Caption = "Advanced <<"
+    AdvancedButton.caption = "Advanced <<"
 Else
     LocalSymbolLabel.Visible = False
     
@@ -889,7 +973,7 @@ Else
     
     AdvancedButton.Top = rowHeight
     AdvancedButton.Left = UserControl.Width - AdvancedButton.Width
-    AdvancedButton.Caption = "Advanced >>"
+    AdvancedButton.caption = "Advanced >>"
 End If
 
 Exit Sub
