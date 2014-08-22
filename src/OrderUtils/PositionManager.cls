@@ -1077,12 +1077,13 @@ AssertArgument Not pOrderSubmitterFactory Is Nothing, "pOrderSubmitterFactory Is
 AssertArgument Not pDataSource Is Nothing, "pDataSource is nothing"
 
 PreInitialise pOrderManager
-Set mOrderSubmitter = pOrderSubmitterFactory.CreateOrderSubmitter
-mOrderSubmitter.AddOrderSubmissionListener Me
-mOrderSubmitter.AddStateChangeListener Me
 
 Set mDataSource = pDataSource
 mDataSource.AddGenericTickListener Me
+
+Set mOrderSubmitter = pOrderSubmitterFactory.CreateOrderSubmitter(mDataSource)
+mOrderSubmitter.AddOrderSubmissionListener Me
+mOrderSubmitter.AddStateChangeListener Me
 
 Set mBracketOrderRecoveryController = pRecoveryController
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
@@ -1322,18 +1323,13 @@ mProfitListeners.Clear
 mRecoverableObjectListeners.Clear
 
 mOrderContexts.Finish
+Set mOrderContexts = Nothing
+Set mMoneyManager = Nothing
+Set mOrderSubmitter = Nothing
 
 Set mBracketOrders = Nothing
 Set mOrders = Nothing
 Set mExecutions = Nothing
-
-Set mOrderContexts = Nothing
-Set mMoneyManager = Nothing
-
-If Not mOrderSubmitter Is Nothing Then
-    mOrderSubmitter.Finish
-    Set mOrderSubmitter = Nothing
-End If
 
 mIsFinished = True
 

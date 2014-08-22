@@ -425,25 +425,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateSimulatedOrderSubmitterFactory( _
-                ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pPrimaryContractStore As IContractStore, _
-                Optional ByVal pSecondaryContractStore As IContractStore) As IOrderSubmitterFactory
-Const ProcName As String = "CreateSimulatedOrderSubmitterFactory"
-On Error GoTo Err
-
-AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore is Nothing"
-
-Dim lFactory As New SimOrderSubmitterFactory
-lFactory.Initialise pMarketDataManager, pPrimaryContractStore, pSecondaryContractStore
-Set CreateSimulatedOrderSubmitterFactory = lFactory
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Function CreateOrderPersistenceDataStore(ByVal pRecoveryFilePath As String) As IOrderPersistenceDataStore
 Const ProcName As String = "CreateOrderPersistenceDataStore"
 On Error GoTo Err

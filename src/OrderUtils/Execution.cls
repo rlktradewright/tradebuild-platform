@@ -371,10 +371,10 @@ End Sub
 
 Friend Sub SyncToExecutionReport( _
                 ByVal pExecReport As IExecutionReport)
-Dim changed As Boolean
-
 Const ProcName As String = "SyncToExecutionReport"
 On Error GoTo Err
+
+Dim changed As Boolean
 
 With pExecReport
     If .Id <> mExecId Then mExecId = .Id: changed = True
@@ -389,6 +389,7 @@ With pExecReport
     If .BrokerId <> mBrokerId Then mBrokerId = .BrokerId: changed = True
     If .OrderId <> mOrderId Then mOrderId = .OrderId: changed = True
     If .IsLiquidation <> mIsLiquidation Then mIsLiquidation = .IsLiquidation: changed = True
+    If .IsSimulated <> mIsSimulated Then mIsSimulated = .IsSimulated: changed = True
 End With
 
 If changed Then SaveRecoveryInfo

@@ -90,11 +90,11 @@ Private mStreamId                                   As Long
 
 Private mClockFutureBuilder                         As New FutureBuilder
 
-Private mIndexToUse                                 As Long
-
-Private mIsTickReplay                               As Boolean
+Private mTickfileStreamId                           As Long
 
 Private mErrorMessage                               As String
+
+Private mPriorityTickListener                       As IGenericTickListener
 
 '@================================================================================
 ' Class Event Handlers
@@ -114,6 +114,9 @@ Set mQuoteListeners = New Listeners
 Set mStateChangeListeners = New Listeners
 
 Set mFutureWaiter = New FutureWaiter
+
+mTickfileStreamId = NullIndex
+
 Exit Sub
 
 Err:
@@ -351,6 +354,18 @@ End Property
 
 Private Property Get IMarketDataSource_PriceChange() As PriceChange
 IMarketDataSource_PriceChange = PriceChange
+End Property
+
+Private Property Let IMarketDataSource_PriorityTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "IMarketDataSource_PriorityTickListener"
+On Error GoTo Err
+
+PriorityTickListener = pListener
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IMarketDataSource_Refresh()
@@ -637,7 +652,7 @@ IsMarketDepthRequested = mIsMarketDepthRequested
 End Property
 
 Public Property Get IsTickReplay() As Boolean
-IsTickReplay = mIsTickReplay
+IsTickReplay = (mTickfileStreamId <> NullIndex)
 End Property
 
 Public Property Get Key() As String
@@ -658,6 +673,19 @@ On Error GoTo Err
 
 checkNotFinished
 PriceChange = DataSourceBase.GetPriceChange()
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let PriorityTickListener(ByVal Value As IGenericTickListener)
+Const ProcName As String = "PriorityTickListener"
+On Error GoTo Err
+
+Set mPriorityTickListener = Value
+If Not mDataSourceBaseRef Is Nothing Then DataSourceBase.PriorityTickListener = mPriorityTickListener
 
 Exit Property
 
@@ -720,6 +748,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Let TickfileStreamId(ByVal Value As Long)
+mTickfileStreamId = Value
 End Property
 
 Public Property Get Timestamp() As Date
@@ -1079,8 +1111,6 @@ Friend Sub Initialise( _
                 ByVal pKey As String, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pStudyManager As StudyManager, _
-                ByVal pIndexToUse As Long, _
-                ByVal pIsTickReplay As Boolean, _
                 ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -1089,8 +1119,6 @@ Set mMarketDataManagerRef = CreateWeakReference(pMarketDataManager)
 
 mKey = pKey
 Set mContractFuture = pContractFuture
-mIndexToUse = pIndexToUse
-mIsTickReplay = pIsTickReplay
 Set mConfig = pConfig
 
 setState MarketDataSourceStateCreated
@@ -1515,7 +1543,8 @@ On Error GoTo Err
 Dim lContract   As IContract
 Set lContract = mContractFuture.Value
 
-Set mDataSourceBaseRef = CreateWeakReference(getMarketDataManager.GetDataSourceBase(mContractFuture, mIsTickReplay, mIndexToUse))
+Set mDataSourceBaseRef = CreateWeakReference(getMarketDataManager.GetDataSourceBase(mContractFuture, mTickfileStreamId))
+If Not mPriorityTickListener Is Nothing Then DataSourceBase.PriorityTickListener = mPriorityTickListener
 DataSourceBase.AddMarketDataSource Me
 
 mStreamId = DataSourceBase.StreamId

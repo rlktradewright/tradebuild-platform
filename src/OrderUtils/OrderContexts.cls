@@ -171,12 +171,7 @@ Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
-Assert mContractFuture.IsAvailable
 
-Dim lContract As IContract
-Set lContract = mContractFuture.Value
-
-gLog "Received permitted order properties for", ProcName, ModuleName, lContract.Specifier.ToString, LogLevelDetail
 Set mPermittedOrderProperties = ev.Future.Value
 
 Dim lOrderContext As OrderContext

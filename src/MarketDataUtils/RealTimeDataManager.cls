@@ -70,11 +70,12 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
-Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource(pContractFuture, pIsRecoverable, pKey, pStateChangeListener)
+Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener)
 
 Exit Function
 
@@ -150,16 +151,14 @@ Public Function CreateMarketDataSource( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
 If pStateChangeListener Is Nothing Then Set pStateChangeListener = mDefaultStateChangeListener
 
-Dim lDataSource As New MarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, pIsRecoverable, False)
-
-Set CreateMarketDataSource = lDataSource
+Set CreateMarketDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, pIsRecoverable, pUseLocalTimeForStudies)
 
 Exit Function
 
@@ -193,6 +192,7 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pFactory As IMarketDataFactory, _
+                ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pOptions As MarketDataSourceOptions, _
                 ByVal pDefaultStateChangeListener As StateChangeListener, _
                 ByVal pNumberOfMarketDepthRows As Long)
@@ -202,7 +202,7 @@ On Error GoTo Err
 Set mDefaultStateChangeListener = pDefaultStateChangeListener
 
 Set mDataManager = New MarketDataManager
-mDataManager.Initialise pFactory, pOptions, pNumberOfMarketDepthRows
+mDataManager.Initialise pFactory, pStudyLibManager, pOptions, pNumberOfMarketDepthRows
 
 Exit Sub
 

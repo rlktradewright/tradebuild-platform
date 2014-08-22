@@ -41,7 +41,7 @@ Implements IOrderSubmitter
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "SimulatedOrderSubmitter"
+Private Const ModuleName                    As String = "SimulatedOrderSubmitter"
 
 '@================================================================================
 ' Enums
@@ -55,14 +55,16 @@ Private Const ModuleName                As String = "SimulatedOrderSubmitter"
 ' Member variables
 '@================================================================================
 
-Private mSimulator                          As InProcessExchangeSimulator
-
-Private mClientId                           As Long
+Private mSimulator                          As MarketSimulator
 
 Private mState                              As OrderSubmitterStates
 Private mStateChangeListeners               As Listeners
 
 Private mOrderSubmissionListeners           As Listeners
+
+Private mFactory                            As SimOrderSubmitterFactory
+
+Private mKey                                        As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -357,6 +359,9 @@ Private Sub IOrderSubmitter_Finish()
 Const ProcName As String = "IOrderSubmitter_Finish"
 On Error GoTo Err
 
+mFactory.RemoveSubmitter Me, mSimulator
+
+mSimulator.RemoveOrdersForListener Me
 Set mSimulator = Nothing
 mOrderSubmissionListeners.Clear
 mStateChangeListeners.Clear
@@ -373,10 +378,10 @@ Private Sub IOrderSubmitter_ModifyBracketOrder( _
                 ByVal stopOrderChanged As Boolean, _
                 ByVal targetOrderChanged As Boolean, _
                 ByVal closeoutOrderChanged As Boolean)
-Dim lOrder As IOrder
-
 Const ProcName As String = "IOrderSubmitter_ModifyBracketOrder"
 On Error GoTo Err
+
+Dim lOrder As IOrder
 
 If entryOrderChanged Then
     PlaceOrder pBracketOrder.EntryOrder, "", "", True
@@ -386,7 +391,7 @@ If stopOrderChanged Then
     PlaceOrder lOrder, "", "", True
 End If
 If targetOrderChanged Then
-    Set lOrder = pBracketOrder.StopLossOrder
+    Set lOrder = pBracketOrder.TargetOrder
     PlaceOrder lOrder, "", "", True
 End If
 If closeoutOrderChanged Then
@@ -480,16 +485,16 @@ Private Sub IOrderSubmitter_ResubmitStopAndTargetOrders(ByVal pBracketOrder As I
 Const ProcName As String = "IOrderSubmitter_ResubmitStopAndTargetOrders"
 On Error GoTo Err
 
-Dim lOcaGroup As String
-Dim lStoporder As IOrder
-Dim lTargetOrder As IOrder
 
+Dim lOcaGroup As String
 lOcaGroup = GenerateTextID
 
+Dim lStoporder As IOrder
 Set lStoporder = pBracketOrder.StopLossOrder
 'lStoporder.BrokerId = ""    ' force a new id to be allocated
 PlaceOrder lStoporder, "", lOcaGroup, False
 
+Dim lTargetOrder As IOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 'lTargetOrder.BrokerId = "" ' force a new id to be allocated
 PlaceOrder lTargetOrder, "", lOcaGroup, True
@@ -505,11 +510,12 @@ Const ProcName As String = "IOrderSubmitter_ResubmitStopOrder"
 On Error GoTo Err
 
 Dim lStoporder As IOrder
-Dim lTargetOrder As IOrder
-
 Set lStoporder = pBracketOrder.StopLossOrder
+
+Dim lTargetOrder As IOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 'lStoporder.BrokerId = ""     ' force a new id to be allocated
+
 If Not pBracketOrder.TargetOrder Is Nothing Then
     PlaceOrder lStoporder, "", mSimulator.GetOcaGroup(lTargetOrder.Id), True
 Else
@@ -527,11 +533,12 @@ Const ProcName As String = "IOrderSubmitter_ResubmitTargetOrder"
 On Error GoTo Err
 
 Dim lStoporder As IOrder
-Dim lTargetOrder As IOrder
-
 Set lStoporder = pBracketOrder.StopLossOrder
+
+Dim lTargetOrder As IOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 'lTargetOrder.BrokerId = ""   ' force a new id to be allocated
+
 If Not pBracketOrder.StopLossOrder Is Nothing Then
     PlaceOrder lTargetOrder, "", mSimulator.GetOcaGroup(lStoporder.Id), True
 Else
@@ -564,17 +571,25 @@ End Property
 ' Properties
 '@================================================================================
 
+Friend Property Get Key() As String
+Key = mKey
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
-                ByVal pSimulator As InProcessExchangeSimulator)
-Const ProcName As String = "Initialise"
+Friend Sub Initialise(ByVal pFactory As SimOrderSubmitterFactory, ByVal pKey As String)
+Set mFactory = pFactory
+mKey = pKey
+End Sub
+
+Friend Sub SetSimulator( _
+                ByVal pSimulator As MarketSimulator)
+Const ProcName As String = "SetSimulator"
 On Error GoTo Err
 
 Set mSimulator = pSimulator
-mClientId = mSimulator.RegisterClient(Me)
 setState OrderSubmitterStateReady
 
 Exit Sub
@@ -591,11 +606,11 @@ Private Sub fireStateChange()
 Const ProcName As String = "fireStateChange"
 On Error GoTo Err
 
-Dim lListener As StateChangeListener
 Dim ev As StateChangeEventData
-
 Set ev.Source = Me
 ev.State = mState
+
+Dim lListener As StateChangeListener
 For Each lListener In mStateChangeListeners.CurrentListeners
     lListener.Change ev
 Next
@@ -614,7 +629,7 @@ Private Sub PlaceOrder( _
 Const ProcName As String = "placeOrder"
 On Error GoTo Err
 
-mSimulator.PlaceOrder pOrder, pParentId, pOcaGroup, mClientId, pTransmit
+mSimulator.PlaceOrder pOrder, pParentId, pOcaGroup, pTransmit, Me
 
 Exit Sub
 

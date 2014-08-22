@@ -944,7 +944,6 @@ End Property
 
 Public Property Let AllOrNone(ByVal Value As Boolean)
 Const ProcName As String = "AllOrNone"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttAllOrNone
@@ -972,7 +971,6 @@ End Property
 
 Public Property Let BlockOrder(ByVal Value As Boolean)
 Const ProcName As String = "BlockOrder"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttBlockOrder
@@ -1004,7 +1002,6 @@ End Property
 
 Public Property Let DiscretionaryAmount(ByVal Value As Double)
 Const ProcName As String = "DiscretionaryAmount"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttDiscretionaryAmount
@@ -1024,7 +1021,6 @@ End Property
 
 Public Property Let DisplaySize(ByVal Value As Long)
 Const ProcName As String = "DisplaySize"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttDisplaySize
@@ -1044,7 +1040,6 @@ End Property
 
 Public Property Let ETradeOnly(ByVal Value As Boolean)
 Const ProcName As String = "ETradeOnly"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttETradeOnly
@@ -1072,7 +1067,6 @@ End Property
 
 Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
 Const ProcName As String = "FirmQuoteOnly"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttFirmQuoteOnly
@@ -1092,7 +1086,6 @@ End Property
 
 Public Property Let GoodAfterTime(ByVal Value As Date)
 Const ProcName As String = "GoodAfterTime"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttGoodAfterTime
@@ -1112,7 +1105,6 @@ End Property
 
 Public Property Let GoodAfterTimeTZ(ByVal Value As String)
 Const ProcName As String = "GoodAfterTimeTZ"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttGoodAfterTimeTZ
@@ -1132,7 +1124,6 @@ End Property
 
 Public Property Let GoodTillDate(ByVal Value As Date)
 Const ProcName As String = "GoodTillDate"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttGoodTillDate
@@ -1152,7 +1143,6 @@ End Property
 
 Public Property Let GoodTillDateTZ(ByVal Value As String)
 Const ProcName As String = "GoodTillDateTZ"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttGoodTillDateTZ
@@ -1166,12 +1156,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get GroupName() As String
-GroupName = mGroupName
-End Property
-
 Public Property Get GoodTillDateTZ() As String
 GoodTillDateTZ = mGoodTillDateTZ
+End Property
+
+Public Property Get GroupName() As String
+GroupName = mGroupName
 End Property
 
 Public Property Let Hidden(ByVal Value As Boolean)
@@ -1203,7 +1193,6 @@ End Property
 
 Public Property Let IgnoreRegularTradingHours(ByVal Value As Boolean)
 Const ProcName As String = "IgnoreRegularTradingHours"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttIgnoreRTH
@@ -1249,7 +1238,18 @@ LastFillPrice = mLastFillPrice
 End Property
 
 Public Property Let LimitPrice(ByVal Value As Double)
+Const ProcName As String = "LimitPrice"
+On Error GoTo Err
+
+checkAttributeModificationPermitted OrderAttributes.OrderAttLimitPrice
+If Value = mLimitPrice Then Exit Property
+setDirty
 mLimitPrice = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LimitPrice() As Double
@@ -1258,7 +1258,6 @@ End Property
 
 Public Property Let MinimumQuantity(ByVal Value As Long)
 Const ProcName As String = "MinimumQuantity"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttMinimumQuantity
@@ -1278,7 +1277,6 @@ End Property
 
 Public Property Let NbboPriceCap(ByVal Value As Double)
 Const ProcName As String = "NbboPriceCap"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttNBBOPriceCap
@@ -1314,7 +1312,6 @@ End Property
 
 Public Property Let OrderType(ByVal Value As OrderTypes)
 Const ProcName As String = "OrderType"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttOrderType
@@ -1337,7 +1334,6 @@ End Property
 
 Public Property Let Origin(ByVal Value As OrderOrigins)
 Const ProcName As String = "Origin"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttOrigin
@@ -1357,7 +1353,6 @@ End Property
 
 Public Property Let OriginatorRef(ByVal Value As String)
 Const ProcName As String = "OriginatorRef"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttOriginatorRef
@@ -1377,7 +1372,6 @@ End Property
 
 Public Property Let OverrideConstraints(ByVal Value As Boolean)
 Const ProcName As String = "OverrideConstraints"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttOverrideConstraints
@@ -1425,7 +1419,6 @@ End Property
 
 Public Property Let Quantity(ByVal Value As Long)
 Const ProcName As String = "Quantity"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttQuantity
@@ -1462,7 +1455,6 @@ End Property
 
 Public Property Let SettlingFirm(ByVal Value As String)
 Const ProcName As String = "SettlingFirm"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttSettlingFirm
@@ -1503,7 +1495,6 @@ End Property
 
 Public Property Let StopTriggerMethod(ByVal Value As OrderStopTriggerMethods)
 Const ProcName As String = "StopTriggerMethod"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttStopTriggerMethod
@@ -1526,7 +1517,6 @@ End Property
 
 Public Property Let SweepToFill(ByVal Value As Boolean)
 Const ProcName As String = "SweepToFill"
-
 On Error GoTo Err
 
 checkAttributeModificationPermitted OrderAttributes.OrderAttSweepToFill
@@ -1546,7 +1536,6 @@ End Property
 
 Public Property Let TimeInForce(ByVal Value As OrderTIFs)
 Const ProcName As String = "TimeInForce"
-
 On Error GoTo Err
 
 AssertArgument gIsValidTIF(Value), "Value must be a member of the OrderTifs enum"

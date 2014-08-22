@@ -60,11 +60,14 @@ Private Const ModuleName                            As String = "IOrderSubmitter
 ' Properties
 '@================================================================================
 
+Public Property Get NeedsDataSource() As Boolean
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function CreateOrderSubmitter() As IOrderSubmitter
+Public Function CreateOrderSubmitter(Optional ByVal pDataSource As IMarketDataSource) As IOrderSubmitter
 End Function
 
 '@================================================================================

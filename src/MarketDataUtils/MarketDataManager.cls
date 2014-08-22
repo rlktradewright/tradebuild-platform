@@ -104,9 +104,7 @@ Friend Function CreateMarketDataSource( _
                 ByVal pKey As String, _
                 ByVal pStateChangeListener As StateChangeListener, _
                 ByVal pIsRecoverable As Boolean, _
-                ByVal pIsTickReplay As Boolean, _
-                ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pIndexToUse As Long = NullIndex) As IMarketDataSource
+                ByVal pUseLocalTimeForStudies As Boolean) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
@@ -122,7 +120,7 @@ If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStud
 Dim lStudyManager As StudyManager
 If Not mStudyLibManager Is Nothing Then Set lStudyManager = mStudyLibManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies)
 
-lDataSource.Initialise Me, pKey, pContractFuture, lStudyManager, pIndexToUse, pIsTickReplay, lConfig
+lDataSource.Initialise Me, pKey, pContractFuture, lStudyManager, lConfig
 
 mDataSources.Add lDataSource, pKey
 
@@ -167,20 +165,24 @@ End Function
 
 Friend Function GetDataSourceBase( _
                 ByVal pContractFuture As IFuture, _
-                ByVal pIsTickReplay As Boolean, _
-                ByVal pIndexToUse As Long) As DataSourceBase
- Const ProcName As String = "GetDataSourceBase"
+                Optional ByVal pTickfileStreamId As Long = NullIndex) As DataSourceBase
+Const ProcName As String = "GetDataSourceBase"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture cannot be Nothing"
 AssertArgument pContractFuture.IsAvailable, "pContractFuture must be IsAvailable"
+AssertArgument pTickfileStreamId = NullIndex Or pTickfileStreamId >= 0, "Invalid TickfileStreamId"
 
 Dim lContract As IContract
 Set lContract = pContractFuture.Value
 
 Dim lIndex As Long
-lIndex = getDataSourceBaseIndex(lContract.Specifier, pIndexToUse)
-If lIndex = -1 Then Exit Function
+If pTickfileStreamId <> NullIndex Then
+    lIndex = allocateDataSourceBaseTableEntry(pTickfileStreamId)
+Else
+    lIndex = getDataSourceBaseIndex(lContract.Specifier)
+    If lIndex = -1 Then Exit Function
+End If
 
 Dim lDataSourceBase As DataSourceBase
 Set lDataSourceBase = mDataSourceBaseTable(lIndex).DataSourceBase
@@ -188,7 +190,7 @@ If lDataSourceBase Is Nothing Then
     Set lDataSourceBase = New DataSourceBase
     Set mDataSourceBaseTable(lIndex).DataSourceBase = lDataSourceBase
     
-    lDataSourceBase.Initialise Me, pContractFuture, pIsTickReplay, lIndex, mOptions, mNumberOfMarketDepthRows
+    lDataSourceBase.Initialise Me, pContractFuture, pTickfileStreamId <> NullIndex, lIndex, mOptions, mNumberOfMarketDepthRows
 End If
 
 Set GetDataSourceBase = lDataSourceBase
@@ -238,7 +240,6 @@ For Each lCs In mConfig
                                 lCs.InstanceQualifier, _
                                 Nothing, _
                                 True, _
-                                False, _
                                 lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False")
     End If
 Next
@@ -258,7 +259,7 @@ On Error GoTo Err
 releaseDataSourceBaseTableEntry pDataSourceBase.StreamId
 Dim lContract As IContract
 Set lContract = pDataSourceBase.ContractFuture.Value
-mContractMap.Remove lContract.Specifier
+If mContractMap.Contains(lContract.Specifier) Then mContractMap.Remove lContract.Specifier
 
 Exit Sub
 
@@ -336,7 +337,7 @@ Else
     allocateDataSourceBaseTableEntry = mNextDataSourceBaseTableIndex
 End If
 
-Assert Not mDataSourceBaseTable(allocateDataSourceBaseTableEntry).InUse, "Stream table entry already in use"
+Assert Not (pIndex = NullIndex And mDataSourceBaseTable(allocateDataSourceBaseTableEntry).InUse), "Stream table entry already in use"
 Assert allocateDataSourceBaseTableEntry <= mFactory.MaxStreamId, "Max stream id exceeded"
 
 mDataSourceBaseTable(allocateDataSourceBaseTableEntry).InUse = True
@@ -407,8 +408,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getDataSourceBaseIndex( _
-                ByVal pContractSpec As IContractSpecifier, _
-                ByVal pIndexToUse As Long) As Long
+                ByVal pContractSpec As IContractSpecifier) As Long
 Const ProcName As String = "getDataSourceBaseIndex"
 On Error GoTo Err
 
@@ -416,11 +416,6 @@ Dim lIndex As Long
 
 If mContractMap.Contains(pContractSpec) Then
     lIndex = mContractMap.Item(pContractSpec)
-ElseIf pIndexToUse >= 0 Then
-    lIndex = allocateDataSourceBaseTableEntry(pIndexToUse)
-    mContractMap.Add pContractSpec, lIndex
-'ElseIf pUseExistingDataSourceBase Then
-'    lIndex = NullIndex
 Else
     lIndex = allocateDataSourceBaseTableEntry
     mContractMap.Add pContractSpec, lIndex

@@ -51,11 +51,6 @@ Private Const ModuleName                As String = "SimulatorOrder"
 Private mOrder                                  As IOrder
 
 ''
-' Index into the simulator's MarketTable relevant to this <code>order</code>
-'@/
-Private mMarketId                               As Long
-
-''
 ' Indicates that the <code>order</code> is now active at the exchange
 '@/
 Private mAtExchange                             As Boolean
@@ -71,10 +66,6 @@ Private mParentId                               As String
 '@/
 Private mOcaGroup                               As String
 
-Private mClientId                               As Long
-
-Private mSimulatorRef                           As WeakReference
-
 Private mTransmit                               As Boolean
 
 ''
@@ -82,6 +73,8 @@ Private mTransmit                               As Boolean
 ' be deleted from the relevant collection
 '@/
 Private mIsFinished                             As Boolean
+
+Private mListener                               As IOrderSubmissionListener
 
 '@================================================================================
 ' Class Event Handlers
@@ -105,14 +98,6 @@ End Property
 
 Friend Property Get AtExchange() As Boolean
 AtExchange = mAtExchange
-End Property
-
-Friend Property Let ClientId(ByVal Value As Long)
-mClientId = Value
-End Property
-
-Friend Property Get ClientId() As Long
-ClientId = mClientId
 End Property
 
 Friend Property Let IsFinished(ByVal Value As Boolean)
@@ -148,8 +133,8 @@ IsSiblingOf = (mOrder.Id <> pOrder.Order.Id And _
                 mParentId = pOrder.ParentId)
 End Function
 
-Friend Property Get MarketId() As Long
-MarketId = mMarketId
+Friend Property Get Listener() As IOrderSubmissionListener
+Set Listener = mListener
 End Property
 
 Friend Property Let OcaGroup(ByVal Value As String)
@@ -198,26 +183,19 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pSimulator As InProcessExchangeSimulator, _
                 ByVal pOrder As IOrder, _
-                ByVal pClientId As Long, _
                 ByVal pParentId As String, _
                 ByVal pOcaGroup As String, _
                 ByVal pTransmit As Boolean, _
-                ByVal pMarketId As Long)
-Set mSimulatorRef = CreateWeakReference(pSimulator)
+                ByVal pListener As IOrderSubmissionListener)
 Set mOrder = pOrder
-mClientId = pClientId
 mParentId = pParentId
 mOcaGroup = pOcaGroup
 mTransmit = pTransmit
-mMarketId = pMarketId
+Set mListener = pListener
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function getSimulator() As InProcessExchangeSimulator
-Set getSimulator = mSimulatorRef.Target
-End Function

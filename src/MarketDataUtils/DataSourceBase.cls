@@ -123,6 +123,8 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mDataTickStream                             As ITickStream
 Private mDepthTickStream                            As ITickStream
 
+Private mPriorityTickListener                       As IGenericTickListener
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -284,6 +286,11 @@ End Property
 
 Friend Property Get Options() As MarketDataSourceOptions
 Options = mOptions
+End Property
+
+Friend Property Let PriorityTickListener(ByVal Value As IGenericTickListener)
+Assert mPriorityTickListener Is Nothing, "PriorityTickListener has already been set"
+Set mPriorityTickListener = Value
 End Property
 
 Friend Property Get SessionFuture() As IFuture
@@ -836,29 +843,36 @@ Case TickTypeBid
     mBidTick = ev.Tick
     If mBidTick.Price <> mPrevBidTick.Price Then mRecentBidPriceChange = gCalcValueChange(mBidTick.Price, mPrevBidTick.Price)
     If mBidTick.Size <> mPrevBidTick.Size Then mRecentBidSizeChange = gCalcValueChange(mBidTick.Size, mPrevBidTick.Size)
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeAsk
     mPrevAskTick = mAskTick
     mAskTick = ev.Tick
     If mAskTick.Price <> mPrevAskTick.Price Then mRecentAskPriceChange = gCalcValueChange(mAskTick.Price, mPrevAskTick.Price)
     If mAskTick.Size <> mPrevAskTick.Size Then mRecentAskSizeChange = gCalcValueChange(mAskTick.Size, mPrevAskTick.Size)
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeClosePrice
     mPrevCloseTick = mCloseTick
     mCloseTick = ev.Tick
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeHighPrice
     mPrevHighTick = mHighTick
     mHighTick = ev.Tick
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeLowPrice
     mPrevLowTick = mLowTick
     mLowTick = ev.Tick
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeMarketDepth
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
     mDOMManager.ProcessMarketDepth ev.Tick
 Case TickTypeMarketDepthReset
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
     mDOMManager.ProcessMarketDepthReset
 Case TickTypeTrade
@@ -866,34 +880,49 @@ Case TickTypeTrade
     mTradeTick = ev.Tick
     If mTradeTick.Price <> mPrevTradeTick.Price Then mRecentTradePriceChange = gCalcValueChange(mTradeTick.Price, mPrevTradeTick.Price)
     If mTradeTick.Size <> mPrevTradeTick.Size Then mRecentTradeSizeChange = gCalcValueChange(mTradeTick.Size, mPrevTradeTick.Size)
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
     mDOMManager.ProcessTrade ev.Tick
     Dim lVolumeTick As GenericTick
     lVolumeTick = mVolumeAdjuster.GetVolumeTickForTrade(ev.Tick)
-    If lVolumeTick.TickType = TickTypeVolume Then mDataSources.NotifyTick lVolumeTick
+    If lVolumeTick.TickType = TickTypeVolume Then
+        ev.Tick = lVolumeTick
+        If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
+        mDataSources.NotifyTick lVolumeTick
+    End If
 Case TickTypeVolume
     mPrevVolumeTick = mVolumeTick
     mVolumeTick = ev.Tick
     Dim lAdjustedTick As GenericTick
     Dim lImpliedTick As GenericTick
     If mNoVolumeAdjustments Then
+        If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
         mDataSources.NotifyTick ev.Tick
     ElseIf mVolumeAdjuster.ProcessVolumeTick(ev.Tick, lAdjustedTick, lImpliedTick) Then
+        If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
         mDataSources.NotifyTick ev.Tick
     Else
         If lImpliedTick.TickType = TickTypeTrade Then
+            ev.Tick = lImpliedTick
+            If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
             mDataSources.NotifyTick lImpliedTick
             mDOMManager.ProcessTrade lImpliedTick
         End If
-        If lAdjustedTick.TickType = TickTypeVolume Then mDataSources.NotifyTick lAdjustedTick
+        If lAdjustedTick.TickType = TickTypeVolume Then
+            ev.Tick = lAdjustedTick
+            If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
+            mDataSources.NotifyTick lAdjustedTick
+        End If
     End If
 Case TickTypeOpenInterest
     mPrevOpenInterestTick = mOpenInterestTick
     mOpenInterestTick = ev.Tick
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeOpenPrice
     mPrevOpenTick = mOpenTick
     mOpenTick = ev.Tick
+    If Not mPriorityTickListener Is Nothing Then mPriorityTickListener.NotifyTick ev
     mDataSources.NotifyTick ev.Tick
 Case Else
     AssertArgument False, "Invalid tick type"
