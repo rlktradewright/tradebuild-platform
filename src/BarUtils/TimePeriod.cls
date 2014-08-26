@@ -58,8 +58,8 @@ Private mUnits                              As TimePeriodUnits
 ' Stringable Interface Members
 '@================================================================================
 
-Private Function Stringable_toString() As String
-Stringable_toString = toString
+Private Function Stringable_ToString() As String
+Stringable_ToString = ToString
 End Function
 
 '@================================================================================
@@ -70,72 +70,102 @@ End Function
 ' Properties
 '@================================================================================
 
+Public Property Get Length() As Long
+Length = mLength
+End Property
+
+Public Property Get Name() As String
+Name = ToString
+End Property
+
+Public Property Get ShortName() As String
+ShortName = ToShortString
+End Property
+
+Public Property Get Units() As TimePeriodUnits
+Units = mUnits
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
-                ByVal length As Long, _
-                ByVal units As TimePeriodUnits)
-mLength = length
-mUnits = units
+Friend Sub Initialise( _
+                ByVal Length As Long, _
+                ByVal Units As TimePeriodUnits)
+mLength = Length
+mUnits = Units
 End Sub
 
-Public Function toString() As String
-Select Case mUnits
-Case TimePeriodSecond
-    If mLength = 1 Then
-        toString = mLength & " " & TimePeriodNameSecond
-    Else
-        toString = mLength & " " & TimePeriodNameSeconds
-    End If
-Case TimePeriodMinute
-    If mLength = 1 Then
-        toString = mLength & " " & TimePeriodNameMinute
-    Else
-        toString = mLength & " " & TimePeriodNameMinutes
-    End If
-Case TimePeriodHour
-    If mLength = 1 Then
-        toString = TimePeriodNameHour
-    Else
-        toString = mLength & " " & TimePeriodNameHours
-    End If
-Case TimePeriodDay
-    If mLength = 1 Then
-        toString = TimePeriodNameDay
-    Else
-        toString = mLength & " " & TimePeriodNameDays
-    End If
-Case TimePeriodWeek
-    If mLength = 1 Then
-        toString = TimePeriodNameWeek
-    Else
-        toString = mLength & " " & TimePeriodNameWeeks
-    End If
-Case TimePeriodMonth
-    If mLength = 1 Then
-        toString = TimePeriodNameMonth
-    Else
-        toString = mLength & " " & TimePeriodNameMonths
-    End If
-Case TimePeriodYear
-    If mLength = 1 Then
-        toString = TimePeriodNameYear
-    Else
-        toString = mLength & " " & TimePeriodNameYears
-    End If
-Case TimePeriodVolume
-    toString = mLength & " " & TimePeriodNameVolumeIncrement
-Case TimePeriodTickVolume
-    toString = mLength & " " & TimePeriodNameTickVolumeIncrement
-Case TimePeriodTickMovement
-    toString = mLength & " " & TimePeriodNameTickIncrement
-End Select
+Public Function ToString() As String
+Static value As String
+If value = "" Then
+    Select Case mUnits
+    Case TimePeriodNone
+        value = "0"
+    Case TimePeriodSecond
+        If mLength = 1 Then
+            value = mLength & " " & TimePeriodNameSecond
+        Else
+            value = mLength & " " & TimePeriodNameSeconds
+        End If
+    Case TimePeriodMinute
+        If mLength = 1 Then
+            value = mLength & " " & TimePeriodNameMinute
+        Else
+            value = mLength & " " & TimePeriodNameMinutes
+        End If
+    Case TimePeriodHour
+        If mLength = 1 Then
+            value = TimePeriodNameHour
+        Else
+            value = mLength & " " & TimePeriodNameHours
+        End If
+    Case TimePeriodDay
+        If mLength = 1 Then
+            value = TimePeriodNameDay
+        Else
+            value = mLength & " " & TimePeriodNameDays
+        End If
+    Case TimePeriodWeek
+        If mLength = 1 Then
+            value = TimePeriodNameWeek
+        Else
+            value = mLength & " " & TimePeriodNameWeeks
+        End If
+    Case TimePeriodMonth
+        If mLength = 1 Then
+            value = TimePeriodNameMonth
+        Else
+            value = mLength & " " & TimePeriodNameMonths
+        End If
+    Case TimePeriodYear
+        If mLength = 1 Then
+            value = TimePeriodNameYear
+        Else
+            value = mLength & " " & TimePeriodNameYears
+        End If
+    Case TimePeriodVolume
+        value = mLength & " " & TimePeriodNameVolumeIncrement
+    Case TimePeriodTickVolume
+        value = mLength & " " & TimePeriodNameTickVolumeIncrement
+    Case TimePeriodTickMovement
+        value = mLength & " " & TimePeriodNameTickIncrement
+    End Select
+End If
+ToString = value
 End Function
 
-Public Function toShortString() As String
-toShortString = mLength & gTimePeriodUnitsToShortString(mUnits)
+Public Function ToShortString() As String
+Static value As String
+If value = "" Then
+    If mUnits = TimePeriodNone Then
+        value = "0"
+    Else
+        value = mLength & gTimePeriodUnitsToShortString(mUnits)
+    End If
+End If
+ToShortString = value
 End Function
 
 '@================================================================================
