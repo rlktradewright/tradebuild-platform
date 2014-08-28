@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "TickDataStudyBase"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -60,6 +60,8 @@ Private mInputHandleVolume                          As Long
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mIsInitialised                              As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -67,6 +69,10 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 '@================================================================================
 ' IGenericTickListener Interface Members
 '@================================================================================
+
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+' nothing to do
+End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
@@ -133,11 +139,14 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
+Public Sub Initialise( _
                 ByVal pStudyManager As StudyManager, _
                 ByVal pContractFuture As IFuture)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
+
+Assert Not mIsInitialised, "Already initialised"
+mIsInitialised = True
 
 Dim lTickSize As Double
 Dim lName As String
@@ -156,37 +165,37 @@ End If
 
 Set mStudyInputHandler = mStudyManager.CreateStudyInputHandler(lName)
 mInputHandleBid = mStudyManager.AddInput(mStudyInputHandler, _
-                        InputNameBid, _
+                        BidInputName, _
                         "Bid prices", _
                         StudyInputTypes.InputTypeReal, _
                         False, _
                         lTickSize)
 mInputHandleAsk = mStudyManager.AddInput(mStudyInputHandler, _
-                        InputNameAsk, _
+                        AskInputName, _
                         "Ask prices", _
                         StudyInputTypes.InputTypeReal, _
                         False, _
                         lTickSize)
 mInputHandleOpenInterest = mStudyManager.AddInput(mStudyInputHandler, _
-                        InputNameOpenInterest, _
+                        OpenInterestInputName, _
                         "OpenInterest", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
                         1)
 mInputHandleTickVolume = mStudyManager.AddInput(mStudyInputHandler, _
-                        InputNameTickVolume, _
+                        TickVolumeInputName, _
                         "Tick Volume", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
                         1)
 mInputHandleTrade = mStudyManager.AddInput(mStudyInputHandler, _
-                        InputNameTrade, _
+                        TradeInputName, _
                         "Trade prices", _
                         StudyInputTypes.InputTypeReal, _
                         True, _
                         lTickSize)
 mInputHandleVolume = mStudyManager.AddInput(mStudyInputHandler, _
-                        InputNameVolume, _
+                        VolumeInputName, _
                         "Volume", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
@@ -198,9 +207,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyTick(pTick As GenericTick)
+Public Sub NotifyTick(pTick As GenericTick)
 Const ProcName As String = "NotifyTick"
 On Error GoTo Err
+
+Assert mIsInitialised, "Not initialised"
 
 Select Case pTick.TickType
 Case TickTypeBid
