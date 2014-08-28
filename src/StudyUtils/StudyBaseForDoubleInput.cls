@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "NullInputStudyBase"
+Attribute VB_Name = "StudyBaseForDoubleInput"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -40,7 +40,9 @@ Implements IStudyBase
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "NullInputStudyBase"
+Private Const ModuleName                            As String = "StudyBaseForDoubleInput"
+
+Private Const ValueInputName                        As String = "value"
 
 '@================================================================================
 ' Member variables
@@ -49,8 +51,7 @@ Private Const ModuleName                            As String = "NullInputStudyB
 Private mStudyManager                               As StudyManager
 Private mStudyInputHandler                          As StudyInputHandler
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
+Private mInputHandle                                As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -61,67 +62,69 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 '@================================================================================
 
 Private Property Get IStudyBase_BaseStudy() As IStudy
-Const ProcName As String = "IStudyBase_BaseStudy"
-On Error GoTo Err
-
-Set IStudyBase_BaseStudy = mStudyInputHandler
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Set IStudyBase_BaseStudy = BaseStudy
 End Property
 
 Private Property Get IStudyBase_StudyManager() As StudyManager
-Const ProcName As String = "IStudyBase_StudyManager"
-On Error GoTo Err
-
-Set IStudyBase_StudyManager = mStudyManager
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Set IStudyBase_StudyManager = StudyManager
 End Property
 
 '@================================================================================
-' mFutureWaiter Event Handlers
+' XXXX Event Handlers
 '@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If Not ev.Future.IsAvailable Then Exit Sub
-
-Dim lContract As IContract
-Set lContract = ev.Future.Value
-
-mStudyInputHandler.Name = lContract.Specifier.ToString
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
+Public Property Get BaseStudy() As IStudy
+Set BaseStudy = mStudyInputHandler
+End Property
+
+Public Property Get StudyManager() As StudyManager
+Set StudyManager = mStudyManager
+End Property
+
+'@================================================================================
+' Methods
+'@================================================================================
+
 Friend Sub Initialise( _
                 ByVal pStudyManager As StudyManager, _
+                ByVal pQuantum As Double, _
                 ByVal pName As String)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mStudyManager = pStudyManager
 
 If pName = "" Then pName = GenerateGUIDString
 
 Set mStudyInputHandler = mStudyManager.CreateStudyInputHandler(pName)
+mInputHandle = mStudyManager.AddInput(mStudyInputHandler, _
+                        ValueInputName, _
+                        "Value", _
+                        StudyInputTypes.InputTypeReal, _
+                        False, _
+                        pQuantum)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-'@================================================================================
-' Methods
-'@================================================================================
+Public Sub NotifyValue(pValue As Double, ByVal pTimestamp As Date)
+Const ProcName As String = "NotifyValue"
+On Error GoTo Err
+
+mStudyManager.NotifyInput mInputHandle, pValue, pTimestamp
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions
