@@ -20,6 +20,8 @@ vb6 /m DataCollector\DataCollector.vbp
 if errorlevel 1 pause
 vb6 /m TickfileManager\TickfileManager.vbp
 if errorlevel 1 pause
+vb6 /m StrategyHost\StrategyHost.vbp
+if errorlevel 1 pause
 vb6 /m TradeSkilDemo\TradeSkilDemo.vbp
 if errorlevel 1 pause
 

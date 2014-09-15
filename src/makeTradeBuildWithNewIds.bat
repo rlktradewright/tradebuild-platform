@@ -5,8 +5,8 @@ set tbversion="27"
 call makedll SessionUtils
 call makedll ContractUtils compat
 call makedll BarUtils
-call makedll StudyUtils
 call makedll TickUtils
+call makedll StudyUtils
 
 
 call makedll TickfileUtils
@@ -21,6 +21,7 @@ call makedll TradingDbApi
 call makedll MarketDataUtils
 call makedll OrderUtils
 call makedll TickerUtils
+call makedll StrategyUtils
 call makedll WorkspaceUtils
 
 
@@ -38,8 +39,8 @@ call makeocx TradingUI
 
 call makedll CommonStudiesLib
 
-
 call makedll TradeBuild
+call makedll Strategies
 call makedll ConfigUtils
 call makeocx TradeBuildUI
 
