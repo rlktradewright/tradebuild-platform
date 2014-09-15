@@ -72,7 +72,6 @@ End Sub
 
 Private Sub Task_Cancel()
 Const ProcName As String = "Task_Cancel"
-
 On Error GoTo Err
 
 If Not mInstrumentTaskController Is Nothing Then
@@ -88,7 +87,6 @@ End Sub
 
 Private Sub Task_run()
 Const ProcName As String = "Task_run"
-
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
@@ -122,9 +120,6 @@ End Property
 
 Private Sub mInstrumentTaskController_Completed(ev As TaskCompletionEventData)
 Const ProcName As String = "mInstrumentTaskController_Completed"
-Dim lInstrument As instrument
-
-
 On Error GoTo Err
 
 If ev.Cancelled Then
@@ -135,6 +130,7 @@ ElseIf IsEmpty(ev.Result) Then
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, _
                         "Specified object does not exist"
 Else
+    Dim lInstrument As instrument
     Set lInstrument = ev.Result
     mTaskContext.Finish lInstrument.CreateTickStream(mFromDate, mToDate), False
 End If

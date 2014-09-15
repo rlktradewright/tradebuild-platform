@@ -88,8 +88,11 @@ Private Sub IOrderSubmissionListener_NotifyError(ByVal pOrderId As String, ByVal
 Const ProcName As String = "IOrderSubmissionListener_NotifyError"
 On Error GoTo Err
 
-Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners.CurrentListeners
+mOrderSubmissionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mOrderSubmissionListeners.Count
+    Dim lListener As IOrderSubmissionListener
+    Set lListener = mOrderSubmissionListeners.GetListener(i)
     lListener.NotifyError pOrderId, pErrorCode, pErrorMsg
 Next
 
@@ -103,8 +106,11 @@ Private Sub IOrderSubmissionListener_NotifyExecutionReport(ByVal pExecutionRepor
 Const ProcName As String = "IOrderSubmissionListener_NotifyExecutionReport"
 On Error GoTo Err
 
-Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners.CurrentListeners
+mOrderSubmissionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mOrderSubmissionListeners.Count
+    Dim lListener As IOrderSubmissionListener
+    Set lListener = mOrderSubmissionListeners.GetListener(i)
     lListener.NotifyExecutionReport pExecutionReport
 Next
 
@@ -118,8 +124,11 @@ Private Sub IOrderSubmissionListener_NotifyOrderReport(ByVal pOrderReport As IOr
 Const ProcName As String = "IOrderSubmissionListener_NotifyOrderReport"
 On Error GoTo Err
 
-Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners.CurrentListeners
+mOrderSubmissionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mOrderSubmissionListeners.Count
+    Dim lListener As IOrderSubmissionListener
+    Set lListener = mOrderSubmissionListeners.GetListener(i)
     lListener.NotifyOrderReport pOrderReport
 Next
 
@@ -133,8 +142,11 @@ Private Sub IOrderSubmissionListener_NotifyOrderStatusReport(ByVal pOrderStatusR
 Const ProcName As String = "IOrderSubmissionListener_NotifyOrderStatusReport"
 On Error GoTo Err
 
-Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners.CurrentListeners
+mOrderSubmissionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mOrderSubmissionListeners.Count
+    Dim lListener As IOrderSubmissionListener
+    Set lListener = mOrderSubmissionListeners.GetListener(i)
     lListener.NotifyOrderStatusReport pOrderStatusReport
 Next
 
@@ -610,8 +622,11 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = mState
 
-Dim lListener As StateChangeListener
-For Each lListener In mStateChangeListeners.CurrentListeners
+mStateChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mStateChangeListeners.Count
+    Dim lListener As StateChangeListener
+    Set lListener = mStateChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 

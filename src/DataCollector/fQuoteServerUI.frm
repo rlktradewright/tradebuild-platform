@@ -97,9 +97,9 @@ Begin VB.Form fDataCollectorUI
       TabCaption(2)   =   "Configuration"
       TabPicture(2)   =   "fQuoteServerUI.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ConfigDetailsButton"
+      Tab(2).Control(0)=   "Label4"
       Tab(2).Control(1)=   "ConfigNameText"
-      Tab(2).Control(2)=   "Label4"
+      Tab(2).Control(2)=   "ConfigDetailsButton"
       Tab(2).ControlCount=   3
       Begin VB.CommandButton ConfigDetailsButton 
          Caption         =   "Details..."
@@ -611,6 +611,10 @@ End Sub
 ' IGenericTickListener Interface Members
 '================================================================================
 
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+
+End Sub
+
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
@@ -1066,9 +1070,9 @@ End If
 Set mTickers(index).Ticker = pTicker
 Set mTickers(index).tli = Nothing
 
-If index > ShortNameText.ubound Then
+If index > ShortNameText.UBound Then
     Dim i As Long
-    For i = ShortNameText.ubound + 1 To index
+    For i = ShortNameText.UBound + 1 To index
         Load ShortNameText(i)
         ShortNameText(i).Left = ShortNameText(i - 5).Left
         ShortNameText(i).Top = ShortNameText(i - 5).Top + mLineSpacing
@@ -1196,7 +1200,7 @@ Const ProcName As String = "clearTickers"
 On Error GoTo Err
 
 Dim i As Long
-For i = 0 To ShortNameText.ubound
+For i = 0 To ShortNameText.UBound
     ShortNameText(i).Text = ""
     DataLightLabel(i).BackColor = vbButtonFace
 Next
@@ -1426,7 +1430,7 @@ Const ProcName As String = "setupTickerScroll"
 On Error GoTo Err
 
 Dim totalLines As Long
-totalLines = (ShortNameText.ubound + 5) / 5
+totalLines = (ShortNameText.UBound + 5) / 5
 
 Dim linesPerpage As Single
 linesPerpage = TickersContainerPicture.Height / mLineSpacing

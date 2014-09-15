@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#216.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#237.0#0"; "TradingUI27.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.7"
    ClientHeight    =   7875
@@ -2414,11 +2414,11 @@ Set lDataSource = lMarketDataManager.CreateMarketDataSource(mReplayController.Ti
 lDataSource.StartMarketData
 
 If Not mOutputTickfileStore Is Nothing And WriteTickDataCheck.Value = vbChecked Then
-    Set mTickDataWriter = RecordTickData(lDataSource, mOutputTickfileStore, Me, mOutputFormat, mOutputPath)
+    Set mTickDataWriter = RecordTickData(lDataSource, lDataSource.ContractFuture, mOutputTickfileStore, Me, mOutputFormat, mOutputPath)
 End If
 
 If Not mOutputHistDataStore Is Nothing And WriteBarDataCheck.Value = vbChecked Then
-    Set mHistDataWriter = RecordHistoricalBars(lDataSource, mOutputHistDataStore, HistDataWriteOptionWriteTradeBars, 0, Me)
+    Set mHistDataWriter = RecordHistoricalBars(lDataSource.ContractFuture, lDataSource.ClockFuture, lDataSource.StudyBase, mOutputHistDataStore, HistDataWriteOptionWriteTradeBars, 0, Me)
 End If
 
 mReplayController.TickStream(0).Start

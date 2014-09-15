@@ -124,6 +124,10 @@ End Sub
 ' IGenericTickListener Interface Members
 '@================================================================================
 
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+
+End Sub
+
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
@@ -336,8 +340,11 @@ Dim ev As ChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 
-Dim lListener As ChangeListener
-For Each lListener In mChangeListeners.CurrentListeners
+mChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mChangeListeners.Count
+    Dim lListener As ChangeListener
+    Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 
@@ -370,8 +377,11 @@ ev.ProfitAmount = ProfitAmount
 ev.ProfitType = ProfitType
 ev.CurrencyCode = sCurrencyCode
 
-Dim lListener As IProfitListener
-For Each lListener In mProfitListeners.CurrentListeners
+mProfitListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mProfitListeners.Count
+    Dim lListener As IProfitListener
+    Set lListener = mProfitListeners.GetListener(i)
     lListener.NotifyProfit ev
 Next
 

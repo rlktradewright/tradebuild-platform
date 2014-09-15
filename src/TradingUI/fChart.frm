@@ -368,6 +368,10 @@ End Sub
 ' IGenericTickListener Interface Members
 '================================================================================
 
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+
+End Sub
+
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
@@ -491,7 +495,7 @@ Case MultiChartSelectionChanged
     Set mCurrentTool = Nothing
 Case MultiChartAdd
     Dim lTitle As Text
-    Set lTitle = MultiChart1.BaseChartController(MultiChart1.Count).XAxisRegion.title
+    Set lTitle = MultiChart1.BaseChartController(MultiChart1.Count).XAxisRegion.Title
     lTitle.Box = False
     lTitle.Position = NewPoint(0.1, 0.1, CoordsDistance, CoordsCounterDistance)
     lTitle.FixedX = True
@@ -866,8 +870,8 @@ Private Function createNewTimeframes( _
 Const ProcName As String = "createNewTimeframes"
 On Error GoTo Err
 
-Dim lStudyBase As New NullInputStudyBase
-lStudyBase.Initialise pStudyManager, pContractFuture
+Dim lStudyBase As IStudyBase
+Set lStudyBase = CreateStudyBaseForNullInput(pStudyManager)
 
 Dim lTimeframes As Timeframes
 Set lTimeframes = CreateTimeframes(lStudyBase, pContractFuture, pHistDataStore)

@@ -1953,8 +1953,11 @@ If mRecoverableObjectListeners Is Nothing Or mRecoverableObjectListeners.Count =
 Dim ev As RecoveryDataChangedEventData
 Set ev.Source = Me
 
-Dim lListener As IRecoverableObjectListener
-For Each lListener In mRecoverableObjectListeners.CurrentListeners
+mRecoverableObjectListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mRecoverableObjectListeners.Count
+    Dim lListener As IRecoverableObjectListener
+    Set lListener = mRecoverableObjectListeners.GetListener(i)
     lListener.NotifyRecoveryDataChanged ev
 Next
 

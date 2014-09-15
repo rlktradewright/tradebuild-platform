@@ -64,6 +64,12 @@ Private Const ModuleName                            As String = "IGenericTickSou
 ' Methods
 '@================================================================================
 
+Public Sub AddGenericTickListener(ByVal pListener As IGenericTickListener)
+End Sub
+
+Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

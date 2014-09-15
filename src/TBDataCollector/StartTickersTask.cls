@@ -168,7 +168,9 @@ Set lTicker = ev.AffectedItem
 If mWriteBars Then
     Dim lBarWriter As HistDataWriter
     Set lBarWriter = RecordHistoricalBars( _
-                                    lTicker, _
+                                    lTicker.ContractFuture, _
+                                    lTicker.ClockFuture, _
+                                    lTicker.StudyBase, _
                                     mHistDataStore, _
                                     HistDataWriteOptionUpdateLatestBar + _
                                         IIf(mWriteTradeBars, HistDataWriteOptionWriteTradeBars, 0) + _
@@ -180,7 +182,7 @@ End If
 
 If mWriteTicks Then
     Dim lTickWriter As TickDataWriter
-    Set lTickWriter = RecordTickData(lTicker, mTickfileStore, mTickfileOutputMonitor, mOutputFormat, mOutputPath)
+    Set lTickWriter = RecordTickData(lTicker, lTicker.ContractFuture, mTickfileStore, mTickfileOutputMonitor, mOutputFormat, mOutputPath)
     mTaskContext.Progress 0!, lTickWriter
 End If
 

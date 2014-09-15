@@ -19,9 +19,6 @@ Public Const ConstTimeBarsInputTotalVolumeUcase As String = "TOTAL VOLUME"
 Public Const ConstTimeBarsInputTickVolume As String = "Tick volume"
 Public Const ConstTimeBarsInputTickVolumeUcase As String = "TICK VOLUME"
 
-Public Const ConstTimeBarsParamBarLength As String = "Bar length"
-Public Const ConstTimeBarsParamTimeUnits As String = "Time units"
-
 Public Const ConstTimeBarsValueBar As String = "Bar"
 
 '@================================================================================
@@ -97,9 +94,9 @@ ReDim ar(6) As Variant
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
-    mStudyDefinition.name = ConstTimeBarsName
+    mStudyDefinition.name = ConstTimeBarsStudyName
     mStudyDefinition.NeedsBars = False
-    mStudyDefinition.ShortName = ConstTimeBarsShortName
+    mStudyDefinition.ShortName = ConstTimeBarsStudyShortName
     mStudyDefinition.Description = "Constant time bars " & _
                         "divide price movement into periods (bars) of equal time. " & _
                         "For each period the open, high, low and close price values " & _

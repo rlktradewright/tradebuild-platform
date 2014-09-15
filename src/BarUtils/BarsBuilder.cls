@@ -88,10 +88,10 @@ On Error GoTo Err
 If Not ev.changeType = CollItemAdded Then Exit Sub
 
 Set mCurrentBar = ev.AffectedItem
-mBarEndTime = gBarEndTime(mCurrentBar.Timestamp, _
-                            mBarTimePeriod, _
-                            mMainSession.SessionStartTime, _
-                            mMainSession.SessionEndTime)
+If mBarTimePeriod.Length <> 0 Then mBarEndTime = gBarEndTime(mCurrentBar.Timestamp, _
+                                                            mBarTimePeriod, _
+                                                            mMainSession.SessionStartTime, _
+                                                            mMainSession.SessionEndTime)
 
 
 Exit Sub
@@ -176,7 +176,7 @@ Public Sub AddBar( _
 Const ProcName As String = "AddBar"
 On Error GoTo Err
 
-Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession is nothing"
 
 Dim lBar As New Bar
 lBar.Initialise Timestamp, _
@@ -202,7 +202,7 @@ Public Sub AddThisBar( _
 Const ProcName As String = "AddThisBar"
 On Error GoTo Err
 
-Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession is nothing"
 AssertArgument Not pBar Is Nothing, "pBar is nothing"
 
 mCurrentBarNumber = mCurrentBarNumber + 1
@@ -223,7 +223,7 @@ Public Sub AppendBars( _
 Const ProcName As String = "AppendBars"
 On Error GoTo Err
 
-Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession is nothing"
 Assert Not mBars Is Nothing, "Can't append bars - no saved bars"
 AssertArgument Not pBars Is Nothing, "pBars Is Nothing"
 
@@ -241,7 +241,7 @@ Public Function AppendBarsAsync( _
 Const ProcName As String = "AppendBarsAsync"
 On Error GoTo Err
 
-Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession is nothing"
 Assert Not mBars Is Nothing, "Can't append bars - no saved bars"
 AssertArgument Not pBars Is Nothing, "pBars Is Nothing"
 
@@ -336,13 +336,12 @@ Set mInitialBarsSession = mBars.Session
 If mBars.Count > 0 Then
     Set mCurrentBar = mBars.Bar(0)
     
-    Assert Not mInitialBarsSession Is Nothing, "mInitialBarsSession is nothing"
-    
-    mBarEndTime = gBarEndTime(mCurrentBar.Timestamp, _
-                                mBarTimePeriod, _
-                                mInitialBarsSession.SessionStartTime, _
-                                mInitialBarsSession.SessionEndTime)
-    
+    If Not mInitialBarsSession Is Nothing Then
+        mBarEndTime = gBarEndTime(mCurrentBar.Timestamp, _
+                                    mBarTimePeriod, _
+                                    mInitialBarsSession.SessionStartTime, _
+                                    mInitialBarsSession.SessionEndTime)
+    End If
     mCurrentBarNumber = mCurrentBar.BarNumber
 End If
     
@@ -528,7 +527,6 @@ On Error GoTo Err
 
 If mMainSession Is Nothing Or mInitialBarsSession Is Nothing Then Exit Sub
 mMainSession.LinkToSession mInitialBarsSession
-'mInitialBarsSession.LinkToSession mMainSession
 
 Exit Sub
 
@@ -545,7 +543,7 @@ Const ProcName As String = "createNewBar"
 On Error GoTo Err
 
 Assert Not mBarTimePeriod Is Nothing, "mBarTimePeriod is nothing"
-Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession is nothing"
 
 Dim lBar As New Bar
 

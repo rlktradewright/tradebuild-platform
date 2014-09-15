@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IGenericTickSource
 Implements ITickStream
 
 '@================================================================================
@@ -63,6 +64,34 @@ Private mState                                      As TickStreamStates
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+'@================================================================================
+' IGenericTickSource Interface Members
+'@================================================================================
+
+Private Sub IGenericTickSource_AddGenericTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "IGenericTickSource_AddGenericTickListener"
+On Error GoTo Err
+
+AddGenericTickListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IGenericTickSource_RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "IGenericTickSource_RemoveGenericTickListener"
+On Error GoTo Err
+
+RemoveGenericTickListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' ITickStream Interface Members
@@ -183,8 +212,11 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = mState
 
-Dim lListener As StateChangeListener
-For Each lListener In mStateChangeListeners.CurrentListeners
+mStateChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mStateChangeListeners.Count
+    Dim lListener As StateChangeListener
+    Set lListener = mStateChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 
@@ -242,7 +274,7 @@ Const ProcName As String = "Finish"
 On Error GoTo Err
 
 If mState = TickStreamStateFinished Then Exit Sub
-mBuilder.NotifyFinished
+mBuilder.Finish
 Set mBuilder = Nothing
 
 Exit Sub
@@ -271,6 +303,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub NoMoreTicks()
+Const ProcName As String = "NoMoreTicks"
+On Error GoTo Err
+
+If mState = TickStreamStateFinished Then Exit Sub
+mState = TickStreamStateFinished
+
+Dim ev As GenericTickEventData
+ev.StreamId = StreamId
+ev.Tick.Timestamp = MaxDate
+ev.Tick.TickType = -1
+Set ev.Source = Me
+
+mGenericTickListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mGenericTickListeners.Count
+    Dim lListener As IGenericTickListener
+    Set lListener = mGenericTickListeners.GetListener(i)
+    lListener.NoMoreTicks ev
+Next
+
+State = TickStreamStateFinished
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub NotifyTick(ByRef pTick As GenericTick)
 Const ProcName As String = "NotifyTick"
 On Error GoTo Err
@@ -282,8 +343,11 @@ ev.StreamId = StreamId
 ev.Tick = pTick
 Set ev.Source = Me
 
-Dim lListener As IGenericTickListener
-For Each lListener In mGenericTickListeners.CurrentListeners
+mGenericTickListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mGenericTickListeners.Count
+    Dim lListener As IGenericTickListener
+    Set lListener = mGenericTickListeners.GetListener(i)
     lListener.NotifyTick ev
 Next
 

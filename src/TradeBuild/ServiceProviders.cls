@@ -935,15 +935,19 @@ Private Sub fireCollectionChange( _
 Const ProcName As String = "fireCollectionChange"
 On Error GoTo Err
 
-Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEventData
-
 Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
-For Each listener In mCollectionChangeListeners.CurrentListeners
-    listener.Change ev
+
+mCollectionChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mCollectionChangeListeners.Count
+    Dim lListener As CollectionChangeListener
+    Set lListener = mCollectionChangeListeners.GetListener(i)
+    lListener.Change ev
 Next
+
 RaiseEvent CollectionChanged(ev)
 
 Exit Sub

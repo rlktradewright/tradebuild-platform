@@ -46,7 +46,6 @@ Private Const ModuleName                            As String = "PriceFormatter"
 ' Member variables
 '@================================================================================
 
-Private mContract                                   As Contract
 Private mSecType                                    As SecurityTypes
 Private mTickSize                                   As Double
 
@@ -91,15 +90,16 @@ End Property
 ' Properties
 '@================================================================================
 
-Friend Property Let Contract(ByVal value As Contract)
-Set mContract = value
-mSecType = mContract.Specifier.secType
-mTickSize = mContract.TickSize
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double)
+mSecType = pSecType
+mTickSize = pTickSize
+End Sub
 
 '@================================================================================
 ' Helper Functions

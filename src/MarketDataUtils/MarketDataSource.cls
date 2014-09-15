@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IGenericTickSource
 Implements IMarketDataSource
 
 '@================================================================================
@@ -54,7 +55,7 @@ Private mDataSourceBaseRef                          As WeakReference
 
 Private mContractFuture                             As IFuture
 
-Private mStudyBase                                  As TickDataStudyBase
+Private mStudyBase                                  As StudyBaseForTickDataInput
 
 Private mGenericTickListeners                       As Listeners
 Private mMarketDepthListeners                       As Listeners
@@ -125,7 +126,36 @@ End Sub
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
+On Error Resume Next
 gLogger.Log "MarketDataSource terminated (" & mKey & ")", ProcName, ModuleName, LogLevelDetail
+End Sub
+
+'@================================================================================
+' IGenericTickSource Interface Members
+'@================================================================================
+
+Private Sub IGenericTickSource_AddGenericTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "IGenericTickSource_AddGenericTickListener"
+On Error GoTo Err
+
+AddGenericTickListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IGenericTickSource_RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "IGenericTickSource_RemoveGenericTickListener"
+On Error GoTo Err
+
+RemoveGenericTickListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -278,6 +308,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Property Get IMarketDataSource_IsFinished() As Boolean
+IMarketDataSource_IsFinished = IsFinished
 End Property
 
 Private Property Get IMarketDataSource_IsMarketDataRequested() As Boolean
@@ -569,13 +603,15 @@ ElseIf ev.Future.IsCancelled Then
     SetError ErrorCodes.ErrIllegalStateException, ev.ContinuationData & " creation cancelled"
     mFutureWaiter.Cancel
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    processContractAvailable
+    If processContractAvailable Then checkReady
 ElseIf TypeOf ev.Future.Value Is Clock Then
     mClockFutureBuilder.Value = ev.Future.Value
     mClockFutureBuilder.Complete
+    checkReady
 ElseIf TypeOf ev.Future.Value Is Session Then
     mSessionFutureBuilder.Value = ev.Future.Value
     mSessionFutureBuilder.Complete
+    checkReady
 End If
 
 Exit Sub
@@ -641,6 +677,10 @@ End Property
 
 Friend Property Get HasPriceChangeListeners()
 HasPriceChangeListeners = (mPriceChangeListeners.Count <> 0)
+End Property
+
+Public Property Get IsFinished() As Boolean
+IsFinished = (mState = MarketDataSourceStateFinished)
 End Property
 
 Public Property Get IsMarketDataRequested() As Boolean
@@ -759,7 +799,7 @@ Const ProcName As String = "Timestamp"
 On Error GoTo Err
 
 checkNotFinished
-Assert mState = MarketDataSourceStateRunning, "Not in Running state"
+Assert mState = MarketDataSourceStateReady Or mState = MarketDataSourceStateRunning, "Not in Ready or Running state"
 Timestamp = DataSourceBase.Timestamp
 
 Exit Property
@@ -919,9 +959,36 @@ Set ev.Source = Me
 ev.ErrorCode = pErrorCode
 ev.ErrorMessage = pErrorMessage
 
-Dim lListener As ErrorListener
-For Each lListener In mErrorListeners.CurrentListeners
+mErrorListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mErrorListeners.Count
+    Dim lListener As ErrorListener
+    Set lListener = mErrorListeners.GetListener(i)
     lListener.Notify ev
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub FireNoMoreTicks()
+Const ProcName As String = "FireNoMoreTicks"
+On Error GoTo Err
+
+If mSubscribedToMarketDepth Or mSubscribedToMarketData Then Exit Sub
+
+Dim ev As GenericTickEventData
+Set ev.Source = Me
+ev.StreamId = mStreamId
+
+mGenericTickListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mGenericTickListeners.Count
+    Dim lListener As IGenericTickListener
+    Set lListener = mGenericTickListeners.GetListener(i)
+    lListener.NoMoreTicks ev
 Next
 
 Exit Sub
@@ -940,8 +1007,11 @@ Dim ev As PriceChangeEventData
 Set ev.Source = Me
 ev.PriceChange = pPriceChange
 
-Dim lListener As IPriceChangeListener
-For Each lListener In mPriceChangeListeners.CurrentListeners
+mPriceChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mPriceChangeListeners.Count
+    Dim lListener As IPriceChangeListener
+    Set lListener = mPriceChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 
@@ -961,8 +1031,11 @@ Dim ev As QuoteEventData
 Set ev.Source = Me
 ev.Quote = pQuote
 
-Dim lListener As IQuoteListener
-For Each lListener In mQuoteListeners.CurrentListeners
+mQuoteListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mQuoteListeners.Count
+    Dim lListener As IQuoteListener
+    Set lListener = mQuoteListeners.GetListener(i)
     Select Case pTickType
     Case TickTypeBid
         lListener.Bid ev
@@ -1012,8 +1085,11 @@ If pTick.TickType = TickTypeMarketDepth Then
     ev.Size = pTick.Size
 End If
 
-Dim lListener As IRawMarketDepthListener
-For Each lListener In mRawMarketDepthListeners.CurrentListeners
+mRawMarketDepthListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mRawMarketDepthListeners.Count
+    Dim lListener As IRawMarketDepthListener
+    Set lListener = mRawMarketDepthListeners.GetListener(i)
     If pTick.TickType = TickTypeMarketDepth Then
         lListener.UpdateMarketDepth ev
     Else
@@ -1036,16 +1112,21 @@ If Not mSubscribedToMarketDepth Then Exit Sub
 Dim evRaw As RawMarketDepthEventData
 Set evRaw.Source = Me
 
-Dim lRawListener As IRawMarketDepthListener
-For Each lRawListener In mRawMarketDepthListeners.CurrentListeners
+mRawMarketDepthListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mRawMarketDepthListeners.Count
+    Dim lRawListener As IRawMarketDepthListener
+    Set lRawListener = mRawMarketDepthListeners.GetListener(i)
     lRawListener.ResetMarketDepth evRaw
 Next
 
 Dim ev As MarketDepthEventData
 Set ev.Source = Me
 
-Dim lListener As IMarketDepthListener
-For Each lListener In mMarketDepthListeners.CurrentListeners
+mMarketDepthListeners.SetCurrentListeners
+For i = 1 To mMarketDepthListeners.Count
+    Dim lListener As IMarketDepthListener
+    Set lListener = mMarketDepthListeners.GetListener(i)
     lListener.ResetMarketDepth ev
 Next
 
@@ -1070,8 +1151,11 @@ ev.Price = pPrice
 ev.Type = pSide
 ev.Size = pSize
 
-Dim lListener As IMarketDepthListener
-For Each lListener In mMarketDepthListeners.CurrentListeners
+mMarketDepthListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mMarketDepthListeners.Count
+    Dim lListener As IMarketDepthListener
+    Set lListener = mMarketDepthListeners.GetListener(i)
     lListener.SetMarketDepthCell ev
 Next
 
@@ -1085,7 +1169,11 @@ Friend Sub FireTick(ByRef pTick As GenericTick)
 Const ProcName As String = "FireTick"
 On Error GoTo Err
 
-If Not mSubscribedToMarketData Then Exit Sub
+If pTick.TickType = TickTypeMarketDepth Or pTick.TickType = TickTypeMarketDepthReset Then
+    If Not mSubscribedToMarketDepth Then Exit Sub
+Else
+    If Not mSubscribedToMarketData Then Exit Sub
+End If
 
 ' studies must be updated before notifying other listeners
 If Not mStudyBase Is Nothing Then mStudyBase.NotifyTick pTick
@@ -1095,8 +1183,11 @@ Set ev.Source = Me
 ev.StreamId = mStreamId
 ev.Tick = pTick
 
-Dim lListener As IGenericTickListener
-For Each lListener In mGenericTickListeners.CurrentListeners
+mGenericTickListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mGenericTickListeners.Count
+    Dim lListener As IGenericTickListener
+    Set lListener = mGenericTickListeners.GetListener(i)
     lListener.NotifyTick ev
 Next
 
@@ -1130,7 +1221,7 @@ Else
 End If
 
 If Not pStudyManager Is Nothing Then
-    Set mStudyBase = New TickDataStudyBase
+    Set mStudyBase = New StudyBaseForTickDataInput
     mStudyBase.Initialise pStudyManager, mContractFuture
 End If
 
@@ -1202,21 +1293,29 @@ checkNotFinished
 
 If Not (State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunning) Then Exit Sub
 
-Dim lTickListener As IGenericTickListener
-For Each lTickListener In mGenericTickListeners.CurrentListeners
+mGenericTickListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mGenericTickListeners.Count
+    Dim lTickListener As IGenericTickListener
+    Set lTickListener = mGenericTickListeners.GetListener(i)
     DataSourceBase.NotifyCurrentMarketDataTickValues lTickListener, Me
 Next
 
-Dim lQuoteListener As IQuoteListener
-For Each lQuoteListener In mQuoteListeners.CurrentListeners
+mQuoteListeners.SetCurrentListeners
+For i = 1 To mQuoteListeners.Count
+    Dim lQuoteListener As IQuoteListener
+    Set lQuoteListener = mQuoteListeners.GetListener(i)
     DataSourceBase.NotifyCurrentMarketDataQuoteValues lQuoteListener, Me
 Next
 
-Dim lPricechangeListener As IPriceChangeListener
 Dim ev As PriceChangeEventData
 Set ev.Source = Me
 ev.PriceChange = DataSourceBase.GetPriceChange
-For Each lPricechangeListener In mPriceChangeListeners.CurrentListeners
+
+mPriceChangeListeners.SetCurrentListeners
+For i = 1 To mPriceChangeListeners.Count
+    Dim lPricechangeListener As IPriceChangeListener
+    Set lPricechangeListener = mPriceChangeListeners.GetListener(i)
     lPricechangeListener.Change ev
 Next
 
@@ -1403,8 +1502,11 @@ Set ev.Source = Me
 ev.ErrorCode = pErrorCode
 ev.ErrorMessage = pErrorMessage
 
-Dim lListener As ErrorListener
-For Each lListener In mErrorListeners.CurrentListeners
+mErrorListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mErrorListeners.Count
+    Dim lListener As ErrorListener
+    Set lListener = mErrorListeners.GetListener(i)
     lListener.Notify ev
 Next
 
@@ -1505,18 +1607,17 @@ Private Sub checkNotFinished()
 Assert Not IsFinished, "Object has been Finished"
 End Sub
 
-Private Sub fireStateChange(ByVal pState As MarketDataSourceStates)
-Const ProcName As String = "fireStateChange"
+Private Sub checkReady()
+Const ProcName As String = "checkReady"
 On Error GoTo Err
 
-Dim ev As StateChangeEventData
-Set ev.Source = Me
-ev.State = pState
+If Not ContractFuture.IsAvailable Then Exit Sub
+If Not ClockFuture.IsAvailable Then Exit Sub
+If Not SessionFuture.IsAvailable Then Exit Sub
 
-Dim lListener As StateChangeListener
-For Each lListener In mStateChangeListeners.CurrentListeners
-    lListener.Change ev
-Next
+setState MarketDataSourceStateReady
+
+storeSettings
 
 Exit Sub
 
@@ -1528,15 +1629,33 @@ Private Function DataSourceBase() As DataSourceBase
 Set DataSourceBase = mDataSourceBaseRef.Target
 End Function
 
+Private Sub fireStateChange(ByVal pState As MarketDataSourceStates)
+Const ProcName As String = "fireStateChange"
+On Error GoTo Err
+
+Dim ev As StateChangeEventData
+Set ev.Source = Me
+ev.State = pState
+
+mStateChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mStateChangeListeners.Count
+    Dim lListener As StateChangeListener
+    Set lListener = mStateChangeListeners.GetListener(i)
+    lListener.Change ev
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Function getMarketDataManager() As MarketDataManager
 Set getMarketDataManager = mMarketDataManagerRef.Target
 End Function
 
-Private Function IsFinished() As Boolean
-IsFinished = (mState = MarketDataSourceStateFinished)
-End Function
-
-Private Sub processContractAvailable()
+Private Function processContractAvailable() As Boolean
 Const ProcName As String = "processContractAvailable"
 On Error GoTo Err
 
@@ -1549,7 +1668,12 @@ DataSourceBase.AddMarketDataSource Me
 
 mStreamId = DataSourceBase.StreamId
 
-mFutureWaiter.Add DataSourceBase.ClockFuture
+If DataSourceBase.ClockFuture.IsAvailable Then
+    mClockFutureBuilder.Value = DataSourceBase.ClockFuture.Value
+    mClockFutureBuilder.Complete
+Else
+    mFutureWaiter.Add DataSourceBase.ClockFuture
+End If
 
 If DataSourceBase.SessionFuture.IsAvailable Then
     mSessionFutureBuilder.Value = DataSourceBase.SessionFuture.Value
@@ -1560,32 +1684,19 @@ End If
 
 If IsContractExpired(lContract) And Not IsTickReplay Then
     SetError ErrorCodes.ErrIllegalStateException, "Contract has expired"
+    processContractAvailable = False
 Else
-    SetReady
+    If mIsMarketDataRequested Then subscribeToMarketData
+    If mIsMarketDepthRequested Then subscribeToMarketDepth
+    
+    processContractAvailable = True
 End If
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub SetReady()
-Const ProcName As String = "SetReady"
-On Error GoTo Err
-
-setState MarketDataSourceStateReady
-
-If mIsMarketDataRequested Then subscribeToMarketData
-If mIsMarketDepthRequested Then subscribeToMarketDepth
-
-storeSettings
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub setState(ByVal pState As MarketDataSourceStates)
 Const ProcName As String = "setState"

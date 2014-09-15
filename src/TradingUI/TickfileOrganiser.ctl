@@ -106,7 +106,7 @@ Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
-mMinimumHeight = TickfileListManager1.MinimumHeight + 105 + ClearButton.Height
+mMinimumHeight = TickfileListManager1.MinimumHeight + 30 + ClearButton.Height
 mMinimumWidth = ClearButton.Width + 105 + AddTickfilesButton.Width + 105 + AddTickstreamsButton.Width + 315
 
 Exit Sub
@@ -123,7 +123,7 @@ If UserControl.Width < mMinimumWidth Then UserControl.Width = mMinimumWidth
 If UserControl.Height < mMinimumHeight Then UserControl.Height = mMinimumHeight
 
 TickfileListManager1.Width = UserControl.Width
-TickfileListManager1.Height = UserControl.Height - AddTickfilesButton.Height - 105
+TickfileListManager1.Height = UserControl.Height - AddTickfilesButton.Height - 30
 
 ClearButton.Top = UserControl.Height - ClearButton.Height
 AddTickfilesButton.Top = UserControl.Height - AddTickfilesButton.Height

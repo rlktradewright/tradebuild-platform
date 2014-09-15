@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TickDataStudyBase"
+Attribute VB_Name = "StudyBaseForTickDataInput"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -41,7 +41,7 @@ Implements IStudyBase
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "TickDataStudyBase"
+Private Const ModuleName                            As String = "StudyBaseForTickDataInput"
 
 '@================================================================================
 ' Member variables

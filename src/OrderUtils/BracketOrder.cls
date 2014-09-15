@@ -3146,10 +3146,15 @@ Dim ev As ChangeEventData
 Set ev.Source = Me
 ev.changeType = pChangeType
 
-Dim lListener As ChangeListener
-For Each lListener In mChangeListeners.CurrentListeners
+mChangeListeners.SetCurrentListeners
+
+Dim i As Long
+For i = 1 To mChangeListeners.Count
+    Dim lListener As ChangeListener
+    Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next
+
 RaiseEvent Change(ev)
 
 Exit Sub
@@ -3167,10 +3172,14 @@ Dim ev As ExecutionEventData
 Set ev.Source = Me
 Set ev.ExecutionReport = pExec
 
-Dim Listener As IExecutionListener
-For Each Listener In mExecutionListeners.CurrentListeners
-    Listener.NotifyExecution ev
+mExecutionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mExecutionListeners.Count
+    Dim lListener As IExecutionListener
+    Set lListener = mExecutionListeners.GetListener(i)
+    lListener.NotifyExecution ev
 Next
+
 RaiseEvent Execution(ev)
 
 Exit Sub
@@ -3188,10 +3197,14 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = pState
 
-Dim Listener As StateChangeListener
-For Each Listener In mStateChangeListeners.CurrentListeners
-    Listener.Change ev
+mStateChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mStateChangeListeners.Count
+    Dim lListener As StateChangeListener
+    Set lListener = mStateChangeListeners.GetListener(i)
+    lListener.Change ev
 Next
+
 RaiseEvent StateChange(ev)
 
 Exit Sub
@@ -3207,8 +3220,11 @@ On Error GoTo Err
 Dim ev As RecoveryDataChangedEventData
 Set ev.Source = Me
 
-Dim lListener As IRecoverableObjectListener
-For Each lListener In mRecoverableObjectListeners.CurrentListeners
+mRecoverableObjectListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mRecoverableObjectListeners.Count
+    Dim lListener As IRecoverableObjectListener
+    Set lListener = mRecoverableObjectListeners.GetListener(i)
     lListener.NotifyRecoveryDataChanged ev
 Next
 

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.UserControl MultiChart 
    Alignable       =   -1  'True
    ClientHeight    =   7140
@@ -548,8 +548,12 @@ End Property
 ' Methods
 '@================================================================================
 
+' return the index rather than the chart because the chart cannot be handled by non-friend
+' components
 Public Function Add( _
-                ByVal pPeriodLength As TimePeriod) As MarketChart
+                ByVal pPeriodLength As TimePeriod, _
+                Optional ByVal pTitle As String, _
+                Optional ByVal pUpdatePerTick As Boolean = True) As Long
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -557,6 +561,7 @@ Dim lChart As MarketChart
 Dim lTab As MSComctlLib.Tab
 
 Set lChart = loadChartControl
+lChart.UpdatePerTick = pUpdatePerTick
 
 Set lTab = addTab(pPeriodLength)
 
@@ -564,13 +569,14 @@ Set lTab = addTab(pPeriodLength)
 ' the ChartStates.ChartStateInitialised and ChartStates.ChartStateLoaded events
 fireChange MultiChartAdd
 
-lChart.ShowChart mTimeframes, pPeriodLength, mSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar
+lChart.ShowChart mTimeframes, pPeriodLength, mSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
 
 If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
 End If
 
 lTab.Selected = True
+Add = mCurrentIndex
 
 fireChange MultiChartSelectionChanged
 
@@ -928,14 +934,18 @@ Private Sub fireChange( _
 Const ProcName As String = "fireChange"
 On Error GoTo Err
 
-Dim listener As ChangeListener
 Dim ev As ChangeEventData
-
 Set ev.Source = Me
 ev.changeType = changeType
-For Each listener In mChangeListeners.CurrentListeners
-    listener.Change ev
+
+mChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mChangeListeners.Count
+    Dim lListener As ChangeListener
+    Set lListener = mChangeListeners.GetListener(i)
+    lListener.Change ev
 Next
+
 RaiseEvent Change(ev)
 
 Exit Sub

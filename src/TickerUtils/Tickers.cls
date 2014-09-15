@@ -246,10 +246,12 @@ On Error GoTo Err
 
 If pkey = "" Then pkey = GenerateGUIDString
 
-Dim lDataSource As IMarketDataSource
-Set lDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, pIsRecoverable, pkey, pUseLocalTimeForStudies, pStateChangeListener)
-
 Set CreateTicker = New Ticker
+If Not pStateChangeListener Is Nothing Then CreateTicker.AddStateChangeListener pStateChangeListener
+
+Dim lDataSource As IMarketDataSource
+Set lDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, pIsRecoverable, pkey, pUseLocalTimeForStudies)
+
 CreateTicker.Initialise lDataSource, mHistDataStore, Me, Nothing
                 
 If pIsRecoverable And Not mConfig Is Nothing Then addTickerToConfig pkey
@@ -524,10 +526,16 @@ Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
 
-Dim listener As CollectionChangeListener
-For Each listener In mCollectionChangeListeners.CurrentListeners
-    listener.Change ev
-Next
+If mCollectionChangeListeners.Count <> 0 Then
+    mCollectionChangeListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mCollectionChangeListeners.Count
+        Dim lListener As CollectionChangeListener
+        Set lListener = mCollectionChangeListeners.GetListener(i)
+        lListener.Change ev
+    Next
+End If
+
 RaiseEvent CollectionChanged(ev)
 
 Exit Sub

@@ -59,19 +59,15 @@ Private Const ModuleName                As String = "UserDefinedBars"
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private mSessionFuture As IFuture
-
-Private mBarTimePeriod As TimePeriod
-
 Private mBarsBuilder As BarsBuilder
+Private mBarNumber As Long
 
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
 Private WithEvents mBar As Bar
 Attribute mBar.VB_VarHelpID = -1
 
-Private mPriceTickSize As Double
-Private mVolumeTickSize As Double
+Private mValueTickSize As Double
 
 Private mTimestamp As Date
 
@@ -92,7 +88,7 @@ Set mFutureWaiter = New FutureWaiter
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "Constant Time Bars study terminated"
+Debug.Print "User Defined Bars study terminated"
 End Sub
 
 '@================================================================================
@@ -159,11 +155,11 @@ Assert mBarFetchListener Is Nothing, "Bar fetch listener has been requested - in
 mInitialBarsFutureSupplied = True
 
 Set mBarsFutureBuilder = New FutureBuilder
-If Value.IsAvailable And mSessionFuture.IsAvailable Then
-    setupBars CreateBarsBuilderWithInitialBars(Value.Value, mSessionFuture.Value, mPriceTickSize)
+If Value.IsAvailable Then
+    setupBars CreateBarsBuilderWithInitialBars(Value.Value, Nothing, mValueTickSize)
 Else
     mFutureWaiter.Clear
-    mFutureWaiter.Add CreateBarsBuilderWithInitialBarsFuture(Value, mSessionFuture, mPriceTickSize)
+    mFutureWaiter.Add CreateBarsBuilderWithInitialBarsFuture(Value, Nothing, mValueTickSize)
 End If
 
 Exit Property
@@ -278,8 +274,6 @@ Private Sub customInitialise( _
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
 
-Set mSessionFuture = pSessionFuture
-
 mStudyFoundation.ReplayUsingStudyValues = True
 customProcessParameters Parameters
 
@@ -304,7 +298,7 @@ sv.BarStartTime = Bar.Timestamp
 sv.Timestamp = Bar.Timestamp
 
 Select Case UCase$(valueName)
-Case UCase$(ConstTimeBarsValueBar)
+Case UCase$(UserDefinedBarsValueBar)
     Set sv.Value = Bar
 Case UCase$(BarValueOpen)
         sv.Value = Bar.OpenValue
@@ -316,10 +310,6 @@ Case UCase$(BarValueClose), UCase$(DefaultStudyValueName)
         sv.Value = Bar.CloseValue
 Case UCase$(BarValueTickVolume)
         sv.Value = Bar.TickVolume
-Case UCase$(BarValueVolume)
-        sv.Value = Bar.volume
-Case UCase$(BarValueOpenInterest)
-        sv.Value = Bar.OpenInterest
 Case UCase$(BarValueHL2)
         sv.Value = Bar.HL2
 Case UCase$(BarValueHLC3)
@@ -346,14 +336,12 @@ If IsEmpty(ev.sVal.Value) Then Exit Sub
 mTimestamp = ev.sVal.Timestamp
 
 ev.valueName = UCase$(ev.valueName)
-If ev.valueName = ConstTimeBarsInputPriceUcase Then
+If ev.valueName = UserDefinedBarsInputValueUCase Then
+    ev.sVal.BarNumber = mBarNumber
     mBarsBuilder.notifyValue ev.sVal
-ElseIf ev.valueName = ConstTimeBarsInputTotalVolumeUcase Then
-    mBarsBuilder.NotifyVolume ev.sVal
-ElseIf ev.valueName = ConstTimeBarsInputTickVolumeUcase Then
-    mBarsBuilder.IncrementTickVolume ev.sVal.Value
-ElseIf ev.valueName = ConstTimeBarsInputOpenInterestUcase Then
-    mBarsBuilder.NotifyOpenInterest ev.sVal
+ElseIf ev.valueName = UserDefinedBarsInputBarNumberUCase Then
+    Assert ev.sVal.Value = mBarNumber + 1, "Bar number out of sequence"
+    mBarNumber = ev.sVal.Value
 Else
     AssertArgument False, "Invalid input Value name: " & ev.valueName
 End If
@@ -377,32 +365,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
-Dim param As Parameter
-Dim barLength As Long
-Dim timeUnits As TimePeriodUnits
-
 Const ProcName As String = "customProcessParameters"
 On Error GoTo Err
 
-For Each param In params
-    Select Case UCase$(param.name)
-    Case UCase$(ConstTimeBarsParamBarLength)
-        barLength = param.Value
-    Case UCase$(ConstTimeBarsParamTimeUnits)
-        timeUnits = TimePeriodUnitsFromString(param.Value)
-    End Select
-Next
-
 Set mBarsFutureBuilder = New FutureBuilder
-If mSessionFuture.IsAvailable Then
-    setupBars CreateBarsBuilder(GetTimePeriod(barLength, timeUnits), _
-                                        mSessionFuture.Value, _
-                                        mPriceTickSize)
-Else
-    mFutureWaiter.Add CreateBarsBuilderFuture(GetTimePeriod(barLength, timeUnits), _
-                                        mSessionFuture, _
-                                        mPriceTickSize)
-End If
+setupBars CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
+                                    Nothing, _
+                                    mValueTickSize)
 
 Exit Sub
 
@@ -414,7 +383,7 @@ Private Function customStudyDefinition() As StudyDefinition
 Const ProcName As String = "customStudyDefinition"
 On Error GoTo Err
 
-Set customStudyDefinition = GConstTimeBars.StudyDefinition
+Set customStudyDefinition = GUserDefinedBars.StudyDefinition
 
 Exit Function
 
@@ -461,7 +430,7 @@ evOut.sVal.Timestamp = mTimestamp
 
 If mBar.BarChanged Then
     Set evOut.sVal.Value = mBar
-    evOut.valueName = ConstTimeBarsValueBar
+    evOut.valueName = UserDefinedBarsValueBar
     mStudyFoundation.notifyValue evOut
 End If
 
@@ -486,18 +455,6 @@ End If
 If mBar.CloseChanged Then
     evOut.sVal.Value = mBar.CloseValue
     evOut.valueName = BarValueClose
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.VolumeChanged Then
-    evOut.sVal.Value = mBar.volume
-    evOut.valueName = BarValueVolume
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.OpenInterestChanged Then
-    evOut.sVal.Value = mBar.OpenInterest
-    evOut.valueName = BarValueOpenInterest
     mStudyFoundation.notifyValue evOut
 End If
 
@@ -638,9 +595,9 @@ Case UCase$(BarValueOpen), _
     UCase$(BarValueLow), _
     UCase$(BarValueClose), _
     UCase$(DefaultStudyValueName)
-    IStudy_GetValueTicksize = mPriceTickSize
+    IStudy_GetValueTicksize = mValueTickSize
 Case UCase$(BarValueVolume)
-    IStudy_GetValueTicksize = mVolumeTickSize
+    IStudy_GetValueTicksize = 0
 Case UCase$(BarValueTickVolume)
     IStudy_GetValueTicksize = 1
 End Select
@@ -752,7 +709,7 @@ Private Function IStudy_NumberOfCachedValues( _
 Const ProcName As String = "IStudy_NumberOfCachedValues"
 On Error GoTo Err
 
-If valueName = "" Or valueName = ConstTimeBarsValueBar Then
+If valueName = "" Or valueName = UserDefinedBarsValueBar Then
     If mBars Is Nothing Then
         IStudy_NumberOfCachedValues = 0
     Else
@@ -799,11 +756,7 @@ Private Sub IStudy_SetInputTicksize( _
 Const ProcName As String = "IStudy_SetInputTicksize"
 On Error GoTo Err
 
-If UCase$(inputName) = UCase$(ConstTimeBarsInputPrice) Then
-    mPriceTickSize = tickSize
-ElseIf UCase$(inputName) = UCase$(ConstTimeBarsInputTotalVolume) Then
-    mVolumeTickSize = tickSize
-End If
+If UCase$(inputName) = UCase$(UserDefinedBarsInputValue) Then mValueTickSize = tickSize
 
 Exit Sub
 

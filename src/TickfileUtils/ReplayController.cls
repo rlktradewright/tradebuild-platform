@@ -89,6 +89,8 @@ Private mTickScheduler                              As TickScheduler
 
 Private mTaskContext                                As TaskContext
 
+Private mUnableToReplay                             As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -112,6 +114,12 @@ End Sub
 Private Sub Task_Run()
 Const ProcName As String = "Task_Run"
 On Error GoTo Err
+
+If mUnableToReplay Then
+    mTickScheduler.StopScheduling
+    mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "One of more files was invalid"
+    Exit Sub
+End If
 
 mTaskContext.Suspend -1
 
@@ -172,6 +180,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let TickFileSpecifiers(Value As TickFileSpecifiers)
+Const ProcName As String = "TickfileSpecifiers"
+On Error GoTo Err
+
+Assert mTickfileSpecifiers Is Nothing, "TickfileSpecifiers has already been set"
+AssertArgument Value.Count > 0, "Value has no members"
+
+Set mTickfileSpecifiers = Value.Clone
+
+ReDim mPlayers(mTickfileSpecifiers.Count - 1) As TickfilePlayer
+
+Set mTickScheduler = New TickScheduler
+mTickScheduler.Initialise Me, mReplaySpeed, mReplayProgressEventInterval, IIf(mTickfileSpecifiers.Count = 1, True, False)
+
+Dim i As Long
+For i = 0 To UBound(mPlayers)
+    Set mPlayers(i) = SetupTickfilePlayer(mTickfileSpecifiers(i + 1), mTickScheduler)
+    If Not mPlayers(i) Is Nothing Then
+        mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
+        mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted + 1
+    End If
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get TickFileSpecifiers() As TickFileSpecifiers
 Const ProcName As String = "TickfileSpecifiers"
 On Error GoTo Err
@@ -188,7 +225,9 @@ Public Property Get TickStream(ByVal pIndex As Long) As ITickStream
 Const ProcName As String = "TickStream"
 On Error GoTo Err
 
-Set TickStream = mPlayers(pIndex).TickStream
+Assert Not mTickfileSpecifiers Is Nothing, "TickfileSpecifiers has not yet been set"
+
+If Not mPlayers(pIndex) Is Nothing Then Set TickStream = mPlayers(pIndex).TickStream
 
 Exit Property
 
@@ -237,7 +276,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Intialise( _
-                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
                 ByVal pPrimaryContractStore As IContractStore, _
                 ByVal pSecondaryContractStore As IContractStore, _
@@ -248,7 +286,6 @@ Friend Sub Intialise( _
 Const ProcName As String = "Intialise"
 On Error GoTo Err
 
-Set mTickfileSpecifiers = pTickfileSpecifiers.Clone
 Set mTickfileStore = pTickfileStore
 Set mPrimaryContractStore = pPrimaryContractStore
 Set pSecondaryContractStore = pSecondaryContractStore
@@ -258,19 +295,22 @@ mTimestampAdjustmentEnd = pTimestampAdjustmentEnd
 
 mReplayProgressEventInterval = pReplayProgressEventInterval
 
-ReDim mPlayers(mTickfileSpecifiers.Count - 1) As TickfilePlayer
+Exit Sub
 
-Set mTickScheduler = New TickScheduler
-mTickScheduler.Initialise Me, mReplaySpeed, mReplayProgressEventInterval, IIf(mTickfileSpecifiers.Count = 1, True, False)
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
-Dim i As Long
-For i = 0 To UBound(mPlayers)
-    Set mPlayers(i) = SetupTickfilePlayer(mTickfileSpecifiers(i + 1), mTickScheduler)
-    If Not mPlayers(i) Is Nothing Then
-        mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted + 1
-        mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
-    End If
-Next
+Friend Sub NotifyCantPlay(ByVal pPlayer As TickfilePlayer)
+Const ProcName As String = "NotifyCantPlay"
+On Error GoTo Err
+
+mUnableToReplay = True
+mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady - 1
+If mNumberOfPlayersAwaitingReady = 0 And mReplayInProgress Then
+    mTickScheduler.StopScheduling
+    mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "One of more files was invalid"
+End If
 
 Exit Sub
 
@@ -283,7 +323,7 @@ Const ProcName As String = "NotifyEvent"
 On Error GoTo Err
 
 Set ev.Source = Me
-RaiseEvent NotifyEvent(ev)
+fireNotifyEvent ev
 
 Exit Sub
 
@@ -308,11 +348,14 @@ Const ProcName As String = "NotifyReady"
 On Error GoTo Err
 
 mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady - 1
-
-mTickScheduler.AddPlayer pPlayer
-pPlayer.StartReplay
-
-If mNumberOfPlayersAwaitingReady = 0 And mReplayInProgress Then mTickScheduler.StartScheduling
+If mNumberOfPlayersAwaitingReady = 0 And mReplayInProgress Then
+    If mUnableToReplay Then
+        mTickScheduler.StopScheduling
+        mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "One of more files was invalid"
+    Else
+        mTickScheduler.StartScheduling
+    End If
+End If
 
 Exit Sub
 
@@ -450,8 +493,11 @@ Private Sub fireNotifyEvent(ev As NotificationEventData)
 Const ProcName As String = "fireNotifyEvent"
 On Error GoTo Err
 
-Dim lListener As ITickfileReplayListener
-For Each lListener In mListeners.CurrentListeners
+mListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mListeners.Count
+    Dim lListener As ITickfileReplayListener
+    Set lListener = mListeners.GetListener(i)
     lListener.NotifyEvent ev
 Next
 
@@ -467,8 +513,11 @@ Private Sub fireProgress(ByVal pTimestamp As Date, ByVal pEventsPlayed As Long, 
 Const ProcName As String = "fireProgress"
 On Error GoTo Err
 
-Dim lListener As ITickfileReplayListener
-For Each lListener In mListeners.CurrentListeners
+mListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mListeners.Count
+    Dim lListener As ITickfileReplayListener
+    Set lListener = mListeners.GetListener(i)
     lListener.ReplayProgress pTimestamp, pEventsPlayed, pPercentComplete
 Next
 
@@ -484,8 +533,11 @@ Private Sub fireTickfileCompleted(ByRef ev As TickfileEventData, ByVal pEventsPl
 Const ProcName As String = "fireTickfileCompleted"
 On Error GoTo Err
 
-Dim lListener As ITickfileReplayListener
-For Each lListener In mListeners.CurrentListeners
+mListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mListeners.Count
+    Dim lListener As ITickfileReplayListener
+    Set lListener = mListeners.GetListener(i)
     lListener.TickfileCompleted ev, pEventsPlayed
 Next
 

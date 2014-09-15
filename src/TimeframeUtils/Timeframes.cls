@@ -133,7 +133,8 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 Select Case BarTimePeriod.Units
-Case TimePeriodSecond, _
+Case TimePeriodNone, _
+        TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
         TimePeriodDay, _
@@ -450,9 +451,12 @@ Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
 
-Dim listener As CollectionChangeListener
-For Each listener In mCollectionChangeListeners.CurrentListeners
-    listener.Change ev
+mCollectionChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mCollectionChangeListeners.Count
+    Dim lListener As CollectionChangeListener
+    Set lListener = mCollectionChangeListeners.GetListener(i)
+    lListener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
 

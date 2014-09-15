@@ -40,8 +40,6 @@ Public Const ConstTickVolumeBarsInputTotalVolumeUcase As String = "TOTAL VOLUME"
 Public Const ConstTickVolumeBarsInputTickVolume As String = "Tick volume"
 Public Const ConstTickVolumeBarsInputTickVolumeUcase As String = "TICK VOLUME"
 
-Public Const ConstTickVolumeBarsParamTicksPerBar As String = "Ticks per bar"
-
 Public Const ConstTickVolumeBarsValueBar As String = "Bar"
 
 '@================================================================================
@@ -115,9 +113,9 @@ ReDim ar(6) As Variant
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
-    mStudyDefinition.name = ConstTickVolBarsName
+    mStudyDefinition.name = ConstTickVolumeBarsStudyName
     mStudyDefinition.NeedsBars = False
-    mStudyDefinition.ShortName = ConstTickVolBarsShortName
+    mStudyDefinition.ShortName = ConstTickVolumeBarsStudyShortName
     mStudyDefinition.Description = "Constant Tick Volume bars " & _
                         "divide price movement into periods (bars) with equal numbers of trades. " & _
                         "For each period the open, high, low and close price values " & _

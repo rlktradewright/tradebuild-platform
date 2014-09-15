@@ -11,6 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
+
 Option Explicit
 
 ''
@@ -166,10 +167,13 @@ Friend Sub AddPlayer(ByVal pPlayer As TickfilePlayer)
 Const ProcName As String = "AddPlayer"
 On Error GoTo Err
 
-If getPlayerIndex(pPlayer) > UBound(mPlayers) Then ReDim Preserve mPlayers(2 * (UBound(mPlayers) + 1) - 1) As PlayerEntry
-
 Dim lIndex As Long
 lIndex = getPlayerIndex(pPlayer)
+
+Do While lIndex > UBound(mPlayers)
+    ReDim Preserve mPlayers(2 * (UBound(mPlayers) + 1) - 1) As PlayerEntry
+Loop
+
 Set mPlayers(lIndex).Player = pPlayer
 mPlayers(lIndex).UTCTimestamp = MaxDate
 mNumberOfTicksAwaited = mNumberOfTicksAwaited + 1
@@ -202,10 +206,26 @@ Friend Sub NotifyTick(ByRef pTick As GenericTick, ByVal pPlayer As TickfilePlaye
 Const ProcName As String = "NotifyTick"
 On Error GoTo Err
 
-mPlayers(getPlayerIndex(pPlayer)).Tick = pTick
-mPlayers(getPlayerIndex(pPlayer)).UTCTimestamp = ConvertDateTzToUTC(pTick.Timestamp, pPlayer.TimeZone)
+Static sFirstTickNotified As Boolean
+Static sFirstTickTimeUTC As Date
+
+If sFirstTickTimeUTC = 0# Then sFirstTickTimeUTC = MaxDate
+
+Dim lIndex As Long
+lIndex = getPlayerIndex(pPlayer)
+mPlayers(lIndex).Tick = pTick
+mPlayers(lIndex).UTCTimestamp = ConvertDateTzToUTC(pTick.Timestamp, pPlayer.TimeZone)
 
 mNumberOfTicksAwaited = mNumberOfTicksAwaited - 1
+
+If Not sFirstTickNotified Then
+    If mPlayers(lIndex).UTCTimestamp < sFirstTickTimeUTC Then sFirstTickTimeUTC = mPlayers(lIndex).UTCTimestamp
+    If mNumberOfTicksAwaited = 0 Then
+        sFirstTickNotified = True
+        notifyFirstTickTime sFirstTickTimeUTC
+    End If
+End If
+
 schedule
 
 Exit Sub
@@ -286,6 +306,7 @@ Friend Sub StopScheduling()
 Const ProcName As String = "StopScheduling"
 On Error GoTo Err
 
+fireProgress
 mStarted = False
 undispatch
 unProgress
@@ -351,10 +372,12 @@ Dim lTimestamp As Date
 lTimestamp = mClock.Timestamp
 'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Notify progress: " & FormatTimestamp(lTimestamp, TimestampDateAndTimeISO8601)
 
-If mSingleSource Then
-    mTickfileReplayController.NotifyProgress lTimestamp, mTicksPlayed, mPlayers(0).Player.ReplayProgressPercent
-Else
+If Not mSingleSource Then
     mTickfileReplayController.NotifyProgress lTimestamp, mTicksPlayed, 0
+ElseIf mPlayers(0).Player Is Nothing Then
+    mTickfileReplayController.NotifyProgress lTimestamp, mTicksPlayed, 100
+Else
+    mTickfileReplayController.NotifyProgress lTimestamp, mTicksPlayed, mPlayers(0).Player.ReplayProgressPercent
 End If
 
 Exit Sub
@@ -368,16 +391,6 @@ Const ProcName As String = "fireTick"
 On Error GoTo Err
 
 If mClockNeedsSetting Then mClock.SetTime ConvertDateUTCToLocal(mPlayers(pIndex).UTCTimestamp)
-
-Static sFirstTickNotified As Boolean
-If Not sFirstTickNotified Then
-    sFirstTickNotified = True
-    Dim i As Long
-    For i = 0 To UBound(mPlayers)
-        If Not mPlayers(i).Player Is Nothing Then mPlayers(i).Player.FirstTickTimeUTC = mPlayers(pIndex).UTCTimestamp
-    Next
-End If
-
 
 If Not mPlayers(pIndex).Player Is Nothing Then
     mPlayers(pIndex).Player.ProcessTick mPlayers(pIndex).Tick
@@ -424,6 +437,22 @@ End Function
 Private Function getPlayerIndex(ByVal pPlayer As TickfilePlayer) As Long
 getPlayerIndex = IIf(mSingleSource, 0, pPlayer.TickStream.StreamId)
 End Function
+
+Private Sub notifyFirstTickTime(ByVal pUTCTimestamp As Date)
+Const ProcName As String = "notifyFirstTickTime"
+On Error GoTo Err
+
+Dim i As Long
+For i = 0 To UBound(mPlayers)
+    If Not mPlayers(i).Player Is Nothing Then mPlayers(i).Player.FirstTickTimeUTC = pUTCTimestamp
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
+End Sub
 
 Private Sub schedule()
 Const ProcName As String = "schedule"

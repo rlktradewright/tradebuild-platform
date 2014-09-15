@@ -64,8 +64,10 @@ Private Const ModuleName                            As String = "IGenericTickLis
 ' Methods
 '@================================================================================
 
-Public Sub NotifyTick(ByRef ev As GenericTickEventData)
+Public Sub NoMoreTicks(ByRef ev As GenericTickEventData)
+End Sub
 
+Public Sub NotifyTick(ByRef ev As GenericTickEventData)
 End Sub
 
 '@================================================================================

@@ -103,7 +103,9 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-mTickStream.State = TickStreamStateFinished
+If mTickStream.State = TickStreamStateFinished Then Exit Sub
+
+mTickStream.NoMoreTicks
 
 fireStateChange TickStreamStateFinished
 mStateChangeListeners.Clear
@@ -124,18 +126,6 @@ On Error GoTo Err
 mTickStream.Initialise Me, pStreamId, pContractFuture, pClockFuture
 mTickStream.State = TickStreamStateReady
 fireStateChange TickStreamStateReady
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub NotifyFinished()
-Const ProcName As String = "NotifyFinished"
-On Error GoTo Err
-
-Finish
 
 Exit Sub
 
@@ -195,8 +185,11 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = pState
 
-Dim lListener As StateChangeListener
-For Each lListener In mStateChangeListeners.CurrentListeners
+mStateChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mStateChangeListeners.Count
+    Dim lListener As StateChangeListener
+    Set lListener = mStateChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 

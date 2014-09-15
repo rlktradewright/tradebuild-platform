@@ -155,7 +155,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTickfileReplayController( _
-                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
                 Optional ByVal pPrimaryContractStore As IContractStore, _
                 Optional ByVal pSecondaryContractStore As IContractStore, _
@@ -166,11 +165,10 @@ Public Function CreateTickfileReplayController( _
 Const ProcName As String = "CreateTickfileReplayController"
 On Error GoTo Err
 
-AssertArgument pTickfileSpecifiers.Count > 0, "pTickFileSpecifiers has no members"
 AssertArgument pReplayProgressEventInterval >= 50, "pReplayProgressEventInterval cannot be less than 50"
 
 Dim clr As New ReplayController
-clr.Intialise pTickfileSpecifiers, pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pReplaySpeed, pTimestampAdjustmentStart, pTimestampAdjustmentEnd, pReplayProgressEventInterval
+clr.Intialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pReplaySpeed, pTimestampAdjustmentStart, pTimestampAdjustmentEnd, pReplayProgressEventInterval
 
 Set CreateTickfileReplayController = clr
 
@@ -430,7 +428,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function RecordTickData( _
-                ByVal pDataSource As IMarketDataSource, _
+                ByVal pTickSource As IGenericTickSource, _
+                ByVal pContractFuture As IFuture, _
                 ByVal pTickfileStore As ITickfileStore, _
                 Optional ByVal pOutputMonitor As ITickfileOutputMonitor, _
                 Optional ByVal pFormatIdentifier As String = "", _
@@ -439,7 +438,7 @@ Const ProcName As String = "RecordTickData"
 On Error GoTo Err
 
 Set RecordTickData = New TickDataWriter
-RecordTickData.Initialise pDataSource, pOutputMonitor, pTickfileStore, pFormatIdentifier, pLocation
+RecordTickData.Initialise pTickSource, pContractFuture, pOutputMonitor, pTickfileStore, pFormatIdentifier, pLocation
 
 Exit Function
 

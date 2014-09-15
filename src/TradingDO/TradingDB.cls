@@ -231,6 +231,51 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function FetchContracts( _
+                ByVal contractSpec As IContractSpecifier) As IContracts
+Const ProcName As String = "FetchContracts"
+On Error GoTo Err
+
+Dim instruments As DataObjects
+Set instruments = Me.InstrumentFactory.QueryObjectsBySpec(contractSpec)
+
+Dim builder As ContractsBuilder
+Set builder = New ContractsBuilder
+
+Dim instrument As BusinessDataObject
+For Each instrument In instruments
+    builder.Add gContractFromInstrument(instrument)
+Next
+
+Set FetchContracts = builder.Contracts
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function FetchContractsAsync( _
+                ByVal pContractSpec As IContractSpecifier, _
+                Optional ByVal pListener As IContractFetchListener, _
+                Optional ByVal pCookie As Variant, _
+                Optional ByVal pTaskName As String) As IFuture
+Const ProcName As String = "FetchContractsAsync"
+On Error GoTo Err
+
+Dim crt As New ContractsRetrievalTask
+crt.Initialise Me, pContractSpec, pListener, pCookie
+If pTaskName = "" Then pTaskName = "LoadContractsAsync/" & pContractSpec.ToString & "(" & gGetSequenceNumber & ")"
+StartTask crt, PriorityNormal, pTaskName, pCookie
+                            
+Set FetchContractsAsync = crt.ContractsFuture
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function FetchTicks( _
                 ByVal Specifier As IContractSpecifier, _
                 ByVal fromDate As Date, _
@@ -260,15 +305,9 @@ Const ProcName As String = "FetchTicksAsync"
 On Error GoTo Err
 
 Dim ftt As New FetchTicksTask
-ftt.Initialise Me, _
-                Specifier, _
-                fromDate, _
-                toDate
+ftt.Initialise Me, Specifier, fromDate, toDate
 If taskName = "" Then taskName = "FetchTicksAsync/" & Specifier.LocalSymbol & "/" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
-Set FetchTicksAsync = StartTask(ftt, _
-                        PriorityNormal, _
-                        taskName, _
-                        cookie)
+Set FetchTicksAsync = StartTask(ftt, PriorityNormal, taskName, cookie)
 
 Exit Function
 
@@ -320,51 +359,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Public Function FetchContracts( _
-                ByVal contractSpec As IContractSpecifier) As IContracts
-Const ProcName As String = "FetchContracts"
-On Error GoTo Err
-
-Dim instruments As DataObjects
-Set instruments = Me.InstrumentFactory.QueryObjectsBySpec(contractSpec)
-
-Dim builder As ContractsBuilder
-Set builder = New ContractsBuilder
-
-Dim instrument As BusinessDataObject
-For Each instrument In instruments
-    builder.Add gContractFromInstrument(instrument)
-Next
-
-Set FetchContracts = builder.Contracts
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function FetchContractsAsync( _
-                ByVal pContractSpec As IContractSpecifier, _
-                Optional ByVal pListener As IContractFetchListener, _
-                Optional ByVal pCookie As Variant, _
-                Optional ByVal pTaskName As String) As IFuture
-Const ProcName As String = "FetchContractsAsync"
-On Error GoTo Err
-
-Dim crt As New ContractsRetrievalTask
-crt.Initialise Me, pContractSpec, pListener, pCookie
-If pTaskName = "" Then pTaskName = "LoadContractsAsync/" & pContractSpec.ToString & "(" & gGetSequenceNumber & ")"
-StartTask crt, PriorityNormal, pTaskName, pCookie
-                            
-Set FetchContractsAsync = crt.ContractsFuture
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Public Function ToString() As String
 ToString = mConnectionParams.ToString

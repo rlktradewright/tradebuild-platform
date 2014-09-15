@@ -99,29 +99,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateTickDataStudyBase( _
-                ByVal pStudyManager As StudyManager, _
-                ByVal pTickStream As ITickStream, _
-                ByVal pContractFuture As IFuture) As IStudyBase
-Const ProcName As String = "CreateTickDataStudyBase"
-On Error GoTo Err
-
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-AssertArgument Not pTickStream Is Nothing, "pTickStream Is Nothing"
-AssertArgument Not pContractFuture Is Nothing, "pContractFuture Is Nothing"
-
-Dim lStudyBase As New TickDataStudyBase
-lStudyBase.Initialise pStudyManager, pContractFuture
-pTickStream.AddGenericTickListener lStudyBase
-
-Set CreateTickDataStudyBase = lStudyBase
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Function CreateTickDataManager( _
                 ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _

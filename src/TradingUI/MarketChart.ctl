@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#189.0#0"; "ChartSkil27.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#214.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -180,6 +180,8 @@ Private mExcludeCurrentBar                              As Boolean
 
 Private WithEvents mFutureWaiter                        As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mTitle                                          As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -797,6 +799,7 @@ Const ProcName As String = "UpdatePerTick"
 On Error GoTo Err
 
 mUpdatePerTick = value
+If Not mManager Is Nothing Then mManager.UpdatePerTick = mUpdatePerTick
 
 Exit Property
 
@@ -1050,7 +1053,8 @@ Public Sub ShowChart( _
                 Optional ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 Optional ByVal pBarFormatterFactoryName As String, _
                 Optional ByVal pBarFormatterLibraryName As String, _
-                Optional ByVal pExcludeCurrentBar As Boolean)
+                Optional ByVal pExcludeCurrentBar As Boolean, _
+                Optional ByVal pTitle As String)
 Const ProcName As String = "ShowChart"
 On Error GoTo Err
 
@@ -1075,6 +1079,7 @@ Set mChartStyle = pChartStyle
 mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
 mExcludeCurrentBar = pExcludeCurrentBar
+mTitle = pTitle
 
 storeSettings
 
@@ -1143,7 +1148,8 @@ studyValueConfig.IncludeInChart = True
 studyValueConfig.BarFormatterFactoryName = mBarFormatterFactoryName
 studyValueConfig.BarFormatterLibraryName = mBarFormatterLibraryName
 
-If mContract.Specifier.secType <> SecurityTypes.SecTypeCash And _
+If mContract Is Nothing Then
+ElseIf mContract.Specifier.secType <> SecurityTypes.SecTypeCash And _
     mContract.Specifier.secType <> SecurityTypes.SecTypeIndex _
 Then
     Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(StudyValueConfigNameVolume)
@@ -1160,8 +1166,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createPriceFormatter() As PriceFormatter
+Const ProcName As String = "createPriceFormatter"
+On Error GoTo Err
+
 Set createPriceFormatter = New PriceFormatter
-createPriceFormatter.Contract = mContract
+If mContract Is Nothing Then
+    createPriceFormatter.Initialise SecTypeNone, 0.0001
+Else
+    createPriceFormatter.Initialise mContract.Specifier.secType, mContract.TickSize
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub createTimeframe()
@@ -1204,6 +1222,7 @@ Chart1.DisableDrawing
 
 If Not mInitialised Then
     Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager)
+    mManager.UpdatePerTick = mUpdatePerTick
     If Not mConfig Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudies)
 
     If mChartStyle Is Nothing Then
@@ -1238,21 +1257,36 @@ Chart1.DisableDrawing
 
 Chart1.TimePeriod = mTimePeriod
 
-Chart1.SessionStartTime = mContract.SessionStartTime
-Chart1.SessionEndTime = mContract.SessionEndTime
-
-mPriceRegion.YScaleQuantum = mContract.TickSize
-If mMinimumTicksHeight * mContract.TickSize <> 0 Then
-    mPriceRegion.MinimumHeight = mMinimumTicksHeight * mContract.TickSize
+If mContract Is Nothing Then
+    Chart1.SessionStartTime = 0#
+    Chart1.SessionEndTime = 0#
+Else
+    Chart1.SessionStartTime = mContract.SessionStartTime
+    Chart1.SessionEndTime = mContract.SessionEndTime
 End If
+
+If mContract Is Nothing Then
+    mPriceRegion.YScaleQuantum = 0.001
+Else
+    mPriceRegion.YScaleQuantum = mContract.TickSize
+    If mMinimumTicksHeight * mContract.TickSize <> 0 Then
+        mPriceRegion.MinimumHeight = mMinimumTicksHeight * mContract.TickSize
+    End If
+End If
+
 mPriceRegion.PriceFormatter = createPriceFormatter
 
-mPriceRegion.title.Text = mContract.Specifier.LocalSymbol & _
-                " (" & mContract.Specifier.Exchange & ") " & _
-                TimeframeCaption
-mPriceRegion.title.Color = vbBlue
+If mTitle <> "" Then
+    mPriceRegion.Title.Text = mTitle
+ElseIf Not mContract Is Nothing Then
+    mPriceRegion.Title.Text = mContract.Specifier.LocalSymbol & _
+                    " (" & mContract.Specifier.Exchange & ") " & _
+                    TimeframeCaption
+End If
+mPriceRegion.Title.Color = vbBlue
 
-If mContract.Specifier.secType <> SecurityTypes.SecTypeCash _
+If mContract Is Nothing Then
+ElseIf mContract.Specifier.secType <> SecurityTypes.SecTypeCash _
     And mContract.Specifier.secType <> SecurityTypes.SecTypeIndex _
 Then
     On Error Resume Next
@@ -1263,8 +1297,8 @@ Then
 
     mVolumeRegion.MinimumHeight = 10
     mVolumeRegion.IntegerYScale = True
-    mVolumeRegion.title.Text = "Volume"
-    mVolumeRegion.title.Color = vbBlue
+    mVolumeRegion.Title.Text = "Volume"
+    mVolumeRegion.Title.Color = vbBlue
 End If
 
 If mTimeframe.State <> TimeframeStateLoaded Then
@@ -1305,7 +1339,10 @@ On Error GoTo Err
 createTimeframe
 initialiseChart
 
-If mTimeframes.ContractFuture.IsAvailable Then
+If mTimeframes.ContractFuture Is Nothing Then
+    setupStudies
+    loadchart
+ElseIf mTimeframes.ContractFuture.IsAvailable Then
     Set mContract = mTimeframes.ContractFuture.value
 
     setupStudies

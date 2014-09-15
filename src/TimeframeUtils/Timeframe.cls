@@ -286,9 +286,12 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = newState
 
-Dim listener As StateChangeListener
-For Each listener In mStateChangeListeners.CurrentListeners
-    listener.Change ev
+mStateChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mStateChangeListeners.Count
+    Dim lListener As StateChangeListener
+    Set lListener = mStateChangeListeners.GetListener(i)
+    lListener.Change ev
 Next
 RaiseEvent StateChange(ev)
 

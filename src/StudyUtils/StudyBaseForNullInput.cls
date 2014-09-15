@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "NullInputStudyBase"
+Attribute VB_Name = "StudyBaseForNullInput"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -40,7 +40,7 @@ Implements IStudyBase
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "NullInputStudyBase"
+Private Const ModuleName                            As String = "StudyBaseForNullInput"
 
 '@================================================================================
 ' Member variables
@@ -48,9 +48,6 @@ Private Const ModuleName                            As String = "NullInputStudyB
 
 Private mStudyManager                               As StudyManager
 Private mStudyInputHandler                          As StudyInputHandler
-
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -85,25 +82,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' mFutureWaiter Event Handlers
+' XXXX Event Handlers
 '@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If Not ev.Future.IsAvailable Then Exit Sub
-
-Dim lContract As IContract
-Set lContract = ev.Future.Value
-
-mStudyInputHandler.Name = lContract.Specifier.ToString
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties

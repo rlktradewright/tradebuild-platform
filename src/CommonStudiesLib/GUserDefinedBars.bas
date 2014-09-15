@@ -68,44 +68,34 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
-Dim inputDef As StudyInputDefinition
-Dim valueDef As StudyValueDefinition
-Dim paramDef As StudyParameterDefinition
 Const ProcName As String = "StudyDefinition"
 On Error GoTo Err
 
-ReDim ar(6) As Variant
-
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
-    mStudyDefinition.name = ConstTimeBarsName
+    mStudyDefinition.name = UserDefinedBarsStudyName
     mStudyDefinition.NeedsBars = False
-    mStudyDefinition.ShortName = ConstTimeBarsShortName
-    mStudyDefinition.Description = "Constant time bars " & _
-                        "divide price movement into periods (bars) of equal time. " & _
-                        "For each period the open, high, low and close price values " & _
+    mStudyDefinition.ShortName = UserDefinedBarsStudyShortName
+    mStudyDefinition.Description = "User-defined bars " & _
+                        "divide value movement into periods (bars) of duration " & _
+                        "determined by the program that supplies the values. " & _
+                        "For each period the open, high, low and close values " & _
                         "are determined."
     mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
     
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputPrice)
+    Dim inputDef As StudyInputDefinition
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(UserDefinedBarsInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Price"
+    inputDef.Description = "Value"
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputTotalVolume)
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(UserDefinedBarsInputBarNumber)
     inputDef.InputType = InputTypeInteger
-    inputDef.Description = "Accumulated volume"
+    inputDef.Description = "Bar number"
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputTickVolume)
-    inputDef.InputType = InputTypeInteger
-    inputDef.Description = "Tick volume"
-    
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputOpenInterest)
-    inputDef.InputType = InputTypeInteger
-    inputDef.Description = "Open interest"
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstTimeBarsValueBar)
-    valueDef.Description = "The constant time bars"
+    Dim valueDef As StudyValueDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(UserDefinedBarsValueBar)
+    valueDef.Description = "The user-defined bars"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeBar
@@ -141,25 +131,11 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueStyle = gCreateDataPointStyle(&H80&)
     valueDef.ValueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueVolume)
-    valueDef.Description = "Bar volume"
-    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H808080, DisplayMode:=DataPointDisplayModeHistogram)
-    valueDef.ValueType = ValueTypeInteger
-    
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueTickVolume)
     valueDef.Description = "Bar tick volume"
     valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H800000, DisplayMode:=DataPointDisplayModeHistogram)
-    valueDef.ValueType = ValueTypeInteger
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpenInterest)
-    valueDef.Description = "Bar open interest"
-    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H80&, DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHL2)
@@ -182,22 +158,6 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&HFF0000)
     valueDef.ValueType = ValueTypeReal
-    
-    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstTimeBarsParamBarLength)
-    paramDef.Description = "The number of time units in each constant time bar"
-    paramDef.ParameterType = ParameterTypeInteger
-
-    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstTimeBarsParamTimeUnits)
-    paramDef.Description = "The time units that the constant time bars are measured in"
-    paramDef.ParameterType = ParameterTypeString
-    ar(0) = TimePeriodUnitsToString(TimePeriodSecond)
-    ar(1) = TimePeriodUnitsToString(TimePeriodMinute)
-    ar(2) = TimePeriodUnitsToString(TimePeriodHour)
-    ar(3) = TimePeriodUnitsToString(TimePeriodDay)
-    ar(4) = TimePeriodUnitsToString(TimePeriodWeek)
-    ar(5) = TimePeriodUnitsToString(TimePeriodMonth)
-    ar(6) = TimePeriodUnitsToString(TimePeriodYear)
-    paramDef.PermittedValues = ar
     
 End If
 

@@ -25,7 +25,6 @@ Option Explicit
 Implements DeferredAction
 Implements IGenericTickListener
 Implements IMarketDataErrorListener
-Implements StateChangeListener
 
 '@================================================================================
 ' Events
@@ -175,6 +174,27 @@ End Sub
 ' IGenericTickListener Interface Members
 '@================================================================================
 
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NoMoreTicks"
+On Error GoTo Err
+
+Dim lDataStream As ITickStream
+Set lDataStream = ev.Source
+
+Assert lDataStream Is mDataTickStream Or lDataStream Is mDepthTickStream, "Invalid tick stream"
+
+If lDataStream Is mDataTickStream Then
+    mDataSources.NotifyMarketDataStreamFinished
+Else
+    mDataSources.NotifyMarketDepthStreamFinished
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
@@ -208,24 +228,6 @@ Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDepthError"
 On Error GoTo Err
 
 NotifyMarketDepthError pErrorCode, pErrorMessage
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' StateChangeListener Interface Members
-'@================================================================================
-
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
-On Error GoTo Err
-
-If ev.State <> TickStreamStates.TickStreamStateFinished Then Exit Sub
-
-NotifyStreamFinished
 
 Exit Sub
 
@@ -680,7 +682,7 @@ On Error GoTo Err
 If mDataTickStream Is Nothing Then Exit Sub
 
 If mNumberOfMarketDataSubscriptions = 0 Then
-    mDataTickStream.RemoveStateChangeListener Me
+    mDataTickStream.RemoveGenericTickListener Me
     mDataTickStream.Finish
     Set mDataTickStream = Nothing
 End If
@@ -698,7 +700,7 @@ On Error GoTo Err
 If mDepthTickStream Is Nothing Then Exit Sub
 
 If mNumberOfMarketDepthSubscriptions = 0 Then
-    mDepthTickStream.RemoveStateChangeListener Me
+    mDepthTickStream.RemoveGenericTickListener Me
     mDepthTickStream.Finish
     Set mDepthTickStream = Nothing
     mDOMManager.Reset
@@ -808,18 +810,6 @@ Const ProcName As String = "NotifyMarketDepthError"
 On Error GoTo Err
 
 mDataSources.NotifyMarketDepthError pErrorCode, pErrorMessage
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub NotifyStreamFinished()
-Const ProcName As String = "NotifyStreamFinished"
-On Error GoTo Err
-
-mDataSources.NotifyStreamFinished
 
 Exit Sub
 
@@ -957,7 +947,7 @@ If mNumberOfMarketDataSubscriptions <> 1 Then Exit Sub
 
 Set mDataTickStream = getDataManager.RequestMarketData(Me)
 mDataTickStream.AddGenericTickListener Me
-mDataTickStream.AddStateChangeListener Me
+
 mDataTickStream.Start
 
 If Not mGotClockFuture And mNumberOfMarketDepthSubscriptions = 0 Then

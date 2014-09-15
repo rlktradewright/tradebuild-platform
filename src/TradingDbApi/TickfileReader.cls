@@ -93,6 +93,9 @@ Private mUseSynchronousReads        As Boolean
 Private WithEvents mFutureWaiter    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mSessionBuilder             As SessionBuilder
+Private mSession                    As Session
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -202,18 +205,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get ITickfileReader_FirstTickFileTime() As Date
-Const ProcName As String = "ITickfileReader_FirstTickFileTime"
-On Error GoTo Err
-
-ITickfileReader_FirstTickFileTime = mFirstTick.TimeStamp
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Private Function ITickfileReader_PrepareTickfile( _
                 ByVal pTickfileSpec As ITickfileSpecifier) As Boolean
 Const ProcName As String = "ITickfileReader_PrepareTickfile"
@@ -264,7 +255,6 @@ ElseIf IsEmpty(ev.Result) Then
 Else
     Set mTickStream = ev.Result
     mTickStream.StartStream True
-    getTick
 End If
 
 Exit Sub
@@ -316,10 +306,9 @@ End Sub
 
 Private Sub mTickStream_DataAvailable()
 Const ProcName As String = "mTickStream_DataAvailable"
-
 On Error GoTo Err
 
-logMessage pMsg:="Ticks available", pProcName:="mTickStream_DataAvailable", pLogLevel:=LogLevelDetail
+logMessage "Ticks available", ProcName, , LogLevelDetail
 If mTickRequested Or Not mGotFirstTick Then
     mTickRequested = False
     getTick
@@ -396,8 +385,8 @@ On Error GoTo Err
 
 If mTradingDB Is Nothing Or mTargetContractSpec Is Nothing Then Exit Sub
 
-logMessage "Fetching contract", ProcName, mTargetContractSpec.ToString
 If mUseSynchronousReads Then
+    logMessage "Fetching contract synchronously", ProcName, mTargetContractSpec.ToString
     Set mContracts = mTradingDB.FetchContracts(mTargetContractSpec)
     processContracts
     If Not mTickStream Is Nothing Then
@@ -405,6 +394,7 @@ If mUseSynchronousReads Then
         getTick
     End If
 Else
+    logMessage "Fetching contract asynchronously", ProcName, mTargetContractSpec.ToString
     mFutureWaiter.Add mTradingDB.FetchContractsAsync(mTargetContractSpec, Me)
 End If
 
@@ -431,25 +421,25 @@ Do While mTickStream.GetNextTick(tick)
             Exit Function
         End If
         
-        mTickCounter = mTickCounter + 1
-        If Not mGotFirstTick Then
-            mGotFirstTick = True
-            mFirstTick = tick
-            logMessage pMsg:="Notify ready", pProcName:="getTick", pLogLevel:=LogLevelHighDetail
-            mReplayMonitor.NotifyReady Me, mInputTickfileSpecifier
-        Else
-            notifyTick tick
+        If Not mInputTickfileSpecifier.EntireSession Then
+            processTick tick
             getTick = True
+            Exit Function
+        Else
+            mSessionBuilder.SetSessionCurrentTime tick.TimeStamp
+            If mSession.IsTimeInSession(tick.TimeStamp) Then
+                processTick tick
+                getTick = True
+                Exit Function
+            End If
         End If
-        
-        Exit Function
     End If
 Loop
     
 If mTickStream.Eos Then
     noMoreTicks
 Else
-    logMessage pMsg:="Waiting for ticks", pProcName:="getTick", pLogLevel:=LogLevelHighDetail
+    logMessage "Waiting for ticks", ProcName, , LogLevelHighDetail
     mTickRequested = True
 End If
 
@@ -534,23 +524,29 @@ Else
     
     With mInputTickfileSpecifier
         If .EntireSession Then
+            Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimeZoneName))
+            Set mSession = mSessionBuilder.Session
+            
+            If .ToDate = 0# Then .ToDate = .FromDate
+            
             Dim st As SessionTimes
-            st = GetSessionTimes(.FromDate + mContract.SessionStartTime + 1# / 86400#, _
+            st = GetSessionTimes(CDbl(Int(.FromDate)) + mContract.SessionStartTime + 1# / 86400#, _
                                 mContract.SessionStartTime, _
                                 mContract.SessionEndTime)
             .FromDate = st.StartTime
+            st = GetSessionTimes(CDbl(Int(.ToDate)) + mContract.SessionStartTime + 1# / 86400#, _
+                                mContract.SessionStartTime, _
+                                mContract.SessionEndTime)
             .ToDate = st.EndTime
         End If
     
-        logMessage "Fetching ticks", ProcName, , LogLevelHighDetail
         If mUseSynchronousReads Then
-            Set mTickStream = mTradingDB.FetchTicks(mContract.Specifier, _
-                                                        .FromDate, _
-                                                        .ToDate)
+            logMessage "Fetching ticks synchronously", ProcName, , LogLevelHighDetail
+            Set mTickStream = mTradingDB.FetchTicks(mContract.Specifier, .FromDate, .ToDate)
+            mTickStream.StartStream False
         Else
-            Set mFetchTicksTC = mTradingDB.FetchTicksAsync(mContract.Specifier, _
-                                                        .FromDate, _
-                                                        .ToDate)
+            logMessage "Fetching ticks asynchronously", ProcName, , LogLevelHighDetail
+            Set mFetchTicksTC = mTradingDB.FetchTicksAsync(mContract.Specifier, .FromDate, .ToDate)
         End If
     End With
 End If
@@ -561,3 +557,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processTick(ByRef pTick As GenericTick)
+Const ProcName As String = "processTick"
+On Error GoTo Err
+
+mTickCounter = mTickCounter + 1
+If Not mGotFirstTick Then
+    mGotFirstTick = True
+    mFirstTick = pTick
+    logMessage "Notify ready", ProcName, , LogLevelHighDetail
+    mReplayMonitor.NotifyReady Me, mInputTickfileSpecifier
+Else
+    notifyTick pTick
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub

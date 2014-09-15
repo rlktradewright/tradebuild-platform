@@ -488,8 +488,11 @@ Private Sub fireCollectionChanged(ev As CollectionChangeEventData)
 Const ProcName As String = "fireCollectionChanged"
 On Error GoTo Err
 
-Dim lListener As CollectionChangeListener
-For Each lListener In mCollectionChangeListeners.CurrentListeners
+mCollectionChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mCollectionChangeListeners.Count
+    Dim lListener As CollectionChangeListener
+    Set lListener = mCollectionChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 

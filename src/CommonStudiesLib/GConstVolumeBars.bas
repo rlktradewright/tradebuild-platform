@@ -19,8 +19,6 @@ Public Const ConstVolBarsInputTotalVolumeUcase As String = "TOTAL VOLUME"
 Public Const ConstVolBarsInputTickVolume As String = "Tick volume"
 Public Const ConstVolBarsInputTickVolumeUcase As String = "TICK VOLUME"
 
-Public Const ConstVolBarsParamVolPerBar As String = "Volume per bar"
-
 Public Const ConstVolBarsValueBar As String = "Bar"
 
 '@================================================================================
@@ -71,7 +69,7 @@ On Error GoTo Err
 
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
-    mDefaultParameters.SetParameterValue ConstVolBarsParamVolPerBar, 1000
+    mDefaultParameters.SetParameterValue ConstVolumeBarsParamVolPerBar, 1000
 End If
 
 ' now create a clone of the default parameters for the caller
@@ -94,9 +92,9 @@ ReDim ar(6) As Variant
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
-    mStudyDefinition.name = ConstVolBarsName
+    mStudyDefinition.name = ConstVolumeBarsStudyName
     mStudyDefinition.NeedsBars = False
-    mStudyDefinition.ShortName = ConstVolBarsShortName
+    mStudyDefinition.ShortName = ConstVolumeBarsStudyShortName
     mStudyDefinition.Description = "Constant volume bars " & _
                         "divide price movement into periods (bars) of equal volume. " & _
                         "For each period the open, high, low and close price values " & _
@@ -199,7 +197,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueStyle = gCreateDataPointStyle(&HFF0000)
     valueDef.ValueType = ValueTypeReal
     
-    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstVolBarsParamVolPerBar)
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstVolumeBarsParamVolPerBar)
     paramDef.Description = "The volume in each constant volume bar"
     paramDef.ParameterType = ParameterTypeInteger
 

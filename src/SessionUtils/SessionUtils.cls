@@ -85,13 +85,13 @@ Private Const ModuleName                            As String = "SessionUtils"
 Public Function CreateSessionBuilder( _
                 ByVal pSessionStartTime As Date, _
                 ByVal pSessionEndTime As Date, _
-                ByVal pTimezone As TimeZone, _
+                Optional ByVal pTimeZone As TimeZone, _
                 Optional ByVal pInitialSessionTime As Date) As SessionBuilder
 Const ProcName As String = "CreateSessionBuilder"
 On Error GoTo Err
 
 Set CreateSessionBuilder = New SessionBuilder
-CreateSessionBuilder.Initialise pSessionStartTime, pSessionEndTime, pTimezone
+CreateSessionBuilder.Initialise pSessionStartTime, pSessionEndTime, pTimeZone
 CreateSessionBuilder.SetSessionCurrentTime pInitialSessionTime
 
 Exit Function

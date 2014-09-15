@@ -151,7 +151,7 @@ On Error GoTo Err
 
 lSessionBuilder.SessionEndTime = pSession.SessionEndTime
 lSessionBuilder.SessionStartTime = pSession.SessionStartTime
-lSessionBuilder.TimeZone = pSession.TimeZone
+'lSessionBuilder.TimeZone = pSession.TimeZone
    
 mFutureBuilder.Value = lSessionBuilder
 mFutureBuilder.Complete

@@ -69,10 +69,10 @@ ReDim mStudyNames(0) As String
 addStudyName AccDistName
 addStudyName AtrName
 addStudyName BbName
-addStudyName ConstMomentumBarsName
-addStudyName ConstTickVolBarsName
-addStudyName ConstTimeBarsName
-addStudyName ConstVolBarsName
+addStudyName ConstMomentumBarsStudyName
+addStudyName ConstTickVolumeBarsStudyName
+addStudyName ConstTimeBarsStudyName
+addStudyName ConstVolumeBarsStudyName
 addStudyName DoncName
 addStudyName EmaName
 addStudyName FIName
@@ -84,6 +84,7 @@ addStudyName SmaName
 addStudyName SdName
 addStudyName StochName
 addStudyName SwingName
+addStudyName UserDefinedBarsStudyName
 End Sub
 
 '@================================================================================
@@ -102,13 +103,13 @@ Case UCase$(AtrName), UCase$(AtrShortName)
     Set IStudyLibrary_createStudy = New ATR
 Case UCase$(BbName), UCase$(BbShortName)
     Set IStudyLibrary_createStudy = New BollingerBands
-Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
+Case UCase$(ConstMomentumBarsStudyName), UCase$(ConstMomentumBarsStudyShortName)
     Set IStudyLibrary_createStudy = New ConstMomentumBars
-Case UCase$(ConstTickVolBarsName), UCase$(ConstTickVolBarsShortName)
+Case UCase$(ConstTickVolumeBarsStudyName), UCase$(ConstTickVolumeBarsStudyShortName)
     Set IStudyLibrary_createStudy = New ConstTickVolumeBars
-Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
+Case UCase$(ConstTimeBarsStudyName), UCase$(ConstTimeBarsStudyShortName)
     Set IStudyLibrary_createStudy = New ConstTimeBars
-Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
+Case UCase$(ConstVolumeBarsStudyName), UCase$(ConstVolumeBarsStudyShortName)
     Set IStudyLibrary_createStudy = New ConstVolumeBars
 Case UCase$(DoncName), UCase$(DoncName)
     Set IStudyLibrary_createStudy = New DonchianChannels
@@ -132,6 +133,8 @@ Case UCase$(StochName), UCase$(StochShortName)
     Set IStudyLibrary_createStudy = New Stochastic
 Case UCase$(SwingName), UCase$(SwingShortName)
     Set IStudyLibrary_createStudy = New Swing
+Case UCase$(UserDefinedBarsStudyName), UCase$(UserDefinedBarsStudyShortName)
+    Set IStudyLibrary_createStudy = New UserDefinedBars
 End Select
 
 Exit Function
@@ -164,13 +167,13 @@ Case UCase$(AtrName), UCase$(AtrShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GATR.defaultParameters
 Case UCase$(BbName), UCase$(BbShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GBollingerBands.defaultParameters
-Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
+Case UCase$(ConstMomentumBarsStudyName), UCase$(ConstMomentumBarsStudyShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GConstMomentumBars.defaultParameters
-Case UCase$(ConstTickVolBarsName), UCase$(ConstTickVolBarsShortName)
+Case UCase$(ConstTickVolumeBarsStudyName), UCase$(ConstTickVolumeBarsStudyShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GConstTickVolumeBars.defaultParameters
-Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
+Case UCase$(ConstTimeBarsStudyName), UCase$(ConstTimeBarsStudyShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GConstTimeBars.defaultParameters
-Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
+Case UCase$(ConstVolumeBarsStudyName), UCase$(ConstVolumeBarsStudyShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GConstVolumeBars.defaultParameters
 Case UCase$(DoncName), UCase$(DoncName)
     Set IStudyLibrary_getStudyDefaultParameters = GDonchianChannels.defaultParameters
@@ -194,6 +197,8 @@ Case UCase$(StochName), UCase$(StochShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GStochastic.defaultParameters
 Case UCase$(SwingName), UCase$(SwingShortName)
     Set IStudyLibrary_getStudyDefaultParameters = GSwing.defaultParameters
+Case UCase$(UserDefinedBarsStudyName), UCase$(UserDefinedBarsStudyShortName)
+    Set IStudyLibrary_getStudyDefaultParameters = GUserDefinedBars.defaultParameters
 End Select
 
 Exit Function
@@ -214,13 +219,13 @@ Case UCase$(AtrName), UCase$(AtrShortName)
     Set IStudyLibrary_getStudyDefinition = GATR.StudyDefinition
 Case UCase$(BbName), UCase$(BbShortName)
     Set IStudyLibrary_getStudyDefinition = GBollingerBands.StudyDefinition
-Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
+Case UCase$(ConstMomentumBarsStudyName), UCase$(ConstMomentumBarsStudyShortName)
     Set IStudyLibrary_getStudyDefinition = GConstMomentumBars.StudyDefinition
-Case UCase$(ConstTickVolBarsName), UCase$(ConstTickVolBarsShortName)
+Case UCase$(ConstTickVolumeBarsStudyName), UCase$(ConstTickVolumeBarsStudyShortName)
     Set IStudyLibrary_getStudyDefinition = GConstTickVolumeBars.StudyDefinition
-Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
+Case UCase$(ConstTimeBarsStudyName), UCase$(ConstTimeBarsStudyShortName)
     Set IStudyLibrary_getStudyDefinition = GConstTimeBars.StudyDefinition
-Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
+Case UCase$(ConstVolumeBarsStudyName), UCase$(ConstVolumeBarsStudyShortName)
     Set IStudyLibrary_getStudyDefinition = GConstVolumeBars.StudyDefinition
 Case UCase$(DoncName), UCase$(DoncName)
     Set IStudyLibrary_getStudyDefinition = GDonchianChannels.StudyDefinition
@@ -244,6 +249,8 @@ Case UCase$(StochName), UCase$(StochShortName)
     Set IStudyLibrary_getStudyDefinition = GStochastic.StudyDefinition
 Case UCase$(SwingName), UCase$(SwingShortName)
     Set IStudyLibrary_getStudyDefinition = GSwing.StudyDefinition
+Case UCase$(UserDefinedBarsStudyName), UCase$(UserDefinedBarsStudyShortName)
+    Set IStudyLibrary_getStudyDefinition = GUserDefinedBars.StudyDefinition
 End Select
 
 Exit Function
@@ -307,13 +314,13 @@ Case UCase$(AtrName), UCase$(AtrShortName)
     GATR.defaultParameters = params
 Case UCase$(BbName), UCase$(BbShortName)
     GBollingerBands.defaultParameters = params
-Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
+Case UCase$(ConstMomentumBarsStudyName), UCase$(ConstMomentumBarsStudyShortName)
     GConstMomentumBars.defaultParameters = params
-Case UCase$(ConstTickVolBarsName), UCase$(ConstTickVolBarsShortName)
+Case UCase$(ConstTickVolumeBarsStudyName), UCase$(ConstTickVolumeBarsStudyShortName)
     GConstTickVolumeBars.defaultParameters = params
-Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
+Case UCase$(ConstTimeBarsStudyName), UCase$(ConstTimeBarsStudyShortName)
     GConstTimeBars.defaultParameters = params
-Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
+Case UCase$(ConstVolumeBarsStudyName), UCase$(ConstVolumeBarsStudyShortName)
     GConstVolumeBars.defaultParameters = params
 Case UCase$(DoncName), UCase$(DoncName)
     GDonchianChannels.defaultParameters = params
@@ -337,6 +344,8 @@ Case UCase$(StochName), UCase$(StochShortName)
     GStochastic.defaultParameters = params
 Case UCase$(SwingName), UCase$(SwingShortName)
     GSwing.defaultParameters = params
+Case UCase$(UserDefinedBarsStudyName), UCase$(UserDefinedBarsStudyShortName)
+    GUserDefinedBars.defaultParameters = params
 Case Else
     IStudyLibrary_SetStudyDefaultParameters = False
 End Select

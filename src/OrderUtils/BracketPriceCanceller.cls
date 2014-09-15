@@ -62,6 +62,10 @@ Private mSelfRef                                    As Object
 ' IGenericTickListener Interface Members
 '@================================================================================
 
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+
+End Sub
+
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err

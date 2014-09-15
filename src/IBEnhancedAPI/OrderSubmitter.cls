@@ -679,8 +679,11 @@ Friend Sub NotifyError( _
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
 
-Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners.CurrentListeners
+mOrderSubmissionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mOrderSubmissionListeners.Count
+    Dim lListener As IOrderSubmissionListener
+    Set lListener = mOrderSubmissionListeners.GetListener(i)
     lListener.NotifyError pOrderId, pErrorCode, pErrorMsg
 Next
 
@@ -694,8 +697,11 @@ Friend Sub NotifyExecutionReport(ByVal pExecutionReport As IExecutionReport)
 Const ProcName As String = "NotifyExecutionReport"
 On Error GoTo Err
 
-Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners.CurrentListeners
+mOrderSubmissionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mOrderSubmissionListeners.Count
+    Dim lListener As IOrderSubmissionListener
+    Set lListener = mOrderSubmissionListeners.GetListener(i)
     lListener.NotifyExecutionReport pExecutionReport
 Next
 
@@ -709,8 +715,11 @@ Friend Sub NotifyOrderReport(ByVal pOrderReport As IOrderReport)
 Const ProcName As String = "NotifyOrderReport"
 On Error GoTo Err
 
-Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners.CurrentListeners
+mOrderSubmissionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mOrderSubmissionListeners.Count
+    Dim lListener As IOrderSubmissionListener
+    Set lListener = mOrderSubmissionListeners.GetListener(i)
     lListener.NotifyOrderReport pOrderReport
 Next
 
@@ -724,8 +733,11 @@ Friend Sub NotifyOrderStatusReport(ByVal pOrderStatusReport As IOrderStatusRepor
 Const ProcName As String = "NotifyOrderStatusReport"
 On Error GoTo Err
 
-Dim lListener As IOrderSubmissionListener
-For Each lListener In mOrderSubmissionListeners.CurrentListeners
+mOrderSubmissionListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mOrderSubmissionListeners.Count
+    Dim lListener As IOrderSubmissionListener
+    Set lListener = mOrderSubmissionListeners.GetListener(i)
     lListener.NotifyOrderStatusReport pOrderStatusReport
 Next
 
@@ -923,12 +935,15 @@ Private Sub fireStateChange()
 Const ProcName As String = "fireStateChange"
 On Error GoTo Err
 
-Dim lListener As StateChangeListener
 Dim ev As StateChangeEventData
-
 Set ev.Source = Me
 ev.State = mState
-For Each lListener In mStateChangeListeners.CurrentListeners
+
+mStateChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mStateChangeListeners.Count
+    Dim lListener As StateChangeListener
+    Set lListener = mStateChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 

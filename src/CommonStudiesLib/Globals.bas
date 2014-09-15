@@ -28,18 +28,6 @@ Public Const AtrShortName As String = "ATR"
 Public Const BbName As String = "Bollinger Bands"
 Public Const BbShortName As String = "BB"
 
-Public Const ConstMomentumBarsName As String = "Constant momentum bars"
-Public Const ConstMomentumBarsShortName As String = "CM Bars"
-
-Public Const ConstTimeBarsName As String = "Constant time bars"
-Public Const ConstTimeBarsShortName As String = "Bars"
-
-Public Const ConstTickVolBarsName As String = "Constant tick volume bars"
-Public Const ConstTickVolBarsShortName As String = "CTV Bars"
-
-Public Const ConstVolBarsName As String = "Constant volume bars"
-Public Const ConstVolBarsShortName As String = "CV Bars"
-
 Public Const DoncName As String = "Donchian Channels"
 Public Const DoncShortName As String = "Donc"
 

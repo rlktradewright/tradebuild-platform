@@ -1241,8 +1241,11 @@ Dim ev As ChangeEventData
 Set ev.Source = Me
 ev.changeType = pChangeType
 
-Dim lListener As ChangeListener
-For Each lListener In mChangeListeners.CurrentListeners
+mChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mChangeListeners.Count
+    Dim lListener As ChangeListener
+    Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 

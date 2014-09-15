@@ -105,19 +105,14 @@ Private mStudy              As IStudy
 Private mValueMode As StudyValueModes
 Private mValueType As StudyValueTypes
 
-Private mCurrentDataPoint   As DataPoint
-Private mPrevDataPoint      As DataPoint
+Private mCurrentDataPointValue   As SValue
+Private mPrevDataPointValue      As SValue
 
-Private mCurrentBar         As ChartSkil27.Bar
-Private mPrevBar            As ChartSkil27.Bar
+'Private mCurrentBar         As ChartSkil27.Bar
+'Private mPrevBar            As ChartSkil27.Bar
 
 Private mCurrentLine        As ChartSkil27.line
 Private mPrevLine           As ChartSkil27.line
-
-Private mCurrentText        As ChartSkil27.Text
-Private mPrevText           As ChartSkil27.Text
-
-Private mLatestValue        As Variant
 
 Private mDataSeries         As DataPointSeries
 Private mBarSeries          As BarSeries
@@ -165,29 +160,27 @@ Private Sub IStudyValueListener_notify( _
 
 If IsEmpty(ev.sVal.Value) Then Exit Sub
 
-If mUpdatePerTick Then
-    Select Case mValueMode
-    Case ValueModeNone
-        Select Case mValueType
-        Case ValueTypeInteger
-            processDataPoint ev
-        Case ValueTypeReal
-            processDataPoint ev
-        Case ValueTypeString
-            processString ev
-        Case ValueTypeDate
-    
-        Case ValueTypeBoolean
-    
-        End Select
-    Case ValueModeLine
-        processLine ev
-    Case ValueModeBar
-        processBar ev
-    Case ValueModeText
-        processText ev
+Select Case mValueMode
+Case ValueModeNone
+    Select Case mValueType
+    Case ValueTypeInteger
+        processDataPoint ev
+    Case ValueTypeReal
+        processDataPoint ev
+    Case ValueTypeString
+        processString ev
+    Case ValueTypeDate
+
+    Case ValueTypeBoolean
+
     End Select
-End If
+Case ValueModeLine
+    processLine ev
+Case ValueModeBar
+    processBar ev
+Case ValueModeText
+    processText ev
+End Select
 
 End Sub
 
@@ -300,57 +293,51 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub UpdatePreviousBar(ByVal timestamp As Date)
-Const ProcName As String = "UpdatePreviousBar"
-On Error GoTo Err
-
-If Not mCurrentDataPoint Is Nothing Then
-    If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.DataValue = mLatestValue
-    If mConditionalActionsIndex >= 0 Then processConditionalActions timestamp
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
+'Public Sub UpdatePreviousBar(ByVal timestamp As Date)
+'Const ProcName As String = "UpdatePreviousBar"
+'On Error GoTo Err
+'
+'If Not mCurrentDataPoint Is Nothing Then
+'    If Not IsEmpty(mLatestValue) Then mCurrentDataPointValue.Value = mLatestValue
+'    If mConditionalActionsIndex >= 0 Then processConditionalActions timestamp
+'End If
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub AddBarToChart( _
-                ByVal timestamp As Date)
+Private Function AddBarToChart( _
+                ByVal timestamp As Date) As ChartSkil27.Bar
 
 Const ProcName As String = "AddBarToChart"
 On Error GoTo Err
 
-Set mPrevBar = mCurrentBar
+Set AddBarToChart = mBarSeries.Add(timestamp)
 
-Set mCurrentBar = mBarSeries.Add(timestamp)
-
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
-Private Sub AddDataPointToChart( _
-                ByVal timestamp As Date)
-
+Private Function AddDataPointToChart( _
+                ByVal timestamp As Date) As DataPoint
 Const ProcName As String = "AddDataPointToChart"
 On Error GoTo Err
 
-Set mPrevDataPoint = mCurrentDataPoint
+Set AddDataPointToChart = mDataSeries.Add(timestamp)
 
-Set mCurrentDataPoint = mDataSeries.Add(timestamp)
-If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.DataValue = mLatestValue
-
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub AddLineToChart()
 
@@ -367,19 +354,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub AddTextToChart()
+Private Function AddTextToChart() As Text
 Const ProcName As String = "AddTextToChart"
 On Error GoTo Err
 
-Set mPrevText = mCurrentText
+Set AddTextToChart = mTextSeries.Add
 
-Set mCurrentText = mTextSeries.Add
-
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Function chartMgr() As ChartManager
 Const ProcName As String = "chartMgr"
@@ -395,42 +380,59 @@ End Function
 
 Private Sub processBar( _
                 ByRef ev As StudyValueEventData)
-Static prevBarNumber As Long
-Dim lBar As BarUtils27.Bar
-
 Const ProcName As String = "processBar"
 On Error GoTo Err
 
 If TypeName(ev.sVal.Value) = "Nothing" Then Exit Sub
 
+Dim lBar As BarUtils27.Bar
 Set lBar = ev.sVal.Value
 
-If mCurrentBar Is Nothing Or _
-    ev.sVal.BarNumber <> prevBarNumber _
-Then
-    AddBarToChart lBar.timestamp
-    
-    If Not lBar.Blank Then
-        ' we may be processing a historical bar here, so make sure open, high
-        ' low and close are all set
-        
-        mCurrentBar.Tick lBar.OpenValue
-        mCurrentBar.Tick lBar.HighValue
-        mCurrentBar.Tick lBar.LowValue
-        mCurrentBar.Tick lBar.CloseValue
+Static sCurrentBarNumber As Long
+
+If mUpdatePerTick Then
+    Static sCurrentChartBar As ChartSkil27.Bar
+    If sCurrentChartBar Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then
+        Set sCurrentChartBar = AddBarToChart(lBar.timestamp)
+        If Not lBar.Blank Then
+            ' we may be processing a historical bar here, so make sure open, high
+            ' low and close are all set
+            
+            sCurrentChartBar.Tick lBar.OpenValue
+            sCurrentChartBar.Tick lBar.HighValue
+            sCurrentChartBar.Tick lBar.LowValue
+            sCurrentChartBar.Tick lBar.CloseValue
+        End If
+    Else
+        If Not lBar.Blank Then sCurrentChartBar.Tick lBar.CloseValue
     End If
+    
+    If lBar.Blank Then
+        If Not mBarFormatter Is Nothing Then gLogger.Log "Bar number " & ev.sVal.BarNumber & " is blank: no bar formatting performed", ProcName, ModuleName
+    Else
+        If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp, sCurrentChartBar
+        If Not mBarFormatter Is Nothing Then mBarFormatter.FormatBar lBar, sCurrentChartBar
+    End If
+    
+    sCurrentBarNumber = ev.sVal.BarNumber
 Else
-    If Not lBar.Blank Then mCurrentBar.Tick lBar.CloseValue
+    Static sCurrentBar As BarUtils27.Bar
+    If ev.sVal.BarNumber <> sCurrentBarNumber Then
+        sCurrentBarNumber = ev.sVal.BarNumber
+        If sCurrentBar Is Nothing Then
+        ElseIf Not sCurrentBar.Blank Then
+            Dim lChartbar As ChartSkil27.Bar
+            Set lChartbar = AddBarToChart(sCurrentBar.timestamp)
+            lChartbar.Tick sCurrentBar.OpenValue
+            lChartbar.Tick sCurrentBar.HighValue
+            lChartbar.Tick sCurrentBar.LowValue
+            lChartbar.Tick sCurrentBar.CloseValue
+            If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp, lChartbar
+            If Not mBarFormatter Is Nothing Then mBarFormatter.FormatBar sCurrentBar, lChartbar
+        End If
+    End If
+    Set sCurrentBar = lBar
 End If
-
-If lBar.Blank Then
-    If Not mBarFormatter Is Nothing Then gLogger.Log "Bar number " & ev.sVal.BarNumber & " is blank: no bar formatting performed", ProcName, ModuleName
-Else
-    If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
-    If Not mBarFormatter Is Nothing Then mBarFormatter.FormatBar lBar, mCurrentBar
-End If
-
-prevBarNumber = ev.sVal.BarNumber
 
 Exit Sub
 
@@ -440,13 +442,13 @@ End Sub
 
 Private Function processConditionalAction( _
                 ByRef pConditionalAction As ConditionalAction, _
-                ByVal timestamp As Date) As Boolean
-Dim value1 As Variant
-Dim value2 As Variant
-Dim conditionSatisfied As Boolean
-
+                ByVal timestamp As Date, _
+                ByVal pTarget As Object) As Boolean
 Const ProcName As String = "processConditionalAction"
 On Error GoTo Err
+
+Dim value1 As Variant
+Dim value2 As Variant
 
 If pConditionalAction.isSpecial1 Then
     value1 = chartMgr.GetSpecialValue(pConditionalAction.value1)
@@ -460,41 +462,42 @@ Else
     value2 = pConditionalAction.value2
 End If
 
+Dim conditionSatisfied As Boolean
 Select Case pConditionalAction.operator
 Case ConditionalOperators.OpAnd
-    conditionSatisfied = (mCurrentDataPoint.DataValue And value1)
+    conditionSatisfied = (mCurrentDataPointValue.Value And value1)
 Case ConditionalOperators.OpBetween
-    conditionSatisfied = (mCurrentDataPoint.DataValue >= value1 And mCurrentDataPoint.DataValue <= value2)
+    conditionSatisfied = (mCurrentDataPointValue.Value >= value1 And mCurrentDataPointValue.Value <= value2)
 Case ConditionalOperators.OpContains
-    conditionSatisfied = (InStr(1, CStr(mCurrentDataPoint.DataValue), value1) <> 0)
+    conditionSatisfied = (InStr(1, CStr(mCurrentDataPointValue.Value), value1) <> 0)
 Case ConditionalOperators.OpEndsWith
-    conditionSatisfied = (Right$(CStr(mCurrentDataPoint.DataValue), Len(value1)) = value1)
+    conditionSatisfied = (Right$(CStr(mCurrentDataPointValue.Value), Len(value1)) = value1)
 Case ConditionalOperators.OpEqual
-    conditionSatisfied = (mCurrentDataPoint.DataValue = value1)
+    conditionSatisfied = (mCurrentDataPointValue.Value = value1)
 Case ConditionalOperators.OpEqualPrevious
-    If Not mPrevDataPoint Is Nothing Then
-        conditionSatisfied = (mCurrentDataPoint.DataValue = mPrevDataPoint.DataValue)
+    If Not IsEmpty(mPrevDataPointValue.Value) Then
+        conditionSatisfied = (mCurrentDataPointValue.Value = mPrevDataPointValue.Value)
     End If
 Case ConditionalOperators.OpGreaterThan
-    conditionSatisfied = (mCurrentDataPoint.DataValue > value1)
+    conditionSatisfied = (mCurrentDataPointValue.Value > value1)
 Case ConditionalOperators.OpGreaterThanPrevious
-    If Not mPrevDataPoint Is Nothing Then
-        conditionSatisfied = (mCurrentDataPoint.DataValue > mPrevDataPoint.DataValue)
+    If Not IsEmpty(mPrevDataPointValue.Value) Then
+        conditionSatisfied = (mCurrentDataPointValue.Value > mPrevDataPointValue.Value)
     End If
 Case ConditionalOperators.OpLessThan
-    conditionSatisfied = (mCurrentDataPoint.DataValue < value1)
+    conditionSatisfied = (mCurrentDataPointValue.Value < value1)
 Case ConditionalOperators.OpLessThanPrevious
-    If Not mPrevDataPoint Is Nothing Then
-        conditionSatisfied = (mCurrentDataPoint.DataValue < mPrevDataPoint.DataValue)
+    If Not IsEmpty(mPrevDataPointValue.Value) Then
+        conditionSatisfied = (mCurrentDataPointValue.Value < mPrevDataPointValue.Value)
     End If
 Case ConditionalOperators.OpOr
-    conditionSatisfied = (mCurrentDataPoint.DataValue Or value1)
+    conditionSatisfied = (mCurrentDataPointValue.Value Or value1)
 Case ConditionalOperators.OpStartsWith
-    conditionSatisfied = (Left$(CStr(mCurrentDataPoint.DataValue), Len(value1)) = value1)
+    conditionSatisfied = (Left$(CStr(mCurrentDataPointValue.Value), Len(value1)) = value1)
 Case ConditionalOperators.OpTrue
-    conditionSatisfied = CBool(mCurrentDataPoint.DataValue)
+    conditionSatisfied = CBool(mCurrentDataPointValue.Value)
 Case ConditionalOperators.OpXor
-    conditionSatisfied = (mCurrentDataPoint.DataValue Xor value1)
+    conditionSatisfied = (mCurrentDataPointValue.Value Xor value1)
 End Select
 
 If pConditionalAction.not Then conditionSatisfied = (Not conditionSatisfied)
@@ -504,8 +507,12 @@ If conditionSatisfied Then
     Case StudyRenderingActions.SRActSetPeriodBackgroundColor
         mRegion.SetPeriodBackgroundColor chartMgr.GetPeriod(timestamp).periodNumber, CLng(pConditionalAction.actionValue)
     Case StudyRenderingActions.SRActSetValueColor
-        mCurrentDataPoint.UpColor = CLng(pConditionalAction.actionValue)
-        mCurrentDataPoint.DownColor = CLng(pConditionalAction.actionValue)
+        If TypeOf pTarget Is DataPoint Then
+            Dim lDataPoint As DataPoint
+            Set lDataPoint = pTarget
+            lDataPoint.UpColor = CLng(pConditionalAction.actionValue)
+            lDataPoint.DownColor = CLng(pConditionalAction.actionValue)
+        End If
     End Select
 End If
 processConditionalAction = conditionSatisfied
@@ -517,16 +524,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processConditionalActions( _
-                ByVal timestamp As Date)
-Dim i As Long
-
+                ByVal timestamp As Date, _
+                ByVal pTarget As Object)
 Const ProcName As String = "processConditionalActions"
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To mConditionalActionsIndex
-    If processConditionalAction( _
-                            mConditionalActions(i), _
-                            timestamp) And _
+    If processConditionalAction(mConditionalActions(i), timestamp, pTarget) And _
         mConditionalActions(i).stopIfTrue _
     Then
         Exit For
@@ -541,19 +546,34 @@ End Sub
 
 Private Sub processDataPoint( _
                 ByRef ev As StudyValueEventData)
-Static prevBarNumber As Long
 Const ProcName As String = "processDataPoint"
 On Error GoTo Err
 
-If mCurrentDataPoint Is Nothing Or _
-    ev.sVal.BarNumber <> prevBarNumber _
-Then
-    AddDataPointToChart ev.sVal.BarStartTime
+Static sPrevBarNumber As Long
+
+If mUpdatePerTick Then
+    Static sCurrentDataPoint As DataPoint
+    If sCurrentDataPoint Is Nothing Or ev.sVal.BarNumber <> sPrevBarNumber Then
+        Set sCurrentDataPoint = AddDataPointToChart(ev.sVal.BarStartTime)
+        'If Not IsEmpty(mCurrentDataPointValue.Value) Then mCurrentDataPoint.DataValue = mCurrentDataPointValue.Value
+    End If
+    mCurrentDataPointValue = ev.sVal
+    sCurrentDataPoint.DataValue = mCurrentDataPointValue.Value
+    sPrevBarNumber = ev.sVal.BarNumber
+
+    If mConditionalActionsIndex >= 0 Then processConditionalActions mCurrentDataPointValue.timestamp, sCurrentDataPoint
+Else
+    If ev.sVal.BarNumber <> sPrevBarNumber Then
+        sPrevBarNumber = ev.sVal.BarNumber
+        If Not IsEmpty(mCurrentDataPointValue.Value) Then
+            Dim lDataPoint As DataPoint
+            Set lDataPoint = AddDataPointToChart(mCurrentDataPointValue.BarStartTime)
+            lDataPoint.DataValue = mCurrentDataPointValue.Value
+            If mConditionalActionsIndex >= 0 Then processConditionalActions mCurrentDataPointValue.timestamp, lDataPoint
+        End If
+    End If
+    mCurrentDataPointValue = ev.sVal
 End If
-mCurrentDataPoint.DataValue = ev.sVal.Value
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
-prevBarNumber = ev.sVal.BarNumber
-mLatestValue = ev.sVal.Value
 
 Exit Sub
 
@@ -584,7 +604,7 @@ mCurrentLine.SetPosition NewPoint( _
                         NewPoint( _
                                 chartMgr.GetPeriod(studyLine.Point2.X).periodNumber, _
                                 studyLine.Point2.Y)
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
+If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp, mCurrentLine
 prevBarNumber = ev.sVal.BarNumber
 
 Exit Sub
@@ -595,23 +615,20 @@ End Sub
 
 Private Sub processString( _
                 ByRef ev As StudyValueEventData)
-Static prevBarNumber As Long
-
 Const ProcName As String = "processString"
 On Error GoTo Err
 
-If mCurrentText Is Nothing Or _
-    ev.sVal.BarNumber <> prevBarNumber _
-Then
-    AddTextToChart
-End If
+Static sPrevBarNumber As Long
+Static sCurrentText As ChartSkil27.Text
 
-mCurrentText.Position = NewPoint( _
+If sCurrentText Is Nothing Or ev.sVal.BarNumber <> sPrevBarNumber Then Set sCurrentText = AddTextToChart
+
+sCurrentText.Position = NewPoint( _
                                 chartMgr.GetPeriod(ev.sVal.BarStartTime).periodNumber, _
                                 0, CoordsCounterDistance, CoordsRelative)
-mCurrentText.Text = ev.sVal.Value
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
-prevBarNumber = ev.sVal.BarNumber
+sCurrentText.Text = ev.sVal.Value
+If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp, sCurrentText
+sPrevBarNumber = ev.sVal.BarNumber
 
 Exit Sub
 
@@ -621,26 +638,23 @@ End Sub
 
 Private Sub processText( _
                 ByRef ev As StudyValueEventData)
-Static prevBarNumber As Long
-Dim studyText As studyText
-
 Const ProcName As String = "processText"
 On Error GoTo Err
 
-If mCurrentText Is Nothing Or _
-    ev.sVal.BarNumber <> prevBarNumber _
-Then
-    AddTextToChart
-End If
+Static sPrevBarNumber As Long
+Static sCurrentText As ChartSkil27.Text
 
+If sCurrentText Is Nothing Or ev.sVal.BarNumber <> sPrevBarNumber Then Set sCurrentText = AddTextToChart
+
+Dim studyText As studyText
 Set studyText = ev.sVal.Value
-mCurrentText.Position = NewPoint( _
+sCurrentText.Position = NewPoint( _
                                 chartMgr.GetPeriod(studyText.Position.X).periodNumber, _
                                 studyText.Position.Y)
-mCurrentText.Offset = mTextOffset
-mCurrentText.Text = studyText.Text
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
-prevBarNumber = ev.sVal.BarNumber
+sCurrentText.Offset = mTextOffset
+sCurrentText.Text = studyText.Text
+If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp, sCurrentText
+sPrevBarNumber = ev.sVal.BarNumber
 
 Exit Sub
 

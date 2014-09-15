@@ -66,11 +66,11 @@ Private mCurrentSessionTimes                        As SessionTimes
 
 'Private mIsLinkable                                 As Boolean
 
-Private mClock                                      As Clock
+'Private mClock                                      As Clock
 
 Private mBuilderRef                                 As WeakReference
 
-'Private mTimeHasBeenSet                             As Boolean
+Private mTimestamp                                  As Date
 
 '@================================================================================
 ' Class Event Handlers
@@ -78,7 +78,7 @@ Private mBuilderRef                                 As WeakReference
 
 Private Sub Class_Initialize()
 Set mTimezone = GetTimeZone("")
-Set mClock = CreateSimulatedClock(1, "")
+'Set mClock = CreateSimulatedClock(1, "")
 mCurrentSessionTimes.EndTime = MinDate
 mCurrentSessionTimes.StartTime = MinDate
 End Sub
@@ -99,7 +99,6 @@ Public Property Get CurrentSessionEndTime() As Date
 Const ProcName As String = "CurrentSessionEndTime"
 On Error GoTo Err
 
-'Assert mTimeHasBeenSet, "Session current time has not been set"
 CurrentSessionEndTime = mCurrentSessionTimes.EndTime
 
 Exit Property
@@ -112,7 +111,6 @@ Public Property Get CurrentSessionStartTime() As Date
 Const ProcName As String = "CurrentSessionStartTime"
 On Error GoTo Err
 
-'Assert mTimeHasBeenSet, "Session current time has not been set"
 CurrentSessionStartTime = mCurrentSessionTimes.StartTime
 
 Exit Property
@@ -138,8 +136,8 @@ Public Property Get SessionCurrentTime() As Date
 Const ProcName As String = "SessionCurrentTime"
 On Error GoTo Err
 
-'Assert mTimeHasBeenSet, "Session current time has not been set"
-SessionCurrentTime = mClock.Timestamp
+'SessionCurrentTime = mClock.Timestamp
+SessionCurrentTime = mTimestamp
 
 Exit Property
 
@@ -192,7 +190,7 @@ Else
     Set mTimezone = Value
 End If
 
-Set mClock = CreateSimulatedClock(1, mTimezone.StandardName)
+'Set mClock = CreateSimulatedClock(1, mTimezone.StandardName)
 
 Exit Property
 
@@ -258,21 +256,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
-Const ProcName As String = "IsTimeInSession"
-On Error GoTo Err
+IsTimeInSession = Timestamp >= mCurrentSessionTimes.StartTime And Timestamp < mCurrentSessionTimes.EndTime
 
-'Assert mTimeHasBeenSet, "Session current time has not been set"
-
-If Timestamp >= mCurrentSessionTimes.StartTime And _
-    Timestamp < mCurrentSessionTimes.EndTime _
-Then
-    IsTimeInSession = True
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+'If Timestamp < mCurrentSessionTimes.StartTime Then
+'ElseIf Timestamp >= mCurrentSessionTimes.EndTime Then
+'Else
+'    IsTimeInSession = True
+'End If
 End Function
 
 ''
@@ -315,12 +305,11 @@ Static sNextSessionTimes As SessionTimes
 Static sPrevTimeNotified As Date
 
 Dim ev As SessionEventData
-
 Set ev.Source = Me
 ev.changeType = SessionChangeNone
 
-mClock.SetTime pTimestamp
-'mTimeHasBeenSet = True
+'mClock.SetTime pTimestamp
+mTimestamp = pTimestamp
 
 If Int(pTimestamp) > Int(sPrevTimeNotified) Then
     ev.changeType = SessionChangeDateChange

@@ -191,6 +191,10 @@ End Sub
 ' IGenericTickListener Interface Members
 '@================================================================================
 
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+
+End Sub
+
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
@@ -1380,9 +1384,12 @@ Dim ev As ChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 
-Dim Listener As ChangeListener
-For Each Listener In mChangeListeners.CurrentListeners
-    Listener.Change ev
+mChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mChangeListeners.Count
+    Dim lListener As ChangeListener
+    Set lListener = mChangeListeners.GetListener(i)
+    lListener.Change ev
 Next
 
 RaiseEvent Change(ev)
@@ -1405,9 +1412,12 @@ ev.ProfitAmount = ProfitAmount
 ev.ProfitType = ProfitType
 ev.CurrencyCode = mCurrencyCode
 
-Dim Listener As IProfitListener
-For Each Listener In mProfitListeners.CurrentListeners
-    Listener.NotifyProfit ev
+mProfitListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mProfitListeners.Count
+    Dim lListener As IProfitListener
+    Set lListener = mProfitListeners.GetListener(i)
+    lListener.NotifyProfit ev
 Next
 
 Exit Sub
@@ -1423,8 +1433,11 @@ On Error GoTo Err
 Dim ev As RecoveryDataChangedEventData
 Set ev.Source = Me
 
-Dim lListener As IRecoverableObjectListener
-For Each lListener In mRecoverableObjectListeners.CurrentListeners
+mRecoverableObjectListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mRecoverableObjectListeners.Count
+    Dim lListener As IRecoverableObjectListener
+    Set lListener = mRecoverableObjectListeners.GetListener(i)
     lListener.NotifyRecoveryDataChanged ev
 Next
 

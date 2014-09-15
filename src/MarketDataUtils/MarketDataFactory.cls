@@ -502,19 +502,21 @@ If ev.State = TickStreamStates.TickStreamStateFinished Then
     If lStreamId <= mMarketDataTableMaxUsedIndex Then
         If mMarketDataTable(lStreamId).TickStreamBuilder Is lBuilder Then
             CancelMarketData lStreamId
-            Exit Sub
         End If
     ElseIf lStreamId <= mMarketDepthTableMaxUsedIndex Then
         If mMarketDepthTable(lStreamId).TickStreamBuilder Is lBuilder Then
             CancelMarketDepth lStreamId
-            Exit Sub
         End If
     End If
 ElseIf ev.State = TickStreamStates.TickStreamStateRunning Then
     If lStreamId <= mMarketDataTableMaxUsedIndex Then
-        If isReadyForData(mMarketDataTable, lStreamId) Then reqMarketData lStreamId
+        If mMarketDataTable(lStreamId).TickStreamBuilder Is lBuilder Then
+            If isReadyForData(mMarketDataTable, lStreamId) Then reqMarketData lStreamId
+        End If
     ElseIf lStreamId <= mMarketDepthTableMaxUsedIndex Then
-        If isReadyForData(mMarketDepthTable, lStreamId) Then reqMarketDepth lStreamId
+        If mMarketDepthTable(lStreamId).TickStreamBuilder Is lBuilder Then
+            If isReadyForData(mMarketDepthTable, lStreamId) Then reqMarketDepth lStreamId
+        End If
     End If
 End If
 
@@ -540,7 +542,7 @@ lStreamId = ev.ContinuationData
 If lStreamId < MarketDepthIdOffset Then
     If handleCompletedFuture(ev.Future, mMarketDataTable, lStreamId) Then reqMarketData lStreamId
 Else
-    If handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId - MarketDepthIdOffset) Then reqMarketDepth lStreamId
+    If handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId - MarketDepthIdOffset) Then reqMarketDepth lStreamId - MarketDepthIdOffset
 End If
 
 Exit Sub
@@ -1013,13 +1015,10 @@ Private Sub ResetMarketDepth(ByVal pReEstablish As Boolean)
 Const ProcName As String = "ResetMarketDepth"
 On Error GoTo Err
 
-Dim i As Long
 Dim lTick As GenericTick
-Dim var As Variant
-
-
 lTick.TickType = TickTypeMarketDepthReset
 
+Dim i As Long
 For i = 0 To UBound(mMarketDepthTable)
     With mMarketDepthTable(i)
         If .InUse Then
@@ -1037,10 +1036,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function tickerHasBeenStopped(ByVal pTickerId As Long) As Boolean
-Dim lIndex As Long
 Const ProcName As String = "tickerHasBeenStopped"
 On Error GoTo Err
 
+Dim lIndex As Long
 lIndex = getIndexFromTickerId(pTickerId)
 tickerHasBeenStopped = (pTickerId <> getTickerIdFromIndex(lIndex))
 
@@ -1051,10 +1050,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function tickerMarketDepthHasBeenStopped(ByVal pMarketDepthId As Long) As Boolean
-Dim lIndex As Long
 Const ProcName As String = "tickerMarketDepthHasBeenStopped"
 On Error GoTo Err
 
+Dim lIndex As Long
 lIndex = getIndexFromMarketDepthId(pMarketDepthId)
 tickerMarketDepthHasBeenStopped = (pMarketDepthId <> getMarketDepthIdFromIndex(lIndex))
 
@@ -1070,7 +1069,6 @@ Private Function validPrice( _
                 ByVal pPriceType As String, _
                 ByVal pContract As IContract) As Boolean
 Const ProcName As String = "validPrice"
-
 On Error GoTo Err
 
 If (pPrevPrice <> MaxDouble Or (pPrice <> 0# And pPrice <> -1# And pPrice <> -100#)) And _

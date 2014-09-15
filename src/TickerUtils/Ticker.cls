@@ -19,6 +19,7 @@ Option Explicit
 
 Implements ErrorListener
 Implements IGenericTickListener
+Implements IGenericTickSource
 Implements IMarketDataSource
 Implements IMarketDepthListener
 Implements IPriceChangeListener
@@ -47,6 +48,8 @@ Event High(ByRef ev As QuoteEventData)
 Event Low(ByRef ev As QuoteEventData)
 
 Event MarketDepthNotAvailable(ByVal reason As String)
+
+Event NoMoreTicks(ByRef ev As GenericTickEventData)
 
 Event OpenInterest(ByRef ev As QuoteEventData)
 
@@ -101,6 +104,16 @@ Private mStudyBase                  As IStudyBase
 
 Private mKey                        As String
 
+Private mIsFinished                 As Boolean
+
+Private mErrorListeners             As New Listeners
+Private mGenericTickListeners       As New Listeners
+Private mMarketDepthListeners       As New Listeners
+Private mPriceChangeListeners       As New Listeners
+Private mQuoteListeners             As New Listeners
+Private mRawMarketDepthListeners    As New Listeners
+Private mStateChangeListeners       As New Listeners
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -126,8 +139,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' IGenericTickListener_NotifyTick Interface Members
+' IGenericTickListener Interface Members
 '@================================================================================
+
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+
+End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
@@ -136,6 +153,34 @@ On Error GoTo Err
 mTickNumber = mTickNumber + 1
    
 fireGenericTick ev
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IGenericTickSource Interface Members
+'@================================================================================
+
+Private Sub IGenericTickSource_AddGenericTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "IGenericTickSource_AddGenericTickListener"
+On Error GoTo Err
+
+AddGenericTickListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IGenericTickSource_RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
+Const ProcName As String = "IGenericTickSource_RemoveGenericTickListener"
+On Error GoTo Err
+
+RemoveGenericTickListener pListener
 
 Exit Sub
 
@@ -205,6 +250,10 @@ End Sub
 
 Private Property Get IMarketDataSource_Handle() As Long
 IMarketDataSource_Handle = Handle
+End Property
+
+Private Property Get IMarketDataSource_IsFinished() As Boolean
+IMarketDataSource_IsFinished = IsFinished
 End Property
 
 Private Property Get IMarketDataSource_IsMarketDataRequested() As Boolean
@@ -463,10 +512,7 @@ Private Sub StateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
-Dim lEv As StateChangeEventData
-lEv = ev
-Set lEv.Source = Me
-RaiseEvent StateChange(ev)
+fireStateChange ev
 
 Exit Sub
 
@@ -629,6 +675,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IsFinished() As Boolean
+IsFinished = mIsFinished
 End Property
 
 Public Property Get IsLiveOrdersEnabled() As Boolean
@@ -913,7 +963,7 @@ Public Sub AddErrorListener( _
 Const ProcName As String = "AddErrorListener"
 On Error GoTo Err
 
-mDataSource.AddErrorListener pListener
+mErrorListeners.Add pListener
 
 Exit Sub
 
@@ -926,7 +976,7 @@ Public Sub AddGenericTickListener( _
 Const ProcName As String = "AddGenericTickListener"
 On Error GoTo Err
 
-mDataSource.AddGenericTickListener pListener
+mGenericTickListeners.Add pListener
 
 Exit Sub
 
@@ -939,7 +989,7 @@ Public Sub AddMarketDepthListener( _
 Const ProcName As String = "AddMarketDepthListener"
 On Error GoTo Err
 
-mDataSource.AddMarketDepthListener pListener
+mMarketDepthListeners.Add pListener
 
 Exit Sub
 
@@ -952,7 +1002,7 @@ Public Sub AddPriceChangeListener( _
 Const ProcName As String = "AddPriceChangeListener"
 On Error GoTo Err
 
-mDataSource.AddPriceChangeListener pListener
+mPriceChangeListeners.Add pListener
 
 Exit Sub
 
@@ -964,7 +1014,7 @@ Public Sub AddQuoteListener(ByVal pListener As IQuoteListener)
 Const ProcName As String = "AddQuoteListener"
 On Error GoTo Err
 
-mDataSource.AddQuoteListener pListener
+mQuoteListeners.Add pListener
 
 Exit Sub
 
@@ -976,7 +1026,7 @@ Public Sub AddRawMarketDepthListener(ByVal pListener As IRawMarketDepthListener)
 Const ProcName As String = "AddRawMarketDepthListener"
 On Error GoTo Err
 
-mDataSource.AddRawMarketDepthListener pListener
+mRawMarketDepthListeners.Add pListener
 
 Exit Sub
 
@@ -988,7 +1038,7 @@ Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
 Const ProcName As String = "AddStateChangeListener"
 On Error GoTo Err
 
-mDataSource.AddStateChangeListener pListener
+mStateChangeListeners.Add pListener
 
 Exit Sub
 
@@ -1024,10 +1074,8 @@ Friend Sub FinishAndRemoveFromConfig(ByVal pRemoveFromConfig As Boolean)
 Const ProcName As String = "FinishAndRemoveFromConfig"
 On Error GoTo Err
 
-Static sFinished As Boolean
-
-If sFinished Then Exit Sub
-sFinished = True
+If mIsFinished Then Exit Sub
+mIsFinished = True
 
 If Not getContractSpec Is Nothing Then
     gLogger.Log "Finishing ticker", ProcName, ModuleName, , getContractSpec.ToString
@@ -1070,7 +1118,7 @@ Set mStudyBase = Nothing
 mTickers.RemoveNoFinish Me
 If pRemoveFromConfig Then RemoveFromConfig
 
-mDataSource.Finish
+If Not mDataSource.IsFinished Then mDataSource.Finish
 
 Set mTickers = Nothing
 
@@ -1131,6 +1179,19 @@ Set mTickers = pTickers
 Set mPositionManager = pPositionManager
 
 mKey = mDataSource.Key
+
+Dim ev As StateChangeEventData
+Set ev.Source = Me
+ev.State = MarketDataSourceStates.MarketDataSourceStateCreated
+fireStateChange ev
+
+If mDataSource.State = MarketDataSourceStates.MarketDataSourceStateReady Then
+    ev.State = MarketDataSourceStates.MarketDataSourceStateReady
+    fireStateChange ev
+ElseIf mDataSource.State = MarketDataSourceStates.MarketDataSourceStateError Then
+    ev.State = MarketDataSourceStates.MarketDataSourceStateError
+    fireStateChange ev
+End If
 
 Exit Sub
 
@@ -1265,7 +1326,7 @@ Public Sub RemoveErrorListener(ByVal pListener As ErrorListener)
 Const ProcName As String = "RemoveErrorListener"
 On Error GoTo Err
 
-mDataSource.RemoveErrorListener pListener
+mErrorListeners.Remove pListener
 
 Exit Sub
 
@@ -1290,7 +1351,7 @@ Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
 Const ProcName As String = "RemoveGenericTickListener"
 On Error GoTo Err
 
-mDataSource.RemoveGenericTickListener pListener
+mGenericTickListeners.Remove pListener
 
 Exit Sub
 
@@ -1302,7 +1363,7 @@ Public Sub RemoveMarketDepthListener(ByVal pListener As IMarketDepthListener)
 Const ProcName As String = "RemoveMarketDepthListener"
 On Error GoTo Err
 
-mDataSource.RemoveMarketDepthListener pListener
+mMarketDepthListeners.Remove pListener
 
 Exit Sub
 
@@ -1314,7 +1375,7 @@ Public Sub RemovePriceChangeListener(ByVal pListener As IPriceChangeListener)
 Const ProcName As String = "RemovePriceChangeListener"
 On Error GoTo Err
 
-mDataSource.RemovePriceChangeListener pListener
+mPriceChangeListeners.Remove pListener
 
 Exit Sub
 
@@ -1326,7 +1387,7 @@ Public Sub RemoveQuoteListener(ByVal pListener As IQuoteListener)
 Const ProcName As String = "RemoveQuoteListener"
 On Error GoTo Err
 
-mDataSource.RemoveQuoteListener pListener
+mQuoteListeners.Remove pListener
 
 Exit Sub
 
@@ -1338,7 +1399,7 @@ Public Sub RemoveRawMarketDepthListener(ByVal pListener As IRawMarketDepthListen
 Const ProcName As String = "RemoveRawMarketDepthListener"
 On Error GoTo Err
 
-mDataSource.RemoveRawMarketDepthListener pListener
+mRawMarketDepthListeners.Remove pListener
 
 Exit Sub
 
@@ -1350,7 +1411,7 @@ Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
 Const ProcName As String = "RemoveStateChangeListener"
 On Error GoTo Err
 
-mDataSource.RemoveStateChangeListener pListener
+mStateChangeListeners.Remove pListener
 
 Exit Sub
 
@@ -1421,6 +1482,17 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.Ask lEv
+    Next
+End If
+
 RaiseEvent Ask(lEv)
 
 Exit Sub
@@ -1436,6 +1508,17 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.Bid lEv
+    Next
+End If
+
 RaiseEvent Bid(lEv)
 
 Exit Sub
@@ -1451,6 +1534,17 @@ On Error GoTo Err
 Dim lEv As ErrorEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mErrorListeners.Count <> 0 Then
+    mErrorListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mErrorListeners.Count
+        Dim lListener As ErrorListener
+        Set lListener = mErrorListeners.GetListener(i)
+        lListener.Notify lEv
+    Next
+End If
+
 RaiseEvent Error(lEv)
 
 Exit Sub
@@ -1467,6 +1561,17 @@ On Error GoTo Err
 Dim lEv As GenericTickEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mGenericTickListeners.Count <> 0 Then
+    mGenericTickListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mGenericTickListeners.Count
+        Dim lListener As IGenericTickListener
+        Set lListener = mGenericTickListeners.GetListener(i)
+        lListener.NotifyTick lEv
+    Next
+End If
+
 RaiseEvent GenericTick(lEv)
 
 Exit Sub
@@ -1483,6 +1588,17 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.High lEv
+    Next
+End If
+
 RaiseEvent High(lEv)
 
 Exit Sub
@@ -1499,7 +1615,45 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.Low lEv
+    Next
+End If
+
 RaiseEvent Low(lEv)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub fireNoMoreTicks( _
+                ByRef ev As GenericTickEventData)
+Const ProcName As String = "fireNoMoreTicks"
+On Error GoTo Err
+
+Dim lEv As GenericTickEventData
+lEv = ev
+Set lEv.Source = Me
+
+If mGenericTickListeners.Count <> 0 Then
+    mGenericTickListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mGenericTickListeners.Count
+        Dim lListener As IGenericTickListener
+        Set lListener = mGenericTickListeners.GetListener(i)
+        lListener.NoMoreTicks lEv
+    Next
+End If
+
+RaiseEvent NoMoreTicks(lEv)
 
 Exit Sub
 
@@ -1515,6 +1669,17 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.SessionOpen lEv
+    Next
+End If
+
 RaiseEvent SessionOpen(lEv)
 
 Exit Sub
@@ -1531,6 +1696,17 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.OpenInterest lEv
+    Next
+End If
+
 RaiseEvent OpenInterest(lEv)
 
 Exit Sub
@@ -1546,6 +1722,17 @@ On Error GoTo Err
 Dim lEv As PriceChangeEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mPriceChangeListeners.Count <> 0 Then
+    mPriceChangeListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mPriceChangeListeners.Count
+        Dim lListener As IPriceChangeListener
+        Set lListener = mPriceChangeListeners.GetListener(i)
+        lListener.Change lEv
+    Next
+End If
+
 RaiseEvent PriceChange(lEv)
 
 Exit Sub
@@ -1562,6 +1749,17 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.PreviousClose lEv
+    Next
+End If
+
 RaiseEvent PreviousClose(lEv)
 
 Exit Sub
@@ -1577,6 +1775,17 @@ On Error GoTo Err
 Dim lEv As RawMarketDepthEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mRawMarketDepthListeners.Count <> 0 Then
+    mRawMarketDepthListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mRawMarketDepthListeners.Count
+        Dim lListener As IRawMarketDepthListener
+        Set lListener = mRawMarketDepthListeners.GetListener(i)
+        lListener.ResetMarketDepth lEv
+    Next
+End If
+
 RaiseEvent RawMarketDepthReset(lEv)
 
 Exit Sub
@@ -1592,6 +1801,17 @@ On Error GoTo Err
 Dim lEv As MarketDepthEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mMarketDepthListeners.Count <> 0 Then
+    mMarketDepthListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mMarketDepthListeners.Count
+        Dim lListener As IMarketDepthListener
+        Set lListener = mMarketDepthListeners.GetListener(i)
+        lListener.ResetMarketDepth lEv
+    Next
+End If
+
 RaiseEvent DOMReset(lEv)
 
 Exit Sub
@@ -1607,6 +1827,17 @@ On Error GoTo Err
 Dim lEv As RawMarketDepthEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mRawMarketDepthListeners.Count <> 0 Then
+    mRawMarketDepthListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mRawMarketDepthListeners.Count
+        Dim lListener As IRawMarketDepthListener
+        Set lListener = mRawMarketDepthListeners.GetListener(i)
+        lListener.UpdateMarketDepth lEv
+    Next
+End If
+
 RaiseEvent RawMarketDepthUpdate(lEv)
 
 Exit Sub
@@ -1622,7 +1853,44 @@ On Error GoTo Err
 Dim lEv As MarketDepthEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mMarketDepthListeners.Count <> 0 Then
+    mMarketDepthListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mMarketDepthListeners.Count
+        Dim lListener As IMarketDepthListener
+        Set lListener = mMarketDepthListeners.GetListener(i)
+        lListener.SetMarketDepthCell lEv
+    Next
+End If
+
 RaiseEvent DOMSetCell(lEv)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub fireStateChange(ev As StateChangeEventData)
+Const ProcName As String = "fireStateChange"
+On Error GoTo Err
+
+Dim lEv As StateChangeEventData
+lEv = ev
+Set lEv.Source = Me
+
+If mStateChangeListeners.Count <> 0 Then
+    mStateChangeListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mStateChangeListeners.Count
+        Dim lListener As StateChangeListener
+        Set lListener = mStateChangeListeners.GetListener(i)
+        lListener.Change lEv
+    Next
+End If
+
+RaiseEvent StateChange(lEv)
 
 Exit Sub
 
@@ -1637,6 +1905,17 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.Trade lEv
+    Next
+End If
+
 RaiseEvent Trade(lEv)
 
 Exit Sub
@@ -1653,6 +1932,17 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
+
+If mQuoteListeners.Count <> 0 Then
+    mQuoteListeners.SetCurrentListeners
+    Dim i As Long
+    For i = 1 To mQuoteListeners.Count
+        Dim lListener As IQuoteListener
+        Set lListener = mQuoteListeners.GetListener(i)
+        lListener.Volume lEv
+    Next
+End If
+
 RaiseEvent Volume(lEv)
 
 Exit Sub

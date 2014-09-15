@@ -23,7 +23,6 @@ Option Explicit
 '@================================================================================
 
 Implements IGenericTickListener
-Implements StateChangeListener
 
 '@================================================================================
 ' Events
@@ -59,27 +58,15 @@ Private mSelfRef                                    As Object
 ' IGenericTickListener Interface Members
 '@================================================================================
 
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+Set mSelfRef = Nothing
+End Sub
+
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
 mTickWriter.WriteTick ev.Tick
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' StateChangeListener Interface Members
-'@================================================================================
-
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
-On Error GoTo Err
-
-If ev.State = MarketDataSourceStates.MarketDataSourceStateFinished Then Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -112,7 +99,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pDataSource As IMarketDataSource, _
+                ByVal pTickSource As IGenericTickSource, _
+                ByVal pContractFuture As IFuture, _
                 ByVal pOutputMonitor As ITickfileOutputMonitor, _
                 ByVal pTickfileStore As ITickfileStore, _
                 ByVal pFormatIdentifier As String, _
@@ -120,13 +108,12 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-AssertArgument Not pDataSource Is Nothing, "pDataSource is Nothing"
+AssertArgument Not pTickSource Is Nothing, "pTickSource is Nothing"
 AssertArgument Not pTickfileStore Is Nothing, "pTickfileStore is Nothing"
 
-Set mTickWriter = gCreateBufferedTickfileWriter(pTickfileStore, pOutputMonitor, pDataSource.ContractFuture, pFormatIdentifier, pLocation)
+Set mTickWriter = gCreateBufferedTickfileWriter(pTickfileStore, pOutputMonitor, pContractFuture, pFormatIdentifier, pLocation)
 
-pDataSource.AddGenericTickListener Me
-pDataSource.AddStateChangeListener Me
+pTickSource.AddGenericTickListener Me
 
 Set mSelfRef = Me
 

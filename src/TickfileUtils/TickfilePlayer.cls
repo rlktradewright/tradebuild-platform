@@ -102,8 +102,6 @@ Private WithEvents mFutureWaiter        As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mContract                       As IContract
 
-Private mFirstTickTimeUTC               As Date
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -116,6 +114,10 @@ End Sub
 '@================================================================================
 ' IGenericTickListener Interface Members
 '@================================================================================
+
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+' nothing to do
+End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
@@ -151,12 +153,13 @@ mTickfileReplayController.NotifyEvent ev
 
 Select Case ev.EventCode
 Case TickfileEventCodes.TickfileEventFileDoesNotExist, _
+        TickfileEventCodes.TickfileEventFileIsEmpty, _
         TickfileEventCodes.TickfileEventFileIsInvalid, _
         TickfileEventCodes.TickfileEventFileFormatNotSupported, _
         TickfileEventCodes.TickfileEventAmbiguousContractDetails, _
         TickfileEventCodes.TickfileEventNoContractDetails, _
         TickfileEventCodes.TickfileEventDataSourceNotAvailable
-    mTickfileReplayController.StopReplay
+    mTickfileReplayController.NotifyCantPlay Me
 End Select
 
 Exit Sub
@@ -244,7 +247,7 @@ End If
 If mState = States.HandlingTick Then
     mState = States.PendingFireTick
     mTickScheduler.NotifyTick mCurrentTick, Me
-    If Not mState = States.NeedingTick Then mTaskContext.Suspend -1
+    If mState <> States.NeedingTick Then mTaskContext.Suspend -1
 ElseIf mState = States.NeedingTick Then
     If Not mReader.FireNextTick Then
         mTaskContext.Suspend -1
@@ -292,7 +295,9 @@ Else
     Set mContract = ev.Future.Value
     mContractFutureBuilder.Value = mContract
     mContractFutureBuilder.Complete
-    checkReady
+    Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
+    mTickScheduler.AddPlayer Me
+    StartReplay
 End If
 
 Exit Sub
@@ -326,12 +331,14 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let FirstTickTimeUTC(ByVal Value As Date)
+Friend Property Let FirstTickTimeUTC(ByVal pTimestamp As Date)
 Const ProcName As String = "FirstTickTimeUTC"
 On Error GoTo Err
 
-mFirstTickTimeUTC = Value
-checkReady
+mClock.SetTimeUTC pTimestamp
+mClockFutureBuilder.Value = mClock
+mClockFutureBuilder.Complete
+mTickfileReplayController.NotifyReady Me
 
 Exit Property
 
@@ -507,22 +514,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub StartReplay()
-Const ProcName As String = "StartReplay"
-On Error GoTo Err
-
-If mTickfileState = TickfileStates.TickfileStatePlaying Then Exit Sub
-
-mTickfileState = TickfileStates.TickfileStatePlaying
-mState = States.NeedingTick
-StartTask Me, PriorityLow
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Friend Sub StopReplay()
 Const ProcName As String = "StopReplay"
 On Error GoTo Err
@@ -583,7 +574,7 @@ On Error GoTo Err
 
 If mPrimaryContractStore Is Nothing Then
     fireNotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "No contract store is available"
-    mTickfileReplayController.StopReplay
+    mTickfileReplayController.NotifyCantPlay Me
     Exit Function
 End If
     
@@ -596,22 +587,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub checkReady()
-Const ProcName As String = "checkReady"
+Private Sub StartReplay()
+Const ProcName As String = "StartReplay"
 On Error GoTo Err
 
-If mContract Is Nothing Then Exit Sub
+If mTickfileState = TickfileStates.TickfileStatePlaying Then Exit Sub
 
-If mClock Is Nothing Then Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
-
-If mFirstTickTimeUTC = 0 Then
-    If mTickStreamBuilder.TickStream.State = TickStreamStateRunning Then mTickfileReplayController.NotifyReady Me
-    Exit Sub
-End If
-
-mClock.SetTimeUTC mFirstTickTimeUTC
-mClockFutureBuilder.Value = mClock
-mClockFutureBuilder.Complete
+mTickfileState = TickfileStates.TickfileStatePlaying
+mState = States.NeedingTick
+StartTask Me, PriorityLow
 
 Exit Sub
 

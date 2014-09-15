@@ -235,7 +235,7 @@ Set lTickStream = mTickStreams(GetObjectKey(pContractFuture))
 
 Dim lDataSource As New MarketDataSource
 Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, False, pUseLocalTimeForStudies)
-lDataSource.tickfilestreamid = lTickStream.StreamId
+lDataSource.TickfileStreamId = lTickStream.StreamId
 
 Set CreateMarketDataSource = lDataSource
 
@@ -295,7 +295,8 @@ mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 Set mDataManager = New MarketDataManager
 mDataManager.Initialise Me, pStudyLibManager, pOptions, pNumberOfMarketDepthRows
 
-Set mReplayController = CreateTickfileReplayController(pTickfileSpecifiers, pTickfileStore, mPrimaryContractStore, mSecondaryContractStore, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
+Set mReplayController = CreateTickfileReplayController(pTickfileStore, mPrimaryContractStore, mSecondaryContractStore, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
+mReplayController.TickFileSpecifiers = pTickfileSpecifiers
 
 Dim i As Long
 For i = 1 To pTickfileSpecifiers.Count

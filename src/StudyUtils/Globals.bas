@@ -21,12 +21,14 @@ Option Explicit
 
 Public Const ProjectName                        As String = "StudyUtils27"
 
-Public Const AskInputName                           As String = "Ask"
-Public Const BidInputName                           As String = "Bid"
-Public Const OpenInterestInputName                   As String = "Open interest"
-Public Const TickVolumeInputName                     As String = "Tick Volume"
-Public Const TradeInputName                          As String = "Trade"
-Public Const VolumeInputName                         As String = "Total Volume"
+Public Const AskInputName                       As String = "Ask"
+Public Const BidInputName                       As String = "Bid"
+Public Const OpenInterestInputName              As String = "Open interest"
+Public Const TickVolumeInputName                As String = "Tick Volume"
+Public Const TradeInputName                     As String = "Trade"
+Public Const VolumeInputName                    As String = "Total Volume"
+Public Const ValueInputName                     As String = "Value"
+Public Const BarNumberInputName                 As String = "Bar number"
 
 Public Const AttributeNameEnabled               As String = "Enabled"
 Public Const AttributeNameStudyLibraryBuiltIn   As String = "BuiltIn"
@@ -39,17 +41,24 @@ Public Const ConfigNameStudyLibraries           As String = "StudyLibraries"
 Public Const ConfigNameStudyLibrary             As String = "StudyLibrary"
 
 Public Const ConstTickVolumeBarsStudyName       As String = "Constant Tick Volume bars"
-Public Const ConstTickVolumeBarsParamTicksPerBar   As String = "Ticks per bar"
+Public Const ConstTickVolumeBarsStudyShortName  As String = "CTV Bars"
+Public Const ConstTickVolumeBarsParamTicksPerBar As String = "Ticks per bar"
 
-Public Const ConstTimeBarsStudyName                As String = "Constant time bars"
-Public Const ConstTimeBarsParamBarLength           As String = "Bar length"
-Public Const ConstTimeBarsParamTimeUnits           As String = "Time units"
+Public Const ConstTimeBarsStudyName             As String = "Constant time bars"
+Public Const ConstTimeBarsStudyShortName        As String = "Bars"
+Public Const ConstTimeBarsParamBarLength        As String = "Bar length"
+Public Const ConstTimeBarsParamTimeUnits        As String = "Time units"
 
 Public Const ConstVolumeBarsStudyName           As String = "Constant Volume bars"
+Public Const ConstVolumeBarsStudyShortName      As String = "CV Bars"
 Public Const ConstVolumeBarsParamVolPerBar      As String = "Volume per bar"
 
-Public Const ConstMomentumBarsStudyName            As String = "Constant momentum bars"
-Public Const ConstMomentumBarsParamTicksPerBar     As String = "Ticks move per bar"
+Public Const ConstMomentumBarsStudyName         As String = "Constant momentum bars"
+Public Const ConstMomentumBarsStudyShortName    As String = "CM Bars"
+Public Const ConstMomentumBarsParamTicksPerBar  As String = "Ticks move per bar"
+
+Public Const UserDefinedBarsStudyName           As String = "User-defined bars"
+Public Const UserDefinedBarsStudyShortName      As String = "UD bars"
 
 Public Const DefaultStudyValueNameStr           As String = "$DEFAULT"
 Public Const MovingAverageStudyValueNameStr     As String = "MA"

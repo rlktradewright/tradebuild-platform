@@ -50,7 +50,7 @@ Private Const ModuleName                            As String = "SessionBuilder"
 Private mSession                                    As New Session
 'Private mFutureBuilder                              As New FutureBuilder
 Private mLatestTimeNotified                         As Date
-Private mLinkedSessions                             As New EnumerableCollection
+Private mLinkedSessions                             As EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
@@ -112,22 +112,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let TimeZone( _
-                ByVal Value As TimeZone)
-Const ProcName As String = "TimeZone"
-On Error GoTo Err
-
-AssertArgument Not Value Is Nothing, "Value is Nothing"
-'Assert mFutureBuilder.Future.IsPending, "Session creation has already been completed"
-'Assert Not mSession.IsLinkable, "Session has been made linkable, so no further modification is allowed via this SessionBuilder"
-
-mSession.TimeZone = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
+'Friend Property Let TimeZone( _
+'                ByVal Value As TimeZone)
+'Const ProcName As String = "TimeZone"
+'On Error GoTo Err
+'
+'AssertArgument Not Value Is Nothing, "Value is Nothing"
+''Assert mFutureBuilder.Future.IsPending, "Session creation has already been completed"
+''Assert Not mSession.IsLinkable, "Session has been made linkable, so no further modification is allowed via this SessionBuilder"
+'
+'mSession.TimeZone = Value
+'
+'Exit Property
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Property
 
 '@================================================================================
 ' Methods
@@ -186,6 +186,7 @@ On Error GoTo Err
 pSessionToLink.SessionStartTime = mSession.SessionStartTime
 pSessionToLink.SessionEndTime = mSession.SessionEndTime
 pSessionToLink.SetSessionCurrentTime mLatestTimeNotified
+If mLinkedSessions Is Nothing Then Set mLinkedSessions = New EnumerableCollection
 mLinkedSessions.Add pSessionToLink
 
 Exit Sub
@@ -203,13 +204,15 @@ On Error GoTo Err
 'Assert Not mSession.IsLinkable, "Session has been made linkable, so no further modification is allowed via this SessionBuilder"
 
 SetSessionCurrentTime = mSession.SetSessionCurrentTime(Timestamp)
+mLatestTimeNotified = Timestamp
+
+If mLinkedSessions Is Nothing Then Exit Function
 
 Dim sess As Session
 For Each sess In mLinkedSessions
     sess.SetSessionCurrentTime Timestamp
 Next
 
-mLatestTimeNotified = Timestamp
 
 'If mFutureBuilder.Future.IsPending Then
 '    mFutureBuilder.Value = mSession
@@ -236,7 +239,7 @@ Public Sub UnLinkSession( _
 Const ProcName As String = "UnLinkSession"
 On Error GoTo Err
 
-mLinkedSessions.Remove objectToUnlink
+If Not mLinkedSessions Is Nothing Then mLinkedSessions.Remove objectToUnlink
 
 Exit Sub
 

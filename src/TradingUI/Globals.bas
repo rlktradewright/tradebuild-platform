@@ -144,13 +144,13 @@ End Sub
 
 Public Sub gShowStudyPicker( _
                 ByVal chartMgr As ChartManager, _
-                ByVal title As String)
+                ByVal Title As String)
 Const ProcName As String = "gShowStudyPicker"
 
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
-mStudyPickerForm.Initialise chartMgr, title
+mStudyPickerForm.Initialise chartMgr, Title
 mStudyPickerForm.Show vbModeless
 
 Exit Sub
@@ -161,13 +161,13 @@ End Sub
 
 Public Sub gSyncStudyPicker( _
                 ByVal chartMgr As ChartManager, _
-                ByVal title As String)
+                ByVal Title As String)
 Const ProcName As String = "gSyncStudyPicker"
 
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.Initialise chartMgr, title
+mStudyPickerForm.Initialise chartMgr, Title
 
 Exit Sub
 

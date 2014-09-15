@@ -389,7 +389,7 @@ On Error GoTo Err
 
 For Each param In params
     Select Case UCase$(param.name)
-    Case UCase$(ConstVolBarsParamVolPerBar)
+    Case UCase$(ConstVolumeBarsParamVolPerBar)
         mVolumePerBar = param.Value
         AssertArgument mVolumePerBar > 0, "Volume per bar parameter must be > 0"
     End Select

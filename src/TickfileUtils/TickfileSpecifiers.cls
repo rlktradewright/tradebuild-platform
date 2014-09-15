@@ -214,17 +214,22 @@ End Sub
 Private Sub fireCollectionChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As TickfileSpecifier)
-Dim listener As CollectionChangeListener
-Dim ev As CollectionChangeEventData
 Const ProcName As String = "fireCollectionChange"
 On Error GoTo Err
 
+Dim ev As CollectionChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
-For Each listener In mChangeListeners.CurrentListeners
-    listener.Change ev
+
+mChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mChangeListeners.Count
+    Dim lListener As CollectionChangeListener
+    Set lListener = mChangeListeners.GetListener(i)
+    lListener.Change ev
 Next
+
 RaiseEvent CollectionChanged(ev)
 
 Exit Sub

@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "HistDataWriter"
 ' Member variables
 '@================================================================================
 
-Private mDataSource                                 As IMarketDataSource
+Private mTickStream                                 As TickStream
 Private mContractFuture                             As IFuture
 
 Private mOptions                                    As HistDataWriteOptions
@@ -121,7 +121,7 @@ For Each lTimeframeHandler In mTimeframeHandlers
     End If
 Next
 
-Set mDataSource = Nothing
+Set mTickStream = Nothing
 
 gLogger.Log "HistDataWriter finished" & s, ProcName, ModuleName
 
@@ -136,7 +136,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pDataSource As IMarketDataSource, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pClockFuture As IFuture, _
+                ByVal pStudyBase As IStudyBase, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pOutputMonitor As IBarOutputMonitor, _
                 ByVal pOptions As HistDataWriteOptions, _
@@ -147,14 +149,13 @@ On Error GoTo Err
 If pOptions And HistDataWriteOptionWriteTradeBars Then AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityWriteTradeBars), "HistDataStore does not support writing trade bars"
 If pOptions And HistDataWriteOptionWriteBidAndAskBars Then AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityWriteBidAndAskBars), "HistDataStore does not support writing bid and ask bars"
 
-Set mDataSource = pDataSource
-Set mContractFuture = mDataSource.ContractFuture
+Set mContractFuture = pContractFuture
 mOptions = pOptions
 
-Set mBarWriter = gCreateBufferedBarWriter(pHistDataStore, pOutputMonitor, mDataSource.ContractFuture)
+Set mBarWriter = gCreateBufferedBarWriter(pHistDataStore, pOutputMonitor, mContractFuture)
 
 Dim lTask As New TimeframeSetupTask
-lTask.Initialise pHistDataStore, mBarWriter, pOutputMonitor, pDataSource.ContractFuture, pDataSource.ClockFuture, pDataSource.StudyBase, pOptions, pSaveIntervalSeconds
+lTask.Initialise pHistDataStore, mBarWriter, pOutputMonitor, mContractFuture, pClockFuture, pStudyBase, pOptions, pSaveIntervalSeconds
 
 Set mTimeframeSetupTC = StartTask(lTask, PriorityNormal)
 

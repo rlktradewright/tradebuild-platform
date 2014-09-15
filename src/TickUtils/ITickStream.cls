@@ -82,10 +82,10 @@ End Sub
 Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
 End Sub
 
-Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
+Public Sub Finish()
 End Sub
 
-Public Sub Finish()
+Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)

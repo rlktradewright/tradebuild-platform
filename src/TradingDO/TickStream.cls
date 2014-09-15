@@ -66,7 +66,6 @@ Private mInstrumentID                       As Long
 Private mFromDate                           As Date
 Private mToDate                             As Date
 
-Private mWaitingForData                     As Boolean
 Private mFetchComplete                      As Boolean
 
 Private mEos                                As Boolean
@@ -164,12 +163,7 @@ End If
 mFetchComplete = True
 Debug.Print "Fetch complete"
 
-If Not mAsynchronous Then
-    RaiseEvent DataAvailable
-ElseIf mWaitingForData Then
-    mWaitingForData = False
-    RaiseEvent DataAvailable
-End If
+RaiseEvent DataAvailable
 
 Exit Sub
 
@@ -188,10 +182,7 @@ On Error GoTo Err
 Debug.Print "Fetch progress=" & Progress & "; max=" & MaxProgress
 If Not mAsynchronous Then Exit Sub
 
-If mWaitingForData Then
-    mWaitingForData = False
-    RaiseEvent DataAvailable
-End If
+RaiseEvent DataAvailable
 
 Exit Sub
 
@@ -248,7 +239,6 @@ If mRs Is Nothing Then
     Assert mAsynchronous, "Must call StartStream before calling GetNextTick"
         
     Debug.Print "GetNextTick: no recordset"
-    mWaitingForData = True
     Exit Function
 End If
 
@@ -402,7 +392,6 @@ End Sub
 
 Private Function getNextDecoder() As Boolean
 Const ProcName As String = "getNextDecoder"
-
 On Error GoTo Err
 
 Set mDecoder = Nothing
@@ -410,18 +399,14 @@ Set mDecoder = Nothing
 If Not gIsStateSet(mRs.State, adStateOpen) Then
     gLogger.Log "recordset state is " & mRs.State, ProcName, ModuleName, LogLevelDetail
     Debug.Print "Recordset state is " & mRs.State
-    mWaitingForData = True
 ElseIf mRs.EOF Then
     If Not mFetchComplete Then
         Debug.Print "getNextDecoder: waiting for data"
-        mWaitingForData = True
     Else
         mEos = True
         Debug.Print "getNextDecoder: already at EOS"
     End If
 Else
-    mWaitingForData = False
-    
     Set mDecoder = createNewTickDecoder
     getNextDecoder = True
     

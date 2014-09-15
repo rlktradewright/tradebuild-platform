@@ -439,10 +439,7 @@ connectToDB
 
 If Not useTickData Then
     generateBarRequestDetails mSpecifier.fromDate, mSpecifier.toDate
-    doFetchBars mSpecifier.barType, mBarLengthMinutes, mNumberOfBars, mFromDate, mToDate, False
-                
-    setBarsFutureValue
-    
+    Set mRs = doFetchBars(mSpecifier.barType, mBarLengthMinutes, mNumberOfBars, mFromDate, mToDate, False)
     processBars
 Else
     Set mInterimBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _

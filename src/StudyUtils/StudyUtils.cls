@@ -132,12 +132,28 @@ Public Property Get BuiltInStudyLibraryProgId() As String
 BuiltInStudyLibraryProgId = BuiltInStudyLibProgId
 End Property
 
+Public Property Get ConstMomentumBarsParamTicksPerBar() As String
+ConstMomentumBarsParamTicksPerBar = Globals.ConstMomentumBarsParamTicksPerBar
+End Property
+
+Public Property Get ConstMomentumBarsStudyName() As String
+ConstMomentumBarsStudyName = Globals.ConstMomentumBarsStudyName
+End Property
+
+Public Property Get ConstMomentumBarsStudyShortName() As String
+ConstMomentumBarsStudyShortName = Globals.ConstMomentumBarsStudyShortName
+End Property
+
+Public Property Get ConstTickVolumeBarsParamTicksPerBar() As String
+ConstTickVolumeBarsParamTicksPerBar = Globals.ConstTickVolumeBarsParamTicksPerBar
+End Property
+
 Public Property Get ConstTickVolumeBarsStudyName() As String
 ConstTickVolumeBarsStudyName = Globals.ConstTickVolumeBarsStudyName
 End Property
 
-Public Property Get ConstTimeBarsStudyName() As String
-ConstTimeBarsStudyName = Globals.ConstTimeBarsStudyName
+Public Property Get ConstTickVolumeBarsStudyShortName() As String
+ConstTickVolumeBarsStudyShortName = Globals.ConstTickVolumeBarsStudyShortName
 End Property
 
 Public Property Get ConstTimeBarsParamBarLength() As String
@@ -148,24 +164,32 @@ Public Property Get ConstTimeBarsParamTimeUnits() As String
 ConstTimeBarsParamTimeUnits = Globals.ConstTimeBarsParamTimeUnits
 End Property
 
-Public Property Get ConstVolumeBarsStudyName() As String
-ConstVolumeBarsStudyName = Globals.ConstVolumeBarsStudyName
+Public Property Get ConstTimeBarsStudyName() As String
+ConstTimeBarsStudyName = Globals.ConstTimeBarsStudyName
+End Property
+
+Public Property Get ConstTimeBarsStudyShortName() As String
+ConstTimeBarsStudyShortName = Globals.ConstTimeBarsStudyShortName
 End Property
 
 Public Property Get ConstVolumeBarsParamVolPerBar() As String
 ConstVolumeBarsParamVolPerBar = Globals.ConstVolumeBarsParamVolPerBar
 End Property
 
-Public Property Get ConstMomentumBarsStudyName() As String
-ConstMomentumBarsStudyName = Globals.ConstMomentumBarsStudyName
+Public Property Get ConstVolumeBarsStudyShortName() As String
+ConstVolumeBarsStudyShortName = Globals.ConstVolumeBarsStudyShortName
 End Property
 
-Public Property Get ConstMomentumBarsParamTicksPerBar() As String
-ConstMomentumBarsParamTicksPerBar = Globals.ConstMomentumBarsParamTicksPerBar
+Public Property Get ConstVolumeBarsStudyName() As String
+ConstVolumeBarsStudyName = Globals.ConstVolumeBarsStudyName
 End Property
 
 Public Property Get InputNameAsk() As String
 InputNameAsk = Globals.AskInputName
+End Property
+
+Public Property Get InputNameBarNumber() As String
+InputNameBarNumber = Globals.BarNumberInputName
 End Property
 
 Public Property Get InputNameBid() As String
@@ -184,8 +208,20 @@ Public Property Get InputNameTrade() As String
 InputNameTrade = Globals.TradeInputName
 End Property
 
+Public Property Get InputNameValue() As String
+InputNameValue = Globals.ValueInputName
+End Property
+
 Public Property Get InputNameVolume() As String
 InputNameVolume = Globals.VolumeInputName
+End Property
+
+Public Property Get UserDefinedBarsStudyName() As String
+UserDefinedBarsStudyName = Globals.UserDefinedBarsStudyName
+End Property
+
+Public Property Get UserDefinedBarsStudyShortName() As String
+UserDefinedBarsStudyShortName = Globals.UserDefinedBarsStudyShortName
 End Property
 
 '@================================================================================
@@ -199,22 +235,26 @@ Public Function CreateBarStudy( _
 Const ProcName As String = "CreateBarStudy"
 On Error GoTo Err
 
-Select Case pTimePeriod.Units
-Case TimePeriodSecond, _
-        TimePeriodMinute, _
-        TimePeriodHour, _
-        TimePeriodDay, _
-        TimePeriodWeek, _
-        TimePeriodMonth, _
-        TimePeriodYear
-    Set CreateBarStudy = setupConstantTimeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
-Case TimePeriodTickMovement
-    Set CreateBarStudy = setupConstantMomentumBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
-Case TimePeriodTickVolume
-    Set CreateBarStudy = setupConstantTickVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
-Case TimePeriodVolume
-    Set CreateBarStudy = setupConstantVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
-End Select
+If pTimePeriod.Length = 0 Then
+    Set CreateBarStudy = setupUserDefinedBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+Else
+    Select Case pTimePeriod.Units
+    Case TimePeriodSecond, _
+            TimePeriodMinute, _
+            TimePeriodHour, _
+            TimePeriodDay, _
+            TimePeriodWeek, _
+            TimePeriodMonth, _
+            TimePeriodYear
+        Set CreateBarStudy = setupConstantTimeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+    Case TimePeriodTickMovement
+        Set CreateBarStudy = setupConstantMomentumBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+    Case TimePeriodTickVolume
+        Set CreateBarStudy = setupConstantTickVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+    Case TimePeriodVolume
+        Set CreateBarStudy = setupConstantVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+    End Select
+End If
 
 Exit Function
 
@@ -239,6 +279,110 @@ CreateCacheReplayTask.Initialise pStudyManager, _
                             pSourceStudy, _
                             pNumberOfValuesToReplay, _
                             pDiscriminator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateStudyBaseForDoubleInput( _
+                ByVal pStudyManager As StudyManager, _
+                Optional ByVal pQuantum As Double = 0#, _
+                Optional ByVal pName As String) As IStudyBase
+Const ProcName As String = "CreateStudyBaseForTickDataInput"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+AssertArgument pQuantum >= 0, "pQuantum is negative"
+
+Dim lStudyBase As New StudyBaseForDoubleInput
+lStudyBase.Initialise pStudyManager, pQuantum, pName
+
+Set CreateStudyBaseForDoubleInput = lStudyBase
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateStudyBaseForIntegerInput( _
+                ByVal pStudyManager As StudyManager, _
+                Optional ByVal pName As String) As IStudyBase
+Const ProcName As String = "CreateStudyBaseForIntegerInput"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+
+Dim lStudyBase As New StudyBaseForIntegerInput
+lStudyBase.Initialise pStudyManager, pName
+
+Set CreateStudyBaseForIntegerInput = lStudyBase
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateStudyBaseForNullInput( _
+                ByVal pStudyManager As StudyManager, _
+                Optional ByVal pName As String) As IStudyBase
+Const ProcName As String = "CreateStudyBaseForNullInput"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+
+Dim lStudyBase As New StudyBaseForNullInput
+lStudyBase.Initialise pStudyManager, pName
+
+Set CreateStudyBaseForNullInput = lStudyBase
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateStudyBaseForTickDataInput( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pTickSource As IGenericTickSource, _
+                ByVal pContractFuture As IFuture) As IStudyBase
+Const ProcName As String = "CreateStudyBaseForTickDataInput"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+AssertArgument Not pTickSource Is Nothing, "pTickSource Is Nothing"
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture Is Nothing"
+
+Dim lStudyBase As New StudyBaseForTickDataInput
+lStudyBase.Initialise pStudyManager, pContractFuture
+
+pTickSource.AddGenericTickListener lStudyBase
+
+Set CreateStudyBaseForTickDataInput = lStudyBase
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateStudyBaseForUserBarsInput( _
+                ByVal pStudyManager As StudyManager, _
+                Optional ByVal pQuantum As Double = 0#, _
+                Optional ByVal pName As String) As IStudyBase
+Const ProcName As String = "CreateStudyBaseForUserBarsInput"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+AssertArgument pQuantum >= 0, "pQuantum is negative"
+
+Dim lStudyBase As New StudyBaseForUserBarsInput
+lStudyBase.Initialise pStudyManager, pQuantum, pName
+
+Set CreateStudyBaseForUserBarsInput = lStudyBase
 
 Exit Function
 
@@ -313,19 +457,25 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function setupBarsStudy( _
+Private Function setupBarStudy( _
                 ByVal pStudyName As String, _
                 ByVal pStudyBase As IStudyBase, _
                 ByVal pParams As Parameters, _
                 ByVal pInitialBarsFuture As IFuture) As IBarStudy
-Const ProcName As String = "setupBarsStudy"
+Const ProcName As String = "setupBarStudy"
 On Error GoTo Err
 
-ReDim InputValueNames(3) As String
-InputValueNames(0) = InputNameTrade
-InputValueNames(1) = InputNameVolume
-InputValueNames(2) = InputNameTickVolume
-InputValueNames(3) = InputNameOpenInterest
+If pStudyName = UserDefinedBarsStudyName Then
+    ReDim InputValueNames(1) As String
+    InputValueNames(0) = InputNameValue
+    InputValueNames(1) = InputNameBarNumber
+Else
+    ReDim InputValueNames(3) As String
+    InputValueNames(0) = InputNameTrade
+    InputValueNames(1) = InputNameVolume
+    InputValueNames(2) = InputNameTickVolume
+    InputValueNames(3) = InputNameOpenInterest
+End If
 
 Dim lBarStudy As IBarStudy
 Set lBarStudy = pStudyBase.StudyManager.AddStudy(pStudyName, _
@@ -333,7 +483,7 @@ Set lBarStudy = pStudyBase.StudyManager.AddStudy(pStudyName, _
                                         InputValueNames, _
                                         pParams)
 If Not pInitialBarsFuture Is Nothing Then lBarStudy.InitialBarsFuture = pInitialBarsFuture
-Set setupBarsStudy = lBarStudy
+Set setupBarStudy = lBarStudy
 
 Exit Function
 
@@ -351,7 +501,7 @@ On Error GoTo Err
 Dim lParams As New Parameters
 lParams.SetParameterValue ConstMomentumBarsParamTicksPerBar, pTimePeriod.Length
 
-Set setupConstantMomentumBarsStudy = setupBarsStudy(ConstMomentumBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupConstantMomentumBarsStudy = setupBarStudy(ConstMomentumBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
 
 Exit Function
 
@@ -369,7 +519,7 @@ On Error GoTo Err
 Dim lParams As New Parameters
 lParams.SetParameterValue ConstTickVolumeBarsParamTicksPerBar, pTimePeriod.Length
 
-Set setupConstantTickVolumeBarsStudy = setupBarsStudy(ConstTickVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupConstantTickVolumeBarsStudy = setupBarStudy(ConstTickVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
 
 Exit Function
 
@@ -389,7 +539,7 @@ lParams.SetParameterValue ConstTimeBarsParamBarLength, pTimePeriod.Length
 lParams.SetParameterValue ConstTimeBarsParamTimeUnits, _
                         TimePeriodUnitsToString(pTimePeriod.Units)
 
-Set setupConstantTimeBarsStudy = setupBarsStudy(ConstTimeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupConstantTimeBarsStudy = setupBarStudy(ConstTimeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
 
 Exit Function
 
@@ -407,7 +557,24 @@ On Error GoTo Err
 Dim lParams As New Parameters
 lParams.SetParameterValue ConstVolumeBarsParamVolPerBar, pTimePeriod.Length
 
-Set setupConstantVolumeBarsStudy = setupBarsStudy(ConstVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupConstantVolumeBarsStudy = setupBarStudy(ConstVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function setupUserDefinedBarsStudy( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pStudyBase As IStudyBase, _
+                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+Const ProcName As String = "setupUserDefinedBarsStudy"
+On Error GoTo Err
+
+Dim lParams As New Parameters
+
+Set setupUserDefinedBarsStudy = setupBarStudy(UserDefinedBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
 
 Exit Function
 

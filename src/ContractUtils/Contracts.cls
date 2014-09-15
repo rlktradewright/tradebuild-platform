@@ -376,8 +376,11 @@ Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
 
-Dim lListener As CollectionChangeListener
-For Each lListener In mChangeListeners.CurrentListeners
+mChangeListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mChangeListeners.Count
+    Dim lListener As CollectionChangeListener
+    Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)

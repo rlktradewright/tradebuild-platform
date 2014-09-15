@@ -487,10 +487,13 @@ Const ProcName As String = "fireRecoveryDataChanged"
 On Error GoTo Err
 
 Dim ev As RecoveryDataChangedEventData
-Dim lListener As IRecoverableObjectListener
-
 Set ev.Source = Me
-For Each lListener In mRecoverableObjectListeners.CurrentListeners
+
+mRecoverableObjectListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mRecoverableObjectListeners.Count
+    Dim lListener As IRecoverableObjectListener
+    Set lListener = mRecoverableObjectListeners.GetListener(i)
     lListener.NotifyRecoveryDataChanged ev
 Next
 

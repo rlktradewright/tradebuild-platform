@@ -170,7 +170,7 @@ End Function
 
 Public Function CreateBarsBuilder( _
                 ByVal pBarTimePeriod As TimePeriod, _
-                ByVal pSession As Session, _
+                Optional ByVal pSession As Session, _
                 Optional ByVal pTickSize As Double, _
                 Optional ByVal pNumberOfBarsToCache As Long, _
                 Optional ByVal pSave As Boolean = True) As BarsBuilder
@@ -178,7 +178,7 @@ Const ProcName As String = "CreateBarsBuilder"
 On Error GoTo Err
 
 AssertArgument Not pBarTimePeriod Is Nothing, "pBarTimePeriod is Nothing"
-AssertArgument Not pSession Is Nothing, "pSession is Nothing"
+AssertArgument Not pSession Is Nothing Or pBarTimePeriod.Length = 0, "pSession is Nothing"
 
 Dim lBarsBuilder As New BarsBuilder
 lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pSave

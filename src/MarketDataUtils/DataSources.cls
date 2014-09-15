@@ -89,9 +89,11 @@ Friend Sub DOMReset()
 Const ProcName As String = "DOMReset"
 On Error GoTo Err
 
-Dim lDataSource As MarketDataSource
-
-For Each lDataSource In mDataSources.CurrentListeners
+mDataSources.SetCurrentListeners
+Dim i As Long
+For i = 1 To mDataSources.Count
+    Dim lDataSource As MarketDataSource
+    Set lDataSource = mDataSources.GetListener(i)
     lDataSource.FireResetMarketDepth
 Next
 
@@ -108,9 +110,11 @@ Friend Sub DOMSetCell( _
 Const ProcName As String = "DOMSetCell"
 On Error GoTo Err
 
-Dim lDataSource As MarketDataSource
-
-For Each lDataSource In mDataSources.CurrentListeners
+mDataSources.SetCurrentListeners
+Dim i As Long
+For i = 1 To mDataSources.Count
+    Dim lDataSource As MarketDataSource
+    Set lDataSource = mDataSources.GetListener(i)
     lDataSource.FireSetMarketDepthCell pSide, pPrice, pSize
 Next
 
@@ -130,10 +134,11 @@ Friend Sub NotifyError( _
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
 
-If mDataSources.Count = 0 Then Exit Sub
-
-Dim lDataSource As MarketDataSource
-For Each lDataSource In mDataSources.CurrentListeners
+mDataSources.SetCurrentListeners
+Dim i As Long
+For i = 1 To mDataSources.Count
+    Dim lDataSource As MarketDataSource
+    Set lDataSource = mDataSources.GetListener(i)
     lDataSource.SetError pErrorCode, pErrorMsg
 Next
 
@@ -149,8 +154,11 @@ Friend Sub NotifyMarketDataError( _
 Const ProcName As String = "NotifyMarketDataError"
 On Error GoTo Err
 
-Dim lDataSource As MarketDataSource
-For Each lDataSource In mDataSources.CurrentListeners
+mDataSources.SetCurrentListeners
+Dim i As Long
+For i = 1 To mDataSources.Count
+    Dim lDataSource As MarketDataSource
+    Set lDataSource = mDataSources.GetListener(i)
     If lDataSource.SubscribedToMarketData Then lDataSource.FireError pErrorCode, pErrorMsg
 Next
 
@@ -166,8 +174,11 @@ Friend Sub NotifyMarketDepthError( _
 Const ProcName As String = "NotifyMarketDepthError"
 On Error GoTo Err
 
-Dim lDataSource As MarketDataSource
-For Each lDataSource In mDataSources.CurrentListeners
+mDataSources.SetCurrentListeners
+Dim i As Long
+For i = 1 To mDataSources.Count
+    Dim lDataSource As MarketDataSource
+    Set lDataSource = mDataSources.GetListener(i)
     If lDataSource.SubscribedToMarketDepth Then lDataSource.FireError pErrorCode, pErrorMsg
 Next
 
@@ -177,13 +188,40 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyStreamFinished()
-Const ProcName As String = "NotifyStreamFinished"
+Friend Sub NotifyMarketDataStreamFinished()
+Const ProcName As String = "NotifyMarketDataStreamFinished"
 On Error GoTo Err
 
-Dim lDataSource As MarketDataSource
-For Each lDataSource In mDataSources.CurrentListeners
-    lDataSource.Finish
+mDataSources.SetCurrentListeners
+Dim i As Long
+For i = 1 To mDataSources.Count
+    Dim lDataSource As MarketDataSource
+    Set lDataSource = mDataSources.GetListener(i)
+    If Not lDataSource.SubscribedToMarketDepth Then
+        lDataSource.FireNoMoreTicks
+        lDataSource.Finish
+    End If
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyMarketDepthStreamFinished()
+Const ProcName As String = "NotifyMarketDepthStreamFinished"
+On Error GoTo Err
+
+mDataSources.SetCurrentListeners
+Dim i As Long
+For i = 1 To mDataSources.Count
+    Dim lDataSource As MarketDataSource
+    Set lDataSource = mDataSources.GetListener(i)
+    If Not lDataSource.SubscribedToMarketData Then
+        lDataSource.FireNoMoreTicks
+        lDataSource.Finish
+    End If
 Next
 
 Exit Sub
@@ -199,12 +237,15 @@ On Error GoTo Err
 Dim lGotQuote As Boolean
 Dim lGotPriceChange As Boolean
 
-Dim lDataSource As MarketDataSource
-For Each lDataSource In mDataSources.CurrentListeners
+mDataSources.SetCurrentListeners
+Dim i As Long
+For i = 1 To mDataSources.Count
+    Dim lDataSource As MarketDataSource
+    Set lDataSource = mDataSources.GetListener(i)
+    lDataSource.FireTick pTick
     If pTick.TickType = TickTypeMarketDepth Or pTick.TickType = TickTypeMarketDepthReset Then
         lDataSource.FireRawMarketDepth pTick
     Else
-        lDataSource.FireTick pTick
         If lDataSource.HasQuoteListeners Then
             Dim lQuote As Quote
             If Not lGotQuote Then lQuote = DataSourceBase.GetCurrentQuote(pTick.TickType): lGotQuote = True
