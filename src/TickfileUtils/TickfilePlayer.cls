@@ -102,6 +102,9 @@ Private WithEvents mFutureWaiter        As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mContract                       As IContract
 
+Private mFinalReplayProgressPercent     As Long
+Private mFinalReplayProgressTicks       As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -346,12 +349,36 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get ReplayProgressTicks() As Long
-ReplayProgressTicks = mReader.ReplayProgressTicks
+Friend Property Get ReplayProgressPercent() As Long
+Const ProcName As String = "ReplayProgressPercent"
+On Error GoTo Err
+
+If mReader Is Nothing Then
+    ReplayProgressPercent = mFinalReplayProgressPercent
+Else
+    ReplayProgressPercent = mReader.ReplayProgressPercent
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get ReplayProgressPercent() As Long
-ReplayProgressPercent = mReader.ReplayProgressPercent
+Friend Property Get ReplayProgressTicks() As Long
+Const ProcName As String = "ReplayProgressTicks"
+On Error GoTo Err
+
+If mReader Is Nothing Then
+    ReplayProgressTicks = mFinalReplayProgressTicks
+Else
+    ReplayProgressTicks = mReader.ReplayProgressTicks
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let ReplaySpeed(ByVal Value As Long)
@@ -521,8 +548,12 @@ On Error GoTo Err
 mState = Finished
 If Not mTaskContext Is Nothing Then mTaskContext.Continue
 
-If Not mReader Is Nothing Then mReader.CloseInputFile
-Set mReader = Nothing
+If Not mReader Is Nothing Then
+    mFinalReplayProgressPercent = mReader.ReplayProgressPercent
+    mFinalReplayProgressTicks = mReader.ReplayProgressTicks
+    mReader.CloseInputFile
+    Set mReader = Nothing
+End If
 
 If Not mTickStreamBuilder Is Nothing Then
     Dim lTickStreamBuilder As TickStreamBuilder

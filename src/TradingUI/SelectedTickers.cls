@@ -169,7 +169,7 @@ Friend Sub Remove(ByVal pTicker As IMarketDataSource)
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-mTickers.Remove pTicker
+If mTickers.Contains(pTicker) Then mTickers.Remove pTicker
 If Not mChanging Then
     RaiseEvent SelectionChanged
 Else

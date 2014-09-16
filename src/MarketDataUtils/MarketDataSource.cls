@@ -603,15 +603,13 @@ ElseIf ev.Future.IsCancelled Then
     SetError ErrorCodes.ErrIllegalStateException, ev.ContinuationData & " creation cancelled"
     mFutureWaiter.Cancel
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    If processContractAvailable Then checkReady
+    If processContractAvailable Then setReady
 ElseIf TypeOf ev.Future.Value Is Clock Then
     mClockFutureBuilder.Value = ev.Future.Value
     mClockFutureBuilder.Complete
-    checkReady
 ElseIf TypeOf ev.Future.Value Is Session Then
     mSessionFutureBuilder.Value = ev.Future.Value
     mSessionFutureBuilder.Complete
-    checkReady
 End If
 
 Exit Sub
@@ -1215,7 +1213,7 @@ Set mConfig = pConfig
 setState MarketDataSourceStateCreated
 
 If pContractFuture.IsAvailable Then
-    processContractAvailable
+    If processContractAvailable Then setReady
 Else
     mFutureWaiter.Add mContractFuture
 End If
@@ -1607,24 +1605,6 @@ Private Sub checkNotFinished()
 Assert Not IsFinished, "Object has been Finished"
 End Sub
 
-Private Sub checkReady()
-Const ProcName As String = "checkReady"
-On Error GoTo Err
-
-If Not ContractFuture.IsAvailable Then Exit Sub
-If Not ClockFuture.IsAvailable Then Exit Sub
-If Not SessionFuture.IsAvailable Then Exit Sub
-
-setState MarketDataSourceStateReady
-
-storeSettings
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Function DataSourceBase() As DataSourceBase
 Set DataSourceBase = mDataSourceBaseRef.Target
 End Function
@@ -1659,7 +1639,7 @@ Private Function processContractAvailable() As Boolean
 Const ProcName As String = "processContractAvailable"
 On Error GoTo Err
 
-Dim lContract   As IContract
+Dim lContract As IContract
 Set lContract = mContractFuture.Value
 
 Set mDataSourceBaseRef = CreateWeakReference(getMarketDataManager.GetDataSourceBase(mContractFuture, mTickfileStreamId))
@@ -1686,9 +1666,6 @@ If IsContractExpired(lContract) And Not IsTickReplay Then
     SetError ErrorCodes.ErrIllegalStateException, "Contract has expired"
     processContractAvailable = False
 Else
-    If mIsMarketDataRequested Then subscribeToMarketData
-    If mIsMarketDepthRequested Then subscribeToMarketDepth
-    
     processContractAvailable = True
 End If
 
@@ -1698,9 +1675,32 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub setReady()
+Const ProcName As String = "setReady"
+On Error GoTo Err
+
+If Not ContractFuture.IsAvailable Then Exit Sub
+
+If State <> MarketDataSourceStateCreated Then Exit Sub
+
+setState MarketDataSourceStateReady
+
+If mIsMarketDataRequested Then subscribeToMarketData
+If mIsMarketDepthRequested Then subscribeToMarketDepth
+
+storeSettings
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub setState(ByVal pState As MarketDataSourceStates)
 Const ProcName As String = "setState"
 On Error GoTo Err
+
+If pState = mState Then Exit Sub
 
 mState = pState
 fireStateChange mState
@@ -1731,6 +1731,7 @@ Private Sub subscribeToMarketData()
 Const ProcName As String = "subscribeToMarketData"
 On Error GoTo Err
 
+If mSubscribedToMarketData Then Exit Sub
 mSubscribedToMarketData = True
 DataSourceBase.AddMarketDataSubscription
 setState MarketDataSourceStateRunning
@@ -1747,6 +1748,7 @@ Private Sub subscribeToMarketDepth()
 Const ProcName As String = "subscribeToMarketDepth"
 On Error GoTo Err
 
+If mSubscribedToMarketDepth Then Exit Sub
 mSubscribedToMarketDepth = True
 DataSourceBase.AddMarketDepthSubscription
 setState MarketDataSourceStateRunning
