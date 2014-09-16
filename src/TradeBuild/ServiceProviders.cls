@@ -723,7 +723,7 @@ If pRole And mPermittedServiceProviderRoles Then Exit Sub
 Dim s As String
 s = "Service provider " & NameFromHandle(pHandle) & " has impermissible role"
 gLogger.Log s, ProcName, ModuleName
-Assert True, s
+Assert False, s
 
 Exit Sub
 

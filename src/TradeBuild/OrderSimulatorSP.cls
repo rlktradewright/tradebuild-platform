@@ -41,7 +41,10 @@ Implements IOrderSubmissionSP
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "OrderSimulatorSP"
+Private Const ModuleName                    As String = "OrderSimulatorSP"
+
+Private Const ParamNameRole                 As String = "Role"
+Private Const ParamNameName                 As String = "Name"
 
 '@================================================================================
 ' Enums
@@ -55,12 +58,13 @@ Private Const ModuleName                As String = "OrderSimulatorSP"
 ' Member variables
 '@================================================================================
 
-Private mName                           As String
-Private mHandle                         As Long
-Private mServiceProviderManager         As IServiceProviderManager
-Private mMarketDataManager              As IMarketDataManager
-Private mPrimaryContractStore           As IContractStore
-Private mSecondaryContractStore         As IContractStore
+Private mName                               As String
+Private mHandle                             As Long
+Private mServiceProviderManager             As IServiceProviderManager
+Private mMarketDataManager                  As IMarketDataManager
+Private mPrimaryContractStore               As IContractStore
+Private mSecondaryContractStore             As IContractStore
+Private mRole                               As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -68,6 +72,7 @@ Private mSecondaryContractStore         As IContractStore
 
 Private Sub Class_Initialize()
 mName = "TradeBuild Default Order Simulator"
+Role = "SIMULATED"
 End Sub
 
 Private Sub Class_Terminate()
@@ -114,8 +119,24 @@ On Error GoTo Err
 
 Set mServiceProviderManager = ServiceProviderManager
 mHandle = Handle
-mServiceProviderManager.RegisterServiceProvider mHandle, _
-                            ServiceProviderRoles.SPRoleOrderSubmissionSimulated
+
+Dim lParam As Parameter
+For Each lParam In Params
+    Select Case UCase$(lParam.Name)
+    Case UCase$(ParamNameName)
+        Name = lParam.Value
+    Case UCase$(ParamNameRole)
+        Role = lParam.Value
+    End Select
+Next
+
+If mRole = "SIMULATED" Then
+    mServiceProviderManager.RegisterServiceProvider mHandle, _
+                                ServiceProviderRoles.SPRoleOrderSubmissionSimulated
+Else
+    mServiceProviderManager.RegisterServiceProvider mHandle, _
+                                ServiceProviderRoles.SPRoleOrderSubmissionLive
+End If
 
 Exit Sub
 
@@ -124,12 +145,12 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Private Property Let IServiceProvider_Name(ByVal value As String)
+Private Property Let IServiceProvider_Name(ByVal Value As String)
 
 Const ProcName As String = "IServiceProvider_Name"
 On Error GoTo Err
 
-
+Name = Value
 
 Exit Property
 
@@ -190,12 +211,31 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Let Name(ByVal value As String)
-mName = value
+Public Property Let Name(ByVal Value As String)
+mName = Value
 End Property
 
 Public Property Get Name() As String
 Name = mName
+End Property
+
+Public Property Let Role(ByVal Value As String)
+Const ProcName As String = "Role"
+On Error GoTo Err
+
+Select Case UCase$(Value)
+Case "L", "LIVE"
+    mRole = "LIVE"
+Case "S", "SIM", "SIMULATED"
+    mRole = "SIMULATED"
+Case Else
+    AssertArgument False, "Invalid role parameter"
+End Select
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
