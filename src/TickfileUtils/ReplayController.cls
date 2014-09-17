@@ -364,14 +364,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyTickfileCompleted(ByVal pPlayer As TickfilePlayer, ByRef ev As TickfileEventData, ByVal pEventsPlayed As Long)
-Const ProcName As String = "NotifyReplayComplete"
+Const ProcName As String = "NotifyTickfileCompleted"
 On Error GoTo Err
 
 mTickScheduler.RemovePlayer pPlayer
 
 mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted - 1
 If mNumberOfPlayersNotCompleted = 0 Then
-    mTickScheduler.StopScheduling
+    If Not mTickScheduler Is Nothing Then mTickScheduler.StopScheduling
     mTaskContext.Finish Empty, False
 End If
 
