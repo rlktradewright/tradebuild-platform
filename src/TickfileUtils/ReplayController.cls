@@ -372,7 +372,7 @@ mTickScheduler.RemovePlayer pPlayer
 mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted - 1
 If mNumberOfPlayersNotCompleted = 0 Then
     If Not mTickScheduler Is Nothing Then mTickScheduler.StopScheduling
-    mTaskContext.Finish Empty, False
+    If Not mTaskContext Is Nothing Then mTaskContext.Finish Empty, False
 End If
 
 fireTickfileCompleted ev, pEventsPlayed
