@@ -723,7 +723,7 @@ Const ProcName As String = "PriorityTickListener"
 On Error GoTo Err
 
 Set mPriorityTickListener = Value
-If Not mDataSourceBaseRef Is Nothing Then DataSourceBase.PriorityTickListener = mPriorityTickListener
+If Not mDataSourceBaseRef Is Nothing Then DataSourceBase.AddPriorityTickListener mPriorityTickListener
 
 Exit Property
 
@@ -1643,7 +1643,7 @@ Dim lContract As IContract
 Set lContract = mContractFuture.Value
 
 Set mDataSourceBaseRef = CreateWeakReference(getMarketDataManager.GetDataSourceBase(mContractFuture, mTickfileStreamId))
-If Not mPriorityTickListener Is Nothing Then DataSourceBase.PriorityTickListener = mPriorityTickListener
+If Not mPriorityTickListener Is Nothing Then DataSourceBase.AddPriorityTickListener mPriorityTickListener
 DataSourceBase.AddMarketDataSource Me
 
 mStreamId = DataSourceBase.StreamId
