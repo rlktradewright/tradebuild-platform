@@ -77,6 +77,8 @@ Private mContractFuture                     As IFuture
 Private WithEvents mFutureWaiter            As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mTimePeriod                         As TimePeriod
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -119,8 +121,6 @@ If ev.Future.IsFaulted Then Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSour
 Dim lInitialBars As Bars
 Set lInitialBars = mInitialBarsFuture.Value
 logAMessage "initial bars loaded: " & lInitialBars.Count, ProcName
-logAMessage "starting BarStudy", ProcName
-mStudyBase.StudyManager.StartStudy mBarStudy, 0
 
 Exit Sub
 
@@ -150,6 +150,10 @@ End Property
 
 Public Property Get BarStudy() As IBarStudy
 Set BarStudy = mBarStudy
+End Property
+
+Public Property Get TimePeriod() As TimePeriod
+Set TimePeriod = mTimePeriod
 End Property
 
 '@================================================================================
@@ -208,6 +212,7 @@ If Not pStateChangeListener Is Nothing Then AddStateChangeListener pStateChangeL
 mKey = pKey
 Set mStudyBase = pStudyBase
 Set mContractFuture = pContractFuture
+Set mTimePeriod = pBarTimePeriod
 
 Dim lFetchBarsNeeded As Boolean
 If pMaxNumberOfBars = 0 And pToTime = 0 Then
@@ -221,12 +226,15 @@ Else
     lFetchBarsNeeded = True
 End If
 
-Set mBarStudy = CreateBarStudy(pBarTimePeriod, mStudyBase)
+Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase)
+logAMessage "starting BarStudy", ProcName
+mStudyBase.StudyManager.StartStudy mBarStudy, 0
+
 Set mBarsFuture = mBarStudy.BarsFuture
 
 If lFetchBarsNeeded And Not mContractFuture Is Nothing And Not pHistDataStore Is Nothing Then
     Set mInitialBarsFuture = pHistDataStore.FetchBars(CreateBarDataSpecifierFuture(pContractFuture, _
-                                                                pBarTimePeriod, _
+                                                                mTimePeriod, _
                                                                 pFromTime, _
                                                                 pToTime, _
                                                                 pMaxNumberOfBars, _
@@ -305,7 +313,9 @@ Private Function getName() As String
 Const ProcName As String = "getName"
 On Error GoTo Err
 
-If Not mContractFuture.IsAvailable Then
+If mContractFuture Is Nothing Then
+    getName = "????/" & mKey
+ElseIf Not mContractFuture.IsAvailable Then
     getName = "????/" & mKey
 Else
     Dim lContract As IContract
