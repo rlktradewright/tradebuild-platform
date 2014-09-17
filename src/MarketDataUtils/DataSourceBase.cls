@@ -291,7 +291,7 @@ Options = mOptions
 End Property
 
 Friend Property Let PriorityTickListener(ByVal Value As IGenericTickListener)
-Assert mPriorityTickListener Is Nothing, "PriorityTickListener has already been set"
+Assert mPriorityTickListener Is Nothing Or mPriorityTickListener Is Value, "PriorityTickListener has already been set"
 Set mPriorityTickListener = Value
 End Property
 
