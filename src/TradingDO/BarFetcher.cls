@@ -803,39 +803,6 @@ Private Sub generateBarRequestDetails( _
 Const ProcName As String = "generateBarRequestDetails"
 On Error GoTo Err
 
-Select Case mSpecifier.BarTimePeriod.Units
-Case TimePeriodUnits.TimePeriodDay
-    mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * mSpecifier.BarTimePeriod.Length
-Case TimePeriodUnits.TimePeriodHour
-    mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.BarTimePeriod.Length
-Case TimePeriodUnits.TimePeriodMinute
-    If (mSpecifier.BarTimePeriod.Length Mod 60) = 0 Then
-        mBarLengthMinutes = 60
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.BarTimePeriod.Length / 60)
-    ElseIf (mSpecifier.BarTimePeriod.Length Mod 15) = 0 Then
-        mBarLengthMinutes = 15
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.BarTimePeriod.Length / 15)
-    ElseIf (mSpecifier.BarTimePeriod.Length Mod 5) = 0 Then
-        mBarLengthMinutes = 5
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.BarTimePeriod.Length / 5)
-    Else
-        mBarLengthMinutes = 1
-        mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.BarTimePeriod.Length
-    End If
-Case TimePeriodUnits.TimePeriodMonth
-    mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 22 * mSpecifier.BarTimePeriod.Length
-Case TimePeriodUnits.TimePeriodWeek
-    mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 5 * mSpecifier.BarTimePeriod.Length
-Case TimePeriodUnits.TimePeriodYear
-    mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 260 * mSpecifier.BarTimePeriod.Length
-End Select
-
-
 If toDate <> 0 Then
     mToDate = toDate
     
@@ -858,6 +825,41 @@ Else
                                 mInstrument.SessionStartTime, _
                                 mInstrument.SessionEndTime)
 End If
+
+Dim lNumberOfTargetBars As Long
+lNumberOfTargetBars = MaxNumberOfBarsInTimespan(mSpecifier.BarTimePeriod, mFromDate, mToDate, mInstrument.SessionStartTime, mInstrument.SessionEndTime)
+
+Select Case mSpecifier.BarTimePeriod.Units
+Case TimePeriodUnits.TimePeriodDay
+    mBarLengthMinutes = 60
+    mNumberOfBars = lNumberOfTargetBars * 24 * mSpecifier.BarTimePeriod.Length
+Case TimePeriodUnits.TimePeriodHour
+    mBarLengthMinutes = 60
+    mNumberOfBars = lNumberOfTargetBars * mSpecifier.BarTimePeriod.Length
+Case TimePeriodUnits.TimePeriodMinute
+    If (mSpecifier.BarTimePeriod.Length Mod 60) = 0 Then
+        mBarLengthMinutes = 60
+        mNumberOfBars = lNumberOfTargetBars * (mSpecifier.BarTimePeriod.Length / 60)
+    ElseIf (mSpecifier.BarTimePeriod.Length Mod 15) = 0 Then
+        mBarLengthMinutes = 15
+        mNumberOfBars = lNumberOfTargetBars * (mSpecifier.BarTimePeriod.Length / 15)
+    ElseIf (mSpecifier.BarTimePeriod.Length Mod 5) = 0 Then
+        mBarLengthMinutes = 5
+        mNumberOfBars = lNumberOfTargetBars * (mSpecifier.BarTimePeriod.Length / 5)
+    Else
+        mBarLengthMinutes = 1
+        mNumberOfBars = lNumberOfTargetBars * mSpecifier.BarTimePeriod.Length
+    End If
+Case TimePeriodUnits.TimePeriodMonth
+    mBarLengthMinutes = 60
+    mNumberOfBars = lNumberOfTargetBars * 24 * 22 * mSpecifier.BarTimePeriod.Length
+Case TimePeriodUnits.TimePeriodWeek
+    mBarLengthMinutes = 60
+    mNumberOfBars = lNumberOfTargetBars * 24 * 5 * mSpecifier.BarTimePeriod.Length
+Case TimePeriodUnits.TimePeriodYear
+    mBarLengthMinutes = 60
+    mNumberOfBars = lNumberOfTargetBars * 24 * 260 * mSpecifier.BarTimePeriod.Length
+End Select
 
 Exit Sub
 
