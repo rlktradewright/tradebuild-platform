@@ -1,12 +1,64 @@
 Attribute VB_Name = "MainModule"
 Option Explicit
-Option Private Module
 
-Private mForm As fStrategyHost
+''
+' Description here
+'
+'@/
 
-Private mStrategyHost As StrategyHost
+'@================================================================================
+' Interfaces
+'@================================================================================
 
-Public gTB As TradeBuildAPI
+'@================================================================================
+' Events
+'@================================================================================
+
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
+' Types
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+Private Const ModuleName                            As String = "MainModule"
+
+'@================================================================================
+' Member variables
+'@================================================================================
+
+Private mForm                                       As fStrategyHost
+
+Private mStrategyHost                               As StrategyHost
+
+Private mFatalErrorHandler                          As FatalErrorHandler
+
+Public gTB                                          As TradeBuildAPI
+
+'@================================================================================
+' Class Event Handlers
+'@================================================================================
+
+'@================================================================================
+' XXXX Interface Members
+'@================================================================================
+
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+'@================================================================================
+' Methods
+'@================================================================================
 
 Public Sub Main()
 Const ProcName As String = "Main"
@@ -38,7 +90,7 @@ Dim lLiveTrades As Boolean
 If lClp.Switch("livetrades") Then lLiveTrades = True
 
 Dim lSymbol As String
-lSymbol = lClp.arg(0)
+lSymbol = lClp.Arg(0)
 If lSymbol = "" And lNoUI Then
     LogMessage "No symbol supplied"
     If Not lNoUI And lRun Then MsgBox "Error - no symbol argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
@@ -46,7 +98,7 @@ If lSymbol = "" And lNoUI Then
 End If
 
 Dim lStrategyClassName As String
-lStrategyClassName = lClp.arg(2)
+lStrategyClassName = lClp.Arg(2)
 If lStrategyClassName = "" And lNoUI Then
     LogMessage "No strategy supplied"
     If Not lNoUI And lRun Then MsgBox "Error - no strategy class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
@@ -54,15 +106,13 @@ If lStrategyClassName = "" And lNoUI Then
 End If
 
 Dim lPermittedSPRoles As ServiceProviderRoles
-lPermittedSPRoles = SPRoleContractDataPrimary + SPRoleHistoricalDataInput + SPRoleRealtimeData
+lPermittedSPRoles = SPRoleContractDataPrimary + _
+                    SPRoleHistoricalDataInput + _
+                    SPRoleRealtimeData + _
+                    SPRoleOrderSubmissionLive + _
+                    SPRoleOrderSubmissionSimulated
 
-If lLiveTrades Then
-    lPermittedSPRoles = lPermittedSPRoles + SPRoleOrderSubmissionLive
-Else
-    lPermittedSPRoles = lPermittedSPRoles + SPRoleOrderSubmissionSimulated
-End If
-
-If Not lNoUI Then lPermittedSPRoles = lPermittedSPRoles + SPRoleTickfileInput
+If Not lLiveTrades And Not lNoUI Then lPermittedSPRoles = lPermittedSPRoles + SPRoleTickfileInput
 
 Set gTB = CreateTradeBuildAPI(, lPermittedSPRoles)
 
@@ -86,12 +136,14 @@ Else
     Exit Sub
 End If
 
-If Not lLiveTrades Then
-    If Not setupSimulateOrderServiceProvider Then
-        MsgBox "Error setting up simulated orders service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
-        Exit Sub
-    End If
+If Not setupSimulateOrderServiceProviders(lLiveTrades) Then
+    MsgBox "Error setting up simulated orders service provider(s) - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
+    Exit Sub
 End If
+
+gTB.StartServiceProviders
+
+gTB.StudyLibraryManager.AddBuiltInStudyLibrary
 
 Dim lUseMoneyManagement As Boolean
 If lClp.Switch("umm") Or _
@@ -110,7 +162,7 @@ If lNoUI Then
     mStrategyHost.UseMoneyManagement = lUseMoneyManagement
     mStrategyHost.ResultsPath = lResultsPath
     mStrategyHost.SetStrategy CreateObject(lStrategyClassName), Nothing
-    mStrategyHost.StartTesting lSymbol
+    mStrategyHost.PrepareSymbol lSymbol
     Set mStrategyHost = Nothing
 Else
     Set mForm = New fStrategyHost
@@ -150,6 +202,10 @@ End If
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
 Private Function getUsageString() As String
 getUsageString = _
             "strategyhost  [symbol]" & vbCrLf & _
@@ -183,12 +239,12 @@ Set clp = CreateCommandLineParser(switchValue, ",")
 setupDbServiceProviders = True
 
 On Error Resume Next
-Server = clp.arg(0)
-dbtypeStr = clp.arg(1)
-database = clp.arg(2)
-username = clp.arg(3)
-password = clp.arg(4)
-On Error GoTo 0
+Server = clp.Arg(0)
+dbtypeStr = clp.Arg(1)
+database = clp.Arg(2)
+username = clp.Arg(3)
+password = clp.Arg(4)
+On Error GoTo Err
 
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
@@ -223,7 +279,7 @@ If setupDbServiceProviders Then
                                     ";Server=" & Server & _
                                     ";User Name=" & username & _
                                     ";Password=" & password & _
-                                    ";Use Synchronous Reads=True", _
+                                    ";Use Synchronous Reads=False", _
                         Description:="Historical data input"
 
     If pAllowTickfiles Then
@@ -236,7 +292,7 @@ If setupDbServiceProviders Then
                                         ";Server=" & Server & _
                                         ";User Name=" & username & _
                                         ";Password=" & password & _
-                                        ";Use Synchronous Reads=True", _
+                                        ";Use Synchronous Reads=false", _
                             Description:="Tickfile input"
     End If
 End If
@@ -248,21 +304,31 @@ LogMessage Err.Description, LogLevelSevere
 setupDbServiceProviders = False
 End Function
 
-Private Function setupSimulateOrderServiceProvider() As Boolean
+Private Function setupSimulateOrderServiceProviders(ByVal pLiveTrades As Boolean) As Boolean
 On Error GoTo Err
+
+If Not pLiveTrades Then
+    gTB.ServiceProviders.Add _
+                        ProgId:="TradeBuild27.OrderSimulatorSP", _
+                        Enabled:=True, _
+                        Name:="TradeBuild Exchange Simulator for Main Orders", _
+                        ParamString:="Role=LIVE", _
+                        Description:="Simulated order submission for main orders"
+End If
 
 gTB.ServiceProviders.Add _
                     ProgId:="TradeBuild27.OrderSimulatorSP", _
                     Enabled:=True, _
-                    ParamString:="", _
-                    Description:="Simulated order submission"
+                    Name:="TradeBuild Exchange Simulator for Dummy Orders", _
+                    ParamString:="Role=SIMULATED", _
+                    Description:="Simulated order submission for dummy orders"
 
-setupSimulateOrderServiceProvider = True
+setupSimulateOrderServiceProviders = True
 Exit Function
 
 Err:
 LogMessage Err.Description, LogLevelSevere
-setupSimulateOrderServiceProvider = False
+setupSimulateOrderServiceProviders = False
 End Function
 
 Private Function setupTwsServiceProvider( _
@@ -277,13 +343,13 @@ setupTwsServiceProvider = True
 
 On Error Resume Next
 Dim Server As String
-Server = clp.arg(0)
+Server = clp.Arg(0)
 
 Dim Port As String
-Port = clp.arg(1)
+Port = clp.Arg(1)
 
 Dim ClientId As String
-ClientId = clp.arg(2)
+ClientId = clp.Arg(2)
 On Error GoTo Err
 
 If Port = "" Then

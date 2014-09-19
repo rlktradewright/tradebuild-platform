@@ -37,6 +37,7 @@ Implements StateChangeListener
 '================================================================================
 
 Event ContractInvalid(ByVal pMessage As String)
+Event NotifyEvent(ev As NotificationEventData)
 Event ReplayCompleted()
 Event ReplayProgress( _
                 ByVal tickfileTimestamp As Date, _
@@ -61,13 +62,12 @@ Private Const ModuleName                            As String = "StrategyHost"
 ' Member variables
 '================================================================================
 
-Private mTradeBuildAPI                              As TradeBuildAPI
 Private WithEvents mReplayController                As ReplayController
 Attribute mReplayController.VB_VarHelpID = -1
 Private WithEvents mTickfileReplayTC                As TaskController
 Attribute mTickfileReplayTC.VB_VarHelpID = -1
 
-Private mHostController                             As New HostController
+Private mHostController                             As HostController
 
 'Private mAccount As IAccount
 Private mUseMoneyManagement                         As Boolean
@@ -82,11 +82,14 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mTicker                                     As Ticker
 
+Private mStrategy                                   As IStrategy
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
 Randomize
 End Sub
 
@@ -98,13 +101,14 @@ Private Sub StateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
-If TypeOf ev.source Is Ticker Then
+If TypeOf ev.Source Is Ticker Then
     If ev.State = MarketDataSourceStates.MarketDataSourceStateReady Then
-        Set mTicker = ev.source
+        Set mTicker = ev.Source
         RaiseEvent TickerCreated(mTicker)
         
-        LogMessage "Tickfile replay started"
-        Set mTickfileReplayTC = mReplayController.StartReplay
+        Dim lContract As IContract
+        Set lContract = mTicker.ContractFuture.Value
+        prepare lContract.Specifier.LocalSymbol
     End If
 End If
 
@@ -132,7 +136,9 @@ If lContracts.Count = 0 Then
 ElseIf lContracts.Count > 1 Then
     RaiseEvent ContractInvalid("Contract not uniquely specified")
 Else
-    gTB.Tickers.CreateTicker CreateFuture(lContracts.ItemAtIndex(1)), False, Me
+    Dim lTicker As Ticker
+    Set lTicker = gTB.Tickers.CreateTicker(CreateFuture(lContracts.ItemAtIndex(1)), False, , , Me)
+    lTicker.StartMarketData
 End If
 
 Exit Sub
@@ -144,6 +150,19 @@ End Sub
 '================================================================================
 ' mReplayController Event Handlers
 '================================================================================
+
+Private Sub mReplayController_NotifyEvent(ev As NotificationEventData)
+Const ProcName As String = "mReplayController_NotifyEvent"
+On Error GoTo Err
+
+Set ev.Source = Me
+RaiseEvent NotifyEvent(ev)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 Private Sub mReplayController_ReplayProgress( _
                 ByVal pTickfileTimestamp As Date, _
@@ -201,39 +220,45 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub PlayTickFile(ByVal pTickfile As TickfileSpecifier)
-Const ProcName As String = "PlayTickFile"
+Friend Sub PrepareSymbol(ByVal pSymbol As String)
+Const ProcName As String = "PrepareSymbol"
 On Error GoTo Err
 
-If mReplayController Is Nothing Then
-    Dim lTickfiles As New tickfileSpecifiers
-    lTickfiles.Add pTickfile
+mFutureWaiter.Add gTB.ContractStorePrimary.FetchContracts(CreateContractSpecifier(pSymbol))
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub PrepareTickFile(ByVal pTickfile As TickfileSpecifier)
+Const ProcName As String = "PrepareTickFile"
+On Error GoTo Err
+
+Assert mReplayController Is Nothing, "mReplayController is not Nothing "
     
-    Dim lTickfileDataManager As TickfileDataManager
-    Set lTickfileDataManager = CreateTickDataManager(lTickfiles, _
-                                                mTradeBuildAPI.TickfileStoreInput, _
-                                                mTradeBuildAPI.StudyLibraryManager, _
-                                                mTradeBuildAPI.ContractStorePrimary, _
-                                                mTradeBuildAPI.ContractStoreSecondary, _
-                                                MarketDataSourceOptUseExchangeTimeZone, _
-                                                , _
-                                                , _
-                                                0, _
-                                                250)
-    
-    Set mReplayController = lTickfileDataManager.ReplayController
-    
-    Dim lOrderManager As New OrderManager
-    Dim lTickers As Tickers
-    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, lOrderManager, , mTradeBuildAPI.OrderSubmitterFactorySimulated)
-    
-    Dim lTicker As Ticker
-    Set lTicker = lTickers.CreateTicker(mReplayController.TickStream(0).ContractFuture, False)
-    lTicker.AddStateChangeListener Me
-ElseIf mReplayController.ReplayInProgress Then
-    LogMessage "Tickfile replay resumed"
-    mReplayController.ResumeReplay
-End If
+Dim lTickfiles As New TickFileSpecifiers
+lTickfiles.Add pTickfile
+
+Dim lTickfileDataManager As TickfileDataManager
+Set lTickfileDataManager = CreateTickDataManager(lTickfiles, _
+                                            gTB.TickfileStoreInput, _
+                                            gTB.StudyLibraryManager, _
+                                            gTB.ContractStorePrimary, _
+                                            gTB.ContractStoreSecondary, _
+                                            MarketDataSourceOptUseExchangeTimeZone, _
+                                            pReplaySpeed:=0)
+
+Set mReplayController = lTickfileDataManager.ReplayController
+
+Dim lOrderManager As New OrderManager
+Dim lTickers As Tickers
+Set lTickers = CreateTickers(lTickfileDataManager, gTB.StudyLibraryManager, gTB.HistoricalDataStoreInput, lOrderManager, gTB.OrderSubmitterFactoryLive, gTB.OrderSubmitterFactorySimulated)
+
+Dim lTicker As Ticker
+Set lTicker = lTickers.CreateTicker(mReplayController.TickStream(0).ContractFuture, False, , , Me)
+lTicker.StartMarketData
 
 Exit Sub
 
@@ -247,6 +272,7 @@ Friend Function SetStrategy( _
 Const ProcName As String = "SetStrategy"
 On Error GoTo Err
 
+Set mStrategy = pStrategy
 Set mHostController = New HostController
 Set SetStrategy = mHostController.Initialise(pStrategy, pStopStrategyFactory)
 
@@ -256,13 +282,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub StartTesting(ByVal pSymbol As String)
-Const ProcName As String = "StartTesting"
+Friend Sub StartReplay()
+Const ProcName As String = "StartReplay"
 On Error GoTo Err
 
-prepare pSymbol
+If Not mReplayController Is Nothing Then
+    LogMessage "Tickfile replay started"
+    Set mTickfileReplayTC = mReplayController.StartReplay
+End If
 
-mFutureWaiter.Add gTB.ContractStorePrimary.FetchContracts(CreateContractSpecifier(pSymbol))
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub StartStrategy( _
+                ByVal pParams As Parameters)
+Const ProcName As String = "StartStrategy"
+On Error GoTo Err
+
+mHostController.Start mTicker, pParams, True
 
 Exit Sub
 
@@ -274,11 +314,15 @@ Friend Sub StopTesting()
 Const ProcName As String = "StopTesting"
 On Error GoTo Err
 
-If mReplayController Is Nothing Then
-    mTicker.Finish
-Else
-    mReplayController.StopReplay
+If Not mReplayController Is Nothing Then
+    ' prevent event handler being fired on completion, which would
+    ' reload the main form again
+    Set mTickfileReplayTC = Nothing
+    If mReplayController.ReplayInProgress Then mReplayController.StopReplay
+    Set mReplayController = Nothing
 End If
+    
+If Not mTicker Is Nothing Then mTicker.Finish
 
 Exit Sub
 
@@ -302,7 +346,7 @@ If mUseMoneyManagement Then
 '    mEngine.moneyManager = mMoneyManager
 End If
 
-If mResultsPath = "" Then mResultsPath = ApplicationSettingsFolder & "TestResults\"
+If mResultsPath = "" Then mResultsPath = ApplicationSettingsFolder & "\TestResults\"
 If Right$(mResultsPath, 1) <> "\" Then mResultsPath = mResultsPath & "\"
 
 Dim lFilenameDiscriminator As String
@@ -355,6 +399,8 @@ If mLogProfitProfile Then
 End If
 
 Exit Sub
+
+Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
