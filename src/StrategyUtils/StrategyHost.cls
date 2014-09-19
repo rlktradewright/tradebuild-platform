@@ -8,9 +8,9 @@ BEGIN
 END
 Attribute VB_Name = "StrategyHost"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '================================================================================
@@ -61,6 +61,18 @@ Private Const ModuleName                            As String = "StrategyHost"
 '================================================================================
 ' Member variables
 '================================================================================
+
+Private mStrategyHostRef                            As WeakReference
+
+Private mRealtimeTickers                            As Tickers
+Private mTickfileStoreInput                         As IHistoricalDataStore
+Private mStudyLibraryManager                        As StudyLibraryManager
+Private mContractStorePrimary                       As IContractStore
+Private mContractStoreSecondary                     As IContractStore
+Private mHistoricalDataStoreInput                   As IHistoricalDataStore
+Private mOrderManager                               As OrderManager
+Private mOrderSubmitterFactoryLive                  As IOrderSubmitterFactory
+Private mOrderSubmitterFactorySimulated             As IOrderSubmitterFactory
 
 Private WithEvents mReplayController                As ReplayController
 Attribute mReplayController.VB_VarHelpID = -1
@@ -126,18 +138,14 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If Not ev.Future.IsAvailable Then Exit Sub
-
-Dim lContracts As IContracts
-Set lContracts = ev.Future.Value
-
-If lContracts.Count = 0 Then
-    RaiseEvent ContractInvalid("No such contract")
-ElseIf lContracts.Count > 1 Then
-    RaiseEvent ContractInvalid("Contract not uniquely specified")
-Else
+If ev.Future.IsFaulted Then
+    RaiseEvent ContractInvalid(ev.Future.ErrorMessage)
+ElseIf ev.Future.IsAvailable Then
+    Dim lContract As IContract
+    Set lContract = ev.Future.Value
+    
     Dim lTicker As Ticker
-    Set lTicker = gTB.Tickers.CreateTicker(CreateFuture(lContracts.ItemAtIndex(1)), False, , , Me)
+    Set lTicker = mRealtimeTickers.CreateTicker(CreateFuture(lContract), False, , , Me)
     lTicker.StartMarketData
 End If
 
@@ -200,19 +208,19 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let LogDummyProfitProfile(ByVal val As Boolean)
+Public Property Let LogDummyProfitProfile(ByVal val As Boolean)
 mLogDummyProfitProfile = val
 End Property
 
-Friend Property Let LogProfitProfile(ByVal val As Boolean)
+Public Property Let LogProfitProfile(ByVal val As Boolean)
 mLogProfitProfile = val
 End Property
 
-Friend Property Let ResultsPath(ByVal val As String)
+Public Property Let ResultsPath(ByVal val As String)
 mResultsPath = val
 End Property
 
-Friend Property Let UseMoneyManagement(ByVal val As Boolean)
+Public Property Let UseMoneyManagement(ByVal val As Boolean)
 mUseMoneyManagement = val
 End Property
 
@@ -220,11 +228,21 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub PrepareSymbol(ByVal pSymbol As String)
-Const ProcName As String = "PrepareSymbol"
+Friend Sub Initialise( _
+                ByVal pStrategyHost As IStrategyHost)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-mFutureWaiter.Add gTB.ContractStorePrimary.FetchContracts(CreateContractSpecifier(pSymbol))
+Set mStrategyHostRef = CreateWeakReference(pStrategyHost)
+
+Set mTickfileStoreInput = pStrategyHost.TickfileStoreInput
+Set mStudyLibraryManager = pStrategyHost.StudyLibraryManager
+Set mContractStorePrimary = pStrategyHost.ContractStorePrimary
+Set mContractStoreSecondary = pStrategyHost.ContractStoreSecondary
+Set mHistoricalDataStoreInput = pStrategyHost.HistoricalDataStoreInput
+Set mOrderManager = pStrategyHost.OrderManager
+Set mOrderSubmitterFactoryLive = pStrategyHost.OrderSubmitterFactoryLive
+Set mOrderSubmitterFactorySimulated = pStrategyHost.OrderSubmitterFactorySimulated
 
 Exit Sub
 
@@ -232,7 +250,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub PrepareTickFile(ByVal pTickfile As TickfileSpecifier)
+Public Sub PrepareSymbol( _
+                ByVal pSymbol As String)
+Const ProcName As String = "PrepareSymbol"
+On Error GoTo Err
+
+mFutureWaiter.Add FetchContract(CreateContractSpecifier(pSymbol), mContractStorePrimary, mContractStoreSecondary)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub PrepareTickFile(ByVal pTickfile As TickfileSpecifier)
 Const ProcName As String = "PrepareTickFile"
 On Error GoTo Err
 
@@ -243,10 +274,10 @@ lTickfiles.Add pTickfile
 
 Dim lTickfileDataManager As TickfileDataManager
 Set lTickfileDataManager = CreateTickDataManager(lTickfiles, _
-                                            gTB.TickfileStoreInput, _
-                                            gTB.StudyLibraryManager, _
-                                            gTB.ContractStorePrimary, _
-                                            gTB.ContractStoreSecondary, _
+                                            mTickfileStoreInput, _
+                                            mStudyLibraryManager, _
+                                            mContractStorePrimary, _
+                                            mContractStoreSecondary, _
                                             MarketDataSourceOptUseExchangeTimeZone, _
                                             pReplaySpeed:=0)
 
@@ -254,7 +285,7 @@ Set mReplayController = lTickfileDataManager.ReplayController
 
 Dim lOrderManager As New OrderManager
 Dim lTickers As Tickers
-Set lTickers = CreateTickers(lTickfileDataManager, gTB.StudyLibraryManager, gTB.HistoricalDataStoreInput, lOrderManager, gTB.OrderSubmitterFactoryLive, gTB.OrderSubmitterFactorySimulated)
+Set lTickers = CreateTickers(lTickfileDataManager, mStudyLibraryManager, mHistoricalDataStoreInput, mOrderManager, mOrderSubmitterFactoryLive, mOrderSubmitterFactorySimulated)
 
 Dim lTicker As Ticker
 Set lTicker = lTickers.CreateTicker(mReplayController.TickStream(0).ContractFuture, False, , , Me)
@@ -266,7 +297,7 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Friend Function SetStrategy( _
+Public Function SetStrategy( _
                 ByVal pStrategy As IStrategy, _
                 ByVal pStopStrategyFactory As IPosnMgmtStrtgyFactory) As Parameters
 Const ProcName As String = "SetStrategy"
@@ -282,7 +313,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub StartReplay()
+Public Sub StartReplay()
 Const ProcName As String = "StartReplay"
 On Error GoTo Err
 
@@ -297,12 +328,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub StartStrategy( _
-                ByVal pParams As Parameters)
+Public Sub StartStrategy( _
+                ByVal pParams As Parameters, _
+                ByVal pHostTimeframes As Timeframes)
 Const ProcName As String = "StartStrategy"
 On Error GoTo Err
 
-mHostController.Start mTicker, pParams, True
+mHostController.Start mTicker, pParams, True, pHostTimeframes
 
 Exit Sub
 
@@ -310,7 +342,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub StopTesting()
+Public Sub StopTesting()
 Const ProcName As String = "StopTesting"
 On Error GoTo Err
 
@@ -404,5 +436,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-
+Private Function getStrategyHost() As IStrategyHost
+Set getStrategyHost = mStrategyHostRef.Target
+End Function
 
