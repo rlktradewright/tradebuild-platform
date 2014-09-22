@@ -207,19 +207,16 @@ End Sub
 
 Public Sub gLoadDefaultStudyConfigurationsFromConfig( _
                 ByVal config As ConfigurationSection)
-Dim sc As StudyConfiguration
-Dim scSect As ConfigurationSection
-
 Const ProcName As String = "gLoadDefaultStudyConfigurationsFromConfig"
-
-
 On Error GoTo Err
 
 Set mConfig = config
 
 Set mDefaultStudyConfigurations = New Collection
 
+Dim scSect As ConfigurationSection
 For Each scSect In mConfig
+    Dim sc As StudyConfiguration
     Set sc = New StudyConfiguration
     sc.LoadFromConfig scSect
     mDefaultStudyConfigurations.Add sc, calcDefaultStudyKey(sc.Name, sc.StudyLibraryName)
@@ -237,19 +234,17 @@ End Sub
 
 Public Sub gSetDefaultStudyConfiguration( _
                 ByVal Value As StudyConfiguration)
-Dim sc As StudyConfiguration
-Dim key As String
-
 Const ProcName As String = "gSetDefaultStudyConfiguration"
-
 On Error GoTo Err
 
 If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection
 End If
 
+Dim key As String
 key = calcDefaultStudyKey(Value.Name, Value.StudyLibraryName)
 
+Dim sc As StudyConfiguration
 On Error Resume Next
 Set sc = mDefaultStudyConfigurations(key)
 On Error GoTo Err
@@ -262,7 +257,7 @@ End If
 Set sc = Value.Clone
 sc.UnderlyingStudy = Nothing
 mDefaultStudyConfigurations.Add sc, key
-sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultStudyConfig & "(" & sc.ID & ")")
+If Not mConfig Is Nothing Then sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultStudyConfig & "(" & sc.ID & ")")
 
 Exit Sub
 
