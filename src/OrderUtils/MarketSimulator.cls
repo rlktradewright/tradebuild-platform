@@ -158,7 +158,7 @@ lPermittedOrderProperties.PermittedOrderAttributes = _
                             OrderAttributes.OrderAttTimeInForce + _
                             OrderAttributes.OrderAttTriggerPrice
 
-lPermittedOrderProperties.PermittedOrderTifs = OrderTIFDay
+lPermittedOrderProperties.PermittedOrderTifs = OrderTIFDay + OrderTIFGoodTillCancelled
 
 lPermittedOrderProperties.PermittedOrderTypes = _
                         OrderTypes.OrderTypeMarket + _
