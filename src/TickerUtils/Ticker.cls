@@ -1555,7 +1555,7 @@ End Sub
 
 Private Sub fireGenericTick( _
                 ByRef ev As GenericTickEventData)
-Const ProcName As String = "fireHigh"
+Const ProcName As String = "fireGenericTick"
 On Error GoTo Err
 
 Dim lEv As GenericTickEventData
