@@ -155,6 +155,7 @@ lPermittedOrderProperties.PermittedOrderAttributes = _
                             OrderAttributes.OrderAttOriginatorRef + _
                             OrderAttributes.OrderAttQuantity + _
                             OrderAttributes.OrderAttStopTriggerMethod + _
+                            OrderAttributes.OrderAttTimeInForce + _
                             OrderAttributes.OrderAttTriggerPrice
 
 lPermittedOrderProperties.PermittedOrderTifs = OrderTIFDay
