@@ -434,7 +434,9 @@ Public Function Buy(ByRef Number As Long, _
                     ByVal TargetTriggerPrice As Double, _
                     Optional ByVal entryTIF As OrderTIFs = OrderTIFDay, _
                     Optional ByVal stopTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
-                    Optional ByVal targetTIF As OrderTIFs = OrderTIFGoodTillCancelled) As IBracketOrder
+                    Optional ByVal targetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
+                    Optional ByVal pCancelPrice As Double, _
+                    Optional ByVal pCancelAfter As Long) As IBracketOrder
 
 Const ProcName As String = "Buy"
 On Error GoTo Err
@@ -476,6 +478,8 @@ Set Buy = CreateBracketOrder(OrderActions.OrderActionBuy, _
 Buy.EntryOrder.TimeInForce = entryTIF
 If Not Buy.StopLossOrder Is Nothing Then Buy.StopLossOrder.TimeInForce = stopTIF
 If Not Buy.TargetOrder Is Nothing Then Buy.TargetOrder.TimeInForce = targetTIF
+Buy.CancelPrice = pCancelPrice
+Buy.CancelAfter = pCancelAfter
 
 ExecuteBracketOrder Buy, True
 
@@ -1010,7 +1014,9 @@ Public Function Sell(ByRef Number As Long, _
                     ByVal TargetTriggerPrice As Double, _
                     Optional ByVal entryTIF As OrderTIFs = OrderTIFDay, _
                     Optional ByVal stopTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
-                    Optional ByVal targetTIF As OrderTIFs = OrderTIFGoodTillCancelled) As IBracketOrder
+                    Optional ByVal targetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
+                    Optional ByVal pCancelPrice As Double, _
+                    Optional ByVal pCancelAfter As Long) As IBracketOrder
 
 Const ProcName As String = "Sell"
 
@@ -1053,6 +1059,8 @@ Set Sell = CreateBracketOrder(OrderActions.OrderActionSell, _
 Sell.EntryOrder.TimeInForce = entryTIF
 If Not Sell.StopLossOrder Is Nothing Then Sell.StopLossOrder.TimeInForce = stopTIF
 If Not Sell.TargetOrder Is Nothing Then Sell.TargetOrder.TimeInForce = targetTIF
+Sell.CancelPrice = pCancelPrice
+Sell.CancelAfter = pCancelAfter
 
 ExecuteBracketOrder Sell, True
 
