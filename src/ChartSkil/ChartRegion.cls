@@ -1968,6 +1968,9 @@ On Error GoTo Err
 
 If mIsCleared Then Exit Sub
 
+mDeferredPainter.Finish
+Set mDeferredPainter = Nothing
+
 Set mTitle = Nothing
 
 Set mPointerController = Nothing

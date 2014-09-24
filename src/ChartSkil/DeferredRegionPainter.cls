@@ -79,19 +79,20 @@ Private mAreasToRedrawIndex As Long
 '================================================================================
 
 Private Sub DeferredAction_run(ByVal data As Variant)
-Dim et As ElapsedTimer
-Dim i As Long
-
 Const ProcName As String = "DeferredAction_run"
-
 On Error GoTo Err
 
 #If trace Then
     gTracer.EnterProcedure pInfo:="", pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
-If regionObj.IsCleared Then Exit Sub
+Dim lRegion As ChartRegion
+Set lRegion = regionObj
 
+If lRegion Is Nothing Then Exit Sub
+If lRegion.IsCleared Then Exit Sub
+
+Dim et As ElapsedTimer
 If gIsInDev Then
     If et Is Nothing Then Set et = New ElapsedTimer
     et.StartTiming
@@ -101,15 +102,15 @@ Select Case mDeferredPaintAction
 Case DeferredPaintRepaintNone
 
 Case DeferredPaintPaintAreas
-    regionObj.PaintAreas mAreasToRedraw, mAreasToRedrawIndex + 1
+    lRegion.PaintAreas mAreasToRedraw, mAreasToRedrawIndex + 1
 Case DeferredPaintPaint
-    regionObj.PaintSync
+    lRegion.PaintSync
 Case DeferredPaintChangeGaugeAndPaint
-    regionObj.ChangeGaugeAndPaint
+    lRegion.ChangeGaugeAndPaint
 Case DeferredPaintScaleAndPaint
-    regionObj.ScaleAndPaintSync
+    lRegion.ScaleAndPaintSync
 Case DeferredPaintCalculateAndPaint
-    regionObj.CalculateAndPaintSync
+    lRegion.CalculateAndPaintSync
 End Select
 
 
@@ -141,13 +142,12 @@ End Sub
 
 Friend Sub AddAreaToRedraw( _
                 ByRef areaToRedraw As TRectangle)
-Dim i As Long
-Dim handled As Boolean
-
 Const ProcName As String = "AddareaToRedraw"
-
 On Error GoTo Err
 
+Dim handled As Boolean
+
+Dim i As Long
 For i = 0 To mAreasToRedrawIndex
     If RectContainsRect(mAreasToRedraw(i), areaToRedraw) Then
         handled = True
@@ -181,7 +181,6 @@ End Sub
 
 Friend Sub CalculateAndPaint()
 Const ProcName As String = "CalculateAndPaint"
-
 On Error GoTo Err
 
 doDeferredPaint DeferredPaintCalculateAndPaint
@@ -194,7 +193,6 @@ End Sub
 
 Friend Sub ChangeGaugeAndPaint()
 Const ProcName As String = "ChangeGaugeAndPaint"
-
 On Error GoTo Err
 
 doDeferredPaint DeferredPaintChangeGaugeAndPaint
@@ -205,10 +203,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+Set mRegionRef = CreateWeakReference(Nothing)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub Initialise( _
                 ByVal pRegion As ChartRegion)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
 Set mRegionRef = CreateWeakReference(pRegion)
@@ -222,7 +231,6 @@ End Sub
 
 Friend Sub Paint()
 Const ProcName As String = "Paint"
-
 On Error GoTo Err
 
 doDeferredPaint DeferredPaintPaint
@@ -235,7 +243,6 @@ End Sub
 
 Friend Sub ScaleAndPaint()
 Const ProcName As String = "ScaleAndPaint"
-
 On Error GoTo Err
 
 doDeferredPaint DeferredPaintScaleAndPaint
@@ -252,7 +259,6 @@ End Sub
 
 Private Sub doDeferredPaint(ByVal action As DeferredPaintActions)
 Const ProcName As String = "DeferredPaint"
-
 On Error GoTo Err
 
 If action = DeferredPaintRepaintNone Then
@@ -301,7 +307,6 @@ End Sub
 
 Private Function regionObj() As ChartRegion
 Const ProcName As String = "regionObj"
-
 On Error GoTo Err
 
 Set regionObj = mRegionRef.Target
