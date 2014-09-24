@@ -613,7 +613,7 @@ lBracketOrder.Checkpoint
 
 Set CreateBracketOrder = lBracketOrder
 
-gLogOrder "Created bracket order: (Curr price=" & priceToString(getCurrentPrice(TickTypeTrade)) & vbCrLf & _
+gLogOrder "Created bracket order: (Curr price=" & priceToString(getCurrentPrice(TickTypeTrade)) & ")" & _
             lBracketOrder.ToString, _
             mIsSimulated, _
             Me

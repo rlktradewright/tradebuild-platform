@@ -289,6 +289,8 @@ Public Sub RemoveOrdersForListener(ByVal pListener As IOrderSubmissionListener)
 Const ProcName As String = "RemoveOrdersForListener"
 On Error GoTo Err
 
+If mAllOrders.Count = 0 Then Exit Sub
+
 Dim en As Enumerator
 Set en = mAllOrders.Enumerator
 
@@ -385,6 +387,7 @@ Private Sub handleCreatedOrders()
 Const ProcName As String = "handleCreatedOrders"
 On Error GoTo Err
 
+If mActiveOrders.Count = 0 Then Exit Sub
 Dim lOrder As SimulatorOrder
 For Each lOrder In mActiveOrders
     If lOrder.Order.Status = OrderStatuses.OrderStatusCreated Then
@@ -402,6 +405,7 @@ Private Sub handlePendingSubmitOrders()
 Const ProcName As String = "handlePendingSubmitOrders"
 On Error GoTo Err
 
+If mActiveOrders.Count = 0 Then Exit Sub
 Dim lOrder As SimulatorOrder
 For Each lOrder In mActiveOrders
     If lOrder.Order.Status = OrderStatuses.OrderStatusPendingSubmit And lOrder.ParentId = "" Then
@@ -419,6 +423,7 @@ Private Sub handleRelatedOrders(ByVal pOrder As SimulatorOrder)
 Const ProcName As String = "handleRelatedOrders"
 On Error GoTo Err
 
+If mActiveOrders.Count = 0 Then Exit Sub
 Dim lOrder As SimulatorOrder
 For Each lOrder In mActiveOrders
     If pOrder.IsParentOf(lOrder) Then
@@ -576,6 +581,8 @@ On Error GoTo Err
 
 mAsk = Ask
 
+If mActiveOrders.Count = 0 Then Exit Sub
+
 handleCreatedOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
 
@@ -615,6 +622,8 @@ On Error GoTo Err
 
 mBid = Bid
 
+If mActiveOrders.Count = 0 Then Exit Sub
+
 handleCreatedOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
 
@@ -651,6 +660,8 @@ Private Sub processTrade(ByVal pTimestamp As Date, _
                 ByVal pTrade As Double)
 Const ProcName As String = "processTrade"
 On Error GoTo Err
+
+If mActiveOrders.Count = 0 Then Exit Sub
 
 handleCreatedOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
@@ -711,20 +722,22 @@ If Not pSimulatedOrder.Transmit Then
 Else
     ' submit any other pending orders related
     ' to this one via pParentId or oca group
-    Dim en As Enumerator
-    Set en = mPendingOrders.Enumerator
-    Do While en.MoveNext
-        Dim lPendingOrder As SimulatorOrder
-        Set lPendingOrder = en.Current
-        If lPendingOrder.IsFinished Then
-            en.Remove
-        ElseIf pSimulatedOrder.IsParentOf(lPendingOrder) Or _
-                lPendingOrder.IsRelatedTo(pSimulatedOrder) Then
-            mActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
-            en.Remove
-            setSubmitOrder lPendingOrder
-        End If
-    Loop
+    If mPendingOrders.Count <> 0 Then
+        Dim en As Enumerator
+        Set en = mPendingOrders.Enumerator
+        Do While en.MoveNext
+            Dim lPendingOrder As SimulatorOrder
+            Set lPendingOrder = en.Current
+            If lPendingOrder.IsFinished Then
+                en.Remove
+            ElseIf pSimulatedOrder.IsParentOf(lPendingOrder) Or _
+                    lPendingOrder.IsRelatedTo(pSimulatedOrder) Then
+                mActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
+                en.Remove
+                setSubmitOrder lPendingOrder
+            End If
+        Loop
+    End If
     
     mActiveOrders.Add pSimulatedOrder, pSimulatedOrder.Order.Id
     setSubmitOrder pSimulatedOrder

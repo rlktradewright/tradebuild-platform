@@ -533,7 +533,7 @@ Public Sub gLogMaxLoss( _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-Const ProcName As String = "gMaxLogLoss"
+Const ProcName As String = "gLogMaxLoss"
 On Error GoTo Err
 
 Static lLogger As Logger
@@ -552,7 +552,7 @@ Public Sub gLogMaxProfit( _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-Const ProcName As String = "gMaxLogProfit"
+Const ProcName As String = "gLogMaxProfit"
 On Error GoTo Err
 
 Static lLogger As Logger

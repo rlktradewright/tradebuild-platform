@@ -1605,8 +1605,7 @@ If mContractSpecifier Is Nothing Then
     ' the relevant ticker is ready
 Else
     gLogOrderDetail mContractSpecifier.Exchange & "," & _
-            mContractSpecifier.Symbol & "," & _
-            mContractSpecifier.Expiry & "," & _
+            mContractSpecifier.LocalSymbol & "," & _
             pExec.Quantity & "," & _
             pExec.Price & "," & _
             gOrderActionToString(pExec.Action) & "," & _
