@@ -822,7 +822,7 @@ If lFillPrice = 0 Then lFillPrice = pFillPrice
 lExec.Price = lFillPrice
 lExec.Quantity = lFillSize
 lExec.SecurityName = lContractSpecifier.LocalSymbol
-lExec.TimezoneName = lClock.TimeZone.DisplayName
+lExec.TimezoneName = lClock.TimeZone.StandardName
 
 pOrder.Order.QuantityRemaining = pOrder.Order.QuantityRemaining - lFillSize
 If pOrder.Order.QuantityRemaining = 0 Then pOrder.Order.Status = OrderStatuses.OrderStatusFilled

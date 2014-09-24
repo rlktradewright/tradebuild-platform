@@ -1613,7 +1613,7 @@ Else
             pExec.TimezoneName & "," & _
             pExec.Id & "," & _
             pExec.BrokerId, _
-            pExec.IsSimulated, _
+            mIsSimulated, _
             Me
 End If
 
