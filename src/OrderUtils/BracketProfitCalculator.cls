@@ -417,8 +417,8 @@ With profile
 End With
 gLogBracketOrderProfileStruct profile, mBracketOrder.IsSimulated, Me
 
-gLogBracketOrderProfileString FormatDateTime(mBracketOrder.StartTime) & "," & _
-            FormatDateTime(mBracketOrder.EndTime) & "," & _
+gLogBracketOrderProfileString FormatTimestamp(mBracketOrder.StartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+            FormatTimestamp(mBracketOrder.EndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             mBracketOrder.Description & "," & _
             mBracketOrder.Key & "," & _
             gOrderActionToString(mBracketOrder.EntryOrder.Action) & "," & _

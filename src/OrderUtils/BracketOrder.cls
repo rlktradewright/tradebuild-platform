@@ -3280,15 +3280,18 @@ Const ProcName As String = "logOrderMessage"
 On Error GoTo Err
 
 Dim lTickPart As String
+Dim lTimePart As String
 
 If mDataSource Is Nothing Then
 ElseIf mDataSource.State <> MarketDataSourceStateRunning Then
-ElseIf mDataSource.CurrentTick(TickTypeTrade).Timestamp = 0# Then
 Else
-    lTickPart = "Curr price=" & priceToString(mDataSource.CurrentTick(TickTypeTrade).Price) & "; "
+    If mDataSource.IsTickReplay Then lTimePart = FormatTimestamp(mDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+    If mDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
+        lTickPart = "Curr price=" & priceToString(mDataSource.CurrentTick(TickTypeTrade).Price) & "; "
+    End If
 End If
 
-gLogOrder pMessage & " (" & lTickPart & "id=" & Key & ")", _
+gLogOrder lTimePart & "  " & pMessage & " (" & lTickPart & "id=" & Key & ")", _
         mIsSimulated, _
         Me
 

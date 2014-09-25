@@ -125,6 +125,7 @@ If TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
     Set mTemplateOrder = New Order
     mTemplateOrder.Initialise mGroupName, mContextsName, mContract.Specifier, Me
+    mTemplateOrder.IsSimulated = mIsSimulated
     fireChange OrderContextReadyStateChanged
 ElseIf TypeOf ev.Future.Value Is Clock Then
     Dim lClock As Clock
@@ -613,10 +614,7 @@ lBracketOrder.Checkpoint
 
 Set CreateBracketOrder = lBracketOrder
 
-gLogOrder "Created bracket order: (Curr price=" & priceToString(getCurrentPrice(TickTypeTrade)) & ")" & _
-            lBracketOrder.ToString, _
-            mIsSimulated, _
-            Me
+logOrderMessage "Created bracket order: " & lBracketOrder.ToString, lBracketOrder.Key
 
 Exit Function
 
@@ -702,11 +700,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
                                 pBracketOrder.Risk, _
                                 msg) _
         Then
-            gLogOrder "Rejected by money management: " & msg & " " & _
-                                "(Curr price=" & priceToString(getCurrentPrice(TickTypeTrade)) & _
-                                "; id=" & pBracketOrder.Key & ")", _
-                                mIsSimulated, _
-                                Me
+            logOrderMessage "Rejected by money management: " & msg, pBracketOrder.Key
             Set pBracketOrder = Nothing
             Exit Sub
         End If
@@ -717,11 +711,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
     End If
 End If
 
-gLogOrder "Execute bracket order " & _
-            "(Curr price=" & priceToString(getCurrentPrice(TickTypeTrade)) & _
-            "; id=" & pBracketOrder.Key & ")", _
-            mIsSimulated, _
-            Me
+logOrderMessage "Execute bracket order", pBracketOrder.Key
 
 mActiveBracketOrders.Add pBracketOrder
 If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
@@ -1284,6 +1274,32 @@ Else
     isDataSourceRunning = (mDataSource.State = MarketDataSourceStateRunning)
 End If
 End Function
+
+Private Sub logOrderMessage( _
+                ByVal pMessage As String, _
+                ByVal pKey As String)
+Const ProcName As String = "logOrderMessage"
+On Error GoTo Err
+
+Dim lTickPart As String
+Dim lTimePart As String
+
+If isDataSourceRunning Then
+    If mDataSource.IsTickReplay Then lTimePart = FormatTimestamp(mDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+    If mDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
+        lTickPart = "Curr price=" & priceToString(mDataSource.CurrentTick(TickTypeTrade).Price) & "; "
+    End If
+End If
+
+gLogOrder lTimePart & "  " & pMessage & " (" & lTickPart & IIf(pKey <> "", "; id=" & pKey, "") & ")", _
+        mIsSimulated, _
+        Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function nextKey() As String
 Const ProcName As String = "nextKey"

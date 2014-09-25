@@ -615,7 +615,7 @@ On Error GoTo Err
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
 
-logInfotypeData "orderDetail", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+logInfotypeData "orderdetail", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
 
 Exit Sub
 
