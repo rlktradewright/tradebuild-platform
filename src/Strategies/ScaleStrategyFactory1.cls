@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IStrategyFactory
+Implements IPosnMgmtStrtgyFactory
 
 '@================================================================================
 ' Events
@@ -46,17 +46,19 @@ Private Const ModuleName                            As String = "ScaleStrategyFa
 ' Member variables
 '@================================================================================
 
+Private S                                           As New ScaleStrategy1Static
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' IStrategyFactory Interface Members
+' IPosnMgmtStrtgyFactory Interface Members
 '@================================================================================
 
-Private Function IStrategyFactory_CreateStrategy( _
+Private Function IPosnMgmtStrtgyFactory_CreateStrategy( _
                 ByVal pTradingContext As TradingContext) As IPositionMgmtStrategy
-Const ProcName As String = "IStrategyFactory_CreateStrategy"
+Const ProcName As String = "IPosnMgmtStrtgyFactory_CreateStrategy"
 On Error GoTo Err
 
 
@@ -67,26 +69,59 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IStrategyFactory_Initialise( _
-                ByVal pContext As InitialisationContext)
-Const ProcName As String = "IStrategyFactory_Initialise"
+Private Property Get IPosnMgmtStrtgyFactory_DefaultParameters() As Parameters
+Const ProcName As String = "IPosnMgmtStrtgyFactory_DefaultParameters"
 On Error GoTo Err
 
-Dim barsID As String
-Dim studyID As String
-Dim params As cParameters
+Dim lParams As New Parameters
 
-Dim lTFD As TimeframeDesignator
-Set lTFD = pContext.AddTimeframe(GetTimePeriod(mTimePeriod, mTimePeriodUnit), barsID)
+lParams.SetParameterValue ParamBarLength, BarLength
+lParams.SetParameterValue ParamBarUnit, BarUnit
+lParams.SetParameterValue ParamATRPeriods, ATRPeriods
+lParams.SetParameterValue ParamIncludeBarsOutsideSession, IncludeBarsOutsideSession
+lParams.SetParameterValue ParamInitialStopFactor, InitialStopFactor
+lParams.SetParameterValue ParamMaxIncrements, MaxIncrements
+lParams.SetParameterValue ParamRiskUnitPercent, RiskUnitPercent
+lParams.SetParameterValue ParamRiskIncrementPercent, RiskIncrementPercent
+lParams.SetParameterValue ParamScaleThresholdFactor, ScaleThresholdFactor
+lParams.SetParameterValue ParamStopIncrementFactor, StopIncrementFactor
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub IPosnMgmtStrtgyFactory_Initialise( _
+                ByVal pContext As InitialisationContext, _
+                ByVal pParams As Parameters)
+Const ProcName As String = "IPosnMgmtStrtgyFactory_Initialise"
+On Error GoTo Err
+
+processParameters pParams
+
+Dim lBarLength As Long
+lBarLength = pParams.GetParameterValue(ParamBarLength)
+
+Dim lBarUnit As TimePeriodUnits
+lBarUnit = TimePeriodUnitsFromString(pParams.GetParameterValue(ParamBarUnit))
+
+Dim lTimeframe As Timeframe
+Set lTimeframe = pContext.AddTimeframe(GetTimePeriod(lBarLength, _
+                                                lBarUnit), _
+                                500, _
+                                pParams.GetParameterValue(ParamIncludeBarsOutsideSession))
+
+Dim params As Parameters
 
 Set params = New Parameters
-params.setParam "Periods", mATRPeriods
+params.SetParameterValue "Periods", pParams.GetParameterValue(ParamATRPeriods)
 
-ReDim lInputValueNames(0) As String
-lInputValueNames(0) = "$default"
-Set mATRStudy = pContext.AddStudy("AverageTrueRange", _
-                        pBaseStudy, _
-                        lInputValueNames, _
+ReDim linputvaluenames(0) As String
+linputvaluenames(0) = "$default"
+Set S.ATR = pContext.AddStudy("ATR", _
+                        lTimeframe, _
+                        linputvaluenames, _
                         params, _
                         2)
 
@@ -111,6 +146,23 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub processParameters(ByVal pParams As Parameters)
+Const ProcName As String = "processParameters"
+On Error GoTo Err
+
+S.InitialStopFactor = pParams.GetParameterValue(ParamInitialStopFactor)
+S.MaxIncrements = pParams.GetParameterValue(ParamMaxIncrements)
+S.RiskUnitPercent = pParams.GetParameterValue(ParamRiskUnitPercent)
+S.RiskIncrementPercent = pParams.GetParameterValue(ParamRiskIncrementPercent)
+S.ScaleThresholdFactor = pParams.GetParameterValue(ParamScaleThresholdFactor)
+S.StopIncrementFactor = pParams.GetParameterValue(ParamStopIncrementFactor)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
 

@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "StrategyHostUtils27"
+Public Const ProjectName                            As String = "StrategyUtils27"
 Private Const ModuleName                            As String = "Globals"
 
 '@================================================================================
@@ -48,6 +48,12 @@ Private Const ModuleName                            As String = "Globals"
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get gStrategyLogger() As Logger
+Static sLogger As Logger
+If sLogger Is Nothing Then Set sLogger = GetLogger("strategy")
+Set gStrategyLogger = sLogger
+End Property
 
 '@================================================================================
 ' Methods

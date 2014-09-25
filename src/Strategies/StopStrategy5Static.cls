@@ -60,25 +60,28 @@ Public BreakevenTimeframe As Timeframe
 
 Public LongMA As SMA
 
-Public BackstopMABarLength As Integer
-Public BackstopMAOffset As Integer
-
-Public BreakevenBarLength As Integer
 Public BreakEvenThresholdTicks As Long
 Public BreakevenBarThresholdTicks As Integer
 
-Public BreakoutThreshold As Integer
+Public BreakoutThresholdTicks As Integer
 
-Public ConfirmedCountForBreakEven As Long
-Public ConfirmedCountForSwing As Long
-Public ConfirmedCountForTrailing As Long
-Public ConfirmedCountForExit As Long
+Public ConfirmedBarsForBreakEven As Long
+Public ConfirmedBarsForSwing As Long
+Public ConfirmedBarsForTrailing As Long
+Public ConfirmedBarsForExit As Long
+
+Public MaxContraSwingFactor As Double
 
 Public RetraceFromExtremes As Boolean
-Public RetracementStopFactor As Single
+Public RetracementStopFactor As Double
 Public RetracementStopThresholdTicks As Long
+Public RewardToRiskRatio As Single
 
-Public TicksSwingToMoveStop As Long
+Public SwingToMoveStopTicks As Long
+
+Public TicksSwingToTrail As Long
+
+Public UseIntermediateStops As Boolean
 
 '@================================================================================
 ' Class Event Handlers

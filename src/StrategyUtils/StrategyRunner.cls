@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StrategyHost"
+Attribute VB_Name = "StrategyRunner"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -30,26 +30,15 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements StateChangeListener
-
 '================================================================================
 ' Events
 '================================================================================
-
-Event ContractInvalid(ByVal pMessage As String)
-Event NotifyEvent(ev As NotificationEventData)
-Event ReplayCompleted()
-Event ReplayProgress( _
-                ByVal tickfileTimestamp As Date, _
-                ByVal eventsPlayed As Long, _
-                ByVal percentComplete As Single)
-Event TickerCreated(ByVal pTicker As Ticker)
 
 '================================================================================
 ' Constants
 '================================================================================
 
-Private Const ModuleName                            As String = "StrategyHost"
+Private Const ModuleName                            As String = "StrategyRunner"
 '================================================================================
 ' Enums
 '================================================================================
@@ -64,13 +53,11 @@ Private Const ModuleName                            As String = "StrategyHost"
 
 Private mStrategyHostRef                            As WeakReference
 
-Private mRealtimeTickers                            As Tickers
-Private mTickfileStoreInput                         As IHistoricalDataStore
+Private mTickfileStoreInput                         As ITickfileStore
 Private mStudyLibraryManager                        As StudyLibraryManager
 Private mContractStorePrimary                       As IContractStore
 Private mContractStoreSecondary                     As IContractStore
 Private mHistoricalDataStoreInput                   As IHistoricalDataStore
-Private mOrderManager                               As OrderManager
 Private mOrderSubmitterFactoryLive                  As IOrderSubmitterFactory
 Private mOrderSubmitterFactorySimulated             As IOrderSubmitterFactory
 
@@ -79,15 +66,7 @@ Attribute mReplayController.VB_VarHelpID = -1
 Private WithEvents mTickfileReplayTC                As TaskController
 Attribute mTickfileReplayTC.VB_VarHelpID = -1
 
-Private mHostController                             As HostController
-
 'Private mAccount As IAccount
-Private mUseMoneyManagement                         As Boolean
-Private mMoneyManager                               As IMoneyManager
-
-Private mLogProfitProfile                           As Boolean
-Private mLogDummyProfitProfile                      As Boolean
-Private mResultsPath                                As String
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -95,6 +74,14 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mTicker                                     As Ticker
 
 Private mStrategy                                   As IStrategy
+Private mStopStrategyFactory                        As IPosnMgmtStrtgyFactory
+
+Private mParams                                     As Parameters
+
+Private mInitialisationContext                      As New InitialisationContext
+
+Private mTickers                                    As Tickers
+Private mIsTickfileReplay                           As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -106,31 +93,6 @@ Randomize
 End Sub
 
 '================================================================================
-' StateChangeListener Interface Members
-'================================================================================
-
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
-On Error GoTo Err
-
-If TypeOf ev.Source Is Ticker Then
-    If ev.State = MarketDataSourceStates.MarketDataSourceStateReady Then
-        Set mTicker = ev.Source
-        RaiseEvent TickerCreated(mTicker)
-        
-        Dim lContract As IContract
-        Set lContract = mTicker.ContractFuture.Value
-        prepare lContract.Specifier.LocalSymbol
-    End If
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'================================================================================
 ' mFutureWaiter Event Handlers
 '================================================================================
 
@@ -139,14 +101,17 @@ Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsFaulted Then
-    RaiseEvent ContractInvalid(ev.Future.ErrorMessage)
+    getStrategyHost.ContractInvalid ev.Future.ErrorMessage
 ElseIf ev.Future.IsAvailable Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
     
-    Dim lTicker As Ticker
-    Set lTicker = mRealtimeTickers.CreateTicker(CreateFuture(lContract), False, , , Me)
-    lTicker.StartMarketData
+    Set mTicker = mTickers.CreateTicker(ev.Future, False, lContract.Specifier.Key)
+    Assert mTicker.State = MarketDataSourceStateReady
+    mTicker.StartMarketData
+
+    setupLogging lContract.Specifier.LocalSymbol
+    getStrategyHost.TickerCreated mTicker
 End If
 
 Exit Sub
@@ -164,7 +129,7 @@ Const ProcName As String = "mReplayController_NotifyEvent"
 On Error GoTo Err
 
 Set ev.Source = Me
-RaiseEvent NotifyEvent(ev)
+getStrategyHost.NotifyReplayEvent ev
 
 Exit Sub
 
@@ -179,7 +144,7 @@ Private Sub mReplayController_ReplayProgress( _
 Const ProcName As String = "mReplayController_ReplayProgress"
 On Error GoTo Err
 
-RaiseEvent ReplayProgress(pTickfileTimestamp, pEventsPlayed, pPercentComplete)
+getStrategyHost.NotifyReplayProgress pTickfileTimestamp, pEventsPlayed, pPercentComplete
 
 Exit Sub
 
@@ -196,7 +161,7 @@ Const ProcName As String = "mTickfileReplayTC_Completed"
 On Error GoTo Err
 
 Set mReplayController = Nothing
-RaiseEvent ReplayCompleted
+getStrategyHost.NotifyReplayCompleted
 
 Exit Sub
 
@@ -208,25 +173,36 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let LogDummyProfitProfile(ByVal val As Boolean)
-mLogDummyProfitProfile = val
-End Property
-
-Public Property Let LogProfitProfile(ByVal val As Boolean)
-mLogProfitProfile = val
-End Property
-
-Public Property Let ResultsPath(ByVal val As String)
-mResultsPath = val
-End Property
-
-Public Property Let UseMoneyManagement(ByVal val As Boolean)
-mUseMoneyManagement = val
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub InitialisationContextIsReady(ByVal pContext As InitialisationContext)
+Const ProcName As String = "InitialisationContextIsReady"
+On Error GoTo Err
+
+mStrategy.Initialise pContext, mParams
+mStopStrategyFactory.Initialise pContext, mParams
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub InitialisationCompleted()
+Const ProcName As String = "InitialisationCompleted"
+On Error GoTo Err
+
+Dim lTradingContext As New TradingContext
+lTradingContext.Initialise mStrategy, mTicker
+mStrategy.Start lTradingContext, mStopStrategyFactory
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub Initialise( _
                 ByVal pStrategyHost As IStrategyHost)
@@ -235,14 +211,13 @@ On Error GoTo Err
 
 Set mStrategyHostRef = CreateWeakReference(pStrategyHost)
 
-Set mTickfileStoreInput = pStrategyHost.TickfileStoreInput
-Set mStudyLibraryManager = pStrategyHost.StudyLibraryManager
-Set mContractStorePrimary = pStrategyHost.ContractStorePrimary
-Set mContractStoreSecondary = pStrategyHost.ContractStoreSecondary
-Set mHistoricalDataStoreInput = pStrategyHost.HistoricalDataStoreInput
-Set mOrderManager = pStrategyHost.OrderManager
-Set mOrderSubmitterFactoryLive = pStrategyHost.OrderSubmitterFactoryLive
-Set mOrderSubmitterFactorySimulated = pStrategyHost.OrderSubmitterFactorySimulated
+Set mTickfileStoreInput = getStrategyHost.TickfileStoreInput
+Set mStudyLibraryManager = getStrategyHost.StudyLibraryManager
+Set mContractStorePrimary = getStrategyHost.ContractStorePrimary
+Set mContractStoreSecondary = getStrategyHost.ContractStoreSecondary
+Set mHistoricalDataStoreInput = getStrategyHost.HistoricalDataStoreInput
+Set mOrderSubmitterFactoryLive = getStrategyHost.OrderSubmitterFactoryLive
+Set mOrderSubmitterFactorySimulated = getStrategyHost.OrderSubmitterFactorySimulated
 
 Exit Sub
 
@@ -255,6 +230,8 @@ Public Sub PrepareSymbol( _
 Const ProcName As String = "PrepareSymbol"
 On Error GoTo Err
 
+mIsTickfileReplay = False
+Set mTickers = getStrategyHost.RealtimeTickers
 mFutureWaiter.Add FetchContract(CreateContractSpecifier(pSymbol), mContractStorePrimary, mContractStoreSecondary)
 
 Exit Sub
@@ -269,6 +246,8 @@ On Error GoTo Err
 
 Assert mReplayController Is Nothing, "mReplayController is not Nothing "
     
+mIsTickfileReplay = False
+
 Dim lTickfiles As New TickFileSpecifiers
 lTickfiles.Add pTickfile
 
@@ -284,12 +263,9 @@ Set lTickfileDataManager = CreateTickDataManager(lTickfiles, _
 Set mReplayController = lTickfileDataManager.ReplayController
 
 Dim lOrderManager As New OrderManager
-Dim lTickers As Tickers
-Set lTickers = CreateTickers(lTickfileDataManager, mStudyLibraryManager, mHistoricalDataStoreInput, mOrderManager, mOrderSubmitterFactoryLive, mOrderSubmitterFactorySimulated)
+Set mTickers = CreateTickers(lTickfileDataManager, mStudyLibraryManager, mHistoricalDataStoreInput, lOrderManager, mOrderSubmitterFactoryLive, mOrderSubmitterFactorySimulated)
 
-Dim lTicker As Ticker
-Set lTicker = lTickers.CreateTicker(mReplayController.TickStream(0).ContractFuture, False, , , Me)
-lTicker.StartMarketData
+mFutureWaiter.Add mReplayController.TickStream(0).ContractFuture
 
 Exit Sub
 
@@ -304,8 +280,8 @@ Const ProcName As String = "SetStrategy"
 On Error GoTo Err
 
 Set mStrategy = pStrategy
-Set mHostController = New HostController
-Set SetStrategy = mHostController.Initialise(pStrategy, pStopStrategyFactory)
+Set mStopStrategyFactory = pStopStrategyFactory
+Set SetStrategy = mergeParameters(pStrategy.DefaultParameters, pStopStrategyFactory.DefaultParameters)
 
 Exit Function
 
@@ -329,12 +305,26 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StartStrategy( _
-                ByVal pParams As Parameters, _
-                ByVal pHostTimeframes As Timeframes)
+                ByVal pParams As Parameters)
 Const ProcName As String = "StartStrategy"
 On Error GoTo Err
 
-mHostController.Start mTicker, pParams, True, pHostTimeframes
+Set mParams = pParams
+
+If getStrategyHost.LogParameters Then
+    Dim s As String
+    s = "Strategy Parameters:" & vbCrLf
+    If Not pParams Is Nothing Then
+        Dim lParam As Parameter
+        For Each lParam In pParams
+            s = s & vbTab & lParam.Name & "=" & lParam.Value & vbCrLf
+        Next
+    End If
+    gStrategyLogger.Log LogLevelNormal, s
+End If
+
+mInitialisationContext.Initialise getStrategyHost, Me, mTicker
+
 
 Exit Sub
 
@@ -366,11 +356,40 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub prepare(ByVal pSymbol As String)
-Const ProcName As String = "prepare"
+Private Function getStrategyHost() As IStrategyHost
+Set getStrategyHost = mStrategyHostRef.Target
+End Function
+
+Private Function mergeParameters(ByVal pParams1 As Parameters, ByVal pParams2 As Parameters) As Parameters
+Const ProcName As String = "mergeParameters"
 On Error GoTo Err
 
-If mUseMoneyManagement Then
+Const DefaultValue As String = "***$Default$***"
+
+Dim lParams As New Parameters
+
+Dim lParam As Parameter
+For Each lParam In pParams1
+    lParams.SetParameterValue lParam.Name, lParam.Value
+Next
+
+For Each lParam In pParams2
+    If lParams.GetParameterValue(lParam.Name, DefaultValue) = DefaultValue Then lParams.SetParameterValue lParam.Name, lParam.Value
+Next
+
+Set mergeParameters = lParams
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub setupLogging(ByVal pSymbol As String)
+Const ProcName As String = "setupLogging"
+On Error GoTo Err
+
+If getStrategyHost.UseMoneyManagement Then
 '    Set mAccount = New cAccount
 '    mAccount.Load "rlk"
 '    Set mMoneyManager = New cMoneyManager
@@ -378,55 +397,66 @@ If mUseMoneyManagement Then
 '    mEngine.moneyManager = mMoneyManager
 End If
 
-If mResultsPath = "" Then mResultsPath = ApplicationSettingsFolder & "\TestResults\"
-If Right$(mResultsPath, 1) <> "\" Then mResultsPath = mResultsPath & "\"
+Dim lResultsPath As String
+lResultsPath = getStrategyHost.ResultsPath
+If lResultsPath = "" Then lResultsPath = ApplicationSettingsFolder & "\TestResults\"
+If Right$(lResultsPath, 1) <> "\" Then lResultsPath = lResultsPath & "\"
 
 Dim lFilenameDiscriminator As String
 lFilenameDiscriminator = CStr(Int(1000000 * Rnd() + 1))
 
 Dim lLogfile As FileLogListener
-Set lLogfile = CreateFileLogListener(mResultsPath & "Logs\" & _
-                                    mStrategy.Name & _
-                                    "-" & _
-                                    pSymbol & _
-                                    "-" & lFilenameDiscriminator & ".log")
+Set lLogfile = CreateFileLogListener(lResultsPath & "Logs\" & _
+                                        mStrategy.Name & _
+                                        "-" & _
+                                        pSymbol & _
+                                        "-" & lFilenameDiscriminator & ".log", _
+                                    includeTimestamp:=False, _
+                                    includeLogLevel:=False)
 GetLogger("position.order").AddLogListener lLogfile
-GetLogger("position.simulatedorder").AddLogListener lLogfile
-GetLogger("position.drawdown").AddLogListener lLogfile
 GetLogger("position.simulatedorder").AddLogListener lLogfile
 GetLogger("strategy").AddLogListener lLogfile
 GetLogger("position.moneymanagement").AddLogListener lLogfile
 
-Set lLogfile = CreateFileLogListener(mResultsPath & "Orders\" & _
-                                    mStrategy.Name & _
-                                    "-" & _
-                                    pSymbol & _
-                                    "-" & lFilenameDiscriminator & ".log")
-GetLogger("position.orderdetail").AddLogListener lLogfile
-
-Set lLogfile = CreateFileLogListener(mResultsPath & "Orders\" & _
-                                    mStrategy.Name & _
-                                    "-" & _
-                                    pSymbol & _
-                                    "-" & lFilenameDiscriminator & _
-                                    "-Profile" & ".log")
-GetLogger("position.bracketorderprofile").AddLogListener lLogfile
-
-Set lLogfile = CreateFileLogListener(mResultsPath & "Orders\" & _
-                                    mStrategy.Name & _
-                                    "-" & _
-                                    pSymbol & _
-                                    "-" & lFilenameDiscriminator & _
-                                    "-TradeProfile" & ".log")
-GetLogger("position.tradeprofile").AddLogListener lLogfile
-
-If mLogProfitProfile Then
-    Set lLogfile = CreateFileLogListener(mResultsPath & "Orders\" & _
+Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
                                         mStrategy.Name & _
                                         "-" & _
                                         pSymbol & _
                                         "-" & lFilenameDiscriminator & _
-                                        "-Profit" & ".log")
+                                        ".log", _
+                                    includeTimestamp:=False, _
+                                    includeLogLevel:=False)
+GetLogger("position.orderdetail").AddLogListener lLogfile
+
+Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
+                                        mStrategy.Name & _
+                                        "-" & _
+                                        pSymbol & _
+                                        "-" & lFilenameDiscriminator & _
+                                        "-Profile" & ".log", _
+                                    includeTimestamp:=False, _
+                                    includeLogLevel:=False)
+GetLogger("position.bracketorderprofilestring").AddLogListener lLogfile
+
+Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
+                                        mStrategy.Name & _
+                                        "-" & _
+                                        pSymbol & _
+                                        "-" & lFilenameDiscriminator & _
+                                        "-TradeProfile" & ".log", _
+                                    includeTimestamp:=False, _
+                                    includeLogLevel:=False)
+GetLogger("position.tradeprofile").AddLogListener lLogfile
+
+If getStrategyHost.LogProfitProfile Then
+    Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
+                                        mStrategy.Name & _
+                                        "-" & _
+                                        pSymbol & _
+                                        "-" & lFilenameDiscriminator & _
+                                        "-Profit" & ".log", _
+                                    includeTimestamp:=False, _
+                                    includeLogLevel:=False)
     GetLogger("position.profitprofile").AddLogListener lLogfile
 End If
 
@@ -435,8 +465,4 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function getStrategyHost() As IStrategyHost
-Set getStrategyHost = mStrategyHostRef.Target
-End Function
 

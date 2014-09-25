@@ -47,11 +47,13 @@ Private Const ModuleName                            As String = "TradingContext"
 '@================================================================================
 
 Private mTicker                                     As Ticker
-Private mPositionManager                            As PositionManager
-Private mPositionManagerSimulated                   As PositionManager
-Private mTimeframes                                 As Timeframes
 
-Private mHostController                             As HostController
+Private mPositionManager                            As PositionManager
+Private WithEvents mBracketOrders                   As BracketOrders
+Attribute mBracketOrders.VB_VarHelpID = -1
+
+Private mPositionManagerDummy                       As PositionManager
+Private mTimeframes                                 As Timeframes
 
 Private mTradeReasonLogger                          As Logger
 
@@ -59,9 +61,12 @@ Private mTickNumber                                 As Long
 
 Private mStrategy                                   As IStrategy
 
-Private mPositionMgmgtStrategies                    As New EnumerableCollection
+Private mPositionMgmgtStrategies                    As Collection
+Private mActivePositionMgmgtStrategies              As Collection
 
 Private mReceivedFirstBidAndAsk                     As Boolean
+
+Private mClock                                      As Clock
 
 '@================================================================================
 ' Class Event Handlers
@@ -71,8 +76,11 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-Set mTradeReasonLogger = GetLogger("tradereason")
+Set mTradeReasonLogger = GetLogger("strategy.tradereason")
 mTradeReasonLogger.LogToParent = True
+
+Set mPositionMgmgtStrategies = New Collection
+Set mActivePositionMgmgtStrategies = New Collection
 
 Exit Sub
 
@@ -83,6 +91,10 @@ End Sub
 '@================================================================================
 ' IGenericTickListener_NotifyTick Interface Members
 '@================================================================================
+
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+
+End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
@@ -98,7 +110,7 @@ If ev.Tick.TickType = TickTypeBid Then sGotFirstBid = True
 If sGotFirstAsk And sGotFirstBid Then mReceivedFirstBidAndAsk = True
 
 Dim lPMStrategy As IPositionMgmtStrategy
-For Each lPMStrategy In mPositionMgmgtStrategies
+For Each lPMStrategy In mActivePositionMgmgtStrategies
     lPMStrategy.NotifyTick ev.Tick.TickType
 Next
 
@@ -111,8 +123,22 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Event Handlers
+' mBracketOrders Event Handlers
 '@================================================================================
+
+Private Sub mBracketOrders_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mBracketOrders_CollectionChanged"
+On Error GoTo Err
+
+If ev.ChangeType <> CollItemAdded Then Exit Sub
+
+CreateBracketProfitCalculator ev.AffectedItem, mTicker
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -178,11 +204,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get DefaultOrderContextSimulated() As OrderContext
-Const ProcName As String = "DefaultOrderContextSimulated"
+Public Property Get DefaultOrderContextDummy() As OrderContext
+Const ProcName As String = "DefaultOrderContextDummy"
 On Error GoTo Err
 
-Set DefaultOrderContextSimulated = mPositionManagerSimulated.OrderContexts.DefaultOrderContext
+Set DefaultOrderContextDummy = mPositionManagerDummy.OrderContexts.DefaultOrderContext
 
 Exit Property
 
@@ -238,11 +264,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PositionManagerSimulated() As PositionManager
-Const ProcName As String = "PositionManagerSimulated"
+Public Property Get PositionManagerDummy() As PositionManager
+Const ProcName As String = "PositionManagerDummy"
 On Error GoTo Err
 
-Set PositionManagerSimulated = mPositionManagerSimulated
+Set PositionManagerDummy = mPositionManagerDummy
 
 Exit Property
 
@@ -263,7 +289,7 @@ Public Property Get Timestamp() As Date
 Const ProcName As String = "Timestamp"
 On Error GoTo Err
 
-Timestamp = mTicker.Timestamp
+Timestamp = mClock.Timestamp
 
 Exit Property
 
@@ -299,6 +325,21 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub ApplyPositionManagementStrategy( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pStrategy As IPositionMgmtStrategy)
+Const ProcName As String = "ApplyPositionManagementStrategy"
+On Error GoTo Err
+
+mPositionMgmgtStrategies.Add pStrategy
+pStrategy.Start Me, pBracketOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Function GetBars( _
                 ByVal pTimeframe As Timeframe) As Bars
 Const ProcName As String = "GetBars"
@@ -312,53 +353,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub LogTradeReason(ByVal pReason As String, Optional ByVal pLogLevel As LogLevels = LogLevels.LogLevelNormal)
-mTradeReasonLogger.Log pLogLevel, pReason
-End Sub
-
-'@================================================================================
-' Methods
-'@================================================================================
-
-Public Sub ApplyPositionManagementStrategy( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pStrategy As IPositionMgmtStrategy)
-Const ProcName As String = "ApplyPositionManagementStrategy"
-On Error GoTo Err
-
-pStrategy.Start Me, pBracketOrder
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Friend Sub Initialise( _
-                ByVal pHostController As HostController, _
                 ByVal pStrategy As IStrategy, _
                 ByVal pTicker As Ticker)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mHostController = pHostController
 Set mStrategy = pStrategy
 Set mTicker = pTicker
+Set mClock = pTicker.ClockFuture.Value
 mTicker.AddGenericTickListener Me
 Set mPositionManager = mTicker.PositionManager
-Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
+Set mBracketOrders = mPositionManager.BracketOrders
+Set mPositionManagerDummy = mTicker.PositionManagerSimulated
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub LogTradeReason(ByVal pReason As String, Optional ByVal pLogLevel As LogLevels = LogLevels.LogLevelNormal)
+mTradeReasonLogger.Log pLogLevel, FormatTimestamp(Timestamp, TimestampDateAndTimeISO8601) & "  " & pReason
 End Sub
 
 Public Sub StartTickData(ByVal pStrategy As IPositionMgmtStrategy)
 Const ProcName As String = "StartTickData"
 On Error GoTo Err
 
-If Not mPositionMgmgtStrategies.Contains(pStrategy) Then mPositionMgmgtStrategies.Add pStrategy
+mActivePositionMgmgtStrategies.Add pStrategy, GetObjectKey(pStrategy)
 
 Exit Sub
 
@@ -370,7 +393,7 @@ Public Sub StopTickData(ByVal pStrategy As IPositionMgmtStrategy)
 Const ProcName As String = "StopTickData"
 On Error GoTo Err
 
-mPositionMgmgtStrategies.Remove pStrategy
+mActivePositionMgmgtStrategies.Remove GetObjectKey(pStrategy)
 
 Exit Sub
 

@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StrategyHostUtils"
+Attribute VB_Name = "StrategyUtils"
 Attribute VB_GlobalNameSpace = True
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "StrategyHostUtils"
+Private Const ModuleName                            As String = "StrategyUtils"
 
 '@================================================================================
 ' Member variables
@@ -63,6 +63,22 @@ Private Const ModuleName                            As String = "StrategyHostUti
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function CreateStrategyRunner( _
+                ByVal pStrategyHost As IStrategyHost) As StrategyRunner
+Const ProcName As String = "CreateStrategyRunner"
+On Error GoTo Err
+
+AssertArgument Not pStrategyHost Is Nothing, "pStrategyHost is Nothing"
+
+Set CreateStrategyRunner = New StrategyRunner
+CreateStrategyRunner.Initialise pStrategyHost
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions

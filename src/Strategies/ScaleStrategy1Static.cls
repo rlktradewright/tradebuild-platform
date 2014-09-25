@@ -44,6 +44,25 @@ Private Const ModuleName                            As String = "ScaleStrategy1S
 ' Member variables
 '@================================================================================
 
+Public ATR                                          As ATR
+Public MaxIncrements                                As Long
+
+' the percentage of account balance when 1 unit of contracts
+' changes price by 1 ATR
+Public RiskUnitPercent                              As Double
+                                            
+' the amount by which risk is to be increased at each scaling point
+Public RiskIncrementPercent                         As Double
+
+' the number of ATRs to the next scaling point
+Public ScaleThresholdFactor                         As Double
+
+' the number of ATRs to raise the stop losses at each scaling point
+Public StopIncrementFactor                          As Double
+
+' the number of ATR to set the initial stop loss for each order
+Public InitialStopFactor                            As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================

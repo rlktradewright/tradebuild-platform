@@ -22,6 +22,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements StateChangeListener
+Implements TaskCompletionListener
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,19 +47,26 @@ Private Const ModuleName                            As String = "InitialisationC
 ' Member variables
 '@================================================================================
 
+Private mStrategyHostRef                            As WeakReference
+
 Private mTicker                                     As Ticker
 Private mContract                                   As IContract
 Private mSession                                    As Session
+Private mClock                                      As Clock
+Private mInitialTimestamp                           As Date
+
+Private mStudyManager                               As StudyManager
 Private mTimeframes                                 As Timeframes
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mHostController                             As HostController
+Private mStrategyRunner                             As StrategyRunner
 
 Private mBarsOutstanding                            As Long
+Private mStudiesOutstanding                         As Long
 
-Private mStudyManager                               As StudyManager
+Private mStudiesMap                                 As New Collection
 
 '@================================================================================
 ' Class Event Handlers
@@ -67,8 +77,52 @@ Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' StateChangeListener Interface Members
 '@================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+Dim lState As TimeframeStates
+lState = ev.State
+If lState <> TimeframeStateLoaded Then Exit Sub
+
+mBarsOutstanding = mBarsOutstanding - 1
+If mBarsOutstanding = 0 And mStudiesOutstanding = 0 Then
+    mStrategyRunner.InitialisationCompleted
+    Set mStrategyRunner = Nothing
+End If
+
+Dim lTimeframe As Timeframe
+Set lTimeframe = ev.Source
+lTimeframe.RemoveStateChangeListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' TaskCompletionListener Interface Members
+'@================================================================================
+
+Private Sub TaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
+Const ProcName As String = "TaskCompletionListener_TaskCompleted"
+On Error GoTo Err
+
+mStudiesOutstanding = mStudiesOutstanding - 1
+If mBarsOutstanding = 0 And mStudiesOutstanding = 0 Then
+    mStrategyRunner.InitialisationCompleted
+    Set mStrategyRunner = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' mFutureWaiter Event Handlers
@@ -82,16 +136,14 @@ If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
-    If Not mSession Is Nothing Then mHostController.InitialisationContextIsReady Me
+    checkReady
 ElseIf TypeOf ev.Future.Value Is Session Then
     Set mSession = ev.Future.Value
-    If Not mContract Is Nothing Then mHostController.InitialisationContextIsReady Me
-ElseIf TypeOf ev.Future.Value Is Bars Then
-    mBarsOutstanding = mBarsOutstanding - 1
-    If mBarsOutstanding = 0 Then
-        mHostController.InitialisationCompleted
-        Set mHostController = Nothing
-    End If
+    checkReady
+ElseIf TypeOf ev.Future.Value Is Clock Then
+    Set mClock = ev.Future.Value
+    If mTicker.IsTickReplay Then mInitialTimestamp = mClock.Timestamp
+    checkReady
 End If
 
 Exit Sub
@@ -144,54 +196,6 @@ End Property
 ' Methods
 '@================================================================================
 
-' Adds a timeframe of the specified bar length to the underlying ticker, and returns
-' its name.
-'
-' @remarks
-'   This method can only be called during the <code>IStrategy</code> object&#39;s
-'   <code>Initialise</code> method. Calling it elsewhere results in an
-'   <code>ErrIllegalStateException</code> error being raised. If a <code>Strategy</code>
-'   object needs to create timeframes at other times, it must use the <code>Ticker.Timeframes.Add</code>
-'   method.
-'
-'   Note that the <code>Strategy</code> object&#39;s <code>Start</code> method
-'   is not called until all timeframes created using this method have had their
-'   historical data fully loaded, and all studies created using the <code>addStudy</code>
-'   method have been fully initialised.
-' @return
-'   An object used to refer to the new timeframe in the <code>TradingContext</code>'s
-'   <code>GetBars</code> method.
-' @param pTimePeriodLength
-'   The time period for this timeframe.
-' @param pNumberOfBarsToFetch
-'   The number of bars of historical data to be loaded into this timeframe for
-'   initialising studies.
-' @param pIncludeBarsOutsideSession
-'   If set to <code>True</code>, then bars that occur outside the session times
-'   defined in the contract for the underlying ticker will be included in the
-'   retrieved historical data.
-'
-'@/
-Public Function AddTimeframe( _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pNumberOfBarsToFetch As Long, _
-                Optional ByVal pIncludeBarsOutsideSession As Boolean) As Timeframe
-Const ProcName As String = "AddTimeframe"
-On Error GoTo Err
-
-Dim lTimeframe As Timeframe
-Set lTimeframe = mTimeframes.Add(pTimePeriod, "", pNumberOfBarsToFetch, , , pIncludeBarsOutsideSession)
-mFutureWaiter.Add lTimeframe.BarsFuture
-mBarsOutstanding = mBarsOutstanding + 1
-
-Set AddTimeframe = lTimeframe
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 ''
 ' Creates a <code>Study</code> object, taking its input from a specified existing
 ' <code>Study</code> object.
@@ -233,11 +237,81 @@ Public Function AddStudy(ByVal pName As String, _
                 ByRef pInputValueNames() As String, _
                 Optional ByVal pParams As Parameters, _
                 Optional ByVal pNumberOfValuesToCache As Long, _
-                Optional ByVal pLibraryName As String) As IStudy
+                Optional ByVal pLibraryName As String, _
+                Optional ByVal pShowInChart As Boolean) As IStudy
 Const ProcName As String = "AddStudy"
 On Error GoTo Err
 
 Set AddStudy = mStudyManager.AddStudy(pName, pUnderlyingStudy, pInputValueNames, pParams, pLibraryName, pNumberOfValuesToCache)
+
+Dim lTC As TaskController
+Set lTC = mStudyManager.StartStudy(AddStudy, 0)
+If Not lTC Is Nothing Then
+    lTC.AddTaskCompletionListener Me
+    mStudiesOutstanding = mStudiesOutstanding + 1
+End If
+
+If pShowInChart Then addStudyToMap getStrategyHost.AddStudy(pName, mStudiesMap.Item(pUnderlyingStudy.InstancePath), pInputValueNames, pParams, pNumberOfValuesToCache, pLibraryName)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+' Adds a timeframe of the specified bar length to the underlying ticker, and returns
+' its name.
+'
+' @remarks
+'   This method can only be called during the <code>IStrategy</code> object&#39;s
+'   <code>Initialise</code> method. Calling it elsewhere results in an
+'   <code>ErrIllegalStateException</code> error being raised. If a <code>Strategy</code>
+'   object needs to create timeframes at other times, it must use the <code>Ticker.Timeframes.Add</code>
+'   method.
+'
+'   Note that the <code>Strategy</code> object&#39;s <code>Start</code> method
+'   is not called until all timeframes created using this method have had their
+'   historical data fully loaded, and all studies created using the <code>addStudy</code>
+'   method have been fully initialised.
+' @return
+'   An object used to refer to the new timeframe in the <code>TradingContext</code>'s
+'   <code>GetBars</code> method.
+' @param pTimePeriodLength
+'   The time period for this timeframe.
+' @param pNumberOfBarsToFetch
+'   The number of bars of historical data to be loaded into this timeframe for
+'   initialising studies.
+' @param pIncludeBarsOutsideSession
+'   If set to <code>True</code>, then bars that occur outside the session times
+'   defined in the contract for the underlying ticker will be included in the
+'   retrieved historical data.
+'
+'@/
+Public Function AddTimeframe( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pNumberOfBarsToFetch As Long, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean, _
+                Optional ByVal pShowInChart As Boolean) As Timeframe
+Const ProcName As String = "AddTimeframe"
+On Error GoTo Err
+
+Dim lTimeframe As Timeframe
+If mTicker.IsTickReplay Then
+    Set lTimeframe = mTimeframes.AddHistorical(pTimePeriod, "", pNumberOfBarsToFetch, , mInitialTimestamp, , pIncludeBarsOutsideSession)
+Else
+    Set lTimeframe = mTimeframes.Add(pTimePeriod, "", pNumberOfBarsToFetch, , , pIncludeBarsOutsideSession)
+End If
+
+Static sTimeframes As New EnumerableCollection
+If Not sTimeframes.Contains(lTimeframe) Then
+    sTimeframes.Add lTimeframe
+    lTimeframe.AddStateChangeListener Me
+    mBarsOutstanding = mBarsOutstanding + 1
+End If
+
+If pShowInChart Then addStudyToMap getStrategyHost.AddTimeframe(pTimePeriod, pNumberOfBarsToFetch, pIncludeBarsOutsideSession).BarStudy
+
+Set AddTimeframe = lTimeframe
 
 Exit Function
 
@@ -246,18 +320,22 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
-                ByVal pHostController As HostController, _
+                ByVal pStrategyHost As IStrategyHost, _
+                ByVal pStrategyRunner As StrategyRunner, _
                 ByVal pTicker As Ticker)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mHostController = pHostController
+Set mStrategyHostRef = CreateWeakReference(pStrategyHost)
+
+Set mStrategyRunner = pStrategyRunner
 Set mTicker = pTicker
 Set mTimeframes = mTicker.Timeframes
 Set mStudyManager = mTicker.StudyBase.StudyManager
 
 mFutureWaiter.Add mTicker.ContractFuture
 mFutureWaiter.Add mTicker.SessionFuture
+mFutureWaiter.Add mTicker.ClockFuture
 
 Exit Sub
 
@@ -269,6 +347,28 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub addStudyToMap(ByVal pStudy As IStudy)
+Const ProcName As String = "addStudyToMap"
+On Error GoTo Err
+
+mStudiesMap.Add pStudy, pStudy.InstancePath
+
+Exit Sub
+
+Err:
+' allow for the fact that both the strategy and the stop/scaling factories
+' may add the same timeframes or studies
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Resume Next
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub checkReady()
+If Not mSession Is Nothing And Not mContract Is Nothing And Not mClock Is Nothing Then mStrategyRunner.InitialisationContextIsReady Me
+End Sub
+
+Private Function getStrategyHost() As IStrategyHost
+Set getStrategyHost = mStrategyHostRef.Target
+End Function
 
 
 

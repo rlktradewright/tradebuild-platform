@@ -64,6 +64,9 @@ Private Const ModuleName                    As String = "IStrategy"
 Public Property Get DefaultParameters() As Parameters
 End Property
 
+Public Property Get Name() As String
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -79,8 +82,7 @@ End Property
 '@/
 Public Sub Initialise( _
                 ByVal pInitialisationContext As InitialisationContext, _
-                ByVal pParams As Parameters, _
-                ByVal pStopStrategyFactory As IPosnMgmtStrtgyFactory)
+                ByVal pParams As Parameters)
 End Sub
 
 ''
@@ -94,13 +96,13 @@ End Sub
 '   The type of tick that has occurred.
 '@/
 Public Sub NotifyTick(ByVal pType As TickTypes)
-
 End Sub
 
 ''
 ' Called after historic price data has been loaded,
 ' but before the first tick is notified.
-Public Sub Start(ByVal pTradingContext As TradingContext)
+Public Sub Start(ByVal pTradingContext As TradingContext, _
+                ByVal pStopStrategyFactory As IPosnMgmtStrtgyFactory)
 End Sub
 
 '@================================================================================

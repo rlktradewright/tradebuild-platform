@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IStrategyFactory
+Implements IPosnMgmtStrtgyFactory
 
 '@================================================================================
 ' Events
@@ -46,28 +46,9 @@ Private Const ModuleName                            As String = "StopStrategyFac
 ' Member variables
 '@================================================================================
 
-Private mTimeframe As Timeframe
-Private mLongTimeframe As Timeframe
-Private mSwing As Swing
-Private mMACDStudy As MACD
-Private mListenerKey As String
+Private mParams                                     As Parameters
 
-Private mStopTimeframe As Timeframe
-Private mStopMA As EMA
-Private mBoll As BollingerBands
-
-Private mLongBoll As BollingerBands
-Private mLongBollPeriods As Long
-
-Private mBreakevenTimeframe As Timeframe
-
-Private mTimePeriod As Integer
-Private mTimePeriodUnit As String
-Private mLongTimePeriod As Integer
-Private mLongTimePeriodUnit As String
-
-Private mLongMA As SMA
-Private mLongMAPeriods As Long
+Private S                                           As New StopStrategy5Static
 
 '@================================================================================
 ' Class Event Handlers
@@ -77,12 +58,14 @@ Private mLongMAPeriods As Long
 ' IStopStrategyFactory Interface Members
 '@================================================================================
 
-Private Function IStrategyFactory_CreateStrategy( _
+Private Function IPosnMgmtStrtgyFactory_CreateStrategy( _
                 ByVal pTradingContext As TradingContext) As IPositionMgmtStrategy
-Const ProcName As String = "IStrategyFactory_CreateStrategy"
+Const ProcName As String = "IPosnMgmtStrtgyFactory_CreateStrategy"
 On Error GoTo Err
 
-
+Dim l As New StopStrategy5
+l.Initialise S
+Set IPosnMgmtStrtgyFactory_CreateStrategy = l
 
 Exit Function
 
@@ -90,115 +73,178 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IStrategyFactory_Initialise( _
-                ByVal pContext As InitialisationContext)
-Const ProcName As String = "IStrategyFactory_Initialise"
+Private Property Get IPosnMgmtStrtgyFactory_DefaultParameters() As Parameters
+Const ProcName As String = "IPosnMgmtStrtgyFactory_DefaultParameters"
 On Error GoTo Err
 
-Dim barsID As String
-Dim longBarsID As String
-Dim stopBarsID As String
-Dim breakevenBarsID As String
-Dim studyID As String
+Dim lParams As New Parameters
+lParams.SetParameterValue ParamBarLength, BarLength
+lParams.SetParameterValue ParamBarUnit, BarUnit
+lParams.SetParameterValue ParamIncludeBarsOutsideSession, IncludeBarsOutsideSession
+lParams.SetParameterValue ParamBollingerPeriods, BollingerPeriods
+lParams.SetParameterValue ParamBollingerMovingAverageType, "SMA"
+lParams.SetParameterValue ParamMinimumSwingTicks, MinimumSwingTicks
+lParams.SetParameterValue ParamRetraceFromExtremes, RetraceFromExtremes
+lParams.SetParameterValue ParamBreakoutThresholdTicks, StopBreakoutThresholdTicks
+lParams.SetParameterValue ParamLongBarLengthFactor, LongBarLengthFactor
+lParams.SetParameterValue ParamLongBollPeriods, LongBollPeriods
+lParams.SetParameterValue ParamLongMAPeriods, LongMAPeriods
+lParams.SetParameterValue ParamBackstopBarLengthFactor, BackstopBarLengthFactor
+lParams.SetParameterValue ParamBackstopMAPeriods, BackstopMAPeriods
+lParams.SetParameterValue ParamBreakEvenBarLength, BreakevenBarLength
+lParams.SetParameterValue ParamRetracementStopPercent, RetracementStopPercent
+lParams.SetParameterValue ParamRetracementStopThresholdTicks, RetracementStopThresholdTicks
+lParams.SetParameterValue ParamBreakEvenBarThresholdTicks, BreakevenBarThresholdTicks
+lParams.SetParameterValue ParamBreakEvenThresholdTicks, BreakEvenThresholdTicks
+lParams.SetParameterValue ParamConfirmedBarsForBreakEven, ConfirmedBarsForBreakEven
+lParams.SetParameterValue ParamConfirmedBarsForSwing, ConfirmedBarsForSwing
+lParams.SetParameterValue ParamConfirmedBarsForTrail, ConfirmedBarsForTrail
+lParams.SetParameterValue ParamConfirmedBarsForExit, ConfirmedBarsForExit
+lParams.SetParameterValue ParamBollingerCentreBandWidthTicks, BollCentreBandwidthTicks
+lParams.SetParameterValue ParamBollingerEdgeBandWidthTicks, BollEdgeBandwidthTicks
+lParams.SetParameterValue ParamSwingToMoveStopTicks, SwingToMoveStopTicks
+lParams.SetParameterValue ParamMaxContraSwingPercent, MaxContraSwingPercent
+lParams.SetParameterValue ParamTicksSwingToTrail, TicksSwingToTrail
+lParams.SetParameterValue ParamUseIntermediateStops, UseIntermediateStops
+lParams.SetParameterValue ParamRewardToRiskRatio, RewardToRiskRatio
+
+Set IPosnMgmtStrtgyFactory_DefaultParameters = lParams
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub IPosnMgmtStrtgyFactory_Initialise( _
+                ByVal pContext As InitialisationContext, _
+                ByVal pParams As Parameters)
+Const ProcName As String = "IPosnMgmtStrtgyFactory_Initialise"
+On Error GoTo Err
+
+processParameters pParams
+
+Dim lBarLength As Long
+lBarLength = mParams.GetParameterValue(ParamBarLength)
+
+Dim lBarUnit As TimePeriodUnits
+lBarUnit = TimePeriodUnitsFromString(mParams.GetParameterValue(ParamBarUnit))
+Set S.Timeframe = pContext.AddTimeframe(GetTimePeriod(lBarLength, _
+                                                lBarUnit), _
+                                500, _
+                                mParams.GetParameterValue(ParamIncludeBarsOutsideSession))
+
+ReDim linputvaluenames(0) As String
+
 Dim params As Parameters
 
-Set mTimeframe = pContext.AddTimeframe(GetTimePeriod(mTimePeriod, mTimePeriodUnit), barsID)
-
-If mMinimumSwing <> 0 Then
-    Set params = New cParameters
-    params.setParam "valuetype", "$default"
-    params.setParam "numberOfSwingHighs", 5
-    params.setParam "numberOfSwingLows", 5
-    params.setParam "minimumswing", mMinimumSwing
-    params.setParam "includeimplicitswingpoints", "N"
-    Set mSwing = pContext.AddStudy("studies2.CSwingStudy", _
-                            studyID, _
-                            barsID, _
-                            params)
+Dim lMinimumSwingTicks As Long
+lMinimumSwingTicks = CLng(mParams.GetParameterValue(ParamMinimumSwingTicks, MinimumSwingTicks))
+If lMinimumSwingTicks <> 0 Then
+    Set params = New Parameters
+    params.SetParameterValue "Minimum swing (ticks)", lMinimumSwingTicks
+    params.SetParameterValue "Include implicit swing points", "Y"
+    linputvaluenames(0) = "$default"
+    Set S.Swing = pContext.AddStudy("Swing", _
+                                S.Timeframe.BarStudy, _
+                                linputvaluenames, _
+                                params, _
+                                3)
 End If
 
-If mLongTimePeriod <> 0 And _
-    (mLongMAPeriods <> 0 Or mLongBollPeriods <> 0) _
+Dim lLongBarLengthFactor As Long
+lLongBarLengthFactor = CLng(mParams.GetParameterValue(ParamLongBarLengthFactor, LongBarLengthFactor))
+
+Dim lLongBollPeriods As Long
+lLongBollPeriods = CLng(mParams.GetParameterValue(ParamLongBollPeriods, LongBollPeriods))
+
+Dim lLongMAPeriods As Long
+lLongMAPeriods = CLng(mParams.GetParameterValue(ParamLongMAPeriods, LongMAPeriods))
+
+If lLongBarLengthFactor <> 0 And _
+    (lLongMAPeriods <> 0 Or lLongBollPeriods <> 0) _
 Then
-    Set mLongTimeframe = pContext.addPeriod(mLongTimePeriod, _
-                                    mLongTimePeriodUnit, _
-                                    longBarsID)
+    Set S.LongTimeframe = pContext.AddTimeframe(GetTimePeriod(lLongBarLengthFactor * lBarLength, _
+                                                            lBarUnit), _
+                                    IIf(lLongMAPeriods > lLongBollPeriods, lLongMAPeriods, lLongBollPeriods) + 1)
     
-    If mLongMAPeriods <> 0 Then
-        Set params = New cParameters
-        params.setParam "valuetype", "lastprice"
-        params.setParam "periods", mLongMAPeriods
-        Set mLongMA = pContext.AddStudy("studies2.cSimpleMovingAverageStudy", _
-                                studyID, _
-                                longBarsID, _
-                                params)
-        mLongMA.numberOfHistoricValues = 2
+    If lLongMAPeriods <> 0 Then
+        Set params = New Parameters
+        params.SetParameterValue "periods", lLongMAPeriods
+        linputvaluenames(0) = "$default"
+        Set S.LongMA = pContext.AddStudy("Simple Moving Average", _
+                                S.LongTimeframe.BarStudy, _
+                                linputvaluenames, _
+                                params, _
+                                3)
     End If
     
-    If mLongBollPeriods <> 0 Then
-        Set params = New cParameters
-        params.setParam "valuetype", "lastprice"
-        params.setParam "periods", mLongBollPeriods
-        params.setParam "deviations", 2
-        Set mLongBoll = pContext.AddStudy("studies2.cBollingerBandStudy", _
-                                studyID, _
-                                longBarsID, _
-                                params)
-        mLongBoll.numberOfHistoricValues = 2
+    If lLongBollPeriods <> 0 Then
+        Set params = New Parameters
+        params.SetParameterValue "periods", lLongBollPeriods
+        params.SetParameterValue "deviations", 2
+        Set S.LongBoll = pContext.AddStudy("Bollinger Bands", _
+                                S.LongTimeframe.BarStudy, _
+                                linputvaluenames, _
+                                params, _
+                                3)
     End If
 End If
 
-If mConfirmedCountForBreakEven <> 0 Or _
-    mConfirmedCountForSwing <> 0 Or _
-    mConfirmedCountForTrailing <> 0 Or _
-    mConfirmedCountForExit <> 0 _
+If S.ConfirmedBarsForBreakEven <> 0 Or _
+    S.ConfirmedBarsForSwing <> 0 Or _
+    S.ConfirmedBarsForTrailing <> 0 Or _
+    S.ConfirmedBarsForExit <> 0 _
 Then
-    Set params = New cParameters
-    params.setParam "valuetype", "lastprice"
-    params.setParam "shortperiods", 5
-    params.setParam "shortmatype", "studies2.cExponentialMovingAverageStudy"
-    params.setParam "longperiods", 34
-    params.setParam "longmatype", "studies2.cExponentialMovingAverageStudy"
-    params.setParam "smoothingperiods", 5
-    params.setParam "smoothingmatype", "studies2.cSimpleMovingAverageStudy"
-    Set mMACDStudy = pContext.AddStudy("studies2.cMACDStudy", _
-                            studyID, _
-                            barsID, _
-                            params)
-    mMACDStudy.numberOfHistoricValues = 10
+    Set params = New Parameters
+    params.SetParameterValue "Short periods", 5
+    params.SetParameterValue "Long periods", 34
+    params.SetParameterValue "Mov avg type", "SMA"
+    params.SetParameterValue "Smoothing periods", 5
+    linputvaluenames(0) = "$default"
+    Set S.MACDStudy = pContext.AddStudy("MACD", _
+                            S.Timeframe.BarStudy, _
+                            linputvaluenames, _
+                            params, _
+                            10)
 End If
 
-If mBackstopMABarLength > 0 And _
-    mBackstopMAPeriods > 0 _
+Dim lBackstopBarLengthFactor As Long
+lBackstopBarLengthFactor = mParams.GetParameterValue(ParamBackstopBarLengthFactor)
+
+Dim lBackstopMAPeriods As Long
+lBackstopMAPeriods = mParams.GetParameterValue(ParamBackstopMAPeriods)
+
+If lBackstopBarLengthFactor > 0 And _
+    lBackstopMAPeriods > 0 _
 Then
-    Set mStopTimeframe = pContext.AddTimeframe(GetTimePeriod(mBackstopMABarLength, _
-                                                            mParams.GetParameterValue(ParamTimePeriodUnit)), _
-                                                10)
+    Set S.StopTimeframe = pContext.AddTimeframe(GetTimePeriod(lBackstopBarLengthFactor * lBarLength, _
+                                                            lBarUnit), _
+                                                lBackstopMAPeriods + 1)
 
     Set params = New Parameters
-    params.SetParameterValue "Periods", mBackstopMAPeriods
-    params.SetParameterValue "source", "HL/2"
-    lInputValueNames(0) = "HL/2"
-    Set mStopMA = pContext.AddStudy("ExponentialMovingAverage", _
-                            mStopTimeframe, _
-                            lInputValueNames, _
+    params.SetParameterValue "Periods", lBackstopMAPeriods
+    linputvaluenames(0) = "HL/2"
+    Set S.StopMA = pContext.AddStudy("Exponential Moving Average", _
+                            S.StopTimeframe.BarStudy, _
+                            linputvaluenames, _
                             params, _
                             2)
 
     Set params = New Parameters
     params.SetParameterValue "Periods", 34
     params.SetParameterValue "Standard deviations", 2
-    lInputValueNames(0) = "$default"
-    Set mStopBoll = pContext.AddStudy("BollingerBands", _
-                            mStopTimeframe, _
-                            lInputValueNames, _
+    linputvaluenames(0) = "$default"
+    Set S.StopMA = pContext.AddStudy("Bollinger Bands", _
+                            S.StopTimeframe.BarStudy, _
+                            linputvaluenames, _
                             params, _
                             2)
 End If
     
 If mParams.GetParameterValue(ParamBreakEvenBarLength) > 0 Then
-    Set mBreakevenTimeframe = pContext.AddTimeframe(GetTimePeriod(mParams.GetParameterValue(ParamBreakEvenBarLength), _
-                                                                mParams.GetParameterValue(ParamTimePeriodUnit)), _
+    Set S.BreakevenTimeframe = pContext.AddTimeframe(GetTimePeriod(mParams.GetParameterValue(ParamBreakEvenBarLength), _
+                                                                mParams.GetParameterValue(ParamBarUnit)), _
                                                     2)
 End If
 
@@ -226,6 +272,48 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub processParameters(ByVal pParams As Parameters)
+Const ProcName As String = "processParameters"
+On Error GoTo Err
+
+Set mParams = pParams
+
+S.BreakEvenThresholdTicks = mParams.GetParameterValue(ParamBreakEvenThresholdTicks)
+S.BreakevenBarThresholdTicks = mParams.GetParameterValue(ParamBreakEvenBarThresholdTicks)
+S.BreakoutThresholdTicks = mParams.GetParameterValue(ParamBreakoutThresholdTicks)
+S.ConfirmedBarsForBreakEven = mParams.GetParameterValue(ParamConfirmedBarsForBreakEven)
+S.ConfirmedBarsForSwing = mParams.GetParameterValue(ParamConfirmedBarsForSwing)
+S.ConfirmedBarsForTrailing = mParams.GetParameterValue(ParamConfirmedBarsForTrail)
+S.ConfirmedBarsForExit = mParams.GetParameterValue(ParamConfirmedBarsForExit)
+S.RetraceFromExtremes = CBool(mParams.GetParameterValue(ParamRetraceFromExtremes))
+
+Dim v As Double
+v = CDbl(mParams.GetParameterValue(ParamMaxContraSwingPercent, "0"))
+If v = 0 Then
+    S.MaxContraSwingFactor = 0
+Else
+    S.MaxContraSwingFactor = 1! - v / 100
+End If
+
+v = CDbl(mParams.GetParameterValue(ParamRetracementStopPercent, "0"))
+If v = 0# Then
+    S.RetracementStopFactor = 0#
+Else
+    S.RetracementStopFactor = 1# - v / 100#
+End If
+
+S.RetracementStopThresholdTicks = mParams.GetParameterValue(ParamRetracementStopThresholdTicks)
+S.RewardToRiskRatio = mParams.GetParameterValue(ParamRewardToRiskRatio)
+S.SwingToMoveStopTicks = mParams.GetParameterValue(ParamSwingToMoveStopTicks)
+S.TicksSwingToTrail = mParams.GetParameterValue(ParamTicksSwingToTrail)
+S.UseIntermediateStops = mParams.GetParameterValue(ParamUseIntermediateStops)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
 
