@@ -104,7 +104,8 @@ Friend Function CreateMarketDataSource( _
                 ByVal pKey As String, _
                 ByVal pStateChangeListener As StateChangeListener, _
                 ByVal pIsRecoverable As Boolean, _
-                ByVal pUseLocalTimeForStudies As Boolean) As IMarketDataSource
+                ByVal pUseLocalTimeForStudies As Boolean, _
+                ByVal pTickfileStreamId As Long) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
@@ -120,7 +121,7 @@ If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStud
 Dim lStudyManager As StudyManager
 If Not mStudyLibManager Is Nothing Then Set lStudyManager = mStudyLibManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies)
 
-lDataSource.Initialise Me, pKey, pContractFuture, lStudyManager, lConfig
+lDataSource.Initialise Me, pKey, pContractFuture, lStudyManager, lConfig, pTickfileStreamId
 
 mDataSources.Add lDataSource, pKey
 
@@ -240,7 +241,8 @@ For Each lCs In mConfig
                                 lCs.InstanceQualifier, _
                                 Nothing, _
                                 True, _
-                                lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False")
+                                lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False"), _
+                                NullIndex
     End If
 Next
 

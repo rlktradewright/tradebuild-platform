@@ -788,10 +788,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let TickfileStreamId(ByVal Value As Long)
-mTickfileStreamId = Value
-End Property
-
 Public Property Get Timestamp() As Date
 Const ProcName As String = "Timestamp"
 On Error GoTo Err
@@ -1200,7 +1196,8 @@ Friend Sub Initialise( _
                 ByVal pKey As String, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pStudyManager As StudyManager, _
-                ByVal pConfig As ConfigurationSection)
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pTickfileStreamId As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -1209,6 +1206,7 @@ Set mMarketDataManagerRef = CreateWeakReference(pMarketDataManager)
 mKey = pKey
 Set mContractFuture = pContractFuture
 Set mConfig = pConfig
+mTickfileStreamId = pTickfileStreamId
 
 setState MarketDataSourceStateCreated
 
