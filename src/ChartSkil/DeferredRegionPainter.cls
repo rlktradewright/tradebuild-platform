@@ -60,7 +60,7 @@ Private Const ModuleName                            As String = "DeferredRegionP
 ' Member variables
 '@================================================================================
 
-Private mRegionRef As WeakReference
+Private mRegion As ChartRegion
 
 Private mDeferredPaintPending As Boolean
 
@@ -86,12 +86,6 @@ On Error GoTo Err
     gTracer.EnterProcedure pInfo:="", pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
-Dim lRegion As ChartRegion
-Set lRegion = regionObj
-
-If lRegion Is Nothing Then Exit Sub
-If lRegion.IsCleared Then Exit Sub
-
 Dim et As ElapsedTimer
 If gIsInDev Then
     If et Is Nothing Then Set et = New ElapsedTimer
@@ -102,15 +96,15 @@ Select Case mDeferredPaintAction
 Case DeferredPaintRepaintNone
 
 Case DeferredPaintPaintAreas
-    lRegion.PaintAreas mAreasToRedraw, mAreasToRedrawIndex + 1
+    mRegion.PaintAreas mAreasToRedraw, mAreasToRedrawIndex + 1
 Case DeferredPaintPaint
-    lRegion.PaintSync
+    mRegion.PaintSync
 Case DeferredPaintChangeGaugeAndPaint
-    lRegion.ChangeGaugeAndPaint
+    mRegion.ChangeGaugeAndPaint
 Case DeferredPaintScaleAndPaint
-    lRegion.ScaleAndPaintSync
+    mRegion.ScaleAndPaintSync
 Case DeferredPaintCalculateAndPaint
-    lRegion.CalculateAndPaintSync
+    mRegion.CalculateAndPaintSync
 End Select
 
 
@@ -207,7 +201,7 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-Set mRegionRef = CreateWeakReference(Nothing)
+Set mRegion = Nothing
 
 Exit Sub
 
@@ -220,7 +214,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mRegionRef = CreateWeakReference(pRegion)
+Set mRegion = pRegion
 doDeferredPaint DeferredPaintRepaintNone
 
 Exit Sub
@@ -305,14 +299,3 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function regionObj() As ChartRegion
-Const ProcName As String = "regionObj"
-On Error GoTo Err
-
-Set regionObj = mRegionRef.Target
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
