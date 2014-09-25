@@ -1609,7 +1609,7 @@ Else
             pExec.Quantity & "," & _
             pExec.Price & "," & _
             gOrderActionToString(pExec.Action) & "," & _
-            pExec.FillTime & "," & _
+            FormatTimestamp(pExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             pExec.TimezoneName & "," & _
             pExec.Id & "," & _
             pExec.BrokerId, _

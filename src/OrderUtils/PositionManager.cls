@@ -1642,8 +1642,8 @@ Else
     calcProfits
     
     gLogPosition mQuantityOutstanding, mIsSimulated, Me
-    gLogTradeProfile mTradeStartTime & "," & _
-            pExec.FillTime & "," & _
+    gLogTradeProfile FormatTimestamp(mTradeStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+            FormatTimestamp(pExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             mTradeStartTimezoneName & "," & _
             mProfitThisTrade & "," & _
             mMaxProfitThisTrade & "," & _
