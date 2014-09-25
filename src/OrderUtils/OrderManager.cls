@@ -62,7 +62,7 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-mSessionName = GenerateGUIDString
+mSessionName = FormatTimestamp(GetTimestamp, TimestampDateAndTime)
 
 Exit Sub
 
