@@ -34,7 +34,7 @@ Private Const ModuleName                            As String = "MainModule"
 
 Private mForm                                       As fStrategyHost
 
-Private mStrategyHost                               As StrategyHost
+Private mStrategyRunner                             As StrategyRunner
 
 Private mFatalErrorHandler                          As FatalErrorHandler
 
@@ -158,12 +158,12 @@ If lClp.Switch("ResultsPath") Then
 End If
 
 If lNoUI Then
-    Set mStrategyHost = New StrategyHost
-    mStrategyHost.UseMoneyManagement = lUseMoneyManagement
-    mStrategyHost.ResultsPath = lResultsPath
-    mStrategyHost.SetStrategy CreateObject(lStrategyClassName), Nothing
-    mStrategyHost.PrepareSymbol lSymbol
-    Set mStrategyHost = Nothing
+'    Set mStrategyRunner = CreateStrategyRunner(Me)
+'    mStrategyRunner.UseMoneyManagement = lUseMoneyManagement
+'    mStrategyRunner.ResultsPath = lResultsPath
+'    mStrategyRunner.SetStrategy CreateObject(lStrategyClassName), Nothing
+'    mStrategyRunner.PrepareSymbol lSymbol
+'    Set mStrategyRunner = Nothing
 Else
     Set mForm = New fStrategyHost
     

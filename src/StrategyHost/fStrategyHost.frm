@@ -120,8 +120,8 @@ Begin VB.Form fStrategyHost
       TabCaption(1)   =   "Tick files"
       TabPicture(1)   =   "fStrategyHost.frx":008C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Picture3"
-      Tab(1).Control(1)=   "Picture2(1)"
+      Tab(1).Control(0)=   "Picture2(1)"
+      Tab(1).Control(1)=   "Picture3"
       Tab(1).ControlCount=   2
       TabCaption(2)   =   "Parameters"
       TabPicture(2)   =   "fStrategyHost.frx":00A8
@@ -141,60 +141,39 @@ Begin VB.Form fStrategyHost
       TabCaption(5)   =   "Results"
       TabPicture(5)   =   "fStrategyHost.frx":00FC
       Tab(5).ControlEnabled=   0   'False
-      Tab(5).Control(0)=   "TheTime"
+      Tab(5).Control(0)=   "AskSizeText"
       Tab(5).Control(0).Enabled=   0   'False
-      Tab(5).Control(1)=   "Label14"
+      Tab(5).Control(1)=   "TradeSizeText"
       Tab(5).Control(1).Enabled=   0   'False
-      Tab(5).Control(2)=   "Position"
+      Tab(5).Control(2)=   "BidSizeText"
       Tab(5).Control(2).Enabled=   0   'False
-      Tab(5).Control(3)=   "MaxProfit"
+      Tab(5).Control(3)=   "AskText"
       Tab(5).Control(3).Enabled=   0   'False
-      Tab(5).Control(4)=   "Label5"
+      Tab(5).Control(4)=   "TradeText"
       Tab(5).Control(4).Enabled=   0   'False
-      Tab(5).Control(5)=   "Label12"
+      Tab(5).Control(5)=   "BidText"
       Tab(5).Control(5).Enabled=   0   'False
-      Tab(5).Control(6)=   "Drawdown"
-      Tab(5).Control(6).Enabled=   0   'False
-      Tab(5).Control(7)=   "Profit"
-      Tab(5).Control(7).Enabled=   0   'False
-      Tab(5).Control(8)=   "Label4"
-      Tab(5).Control(8).Enabled=   0   'False
-      Tab(5).Control(9)=   "Label9"
-      Tab(5).Control(9).Enabled=   0   'False
-      Tab(5).Control(10)=   "Label10"
-      Tab(5).Control(10).Enabled=   0   'False
-      Tab(5).Control(11)=   "Label8"
-      Tab(5).Control(11).Enabled=   0   'False
-      Tab(5).Control(12)=   "Label1"
-      Tab(5).Control(12).Enabled=   0   'False
+      Tab(5).Control(6)=   "MoreButton"
+      Tab(5).Control(7)=   "Label7"
+      Tab(5).Control(8)=   "MicrosecsPerEventLabel"
+      Tab(5).Control(9)=   "EventsPerSecondLabel"
+      Tab(5).Control(10)=   "Label3"
+      Tab(5).Control(11)=   "PercentCompleteLabel"
+      Tab(5).Control(12)=   "Label2"
       Tab(5).Control(13)=   "EventsPlayedLabel"
-      Tab(5).Control(13).Enabled=   0   'False
-      Tab(5).Control(14)=   "Label2"
-      Tab(5).Control(14).Enabled=   0   'False
-      Tab(5).Control(15)=   "PercentCompleteLabel"
-      Tab(5).Control(15).Enabled=   0   'False
-      Tab(5).Control(16)=   "Label3"
-      Tab(5).Control(16).Enabled=   0   'False
-      Tab(5).Control(17)=   "EventsPerSecondLabel"
-      Tab(5).Control(17).Enabled=   0   'False
-      Tab(5).Control(18)=   "MicrosecsPerEventLabel"
-      Tab(5).Control(18).Enabled=   0   'False
-      Tab(5).Control(19)=   "Label7"
-      Tab(5).Control(19).Enabled=   0   'False
-      Tab(5).Control(20)=   "MoreButton"
-      Tab(5).Control(20).Enabled=   0   'False
-      Tab(5).Control(21)=   "BidText"
-      Tab(5).Control(21).Enabled=   0   'False
-      Tab(5).Control(22)=   "TradeText"
-      Tab(5).Control(22).Enabled=   0   'False
-      Tab(5).Control(23)=   "AskText"
-      Tab(5).Control(23).Enabled=   0   'False
-      Tab(5).Control(24)=   "BidSizeText"
-      Tab(5).Control(24).Enabled=   0   'False
-      Tab(5).Control(25)=   "TradeSizeText"
-      Tab(5).Control(25).Enabled=   0   'False
-      Tab(5).Control(26)=   "AskSizeText"
-      Tab(5).Control(26).Enabled=   0   'False
+      Tab(5).Control(14)=   "Label1"
+      Tab(5).Control(15)=   "Label8"
+      Tab(5).Control(16)=   "Label10"
+      Tab(5).Control(17)=   "Label9"
+      Tab(5).Control(18)=   "Label4"
+      Tab(5).Control(19)=   "Profit"
+      Tab(5).Control(20)=   "Drawdown"
+      Tab(5).Control(21)=   "Label12"
+      Tab(5).Control(22)=   "Label5"
+      Tab(5).Control(23)=   "MaxProfit"
+      Tab(5).Control(24)=   "Position"
+      Tab(5).Control(25)=   "Label14"
+      Tab(5).Control(26)=   "TheTime"
       Tab(5).ControlCount=   27
       Begin VB.PictureBox LogPicture 
          BorderStyle     =   0  'None
@@ -828,6 +807,7 @@ Option Explicit
 '================================================================================
 
 Implements IGenericTickListener
+Implements IStrategyHost
 Implements LogListener
 
 '================================================================================
@@ -912,15 +892,14 @@ Private WithEvents mSession                             As Session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mParams                                         As Parameters
-Private WithEvents mStrategyHost                        As StrategyHost
-Attribute mStrategyHost.VB_VarHelpID = -1
+Private mStrategyRunner                                 As StrategyRunner
+Attribute mStrategyRunner.VB_VarHelpID = -1
 
 Private mCurrTickfileIndex                              As Long
 
 Private mPriceStudyBase                                 As StudyBaseForTickDataInput
-Private WithEvents mTimeframes                          As Timeframes
-Attribute mTimeframes.VB_VarHelpID = -1
 
+Private mPriceChartTimePeriod                           As TimePeriod
 Private mPriceChartIndex                                As Long
 
 Private mProfitStudyBase                                As StudyBaseForDoubleInput
@@ -998,9 +977,9 @@ GetLogger("log").RemoveLogListener Me
 
 LogMessage "Unloading main form"
 
-If Not mStrategyHost Is Nothing Then
+If Not mStrategyRunner Is Nothing Then
     LogMessage "Stopping strategy host"
-    mStrategyHost.StopTesting
+    mStrategyRunner.StopTesting
 End If
 
 LogMessage "Finishing charts"
@@ -1057,6 +1036,273 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
+' IStrategyHost Interface Members
+'================================================================================
+
+Private Function IStrategyHost_AddStudy( _
+                ByVal pName As String, _
+                ByVal pUnderlyingStudy As IStudy, _
+                ByRef pInputValueNames() As String, _
+                Optional ByVal pParams As Parameters, _
+                Optional ByVal pNumberOfValuesToCache As Long, _
+                Optional ByVal pLibraryName As String) As IStudy
+Const ProcName As String = "IStrategyHost_AddStudy"
+On Error GoTo Err
+
+Dim lChartManager As ChartManager
+Set lChartManager = PriceChart.ChartManager
+
+Dim lStudyConfig As StudyConfiguration
+Set lStudyConfig = lChartManager.GetDefaultStudyConfiguration(pName, pLibraryName)
+
+lStudyConfig.UnderlyingStudy = pUnderlyingStudy
+
+Dim lInputValueNames() As String
+lInputValueNames = pInputValueNames
+lStudyConfig.InputValueNames = lInputValueNames
+lStudyConfig.Parameters = pParams
+lStudyConfig.StudyLibraryName = pLibraryName
+
+Dim lStudy As IStudy
+Set lStudy = lChartManager.AddStudyConfiguration(lStudyConfig)
+lChartManager.StartStudy lStudy
+
+Set IStrategyHost_AddStudy = lStudy
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IStrategyHost_AddTimeframe( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pNumberOfBarsToFetch As Long, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean) As Timeframe
+Const ProcName As String = "IStrategyHost_AddTimeframe"
+On Error GoTo Err
+
+Dim lIndex As Long
+If TickfileOrganiser1.TickfileCount <> 0 Then
+    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.Symbol, False, pNumberOfBarsToFetch)
+Else
+    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.LocalSymbol, True, pNumberOfBarsToFetch)
+End If
+
+If mPriceChartIndex = 0 Then
+    mPriceChartIndex = lIndex
+    Set mPriceChartTimePeriod = pTimePeriod
+End If
+If mPricePeriods Is Nothing Then Set mPricePeriods = PriceChart.BaseChartController.Periods
+If mBracketOrderLineSeries Is Nothing Then Set mBracketOrderLineSeries = PriceChart.BaseChartController.Regions.Item(ChartRegionNamePrice).AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerHighestUser)
+
+Set IStrategyHost_AddTimeframe = PriceChart.Timeframe
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub IStrategyHost_ContractInvalid(ByVal pMessage As String)
+MsgBox pMessage, vbCritical, "Invalid contract"
+StartButton.Enabled = True
+StopButton.Enabled = False
+End Sub
+
+Private Property Get IStrategyHost_ContractStorePrimary() As IContractStore
+Set IStrategyHost_ContractStorePrimary = gTB.ContractStorePrimary
+End Property
+
+Private Property Get IStrategyHost_ContractStoreSecondary() As IContractStore
+Set IStrategyHost_ContractStoreSecondary = gTB.ContractStoreSecondary
+End Property
+
+Private Property Get IStrategyHost_HistoricalDataStoreInput() As IHistoricalDataStore
+Set IStrategyHost_HistoricalDataStoreInput = gTB.HistoricalDataStoreInput
+End Property
+
+Private Property Get IStrategyHost_LogDummyProfitProfile() As Boolean
+IStrategyHost_LogDummyProfitProfile = IIf(DummyProfitProfileCheck = vbChecked, True, False)
+End Property
+
+Private Property Get IStrategyHost_LogParameters() As Boolean
+IStrategyHost_LogParameters = True
+End Property
+
+Private Property Get IStrategyHost_LogProfitProfile() As Boolean
+IStrategyHost_LogProfitProfile = IIf(ProfitProfileCheck = vbChecked, True, False)
+End Property
+
+Private Sub IStrategyHost_NotifyReplayCompleted()
+Const ProcName As String = "IStrategyHost_NotifyReplayCompleted"
+On Error GoTo Err
+
+mTotalElapsedSecs = mTotalElapsedSecs + mElapsedSecsCurrTickfile
+mElapsedSecsCurrTickfile = 0
+
+mTotalEvents = mTotalEvents + mEventsCurrTickfile
+mEventsCurrTickfile = 0
+
+If mTickfileIndex = TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
+    Set mPriceStudyBase = Nothing
+    StartButton.Enabled = True
+    StopButton.Enabled = False
+Else
+    mTickfileIndex = mTickfileIndex + 1
+    TickfileOrganiser1.ListIndex = mTickfileIndex
+    If SeparateSessionsCheck = vbChecked Then
+        clearFields
+        mStrategyRunner.PrepareTickFile TickfileOrganiser1.TickFileSpecifiers(mTickfileIndex)
+    End If
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategyHost_NotifyReplayEvent(ev As NotificationEventData)
+Const ProcName As String = "IStrategyHost_NotifyReplayEvent"
+On Error GoTo Err
+
+Dim lMessage As String
+
+Dim lEventCode As TickfileEventCodes
+lEventCode = ev.EventCode
+Select Case lEventCode
+Case TickfileEventFileDoesNotExist
+    lMessage = "Tickfile does not exist"
+Case TickfileEventFileIsEmpty
+    lMessage = "Tickfile is empty"
+Case TickfileEventFileIsInvalid
+    lMessage = "Tickfile is invalid"
+Case TickfileEventFileFormatNotSupported
+    lMessage = "Tickfile format is not supported"
+Case TickfileEventNoContractDetails
+    lMessage = "No contract details are available for this tickfile"
+Case TickfileEventDataSourceNotAvailable
+    lMessage = "Tickfile data source is not available"
+Case TickfileEventAmbiguousContractDetails
+    lMessage = "A unique contract for this tickfile cannot be determined"
+Case Else
+    lMessage = "An unspecified error has occurred"
+End Select
+
+If ev.EventMessage <> "" Then lMessage = lMessage & ev.EventMessage
+
+MsgBox lMessage, vbCritical, "Tickfile problem"
+StopButton.Enabled = False
+StartButton.Enabled = True
+
+mStrategyRunner.StopTesting
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategyHost_NotifyReplayProgress( _
+                ByVal pTickfileTimestamp As Date, _
+                ByVal pEventsPlayed As Long, _
+                ByVal pPercentComplete As Single)
+Const ProcName As String = "IStrategyHost_NotifyReplayProgress"
+On Error GoTo Err
+
+PercentCompleteLabel.Caption = Format(pPercentComplete, "0.0")
+
+mElapsedSecsCurrTickfile = (GetTimestamp - mReplayStartTime) * 86400
+Dim lTotalElapsedSecs As Double
+lTotalElapsedSecs = mTotalElapsedSecs + mElapsedSecsCurrTickfile
+
+mEventsCurrTickfile = pEventsPlayed
+Dim lTotalEvents As Long
+lTotalEvents = mTotalEvents + mEventsCurrTickfile
+
+EventsPlayedLabel.Caption = lTotalEvents
+EventsPerSecondLabel.Caption = Int(lTotalEvents / lTotalElapsedSecs)
+MicrosecsPerEventLabel.Caption = Int(lTotalElapsedSecs * 1000000 / lTotalEvents)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Property Get IStrategyHost_OrderSubmitterFactoryLive() As IOrderSubmitterFactory
+Set IStrategyHost_OrderSubmitterFactoryLive = gTB.OrderSubmitterFactoryLive
+End Property
+
+Private Property Get IStrategyHost_OrderSubmitterFactorySimulated() As IOrderSubmitterFactory
+Set IStrategyHost_OrderSubmitterFactorySimulated = gTB.OrderSubmitterFactorySimulated
+End Property
+
+Private Property Get IStrategyHost_RealtimeTickers() As Tickers
+Set IStrategyHost_RealtimeTickers = gTB.Tickers
+End Property
+
+Private Property Get IStrategyHost_ResultsPath() As String
+IStrategyHost_ResultsPath = ResultsPathText
+End Property
+
+Private Property Get IStrategyHost_StudyLibraryManager() As StudyLibraryManager
+Set IStrategyHost_StudyLibraryManager = gTB.StudyLibraryManager
+End Property
+
+Private Sub IStrategyHost_TickerCreated(ByVal pTicker As Ticker)
+Const ProcName As String = "IStrategyHost_TickerCreated"
+On Error GoTo Err
+
+Set mTicker = pTicker
+mTicker.AddGenericTickListener Me
+Set mContract = mTicker.ContractFuture.Value
+mSecType = mContract.Specifier.SecType
+mTickSize = mContract.TickSize
+Set mSession = mTicker.SessionFuture.Value
+
+If mPriceStudyBase Is Nothing Then
+    Set mPriceStudyBase = New StudyBaseForTickDataInput
+    mPriceStudyBase.Initialise gTB.StudyLibraryManager.CreateStudyManager( _
+                                                        mContract.SessionStartTime, _
+                                                        mContract.SessionEndTime, _
+                                                        GetTimeZone(mContract.TimeZoneName)), _
+                                mTicker.ContractFuture
+    
+    If mTicker.IsTickReplay Then
+        mFutureWaiter.Add mTicker.ClockFuture
+    Else
+        initialisePriceChart
+    End If
+Else
+    mStrategyRunner.StartReplay
+    mReplayStartTime = GetTimestamp
+End If
+If mProfitStudyBase Is Nothing Then initialiseProfitChart
+If mTradeStudyBase Is Nothing Then initialiseTradeChart
+
+Me.Caption = "TradeBuild Strategy Trader - " & _
+            StrategyCombo.Text & " - " & _
+            mContract.Specifier.LocalSymbol
+
+SSTab2.Tab = 5
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Property Get IStrategyHost_TickfileStoreInput() As ITickfileStore
+Set IStrategyHost_TickfileStoreInput = gTB.TickfileStoreInput
+End Property
+
+Private Property Get IStrategyHost_UseMoneyManagement() As Boolean
+IStrategyHost_UseMoneyManagement = IIf(NoMoneyManagement = vbChecked, False, True)
+End Property
+
+'================================================================================
 ' LogListener Interface Members
 '================================================================================
 
@@ -1109,10 +1355,10 @@ Case "position.bracketorderprofilestruct"
     
     Dim lBracketOrderLine As ChartSkil27.Line
     Set lBracketOrderLine = mBracketOrderLineSeries.Add
-    lBracketOrderLine.Point1 = NewPoint(mPricePeriods(BarStartTime(lBracketOrderProfile.StartTime, GetTimePeriod(5, TimePeriodMinute), mContract.SessionStartTime)).PeriodNumber, lBracketOrderProfile.EntryPrice)
+    lBracketOrderLine.Point1 = NewPoint(mPricePeriods(BarStartTime(lBracketOrderProfile.StartTime, mPriceChartTimePeriod, mContract.SessionStartTime)).PeriodNumber, lBracketOrderProfile.EntryPrice)
     
     Dim lLineEndBarStartTime As Date
-    lLineEndBarStartTime = BarStartTime(lBracketOrderProfile.EndTime, GetTimePeriod(5, TimePeriodMinute), mContract.SessionStartTime)
+    lLineEndBarStartTime = BarStartTime(lBracketOrderProfile.EndTime, mPriceChartTimePeriod, mContract.SessionStartTime)
     
     On Error Resume Next
     Dim lPeriod As Period
@@ -1183,7 +1429,7 @@ End Sub
 ' mFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub mFutureWaiter_WaitCompleted(ev As TWUtilities40.FutureWaitCompletedEventData)
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
@@ -1202,7 +1448,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mStrategyHost Event Handlers
+' mSession Event Handlers
 '================================================================================
 
 Private Sub mSession_SessionStarted(ev As SessionEventData)
@@ -1210,188 +1456,6 @@ Const ProcName As String = "mSession_SessionStarted"
 On Error GoTo Err
 
 mProfitStudyBase.NotifyValue mOverallProfit, mTicker.TimeStamp
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'================================================================================
-' mStrategyHost Event Handlers
-'================================================================================
-
-Private Sub mStrategyHost_ContractInvalid(ByVal pMessage As String)
-MsgBox pMessage, vbCritical, "Invalid contract"
-StartButton.Enabled = True
-StopButton.Enabled = False
-End Sub
-
-Private Sub mStrategyHost_NotifyEvent(ev As NotificationEventData)
-Const ProcName As String = "mStrategyHost_NotifyEvent"
-On Error GoTo Err
-
-Dim lMessage As String
-
-Dim lEventCode As TickfileEventCodes
-lEventCode = ev.EventCode
-Select Case lEventCode
-Case TickfileEventFileDoesNotExist
-    lMessage = "Tickfile does not exist"
-Case TickfileEventFileIsEmpty
-    lMessage = "Tickfile is empty"
-Case TickfileEventFileIsInvalid
-    lMessage = "Tickfile is invalid"
-Case TickfileEventFileFormatNotSupported
-    lMessage = "Tickfile format is not supported"
-Case TickfileEventNoContractDetails
-    lMessage = "No contract details are available for this tickfile"
-Case TickfileEventDataSourceNotAvailable
-    lMessage = "Tickfile data source is not available"
-Case TickfileEventAmbiguousContractDetails
-    lMessage = "A unique contract for this tickfile cannot be determined"
-Case Else
-    lMessage = "An unspecified error has occurred"
-End Select
-
-If ev.EventMessage <> "" Then lMessage = lMessage & ev.EventMessage
-
-MsgBox lMessage, vbCritical, "Tickfile problem"
-StopButton.Enabled = False
-StartButton.Enabled = True
-
-mStrategyHost.StopTesting
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mStrategyHost_ReplayCompleted()
-Const ProcName As String = "mStrategyHost_ReplayCompleted"
-On Error GoTo Err
-
-mTotalElapsedSecs = mTotalElapsedSecs + mElapsedSecsCurrTickfile
-mElapsedSecsCurrTickfile = 0
-
-mTotalEvents = mTotalEvents + mEventsCurrTickfile
-mEventsCurrTickfile = 0
-
-If mTickfileIndex = TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
-    Set mPriceStudyBase = Nothing
-    StartButton.Enabled = True
-    StopButton.Enabled = False
-Else
-    mTickfileIndex = mTickfileIndex + 1
-    TickfileOrganiser1.ListIndex = mTickfileIndex
-    If SeparateSessionsCheck = vbChecked Then
-        clearFields
-        mStrategyHost.PrepareTickFile TickfileOrganiser1.TickFileSpecifiers(mTickfileIndex)
-    End If
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mStrategyHost_ReplayProgress(ByVal tickfileTimestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
-Const ProcName As String = "mStrategyHost_ReplayProgress"
-On Error GoTo Err
-
-PercentCompleteLabel.Caption = Format(percentComplete, "0.0")
-
-mElapsedSecsCurrTickfile = (GetTimestamp - mReplayStartTime) * 86400
-Dim lTotalElapsedSecs As Double
-lTotalElapsedSecs = mTotalElapsedSecs + mElapsedSecsCurrTickfile
-
-mEventsCurrTickfile = eventsPlayed
-Dim lTotalEvents As Long
-lTotalEvents = mTotalEvents + mEventsCurrTickfile
-
-EventsPlayedLabel.Caption = lTotalEvents
-EventsPerSecondLabel.Caption = Int(lTotalEvents / lTotalElapsedSecs)
-MicrosecsPerEventLabel.Caption = Int(lTotalElapsedSecs * 1000000 / lTotalEvents)
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mStrategyHost_TickerCreated(ByVal pTicker As Ticker)
-Const ProcName As String = "mStrategyHost_TickerCreated"
-On Error GoTo Err
-
-Set mTicker = pTicker
-mTicker.AddGenericTickListener Me
-Set mContract = mTicker.ContractFuture.Value
-mSecType = mContract.Specifier.SecType
-mTickSize = mContract.TickSize
-Set mSession = mTicker.SessionFuture.Value
-
-If mPriceStudyBase Is Nothing Then
-    Set mPriceStudyBase = New StudyBaseForTickDataInput
-    mPriceStudyBase.Initialise gTB.StudyLibraryManager.CreateStudyManager( _
-                                                        mContract.SessionStartTime, _
-                                                        mContract.SessionEndTime, _
-                                                        GetTimeZone(mContract.TimeZoneName)), _
-                                mTicker.ContractFuture
-    
-'    Set mTimeframes = CreateTimeframes(mPriceStudyBase, _
-'                                    mTicker.ContractFuture, _
-'                                    gTB.HistoricalDataStoreInput, _
-'                                    mTicker.ClockFuture)
-    Set mTimeframes = mTicker.Timeframes
-    
-    If mTicker.IsTickReplay Then
-        mFutureWaiter.Add mTicker.ClockFuture
-    Else
-        initialisePriceChart
-    End If
-Else
-    mStrategyHost.StartReplay
-    mReplayStartTime = GetTimestamp
-End If
-If mProfitStudyBase Is Nothing Then initialiseProfitChart
-If mTradeStudyBase Is Nothing Then initialiseTradeChart
-
-Me.Caption = "TradeBuild Strategy Trader - " & _
-            StrategyCombo.Text & " - " & _
-            mContract.Specifier.LocalSymbol
-
-SSTab2.Tab = 5
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'================================================================================
-' mTimeframes Event Handlers
-'================================================================================
-
-Private Sub mTimeframes_CollectionChanged(ev As CollectionChangeEventData)
-Const ProcName As String = "mTimeframes_CollectionChanged"
-On Error GoTo Err
-
-If ev.ChangeType <> CollItemAdded Then Exit Sub
-
-Dim lTimeframe As Timeframe
-Set lTimeframe = ev.AffectedItem
-
-Dim lIndex As Long
-If TickfileOrganiser1.TickfileCount <> 0 Then
-    lIndex = PriceChart.Add(lTimeframe.TimePeriod, mContract.Specifier.Symbol, False)
-Else
-    lIndex = PriceChart.Add(lTimeframe.TimePeriod, mContract.Specifier.LocalSymbol, True)
-End If
-
-If mPriceChartIndex = 0 Then mPriceChartIndex = lIndex
-If mPricePeriods Is Nothing Then Set mPricePeriods = PriceChart.BaseChartController.Periods
 
 Exit Sub
 
@@ -1444,7 +1508,7 @@ Dim ListItem As ListItem
 Set ListItem = BracketOrderList.SelectedItem
 
 Dim PeriodNumber As Long
-PeriodNumber = mPricePeriods(BarStartTime(CDate(ListItem.SubItems(BOListColumns.ColumnStartTime - 1)), GetTimePeriod(5, TimePeriodMinute), mContract.SessionStartTime)).PeriodNumber
+PeriodNumber = mPricePeriods(BarStartTime(CDate(ListItem.SubItems(BOListColumns.ColumnStartTime - 1)), mPriceChartTimePeriod, mContract.SessionStartTime)).PeriodNumber
 PriceChart.BaseChartController.LastVisiblePeriod = _
             PeriodNumber + _
             Int((PriceChart.BaseChartController.LastVisiblePeriod - _
@@ -1497,6 +1561,24 @@ Else
     mShowingDetails = False
     MoreButton.Caption = "More >>>"
     Me.Height = minimumHeight + Me.Height - Me.ScaleHeight
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub PriceChart_ChartStateChanged(ByVal Index As Long, ev As TWUtilities40.StateChangeEventData)
+Const ProcName As String = "PriceChart_ChartStateChanged"
+On Error GoTo Err
+
+If Not mTicker.IsTickReplay Then Exit Sub
+If Index <> mPriceChartIndex Then Exit Sub
+
+If ev.State = ChartStates.ChartStateLoaded Then
+    mStrategyRunner.StartReplay
+    mReplayStartTime = GetTimestamp
 End If
 
 Exit Sub
@@ -1564,16 +1646,11 @@ mOverallProfit = 0#
 mSessionProfit = 0#
 Set mTradeBar = Nothing
 
-mStrategyHost.UseMoneyManagement = IIf(NoMoneyManagement = vbChecked, False, True)
-mStrategyHost.LogProfitProfile = IIf(ProfitProfileCheck = vbChecked, True, False)
-mStrategyHost.LogDummyProfitProfile = IIf(DummyProfitProfileCheck = vbChecked, True, False)
-mStrategyHost.ResultsPath = ResultsPathText
-
 If TickfileOrganiser1.TickfileCount <> 0 Then
     TickfileOrganiser1.ListIndex = 0
-    mStrategyHost.PrepareTickFile TickfileOrganiser1.TickFileSpecifiers(1)
+    mStrategyRunner.PrepareTickFile TickfileOrganiser1.TickFileSpecifiers(1)
 Else
-    mStrategyHost.PrepareSymbol SymbolText.Text
+    mStrategyRunner.PrepareSymbol SymbolText.Text
 End If
 
 Exit Sub
@@ -1586,7 +1663,7 @@ Private Sub StopButton_Click()
 Const ProcName As String = "StopButton_Click"
 On Error GoTo Err
 
-mStrategyHost.StopTesting
+mStrategyRunner.StopTesting
 StartButton.Enabled = True
 StopButton.Enabled = False
 
@@ -1688,24 +1765,15 @@ Private Sub initialisePriceChart(Optional ByVal pTimestamp As Date)
 Const ProcName As String = "initialisePriceChart"
 On Error GoTo Err
 
-'PriceChart.Initialise CreateTimeframes(mPriceStudyBase, _
-'                                    mTicker.ContractFuture, _
-'                                    gTB.HistoricalDataStoreInput, _
-'                                    mTicker.ClockFuture), _
-'                    gTB.HistoricalDataStoreInput.TimePeriodValidator, _
-'                    CreateChartSpecifier(200, , , pTimestamp), _
-'                    ChartStylesManager.DefaultStyle
-PriceChart.Initialise mTimeframes, _
+PriceChart.Initialise CreateTimeframes(mPriceStudyBase, _
+                                    mTicker.ContractFuture, _
+                                    gTB.HistoricalDataStoreInput, _
+                                    mTicker.ClockFuture), _
                     gTB.HistoricalDataStoreInput.TimePeriodValidator, _
-                    CreateChartSpecifier(50, , , pTimestamp), _
+                    CreateChartSpecifier(200, , , pTimestamp), _
                     ChartStylesManager.DefaultStyle
 
-mStrategyHost.StartStrategy mParams
-
-If mTicker.IsTickReplay Then
-'    mStrategyHost.StartReplay
-'    mReplayStartTime = GetTimestamp
-End If
+mStrategyRunner.StartStrategy mParams
 
 Exit Sub
 
@@ -1766,8 +1834,8 @@ On Error GoTo Err
 If StrategyCombo.Text = "" Then Exit Sub
 If StopStrategyFactoryCombo.Text = "" Then Exit Sub
 
-Set mStrategyHost = New StrategyHost
-Set mParams = mStrategyHost.SetStrategy(CreateObject(StrategyCombo.Text), CreateObject(StopStrategyFactoryCombo.Text))
+Set mStrategyRunner = CreateStrategyRunner(Me)
+Set mParams = mStrategyRunner.SetStrategy(CreateObject(StrategyCombo.Text), CreateObject(StopStrategyFactoryCombo.Text))
 
 Dim da As DataAdapter
 Set da = New DataAdapter
