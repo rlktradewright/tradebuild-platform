@@ -360,10 +360,8 @@ On Error Resume Next
 Set GetPeriod = mPeriods(pTimestamp)
 On Error GoTo Err
 
-If GetPeriod Is Nothing Then
-    Set GetPeriod = mPeriods.Add(pTimestamp)
-    mChartController.ScrollX 1
-End If
+If GetPeriod Is Nothing Then Set GetPeriod = mPeriods.Add(pTimestamp)
+
 Set sPeriod = GetPeriod
 sTimestamp = pTimestamp
 
