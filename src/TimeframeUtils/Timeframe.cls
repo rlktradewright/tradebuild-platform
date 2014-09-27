@@ -247,6 +247,8 @@ If lFetchBarsNeeded And Not mContractFuture Is Nothing And Not pHistDataStore Is
     
     
     fireStateChange TimeframeStateLoading
+Else
+    fireStateChange TimeframeStateLoaded
 End If
 
 Exit Sub
