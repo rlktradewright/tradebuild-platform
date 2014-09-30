@@ -10,15 +10,14 @@ Begin VB.UserControl MultiChart
    ScaleWidth      =   9480
    Begin TradingUI27.MarketChart TBChart 
       Align           =   1  'Align Top
-      Height          =   4335
+      Height          =   5895
       Index           =   0
       Left            =   0
-      TabIndex        =   2
+      TabIndex        =   3
       Top             =   0
-      Visible         =   0   'False
       Width           =   9480
       _ExtentX        =   16722
-      _ExtentY        =   7646
+      _ExtentY        =   10398
    End
    Begin MSComctlLib.Toolbar ControlToolbar 
       Height          =   330
@@ -67,7 +66,7 @@ Begin VB.UserControl MultiChart
       Begin TradingUI27.TimeframeSelector TimeframeSelector1 
          Height          =   330
          Left            =   0
-         TabIndex        =   3
+         TabIndex        =   2
          Top             =   0
          Width           =   1500
          _ExtentX        =   2646
@@ -553,7 +552,8 @@ End Property
 Public Function Add( _
                 ByVal pPeriodLength As TimePeriod, _
                 Optional ByVal pTitle As String, _
-                Optional ByVal pUpdatePerTick As Boolean = True) As Long
+                Optional ByVal pUpdatePerTick As Boolean = True, _
+                Optional ByVal pInitialNumberOfBars As Long = -1) As Long
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -569,7 +569,10 @@ Set lTab = addTab(pPeriodLength)
 ' the ChartStates.ChartStateInitialised and ChartStates.ChartStateLoaded events
 fireChange MultiChartAdd
 
-lChart.ShowChart mTimeframes, pPeriodLength, mSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
+Dim lChartSpec As ChartSpecifier
+Set lChartSpec = CreateChartSpecifier(IIf(pInitialNumberOfBars = -1, mSpec.InitialNumberOfBars, pInitialNumberOfBars), mSpec.IncludeBarsOutsideSession, mSpec.FromTime, mSpec.toTime)
+
+lChart.ShowChart mTimeframes, pPeriodLength, lChartSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
 
 If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
