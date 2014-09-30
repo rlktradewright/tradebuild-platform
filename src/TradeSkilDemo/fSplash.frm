@@ -1,7 +1,6 @@
 VERSION 5.00
 Begin VB.Form fSplash 
-   Appearance      =   0  'Flat
-   BackColor       =   &H80000005&
+   BackColor       =   &H00F8F8F8&
    BorderStyle     =   0  'None
    Caption         =   "Form1"
    ClientHeight    =   6240
@@ -16,91 +15,61 @@ Begin VB.Form fSplash
    ScaleWidth      =   7035
    ShowInTaskbar   =   0   'False
    StartUpPosition =   2  'CenterScreen
-   Begin VB.PictureBox Picture1 
-      BackColor       =   &H00ECECDE&
-      BorderStyle     =   0  'None
-      Height          =   1445
-      Left            =   15
-      ScaleHeight     =   1440
-      ScaleWidth      =   7005
-      TabIndex        =   0
-      Top             =   15
-      Width           =   7005
-      Begin VB.Label VersionLabel 
-         Alignment       =   2  'Center
-         BackColor       =   &H00FFFFFF&
-         BackStyle       =   0  'Transparent
-         Caption         =   "Version ?.?.?"
-         BeginProperty Font 
-            Name            =   "Tahoma"
-            Size            =   14.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Height          =   615
-         Left            =   0
-         TabIndex        =   2
-         Top             =   840
-         Width           =   6975
-      End
-      Begin VB.Label ProductLabel 
-         Alignment       =   2  'Center
-         BackColor       =   &H00FFFFFF&
-         BackStyle       =   0  'Transparent
-         Caption         =   "TradeSkil Demo Edition"
-         BeginProperty Font 
-            Name            =   "Tahoma"
-            Size            =   24
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         ForeColor       =   &H00FF0000&
-         Height          =   615
-         Left            =   0
-         TabIndex        =   1
-         Top             =   120
-         Width           =   6975
-      End
-   End
    Begin VB.TextBox LogText 
       Appearance      =   0  'Flat
-      BackColor       =   &H00000000&
+      BackColor       =   &H00F8F8F8&
       BorderStyle     =   0  'None
-      ForeColor       =   &H00FFFFFF&
-      Height          =   975
+      ForeColor       =   &H00D0D0D0&
+      Height          =   1815
       Left            =   15
       Locked          =   -1  'True
       MultiLine       =   -1  'True
-      TabIndex        =   3
+      TabIndex        =   0
       TabStop         =   0   'False
-      Top             =   5255
+      Top             =   4410
       Width           =   7005
    End
-   Begin VB.PictureBox Picture2 
-      Appearance      =   0  'Flat
-      BackColor       =   &H80000005&
-      ForeColor       =   &H80000008&
-      Height          =   6240
+   Begin VB.Label ProductLabel 
+      Alignment       =   2  'Center
+      BackColor       =   &H00FFFFFF&
+      BackStyle       =   0  'Transparent
+      Caption         =   "TradeSkil Demo Edition"
+      BeginProperty Font 
+         Name            =   "Tahoma"
+         Size            =   24
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00808080&
+      Height          =   615
       Left            =   0
-      ScaleHeight     =   6210
-      ScaleWidth      =   7005
-      TabIndex        =   4
-      Top             =   0
-      Width           =   7035
-      Begin VB.Image Image2 
-         Height          =   3795
-         Left            =   0
-         Picture         =   "fSplash.frx":0000
-         Stretch         =   -1  'True
-         Top             =   1460
-         Width           =   7005
-      End
+      TabIndex        =   2
+      Top             =   1920
+      Width           =   6975
+   End
+   Begin VB.Label VersionLabel 
+      Alignment       =   2  'Center
+      BackColor       =   &H00FFFFFF&
+      BackStyle       =   0  'Transparent
+      Caption         =   "Version ?.?.?"
+      BeginProperty Font 
+         Name            =   "Tahoma"
+         Size            =   14.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00A0A0A0&
+      Height          =   615
+      Left            =   0
+      TabIndex        =   1
+      Top             =   2640
+      Width           =   6975
    End
 End
 Attribute VB_Name = "fSplash"
