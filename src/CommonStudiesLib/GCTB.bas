@@ -128,28 +128,28 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueStyle = gCreateBarStyle
     valueDef.ValueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpen)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOpen)
     valueDef.Description = "Bar open Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&H8000&)
     valueDef.ValueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHigh)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHigh)
     valueDef.Description = "Bar high Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.ValueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueLow)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueLow)
     valueDef.Description = "Bar low Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
     valueDef.ValueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueClose)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueClose)
     valueDef.Description = "Bar close Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IsDefault = True
@@ -157,42 +157,42 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueStyle = gCreateDataPointStyle(&H80&)
     valueDef.ValueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueVolume)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueVolume)
     valueDef.Description = "Bar volume"
     valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H808080, DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueTickVolume)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueTickVolume)
     valueDef.Description = "Bar tick volume"
     valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H800000, DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpenInterest)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOpenInterest)
     valueDef.Description = "Bar open interest"
     valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H80&, DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHL2)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHL2)
     valueDef.Description = "Bar H+L/2 Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&HFF&)
     valueDef.ValueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHLC3)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHLC3)
     valueDef.Description = "Bar H+L+C/3 Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&HFF00&)
     valueDef.ValueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOHLC4)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOHLC4)
     valueDef.Description = "Bar O+H+L+C/4 Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone

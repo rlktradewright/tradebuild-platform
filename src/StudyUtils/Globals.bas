@@ -44,7 +44,7 @@ Public Const ConstTickVolumeBarsStudyName       As String = "Constant Tick Volum
 Public Const ConstTickVolumeBarsStudyShortName  As String = "CTV Bars"
 Public Const ConstTickVolumeBarsParamTicksPerBar As String = "Ticks per bar"
 
-Public Const ConstTimeBarsStudyName             As String = "Constant time bars"
+Public Const ConstTimeBarsStudyName             As String = "Constant Time Bars"
 Public Const ConstTimeBarsStudyShortName        As String = "Bars"
 Public Const ConstTimeBarsParamBarLength        As String = "Bar length"
 Public Const ConstTimeBarsParamTimeUnits        As String = "Time units"
@@ -53,15 +53,27 @@ Public Const ConstVolumeBarsStudyName           As String = "Constant Volume bar
 Public Const ConstVolumeBarsStudyShortName      As String = "CV Bars"
 Public Const ConstVolumeBarsParamVolPerBar      As String = "Volume per bar"
 
-Public Const ConstMomentumBarsStudyName         As String = "Constant momentum bars"
+Public Const ConstMomentumBarsStudyName         As String = "Constant Momentum Bars"
 Public Const ConstMomentumBarsStudyShortName    As String = "CM Bars"
 Public Const ConstMomentumBarsParamTicksPerBar  As String = "Ticks move per bar"
 
-Public Const UserDefinedBarsStudyName           As String = "User-defined bars"
-Public Const UserDefinedBarsStudyShortName      As String = "UD bars"
+Public Const UserDefinedBarsStudyName           As String = "User-defined Bars"
+Public Const UserDefinedBarsStudyShortName      As String = "UD Bars"
 
 Public Const DefaultStudyValueNameStr           As String = "$DEFAULT"
 Public Const MovingAverageStudyValueNameStr     As String = "MA"
+
+' sub-Value names for study values in bar mode
+Public Const BarStudyValueOpen                  As String = "Open"
+Public Const BarStudyValueHigh                  As String = "High"
+Public Const BarStudyValueLow                   As String = "Low"
+Public Const BarStudyValueClose                 As String = "Close"
+Public Const BarStudyValueVolume                As String = "Volume"
+Public Const BarStudyValueTickVolume            As String = "Tick Volume"
+Public Const BarStudyValueOpenInterest          As String = "Open Interest"
+Public Const BarStudyValueHL2                   As String = "(H+L)/2"
+Public Const BarStudyValueHLC3                  As String = "(H+L+C)/3"
+Public Const BarStudyValueOHLC4                 As String = "(O+H+L+C)/4"
 
 Public Const StudyLibrariesRenderer             As String = "StudiesUI27.StudyLibConfigurer"
 

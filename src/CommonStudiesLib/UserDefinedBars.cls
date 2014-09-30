@@ -62,6 +62,9 @@ Private mStudyFoundation As StudyFoundation
 Private mBarsBuilder As BarsBuilder
 Private mBarNumber As Long
 
+Private WithEvents mBarStudySupport As BarStudySupport
+Attribute mBarStudySupport.VB_VarHelpID = -1
+
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
 Private WithEvents mBar As Bar
@@ -83,10 +86,6 @@ Private mInitialBarsFutureSupplied As Boolean
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
-End Sub
-
 Private Sub Class_Terminate()
 Debug.Print "User Defined Bars study terminated"
 End Sub
@@ -99,7 +98,7 @@ Private Property Get IBarStudy_BarsFuture() As IFuture
 Const ProcName As String = "IBarStudy_BarsFuture"
 On Error GoTo Err
 
-Set IBarStudy_BarsFuture = mBarsFutureBuilder.Future
+Set IBarStudy_BarsFuture = mBarStudySupport.BarsFuture
 
 Exit Property
 
@@ -111,7 +110,7 @@ Private Property Get IBarStudy_CloseValueName() As String
 Const ProcName As String = "IBarStudy_CloseValueName"
 On Error GoTo Err
 
-IBarStudy_CloseValueName = BarValueClose
+IBarStudy_CloseValueName = BarStudyValueClose
 
 Exit Property
 
@@ -123,7 +122,7 @@ Private Property Get IBarStudy_HighValueName() As String
 Const ProcName As String = "IBarStudy_HighValueName"
 On Error GoTo Err
 
-IBarStudy_HighValueName = BarValueHigh
+IBarStudy_HighValueName = BarStudyValueHigh
 
 Exit Property
 
@@ -135,10 +134,7 @@ Private Property Get IBarStudy_InitialBarFetchListener() As IBarFetchListener
 Const ProcName As String = "IBarStudy_InitialBarFetchListener"
 On Error GoTo Err
 
-Assert Not mInitialBarsFutureSupplied, "Initial bars future has been supplied"
-
-If mBarFetchListener Is Nothing Then Set mBarFetchListener = New BarFetchListener
-Set IBarStudy_InitialBarFetchListener = mBarFetchListener
+Set IBarStudy_InitialBarFetchListener = mBarStudySupport.InitialBarFetchListener
 
 Exit Property
 
@@ -150,17 +146,7 @@ Private Property Let IBarStudy_InitialBarsFuture(ByVal Value As IFuture)
 Const ProcName As String = "IBarStudy_InitialBarsFuture"
 On Error GoTo Err
 
-Assert mBarFetchListener Is Nothing, "Bar fetch listener has been requested - initial bars future cannot be supplied"
-
-mInitialBarsFutureSupplied = True
-
-Set mBarsFutureBuilder = New FutureBuilder
-If Value.IsAvailable Then
-    setupBars CreateBarsBuilderWithInitialBars(Value.Value, Nothing, mValueTickSize)
-Else
-    mFutureWaiter.Clear
-    mFutureWaiter.Add CreateBarsBuilderWithInitialBarsFuture(Value, Nothing, mValueTickSize)
-End If
+mBarStudySupport.InitialBarsFuture = Value
 
 Exit Property
 
@@ -172,7 +158,7 @@ Private Property Get IBarStudy_LowValueName() As String
 Const ProcName As String = "IBarStudy_LowValueName"
 On Error GoTo Err
 
-IBarStudy_LowValueName = BarValueLow
+IBarStudy_LowValueName = BarStudyValueLow
 
 Exit Property
 
@@ -184,7 +170,7 @@ Private Property Get IBarStudy_OpenValueName() As String
 Const ProcName As String = "IBarStudy_OpenValueName"
 On Error GoTo Err
 
-IBarStudy_OpenValueName = BarValueOpen
+IBarStudy_OpenValueName = BarStudyValueOpen
 
 Exit Property
 
@@ -201,23 +187,6 @@ Const ProcName As String = "mBar_Changed"
 On Error GoTo Err
 
 notifyBarValues
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mBarFetchListener Event Handlers
-'@================================================================================
-
-Private Sub mBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)
-Const ProcName As String = "mBarFetchListener_NotifyBar"
-On Error GoTo Err
-
-mBarsBuilder.AddThisBar pBar
-mTimestamp = pBar.Timestamp
 
 Exit Sub
 
@@ -245,14 +214,14 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mFutureWaiter Event Handlers
+' mBarStudySupport Event Handlers
 '@================================================================================
 
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
+Private Sub mBarStudySupport_BarsAvailable(ByVal pBars As Bars)
+Const ProcName As String = "mBarStudySupport_BarsAvailable"
 On Error GoTo Err
 
-If ev.Future.IsAvailable Then setupBars ev.Future.Value
+Set mBars = pBars
 
 Exit Sub
 
@@ -300,21 +269,21 @@ sv.Timestamp = Bar.Timestamp
 Select Case UCase$(valueName)
 Case UCase$(UserDefinedBarsValueBar)
     Set sv.Value = Bar
-Case UCase$(BarValueOpen)
+Case UCase$(BarStudyValueOpen)
         sv.Value = Bar.OpenValue
-Case UCase$(BarValueHigh)
+Case UCase$(BarStudyValueHigh)
         sv.Value = Bar.highValue
-Case UCase$(BarValueLow)
+Case UCase$(BarStudyValueLow)
         sv.Value = Bar.lowValue
-Case UCase$(BarValueClose), UCase$(DefaultStudyValueName)
+Case UCase$(BarStudyValueClose), UCase$(DefaultStudyValueName)
         sv.Value = Bar.CloseValue
-Case UCase$(BarValueTickVolume)
+Case UCase$(BarStudyValueTickVolume)
         sv.Value = Bar.TickVolume
-Case UCase$(BarValueHL2)
+Case UCase$(BarStudyValueHL2)
         sv.Value = Bar.HL2
-Case UCase$(BarValueHLC3)
+Case UCase$(BarStudyValueHLC3)
         sv.Value = Bar.HLC3
-Case UCase$(BarValueOHLC4)
+Case UCase$(BarStudyValueOHLC4)
         sv.Value = Bar.OHLC4
 End Select
 
@@ -338,7 +307,7 @@ mTimestamp = ev.sVal.Timestamp
 ev.valueName = UCase$(ev.valueName)
 If ev.valueName = UserDefinedBarsInputValueUCase Then
     ev.sVal.BarNumber = mBarNumber
-    mBarsBuilder.notifyValue ev.sVal
+    mBarStudySupport.BarsBuilder.notifyValue ev.sVal
 ElseIf ev.valueName = UserDefinedBarsInputBarNumberUCase Then
     Assert ev.sVal.Value = mBarNumber + 1, "Bar number out of sequence"
     mBarNumber = ev.sVal.Value
@@ -368,10 +337,8 @@ Private Sub customProcessParameters(ByVal params As Parameters)
 Const ProcName As String = "customProcessParameters"
 On Error GoTo Err
 
-Set mBarsFutureBuilder = New FutureBuilder
-setupBars CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
-                                    Nothing, _
-                                    mValueTickSize)
+Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(0, TimePeriodNone), Nothing, mValueTickSize)
+If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
 
 Exit Sub
 
@@ -436,49 +403,49 @@ End If
 
 If mBar.OpenChanged Then
     evOut.sVal.Value = mBar.OpenValue
-    evOut.valueName = BarValueOpen
+    evOut.valueName = BarStudyValueOpen
     mStudyFoundation.notifyValue evOut
 End If
 
 If mBar.HighChanged Then
     evOut.sVal.Value = mBar.highValue
-    evOut.valueName = BarValueHigh
+    evOut.valueName = BarStudyValueHigh
     mStudyFoundation.notifyValue evOut
 End If
 
 If mBar.LowChanged Then
     evOut.sVal.Value = mBar.lowValue
-    evOut.valueName = BarValueLow
+    evOut.valueName = BarStudyValueLow
     mStudyFoundation.notifyValue evOut
 End If
 
 If mBar.CloseChanged Then
     evOut.sVal.Value = mBar.CloseValue
-    evOut.valueName = BarValueClose
+    evOut.valueName = BarStudyValueClose
     mStudyFoundation.notifyValue evOut
 End If
 
 If mBar.BarChanged Then
     evOut.sVal.Value = mBar.TickVolume
-    evOut.valueName = BarValueTickVolume
+    evOut.valueName = BarStudyValueTickVolume
     mStudyFoundation.notifyValue evOut
 End If
 
 If mBar.HighChanged Or mBar.LowChanged Then
     evOut.sVal.Value = mBar.HL2
-    evOut.valueName = BarValueHL2
+    evOut.valueName = BarStudyValueHL2
     mStudyFoundation.notifyValue evOut
 End If
 
 If mBar.HighChanged Or mBar.LowChanged Or mBar.CloseChanged Then
     evOut.sVal.Value = mBar.HLC3
-    evOut.valueName = BarValueHLC3
+    evOut.valueName = BarStudyValueHLC3
     mStudyFoundation.notifyValue evOut
 End If
 
 If mBar.OpenChanged Or mBar.HighChanged Or mBar.LowChanged Or mBar.CloseChanged Then
     evOut.sVal.Value = mBar.OHLC4
-    evOut.valueName = BarValueOHLC4
+    evOut.valueName = BarStudyValueOHLC4
     mStudyFoundation.notifyValue evOut
 End If
 
@@ -590,15 +557,15 @@ Const ProcName As String = "IStudy_GetValueTicksize"
 On Error GoTo Err
 
 Select Case UCase$(valueName)
-Case UCase$(BarValueOpen), _
-    UCase$(BarValueHigh), _
-    UCase$(BarValueLow), _
-    UCase$(BarValueClose), _
+Case UCase$(BarStudyValueOpen), _
+    UCase$(BarStudyValueHigh), _
+    UCase$(BarStudyValueLow), _
+    UCase$(BarStudyValueClose), _
     UCase$(DefaultStudyValueName)
     IStudy_GetValueTicksize = mValueTickSize
-Case UCase$(BarValueVolume)
+Case UCase$(BarStudyValueVolume)
     IStudy_GetValueTicksize = 0
-Case UCase$(BarValueTickVolume)
+Case UCase$(BarStudyValueTickVolume)
     IStudy_GetValueTicksize = 1
 End Select
 

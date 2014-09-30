@@ -614,11 +614,6 @@ End Property
 '@================================================================================
 
 Private Sub calcTrendDirection()
-Dim latestSwingLow As Double
-Dim prevSwingLow As Double
-Dim latestSwingHigh As Double
-Dim prevSwingHigh As Double
-
 Const ProcName As String = "calcTrendDirection"
 On Error GoTo Err
 
@@ -627,16 +622,27 @@ mTrend = TrendUnknown
 If mSwingHighCache.Count < 2 Then Exit Sub
 If mSwingLowCache.Count < 2 Then Exit Sub
 
+Dim latestSwingLow As SwingPoint
 latestSwingLow = SwingLow(0).Value
-prevSwingLow = SwingLow(-1).Value
-latestSwingHigh = SwingHigh(0).Value
-prevSwingHigh = SwingHigh(-1).Value
+If IsEmpty(latestSwingLow.Value) Then Exit Sub
 
-If (mSwingHigh.Value > latestSwingHigh Or latestSwingHigh > prevSwingHigh) And _
-    mSwingLow.Value >= latestSwingLow And latestSwingLow >= prevSwingLow Then
+Dim prevSwingLow As SwingPoint
+prevSwingLow = SwingLow(-1).Value
+If IsEmpty(prevSwingLow.Value) Then Exit Sub
+
+Dim latestSwingHigh As SwingPoint
+latestSwingHigh = SwingHigh(0).Value
+If IsEmpty(latestSwingHigh.Value) Then Exit Sub
+
+Dim prevSwingHigh As SwingPoint
+prevSwingHigh = SwingHigh(-1).Value
+If IsEmpty(prevSwingHigh.Value) Then Exit Sub
+
+If (mSwingHigh.Value > latestSwingHigh.Value Or latestSwingHigh.Value > prevSwingHigh.Value) And _
+    mSwingLow.Value >= latestSwingLow.Value And latestSwingLow.Value >= prevSwingLow.Value Then
     mTrend = TrendDirections.TrendUp
-ElseIf (mSwingLow.Value < latestSwingLow Or latestSwingLow < prevSwingLow) And _
-    mSwingHigh.Value <= latestSwingHigh And latestSwingHigh < prevSwingHigh Then
+ElseIf (mSwingLow.Value < latestSwingLow.Value Or latestSwingLow.Value < prevSwingLow.Value) And _
+    mSwingHigh.Value <= latestSwingHigh.Value And latestSwingHigh.Value < prevSwingHigh.Value Then
     mTrend = TrendDirections.TrendDown
 Else
     mTrend = TrendDirections.TrendSideways

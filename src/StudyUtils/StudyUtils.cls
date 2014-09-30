@@ -228,6 +228,46 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function BarStudyValueOpen() As String
+BarStudyValueOpen = Globals.BarStudyValueOpen
+End Function
+
+Public Function BarStudyValueHigh() As String
+BarStudyValueHigh = Globals.BarStudyValueHigh
+End Function
+
+Public Function BarStudyValueLow() As String
+BarStudyValueLow = Globals.BarStudyValueLow
+End Function
+
+Public Function BarStudyValueClose() As String
+BarStudyValueClose = Globals.BarStudyValueClose
+End Function
+
+Public Function BarStudyValueVolume() As String
+BarStudyValueVolume = Globals.BarStudyValueVolume
+End Function
+
+Public Function BarStudyValueTickVolume() As String
+BarStudyValueTickVolume = Globals.BarStudyValueTickVolume
+End Function
+
+Public Function BarStudyValueOpenInterest() As String
+BarStudyValueOpenInterest = Globals.BarStudyValueOpenInterest
+End Function
+
+Public Function BarStudyValueHL2() As String
+BarStudyValueHL2 = Globals.BarStudyValueHL2
+End Function
+
+Public Function BarStudyValueHLC3() As String
+BarStudyValueHLC3 = Globals.BarStudyValueHLC3
+End Function
+
+Public Function BarStudyValueOHLC4() As String
+BarStudyValueOHLC4 = Globals.BarStudyValueOHLC4
+End Function
+
 Public Function CreateBarStudy( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pStudyBase As IStudyBase, _
@@ -255,6 +295,22 @@ Else
         Set CreateBarStudy = setupConstantVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
     End Select
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateBarStudySupport( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pSessionFuture As IFuture, _
+                ByVal pPriceTickSize As Double) As BarStudySupport
+Const ProcName As String = "CreateBarStudySupport"
+On Error GoTo Err
+
+Set CreateBarStudySupport = New BarStudySupport
+CreateBarStudySupport.Initialise pTimePeriod, pSessionFuture, pPriceTickSize
 
 Exit Function
 

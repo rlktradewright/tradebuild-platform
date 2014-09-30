@@ -26,6 +26,7 @@ Option Explicit
 ' Events
 '@================================================================================
 
+Event BarsAvailable(ByVal pBars As Bars)
 Event InitialBarsLoaded()
 
 '@================================================================================
@@ -60,7 +61,7 @@ Private mBarsFutureBuilder                          As FutureBuilder
 
 Private mSessionFuture                              As IFuture
 
-Private mVolumeTickSize                             As Double
+Private mPriceTickSize                              As Double
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -89,6 +90,7 @@ Const ProcName As String = "mBarFetchListener_FetchCompleted"
 On Error GoTo Err
 
 mInitialBarsReceived = True
+RaiseEvent InitialBarsLoaded
 
 Exit Sub
 
@@ -129,6 +131,26 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get Bars() As Bars
+Set Bars = mBars
+End Property
+
+Public Property Get BarsBuilder() As BarsBuilder
+Set BarsBuilder = mBarsBuilder
+End Property
+
+Public Property Get BarsFuture() As IFuture
+Const ProcName As String = "BarsFuture"
+On Error GoTo Err
+
+Set BarsFuture = mBarsFutureBuilder.Future
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get InitialBarFetchListener() As IBarFetchListener
 Const ProcName As String = "InitialBarFetchListener"
 On Error GoTo Err
@@ -145,7 +167,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Let InitialBarsFuture(ByVal Value As IFuture)
+Public Property Let InitialBarsFuture(ByVal Value As IFuture)
 Const ProcName As String = "InitialBarsFuture"
 On Error GoTo Err
 
@@ -167,6 +189,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get IsReady() As Boolean
+IsReady = mBarFetchListener Is Nothing Or mInitialBarsReceived
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -179,16 +205,21 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mSessionFuture = pSessionFuture
+mPriceTickSize = pPriceTickSize
 
 Set mBarsFutureBuilder = New FutureBuilder
-If mSessionFuture.IsAvailable Then
+If pTimePeriod.Length = 0 Then
+    setupBars CreateBarsBuilder(pTimePeriod, _
+                                Nothing, _
+                                mPriceTickSize)
+ElseIf mSessionFuture.IsAvailable Then
     setupBars CreateBarsBuilder(pTimePeriod, _
                                 mSessionFuture.Value, _
-                                pPriceTickSize)
+                                mPriceTickSize)
 Else
     mFutureWaiter.Add CreateBarsBuilderFuture(pTimePeriod, _
                                         mSessionFuture, _
-                                        pPriceTickSize)
+                                        mPriceTickSize)
 End If
 
 Exit Sub
@@ -210,6 +241,8 @@ Set mBars = mBarsBuilder.Bars
 
 mBarsFutureBuilder.Value = mBars
 mBarsFutureBuilder.Complete
+
+RaiseEvent BarsAvailable(mBars)
 
 Exit Sub
 
