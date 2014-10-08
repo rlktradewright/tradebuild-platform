@@ -986,6 +986,11 @@ fireChange BracketOrderEntryOrderChanged
 
 processExecution pExec
 
+If Not mCancelTLI Is Nothing Then
+    mCancelTLI.Cancel
+    Set mCancelTLI = Nothing
+End If
+
 mCancelPrice = 0
 
 logOrderMessage "Entry order fill (id=" & _
@@ -2016,10 +2021,8 @@ On Error GoTo Err
 
 mCancelPrice = 0
 If Not mCancelTLI Is Nothing Then
-    If mCancelTLI.State = TimerListItemStatePending Then
-        mCancelTLI.Cancel
-        Set mCancelTLI = Nothing
-    End If
+    If mCancelTLI.State = TimerListItemStatePending Then mCancelTLI.Cancel
+    Set mCancelTLI = Nothing
 End If
 
 If evenIfFilled Then
