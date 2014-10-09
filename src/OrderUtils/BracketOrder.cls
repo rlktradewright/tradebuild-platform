@@ -2322,7 +2322,7 @@ Select Case mEntryOrder.OrderType
 End Select
 
 If Value <> mEntryOrder.LimitPrice Then
-    logOrderMessage "Set entry price=" & priceToString(Value)
+    logOrderMessage "Set entry price=" & gPriceToString(Value, mContract)
     mNewEntryPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2358,7 +2358,7 @@ Select Case mEntryOrder.OrderType
 End Select
 
 If Value <> mEntryOrder.TriggerPrice Then
-    logOrderMessage "Set entry trigger price=" & priceToString(Value)
+    logOrderMessage "Set entry trigger price=" & gPriceToString(Value, mContract)
     mNewEntryTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2520,7 +2520,7 @@ Case Else
 End Select
 
 If Value <> mStopLossOrder.LimitPrice Then
-    logOrderMessage "Set stop price=" & priceToString(Value)
+    logOrderMessage "Set stop price=" & gPriceToString(Value, mContract)
     mNewStopLossPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2583,7 +2583,7 @@ Select Case mStopLossOrder.OrderType
 End Select
 
 If Value <> mStopLossOrder.TriggerPrice Then
-    logOrderMessage "Set stop trigger price=" & priceToString(Value)
+    logOrderMessage "Set stop trigger price=" & gPriceToString(Value, mContract)
     mNewStopLossTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2618,7 +2618,7 @@ Case Else
 End Select
 
 If Value <> mTargetOrder.LimitPrice Then
-    logOrderMessage "Set target price=" & priceToString(Value)
+    logOrderMessage "Set target price=" & gPriceToString(Value, mContract)
     mNewTargetPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2709,7 +2709,7 @@ Case Else
 End Select
 
 If Value <> mTargetOrder.TriggerPrice Then
-    logOrderMessage "Set target trigger price=" & priceToString(Value)
+    logOrderMessage "Set target trigger price=" & gPriceToString(Value, mContract)
     mNewTargetTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2726,18 +2726,21 @@ Public Function ToString() As String
 Const ProcName As String = "ToString"
 On Error GoTo Err
 
-ToString = gOrderActionToString(mEntryOrder.Action) & " " & mEntryOrder.Quantity & " at " & _
-        gOrderTypeToString(mEntryOrder.OrderType) & " " & _
-        IIf(mEntryOrder.TriggerPrice <> 0, "(" & mEntryOrder.TriggerPrice & ")", "")
+ToString = gOrderActionToString(mEntryOrder.Action) & " " & _
+            mEntryOrder.Quantity & " " & _
+            gGetOrderTypeAndPricesString(mEntryOrder, mContract)
+
+ToString = ToString & "; "
 If Not mStopLossOrder Is Nothing Then
     ToString = ToString & _
-        ", stop " & IIf(mStopLossOrder.OrderType = OrderTypeAutoStop, "AUTO(" & mStopLossOrder.Offset * mContract.TickSize & ")", mStopLossOrder.TriggerPrice)
+            gGetOrderTypeAndPricesString(mStopLossOrder, mContract)
 End If
+
+ToString = ToString & "; "
 If Not mTargetOrder Is Nothing Then
     ToString = ToString & _
-        ", target " & IIf(mTargetOrder.OrderType = OrderTypeAutoLimit, "AUTO(" & mTargetOrder.Offset * mContract.TickSize & ")", mTargetOrder.LimitPrice)
+        gGetOrderTypeAndPricesString(mTargetOrder, mContract)
 End If
-ToString = ToString & "(id=" & mKey & ")"
 
 Exit Function
 
@@ -3113,7 +3116,7 @@ For Each lAction In pActions
     Case OpActions.ActCancelTimeout
         doActions = cancelStateTimeout
     Case OpActions.ActLog
-        gLog "Stimulus " & pStimulus & " occurred in state " & pPreviousState, ProcName, ModuleName, , LogLevelSevere
+        gLog "Stimulus " & gOpStimuliToString(pStimulus) & " occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mKey & ")", ProcName, ModuleName, , LogLevelSevere
         doActions = Empty
     Case Else
         Assert False, "Invalid Action " & lAction
@@ -3258,7 +3261,8 @@ For i = 0 To UBound(lActions)
     lActionsString = lActionsString & gOpActionsToString(lActions(i)) & IIf(i = UBound(lActions), "", ",")
 Next
 
-gLog "Handling bracket order stimulus: prior state=" & gBracketOrderStatesToString(lPrevState) & _
+gLog "Handling bracket order stimulus (" & mKey & "): " & vbCrLf & _
+                "    prior state=" & gBracketOrderStatesToString(lPrevState) & _
                 "; stimulus=" & gOpStimuliToString(pStimulus) & _
                 "; conditions=" & gOpConditionsToString(lConditions) & _
                 "; new state=" & gBracketOrderStatesToString(mStateEngine.State) & _
@@ -3288,13 +3292,13 @@ Dim lTimePart As String
 If mDataSource Is Nothing Then
 ElseIf mDataSource.State <> MarketDataSourceStateRunning Then
 Else
-    If mDataSource.IsTickReplay Then lTimePart = FormatTimestamp(mDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+    If mDataSource.IsTickReplay Then lTimePart = FormatTimestamp(mDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "  "
     If mDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
-        lTickPart = "Curr price=" & priceToString(mDataSource.CurrentTick(TickTypeTrade).Price) & "; "
+        lTickPart = "Curr price=" & gPriceToString(mDataSource.CurrentTick(TickTypeTrade).Price, mContract) & "; "
     End If
 End If
 
-gLogOrder lTimePart & "  " & pMessage & " (" & lTickPart & "id=" & Key & ")", _
+gLogOrder lTimePart & pMessage & " (" & lTickPart & "id=" & Key & ")", _
         mIsSimulated, _
         Me
 
@@ -3381,18 +3385,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function priceToString(ByVal pPrice As Double) As String
-Const ProcName As String = "priceToString"
-On Error GoTo Err
-
-priceToString = FormatPrice(pPrice, mContract.Specifier.SecType, mContract.TickSize)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Sub processExecution( _
                 ByVal pExec As IExecutionReport)

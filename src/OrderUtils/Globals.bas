@@ -411,6 +411,63 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gGetOrderTypeAndPricesString( _
+                ByVal pOrder As IOrder, _
+                ByVal pContract As IContract) As String
+Const ProcName As String = "gGetOrderTypeAndPricesString"
+On Error GoTo Err
+
+Dim s As String
+s = gOrderTypeToShortString(pOrder.OrderType)
+
+Select Case pOrder.OrderType
+Case OrderTypeLimit, _
+        OrderTypeLimitOnClose, _
+        OrderTypeMarketToLimit, _
+        OrderTypeLimitOnOpen
+    s = s & " " & gPriceToString(pOrder.LimitPrice, pContract)
+Case OrderTypeStop, _
+        OrderTypeMarketIfTouched
+    s = s & " " & gPriceToString(pOrder.TriggerPrice, pContract)
+Case OrderTypeStopLimit, _
+        OrderTypeLimitIfTouched
+    s = s & " " & gPriceToString(pOrder.LimitPrice, pContract) & _
+        " " & gPriceToString(pOrder.TriggerPrice, pContract)
+Case OrderTypeTrail
+
+Case OrderTypeRelative
+
+Case OrderTypeVWAP
+
+Case OrderTypeQuote
+
+Case OrderTypeAutoStop
+
+Case OrderTypeAutoLimit
+
+Case OrderTypeAdjust
+
+Case OrderTypeAlert
+
+Case OrderTypeTrailLimit
+
+Case OrderTypeMarketWithProtection
+
+Case OrderTypeMarketOnOpen
+
+Case OrderTypePeggedToPrimary
+
+End Select
+
+gGetOrderTypeAndPricesString = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
+End Function
+
 Public Function gGetSignedQuantity(ByVal pExec As IExecutionReport) As Long
 gGetSignedQuantity = IIf(pExec.Action = OrderActionBuy, pExec.Quantity, -pExec.Quantity)
 End Function
@@ -1055,6 +1112,20 @@ Case OrderTypes.OrderTypeAutoStop
 Case Else
     AssertArgument False, "Value is not a valid Order Type"
 End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gPriceToString( _
+                ByVal pPrice As Double, _
+                ByVal pContract As IContract) As String
+Const ProcName As String = "gPriceToString"
+On Error GoTo Err
+
+gPriceToString = FormatPrice(pPrice, pContract.Specifier.SecType, pContract.TickSize)
 
 Exit Function
 
