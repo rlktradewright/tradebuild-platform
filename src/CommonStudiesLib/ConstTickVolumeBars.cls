@@ -739,7 +739,7 @@ On Error GoTo Err
 
 If UCase$(inputName) = UCase$(ConstTickVolumeBarsInputPrice) Then
     mPriceTickSize = tickSize
-    If Not mBarStudySupport.BarsBuilder Is Nothing Then
+    If Not mBarStudySupport Is Nothing Then
         ' this can happen if this study is set up before the tick size is
         ' known
         mBarStudySupport.BarsBuilder.tickSize = mPriceTickSize
