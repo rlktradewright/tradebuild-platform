@@ -152,11 +152,11 @@ If Not S.UseIntermediateStops Then
     End If
 End If
 
-If mBracketOrder.State = BracketOrderStateClosed Then
-    mContext.StopTickData Me
-    Set mBracketOrder = Nothing
-    Exit Sub
-End If
+'If mBracketOrder.State = BracketOrderStateClosed Then
+'    mContext.StopTickData Me
+'    Set mBracketOrder = Nothing
+'    Exit Sub
+'End If
 
 ' NB: can't maintain current stop in a static
 ' variable, since stops may be altered by other
@@ -675,14 +675,14 @@ Private Sub mBracketOrder_Completed()
 Const ProcName As String = "mBracketOrder_Completed"
 On Error GoTo Err
 
-mContext.StopTickData Me
+If mReceivingTicks Then mContext.StopTickData Me
 mReceivingTicks = False
 Set mBracketOrder = Nothing
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mBracketOrder_EntryOrderPartiallyFilled()
@@ -707,6 +707,7 @@ If S.RewardToRiskRatio <> 0 Then
 End If
 
 If Not mReceivingTicks Then
+    mReceivingTicks = True
     mContext.StartTickData Me
     mHighest = mBars.CloseValue
     mLowest = mHighest
@@ -789,7 +790,7 @@ If mInitialReferencePrice = 0 Then Stop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -801,6 +802,9 @@ If val Then mTrailStop = True
 End Property
 
 Public Property Let ReferencePoint(ByRef Value As SwingPoint)
+Const ProcName As String = "ReferencePoint"
+On Error GoTo Err
+
 mReferencePrice = Value.Value
 mReferenceBar = Value.BarNumber
 mInitialReferencePrice = Value.Value
@@ -808,6 +812,11 @@ mLowest = mReferencePrice
 mHighest = mReferencePrice
 mSwingCount = 0
 mRestartCount = 0
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================

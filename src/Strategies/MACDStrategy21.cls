@@ -363,7 +363,7 @@ If mPositionManagerDummy.PositionSize <> 0 Then Exit Sub
 If mCurrColour = Red Then
     sell getTriggerPriceShort, "signs of weakness: current colour=Red"
 ElseIf (mCurrColour = Pink And mPrevColour = Green) Then
-    sell getTriggerPriceShort, "signs of weakness: current colour=Pink; prev colur=Green"
+    sell getTriggerPriceShort, "signs of weakness: current colour=Pink; prev colour=Green"
 ElseIf mCurrColour = Green Then
     buy getTriggerPriceLong, "signs of strength: current colour=Green"
 ElseIf (mCurrColour = Amber And mPrevColour = Red) Then
@@ -409,11 +409,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getTriggerPriceLong() As Double
-getTriggerPriceLong = mBars.CloseValue(-1) - mEntryBreakoutThresholdTicks * mTickSize
+getTriggerPriceLong = mBars.CloseValue(-1) + mEntryBreakoutThresholdTicks * mTickSize
 End Function
 
 Private Function getTriggerPriceShort() As Double
-getTriggerPriceShort = mBars.CloseValue(-1) + mEntryBreakoutThresholdTicks * mTickSize
+getTriggerPriceShort = mBars.CloseValue(-1) - mEntryBreakoutThresholdTicks * mTickSize
 End Function
 
 Private Function okToBuy(ByVal triggerPrice As Double) As Boolean
@@ -422,23 +422,23 @@ On Error GoTo Err
 
 okToBuy = True
 
-Dim lSwingLow As SValue
-lSwingLow = mSwing.SwingLow(-1)
+Dim lSwingLowPoint As SwingPoint
+lSwingLowPoint = mSwing.SwingLowPoint(0)
 
-Dim lPotentialSwingLow As SValue
-lPotentialSwingLow = mSwing.SwingLow(0)
+Dim lPotentialSwingLowPoint As SwingPoint
+lPotentialSwingLowPoint = mSwing.PotentialSwingLowPoint
 
-If mBarNumber - lSwingLow.BarNumber > 3 Then
-    If lPotentialSwingLow.Value.Value = MaxDouble Then
-        mContext.LogTradeReason "    reject: more than 3 Bars since swing low at " & FormatTimestamp(lSwingLow.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+If mBarNumber - lSwingLowPoint.BarNumber > 3 Then
+    If lPotentialSwingLowPoint.Value = MaxDouble Then
+        mContext.LogTradeReason "    reject: more than 3 Bars since swing low at " & FormatTimestamp(lSwingLowPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
         okToBuy = False
-    ElseIf mBarNumber - lPotentialSwingLow.BarNumber > 3 Then
-        mContext.LogTradeReason "    reject: more than 3 Bars since potential swing low at " & FormatTimestamp(lPotentialSwingLow.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+    ElseIf mBarNumber - lPotentialSwingLowPoint.BarNumber > 3 Then
+        mContext.LogTradeReason "    reject: more than 3 Bars since potential swing low at " & FormatTimestamp(lPotentialSwingLowPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
         okToBuy = False
-    ElseIf mBarNumber - lPotentialSwingLow.BarNumber = 1 Then
+    ElseIf mBarNumber - lPotentialSwingLowPoint.BarNumber = 1 Then
         mContext.LogTradeReason "    reject: signal bar is potential swing low"
         okToBuy = False
-    ElseIf mBarNumber = lPotentialSwingLow.BarNumber Then
+    ElseIf mBarNumber = lPotentialSwingLowPoint.BarNumber Then
         mContext.LogTradeReason "    reject: potential new swing low this bar"
         okToBuy = False
     End If
@@ -473,23 +473,23 @@ On Error GoTo Err
 
 okToSell = True
 
-Dim lSwingHigh As SValue
-lSwingHigh = mSwing.SwingLow(-1)
+Dim lSwingHighPoint As SwingPoint
+lSwingHighPoint = mSwing.SwingHighPoint(0)
 
-Dim lPotentialSwingHigh As SValue
-lPotentialSwingHigh = mSwing.SwingHigh(0)
+Dim lPotentialSwingHighPoint As SwingPoint
+lPotentialSwingHighPoint = mSwing.PotentialSwingHighPoint
 
-If mBarNumber - lSwingHigh.BarNumber > 3 Then
-    If lPotentialSwingHigh.Value.Value = MinDouble Then
-        mContext.LogTradeReason "    reject: more than 3 Bars since swing high at " & FormatTimestamp(lSwingHigh.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+If mBarNumber - lSwingHighPoint.BarNumber > 3 Then
+    If lPotentialSwingHighPoint.Value = MinDouble Then
+        mContext.LogTradeReason "    reject: more than 3 Bars since swing high at " & FormatTimestamp(lSwingHighPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
         okToSell = False
-    ElseIf mBarNumber - lSwingHigh.BarNumber > 3 Then
-        mContext.LogTradeReason "    reject: more than 3 Bars since potential swing high at " & FormatTimestamp(lPotentialSwingHigh.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+    ElseIf mBarNumber - lSwingHighPoint.BarNumber > 3 Then
+        mContext.LogTradeReason "    reject: more than 3 Bars since potential swing high at " & FormatTimestamp(lPotentialSwingHighPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
         okToSell = False
-    ElseIf mBarNumber - lSwingHigh.BarNumber = 1 Then
+    ElseIf mBarNumber - lSwingHighPoint.BarNumber = 1 Then
         mContext.LogTradeReason "    reject: signal bar is potential swing high"
         okToSell = False
-    ElseIf mBarNumber = lSwingHigh.BarNumber Then
+    ElseIf mBarNumber = lSwingHighPoint.BarNumber Then
         mContext.LogTradeReason "    reject: potential new swing high this bar"
         okToSell = False
     End If
@@ -524,9 +524,9 @@ On Error GoTo Err
 
 stillOkToBuy = True
 
-If mBarNumber - mSwing.SwingLow(-1).BarNumber > 3 Then
-    If mSwing.SwingLow(0).Value.Value.Value <> MaxDouble And _
-        mBarNumber = mSwing.SwingLow(0).BarNumber _
+If mBarNumber - mSwing.SwingLowPoint(0).BarNumber > 3 Then
+    If mSwing.PotentialSwingLowPoint.Value <> MaxDouble And _
+        mBarNumber = mSwing.PotentialSwingLowPoint.BarNumber _
     Then
         mContext.LogTradeReason "    reject: potential new swing low this bar"
         stillOkToBuy = False
@@ -557,9 +557,9 @@ On Error GoTo Err
 
 stillOkToSell = True
 
-If mBarNumber - mSwing.SwingHigh(-1).BarNumber > 3 Then
-    If mSwing.SwingHigh(0).Value.Value.Value <> MinDouble And _
-        mBarNumber = mSwing.SwingHigh(0).BarNumber _
+If mBarNumber - mSwing.SwingHighPoint(0).BarNumber > 3 Then
+    If mSwing.PotentialSwingHighPoint.Value <> MinDouble And _
+        mBarNumber = mSwing.PotentialSwingHighPoint.BarNumber _
     Then
         mContext.LogTradeReason "    reject: potential new swing high this bar"
         stillOkToSell = False
@@ -606,7 +606,7 @@ If mOrderContextSellDummy.PendingSize <> 0 Then
         
     calcPricesForSell triggerPrice, stopPrice, breakevenPrice, cancelPrice, risk
     mBracketOrderSellDummy.SetNewEntryTriggerPrice triggerPrice
-    mBracketOrderSellDummy.SetNewStopLossPrice stopPrice
+    mBracketOrderSellDummy.SetNewStopLossTriggerPrice stopPrice
     On Error Resume Next
     mBracketOrderSellDummy.Update
     If Err.Number = 0 Then
@@ -615,7 +615,7 @@ If mOrderContextSellDummy.PendingSize <> 0 Then
         mBracketOrderSell.SetNewQuantity UnitSize(risk)
         mBracketOrderSell.SetNewEntryTriggerPrice triggerPrice
         mBracketOrderSell.SetNewEntryPrice triggerPrice + mEntryLimitOffsetTicks * mTickSize
-        mBracketOrderSell.SetNewStopLossPrice stopPrice
+        mBracketOrderSell.SetNewStopLossTriggerPrice stopPrice
         On Error Resume Next
         mBracketOrderSell.Update
         If Err.Number = 0 Then Exit Sub
@@ -706,7 +706,7 @@ Const ProcName As String = "calcPricesForSell"
 On Error GoTo Err
 
 Dim SwingHigh As Double
-SwingHigh = IIf(mSwing.SwingHigh(-1).Value.Value > mSwing.SwingHigh(0).Value.Value, mSwing.SwingHigh(-1).Value.Value, mSwing.SwingHigh(0).Value.Value)
+SwingHigh = IIf(mSwing.SwingHighPoint(0).Value > mSwing.PotentialSwingHighPoint.Value, mSwing.SwingHighPoint(0).Value, mSwing.PotentialSwingHighPoint.Value)
 If mSwingToBreakeven <> 0 Then
     If (SwingHigh - triggerPrice) > 0.5 * mSwingToBreakeven Then Exit Sub
     breakevenPrice = SwingHigh - mSwingToBreakeven
@@ -720,10 +720,10 @@ End If
 
 risk = (stopPrice - triggerPrice - mEntryLimitOffsetTicks * mTickSize) * mTickValue / mTickSize
 
-If mSwing.SwingHigh(0).Value.Value = MinDouble Then
-    cancelPrice = mSwing.SwingHigh(-1).Value.Value
+If mSwing.PotentialSwingHighPoint.Value = MinDouble Then
+    cancelPrice = mSwing.SwingHighPoint(0).Value
 Else
-    cancelPrice = mSwing.SwingHigh(0).Value.Value
+    cancelPrice = mSwing.PotentialSwingHighPoint.Value
 End If
 
 Exit Sub
@@ -756,7 +756,7 @@ If mOrderContextBuyDummy.PendingSize <> 0 Then
     
     calcPricesForBuy triggerPrice, stopPrice, breakevenPrice, cancelPrice, risk
     mBracketOrderBuyDummy.SetNewEntryTriggerPrice triggerPrice
-    mBracketOrderBuyDummy.SetNewStopLossPrice stopPrice
+    mBracketOrderBuyDummy.SetNewStopLossTriggerPrice stopPrice
     On Error Resume Next
     mBracketOrderBuyDummy.Update
     If Err.Number = 0 Then
@@ -765,7 +765,7 @@ If mOrderContextBuyDummy.PendingSize <> 0 Then
         mBracketOrderBuy.SetNewQuantity UnitSize(risk)
         mBracketOrderBuy.SetNewEntryTriggerPrice triggerPrice
         mBracketOrderBuy.SetNewEntryPrice triggerPrice - mEntryLimitOffsetTicks * mTickSize
-        mBracketOrderBuy.SetNewStopLossPrice stopPrice
+        mBracketOrderBuy.SetNewStopLossTriggerPrice stopPrice
         On Error Resume Next
         mBracketOrderBuy.Update
         If Err.Number = 0 Then Exit Sub
@@ -856,7 +856,7 @@ Const ProcName As String = "calcPricesForBuy"
 On Error GoTo Err
 
 Dim SwingLow As Double
-SwingLow = IIf(mSwing.SwingLow(-1).Value.Value < mSwing.SwingLow(0).Value.Value, mSwing.SwingLow(-1).Value.Value, mSwing.SwingLow(0).Value.Value)
+SwingLow = IIf(mSwing.SwingLowPoint(0).Value < mSwing.PotentialSwingLowPoint.Value, mSwing.SwingLowPoint(0).Value, mSwing.PotentialSwingLowPoint.Value)
 If mSwingToBreakeven <> 0 Then
     If (triggerPrice - SwingLow) > 0.5 * mSwingToBreakeven Then Exit Sub
     breakevenPrice = SwingLow + mSwingToBreakeven
@@ -870,10 +870,10 @@ End If
 
 risk = (triggerPrice + mEntryLimitOffsetTicks * mTickSize - stopPrice) * mTickValue / mTickSize
 
-If mSwing.SwingLow(0).Value.Value = MaxDouble Then
-    cancelPrice = mSwing.SwingLow(-1).Value.Value
+If mSwing.PotentialSwingLowPoint.Value = MaxDouble Then
+    cancelPrice = mSwing.SwingLowPoint(0).Value
 Else
-    cancelPrice = mSwing.SwingLow(0).Value.Value
+    cancelPrice = mSwing.PotentialSwingLowPoint.Value
 End If
 
 Exit Sub

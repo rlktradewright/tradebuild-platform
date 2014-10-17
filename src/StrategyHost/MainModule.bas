@@ -141,7 +141,10 @@ If Not setupSimulateOrderServiceProviders(lLiveTrades) Then
     Exit Sub
 End If
 
-gTB.StartServiceProviders
+If Not gTB.StartServiceProviders Then
+    MsgBox "One or more service providers failed to start: see logfile"
+    Exit Sub
+End If
 
 gTB.StudyLibraryManager.AddBuiltInStudyLibrary
 

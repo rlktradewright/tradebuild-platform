@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#248.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#253.0#0"; "TradingUI27.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
    ClientHeight    =   8475
@@ -127,6 +127,7 @@ Begin VB.Form fStrategyHost
       TabPicture(2)   =   "fStrategyHost.frx":00A8
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Picture4"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Listeners"
       TabPicture(3)   =   "fStrategyHost.frx":00C4
@@ -515,8 +516,8 @@ Begin VB.Form fStrategyHost
             Left            =   0
             TabIndex        =   13
             Top             =   0
-            Width           =   4335
-            _ExtentX        =   7646
+            Width           =   10695
+            _ExtentX        =   18865
             _ExtentY        =   4048
             _Version        =   393216
             AllowUpdate     =   -1  'True
@@ -1084,9 +1085,9 @@ On Error GoTo Err
 
 Dim lIndex As Long
 If TickfileOrganiser1.TickfileCount <> 0 Then
-    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.Symbol, False, pNumberOfBarsToFetch)
+    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.Symbol, False, pNumberOfBarsToFetch, pIncludeBarsOutsideSession)
 Else
-    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.LocalSymbol, True, pNumberOfBarsToFetch)
+    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.LocalSymbol, True, pNumberOfBarsToFetch, pIncludeBarsOutsideSession)
 End If
 
 If mPriceChartIndex = 0 Then
@@ -1143,6 +1144,8 @@ mElapsedSecsCurrTickfile = 0
 
 mTotalEvents = mTotalEvents + mEventsCurrTickfile
 mEventsCurrTickfile = 0
+
+PriceChart.BaseChartController.EnableDrawing
 
 If mTickfileIndex = TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
     Set mPriceStudyBase = Nothing
@@ -1225,6 +1228,9 @@ EventsPlayedLabel.Caption = lTotalEvents
 EventsPerSecondLabel.Caption = Int(lTotalEvents / lTotalElapsedSecs)
 MicrosecsPerEventLabel.Caption = Int(lTotalElapsedSecs * 1000000 / lTotalEvents)
 
+PriceChart.BaseChartController.EnableDrawing
+PriceChart.BaseChartController.DisableDrawing
+
 Exit Sub
 
 Err:
@@ -1256,7 +1262,6 @@ Const ProcName As String = "IStrategyHost_TickerCreated"
 On Error GoTo Err
 
 Set mTicker = pTicker
-mTicker.AddGenericTickListener Me
 Set mContract = mTicker.ContractFuture.Value
 mSecType = mContract.Specifier.SecType
 mTickSize = mContract.TickSize
@@ -1276,8 +1281,10 @@ If mPriceStudyBase Is Nothing Then
         initialisePriceChart
     End If
 Else
+    mTicker.AddGenericTickListener Me
     mStrategyRunner.StartReplay
     mReplayStartTime = GetTimestamp
+    PriceChart.BaseChartController.DisableDrawing
 End If
 If mProfitStudyBase Is Nothing Then initialiseProfitChart
 If mTradeStudyBase Is Nothing Then initialiseTradeChart
@@ -1416,7 +1423,8 @@ Case "position.position"
     Position.Caption = mPosition
 Case "position.order", _
     "position.moneymanagement"
-    LogMessage "(" & FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601) & ")  " & CStr(pLogrec.Data)
+    'LogMessage "(" & FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601) & ")  " & CStr(pLogrec.Data)
+    LogMessage CStr(pLogrec.Data)
 End Select
 
 Exit Sub
@@ -1573,12 +1581,16 @@ Private Sub PriceChart_ChartStateChanged(ByVal Index As Long, ev As TWUtilities4
 Const ProcName As String = "PriceChart_ChartStateChanged"
 On Error GoTo Err
 
-If Not mTicker.IsTickReplay Then Exit Sub
 If Index <> mPriceChartIndex Then Exit Sub
 
-If ev.State = ChartStates.ChartStateLoaded Then
+If ev.State <> ChartStates.ChartStateLoaded Then Exit Sub
+
+mTicker.AddGenericTickListener Me
+
+If mTicker.IsTickReplay Then
     mStrategyRunner.StartReplay
     mReplayStartTime = GetTimestamp
+    PriceChart.BaseChartController.DisableDrawing
 End If
 
 Exit Sub
@@ -1752,7 +1764,7 @@ Const ProcName As String = "formatLogRecord"
 On Error GoTo Err
 
 Static formatter As LogFormatter
-If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)
+If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal, , False, False)
 formatLogRecord = formatter.FormatRecord(Logrec)
 
 Exit Function
@@ -1837,10 +1849,9 @@ If StopStrategyFactoryCombo.Text = "" Then Exit Sub
 Set mStrategyRunner = CreateStrategyRunner(Me)
 Set mParams = mStrategyRunner.SetStrategy(CreateObject(StrategyCombo.Text), CreateObject(StopStrategyFactoryCombo.Text))
 
-Dim da As DataAdapter
-Set da = New DataAdapter
-Set da.Object = mParams
-Set ParamGrid.DataSource = da
+Set ParamGrid.DataSource = mParams
+ParamGrid.Columns(0).Width = ParamGrid.Width / 2
+ParamGrid.Columns(1).Width = ParamGrid.Width / 2
 
 StartButton.Enabled = True
 
