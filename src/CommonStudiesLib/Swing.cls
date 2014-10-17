@@ -65,13 +65,15 @@ Private mSwingCache As ValueCache
 Private mSwingLineBuilder As StudyLineBuilder
 Private mSwingLineCache As ValueCache
 
-Private mSwingHigh As SwingPoint
+Private mPotentialSwingHighPoint As SwingPoint
 Private mSwingHighCache As ValueCache
+
 Private mSwingHighLineBuilder As StudyLineBuilder
 Private mSwingHighLineCache As ValueCache
 
-Private mSwingLow As SwingPoint
+Private mPotentialSwingLowPoint As SwingPoint
 Private mSwingLowCache As ValueCache
+
 Private mSwingLowLineBuilder As StudyLineBuilder
 Private mSwingLowLineCache As ValueCache
 
@@ -110,7 +112,6 @@ Private Sub customInitialise( _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As IStudy, _
                 ByVal pSessionFuture As IFuture)
-
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
 
@@ -126,8 +127,8 @@ Set mSwingCache = mStudyFoundation.FindValueCache(SwingValueSwingPoint)
 Set mSwingHighCache = mStudyFoundation.FindValueCache(SwingValueSwingHighPoint)
 Set mSwingLowCache = mStudyFoundation.FindValueCache(SwingValueSwingLowPoint)
 
-mSwingHigh.Value = DummyHigh
-mSwingLow.Value = DummyLow
+mPotentialSwingHighPoint.Value = DummyHigh
+mPotentialSwingLowPoint.Value = DummyLow
 
 mHighBeforeLowPoint.Value = DummyHigh
 mHighAfterLowPoint.Value = DummyHigh
@@ -147,16 +148,16 @@ Private Sub customNotify( _
 Const ProcName As String = "customNotify"
 On Error GoTo Err
 
-Dim currValue As Double
-Dim prevSwingHigh As SwingPoint
-Dim prevSwingLow As SwingPoint
-
 If IsEmpty(ev.sVal.Value) Then Exit Sub
 
+Dim currValue As Double
 currValue = ev.sVal.Value
 If inputValueHasNotChanged(currValue) Then Exit Sub
 
+Dim prevSwingHigh As SwingPoint
 If mSwingHighCache.Count >= 1 Then prevSwingHigh = mSwingHighCache.GetValue(0)
+
+Dim prevSwingLow As SwingPoint
 If mSwingLowCache.Count >= 1 Then prevSwingLow = mSwingLowCache.GetValue(0)
 
 If mStudyFoundation.IsNewBar Then
@@ -166,28 +167,28 @@ If mStudyFoundation.IsNewBar Then
         mCurrentBarHigh = currValue
         mCurrentBarLow = currValue
         
-        initialiseSwingHighPoint mSwingHigh, ev.sVal
-        mSwingHigh.Value = Empty
+        initialiseSwingHighPoint mPotentialSwingHighPoint, ev.sVal
+        mPotentialSwingHighPoint.Value = Empty
         
-        initialiseSwingLowPoint mSwingLow, ev.sVal
-        mSwingLow.Value = Empty
+        initialiseSwingLowPoint mPotentialSwingLowPoint, ev.sVal
+        mPotentialSwingLowPoint.Value = Empty
         
-        mSwingHighCache.AddValue mSwingHigh, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
+        mSwingHighCache.AddValue mPotentialSwingHighPoint, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
         mSwingHighLineCache.AddValue Nothing, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
         
-        mSwingLowCache.AddValue mSwingLow, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
+        mSwingLowCache.AddValue mPotentialSwingLowPoint, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
         mSwingLowLineCache.AddValue Nothing, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
     
-        mSwingCache.AddValue mSwingHigh, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
+        mSwingCache.AddValue mPotentialSwingHighPoint, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
         mSwingLineCache.AddValue Nothing, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
         
     End If
     
-    If mSwingHigh.Value <> DummyHigh Then
-        If mStudyFoundation.BarNumber - mSwingHigh.BarNumber >= 3 And _
-            (mSwingHigh.Value - mPrevBarHigh) >= mMinimumSwing _
+    If mPotentialSwingHighPoint.Value <> DummyHigh Then
+        If mStudyFoundation.BarNumber - mPotentialSwingHighPoint.BarNumber >= 3 And _
+            (mPotentialSwingHighPoint.Value - mPrevBarHigh) >= mMinimumSwing _
         Then
-            updateSwingHighType prevSwingHigh, mSwingHigh
+            updateSwingHighType prevSwingHigh, mPotentialSwingHighPoint
 
             If Not IsEmpty(prevSwingHigh.Value) Then
                 If prevSwingLow.SequenceNumber < prevSwingHigh.SequenceNumber Then
@@ -196,29 +197,29 @@ If mStudyFoundation.IsNewBar Then
                 End If
             End If
 
-            mSwingHigh.SequenceNumber = mSwingSequenceNumber
+            mPotentialSwingHighPoint.SequenceNumber = mSwingSequenceNumber
             mSwingSequenceNumber = mSwingSequenceNumber + 1
             
             mLowBeforeHighPoint = mLowAfterHighPoint
 
-            mSwingHighCache.AddValue mSwingHigh, mSwingHigh.BarNumber, mSwingHigh.Timestamp, mSwingHigh.BarStartTime
+            mSwingHighCache.AddValue mPotentialSwingHighPoint, mPotentialSwingHighPoint.BarNumber, mPotentialSwingHighPoint.Timestamp, mPotentialSwingHighPoint.BarStartTime
             
             If Not mSwingHighLineBuilder Is Nothing Then
-                mSwingHighLineBuilder.Point2 = CreateStudyPoint(mSwingHigh.Timestamp, mSwingHigh.Value)
+                mSwingHighLineBuilder.Point2 = CreateStudyPoint(mPotentialSwingHighPoint.Timestamp, mPotentialSwingHighPoint.Value)
                 notifySwingHighLine
             End If
             If Not mSwingLineBuilder Is Nothing Then
-                mSwingLineBuilder.Point2 = CreateStudyPoint(mSwingHigh.Timestamp, mSwingHigh.Value)
+                mSwingLineBuilder.Point2 = CreateStudyPoint(mPotentialSwingHighPoint.Timestamp, mPotentialSwingHighPoint.Value)
                 notifySwingLine
             End If
             
-            Set mSwingHighLineBuilder = createStudyLineBuilder(mSwingHigh.Timestamp, mSwingHigh.Value)
-            mSwingHighLineCache.AddValue mSwingHighLineBuilder.StudyLine, mSwingHigh.BarNumber, mSwingHigh.Timestamp, mSwingHigh.BarStartTime
+            Set mSwingHighLineBuilder = createStudyLineBuilder(mPotentialSwingHighPoint.Timestamp, mPotentialSwingHighPoint.Value)
+            mSwingHighLineCache.AddValue mSwingHighLineBuilder.StudyLine, mPotentialSwingHighPoint.BarNumber, mPotentialSwingHighPoint.Timestamp, mPotentialSwingHighPoint.BarStartTime
             
-            mSwingCache.AddValue mSwingHigh, mSwingHigh.BarNumber, mSwingHigh.Timestamp, mSwingHigh.BarStartTime
+            mSwingCache.AddValue mPotentialSwingHighPoint, mPotentialSwingHighPoint.BarNumber, mPotentialSwingHighPoint.Timestamp, mPotentialSwingHighPoint.BarStartTime
             
-            Set mSwingLineBuilder = createStudyLineBuilder(mSwingHigh.Timestamp, mSwingHigh.Value)
-            mSwingLineCache.AddValue mSwingLineBuilder.StudyLine, mSwingHigh.BarNumber, mSwingHigh.Timestamp, mSwingHigh.BarStartTime
+            Set mSwingLineBuilder = createStudyLineBuilder(mPotentialSwingHighPoint.Timestamp, mPotentialSwingHighPoint.Value)
+            mSwingLineCache.AddValue mSwingLineBuilder.StudyLine, mPotentialSwingHighPoint.BarNumber, mPotentialSwingHighPoint.Timestamp, mPotentialSwingHighPoint.BarStartTime
             
             notifySwingPoint
             notifySwingHighPoint
@@ -226,25 +227,25 @@ If mStudyFoundation.IsNewBar Then
             notifySwingLine
             notifySwingHighLine
             
-            prevSwingHigh = mSwingHigh
-            initialiseSwingHighPoint mSwingHigh, ev.sVal
+            prevSwingHigh = mPotentialSwingHighPoint
+            initialiseSwingHighPoint mPotentialSwingHighPoint, ev.sVal
                 
             ' we now need to discard any incompletely formed low that is earlier than
             ' the high just completed, since otherwise if it eventually completed it
             ' would be notified to listeners and studies with a time earlier than the
             ' high just notified
-            If mSwingLow.Value <> DummyLow And _
-                mSwingLow.Timestamp < prevSwingHigh.Timestamp _
+            If mPotentialSwingLowPoint.Value <> DummyLow And _
+                mPotentialSwingLowPoint.Timestamp < prevSwingHigh.Timestamp _
             Then
-                initialiseSwingLowPoint mSwingLow, ev.sVal
+                initialiseSwingLowPoint mPotentialSwingLowPoint, ev.sVal
             End If
         End If
     End If
-    If mSwingLow.Value <> DummyLow Then
-        If mStudyFoundation.BarNumber - mSwingLow.BarNumber >= 3 And _
-            (mPrevBarLow - mSwingLow.Value) >= mMinimumSwing _
+    If mPotentialSwingLowPoint.Value <> DummyLow Then
+        If mStudyFoundation.BarNumber - mPotentialSwingLowPoint.BarNumber >= 3 And _
+            (mPrevBarLow - mPotentialSwingLowPoint.Value) >= mMinimumSwing _
         Then
-            updateSwingLowType prevSwingLow, mSwingLow
+            updateSwingLowType prevSwingLow, mPotentialSwingLowPoint
 
             If Not IsEmpty(prevSwingLow.Value) Then
                 If prevSwingHigh.SequenceNumber <= prevSwingLow.SequenceNumber Then
@@ -253,29 +254,29 @@ If mStudyFoundation.IsNewBar Then
                 End If
             End If
 
-            mSwingLow.SequenceNumber = mSwingSequenceNumber
+            mPotentialSwingLowPoint.SequenceNumber = mSwingSequenceNumber
             mSwingSequenceNumber = mSwingSequenceNumber + 1
             
             mHighBeforeLowPoint = mHighAfterLowPoint
 
-            mSwingLowCache.AddValue mSwingLow, mSwingLow.BarNumber, mSwingLow.Timestamp, mSwingLow.BarStartTime
+            mSwingLowCache.AddValue mPotentialSwingLowPoint, mPotentialSwingLowPoint.BarNumber, mPotentialSwingLowPoint.Timestamp, mPotentialSwingLowPoint.BarStartTime
             
             If Not mSwingLowLineBuilder Is Nothing Then
-                mSwingLowLineBuilder.Point2 = CreateStudyPoint(mSwingLow.Timestamp, mSwingLow.Value)
+                mSwingLowLineBuilder.Point2 = CreateStudyPoint(mPotentialSwingLowPoint.Timestamp, mPotentialSwingLowPoint.Value)
                 notifySwingLowLine
             End If
             If Not mSwingLineBuilder Is Nothing Then
-                mSwingLineBuilder.Point2 = CreateStudyPoint(mSwingLow.Timestamp, mSwingLow.Value)
+                mSwingLineBuilder.Point2 = CreateStudyPoint(mPotentialSwingLowPoint.Timestamp, mPotentialSwingLowPoint.Value)
                 notifySwingLine
             End If
             
-            Set mSwingLowLineBuilder = createStudyLineBuilder(mSwingLow.Timestamp, mSwingLow.Value)
-            mSwingLowLineCache.AddValue mSwingLowLineBuilder.StudyLine, mSwingLow.BarNumber, mSwingLow.Timestamp, mSwingLow.BarStartTime
+            Set mSwingLowLineBuilder = createStudyLineBuilder(mPotentialSwingLowPoint.Timestamp, mPotentialSwingLowPoint.Value)
+            mSwingLowLineCache.AddValue mSwingLowLineBuilder.StudyLine, mPotentialSwingLowPoint.BarNumber, mPotentialSwingLowPoint.Timestamp, mPotentialSwingLowPoint.BarStartTime
             
-            mSwingCache.AddValue mSwingLow, mSwingLow.BarNumber, mSwingLow.Timestamp, mSwingLow.BarStartTime
+            mSwingCache.AddValue mPotentialSwingLowPoint, mPotentialSwingLowPoint.BarNumber, mPotentialSwingLowPoint.Timestamp, mPotentialSwingLowPoint.BarStartTime
             
-            Set mSwingLineBuilder = createStudyLineBuilder(mSwingLow.Timestamp, mSwingLow.Value)
-            mSwingLineCache.AddValue mSwingLineBuilder.StudyLine, mSwingLow.BarNumber, mSwingLow.Timestamp, mSwingLow.BarStartTime
+            Set mSwingLineBuilder = createStudyLineBuilder(mPotentialSwingLowPoint.Timestamp, mPotentialSwingLowPoint.Value)
+            mSwingLineCache.AddValue mSwingLineBuilder.StudyLine, mPotentialSwingLowPoint.BarNumber, mPotentialSwingLowPoint.Timestamp, mPotentialSwingLowPoint.BarStartTime
             
             notifySwingPoint
             notifySwingLowPoint
@@ -283,17 +284,17 @@ If mStudyFoundation.IsNewBar Then
             notifySwingLine
             notifySwingLowLine
             
-            prevSwingLow = mSwingLow
-            initialiseSwingLowPoint mSwingLow, ev.sVal
+            prevSwingLow = mPotentialSwingLowPoint
+            initialiseSwingLowPoint mPotentialSwingLowPoint, ev.sVal
             
             ' we now need to discard any incompletely formed high that is earlier than
             ' the low just completed, since otherwise if it eventually completed it
             ' would be notified to listeners and studies with a time earlier than the
             ' low just notified
-            If mSwingHigh.Value <> DummyHigh And _
-                mSwingHigh.Timestamp < prevSwingLow.Timestamp _
+            If mPotentialSwingHighPoint.Value <> DummyHigh And _
+                mPotentialSwingHighPoint.Timestamp < prevSwingLow.Timestamp _
             Then
-                initialiseSwingHighPoint mSwingHigh, ev.sVal
+                initialiseSwingHighPoint mPotentialSwingHighPoint, ev.sVal
             End If
         End If
     End If
@@ -324,12 +325,12 @@ If Not IsEmpty(prevSwingLow.Value) Then
     End If
 End If
 
-If (mSwingHigh.Value = DummyHigh And _
+If (mPotentialSwingHighPoint.Value = DummyHigh And _
     currValue >= mPrevBarHigh And _
     currValue >= mPrevPrevBarHigh) Or _
-    (mSwingHigh.Value <> DummyHigh And currValue >= mSwingHigh.Value) _
+    (mPotentialSwingHighPoint.Value <> DummyHigh And currValue >= mPotentialSwingHighPoint.Value) _
 Then
-    setSwingPointFromSValue mSwingHigh, ev.sVal
+    setSwingPointFromSValue mPotentialSwingHighPoint, ev.sVal
     
     If mLowBeforeHighPoint.Value >= mLowAfterHighPoint.Value Then
         mLowBeforeHighPoint = mLowAfterHighPoint
@@ -337,12 +338,12 @@ Then
     setSwingPointFromSValue mLowAfterHighPoint, ev.sVal
 End If
 
-If (mSwingLow.Value = DummyLow And _
+If (mPotentialSwingLowPoint.Value = DummyLow And _
     currValue <= mPrevBarLow And _
     currValue <= mPrevPrevBarLow) Or _
-    (mSwingLow.Value <> DummyLow And currValue <= mSwingLow.Value) _
+    (mPotentialSwingLowPoint.Value <> DummyLow And currValue <= mPotentialSwingLowPoint.Value) _
 Then
-    setSwingPointFromSValue mSwingLow, ev.sVal
+    setSwingPointFromSValue mPotentialSwingLowPoint, ev.sVal
     
     If mHighBeforeLowPoint.Value <= mHighAfterLowPoint.Value Then
         mHighBeforeLowPoint = mHighAfterLowPoint
@@ -441,7 +442,7 @@ Const ProcName As String = "HighAfterLowPoint"
 On Error GoTo Err
 
 If excludingCurrentBar Then
-    If mSwingLow.Value = DummyLow Then
+    If mPotentialSwingLowPoint.Value = DummyLow Then
         thePoint = mHighAfterLowPointExcl
     Else
         If mHighBeforeLowPoint.Value > mHighAfterLowPointExcl.Value Then
@@ -450,7 +451,7 @@ If excludingCurrentBar Then
             thePoint = mHighAfterLowPointExcl
         End If
     End If
-ElseIf mSwingLow.Value = DummyLow Then
+ElseIf mPotentialSwingLowPoint.Value = DummyLow Then
     thePoint = mHighAfterLowPoint
 Else
     If mHighBeforeLowPoint.Value > mHighAfterLowPoint.Value Then
@@ -493,7 +494,7 @@ Const ProcName As String = "LowAfterHighPoint"
 On Error GoTo Err
 
 If excludingCurrentBar Then
-    If mSwingHigh.Value = DummyHigh Then
+    If mPotentialSwingHighPoint.Value = DummyHigh Then
         thePoint = mLowAfterHighPointExcl
     Else
         If mLowBeforeHighPoint.Value < mLowAfterHighPoint.Value Then
@@ -502,7 +503,7 @@ If excludingCurrentBar Then
             thePoint = mLowAfterHighPointExcl
         End If
     End If
-ElseIf mSwingHigh.Value = DummyHigh Then
+ElseIf mPotentialSwingHighPoint.Value = DummyHigh Then
     thePoint = mLowAfterHighPoint
 Else
     If mLowBeforeHighPoint.Value < mLowAfterHighPoint.Value Then
@@ -514,6 +515,26 @@ End If
 LowAfterHighPoint.BarNumber = thePoint.BarNumber
 LowAfterHighPoint.Timestamp = thePoint.Timestamp
 LowAfterHighPoint.Value = thePoint
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get PotentialSwingHighPoint() As SwingPoint
+PotentialSwingHighPoint = mPotentialSwingHighPoint
+End Property
+
+Public Property Get PotentialSwingLowPoint() As SwingPoint
+PotentialSwingLowPoint = mPotentialSwingLowPoint
+End Property
+
+Public Property Get SwingHigh(Optional ByVal ref As Long) As SValue
+Const ProcName As String = "SwingHigh"
+On Error GoTo Err
+
+SwingHigh = mSwingHighCache.GetSValue(ref)
 
 Exit Property
 
@@ -533,11 +554,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get SwingHigh(Optional ByVal ref As Long) As SValue
-Const ProcName As String = "SwingHigh"
+Public Property Get SwingLow(Optional ByVal ref As Long) As SValue
+Const ProcName As String = "SwingLow"
 On Error GoTo Err
 
-SwingHigh = mSwingHighCache.GetSValue(ref)
+SwingLow = mSwingLowCache.GetSValue(ref)
 
 Exit Property
 
@@ -550,18 +571,6 @@ Const ProcName As String = "SwingLowPoint"
 On Error GoTo Err
 
 SwingLowPoint = mSwingLowCache.GetValue(ref)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get SwingLow(Optional ByVal ref As Long) As SValue
-Const ProcName As String = "SwingLow"
-On Error GoTo Err
-
-SwingLow = mSwingLowCache.GetSValue(ref)
 
 Exit Property
 
@@ -638,11 +647,11 @@ Dim prevSwingHigh As SwingPoint
 prevSwingHigh = SwingHigh(-1).Value
 If IsEmpty(prevSwingHigh.Value) Then Exit Sub
 
-If (mSwingHigh.Value > latestSwingHigh.Value Or latestSwingHigh.Value > prevSwingHigh.Value) And _
-    mSwingLow.Value >= latestSwingLow.Value And latestSwingLow.Value >= prevSwingLow.Value Then
+If (mPotentialSwingHighPoint.Value > latestSwingHigh.Value Or latestSwingHigh.Value > prevSwingHigh.Value) And _
+    mPotentialSwingLowPoint.Value >= latestSwingLow.Value And latestSwingLow.Value >= prevSwingLow.Value Then
     mTrend = TrendDirections.TrendUp
-ElseIf (mSwingLow.Value < latestSwingLow.Value Or latestSwingLow.Value < prevSwingLow.Value) And _
-    mSwingHigh.Value <= latestSwingHigh.Value And latestSwingHigh.Value < prevSwingHigh.Value Then
+ElseIf (mPotentialSwingLowPoint.Value < latestSwingLow.Value Or latestSwingLow.Value < prevSwingLow.Value) And _
+    mPotentialSwingHighPoint.Value <= latestSwingHigh.Value And latestSwingHigh.Value < prevSwingHigh.Value Then
     mTrend = TrendDirections.TrendDown
 Else
     mTrend = TrendDirections.TrendSideways
@@ -834,11 +843,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function inputValueHasNotChanged(ByVal pValue As Double) As Boolean
-Static sGotfirst As Boolean
-Static sPrevVal As Double
-
 Const ProcName As String = "inputValueHasNotChanged"
 On Error GoTo Err
+
+Static sGotfirst As Boolean
+Static sPrevVal As Double
 
 If mStudyFoundation.IsNewBar Then
 ElseIf Not sGotfirst Then
@@ -855,12 +864,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub notifySwingHighLine()
-Dim sv As SValue
-Dim evOut As StudyValueEventData
 Const ProcName As String = "notifySwingHighLine"
 On Error GoTo Err
 
+Dim sv As SValue
 sv = mSwingHighLineCache.GetSValue(0)
+
+Dim evOut As StudyValueEventData
 Set evOut.Source = Me
 evOut.sVal.BarNumber = sv.BarNumber
 evOut.sVal.BarStartTime = sv.BarStartTime
@@ -876,12 +886,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifySwingHighPoint()
-Dim sp As SwingPoint
-Dim evOut As StudyValueEventData
 Const ProcName As String = "notifySwingHighPoint"
 On Error GoTo Err
 
+Dim sp As SwingPoint
 sp = mSwingHighCache.GetSValue(0).Value
+
+Dim evOut As StudyValueEventData
 Set evOut.Source = Me
 evOut.sVal.BarNumber = sp.BarNumber
 evOut.sVal.BarStartTime = sp.BarStartTime
@@ -897,12 +908,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifySwingLine()
-Dim sv As SValue
-Dim evOut As StudyValueEventData
 Const ProcName As String = "notifySwingLine"
 On Error GoTo Err
 
+Dim sv As SValue
 sv = mSwingLineCache.GetSValue(0)
+
+Dim evOut As StudyValueEventData
 Set evOut.Source = Me
 evOut.sVal.BarNumber = sv.BarNumber
 evOut.sVal.BarStartTime = sv.BarStartTime
@@ -918,12 +930,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifySwingLowLine()
-Dim sv As SValue
-Dim evOut As StudyValueEventData
 Const ProcName As String = "notifySwingLowLine"
 On Error GoTo Err
 
+Dim sv As SValue
 sv = mSwingLowLineCache.GetSValue(0)
+
+Dim evOut As StudyValueEventData
 Set evOut.Source = Me
 evOut.sVal.BarNumber = sv.BarNumber
 evOut.sVal.BarStartTime = sv.BarStartTime
@@ -939,12 +952,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifySwingLowPoint()
-Dim sp As SwingPoint
-Dim evOut As StudyValueEventData
 Const ProcName As String = "notifySwingLowPoint"
 On Error GoTo Err
 
+Dim sp As SwingPoint
 sp = mSwingLowCache.GetSValue(0).Value
+
+Dim evOut As StudyValueEventData
 Set evOut.Source = Me
 evOut.sVal.BarNumber = sp.BarNumber
 evOut.sVal.BarStartTime = sp.BarStartTime
@@ -960,12 +974,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifySwingPoint()
-Dim sp As SwingPoint
-Dim evOut As StudyValueEventData
 Const ProcName As String = "notifySwingPoint"
 On Error GoTo Err
 
+Dim sp As SwingPoint
 sp = mSwingCache.GetSValue(0).Value
+
+Dim evOut As StudyValueEventData
 Set evOut.Source = Me
 evOut.sVal.BarNumber = sp.BarNumber
 evOut.sVal.BarStartTime = sp.BarStartTime
@@ -1018,10 +1033,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updateCurrentLineEnds(ev As StudyValueEventData)
-Dim lStudyPoint As StudyPoint
 Const ProcName As String = "updateCurrentLineEnds"
 On Error GoTo Err
 
+Dim lStudyPoint As StudyPoint
 Set lStudyPoint = CreateStudyPoint(ev.sVal.Timestamp, ev.sVal.Value)
 If Not mSwingLineBuilder Is Nothing Then
     mSwingLineBuilder.Point2 = lStudyPoint
@@ -1107,7 +1122,6 @@ Private Function IStudy_AddStudy( _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-
 Const ProcName As String = "IStudy_AddStudy"
 On Error GoTo Err
 
