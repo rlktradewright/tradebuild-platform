@@ -553,7 +553,8 @@ Public Function Add( _
                 ByVal pPeriodLength As TimePeriod, _
                 Optional ByVal pTitle As String, _
                 Optional ByVal pUpdatePerTick As Boolean = True, _
-                Optional ByVal pInitialNumberOfBars As Long = -1) As Long
+                Optional ByVal pInitialNumberOfBars As Long = -1, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean = False) As Long
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -570,7 +571,11 @@ Set lTab = addTab(pPeriodLength)
 fireChange MultiChartAdd
 
 Dim lChartSpec As ChartSpecifier
-Set lChartSpec = CreateChartSpecifier(IIf(pInitialNumberOfBars = -1, mSpec.InitialNumberOfBars, pInitialNumberOfBars), mSpec.IncludeBarsOutsideSession, mSpec.FromTime, mSpec.toTime)
+Set lChartSpec = CreateChartSpecifier( _
+                        IIf(pInitialNumberOfBars = -1, mSpec.InitialNumberOfBars, pInitialNumberOfBars), _
+                        IIf(pIncludeBarsOutsideSession, True, mSpec.IncludeBarsOutsideSession), _
+                        mSpec.FromTime, _
+                        mSpec.toTime)
 
 lChart.ShowChart mTimeframes, pPeriodLength, lChartSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
 

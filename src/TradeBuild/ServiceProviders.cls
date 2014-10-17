@@ -595,7 +595,11 @@ For i = 0 To mMaxSPIndex
     
     On Error Resume Next
     lServiceProvider.Link Me, i, mServiceProviders(i).Params, pSessionID
-    If Err.Number <> 0 Then lErrorOccurred = True
+    If Err.Number <> 0 Then
+        lErrorOccurred = True
+        gLogger.Log "Error in Service Provider: " & mServiceProviders(i).Name, ProcName, ModuleName, LogLevelSevere
+        gHandleUnexpectedError ProcName, ModuleName, , False, True
+    End If
     Err.Clear
     On Error GoTo Err
     

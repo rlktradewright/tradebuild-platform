@@ -493,16 +493,14 @@ If TypeOf ev.Source Is BracketProfitCalculator Then
     rowIndex = mBracketOrderGridMappingTable(lBracketOrderIndex).GridIndex
     
     Dim lBOProfitType As ProfitTypes
-    lBOProfitType = ev.ProfitType
+    lBOProfitType = ev.ProfitTypes
     
-    Select Case lBOProfitType
-    Case ProfitTypes.ProfitTypeProfit
-        displayProfitValue ev.ProfitAmount, rowIndex, BracketProfit
-    Case ProfitTypes.ProfitTypeMaxProfit
-        displayProfitValue ev.ProfitAmount, rowIndex, BracketMaxProfit
-    Case ProfitTypes.ProfitTypeDrawdown
-        displayProfitValue -ev.ProfitAmount, rowIndex, BracketDrawdown
-    End Select
+    If lBOProfitType And ProfitTypes.ProfitTypeProfit Then _
+        displayProfitValue lProfitCalculator.Profit, rowIndex, BracketProfit
+    If lBOProfitType And ProfitTypes.ProfitTypeMaxProfit Then _
+        displayProfitValue lProfitCalculator.MaxProfit, rowIndex, BracketMaxProfit
+    If lBOProfitType And ProfitTypes.ProfitTypeDrawdown Then _
+        displayProfitValue -lProfitCalculator.Drawdown, rowIndex, BracketDrawdown
 
 ElseIf TypeOf ev.Source Is PositionManager Then
     Dim lPositionManager As PositionManager
@@ -515,19 +513,14 @@ ElseIf TypeOf ev.Source Is PositionManager Then
     rowIndex = mPositionManagerGridMappingTable(lPositionManagerIndex).GridIndex
     
     Dim lPMProfitType As ProfitTypes
-    lPMProfitType = ev.ProfitType
+    lPMProfitType = ev.ProfitTypes
     
-    Select Case lPMProfitType
-    Case ProfitTypes.ProfitTypeSessionProfit
-        displayProfitValue ev.ProfitAmount, rowIndex, PositionProfit
-    Case ProfitTypes.ProfitTypeSessionMaxProfit
-        displayProfitValue ev.ProfitAmount, rowIndex, PositionMaxProfit
-    Case ProfitTypes.ProfitTypeSessionDrawdown
-        displayProfitValue -ev.ProfitAmount, rowIndex, PositionDrawdown
-    Case ProfitTypes.ProfitTypeTradeProfit
-    Case ProfitTypes.ProfitTypeTradeMaxProfit
-    Case ProfitTypes.ProfitTypeTradeDrawdown
-    End Select
+    If lPMProfitType Or ProfitTypes.ProfitTypeSessionProfit Then _
+        displayProfitValue lPositionManager.Profit, rowIndex, PositionProfit
+    If lPMProfitType Or ProfitTypes.ProfitTypeSessionMaxProfit Then _
+        displayProfitValue lPositionManager.MaxProfit, rowIndex, PositionMaxProfit
+    If lPMProfitType Or ProfitTypes.ProfitTypeSessionDrawdown Then _
+        displayProfitValue -lPositionManager.Drawdown, rowIndex, PositionDrawdown
 End If
 
 adjustEditBox
