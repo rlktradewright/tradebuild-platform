@@ -122,16 +122,10 @@ On Error GoTo Err
 If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is IContract Then
-    Set mContract = ev.Future.Value
-    Set mTemplateOrder = New Order
-    mTemplateOrder.Initialise mGroupName, mContextsName, mContract.Specifier, Me
-    mTemplateOrder.IsSimulated = mIsSimulated
+    setContract ev.Future.Value
     fireChange OrderContextReadyStateChanged
 ElseIf TypeOf ev.Future.Value Is Clock Then
-    Dim lClock As Clock
-    Set lClock = ev.Future.Value
-    Assert lClock.IsSimulated, "Not a simulated clock"
-    Set mTimerList = GetSimulatedTimerList(lClock)
+    setTimerListFromSimulatedClock ev.Future.Value
     fireChange OrderContextReadyStateChanged
 End If
 
@@ -187,6 +181,8 @@ End Property
 Public Property Let Enabled(ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
+
+If mEnabled = Value Then Exit Property
 
 mEnabled = Value
 fireChange OrderContextReadyStateChanged
@@ -786,12 +782,18 @@ mGroupName = pGroupName
 mIsSimulated = pIsSimulated
 
 Set mContractFuture = pContractFuture
-mFutureWaiter.Add mContractFuture
-
-If Not pSimulatedClockFuture Is Nothing Then
-    mFutureWaiter.Add pSimulatedClockFuture
+If mContractFuture.IsAvailable Then
+    setContract mContractFuture.Value
 Else
+    mFutureWaiter.Add mContractFuture
+End If
+
+If pSimulatedClockFuture Is Nothing Then
     Set mTimerList = GetGlobalTimerList
+ElseIf pSimulatedClockFuture.IsAvailable Then
+    setTimerListFromSimulatedClock pSimulatedClockFuture.Value
+Else
+    mFutureWaiter.Add pSimulatedClockFuture
 End If
 
 Set mDataSource = pDataSource
@@ -976,6 +978,22 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Friend Sub NotifyPositionCloseout( _
+                ByVal pExec As IExecutionReport)
+Const ProcName As String = "NotifyCloseout"
+On Error GoTo Err
+
+Dim lBracketOrder As IBracketOrder
+For Each lBracketOrder In mClosedBracketOrders
+    lBracketOrder.NotifyCloseout pExec
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
 Const ProcName As String = "RemoveChangeListenerChangeListener"
@@ -1326,6 +1344,34 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub setContract(ByVal pContract As IContract)
+Const ProcName As String = "setContract"
+On Error GoTo Err
+
+Set mContract = pContract
+Set mTemplateOrder = New Order
+mTemplateOrder.Initialise mGroupName, mContextsName, mContract.Specifier, Me
+mTemplateOrder.IsSimulated = mIsSimulated
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setTimerListFromSimulatedClock(ByVal pClock As Clock)
+Const ProcName As String = "setTimerListFromSimulatedClock"
+On Error GoTo Err
+
+Assert pClock.IsSimulated, "Not a simulated clock"
+Set mTimerList = GetSimulatedTimerList(pClock)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub validateBracketEntryType(ByVal pBracketEntryType As BracketEntryTypes)
 Select Case pBracketEntryType

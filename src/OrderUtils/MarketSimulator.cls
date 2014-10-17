@@ -63,6 +63,14 @@ Private mUsageCount                                 As Long
 
 Private mKey                                        As String
 
+' Holds orders that are placed by listeners while processing a
+' notification. When the event handler that caused the notification
+' completes, the orders in here are queued. This is to avoid mActiveOrders
+' being modified while it is being enumerated.
+Private mOrdersToBeQueued                           As New EnumerableCollection
+
+Private mEnumerationInProgess                       As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -114,6 +122,8 @@ Private Sub DeferredAction_Run(ByVal pData As Variant)
 Const ProcName As String = "DeferredAction_Run"
 On Error GoTo Err
 
+mEnumerationInProgess = True
+
 Dim lOrder As SimulatorOrder
 Set lOrder = pData
 
@@ -124,6 +134,9 @@ Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelling
     setCancelOrder lOrder
 End Select
+
+mEnumerationInProgess = False
+queueOrders
 
 Exit Sub
 
@@ -583,6 +596,8 @@ mAsk = Ask
 
 If mActiveOrders.Count = 0 Then Exit Sub
 
+mEnumerationInProgess = True
+
 handleCreatedOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
 
@@ -608,6 +623,9 @@ Do While en.MoveNext
         End If
     End If
 Loop
+
+mEnumerationInProgess = False
+queueOrders
 
 Exit Sub
 
@@ -624,6 +642,8 @@ mBid = Bid
 
 If mActiveOrders.Count = 0 Then Exit Sub
 
+mEnumerationInProgess = True
+
 handleCreatedOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
 
@@ -650,6 +670,9 @@ Do While en.MoveNext
     End If
 Loop
 
+mEnumerationInProgess = False
+queueOrders
+
 Exit Sub
 
 Err:
@@ -662,6 +685,8 @@ Const ProcName As String = "processTrade"
 On Error GoTo Err
 
 If mActiveOrders.Count = 0 Then Exit Sub
+
+mEnumerationInProgess = True
 
 handleCreatedOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
@@ -702,23 +727,31 @@ Do While en.MoveNext
     End If
 Loop
 
+mEnumerationInProgess = False
+queueOrders
+
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub queueOrder(ByVal pSimulatedOrder As SimulatorOrder)
+Private Sub queueOrder(ByVal pSimulatorOrder As SimulatorOrder)
 Const ProcName As String = "queueOrder"
 On Error GoTo Err
 
+If mEnumerationInProgess Then
+    mOrdersToBeQueued.Add pSimulatorOrder
+    Exit Sub
+End If
+
 ' if this order was previously queued, remove
 ' it now
-If mPendingOrders.Contains(pSimulatedOrder.Order.Id) Then mPendingOrders.Remove pSimulatedOrder.Order.Id
-If mActiveOrders.Contains(pSimulatedOrder.Order.Id) Then mActiveOrders.Remove pSimulatedOrder.Order.Id
+If mPendingOrders.Contains(pSimulatorOrder.Order.Id) Then mPendingOrders.Remove pSimulatorOrder.Order.Id
+If mActiveOrders.Contains(pSimulatorOrder.Order.Id) Then mActiveOrders.Remove pSimulatorOrder.Order.Id
 
-If Not pSimulatedOrder.Transmit Then
-    mPendingOrders.Add pSimulatedOrder, pSimulatedOrder.Order.Id
+If Not pSimulatorOrder.Transmit Then
+    mPendingOrders.Add pSimulatorOrder, pSimulatorOrder.Order.Id
 Else
     ' submit any other pending orders related
     ' to this one via pParentId or oca group
@@ -730,8 +763,8 @@ Else
             Set lPendingOrder = en.Current
             If lPendingOrder.IsFinished Then
                 en.Remove
-            ElseIf pSimulatedOrder.IsParentOf(lPendingOrder) Or _
-                    lPendingOrder.IsRelatedTo(pSimulatedOrder) Then
+            ElseIf pSimulatorOrder.IsParentOf(lPendingOrder) Or _
+                    lPendingOrder.IsRelatedTo(pSimulatorOrder) Then
                 mActiveOrders.Add lPendingOrder, lPendingOrder.Order.Id
                 en.Remove
                 setSubmitOrder lPendingOrder
@@ -739,9 +772,28 @@ Else
         Loop
     End If
     
-    mActiveOrders.Add pSimulatedOrder, pSimulatedOrder.Order.Id
-    setSubmitOrder pSimulatedOrder
+    mActiveOrders.Add pSimulatorOrder, pSimulatorOrder.Order.Id
+    setSubmitOrder pSimulatorOrder
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub queueOrders()
+Const ProcName As String = "queueOrders"
+On Error GoTo Err
+
+If mOrdersToBeQueued.Count = 0 Then Exit Sub
+
+Dim lSimulatorOrder As SimulatorOrder
+For Each lSimulatorOrder In mOrdersToBeQueued
+    queueOrder lSimulatorOrder
+Next
+
+mOrdersToBeQueued.Clear
 
 Exit Sub
 

@@ -205,6 +205,9 @@ End Function
 Public Sub Execute()
 End Sub
 
+Public Sub NotifyCloseout(ByVal pExec As IExecutionReport)
+End Sub
+
 Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
 End Sub
 

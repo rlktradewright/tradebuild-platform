@@ -62,6 +62,7 @@ Public Enum BracketOrderChangeTypes
     BracketOrderChangesPending
     BracketOrderChangesApplied
     BracketOrderChangesCancelled
+    BracketOrderPositionCloseoutNotified
 End Enum
 
 Public Enum BracketOrderStates
@@ -222,18 +223,18 @@ Public Enum ProfitChangeTypes
 End Enum
 
 Public Enum ProfitTypes
-    ProfitTypeProfit
-    ProfitTypeMaxProfit
-    ProfitTypeMaxLoss
-    ProfitTypeDrawdown
-    ProfitTypeSessionProfit
-    ProfitTypeSessionMaxProfit
-    ProfitTypeSessionMaxLoss
-    ProfitTypeSessionDrawdown
-    ProfitTypeTradeProfit
-    ProfitTypeTradeMaxProfit
-    ProfitTypeTradeMaxLoss
-    ProfitTypeTradeDrawdown
+    ProfitTypeProfit = 1&
+    ProfitTypeMaxProfit = 2&
+    ProfitTypeMaxLoss = 4&
+    ProfitTypeDrawdown = 8&
+    ProfitTypeSessionProfit = &H10&
+    ProfitTypeSessionMaxProfit = &H20&
+    ProfitTypeSessionMaxLoss = &H40&
+    ProfitTypeSessionDrawdown = &H80&
+    ProfitTypeTradeProfit = &H100&
+    ProfitTypeTradeMaxProfit = &H200&
+    ProfitTypeTradeMaxLoss = &H400&
+    ProfitTypeTradeDrawdown = &H800&
 End Enum
 
 '@================================================================================
@@ -265,8 +266,7 @@ End Type
 
 Public Type ProfitEventData
     Source          As Object
-    ProfitType      As Long
-    ProfitAmount    As Currency
+    ProfitTypes     As ProfitTypes
     CurrencyCode    As String
 End Type
 

@@ -240,6 +240,8 @@ Friend Property Let Enabled(ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
+If mEnabled = Value Then Exit Property
+
 mEnabled = Value
 
 Dim oc As OrderContext

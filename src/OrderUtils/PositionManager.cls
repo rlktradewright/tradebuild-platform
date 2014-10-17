@@ -99,10 +99,10 @@ Private mCumBuyPrice                            As Double
 Private mCumSellPrice                           As Double
 Private mQuantityOutstanding                    As Long
 
-Private mProfit                                 As Currency
-Private mMaxProfit                              As Currency
-Private mMaxLoss                                As Currency
-Private mDrawdown                               As Currency
+Private mSessionProfit                          As Currency
+Private mMaxSessionProfit                       As Currency
+Private mMaxSessionLoss                         As Currency
+Private mSessionDrawdown                        As Currency
 
 Private mProfitLastFlat                         As Currency
 Private mProfitThisTrade                        As Currency
@@ -129,8 +129,8 @@ Private mRecovering                             As Boolean
 
 Private mInitialSessionStartTime                As Date
 
-Private WithEvents mClosePositionsTC            As TaskController
-Attribute mClosePositionsTC.VB_VarHelpID = -1
+Private WithEvents mClosePositionsTask          As ClosePositionsTask
+Attribute mClosePositionsTask.VB_VarHelpID = -1
 
 ' Indicates that all OrderContexts are being closed, either as a result of
 ' a call to the closePosition functions, or because money management
@@ -241,8 +241,8 @@ If Not mMoneyManager Is Nothing Then
                                         pIsLongOrder, _
                                         pOrderSize, _
                                         pRisk + Risk, _
-                                        mProfit, _
-                                        mMaxProfit - mProfit, _
+                                        mSessionProfit, _
+                                        mMaxSessionProfit - mSessionProfit, _
                                         mProfitThisTrade, _
                                         mMaxProfitThisTrade - mProfitThisTrade, _
                                         mSession.SessionCurrentTime, _
@@ -303,9 +303,9 @@ Else
     End If
     
     mExecutions.Add lExec
-    mOrders.Item(lExec.OrderId).NotifyFill lExec
-    
     processExecution lExec
+    
+    mOrders.Item(lExec.OrderId).NotifyFill lExec
 End If
 
 Exit Sub
@@ -489,14 +489,15 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mClosePositionsTC Event Handlers
+' mClosePositionsTask Event Handlers
 '@================================================================================
 
-Private Sub mClosePositionsTC_Completed(ev As TaskCompletionEventData)
-Const ProcName As String = "mClosePositionsTC_Completed"
+Private Sub mClosePositionsTask_PositionClosed()
+Const ProcName As String = "mClosePositionsTask_PositionClosed"
 On Error GoTo Err
 
 fireChange PositionClosed
+Set mClosePositionsTask = Nothing
 
 Exit Sub
 
@@ -555,10 +556,10 @@ On Error GoTo Err
 '                    Me
 'GLogProfitProfile FormatTimestamp(mSession.SessionCurrentTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
 '                mProfitProfileBarNumber + 1 & "," & _
-'                mProfit & "," & _
-'                mProfit & "," & _
-'                mProfit & "," & _
-'                mProfit, _
+'                mSessionProfit & "," & _
+'                mSessionProfit & "," & _
+'                mSessionProfit & "," & _
+'                mSessionProfit, _
 '                mIsSimulated, _
 '                Me
 
@@ -638,7 +639,7 @@ On Error GoTo Err
 
 checkInitialised
 
-Drawdown = mMaxProfit - mProfit
+Drawdown = mSessionDrawdown
 
 Exit Property
 
@@ -722,6 +723,56 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get MaxLoss() As Currency
+Const ProcName As String = "MaxLoss"
+On Error GoTo Err
+
+checkInitialised
+MaxLoss = mMaxSessionLoss
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get MaxLossThisTrade() As Currency
+Const ProcName As String = "MaxLossThisTrade"
+On Error GoTo Err
+
+MaxLossThisTrade = mMaxLossThisTrade
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get MaxProfit() As Currency
+Const ProcName As String = "MaxProfit"
+On Error GoTo Err
+
+checkInitialised
+MaxProfit = mMaxSessionProfit
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get MaxProfitThisTrade() As Currency
+Const ProcName As String = "MaxProfitThisTrade"
+On Error GoTo Err
+
+MaxProfitThisTrade = mMaxProfitThisTrade
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get Name() As String
 Name = mName
 End Property
@@ -795,7 +846,7 @@ Const ProcName As String = "Profit"
 On Error GoTo Err
 
 checkInitialised
-Profit = mProfit
+Profit = mSessionProfit
 
 Exit Property
 
@@ -869,6 +920,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get TradeStartTime() As Date
+Const ProcName As String = "TradeStartTime"
+On Error GoTo Err
+
+TradeStartTime = mTradeStartTime
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TradeStartTimezoneName() As String
+Const ProcName As String = "TradeStartTimezoneName"
+On Error GoTo Err
+
+TradeStartTimezoneName = mTradeStartTimezoneName
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -907,53 +982,19 @@ Dim ev As ProfitEventData
 Set ev.Source = Me
 ev.CurrencyCode = mCurrencyCode
 
-If mProfit <> 0 Then
-    ev.ProfitAmount = mProfit
-    ev.ProfitType = ProfitTypes.ProfitTypeSessionProfit
-    pListener.NotifyProfit ev
-End If
+Dim lProfitTypes As ProfitTypes
 
-If mMaxProfit <> 0 Then
-    ev.ProfitAmount = mMaxProfit
-    ev.ProfitType = ProfitTypes.ProfitTypeSessionMaxProfit
-    pListener.NotifyProfit ev
-End If
+If mSessionProfit <> 0 Then lProfitTypes = ProfitTypes.ProfitTypeSessionProfit
+If mMaxSessionProfit <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeSessionMaxProfit
+If mMaxSessionLoss <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeSessionMaxLoss
+If mSessionDrawdown <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeSessionDrawdown
 
-If mMaxLoss <> 0 Then
-    ev.ProfitAmount = mMaxLoss
-    ev.ProfitType = ProfitTypes.ProfitTypeSessionMaxLoss
-    pListener.NotifyProfit ev
-End If
-
-If mDrawdown <> 0 Then
-    ev.ProfitAmount = mDrawdown
-    ev.ProfitType = ProfitTypes.ProfitTypeSessionDrawdown
-    pListener.NotifyProfit ev
-End If
-
-If mProfitThisTrade <> 0 Then
-    ev.ProfitAmount = mProfitThisTrade
-    ev.ProfitType = ProfitTypes.ProfitTypeTradeProfit
-    pListener.NotifyProfit ev
-End If
-
-If mMaxProfitThisTrade <> 0 Then
-    ev.ProfitAmount = mMaxProfitThisTrade
-    ev.ProfitType = ProfitTypes.ProfitTypeTradeMaxProfit
-    pListener.NotifyProfit ev
-End If
-
-If mMaxLossThisTrade <> 0 Then
-    ev.ProfitAmount = mMaxLossThisTrade
-    ev.ProfitType = ProfitTypes.ProfitTypeTradeMaxLoss
-    pListener.NotifyProfit ev
-End If
-
-If mDrawdownThisTrade <> 0 Then
-    ev.ProfitAmount = mDrawdownThisTrade
-    ev.ProfitType = ProfitTypes.ProfitTypeTradeDrawdown
-    pListener.NotifyProfit ev
-End If
+If mProfitThisTrade <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeTradeProfit
+If mMaxProfitThisTrade <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeTradeMaxProfit
+If mMaxLossThisTrade <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeTradeMaxLoss
+If mDrawdownThisTrade <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeTradeDrawdown
+    
+pListener.NotifyProfit ev
 
 Exit Sub
 
@@ -990,10 +1031,8 @@ End If
 
 mClosingPosition = True
 
-Dim lCloseoutTask As ClosePositionsTask
-Set lCloseoutTask = New ClosePositionsTask
-lCloseoutTask.Initialise Me, pFlags
-Set mClosePositionsTC = StartTask(lCloseoutTask, PriorityHigh)
+Set mClosePositionsTask = New ClosePositionsTask
+mClosePositionsTask.ClosePositions Me, pFlags
 
 Exit Sub
 
@@ -1190,49 +1229,63 @@ On Error GoTo Err
 If mTickSize = 0 Then Exit Sub
 If mCumSellPrice = 0 And mCumBuyPrice = 0 And mQuantityOutstanding = 0 Then Exit Sub
 
-Dim Profit As Currency
-Profit = mTickValue * (mCumSellPrice + mQuantityOutstanding * Price - mCumBuyPrice) / mTickSize
+Dim lProfit As Currency
+lProfit = mTickValue * (mCumSellPrice + mQuantityOutstanding * Price - mCumBuyPrice) / mTickSize
 
-If Profit <> mProfit Then
-    mProfit = Profit
+If lProfit = mSessionProfit Then Exit Sub
     
-    fireProfit mProfit, ProfitTypes.ProfitTypeSessionProfit
-    
-    gLogProfit mProfit, mIsSimulated, Me
-    gLogDrawDown mMaxProfit - mProfit, mIsSimulated, Me
+Dim lProfitTypes As ProfitTypes
+mSessionProfit = lProfit
+lProfitTypes = ProfitTypes.ProfitTypeSessionProfit
+
+If mSessionProfit > mMaxSessionProfit Then
+    mMaxSessionProfit = mSessionProfit
+    lProfitTypes = lProfitTypes Or ProfitTypeSessionMaxProfit
+    If mSessionDrawdown <> 0 Then
+        mSessionDrawdown = 0
+        lProfitTypes = lProfitTypes Or ProfitTypeSessionDrawdown
+    End If
+End If
+If mSessionProfit < mMaxSessionLoss Then
+    mMaxSessionLoss = mSessionProfit
+    lProfitTypes = lProfitTypes Or ProfitTypeSessionMaxLoss
+End If
+If mSessionProfit < mMaxSessionProfit Then
+    mSessionDrawdown = mMaxSessionProfit - mSessionProfit
+    lProfitTypes = lProfitTypes Or ProfitTypeSessionDrawdown
 End If
 
-If mProfit > mMaxProfit Then
-    mMaxProfit = mProfit
-    fireProfit mMaxProfit, ProfitTypes.ProfitTypeSessionMaxProfit
-    gLogMaxProfit mMaxProfit, mIsSimulated, Me
-End If
-If mProfit < mMaxLoss Then
-    mMaxLoss = mProfit
-    fireProfit mMaxLoss, ProfitTypes.ProfitTypeSessionMaxLoss
-    gLogMaxLoss mMaxLoss, mIsSimulated, Me
-End If
-If mProfit < mMaxProfit Then
-    mDrawdown = mMaxProfit - mProfit
-    fireProfit mDrawdown, ProfitTypes.ProfitTypeSessionDrawdown
-ElseIf mDrawdown <> 0 Then
-    mDrawdown = 0
-    fireProfit mDrawdown, ProfitTypes.ProfitTypeSessionDrawdown
-End If
+mProfitThisTrade = mSessionProfit - mProfitLastFlat
+lProfitTypes = lProfitTypes Or ProfitTypeTradeProfit
 
-mProfitThisTrade = mProfit - mProfitLastFlat
-fireProfit mProfitThisTrade, ProfitTypes.ProfitTypeTradeProfit
 If mProfitThisTrade > mMaxProfitThisTrade Then
     mMaxProfitThisTrade = mProfitThisTrade
-    fireProfit mMaxProfitThisTrade, ProfitTypes.ProfitTypeTradeMaxProfit
+    lProfitTypes = lProfitTypes Or ProfitTypeTradeMaxProfit
+    If mDrawdownThisTrade <> 0 Then
+        mDrawdownThisTrade = 0
+        lProfitTypes = lProfitTypes Or ProfitTypeTradeDrawdown
+    End If
 End If
 If mProfitThisTrade < mMaxLossThisTrade Then
     mMaxLossThisTrade = mProfitThisTrade
-    fireProfit mMaxLossThisTrade, ProfitTypes.ProfitTypeTradeMaxLoss
+    lProfitTypes = lProfitTypes Or ProfitTypeTradeMaxLoss
 End If
 If mProfitThisTrade < mMaxProfitThisTrade Then
     mDrawdownThisTrade = mMaxProfitThisTrade - mProfitThisTrade
-    fireProfit mDrawdownThisTrade, ProfitTypes.ProfitTypeTradeDrawdown
+    lProfitTypes = lProfitTypes Or ProfitTypeTradeDrawdown
+End If
+
+fireProfit lProfitTypes
+
+If lProfitTypes And ProfitTypes.ProfitTypeSessionProfit Then
+    gLogProfit mSessionProfit, mIsSimulated, Me
+    gLogDrawDown mSessionDrawdown, mIsSimulated, Me
+End If
+If lProfitTypes And ProfitTypeSessionMaxProfit Then
+    gLogMaxProfit mMaxSessionProfit, mIsSimulated, Me
+End If
+If lProfitTypes And ProfitTypeSessionMaxLoss Then
+    gLogMaxLoss mMaxSessionLoss, mIsSimulated, Me
 End If
 
 Exit Sub
@@ -1251,8 +1304,8 @@ If mMoneyManager Is Nothing Then Exit Sub
 
 Dim msg As String
 Dim lEndSession As Boolean
-If mMoneyManager.CloseAll(mProfit, _
-                            mMaxProfit - mProfit, _
+If mMoneyManager.CloseAll(mSessionProfit, _
+                            mMaxSessionProfit - mSessionProfit, _
                             mProfitThisTrade, _
                             mMaxProfitThisTrade - mProfitThisTrade, _
                             mSession.SessionCurrentTime, _
@@ -1401,15 +1454,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireProfit( _
-                ByVal ProfitAmount As Double, _
-                ByVal ProfitType As ProfitTypes)
+                ByVal pProfitTypes As ProfitTypes)
 Const ProcName As String = "fireProfit"
 On Error GoTo Err
 
 Dim ev As ProfitEventData
 Set ev.Source = Me
-ev.ProfitAmount = ProfitAmount
-ev.ProfitType = ProfitType
+ev.ProfitTypes = pProfitTypes
 ev.CurrencyCode = mCurrencyCode
 
 mProfitListeners.SetCurrentListeners
@@ -1655,7 +1706,7 @@ Else
     mProfitThisTrade = 0
     mMaxProfitThisTrade = 0
     mMaxLossThisTrade = 0
-    mProfitLastFlat = mProfit
+    mProfitLastFlat = mSessionProfit
     mDrawdownThisTrade = 0
     
     If Not mMoneyManager Is Nothing Then mMoneyManager.NotifyPositionFlat
@@ -1723,12 +1774,12 @@ mDrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
 mProfitThisTrade = 0
 mMaxProfitThisTrade = 0
 mMaxLossThisTrade = 0
-mProfitLastFlat = mProfit
+mProfitLastFlat = mSessionProfit
 
-mProfit = 0
-mMaxProfit = 0
-mMaxLoss = 0
-mDrawdown = 0
+mSessionProfit = 0
+mMaxSessionProfit = 0
+mMaxSessionLoss = 0
+mSessionDrawdown = 0
 
 mDrawdownThisTrade = 0
 mTradeStartTime = mInitialSessionStartTime

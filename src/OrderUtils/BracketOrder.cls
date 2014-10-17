@@ -301,7 +301,7 @@ Private Function IBracketOrder_Cancel(Optional ByVal pEvenIfFilled As Boolean = 
 Const ProcName As String = "IBracketOrder_Cancel"
 On Error GoTo Err
 
-Cancel pEvenIfFilled
+IBracketOrder_Cancel = Cancel(pEvenIfFilled)
 
 Exit Function
 
@@ -488,6 +488,18 @@ End Property
 Private Property Get IBracketOrder_LongPosition() As Boolean
 IBracketOrder_LongPosition = LongPosition
 End Property
+
+Private Sub IBracketOrder_NotifyCloseout(ByVal pExec As IExecutionReport)
+Const ProcName As String = "IBracketOrder_NotifyCloseout"
+On Error GoTo Err
+
+NotifyCloseout pExec
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Property Get IBracketOrder_Order(ByVal pIndex As Long) As IOrder
 Const ProcName As String = "IBracketOrder_Order"
@@ -2241,19 +2253,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-'Friend Sub NotifyCloseout( _
-'                ByVal pPrice As Double, _
-'                ByVal pTimestamp As Date)
-'Const ProcName As String = "NotifyCloseout"
-'On Error GoTo Err
-'
-'If Size <> 0 Then processExecution -Size, pPrice, pTimestamp, mTimezoneName, True
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError  ProcName, ModuleName
-'End Sub
+Friend Sub NotifyCloseout( _
+                ByVal pExec As IExecutionReport)
+Const ProcName As String = "NotifyCloseout"
+On Error GoTo Err
+
+If Size = 0 Then Exit Sub
+
+Dim lExec As New Execution
+lExec.SyncToExecutionReport pExec
+lExec.Quantity = Size
+If Size > 0 Then
+    lExec.Action = OrderActionSell
+Else
+    lExec.Action = OrderActionBuy
+End If
+
+processExecution lExec
+
+fireChange BracketOrderPositionCloseoutNotified
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
 Const ProcName As String = "RemoveChangeListener"
@@ -2808,21 +2832,28 @@ Const ProcName As String = "cancelOrders"
 On Error GoTo Err
 
 mCancelPrice = 0
+If Not mCancelTLI Is Nothing Then
+    mCancelTLI.Cancel
+    Set mCancelTLI = Nothing
+End If
+
+Dim lNeedCancel As Boolean
 
 Select Case mEntryOrder.Status
 Case OrderStatuses.OrderStatusCreated
     CancelAfter = 0
     CancelTime = 0
     mEntryOrder.Status = OrderStatuses.OrderStatusCancelled
-
-    cancelOrders = True
+Case Else
+    lNeedCancel = True
 End Select
 
 If Not mStopLossOrder Is Nothing Then
     Select Case mStopLossOrder.Status
     Case OrderStatuses.OrderStatusCreated
         mStopLossOrder.Status = OrderStatuses.OrderStatusCancelled
-        cancelOrders = True
+    Case Else
+        lNeedCancel = True
     End Select
 End If
 
@@ -2830,23 +2861,25 @@ If Not mTargetOrder Is Nothing Then
     Select Case mTargetOrder.Status
     Case OrderStatuses.OrderStatusCreated
         mTargetOrder.Status = OrderStatuses.OrderStatusCancelled
-        cancelOrders = True
+    Case Else
+        lNeedCancel = True
     End Select
 End If
 
-If mOrderSubmitter.CancelBracketOrder(Me) Then
-    cancelOrders = True
-    
-    Dim StopLossOrderId As String
-    If Not mStopLossOrder Is Nothing Then StopLossOrderId = mStopLossOrder.Id
-    
-    Dim TargetOrderId As String
-    If Not mTargetOrder Is Nothing Then TargetOrderId = mTargetOrder.Id
-    logOrderMessage "Cancel orders: " & _
-                    EntryOrder.Id & _
-                    ", " & StopLossOrderId & _
-                    ", " & TargetOrderId
-End If
+If Not lNeedCancel Then Exit Function
+If Not mOrderSubmitter.CancelBracketOrder(Me) Then Exit Function
+
+cancelOrders = True
+
+Dim StopLossOrderId As String
+If Not mStopLossOrder Is Nothing Then StopLossOrderId = mStopLossOrder.Id
+
+Dim TargetOrderId As String
+If Not mTargetOrder Is Nothing Then TargetOrderId = mTargetOrder.Id
+logOrderMessage "Cancel orders: " & _
+                EntryOrder.Id & _
+                ", " & StopLossOrderId & _
+                ", " & TargetOrderId
 
 Exit Function
 
@@ -3247,13 +3280,13 @@ On Error GoTo Err
 Dim lPrevState As BracketOrderStates
 lPrevState = mStateEngine.State
 
+Dim lConditions As OpConditions
+lConditions = mStateEngine.Conditions
+
 Dim lActions() As OpActions
 lActions = mStateEngine.NotifyStimulus(pStimulus)
 mSummary.State = State
 SaveRecoveryInfo
-
-Dim lConditions As OpConditions
-lConditions = mStateEngine.Conditions
 
 Dim lActionsString As String
 Dim i As Long

@@ -58,6 +58,7 @@ Private mDataSource                                 As IMarketDataSource
 
 Private mLastBid                                    As Double
 Private mLastAsk                                    As Double
+Private mLastTrade                                  As Double
 
 Private mCumBuyPrice                                As Double
 Private mCumSellPrice                               As Double
@@ -87,11 +88,25 @@ Const ProcName As String = "ChangeListener_Change"
 On Error GoTo Err
 
 Select Case ev.changeType
+Case BracketOrderChangeTypes.BracketOrderSelfCancelled
+    mBracketOrder.RemoveExecutionListener Me
+    mBracketOrder.RemoveChangeListener Me
+    Set mBracketOrder = Nothing
+    mDataSource.RemoveGenericTickListener Me
 Case BracketOrderChangeTypes.BracketOrderCompleted
     If mBracketOrder.Size = 0 Then
         logBracketProfile
         mDataSource.RemoveGenericTickListener Me
     End If
+Case BracketOrderChangeTypes.BracketOrderPositionCloseoutNotified
+    Assert mBracketOrder.Size = 0, "Bracket order size is not zero after position closeout notification"
+    
+    logBracketProfile
+    
+    mBracketOrder.RemoveExecutionListener Me
+    mBracketOrder.RemoveChangeListener Me
+    Set mBracketOrder = Nothing
+    mDataSource.RemoveGenericTickListener Me
 End Select
 
 Exit Sub
@@ -114,6 +129,14 @@ Else
     mCumSellPrice = mCumSellPrice + ev.ExecutionReport.Quantity * ev.ExecutionReport.Price
 End If
 
+If mLastTrade <> MaxDouble Then
+    ProcessTradePrice mLastTrade
+ElseIf mBracketOrder.LongPosition Then
+    ProcessBidPrice mLastBid
+Else
+    ProcessAskPrice mLastAsk
+End If
+
 Exit Sub
 
 Err:
@@ -134,10 +157,13 @@ On Error GoTo Err
 
 Select Case ev.Tick.TickType
 Case TickTypeBid
+    If ev.Tick.Price = mLastBid Then Exit Sub
     ProcessBidPrice ev.Tick.Price
 Case TickTypeAsk
+    If ev.Tick.Price = mLastAsk Then Exit Sub
     ProcessAskPrice ev.Tick.Price
 Case TickTypeTrade
+    If ev.Tick.Price = mLastTrade Then Exit Sub
     ProcessTradePrice ev.Tick.Price
 End Select
 
@@ -155,12 +181,28 @@ Public Property Get BracketOrder() As IBracketOrder
 Set BracketOrder = mBracketOrder
 End Property
 
+Public Property Get Drawdown() As Currency
+Drawdown = mDrawdown
+End Property
+
 Public Property Let DrawdownNotificationThreshold(ByVal Value As Currency)
 mDrawdownNotificationThreshold = Value
 End Property
 
 Public Property Let LossNotificationThreshold(ByVal Value As Currency)
 mLossNotificationThreshold = Value
+End Property
+
+Public Property Get MaxLoss() As Currency
+MaxLoss = mMaxLoss
+End Property
+
+Public Property Get MaxProfit() As Currency
+MaxProfit = mMaxProfit
+End Property
+
+Public Property Get Profit() As Currency
+Profit = mProfit
 End Property
 
 Public Property Let ProfitNotificationThreshold(ByVal Value As Currency)
@@ -173,7 +215,6 @@ End Property
 
 Public Sub AddChangeListener(ByVal pListener As ChangeListener)
 Const ProcName As String = "AddChangeListener"
-
 On Error GoTo Err
 
 mChangeListeners.Add pListener
@@ -186,7 +227,6 @@ End Sub
 
 Public Sub AddProfitListener(ByVal pListener As IProfitListener)
 Const ProcName As String = "AddProfitListener"
-
 On Error GoTo Err
 
 mProfitListeners.Add pListener
@@ -203,6 +243,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+mLastTrade = MaxDouble
+
 Set mBracketOrder = pBracketOrder
 mBracketOrder.AddExecutionListener Me
 mBracketOrder.AddChangeListener Me
@@ -215,6 +257,18 @@ Set mContractFuture = pDataSource.ContractFuture
 Set mDataSource = pDataSource
 mDataSource.AddGenericTickListener Me
 
+If mDataSource.State = MarketDataSourceStateRunning And _
+    (mCumBuyPrice <> 0# Or mCumSellPrice <> 0#) _
+Then
+    Dim lAskTick As GenericTick
+    lAskTick = mDataSource.CurrentTick(TickTypeAsk)
+    If lAskTick.Timestamp <> 0# Then ProcessAskPrice lAskTick.Price
+    
+    Dim lBidTick As GenericTick
+    lBidTick = mDataSource.CurrentTick(TickTypeBid)
+    If lBidTick.Timestamp <> 0# Then ProcessBidPrice lBidTick.Price
+End If
+    
 Exit Sub
 
 Err:
@@ -223,7 +277,6 @@ End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
 Const ProcName As String = "RemoveChangeListener"
-
 On Error GoTo Err
 
 mChangeListeners.Remove pListener
@@ -236,7 +289,6 @@ End Sub
 
 Public Sub RemoveProfitListener(ByVal pListener As IProfitListener)
 Const ProcName As String = "RemoveProfitListener"
-
 On Error GoTo Err
 
 mProfitListeners.Remove pListener
@@ -297,10 +349,12 @@ ElseIf mDrawdown <> 0 Then
     lNotifyDrawdown = True
 End If
 
-If lNotifyProfit Then fireProfit mProfit, ProfitTypes.ProfitTypeProfit
-If lNotifyMaxProfit Then fireProfit mMaxProfit, ProfitTypes.ProfitTypeMaxProfit
-If lNotifyMaxLoss Then fireProfit mMaxLoss, ProfitTypes.ProfitTypeMaxLoss
-If lNotifyDrawdown Then fireProfit mDrawdown, ProfitTypes.ProfitTypeDrawdown
+Dim lProfitTypes As ProfitTypes
+If lNotifyProfit Then lProfitTypes = ProfitTypes.ProfitTypeProfit
+If lNotifyMaxProfit Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeMaxProfit
+If lNotifyMaxLoss Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeMaxLoss
+If lNotifyDrawdown Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeDrawdown
+fireProfit lProfitTypes
 
 If lNotifyProfit Then
     If mProfitNotificationThreshold <> 0 And _
@@ -357,8 +411,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireProfit( _
-                ByVal ProfitAmount As Double, _
-                ByVal ProfitType As ProfitTypes)
+                ByVal pProfitTypes As ProfitTypes)
 Const ProcName As String = "fireProfit"
 On Error GoTo Err
 
@@ -373,8 +426,7 @@ If sCurrencyCode = "" Then
 End If
 
 Set ev.Source = Me
-ev.ProfitAmount = ProfitAmount
-ev.ProfitType = ProfitType
+ev.ProfitTypes = pProfitTypes
 ev.CurrencyCode = sCurrencyCode
 
 mProfitListeners.SetCurrentListeners
@@ -445,9 +497,9 @@ Private Sub ProcessAskPrice(ByVal pPrice As Double)
 Const ProcName As String = "ProcessAskPrice"
 On Error GoTo Err
 
-If pPrice = mLastAsk Then Exit Sub
 If Not mBracketOrder.LongPosition Then calcProfitLoss pPrice
 mLastAsk = pPrice
+mLastTrade = MaxDouble
 
 Exit Sub
 
@@ -459,9 +511,9 @@ Private Sub ProcessBidPrice(ByVal pPrice As Double)
 Const ProcName As String = "ProcessBidPrice"
 On Error GoTo Err
 
-If pPrice = mLastBid Then Exit Sub
 If mBracketOrder.LongPosition Then calcProfitLoss pPrice
 mLastBid = pPrice
+mLastTrade = MaxDouble
 
 Exit Sub
 
@@ -473,8 +525,13 @@ Private Sub ProcessTradePrice(ByVal pPrice As Double)
 Const ProcName As String = "ProcessTradePrice"
 On Error GoTo Err
 
-If pPrice > mLastAsk Then ProcessAskPrice pPrice     ' because the Ask Price must have gone at least that high
-If pPrice < mLastBid Then ProcessBidPrice pPrice   ' because the Bid Price must have gone at least that low
+If pPrice > mLastAsk Then
+    ProcessAskPrice pPrice     ' because the Ask Price must have gone at least that high
+    mLastTrade = pPrice
+ElseIf pPrice < mLastBid Then
+    ProcessBidPrice pPrice   ' because the Bid Price must have gone at least that low
+    mLastTrade = pPrice
+End If
 
 Exit Sub
 
