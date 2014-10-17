@@ -56,6 +56,8 @@ Private mName                                       As String
 
 Private mRecoveryFilePath                           As String
 
+Private mOrderPersistenceDataStore                  As IOrderPersistenceDataStore
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -116,7 +118,8 @@ mName = Value
 End Property
 
 Private Sub IServiceProvider_Terminate()
-
+If Not mOrderPersistenceDataStore Is Nothing Then mOrderPersistenceDataStore.Finish
+Set mOrderPersistenceDataStore = Nothing
 End Sub
 
 '@================================================================================
@@ -147,7 +150,8 @@ Public Property Get OrderPersistenceDataStore() As IOrderPersistenceDataStore
 Const ProcName As String = "OrderPersistenceDataStore"
 On Error GoTo Err
 
-Set OrderPersistenceDataStore = createOrderPersistenceDataStore(mRecoveryFilePath)
+If mOrderPersistenceDataStore Is Nothing Then Set mOrderPersistenceDataStore = createOrderPersistenceDataStore(mRecoveryFilePath)
+Set OrderPersistenceDataStore = mOrderPersistenceDataStore
 
 Exit Property
 
