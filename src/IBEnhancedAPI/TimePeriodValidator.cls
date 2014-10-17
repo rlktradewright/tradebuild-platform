@@ -79,7 +79,6 @@ If pTimePeriod.Length < 1 Then ITimePeriodValidator_IsValidTimePeriod = False
 
 Select Case pTimePeriod.Units
 Case TimePeriodSecond
-    If pTimePeriod.Length < 15 Then ITimePeriodValidator_IsValidTimePeriod = False
     If pTimePeriod.Length > 86400 Then ITimePeriodValidator_IsValidTimePeriod = False
 Case TimePeriodMinute
     If pTimePeriod.Length > 1440 Then ITimePeriodValidator_IsValidTimePeriod = False
