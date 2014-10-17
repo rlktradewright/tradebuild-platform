@@ -67,6 +67,9 @@ Private Const ModuleName                            As String = "IOrderPersisten
 Public Sub Clear(ByVal pScopeName As String)
 End Sub
 
+Public Sub Finish()
+End Sub
+
 Public Function GetEnumeratorForScope(ByVal pScopeName As String) As Enumerator
 End Function
 

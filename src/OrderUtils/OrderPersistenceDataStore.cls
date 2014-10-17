@@ -72,13 +72,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IOrderPersistenceDataStore_Finish()
+Const ProcName As String = "IOrderPersistenceDataStore_Finish"
+On Error GoTo Err
+
+Dim lTS As TextStream
+For Each lTS In mTextStreams
+    lTS.Close
+Next
+
+mTextStreams.Clear
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Function IOrderPersistenceDataStore_GetEnumeratorForScope(ByVal pScopeName As String) As Enumerator
 Const ProcName As String = "IOrderPersistenceDataStore_GetEnumeratorForScope"
 On Error GoTo Err
 
 Dim lOpEnumerator As New OrderPersistenceEnumerator
 lOpEnumerator.Initialise getPreviousPersistenceFile(pScopeName)
-Set IOrderPersistenceDataStore_GetEnumeratorForScope = lOpEnumerator.GetEnumerator
+Set IOrderPersistenceDataStore_GetEnumeratorForScope = lOpEnumerator.getEnumerator
 
 Exit Function
 
