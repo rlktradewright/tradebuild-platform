@@ -86,6 +86,8 @@ On Error GoTo Err
     gTracer.EnterProcedure pInfo:="", pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
+If mRegion Is Nothing Then Exit Sub
+
 Dim et As ElapsedTimer
 If gIsInDev Then
     If et Is Nothing Then Set et = New ElapsedTimer
