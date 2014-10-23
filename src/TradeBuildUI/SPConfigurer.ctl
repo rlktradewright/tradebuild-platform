@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
 Begin VB.UserControl SPConfigurer 
    ClientHeight    =   12750
    ClientLeft      =   0
@@ -2245,10 +2245,7 @@ Next
 
 On Error GoTo Err
 
-Dim da As DataAdapter
-Set da = New DataAdapter
-Set da.object = mCustomParams
-Set ParamsGrid.DataSource = da
+Set ParamsGrid.DataSource = mCustomParams
 
 mCustomParams.AddCollectionChangeListener Me
 
