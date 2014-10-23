@@ -620,7 +620,7 @@ Else
     Set mTickfileStoreInput = createTickfileStoreInput
     Set mTickfileStoreOutput = createTickfileStoreOutput
     
-    ' do these last as simulator needs MarketDataManager and ContractStores
+    ' do these last as order submitters need MarketDataManager and ContractStores
     Set mOrderSubmitterFactoryLive = createOrderSubmitterFactoryLive
     Set mOrderSubmitterFactorySimulated = createOrderSubmitterFactorySimulated
     
@@ -1042,8 +1042,8 @@ Private Sub loadConfiguration()
 Const ProcName As String = "loadConfiguration"
 On Error GoTo Err
 
-Dim sp As ConfigurationSection
-Dim spName As String
+gLogger.Log "Creating service providers from config", ProcName, ModuleName
+
 Dim spProgId As String
 Dim props As ConfigurationSection
 Dim prop As ConfigurationSection
@@ -1051,11 +1051,14 @@ Dim spObj As Object
 Dim spIndex As Long
 Dim Params As Parameters
 
+Dim sp As ConfigurationSection
 For Each sp In mServiceProviderConfig
-    If CBool(sp.getAttribute(AttributeNameEnabled, "False")) Then
+    Dim spName As String
+    spName = sp.InstanceQualifier
         
-        spName = sp.InstanceQualifier
-        
+    If Not CBool(sp.getAttribute(AttributeNameEnabled, "False")) Then
+        gLogger.Log "Not creating disabled service provider: " & spName, ProcName, ModuleName
+    Else
         spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
         AssertArgument spProgId <> "", "Service provider ProgId not specified"
         
@@ -1088,6 +1091,8 @@ For Each sp In mServiceProviderConfig
         AssertArgument spIndex >= 0, "Can't Add service provider " & spName
             
         Set mServiceProviders(spIndex).SpConfig = sp
+        
+        gLogger.Log "Created service provider: " & spName, ProcName, ModuleName
     End If
 Next
 

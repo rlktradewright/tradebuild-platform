@@ -570,9 +570,9 @@ Const ProcName As String = "StartServiceProviders"
 On Error GoTo Err
 
 StartServiceProviders = ServiceProviders.StartServiceProviders(mStudyLibraryManager, mSessionName)
-If Not mMarketDataSourcesConfig Is Nothing Then MarketDataManager.LoadFromConfig mMarketDataSourcesConfig
 
 If Not ServiceProviders.MarketDataManager Is Nothing Then
+    If Not mMarketDataSourcesConfig Is Nothing Then MarketDataManager.LoadFromConfig mMarketDataSourcesConfig
     Set mWorkspaces = CreateWorkspaces(mScopeName, _
                         Me.MarketDataManager, _
                         mOrderManager, _
