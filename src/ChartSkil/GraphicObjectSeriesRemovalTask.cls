@@ -73,14 +73,19 @@ Private Sub Task_run()
 Const ProcName As String = "Task_run"
 On Error GoTo Err
 
+Dim failpoint As String
+
 If mGraphObjSeries.Count <> 0 Then
     ' we remove the latest object first, since later objects may have references to earlier
     ' objects, so that removing the earliest first would mean they can't actually be
     ' terminated
+    failpoint = 100
     If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(mGraphObjSeries.Count), False, False
     
+    failpoint = 200
     mGraphObjSeries.Remove mGraphObjSeries.Count
 Else
+    failpoint = 300
     mGraphObjSeries.Finish
     Set mGraphObjSeries = Nothing
     Set mRegion = Nothing
@@ -91,7 +96,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Property Let Task_TaskContext(ByVal Value As TaskContext)
@@ -120,6 +125,7 @@ Friend Sub Initialise( _
                 ByVal removeObjectsFromRegion As Boolean)
 Set mGraphObjSeries = graphObjSeries
 If removeObjectsFromRegion Then
+    AssertArgument Not Region Is Nothing, "Region is Nothing"
     Set mRegion = Region
     mRemoveObjectsFromRegion = True
 End If

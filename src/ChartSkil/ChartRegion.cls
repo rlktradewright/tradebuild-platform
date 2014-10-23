@@ -2387,20 +2387,28 @@ Friend Sub RemoveGraphicObjectEx( _
 Const ProcName As String = "RemoveGraphicObjectEx"
 On Error GoTo Err
 
+If mData Is Nothing Then Exit Sub   'the region might have been removed
+
+Dim failpoint As String
+
+failpoint = 100
 If Not mSelectedObject Is Nothing Then
     If graphObj Is mSelectedObject Then ClearSelection
 End If
 
+failpoint = 200
 If removeFromSeries Then mGraphObjSeriesCollection.Item(graphObj.SeriesID).RemoveObject graphObj
 
+failpoint = 300
 If undraw Then UndrawArea graphObj.BoundingRectangleInViewport, graphObj
 
+failpoint = 400
 mData.RemoveGraphicObject graphObj
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveGraphicObjectSeries( _
