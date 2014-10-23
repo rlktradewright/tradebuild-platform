@@ -75,6 +75,7 @@ Attribute mConnectionTimer.VB_VarHelpID = -1
 
 Private mBufferedReader                             As BufferedReader
 
+Private mIsConnecting                               As Boolean
 Private mIsConnected                                As Boolean
 
 Private mConnectionRetryIntervalSecs                As Long
@@ -134,6 +135,7 @@ If mRetryingConnection Then
     Exit Sub
 End If
 
+mIsConnecting = False
 mIsConnected = True
 
 mBufferedReader.ClearBuffer
@@ -151,12 +153,12 @@ Private Sub mSocket_DataArrival( _
 Const ProcName As String = "mSocket_DataArrival"
 On Error GoTo Err
 
-Dim lBytesReceived As Long
-Dim lSocketInputData() As Byte
-
 If mSocket.State <> StateConstants.sckConnected Then Exit Sub
 
+Dim lSocketInputData() As Byte
 mSocket.GetData lSocketInputData, vbArray + vbByte
+
+Dim lBytesReceived As Long
 lBytesReceived = UBound(lSocketInputData) + 1
 
 If gSocketLogger.IsLoggable(LogLevelMediumDetail) Then
@@ -305,6 +307,7 @@ s = "Connecting to Tws: " & getConnectionString
 gLog s, ModuleName, ProcName
 
 mSocket.Connect mServer, mPort
+mIsConnecting = True
 
 RaiseEvent Connecting
 
@@ -319,7 +322,8 @@ Friend Sub Disconnect( _
 Const ProcName As String = "Disconnect"
 On Error GoTo Err
 
-If Not mIsConnected Then Exit Sub
+If Not (mIsConnecting Or mIsConnected) Then Exit Sub
+mIsConnecting = False
 mIsConnected = False
 
 If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
@@ -349,7 +353,6 @@ End Sub
 
 Friend Sub Send(ByRef pData() As Byte)
 Const ProcName As String = "Send"
-
 On Error GoTo Err
 
 If gSocketLogger.IsLoggable(LogLevelMediumDetail) Then
@@ -389,7 +392,6 @@ Private Sub handleTwsDisconnection(ByVal pMessage As String, ByVal pClosedByAppl
 Const ProcName As String = "handleTwsDisconnection"
 On Error GoTo Err
 
-Dim s As String
 gLog "Connection to Tws closed: " & pMessage & ": " & getConnectionString, ModuleName, ProcName
 
 Set mSocket = Nothing
@@ -406,7 +408,6 @@ End Sub
 
 Private Sub ReleaseSocket()
 Const ProcName As String = "ReleaseSocket"
-
 On Error GoTo Err
 
 If Not mSocket Is Nothing Then
@@ -426,7 +427,6 @@ End Sub
 
 Private Sub retryConnection()
 Const ProcName As String = "retryConnection"
-
 On Error GoTo Err
 
 If mConnectionRetryIntervalSecs <> 0 Then
@@ -446,7 +446,6 @@ Private Function showBuffer( _
                 ByRef pHeader As String, _
                 ByRef pBuffer() As Byte) As String
 Const ProcName As String = "showBuffer"
-
 On Error GoTo Err
 
 showBuffer = pHeader & Replace(StrConv(pBuffer, vbUnicode), Chr$(0), "_")
