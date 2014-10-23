@@ -94,6 +94,7 @@ Public Const WindowStateNormal                      As String = "Normal"
 Private mIsInDev                                    As Boolean
 
 Public mConfigStore                                 As ConfigurationStore
+Private mConfigChangeMonitor                        As ConfigChangeMonitor
 
 Private mEditConfig                                 As Boolean
 
@@ -102,6 +103,8 @@ Private mFatalErrorHandler                          As FatalErrorHandler
 Private mMainForm                                   As fTradeSkilDemo
 
 Private mConfigEditor                               As fConfigEditor
+
+Private mSplash                                     As fSplash
 
 '@================================================================================
 ' Class Event Handlers
@@ -148,6 +151,41 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub gFinishConfigChangeMonitoring()
+Const ProcName As String = "gFinishConfigChangeMonitoring"
+On Error GoTo Err
+
+If Not mConfigChangeMonitor Is Nothing Then
+    mConfigChangeMonitor.Finish
+    Set mConfigChangeMonitor = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function gGetSplashScreen() As Form
+Const ProcName As String = "gGetSplashScreen"
+On Error GoTo Err
+
+If mSplash Is Nothing Then
+    Set mSplash = New fSplash
+    mSplash.Show vbModeless
+    mSplash.Refresh
+    SetWindowLong mSplash.hWnd, GWL_EXSTYLE, GetWindowLong(mSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
+    SetWindowPos mSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
+End If
+
+Set gGetSplashScreen = mSplash
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
@@ -180,27 +218,65 @@ End Sub
 
 Public Function gLoadMainForm( _
                 ByVal pAppInstanceConfig As ConfigurationSection, _
-                Optional ByVal pPrevMainForm As fTradeSkilDemo, _
-                Optional ByVal pSplash As fSplash) As Boolean
+                Optional ByVal pPrevMainForm As fTradeSkilDemo) As Boolean
 Const ProcName As String = "gLoadMainForm"
 On Error GoTo Err
 
-Dim lMainForm As New fTradeSkilDemo
+Do
+    gGetSplashScreen
+    
+    Dim lMainForm As New fTradeSkilDemo
+    
+    LogMessage "Configuring TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
+    Dim lTradeBuildAPI As TradeBuildAPI
+    Set lTradeBuildAPI = configureTradeBuild(mConfigStore, pAppInstanceConfig)
+    
+    If lTradeBuildAPI Is Nothing Then
+        LogMessage "Failed to configure TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
+    End If
+    
+    LogMessage "Successfully configured TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
+    LogMessage "Loading main form for config: " & pAppInstanceConfig.InstanceQualifier
+    
+    Dim lErrorMessage As String
+    If lMainForm.Initialise(lTradeBuildAPI, mConfigStore, pAppInstanceConfig, pPrevMainForm, lErrorMessage) Then Exit Do
 
-LogMessage "Configuring TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
-Dim lTradeBuildAPI As TradeBuildAPI
-Set lTradeBuildAPI = configureTradeBuild(mConfigStore, pAppInstanceConfig)
-
-If lTradeBuildAPI Is Nothing Then
-    LogMessage "Failed to configure TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
-    gLoadMainForm = False
-    Exit Function
-End If
-
-LogMessage "Successfully configured TradeBuild with config: " & pAppInstanceConfig.InstanceQualifier
-LogMessage "Loading main form for config: " & pAppInstanceConfig.InstanceQualifier
-
-lMainForm.Initialise lTradeBuildAPI, mConfigStore, pAppInstanceConfig, pSplash, pPrevMainForm
+    lTradeBuildAPI.ServiceProviders.RemoveAll
+    gUnloadMainForm
+    gUnloadSplashScreen
+    
+    Dim userResponse As Long
+    userResponse = MsgBox( _
+            "The configuration failed to operate correctly, for this " & vbCrLf & _
+            "reason:" & vbCrLf & vbCrLf & _
+            lErrorMessage & vbCrLf & vbCrLf & _
+            "Would you like to manually correct the configuration?" & vbCrLf & vbCrLf & _
+            "Click Yes to manually correct the configuration." & vbCrLf & vbCrLf & _
+            "Click No to proceed with a new default configuration." & _
+            "The default configuration will connect to TWS running on the " & vbCrLf & _
+            "same computer. It will obtain contract data and historical data " & vbCrLf & _
+            "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
+            "You may amend the default configuration by going to the " & vbCrLf & _
+            "Configuration tab when the program has started." & vbCrLf & vbCrLf & _
+            "Click Cancel to exit.", _
+            vbYesNoCancel Or vbQuestion, _
+            "Attention!")
+    If userResponse = vbYes Then
+        LogMessage "User editing app instance configuration: " & pAppInstanceConfig.InstanceQualifier
+        Set pAppInstanceConfig = gShowConfigEditor(mConfigStore, pAppInstanceConfig, pCentreWindow:=True)
+    ElseIf userResponse = vbNo Then
+        LogMessage "Creating a new default app instance configuration"
+        Set pAppInstanceConfig = AddAppInstanceConfig(mConfigStore, _
+                                                DefaultAppInstanceConfigName, _
+                                                ConfigFlagIncludeDefaultBarFormatterLibrary Or _
+                                                    ConfigFlagIncludeDefaultStudyLibrary Or _
+                                                    ConfigFlagSetAsDefault)
+    Else
+        gLoadMainForm = False
+        Exit Function
+    End If
+    
+Loop
 
 LogMessage "Main form initialised successfully"
 
@@ -220,9 +296,7 @@ Public Sub gModelessMsgBox( _
 Const ProcName As String = "gModelessMsgBox"
 On Error GoTo Err
 
-Dim lMsgBox As New fMsgBox
-lMsgBox.Initialise prompt, buttons, title
-lMsgBox.Show vbModeless, gMainForm
+ModelessMsgBox prompt, buttons, title, gMainForm
 
 Exit Sub
 
@@ -241,39 +315,33 @@ gPermittedServiceProviderRoles = ServiceProviderRoles.SPRoleRealtimeData Or _
                                 ServiceProviderRoles.SPRoleTickfileInput
 End Property
 
-Public Sub gSaveSettings()
-Const ProcName As String = "gSaveSettings"
-On Error GoTo Err
-
-If mConfigStore.Dirty Then
-    LogMessage "Saving configuration"
-    mConfigStore.Save
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub gUnloadConfigEditor()
-If Not mConfigEditor Is Nothing Then
-    Unload mConfigEditor
-    Set mConfigEditor = Nothing
-End If
-End Sub
+'Public Sub gSaveSettings()
+'Const ProcName As String = "gSaveSettings"
+'On Error GoTo Err
+'
+'If mConfigStore.Dirty Then
+'    LogMessage "Saving configuration"
+'    mConfigStore.Save
+'End If
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 Public Function gShowConfigEditor( _
                 ByVal pConfigStore As ConfigurationStore, _
                 ByVal pCurrAppInstanceConfig As ConfigurationSection, _
-                Optional ByVal pParentForm As Form) As ConfigurationSection
+                Optional ByVal pParentForm As Form, _
+                Optional ByVal pCentreWindow As Boolean = False) As ConfigurationSection
 Const ProcName As String = "gShowConfigEditor"
 On Error GoTo Err
 
 If mConfigEditor Is Nothing Then
     Set mConfigEditor = New fConfigEditor
        
-    mConfigEditor.Initialise pConfigStore, pCurrAppInstanceConfig
+    mConfigEditor.Initialise pConfigStore, pCurrAppInstanceConfig, pCentreWindow
 End If
 mConfigEditor.Show vbModal, pParentForm
 Set gShowConfigEditor = mConfigEditor.selectedAppConfig
@@ -284,55 +352,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gShowSplashScreen() As Form
-Const ProcName As String = "gShowSplashScreen"
-On Error GoTo Err
-
-Dim lSplash As New fSplash
-lSplash.Show vbModeless
-lSplash.Refresh
-Set gShowSplashScreen = lSplash
-SetWindowLong lSplash.hWnd, GWL_EXSTYLE, GetWindowLong(lSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
-SetWindowPos lSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-'Public Sub gShowStudyPicker( _
-'                ByVal chartMgr As ChartManager, _
-'                ByVal title As String)
-'Const ProcName As String = "gShowStudyPicker"
-'
-'On Error GoTo Err
-'
-'If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
-'mStudyPickerForm.Initialise chartMgr, title
-'mStudyPickerForm.Show vbModeless, mMainForm
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
-
-'Public Sub gSyncStudyPicker( _
-'                ByVal chartMgr As ChartManager, _
-'                ByVal title As String)
-'Const ProcName As String = "gSyncStudyPicker"
-'
-'On Error GoTo Err
-'
-'If mStudyPickerForm Is Nothing Then Exit Sub
-'mStudyPickerForm.Initialise chartMgr, title
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
+Public Sub gUnloadConfigEditor()
+If Not mConfigEditor Is Nothing Then
+    Unload mConfigEditor
+    Set mConfigEditor = Nothing
+End If
+End Sub
 
 Public Sub gUnloadMainForm()
 Const ProcName As String = "gUnloadMainForm"
@@ -351,19 +376,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-'Public Sub gUnsyncStudyPicker()
-'Const ProcName As String = "gUnsyncStudyPicker"
-'
-'On Error GoTo Err
-'
-'If mStudyPickerForm Is Nothing Then Exit Sub
-'mStudyPickerForm.Initialise Nothing, "Study picker"
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
+Public Sub gUnloadSplashScreen()
+Const ProcName As String = "gUnloadSplashScreen"
+On Error GoTo Err
+
+If mSplash Is Nothing Then Exit Sub
+Unload mSplash
+Set mSplash = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Sub Main()
 Const ProcName As String = "Main"
@@ -391,23 +416,28 @@ If mConfigStore Is Nothing Then
     Exit Sub
 End If
 
-Dim lSplash As fSplash
-Set lSplash = gShowSplashScreen
+Set mConfigChangeMonitor = New ConfigChangeMonitor
+mConfigChangeMonitor.Initialise mConfigStore
 
+gGetSplashScreen
 loadChartStyles mConfigStore
     
 Dim lAppInstanceConfig As ConfigurationSection
 Set lAppInstanceConfig = getAppInstanceConfig(mConfigStore)
 If lAppInstanceConfig Is Nothing Then
     LogMessage "Program exiting at user request"
-    Unload lSplash
+    gFinishConfigChangeMonitoring
+    gUnloadSplashScreen
+    gUnloadConfigEditor
     TerminateTWUtilities
     Exit Sub
 End If
 
-If Not gLoadMainForm(lAppInstanceConfig, , lSplash) Then
+If Not gLoadMainForm(lAppInstanceConfig) Then
     LogMessage "Program exiting at user request"
-    Unload lSplash
+    gFinishConfigChangeMonitoring
+    gUnloadSplashScreen
+    gUnloadConfigEditor
     TerminateTWUtilities
     Exit Sub
 End If
@@ -416,7 +446,7 @@ Do While Forms.Count > 0
     Wait 50
 Loop
 
-gSaveSettings
+gFinishConfigChangeMonitoring
 
 LogMessage "Application exiting"
 
@@ -450,6 +480,8 @@ On Error GoTo Err
 Dim lTradeBuildAPI As TradeBuildAPI
 Set lTradeBuildAPI = CreateTradeBuildAPIFromConfig(pAppInstanceConfig, pAppInstanceConfig.InstanceQualifier, gPermittedServiceProviderRoles)
 Do While lTradeBuildAPI Is Nothing
+    gUnloadSplashScreen
+    
     Dim userResponse As Long
     userResponse = MsgBox("The configuration cannot be loaded. Would you like to " & vbCrLf & _
             "manually correct the configuration?" & vbCrLf & vbCrLf & _
@@ -465,7 +497,7 @@ Do While lTradeBuildAPI Is Nothing
             "Attention!")
     If userResponse = vbYes Then
         LogMessage "User editing app instance configuration: " & pAppInstanceConfig.InstanceQualifier
-        Set pAppInstanceConfig = gShowConfigEditor(pConfigStore, pAppInstanceConfig)
+        Set pAppInstanceConfig = gShowConfigEditor(pConfigStore, pAppInstanceConfig, pCentreWindow:=True)
     ElseIf userResponse = vbNo Then
         LogMessage "Creating a new default app instance configuration"
         Set pAppInstanceConfig = AddAppInstanceConfig(pConfigStore, _

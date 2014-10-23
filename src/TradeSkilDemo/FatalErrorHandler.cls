@@ -64,8 +64,12 @@ End Sub
 '@================================================================================
 
 Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
-
 On Error Resume Next    ' ignore any further errors that might arise
+
+Set mUnhandledErrorHandler = Nothing
+
+gUnloadSplashScreen
+gFinishConfigChangeMonitoring
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _

@@ -101,6 +101,8 @@ Private mConfig                                     As ConfigurationSection
 
 Private mSelectedAppConfig                          As ConfigurationSection
 
+Private mOverridePositionSettings                   As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -174,6 +176,7 @@ On Error GoTo Err
 
 updateSettings
 Set mSelectedAppConfig = ConfigManager1.selectedAppConfig
+mOverridePositionSettings = False
 Me.Hide
 
 Exit Sub
@@ -208,14 +211,21 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pConfigStore As ConfigurationStore, _
-                ByVal pCurrAppInstanceConfig As ConfigurationSection)
+                ByVal pCurrAppInstanceConfig As ConfigurationSection, _
+                ByVal pCentreWindow As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mConfig = pCurrAppInstanceConfig
 
-Me.left = CLng(mConfig.GetSetting(ConfigSettingConfigEditorLeft, 0)) * Screen.TwipsPerPixelX
-Me.Top = CLng(mConfig.GetSetting(ConfigSettingConfigEditorTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+If pCentreWindow Then
+    mOverridePositionSettings = True
+    Me.left = CLng((Screen.Width - Me.Width) / 2)
+    Me.Top = CLng((Screen.Height - Me.Height) / 2)
+Else
+    Me.left = CLng(mConfig.GetSetting(ConfigSettingConfigEditorLeft, 0)) * Screen.TwipsPerPixelX
+    Me.Top = CLng(mConfig.GetSetting(ConfigSettingConfigEditorTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+End If
 
 ConfigManager1.Initialise pConfigStore, App.ProductName, ConfigFileVersion, gPermittedServiceProviderRoles, ConfigFlags.ConfigFlagIncludeDefaultBarFormatterLibrary Or ConfigFlags.ConfigFlagIncludeDefaultStudyLibrary
 
@@ -252,6 +262,8 @@ End Sub
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
 On Error GoTo Err
+
+If mOverridePositionSettings Then Exit Sub
 
 If Not mConfig Is Nothing Then
     mConfig.AddPrivateConfigurationSection ConfigSectionConfigEditor

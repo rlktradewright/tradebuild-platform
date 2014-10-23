@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#82.1#0"; "TradeBuildUI27.ocx"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#167.0#0"; "StudiesUI27.ocx"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#111.0#0"; "TradeBuildUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#198.0#0"; "StudiesUI27.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -13,7 +13,7 @@ Begin VB.UserControl ConfigManager
    Begin TradeBuildUI27.SPConfigurer SPConfigurer1 
       Height          =   4005
       Left            =   120
-      TabIndex        =   4
+      TabIndex        =   3
       Top             =   4320
       Width           =   7500
       _ExtentX        =   13229
@@ -31,24 +31,15 @@ Begin VB.UserControl ConfigManager
    Begin VB.CommandButton NewConfigButton 
       Caption         =   "New"
       Height          =   375
-      Left            =   840
-      TabIndex        =   2
-      Top             =   3600
-      Width           =   735
-   End
-   Begin VB.CommandButton SaveConfigButton 
-      Caption         =   "Save"
-      Enabled         =   0   'False
-      Height          =   375
       Left            =   1680
-      TabIndex        =   3
+      TabIndex        =   2
       Top             =   3600
       Width           =   735
    End
    Begin StudiesUI27.StudyLibConfigurer StudyLibConfigurer1 
       Height          =   4005
       Left            =   8520
-      TabIndex        =   5
+      TabIndex        =   4
       Top             =   4320
       Visible         =   0   'False
       Width           =   7500
@@ -88,7 +79,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   735
       Left            =   10560
-      TabIndex        =   8
+      TabIndex        =   7
       Top             =   2640
       Visible         =   0   'False
       Width           =   2775
@@ -105,7 +96,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   615
       Left            =   5520
-      TabIndex        =   7
+      TabIndex        =   6
       Top             =   1080
       Visible         =   0   'False
       Width           =   2775
@@ -122,7 +113,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   495
       Left            =   10320
-      TabIndex        =   6
+      TabIndex        =   5
       Top             =   120
       Visible         =   0   'False
       Width           =   2775
@@ -162,13 +153,6 @@ Begin VB.UserControl ConfigManager
          Caption         =   "Delete"
          Enabled         =   0   'False
       End
-      Begin VB.Menu ConfigSep2Menu 
-         Caption         =   "-"
-      End
-      Begin VB.Menu SaveConfigMenu 
-         Caption         =   "Save changes"
-         Enabled         =   0   'False
-      End
    End
 End
 Attribute VB_Name = "ConfigManager"
@@ -186,8 +170,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements ChangeListener
 
 '@================================================================================
 ' Events
@@ -268,44 +250,22 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' ChangeListener Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-Private Sub ChangeListener_Change( _
-                ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
-On Error GoTo Err
-
-If ev.Source Is mConfigStore Then
-    Select Case ev.ChangeType
-    Case ConfigChangeTypes.ConfigClean
-        SaveConfigButton.Enabled = False
-        SaveConfigMenu.Enabled = False
-    Case ConfigChangeTypes.ConfigDirty
-        SaveConfigButton.Enabled = True
-        SaveConfigMenu.Enabled = True
-    End Select
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Control Event Handlers
 '@================================================================================
 
 Private Sub ConfigsTV_AfterLabelEdit( _
-                cancel As Integer, _
+                Cancel As Integer, _
                 NewString As String)
 
 Const ProcName As String = "ConfigsTV_AfterLabelEdit"
 On Error GoTo Err
 
 If NewString = "" Then
-    cancel = True
+    Cancel = True
     Exit Sub
 End If
 
@@ -313,7 +273,7 @@ If NewString = ConfigsTV.SelectedItem.Text Then Exit Sub
 
 If nameAlreadyInUse(NewString) Then
     MsgBox "Configuration name '" & NewString & "' is already in use", vbExclamation, "Error"
-    cancel = True
+    Cancel = True
     Exit Sub
 End If
 
@@ -453,30 +413,6 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub SaveConfigButton_Click()
-Const ProcName As String = "SaveConfigButton_Click"
-On Error GoTo Err
-
-SaveConfigFile
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub SaveConfigMenu_Click()
-Const ProcName As String = "SaveConfigMenu_Click"
-On Error GoTo Err
-
-SaveConfigFile
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
 Private Sub SetDefaultConfigMenu_Click()
 Const ProcName As String = "SetDefaultConfigMenu_Click"
 On Error GoTo Err
@@ -603,7 +539,6 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-mConfigStore.RemoveChangeListener Me
 SPConfigurer1.Finish
 
 Exit Sub
@@ -635,13 +570,6 @@ Then
     Exit Function
 End If
     
-mConfigStore.AddChangeListener Me
-
-If mConfigStore.Dirty Then
-    SaveConfigButton.Enabled = True
-    SaveConfigMenu.Enabled = True
-End If
-
 LogMessage "Locating config definitions in config file", LogLevelDetail
 
 Set mAppConfigs = mConfigStore.GetConfigurationSection("/" & ConfigNameAppConfigs)
@@ -674,20 +602,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Public Sub SaveConfigFile( _
-                Optional ByVal filename As String)
-Const ProcName As String = "SaveConfigFile"
-On Error GoTo Err
-
-LogMessage "Saving configuration"
-mConfigStore.Save filename
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Helper Functions

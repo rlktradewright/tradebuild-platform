@@ -127,7 +127,8 @@ VersionLabel.caption = "Version" & App.Major & "." & App.Minor & "." & App.Revis
 GetLogger("log").AddLogListener Me
 End Sub
 
-Private Sub Form_Unload(cancel As Integer)
+Private Sub Form_Unload(Cancel As Integer)
+On Error Resume Next    ' in case logging has been terminated by a call to NotifyUnhandledError
 GetLogger("log").RemoveLogListener Me
 End Sub
 
