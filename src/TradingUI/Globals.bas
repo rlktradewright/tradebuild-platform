@@ -142,16 +142,25 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
+If IsObject(pSource) Then
+    Set pTarget = pSource
+Else
+    pTarget = pSource
+End If
+End Sub
+
 Public Sub gShowStudyPicker( _
                 ByVal chartMgr As ChartManager, _
-                ByVal Title As String)
+                ByVal Title As String, _
+                ByVal pOwner As Variant)
 Const ProcName As String = "gShowStudyPicker"
 
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
 mStudyPickerForm.Initialise chartMgr, Title
-mStudyPickerForm.Show vbModeless
+mStudyPickerForm.Show vbModeless, pOwner
 
 Exit Sub
 

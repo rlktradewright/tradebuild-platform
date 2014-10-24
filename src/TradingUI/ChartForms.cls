@@ -74,15 +74,16 @@ Public Sub Add( _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
                 ByVal pConfig As ConfigurationSection, _
                 ByVal pSpec As ChartSpecifier, _
-                ByVal pStyle As ChartStyle)
+                ByVal pStyle As ChartStyle, _
+                Optional ByVal pOwner As Variant)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
 Dim lChartForm As New fChart
-lChartForm.Initialise pDataSource, pPeriodLength, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, pConfig, pSpec, pStyle
+lChartForm.Initialise pDataSource, pPeriodLength, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, pConfig, pSpec, pStyle, pOwner
 mChartForms.Add lChartForm
 
-lChartForm.Show vbModeless
+lChartForm.Show vbModeless, pOwner
 
 Exit Sub
 
@@ -95,15 +96,16 @@ Public Function AddFromConfig( _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
-                ByVal pConfig As ConfigurationSection) As Boolean
+                ByVal pConfig As ConfigurationSection, _
+                Optional ByVal pOwner As Variant) As Boolean
 Const ProcName As String = "AddFromConfig"
 On Error GoTo Err
 
 Dim lChartForm As New fChart
-AddFromConfig = lChartForm.LoadFromConfig(pDataSource, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, pConfig)
+AddFromConfig = lChartForm.LoadFromConfig(pDataSource, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, pConfig, pOwner)
 If AddFromConfig Then
     mChartForms.Add lChartForm
-    lChartForm.Show vbModeless
+    lChartForm.Show vbModeless, pOwner
 Else
     Unload lChartForm
 End If
@@ -122,15 +124,16 @@ Public Sub AddHistoric( _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pConfig As ConfigurationSection, _
                 ByVal pSpec As ChartSpecifier, _
-                ByVal pStyle As ChartStyle)
+                ByVal pStyle As ChartStyle, _
+                Optional ByVal pOwner As Variant)
 Const ProcName As String = "AddHistoric"
 On Error GoTo Err
 
 Dim lChartForm As New fChart
-lChartForm.InitialiseHistoric pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, pConfig, pSpec, pStyle
+lChartForm.InitialiseHistoric pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, pConfig, pSpec, pStyle, pOwner
 mChartForms.Add lChartForm
 
-lChartForm.Show vbModeless
+lChartForm.Show vbModeless, pOwner
 
 Exit Sub
 
@@ -143,7 +146,8 @@ Public Function AddHistoricFromConfig( _
                 ByVal pStudyManager As StudyManager, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
-                ByVal pConfig As ConfigurationSection) As Boolean
+                ByVal pConfig As ConfigurationSection, _
+                Optional ByVal pOwner As Variant) As Boolean
 Const ProcName As String = "AddHistoricFromConfig"
 On Error GoTo Err
 
@@ -151,7 +155,7 @@ Dim lChartForm As New fChart
 AddHistoricFromConfig = lChartForm.LoadHistoricFromConfig(pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, pConfig)
 If AddHistoricFromConfig Then
     mChartForms.Add lChartForm
-    lChartForm.Show vbModeless
+    lChartForm.Show vbModeless, pOwner
 Else
     Unload lChartForm
 End If

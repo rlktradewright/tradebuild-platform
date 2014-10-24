@@ -273,6 +273,10 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mTimePeriodValidator                    As ITimePeriodValidator
 
+Private mOwner                                  As Variant
+
+Private mIsInitialised                          As Boolean
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -444,7 +448,8 @@ Select Case Button.Key
 Case ChartToolsCommandStudies
     gShowStudyPicker MultiChart1.ChartManager, _
                     mSymbol & _
-                    " (" & MultiChart1.TimePeriod.ToString & ")"
+                    " (" & MultiChart1.TimePeriod.ToString & ")", _
+                    mOwner
 Case ChartToolsCommandSelection
     setSelectionMode
 Case ChartToolsCommandLines
@@ -635,7 +640,8 @@ Friend Sub Initialise( _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
                 ByVal pConfig As ConfigurationSection, _
                 ByVal pSpec As ChartSpecifier, _
-                ByVal pStyle As ChartStyle)
+                ByVal pStyle As ChartStyle, _
+                ByVal pOwner As Variant)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -643,6 +649,8 @@ Assert Not pPeriodLength Is Nothing, "pPeriodLength is nothing"
 Assert Not pDataSource Is Nothing, "pDataSource is nothing"
 Assert Not pTimeframes Is Nothing, "pTimeframes is nothing"
 Assert Not pSpec Is Nothing, "pSpec is nothing"
+
+gSetVariant mOwner, pOwner
 
 Set mDataSource = pDataSource
 getInitialTickerValues
@@ -673,6 +681,7 @@ ChartStylePicker.Initialise , MultiChart1
 MultiChart1.Add pPeriodLength
 
 setCaption
+mIsInitialised = True
 
 Exit Sub
 
@@ -688,9 +697,12 @@ Friend Sub InitialiseHistoric( _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pConfig As ConfigurationSection, _
                 ByVal pSpec As ChartSpecifier, _
-                ByVal pStyle As ChartStyle)
+                ByVal pStyle As ChartStyle, _
+                ByVal pOwner As Variant)
 Const ProcName As String = "InitialiseHistoric"
 On Error GoTo Err
+
+gSetVariant mOwner, pOwner
 
 mFutureWaiter.Add pContractFuture
 
@@ -708,6 +720,7 @@ ChartStylePicker.Initialise , MultiChart1
 MultiChart1.Add pPeriodLength
 
 setCaption
+mIsInitialised = True
 
 Exit Sub
 
@@ -720,12 +733,15 @@ Friend Function LoadFromConfig( _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
-                ByVal pConfig As ConfigurationSection) As Boolean
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pOwner As Variant) As Boolean
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
 Assert Not pDataSource Is Nothing, "pDataSource is nothing"
 Assert Not pTimeframes Is Nothing, "pTimeframes is nothing"
+
+gSetVariant mOwner, pOwner
 
 Set mDataSource = pDataSource
 getInitialTickerValues
@@ -753,6 +769,7 @@ If Not MultiChart1.LoadFromConfig(mConfig.GetConfigurationSection(ConfigSectionM
 End If
 
 setWindow
+mIsInitialised = True
 
 LoadFromConfig = True
 
@@ -792,6 +809,7 @@ If Not MultiChart1.LoadFromConfig(mConfig.GetConfigurationSection(ConfigSectionM
 End If
 
 setWindow
+mIsInitialised = True
 
 LoadHistoricFromConfig = True
 
@@ -918,6 +936,8 @@ If Me.ScaleHeight >= CoolBar1.Height Then
     MultiChart1.Height = Me.ScaleHeight - CoolBar1.Height
     MultiChart1.Top = CoolBar1.Height
 End If
+
+updateSettings
 
 Exit Sub
 
@@ -1047,6 +1067,9 @@ End Sub
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
 On Error GoTo Err
+
+If mConfig Is Nothing Then Exit Sub
+If Not mIsInitialised Then Exit Sub
 
 Select Case Me.WindowState
 Case FormWindowStateConstants.vbMaximized
