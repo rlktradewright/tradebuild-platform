@@ -3242,7 +3242,7 @@ On Error GoTo Err
 If mEnteringTickerSymbol Then
     Dim s As String
     s = TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName)
-    TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = Left$(s, Len(s) - 1)
+    If s <> "" Then TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = Left$(s, Len(s) - 1)
 End If
 
 Exit Sub
