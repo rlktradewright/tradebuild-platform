@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -666,31 +666,26 @@ Dim lColSel As Long
 lColSel = TickerGrid.ColSel
 
 mSelectedTickers.BeginChange
-If lCol = 1 And lColSel = TickerGrid.Cols - 1 Then
-    ' the user has clicked in the selector column
-    If lRow = 1 And lRowSel = TickerGrid.Rows - 1 Then
-        ' the user has clicked on the top left cell so select all rows
-        ' regardless of whether ctrl is down
-        
-        DeselectSelectedTickers
-        SelectAllTickers
-    Else
-        If mShiftDown Then
-            DeselectSelectedTickers
-            
-            Dim i As Long
-            For i = TickerGrid.Row To TickerGrid.RowSel Step IIf(TickerGrid.Row <= TickerGrid.RowSel, 1, -1)
-                SelectTicker i
-            Next
-        ElseIf mControlDown Then
-            toggleRowSelection lRow
-        Else
-            DeselectSelectedTickers
-            SelectTicker lRow
-        End If
-    End If
+If lCol = 1 And lColSel = TickerGrid.Cols - 1 And _
+    lRow = 1 And lRowSel = TickerGrid.Rows - 1 _
+Then
+    ' the user has clicked on the top left cell so select all rows
+    ' regardless of whether ctrl is down
+    
+    DeselectSelectedTickers
+    SelectAllTickers
+ElseIf mShiftDown Then
+    DeselectSelectedTickers
+    
+    Dim i As Long
+    For i = TickerGrid.Row To TickerGrid.RowSel Step IIf(TickerGrid.Row <= TickerGrid.RowSel, 1, -1)
+        SelectTicker i
+    Next
+ElseIf mControlDown Then
+    toggleRowSelection lRow
 Else
     DeselectSelectedTickers
+    SelectTicker lRow
 End If
 mSelectedTickers.EndChange
 
