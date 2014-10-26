@@ -231,12 +231,16 @@ gLogger.Log "Loading market data sources from config", ProcName, ModuleName
 
 Set mConfig = pConfig
 
+Dim lRemovableCSs As New Collection
+
 Dim lCs As ConfigurationSection
 For Each lCs In mConfig
     gLogger.Log "Loading market data source: " & lCs.InstanceQualifier, ProcName, ModuleName
     Dim lContractConfig As ConfigurationSection
     Set lContractConfig = lCs.GetConfigurationSection(ConfigSectionContract)
-    If Not lContractConfig Is Nothing Then
+    If lContractConfig Is Nothing Then
+        lRemovableCSs.Add lCs
+    Else
         CreateMarketDataSource CreateFuture(LoadContractFromConfig(lContractConfig)), _
                                 lCs.InstanceQualifier, _
                                 Nothing, _
@@ -244,6 +248,10 @@ For Each lCs In mConfig
                                 lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False"), _
                                 NullIndex
     End If
+Next
+
+For Each lCs In lRemovableCSs
+    lCs.Remove
 Next
 
 gLogger.Log "Loaded market data sources", ProcName, ModuleName

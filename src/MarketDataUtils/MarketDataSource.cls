@@ -1715,7 +1715,11 @@ On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
-If State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunning Then SaveContractToConfig mContractFuture.Value, mConfig.AddConfigurationSection(ConfigSectionContract)
+' don't save settings until we have the contract. Missing contract
+' data could cause problems on recovery
+If State = MarketDataSourceStateCreated Then Exit Sub
+
+SaveContractToConfig mContractFuture.Value, mConfig.AddConfigurationSection(ConfigSectionContract)
 mConfig.SetSetting ConfigSettingIsMarketDataRequested, mIsMarketDataRequested
 mConfig.SetSetting ConfigSettingIsMarketDepthRequested, mIsMarketDepthRequested
 
