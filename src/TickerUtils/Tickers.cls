@@ -342,6 +342,8 @@ gLogger.Log "Loading tickers from config", ProcName, ModuleName
 
 Set mConfig = pConfig
 
+Dim lRemovableCSs As New Collection
+
 Dim lCs As ConfigurationSection
 For Each lCs In mConfig
     Dim lKey As String
@@ -361,11 +363,19 @@ For Each lCs In mConfig
     Dim lDataSource As IMarketDataSource
     Set lDataSource = mMarketDataManager.GetMarketDataSource(lKey)
     
-    Dim lTicker As Ticker
-    Set lTicker = New Ticker
-    lTicker.Initialise lDataSource, mHistDataStore, Me, lPositionManager
-                
-    mTickers.Add lTicker, lKey
+    If lDataSource Is Nothing Then
+        lRemovableCSs.Add lCs
+    Else
+        Dim lTicker As Ticker
+        Set lTicker = New Ticker
+        lTicker.Initialise lDataSource, mHistDataStore, Me, lPositionManager
+                    
+        mTickers.Add lTicker, lKey
+    End If
+Next
+
+For Each lCs In lRemovableCSs
+    lCs.Remove
 Next
 
 gLogger.Log "Loaded tickers from config", ProcName, ModuleName
