@@ -67,7 +67,7 @@ Const ProcName As String = "mConfigStore_Change"
 On Error GoTo Err
 
 If ev.ChangeType = ConfigChangeTypes.ConfigDirty Then
-    If mTLI Is Nothing Then Set mTLI = GetGlobalTimerList.Add(Empty, 250, ExpiryTimeUnitMilliseconds)
+    If mTLI Is Nothing Then Set mTLI = GetGlobalTimerList.Add(Empty, 1000, ExpiryTimeUnitMilliseconds)
 ElseIf ev.ChangeType = ConfigChangeTypes.ConfigClean Then
     If Not mTLI Is Nothing Then
         mTLI.Cancel
