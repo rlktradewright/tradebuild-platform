@@ -1758,7 +1758,7 @@ Dim lTicker As IMarketDataSource
 For Each lTicker In mTickers
     lIndex = getTickerIndex(lTicker)
     If isTickerSelected(lIndex) Then
-        highlightRow getTickerGridRowFromIndex(lIndex)
+        toggleRowHighlight getTickerGridRowFromIndex(lIndex)
     End If
 Next
 
@@ -1869,6 +1869,7 @@ Public Sub LoadFromConfig( _
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
+Assert Not mMarketDataManager Is Nothing, "TickerGrid has not been initialised"
 AssertArgument Not pConfig Is Nothing, "pConfig cannot be Nothing"
 
 Set mConfig = pConfig
@@ -1881,7 +1882,6 @@ TickerGrid.LoadFromConfig mConfig.AddPrivateConfigurationSection(ConfigSectionGr
 TickerGrid.Redraw = True
 
 loadColumnMap
-setupDefaultTickerGridHeaders
 
 If mConfig.GetSetting(ConfigSettingPositiveChangeBackColor) <> "" Then mPositiveChangeBackColor = mConfig.GetSetting(ConfigSettingPositiveChangeBackColor)
 If mConfig.GetSetting(ConfigSettingPositiveChangeForeColor) <> "" Then mPositiveChangeForeColor = mConfig.GetSetting(ConfigSettingPositiveChangeForeColor)
@@ -2131,7 +2131,9 @@ lIndex = addTickerToTickerTable(pTicker)
 
 Dim lRow As Long
 If pGridRow > 0 Then
-    If isRowOccupied(pGridRow) Then insertBlankRow pGridRow
+    If isRowOccupied(pGridRow) Then
+        If getTickerFromGridRow(pGridRow).State <> MarketDataSourceStateError Then insertBlankRow pGridRow
+    End If
     lRow = pGridRow
 Else
     lRow = allocateRow
@@ -2270,7 +2272,7 @@ On Error GoTo Err
 
 If isTickerSelected(pIndex) Then
     mSelectedTickers.Remove getTickerFromIndex(pIndex)
-    highlightRow getTickerGridRowFromIndex(pIndex)
+    toggleRowHighlight getTickerGridRowFromIndex(pIndex)
 End If
 
 Exit Sub
@@ -2371,30 +2373,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub errorRow(ByVal pRow As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "errorRow"
-On Error GoTo Err
-
-If pRow < 0 Then Exit Sub
-
-Dim i As Long
-For i = 1 To TickerGrid.Cols - 1
-    TickerGrid.BeginCellEdit pRow, i
-    TickerGrid.CellBackColor = CErroredRowBackColor
-    TickerGrid.CellForeColor = CErroredRowForeColor
-    TickerGrid.CellFontBold = True
-    TickerGrid.EndCellEdit
-Next
-
-TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.ErrorText)) = pErrorMessage
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-
-End Sub
-
 Private Function getAverageCharacterWidth( _
                 ByVal widthString As String, _
                 ByVal pFont As StdFont) As Long
@@ -2477,53 +2455,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub highlightRow(ByVal pRow As Long)
-Const ProcName As String = "highlightRow"
-On Error GoTo Err
-
-If pRow < 0 Then Exit Sub
-
-Dim i As Long
-For i = 1 To TickerGrid.Cols - 1
-    TickerGrid.BeginCellEdit pRow, i
-    If TickerGrid.CellFontBold Then
-        TickerGrid.CellFontBold = False
-    Else
-        TickerGrid.CellFontBold = True
-    End If
-    TickerGrid.EndCellEdit
-Next
-
-TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.TickerName)
-TickerGrid.InvertCellColors
-TickerGrid.EndCellEdit
-
-TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.CurrencyCode)
-TickerGrid.InvertCellColors
-TickerGrid.EndCellEdit
-
-TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.Description)
-TickerGrid.InvertCellColors
-TickerGrid.EndCellEdit
-
-TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.Exchange)
-TickerGrid.InvertCellColors
-TickerGrid.EndCellEdit
-
-TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.secType)
-TickerGrid.InvertCellColors
-TickerGrid.EndCellEdit
-
-TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.Symbol)
-TickerGrid.InvertCellColors
-TickerGrid.EndCellEdit
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Sub insertBlankRow(ByVal pRow As Long)
 Const ProcName As String = "insertBlankRow"
 On Error GoTo Err
@@ -2554,7 +2485,7 @@ If KeyAscii < 123 Then isAlphaNumeric = True: Exit Function
 End Function
 
 Private Function isRowOccupied( _
-                ByVal pRow As Long)
+                ByVal pRow As Long) As Boolean
 Const ProcName As String = "isRowOccupied"
 On Error GoTo Err
 
@@ -2567,7 +2498,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isTickerSelected( _
-                ByVal pIndex As Long)
+                ByVal pIndex As Long) As Boolean
 Const ProcName As String = "isTickerSelected"
 On Error GoTo Err
 
@@ -2659,7 +2590,10 @@ Const ProcName As String = "processAlphaNumericKey"
 On Error GoTo Err
 
 If TickerGrid.Row = 0 Then Exit Sub
-If isRowOccupied(TickerGrid.Row) Then Exit Sub
+If isRowOccupied(TickerGrid.Row) Then
+    If getTickerFromGridRow(TickerGrid.Row).State <> MarketDataSourceStateError Then Exit Sub
+    clearRowError TickerGrid.Row
+End If
 
 If Not mEnteringTickerSymbol Then
     mEnteringTickerSymbol = True
@@ -2685,17 +2619,19 @@ lRow = getTickerGridRowFromIndex(lIndex)
     
 Select Case pDataSource.State
 Case MarketDataSourceStates.MarketDataSourceStateCreated
-    TickerGrid.TextMatrix(lRow, mColumnMap(TickerGridColumns.TickerName)) = "Starting"
+    'TickerGrid.TextMatrix(lRow, mColumnMap(TickerGridColumns.TickerName)) = "Starting"
 Case MarketDataSourceStates.MarketDataSourceStateReady
     setTickerFields lRow, gGetContractFromContractFuture(pDataSource.ContractFuture)
     setFieldsHaveBeenSet lIndex
     storeTickerSettings pDataSource
 Case MarketDataSourceStates.MarketDataSourceStateError
     If Not getFieldsHaveBeenSet(lIndex) Then
-        setTickerFields lRow, gGetContractFromContractFuture(pDataSource.ContractFuture)
-        setFieldsHaveBeenSet lIndex
+        If pDataSource.ContractFuture.IsAvailable Then
+            setTickerFields lRow, gGetContractFromContractFuture(pDataSource.ContractFuture)
+            setFieldsHaveBeenSet lIndex
+        End If
     End If
-    errorRow lRow, pDataSource.ErrorMessage
+    setRowError lRow, pDataSource.ErrorMessage
 Case MarketDataSourceStates.MarketDataSourceStateStopped, MarketDataSourceStates.MarketDataSourceStateFinished
     ' if the DataSource was stopped by the application via a call to IMarketDataSource.Finish (rather
     ' than via this control), the entry will still be in the grid so Remove it
@@ -2800,9 +2736,10 @@ On Error GoTo Err
 Dim lTicker As IMarketDataSource
 Set lTicker = getTickerFromIndex(pIndex)
 If lTicker Is Nothing Then Exit Sub
+If lTicker.State = MarketDataSourceStateError Then Exit Sub
 
 mSelectedTickers.Add lTicker
-highlightRow getTickerGridRowFromIndex(pIndex)
+toggleRowHighlight getTickerGridRowFromIndex(pIndex)
 
 Exit Sub
 
@@ -2878,6 +2815,52 @@ End Sub
 
 Private Sub setFieldsHaveBeenSet(ByVal pIndex As Long)
 mTickerTable(pIndex).FieldsHaveBeenSet = True
+End Sub
+
+Private Sub clearRowError(ByVal pRow As Long)
+Const ProcName As String = "clearRowError"
+On Error GoTo Err
+
+If pRow < 0 Then Exit Sub
+
+Dim i As Long
+For i = 1 To TickerGrid.Cols - 1
+    TickerGrid.BeginCellEdit pRow, i
+    TickerGrid.CellBackColor = 0
+    TickerGrid.CellForeColor = 0
+    TickerGrid.CellFontBold = False
+    TickerGrid.EndCellEdit
+Next
+
+TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.ErrorText)) = ""
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setRowError(ByVal pRow As Long, ByVal pErrorMessage As String)
+Const ProcName As String = "setRowError"
+On Error GoTo Err
+
+If pRow < 0 Then Exit Sub
+
+Dim i As Long
+For i = 1 To TickerGrid.Cols - 1
+    TickerGrid.BeginCellEdit pRow, i
+    TickerGrid.CellBackColor = CErroredRowBackColor
+    TickerGrid.CellForeColor = CErroredRowForeColor
+    TickerGrid.CellFontBold = True
+    TickerGrid.EndCellEdit
+Next
+
+TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.ErrorText)) = pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setTickerFields(ByVal pRow As Long, ByVal pContract As IContract)
@@ -3137,7 +3120,7 @@ On Error GoTo Err
 
 If mEnteringTickerSymbol Then
     mEnteringTickerSymbol = False
-    TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = ""
+    'TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = ""
 End If
 
 Exit Sub
@@ -3216,6 +3199,53 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub toggleRowHighlight(ByVal pRow As Long)
+Const ProcName As String = "toggleRowHighlight"
+On Error GoTo Err
+
+If pRow < 0 Then Exit Sub
+
+Dim i As Long
+For i = 1 To TickerGrid.Cols - 1
+    TickerGrid.BeginCellEdit pRow, i
+    If TickerGrid.CellFontBold Then
+        TickerGrid.CellFontBold = False
+    Else
+        TickerGrid.CellFontBold = True
+    End If
+    TickerGrid.EndCellEdit
+Next
+
+TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.TickerName)
+TickerGrid.InvertCellColors
+TickerGrid.EndCellEdit
+
+TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.CurrencyCode)
+TickerGrid.InvertCellColors
+TickerGrid.EndCellEdit
+
+TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.Description)
+TickerGrid.InvertCellColors
+TickerGrid.EndCellEdit
+
+TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.Exchange)
+TickerGrid.InvertCellColors
+TickerGrid.EndCellEdit
+
+TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.secType)
+TickerGrid.InvertCellColors
+TickerGrid.EndCellEdit
+
+TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.Symbol)
+TickerGrid.InvertCellColors
+TickerGrid.EndCellEdit
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub toggleRowSelection( _
                 ByVal pRow As Long)
 Const ProcName As String = "toggleRowSelection"
@@ -3239,11 +3269,18 @@ Private Sub truncateTickerSymbol()
 Const ProcName As String = "truncateTickerSymbol"
 On Error GoTo Err
 
-If mEnteringTickerSymbol Then
-    Dim s As String
-    s = TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName)
-    If s <> "" Then TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = Left$(s, Len(s) - 1)
+If Not mEnteringTickerSymbol Then
+    If isRowOccupied(TickerGrid.Row) Then
+        If getTickerFromGridRow(TickerGrid.Row).State <> MarketDataSourceStateError Then Exit Sub
+        clearRowError TickerGrid.Row
+        mTickerSymbolRow = TickerGrid.Row
+        mEnteringTickerSymbol = True
+    End If
 End If
+
+Dim s As String
+s = TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName)
+If s <> "" Then TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = Left$(s, Len(s) - 1)
 
 Exit Sub
 

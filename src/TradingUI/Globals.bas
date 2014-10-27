@@ -1,5 +1,5 @@
 Attribute VB_Name = "Globals"
-                 Option Explicit
+Option Explicit
 
 ''
 ' Description here
@@ -29,6 +29,11 @@ Attribute VB_Name = "Globals"
 Public Const ProjectName                            As String = "TradingUI27"
 
 Private Const ModuleName                            As String = "Globals"
+
+Public Const ConfigSectionChart                     As String = "Chart"
+Public Const ConfigSectionContract                  As String = "Contract"
+
+Public Const ConfigSettingDataSourceKey             As String = "&DataSourceKey"
 
 Public Const CPositiveChangeBackColor               As Long = &HB7E43
 Public Const CPositiveChangeForeColor               As Long = &HFFFFFF

@@ -601,6 +601,9 @@ mSecType = lContract.Specifier.secType
 mSymbol = lContract.Specifier.LocalSymbol
 mTickSize = lContract.TickSize
 setCaption
+If mIsHistorical And Not mConfig Is Nothing Then
+    SaveContractToConfig lContract, mConfig.AddConfigurationSection(ConfigSectionContract)
+End If
 
 Exit Sub
 
@@ -667,7 +670,7 @@ Dim lExcludeLastBar As Boolean
 lExcludeLastBar = mDataSource.IsTickReplay
 
 MultiChart1.Initialise pTimeframes, pTimePeriodValidator, pSpec, pStyle, pBarFormatterLibManager, , , lExcludeLastBar
-If Not mDataSource.IsTickReplay Then setConfig pConfig
+If Not pConfig Is Nothing Then setConfig pConfig
 
 '' we have to do something to cause Form_Load to run, otherwise MultiChart1 is
 '' not created for use below
