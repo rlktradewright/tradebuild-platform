@@ -116,11 +116,17 @@ On Error GoTo Err
 If ev.Future.IsPending Then Exit Sub
 If ev.Future.IsCancelled Then Exit Sub
 
-If ev.Future.IsFaulted Then Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
-
-Dim lInitialBars As Bars
-Set lInitialBars = mInitialBarsFuture.Value
-logAMessage "initial bars loaded: " & lInitialBars.Count, ProcName
+If ev.Future.IsFaulted Then
+    If ev.Future.ErrorNumber = ErrorCodes.ErrIllegalArgumentException Then
+        logAMessage "No bars available - contract no known", ProcName
+    Else
+        Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
+    End If
+Else
+    Dim lInitialBars As Bars
+    Set lInitialBars = mInitialBarsFuture.Value
+    logAMessage "initial bars loaded: " & lInitialBars.Count, ProcName
+End If
 
 Exit Sub
 
