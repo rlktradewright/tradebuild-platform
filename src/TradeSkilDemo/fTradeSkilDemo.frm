@@ -742,7 +742,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   66781187
+         Format          =   20643843
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -756,7 +756,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   66781187
+         Format          =   20643843
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -1522,7 +1522,10 @@ Private Sub LiveContractSearch_Action()
 Const ProcName As String = "LiveContractSearch_Action"
 On Error GoTo Err
 
-mTickers.StartTickers CreateFuture(LiveContractSearch.SelectedContracts), MarketDataSourceOptUseExchangeTimeZone
+Dim lCOntract As IContract
+For Each lCOntract In LiveContractSearch.SelectedContracts
+    TickerGrid1.StartTickerFromContract lCOntract
+Next
 
 Exit Sub
 
@@ -2213,8 +2216,8 @@ On Error GoTo Err
 Dim lConfig As ConfigurationSection
 Set lConfig = mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts)
 
-Dim lContract As IContract
-For Each lContract In pContracts
+Dim lCOntract As IContract
+For Each lCOntract In pContracts
     Dim fromDate As Date
     If IsNull(FromDatePicker.Value) Then
         fromDate = CDate(0)
@@ -2232,7 +2235,7 @@ For Each lContract In pContracts
     End If
     
     mChartForms.AddHistoric HistTimeframeSelector.TimePeriod, _
-                        CreateFuture(lContract), _
+                        CreateFuture(lCOntract), _
                         mTradeBuildAPI.StudyLibraryManager.CreateStudyManager, _
                         mTradeBuildAPI.HistoricalDataStoreInput, _
                         mTradeBuildAPI.BarFormatterLibManager, _
@@ -2358,9 +2361,9 @@ Else
         mClockDisplay.SetClockFuture lTicker.ClockFuture
         ChartButton.Enabled = True
         ChartButton1.Enabled = True
-        Dim lContract As IContract
-        Set lContract = lTicker.ContractFuture.Value
-        If (lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled) And lContract.Specifier.SecType <> SecTypeIndex Then
+        Dim lCOntract As IContract
+        Set lCOntract = lTicker.ContractFuture.Value
+        If (lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled) And lCOntract.Specifier.SecType <> SecTypeIndex Then
             OrderTicketButton.Enabled = True
             OrderTicket1Button.Enabled = True
             MarketDepthButton.Enabled = True
