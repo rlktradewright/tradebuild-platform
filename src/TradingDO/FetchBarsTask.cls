@@ -210,6 +210,7 @@ ElseIf ev.ErrorNumber <> 0 Then
     mFutureBuilder.Fail ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
     mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 ElseIf IsEmpty(ev.Result) Then
+    gLogger.Log "FetchBarsTask cannot retrieve instrument object for " & mSpecifier.ToString, ProcName, ModuleName
     mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Specified object does not exist", ""
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "Specified object does not exist"
 Else
