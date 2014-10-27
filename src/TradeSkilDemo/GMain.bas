@@ -26,10 +26,10 @@ Public Const AppName                                As String = "TradeSkil Demo 
 Public Const ConfigFileVersion                      As String = "1.3"
 
 Public Const ConfigSectionApplication               As String = "Application"
-Public Const ConfigSectionChart                     As String = "Chart"
+'Public Const ConfigSectionChart                     As String = "Chart"
 Public Const ConfigSectionCharts                    As String = "Charts"
 Public Const ConfigSectionConfigEditor              As String = "ConfigEditor"
-Public Const ConfigSectionContract                  As String = "Contract"
+'Public Const ConfigSectionContract                  As String = "Contract"
 Public Const ConfigSectionDefaultStudyConfigs       As String = "DefaultStudyConfigs"
 Public Const ConfigSectionChartStyles               As String = "/ChartStyles"
 Public Const ConfigSectionHistoricCharts            As String = "HistoricCharts"

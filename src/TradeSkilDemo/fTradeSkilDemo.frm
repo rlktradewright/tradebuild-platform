@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#254.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#254.2#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.7"
@@ -742,7 +742,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20709379
+         Format          =   66781187
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -756,7 +756,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20709379
+         Format          =   66781187
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -1021,7 +1021,7 @@ End Enum
 Private WithEvents mTradeBuildAPI                   As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 
-Private WithEvents mTickers                         As Tickers
+Private mTickers                                    As Tickers
 Attribute mTickers.VB_VarHelpID = -1
 
 Private WithEvents mReplayController                As ReplayController
@@ -1865,6 +1865,20 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+Private Sub TickerGrid1_TickerSymbolEntered(ByVal pSymbol As String, ByVal pPreferredRow As Long)
+Const ProcName As String = "TickerGrid1_TickerSymbolEntered"
+On Error GoTo Err
+
+TickerGrid1.StartTickerFromContractFuture _
+                            FetchContract(CreateContractSpecifier(pSymbol), mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary), _
+                            pPreferredRow
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub TickfileOrdersSummary_SelectionChanged()
 Const ProcName As String = "SimulatedOrdersSummary_SelectionChanged"
 On Error GoTo Err
@@ -1950,25 +1964,25 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-'================================================================================
-' mTickers Event Handlers
-'================================================================================
-
-Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
-Const ProcName As String = "mTickers_CollectionChanged"
-On Error GoTo Err
-
-If ev.ChangeType <> CollItemAdded Then Exit Sub
-
-Dim lTicker As Ticker
-Set lTicker = ev.AffectedItem
-TickerGrid1.AddTickerFromDataSource lTicker
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
+''================================================================================
+'' mTickers Event Handlers
+''================================================================================
+'
+'Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
+'Const ProcName As String = "mTickers_CollectionChanged"
+'On Error GoTo Err
+'
+'If ev.ChangeType <> CollItemAdded Then Exit Sub
+'
+'Dim lTicker As Ticker
+'Set lTicker = ev.AffectedItem
+'TickerGrid1.AddTickerFromDataSource lTicker
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 '================================================================================
 ' mTickfileReplayTC Event Handlers
@@ -2172,8 +2186,7 @@ Set tp = LiveChartTimeframeSelector.TimePeriod
 Dim lConfig As ConfigurationSection
 
 If Not pTicker.IsTickReplay Then
-    Set lConfig = mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
-    lConfig.SetSetting ConfigSettingDataSourceKey, pTicker.Key
+    Set lConfig = mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts)
 End If
 
 mChartForms.Add pTicker, _
@@ -2192,61 +2205,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub createChartFromConfig( _
-                ByVal pChartConfig As ConfigurationSection)
-Const ProcName As String = "createChartFromConfig"
-On Error GoTo Err
-
-Dim lTickerKey As String
-lTickerKey = pChartConfig.GetSetting(ConfigSettingDataSourceKey, "")
-
-Dim lTicker As Ticker
-If lTickerKey = "" Then
-    Set lTicker = mTickers.GetTicker(pChartConfig.InstanceQualifier)
-Else
-    Set lTicker = mTickers.GetTicker(lTickerKey)
-End If
-
-If Not mChartForms.AddFromConfig(lTicker, _
-                    lTicker.Timeframes, _
-                    mTradeBuildAPI.BarFormatterLibManager, _
-                    mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator, _
-                    pChartConfig, _
-                    gMainForm) Then
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub createHistoricalChartFromConfig( _
-                ByVal pChartConfig As ConfigurationSection)
-Const ProcName As String = "createHistoricalChartFromConfig"
-On Error GoTo Err
-
-Dim lContract As IContract
-Set lContract = LoadContractFromConfig(pChartConfig.GetConfigurationSection(ConfigSectionContract))
-
-If Not mChartForms.AddHistoricFromConfig(CreateFuture(lContract), _
-                    mTradeBuildAPI.StudyLibraryManager.CreateStudyManager, _
-                    mTradeBuildAPI.HistoricalDataStoreInput, _
-                    mTradeBuildAPI.BarFormatterLibManager, _
-                    pChartConfig, _
-                    gMainForm) Then
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Sub createHistoricCharts( _
                 ByVal pContracts As IContracts)
 Const ProcName As String = "createHistoricCharts"
 On Error GoTo Err
+
+Dim lConfig As ConfigurationSection
+Set lConfig = mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts)
 
 Dim lContract As IContract
 For Each lContract In pContracts
@@ -2265,10 +2230,6 @@ For Each lContract In pContracts
         toDate = DateSerial(ToDatePicker.Year, ToDatePicker.Month, ToDatePicker.Day) + _
                     TimeSerial(ToDatePicker.Hour, ToDatePicker.Minute, 0)
     End If
-    
-    Dim lConfig As ConfigurationSection
-    Set lConfig = mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
-    SaveContractToConfig lContract, lConfig.AddConfigurationSection(ConfigSectionContract)
     
     mChartForms.AddHistoric HistTimeframeSelector.TimePeriod, _
                         CreateFuture(lContract), _
@@ -3222,10 +3183,11 @@ Private Sub startCharts()
 Const ProcName As String = "startCharts"
 On Error GoTo Err
 
-Dim chartConfig As ConfigurationSection
-For Each chartConfig In mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts)
-    createChartFromConfig chartConfig
-Next
+mChartForms.LoadChartsFromConfig mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts), _
+                                mTickers, _
+                                mTradeBuildAPI.BarFormatterLibManager, _
+                                mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator, _
+                                gMainForm
 
 Exit Sub
 
@@ -3237,11 +3199,13 @@ Private Sub startHistoricalCharts()
 Const ProcName As String = "startHistoricalCharts"
 On Error GoTo Err
 
-Dim chartConfig As ConfigurationSection
-For Each chartConfig In mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts)
-    createHistoricalChartFromConfig chartConfig
-Next
-
+mChartForms.LoadHistoricalChartsFromConfig _
+                    mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts), _
+                    mTradeBuildAPI.StudyLibraryManager, _
+                    mTradeBuildAPI.HistoricalDataStoreInput, _
+                    mTradeBuildAPI.BarFormatterLibManager, _
+                    gMainForm
+                    
 Exit Sub
 
 Err:
