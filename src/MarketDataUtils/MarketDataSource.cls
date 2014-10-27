@@ -915,6 +915,9 @@ Const ProcName As String = "Finish"
 On Error GoTo Err
 
 checkNotFinished
+
+If State = MarketDataSourceStateError Then Exit Sub
+
 DataSourceBase.RemoveMarketDataSource Me
 setState MarketDataSourceStateFinished
 
