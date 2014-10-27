@@ -87,7 +87,7 @@ If Not pConfig Is Nothing Then
 End If
 
 Dim lChartForm As New fChart
-lChartForm.Initialise pDataSource, pPeriodLength, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, pConfig, pSpec, pStyle, pOwner
+lChartForm.Initialise pDataSource, pPeriodLength, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, lConfig, pSpec, pStyle, pOwner
 mChartForms.Add lChartForm
 
 lChartForm.Show vbModeless, pOwner
@@ -143,7 +143,7 @@ End If
 
     
 Dim lChartForm As New fChart
-lChartForm.InitialiseHistoric pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, pConfig, pSpec, pStyle, pOwner
+lChartForm.InitialiseHistoric pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, lConfig, pSpec, pStyle, pOwner
 mChartForms.Add lChartForm
 
 lChartForm.Show vbModeless, pOwner
