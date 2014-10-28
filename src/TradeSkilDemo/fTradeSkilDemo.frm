@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#254.2#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#254.3#0"; "y.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.7"
@@ -742,7 +742,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20643843
+         Format          =   20840451
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -756,7 +756,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20643843
+         Format          =   20840451
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -1036,8 +1036,10 @@ Private mClockDisplay                               As ClockDisplay
 
 Private mAppInstanceConfig                          As ConfigurationSection
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
+Private WithEvents mOrderRecoveryFutureWaiter       As FutureWaiter
+Attribute mOrderRecoveryFutureWaiter.VB_VarHelpID = -1
+Private WithEvents mContractsFutureWaiter           As FutureWaiter
+Attribute mContractsFutureWaiter.VB_VarHelpID = -1
 
 Private mChartForms                                 As New ChartForms
 
@@ -1050,7 +1052,8 @@ Private mPreviousMainForm                           As fTradeSkilDemo
 Private Sub Form_Initialize()
 ' ensure we get the Windows XP look and feel if running on XP
 InitCommonControls
-Set mFutureWaiter = New FutureWaiter
+Set mOrderRecoveryFutureWaiter = New FutureWaiter
+Set mContractsFutureWaiter = New FutureWaiter
 End Sub
 
 Private Sub Form_Load()
@@ -1522,9 +1525,13 @@ Private Sub LiveContractSearch_Action()
 Const ProcName As String = "LiveContractSearch_Action"
 On Error GoTo Err
 
-Dim lCOntract As IContract
-For Each lCOntract In LiveContractSearch.SelectedContracts
-    TickerGrid1.StartTickerFromContract lCOntract
+Dim lPreferredRow As Long
+lPreferredRow = CLng(LiveContractSearch.Cookie)
+
+Dim lContract As IContract
+For Each lContract In LiveContractSearch.SelectedContracts
+    TickerGrid1.StartTickerFromContract lContract, lPreferredRow
+    If lPreferredRow <> 0 Then lPreferredRow = lPreferredRow + 1
 Next
 
 Exit Sub
@@ -1872,9 +1879,7 @@ Private Sub TickerGrid1_TickerSymbolEntered(ByVal pSymbol As String, ByVal pPref
 Const ProcName As String = "TickerGrid1_TickerSymbolEntered"
 On Error GoTo Err
 
-TickerGrid1.StartTickerFromContractFuture _
-                            FetchContract(CreateContractSpecifier(pSymbol), mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary), _
-                            pPreferredRow
+mContractsFutureWaiter.Add FetchContracts(CreateContractSpecifier(, pSymbol), mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary), pPreferredRow
 
 Exit Sub
 
@@ -1915,11 +1920,36 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mFutureWaiter Event Handlers
+' mContractsFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
+Private Sub mContractsFutureWaiter_WaitCompleted(ev As TWUtilities40.FutureWaitCompletedEventData)
+Const ProcName As String = "mContractsFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+Dim lContracts As IContracts
+Set lContracts = ev.Future.Value
+
+If lContracts.Count = 1 Then
+    TickerGrid1.StartTickerFromContract lContracts.ItemAtIndex(1), CLng(ev.ContinuationData)
+Else
+    LiveContractSearch.LoadContracts lContracts, CLng(ev.ContinuationData)
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' mOrderRecoveryFutureWaiter Event Handlers
+'================================================================================
+
+Private Sub mOrderRecoveryFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mOrderRecoveryFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsFaulted Then
@@ -2080,7 +2110,7 @@ If mTickers Is Nothing Then
 End If
 
 LogMessage "Recovering orders from last session"
-mFutureWaiter.Add CreateFutureFromTask(mTradeBuildAPI.RecoverOrders())
+mOrderRecoveryFutureWaiter.Add CreateFutureFromTask(mTradeBuildAPI.RecoverOrders())
 
 Initialise = True
 
@@ -2216,8 +2246,8 @@ On Error GoTo Err
 Dim lConfig As ConfigurationSection
 Set lConfig = mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts)
 
-Dim lCOntract As IContract
-For Each lCOntract In pContracts
+Dim lContract As IContract
+For Each lContract In pContracts
     Dim fromDate As Date
     If IsNull(FromDatePicker.Value) Then
         fromDate = CDate(0)
@@ -2235,7 +2265,7 @@ For Each lCOntract In pContracts
     End If
     
     mChartForms.AddHistoric HistTimeframeSelector.TimePeriod, _
-                        CreateFuture(lCOntract), _
+                        CreateFuture(lContract), _
                         mTradeBuildAPI.StudyLibraryManager.CreateStudyManager, _
                         mTradeBuildAPI.HistoricalDataStoreInput, _
                         mTradeBuildAPI.BarFormatterLibManager, _
@@ -2361,9 +2391,9 @@ Else
         mClockDisplay.SetClockFuture lTicker.ClockFuture
         ChartButton.Enabled = True
         ChartButton1.Enabled = True
-        Dim lCOntract As IContract
-        Set lCOntract = lTicker.ContractFuture.Value
-        If (lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled) And lCOntract.Specifier.SecType <> SecTypeIndex Then
+        Dim lContract As IContract
+        Set lContract = lTicker.ContractFuture.Value
+        If (lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled) And lContract.Specifier.SecType <> SecTypeIndex Then
             OrderTicketButton.Enabled = True
             OrderTicket1Button.Enabled = True
             MarketDepthButton.Enabled = True
