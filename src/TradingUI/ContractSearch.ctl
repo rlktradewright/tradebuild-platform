@@ -117,6 +117,8 @@ Private mAllowMultipleSelection                     As Boolean
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mCookie                                     As Variant
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -218,6 +220,7 @@ On Error GoTo Err
 
 If ContractSelector1.Visible Then
     RaiseEvent Action
+    mCookie = Empty
 Else
     mFutureWaiter.Add FetchContracts(ContractSpecBuilder1.ContractSpecifier, mContractStorePrimary, mContractStoreSecondary)
     mLoadingContracts = True
@@ -315,6 +318,11 @@ mAllowMultipleSelection = value
 PropertyChanged AllowMultipleSelection
 End Property
 
+Public Property Get Cookie() As Variant
+Attribute Cookie.VB_MemberFlags = "400"
+Cookie = mCookie
+End Property
+
 Public Property Let IncludeHistoricalContracts( _
                 ByVal value As Boolean)
 Const ProcName As String = "IncludeHistoricalContracts"
@@ -340,23 +348,6 @@ Exit Property
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
-
-'Public Property Let InitialContracts(ByVal pContracts As IContracts)
-'Const ProcName As String = "InitialContracts"
-'On Error GoTo Err
-'
-'AssertArgument Not pContracts Is Nothing, "pContracts must not be Nothing"
-'
-'Set mContracts = pContracts
-'ContractSpecBuilder1.ContractSpecifier = mContracts.ContractSpecifier
-'
-'If mContracts.Count > 0 Then setupContractSelector mContracts, mAllowMultipleSelection
-'
-'Exit Property
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Property
 
 Public Property Get SelectedContracts() As IContracts
 Const ProcName As String = "SelectedContracts"
@@ -385,6 +376,28 @@ Set mContractStorePrimary = pContractStorePrimary
 Set mContractStoreSecondary = pContractStoreSecondary
 End Sub
 
+Public Sub LoadContracts( _
+                ByVal pContracts As IContracts, _
+                Optional ByVal pCookie As Variant)
+Const ProcName As String = "LoadContracts"
+On Error GoTo Err
+
+AssertArgument Not pContracts Is Nothing, "pContracts is Nothing"
+
+ActionButton.Enabled = True
+ActionButton.Default = True
+
+Set mContracts = pContracts
+gSetVariant mCookie, pCookie
+
+handleContractsLoaded
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -399,6 +412,7 @@ If mContracts.Count = 0 Then
 ElseIf mContracts.Count = 1 Then
     If IncludeHistoricalContracts Or Not IsContractExpired(mContracts.ItemAtIndex(1)) Then
         RaiseEvent Action
+        mCookie = Empty
     Else
         MessageLabel.caption = "Contract expired"
         RaiseEvent NoContracts
