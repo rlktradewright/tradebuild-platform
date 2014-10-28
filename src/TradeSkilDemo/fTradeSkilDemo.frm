@@ -742,7 +742,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20774915
+         Format          =   66781187
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -756,7 +756,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20774915
+         Format          =   66781187
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -1933,7 +1933,11 @@ Dim lContracts As IContracts
 Set lContracts = ev.Future.Value
 
 If lContracts.Count = 1 Then
-    TickerGrid1.StartTickerFromContract lContracts.ItemAtIndex(1), CLng(ev.ContinuationData)
+    If IsContractExpired(lContracts.ItemAtIndex(1)) Then
+        gModelessMsgBox "Contract has expired", MsgBoxExclamation, "Attention"
+    Else
+        TickerGrid1.StartTickerFromContract lContracts.ItemAtIndex(1), CLng(ev.ContinuationData)
+    End If
 Else
     LiveContractSearch.LoadContracts lContracts, CLng(ev.ContinuationData)
 End If
@@ -1941,7 +1945,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
