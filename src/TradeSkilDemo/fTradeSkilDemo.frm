@@ -742,7 +742,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20840451
+         Format          =   20774915
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -756,7 +756,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20840451
+         Format          =   20774915
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
