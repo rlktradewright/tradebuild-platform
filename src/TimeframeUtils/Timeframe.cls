@@ -118,7 +118,7 @@ If ev.Future.IsCancelled Then Exit Sub
 
 If ev.Future.IsFaulted Then
     If ev.Future.ErrorNumber = ErrorCodes.ErrIllegalArgumentException Then
-        logAMessage "No bars available - contract no known", ProcName
+        logAMessage "No bars available: " & ev.Future.ErrorMessage, ProcName
     Else
         Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
     End If
