@@ -2215,7 +2215,12 @@ On Error GoTo Err
 
 Dim i As Long
 For i = 1 To TickerGrid.Rows - 1
-    If Not isRowOccupied(i) Then
+    If isRowOccupied(i) Then
+        If getTickerFromGridRow(pGridRow).State = MarketDataSourceStateError Then
+            allocateRow = i
+            Exit For
+        End If
+    Else
         allocateRow = i
         Exit For
     End If
