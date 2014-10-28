@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#11.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -542,7 +542,7 @@ For Each lContract In mContracts
     Dim lContractSpec As IContractSpecifier
     Set lContractSpec = lContract.Specifier
     
-    If IncludeHistoricalContracts Or Not isExpired(lContract) Then
+    If IncludeHistoricalContracts Or Not IsContractExpired(lContract) Then
         lRow = lRow + 1
         If lRow > TWGrid1.Rows - 1 Then TWGrid1.Rows = TWGrid1.Rows + 1
         
@@ -640,24 +640,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
-
-Private Function isExpired( _
-                ByVal pContract As Contract) As Boolean
-Const ProcName As String = "isExpired"
-On Error GoTo Err
-
-If pContract.Specifier.secType = SecTypeFuture Or _
-    pContract.Specifier.secType = SecTypeFuturesOption Or _
-    pContract.Specifier.secType = SecTypeOption _
-Then
-    If Int(pContract.ExpiryDate) < Int(Now) Then isExpired = True
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Function isFullHeadingSecType( _
                 ByVal secType As SecurityTypes) As Boolean
