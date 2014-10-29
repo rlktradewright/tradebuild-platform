@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
    ClientHeight    =   3330
@@ -258,13 +258,13 @@ Const ProcName As String = "UserControl_EnterFocus"
 On Error GoTo Err
 
 If Not mModeAdvanced Then
-    SymbolText.SetFocus
+    If SymbolText.Visible Then SymbolText.SetFocus
 ElseIf LocalSymbolText <> "" Then
-    LocalSymbolText.SetFocus
+    If LocalSymbolText.Visible Then LocalSymbolText.SetFocus
 ElseIf SymbolText <> "" Then
-    SymbolText.SetFocus
+    If SymbolText.Visible Then SymbolText.SetFocus
 Else
-    LocalSymbolText.SetFocus
+    If LocalSymbolText.Visible Then LocalSymbolText.SetFocus
 End If
 
 Exit Sub

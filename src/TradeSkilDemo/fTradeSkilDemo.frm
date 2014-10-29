@@ -24,7 +24,7 @@ Begin VB.Form fTradeSkilDemo
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   1
-      ToolTipText     =   "Show features"
+      ToolTipText     =   "Show Information Pane"
       Top             =   9345
       Width           =   240
    End
@@ -39,7 +39,7 @@ Begin VB.Form fTradeSkilDemo
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   26
-      ToolTipText     =   "Hide features"
+      ToolTipText     =   "Hide Information Pane"
       Top             =   5070
       Width           =   240
    End
@@ -54,7 +54,7 @@ Begin VB.Form fTradeSkilDemo
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   56
-      ToolTipText     =   "Show controls"
+      ToolTipText     =   "Show Features Pane"
       Top             =   440
       Width           =   240
    End
@@ -69,7 +69,7 @@ Begin VB.Form fTradeSkilDemo
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   55
-      ToolTipText     =   "Hide controls"
+      ToolTipText     =   "Hide Features Pane"
       Top             =   440
       Width           =   240
    End
@@ -118,10 +118,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1B8C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "LiveExecutionsSummary"
-      Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
-      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
-      Tab(1).Control(3)=   "TickfileExecutionsSummary"
+      Tab(1).Control(0)=   "TickfileExecutionsSummary"
+      Tab(1).Control(1)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(2)=   "ExecutionsSummaryTabStrip"
+      Tab(1).Control(3)=   "LiveExecutionsSummary"
       Tab(1).ControlCount=   4
       TabCaption(2)   =   "&3. Log"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BA8
@@ -394,53 +394,53 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "fTradeSkilDemo.frx":1BE0
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "LiveChartStylesCombo"
-      Tab(1).Control(1)=   "Frame1"
-      Tab(1).Control(2)=   "ChartButton"
-      Tab(1).Control(3)=   "SessionOnlyCheck"
+      Tab(1).Control(0)=   "Label18"
+      Tab(1).Control(1)=   "Label22"
+      Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(3)=   "LiveChartTimeframeSelector"
       Tab(1).Control(4)=   "NumHistoryBarsText"
-      Tab(1).Control(5)=   "LiveChartTimeframeSelector"
-      Tab(1).Control(6)=   "Label1"
-      Tab(1).Control(7)=   "Label22"
-      Tab(1).Control(8)=   "Label18"
+      Tab(1).Control(5)=   "SessionOnlyCheck"
+      Tab(1).Control(6)=   "ChartButton"
+      Tab(1).Control(7)=   "Frame1"
+      Tab(1).Control(8)=   "LiveChartStylesCombo"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1BFC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label5"
-      Tab(2).Control(1)=   "Label4"
-      Tab(2).Control(2)=   "Label2"
-      Tab(2).Control(3)=   "Label3"
-      Tab(2).Control(4)=   "Label8"
-      Tab(2).Control(5)=   "HistChartStylesCombo"
+      Tab(2).Control(0)=   "Frame2"
+      Tab(2).Control(1)=   "HistContractSearch"
+      Tab(2).Control(2)=   "HistSessionOnlyCheck"
+      Tab(2).Control(3)=   "NumHistBarsText"
+      Tab(2).Control(4)=   "HistTimeframeSelector"
+      Tab(2).Control(5)=   "ToDatePicker"
       Tab(2).Control(6)=   "FromDatePicker"
-      Tab(2).Control(7)=   "ToDatePicker"
-      Tab(2).Control(8)=   "HistTimeframeSelector"
-      Tab(2).Control(9)=   "NumHistBarsText"
-      Tab(2).Control(10)=   "HistSessionOnlyCheck"
-      Tab(2).Control(11)=   "HistContractSearch"
-      Tab(2).Control(12)=   "Frame2"
+      Tab(2).Control(7)=   "HistChartStylesCombo"
+      Tab(2).Control(8)=   "Label8"
+      Tab(2).Control(9)=   "Label3"
+      Tab(2).Control(10)=   "Label2"
+      Tab(2).Control(11)=   "Label4"
+      Tab(2).Control(12)=   "Label5"
       Tab(2).ControlCount=   13
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":1C18
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "TickfileOrganiser1"
-      Tab(3).Control(1)=   "PlayTickFileButton"
-      Tab(3).Control(2)=   "PauseReplayButton"
-      Tab(3).Control(3)=   "StopReplayButton"
+      Tab(3).Control(0)=   "Label20"
+      Tab(3).Control(1)=   "ReplayContractLabel"
+      Tab(3).Control(2)=   "ReplayProgressLabel"
+      Tab(3).Control(3)=   "ReplayProgressBar"
       Tab(3).Control(4)=   "ReplaySpeedCombo"
-      Tab(3).Control(5)=   "ReplayProgressBar"
-      Tab(3).Control(6)=   "ReplayProgressLabel"
-      Tab(3).Control(7)=   "ReplayContractLabel"
-      Tab(3).Control(8)=   "Label20"
+      Tab(3).Control(5)=   "StopReplayButton"
+      Tab(3).Control(6)=   "PauseReplayButton"
+      Tab(3).Control(7)=   "PlayTickFileButton"
+      Tab(3).Control(8)=   "TickfileOrganiser1"
       Tab(3).ControlCount=   9
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1C34
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label6"
+      Tab(4).Control(0)=   "ConfigEditorButton"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "ConfigEditorButton"
+      Tab(4).Control(2)=   "Label6"
       Tab(4).ControlCount=   3
       Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
          Height          =   2520
@@ -742,7 +742,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   66781187
+         Format          =   20774915
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -756,7 +756,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   66781187
+         Format          =   20774915
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -1939,6 +1939,8 @@ If lContracts.Count = 1 Then
         TickerGrid1.StartTickerFromContract lContracts.ItemAtIndex(1), CLng(ev.ContinuationData)
     End If
 Else
+    If mControlsHidden Then showControls
+    If ControlsSSTab.Tab <> ControlsTabIndexNumbers.ControlsTabIndexTickers Then ControlsTabStrip.Tabs(ControlsTabIndexNumbers.ControlsTabIndexTickers + 1).Selected = True
     LiveContractSearch.LoadContracts lContracts, CLng(ev.ContinuationData)
 End If
 
@@ -2129,7 +2131,7 @@ Const ProcName As String = "MakeVisible"
 On Error GoTo Err
 
 Me.Show
-If Not mControlsHidden Then ControlsTabStrip.Tabs(1).Selected = True
+If Not mControlsHidden Then ControlsTabStrip.Tabs(ControlsTabIndexNumbers.ControlsTabIndexTickers + 1).Selected = True
 
 Exit Sub
 
