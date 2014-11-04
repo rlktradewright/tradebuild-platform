@@ -1,9 +1,9 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#138.0#0"; "StudiesUI27.ocx"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#167.0#0"; "ChartSkil27.ocx"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFlxGrd.ocx"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#199.0#0"; "StudiesUI27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#228.0#0"; "ChartSkil27.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.7"
@@ -46,7 +46,7 @@ Begin VB.Form StudyTestForm
       _Version        =   393216
       Style           =   1
       TabHeight       =   520
-      BackColor       =   -2147483638
+      ForeColor       =   -2147483630
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "Microsoft Sans Serif"
          Size            =   8.25
@@ -100,7 +100,9 @@ Begin VB.Form StudyTestForm
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Chart1"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "ChartToolbar1"
+      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).ControlCount=   2
       Begin VB.TextBox ErrorText 
          BackColor       =   &H8000000F&
@@ -367,7 +369,7 @@ Private mGrid                           As GridManager
 Private Sub Form_Initialize()
 Debug.Print "Running in development environment: " & CStr(inDev)
 
-InitCommonControls  ' enables WinXP look and feel
+InitialiseCommonControls  ' enables WinXP look and feel
 InitialiseTWUtilities
 Set mUnhandledErrorHandler = UnhandledErrorHandler
 
