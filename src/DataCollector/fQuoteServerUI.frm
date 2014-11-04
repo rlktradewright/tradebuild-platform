@@ -97,9 +97,9 @@ Begin VB.Form fDataCollectorUI
       TabCaption(2)   =   "Configuration"
       TabPicture(2)   =   "fQuoteServerUI.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label4"
+      Tab(2).Control(0)=   "ConfigDetailsButton"
       Tab(2).Control(1)=   "ConfigNameText"
-      Tab(2).Control(2)=   "ConfigDetailsButton"
+      Tab(2).Control(2)=   "Label4"
       Tab(2).ControlCount=   3
       Begin VB.CommandButton ConfigDetailsButton 
          Caption         =   "Details..."
@@ -427,7 +427,7 @@ Private Sub Form_Initialize()
 Const ProcName As String = "Form_Initialize"
 On Error GoTo Err
 
-InitCommonControls
+InitialiseCommonControls
 Set mTimerList = GetGlobalTimerList
 ReDim mTickers(99) As TickerTableEntry
 Set mFormatter = CreateBasicLogFormatter(TimestampTimeOnlyLocal)
