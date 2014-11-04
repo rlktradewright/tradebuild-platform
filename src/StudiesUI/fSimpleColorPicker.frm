@@ -321,10 +321,6 @@ Private mSelectedColor As Long
 ' Form Event Handlers
 '@================================================================================
 
-Private Sub Form_Initialize()
-InitCommonControls
-End Sub
-
 Private Sub Form_KeyDown( _
                 KeyCode As Integer, Shift As Integer)
 If KeyCode = vbKeyEscape Then Me.Hide
