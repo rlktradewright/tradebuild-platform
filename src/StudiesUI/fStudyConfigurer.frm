@@ -100,7 +100,6 @@ Private mStudyConfig                            As StudyConfiguration
 '@================================================================================
 
 Private Sub Form_Initialize()
-InitCommonControls
 StudyConfigurer1.Visible = True
 End Sub
 

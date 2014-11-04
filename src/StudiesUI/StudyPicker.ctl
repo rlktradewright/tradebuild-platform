@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.UserControl StudyPicker 
    ClientHeight    =   4335
    ClientLeft      =   0
@@ -162,7 +162,6 @@ Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
-InitCommonControls
 SendMessage StudyList.hWnd, LB_SETHORZEXTENT, 1000, 0
 SendMessage ChartStudiesTree.hWnd, LB_SETHORZEXTENT, 1000, 0
 
