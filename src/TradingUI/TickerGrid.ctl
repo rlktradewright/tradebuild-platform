@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -364,6 +364,8 @@ TickerGrid.Rows = PropBag.ReadProperty("Rows", GridRowsInitial)
 TickerGrid.RowHeightMin = PropBag.ReadProperty("RowHeightMin", 0)
 TickerGrid.RowBackColorOdd = PropBag.ReadProperty("RowBackColorOdd", CRowBackColorOdd)
 TickerGrid.RowBackColorEven = PropBag.ReadProperty("RowBackColorEven", CRowBackColorEven)
+TickerGrid.GridLinesFixed = PropBag.ReadProperty("GridLinesFixed", TwGridGridFlat)
+TickerGrid.GridLines = PropBag.ReadProperty("GridLines", TwGridGridNone)
 TickerGrid.GridLineWidth = PropBag.ReadProperty("GridLineWidth", 1)
 TickerGrid.GridColorFixed = PropBag.ReadProperty("GridColorFixed", 12632256)
 TickerGrid.GridColor = PropBag.ReadProperty("GridColor", -2147483631)
@@ -414,11 +416,13 @@ Call PropBag.WriteProperty("BorderStyle", TickerGrid.BorderStyle, TwGridBorderNo
 Call PropBag.WriteProperty("SelectionMode", TickerGrid.SelectionMode, TwGridSelectionFree)
 Call PropBag.WriteProperty("ScrollBars", TickerGrid.ScrollBars, TwGridScrollBarBoth)
 Call PropBag.WriteProperty("RowSizingMode", TickerGrid.RowSizingMode, TwGridRowSizeAll)
-Call PropBag.WriteProperty("Rows", TickerGrid.Rows, 2)
+Call PropBag.WriteProperty("Rows", TickerGrid.Rows, GridRowsInitial)
 Call PropBag.WriteProperty("RowHeightMin", TickerGrid.RowHeightMin, 0)
 Call PropBag.WriteProperty("RowBackColorOdd", TickerGrid.RowBackColorOdd, 0)
 Call PropBag.WriteProperty("RowBackColorEven", TickerGrid.RowBackColorEven, 0)
 Call PropBag.WriteProperty("HighLight", TickerGrid.HighLight, TwGridHighlightWithFocus)
+Call PropBag.WriteProperty("GridLinesFixed", TickerGrid.GridLinesFixed, TwGridGridFlat)
+Call PropBag.WriteProperty("GridLines", TickerGrid.GridLines, TwGridGridNone)
 Call PropBag.WriteProperty("GridLineWidth", TickerGrid.GridLineWidth, 1)
 Call PropBag.WriteProperty("GridColorFixed", TickerGrid.GridColorFixed, 12632256)
 Call PropBag.WriteProperty("GridColor", TickerGrid.GridColor, -2147483631)

@@ -410,31 +410,6 @@ Public Property Get IncludeHistoricalContracts() As Boolean
 IncludeHistoricalContracts = mIncludeHistoricalContracts
 End Property
 
-Public Property Get RowBackColorOdd() As OLE_COLOR
-Const ProcName As String = "RowBackColorOdd"
-On Error GoTo Err
-
-RowBackColorOdd = TWGrid1.RowBackColorOdd
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Let RowBackColorOdd(ByVal New_RowBackColorOdd As OLE_COLOR)
-Const ProcName As String = "RowBackColorOdd"
-On Error GoTo Err
-
-TWGrid1.RowBackColorOdd = New_RowBackColorOdd
-PropertyChanged "RowBackColorOdd"
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Public Property Get RowBackColorEven() As OLE_COLOR
 Const ProcName As String = "RowBackColorEven"
 On Error GoTo Err
@@ -453,6 +428,31 @@ On Error GoTo Err
 
 TWGrid1.RowBackColorEven = New_RowBackColorEven
 PropertyChanged "RowBackColorEven"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get RowBackColorOdd() As OLE_COLOR
+Const ProcName As String = "RowBackColorOdd"
+On Error GoTo Err
+
+RowBackColorOdd = TWGrid1.RowBackColorOdd
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let RowBackColorOdd(ByVal New_RowBackColorOdd As OLE_COLOR)
+Const ProcName As String = "RowBackColorOdd"
+On Error GoTo Err
+
+TWGrid1.RowBackColorOdd = New_RowBackColorOdd
+PropertyChanged "RowBackColorOdd"
 
 Exit Property
 
@@ -507,6 +507,41 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let TextboxBackColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "TextboxBackColor"
+On Error GoTo Err
+
+TWGrid1.RowBackColorEven = value
+TWGrid1.RowBackColorOdd = toneDown(value)
+TWGrid1.BackColorBkg = value
+
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TextboxBackColor() As OLE_COLOR
+TextboxBackColor = TWGrid1.RowBackColorEven
+End Property
+
+Public Property Let TextboxForeColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "TextboxForeColor"
+On Error GoTo Err
+
+TWGrid1.ForeColor = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TextboxForeColor() As OLE_COLOR
+TextboxForeColor = TWGrid1.ForeColor
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -519,8 +554,7 @@ On Error GoTo Err
 
 mAllowMultipleSelection = pAllowMultipleSelection
 
-TWGrid1.ClearStructure
-setupGrid
+TWGrid1.Clear
 
 TWGrid1.Redraw = False
 
@@ -895,6 +929,14 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function toneDown(ByVal pColor As Long) As Long
+If (pColor And &H80000000) Then pColor = GetSysColor(pColor And &HFFFFFF)
+
+toneDown = (((pColor And &HFF0000) / &H20000) And &HFF0000) + _
+            (((pColor And &HFF00) / &H200) And &HFF00) + _
+            ((pColor And &HFF) / &H2)
+End Function
 
 Private Sub writeHeadingRow( _
                 ByVal contractSpec As IContractSpecifier)

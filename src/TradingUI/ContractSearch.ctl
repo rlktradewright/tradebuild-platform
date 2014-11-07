@@ -33,6 +33,7 @@ Begin VB.UserControl ContractSearch
       Width           =   3375
       _ExtentX        =   3863
       _ExtentY        =   6509
+      ForeColor       =   -2147483640
    End
    Begin TradingUI27.ContractSelector ContractSelector1 
       Height          =   3255
@@ -318,9 +319,40 @@ mAllowMultipleSelection = value
 PropertyChanged AllowMultipleSelection
 End Property
 
+Public Property Let BackColor( _
+                ByVal value As OLE_COLOR)
+UserControl.BackColor = value
+ContractSpecBuilder1.BackColor = value
+MessageLabel.BackColor = value
+End Property
+
+Public Property Get BackColor() As OLE_COLOR
+Attribute BackColor.VB_UserMemId = -501
+BackColor = UserControl.BackColor
+End Property
+
 Public Property Get Cookie() As Variant
 Attribute Cookie.VB_MemberFlags = "400"
 Cookie = mCookie
+End Property
+
+Public Property Let ForeColor( _
+                ByVal value As OLE_COLOR)
+Const ProcName As String = "foreColor"
+On Error GoTo Err
+
+ContractSpecBuilder1.ForeColor = value
+MessageLabel.ForeColor = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get ForeColor() As OLE_COLOR
+Attribute ForeColor.VB_UserMemId = -513
+ForeColor = MessageLabel.ForeColor
 End Property
 
 Public Property Let IncludeHistoricalContracts( _
@@ -363,6 +395,40 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let TextboxBackColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "TextboxBackColor"
+On Error GoTo Err
+
+ContractSpecBuilder1.TextboxBackColor = value
+ContractSelector1.TextboxBackColor = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TextboxBackColor() As OLE_COLOR
+TextboxBackColor = ContractSpecBuilder1.TextboxBackColor
+End Property
+
+Public Property Let TextboxForeColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "TextboxForeColor"
+On Error GoTo Err
+
+ContractSpecBuilder1.TextboxForeColor = value
+ContractSelector1.TextboxForeColor = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TextboxForeColor() As OLE_COLOR
+TextboxForeColor = ContractSpecBuilder1.TextboxForeColor
 End Property
 
 '@================================================================================

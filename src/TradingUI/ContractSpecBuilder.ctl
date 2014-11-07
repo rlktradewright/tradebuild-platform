@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#18.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
    ClientHeight    =   3330
@@ -225,8 +225,8 @@ Private Const PropNameBackColor                         As String = "BackColor"
 Private Const PropNameForeColor                         As String = "ForeColor"
 Private Const PropNameModeAdvanced                      As String = "ModeAdvanced"
 
-Private Const PropDfltBackColor                         As Long = vbWindowBackground
-Private Const PropDfltForeColor                         As Long = vbWindowText
+Private Const PropDfltBackColor                         As Long = vbButtonFace
+Private Const PropDfltForeColor                         As Long = vbButtonText
 Private Const PropDfltModeAdvanced                      As String = "False"
 
 '@================================================================================
@@ -646,18 +646,20 @@ End Sub
 
 Public Property Let BackColor( _
                 ByVal value As OLE_COLOR)
-LocalSymbolText.BackColor = value
-SymbolText.BackColor = value
-TypeCombo.BackColor = value
-ExpiryText.BackColor = value
-ExchangeCombo.BackColor = value
-CurrencyCombo.BackColor = value
-StrikePriceText.BackColor = value
-RightCombo.BackColor = value
+UserControl.BackColor = value
+LocalSymbolLabel.BackColor = value
+SymbolLabel.BackColor = value
+TypeLabel.BackColor = value
+ExpiryLabel.BackColor = value
+ExchangeLabel.BackColor = value
+CurrencyLabel.BackColor = value
+StrikePriceLabel.BackColor = value
+RightLabel.BackColor = value
 End Property
 
 Public Property Get BackColor() As OLE_COLOR
-BackColor = LocalSymbolText.BackColor
+Attribute BackColor.VB_UserMemId = -501
+BackColor = UserControl.BackColor
 End Property
 
 Public Property Let ContractSpecifier( _
@@ -709,14 +711,14 @@ Public Property Let ForeColor( _
 Const ProcName As String = "foreColor"
 On Error GoTo Err
 
-LocalSymbolText.ForeColor = value
-SymbolText.ForeColor = value
-TypeCombo.ForeColor = value
-ExpiryText.ForeColor = value
-ExchangeCombo.ForeColor = value
-CurrencyCombo.ForeColor = value
-StrikePriceText.ForeColor = value
-RightCombo.ForeColor = value
+LocalSymbolLabel.ForeColor = value
+SymbolLabel.ForeColor = value
+TypeLabel.ForeColor = value
+ExpiryLabel.ForeColor = value
+ExchangeLabel.ForeColor = value
+CurrencyLabel.ForeColor = value
+StrikePriceLabel.ForeColor = value
+RightLabel.ForeColor = value
 
 Exit Property
 
@@ -725,6 +727,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ForeColor() As OLE_COLOR
+Attribute ForeColor.VB_UserMemId = -513
 ForeColor = LocalSymbolText.ForeColor
 End Property
 
@@ -740,6 +743,48 @@ End Property
                 
 Public Property Get ModeAdvanced() As Boolean
 ModeAdvanced = mModeAdvanced
+End Property
+
+Public Property Let TextboxBackColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "TextboxBackColor"
+On Error GoTo Err
+
+Dim lControl As Control
+For Each lControl In UserControl.Controls
+    If TypeOf lControl Is TextBox Or _
+            TypeOf lControl Is ComboBox _
+    Then lControl.BackColor = value
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TextboxBackColor() As OLE_COLOR
+TextboxBackColor = LocalSymbolText.BackColor
+End Property
+
+Public Property Let TextboxForeColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "TextboxForeColor"
+On Error GoTo Err
+
+Dim lControl As Control
+For Each lControl In UserControl.Controls
+    If TypeOf lControl Is TextBox Or _
+            TypeOf lControl Is ComboBox _
+    Then lControl.ForeColor = value
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TextboxForeColor() As OLE_COLOR
+TextboxForeColor = LocalSymbolText.ForeColor
 End Property
 
 '@================================================================================
@@ -829,7 +874,7 @@ Private Sub handleTypeComboChange()
 Const ProcName As String = "handleTypeComboChange"
 On Error GoTo Err
 
-Select Case SecTypeFromString(TypeCombo)
+Select Case SecTypeFromString(TypeCombo.Text)
 Case SecurityTypes.SecTypeNone
     ExpiryText.Enabled = True
     StrikePriceText.Enabled = True
