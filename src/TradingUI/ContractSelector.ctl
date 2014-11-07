@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -855,7 +855,7 @@ Const ProcName As String = "setupGrid"
 On Error GoTo Err
 
 TWGrid1.Cols = 2
-TWGrid1.GridLineWidth = 0
+TWGrid1.GridLines = TwGridGridNone
 TWGrid1.FillStyle = TwGridFillRepeat
 TWGrid1.FixedRows = 0
 TWGrid1.FixedCols = 0
