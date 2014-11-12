@@ -42,10 +42,6 @@ Implements ITheme
 
 Private Const ModuleName                            As String = "NativeTheme"
 
-Private Property Get ITheme_BackColor() As stdole.OLE_COLOR
-
-End Property
-
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -66,6 +62,78 @@ End Property
 ' Properties
 '@================================================================================
 
+Private Property Get ITheme_BackColor() As stdole.OLE_COLOR
+ITheme_BackColor = SystemColorConstants.vbButtonFace
+End Property
+
+Private Property Get ITheme_BaseCOlor() As stdole.OLE_COLOR
+ITheme_BaseCOlor = SystemColorConstants.vbButtonFace
+End Property
+
+Private Property Get ITheme_ForeColor() As stdole.OLE_COLOR
+ITheme_ForeColor = SystemColorConstants.vbButtonText
+End Property
+
+Private Property Get ITheme_TextBackColor() As stdole.OLE_COLOR
+ITheme_TextBackColor = SystemColorConstants.vbWindowBackground
+End Property
+
+Private Property Get ITheme_TextForeColor() As stdole.OLE_COLOR
+ITheme_TextForeColor = SystemColorConstants.vbWindowText
+End Property
+
+Private Property Get ITheme_GridBackColorFixed() As stdole.OLE_COLOR
+ITheme_GridBackColorFixed = &HF4F4F4
+End Property
+
+Private Property Get ITheme_DecreasedValueColor() As stdole.OLE_COLOR
+ITheme_DecreasedValueColor = &H4444EB
+End Property
+
+Private Property Get ITheme_GridForeColor() As stdole.OLE_COLOR
+ITheme_GridForeColor = &H707070
+End Property
+
+Private Property Get ITheme_GridForeColorFixed() As stdole.OLE_COLOR
+ITheme_GridForeColorFixed = &HA0A0A0
+End Property
+
+Private Property Get ITheme_GridGridColor() As stdole.OLE_COLOR
+ITheme_GridGridColor = &H80000011
+End Property
+
+Private Property Get ITheme_GridGridColorFixed() As stdole.OLE_COLOR
+ITheme_GridGridColorFixed = &HE0E0E0
+End Property
+
+Private Property Get ITheme_IncreasedValueColor() As stdole.OLE_COLOR
+ITheme_IncreasedValueColor = &HB7E43
+End Property
+
+Private Property Get ITheme_NegativeChangeBackColor() As stdole.OLE_COLOR
+ITheme_NegativeChangeBackColor = &H4444EB
+End Property
+
+Private Property Get ITheme_NegativeChangeForeColor() As stdole.OLE_COLOR
+ITheme_NegativeChangeForeColor = &HFFFFFF
+End Property
+
+Private Property Get ITheme_PositiveChangeBackColor() As stdole.OLE_COLOR
+ITheme_PositiveChangeBackColor = &HB7E43
+End Property
+
+Private Property Get ITheme_PositiveChangeForeColor() As stdole.OLE_COLOR
+ITheme_PositiveChangeForeColor = &HFFFFFF
+End Property
+
+Private Property Get ITheme_GridRowBackColorEven() As stdole.OLE_COLOR
+ITheme_GridRowBackColorEven = &HEEEEEE
+End Property
+
+Private Property Get ITheme_GridRowBackColorOdd() As stdole.OLE_COLOR
+ITheme_GridRowBackColorOdd = &HF8F8F8
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -76,72 +144,4 @@ End Property
 
 
 
-
-Private Property Get ITheme_BaseCOlor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_ForeColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TextBackColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TextForeColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridBackColorFixed() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridDecreasedValueColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridForeColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridForeColorFixed() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridGridColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridGridColorFixed() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridIncreasedValueColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridNegativeChangeBackColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridNegativeChangeForeColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridPositiveChangeBackColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridPositiveChangeForeColor() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridRowBackColorEven() As stdole.OLE_COLOR
-
-End Property
-
-Private Property Get ITheme_TickerGridRowBackColorOdd() As stdole.OLE_COLOR
-
-End Property
 
