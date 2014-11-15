@@ -891,6 +891,7 @@ addExchangeCode "GLOBEX"
 addExchangeCode "HKFE"
 
 addExchangeCode "IBIS"
+addExchangeCode "ICEEU"
 addExchangeCode "IDEAL"
 addExchangeCode "IDEALPRO"
 addExchangeCode "IDEM"
