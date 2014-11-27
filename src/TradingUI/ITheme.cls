@@ -8,9 +8,9 @@ BEGIN
 END
 Attribute VB_Name = "ITheme"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
@@ -66,19 +66,31 @@ End Property
 Public Property Get BackColor() As OLE_COLOR
 End Property
 
-Public Property Get ForeColor() As OLE_COLOR
+Public Property Get BackColorAsk() As OLE_COLOR
 End Property
 
-Public Property Get TextBackColor() As OLE_COLOR
+Public Property Get BackColorBid() As OLE_COLOR
 End Property
 
-Public Property Get TextForeColor() As OLE_COLOR
-End Property
-
-Public Property Get GridBackColorFixed() As OLE_COLOR
+Public Property Get BackColorTrade() As OLE_COLOR
 End Property
 
 Public Property Get DecreasedValueColor() As OLE_COLOR
+End Property
+
+Public Property Get ForeColor() As OLE_COLOR
+End Property
+
+Public Property Get ForeColorAsk() As OLE_COLOR
+End Property
+
+Public Property Get ForeColorBid() As OLE_COLOR
+End Property
+
+Public Property Get ForeColorTrade() As OLE_COLOR
+End Property
+
+Public Property Get GridBackColorFixed() As OLE_COLOR
 End Property
 
 Public Property Get GridForeColor() As OLE_COLOR
@@ -87,10 +99,16 @@ End Property
 Public Property Get GridForeColorFixed() As OLE_COLOR
 End Property
 
-Public Property Get GridGridColor() As OLE_COLOR
+Public Property Get GridLineColor() As OLE_COLOR
 End Property
 
-Public Property Get GridGridColorFixed() As OLE_COLOR
+Public Property Get GridLineColorFixed() As OLE_COLOR
+End Property
+
+Public Property Get GridRowBackColorEven() As OLE_COLOR
+End Property
+
+Public Property Get GridRowBackColorOdd() As OLE_COLOR
 End Property
 
 Public Property Get IncreasedValueColor() As OLE_COLOR
@@ -108,10 +126,10 @@ End Property
 Public Property Get PositiveChangeForeColor() As OLE_COLOR
 End Property
 
-Public Property Get GridRowBackColorEven() As OLE_COLOR
+Public Property Get TextBackColor() As OLE_COLOR
 End Property
 
-Public Property Get GridRowBackColorOdd() As OLE_COLOR
+Public Property Get TextForeColor() As OLE_COLOR
 End Property
 
 '@================================================================================

@@ -10,7 +10,7 @@ Attribute VB_Name = "NativeTheme"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
@@ -70,8 +70,32 @@ Private Property Get ITheme_BaseCOlor() As stdole.OLE_COLOR
 ITheme_BaseCOlor = SystemColorConstants.vbButtonFace
 End Property
 
+Private Property Get ITheme_BackColorAsk() As stdole.OLE_COLOR
+ITheme_BackColorAsk = &HFAE968
+End Property
+
+Private Property Get ITheme_BackColorBid() As stdole.OLE_COLOR
+ITheme_BackColorBid = &HD6C6F2
+End Property
+
+Private Property Get ITheme_BackColorTrade() As stdole.OLE_COLOR
+ITheme_BackColorTrade = &HC1F7CA
+End Property
+
 Private Property Get ITheme_ForeColor() As stdole.OLE_COLOR
 ITheme_ForeColor = SystemColorConstants.vbButtonText
+End Property
+
+Private Property Get ITheme_ForeColorAsk() As stdole.OLE_COLOR
+ITheme_ForeColorAsk = vbBlack
+End Property
+
+Private Property Get ITheme_ForeColorBid() As stdole.OLE_COLOR
+ITheme_ForeColorBid = vbBlack
+End Property
+
+Private Property Get ITheme_ForeColorTrade() As stdole.OLE_COLOR
+ITheme_ForeColorTrade = vbBlack
 End Property
 
 Private Property Get ITheme_TextBackColor() As stdole.OLE_COLOR
@@ -98,12 +122,12 @@ Private Property Get ITheme_GridForeColorFixed() As stdole.OLE_COLOR
 ITheme_GridForeColorFixed = &HA0A0A0
 End Property
 
-Private Property Get ITheme_GridGridColor() As stdole.OLE_COLOR
-ITheme_GridGridColor = &H80000011
+Private Property Get ITheme_GridLineColor() As stdole.OLE_COLOR
+ITheme_GridLineColor = &H80000011
 End Property
 
-Private Property Get ITheme_GridGridColorFixed() As stdole.OLE_COLOR
-ITheme_GridGridColorFixed = &HE0E0E0
+Private Property Get ITheme_GridLineColorFixed() As stdole.OLE_COLOR
+ITheme_GridLineColorFixed = &HE0E0E0
 End Property
 
 Private Property Get ITheme_IncreasedValueColor() As stdole.OLE_COLOR
