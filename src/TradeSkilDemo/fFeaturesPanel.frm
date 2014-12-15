@@ -41,6 +41,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IThemeable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -74,22 +76,24 @@ Private mTopAtMouseDown                             As Single
 Private mMouseXAtMousedown                          As Single
 Private mMouseYAtMouseDown                          As Single
 
+Private mTheme                                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Form_Activate()
-Const ProcName As String = "Form_Activate"
-On Error GoTo Err
-
-Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLeft, 0)) * Screen.TwipsPerPixelX
-Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
+'Private Sub Form_Activate()
+'Const ProcName As String = "Form_Activate"
+'On Error GoTo Err
+'
+'Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLeft, 0)) * Screen.TwipsPerPixelX
+'Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+'
+'Exit Sub
+'
+'Err:
+'gNotifyUnhandledError ProcName, ModuleName, ProjectName
+'End Sub
 
 Private Sub Form_Deactivate()
 Const ProcName As String = "Form_Deactivate"
@@ -104,8 +108,24 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Controls Event Handlers
@@ -184,36 +204,23 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let StyleBackColor(ByVal Value As OLE_COLOR)
-FeaturesPanel.BackColor = Value
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If Value Is Nothing Then Exit Property
+
+Set mTheme = Value
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get StyleBackColor() As OLE_COLOR
-StyleBackColor = FeaturesPanel.BackColor
-End Property
-
-Public Property Let StyleForeColor(ByVal Value As OLE_COLOR)
-FeaturesPanel.ForeColor = Value
-End Property
-
-Public Property Get StyleForeColor() As OLE_COLOR
-StyleForeColor = FeaturesPanel.ForeColor
-End Property
-
-Public Property Let StyleTextboxBackColor(ByVal Value As OLE_COLOR)
-FeaturesPanel.TextboxBackColor = Value
-End Property
-
-Public Property Get StyleTextboxBackColor() As OLE_COLOR
-StyleTextboxBackColor = FeaturesPanel.TextboxBackColor
-End Property
-
-Public Property Let StyleTextboxForeColor(ByVal Value As OLE_COLOR)
-FeaturesPanel.TextboxForeColor = Value
-End Property
-
-Public Property Get StyleTextboxForeColor() As OLE_COLOR
-StyleTextboxForeColor = FeaturesPanel.TextboxForeColor
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================
@@ -245,6 +252,9 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mAppInstanceConfig = pAppInstanceConfig
+
+Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLeft, 0)) * Screen.TwipsPerPixelX
+Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 
 FeaturesPanel.Initialise pPinned, pTradeBuildAPI, pAppInstanceConfig, pTickerGrid, pTickfileOrdersSummary, pTickfileExecutionsSummary, pChartForms, pOrderTicket
 

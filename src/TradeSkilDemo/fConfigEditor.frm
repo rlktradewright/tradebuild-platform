@@ -1,4 +1,5 @@
 VERSION 5.00
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.6#0"; "TWControls40.ocx"
 Begin VB.Form fConfigEditor 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Configuration editor"
@@ -13,6 +14,46 @@ Begin VB.Form fConfigEditor
    ScaleWidth      =   10215
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
+   Begin TWControls40.TWButton CloseButton 
+      Height          =   495
+      Left            =   9120
+      TabIndex        =   4
+      Top             =   4560
+      Width           =   975
+      _ExtentX        =   1720
+      _ExtentY        =   873
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Close"
+      Object.Default         =   -1  'True
+   End
+   Begin TWControls40.TWButton ConfigureButton 
+      Height          =   495
+      Left            =   480
+      TabIndex        =   3
+      Top             =   4560
+      Width           =   1815
+      _ExtentX        =   3201
+      _ExtentY        =   873
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Load Selected &Configuration"
+      Object.Default         =   -1  'True
+   End
    Begin TradeSkilDemo27.ConfigManager ConfigManager1 
       Height          =   4095
       Left            =   120
@@ -22,39 +63,23 @@ Begin VB.Form fConfigEditor
       _ExtentX        =   17806
       _ExtentY        =   7223
    End
-   Begin VB.CommandButton CloseButton 
-      Cancel          =   -1  'True
-      Caption         =   "Close"
-      Height          =   495
-      Left            =   9120
-      TabIndex        =   2
-      Top             =   4560
-      Width           =   975
-   End
-   Begin VB.CommandButton ConfigureButton 
-      Caption         =   "Load Selected &Configuration"
-      Enabled         =   0   'False
-      Height          =   495
-      Left            =   360
-      TabIndex        =   1
-      ToolTipText     =   "Set this configuration"
-      Top             =   4560
-      Width           =   1815
-   End
    Begin VB.TextBox CurrentConfigNameText 
+      Appearance      =   0  'Flat
+      BorderStyle     =   0  'None
       Height          =   285
       Left            =   3240
       Locked          =   -1  'True
-      TabIndex        =   3
+      TabIndex        =   1
       TabStop         =   0   'False
       Top             =   120
       Width           =   3615
    End
    Begin VB.Label Label1 
+      BackStyle       =   0  'Transparent
       Caption         =   "Current configuration is:"
       Height          =   375
       Left            =   1440
-      TabIndex        =   4
+      TabIndex        =   2
       Top             =   120
       Width           =   1815
    End
@@ -74,6 +99,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -102,6 +129,8 @@ Private mConfig                                     As ConfigurationSection
 Private mSelectedAppConfig                          As ConfigurationSection
 
 Private mOverridePositionSettings                   As Boolean
+
+Private mTheme                                      As ITheme
 
 '@================================================================================
 ' Class Event Handlers
@@ -147,8 +176,24 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -175,7 +220,7 @@ Const ProcName As String = "ConfigureButton_Click"
 On Error GoTo Err
 
 updateSettings
-Set mSelectedAppConfig = ConfigManager1.selectedAppConfig
+Set mSelectedAppConfig = ConfigManager1.SelectedAppConfig
 mOverridePositionSettings = False
 Me.Hide
 
@@ -193,11 +238,31 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get selectedAppConfig() As ConfigurationSection
+Friend Property Get SelectedAppConfig() As ConfigurationSection
 Const ProcName As String = "SelectedAppConfig"
 On Error GoTo Err
 
-Set selectedAppConfig = mSelectedAppConfig
+Set SelectedAppConfig = mSelectedAppConfig
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If Value Is Nothing Then Exit Property
+
+Set mTheme = Value
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
 
 Exit Property
 
@@ -245,7 +310,7 @@ Private Sub checkOkToLoadConfiguration()
 Const ProcName As String = "checkOkToLoadConfiguration"
 On Error GoTo Err
 
-If Not ConfigManager1.selectedAppConfig Is Nothing Then
+If Not ConfigManager1.SelectedAppConfig Is Nothing Then
     ConfigureButton.Enabled = True
     ConfigureButton.Default = True
 Else

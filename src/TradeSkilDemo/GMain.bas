@@ -32,6 +32,7 @@ Public Const ConfigSectionConfigEditor              As String = "ConfigEditor"
 'Public Const ConfigSectionContract                  As String = "Contract"
 Public Const ConfigSectionDefaultStudyConfigs       As String = "DefaultStudyConfigs"
 Public Const ConfigSectionChartStyles               As String = "/ChartStyles"
+Public Const ConfigSectionFloatingFeaturesPanel     As String = "FloatingFeaturesPanel"
 Public Const ConfigSectionHistoricCharts            As String = "HistoricCharts"
 Public Const ConfigSectionMainForm                  As String = "MainForm"
 Public Const ConfigSectionOrderTicket               As String = "OrderTicket"
@@ -44,6 +45,8 @@ Public Const ConfigSettingLeft                      As String = "&Left"
 Public Const ConfigSettingTop                       As String = "&Top"
 Public Const ConfigSettingWidth                     As String = "&Width"
 Public Const ConfigSettingWindowstate               As String = "&Windowstate"
+Public Const ConfigSettingFeaturesPanelHidden       As String = "&FeaturesPanelHidden"
+Public Const ConfigSettingFeaturesPanelPinned       As String = "&FeaturesPanelPinned"
 
 Public Const ConfigSettingCurrentChartStyle         As String = "&CurrentChartStyle"
 Public Const ConfigSettingCurrentHistChartStyle     As String = "&CurrentHistChartStyle"
@@ -54,8 +57,7 @@ Public Const ConfigSettingAppCurrentHistChartStyle  As String = ConfigSectionApp
 Public Const ConfigSettingConfigEditorLeft          As String = ConfigSectionConfigEditor & ConfigSettingLeft
 Public Const ConfigSettingConfigEditorTop           As String = ConfigSectionConfigEditor & ConfigSettingTop
 
-Public Const ConfigSettingMainFormControlsHidden    As String = ConfigSectionMainForm & ".ControlsHidden"
-Public Const ConfigSettingMainFormFeaturesHidden    As String = ConfigSectionMainForm & ".FeaturesHidden"
+Public Const ConfigSettingMainFormFeaturesHidden    As String = ConfigSectionMainForm & "&FeaturesHidden"
 Public Const ConfigSettingMainFormHeight            As String = ConfigSectionMainForm & ConfigSettingHeight
 Public Const ConfigSettingMainFormLeft              As String = ConfigSectionMainForm & ConfigSettingLeft
 Public Const ConfigSettingMainFormTop               As String = ConfigSectionMainForm & ConfigSettingTop
@@ -64,6 +66,9 @@ Public Const ConfigSettingMainFormWindowstate       As String = ConfigSectionMai
 
 Public Const ConfigSettingOrderTicketLeft           As String = ConfigSectionOrderTicket & ConfigSettingLeft
 Public Const ConfigSettingOrderTicketTop            As String = ConfigSectionOrderTicket & ConfigSettingTop
+
+Public Const ConfigSettingFloatingFeaturesPanelLeft As String = ConfigSectionFloatingFeaturesPanel & ConfigSettingLeft
+Public Const ConfigSettingFloatingFeaturesPanelTop  As String = ConfigSectionFloatingFeaturesPanel & ConfigSettingTop
 
 Private Const DefaultAppInstanceConfigName          As String = "Default Config"
 
@@ -106,6 +111,8 @@ Private mConfigEditor                               As fConfigEditor
 
 Private mSplash                                     As fSplash
 
+Private mTheme                                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -147,9 +154,85 @@ Public Property Get gMainForm() As fTradeSkilDemo
 Set gMainForm = mMainForm
 End Property
 
+Public Property Let gTheme(ByVal Value As ITheme)
+Set mTheme = Value
+End Property
+
+Public Property Get gTheme() As ITheme
+Set gTheme = mTheme
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub gApplyTheme(ByVal pTheme As ITheme, ByVal pControls As Object)
+Const ProcName As String = "gApplyTheme"
+On Error GoTo Err
+
+If pTheme Is Nothing Then Exit Sub
+
+Dim lControl As Control
+For Each lControl In pControls
+    If TypeOf lControl Is Label Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is CheckBox Or _
+        TypeOf lControl Is Frame Or _
+        TypeOf lControl Is OptionButton _
+    Then
+        SetWindowThemeOff lControl.hWnd
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is PictureBox Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BorderStyle = pTheme.BorderStyle
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is TextBox Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BorderStyle = pTheme.BorderStyle
+        lControl.BackColor = pTheme.TextBackColor
+        lControl.ForeColor = pTheme.TextForeColor
+    ElseIf TypeOf lControl Is ComboBox Or _
+        TypeOf lControl Is ListBox _
+    Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.TextBackColor
+        lControl.ForeColor = pTheme.TextForeColor
+    ElseIf TypeOf lControl Is CommandButton Or _
+        TypeOf lControl Is Shape _
+    Then
+        ' nothing for these
+    ElseIf TypeOf lControl Is DTPicker Then
+        lControl.CalendarBackColor = mTheme.BackColor
+        lControl.CalendarTitleBackColor = mTheme.TextBackColor
+        lControl.CalendarTitleForeColor = mTheme.TextForeColor
+        lControl.CalendarTrailingForeColor = toneDown(mTheme.TextForeColor)
+    ElseIf TypeOf lControl Is Object  Then
+        On Error Resume Next
+        If TypeOf lControl.object Is IThemeable Then
+            If Err.Number = 0 Then
+                On Error GoTo Err
+                Dim lThemeable As IThemeable
+                Set lThemeable = lControl.object
+                lThemeable.Theme = pTheme
+            Else
+                On Error GoTo Err
+            End If
+        Else
+            On Error GoTo Err
+        End If
+    End If
+Next
+        
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Sub gFinishConfigChangeMonitoring()
 Const ProcName As String = "gFinishConfigChangeMonitoring"
@@ -217,8 +300,7 @@ UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoin
 End Sub
 
 Public Function gLoadMainForm( _
-                ByVal pAppInstanceConfig As ConfigurationSection, _
-                Optional ByVal pPrevMainForm As fTradeSkilDemo) As Boolean
+                ByVal pAppInstanceConfig As ConfigurationSection) As Boolean
 Const ProcName As String = "gLoadMainForm"
 On Error GoTo Err
 
@@ -239,7 +321,7 @@ Do
     LogMessage "Loading main form for config: " & pAppInstanceConfig.InstanceQualifier
     
     Dim lErrorMessage As String
-    If lMainForm.Initialise(lTradeBuildAPI, mConfigStore, pAppInstanceConfig, pPrevMainForm, lErrorMessage) Then Exit Do
+    If lMainForm.Initialise(lTradeBuildAPI, mConfigStore, pAppInstanceConfig, lErrorMessage) Then Exit Do
 
     lTradeBuildAPI.ServiceProviders.RemoveAll
     gUnloadMainForm
@@ -296,7 +378,7 @@ Public Sub gModelessMsgBox( _
 Const ProcName As String = "gModelessMsgBox"
 On Error GoTo Err
 
-ModelessMsgBox prompt, buttons, title, gMainForm
+ModelessMsgBox prompt, buttons, title, gMainForm, mTheme
 
 Exit Sub
 
@@ -315,21 +397,6 @@ gPermittedServiceProviderRoles = ServiceProviderRoles.SPRoleRealtimeData Or _
                                 ServiceProviderRoles.SPRoleTickfileInput
 End Property
 
-'Public Sub gSaveSettings()
-'Const ProcName As String = "gSaveSettings"
-'On Error GoTo Err
-'
-'If mConfigStore.Dirty Then
-'    LogMessage "Saving configuration"
-'    mConfigStore.Save
-'End If
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
-
 Public Function gShowConfigEditor( _
                 ByVal pConfigStore As ConfigurationStore, _
                 ByVal pCurrAppInstanceConfig As ConfigurationSection, _
@@ -343,8 +410,9 @@ If mConfigEditor Is Nothing Then
        
     mConfigEditor.Initialise pConfigStore, pCurrAppInstanceConfig, pCentreWindow
 End If
+If Not mTheme Is Nothing Then mConfigEditor.Theme = mTheme
 mConfigEditor.Show vbModal, pParentForm
-Set gShowConfigEditor = mConfigEditor.selectedAppConfig
+Set gShowConfigEditor = mConfigEditor.SelectedAppConfig
 
 Exit Function
 
@@ -421,6 +489,7 @@ mConfigChangeMonitor.Initialise mConfigStore
 
 gGetSplashScreen
 loadChartStyles mConfigStore
+ensureBuiltInChartStylesExist
     
 Dim lAppInstanceConfig As ConfigurationSection
 Set lAppInstanceConfig = getAppInstanceConfig(mConfigStore)
@@ -545,6 +614,21 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub ensureBuiltInChartStylesExist()
+Const ProcName As String = "ensureBuiltInChartStylesExist"
+On Error GoTo Err
+
+setupChartStyleAppDefault
+setupChartStyleBlack
+setupChartStyleDarkBlueFade
+setupChartStyleGoldFade
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function getAppInstanceConfig(ByVal pConfigStore As ConfigurationStore) As ConfigurationSection
 Const ProcName As String = "getAppInstanceConfig"
@@ -697,6 +781,250 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub setupChartStyleAppDefault()
+Const ProcName As String = "setupChartStyleAppDefault"
+On Error GoTo Err
+
+If ChartStylesManager.Contains(ChartStyleNameAppDefault) Then Exit Sub
+
+Dim lCursorTextStyle As New TextStyle
+lCursorTextStyle.Align = AlignBoxTopCentre
+lCursorTextStyle.Box = True
+lCursorTextStyle.BoxFillWithBackgroundColor = True
+lCursorTextStyle.BoxStyle = LineInvisible
+lCursorTextStyle.BoxThickness = 0
+lCursorTextStyle.Color = &H80&
+lCursorTextStyle.PaddingX = 2
+lCursorTextStyle.PaddingY = 0
+
+Dim lFont As New StdFont
+lFont.name = "Courier New"
+lFont.Bold = True
+lFont.Size = 8
+lCursorTextStyle.Font = lFont
+
+Dim lDefaultRegionStyle As ChartRegionStyle
+Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = RGB(192, 192, 192)
+GradientFillColors(1) = RGB(248, 248, 248)
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.XGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.YGridLineStyle.Color = &HD0D0D0
+    
+Dim lxAxisRegionStyle As ChartRegionStyle
+Set lxAxisRegionStyle = GetDefaultChartXAxisRegionStyle.Clone
+lxAxisRegionStyle.XCursorTextStyle = lCursorTextStyle
+GradientFillColors(0) = RGB(230, 236, 207)
+GradientFillColors(1) = RGB(222, 236, 215)
+lxAxisRegionStyle.BackGradientFillColors = GradientFillColors
+    
+Dim lDefaultYAxisRegionStyle As ChartRegionStyle
+Set lDefaultYAxisRegionStyle = GetDefaultChartYAxisRegionStyle.Clone
+lDefaultYAxisRegionStyle.YCursorTextStyle = lCursorTextStyle
+GradientFillColors(0) = RGB(234, 246, 254)
+GradientFillColors(1) = RGB(226, 246, 255)
+lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+    
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = &H7F
+
+ChartStylesManager.Add ChartStyleNameAppDefault, _
+                        ChartStylesManager.DefaultStyle, _
+                        lDefaultRegionStyle, _
+                        lxAxisRegionStyle, _
+                        lDefaultYAxisRegionStyle, _
+                        lCrosshairLineStyle
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setupChartStyleBlack()
+Const ProcName As String = "setupChartStyleBlack"
+On Error GoTo Err
+
+If ChartStylesManager.Contains(ChartStyleNameBlack) Then Exit Sub
+
+Dim lCursorTextStyle As New TextStyle
+lCursorTextStyle.Align = AlignBoxTopCentre
+lCursorTextStyle.Box = True
+lCursorTextStyle.BoxFillWithBackgroundColor = True
+lCursorTextStyle.BoxStyle = LineInvisible
+lCursorTextStyle.BoxThickness = 0
+lCursorTextStyle.Color = vbRed
+lCursorTextStyle.PaddingX = 2
+lCursorTextStyle.PaddingY = 0
+
+Dim lFont As StdFont
+Set lFont = New StdFont
+lFont.name = "Courier New"
+lFont.Bold = True
+lFont.Size = 8
+lCursorTextStyle.Font = lFont
+
+Dim lDefaultRegionStyle As ChartRegionStyle
+Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = &H202020
+GradientFillColors(1) = &H202020
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+
+lDefaultRegionStyle.XGridLineStyle.Color = &H303030
+lDefaultRegionStyle.YGridLineStyle.Color = &H303030
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &H303030
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &H303030
+    
+Dim lxAxisRegionStyle As ChartRegionStyle
+Set lxAxisRegionStyle = GetDefaultChartXAxisRegionStyle.Clone
+GradientFillColors(0) = RGB(0, 0, 0)
+GradientFillColors(1) = RGB(0, 0, 0)
+lxAxisRegionStyle.BackGradientFillColors = GradientFillColors
+lxAxisRegionStyle.XCursorTextStyle = lCursorTextStyle
+
+Dim lGridTextStyle As New TextStyle
+lGridTextStyle.Box = True
+lGridTextStyle.BoxFillWithBackgroundColor = True
+lGridTextStyle.BoxStyle = LineInvisible
+lGridTextStyle.Color = &HD0D0D0
+lxAxisRegionStyle.XGridTextStyle = lGridTextStyle
+    
+Dim lDefaultYAxisRegionStyle As ChartRegionStyle
+Set lDefaultYAxisRegionStyle = GetDefaultChartYAxisRegionStyle.Clone
+GradientFillColors(0) = RGB(0, 0, 0)
+GradientFillColors(1) = RGB(0, 0, 0)
+lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+lDefaultYAxisRegionStyle.YCursorTextStyle = lCursorTextStyle
+lDefaultYAxisRegionStyle.YGridTextStyle = lGridTextStyle
+    
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = &H80&
+
+ChartStylesManager.Add ChartStyleNameBlack, _
+                        ChartStylesManager.Item(ChartStyleNameAppDefault), _
+                        lDefaultRegionStyle, _
+                        lxAxisRegionStyle, _
+                        lDefaultYAxisRegionStyle, _
+                        lCrosshairLineStyle
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setupChartStyleDarkBlueFade()
+Const ProcName As String = "setupChartStyleDarkBlueFade"
+On Error GoTo Err
+
+If ChartStylesManager.Contains(ChartStyleNameDarkBlueFade) Then Exit Sub
+
+Dim lDefaultRegionStyle As ChartRegionStyle
+Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = &H643232
+GradientFillColors(1) = &H804040
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+    
+lDefaultRegionStyle.XGridLineStyle.Color = &H505050
+lDefaultRegionStyle.YGridLineStyle.Color = &H505050
+    
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &H505050
+    
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &H505050
+
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = vbRed
+
+ChartStylesManager.Add ChartStyleNameDarkBlueFade, _
+                        ChartStylesManager.Item(ChartStyleNameAppDefault), _
+                        lDefaultRegionStyle, _
+                        , _
+                        , _
+                        lCrosshairLineStyle
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setupChartStyleGoldFade()
+Const ProcName As String = "setupChartStyleGoldFade"
+On Error GoTo Err
+
+If ChartStylesManager.Contains(ChartStyleNameGoldFade) Then Exit Sub
+
+Dim lCursorTextStyle As New TextStyle
+lCursorTextStyle.Align = AlignBoxTopCentre
+lCursorTextStyle.Box = True
+lCursorTextStyle.BoxFillWithBackgroundColor = True
+lCursorTextStyle.BoxStyle = LineInvisible
+lCursorTextStyle.BoxThickness = 0
+lCursorTextStyle.Color = &H80&
+lCursorTextStyle.PaddingX = 2
+lCursorTextStyle.PaddingY = 0
+
+Dim lFont As New StdFont
+lFont.name = "Courier New"
+lFont.Bold = True
+lFont.Size = 8
+lCursorTextStyle.Font = lFont
+
+Dim lDefaultRegionStyle As ChartRegionStyle
+Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = &H82DFE6
+GradientFillColors(1) = &HEBFAFB
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+    
+lDefaultRegionStyle.XGridLineStyle.Color = &HE0E0E0
+lDefaultRegionStyle.YGridLineStyle.Color = &HE0E0E0
+    
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &HE0E0E0
+    
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &HE0E0E0
+
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = 127
+
+ChartStylesManager.Add ChartStyleNameGoldFade, _
+                        ChartStylesManager.Item(ChartStyleNameAppDefault), _
+                        lDefaultRegionStyle, _
+                        , _
+                        , _
+                        lCrosshairLineStyle
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Public Sub SetWindowThemeOff(ByVal phWnd As Long)
+Dim result As Long
+result = SetWindowTheme(phWnd, vbNullString, "")
+End Sub
+
 Private Function showCommandLineOptions() As Boolean
 Const ProcName As String = "showCommandLineOptions"
 On Error GoTo Err
@@ -732,4 +1060,14 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Function toneDown(ByVal pColor As Long) As Long
+If (pColor And &H80000000) Then pColor = GetSysColor(pColor And &HFFFFFF)
+
+toneDown = (((pColor And &HFF0000) / &H20000) And &HFF0000) + _
+            (((pColor And &HFF00) / &H200) And &HFF00) + _
+            ((pColor And &HFF) / &H2)
+End Function
+
+
 

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#217.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#271.0#0"; "TradingUI27.ocx"
 Begin VB.Form fMarketDepth 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Market Depth"
@@ -49,6 +49,7 @@ Option Explicit
 '================================================================================
 
 Implements ErrorListener
+Implements IThemeable
 
 '================================================================================
 ' Events
@@ -76,13 +77,11 @@ Private mTicker                                     As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 Private mCaption                                    As String
 
+Private mTheme                                      As ITheme
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
-
-Private Sub Form_Initialize()
-InitCommonControls
-End Sub
 
 Private Sub Form_Load()
 
@@ -118,7 +117,7 @@ Private Sub Form_Terminate()
 Debug.Print "Market depth form terminated"
 End Sub
 
-Private Sub Form_Unload(cancel As Integer)
+Private Sub Form_Unload(Cancel As Integer)
 DOMDisplay1.Finish
 Set mTicker = Nothing
 End Sub
@@ -139,6 +138,26 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '================================================================================
 ' Form Control Event Handlers
@@ -184,16 +203,36 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let numberOfRows(ByVal Value As Long)
-Const ProcName As String = "numberOfRows"
+Public Property Let NumberOfRows(ByVal Value As Long)
+Const ProcName As String = "NumberOfRows"
 On Error GoTo Err
 
-DOMDisplay1.numberOfRows = Value
+DOMDisplay1.NumberOfRows = Value
 
 Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If Value Is Nothing Then Exit Property
+
+Set mTheme = Value
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 Public Property Let Ticker(ByVal Value As Ticker)

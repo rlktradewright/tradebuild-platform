@@ -116,10 +116,6 @@ Private Const ModuleName                            As String = "fSplash"
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Form_Initialize()
-InitCommonControls
-End Sub
-
 Private Sub Form_Load()
 ProductLabel.caption = AppName
 VersionLabel.caption = "Version" & App.Major & "." & App.Minor & "." & App.Revision

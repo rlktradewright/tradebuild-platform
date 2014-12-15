@@ -1,7 +1,8 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#111.0#0"; "TradeBuildUI27.ocx"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#198.0#0"; "StudiesUI27.ocx"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#115.0#0"; "TradeBuildUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#203.0#0"; "StudiesUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.6#0"; "TWControls40.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -10,36 +11,59 @@ Begin VB.UserControl ConfigManager
    ClientWidth     =   16170
    ScaleHeight     =   8325
    ScaleWidth      =   16170
-   Begin TradeBuildUI27.SPConfigurer SPConfigurer1 
-      Height          =   4005
-      Left            =   120
-      TabIndex        =   3
-      Top             =   4320
-      Width           =   7500
-      _ExtentX        =   13229
-      _ExtentY        =   7064
+   Begin TWControls40.TWButton NewConfigButton 
+      Height          =   375
+      Left            =   1680
+      TabIndex        =   7
+      Top             =   3600
+      Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   661
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "New"
+      Object.Default         =   -1  'True
    End
-   Begin VB.CommandButton DeleteConfigButton 
-      Caption         =   "Delete"
-      Enabled         =   0   'False
+   Begin TWControls40.TWButton DeleteConfigButton 
       Height          =   375
       Left            =   0
       TabIndex        =   1
       Top             =   3600
       Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   661
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Delete"
+      Object.Default         =   -1  'True
    End
-   Begin VB.CommandButton NewConfigButton 
-      Caption         =   "New"
-      Height          =   375
-      Left            =   1680
+   Begin TradeBuildUI27.SPConfigurer SPConfigurer1 
+      Height          =   4005
+      Left            =   120
       TabIndex        =   2
-      Top             =   3600
-      Width           =   735
+      Top             =   4320
+      Width           =   7500
+      _ExtentX        =   13229
+      _ExtentY        =   7064
    End
    Begin StudiesUI27.StudyLibConfigurer StudyLibConfigurer1 
       Height          =   4005
       Left            =   8520
-      TabIndex        =   4
+      TabIndex        =   3
       Top             =   4320
       Visible         =   0   'False
       Width           =   7500
@@ -79,7 +103,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   735
       Left            =   10560
-      TabIndex        =   7
+      TabIndex        =   6
       Top             =   2640
       Visible         =   0   'False
       Width           =   2775
@@ -96,7 +120,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   615
       Left            =   5520
-      TabIndex        =   6
+      TabIndex        =   5
       Top             =   1080
       Visible         =   0   'False
       Width           =   2775
@@ -113,7 +137,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   495
       Left            =   10320
-      TabIndex        =   5
+      TabIndex        =   4
       Top             =   120
       Visible         =   0   'False
       Width           =   2775
@@ -171,6 +195,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IThemeable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -220,6 +246,8 @@ Private mConfigNames                        As Collection
 Private mPermittedServiceProviderRoles      As ServiceProviderRoles
 Private mFlags                              As ConfigFlags
 
+Private mTheme                              As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -250,8 +278,24 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -489,8 +533,28 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get selectedAppConfig() As ConfigurationSection
-Set selectedAppConfig = mSelectedAppConfig
+Public Property Get SelectedAppConfig() As ConfigurationSection
+Set SelectedAppConfig = mSelectedAppConfig
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If Value Is Nothing Then Exit Property
+
+Set mTheme = Value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

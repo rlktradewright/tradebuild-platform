@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#235.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#276.1#0"; "TradingUI27.ocx"
 Begin VB.Form fOrderTicket 
    BorderStyle     =   4  'Fixed ToolWindow
    ClientHeight    =   6135
@@ -49,6 +49,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements IThemeable
+
 '================================================================================
 ' Events
 '================================================================================
@@ -75,22 +77,11 @@ Private mAppInstanceConfig                      As ConfigurationSection
 
 Private mTicker                                 As Ticker
 
+Private mTheme                                  As ITheme
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
-
-Private Sub Form_Activate()
-Const ProcName As String = "Form_Activate"
-On Error GoTo Err
-
-Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
-Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
 
 Private Sub Form_Deactivate()
 Const ProcName As String = "Form_Deactivate"
@@ -104,8 +95,31 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub Form_Initialize()
-InitCommonControls
+Private Sub Form_Load()
+If Not mTheme Is Nothing Then
+    Me.BackColor = mTheme.BackColor
+    gApplyTheme mTheme, Me.Controls
+End If
+End Sub
+
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+Dim c As QueryUnloadConstants
+c = UnloadMode
+Select Case c
+Case vbFormControlMenu
+    Me.Hide
+    Cancel = True
+Case vbFormCode
+
+Case vbAppWindows
+
+Case vbAppTaskManager
+
+Case vbFormMDIForm
+
+Case vbFormOwner
+
+End Select
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -120,6 +134,26 @@ Exit Sub
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '================================================================================
 ' Form Control Event Handlers
@@ -193,6 +227,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If Value Is Nothing Then Exit Property
+
+Set mTheme = Value
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -202,6 +256,9 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mAppInstanceConfig = pAppInstanceConfig
+
+Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
+Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 
 Exit Sub
 
