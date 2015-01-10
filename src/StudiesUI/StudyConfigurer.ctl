@@ -1,7 +1,8 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyConfigurer 
    ClientHeight    =   5595
    ClientLeft      =   0
@@ -28,6 +29,8 @@ Begin VB.UserControl StudyConfigurer
          Top             =   240
          Width           =   6900
          Begin VB.TextBox LineText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   285
             Index           =   4
             Left            =   5280
@@ -36,6 +39,8 @@ Begin VB.UserControl StudyConfigurer
             Width           =   615
          End
          Begin VB.TextBox LineText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   285
             Index           =   3
             Left            =   3960
@@ -44,6 +49,8 @@ Begin VB.UserControl StudyConfigurer
             Width           =   615
          End
          Begin VB.TextBox LineText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   285
             Index           =   2
             Left            =   2640
@@ -52,6 +59,8 @@ Begin VB.UserControl StudyConfigurer
             Width           =   615
          End
          Begin VB.TextBox LineText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   285
             Index           =   1
             Left            =   1320
@@ -60,6 +69,8 @@ Begin VB.UserControl StudyConfigurer
             Width           =   615
          End
          Begin VB.TextBox LineText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   285
             Index           =   0
             Left            =   0
@@ -122,14 +133,14 @@ Begin VB.UserControl StudyConfigurer
       Top             =   0
       Width           =   7095
       Begin StudiesUI27.StudyValueConfigurer StudyValueConfigurer 
-         Height          =   450
+         Height          =   375
          Index           =   0
          Left            =   120
          TabIndex        =   39
          Top             =   480
-         Width           =   6855
-         _ExtentX        =   12091
-         _ExtentY        =   794
+         Width           =   6915
+         _ExtentX        =   12197
+         _ExtentY        =   661
       End
       Begin VB.PictureBox ValuesPicture 
          Appearance      =   0  'Flat
@@ -236,7 +247,31 @@ Begin VB.UserControl StudyConfigurer
          TabIndex        =   13
          Top             =   240
          Width           =   2175
+         Begin TWControls40.TWImageCombo ParameterValueCombo 
+            Height          =   270
+            Index           =   0
+            Left            =   1320
+            TabIndex        =   3
+            Top             =   480
+            Width           =   855
+            _ExtentX        =   1508
+            _ExtentY        =   476
+            Appearance      =   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseIcon       =   "StudyConfigurer.ctx":0000
+            Text            =   ""
+         End
          Begin VB.CheckBox ParameterValueCheck 
+            Appearance      =   0  'Flat
+            ForeColor       =   &H80000008&
             Height          =   255
             Index           =   0
             Left            =   1320
@@ -245,21 +280,9 @@ Begin VB.UserControl StudyConfigurer
             Visible         =   0   'False
             Width           =   255
          End
-         Begin MSComctlLib.ImageCombo ParameterValueCombo 
-            Height          =   330
-            Index           =   0
-            Left            =   1320
-            TabIndex        =   3
-            Top             =   480
-            Visible         =   0   'False
-            Width           =   855
-            _ExtentX        =   1508
-            _ExtentY        =   582
-            _Version        =   393216
-            ForeColor       =   -2147483640
-            BackColor       =   -2147483643
-         End
          Begin VB.TextBox ParameterValueTemplateText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   330
             Left            =   1320
             TabIndex        =   4
@@ -269,6 +292,8 @@ Begin VB.UserControl StudyConfigurer
             Width           =   855
          End
          Begin VB.TextBox ParameterValueText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   330
             Index           =   0
             Left            =   1320
@@ -351,32 +376,48 @@ Begin VB.UserControl StudyConfigurer
          TabIndex        =   7
          Top             =   240
          Width           =   2175
-         Begin MSComctlLib.ImageCombo InputValueCombo 
-            Height          =   330
+         Begin TWControls40.TWImageCombo InputValueCombo 
+            Height          =   270
             Index           =   0
             Left            =   0
             TabIndex        =   1
             Top             =   3000
             Width           =   2175
             _ExtentX        =   3836
-            _ExtentY        =   582
-            _Version        =   393216
-            ForeColor       =   -2147483640
-            BackColor       =   -2147483643
-            Locked          =   -1  'True
+            _ExtentY        =   476
+            Appearance      =   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseIcon       =   "StudyConfigurer.ctx":001C
+            Text            =   ""
          End
-         Begin MSComctlLib.ImageCombo ChartRegionCombo 
-            Height          =   330
+         Begin TWControls40.TWImageCombo ChartRegionCombo 
+            Height          =   270
             Left            =   0
             TabIndex        =   0
             Top             =   240
             Width           =   2175
             _ExtentX        =   3836
-            _ExtentY        =   582
-            _Version        =   393216
-            ForeColor       =   -2147483640
-            BackColor       =   -2147483643
-            Locked          =   -1  'True
+            _ExtentY        =   476
+            Appearance      =   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseIcon       =   "StudyConfigurer.ctx":0038
+            Text            =   ""
          End
          Begin VB.Label Label7 
             Caption         =   "Chart region"
@@ -422,6 +463,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -471,6 +514,8 @@ Private mCompatibleStudies As Collection
 
 Private mPrevSelectedBaseStudiesTreeNode As Node
 
+Private mTheme                              As ITheme
+
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
@@ -480,8 +525,24 @@ mNextTabIndex = 2
 End Sub
 
 '@================================================================================
-' XXXX Interface members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -630,6 +691,24 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================
@@ -1167,7 +1246,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setComboSelection( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal text As String)
 Dim item As ComboItem
 Const ProcName As String = "setComboSelection"

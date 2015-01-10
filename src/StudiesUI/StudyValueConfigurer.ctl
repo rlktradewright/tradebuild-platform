@@ -1,15 +1,97 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyValueConfigurer 
    BackStyle       =   0  'Transparent
-   ClientHeight    =   450
+   ClientHeight    =   375
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6885
-   ScaleHeight     =   450
+   ScaleHeight     =   375
    ScaleWidth      =   6885
+   Begin TWControls40.TWButton AdvancedButton 
+      Height          =   300
+      Left            =   6300
+      TabIndex        =   6
+      Top             =   0
+      Width           =   615
+      _ExtentX        =   1085
+      _ExtentY        =   529
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "..."
+   End
+   Begin TWControls40.TWButton FontButton 
+      Height          =   300
+      Left            =   5250
+      TabIndex        =   11
+      Top             =   0
+      Width           =   615
+      _ExtentX        =   1085
+      _ExtentY        =   529
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Font..."
+   End
+   Begin TWControls40.TWImageCombo StyleCombo 
+      Height          =   270
+      Left            =   5160
+      TabIndex        =   5
+      Top             =   0
+      Width           =   1095
+      _ExtentX        =   1931
+      _ExtentY        =   476
+      Appearance      =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "StudyValueConfigurer.ctx":0000
+      Text            =   ""
+   End
+   Begin TWControls40.TWImageCombo DisplayModeCombo 
+      Height          =   270
+      Left            =   3240
+      TabIndex        =   2
+      Top             =   0
+      Width           =   975
+      _ExtentX        =   1720
+      _ExtentY        =   476
+      Appearance      =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "StudyValueConfigurer.ctx":001C
+      Text            =   ""
+   End
    Begin MSComDlg.CommonDialog CommonDialog1 
       Left            =   360
       Top             =   120
@@ -18,6 +100,9 @@ Begin VB.UserControl StudyValueConfigurer
       _Version        =   393216
    End
    Begin VB.CheckBox IncludeCheck 
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
       Height          =   195
       Left            =   1560
       TabIndex        =   0
@@ -27,7 +112,9 @@ Begin VB.UserControl StudyValueConfigurer
    End
    Begin VB.TextBox ThicknessText 
       Alignment       =   2  'Center
-      Height          =   330
+      Appearance      =   0  'Flat
+      BorderStyle     =   0  'None
+      Height          =   270
       Left            =   4320
       TabIndex        =   3
       Text            =   "1"
@@ -36,6 +123,9 @@ Begin VB.UserControl StudyValueConfigurer
       Width           =   495
    End
    Begin VB.CheckBox AutoscaleCheck 
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
       Height          =   195
       Left            =   1920
       TabIndex        =   1
@@ -43,60 +133,14 @@ Begin VB.UserControl StudyValueConfigurer
       Top             =   0
       Width           =   210
    End
-   Begin VB.CommandButton AdvancedButton 
-      Caption         =   "..."
-      Height          =   375
-      Left            =   6360
-      TabIndex        =   7
-      ToolTipText     =   "Click for advanced features"
-      Top             =   0
-      Width           =   495
-   End
-   Begin VB.CommandButton FontButton 
-      Caption         =   "Font..."
-      Height          =   375
-      Left            =   5400
-      TabIndex        =   6
-      ToolTipText     =   "Click to select the font"
-      Top             =   0
-      Width           =   615
-   End
-   Begin MSComctlLib.ImageCombo StyleCombo 
-      Height          =   330
-      Left            =   5160
-      TabIndex        =   5
-      ToolTipText     =   "Choose the line style (ignored if thickness is greater than 1)"
-      Top             =   0
-      Width           =   1095
-      _ExtentX        =   1931
-      _ExtentY        =   582
-      _Version        =   393216
-      ForeColor       =   -2147483640
-      BackColor       =   -2147483643
-      Locked          =   -1  'True
-   End
-   Begin MSComctlLib.ImageCombo DisplayModeCombo 
-      Height          =   330
-      Left            =   3240
-      TabIndex        =   2
-      ToolTipText     =   "Select how to display this value"
-      Top             =   0
-      Width           =   975
-      _ExtentX        =   1720
-      _ExtentY        =   582
-      _Version        =   393216
-      ForeColor       =   -2147483640
-      BackColor       =   -2147483643
-      Locked          =   -1  'True
-   End
    Begin MSComCtl2.UpDown ThicknessUpDown 
-      Height          =   330
+      Height          =   300
       Left            =   4800
       TabIndex        =   4
       Top             =   0
       Width           =   255
       _ExtentX        =   450
-      _ExtentY        =   582
+      _ExtentY        =   529
       _Version        =   393216
       Value           =   1
       OrigLeft        =   4080
@@ -107,37 +151,38 @@ Begin VB.UserControl StudyValueConfigurer
       Enabled         =   -1  'True
    End
    Begin VB.Label ValueNameLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Label2"
       Height          =   375
       Left            =   0
-      TabIndex        =   11
-      Top             =   0
+      TabIndex        =   10
+      Top             =   60
       Width           =   1575
    End
    Begin VB.Label ColorLabel 
       Appearance      =   0  'Flat
       BackColor       =   &H00FF0000&
       ForeColor       =   &H80000008&
-      Height          =   330
+      Height          =   300
       Left            =   2175
-      TabIndex        =   10
+      TabIndex        =   9
       ToolTipText     =   "Click to change the colour for this value"
       Top             =   0
       Width           =   255
    End
    Begin VB.Label UpColorLabel 
       BackColor       =   &H0000FF00&
-      Height          =   330
+      Height          =   300
       Left            =   2520
-      TabIndex        =   9
+      TabIndex        =   8
       Top             =   0
       Width           =   255
    End
    Begin VB.Label DownColorLabel 
       BackColor       =   &H000000FF&
-      Height          =   330
+      Height          =   300
       Left            =   2865
-      TabIndex        =   8
+      TabIndex        =   7
       Top             =   0
       Width           =   255
    End
@@ -157,6 +202,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -186,6 +233,8 @@ Private mStudyValueConfig As StudyValueConfiguration
 
 Private mFont As StdFont
 
+Private mTheme                              As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -196,8 +245,24 @@ UserControl.Width = AdvancedButton.Left + AdvancedButton.Width
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -370,6 +435,24 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
 
 '@================================================================================
 ' Methods
@@ -851,7 +934,7 @@ End If
 End Function
 
 Private Sub initialiseBarDisplayModeCombo( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal pDisplayMode As BarDisplayModes, _
                 ByVal pSolid As Boolean)
 Const ProcName As String = "initialiseBarDisplayModeCombo"
@@ -883,7 +966,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseBarStyleCombo( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal barWidth As Single)
 Const ProcName As String = "initialiseBarStyleCombo"
 On Error GoTo Err
@@ -919,7 +1002,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseHistogramStyleCombo( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal histBarWidth As Single)
 Const ProcName As String = "initialiseHistogramStyleCombo"
 On Error GoTo Err
@@ -955,7 +1038,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseLineDisplayModeCombo( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal pArrowStart As Boolean, _
                 ByVal pArrowEnd As Boolean)
 Const ProcName As String = "initialiseLineDisplayModeCombo"
@@ -987,7 +1070,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseLineStyleCombo( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal pLineStyle As LineStyles)
 Const ProcName As String = "initialiseLineStyleCombo"
 On Error GoTo Err
@@ -1021,7 +1104,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialisePointDisplayModeCombo( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal pDisplayMode As DataPointDisplayModes)
 Const ProcName As String = "initialisePointDisplayModeCombo"
 On Error GoTo Err
@@ -1050,7 +1133,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialisePointStyleCombo( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal pPointStyle As PointStyles)
 Const ProcName As String = "initialisePointStyleCombo"
 On Error GoTo Err
@@ -1075,7 +1158,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseTextDisplayModeCombo( _
-                ByVal combo As ImageCombo, _
+                ByVal combo As TWImageCombo, _
                 ByVal pBox As Boolean, _
                 ByVal pBoxThickness As Long, _
                 ByVal pBoxStyle As LineStyles, _

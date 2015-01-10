@@ -1,5 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyPicker 
    ClientHeight    =   4335
    ClientLeft      =   0
@@ -7,10 +8,90 @@ Begin VB.UserControl StudyPicker
    ClientWidth     =   8655
    ScaleHeight     =   4335
    ScaleWidth      =   8655
+   Begin TWControls40.TWButton RemoveButton 
+      Height          =   375
+      Left            =   3360
+      TabIndex        =   4
+      Top             =   1560
+      Width           =   375
+      _ExtentX        =   661
+      _ExtentY        =   661
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "<"
+   End
+   Begin TWControls40.TWButton AddButton 
+      Height          =   375
+      Left            =   3360
+      TabIndex        =   1
+      Top             =   1080
+      Width           =   375
+      _ExtentX        =   661
+      _ExtentY        =   661
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   ">"
+   End
+   Begin TWControls40.TWButton ChangeButton 
+      Height          =   375
+      Left            =   7440
+      TabIndex        =   3
+      Top             =   3000
+      Width           =   1095
+      _ExtentX        =   1931
+      _ExtentY        =   661
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Change"
+   End
+   Begin TWControls40.TWButton ConfigureButton 
+      Height          =   375
+      Left            =   2160
+      TabIndex        =   5
+      Top             =   3000
+      Width           =   1095
+      _ExtentX        =   1931
+      _ExtentY        =   661
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Co&nfigure"
+   End
    Begin MSComctlLib.TreeView ChartStudiesTree 
       Height          =   2535
       Left            =   3840
-      TabIndex        =   9
+      TabIndex        =   2
       Top             =   360
       Width           =   4695
       _ExtentX        =   8281
@@ -22,70 +103,33 @@ Begin VB.UserControl StudyPicker
       Appearance      =   0
    End
    Begin VB.ListBox StudyList 
-      Height          =   2400
+      Appearance      =   0  'Flat
+      Height          =   2565
       ItemData        =   "StudyPicker.ctx":0000
       Left            =   120
       List            =   "StudyPicker.ctx":0002
-      TabIndex        =   5
+      TabIndex        =   0
       Top             =   360
       Width           =   3135
    End
    Begin VB.TextBox DescriptionText 
+      Appearance      =   0  'Flat
+      BorderStyle     =   0  'None
       Height          =   735
       Left            =   120
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   4
+      TabIndex        =   6
       TabStop         =   0   'False
       Top             =   3480
       Width           =   8415
-   End
-   Begin VB.CommandButton AddButton 
-      Caption         =   ">"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   3360
-      TabIndex        =   3
-      ToolTipText     =   "Add study to chart"
-      Top             =   1080
-      Width           =   375
-   End
-   Begin VB.CommandButton ConfigureButton 
-      Caption         =   "Co&nfigure"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   2160
-      TabIndex        =   2
-      ToolTipText     =   "Configure selected study"
-      Top             =   3000
-      Width           =   1095
-   End
-   Begin VB.CommandButton RemoveButton 
-      Caption         =   "<"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   3360
-      TabIndex        =   1
-      ToolTipText     =   "Remove study from chart"
-      Top             =   1560
-      Width           =   375
-   End
-   Begin VB.CommandButton ChangeButton 
-      Caption         =   "Change"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   7440
-      TabIndex        =   0
-      ToolTipText     =   "Change selected study's configuration"
-      Top             =   3000
-      Width           =   1095
    End
    Begin VB.Label Label1 
       Caption         =   "Available studies"
       Height          =   255
       Left            =   240
-      TabIndex        =   8
+      TabIndex        =   9
       Top             =   120
       Width           =   1455
    End
@@ -93,7 +137,7 @@ Begin VB.UserControl StudyPicker
       Caption         =   "Description"
       Height          =   255
       Left            =   240
-      TabIndex        =   7
+      TabIndex        =   8
       Top             =   3240
       Width           =   1455
    End
@@ -101,7 +145,7 @@ Begin VB.UserControl StudyPicker
       Caption         =   "Studies in chart"
       Height          =   255
       Left            =   3960
-      TabIndex        =   6
+      TabIndex        =   7
       Top             =   120
       Width           =   1695
    End
@@ -122,6 +166,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -154,6 +200,8 @@ Private mAvailableStudies() As StudyListEntry
 Private mConfigForm As fStudyConfigurer
 Attribute mConfigForm.VB_VarHelpID = -1
 
+Private mTheme                              As ITheme
+
 '@================================================================================
 ' UserControl Event Handlers
 '@================================================================================
@@ -170,6 +218,26 @@ Exit Sub
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -378,6 +446,24 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -478,7 +564,10 @@ Private Function showConfigForm( _
 Const ProcName As String = "showConfigForm"
 On Error GoTo Err
 
-If mConfigForm Is Nothing Then Set mConfigForm = New fStudyConfigurer
+If mConfigForm Is Nothing Then
+    Set mConfigForm = New fStudyConfigurer
+    If Not mTheme Is Nothing Then mConfigForm.Theme = mTheme
+End If
 
 Dim noParameterModification  As Boolean
 If Not defaultConfiguration Is Nothing Then

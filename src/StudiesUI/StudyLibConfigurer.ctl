@@ -1,4 +1,5 @@
 VERSION 5.00
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyLibConfigurer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   4755
@@ -8,20 +9,133 @@ Begin VB.UserControl StudyLibConfigurer
    DefaultCancel   =   -1  'True
    ScaleHeight     =   4755
    ScaleWidth      =   8130
-   Begin VB.CommandButton CancelButton 
-      Caption         =   "Cancel"
-      Enabled         =   0   'False
+   Begin TWControls40.TWButton RemoveButton 
+      Height          =   615
+      Left            =   2280
+      TabIndex        =   9
+      Top             =   3240
+      Width           =   375
+      _ExtentX        =   661
+      _ExtentY        =   1085
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "X"
+   End
+   Begin TWControls40.TWButton DownButton 
+      Height          =   495
+      Left            =   2280
+      TabIndex        =   8
+      Top             =   2160
+      Width           =   375
+      _ExtentX        =   661
+      _ExtentY        =   873
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Wingdings"
+         Size            =   18
+         Charset         =   2
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "ò"
+   End
+   Begin TWControls40.TWButton UpButton 
+      Height          =   495
+      Left            =   2280
+      TabIndex        =   7
+      Top             =   1440
+      Width           =   375
+      _ExtentX        =   661
+      _ExtentY        =   873
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Wingdings"
+         Size            =   18
+         Charset         =   2
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "ñ"
+   End
+   Begin TWControls40.TWButton AddButton 
+      Height          =   615
+      Left            =   2280
+      TabIndex        =   6
+      Top             =   120
+      Width           =   375
+      _ExtentX        =   661
+      _ExtentY        =   1085
+      DefaultBorderColor=   15793920
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "+"
+   End
+   Begin TWControls40.TWButton ApplyButton 
       Height          =   375
-      Left            =   5280
+      Left            =   6360
       TabIndex        =   15
       Top             =   3480
       Width           =   975
+      _ExtentX        =   1720
+      _ExtentY        =   661
+      DefaultBorderColor=   15793920
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Apply"
+   End
+   Begin TWControls40.TWButton CancelButton 
+      Height          =   375
+      Left            =   5280
+      TabIndex        =   14
+      Top             =   3480
+      Width           =   975
+      _ExtentX        =   1720
+      _ExtentY        =   661
+      DefaultBorderColor=   15793920
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Cancel"
    End
    Begin VB.Frame Frame1 
       Caption         =   "Library details"
       Height          =   1695
       Left            =   3240
-      TabIndex        =   12
+      TabIndex        =   11
       Top             =   1200
       Width           =   3975
       Begin VB.PictureBox Picture1 
@@ -30,10 +144,12 @@ Begin VB.UserControl StudyLibConfigurer
          Left            =   120
          ScaleHeight     =   1395
          ScaleWidth      =   3750
-         TabIndex        =   13
+         TabIndex        =   12
          Top             =   240
          Width           =   3750
          Begin VB.TextBox ProgIdText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   285
             Left            =   720
             TabIndex        =   4
@@ -41,7 +157,9 @@ Begin VB.UserControl StudyLibConfigurer
             Width           =   3015
          End
          Begin VB.OptionButton CustomOpt 
+            Appearance      =   0  'Flat
             Caption         =   "Use custom study library"
+            ForeColor       =   &H80000008&
             Height          =   375
             Left            =   120
             TabIndex        =   3
@@ -49,7 +167,9 @@ Begin VB.UserControl StudyLibConfigurer
             Width           =   3975
          End
          Begin VB.OptionButton BuiltInOpt 
+            Appearance      =   0  'Flat
             Caption         =   "Use TradeBuild's built-in study library"
+            ForeColor       =   &H80000008&
             Height          =   375
             Left            =   120
             TabIndex        =   2
@@ -60,31 +180,15 @@ Begin VB.UserControl StudyLibConfigurer
             Caption         =   "Prog ID"
             Height          =   255
             Left            =   720
-            TabIndex        =   14
+            TabIndex        =   13
             Top             =   720
             Width           =   1335
          End
       End
    End
-   Begin VB.CommandButton AddButton 
-      Caption         =   "+"
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   12
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   615
-      Left            =   2280
-      TabIndex        =   7
-      ToolTipText     =   "Add new"
-      Top             =   120
-      Width           =   375
-   End
    Begin VB.TextBox NameText 
+      Appearance      =   0  'Flat
+      BorderStyle     =   0  'None
       Height          =   285
       Left            =   4080
       TabIndex        =   1
@@ -92,88 +196,23 @@ Begin VB.UserControl StudyLibConfigurer
       Width           =   3015
    End
    Begin VB.CheckBox EnabledCheck 
+      Appearance      =   0  'Flat
       Caption         =   "Enabled"
+      ForeColor       =   &H80000008&
       Height          =   255
       Left            =   3360
       TabIndex        =   0
       Top             =   480
       Width           =   2535
    End
-   Begin VB.CommandButton ApplyButton 
-      Caption         =   "Apply"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   6360
-      TabIndex        =   5
-      Top             =   3480
-      Width           =   975
-   End
-   Begin VB.CommandButton DownButton 
-      Caption         =   "ò"
-      Enabled         =   0   'False
-      BeginProperty Font 
-         Name            =   "Wingdings"
-         Size            =   18
-         Charset         =   2
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   495
-      Left            =   2280
-      Picture         =   "StudyLibConfigurer.ctx":0000
-      TabIndex        =   9
-      ToolTipText     =   "Move down"
-      Top             =   2160
-      Width           =   375
-   End
-   Begin VB.CommandButton UpButton 
-      Caption         =   "ñ"
-      Enabled         =   0   'False
-      BeginProperty Font 
-         Name            =   "Wingdings"
-         Size            =   18
-         Charset         =   2
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   495
-      Left            =   2280
-      Picture         =   "StudyLibConfigurer.ctx":0442
-      TabIndex        =   8
-      ToolTipText     =   "Move up"
-      Top             =   1440
-      Width           =   375
-   End
-   Begin VB.CommandButton RemoveButton 
-      Caption         =   "X"
-      Enabled         =   0   'False
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   12
-         Charset         =   0
-         Weight          =   700
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   615
-      Left            =   2280
-      TabIndex        =   10
-      ToolTipText     =   "Delete"
-      Top             =   3240
-      Width           =   375
-   End
    Begin VB.ListBox StudyLibList 
-      Height          =   3765
-      ItemData        =   "StudyLibConfigurer.ctx":0884
+      Appearance      =   0  'Flat
+      Height          =   3735
+      ItemData        =   "StudyLibConfigurer.ctx":0000
       Left            =   120
-      List            =   "StudyLibConfigurer.ctx":0886
+      List            =   "StudyLibConfigurer.ctx":0002
       MultiSelect     =   2  'Extended
-      TabIndex        =   6
+      TabIndex        =   5
       Top             =   120
       Width           =   2055
    End
@@ -181,7 +220,7 @@ Begin VB.UserControl StudyLibConfigurer
       Caption         =   "Name"
       Height          =   255
       Left            =   3360
-      TabIndex        =   11
+      TabIndex        =   10
       Top             =   840
       Width           =   615
    End
@@ -208,6 +247,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -257,6 +298,8 @@ Private mNoCheck                    As Boolean
 
 Private mReadOnly                   As Boolean
 
+Private mTheme                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -301,18 +344,30 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
 '@================================================================================
 
 Private Sub AddButton_Click()
-Dim newName As String
-Dim nameStub As String
-Dim i As Long
-
 Const ProcName As String = "AddButton_Click"
 On Error GoTo Err
 
@@ -322,6 +377,8 @@ clearSelection
 Set mCurrSL = Nothing
 mCurrSLIndex = -1
 
+Dim newName As String
+Dim nameStub As String
 If hasBuiltIn Then
     newName = NewStudyLibraryName
     nameStub = NewStudyLibraryName
@@ -330,6 +387,7 @@ Else
     nameStub = BuiltInStudyLibraryName
 End If
 
+Dim i As Long
 Do While invalidName(newName)
     i = i + 1
     newName = nameStub & CLng(i)
@@ -384,7 +442,11 @@ Const ProcName As String = "BuiltInOpt_Click"
 On Error GoTo Err
 
 ProgIdText.Enabled = False
-ProgIdText.BackColor = vbButtonFace
+If Not mTheme Is Nothing Then
+    ProgIdText.BackColor = mTheme.DisabledBackColor
+Else
+    ProgIdText.BackColor = vbButtonFace
+End If
 If mNoCheck Then Exit Sub
 enableApplyButton isValidFields
 enableCancelButton True
@@ -396,18 +458,18 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CancelButton_Click()
-Dim Index As Long
 Const ProcName As String = "CancelButton_Click"
 On Error GoTo Err
 
-Index = mCurrSLIndex
+If mCurrSLIndex <> -1 Then
+    StudyLibList.selected(mCurrSLIndex) = False
+    StudyLibList.selected(mCurrSLIndex) = True
+    Set mCurrSL = Nothing
+    mCurrSLIndex = -1
+End If
 enableApplyButton False
 enableCancelButton False
 clearFields
-Set mCurrSL = Nothing
-mCurrSLIndex = -1
-StudyLibList.selected(Index) = False
-StudyLibList.selected(Index) = True
 
 Exit Sub
 
@@ -420,7 +482,12 @@ Const ProcName As String = "CustomOpt_Click"
 On Error GoTo Err
 
 ProgIdText.Enabled = True
-ProgIdText.BackColor = vbWindowBackground
+If Not mTheme Is Nothing Then
+    ProgIdText.BackColor = mTheme.TextBackColor
+Else
+    ProgIdText.BackColor = vbWindowBackground
+End If
+
 If mNoCheck Then Exit Sub
 enableApplyButton isValidFields
 enableCancelButton True
@@ -637,6 +704,24 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================

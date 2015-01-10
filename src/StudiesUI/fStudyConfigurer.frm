@@ -19,8 +19,8 @@ Begin VB.Form fStudyConfigurer
       TabIndex        =   3
       Top             =   120
       Width           =   12255
-      _ExtentX        =   21616
-      _ExtentY        =   9975
+      _extentx        =   21616
+      _extenty        =   9975
    End
    Begin VB.CommandButton AddButton 
       Caption         =   "&Add to chart"
@@ -66,6 +66,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IThemeable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -95,6 +97,8 @@ Private Const ModuleName                As String = "fStudyConfigurer"
 Private mCancelled                              As Boolean
 Private mStudyConfig                            As StudyConfiguration
 
+Private mTheme                                  As ITheme
+
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
@@ -104,8 +108,24 @@ StudyConfigurer1.Visible = True
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -182,6 +202,24 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================
