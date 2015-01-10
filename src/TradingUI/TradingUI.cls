@@ -129,7 +129,8 @@ Public Function SelectTickfiles( _
                 ByRef UserCancelled As Boolean, _
                 ByVal pTickfileStore As ITickfileStore, _
                 ByVal pPrimaryContractStore As IContractStore, _
-                Optional ByVal pSecondaryContractStore As IContractStore) As TickfileSpecifiers
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pTheme As ITheme) As TickfileSpecifiers
 Const ProcName As String = "SelectTickfiles"
 On Error GoTo Err
 
@@ -145,12 +146,14 @@ gLogger.Log "Create tickfile organiser form", ProcName, ModuleName, LogLevelMedi
 Set lTickfileOrganiser = New fTickfileOrganiser
 lTickfileOrganiser.Initialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore
 
+If Not pTheme Is Nothing Then lTickfileOrganiser.Theme = pTheme
+
 gLogger.Log "Show tickfile organiser form", ProcName, ModuleName, LogLevelMediumDetail
 lTickfileOrganiser.Show vbModal
 
 gLogger.Log "Tickfile organiser form closed", ProcName, ModuleName, LogLevelMediumDetail
 
-UserCancelled = lTickfileOrganiser.cancelled
+UserCancelled = lTickfileOrganiser.Cancelled
 
 inHere = False
 Set SelectTickfiles = lTickfileOrganiser.TickfileSpecifiers

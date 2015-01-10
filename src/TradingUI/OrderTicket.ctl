@@ -1,5 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl OrderTicket 
    ClientHeight    =   6195
    ClientLeft      =   0
@@ -7,648 +8,793 @@ Begin VB.UserControl OrderTicket
    ClientWidth     =   8790
    ScaleHeight     =   6195
    ScaleWidth      =   8790
+   Begin TWControls40.TWImageCombo OrderSchemeCombo 
+      Height          =   330
+      Left            =   1320
+      TabIndex        =   0
+      Top             =   120
+      Width           =   1935
+      _ExtentX        =   3413
+      _ExtentY        =   582
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "OrderTicket.ctx":0000
+      Text            =   "Simple order"
+   End
    Begin VB.CheckBox SimulateOrdersCheck 
       Caption         =   "Simulate orders"
       Height          =   195
       Left            =   3480
-      TabIndex        =   73
+      TabIndex        =   71
       Top             =   120
       Width           =   1455
    End
-   Begin VB.Frame Frame2 
-      Caption         =   "Ticker"
-      Height          =   1815
-      Left            =   240
-      TabIndex        =   52
-      Top             =   3840
-      Width           =   3015
-      Begin VB.PictureBox Picture3 
-         BorderStyle     =   0  'None
-         Height          =   1455
-         Left            =   105
-         ScaleHeight     =   1455
-         ScaleWidth      =   2655
-         TabIndex        =   53
-         Top             =   240
-         Width           =   2655
-         Begin VB.TextBox VolumeText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   960
-            Locked          =   -1  'True
-            TabIndex        =   62
-            TabStop         =   0   'False
-            Top             =   720
-            Width           =   855
-         End
-         Begin VB.TextBox HighText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   960
-            Locked          =   -1  'True
-            TabIndex        =   61
-            TabStop         =   0   'False
-            Top             =   960
-            Width           =   855
-         End
-         Begin VB.TextBox LowText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   960
-            Locked          =   -1  'True
-            TabIndex        =   60
-            TabStop         =   0   'False
-            Top             =   1200
-            Width           =   855
-         End
-         Begin VB.TextBox LastSizeText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   1920
-            Locked          =   -1  'True
-            TabIndex        =   59
-            TabStop         =   0   'False
-            Top             =   240
-            Width           =   735
-         End
-         Begin VB.TextBox AskSizeText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   1920
-            Locked          =   -1  'True
-            TabIndex        =   58
-            TabStop         =   0   'False
-            Top             =   0
-            Width           =   735
-         End
-         Begin VB.TextBox BidSizeText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   1920
-            Locked          =   -1  'True
-            TabIndex        =   57
-            TabStop         =   0   'False
-            Top             =   480
-            Width           =   735
-         End
-         Begin VB.TextBox BidText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   960
-            Locked          =   -1  'True
-            TabIndex        =   56
-            TabStop         =   0   'False
-            Top             =   480
-            Width           =   855
-         End
-         Begin VB.TextBox LastText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   960
-            Locked          =   -1  'True
-            TabIndex        =   55
-            TabStop         =   0   'False
-            Top             =   240
-            Width           =   855
-         End
-         Begin VB.TextBox AskText 
-            Alignment       =   1  'Right Justify
-            BorderStyle     =   0  'None
-            Height          =   255
-            Left            =   960
-            Locked          =   -1  'True
-            TabIndex        =   54
-            TabStop         =   0   'False
-            Top             =   0
-            Width           =   855
-         End
-         Begin VB.Label Label22 
-            Caption         =   "Bid"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   68
-            Top             =   480
-            Width           =   855
-         End
-         Begin VB.Label Label9 
-            Caption         =   "Ask"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   67
-            Top             =   0
-            Width           =   855
-         End
-         Begin VB.Label Label11 
-            Caption         =   "Last"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   66
-            Top             =   240
-            Width           =   855
-         End
-         Begin VB.Label Label25 
-            Caption         =   "Volume"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   65
-            Top             =   720
-            Width           =   735
-         End
-         Begin VB.Label Label24 
-            Caption         =   "High"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   64
-            Top             =   960
-            Width           =   855
-         End
-         Begin VB.Label Label23 
-            Caption         =   "Low"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   63
-            Top             =   1200
-            Width           =   855
-         End
-      End
-   End
-   Begin VB.CommandButton UndoButton 
-      Caption         =   "&Undo"
+   Begin TWControls40.TWButton UndoButton 
       Height          =   495
       Left            =   7560
       TabIndex        =   30
-      Top             =   5160
+      Top             =   5250
       Visible         =   0   'False
       Width           =   1095
+      _ExtentX        =   0
+      _ExtentY        =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "&Undo"
    End
-   Begin VB.Frame Frame1 
-      Caption         =   "Order"
-      Height          =   2895
-      Left            =   240
-      TabIndex        =   41
-      Top             =   840
-      Width           =   3015
-      Begin VB.PictureBox Picture2 
-         BorderStyle     =   0  'None
-         Height          =   2535
-         Left            =   105
-         ScaleHeight     =   2535
-         ScaleWidth      =   2895
-         TabIndex        =   42
-         Top             =   240
-         Width           =   2895
-         Begin VB.TextBox StopPriceText 
-            Alignment       =   1  'Right Justify
-            Height          =   285
-            Index           =   0
-            Left            =   960
-            TabIndex        =   6
-            Top             =   2160
-            Width           =   855
-         End
-         Begin VB.TextBox OffsetText 
-            Alignment       =   1  'Right Justify
-            Height          =   285
-            Index           =   0
-            Left            =   960
-            TabIndex        =   5
-            Top             =   1800
-            Width           =   855
-         End
-         Begin VB.TextBox OffsetValueText 
-            Alignment       =   1  'Right Justify
-            BackColor       =   &H8000000F&
-            Height          =   285
-            Index           =   0
-            Left            =   1920
-            Locked          =   -1  'True
-            TabIndex        =   44
-            TabStop         =   0   'False
-            Top             =   1800
-            Width           =   855
-         End
-         Begin VB.TextBox OrderIDText 
-            BackColor       =   &H8000000F&
-            Height          =   285
-            Index           =   0
-            Left            =   240
-            Locked          =   -1  'True
-            TabIndex        =   43
-            TabStop         =   0   'False
-            Top             =   0
-            Width           =   2535
-         End
-         Begin VB.TextBox PriceText 
-            Alignment       =   1  'Right Justify
-            Height          =   285
-            Index           =   0
-            Left            =   960
-            TabIndex        =   4
-            Top             =   1440
-            Width           =   855
-         End
-         Begin VB.ComboBox TypeCombo 
-            Height          =   315
-            Index           =   0
-            ItemData        =   "OrderTicket.ctx":0000
-            Left            =   960
-            List            =   "OrderTicket.ctx":0002
-            Style           =   2  'Dropdown List
-            TabIndex        =   3
-            Top             =   1080
-            Width           =   1815
-         End
-         Begin VB.TextBox QuantityText 
-            Alignment       =   1  'Right Justify
-            Height          =   255
-            Index           =   0
-            Left            =   960
-            TabIndex        =   2
-            Top             =   720
-            Width           =   855
-         End
-         Begin VB.ComboBox ActionCombo 
-            Height          =   315
-            Index           =   0
-            ItemData        =   "OrderTicket.ctx":0004
-            Left            =   960
-            List            =   "OrderTicket.ctx":0006
-            Style           =   2  'Dropdown List
-            TabIndex        =   1
-            Top             =   360
-            Width           =   975
-         End
-         Begin VB.Label Label8 
-            Caption         =   "Offset (ticks)"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   51
-            Top             =   1800
-            Width           =   975
-         End
-         Begin VB.Label Label6 
-            Caption         =   "Id"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   50
-            Top             =   0
-            Width           =   255
-         End
-         Begin VB.Label Label5 
-            Caption         =   "Stop price"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   49
-            Top             =   2160
-            Width           =   855
-         End
-         Begin VB.Label Label4 
-            Caption         =   "Price"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   48
-            Top             =   1440
-            Width           =   855
-         End
-         Begin VB.Label Label3 
-            Caption         =   "Type"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   47
-            Top             =   1080
-            Width           =   855
-         End
-         Begin VB.Label Label2 
-            Caption         =   "Quantity"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   46
-            Top             =   720
-            Width           =   855
-         End
-         Begin VB.Label Label1 
-            Caption         =   "Action"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   45
-            Top             =   360
-            Width           =   855
-         End
-      End
-   End
-   Begin VB.Frame Frame3 
-      Caption         =   "Options"
-      Height          =   4815
-      Left            =   3360
-      TabIndex        =   31
-      Top             =   840
-      Width           =   3975
-      Begin VB.PictureBox Picture1 
-         BorderStyle     =   0  'None
-         Height          =   4455
-         Left            =   120
-         ScaleHeight     =   4455
-         ScaleWidth      =   3735
-         TabIndex        =   32
-         Top             =   240
-         Width           =   3735
-         Begin VB.CheckBox IgnoreRthCheck 
-            Caption         =   "Ignore RTH"
-            Height          =   255
-            Index           =   0
-            Left            =   2520
-            TabIndex        =   8
-            Top             =   0
-            Width           =   1215
-         End
-         Begin VB.TextBox OrderRefText 
-            Height          =   285
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   9
-            Top             =   360
-            Width           =   2535
-         End
-         Begin VB.CheckBox OverrideCheck 
-            Caption         =   "Override"
-            Height          =   255
-            Index           =   0
-            Left            =   2400
-            TabIndex        =   23
-            Top             =   3000
-            Width           =   1335
-         End
-         Begin VB.TextBox MinQuantityText 
-            Height          =   285
-            Index           =   0
-            Left            =   2760
-            TabIndex        =   15
-            Top             =   1440
-            Width           =   975
-         End
-         Begin VB.CheckBox FirmQuoteOnlyCheck 
-            Caption         =   "Firm quote only"
-            Height          =   255
-            Index           =   0
-            Left            =   2400
-            TabIndex        =   21
-            Top             =   2760
-            Width           =   1410
-         End
-         Begin VB.CheckBox ETradeOnlyCheck 
-            Caption         =   "eTrade only"
-            Height          =   255
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   20
-            Top             =   2760
-            Width           =   1215
-         End
-         Begin VB.CheckBox AllOrNoneCheck 
-            Caption         =   "All or none"
-            Height          =   255
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   18
-            Top             =   2520
-            Width           =   1095
-         End
-         Begin VB.TextBox GoodTillDateTZText 
-            Height          =   285
-            Index           =   0
-            Left            =   2760
-            TabIndex        =   13
-            Top             =   1080
-            Width           =   975
-         End
-         Begin VB.TextBox GoodAfterTimeTZText 
-            Height          =   285
-            Index           =   0
-            Left            =   2760
-            TabIndex        =   11
-            Top             =   720
-            Width           =   975
-         End
-         Begin VB.TextBox GoodTillDateText 
-            Height          =   285
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   12
-            Top             =   1080
-            Width           =   1575
-         End
-         Begin VB.TextBox GoodAfterTimeText 
-            Height          =   285
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   10
-            Top             =   720
-            Width           =   1575
-         End
-         Begin VB.TextBox DiscrAmountText 
-            Height          =   285
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   16
-            Top             =   1800
-            Width           =   735
-         End
-         Begin VB.CheckBox HiddenCheck 
-            Caption         =   "Hidden"
-            Height          =   255
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   22
-            Top             =   3000
-            Width           =   855
-         End
-         Begin VB.ComboBox TriggerMethodCombo 
-            Height          =   315
-            Index           =   0
-            ItemData        =   "OrderTicket.ctx":0008
-            Left            =   1200
-            List            =   "OrderTicket.ctx":000A
-            Style           =   2  'Dropdown List
-            TabIndex        =   17
-            Top             =   2160
-            Width           =   2535
-         End
-         Begin VB.TextBox DisplaySizeText 
-            Height          =   285
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   14
-            Top             =   1440
-            Width           =   735
-         End
-         Begin VB.CheckBox SweepToFillCheck 
-            Caption         =   "SweepToFill"
-            Height          =   255
-            Index           =   0
-            Left            =   1200
-            TabIndex        =   24
-            Top             =   3240
-            Width           =   1215
-         End
-         Begin VB.CheckBox BlockOrderCheck 
-            Caption         =   "Block order"
-            Height          =   255
-            Index           =   0
-            Left            =   2400
-            TabIndex        =   19
-            Top             =   2520
-            Width           =   1335
-         End
-         Begin VB.ComboBox TIFCombo 
-            Height          =   315
-            Index           =   0
-            ItemData        =   "OrderTicket.ctx":000C
-            Left            =   1200
-            List            =   "OrderTicket.ctx":000E
-            Style           =   2  'Dropdown List
-            TabIndex        =   7
-            Top             =   0
-            Width           =   1215
-         End
-         Begin VB.Label Label14 
-            Alignment       =   1  'Right Justify
-            Caption         =   "Min qty"
-            Height          =   375
-            Left            =   2040
-            TabIndex        =   40
-            Top             =   1440
-            Width           =   615
-         End
-         Begin VB.Label Label7 
-            Caption         =   "Good till date"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   39
-            Top             =   1080
-            Width           =   1095
-         End
-         Begin VB.Label Label21 
-            Caption         =   "Good after time"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   38
-            Top             =   720
-            Width           =   1095
-         End
-         Begin VB.Label Label20 
-            Caption         =   "Discr amount"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   37
-            Top             =   1800
-            Width           =   1095
-         End
-         Begin VB.Label Label17 
-            Caption         =   "Trigger method"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   36
-            Top             =   2160
-            Width           =   1095
-         End
-         Begin VB.Label Label16 
-            Caption         =   "Display size"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   35
-            Top             =   1440
-            Width           =   855
-         End
-         Begin VB.Label Label12 
-            Caption         =   "Order ref"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   34
-            Top             =   360
-            Width           =   855
-         End
-         Begin VB.Label Label10 
-            Caption         =   "TIF"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   33
-            Top             =   0
-            Width           =   855
-         End
-      End
-   End
-   Begin VB.ComboBox OrderSchemeCombo 
-      Height          =   315
-      ItemData        =   "OrderTicket.ctx":0010
-      Left            =   1320
-      List            =   "OrderTicket.ctx":0012
-      TabIndex        =   0
-      Text            =   "Simple order"
-      Top             =   120
-      Width           =   1935
-   End
-   Begin VB.CommandButton PlaceOrdersButton 
-      Caption         =   "&Place orders"
+   Begin TWControls40.TWButton PlaceOrdersButton 
       Height          =   495
       Left            =   7560
       TabIndex        =   25
-      Top             =   960
+      Top             =   1020
       Width           =   1095
+      _ExtentX        =   0
+      _ExtentY        =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "&Place orders"
    End
-   Begin VB.CommandButton ResetButton 
-      Caption         =   "&Reset"
+   Begin TWControls40.TWButton ResetButton 
       Height          =   495
       Left            =   7560
       TabIndex        =   28
-      Top             =   2760
+      Top             =   2820
       Width           =   1095
+      _ExtentX        =   0
+      _ExtentY        =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "&Reset"
    End
-   Begin VB.CommandButton CompleteOrdersButton 
-      Caption         =   "Complete &order"
+   Begin TWControls40.TWButton CompleteOrdersButton 
       Height          =   495
       Left            =   7560
       TabIndex        =   26
-      Top             =   1560
+      Top             =   1620
       Visible         =   0   'False
       Width           =   1095
+      _ExtentX        =   0
+      _ExtentY        =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Complete &order"
    End
-   Begin VB.CommandButton ModifyButton 
-      Caption         =   "&Modify"
+   Begin TWControls40.TWButton ModifyButton 
       Height          =   495
       Left            =   7560
       TabIndex        =   29
       Top             =   4200
       Visible         =   0   'False
       Width           =   1095
+      _ExtentX        =   0
+      _ExtentY        =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "&Modify"
    End
-   Begin VB.CommandButton CancelButton 
-      Caption         =   "&Cancel"
+   Begin TWControls40.TWButton CancelButton 
       Height          =   495
       Left            =   7560
       TabIndex        =   27
-      Top             =   2160
+      Top             =   2220
       Visible         =   0   'False
       Width           =   1095
+      _ExtentX        =   0
+      _ExtentY        =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "&Cancel"
+   End
+   Begin VB.PictureBox BackPicture 
+      BorderStyle     =   0  'None
+      Height          =   5415
+      Left            =   0
+      ScaleHeight     =   5415
+      ScaleWidth      =   8775
+      TabIndex        =   73
+      Top             =   795
+      Width           =   8775
+      Begin VB.Frame Frame2 
+         Caption         =   "Ticker"
+         Height          =   1815
+         Left            =   120
+         TabIndex        =   51
+         Top             =   3120
+         Width           =   3135
+         Begin VB.PictureBox Picture3 
+            BorderStyle     =   0  'None
+            Height          =   1455
+            Left            =   105
+            ScaleHeight     =   1455
+            ScaleWidth      =   2655
+            TabIndex        =   52
+            Top             =   240
+            Width           =   2655
+            Begin VB.TextBox VolumeText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   960
+               Locked          =   -1  'True
+               TabIndex        =   61
+               TabStop         =   0   'False
+               Top             =   720
+               Width           =   855
+            End
+            Begin VB.TextBox HighText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   960
+               Locked          =   -1  'True
+               TabIndex        =   60
+               TabStop         =   0   'False
+               Top             =   960
+               Width           =   855
+            End
+            Begin VB.TextBox LowText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   960
+               Locked          =   -1  'True
+               TabIndex        =   59
+               TabStop         =   0   'False
+               Top             =   1200
+               Width           =   855
+            End
+            Begin VB.TextBox LastSizeText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   1920
+               Locked          =   -1  'True
+               TabIndex        =   58
+               TabStop         =   0   'False
+               Top             =   240
+               Width           =   735
+            End
+            Begin VB.TextBox AskSizeText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   1920
+               Locked          =   -1  'True
+               TabIndex        =   57
+               TabStop         =   0   'False
+               Top             =   0
+               Width           =   735
+            End
+            Begin VB.TextBox BidSizeText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   1920
+               Locked          =   -1  'True
+               TabIndex        =   56
+               TabStop         =   0   'False
+               Top             =   480
+               Width           =   735
+            End
+            Begin VB.TextBox BidText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   960
+               Locked          =   -1  'True
+               TabIndex        =   55
+               TabStop         =   0   'False
+               Top             =   480
+               Width           =   855
+            End
+            Begin VB.TextBox LastText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   960
+               Locked          =   -1  'True
+               TabIndex        =   54
+               TabStop         =   0   'False
+               Top             =   240
+               Width           =   855
+            End
+            Begin VB.TextBox AskText 
+               Alignment       =   1  'Right Justify
+               BorderStyle     =   0  'None
+               Height          =   255
+               Left            =   960
+               Locked          =   -1  'True
+               TabIndex        =   53
+               TabStop         =   0   'False
+               Top             =   0
+               Width           =   855
+            End
+            Begin VB.Label Label22 
+               Caption         =   "Bid"
+               Height          =   255
+               Left            =   120
+               TabIndex        =   67
+               Top             =   480
+               Width           =   855
+            End
+            Begin VB.Label Label9 
+               Caption         =   "Ask"
+               Height          =   255
+               Left            =   120
+               TabIndex        =   66
+               Top             =   0
+               Width           =   855
+            End
+            Begin VB.Label Label11 
+               Caption         =   "Last"
+               Height          =   255
+               Left            =   120
+               TabIndex        =   65
+               Top             =   240
+               Width           =   855
+            End
+            Begin VB.Label Label25 
+               Caption         =   "Volume"
+               Height          =   255
+               Left            =   120
+               TabIndex        =   64
+               Top             =   720
+               Width           =   735
+            End
+            Begin VB.Label Label24 
+               Caption         =   "High"
+               Height          =   255
+               Left            =   120
+               TabIndex        =   63
+               Top             =   960
+               Width           =   855
+            End
+            Begin VB.Label Label23 
+               Caption         =   "Low"
+               Height          =   255
+               Left            =   120
+               TabIndex        =   62
+               Top             =   1200
+               Width           =   855
+            End
+         End
+      End
+      Begin VB.Frame Frame1 
+         Caption         =   "Order"
+         Height          =   2895
+         Left            =   120
+         TabIndex        =   41
+         Top             =   120
+         Width           =   3135
+         Begin VB.PictureBox Picture2 
+            BorderStyle     =   0  'None
+            Height          =   2535
+            Left            =   105
+            ScaleHeight     =   2535
+            ScaleWidth      =   2895
+            TabIndex        =   42
+            Top             =   240
+            Width           =   2895
+            Begin TWControls40.TWImageCombo TypeCombo 
+               Height          =   330
+               Index           =   0
+               Left            =   960
+               TabIndex        =   3
+               Top             =   1080
+               Width           =   1815
+               _ExtentX        =   3201
+               _ExtentY        =   582
+               BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+                  Name            =   "MS Sans Serif"
+                  Size            =   8.25
+                  Charset         =   0
+                  Weight          =   400
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               MouseIcon       =   "OrderTicket.ctx":001C
+               Text            =   ""
+            End
+            Begin TWControls40.TWImageCombo ActionCombo 
+               Height          =   330
+               Index           =   0
+               Left            =   960
+               TabIndex        =   1
+               Top             =   360
+               Width           =   975
+               _ExtentX        =   1720
+               _ExtentY        =   582
+               BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+                  Name            =   "MS Sans Serif"
+                  Size            =   8.25
+                  Charset         =   0
+                  Weight          =   400
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               MouseIcon       =   "OrderTicket.ctx":0038
+               Text            =   ""
+            End
+            Begin VB.TextBox StopPriceText 
+               Alignment       =   1  'Right Justify
+               Height          =   285
+               Index           =   0
+               Left            =   960
+               TabIndex        =   6
+               Top             =   2160
+               Width           =   855
+            End
+            Begin VB.TextBox OffsetText 
+               Alignment       =   1  'Right Justify
+               Height          =   285
+               Index           =   0
+               Left            =   960
+               TabIndex        =   5
+               Top             =   1800
+               Width           =   855
+            End
+            Begin VB.TextBox OffsetValueText 
+               Alignment       =   1  'Right Justify
+               BackColor       =   &H8000000F&
+               Height          =   285
+               Index           =   0
+               Left            =   1920
+               Locked          =   -1  'True
+               TabIndex        =   43
+               TabStop         =   0   'False
+               Top             =   1800
+               Width           =   855
+            End
+            Begin VB.TextBox PriceText 
+               Alignment       =   1  'Right Justify
+               Height          =   285
+               Index           =   0
+               Left            =   960
+               TabIndex        =   4
+               Top             =   1440
+               Width           =   855
+            End
+            Begin VB.TextBox QuantityText 
+               Alignment       =   1  'Right Justify
+               Height          =   255
+               Index           =   0
+               Left            =   960
+               TabIndex        =   2
+               Top             =   720
+               Width           =   855
+            End
+            Begin VB.Label OrderIdLabel 
+               Height          =   255
+               Index           =   0
+               Left            =   240
+               TabIndex        =   72
+               Top             =   0
+               Width           =   2535
+            End
+            Begin VB.Label Label8 
+               Caption         =   "Offset (ticks)"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   50
+               Top             =   1800
+               Width           =   975
+            End
+            Begin VB.Label Label6 
+               Caption         =   "Id"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   49
+               Top             =   0
+               Width           =   255
+            End
+            Begin VB.Label Label5 
+               Caption         =   "Stop price"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   48
+               Top             =   2160
+               Width           =   855
+            End
+            Begin VB.Label Label4 
+               Caption         =   "Price"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   47
+               Top             =   1440
+               Width           =   855
+            End
+            Begin VB.Label Label3 
+               Caption         =   "Type"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   46
+               Top             =   1080
+               Width           =   855
+            End
+            Begin VB.Label Label2 
+               Caption         =   "Quantity"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   45
+               Top             =   720
+               Width           =   855
+            End
+            Begin VB.Label Label1 
+               Caption         =   "Action"
+               Height          =   255
+               Index           =   0
+               Left            =   0
+               TabIndex        =   44
+               Top             =   360
+               Width           =   855
+            End
+         End
+      End
+      Begin VB.Frame Frame3 
+         Caption         =   "Options"
+         Height          =   4815
+         Left            =   3360
+         TabIndex        =   31
+         Top             =   120
+         Width           =   3975
+         Begin VB.PictureBox Picture1 
+            BorderStyle     =   0  'None
+            Height          =   4455
+            Left            =   120
+            ScaleHeight     =   4455
+            ScaleWidth      =   3735
+            TabIndex        =   32
+            Top             =   240
+            Width           =   3735
+            Begin TWControls40.TWImageCombo TriggerMethodCombo 
+               Height          =   330
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   17
+               Top             =   2160
+               Width           =   2535
+               _ExtentX        =   4471
+               _ExtentY        =   582
+               BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+                  Name            =   "MS Sans Serif"
+                  Size            =   8.25
+                  Charset         =   0
+                  Weight          =   400
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               MouseIcon       =   "OrderTicket.ctx":0054
+               Text            =   ""
+            End
+            Begin TWControls40.TWImageCombo TIFCombo 
+               Height          =   330
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   7
+               Top             =   0
+               Width           =   1215
+               _ExtentX        =   2143
+               _ExtentY        =   582
+               BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+                  Name            =   "MS Sans Serif"
+                  Size            =   8.25
+                  Charset         =   0
+                  Weight          =   400
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               MouseIcon       =   "OrderTicket.ctx":0070
+               Text            =   ""
+            End
+            Begin VB.CheckBox IgnoreRthCheck 
+               Caption         =   "Ignore RTH"
+               Height          =   255
+               Index           =   0
+               Left            =   2520
+               TabIndex        =   8
+               Top             =   0
+               Width           =   1215
+            End
+            Begin VB.TextBox OrderRefText 
+               Height          =   285
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   9
+               Top             =   360
+               Width           =   2535
+            End
+            Begin VB.CheckBox OverrideCheck 
+               Caption         =   "Override"
+               Height          =   255
+               Index           =   0
+               Left            =   2400
+               TabIndex        =   23
+               Top             =   3000
+               Width           =   1335
+            End
+            Begin VB.TextBox MinQuantityText 
+               Height          =   285
+               Index           =   0
+               Left            =   2760
+               TabIndex        =   15
+               Top             =   1440
+               Width           =   975
+            End
+            Begin VB.CheckBox FirmQuoteOnlyCheck 
+               Caption         =   "Firm quote only"
+               Height          =   255
+               Index           =   0
+               Left            =   2400
+               TabIndex        =   21
+               Top             =   2760
+               Width           =   1410
+            End
+            Begin VB.CheckBox ETradeOnlyCheck 
+               Caption         =   "eTrade only"
+               Height          =   255
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   20
+               Top             =   2760
+               Width           =   1215
+            End
+            Begin VB.CheckBox AllOrNoneCheck 
+               Caption         =   "All or none"
+               Height          =   255
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   18
+               Top             =   2520
+               Width           =   1095
+            End
+            Begin VB.TextBox GoodTillDateTZText 
+               Height          =   285
+               Index           =   0
+               Left            =   2760
+               TabIndex        =   13
+               Top             =   1080
+               Width           =   975
+            End
+            Begin VB.TextBox GoodAfterTimeTZText 
+               Height          =   285
+               Index           =   0
+               Left            =   2760
+               TabIndex        =   11
+               Top             =   720
+               Width           =   975
+            End
+            Begin VB.TextBox GoodTillDateText 
+               Height          =   285
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   12
+               Top             =   1080
+               Width           =   1575
+            End
+            Begin VB.TextBox GoodAfterTimeText 
+               Height          =   285
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   10
+               Top             =   720
+               Width           =   1575
+            End
+            Begin VB.TextBox DiscrAmountText 
+               Height          =   285
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   16
+               Top             =   1800
+               Width           =   735
+            End
+            Begin VB.CheckBox HiddenCheck 
+               Caption         =   "Hidden"
+               Height          =   255
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   22
+               Top             =   3000
+               Width           =   855
+            End
+            Begin VB.TextBox DisplaySizeText 
+               Height          =   285
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   14
+               Top             =   1440
+               Width           =   735
+            End
+            Begin VB.CheckBox SweepToFillCheck 
+               Caption         =   "SweepToFill"
+               Height          =   255
+               Index           =   0
+               Left            =   1200
+               TabIndex        =   24
+               Top             =   3240
+               Width           =   1215
+            End
+            Begin VB.CheckBox BlockOrderCheck 
+               Caption         =   "Block order"
+               Height          =   255
+               Index           =   0
+               Left            =   2400
+               TabIndex        =   19
+               Top             =   2520
+               Width           =   1335
+            End
+            Begin VB.Label Label14 
+               Alignment       =   1  'Right Justify
+               Caption         =   "Min qty"
+               Height          =   375
+               Left            =   2040
+               TabIndex        =   40
+               Top             =   1440
+               Width           =   615
+            End
+            Begin VB.Label Label7 
+               Caption         =   "Good till date"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   39
+               Top             =   1080
+               Width           =   1095
+            End
+            Begin VB.Label Label21 
+               Caption         =   "Good after time"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   38
+               Top             =   720
+               Width           =   1095
+            End
+            Begin VB.Label Label20 
+               Caption         =   "Discr amount"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   37
+               Top             =   1800
+               Width           =   1095
+            End
+            Begin VB.Label Label17 
+               Caption         =   "Trigger method"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   36
+               Top             =   2160
+               Width           =   1095
+            End
+            Begin VB.Label Label16 
+               Caption         =   "Display size"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   35
+               Top             =   1440
+               Width           =   855
+            End
+            Begin VB.Label Label12 
+               Caption         =   "Order ref"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   34
+               Top             =   360
+               Width           =   855
+            End
+            Begin VB.Label Label10 
+               Caption         =   "TIF"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   33
+               Top             =   0
+               Width           =   855
+            End
+         End
+      End
+      Begin VB.Label OrderSimulationLabel 
+         Alignment       =   2  'Center
+         Caption         =   "Qazzly wazzox"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   12
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00000080&
+         Height          =   375
+         Left            =   120
+         TabIndex        =   74
+         Top             =   5010
+         Width           =   7215
+      End
    End
    Begin MSComctlLib.TabStrip BracketTabStrip 
-      Height          =   5280
-      Left            =   120
-      TabIndex        =   69
+      Height          =   5760
+      Left            =   0
+      TabIndex        =   68
       Top             =   480
       Visible         =   0   'False
-      Width           =   7335
-      _ExtentX        =   12938
-      _ExtentY        =   9313
+      Width           =   8850
+      _ExtentX        =   15610
+      _ExtentY        =   10160
       MultiRow        =   -1  'True
+      Style           =   2
       HotTracking     =   -1  'True
+      Separators      =   -1  'True
       _Version        =   393216
       BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
          NumTabs         =   3
@@ -680,7 +826,7 @@ Begin VB.UserControl OrderTicket
       EndProperty
       Height          =   495
       Left            =   5040
-      TabIndex        =   72
+      TabIndex        =   70
       Top             =   120
       Width           =   3615
    End
@@ -689,28 +835,9 @@ Begin VB.UserControl OrderTicket
       Caption         =   "Order scheme"
       Height          =   255
       Left            =   240
-      TabIndex        =   71
+      TabIndex        =   69
       Top             =   120
       Width           =   1215
-   End
-   Begin VB.Label OrderSimulationLabel 
-      Alignment       =   2  'Center
-      BackStyle       =   0  'Transparent
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   12
-         Charset         =   0
-         Weight          =   700
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      ForeColor       =   &H00000080&
-      Height          =   375
-      Left            =   120
-      TabIndex        =   70
-      Top             =   5760
-      Width           =   7335
    End
 End
 Attribute VB_Name = "OrderTicket"
@@ -740,6 +867,8 @@ Option Explicit
 
 Implements ChangeListener
 Implements IGenericTickListener
+Implements IThemeable
+Implements StateChangeListener
 
 '@================================================================================
 ' Events
@@ -811,6 +940,8 @@ Private mCurrentBracketOrderIndex                       As BracketIndexes
 Private mInvalidControls(2)                             As Control
 
 Private mMode                                           As OrderTicketModes
+
+Private mTheme                                          As ITheme
 
 '@================================================================================
 ' Form Event Handlers
@@ -935,7 +1066,61 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Form Control Event Handlers
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+'@================================================================================
+' StateChangeListener Interface Members
+'@================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+Dim lState As MarketDataSourceStates
+lState = ev.State
+
+Select Case lState
+Case MarketDataSourceStateCreated
+
+Case MarketDataSourceStateReady
+
+Case MarketDataSourceStateRunning
+
+Case MarketDataSourceStatePaused
+
+Case MarketDataSourceStateStopped
+    Clear
+Case MarketDataSourceStateFinished
+    Clear
+Case MarketDataSourceStateError
+
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' Control Event Handlers
 '@================================================================================
 
 Private Sub ActionCombo_Click(ByRef index As Integer)
@@ -991,7 +1176,7 @@ Private Sub CompleteOrdersButton_Click()
 '
 'Set mOCAOrders = Nothing
 '
-'OrderIDText = ""
+'OrderIdLabel = ""
 'OcaGroupText = ""
 'OcaGroupText.Visible = False
 'OCAGroupLabel.Visible = False
@@ -1414,6 +1599,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+OrderSimulationLabel.ForeColor = mTheme.AlertForeColor
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -1596,14 +1801,14 @@ End Sub
 '@================================================================================
 
 Private Sub addItemToCombo( _
-                ByVal combo As ComboBox, _
+                ByVal combo As TWImageCombo, _
                 ByVal itemText As String, _
-                ByVal itemData As Long)
+                ByVal ItemData As Long)
 Const ProcName As String = "addItemToCombo"
 On Error GoTo Err
 
-combo.addItem itemText
-combo.itemData(combo.ListCount - 1) = itemData
+combo.ComboItems.Add , , itemText
+combo.ComboItems(combo.ComboItems.Count).Tag = ItemData
 
 Exit Sub
 
@@ -1678,6 +1883,7 @@ On Error GoTo Err
 
 If Not mDataSource Is Nothing Then
     mDataSource.RemoveGenericTickListener Me
+    mDataSource.RemoveStateChangeListener Me
     Set mDataSource = Nothing
 End If
 
@@ -1698,8 +1904,8 @@ Const ProcName As String = "clearOrderFields"
 On Error GoTo Err
 
 enableOrderFields index
-OrderIDText(index) = ""
-ActionCombo(index).ListIndex = 0
+OrderIdLabel(index) = ""
+setComboListIndex ActionCombo(index), 1
 
 QuantityText(index) = 0
 
@@ -1708,8 +1914,8 @@ QuantityText(index) = 0
 PriceText(index) = ""
 StopPriceText(index) = ""
 OffsetText(index) = ""
-If TIFCombo(index).ListCount <> 0 Then TIFCombo(index).ListIndex = 0
-If TriggerMethodCombo(index).ListCount <> 0 Then TriggerMethodCombo(index).ListIndex = 0
+If TIFCombo(index).ComboItems.Count <> 0 Then setComboListIndex TIFCombo(index), 1
+If TriggerMethodCombo(index).ComboItems.Count <> 0 Then setComboListIndex TriggerMethodCombo(index), 1
 IgnoreRthCheck(index) = vbUnchecked
 OrderRefText(index) = ""
 AllOrNoneCheck(index) = vbUnchecked
@@ -1767,12 +1973,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function comboItemData(ByVal combo As ComboBox) As Long
+Private Function comboItemData(ByVal combo As TWImageCombo) As Long
 Const ProcName As String = "comboItemData"
 On Error GoTo Err
 
-If combo.ListIndex < 0 Then Exit Function
-comboItemData = combo.itemData(combo.ListIndex)
+If combo.SelectedItem Is Nothing Then Exit Function
+comboItemData = combo.SelectedItem.Tag
 
 Exit Function
 
@@ -1963,7 +2169,11 @@ field.Enabled = False
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
-field.BackColor = SystemColorConstants.vbButtonFace
+If mTheme Is Nothing Then
+    field.BackColor = SystemColorConstants.vbButtonFace
+Else
+    field.BackColor = mTheme.DisabledBackColor
+End If
 
 Exit Sub
 
@@ -2014,7 +2224,11 @@ field.Enabled = True
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
-field.BackColor = SystemColorConstants.vbWindowBackground
+If mTheme Is Nothing Then
+    field.BackColor = SystemColorConstants.vbWindowBackground
+Else
+    field.BackColor = mTheme.TextBackColor
+End If
 
 Exit Sub
 
@@ -2104,7 +2318,13 @@ Private Function isValidOrder( _
 Const ProcName As String = "isValidOrder"
 On Error GoTo Err
 
-If Not mInvalidControls(index) Is Nothing Then mInvalidControls(index).BackColor = vbButtonFace
+If Not mInvalidControls(index) Is Nothing Then
+    If mTheme Is Nothing Then
+        mInvalidControls(index).BackColor = vbButtonFace
+    Else
+        mInvalidControls(index).BackColor = mTheme.DisabledBackColor
+    End If
+End If
 
 If comboItemData(ActionCombo(index)) = OrderActions.OrderActionNone Then
     isValidOrder = True
@@ -2197,7 +2417,7 @@ Private Sub loadOrderFields(ByVal index As Long)
 Const ProcName As String = "loadOrderFields"
 On Error GoTo Err
 
-Load OrderIDText(index)
+Load OrderIdLabel(index)
 Load ActionCombo(index)
 Load QuantityText(index)
 Load TypeCombo(index)
@@ -2297,15 +2517,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub selectComboEntry( _
-                ByVal combo As ComboBox, _
-                ByVal itemData As Long)
+                ByVal combo As TWImageCombo, _
+                ByVal ItemData As Long)
 Const ProcName As String = "selectComboEntry"
 On Error GoTo Err
 
 Dim i As Long
-For i = 0 To combo.ListCount - 1
-    If combo.itemData(i) = itemData Then
-        combo.ListIndex = i
+For i = 1 To combo.ComboItems.Count
+    If combo.ComboItems(i).Tag = ItemData Then
+        combo.Text = combo.ComboItems(i).Text
         Exit For
     End If
 Next
@@ -2345,19 +2565,37 @@ On Error GoTo Err
 
 If value Is mActiveOrderContext Then Exit Sub
 
-If Not mDataSource Is Nothing Then mDataSource.RemoveGenericTickListener Me
+If Not mDataSource Is Nothing Then
+    mDataSource.RemoveGenericTickListener Me
+    mDataSource.RemoveStateChangeListener Me
+End If
 
 Set mActiveOrderContext = value
 Set mContract = gGetContractFromContractFuture(mActiveOrderContext.ContractFuture)
 
 Set mDataSource = mActiveOrderContext.DataSource
-If Not mDataSource Is Nothing Then mDataSource.AddGenericTickListener Me
+If Not mDataSource Is Nothing Then
+    mDataSource.AddGenericTickListener Me
+    mDataSource.AddStateChangeListener Me
+End If
 
 If mActiveOrderContext.IsReady Then
     setupControls
 Else
     disableAll NotReadyMessage
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setComboListIndex(ByVal pCombo As TWImageCombo, ByVal pListIndex As Long)
+Const ProcName As String = "setComboListIndex"
+On Error GoTo Err
+
+pCombo.Text = pCombo.ComboItems(pListIndex).Text
 
 Exit Sub
 
@@ -2551,9 +2789,9 @@ Private Sub setOrderId( _
 Const ProcName As String = "setOrderId"
 On Error GoTo Err
 
-enableControl OrderIDText(index)
-OrderIDText(index) = Id
-disableControl OrderIDText(index)
+'enableControl OrderIdLabel(index)
+OrderIdLabel(index).caption = Id
+'disableControl OrderIdLabel(index)
 
 Exit Sub
 
@@ -2702,7 +2940,7 @@ Private Sub setupActionCombo(ByVal index As Long)
 Const ProcName As String = "setupActionCombo"
 On Error GoTo Err
 
-ActionCombo(index).Clear
+ActionCombo(index).ComboItems.Clear
 If index <> BracketIndexes.BracketEntryOrder Then
     addItemToCombo ActionCombo(index), _
                 OrderActionToString(OrderActions.OrderActionNone), _
@@ -2766,7 +3004,7 @@ Private Sub setupOrderSchemeCombo()
 Const ProcName As String = "setupOrderSchemeCombo"
 On Error GoTo Err
 
-OrderSchemeCombo.Clear
+OrderSchemeCombo.ComboItems.Clear
 addItemToCombo OrderSchemeCombo, _
             "Bracket order", _
             OrderSchemes.BracketOrder
@@ -2779,7 +3017,7 @@ addItemToCombo OrderSchemeCombo, _
 'addItemToCombo OrderSchemeCombo, _
 '            "Combination order", _
 '            OrderSchemes.CombinationOrder
-OrderSchemeCombo.ListIndex = 0
+setComboListIndex OrderSchemeCombo, 1
 
 Exit Sub
 
@@ -2791,7 +3029,7 @@ Private Sub setupTifCombo(ByVal index As Long)
 Const ProcName As String = "setupTifCombo"
 On Error GoTo Err
 
-TIFCombo(index).Clear
+TIFCombo(index).ComboItems.Clear
 
 If mActiveOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFDay) Then
     addItemToCombo TIFCombo(index), _
@@ -2809,7 +3047,7 @@ If mActiveOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFImmediateOrCancel) 
                 OrderTIFs.OrderTIFImmediateOrCancel
 End If
 
-TIFCombo(0).ListIndex = 0
+setComboListIndex TIFCombo(0), 1
 
 Exit Sub
 
@@ -2821,7 +3059,7 @@ Private Sub setupTriggerMethodCombo(ByVal index As Long)
 Const ProcName As String = "setupTriggerMethodCombo"
 On Error GoTo Err
 
-TriggerMethodCombo(index).Clear
+TriggerMethodCombo(index).ComboItems.Clear
 
 If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.OrderStopTriggerDefault) Then
     addItemToCombo TriggerMethodCombo(index), _
@@ -2859,7 +3097,7 @@ If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.Orde
                 OrderStopTriggerMethods.OrderStopTriggerMidPoint
 End If
 
-TriggerMethodCombo(index).ListIndex = 0
+setComboListIndex TriggerMethodCombo(index), 1
 
 Exit Sub
 
@@ -2871,7 +3109,7 @@ Private Sub setupTypeCombo(ByVal index As Long)
 Const ProcName As String = "setupTypeCombo"
 On Error GoTo Err
 
-TypeCombo(index).Clear
+TypeCombo(index).ComboItems.Clear
 
 If index = BracketIndexes.BracketEntryOrder Then
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimit) Then
@@ -3006,7 +3244,7 @@ ElseIf index = BracketIndexes.BracketTargetOrder Then
     End If
 End If
 
-TypeCombo(index).ListIndex = 0
+setComboListIndex TypeCombo(index), 1
 
 Exit Sub
 
@@ -3021,7 +3259,7 @@ On Error GoTo Err
 Dim i As Long
 For i = 0 To ActionCombo.Count - 1
     If i = index Then
-        OrderIDText(i).Visible = True
+        OrderIdLabel(i).Visible = True
         ActionCombo(i).Visible = True
         QuantityText(i).Visible = True
         TypeCombo(i).Visible = True
@@ -3048,7 +3286,7 @@ For i = 0 To ActionCombo.Count - 1
         GoodTillDateText(i).Visible = True
         GoodTillDateTZText(i).Visible = True
     Else
-        OrderIDText(i).Visible = False
+        OrderIdLabel(i).Visible = False
         ActionCombo(i).Visible = False
         QuantityText(i).Visible = False
         TypeCombo(i).Visible = False

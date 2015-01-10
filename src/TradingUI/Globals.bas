@@ -104,6 +104,94 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub gApplyTheme(ByVal pTheme As ITheme, ByVal pControls As Object)
+Const ProcName As String = "gApplyTheme"
+On Error GoTo Err
+
+If pTheme Is Nothing Then Exit Sub
+
+Dim lControl As Control
+For Each lControl In pControls
+    If TypeOf lControl Is Label Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is CheckBox Or _
+        TypeOf lControl Is Frame Or _
+        TypeOf lControl Is OptionButton _
+    Then
+        SetWindowThemeOff lControl.hWnd
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is PictureBox Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BorderStyle = pTheme.BorderStyle
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is TextBox Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BorderStyle = pTheme.BorderStyle
+        lControl.BackColor = pTheme.TextBackColor
+        lControl.ForeColor = pTheme.TextForeColor
+    ElseIf TypeOf lControl Is ComboBox Or _
+        TypeOf lControl Is ListBox _
+    Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.TextBackColor
+        lControl.ForeColor = pTheme.TextForeColor
+    ElseIf TypeOf lControl Is CommandButton Or _
+        TypeOf lControl Is Shape _
+    Then
+        ' nothing for these
+    ElseIf TypeOf lControl Is CoolBar Then
+        SetWindowThemeOff FindWindowEx(lControl.hWnd, 0, "ReBarWindow32", vbNullString)
+        lControl.BackColor = pTheme.CoolbarBackColor
+        Dim lBand As Band
+        For Each lBand In lControl.Bands
+            lBand.BackColor = pTheme.CoolbarBackColor
+        Next
+    ElseIf TypeOf lControl Is Toolbar Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BorderStyle = pTheme.BorderStyle
+        
+        If lControl.Style = tbrStandard Then
+            Dim lDoneFirstStandardToolbar As Boolean
+            If Not lDoneFirstStandardToolbar Then
+                lDoneFirstStandardToolbar = True
+                SetToolbarColor lControl, pTheme.ToolbarBackColor
+            End If
+        Else
+            Dim lDoneFirstFlatToolbar As Boolean
+            If Not lDoneFirstFlatToolbar Then
+                lDoneFirstFlatToolbar = True
+                SetToolbarColor lControl, pTheme.ToolbarBackColor
+            End If
+        End If
+        lControl.Refresh
+    ElseIf TypeOf lControl Is Object  Then
+        On Error Resume Next
+        If TypeOf lControl.object Is IThemeable Then
+            If Err.Number = 0 Then
+                On Error GoTo Err
+                Dim lThemeable As IThemeable
+                Set lThemeable = lControl.object
+                lThemeable.Theme = pTheme
+            Else
+                On Error GoTo Err
+            End If
+        Else
+            On Error GoTo Err
+        End If
+    End If
+Next
+        
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Function gGetContractFromContractFuture(ByVal pFuture As IFuture) As IContract
 Const ProcName As String = "gGetContractFromContractFuture"
 On Error GoTo Err
@@ -158,12 +246,15 @@ End Sub
 Public Sub gShowStudyPicker( _
                 ByVal chartMgr As ChartManager, _
                 ByVal Title As String, _
-                ByVal pOwner As Variant)
+                ByVal pOwner As Variant, _
+                ByVal pTheme As ITheme)
 Const ProcName As String = "gShowStudyPicker"
-
 On Error GoTo Err
 
-If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
+If mStudyPickerForm Is Nothing Then
+    Set mStudyPickerForm = New fStudyPicker
+    If Not pTheme Is Nothing Then mStudyPickerForm.Theme = pTheme
+End If
 mStudyPickerForm.Initialise chartMgr, Title
 mStudyPickerForm.Show vbModeless, pOwner
 
@@ -177,7 +268,6 @@ Public Sub gSyncStudyPicker( _
                 ByVal chartMgr As ChartManager, _
                 ByVal Title As String)
 Const ProcName As String = "gSyncStudyPicker"
-
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Exit Sub
@@ -191,7 +281,6 @@ End Sub
 
 Public Sub gUnsyncStudyPicker()
 Const ProcName As String = "gUnsyncStudyPicker"
-
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Exit Sub
@@ -206,6 +295,27 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Public Sub SetToolbarColor(ByVal pToolbar As Toolbar, ByVal pColor As Long)
+Dim lBrush As Long
+lBrush = CreateSolidBrush(NormalizeColor(pColor))
+
+Dim lhWnd As Long
+Select Case pToolbar.Style
+Case ToolbarStyleConstants.tbrFlat
+    lhWnd = pToolbar.hWnd
+Case ToolbarStyleConstants.tbrStandard
+    lhWnd = FindWindowEx(pToolbar.hWnd, 0, "msvb_lib_toolbar", vbNullString)
+End Select
+
+Dim lResult As Long
+lResult = SetClassLong(lhWnd, GCLP_HBRBACKGROUND, lBrush)
+End Sub
+
+Public Sub SetWindowThemeOff(ByVal phWnd As Long)
+Dim result As Long
+result = SetWindowTheme(phWnd, vbNullString, "")
+End Sub
 
 
 

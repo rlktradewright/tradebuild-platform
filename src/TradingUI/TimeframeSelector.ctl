@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#10.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.6#0"; "TWControls40.ocx"
 Begin VB.UserControl TimeframeSelector 
    BackStyle       =   0  'Transparent
    ClientHeight    =   1710
@@ -9,13 +9,14 @@ Begin VB.UserControl TimeframeSelector
    ScaleHeight     =   1710
    ScaleWidth      =   3705
    Begin TWControls40.TWImageCombo TimeframeCombo 
-      Height          =   330
+      Height          =   270
       Left            =   120
       TabIndex        =   0
       Top             =   120
       Width           =   2775
       _ExtentX        =   4895
-      _ExtentY        =   582
+      _ExtentY        =   476
+      Appearance      =   0
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -48,12 +49,15 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IThemeable
+
 '@================================================================================
 ' Events
 '@================================================================================
 
 Event Change()
 Event Click()
+Attribute Click.VB_UserMemId = -600
 
 '@================================================================================
 ' Enums
@@ -69,8 +73,8 @@ Event Click()
 
 Private Const ModuleName                                As String = "TimeframeSelector"
 
-Private Const PropNameBackColor                         As String = "BackColor"
-Private Const PropNameForeColor                         As String = "ForeColor"
+Private Const PropNameBackcolor                         As String = "BackColor"
+Private Const PropNameForecolor                         As String = "ForeColor"
 
 Private Const PropDfltBackColor                         As Long = vbWindowBackground
 Private Const PropDfltForeColor                         As Long = vbWindowText
@@ -87,6 +91,8 @@ Private mLatestTimePeriod                               As TimePeriod
 
 Private mValidator                                      As ITimePeriodValidator
 
+Private mTheme                                          As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -101,17 +107,8 @@ End Sub
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 On Error Resume Next
 
-BackColor = PropBag.ReadProperty(PropNameBackColor, PropDfltBackColor)
-If Err.Number <> 0 Then
-    BackColor = PropDfltBackColor
-    Err.Clear
-End If
-
-ForeColor = PropBag.ReadProperty(PropNameForeColor, PropDfltForeColor)
-If Err.Number <> 0 Then
-    BackColor = PropDfltForeColor
-    Err.Clear
-End If
+BackColor = PropBag.ReadProperty(PropNameBackcolor, PropDfltBackColor)
+ForeColor = PropBag.ReadProperty(PropNameForecolor, PropDfltForeColor)
 
 End Sub
 
@@ -132,13 +129,29 @@ End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 On Error Resume Next
-PropBag.WriteProperty PropNameBackColor, BackColor, PropDfltBackColor
-PropBag.WriteProperty PropNameForeColor, ForeColor, PropDfltForeColor
+PropBag.WriteProperty PropNameBackcolor, BackColor, PropDfltBackColor
+PropBag.WriteProperty PropNameForecolor, ForeColor, PropDfltForeColor
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -157,6 +170,7 @@ Dim tp As TimePeriod
 If TimeframeCombo.Text = TimeframeCustom Then
     If mSpecifier Is Nothing Then
         Set mSpecifier = New fTimeframeSpecifier
+        mSpecifier.Theme = mTheme
         mSpecifier.Initialise mValidator
     End If
     mSpecifier.Show vbModal
@@ -186,11 +200,12 @@ End Sub
 '@================================================================================
 
 Public Property Let BackColor( _
-                ByVal Value As OLE_COLOR)
+                ByVal value As OLE_COLOR)
 Const ProcName As String = "backColor"
 On Error GoTo Err
 
-TimeframeCombo.BackColor = Value
+TimeframeCombo.BackColor = value
+PropertyChanged PropNameBackcolor
 
 Exit Property
 
@@ -199,6 +214,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BackColor() As OLE_COLOR
+Attribute BackColor.VB_UserMemId = -501
 Const ProcName As String = "backColor"
 On Error GoTo Err
 
@@ -224,11 +240,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
-                ByVal Value As Boolean)
+                ByVal value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = Value
+UserControl.Enabled = value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -238,11 +254,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ForeColor( _
-                ByVal Value As OLE_COLOR)
+                ByVal value As OLE_COLOR)
 Const ProcName As String = "foreColor"
 On Error GoTo Err
 
-TimeframeCombo.ForeColor = Value
+TimeframeCombo.ForeColor = value
+PropertyChanged PropNameForecolor
 
 Exit Property
 
@@ -251,6 +268,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ForeColor() As OLE_COLOR
+Attribute ForeColor.VB_UserMemId = -513
 Const ProcName As String = "foreColor"
 On Error GoTo Err
 
@@ -275,12 +293,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+BackColor = value.TextBackColor
+ForeColor = value.TextForeColor
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
 Public Property Let TimePeriod( _
-                ByRef Value As TimePeriod)
+                ByRef value As TimePeriod)
 Const ProcName As String = "TimePeriod"
 On Error GoTo Err
 
-selectComboEntry Value
+selectComboEntry value
 
 Exit Property
 
@@ -460,7 +495,7 @@ Dim s As String
 
 s = pTimePeriod.ToString
 If mValidator.IsValidTimePeriod(pTimePeriod) Then
-    TimeframeCombo.ComboItems.item(s).Selected = True
+    TimeframeCombo.ComboItems.Item(s).Selected = True
     Set mLatestTimePeriod = pTimePeriod
     selectComboEntry = True
 End If

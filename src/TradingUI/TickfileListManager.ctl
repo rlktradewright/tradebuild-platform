@@ -1,73 +1,90 @@
 VERSION 5.00
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl TickfileListManager 
+   BackStyle       =   0  'Transparent
    ClientHeight    =   2805
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6555
    ScaleHeight     =   2805
    ScaleWidth      =   6555
-   Begin VB.CommandButton RemoveButton 
-      Caption         =   "X"
-      Enabled         =   0   'False
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   12
-         Charset         =   0
-         Weight          =   700
+   Begin VB.PictureBox MeasurePicture 
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
+      Height          =   735
+      Left            =   5520
+      ScaleHeight     =   705
+      ScaleWidth      =   825
+      TabIndex        =   4
+      Top             =   120
+      Visible         =   0   'False
+      Width           =   855
+   End
+   Begin TWControls40.TWButton DownButton 
+      Height          =   495
+      Left            =   6240
+      TabIndex        =   3
+      Top             =   1800
+      Width           =   315
+      _ExtentX        =   556
+      _ExtentY        =   873
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Wingdings"
+         Size            =   18
+         Charset         =   2
+         Weight          =   400
          Underline       =   0   'False
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
+      Caption         =   "ò"
+   End
+   Begin TWControls40.TWButton RemoveButton 
       Height          =   615
       Left            =   6240
       TabIndex        =   2
       Top             =   1080
       Width           =   315
+      _ExtentX        =   556
+      _ExtentY        =   1085
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "X"
+   End
+   Begin TWControls40.TWButton UpButton 
+      Height          =   495
+      Left            =   6240
+      TabIndex        =   1
+      Top             =   480
+      Width           =   315
+      _ExtentX        =   556
+      _ExtentY        =   873
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Wingdings"
+         Size            =   18
+         Charset         =   2
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "ñ"
    End
    Begin VB.ListBox TickFileList 
-      Height          =   2790
+      Appearance      =   0  'Flat
+      Height          =   2760
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   6255
-   End
-   Begin VB.CommandButton UpButton 
-      Caption         =   "ñ"
-      Enabled         =   0   'False
-      BeginProperty Font 
-         Name            =   "Wingdings"
-         Size            =   18
-         Charset         =   2
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   495
-      Left            =   6240
-      Picture         =   "TickfileListManager.ctx":0000
-      TabIndex        =   1
-      Top             =   480
-      Width           =   315
-   End
-   Begin VB.CommandButton DownButton 
-      Caption         =   "ò"
-      Enabled         =   0   'False
-      BeginProperty Font 
-         Name            =   "Wingdings"
-         Size            =   18
-         Charset         =   2
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   495
-      Left            =   6240
-      Picture         =   "TickfileListManager.ctx":0442
-      TabIndex        =   3
-      Top             =   1800
-      Width           =   315
    End
 End
 Attribute VB_Name = "TickfileListManager"
@@ -94,6 +111,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IThemeable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -104,7 +123,7 @@ Event TickfileCountChanged()
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "TickfileListManager"
+Private Const ModuleName                                    As String = "TickfileListManager"
 
 '@================================================================================
 ' Enums
@@ -118,18 +137,23 @@ Private Const ModuleName                    As String = "TickfileListManager"
 ' Member variables
 '@================================================================================
 
-Private mTickfileStore                      As ITickfileStore
+Private mTickfileStore                                      As ITickfileStore
 
-Private mTickfileSpecifiers                 As TickfileSpecifiers
+Private mTickfileSpecifiers                                 As TickfileSpecifiers
 
-Private mSupportedTickfileFormats()         As TickfileFormatSpecifier
+Private mSupportedTickfileFormats()                         As TickfileFormatSpecifier
 
-Private mSupportsTickFiles                  As Boolean
-Private mSupportsTickStreams                As Boolean
+Private mSupportsTickFiles                                  As Boolean
+Private mSupportsTickStreams                                As Boolean
 
-Private mMinHeight                          As Long
+Private mMinHeight                                          As Long
 
-Private mEnabled                             As Boolean
+Private mEnabled                                            As Boolean
+
+Private mTheme                                              As ITheme
+
+Private mScrollSizeNeedsSetting                             As Boolean
+Private mScrollWidth                                        As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -139,14 +163,12 @@ Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
-SendMessage TickFileList.hWnd, LB_SETHORIZONTALEXTENT, 2000, 0
-
-mMinHeight = 120 * Int((UpButton.Height + _
-                        105 + _
+mMinHeight = 8 * Screen.TwipsPerPixelY * Int((UpButton.Height + _
+                        8 * Screen.TwipsPerPixelY + _
                         DownButton.Height + _
-                        105 + _
+                        8 * Screen.TwipsPerPixelY + _
                         RemoveButton.Height _
-                        + 119) / 120)
+                        + 8 * Screen.TwipsPerPixelY - 1) / (8 * Screen.TwipsPerPixelY))
                         
 
 Set mTickfileSpecifiers = New TickfileSpecifiers
@@ -161,20 +183,18 @@ Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
 On Error GoTo Err
 
+If UserControl.Height < mMinHeight Then UserControl.Height = mMinHeight
+
+TickFileList.Width = UserControl.Width - UpButton.Width - 8 * Screen.TwipsPerPixelX
+TickFileList.Height = UserControl.Height
+
 UpButton.Left = UserControl.Width - UpButton.Width
 DownButton.Left = UserControl.Width - DownButton.Width
 RemoveButton.Left = UserControl.Width - RemoveButton.Width
 
-If UserControl.Height < mMinHeight Then
-    UserControl.Height = mMinHeight
-End If
-
-TickFileList.Width = UpButton.Left
-TickFileList.Height = UserControl.Height
-
 RemoveButton.Top = TickFileList.Height / 2 - RemoveButton.Height / 2
-UpButton.Top = RemoveButton.Top - UpButton.Height - 105
-DownButton.Top = RemoveButton.Top + RemoveButton.Height + 105
+UpButton.Top = RemoveButton.Top - UpButton.Height - 8 * Screen.TwipsPerPixelY
+DownButton.Top = RemoveButton.Top + RemoveButton.Height + 8 * Screen.TwipsPerPixelY
 
 Exit Sub
 
@@ -183,8 +203,24 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' xxxx Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -201,10 +237,10 @@ Dim i As Long
 For i = TickFileList.ListCount - 2 To 0 Step -1
     If TickFileList.Selected(i) And Not TickFileList.Selected(i + 1) Then
         s = TickFileList.List(i)
-        d = TickFileList.itemData(i)
+        d = TickFileList.ItemData(i)
         TickFileList.RemoveItem i
-        TickFileList.addItem s, i + 1
-        TickFileList.itemData(i + 1) = d
+        TickFileList.AddItem s, i + 1
+        TickFileList.ItemData(i + 1) = d
         TickFileList.Selected(i + 1) = True
     End If
 Next
@@ -228,6 +264,12 @@ Next
 DownButton.Enabled = False
 UpButton.Enabled = False
 RemoveButton.Enabled = False
+
+mScrollWidth = 0
+For i = 0 To TickFileList.ListCount - 1
+    adjustScrollSize TickFileList.List(i)
+Next
+setScrollSize
 
 RaiseEvent TickfileCountChanged
 
@@ -262,10 +304,10 @@ Dim i As Long
 For i = 1 To TickFileList.ListCount - 1
     If TickFileList.Selected(i) And Not TickFileList.Selected(i - 1) Then
         s = TickFileList.List(i)
-        d = TickFileList.itemData(i)
+        d = TickFileList.ItemData(i)
         TickFileList.RemoveItem i
-        TickFileList.addItem s, i - 1
-        TickFileList.itemData(i - 1) = d
+        TickFileList.AddItem s, i - 1
+        TickFileList.ItemData(i - 1) = d
         TickFileList.Selected(i - 1) = True
     End If
 Next
@@ -340,6 +382,23 @@ Public Property Get SupportsTickStreams() As Boolean
 SupportsTickStreams = mSupportsTickStreams
 End Property
 
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
 Public Property Get TickfileCount() As Long
 Const ProcName As String = "TickfileCount"
 On Error GoTo Err
@@ -362,7 +421,7 @@ Dim tfs As New TickfileSpecifiers
 If TickFileList.ListCount = 0 Then Exit Property
 
 For i = 0 To TickFileList.ListCount - 1
-    tfs.Add mTickfileSpecifiers.Item(TickFileList.itemData(i))
+    tfs.Add mTickfileSpecifiers.Item(TickFileList.ItemData(i))
 Next
 
 Set TickfileSpecifiers = tfs
@@ -379,25 +438,27 @@ End Property
 
 Public Sub AddTickfileNames( _
                 ByRef fileNames() As String)
+Const ProcName As String = "AddTickfileNames"
 On Error GoTo Err
 
-Dim tfs As TickfileSpecifier
-Dim fileExt As String
 Dim i As Long
-Dim k As Long
-
 For i = 0 To UBound(fileNames)
-    TickFileList.addItem fileNames(i)
+    TickFileList.AddItem fileNames(i)
+    adjustScrollSize fileNames(i)
     
+    Dim tfs As TickfileSpecifier
     Set tfs = New TickfileSpecifier
     mTickfileSpecifiers.Add tfs
     tfs.FileName = fileNames(i)
-    TickFileList.itemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
+    TickFileList.ItemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
 
     ' set up the FormatID - we set it to the first one that matches
     ' the file extension
+    Dim fileExt As String
     fileExt = Right$(tfs.FileName, _
                     Len(tfs.FileName) - InStrRev(tfs.FileName, "."))
+    
+    Dim k As Long
     For k = 0 To UBound(mSupportedTickfileFormats)
         If mSupportedTickfileFormats(k).FormatType = TickfileModeFileBased Then
             If UCase$(fileExt) = UCase$(mSupportedTickfileFormats(k).FileExtension) Then
@@ -408,25 +469,31 @@ For i = 0 To UBound(fileNames)
     Next
 Next
 
+setScrollSize
+
 RaiseEvent TickfileCountChanged
 
 Exit Sub
 
 Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddTickfileSpecifiers( _
                 ByVal pTickfileSpecifiers As TickfileSpecifiers)
-Const ProcName As String = "addTickfileSpecifiers"
+Const ProcName As String = "AddTickfileSpecifiers"
 On Error GoTo Err
 
 Dim i As Long
 
 For i = 1 To pTickfileSpecifiers.Count
-    TickFileList.addItem pTickfileSpecifiers.Item(i).FileName
+    TickFileList.AddItem pTickfileSpecifiers.Item(i).FileName
+    adjustScrollSize pTickfileSpecifiers.Item(i).FileName
     mTickfileSpecifiers.Add pTickfileSpecifiers.Item(i)
-    TickFileList.itemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
+    TickFileList.ItemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
 Next
+
+setScrollSize
 
 RaiseEvent TickfileCountChanged
 
@@ -471,10 +538,27 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub getSupportedTickfileFormats()
-mSupportedTickfileFormats = mTickfileStore.SupportedFormats
-
+Private Sub adjustScrollSize(ByVal pText As String)
+Const ProcName As String = "adjustScrollSize"
 On Error GoTo Err
+
+Dim lWidth As Long
+lWidth = MeasurePicture.TextWidth(pText) + 4 * Screen.TwipsPerPixelX
+If lWidth > mScrollWidth Then
+    mScrollSizeNeedsSetting = True
+    mScrollWidth = lWidth
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub getSupportedTickfileFormats()
+On Error GoTo Err
+
+mSupportedTickfileFormats = mTickfileStore.SupportedFormats
 
 ReDim mSupportedTickStreamFormats(9) As TickfileFormatSpecifier
 
@@ -536,6 +620,20 @@ If TickFileList.SelCount <> 0 Then
 Else
     RemoveButton.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setScrollSize()
+Const ProcName As String = "setScrollSize"
+On Error GoTo Err
+
+If Not mScrollSizeNeedsSetting Then Exit Sub
+mScrollSizeNeedsSetting = False
+SendMessage TickFileList.hWnd, LB_SETHORIZONTALEXTENT, mScrollWidth / Screen.TwipsPerPixelX, 0
 
 Exit Sub
 

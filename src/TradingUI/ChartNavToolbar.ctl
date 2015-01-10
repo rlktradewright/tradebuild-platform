@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#168.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#235.1#0"; "ChartSkil27.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -35,6 +35,7 @@ Option Explicit
 '@================================================================================
 
 Implements ChangeListener
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -65,6 +66,8 @@ Private WithEvents mChartManager                As ChartManager
 Attribute mChartManager.VB_VarHelpID = -1
 Private mMultichartRef                          As WeakReference
 
+Private mTheme                                  As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -79,11 +82,6 @@ Const ProcName As String = "UserControl_Terminate"
 gLogger.Log "ChartNavToolbar terminated", ProcName, ModuleName, LogLevelDetail
 Debug.Print "ChartNavToolbar terminated"
 End Sub
-
-'================================================================================
-' Control Event Handlers
-'================================================================================
-
 
 '@================================================================================
 ' ChangeListener Interface Members
@@ -110,6 +108,30 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+'================================================================================
+' Control Event Handlers
+'================================================================================
 
 '@================================================================================
 ' mChartManager Event Handlers
@@ -178,6 +200,24 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================

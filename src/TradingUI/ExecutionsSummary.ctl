@@ -25,7 +25,7 @@ Begin VB.UserControl ExecutionsSummary
       _Version        =   393217
       ForeColor       =   -2147483640
       BackColor       =   -2147483643
-      Appearance      =   1
+      Appearance      =   0
       NumItems        =   0
    End
 End
@@ -47,6 +47,7 @@ Option Explicit
 '@================================================================================
 
 Implements CollectionChangeListener
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -56,7 +57,7 @@ Implements CollectionChangeListener
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "ExecutionsSummary"
+Private Const ModuleName                        As String = "ExecutionsSummary"
 
 ' Percentage widths of the Open Orders columns
 Private Const ExecutionsExecIdWidth = 25
@@ -66,6 +67,9 @@ Private Const ExecutionsQuantityWidth = 8
 Private Const ExecutionsSymbolWidth = 8
 Private Const ExecutionsPriceWidth = 10
 Private Const ExecutionsTimeWidth = 23
+
+Private Const PropNameBackcolor                 As String = "Backcolor"
+Private Const PropNameForecolor                 As String = "Forecolor"
 
 '@================================================================================
 ' Enums
@@ -91,6 +95,8 @@ End Enum
 
 Private mExecutionsCollection                               As New EnumerableCollection
 Private mPositionManagersCollection                         As New EnumerableCollection
+
+Private mTheme                                              As ITheme
 
 '@================================================================================
 ' UserControl Event Handlers
@@ -118,6 +124,21 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub UserControl_InitProperties()
+BackColor = vbWindowBackground
+ForeColor = vbWindowText
+End Sub
+
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+BackColor = PropBag.ReadProperty(PropNameBackcolor, vbWindowBackground)
+ForeColor = PropBag.ReadProperty(PropNameForecolor, vbWindowText)
+End Sub
+
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+PropBag.WriteProperty PropNameBackcolor, BackColor, vbWindowBackground
+PropBag.WriteProperty PropNameForecolor, ForeColor, vbWindowText
 End Sub
 
 Private Sub UserControl_Resize()
@@ -184,6 +205,26 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+'@================================================================================
 ' Control Event Handlers
 '@================================================================================
 
@@ -211,6 +252,44 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Let BackColor(ByVal value As OLE_COLOR)
+ExecutionsList.BackColor = value
+PropertyChanged PropNameBackcolor
+End Property
+
+Public Property Get BackColor() As OLE_COLOR
+Attribute BackColor.VB_UserMemId = -501
+BackColor = ExecutionsList.BackColor
+End Property
+
+Public Property Let ForeColor(ByVal value As OLE_COLOR)
+ExecutionsList.ForeColor = value
+PropertyChanged PropNameForecolor
+End Property
+
+Public Property Get ForeColor() As OLE_COLOR
+Attribute ForeColor.VB_UserMemId = -513
+ForeColor = ExecutionsList.ForeColor
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+BackColor = mTheme.TextBackColor
+ForeColor = mTheme.TextForeColor
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
 
 '@================================================================================
 ' Methods

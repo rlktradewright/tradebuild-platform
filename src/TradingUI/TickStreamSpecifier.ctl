@@ -1,4 +1,5 @@
 VERSION 5.00
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl TickStreamSpecifier 
    ClientHeight    =   4200
    ClientLeft      =   0
@@ -10,7 +11,7 @@ Begin VB.UserControl TickStreamSpecifier
       Caption         =   "Contract specification"
       Height          =   3615
       Left            =   0
-      TabIndex        =   21
+      TabIndex        =   20
       Top             =   0
       Width           =   2775
       Begin VB.PictureBox Picture1 
@@ -21,7 +22,7 @@ Begin VB.UserControl TickStreamSpecifier
          Left            =   120
          ScaleHeight     =   3255
          ScaleWidth      =   2535
-         TabIndex        =   22
+         TabIndex        =   21
          Top             =   240
          Width           =   2535
          Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
@@ -31,7 +32,8 @@ Begin VB.UserControl TickStreamSpecifier
             Top             =   0
             Width           =   2535
             _ExtentX        =   4471
-            _ExtentY        =   6509
+            _ExtentY        =   5556
+            ForeColor       =   -2147483640
          End
       End
    End
@@ -39,33 +41,44 @@ Begin VB.UserControl TickStreamSpecifier
       Caption         =   "Data source"
       Height          =   735
       Left            =   2880
-      TabIndex        =   18
+      TabIndex        =   17
       Top             =   2880
       Width           =   3735
-      Begin VB.PictureBox Picture2 
+      Begin VB.PictureBox DataSourcePicture 
          BorderStyle     =   0  'None
          Height          =   375
          Left            =   120
          ScaleHeight     =   375
          ScaleWidth      =   3495
-         TabIndex        =   19
+         TabIndex        =   18
          Top             =   240
          Width           =   3495
-         Begin VB.ComboBox FormatCombo 
-            Height          =   315
-            ItemData        =   "TickStreamSpecifier.ctx":0000
+         Begin TWControls40.TWImageCombo FormatCombo 
+            Height          =   270
             Left            =   720
-            List            =   "TickStreamSpecifier.ctx":0002
-            Style           =   2  'Dropdown List
-            TabIndex        =   9
+            TabIndex        =   23
             Top             =   0
             Width           =   2775
+            _ExtentX        =   4895
+            _ExtentY        =   476
+            Appearance      =   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseIcon       =   "TickStreamSpecifier.ctx":0000
+            Text            =   ""
          End
          Begin VB.Label Label1 
             Caption         =   "Format"
             Height          =   255
-            Left            =   120
-            TabIndex        =   20
+            Left            =   0
+            TabIndex        =   19
             Top             =   0
             Width           =   855
          End
@@ -75,19 +88,21 @@ Begin VB.UserControl TickStreamSpecifier
       Caption         =   "Dates/Times"
       Height          =   2775
       Left            =   2880
-      TabIndex        =   10
+      TabIndex        =   9
       Top             =   0
       Width           =   3735
-      Begin VB.PictureBox Picture3 
+      Begin VB.PictureBox DatesTimesPicture 
          BorderStyle     =   0  'None
          Height          =   2415
          Left            =   120
          ScaleHeight     =   2415
          ScaleWidth      =   3495
-         TabIndex        =   11
+         TabIndex        =   10
          Top             =   240
          Width           =   3495
          Begin VB.TextBox ToDateText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   285
             Left            =   2160
             TabIndex        =   2
@@ -95,6 +110,8 @@ Begin VB.UserControl TickStreamSpecifier
             Width           =   1260
          End
          Begin VB.TextBox FromDateText 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
             Height          =   285
             Left            =   480
             TabIndex        =   1
@@ -102,7 +119,9 @@ Begin VB.UserControl TickStreamSpecifier
             Width           =   1260
          End
          Begin VB.CheckBox CompleteSessionCheck 
+            Appearance      =   0  'Flat
             Caption         =   "Complete sessions"
+            ForeColor       =   &H80000008&
             Height          =   255
             Left            =   480
             TabIndex        =   3
@@ -111,8 +130,10 @@ Begin VB.UserControl TickStreamSpecifier
             Width           =   2775
          End
          Begin VB.CheckBox UseExchangeTimezoneCheck 
+            Appearance      =   0  'Flat
             Caption         =   "Use exchange timezone (otherwise local time)"
             Enabled         =   0   'False
+            ForeColor       =   &H80000008&
             Height          =   375
             Left            =   480
             TabIndex        =   4
@@ -124,21 +145,23 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "Session times"
             Height          =   1215
             Left            =   0
-            TabIndex        =   12
+            TabIndex        =   11
             Top             =   1200
             Width           =   3495
-            Begin VB.PictureBox Picture4 
+            Begin VB.PictureBox SessionTimesPicture 
                BorderStyle     =   0  'None
                Height          =   930
                Left            =   120
                ScaleHeight     =   930
                ScaleWidth      =   3285
-               TabIndex        =   13
+               TabIndex        =   12
                Top             =   240
                Width           =   3285
                Begin VB.OptionButton UseContractTimesOption 
+                  Appearance      =   0  'Flat
                   Caption         =   "Use contract times"
                   Enabled         =   0   'False
+                  ForeColor       =   &H80000008&
                   Height          =   255
                   Left            =   0
                   TabIndex        =   5
@@ -147,7 +170,9 @@ Begin VB.UserControl TickStreamSpecifier
                   Width           =   1695
                End
                Begin VB.TextBox CustomToTimeText 
+                  Appearance      =   0  'Flat
                   BackColor       =   &H8000000F&
+                  BorderStyle     =   0  'None
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   2520
@@ -156,7 +181,9 @@ Begin VB.UserControl TickStreamSpecifier
                   Width           =   660
                End
                Begin VB.TextBox CustomFromTimeText 
+                  Appearance      =   0  'Flat
                   BackColor       =   &H8000000F&
+                  BorderStyle     =   0  'None
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   2520
@@ -165,8 +192,10 @@ Begin VB.UserControl TickStreamSpecifier
                   Width           =   660
                End
                Begin VB.OptionButton UseCustomTimesOption 
+                  Appearance      =   0  'Flat
                   Caption         =   "Use custom times (must be in exchange timezone)"
                   Enabled         =   0   'False
+                  ForeColor       =   &H80000008&
                   Height          =   615
                   Left            =   0
                   TabIndex        =   6
@@ -178,7 +207,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Caption         =   "To"
                   Height          =   255
                   Left            =   1920
-                  TabIndex        =   15
+                  TabIndex        =   14
                   Top             =   600
                   Width           =   495
                End
@@ -187,7 +216,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Caption         =   "From"
                   Height          =   255
                   Left            =   1920
-                  TabIndex        =   14
+                  TabIndex        =   13
                   Top             =   360
                   Width           =   495
                End
@@ -198,7 +227,7 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "To"
             Height          =   255
             Left            =   1800
-            TabIndex        =   17
+            TabIndex        =   16
             Top             =   120
             Width           =   255
          End
@@ -206,17 +235,18 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "From"
             Height          =   255
             Left            =   0
-            TabIndex        =   16
+            TabIndex        =   15
             Top             =   120
             Width           =   855
          End
       End
    End
    Begin VB.Label ErrorLabel 
+      BackStyle       =   0  'Transparent
       ForeColor       =   &H000000FF&
       Height          =   375
       Left            =   0
-      TabIndex        =   23
+      TabIndex        =   22
       Top             =   3720
       Width           =   6615
    End
@@ -226,7 +256,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-
 Option Explicit
 
 '@================================================================================
@@ -245,6 +274,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -285,6 +316,8 @@ Private mSecType                            As SecurityTypes
 Private WithEvents mFutureWaiter            As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mTheme                              As ITheme
+
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
@@ -307,8 +340,24 @@ UserControl.Width = 6720
 End Sub
 
 '@================================================================================
-' xxxx Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -439,7 +488,7 @@ Private Sub FormatCombo_GotFocus()
 Const ProcName As String = "FormatCombo_GotFocus"
 On Error GoTo Err
 
-FormatCombo.SelStart = 0
+FormatCombo.SelStart = 1
 FormatCombo.SelLength = Len(FormatCombo.Text)
 
 Exit Sub
@@ -561,7 +610,7 @@ Screen.MousePointer = vbDefault
 If ev.Future.IsFaulted <> 0 Then
     ErrorLabel.caption = ev.Future.ErrorMessage
 ElseIf ev.Future.IsCancelled <> 0 Then
-    ErrorLabel.caption = "Contracts fetch cancelled"
+    ErrorLabel.caption = "Contracts fetch Cancelled"
 Else
     Set mContracts = ev.Future.value
     processContracts
@@ -576,6 +625,24 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
 
 '@================================================================================
 ' Methods
@@ -649,7 +716,7 @@ Private Function checkOk(ByRef pMessage As String) As Boolean
 Const ProcName As String = "checkOk"
 On Error GoTo Err
 
-If FormatCombo.ListCount = 0 Then
+If FormatCombo.ComboItems.Count = 0 Then
     pMessage = "No formats available"
     Exit Function
 End If
@@ -728,9 +795,14 @@ Const ProcName As String = "disableCustomTimeFields"
 On Error GoTo Err
 
 CustomFromTimeText.Enabled = False
-CustomFromTimeText.BackColor = vbButtonFace
 CustomToTimeText.Enabled = False
-CustomToTimeText.BackColor = vbButtonFace
+
+If mTheme Is Nothing Then
+    CustomFromTimeText.BackColor = vbButtonFace
+    CustomToTimeText.BackColor = vbButtonFace
+Else
+    ' leave the themed colours unchanged
+End If
 
 Exit Sub
 
@@ -743,9 +815,14 @@ Const ProcName As String = "enableCustomTimeFields"
 On Error GoTo Err
 
 CustomFromTimeText.Enabled = True
-CustomFromTimeText.BackColor = vbWindowBackground
 CustomToTimeText.Enabled = True
-CustomToTimeText.BackColor = vbWindowBackground
+
+If mTheme Is Nothing Then
+    CustomFromTimeText.BackColor = vbWindowBackground
+    CustomToTimeText.BackColor = vbWindowBackground
+Else
+    ' leave the themed colours unchanged
+End If
 
 Exit Sub
 
@@ -754,17 +831,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub getSupportedTickstreamFormats()
+Const ProcName As String = "getSupportedTickstreamFormats"
 On Error GoTo Err
 
 Dim tff() As TickfileFormatSpecifier
-Dim i As Long
-Dim j As Long
-
 tff = mTickfileStore.SupportedFormats
 
 ReDim mSupportedTickStreamFormats(9) As TickfileFormatSpecifier
+
+Dim j As Long
 j = -1
 
+Dim i As Long
 For i = 0 To UBound(tff)
     If tff(i).FormatType = TickfileModeStreamBased Then
         j = j + 1
@@ -772,11 +850,11 @@ For i = 0 To UBound(tff)
             ReDim Preserve mSupportedTickStreamFormats(UBound(mSupportedTickStreamFormats) + 9) As TickfileFormatSpecifier
         End If
         mSupportedTickStreamFormats(j) = tff(i)
-        FormatCombo.addItem mSupportedTickStreamFormats(j).Name
+        FormatCombo.ComboItems.Add , , mSupportedTickStreamFormats(j).Name
     End If
 Next
 
-FormatCombo.ListIndex = 0
+FormatCombo.ComboItems(1).Selected = True
 
 If j = -1 Then
     Erase mSupportedTickStreamFormats
@@ -787,7 +865,7 @@ End If
 Exit Sub
 
 Err:
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processContracts()

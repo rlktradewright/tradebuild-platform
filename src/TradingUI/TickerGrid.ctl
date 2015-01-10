@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -8,14 +8,14 @@ Begin VB.UserControl TickerGrid
    ScaleHeight     =   3600
    ScaleWidth      =   4800
    Begin VB.PictureBox FontPicture 
-      Height          =   375
-      Left            =   3120
-      ScaleHeight     =   315
-      ScaleWidth      =   555
+      Height          =   735
+      Left            =   120
+      ScaleHeight     =   675
+      ScaleWidth      =   1515
       TabIndex        =   1
-      Top             =   3120
+      Top             =   2760
       Visible         =   0   'False
-      Width           =   615
+      Width           =   1575
    End
    Begin TWControls40.TWGrid TickerGrid 
       Height          =   2655
@@ -48,6 +48,7 @@ Implements DeferredAction
 Implements ErrorListener
 Implements IQuoteListener
 Implements IPriceChangeListener
+Implements IThemeable
 Implements StateChangeListener
 
 '@================================================================================
@@ -61,6 +62,7 @@ Event ColMoving(ByVal fromCol As Long, ByVal toCol As Long, Cancel As Boolean)
 Event DblClick()
 Attribute DblClick.VB_UserMemId = -601
 Event Error(ev As ErrorEventData)
+Event ErroredTickerRemoved(ByVal pTicker As IMarketDataSource)
 Event KeyDown(KeyCode As Integer, Shift As Integer)
 Attribute KeyDown.VB_UserMemId = -602
 Event KeyPress(KeyAscii As Integer)
@@ -265,6 +267,8 @@ Private mTickerSymbolRow                                As Long
 
 Private mIteratingTickersConfig                         As Boolean
 
+Private mTheme                                          As ITheme
+
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
@@ -289,7 +293,7 @@ Private Sub UserControl_InitProperties()
 Const ProcName As String = "UserControl_InitProperties"
 On Error GoTo Err
 
-BorderStyle = TwGridBorderNone
+BorderStyle = BorderStyleNone
 PositiveChangeBackColor = CPositiveChangeBackColor
 PositiveChangeForeColor = CPositiveChangeForeColor
 NegativeChangeBackColor = CNegativeChangeBackColor
@@ -308,11 +312,15 @@ FillStyle = TwGridFillRepeat
 TickerGrid.SelectionMode = TwGridSelectionFree
 TickerGrid.FocusRect = TwGridFocusBroken
 TickerGrid.HighLight = TwGridHighlightWithFocus
+TickerGrid.FontFixed = UserControl.Ambient.Font
+TickerGrid.Font = UserControl.Ambient.Font
     
 TickerGrid.Cols = 2
 Rows = GridRowsInitial
 TickerGrid.FixedRows = 1
 TickerGrid.FixedCols = 1
+
+TickerGrid.PopupScrollbars = True
 
 'setupDefaultTickerGridColumns
 'setupDefaultTickerGridHeaders
@@ -357,7 +365,7 @@ TickerGrid.BackColorSel = PropBag.ReadProperty("BackColorSel", -2147483635)
 TickerGrid.BackColorFixed = PropBag.ReadProperty("BackColorFixed", -2147483633)
 TickerGrid.BackColorBkg = PropBag.ReadProperty("BackColorBkg", -2147483636)
 TickerGrid.BackColor = PropBag.ReadProperty("BackColor", &H80000005)
-TickerGrid.BorderStyle = PropBag.ReadProperty("BorderStyle", TwGridBorderNone)
+TickerGrid.BorderStyle = PropBag.ReadProperty("BorderStyle", BorderStyleNone)
 TickerGrid.ScrollBars = PropBag.ReadProperty("ScrollBars", TwGridScrollBarBoth)
 TickerGrid.RowSizingMode = PropBag.ReadProperty("RowSizingMode", TwGridRowSizeAll)
 TickerGrid.Rows = PropBag.ReadProperty("Rows", GridRowsInitial)
@@ -377,6 +385,7 @@ TickerGrid.ForeColor = PropBag.ReadProperty("ForeColor", &H80000008)
 TickerGrid.FocusRect = TwGridFocusBroken
 TickerGrid.FixedRows = 1
 TickerGrid.FixedCols = 1
+TickerGrid.PopupScrollbars = True
 TickerGrid.FillStyle = TwGridFillRepeat
 TickerGrid.Cols = 2
 TickerGrid.ForeColorSel = -2147483634
@@ -412,7 +421,7 @@ Call PropBag.WriteProperty("BackColorSel", TickerGrid.BackColorSel, -2147483635)
 Call PropBag.WriteProperty("BackColorFixed", TickerGrid.BackColorFixed, -2147483633)
 Call PropBag.WriteProperty("BackColorBkg", TickerGrid.BackColorBkg, -2147483636)
 Call PropBag.WriteProperty("BackColor", TickerGrid.BackColor, &H80000005)
-Call PropBag.WriteProperty("BorderStyle", TickerGrid.BorderStyle, TwGridBorderNone)
+Call PropBag.WriteProperty("BorderStyle", TickerGrid.BorderStyle, BorderStyleNone)
 Call PropBag.WriteProperty("SelectionMode", TickerGrid.SelectionMode, TwGridSelectionFree)
 Call PropBag.WriteProperty("ScrollBars", TickerGrid.ScrollBars, TwGridScrollBarBoth)
 Call PropBag.WriteProperty("RowSizingMode", TickerGrid.RowSizingMode, TwGridRowSizeAll)
@@ -477,6 +486,26 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' PriceChangeListener Interface Members
@@ -910,6 +939,29 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+TickerGrid.Theme = mTheme
+IncreasedValueColor = mTheme.IncreasedValueColor
+NegativeChangeBackColor = mTheme.NegativeChangeBackColor
+NegativeChangeForeColor = mTheme.NegativeChangeForeColor
+PositiveChangeBackColor = mTheme.PositiveChangeBackColor
+PositiveChangeForeColor = mTheme.PositiveChangeForeColor
+PositiveChangeBackColor = mTheme.PositiveChangeBackColor
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
 Public Property Get SelectedTickers() As SelectedTickers
 Attribute SelectedTickers.VB_MemberFlags = "400"
 Const ProcName As String = "SelectedTickers"
@@ -1286,6 +1338,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get hWnd() As Long
+Attribute hWnd.VB_UserMemId = -515
+hWnd = UserControl.hWnd
+End Property
+
 Public Property Get GridLineWidth() As Long
 Attribute GridLineWidth.VB_Description = "Specifies the thickness of the grid lines."
 Attribute GridLineWidth.VB_ProcData.VB_Invoke_Property = ";Appearance"
@@ -1570,7 +1627,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get BorderStyle() As TWControls40.BorderStyleSettings
+Public Property Get BorderStyle() As BorderStyleSettings
 Const ProcName As String = "BorderStyle"
 On Error GoTo Err
 
@@ -1582,7 +1639,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let BorderStyle(ByVal value As TWControls40.BorderStyleSettings)
+Public Property Let BorderStyle(ByVal value As BorderStyleSettings)
 Const ProcName As String = "BorderStyle"
 On Error GoTo Err
 
@@ -1640,8 +1697,8 @@ Public Property Let BackColorBkg(ByVal New_BackColorBkg As OLE_COLOR)
 Const ProcName As String = "BackColorBkg"
 On Error GoTo Err
 
-    TickerGrid.BackColorBkg = New_BackColorBkg
-    PropertyChanged "BackColorBkg"
+TickerGrid.BackColorBkg = New_BackColorBkg
+PropertyChanged "BackColorBkg"
 
 Exit Property
 
@@ -2135,9 +2192,10 @@ lIndex = addTickerToTickerTable(pTicker)
 
 Dim lRow As Long
 If pGridRow > 0 Then
-    If isRowOccupied(pGridRow) Then
-        If getTickerFromGridRow(pGridRow).State <> MarketDataSourceStateError Then insertBlankRow pGridRow
-    End If
+    If isRowOccupied(pGridRow) Then insertBlankRow pGridRow
+'    If isRowOccupied(pGridRow) Then
+'        If getTickerFromGridRow(pGridRow).State <> MarketDataSourceStateError Then insertBlankRow pGridRow
+'    End If
     lRow = pGridRow
 Else
     lRow = allocateRow
@@ -2220,10 +2278,10 @@ On Error GoTo Err
 Dim i As Long
 For i = 1 To TickerGrid.Rows - 1
     If isRowOccupied(i) Then
-        If getTickerFromGridRow(i).State = MarketDataSourceStateError Then
-            allocateRow = i
-            Exit For
-        End If
+'        If getTickerFromGridRow(i).State = MarketDataSourceStateError Then
+'            allocateRow = i
+'            Exit For
+'        End If
     Else
         allocateRow = i
         Exit For
@@ -2397,17 +2455,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getTickerFromIndex(ByVal pIndex As Long) As IMarketDataSource
-If pIndex = 0 Then Exit Function
-Set getTickerFromIndex = mTickerTable(pIndex).DataSource
-End Function
-
 Private Function getFieldsHaveBeenSet(ByVal pIndex As Long) As Boolean
 getFieldsHaveBeenSet = mTickerTable(pIndex).FieldsHaveBeenSet
 End Function
 
 Private Function getTickerFromGridRow(ByVal pRow As Long) As IMarketDataSource
 Set getTickerFromGridRow = getTickerFromIndex(getTickerIndexFromGridRow(pRow))
+End Function
+
+Private Function getTickerFromIndex(ByVal pIndex As Long) As IMarketDataSource
+If pIndex = 0 Then Exit Function
+Set getTickerFromIndex = mTickerTable(pIndex).DataSource
 End Function
 
 Private Function getTickerGridRow( _
@@ -2436,18 +2494,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getTickerIndexFromGridRow(ByVal pRow As Long) As Long
-Const ProcName As String = "getTickerIndexFromGridRow"
-On Error GoTo Err
-
-getTickerIndexFromGridRow = TickerGrid.RowData(pRow)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Function getTickerIndex( _
                 ByVal pTicker As IMarketDataSource) As Long
 Const ProcName As String = "getTickerIndex"
@@ -2462,6 +2508,22 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getTickerIndexFromGridRow(ByVal pRow As Long) As Long
+Const ProcName As String = "getTickerIndexFromGridRow"
+On Error GoTo Err
+
+getTickerIndexFromGridRow = TickerGrid.RowData(pRow)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getTickerNameColumnValue(ByVal pRow As Long) As String
+getTickerNameColumnValue = TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.TickerName))
 End Function
 
 Private Sub insertBlankRow(ByVal pRow As Long)
@@ -2499,6 +2561,24 @@ Const ProcName As String = "isRowOccupied"
 On Error GoTo Err
 
 isRowOccupied = (getTickerIndexFromGridRow(pRow) <> 0)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isRowOccupiedNonError( _
+                ByVal pRow As Long) As Boolean
+Const ProcName As String = "isRowOccupiedNonError"
+On Error GoTo Err
+
+If Not isRowOccupied(TickerGrid.Row) Then
+Else
+    Dim lTicker As IMarketDataSource
+    Set lTicker = getTickerFromGridRow(TickerGrid.Row)
+    isRowOccupiedNonError = lTicker.State <> MarketDataSourceStateError
+End If
 
 Exit Function
 
@@ -2585,7 +2665,7 @@ Private Sub notifyTickerSymbolEntry()
 Const ProcName As String = "notifyTickerSymbolEntry"
 On Error GoTo Err
 
-RaiseEvent TickerSymbolEntered(TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName), mTickerSymbolRow)
+RaiseEvent TickerSymbolEntered(getTickerNameColumnValue(mTickerSymbolRow), mTickerSymbolRow)
 stopEnteringTickerSymbol
 
 Exit Sub
@@ -2599,16 +2679,12 @@ Const ProcName As String = "processAlphaNumericKey"
 On Error GoTo Err
 
 If TickerGrid.Row = 0 Then Exit Sub
-If isRowOccupied(TickerGrid.Row) Then
-    If getTickerFromGridRow(TickerGrid.Row).State <> MarketDataSourceStateError Then Exit Sub
-    clearRowError TickerGrid.Row
-End If
 
 If Not mEnteringTickerSymbol Then
-    mEnteringTickerSymbol = True
-    mTickerSymbolRow = TickerGrid.Row
+    If Not startEnteringTickerSymbol Then Exit Sub
 End If
-TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = TickerGrid.TextMatrix(TickerGrid.Row, TickerGridColumns.TickerName) & UCase$(Chr$(KeyAscii))
+
+setTickerNameColumnValue mTickerSymbolRow, getTickerNameColumnValue(mTickerSymbolRow) & UCase$(Chr$(KeyAscii))
 
 Exit Sub
 
@@ -2628,7 +2704,7 @@ lRow = getTickerGridRowFromIndex(lIndex)
     
 Select Case pDataSource.State
 Case MarketDataSourceStates.MarketDataSourceStateCreated
-    'TickerGrid.TextMatrix(lRow, mColumnMap(TickerGridColumns.TickerName)) = "Starting"
+    'setTickerNameColumnValue lRow,  "Starting"
 Case MarketDataSourceStates.MarketDataSourceStateReady
     setTickerFields lRow, gGetContractFromContractFuture(pDataSource.ContractFuture)
     setFieldsHaveBeenSet lIndex
@@ -2644,7 +2720,7 @@ Case MarketDataSourceStates.MarketDataSourceStateError
 Case MarketDataSourceStates.MarketDataSourceStateStopped, MarketDataSourceStates.MarketDataSourceStateFinished
     ' if the DataSource was stopped by the application via a call to IMarketDataSource.Finish (rather
     ' than via this control), the entry will still be in the grid so Remove it
-    If Not getTickerFromIndex(lIndex) Is Nothing Then removeTickerFromGrid pDataSource
+    If Not getTickerFromIndex(lIndex) Is Nothing Then removeTickerFromGrid pDataSource, True
 End Select
 
 Exit Sub
@@ -2681,38 +2757,45 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub removeTickerFromGrid( _
-                ByVal pTicker As IMarketDataSource)
+Private Function removeTickerFromGrid( _
+                ByVal pTicker As IMarketDataSource, _
+                ByVal pRemoveGridRow As Boolean) As IMarketDataSource
 Const ProcName As String = "removeTickerFromGrid"
 On Error GoTo Err
 
 Dim lRow As Long
 lRow = getTickerGridRow(pTicker)
 
-TickerGrid.RemoveItem lRow
-
 removeTickerFromConfig pTicker
 mTickers.Remove pTicker.Key
 
-Dim pIndex As Long
-pIndex = getTickerIndex(pTicker)
-Set mTickerTable(pIndex).DataSource = Nothing
-setTickerGridRowFromIndex pIndex, 0
-
-Dim lTicker As IMarketDataSource
-For Each lTicker In mTickers
-    If getTickerGridRow(lTicker) > lRow Then setTickerGridRow lTicker, getTickerGridRow(lTicker) - 1
-Next
+Dim lIndex As Long
+lIndex = getTickerIndex(pTicker)
+Set mTickerTable(lIndex).DataSource = Nothing
+setTickerGridRowFromIndex lIndex, 0
 
 mSelectedTickers.Remove pTicker
 
 If pTicker.State <> MarketDataSourceStateFinished Then stopListeningToTicker pTicker
 
-Exit Sub
+If pRemoveGridRow Then
+    TickerGrid.RemoveItem lRow
+
+    Dim lTicker As IMarketDataSource
+    For Each lTicker In mTickers
+        If getTickerGridRow(lTicker) > lRow Then setTickerGridRow lTicker, getTickerGridRow(lTicker) - 1
+    Next
+Else
+    clearGridRow lRow
+End If
+
+Set removeTickerFromGrid = pTicker
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub removeTickerFromConfig( _
                 ByVal pTicker As IMarketDataSource)
@@ -2745,7 +2828,7 @@ On Error GoTo Err
 Dim lTicker As IMarketDataSource
 Set lTicker = getTickerFromIndex(pIndex)
 If lTicker Is Nothing Then Exit Sub
-If lTicker.State = MarketDataSourceStateError Then Exit Sub
+'If lTicker.State = MarketDataSourceStateError Then Exit Sub
 
 mSelectedTickers.Add lTicker
 toggleRowHighlight getTickerGridRowFromIndex(pIndex)
@@ -2776,7 +2859,7 @@ Private Sub setColumnWidth( _
 Const ProcName As String = "setColumnWidth"
 On Error GoTo Err
 
-TickerGrid.colWidth(mColumnMap(pCol)) = IIf(isLetters, mLetterWidth, mDigitWidth) * widthChars
+TickerGrid.ColWidth(mColumnMap(pCol)) = IIf(isLetters, mLetterWidth, mDigitWidth) * widthChars
 
 Exit Sub
 
@@ -2826,8 +2909,8 @@ Private Sub setFieldsHaveBeenSet(ByVal pIndex As Long)
 mTickerTable(pIndex).FieldsHaveBeenSet = True
 End Sub
 
-Private Sub clearRowError(ByVal pRow As Long)
-Const ProcName As String = "clearRowError"
+Private Sub clearGridRow(ByVal pRow As Long)
+Const ProcName As String = "clearGridRow"
 On Error GoTo Err
 
 If pRow < 0 Then Exit Sub
@@ -2839,9 +2922,10 @@ For i = 1 To TickerGrid.Cols - 1
     TickerGrid.CellForeColor = 0
     TickerGrid.CellFontBold = False
     TickerGrid.EndCellEdit
+    TickerGrid.TextMatrix(pRow, i) = ""
 Next
 
-TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.ErrorText)) = ""
+TickerGrid.RowData(pRow) = 0
 
 Exit Sub
 
@@ -2924,6 +3008,10 @@ End Sub
 
 Private Sub setTickerIndexForRow(ByVal pRow As Long, ByVal pTickerIndex As Long)
 TickerGrid.RowData(pRow) = pTickerIndex
+End Sub
+
+Private Sub setTickerNameColumnValue(ByVal pRow As Long, ByVal pValue As String)
+TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.TickerName)) = pValue
 End Sub
 
 Private Sub setupColumnMap( _
@@ -3106,7 +3194,7 @@ With TickerGrid
     
     If (columnNumber + 1) > .Cols Then
         .Cols = columnNumber + 1
-        .colWidth(columnNumber) = 0
+        .ColWidth(columnNumber) = 0
     End If
     
     .ColData(columnNumber) = columnNumber
@@ -3123,13 +3211,39 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function startEnteringTickerSymbol() As Boolean
+Const ProcName As String = "startEnteringTickerSymbol"
+On Error GoTo Err
+
+If isRowOccupiedNonError(TickerGrid.Row) Then Exit Function
+
+mTickerSymbolRow = TickerGrid.Row
+mEnteringTickerSymbol = True
+
+If isRowOccupied(mTickerSymbolRow) Then
+    Dim lName As String
+    lName = getTickerNameColumnValue(mTickerSymbolRow)
+    
+    RaiseEvent ErroredTickerRemoved(removeTickerFromGrid(getTickerFromGridRow(TickerGrid.Row), False))
+    
+    setTickerNameColumnValue mTickerSymbolRow, lName
+End If
+
+startEnteringTickerSymbol = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub stopEnteringTickerSymbol()
 Const ProcName As String = "stopEnteringTickerSymbol"
 On Error GoTo Err
 
 If mEnteringTickerSymbol Then
     mEnteringTickerSymbol = False
-    'TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = ""
+    'setTickerNameColumnValue mTickerSymbolRow, ""
 End If
 
 Exit Sub
@@ -3158,7 +3272,7 @@ Private Sub stopTicker( _
 Const ProcName As String = "stopTicker"
 On Error GoTo Err
 
-removeTickerFromGrid pTicker
+removeTickerFromGrid pTicker, True
 If pTicker.IsMarketDataRequested Then pTicker.StopMarketData
 
 Exit Sub
@@ -3279,17 +3393,12 @@ Const ProcName As String = "truncateTickerSymbol"
 On Error GoTo Err
 
 If Not mEnteringTickerSymbol Then
-    If isRowOccupied(TickerGrid.Row) Then
-        If getTickerFromGridRow(TickerGrid.Row).State <> MarketDataSourceStateError Then Exit Sub
-        clearRowError TickerGrid.Row
-        mTickerSymbolRow = TickerGrid.Row
-        mEnteringTickerSymbol = True
-    End If
+    If Not startEnteringTickerSymbol Then Exit Sub
 End If
 
 Dim s As String
-s = TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName)
-If s <> "" Then TickerGrid.TextMatrix(mTickerSymbolRow, TickerGridColumns.TickerName) = Left$(s, Len(s) - 1)
+s = getTickerNameColumnValue(mTickerSymbolRow)
+If s <> "" Then setTickerNameColumnValue mTickerSymbolRow, Left$(s, Len(s) - 1)
 
 Exit Sub
 

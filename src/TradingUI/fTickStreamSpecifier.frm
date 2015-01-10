@@ -1,4 +1,5 @@
 VERSION 5.00
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.5#0"; "TWControls40.ocx"
 Begin VB.Form fTickStreamSpecifier 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Tickstream specifier"
@@ -22,24 +23,48 @@ Begin VB.Form fTickStreamSpecifier
       _ExtentX        =   11853
       _ExtentY        =   7408
    End
-   Begin VB.CommandButton OkButton 
-      Caption         =   "Ok"
+   Begin TWControls40.TWButton OkButton 
       Default         =   -1  'True
-      Enabled         =   0   'False
       Height          =   495
       Left            =   6840
       TabIndex        =   1
       Top             =   240
       Width           =   735
+      _ExtentX        =   0
+      _ExtentY        =   0
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Appearance      =   0
+      Caption         =   "Ok"
    End
-   Begin VB.CommandButton CancelButton 
+   Begin TWControls40.TWButton CancelButton 
       Cancel          =   -1  'True
-      Caption         =   "Cancel"
       Height          =   495
       Left            =   6840
       TabIndex        =   2
       Top             =   840
       Width           =   735
+      _ExtentX        =   0
+      _ExtentY        =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Appearance      =   0
+      Caption         =   "Cancel"
    End
 End
 Attribute VB_Name = "fTickStreamSpecifier"
@@ -60,6 +85,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -87,6 +114,8 @@ Private mCancelled                          As Boolean
 
 Private mTickfileSpecifiers                 As TickfileSpecifiers
 
+Private mTheme                              As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -96,8 +125,24 @@ mCancelled = True
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -147,8 +192,26 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get cancelled() As Boolean
-cancelled = mCancelled
+Public Property Get Cancelled() As Boolean
+Cancelled = mCancelled
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 Public Property Get TickfileSpecifiers() As TickfileSpecifiers

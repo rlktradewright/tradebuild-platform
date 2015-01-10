@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.5#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -34,6 +34,7 @@ Option Explicit
 '@================================================================================
 
 Implements IContractSelector
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -69,8 +70,7 @@ Private Enum ContractsGridColumns
     CurrencyCode
     Strike = CurrencyCode
     OptionRight
-'    Filler
-'    Description
+    Description
     MaxColumn = OptionRight
 End Enum
 
@@ -83,8 +83,7 @@ Private Enum ContractsGridColumnWidths
     CurrencyWidth = 9
     'StrikeWidth = 9
     OptionRightWidth = 5
-    DescriptionWidth = 20
-    FillerWidth = 500
+    DescriptionWidth = 50
 End Enum
 
 '@================================================================================
@@ -96,6 +95,12 @@ End Enum
 '@================================================================================
 
 Private Const ModuleName                            As String = "ContractSelector"
+
+Private Const PropNameForecolor                     As String = "ForeColor"
+Private Const PropNameIncludeHistoricalContracts    As String = "IncludeHistoricalContracts"
+Private Const PropNameRowBackColorEven              As String = "RowBackColorEven"
+Private Const PropNameRowBackColorOdd               As String = "RowBackColorOdd"
+Private Const PropNameScrollBars                    As String = "ScrollBars"
 
 '@================================================================================
 ' Member variables
@@ -122,6 +127,8 @@ Private mAltDown                                    As Boolean
 Private mSelectedRows                               As Collection
 
 Private mCount                                      As Long
+
+Private mTheme                                      As ITheme
 
 '@================================================================================
 ' Class Event Handlers
@@ -168,6 +175,8 @@ Private Sub UserControl_InitProperties()
 Const ProcName As String = "UserControl_InitProperties"
 On Error GoTo Err
 
+ForeColor = vbWindowText
+IncludeHistoricalContracts = False
 RowBackColorEven = CRowBackColorEven
 RowBackColorOdd = CRowBackColorOdd
 ScrollBars = flexScrollBarBoth
@@ -183,9 +192,11 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 Const ProcName As String = "UserControl_ReadProperties"
 On Error GoTo Err
 
-TWGrid1.RowBackColorOdd = PropBag.ReadProperty("RowBackColorOdd", CRowBackColorOdd)
-TWGrid1.RowBackColorEven = PropBag.ReadProperty("RowBackColorEven", CRowBackColorEven)
-TWGrid1.ScrollBars = PropBag.ReadProperty("ScrollBars", 3)
+ForeColor = PropBag.ReadProperty(PropNameForecolor, vbWindowText)
+IncludeHistoricalContracts = PropBag.ReadProperty(PropNameIncludeHistoricalContracts, False)
+RowBackColorOdd = PropBag.ReadProperty(PropNameRowBackColorOdd, CRowBackColorOdd)
+RowBackColorEven = PropBag.ReadProperty(PropNameRowBackColorEven, CRowBackColorEven)
+ScrollBars = PropBag.ReadProperty("ScrollBars", 3)
 
 setupGrid
 
@@ -214,9 +225,11 @@ Const ProcName As String = "UserControl_WriteProperties"
 On Error GoTo Err
 
 On Error Resume Next
+Call PropBag.WriteProperty(PropNameForecolor, TWGrid1.ForeColor, vbWindowText)
+Call PropBag.WriteProperty(PropNameIncludeHistoricalContracts, IncludeHistoricalContracts, False)
 Call PropBag.WriteProperty("ScrollBars", TWGrid1.ScrollBars, 3)
-Call PropBag.WriteProperty("RowBackColorOdd", TWGrid1.RowBackColorOdd, 0)
-Call PropBag.WriteProperty("RowBackColorEven", TWGrid1.RowBackColorEven, 0)
+Call PropBag.WriteProperty(PropNameRowBackColorOdd, TWGrid1.RowBackColorOdd, CRowBackColorOdd)
+Call PropBag.WriteProperty(PropNameRowBackColorEven, RowBackColorEven, CRowBackColorEven)
 
 Exit Sub
 
@@ -245,6 +258,26 @@ Const ProcName As String = "IContractSelector_SelectedContracts"
 On Error GoTo Err
 
 Set IContractSelector_SelectedContracts = SelectedContracts
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
 
 Exit Property
 
@@ -398,12 +431,31 @@ End Sub
 '@================================================================================
 
 Public Property Get Count() As Long
+Attribute Count.VB_MemberFlags = "400"
 Count = mCount
 End Property
 
+Public Property Let ForeColor(ByVal Value As OLE_COLOR)
+Const ProcName As String = "ForeColor"
+On Error GoTo Err
+
+TWGrid1.ForeColor = Value
+PropertyChanged PropNameForecolor
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get ForeColor() As OLE_COLOR
+ForeColor = TWGrid1.ForeColor
+End Property
+
 Public Property Let IncludeHistoricalContracts( _
-                ByVal value As Boolean)
-mIncludeHistoricalContracts = value
+                ByVal Value As Boolean)
+mIncludeHistoricalContracts = Value
+PropertyChanged PropNameIncludeHistoricalContracts
 End Property
 
 Public Property Get IncludeHistoricalContracts() As Boolean
@@ -427,7 +479,8 @@ Const ProcName As String = "RowBackColorEven"
 On Error GoTo Err
 
 TWGrid1.RowBackColorEven = New_RowBackColorEven
-PropertyChanged "RowBackColorEven"
+TWGrid1.BackColorBkg = New_RowBackColorEven
+PropertyChanged PropNameRowBackColorEven
 
 Exit Property
 
@@ -452,7 +505,7 @@ Const ProcName As String = "RowBackColorOdd"
 On Error GoTo Err
 
 TWGrid1.RowBackColorOdd = New_RowBackColorOdd
-PropertyChanged "RowBackColorOdd"
+PropertyChanged PropNameRowBackColorOdd
 
 Exit Property
 
@@ -477,7 +530,7 @@ Const ProcName As String = "ScrollBars"
 On Error GoTo Err
 
 TWGrid1.ScrollBars = New_ScrollBars
-PropertyChanged "ScrollBars"
+PropertyChanged PropNameScrollBars
 
 Exit Property
 
@@ -486,6 +539,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SelectedContracts() As IContracts
+Attribute SelectedContracts.VB_MemberFlags = "400"
 Const ProcName As String = "SelectedContracts"
 On Error GoTo Err
 
@@ -507,14 +561,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let TextboxBackColor(ByVal value As OLE_COLOR)
-Const ProcName As String = "TextboxBackColor"
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
 On Error GoTo Err
 
-TWGrid1.RowBackColorEven = value
-TWGrid1.RowBackColorOdd = toneDown(value)
-TWGrid1.BackColorBkg = value
-
+Set mTheme = Value
+TWGrid1.Theme = Value
 
 Exit Property
 
@@ -522,24 +574,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TextboxBackColor() As OLE_COLOR
-TextboxBackColor = TWGrid1.RowBackColorEven
-End Property
-
-Public Property Let TextboxForeColor(ByVal value As OLE_COLOR)
-Const ProcName As String = "TextboxForeColor"
-On Error GoTo Err
-
-TWGrid1.ForeColor = value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get TextboxForeColor() As OLE_COLOR
-TextboxForeColor = TWGrid1.ForeColor
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================
@@ -862,13 +898,14 @@ TWGrid1.FixedCols = 0
 TWGrid1.HighLight = TwGridHighlightNever
 TWGrid1.Rows = 1
 TWGrid1.SelectionMode = TwGridSelectionByRow
-TWGrid1.BackColorBkg = SystemColorConstants.vbWindowBackground
 TWGrid1.FocusRect = TwGridFocusNone
+TWGrid1.PopupScrollbars = True
 
 setupGridColumn 0, ContractsGridColumns.secType, ContractsGridColumnWidths.SecTypeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupGridColumn 0, ContractsGridColumns.Exchange, ContractsGridColumnWidths.ExchangeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupGridColumn 0, ContractsGridColumns.CurrencyCode, ContractsGridColumnWidths.CurrencyWidth, True, TWControls40.AlignmentSettings.TwGridAlignCenterCenter
 setupGridColumn 0, ContractsGridColumns.OptionRight, ContractsGridColumnWidths.OptionRightWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
+setupGridColumn 0, ContractsGridColumns.Description, ContractsGridColumnWidths.DescriptionWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 
 Exit Sub
 
@@ -890,7 +927,7 @@ With TWGrid1
     
     If (columnNumber + 1) > .Cols Then
         .Cols = columnNumber + 1
-        .colWidth(columnNumber) = 0
+        .ColWidth(columnNumber) = 0
     End If
     
     .ColData(columnNumber) = columnNumber
@@ -902,7 +939,7 @@ With TWGrid1
         lColumnWidth = mDigitWidth * columnWidth
     End If
     
-    .colWidth(columnNumber) = lColumnWidth
+    .ColWidth(columnNumber) = lColumnWidth
     
     .ColAlignment(columnNumber) = align
 End With
@@ -1016,8 +1053,8 @@ With pContract.Specifier
         End If
     End If
         
-    'TWGrid1.col = ContractsGridColumns.Description
-    'TWGrid1.Text = lContract.Description
+    TWGrid1.col = ContractsGridColumns.Description
+    TWGrid1.Text = pContract.Description
     
     Select Case .secType
         Case SecTypeFuture
@@ -1044,3 +1081,4 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+

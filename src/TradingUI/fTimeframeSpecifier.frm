@@ -1,4 +1,5 @@
 VERSION 5.00
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.5#0"; "TWControls40.ocx"
 Begin VB.Form fTimeframeSpecifier 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Specify a timeframe"
@@ -21,24 +22,48 @@ Begin VB.Form fTimeframeSpecifier
       Width           =   2535
       _ExtentX        =   4471
       _ExtentY        =   1508
+      BackColor       =   -2147483643
+      ForeColor       =   -2147483640
    End
-   Begin VB.CommandButton CancelButton 
-      Caption         =   "Cancel"
+   Begin TWControls40.TWButton CancelButton 
       Height          =   375
       Left            =   2760
       TabIndex        =   1
       Top             =   600
       Width           =   735
+      _ExtentX        =   0
+      _ExtentY        =   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Cancel"
    End
-   Begin VB.CommandButton OkButton 
-      Caption         =   "Ok"
+   Begin TWControls40.TWButton OkButton 
       Default         =   -1  'True
-      Enabled         =   0   'False
       Height          =   375
       Left            =   2760
       TabIndex        =   0
       Top             =   120
       Width           =   735
+      _ExtentX        =   0
+      _ExtentY        =   0
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Ok"
    End
 End
 Attribute VB_Name = "fTimeframeSpecifier"
@@ -61,6 +86,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -85,6 +112,8 @@ Private Const ModuleName As String = "fTimeframeSpecifier"
 '@================================================================================
 
 Private mCancelled As Boolean
+
+Private mTheme                              As ITheme
 
 '@================================================================================
 ' Class Event Handlers
@@ -120,8 +149,24 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -179,8 +224,26 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get cancelled() As Boolean
-cancelled = mCancelled
+Friend Property Get Cancelled() As Boolean
+Cancelled = mCancelled
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 Friend Property Get TimePeriod() As TimePeriod

@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#214.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#232.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -57,6 +57,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -183,6 +185,8 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mTitle                                          As String
 
+Private mTheme                                          As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -260,6 +264,26 @@ On Error Resume Next
 'PropBag.WriteProperty PropNamePeriodWidth, mInitialStyle.PeriodWidth, PropDfltPeriodWidth
 'PropBag.WriteProperty PropNameYAxisWidthCm, mInitialStyle.YAxisWidthCm, PropDfltYAxisWidthCm
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Chart1 Event Handlers
@@ -718,17 +742,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-'Public Property Get DataSource() As IMarketDataSource
-'Const ProcName As String = "DataSource"
-'On Error GoTo Err
-'
-'Set DataSource = mDataSource
-'
-'Exit Property
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Property
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
 
 Public Property Get TimeframeCaption() As String
 Attribute TimeframeCaption.VB_MemberFlags = "400"

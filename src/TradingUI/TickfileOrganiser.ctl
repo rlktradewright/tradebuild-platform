@@ -1,52 +1,87 @@
 VERSION 5.00
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl TickfileOrganiser 
+   BackStyle       =   0  'Transparent
    ClientHeight    =   2295
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   8400
    ScaleHeight     =   2295
    ScaleWidth      =   8400
-   Begin TradingUI27.TickfileChooser TickfileChooser1 
-      Left            =   6720
-      Top             =   1440
-      _ExtentX        =   1296
-      _ExtentY        =   873
-   End
-   Begin TradingUI27.TickfileListManager TickfileListManager1 
-      Height          =   1935
-      Left            =   0
+   Begin TWControls40.TWButton AddTickstreamsButton 
+      Height          =   375
+      Left            =   2160
       TabIndex        =   3
-      Top             =   0
-      Width           =   5175
-      _ExtentX        =   9128
-      _ExtentY        =   3413
-   End
-   Begin VB.CommandButton ClearButton 
-      Caption         =   "Clear"
-      Enabled         =   0   'False
-      Height          =   360
-      Left            =   0
-      TabIndex        =   0
       Top             =   1920
-      Width           =   735
-   End
-   Begin VB.CommandButton AddTickfilesButton 
-      Caption         =   "Add &files..."
+      Width           =   1215
+      _ExtentX        =   2143
+      _ExtentY        =   661
       Enabled         =   0   'False
-      Height          =   360
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Add &streams..."
+   End
+   Begin TWControls40.TWButton AddTickfilesButton 
+      Height          =   375
       Left            =   840
       TabIndex        =   2
       Top             =   1920
       Width           =   1215
-   End
-   Begin VB.CommandButton AddTickstreamsButton 
-      Caption         =   "Add &streams..."
+      _ExtentX        =   2143
+      _ExtentY        =   661
       Enabled         =   0   'False
-      Height          =   360
-      Left            =   2160
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Add &files..."
+   End
+   Begin TWControls40.TWButton ClearButton 
+      Height          =   375
+      Left            =   0
       TabIndex        =   1
       Top             =   1920
-      Width           =   1215
+      Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   661
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Clear"
+   End
+   Begin TradingUI27.TickfileListManager TickfileListManager1 
+      Height          =   1920
+      Left            =   0
+      TabIndex        =   0
+      Top             =   0
+      Width           =   5175
+      _ExtentX        =   9128
+      _ExtentY        =   3387
+   End
+   Begin TradingUI27.TickfileChooser TickfileChooser1 
+      Left            =   0
+      Top             =   1800
+      _ExtentX        =   1296
+      _ExtentY        =   873
    End
 End
 Attribute VB_Name = "TickfileOrganiser"
@@ -64,6 +99,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -97,6 +134,10 @@ Private mEnabled                                    As Boolean
 
 Private mMinimumHeight                              As Long
 Private mMinimumWidth                               As Long
+
+Private mTheme                                      As ITheme
+
+Private mTickstreamSpecifier                        As fTickStreamSpecifier
 
 '@================================================================================
 ' Class Event Handlers
@@ -139,8 +180,24 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -153,7 +210,7 @@ On Error GoTo Err
 Dim tickfileNames() As String
 tickfileNames = TickfileChooser1.ChooseTickfiles
 
-If TickfileChooser1.cancelled Then Exit Sub
+If TickfileChooser1.Cancelled Then Exit Sub
 
 TickfileListManager1.AddTickfileNames tickfileNames
 
@@ -167,18 +224,17 @@ Private Sub AddTickstreamsButton_Click()
 Const ProcName As String = "AddTickstreamsButton_Click"
 On Error GoTo Err
 
-Static sTickstreamSpecifier As fTickStreamSpecifier
-
-If sTickstreamSpecifier Is Nothing Then
-    Set sTickstreamSpecifier = New fTickStreamSpecifier
-    sTickstreamSpecifier.Initialise mTickfileStore, mPrimaryContractStore, mSecondaryContractStore
+If mTickstreamSpecifier Is Nothing Then
+    Set mTickstreamSpecifier = New fTickStreamSpecifier
+    mTickstreamSpecifier.Theme = mTheme
+    mTickstreamSpecifier.Initialise mTickfileStore, mPrimaryContractStore, mSecondaryContractStore
 End If
 
-sTickstreamSpecifier.Show vbModal
+mTickstreamSpecifier.Show vbModal
 
-If sTickstreamSpecifier.cancelled Then Exit Sub
+If mTickstreamSpecifier.Cancelled Then Exit Sub
 
-TickfileListManager1.AddTickfileSpecifiers sTickstreamSpecifier.TickfileSpecifiers
+TickfileListManager1.AddTickfileSpecifiers mTickstreamSpecifier.TickfileSpecifiers
 
 Exit Sub
 
@@ -282,6 +338,25 @@ End Property
 
 Public Property Get MinimumWidth() As Long
 MinimumWidth = mMinimumWidth
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+UserControl.BackColor = mTheme.BackColor
+UserControl.ForeColor = mTheme.GridForeColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = TickfileListManager1.Theme
 End Property
 
 Public Property Get TickfileCount() As Long

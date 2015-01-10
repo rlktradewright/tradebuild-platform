@@ -29,7 +29,7 @@ Implements StateChangeListener
 ' Events
 '@================================================================================
 
-Event cancelled()
+Event Cancelled()
 Event Error(ev As ErrorEventData)
 Event Ready()
 Event ShowContractSelector()
@@ -90,7 +90,7 @@ Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
 If mContractsFuture.IsCancelled Then
-    RaiseEvent cancelled
+    RaiseEvent Cancelled
 ElseIf mContractsFuture.IsFaulted Then
     Dim lEv As ErrorEventData
     Set lEv.Source = Me
@@ -99,7 +99,7 @@ ElseIf mContractsFuture.IsFaulted Then
     lEv.ErrorSource = mContractsFuture.ErrorSource
     RaiseEvent Error(lEv)
 Else
-    Set mContracts = mContractsFuture.Value
+    Set mContracts = mContractsFuture.value
     mReady = True
     If mContracts.Count > 1 Then
         DeferAction Me, pMayYield:=True

@@ -65,6 +65,7 @@ Begin VB.Form fChart
       _ExtentY        =   582
       BandCount       =   4
       BackColor       =   -2147483638
+      BandBorders     =   0   'False
       _CBWidth        =   12525
       _CBHeight       =   330
       _Version        =   "6.7.9816"
@@ -75,12 +76,12 @@ Begin VB.Form fChart
       NewRow1         =   0   'False
       Child2          =   "BarFormatterPicker"
       MinWidth2       =   1185
-      MinHeight2      =   330
+      MinHeight2      =   270
       Width2          =   1185
       NewRow2         =   0   'False
       Child3          =   "ChartStylePicker"
       MinWidth3       =   1185
-      MinHeight3      =   330
+      MinHeight3      =   270
       Width3          =   1185
       NewRow3         =   0   'False
       Child4          =   "ChartNavToolbar1"
@@ -89,14 +90,14 @@ Begin VB.Form fChart
       Width4          =   6465
       NewRow4         =   0   'False
       Begin TradingUI27.ChartStylePicker ChartStylePicker 
-         Height          =   330
-         Left            =   3795
+         Height          =   270
+         Left            =   3735
          TabIndex        =   5
          ToolTipText     =   "Change the chart style"
-         Top             =   0
+         Top             =   30
          Width           =   1185
          _ExtentX        =   2090
-         _ExtentY        =   582
+         _ExtentY        =   476
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -109,14 +110,14 @@ Begin VB.Form fChart
          ListWidth       =   3000
       End
       Begin TradingUI27.BarFormatterPicker BarFormatterPicker 
-         Height          =   330
-         Left            =   2340
+         Height          =   270
+         Left            =   2310
          TabIndex        =   4
          ToolTipText     =   "Change the bar formatting"
-         Top             =   0
+         Top             =   30
          Width           =   1185
          _ExtentX        =   2090
-         _ExtentY        =   582
+         _ExtentY        =   476
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -130,7 +131,7 @@ Begin VB.Form fChart
       End
       Begin TradingUI27.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   5250
+         Left            =   5160
          TabIndex        =   2
          Top             =   0
          Width           =   6465
@@ -148,7 +149,6 @@ Begin VB.Form fChart
          ButtonWidth     =   609
          ButtonHeight    =   582
          Wrappable       =   0   'False
-         Appearance      =   1
          Style           =   1
          ImageList       =   "ImageList1"
          _Version        =   393216
@@ -202,6 +202,7 @@ Option Explicit
 '================================================================================
 
 Implements IGenericTickListener
+Implements IThemeable
 Implements StateChangeListener
 
 '================================================================================
@@ -222,7 +223,6 @@ Private Const ChartToolsCommandFib                  As String = "fib"
 Private Const ConfigSectionChart                    As String = "Chart"
 Private Const ConfigSectionMultiChart               As String = "MultiChart"
 
-'Private Const ConfigSettingHistorical               As String = "&Historical"
 Private Const ConfigSettingHeight                   As String = "&Height"
 Private Const ConfigSettingLeft                     As String = "&Left"
 Private Const ConfigSettingTop                      As String = "&Top"
@@ -276,6 +276,8 @@ Private mTimePeriodValidator                    As ITimePeriodValidator
 Private mOwner                                  As Variant
 
 Private mIsInitialised                          As Boolean
+
+Private mTheme                                          As ITheme
 
 '================================================================================
 ' Class Event Handlers
@@ -407,6 +409,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '================================================================================
 ' StateChangeListener Interface Members
 '================================================================================
@@ -449,7 +471,8 @@ Case ChartToolsCommandStudies
     gShowStudyPicker MultiChart1.ChartManager, _
                     mSymbol & _
                     " (" & MultiChart1.TimePeriod.ToString & ")", _
-                    mOwner
+                    mOwner, _
+                    mTheme
 Case ChartToolsCommandSelection
     setSelectionMode
 Case ChartToolsCommandLines
@@ -629,6 +652,24 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '================================================================================
@@ -1045,6 +1086,8 @@ Case WindowStateMinimized
 Case WindowStateNormal
     Me.WindowState = FormWindowStateConstants.vbNormal
 End Select
+
+resize
 
 Exit Sub
 

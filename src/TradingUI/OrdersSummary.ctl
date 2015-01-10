@@ -100,6 +100,7 @@ Option Explicit
 Implements ChangeListener
 Implements CollectionChangeListener
 Implements IProfitListener
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -254,6 +255,8 @@ Private mMonitoredPositions                                 As New EnumerableCol
     
 Private mIsEditing                                          As Boolean
 Private mEditedCol                                          As Long
+
+Private mTheme                                              As ITheme
 
 '@================================================================================
 ' User Control Event Handlers
@@ -532,7 +535,27 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Form Control Event Handlers
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+'@================================================================================
+' Control Event Handlers
 '@================================================================================
 
 Private Sub EditText_KeyDown(KeyCode As Integer, Shift As Integer)
@@ -708,6 +731,29 @@ End Property
 
 Public Property Get SelectedOrderIndex() As Long
 SelectedOrderIndex = getBracketOrderGridIndex(mSelectedBracketOrder)
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+BracketOrderGrid.BackColorBkg = mTheme.TextBackColor
+BracketOrderGrid.BackColor = mTheme.TextBackColor
+BracketOrderGrid.BackColorFixed = mTheme.GridBackColorFixed
+BracketOrderGrid.ForeColor = mTheme.GridForeColor
+BracketOrderGrid.ForeColorFixed = mTheme.GridForeColorFixed
+BracketOrderGrid.GridColor = mTheme.TextBackColor
+BracketOrderGrid.GridColorFixed = mTheme.GridLineColorFixed
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================
@@ -919,15 +965,15 @@ If pIndex < 0 Then
     Next
     
     If pIndex < 0 Then
-        BracketOrderGrid.addItem ""
+        BracketOrderGrid.AddItem ""
         pIndex = BracketOrderGrid.Rows - 1
     ElseIf GridColumn(pIndex, Symbol) = "" Then
         GridColumn(pIndex, Symbol) = pSymbol
     Else
-        BracketOrderGrid.addItem "", pIndex
+        BracketOrderGrid.AddItem "", pIndex
     End If
 Else
-    BracketOrderGrid.addItem "", pIndex
+    BracketOrderGrid.AddItem "", pIndex
 End If
 
 GridColumn(pIndex, Symbol) = pSymbol
@@ -1018,19 +1064,19 @@ With mBracketOrderGridMappingTable(index)
     
     If .EntryGridOffset >= 0 Then
         lIndex = .GridIndex + .EntryGridOffset
-        BracketOrderGrid.rowHeight(lIndex) = 0
+        BracketOrderGrid.RowHeight(lIndex) = 0
     End If
     If .StopLossGridOffset >= 0 Then
         lIndex = .GridIndex + .StopLossGridOffset
-        BracketOrderGrid.rowHeight(lIndex) = 0
+        BracketOrderGrid.RowHeight(lIndex) = 0
     End If
     If .TargetGridOffset >= 0 Then
         lIndex = .GridIndex + .TargetGridOffset
-        BracketOrderGrid.rowHeight(lIndex) = 0
+        BracketOrderGrid.RowHeight(lIndex) = 0
     End If
     If .CloseoutGridOffset >= 0 Then
         lIndex = .GridIndex + .CloseoutGridOffset
-        BracketOrderGrid.rowHeight(lIndex) = 0
+        BracketOrderGrid.RowHeight(lIndex) = 0
     End If
     
     If Not preserveCurrentExpandedState Then
@@ -1079,7 +1125,7 @@ lSymbol = GridColumn(mPositionManagerGridMappingTable(index).GridIndex, Symbol)
 Dim i As Long
 i = mPositionManagerGridMappingTable(index).GridIndex + 1
 Do While GridColumn(i, Symbol) = lSymbol And gridRowIsBracketOrder(i)
-    BracketOrderGrid.rowHeight(i) = 0
+    BracketOrderGrid.RowHeight(i) = 0
     
     Dim lBracketOrderIndex As Long
     lBracketOrderIndex = getBracketOrderGridMappingIndexFromRowIndex(i)
@@ -1305,19 +1351,19 @@ With mBracketOrderGridMappingTable(index)
     
     If .EntryGridOffset >= 0 Then
         lIndex = .GridIndex + .EntryGridOffset
-        If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.rowHeight(lIndex) = -1
+        If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.RowHeight(lIndex) = -1
     End If
     If .StopLossGridOffset >= 0 Then
         lIndex = .GridIndex + .StopLossGridOffset
-        If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.rowHeight(lIndex) = -1
+        If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.RowHeight(lIndex) = -1
     End If
     If .TargetGridOffset >= 0 Then
         lIndex = .GridIndex + .TargetGridOffset
-        If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.rowHeight(lIndex) = -1
+        If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.RowHeight(lIndex) = -1
     End If
     If .CloseoutGridOffset >= 0 Then
         lIndex = .GridIndex + .CloseoutGridOffset
-        If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.rowHeight(lIndex) = -1
+        If Not preserveCurrentExpandedState Or .IsExpanded Then BracketOrderGrid.RowHeight(lIndex) = -1
     End If
     
     If Not preserveCurrentExpandedState Then
@@ -1366,7 +1412,7 @@ lSymbol = GridColumn(mPositionManagerGridMappingTable(index).GridIndex, Symbol)
 Dim i As Long
 i = mPositionManagerGridMappingTable(index).GridIndex + 1
 Do While GridColumn(i, Symbol) = lSymbol And gridRowIsBracketOrder(i)
-    BracketOrderGrid.rowHeight(i) = -1
+    BracketOrderGrid.RowHeight(i) = -1
     
     Dim lBracketOrderIndex As Long
     lBracketOrderIndex = getBracketOrderGridMappingIndexFromRowIndex(i)
@@ -1582,7 +1628,7 @@ With BracketOrderGrid
     .AllowUserResizing = flexResizeBoth
     
     .Cols = 0
-    .Rows = 20
+    .Rows = 100
     .FixedRows = 3
     ' .FixedCols = 1
     
@@ -1655,7 +1701,7 @@ With BracketOrderGrid
     If (columnNumber + 1) > .Cols Then
         For i = .Cols To columnNumber
             .Cols = i + 1
-            .colWidth(i) = 0
+            .ColWidth(i) = 0
         Next
     End If
     
@@ -1665,8 +1711,8 @@ With BracketOrderGrid
         lColumnWidth = mDigitWidth * columnWidth
     End If
     
-    If .colWidth(columnNumber) < lColumnWidth Then
-        .colWidth(columnNumber) = lColumnWidth
+    If .ColWidth(columnNumber) < lColumnWidth Then
+        .ColWidth(columnNumber) = lColumnWidth
     End If
     
     .ColAlignment(columnNumber) = align

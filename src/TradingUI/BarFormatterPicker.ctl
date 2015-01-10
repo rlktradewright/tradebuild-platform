@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#11.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#24.1#0"; "TWControls40.ocx"
 Begin VB.UserControl BarFormatterPicker 
    BackStyle       =   0  'Transparent
    ClientHeight    =   345
@@ -9,13 +9,14 @@ Begin VB.UserControl BarFormatterPicker
    ScaleHeight     =   345
    ScaleWidth      =   3645
    Begin TWControls40.TWImageCombo Combo1 
-      Height          =   330
+      Height          =   270
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   3615
       _ExtentX        =   6376
-      _ExtentY        =   582
+      _ExtentY        =   476
+      Appearance      =   0
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -44,6 +45,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -78,6 +81,8 @@ Private WithEvents mMarketChart                     As MarketChart
 Attribute mMarketChart.VB_VarHelpID = -1
 Private WithEvents mMultiChart                      As MultiChart
 Attribute mMultiChart.VB_VarHelpID = -1
+
+Private mTheme                                      As ITheme
 
 '@================================================================================
 ' Class Event Handlers
@@ -135,8 +140,24 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -246,6 +267,7 @@ End Sub
 '@================================================================================
 
 Public Property Get BackColor() As OLE_COLOR
+Attribute BackColor.VB_UserMemId = -501
 Const ProcName As String = "BackColor"
 On Error GoTo Err
 
@@ -316,6 +338,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Font() As Font
+Attribute Font.VB_UserMemId = -512
 Const ProcName As String = "Font"
 On Error GoTo Err
 
@@ -341,6 +364,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ForeColor() As OLE_COLOR
+Attribute ForeColor.VB_UserMemId = -513
 Const ProcName As String = "ForeColor"
 On Error GoTo Err
 
@@ -407,6 +431,23 @@ Public Property Get ListWidth() As Long
 ListWidth = Combo1.ListWidth
 End Property
 
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+Combo1.Theme = mTheme
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
 Public Property Get ToolTipText() As String
 Const ProcName As String = "ToolTipText"
 On Error GoTo Err
@@ -469,7 +510,7 @@ Public Sub SelectBarFormatter(ByVal pBarFormatterName As String)
 Const ProcName As String = "SelectBarFormatter"
 On Error GoTo Err
 
-Combo1.ComboItems.item(pBarFormatterName).Selected = True
+Combo1.ComboItems.Item(pBarFormatterName).Selected = True
 
 Exit Sub
 

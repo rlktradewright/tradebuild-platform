@@ -62,6 +62,14 @@ Private Const ModuleName                            As String = "NativeTheme"
 ' Properties
 '@================================================================================
 
+Private Property Get ITheme_AlertForeColor() As stdole.OLE_COLOR
+ITheme_AlertForeColor = &H80&
+End Property
+
+Private Property Get ITheme_Appearance() As AppearanceSettings
+ITheme_Appearance = AppearanceFlat
+End Property
+
 Private Property Get ITheme_BackColor() As stdole.OLE_COLOR
 ITheme_BackColor = SystemColorConstants.vbButtonFace
 End Property
@@ -82,6 +90,34 @@ Private Property Get ITheme_BackColorTrade() As stdole.OLE_COLOR
 ITheme_BackColorTrade = &HC1F7CA
 End Property
 
+Private Property Get ITheme_BorderStyle() As BorderStyleSettings
+ITheme_BorderStyle = BorderStyleNone
+End Property
+
+Private Property Get ITheme_ButtonBackColor() As stdole.OLE_COLOR
+ITheme_ButtonBackColor = SystemColorConstants.vbButtonFace
+End Property
+
+Private Property Get ITheme_ButtonForeColor() As stdole.OLE_COLOR
+ITheme_ButtonForeColor = SystemColorConstants.vbButtonText
+End Property
+
+Private Property Get ITheme_CoolbarBackColor() As stdole.OLE_COLOR
+ITheme_CoolbarBackColor = vbButtonFace
+End Property
+
+Private Property Get ITheme_DefaultBorderColor() As stdole.OLE_COLOR
+ITheme_DefaultBorderColor = &HFF7800
+End Property
+
+Private Property Get ITheme_DisabledBackColor() As stdole.OLE_COLOR
+ITheme_DisabledBackColor = vbInactiveTitleBar
+End Property
+
+Private Property Get ITheme_FocusBorderColor() As stdole.OLE_COLOR
+ITheme_FocusBorderColor = &HA800&
+End Property
+
 Private Property Get ITheme_ForeColor() As stdole.OLE_COLOR
 ITheme_ForeColor = SystemColorConstants.vbButtonText
 End Property
@@ -96,6 +132,34 @@ End Property
 
 Private Property Get ITheme_ForeColorTrade() As stdole.OLE_COLOR
 ITheme_ForeColorTrade = vbBlack
+End Property
+
+Private Property Get ITheme_MouseoverBackColor() As stdole.OLE_COLOR
+ITheme_MouseoverBackColor = vbButtonStandard
+End Property
+
+Private Property Get ITheme_NonDefaultBorderColor() As stdole.OLE_COLOR
+ITheme_NonDefaultBorderColor = vbButtonShadow
+End Property
+
+Private Property Get ITheme_PushedBackColor() As stdole.OLE_COLOR
+ITheme_PushedBackColor = vb3DHighlight
+End Property
+
+Private Property Get ITheme_StatusBarBackColor() As stdole.OLE_COLOR
+ITheme_StatusBarBackColor = vbButtonFace
+End Property
+
+Private Property Get ITheme_StatusBarForeColor() As stdole.OLE_COLOR
+ITheme_StatusBarForeColor = vbButtonText
+End Property
+
+Private Property Get ITheme_TabstripBackColor() As stdole.OLE_COLOR
+ITheme_TabstripBackColor = vbButtonFace
+End Property
+
+Private Property Get ITheme_TabstripForeColor() As stdole.OLE_COLOR
+ITheme_TabstripForeColor = vbButtonText
 End Property
 
 Private Property Get ITheme_TextBackColor() As stdole.OLE_COLOR
@@ -156,6 +220,10 @@ End Property
 
 Private Property Get ITheme_GridRowBackColorOdd() As stdole.OLE_COLOR
 ITheme_GridRowBackColorOdd = &HF8F8F8
+End Property
+
+Private Property Get ITheme_ToolbarBackColor() As stdole.OLE_COLOR
+ITheme_ToolbarBackColor = &HA8A8E0
 End Property
 
 '@================================================================================

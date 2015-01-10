@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#12.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl DOMDisplay 
    ClientHeight    =   1725
    ClientLeft      =   0
@@ -44,6 +44,7 @@ Option Explicit
 
 Implements DeferredAction
 Implements IMarketDepthListener
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -56,11 +57,21 @@ Event Resumed()
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "DOMDisplay"
+Private Const ModuleName                            As String = "DOMDisplay"
 
-Private Const ScrollbarWidth As Long = 370  ' value discovered by trial and error!
+Private Const DeferredCommandCentre                 As String = "Centre"
 
-Private Const DeferredCommandCentre     As String = "Centre"
+Private Const PropNameBackColorAsk                  As String = "BackColorAsk"
+Private Const PropNameBackColorBid                  As String = "BackColorBid"
+Private Const PropNameBackColorFixed                As String = "BackColorFixed"
+Private Const PropNameBackColorTrade                As String = "BackColorTrade"
+Private Const PropNameForeColorAsk                  As String = "ForeColorAsk"
+Private Const PropNameForeColorBid                  As String = "ForeColorBid"
+Private Const PropNameForecolor                     As String = "ForeColor"
+Private Const PropNameForeColorFixed                As String = "ForeColorFixed"
+Private Const PropNameForeColorTrade                As String = "ForeColorTrade"
+Private Const PropNameRowBackColorEven              As String = "RowBackColorEven"
+Private Const PropNameRowBackColorOdd               As String = "RowBackColorOdd"
 
 '@================================================================================
 ' Enums
@@ -75,7 +86,6 @@ Private Enum DOMColumns
 End Enum
 
 Private Enum GridColours
-    BGDefault = &HE1F4FD
     BGBid = &HD6C6F2
     BGAsk = &HFAE968
     BGLast = &HC1F7CA
@@ -89,27 +99,36 @@ End Enum
 ' Member variables
 '@================================================================================
 
-Private mDataSource As IMarketDataSource
+Private mDataSource                                 As IMarketDataSource
 Attribute mDataSource.VB_VarHelpID = -1
 
-Private mContract As Contract
-Private mInitialPrice As Double
-Private mTickSize As Double
-Private mSecType As SecurityTypes
-Private mNumberOfVisibleRows As Long
-Private mBasePrice As Double
-Private mCeilingPrice As Double
+Private mContract                                   As Contract
+Private mInitialPrice                               As Double
+Private mTickSize                                   As Double
+Private mSecType                                    As SecurityTypes
+Private mNumberOfVisibleRows                        As Long
+Private mBasePrice                                  As Double
+Private mCeilingPrice                               As Double
 
-Private mCurrentLast As Double
+Private mCurrentLast                                As Double
 
-Private mHalted As Boolean
+Private mHalted                                     As Boolean
 
-Private mIsVisible As Boolean
+Private mIsVisible                                  As Boolean
 
-Private mFirstCentreDone As Boolean
+Private mFirstCentreDone                            As Boolean
 
-Private WithEvents mFutureWaiter As FutureWaiter
+Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mBackColorAsk                               As Long
+Private mBackColorBid                               As Long
+Private mBackColorTrade                             As Long
+Private mForeColorAsk                               As Long
+Private mForeColorBid                               As Long
+Private mForeColorTrade                             As Long
+
+Private mTheme                                      As ITheme
 
 '@================================================================================
 ' Form Event Handlers
@@ -131,20 +150,39 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub UserControl_InitProperties()
+BackColorAsk = BGAsk
+BackColorBid = BGBid
+BackColorFixed = vbButtonFace
+BackColorTrade = BGLast
+ForeColorAsk = vbWindowText
+ForeColorBid = vbWindowText
+ForeColor = vbWindowText
+ForeColorFixed = vbButtonText
+ForeColorTrade = vbWindowText
+RowBackColorEven = CRowBackColorEven
+RowBackColorOdd = CRowBackColorOdd
+End Sub
+
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+BackColorAsk = PropBag.ReadProperty(PropNameBackColorAsk, BGAsk)
+BackColorBid = PropBag.ReadProperty(PropNameBackColorBid, BGBid)
+BackColorFixed = PropBag.ReadProperty(PropNameBackColorFixed, vbButtonFace)
+BackColorTrade = PropBag.ReadProperty(PropNameBackColorTrade, BGLast)
+ForeColorAsk = PropBag.ReadProperty(PropNameForeColorAsk, vbWindowText)
+ForeColorBid = PropBag.ReadProperty(PropNameForeColorBid, vbWindowText)
+ForeColor = PropBag.ReadProperty(PropNameForecolor, vbWindowText)
+ForeColorFixed = PropBag.ReadProperty(PropNameForeColorFixed, vbButtonText)
+ForeColorTrade = PropBag.ReadProperty(PropNameForeColorTrade, vbWindowText)
+RowBackColorEven = PropBag.ReadProperty(PropNameRowBackColorEven, CRowBackColorEven)
+RowBackColorOdd = PropBag.ReadProperty(PropNameRowBackColorOdd, CRowBackColorOdd)
+End Sub
+
 Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
 On Error GoTo Err
 
-'Static firstResizeDone As Boolean
-
-'If Not firstResizeDone Then
-'    Debug.Print ModuleName & " first resize"
-    resize
-'    firstResizeDone = True
-'Else
-'    mResizeTimer.StopTimer
-'    mResizeTimer.StartTimer
-'End If
+resize
 
 Exit Sub
 
@@ -159,6 +197,40 @@ End Sub
 Private Sub UserControl_Terminate()
 Debug.Print "DOMDisplay control terminated"
 End Sub
+
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+PropBag.WriteProperty PropNameBackColorAsk, BackColorAsk, BGAsk
+PropBag.WriteProperty PropNameBackColorBid, BackColorBid, BGBid
+PropBag.WriteProperty PropNameBackColorFixed, BackColorFixed, vbButtonFace
+PropBag.WriteProperty PropNameBackColorTrade, BackColorTrade, BGLast
+PropBag.WriteProperty PropNameForeColorAsk, ForeColorAsk, vbWindowText
+PropBag.WriteProperty PropNameForeColorBid, ForeColorBid, vbWindowText
+PropBag.WriteProperty PropNameForecolor, ForeColor, vbWindowText
+PropBag.WriteProperty PropNameForeColorFixed, ForeColorFixed, vbButtonText
+PropBag.WriteProperty PropNameForeColorTrade, ForeColorTrade, vbWindowText
+PropBag.WriteProperty PropNameRowBackColorEven, RowBackColorEven, CRowBackColorEven
+PropBag.WriteProperty PropNameRowBackColorOdd, RowBackColorOdd, CRowBackColorOdd
+End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -240,6 +312,42 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Let BackColorAsk(ByVal value As OLE_COLOR)
+mBackColorAsk = value
+PropertyChanged PropNameBackColorAsk
+End Property
+
+Public Property Get BackColorAsk() As OLE_COLOR
+BackColorAsk = mBackColorAsk
+End Property
+
+Public Property Let BackColorBid(ByVal value As OLE_COLOR)
+mBackColorBid = value
+PropertyChanged PropNameBackColorBid
+End Property
+
+Public Property Get BackColorBid() As OLE_COLOR
+BackColorBid = mBackColorBid
+End Property
+
+Public Property Let BackColorFixed(ByVal value As OLE_COLOR)
+DOMGrid.BackColorFixed = value
+PropertyChanged PropNameBackColorFixed
+End Property
+
+Public Property Get BackColorFixed() As OLE_COLOR
+BackColorFixed = DOMGrid.BackColorFixed
+End Property
+
+Public Property Let BackColorTrade(ByVal value As OLE_COLOR)
+mBackColorTrade = value
+PropertyChanged PropNameBackColorTrade
+End Property
+
+Public Property Get BackColorTrade() As OLE_COLOR
+BackColorTrade = mBackColorTrade
+End Property
+
 Public Property Let DataSource(ByVal value As IMarketDataSource)
 Const ProcName As String = "DataSource"
 On Error GoTo Err
@@ -261,6 +369,51 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let ForeColor(ByVal value As OLE_COLOR)
+DOMGrid.ForeColor = value
+PropertyChanged PropNameForecolor
+End Property
+
+Public Property Get ForeColor() As OLE_COLOR
+ForeColor = DOMGrid.ForeColor
+End Property
+
+Public Property Let ForeColorAsk(ByVal value As OLE_COLOR)
+mForeColorAsk = value
+PropertyChanged PropNameForeColorAsk
+End Property
+
+Public Property Get ForeColorAsk() As OLE_COLOR
+ForeColorAsk = mForeColorAsk
+End Property
+
+Public Property Let ForeColorBid(ByVal value As OLE_COLOR)
+mForeColorBid = value
+PropertyChanged PropNameForeColorBid
+End Property
+
+Public Property Get ForeColorBid() As OLE_COLOR
+ForeColorBid = mForeColorBid
+End Property
+
+Public Property Let ForeColorFixed(ByVal value As OLE_COLOR)
+DOMGrid.ForeColorFixed = value
+PropertyChanged PropNameForeColorFixed
+End Property
+
+Public Property Get ForeColorFixed() As OLE_COLOR
+ForeColorFixed = DOMGrid.ForeColorFixed
+End Property
+
+Public Property Let ForeColorTrade(ByVal value As OLE_COLOR)
+mForeColorTrade = value
+PropertyChanged PropNameForeColorTrade
+End Property
+
+Public Property Get ForeColorTrade() As OLE_COLOR
+ForeColorTrade = mForeColorTrade
+End Property
+
 Public Property Let NumberOfRows(ByVal value As Long)
 Const ProcName As String = "NumberOfRows"
 On Error GoTo Err
@@ -273,6 +426,53 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let RowBackColorEven(ByVal value As OLE_COLOR)
+DOMGrid.RowBackColorEven = value
+PropertyChanged PropNameRowBackColorEven
+End Property
+
+Public Property Get RowBackColorEven() As OLE_COLOR
+RowBackColorEven = DOMGrid.RowBackColorEven
+End Property
+
+Public Property Let RowBackColorOdd(ByVal value As OLE_COLOR)
+DOMGrid.RowBackColorOdd = value
+PropertyChanged PropNameRowBackColorOdd
+End Property
+
+Public Property Get RowBackColorOdd() As OLE_COLOR
+RowBackColorOdd = DOMGrid.RowBackColorOdd
+End Property
+
+Public Property Let Theme(ByVal value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = value
+BackColorAsk = mTheme.BackColorAsk
+BackColorBid = mTheme.BackColorBid
+BackColorFixed = mTheme.GridBackColorFixed
+BackColorTrade = mTheme.BackColorTrade
+ForeColor = mTheme.GridForeColor
+ForeColorAsk = mTheme.ForeColorAsk
+ForeColorBid = mTheme.ForeColorBid
+ForeColorFixed = mTheme.GridForeColorFixed
+ForeColorTrade = mTheme.ForeColorTrade
+RowBackColorEven = mTheme.GridRowBackColorEven
+RowBackColorOdd = mTheme.GridRowBackColorOdd
+
+DOMGrid.GridColorFixed = mTheme.GridLineColorFixed
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================
@@ -332,7 +532,7 @@ If (Price - mBasePrice) / mTickSize <= 5 Then
     Do
         For i = 1 To Int(mNumberOfVisibleRows / 2)
             rowprice = mBasePrice - (i * mTickSize)
-            DOMGrid.addItem ""
+            DOMGrid.AddItem ""
             setCellContents DOMGrid.Rows - 1, DOMColumns.PriceLeft, FormatPrice(rowprice, mSecType, mTickSize)
             setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, FormatPrice(rowprice, mSecType, mTickSize)
         Next
@@ -349,7 +549,7 @@ If (mCeilingPrice - Price) / mTickSize <= 5 Then
     Do
         For i = 1 To Int(mNumberOfVisibleRows / 2)
             rowprice = mCeilingPrice + (i * mTickSize)
-            DOMGrid.addItem "", 1
+            DOMGrid.AddItem "", 1
             setCellContents 1, DOMColumns.PriceLeft, FormatPrice(rowprice, mSecType, mTickSize)
             setCellContents 1, DOMColumns.PriceRight, FormatPrice(rowprice, mSecType, mTickSize)
         Next
@@ -370,10 +570,9 @@ Private Sub clearRows()
 Const ProcName As String = "clearRows"
 On Error GoTo Err
 
-Dim i As Long
-
 DOMGrid.Redraw = False
 
+Dim i As Long
 For i = DOMGrid.Rows - 1 To 1 Step -1
     setCellContents i, DOMColumns.PriceLeft, ""
     setCellContents i, DOMColumns.BidSize, ""
@@ -399,35 +598,37 @@ mInitialPrice = 0
 DOMGrid.Redraw = False
 
 DOMGrid.AllowUserResizing = TWControls40.AllowUserResizeSettings.TwGridResizeColumns
-DOMGrid.BackColorFixed = vbButtonFace
-DOMGrid.BackColorSel = GridColours.BGDefault
-DOMGrid.BackColor = GridColours.BGDefault
-DOMGrid.ForeColorSel = DOMGrid.ForeColor
 DOMGrid.Rows = 200
 DOMGrid.Cols = 5
 DOMGrid.FixedCols = 0
 DOMGrid.FixedRows = 1
 DOMGrid.FocusRect = TWControls40.FocusRectSettings.TwGridFocusNone
+DOMGrid.GridLinesFixed = TwGridGridFlat
 DOMGrid.ScrollBars = TWControls40.ScrollBarsSettings.TwGridScrollBarVertical
+DOMGrid.PopupScrollbars = True
 
 setCellContents 0, DOMColumns.PriceLeft, "Price"
-DOMGrid.colWidth(DOMColumns.PriceLeft) = 24 * DOMGrid.Width / 100
+DOMGrid.ColWidth(DOMColumns.PriceLeft) = 26 * DOMGrid.Width / 100
 DOMGrid.ColAlignment(DOMColumns.PriceLeft) = TWControls40.AlignmentSettings.TwGridAlignRightCenter
 
 setCellContents 0, DOMColumns.BidSize, "Bids"
-DOMGrid.colWidth(DOMColumns.BidSize) = 14 * DOMGrid.Width / 100
+DOMGrid.ColWidth(DOMColumns.BidSize) = 16 * DOMGrid.Width / 100
 DOMGrid.ColAlignment(DOMColumns.BidSize) = TWControls40.AlignmentSettings.TwGridAlignCenterCenter
 
 setCellContents 0, DOMColumns.LastSize, "Last"
-DOMGrid.colWidth(DOMColumns.LastSize) = 14 * DOMGrid.Width / 100
+DOMGrid.ColWidth(DOMColumns.LastSize) = 16 * DOMGrid.Width / 100
 DOMGrid.ColAlignment(DOMColumns.LastSize) = TWControls40.AlignmentSettings.TwGridAlignCenterCenter
 
 setCellContents 0, DOMColumns.AskSize, "Asks"
-DOMGrid.colWidth(DOMColumns.AskSize) = 14 * DOMGrid.Width / 100
+DOMGrid.ColWidth(DOMColumns.AskSize) = 16 * DOMGrid.Width / 100
 DOMGrid.ColAlignment(DOMColumns.AskSize) = TWControls40.AlignmentSettings.TwGridAlignCenterCenter
 
 setCellContents 0, DOMColumns.PriceRight, "Price"
-DOMGrid.colWidth(DOMColumns.PriceRight) = 24 * DOMGrid.Width / 100
+DOMGrid.ColWidth(DOMColumns.PriceRight) = DOMGrid.Width - _
+                                            DOMGrid.ColWidth(DOMColumns.PriceLeft) - _
+                                            DOMGrid.ColWidth(DOMColumns.BidSize) - _
+                                            DOMGrid.ColWidth(DOMColumns.LastSize) - _
+                                            DOMGrid.ColWidth(DOMColumns.AskSize)
 DOMGrid.ColAlignment(DOMColumns.PriceRight) = TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 
 DOMGrid.Redraw = True
@@ -475,22 +676,23 @@ DOMGrid.Redraw = False
 If UserControl.Width <> prevWidth Then
     prevWidth = UserControl.Width
     
-    Dim colWidth As Long
-    colWidth = (UserControl.ScaleWidth - ScrollbarWidth) / DOMGrid.Cols
-    
-    Dim i As Long
-    For i = 0 To DOMGrid.Cols - 2
-        DOMGrid.colWidth(i) = colWidth
-    Next
-    DOMGrid.colWidth(DOMGrid.Cols - 1) = UserControl.ScaleWidth - ScrollbarWidth - (DOMGrid.Cols - 1) * colWidth
     DOMGrid.Width = UserControl.Width
+    DOMGrid.ColWidth(DOMColumns.PriceLeft) = 26 * DOMGrid.Width / 100
+    DOMGrid.ColWidth(DOMColumns.BidSize) = 16 * DOMGrid.Width / 100
+    DOMGrid.ColWidth(DOMColumns.LastSize) = 16 * DOMGrid.Width / 100
+    DOMGrid.ColWidth(DOMColumns.AskSize) = 16 * DOMGrid.Width / 100
+    DOMGrid.ColWidth(DOMColumns.PriceRight) = DOMGrid.Width - _
+                                                DOMGrid.ColWidth(DOMColumns.PriceLeft) - _
+                                                DOMGrid.ColWidth(DOMColumns.BidSize) - _
+                                                DOMGrid.ColWidth(DOMColumns.LastSize) - _
+                                                DOMGrid.ColWidth(DOMColumns.AskSize)
 End If
 
 If UserControl.Height <> prevHeight Then
     prevHeight = UserControl.Height
     DOMGrid.Height = UserControl.Height
 
-    mNumberOfVisibleRows = Int(DOMGrid.Height / DOMGrid.rowHeight(1)) - 1
+    mNumberOfVisibleRows = Int(DOMGrid.Height / DOMGrid.RowHeight(1)) - 1
 End If
 
 DOMGrid.Redraw = True
@@ -519,18 +721,21 @@ If (currVal <> "" And value = "") Or _
 Then
     If Row <> 0 Then
         If value = "" Then
-            DOMGrid.CellBackColor = GridColours.BGDefault
+            DOMGrid.CellBackColor = 0
         Else
             Select Case col
             Case DOMColumns.BidSize
-                DOMGrid.CellBackColor = GridColours.BGBid
+                DOMGrid.CellBackColor = mBackColorBid
+                DOMGrid.CellForeColor = mForeColorBid
             Case DOMColumns.LastSize
-                DOMGrid.CellBackColor = GridColours.BGLast
+                DOMGrid.CellBackColor = mBackColorTrade
+                DOMGrid.CellForeColor = mForeColorTrade
                 DOMGrid.CellFontBold = True
             Case DOMColumns.AskSize
-                DOMGrid.CellBackColor = GridColours.BGAsk
+                DOMGrid.CellBackColor = mBackColorAsk
+                DOMGrid.CellForeColor = mForeColorAsk
             Case Else
-                DOMGrid.CellBackColor = GridColours.BGDefault
+                DOMGrid.CellBackColor = 0
             End Select
         End If
     End If
