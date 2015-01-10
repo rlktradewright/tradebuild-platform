@@ -1,28 +1,30 @@
 VERSION 5.00
 Begin VB.Form fFeaturesPanel 
    Appearance      =   0  'Flat
-   BackColor       =   &H00808080&
-   BorderStyle     =   0  'None
-   ClientHeight    =   9435
-   ClientLeft      =   0
-   ClientTop       =   0
-   ClientWidth     =   4125
+   BackColor       =   &H80000005&
+   BorderStyle     =   5  'Sizable ToolWindow
+   Caption         =   "Features Panel"
+   ClientHeight    =   9360
+   ClientLeft      =   60
+   ClientTop       =   330
+   ClientWidth     =   4875
+   ControlBox      =   0   'False
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   9435
+   ScaleHeight     =   9360
    ScaleMode       =   0  'User
-   ScaleWidth      =   4155
+   ScaleWidth      =   4910.454
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin TradeSkilDemo27.FeaturesPanel FeaturesPanel 
-      Height          =   9375
-      Left            =   30
+      Height          =   9675
+      Left            =   0
       TabIndex        =   0
-      Top             =   30
-      Width           =   4065
-      _ExtentX        =   7170
-      _ExtentY        =   16536
+      Top             =   0
+      Width           =   4905
+      _ExtentX        =   8652
+      _ExtentY        =   17066
    End
 End
 Attribute VB_Name = "fFeaturesPanel"
@@ -70,11 +72,11 @@ Private Const ModuleName                            As String = "fFeaturesPane"
 
 Private mAppInstanceConfig                          As ConfigurationSection
 
-Private mMouseDown                                  As Boolean
-Private mLeftAtMousedown                            As Single
-Private mTopAtMouseDown                             As Single
-Private mMouseXAtMousedown                          As Single
-Private mMouseYAtMouseDown                          As Single
+'Private mMouseDown                                  As Boolean
+'Private mLeftAtMousedown                            As Single
+'Private mTopAtMouseDown                             As Single
+'Private mMouseXAtMousedown                          As Single
+'Private mMouseYAtMouseDown                          As Single
 
 Private mTheme                                      As ITheme
 
@@ -105,6 +107,30 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+Select Case UnloadMode
+Case vbFormControlMenu
+    Cancel = 1
+    RaiseEvent Hide
+Case vbFormCode
+
+Case vbAppWindows
+
+Case vbAppTaskManager
+
+Case vbFormMDIForm
+
+Case vbFormOwner
+
+End Select
+End Sub
+
+Private Sub Form_Resize()
+If Me.ScaleWidth < FeaturesPanel.MinimumWidth Then Me.Width = FeaturesPanel.MinimumWidth + Me.Width - Me.ScaleWidth
+If Me.ScaleHeight < FeaturesPanel.MinimumHeight Then Me.Height = FeaturesPanel.MinimumHeight + Me.Height - Me.ScaleHeight
+FeaturesPanel.Move 0, 0, Me.ScaleWidth, Me.ScaleHeight
 End Sub
 
 '@================================================================================
@@ -143,46 +169,46 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub FeaturesPanel_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
-Const ProcName As String = "FeaturesPanel_MouseDown"
-On Error GoTo Err
+'Private Sub FeaturesPanel_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
+'Const ProcName As String = "FeaturesPanel_MouseDown"
+'On Error GoTo Err
+'
+'mMouseDown = True
+'mLeftAtMousedown = Me.Left
+'mTopAtMouseDown = Me.Top
+'mMouseXAtMousedown = x
+'mMouseYAtMouseDown = y
+'
+'Exit Sub
+'
+'Err:
+'gNotifyUnhandledError ProcName, ModuleName
+'End Sub
 
-mMouseDown = True
-mLeftAtMousedown = Me.left
-mTopAtMouseDown = Me.Top
-mMouseXAtMousedown = x
-mMouseYAtMouseDown = y
+'Private Sub FeaturesPanel_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+'Const ProcName As String = "FeaturesPanel_MouseMove"
+'On Error GoTo Err
+'
+''If mMouseDown Then moveMe x, y
+'
+'Exit Sub
+'
+'Err:
+'gNotifyUnhandledError ProcName, ModuleName
+'End Sub
 
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub FeaturesPanel_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
-Const ProcName As String = "FeaturesPanel_MouseMove"
-On Error GoTo Err
-
+'Private Sub FeaturesPanel_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+'Const ProcName As String = "FeaturesPanel_MouseUp"
+'On Error GoTo Err
+'
 'If mMouseDown Then moveMe x, y
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub FeaturesPanel_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
-Const ProcName As String = "FeaturesPanel_MouseUp"
-On Error GoTo Err
-
-If mMouseDown Then moveMe x, y
-mMouseDown = False
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
+'mMouseDown = False
+'
+'Exit Sub
+'
+'Err:
+'gNotifyUnhandledError ProcName, ModuleName
+'End Sub
 
 Private Sub FeaturesPanel_Pin()
 Const ProcName As String = "FeaturesPanel_Pin"
@@ -211,6 +237,7 @@ On Error GoTo Err
 If Value Is Nothing Then Exit Property
 
 Set mTheme = Value
+Me.BackColor = mTheme.BackColor
 gApplyTheme mTheme, Me.Controls
 
 Exit Property
@@ -244,8 +271,8 @@ Friend Sub Initialise( _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
                 ByVal pAppInstanceConfig As ConfigurationSection, _
                 ByVal pTickerGrid As TickerGrid, _
-                ByVal pTickfileOrdersSummary As OrdersSummary, _
-                ByVal pTickfileExecutionsSummary As ExecutionsSummary, _
+                ByVal pInfoPanel As InfoPanel, _
+                ByVal pInfoPanelFloating As InfoPanel, _
                 ByVal pChartForms As ChartForms, _
                 ByVal pOrderTicket As fOrderTicket)
 Const ProcName As String = "Initialise"
@@ -253,10 +280,12 @@ On Error GoTo Err
 
 Set mAppInstanceConfig = pAppInstanceConfig
 
-Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLeft, 0)) * Screen.TwipsPerPixelX
+Me.Left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLeft, 0)) * Screen.TwipsPerPixelX
 Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+Me.Width = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelWidth, 280)) * Screen.TwipsPerPixelX
+Me.Height = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelHeight, 650)) * Screen.TwipsPerPixelY
 
-FeaturesPanel.Initialise pPinned, pTradeBuildAPI, pAppInstanceConfig, pTickerGrid, pTickfileOrdersSummary, pTickfileExecutionsSummary, pChartForms, pOrderTicket
+FeaturesPanel.Initialise pPinned, pTradeBuildAPI, pAppInstanceConfig, pTickerGrid, pInfoPanel, pInfoPanelFloating, pChartForms, pOrderTicket
 
 Exit Sub
 
@@ -268,17 +297,17 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub moveMe(ByVal x As Single, ByVal y As Single)
-Const ProcName As String = "moveMe"
-On Error GoTo Err
-
-Me.Move mLeftAtMousedown + x - mMouseXAtMousedown, mTopAtMouseDown + y - mMouseYAtMouseDown
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
+'Private Sub moveMe(ByVal x As Single, ByVal y As Single)
+'Const ProcName As String = "moveMe"
+'On Error GoTo Err
+'
+'Me.Move mLeftAtMousedown + x - mMouseXAtMousedown, mTopAtMouseDown + y - mMouseYAtMouseDown
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
@@ -286,8 +315,10 @@ On Error GoTo Err
 
 If Not mAppInstanceConfig Is Nothing Then
     mAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionFloatingFeaturesPanel
-    mAppInstanceConfig.SetSetting ConfigSettingFloatingFeaturesPanelLeft, Me.left / Screen.TwipsPerPixelX
+    mAppInstanceConfig.SetSetting ConfigSettingFloatingFeaturesPanelLeft, Me.Left / Screen.TwipsPerPixelX
     mAppInstanceConfig.SetSetting ConfigSettingFloatingFeaturesPanelTop, Me.Top / Screen.TwipsPerPixelY
+    mAppInstanceConfig.SetSetting ConfigSettingFloatingFeaturesPanelWidth, Me.Width / Screen.TwipsPerPixelX
+    mAppInstanceConfig.SetSetting ConfigSettingFloatingFeaturesPanelHeight, Me.Height / Screen.TwipsPerPixelY
 End If
 
 Exit Sub

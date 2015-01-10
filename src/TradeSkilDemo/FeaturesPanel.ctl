@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#274.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#24.2#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#279.1#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
    BackColor       =   &H00CDF3FF&
@@ -15,13 +15,13 @@ Begin VB.UserControl FeaturesPanel
    ScaleHeight     =   9675
    ScaleWidth      =   4065
    Begin TabDlg.SSTab FeaturesSSTab 
-      Height          =   9015
+      Height          =   9030
       Left            =   -30
       TabIndex        =   1
-      Top             =   660
+      Top             =   645
       Width           =   4125
       _ExtentX        =   7276
-      _ExtentY        =   15901
+      _ExtentY        =   15928
       _Version        =   393216
       Tabs            =   5
       TabsPerRow      =   5
@@ -69,24 +69,24 @@ Begin VB.UserControl FeaturesPanel
          Left            =   -75000
          ScaleHeight     =   9015
          ScaleWidth      =   4125
-         TabIndex        =   51
+         TabIndex        =   50
          Top             =   0
          Width           =   4125
          Begin VB.TextBox CurrentConfigNameText 
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
             Height          =   285
-            Left            =   360
+            Left            =   120
             Locked          =   -1  'True
-            TabIndex        =   53
+            TabIndex        =   52
             TabStop         =   0   'False
             Top             =   420
-            Width           =   3375
+            Width           =   3855
          End
          Begin TWControls40.TWButton ConfigEditorButton 
             Height          =   375
-            Left            =   2160
-            TabIndex        =   52
+            Left            =   2400
+            TabIndex        =   51
             Top             =   1440
             Width           =   1575
             _ExtentX        =   0
@@ -106,8 +106,8 @@ Begin VB.UserControl FeaturesPanel
          Begin VB.Label Label6 
             Caption         =   "Current configuration is:"
             Height          =   375
-            Left            =   360
-            TabIndex        =   54
+            Left            =   120
+            TabIndex        =   53
             Top             =   120
             Width           =   2295
          End
@@ -123,21 +123,33 @@ Begin VB.UserControl FeaturesPanel
          TabIndex        =   41
          Top             =   0
          Width           =   4125
-         Begin VB.ComboBox ReplaySpeedCombo 
-            Appearance      =   0  'Flat
-            Height          =   315
+         Begin TWControls40.TWImageCombo ReplaySpeedCombo 
+            Height          =   270
             Left            =   1200
-            Style           =   2  'Dropdown List
             TabIndex        =   46
-            Top             =   2760
+            Top             =   4080
             Width           =   2775
+            _ExtentX        =   4895
+            _ExtentY        =   476
+            Appearance      =   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseIcon       =   "FeaturesPanel.ctx":008C
+            Text            =   ""
          End
          Begin TWControls40.TWButton StopReplayButton 
             Height          =   495
             Left            =   3360
             TabIndex        =   45
             ToolTipText     =   "Stop tickfile replay"
-            Top             =   3240
+            Top             =   4680
             Width           =   615
             _ExtentX        =   0
             _ExtentY        =   0
@@ -159,7 +171,7 @@ Begin VB.UserControl FeaturesPanel
             Left            =   2640
             TabIndex        =   44
             ToolTipText     =   "Pause tickfile replay"
-            Top             =   3240
+            Top             =   4680
             Width           =   615
             _ExtentX        =   0
             _ExtentY        =   0
@@ -181,7 +193,7 @@ Begin VB.UserControl FeaturesPanel
             Left            =   1920
             TabIndex        =   43
             ToolTipText     =   "Start or resume tickfile replay"
-            Top             =   3240
+            Top             =   4680
             Width           =   615
             _ExtentX        =   0
             _ExtentY        =   0
@@ -199,19 +211,19 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "&Play"
          End
          Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
-            Height          =   2520
+            Height          =   3720
             Left            =   120
             TabIndex        =   42
             Top             =   120
             Width           =   3930
             _ExtentX        =   6932
-            _ExtentY        =   4445
+            _ExtentY        =   6562
          End
          Begin MSComctlLib.ProgressBar ReplayProgressBar 
             Height          =   135
             Left            =   120
             TabIndex        =   47
-            Top             =   4200
+            Top             =   5640
             Visible         =   0   'False
             Width           =   3855
             _ExtentX        =   6800
@@ -224,22 +236,15 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Replay speed"
             Height          =   375
             Left            =   120
-            TabIndex        =   50
-            Top             =   2760
-            Width           =   1095
-         End
-         Begin VB.Label ReplayContractLabel 
-            Height          =   975
-            Left            =   120
             TabIndex        =   49
-            Top             =   4440
-            Width           =   3855
+            Top             =   4080
+            Width           =   1095
          End
          Begin VB.Label ReplayProgressLabel 
             Height          =   255
             Left            =   120
             TabIndex        =   48
-            Top             =   3960
+            Top             =   5400
             Width           =   3855
          End
       End
@@ -254,7 +259,26 @@ Begin VB.UserControl FeaturesPanel
          TabIndex        =   24
          Top             =   0
          Width           =   4125
-         Begin VB.TextBox NumHistBarsText 
+         Begin MSComCtl2.DTPicker FromDatePicker 
+            Height          =   375
+            Left            =   1920
+            TabIndex        =   34
+            Top             =   1320
+            Width           =   2055
+            _ExtentX        =   3625
+            _ExtentY        =   661
+            _Version        =   393216
+            CalendarBackColor=   128
+            CalendarForeColor=   16711680
+            CalendarTitleBackColor=   16777215
+            CalendarTitleForeColor=   12632256
+            CalendarTrailingForeColor=   65280
+            CheckBox        =   -1  'True
+            CustomFormat    =   "yyy-MM-dd HH:mm"
+            Format          =   67239939
+            CurrentDate     =   39365
+         End
+         Begin VB.TextBox NumHistHistoryBarsText 
             Alignment       =   1  'Right Justify
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
@@ -276,7 +300,7 @@ Begin VB.UserControl FeaturesPanel
             Value           =   1  'Checked
             Width           =   1215
          End
-         Begin VB.Frame Frame2 
+         Begin VB.Frame ChangeHistChartStylesFrame 
             Caption         =   "Change chart styles"
             Height          =   1335
             Left            =   120
@@ -331,7 +355,7 @@ Begin VB.UserControl FeaturesPanel
             _ExtentX        =   6800
             _ExtentY        =   7858
          End
-         Begin TradingUI27.TimeframeSelector HistTimeframeSelector 
+         Begin TradingUI27.TimeframeSelector HistChartTimeframeSelector 
             Height          =   270
             Left            =   1920
             TabIndex        =   32
@@ -351,26 +375,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   67633155
-            CurrentDate     =   39365
-         End
-         Begin MSComCtl2.DTPicker FromDatePicker 
-            Height          =   375
-            Left            =   1920
-            TabIndex        =   34
-            Top             =   1320
-            Width           =   2055
-            _ExtentX        =   3625
-            _ExtentY        =   661
-            _Version        =   393216
-            CalendarBackColor=   128
-            CalendarForeColor=   16711680
-            CalendarTitleBackColor=   16777215
-            CalendarTitleForeColor=   12632256
-            CalendarTrailingForeColor=   65280
-            CheckBox        =   -1  'True
-            CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   67633155
+            Format          =   67239939
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -391,7 +396,7 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            MouseIcon       =   "FeaturesPanel.ctx":008C
+            MouseIcon       =   "FeaturesPanel.ctx":00A8
             Text            =   ""
          End
          Begin VB.Label Label5 
@@ -446,18 +451,18 @@ Begin VB.UserControl FeaturesPanel
          TabIndex        =   11
          Top             =   0
          Width           =   4125
-         Begin VB.TextBox NumHistoryBarsText 
+         Begin VB.TextBox NumLiveHistoryBarsText 
             Alignment       =   1  'Right Justify
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
             Height          =   285
-            Left            =   3000
+            Left            =   2760
             TabIndex        =   19
             Text            =   "500"
             Top             =   600
-            Width           =   975
+            Width           =   1215
          End
-         Begin VB.CheckBox SessionOnlyCheck 
+         Begin VB.CheckBox LiveSessionOnlyCheck 
             Appearance      =   0  'Flat
             Caption         =   "Session only"
             ForeColor       =   &H80000008&
@@ -468,7 +473,7 @@ Begin VB.UserControl FeaturesPanel
             Value           =   1  'Checked
             Width           =   1215
          End
-         Begin TWControls40.TWButton ChartButton 
+         Begin TWControls40.TWButton LiveChartButton 
             Height          =   375
             Left            =   3000
             TabIndex        =   17
@@ -488,7 +493,7 @@ Begin VB.UserControl FeaturesPanel
             EndProperty
             Caption         =   "Show &Chart"
          End
-         Begin VB.Frame Frame1 
+         Begin VB.Frame ChangeLiveChartStylesFrame 
             Caption         =   "Change chart styles"
             Height          =   1335
             Left            =   120
@@ -552,7 +557,7 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            MouseIcon       =   "FeaturesPanel.ctx":00A8
+            MouseIcon       =   "FeaturesPanel.ctx":00C4
             Text            =   ""
          End
          Begin TradingUI27.TimeframeSelector LiveChartTimeframeSelector 
@@ -609,7 +614,7 @@ Begin VB.UserControl FeaturesPanel
             _ExtentX        =   6800
             _ExtentY        =   9551
          End
-         Begin TWControls40.TWButton ChartButton1 
+         Begin TWControls40.TWButton HistChartButton 
             Height          =   375
             Left            =   720
             TabIndex        =   2
@@ -702,9 +707,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3720
-      MouseIcon       =   "FeaturesPanel.ctx":00C4
+      MouseIcon       =   "FeaturesPanel.ctx":00E0
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":0216
+      Picture         =   "FeaturesPanel.ctx":0232
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   10
@@ -720,9 +725,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3360
-      MouseIcon       =   "FeaturesPanel.ctx":07A0
+      MouseIcon       =   "FeaturesPanel.ctx":07BC
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":08F2
+      Picture         =   "FeaturesPanel.ctx":090E
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   8
@@ -738,9 +743,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3360
-      MouseIcon       =   "FeaturesPanel.ctx":0E7C
+      MouseIcon       =   "FeaturesPanel.ctx":0E98
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":0FCE
+      Picture         =   "FeaturesPanel.ctx":0FEA
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   9
@@ -818,11 +823,8 @@ Implements IThemeable
 
 Event Hide()
 Event MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
-Attribute MouseDown.VB_UserMemId = -605
 Event MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
-Attribute MouseMove.VB_UserMemId = -606
 Event Mouseup(Button As Integer, Shift As Integer, x As Single, y As Single)
-Attribute Mouseup.VB_UserMemId = -607
 Event Pin()
 Event Unpin()
 
@@ -848,6 +850,9 @@ End Enum
 
 Private Const ModuleName                            As String = "FeaturesPanel"
 
+Private Const MinimumHeightTwips                    As Long = 9675
+Private Const MinimumWidthTwips                     As Long = 4065
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -857,8 +862,12 @@ Private mAppInstanceConfig                          As ConfigurationSection
 
 Private WithEvents mTickerGrid                      As TickerGrid
 Attribute mTickerGrid.VB_VarHelpID = -1
-Private mTickfileOrdersSummary                      As OrdersSummary
-Private mTickfileExecutionsSummary                  As ExecutionsSummary
+Private WithEvents mTickers                         As Tickers
+Attribute mTickers.VB_VarHelpID = -1
+
+Private mInfoPanel                                  As InfoPanel
+Private mInfoPanelFloating                          As InfoPanel
+
 Private mChartForms                                 As ChartForms
 Private mOrderTicket                                As fOrderTicket
 
@@ -883,6 +892,65 @@ End Sub
 
 Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
 RaiseEvent Mouseup(Button, Shift, x, y)
+End Sub
+
+Private Sub UserControl_Resize()
+
+If UserControl.Width < MinimumWidthTwips Then UserControl.Width = MinimumWidthTwips
+If UserControl.Height < MinimumHeightTwips Then UserControl.Height = MinimumHeightTwips
+
+UnpinPicture.Left = UserControl.Width - 47 * Screen.TwipsPerPixelX
+PinPicture.Left = UserControl.Width - 47 * Screen.TwipsPerPixelX
+HidePicture.Left = UserControl.Width - 23 * Screen.TwipsPerPixelX
+
+FeaturesTabStrip.Width = UserControl.Width
+
+FeaturesSSTab.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
+FeaturesSSTab.Height = UserControl.Height + 2 * Screen.TwipsPerPixelX
+
+TickersPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
+TickersPicture.Height = UserControl.Height - TickersPicture.Top
+
+LiveContractSearch.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
+
+LiveChartPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
+LiveChartPicture.Height = UserControl.Height - LiveChartPicture.Top
+
+LiveChartTimeframeSelector.Width = UserControl.Width - LiveChartTimeframeSelector.Left - 8 * Screen.TwipsPerPixelX
+NumLiveHistoryBarsText.Width = UserControl.Width - NumLiveHistoryBarsText.Left - 8 * Screen.TwipsPerPixelX
+LiveChartStylesCombo.Width = UserControl.Width - LiveChartStylesCombo.Left - 8 * Screen.TwipsPerPixelX
+LiveChartButton.Left = UserControl.Width - LiveChartButton.Width - 8 * Screen.TwipsPerPixelX
+ChangeLiveChartStylesFrame.Left = UserControl.Width - ChangeLiveChartStylesFrame.Width - 8 * Screen.TwipsPerPixelX
+
+HistChartPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
+HistChartPicture.Height = UserControl.Height - HistChartPicture.Top
+
+HistChartTimeframeSelector.Width = UserControl.Width - HistChartTimeframeSelector.Left - 8 * Screen.TwipsPerPixelX
+NumHistHistoryBarsText.Width = UserControl.Width - NumHistHistoryBarsText.Left - 8 * Screen.TwipsPerPixelX
+HistChartStylesCombo.Width = UserControl.Width - HistChartStylesCombo.Left - 8 * Screen.TwipsPerPixelX
+HistChartButton.Left = UserControl.Width - HistChartButton.Width - 8 * Screen.TwipsPerPixelX
+ChangeHistChartStylesFrame.Left = UserControl.Width - ChangeHistChartStylesFrame.Width - 8 * Screen.TwipsPerPixelX
+HistContractSearch.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
+FromDatePicker.Width = UserControl.Width - FromDatePicker.Left - 8 * Screen.TwipsPerPixelX
+ToDatePicker.Width = UserControl.Width - ToDatePicker.Left - 8 * Screen.TwipsPerPixelX
+
+ReplayTickerPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
+ReplayTickerPicture.Height = UserControl.Height - ReplayTickerPicture.Top
+
+TickfileOrganiser1.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
+ReplaySpeedCombo.Width = UserControl.Width - ReplaySpeedCombo.Left - 8 * Screen.TwipsPerPixelX
+StopReplayButton.Left = UserControl.Width - StopReplayButton.Width - 8 * Screen.TwipsPerPixelX
+PauseReplayButton.Left = UserControl.Width - StopReplayButton.Width - PauseReplayButton.Width - 2 * 8 * Screen.TwipsPerPixelX
+PlayTickFileButton.Left = UserControl.Width - StopReplayButton.Width - PauseReplayButton.Width - PlayTickFileButton.Width - 3 * 8 * Screen.TwipsPerPixelX
+ReplayProgressLabel.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
+ReplayProgressBar.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
+
+ConfigPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
+ConfigPicture.Height = UserControl.Height - ConfigPicture.Top
+
+CurrentConfigNameText.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
+ConfigEditorButton.Left = UserControl.Width - ConfigEditorButton.Width - 8 * Screen.TwipsPerPixelX
+
 End Sub
 
 '@================================================================================
@@ -913,20 +981,19 @@ Private Sub StateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
-OrderTicketButton.Enabled = Not (getSelectedDataSource Is Nothing)
-
-Dim lDataSource As IMarketDataSource
-Set lDataSource = ev.Source
+Dim lTicker As Ticker
+Set lTicker = ev.Source
 
 Select Case ev.State
 Case MarketDataSourceStates.MarketDataSourceStateCreated
 
 Case MarketDataSourceStates.MarketDataSourceStateReady
 Case MarketDataSourceStates.MarketDataSourceStateRunning
-    If lDataSource Is getSelectedDataSource Then
+    If lTicker Is getSelectedDataSource Then
+        If lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled Then OrderTicketButton.Enabled = True
         MarketDepthButton.Enabled = True
-        ChartButton.Enabled = True
-        ChartButton1.Enabled = True
+        LiveChartButton.Enabled = True
+        HistChartButton.Enabled = True
     End If
     
 Case MarketDataSourceStates.MarketDataSourceStatePaused
@@ -935,8 +1002,8 @@ Case MarketDataSourceStates.MarketDataSourceStateStopped
     If getSelectedDataSource Is Nothing Then
         StopTickerButton.Enabled = False
         MarketDepthButton.Enabled = False
-        ChartButton.Enabled = False
-        ChartButton1.Enabled = False
+        LiveChartButton.Enabled = False
+        HistChartButton.Enabled = False
     End If
     
 End Select
@@ -975,8 +1042,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub ChartButton_Click()
-Const ProcName As String = "ChartButton_Click"
+Private Sub LiveChartButton_Click()
+Const ProcName As String = "LiveChartButton_Click"
 On Error GoTo Err
 
 Dim lTicker As Ticker
@@ -992,11 +1059,11 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub ChartButton1_Click()
-Const ProcName As String = "ChartButton1_Click"
+Private Sub HistChartButton_Click()
+Const ProcName As String = "HistChartButton_Click"
 On Error GoTo Err
 
-ChartButton_Click
+LiveChartButton_Click
 
 Exit Sub
 
@@ -1033,10 +1100,10 @@ Case FeaturesTabIndexNumbers.FeaturesTabIndexHistoricalCharts
     HistContractSearch.SetFocus
 Case FeaturesTabIndexNumbers.FeaturesTabIndexLiveCharts
     LiveChartTimeframeSelector.SetFocus
-    If mTickerGrid.SelectedTickers.Count > 0 Then ChartButton.Default = True
+    If mTickerGrid.SelectedTickers.Count > 0 Then LiveChartButton.Default = True
 Case FeaturesTabIndexNumbers.FeaturesTabIndexTickers
     LiveContractSearch.SetFocus
-    If mTickerGrid.SelectedTickers.Count > 0 Then ChartButton1.Default = True
+    If mTickerGrid.SelectedTickers.Count > 0 Then HistChartButton.Default = True
 Case FeaturesTabIndexNumbers.FeaturesTabIndexTickfileReplay
     If Not mReplayController Is Nothing Then
         If PlayTickFileButton.Enabled Then
@@ -1178,11 +1245,11 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub NumHistBarsText_Validate(Cancel As Boolean)
-Const ProcName As String = "NumHistBarsText_Validate"
+Private Sub NumHistHistoryBarsText_Validate(Cancel As Boolean)
+Const ProcName As String = "NumHistHistoryBarsText_Validate"
 On Error GoTo Err
 
-If Not IsInteger(NumHistBarsText.Text, 0, 2000) Then Cancel = True
+If Not IsInteger(NumHistHistoryBarsText.Text, 0, 2000) Then Cancel = True
 
 Exit Sub
 
@@ -1190,11 +1257,11 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub NumHistoryBarsText_Validate(Cancel As Boolean)
-Const ProcName As String = "NumHistoryBarsText_Validate"
+Private Sub NumLiveHistoryBarsText_Validate(Cancel As Boolean)
+Const ProcName As String = "NumLiveHistoryBarsText_Validate"
 On Error GoTo Err
 
-If Not IsInteger(NumHistoryBarsText.Text, 0, 2000) Then Cancel = True
+If Not IsInteger(NumLiveHistoryBarsText.Text, 0, 2000) Then Cancel = True
 
 Exit Sub
 
@@ -1255,13 +1322,10 @@ If mReplayController Is Nothing Then
                                                 MarketDataSourceOptUseExchangeTimeZone, _
                                                 , _
                                                 , _
-                                                CInt(ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)), _
+                                                CInt(ReplaySpeedCombo.SelectedItem.Tag), _
                                                 250)
-    mTickfileOrdersSummary.Initialise lTickfileDataManager
-    
     Dim lOrderManager As New OrderManager
-    mTickfileOrdersSummary.MonitorPositions lOrderManager.PositionManagersSimulated
-    mTickfileExecutionsSummary.MonitorPositions lOrderManager.PositionManagersSimulated
+    mInfoPanel.MonitorTickfilePositions lTickfileDataManager, lOrderManager.PositionManagersSimulated
     
     Set mReplayController = lTickfileDataManager.ReplayController
     
@@ -1293,7 +1357,7 @@ Const ProcName As String = "ReplaySpeedCombo_Click"
 On Error GoTo Err
 
 If Not mReplayController Is Nothing Then
-    mReplayController.ReplaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
+    mReplayController.ReplaySpeed = CInt(ReplaySpeedCombo.SelectedItem.Tag)
 End If
 
 Exit Sub
@@ -1320,6 +1384,22 @@ Const ProcName As String = "StopTickerButton_Click"
 On Error GoTo Err
 
 StopSelectedTickers
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub TickfileOrganiser1_TickfileCountChanged()
+Const ProcName As String = "TickfileOrganiser1_TickfileCountChanged"
+On Error GoTo Err
+
+If TickfileOrganiser1.TickfileCount > 0 Then
+    PlayTickFileButton.Enabled = True
+Else
+    PlayTickFileButton.Enabled = False
+End If
 
 Exit Sub
 
@@ -1371,7 +1451,6 @@ StopReplayButton.Enabled = False
 
 ReplayProgressBar.Value = 0
 ReplayProgressBar.Visible = False
-ReplayContractLabel.caption = ""
 ReplayProgressLabel.caption = ""
 
 TickfileOrganiser1.Enabled = True
@@ -1400,9 +1479,48 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+'================================================================================
+' mTickers Event Handlers
+'================================================================================
+
+Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mTickers_CollectionChanged"
+On Error GoTo Err
+
+Dim lTicker As Ticker
+
+Select Case ev.ChangeType
+Case CollItemAdded
+    Set lTicker = ev.AffectedItem
+    lTicker.AddStateChangeListener Me
+Case CollItemRemoved
+    Set lTicker = ev.AffectedItem
+    lTicker.RemoveStateChangeListener Me
+Case CollItemChanged
+
+Case CollOrderChanged
+
+Case CollCollectionCleared
+
+End Select
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get MinimumHeight() As Long
+MinimumHeight = MinimumHeightTwips
+End Property
+
+Public Property Get MinimumWidth() As Long
+MinimumWidth = MinimumWidthTwips
+End Property
 
 Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
@@ -1453,8 +1571,8 @@ Public Sub Initialise( _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
                 ByVal pAppInstanceConfig As ConfigurationSection, _
                 ByVal pTickerGrid As TickerGrid, _
-                ByVal pTickfileOrdersSummary As OrdersSummary, _
-                ByVal pTickfileExecutionsSummary As ExecutionsSummary, _
+                ByVal pInfoPanel As InfoPanel, _
+                ByVal pInfoPanelFloating As InfoPanel, _
                 ByVal pChartForms As ChartForms, _
                 ByVal pOrderTicket As fOrderTicket)
 Const ProcName As String = "Initialise"
@@ -1469,10 +1587,11 @@ Else
 End If
 
 Set mTradeBuildAPI = pTradeBuildAPI
+Set mTickers = mTradeBuildAPI.Tickers
 Set mAppInstanceConfig = pAppInstanceConfig
 Set mTickerGrid = pTickerGrid
-Set mTickfileOrdersSummary = pTickfileOrdersSummary
-Set mTickfileExecutionsSummary = pTickfileExecutionsSummary
+Set mInfoPanel = pInfoPanel
+Set mInfoPanelFloating = pInfoPanelFloating
 Set mChartForms = pChartForms
 Set mOrderTicket = pOrderTicket
 
@@ -1565,7 +1684,7 @@ mChartForms.Add pTicker, _
                 mTradeBuildAPI.BarFormatterLibManager, _
                 mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator, _
                 lConfig, _
-                CreateChartSpecifier(CLng(NumHistoryBarsText.Text), Not (SessionOnlyCheck = vbChecked)), _
+                CreateChartSpecifier(CLng(NumLiveHistoryBarsText.Text), Not (LiveSessionOnlyCheck = vbChecked)), _
                 ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text), _
                 gMainForm, _
                 gTheme
@@ -1602,13 +1721,13 @@ For Each lContract In pContracts
                     TimeSerial(ToDatePicker.Hour, ToDatePicker.Minute, 0)
     End If
     
-    mChartForms.AddHistoric HistTimeframeSelector.TimePeriod, _
+    mChartForms.AddHistoric HistChartTimeframeSelector.TimePeriod, _
                         CreateFuture(lContract), _
                         mTradeBuildAPI.StudyLibraryManager.CreateStudyManager, _
                         mTradeBuildAPI.HistoricalDataStoreInput, _
                         mTradeBuildAPI.BarFormatterLibManager, _
                         lConfig, _
-                        CreateChartSpecifier(CLng(NumHistBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), fromDate, toDate), _
+                        CreateChartSpecifier(CLng(NumHistHistoryBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), fromDate, toDate), _
                         ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text), _
                         gMainForm, _
                         gTheme
@@ -1639,34 +1758,34 @@ On Error GoTo Err
 
 If mTickerGrid.SelectedTickers.Count = 0 Then
     StopTickerButton.Enabled = False
-    ChartButton.Enabled = False
-    ChartButton1.Enabled = False
+    LiveChartButton.Enabled = False
+    HistChartButton.Enabled = False
     MarketDepthButton.Enabled = False
     OrderTicketButton.Enabled = False
 Else
     StopTickerButton.Enabled = True
     
-    ChartButton.Enabled = False
-    ChartButton1.Enabled = False
+    LiveChartButton.Enabled = False
+    HistChartButton.Enabled = False
     MarketDepthButton.Enabled = False
     OrderTicketButton.Enabled = False
     
     If FeaturesSSTab.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexLiveCharts Then
-        ChartButton.Default = True
+        LiveChartButton.Default = True
     ElseIf FeaturesSSTab.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexTickers Then
-        ChartButton1.Default = True
+        HistChartButton.Default = True
     End If
     
     Dim lTicker As Ticker
     Set lTicker = getSelectedDataSource
     If lTicker Is Nothing Then
     ElseIf lTicker.State = MarketDataSourceStateRunning Then
-        ChartButton.Enabled = True
-        ChartButton1.Enabled = True
+        LiveChartButton.Enabled = True
+        HistChartButton.Enabled = True
         Dim lContract As IContract
         Set lContract = lTicker.ContractFuture.Value
-        If (lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled) And lContract.Specifier.SecType <> SecTypeIndex Then
-            OrderTicketButton.Enabled = True
+        If lContract.Specifier.SecType <> SecTypeIndex Then
+            If lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled Then OrderTicketButton.Enabled = True
             MarketDepthButton.Enabled = True
         End If
     End If
@@ -1714,8 +1833,8 @@ On Error GoTo Err
 Dim tp As TimePeriod
 Set tp = LiveChartTimeframeSelector.TimePeriod
 
-ChartButton.ToolTipText = "Show " & tp.ToString & " chart"
-ChartButton1.ToolTipText = ChartButton.ToolTipText
+LiveChartButton.ToolTipText = "Show " & tp.ToString & " chart"
+HistChartButton.ToolTipText = LiveChartButton.ToolTipText
 
 Exit Sub
 
@@ -1780,18 +1899,21 @@ Private Sub setupReplaySpeedCombo()
 Const ProcName As String = "setupReplaySpeedCombo"
 On Error GoTo Err
 
-ReplaySpeedCombo.AddItem "Continuous"
-ReplaySpeedCombo.ItemData(0) = 0
-ReplaySpeedCombo.AddItem "Actual speed"
-ReplaySpeedCombo.ItemData(1) = 1
-ReplaySpeedCombo.AddItem "2x Actual speed"
-ReplaySpeedCombo.ItemData(2) = 2
-ReplaySpeedCombo.AddItem "4x Actual speed"
-ReplaySpeedCombo.ItemData(3) = 4
-ReplaySpeedCombo.AddItem "8x Actual speed"
-ReplaySpeedCombo.ItemData(4) = 8
+ReplaySpeedCombo.ComboItems.Add , , "Continuous"
+ReplaySpeedCombo.ComboItems(1).Tag = 0
 
-ReplaySpeedCombo.Text = "Actual speed"
+ReplaySpeedCombo.ComboItems.Add , , "Actual speed"
+ReplaySpeedCombo.ComboItems(2).Tag = 1
+ReplaySpeedCombo.ComboItems(2).Selected = True
+
+ReplaySpeedCombo.ComboItems.Add , , "2x Actual speed"
+ReplaySpeedCombo.ComboItems(3).Tag = 2
+
+ReplaySpeedCombo.ComboItems.Add , , "4x Actual speed"
+ReplaySpeedCombo.ComboItems(4).Tag = 4
+
+ReplaySpeedCombo.ComboItems.Add , , "8x Actual speed"
+ReplaySpeedCombo.ComboItems(5).Tag = 8
 
 Exit Sub
 
@@ -1820,8 +1942,8 @@ On Error GoTo Err
 ' provider supports (it obtains this info from TradeBuild)
 LiveChartTimeframeSelector.Initialise mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator     ' use the default settings built-in to the control
 LiveChartTimeframeSelector.SelectTimeframe GetTimePeriod(5, TimePeriodMinute)
-HistTimeframeSelector.Initialise mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator
-HistTimeframeSelector.SelectTimeframe GetTimePeriod(5, TimePeriodMinute)
+HistChartTimeframeSelector.Initialise mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator
+HistChartTimeframeSelector.SelectTimeframe GetTimePeriod(5, TimePeriodMinute)
 
 setChartButtonTooltip
 
@@ -1895,8 +2017,8 @@ On Error GoTo Err
 PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
 StopReplayButton.Enabled = False
-ChartButton.Enabled = False
-ChartButton1.Enabled = False
+LiveChartButton.Enabled = False
+HistChartButton.Enabled = False
 If Not mReplayController Is Nothing Then
     mReplayController.StopReplay
     Set mReplayController = Nothing

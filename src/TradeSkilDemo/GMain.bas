@@ -33,6 +33,7 @@ Public Const ConfigSectionConfigEditor              As String = "ConfigEditor"
 Public Const ConfigSectionDefaultStudyConfigs       As String = "DefaultStudyConfigs"
 Public Const ConfigSectionChartStyles               As String = "/ChartStyles"
 Public Const ConfigSectionFloatingFeaturesPanel     As String = "FloatingFeaturesPanel"
+Public Const ConfigSectionFloatingInfoPanel         As String = "FloatingInfoPanel"
 Public Const ConfigSectionHistoricCharts            As String = "HistoricCharts"
 Public Const ConfigSectionMainForm                  As String = "MainForm"
 Public Const ConfigSectionOrderTicket               As String = "OrderTicket"
@@ -47,6 +48,8 @@ Public Const ConfigSettingWidth                     As String = "&Width"
 Public Const ConfigSettingWindowstate               As String = "&Windowstate"
 Public Const ConfigSettingFeaturesPanelHidden       As String = "&FeaturesPanelHidden"
 Public Const ConfigSettingFeaturesPanelPinned       As String = "&FeaturesPanelPinned"
+Public Const ConfigSettingInfoPanelHidden           As String = "&InfoPanelHidden"
+Public Const ConfigSettingInfoPanelPinned           As String = "&InfoPanelPinned"
 
 Public Const ConfigSettingCurrentChartStyle         As String = "&CurrentChartStyle"
 Public Const ConfigSettingCurrentHistChartStyle     As String = "&CurrentHistChartStyle"
@@ -57,7 +60,6 @@ Public Const ConfigSettingAppCurrentHistChartStyle  As String = ConfigSectionApp
 Public Const ConfigSettingConfigEditorLeft          As String = ConfigSectionConfigEditor & ConfigSettingLeft
 Public Const ConfigSettingConfigEditorTop           As String = ConfigSectionConfigEditor & ConfigSettingTop
 
-Public Const ConfigSettingMainFormFeaturesHidden    As String = ConfigSectionMainForm & "&FeaturesHidden"
 Public Const ConfigSettingMainFormHeight            As String = ConfigSectionMainForm & ConfigSettingHeight
 Public Const ConfigSettingMainFormLeft              As String = ConfigSectionMainForm & ConfigSettingLeft
 Public Const ConfigSettingMainFormTop               As String = ConfigSectionMainForm & ConfigSettingTop
@@ -69,6 +71,13 @@ Public Const ConfigSettingOrderTicketTop            As String = ConfigSectionOrd
 
 Public Const ConfigSettingFloatingFeaturesPanelLeft As String = ConfigSectionFloatingFeaturesPanel & ConfigSettingLeft
 Public Const ConfigSettingFloatingFeaturesPanelTop  As String = ConfigSectionFloatingFeaturesPanel & ConfigSettingTop
+Public Const ConfigSettingFloatingFeaturesPanelWidth  As String = ConfigSectionFloatingFeaturesPanel & ConfigSettingWidth
+Public Const ConfigSettingFloatingFeaturesPanelHeight As String = ConfigSectionFloatingFeaturesPanel & ConfigSettingHeight
+
+Public Const ConfigSettingFloatingInfoPanelLeft     As String = ConfigSectionFloatingInfoPanel & ConfigSettingLeft
+Public Const ConfigSettingFloatingInfoPanelTop      As String = ConfigSectionFloatingInfoPanel & ConfigSettingTop
+Public Const ConfigSettingFloatingInfoPanelWidth    As String = ConfigSectionFloatingInfoPanel & ConfigSettingWidth
+Public Const ConfigSettingFloatingInfoPanelHeight   As String = ConfigSectionFloatingInfoPanel & ConfigSettingHeight
 
 Private Const DefaultAppInstanceConfigName          As String = "Default Config"
 

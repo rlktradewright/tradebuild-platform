@@ -1,8 +1,8 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#115.0#0"; "TradeBuildUI27.ocx"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#203.0#0"; "StudiesUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.6#0"; "TWControls40.ocx"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#119.0#0"; "TradeBuildUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#207.0#0"; "StudiesUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -29,7 +29,6 @@ Begin VB.UserControl ConfigManager
          Strikethrough   =   0   'False
       EndProperty
       Caption         =   "New"
-      Object.Default         =   -1  'True
    End
    Begin TWControls40.TWButton DeleteConfigButton 
       Height          =   375
@@ -49,7 +48,6 @@ Begin VB.UserControl ConfigManager
          Strikethrough   =   0   'False
       EndProperty
       Caption         =   "Delete"
-      Object.Default         =   -1  'True
    End
    Begin TradeBuildUI27.SPConfigurer SPConfigurer1 
       Height          =   4005
@@ -151,10 +149,10 @@ Begin VB.UserControl ConfigManager
    End
    Begin VB.Shape Box1 
       BorderColor     =   &H00E7D395&
-      Height          =   3975
+      Height          =   4020
       Left            =   2520
       Top             =   0
-      Width           =   7455
+      Width           =   7515
    End
    Begin VB.Menu ConfigTVMenu 
       Caption         =   "Config"
@@ -813,7 +811,7 @@ Const ProcName As String = "showServiceProviderConfigDetails"
 On Error GoTo Err
 
 hideConfigControls
-SPConfigurer1.left = Box1.left
+SPConfigurer1.Left = Box1.Left
 SPConfigurer1.Top = Box1.Top
 SPConfigurer1.Visible = True
 SPConfigurer1.Initialise gPermittedServiceProviderRoles, _
@@ -831,7 +829,7 @@ Const ProcName As String = "showStudyLibraryConfigDetails"
 On Error GoTo Err
 
 hideConfigControls
-StudyLibConfigurer1.left = Box1.left
+StudyLibConfigurer1.Left = Box1.Left
 StudyLibConfigurer1.Top = Box1.Top
 StudyLibConfigurer1.Visible = True
 StudyLibConfigurer1.Initialise mCurrAppConfig.GetConfigurationSection(ConfigNameTradeBuild)

@@ -1,8 +1,6 @@
 VERSION 5.00
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#279.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#279.2#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
@@ -12,6 +10,16 @@ Begin VB.Form fTradeSkilDemo
    LinkTopic       =   "Form1"
    ScaleHeight     =   9960
    ScaleWidth      =   16665
+   Begin TradeSkilDemo27.InfoPanel InfoPanel 
+      Height          =   4755
+      Left            =   4320
+      TabIndex        =   5
+      Top             =   4800
+      Visible         =   0   'False
+      Width           =   12255
+      _ExtentX        =   21616
+      _ExtentY        =   8387
+   End
    Begin VB.PictureBox ShowInfoPanelPicture 
       AutoSize        =   -1  'True
       BorderStyle     =   0  'None
@@ -27,330 +35,26 @@ Begin VB.Form fTradeSkilDemo
       Top             =   9345
       Width           =   240
    End
-   Begin VB.PictureBox HideInfoPanelPicture 
-      AutoSize        =   -1  'True
-      BorderStyle     =   0  'None
-      Height          =   240
-      Left            =   16290
-      MouseIcon       =   "fTradeSkilDemo.frx":06DC
-      MousePointer    =   99  'Custom
-      Picture         =   "fTradeSkilDemo.frx":082E
-      ScaleHeight     =   240
-      ScaleWidth      =   240
-      TabIndex        =   8
-      ToolTipText     =   "Hide Information Panel"
-      Top             =   5070
-      Width           =   240
-   End
    Begin VB.PictureBox ShowFeaturesPanelPicture 
       AutoSize        =   -1  'True
       BorderStyle     =   0  'None
       Height          =   240
       Left            =   0
-      MouseIcon       =   "fTradeSkilDemo.frx":0DB8
+      MouseIcon       =   "fTradeSkilDemo.frx":06DC
       MousePointer    =   99  'Custom
-      Picture         =   "fTradeSkilDemo.frx":0F0A
+      Picture         =   "fTradeSkilDemo.frx":082E
       ScaleHeight     =   240
       ScaleWidth      =   240
-      TabIndex        =   16
+      TabIndex        =   3
       ToolTipText     =   "Show Features Panel"
       Top             =   120
       Width           =   240
-   End
-   Begin TabDlg.SSTab InfoSSTab 
-      Height          =   4455
-      Left            =   4320
-      TabIndex        =   3
-      Top             =   5040
-      Width           =   12255
-      _ExtentX        =   21616
-      _ExtentY        =   7858
-      _Version        =   393216
-      TabOrientation  =   1
-      Style           =   1
-      TabsPerRow      =   6
-      TabHeight       =   520
-      ForeColor       =   -2147483630
-      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-         Name            =   "Segoe UI"
-         Size            =   9
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      TabCaption(0)   =   "&1. Orders"
-      TabPicture(0)   =   "fTradeSkilDemo.frx":1494
-      Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "TickfileOrdersSummary"
-      Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "SimulatedOrdersSummary"
-      Tab(0).Control(1).Enabled=   0   'False
-      Tab(0).Control(2)=   "LiveOrdersSummary"
-      Tab(0).Control(2).Enabled=   0   'False
-      Tab(0).Control(3)=   "OrdersSummaryTabStrip"
-      Tab(0).Control(3).Enabled=   0   'False
-      Tab(0).Control(4)=   "OrderTicket1Button"
-      Tab(0).Control(4).Enabled=   0   'False
-      Tab(0).Control(5)=   "ModifyOrderPlexButton"
-      Tab(0).Control(5).Enabled=   0   'False
-      Tab(0).Control(6)=   "CancelOrderPlexButton"
-      Tab(0).Control(6).Enabled=   0   'False
-      Tab(0).Control(7)=   "ClosePositionsButton"
-      Tab(0).Control(7).Enabled=   0   'False
-      Tab(0).ControlCount=   8
-      TabCaption(1)   =   "&2. Executions"
-      TabPicture(1)   =   "fTradeSkilDemo.frx":14B0
-      Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "TickfileExecutionsSummary"
-      Tab(1).Control(1)=   "SimulatedExecutionsSummary"
-      Tab(1).Control(2)=   "ExecutionsSummaryTabStrip"
-      Tab(1).Control(3)=   "LiveExecutionsSummary"
-      Tab(1).ControlCount=   4
-      TabCaption(2)   =   "&3. Log"
-      TabPicture(2)   =   "fTradeSkilDemo.frx":14CC
-      Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "LogText"
-      Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).ControlCount=   1
-      Begin TWControls40.TWButton ClosePositionsButton 
-         Height          =   495
-         Left            =   11160
-         TabIndex        =   7
-         Top             =   3480
-         Width           =   975
-         _ExtentX        =   1720
-         _ExtentY        =   873
-         DefaultBorderColor=   15793920
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   700
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Caption         =   "Close all positions!"
-      End
-      Begin TWControls40.TWButton CancelOrderPlexButton 
-         Height          =   495
-         Left            =   11160
-         TabIndex        =   6
-         Top             =   2040
-         Width           =   975
-         _ExtentX        =   1720
-         _ExtentY        =   873
-         DefaultBorderColor=   15793920
-         Enabled         =   0   'False
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Caption         =   "&Cancel"
-      End
-      Begin TWControls40.TWButton ModifyOrderPlexButton 
-         Height          =   495
-         Left            =   11160
-         TabIndex        =   5
-         Top             =   1440
-         Width           =   975
-         _ExtentX        =   1720
-         _ExtentY        =   873
-         DefaultBorderColor=   15793920
-         Enabled         =   0   'False
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Caption         =   "&Modify"
-      End
-      Begin TWControls40.TWButton OrderTicket1Button 
-         Height          =   495
-         Left            =   11160
-         TabIndex        =   4
-         Top             =   840
-         Width           =   975
-         _ExtentX        =   1720
-         _ExtentY        =   873
-         DefaultBorderColor=   15793920
-         Enabled         =   0   'False
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Caption         =   "Order Ticket"
-      End
-      Begin VB.TextBox LogText 
-         Appearance      =   0  'Flat
-         BorderStyle     =   0  'None
-         Height          =   3975
-         Left            =   -74880
-         Locked          =   -1  'True
-         MultiLine       =   -1  'True
-         ScrollBars      =   2  'Vertical
-         TabIndex        =   12
-         TabStop         =   0   'False
-         ToolTipText     =   "Status messages"
-         Top             =   120
-         Width           =   11955
-      End
-      Begin MSComctlLib.TabStrip OrdersSummaryTabStrip 
-         Height          =   375
-         Left            =   120
-         TabIndex        =   10
-         Top             =   3720
-         Width           =   4215
-         _ExtentX        =   7435
-         _ExtentY        =   661
-         MultiRow        =   -1  'True
-         Style           =   2
-         Placement       =   1
-         _Version        =   393216
-         BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
-            NumTabs         =   3
-            BeginProperty Tab1 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
-               Caption         =   "Live"
-               Object.ToolTipText     =   "Show live orders"
-               ImageVarType    =   2
-            EndProperty
-            BeginProperty Tab2 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
-               Caption         =   "Simulated"
-               Object.ToolTipText     =   "Show simulated orders"
-               ImageVarType    =   2
-            EndProperty
-            BeginProperty Tab3 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
-               Caption         =   "Tickfile"
-               Object.ToolTipText     =   "Show tickfile orders"
-               ImageVarType    =   2
-            EndProperty
-         EndProperty
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "Segoe UI"
-            Size            =   9
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-      End
-      Begin TradingUI27.OrdersSummary LiveOrdersSummary 
-         Height          =   3615
-         Left            =   120
-         TabIndex        =   2
-         Top             =   120
-         Width           =   10935
-         _ExtentX        =   19288
-         _ExtentY        =   6376
-      End
-      Begin TradingUI27.OrdersSummary SimulatedOrdersSummary 
-         Height          =   3615
-         Left            =   120
-         TabIndex        =   11
-         Top             =   120
-         Width           =   10935
-         _ExtentX        =   19288
-         _ExtentY        =   6376
-      End
-      Begin TradingUI27.ExecutionsSummary LiveExecutionsSummary 
-         Height          =   3615
-         Left            =   -74880
-         TabIndex        =   13
-         Top             =   120
-         Width           =   11955
-         _ExtentX        =   21087
-         _ExtentY        =   6376
-      End
-      Begin MSComctlLib.TabStrip ExecutionsSummaryTabStrip 
-         Height          =   375
-         Left            =   -74880
-         TabIndex        =   14
-         Top             =   3720
-         Width           =   4215
-         _ExtentX        =   7435
-         _ExtentY        =   661
-         MultiRow        =   -1  'True
-         Style           =   2
-         Placement       =   1
-         _Version        =   393216
-         BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
-            NumTabs         =   3
-            BeginProperty Tab1 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
-               Caption         =   "Live"
-               Object.ToolTipText     =   "Show live executions"
-               ImageVarType    =   2
-            EndProperty
-            BeginProperty Tab2 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
-               Caption         =   "Simulated"
-               Object.ToolTipText     =   "Show simulated executions"
-               ImageVarType    =   2
-            EndProperty
-            BeginProperty Tab3 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
-               Caption         =   "Tickfile"
-               Object.ToolTipText     =   "Show executions against tickfiles"
-               ImageVarType    =   2
-            EndProperty
-         EndProperty
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "Segoe UI"
-            Size            =   9
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-      End
-      Begin TradingUI27.ExecutionsSummary SimulatedExecutionsSummary 
-         Height          =   3615
-         Left            =   -74880
-         TabIndex        =   15
-         Top             =   120
-         Width           =   11995
-         _ExtentX        =   21167
-         _ExtentY        =   6376
-      End
-      Begin TradingUI27.OrdersSummary TickfileOrdersSummary 
-         Height          =   3615
-         Left            =   120
-         TabIndex        =   17
-         Top             =   120
-         Width           =   10935
-         _ExtentX        =   19288
-         _ExtentY        =   6376
-      End
-      Begin TradingUI27.ExecutionsSummary TickfileExecutionsSummary 
-         Height          =   3615
-         Left            =   -74880
-         TabIndex        =   18
-         Top             =   120
-         Width           =   11955
-         _ExtentX        =   21087
-         _ExtentY        =   6376
-      End
    End
    Begin MSComctlLib.StatusBar StatusBar1 
       Align           =   2  'Align Bottom
       Height          =   375
       Left            =   0
-      TabIndex        =   9
+      TabIndex        =   2
       Top             =   9585
       Width           =   16665
       _ExtentX        =   29395
@@ -378,13 +82,13 @@ Begin VB.Form fTradeSkilDemo
       EndProperty
    End
    Begin TradingUI27.TickerGrid TickerGrid1 
-      Height          =   4815
+      Height          =   4695
       Left            =   4320
       TabIndex        =   1
       Top             =   120
       Width           =   12255
       _ExtentX        =   21616
-      _ExtentY        =   8493
+      _ExtentY        =   8281
       AllowUserReordering=   3
       BackColorFixed  =   16053492
       RowBackColorOdd =   16316664
@@ -412,14 +116,14 @@ Begin VB.Form fTradeSkilDemo
       EndProperty
    End
    Begin TradeSkilDemo27.FeaturesPanel FeaturesPanel 
-      Height          =   9375
+      Height          =   9675
       Left            =   120
-      TabIndex        =   19
+      TabIndex        =   4
       Top             =   120
       Visible         =   0   'False
       Width           =   4095
       _ExtentX        =   7223
-      _ExtentY        =   16536
+      _ExtentY        =   17066
    End
 End
 Attribute VB_Name = "fTradeSkilDemo"
@@ -439,7 +143,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements LogListener
 Implements StateChangeListener
 
 '================================================================================
@@ -452,25 +155,9 @@ Implements StateChangeListener
     
 Private Const ModuleName                    As String = "fTradeSkilDemo"
 
-Private Const ExecutionsTabCaptionLive      As String = "Live"
-Private Const ExecutionsTabCaptionSimulated As String = "Simulated"
-Private Const ExecutionsTabCaptionTickfile  As String = "Tickfile"
-
 '================================================================================
 ' Enums
 '================================================================================
-
-Private Enum InfoTabIndexNumbers
-    InfoTabIndexOrders
-    InfoTabIndexExecutions
-    InfoTabIndexLog
-End Enum
-
-Private Enum OrdersTabIndexNumbers
-    OrdersTabIndexLive = 1
-    OrdersTabIndexSimulated
-    OrderTabIndexTickfile
-End Enum
 
 '================================================================================
 ' Types
@@ -483,13 +170,14 @@ End Enum
 Private WithEvents mTradeBuildAPI                   As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 
-Private mTickers                                    As Tickers
+Private WithEvents mTickers                         As Tickers
 Attribute mTickers.VB_VarHelpID = -1
 
 Private mFeaturesPanelHidden                        As Boolean
 Private mFeaturesPanelPinned                        As Boolean
 
 Private mInfoPanelHidden                            As Boolean
+Private mInfoPanelPinned                            As Boolean
 
 Private mClockDisplay                               As ClockDisplay
 
@@ -508,6 +196,8 @@ Private mOrderTicket                                As fOrderTicket
 
 Private WithEvents mFeaturesPanelForm               As fFeaturesPanel
 Attribute mFeaturesPanelForm.VB_VarHelpID = -1
+Private WithEvents mInfoPanelForm                    As fInfoPanel
+Attribute mInfoPanelForm.VB_VarHelpID = -1
 
 '================================================================================
 ' Form Event Handlers
@@ -522,8 +212,6 @@ End Sub
 Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
 On Error GoTo Err
-
-setupLogging
 
 Set mClockDisplay = New ClockDisplay
 mClockDisplay.Initialise StatusBar1.Panels("datetime"), StatusBar1.Panels("timezone")
@@ -587,6 +275,10 @@ LogMessage "Finishing Features Panel"
 FeaturesPanel.Finish
 If Not mFeaturesPanelForm Is Nothing Then mFeaturesPanelForm.Finish
 
+LogMessage "Finishing Info Panel"
+InfoPanel.Finish
+If Not mInfoPanelForm Is Nothing Then mInfoPanelForm.Finish
+
 Shutdown
 
 LogMessage "Closing charts and market depth forms"
@@ -607,43 +299,10 @@ Next
 LogMessage "Stopping tickers"
 If Not mTickers Is Nothing Then mTickers.Finish
 
-killLoggingForThisForm
-
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-'================================================================================
-' LogListener Interface Members
-'================================================================================
-
-Private Sub LogListener_Finish()
-'nothing to do
-End Sub
-
-Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
-On Error GoTo Err
-
-If Len(LogText.Text) >= 32767 Then
-    ' clear some space at the start of the textbox
-    LogText.SelStart = 0
-    LogText.SelLength = 16384
-    LogText.SelText = ""
-End If
-
-LogText.SelStart = Len(LogText.Text)
-LogText.SelLength = 0
-If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
-LogText.SelText = formatLogRecord(Logrec)
-LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -654,7 +313,6 @@ Private Sub StateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
-OrderTicket1Button.Enabled = Not (getSelectedDataSource Is Nothing)
 Dim lDataSource As IMarketDataSource
 Set lDataSource = ev.Source
 
@@ -668,8 +326,7 @@ Case MarketDataSourceStates.MarketDataSourceStateRunning
 Case MarketDataSourceStates.MarketDataSourceStatePaused
 
 Case MarketDataSourceStates.MarketDataSourceStateStopped
-    If getSelectedDataSource Is Nothing Then
-    Else
+    If Not getSelectedDataSource Is Nothing Then
         mClockDisplay.SetClockFuture getSelectedDataSource.ClockFuture
     End If
     
@@ -684,78 +341,6 @@ End Sub
 '================================================================================
 ' Form Control Event Handlers
 '================================================================================
-
-Private Sub CancelOrderPlexButton_Click()
-Const ProcName As String = "CancelOrderPlexButton_Click"
-On Error GoTo Err
-
-Dim op As IBracketOrder
-
-If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
-    Set op = LiveOrdersSummary.SelectedItem
-ElseIf OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexSimulated Then
-    Set op = SimulatedOrdersSummary.SelectedItem
-Else
-    Set op = TickfileOrdersSummary.SelectedItem
-End If
-If Not op Is Nothing Then op.Cancel True
-
-CancelOrderPlexButton.Enabled = False
-ModifyOrderPlexButton.Enabled = False
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub ClosePositionsButton_Click()
-Const ProcName As String = "ClosePositionsButton_Click"
-On Error GoTo Err
-
-If Not mTradeBuildAPI.ClosingPositions Then
-    If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
-        mTradeBuildAPI.CloseAllPositions PositionTypeLive, _
-                                        ClosePositionCancelOrders Or ClosePositionWaitForCancel
-    Else
-        mTradeBuildAPI.CloseAllPositions PositionTypeSimulated, _
-                                        ClosePositionCancelOrders Or ClosePositionWaitForCancel
-    End If
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub ExecutionsSummaryTabStrip_Click()
-Const ProcName As String = "ExecutionsSummaryTabStrip_Click"
-On Error GoTo Err
-
-Static currIndex As Long
-If ExecutionsSummaryTabStrip.SelectedItem.Index = currIndex Then Exit Sub
-
-Select Case ExecutionsSummaryTabStrip.SelectedItem.caption
-Case ExecutionsTabCaptionLive
-    LiveExecutionsSummary.Visible = True
-    SimulatedExecutionsSummary.Visible = False
-    TickfileExecutionsSummary.Visible = False
-Case ExecutionsTabCaptionSimulated
-    LiveExecutionsSummary.Visible = False
-    SimulatedExecutionsSummary.Visible = True
-    TickfileExecutionsSummary.Visible = False
-Case ExecutionsTabCaptionTickfile
-    LiveExecutionsSummary.Visible = False
-    SimulatedExecutionsSummary.Visible = False
-    TickfileExecutionsSummary.Visible = True
-End Select
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 Private Sub FeaturesPanel_Hide()
 Const ProcName As String = "FeaturesPanel_Hide"
@@ -790,122 +375,37 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub HideInfoPanelPicture_Click()
-Const ProcName As String = "HideInfoPanelPicture_Click"
+Private Sub InfoPanel_Hide()
+Const ProcName As String = "InfoPanel_Hide"
 On Error GoTo Err
 
-hideInfoPanel
+InfoPanel.Visible = False
+mInfoPanelHidden = True
+Resize
+updateInstanceSettings
+ShowInfoPanelPicture.Visible = True
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub InfoSSTab_Click(PreviousTab As Integer)
-Const ProcName As String = "InfoSSTAB_Click"
+Private Sub InfoPanel_Unpin()
+Const ProcName As String = "InfoPanel_Unpin"
 On Error GoTo Err
 
-Select Case InfoSSTab.Tab
-Case InfoSSTab.Tab = InfoTabIndexNumbers.InfoTabIndexLog
-Case InfoSSTab.Tab = InfoTabIndexNumbers.InfoTabIndexOrders
-    If ModifyOrderPlexButton.Enabled Then
-        ModifyOrderPlexButton.Default = True
-    Else
-        If CancelOrderPlexButton.Enabled Then CancelOrderPlexButton.Default = True
-    End If
-Case InfoSSTab.Tab = InfoTabIndexNumbers.InfoTabIndexExecutions
-End Select
+InfoPanel.Visible = False
+mInfoPanelPinned = False
+Resize
+updateInstanceSettings
+
+mInfoPanelForm.Show vbModeless, Me
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub LiveOrdersSummary_SelectionChanged()
-Const ProcName As String = "LiveOrdersSummary_SelectionChanged"
-On Error GoTo Err
-
-setOrdersSelection LiveOrdersSummary
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub ModifyOrderPlexButton_Click()
-Const ProcName As String = "ModifyOrderPlexButton_Click"
-On Error GoTo Err
-
-Dim os As OrdersSummary
-
-If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
-    Set os = LiveOrdersSummary
-ElseIf OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexSimulated Then
-    Set os = SimulatedOrdersSummary
-Else
-    Set os = TickfileOrdersSummary
-End If
-
-If os.SelectedItem Is Nothing Then
-    ModifyOrderPlexButton.Enabled = False
-ElseIf os.IsSelectedItemModifiable Then
-    mOrderTicket.Show vbModeless, Me
-    mOrderTicket.ShowBracketOrder os.SelectedItem, os.SelectedOrderIndex
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub OrdersSummaryTabStrip_Click()
-Const ProcName As String = "OrdersSummaryTabStrip_Click"
-On Error GoTo Err
-
-Static currIndex As Long
-If OrdersSummaryTabStrip.SelectedItem.Index = currIndex Then Exit Sub
-
-Select Case OrdersSummaryTabStrip.SelectedItem.Index
-Case OrdersTabIndexNumbers.OrdersTabIndexLive
-    LiveOrdersSummary.Visible = True
-    SimulatedOrdersSummary.Visible = False
-    TickfileOrdersSummary.Visible = False
-    setOrdersSelection LiveOrdersSummary
-    currIndex = OrdersTabIndexNumbers.OrdersTabIndexLive
-Case OrdersTabIndexNumbers.OrdersTabIndexSimulated
-    LiveOrdersSummary.Visible = False
-    SimulatedOrdersSummary.Visible = True
-    TickfileOrdersSummary.Visible = False
-    setOrdersSelection SimulatedOrdersSummary
-    currIndex = OrdersTabIndexNumbers.OrdersTabIndexSimulated
-Case OrdersTabIndexNumbers.OrderTabIndexTickfile
-    LiveOrdersSummary.Visible = False
-    SimulatedOrdersSummary.Visible = False
-    TickfileOrdersSummary.Visible = True
-    setOrdersSelection TickfileOrdersSummary
-    currIndex = OrdersTabIndexNumbers.OrderTabIndexTickfile
-End Select
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub OrderTicket1Button_Click()
-Const ProcName As String = "OrderTicket1Button_Click"
-On Error GoTo Err
-
-showOrderTicket
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ShowFeaturesPanelPicture_Click()
@@ -933,11 +433,11 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub SimulatedOrdersSummary_SelectionChanged()
-Const ProcName As String = "SimulatedOrdersSummary_SelectionChanged"
+Private Sub TickerGrid1_ErroredTickerRemoved(ByVal pTicker As IMarketDataSource)
+Const ProcName As String = "TickerGrid1_ErroredTickerRemoved"
 On Error GoTo Err
 
-setOrdersSelection SimulatedOrdersSummary
+pTicker.Finish
 
 Exit Sub
 
@@ -982,18 +482,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub TickfileOrdersSummary_SelectionChanged()
-Const ProcName As String = "SimulatedOrdersSummary_SelectionChanged"
-On Error GoTo Err
-
-setOrdersSelection TickfileOrdersSummary
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1063,6 +551,41 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
+' mInfoPanelForm Event Handlers
+'================================================================================
+
+Private Sub mInfoPanelForm_Hide()
+Const ProcName As String = "mInfoPanelForm_Hide"
+On Error GoTo Err
+
+mInfoPanelForm.Hide
+mInfoPanelHidden = True
+updateInstanceSettings
+ShowInfoPanelPicture.Visible = True
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mInfoPanelForm_Pin()
+Const ProcName As String = "mInfoPanelForm_Pin"
+On Error GoTo Err
+
+mInfoPanelForm.Hide
+mInfoPanelPinned = True
+InfoPanel.Visible = True
+Resize
+updateInstanceSettings
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'================================================================================
 ' mOrderRecoveryFutureWaiter Event Handlers
 '================================================================================
 
@@ -1078,6 +601,7 @@ ElseIf ev.Future.IsAvailable Then
     
     Me.Show vbModeless
     If Not mFeaturesPanelPinned And Not mFeaturesPanelHidden Then mFeaturesPanelForm.Show vbModeless, Me
+    If Not mInfoPanelPinned And Not mInfoPanelHidden Then mInfoPanelForm.Show vbModeless, Me
 
     gUnloadSplashScreen
     
@@ -1086,6 +610,37 @@ ElseIf ev.Future.IsAvailable Then
         Set mPreviousMainForm = Nothing
     End If
 End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' mTickers Event Handlers
+'================================================================================
+
+Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mTickers_CollectionChanged"
+On Error GoTo Err
+
+Dim lTicker As Ticker
+
+Select Case ev.ChangeType
+Case CollItemAdded
+    Set lTicker = ev.AffectedItem
+    lTicker.AddStateChangeListener Me
+Case CollItemRemoved
+    Set lTicker = ev.AffectedItem
+    lTicker.RemoveStateChangeListener Me
+Case CollItemChanged
+
+Case CollOrderChanged
+
+Case CollCollectionCleared
+
+End Select
 
 Exit Sub
 
@@ -1201,18 +756,11 @@ Case WindowStateMaximized
 Case WindowStateMinimized
     Me.WindowState = FormWindowStateConstants.vbMinimized
 Case WindowStateNormal
-    Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormLeft, 0)) * Screen.TwipsPerPixelX
+    Me.Left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormLeft, 0)) * Screen.TwipsPerPixelX
     Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormTop, 0)) * Screen.TwipsPerPixelY
     Me.Width = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormWidth, Me.Width / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
     Me.Height = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormHeight, Me.Height / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 End Select
-
-mInfoPanelHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingMainFormFeaturesHidden, CStr(False)))
-If mInfoPanelHidden Then
-    hideInfoPanel
-Else
-    showInfoPanel
-End If
 
 Exit Sub
 
@@ -1228,6 +776,9 @@ gTheme = pTheme
 
 Me.BackColor = gTheme.BaseColor
 gApplyTheme gTheme, Me.Controls
+
+ShowFeaturesPanelPicture.BackColor = gTheme.BaseColor
+ShowInfoPanelPicture.BackColor = gTheme.BaseColor
 
 Dim lForm As Object
 For Each lForm In Forms
@@ -1285,10 +836,6 @@ Private Sub finishUIControls()
 Const ProcName As String = "finishUIControls"
 On Error GoTo Err
 
-LiveOrdersSummary.Finish
-SimulatedOrdersSummary.Finish
-LiveExecutionsSummary.Finish
-SimulatedExecutionsSummary.Finish
 TickerGrid1.Finish
 
 Exit Sub
@@ -1296,20 +843,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
-Const ProcName As String = "formatLogRecord"
-On Error GoTo Err
-
-Static formatter As LogFormatter
-If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)
-formatLogRecord = formatter.FormatRecord(Logrec)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Function getDefaultClock() As Clock
 Const ProcName As String = "getDefaultClock"
@@ -1342,69 +875,18 @@ Const ProcName As String = "handleSelectedTickers"
 On Error GoTo Err
 
 If TickerGrid1.SelectedTickers.Count = 0 Then
-    OrderTicket1Button.Enabled = False
     mClockDisplay.SetClock getDefaultClock
 Else
-    OrderTicket1Button.Enabled = False
-    
     Dim lTicker As Ticker
     Set lTicker = getSelectedDataSource
     If lTicker Is Nothing Then
         mClockDisplay.SetClock getDefaultClock
     ElseIf lTicker.State = MarketDataSourceStateRunning Then
         mClockDisplay.SetClockFuture lTicker.ClockFuture
-        Dim lContract As IContract
-        Set lContract = lTicker.ContractFuture.Value
-        If (lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled) And lContract.Specifier.SecType <> SecTypeIndex Then
-            OrderTicket1Button.Enabled = True
-        End If
     Else
         mClockDisplay.SetClock getDefaultClock
     End If
 End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub hideFeaturesPanel()
-Const ProcName As String = "hideFeaturesPanel"
-On Error GoTo Err
-
-FeaturesPanel.Visible = True
-Resize
-Me.Refresh
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub hideInfoPanel()
-Const ProcName As String = "hideInfoPanel"
-On Error GoTo Err
-
-InfoSSTab.Visible = False
-ShowInfoPanelPicture.Visible = True
-HideInfoPanelPicture.Visible = False
-mInfoPanelHidden = True
-Resize
-Me.Refresh
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub killLoggingForThisForm()
-Const ProcName As String = "killLoggingForThisForm"
-On Error GoTo Err
-
-GetLogger("log").RemoveLogListener Me
 
 Exit Sub
 
@@ -1420,12 +902,6 @@ LogMessage "Loading configuration: " & mAppInstanceConfig.InstanceQualifier
 
 LogMessage "Loading configuration: Setting up ticker grid"
 setupTickerGrid
-
-LogMessage "Loading configuration: Setting up order summaries"
-setupOrderSummaries
-
-LogMessage "Loading configuration: Setting up execution summaries"
-setupExecutionSummaries
 
 LogMessage "Loading configuration: setting up order ticket"
 setupOrderTicket
@@ -1444,7 +920,8 @@ startCharts
 LogMessage "Loading configuration: creating historical charts"
 startHistoricalCharts
 
-InfoSSTab.Tab = InfoTabIndexNumbers.InfoTabIndexOrders
+LogMessage "Loading configuration: initialising Info Panels"
+setupInfoPanels
 
 LogMessage "Loading configuration: initialising Features Panels"
 setupFeaturesPanels
@@ -1467,135 +944,30 @@ Private Sub Resize()
 Const ProcName As String = "Resize"
 On Error GoTo Err
 
-Dim left As Long
+Dim lLeft As Long
 If mFeaturesPanelHidden Or Not mFeaturesPanelPinned Then
-    left = ShowFeaturesPanelPicture.Width + 60
+    lLeft = ShowFeaturesPanelPicture.Width + 60
 Else
-    left = 120 + FeaturesPanel.Width + 120
+    lLeft = 120 + FeaturesPanel.Width + 120
 End If
 
-'StatusBar1.Top = Me.ScaleHeight - StatusBar1.Height
+StatusBar1.Top = Me.ScaleHeight - StatusBar1.Height
 
 FeaturesPanel.Height = StatusBar1.Top - FeaturesPanel.Top
 
-InfoSSTab.Move left, _
-                    StatusBar1.Top - InfoSSTab.Height, _
-                    Me.ScaleWidth - left - 120
+If Not mInfoPanelHidden And mInfoPanelPinned Then
+    InfoPanel.Move lLeft, _
+                        StatusBar1.Top - InfoPanel.Height, _
+                        Me.ScaleWidth - lLeft - 120
+End If
 
-HideInfoPanelPicture.Move InfoSSTab.left + InfoSSTab.Width - HideInfoPanelPicture.Width - 2 * Screen.TwipsPerPixelX, _
-                        InfoSSTab.Top + Screen.TwipsPerPixelY
-ShowInfoPanelPicture.Move HideInfoPanelPicture.left, _
+ShowInfoPanelPicture.Move Me.ScaleWidth - 345, _
                         StatusBar1.Top - 240
 
-TickerGrid1.Move left, _
+TickerGrid1.Move lLeft, _
                 TickerGrid1.Top, _
-                Me.ScaleWidth - left - 120, _
-                IIf(mInfoPanelHidden, ShowInfoPanelPicture.Top - 60, InfoSSTab.Top - 120) - TickerGrid1.Top
-
-If OrderTicket1Button.left >= 0 Then
-    OrderTicket1Button.left = InfoSSTab.Width - OrderTicket1Button.Width - 120
-    ModifyOrderPlexButton.left = InfoSSTab.Width - ModifyOrderPlexButton.Width - 120
-    CancelOrderPlexButton.left = InfoSSTab.Width - CancelOrderPlexButton.Width - 120
-    ClosePositionsButton.left = InfoSSTab.Width - CancelOrderPlexButton.Width - 120
-    
-    LiveOrdersSummary.Width = ModifyOrderPlexButton.left - 120 - 120
-    SimulatedOrdersSummary.Width = LiveOrdersSummary.Width
-    TickfileOrdersSummary.Width = LiveOrdersSummary.Width
-Else
-    OrderTicket1Button.left = InfoSSTab.Width - OrderTicket1Button.Width - 120 - SSTabInactiveControlAdjustment
-    ModifyOrderPlexButton.left = InfoSSTab.Width - ModifyOrderPlexButton.Width - 120 - SSTabInactiveControlAdjustment
-    CancelOrderPlexButton.left = InfoSSTab.Width - CancelOrderPlexButton.Width - 120 - SSTabInactiveControlAdjustment
-    ClosePositionsButton.left = InfoSSTab.Width - CancelOrderPlexButton.Width - 120 - SSTabInactiveControlAdjustment
-    
-    LiveOrdersSummary.Width = ModifyOrderPlexButton.left + SSTabInactiveControlAdjustment - 120 - 120
-    SimulatedOrdersSummary.Width = LiveOrdersSummary.Width
-    TickfileOrdersSummary.Width = LiveOrdersSummary.Width
-End If
-
-LogText.Width = InfoSSTab.Width - 120 - 120
-LiveExecutionsSummary.Width = InfoSSTab.Width - 120 - 120
-SimulatedExecutionsSummary.Width = InfoSSTab.Width - 120 - 120
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setOrdersSelection( _
-                ByVal pOrdersSummary As OrdersSummary)
-Const ProcName As String = "setOrdersSelection"
-On Error GoTo Err
-
-If pOrdersSummary.IsEditing Then
-    pOrdersSummary.Default = True
-    Exit Sub
-End If
-
-pOrdersSummary.Default = False
-
-Dim selection As IBracketOrder
-Set selection = pOrdersSummary.SelectedItem
-
-If selection Is Nothing Then
-    CancelOrderPlexButton.Enabled = False
-    ModifyOrderPlexButton.Enabled = False
-Else
-    If pOrdersSummary.SelectedOrderIndex = 0 Then
-        CancelOrderPlexButton.Enabled = True
-    Else
-        CancelOrderPlexButton.Enabled = False
-    End If
-    If pOrdersSummary.IsSelectedItemModifiable Then
-        ModifyOrderPlexButton.Enabled = True
-        ModifyOrderPlexButton.Default = True
-    Else
-        ModifyOrderPlexButton.Enabled = False
-        ModifyOrderPlexButton.Default = False
-    End If
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setupExecutionSummaries()
-Const ProcName As String = "setupExecutionSummaries"
-On Error GoTo Err
-
-Do While ExecutionsSummaryTabStrip.Tabs.Count > 0
-    ExecutionsSummaryTabStrip.Tabs.Remove 1
-Loop
-
-If mTradeBuildAPI.AllOrdersSimulated Then
-    SimulatedExecutionsSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersLive
-    SimulatedExecutionsSummary.Visible = True
-    ExecutionsSummaryTabStrip.Tabs.Add 1, , ExecutionsTabCaptionSimulated
-Else
-    SimulatedExecutionsSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersSimulated
-    SimulatedExecutionsSummary.Visible = False
-    LiveExecutionsSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersLive
-    LiveExecutionsSummary.Visible = True
-    ExecutionsSummaryTabStrip.Tabs.Add 1, , ExecutionsTabCaptionLive
-    ExecutionsSummaryTabStrip.Tabs.Add 2, , ExecutionsTabCaptionSimulated
-End If
-
-If Not mTradeBuildAPI.TickfileStoreInput Is Nothing Then
-    TickfileExecutionsSummary.Visible = False
-    ExecutionsSummaryTabStrip.Tabs.Add ExecutionsSummaryTabStrip.Tabs.Count + 1, , ExecutionsTabCaptionTickfile
-End If
-
-If ExecutionsSummaryTabStrip.Tabs.Count = 1 Then
-    ExecutionsSummaryTabStrip.Visible = False
-    SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top + ExecutionsSummaryTabStrip.Height - SimulatedExecutionsSummary.Top
-Else
-    ExecutionsSummaryTabStrip.Visible = True
-    SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
-    LiveExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
-    TickfileExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
-End If
+                Me.ScaleWidth - lLeft - 120, _
+                IIf(Not mInfoPanelHidden And mInfoPanelPinned, InfoPanel.Top - 120, ShowInfoPanelPicture.Top - 60) - TickerGrid1.Top
 
 Exit Sub
 
@@ -1607,16 +979,12 @@ Private Sub setupFeaturesPanels()
 Const ProcName As String = "setupFeaturesPanels"
 On Error GoTo Err
 
-FeaturesPanel.Initialise True, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, TickfileOrdersSummary, TickfileExecutionsSummary, mChartForms, mOrderTicket
+FeaturesPanel.Initialise True, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
 mFeaturesPanelPinned = CBool(mAppInstanceConfig.GetSetting(ConfigSettingFeaturesPanelPinned, "True"))
 mFeaturesPanelHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingFeaturesPanelHidden, "False"))
     
-'FeaturesPanel.Visible = mFeaturesPanelPinned And Not mFeaturesPanelHidden
-'ShowFeaturesPanelPicture.Visible = mFeaturesPanelHidden
-
 Set mFeaturesPanelForm = New fFeaturesPanel
-mFeaturesPanelForm.Initialise False, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, TickfileOrdersSummary, TickfileExecutionsSummary, mChartForms, mOrderTicket
-'mFeaturesPanelForm.Theme = gTheme
+mFeaturesPanelForm.Initialise False, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
 
 If Not mFeaturesPanelHidden Then showFeaturesPanel
 
@@ -1626,43 +994,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setupLogging()
-Const ProcName As String = "setupLogging"
+Private Sub setupInfoPanels()
+Const ProcName As String = "setupInfoPanels"
 On Error GoTo Err
 
-GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setupOrderSummaries()
-Const ProcName As String = "setupOrderSummaries"
-On Error GoTo Err
-
-If mTradeBuildAPI.AllOrdersSimulated Then
-    SimulatedOrdersSummary.Height = OrdersSummaryTabStrip.Top + OrdersSummaryTabStrip.Height - SimulatedOrdersSummary.Top
-    SimulatedOrdersSummary.Visible = True
+InfoPanel.Initialise True, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, mOrderTicket
+mInfoPanelPinned = CBool(mAppInstanceConfig.GetSetting(ConfigSettingInfoPanelPinned, "True"))
+mInfoPanelHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingInfoPanelHidden, "False"))
     
-    LiveOrdersSummary.Visible = False
-    
-    OrdersSummaryTabStrip.Visible = False
-    OrdersSummaryTabStrip.Tabs.Item(OrdersTabIndexSimulated).Selected = True
-Else
-    SimulatedOrdersSummary.Height = OrdersSummaryTabStrip.Top - SimulatedOrdersSummary.Top
-    
-    LiveOrdersSummary.Initialise mTradeBuildAPI.MarketDataManager
-    LiveOrdersSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersLive
-    LiveOrdersSummary.Height = SimulatedOrdersSummary.Height
-    
-    OrdersSummaryTabStrip.Visible = True
-    OrdersSummaryTabStrip.Tabs.Item(OrdersTabIndexLive).Selected = True
-End If
+Set mInfoPanelForm = New fInfoPanel
+mInfoPanelForm.Initialise False, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, mOrderTicket
 
-SimulatedOrdersSummary.Initialise mTradeBuildAPI.MarketDataManager
-SimulatedOrdersSummary.MonitorPositions mTradeBuildAPI.OrderManager.PositionManagersSimulated
+If Not mInfoPanelHidden Then showInfoPanel
 
 Exit Sub
 
@@ -1722,28 +1065,16 @@ Const ProcName As String = "showInfoPanel"
 On Error GoTo Err
 
 mInfoPanelHidden = False
-Resize
-Me.Refresh
-InfoSSTab.Visible = True
-ShowInfoPanelPicture.Visible = False
-HideInfoPanelPicture.Visible = True
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub showOrderTicket()
-Const ProcName As String = "showOrderTicket"
-On Error GoTo Err
-
-If getSelectedDataSource Is Nothing Then
-    gModelessMsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
+If mInfoPanelPinned Then
+    InfoPanel.Visible = True
+    Resize
+    Me.Refresh
 Else
-    mOrderTicket.Show vbModeless, Me
-    mOrderTicket.Ticker = getSelectedDataSource
+    mInfoPanelForm.Show vbModeless, Me
 End If
+updateInstanceSettings
+
+ShowInfoPanelPicture.Visible = False
 
 Exit Sub
 
@@ -1818,7 +1149,7 @@ Case FormWindowStateConstants.vbMinimized
     mAppInstanceConfig.SetSetting ConfigSettingMainFormWindowstate, WindowStateMinimized
 Case FormWindowStateConstants.vbNormal
     mAppInstanceConfig.SetSetting ConfigSettingMainFormWindowstate, WindowStateNormal
-    mAppInstanceConfig.SetSetting ConfigSettingMainFormLeft, Me.left / Screen.TwipsPerPixelX
+    mAppInstanceConfig.SetSetting ConfigSettingMainFormLeft, Me.Left / Screen.TwipsPerPixelX
     mAppInstanceConfig.SetSetting ConfigSettingMainFormTop, Me.Top / Screen.TwipsPerPixelY
     mAppInstanceConfig.SetSetting ConfigSettingMainFormWidth, Me.Width / Screen.TwipsPerPixelX
     mAppInstanceConfig.SetSetting ConfigSettingMainFormHeight, Me.Height / Screen.TwipsPerPixelY
@@ -1827,7 +1158,8 @@ End Select
 mAppInstanceConfig.SetSetting ConfigSettingFeaturesPanelHidden, CStr(mFeaturesPanelHidden)
 mAppInstanceConfig.SetSetting ConfigSettingFeaturesPanelPinned, CStr(mFeaturesPanelPinned)
 
-mAppInstanceConfig.SetSetting ConfigSettingMainFormFeaturesHidden, CStr(mInfoPanelHidden)
+mAppInstanceConfig.SetSetting ConfigSettingInfoPanelHidden, CStr(mInfoPanelHidden)
+mAppInstanceConfig.SetSetting ConfigSettingInfoPanelPinned, CStr(mInfoPanelPinned)
 
 Exit Sub
 

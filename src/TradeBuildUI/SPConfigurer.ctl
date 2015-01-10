@@ -1,7 +1,8 @@
 VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#16.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl SPConfigurer 
+   BackStyle       =   0  'Transparent
    ClientHeight    =   12750
    ClientLeft      =   0
    ClientTop       =   0
@@ -9,35 +10,90 @@ Begin VB.UserControl SPConfigurer
    DefaultCancel   =   -1  'True
    ScaleHeight     =   12750
    ScaleWidth      =   16740
+   Begin TWControls40.TWButton ApplyButton 
+      Height          =   375
+      Left            =   6360
+      TabIndex        =   67
+      Top             =   3480
+      Width           =   975
+      _ExtentX        =   1720
+      _ExtentY        =   661
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Apply"
+   End
+   Begin TWControls40.TWButton CancelButton 
+      Height          =   375
+      Left            =   5280
+      TabIndex        =   66
+      Top             =   3480
+      Width           =   975
+      _ExtentX        =   1720
+      _ExtentY        =   661
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Caption         =   "Cancel"
+   End
    Begin VB.PictureBox TfInputOptionsPicture 
       BorderStyle     =   0  'None
       Height          =   2175
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   62
+      TabIndex        =   59
       Top             =   9000
       Width           =   4815
+      Begin TWControls40.TWButton InputPathChooserButton 
+         Height          =   375
+         Left            =   4320
+         TabIndex        =   65
+         Top             =   360
+         Width           =   495
+         _ExtentX        =   873
+         _ExtentY        =   661
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Caption         =   "..."
+      End
       Begin VB.TextBox InputTickfilePathText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
-         TabIndex        =   67
+         TabIndex        =   63
          Top             =   360
          Width           =   3375
       End
-      Begin VB.CommandButton InputPathChooserButton 
-         Caption         =   "..."
-         Height          =   375
-         Left            =   4320
-         TabIndex        =   66
-         Top             =   360
-         Width           =   495
-      End
       Begin VB.CheckBox TfInputEnabledCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Enabled"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   0
-         TabIndex        =   63
+         TabIndex        =   60
          Top             =   0
          Width           =   2535
       End
@@ -45,19 +101,20 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Input path"
          Height          =   375
          Left            =   0
-         TabIndex        =   65
+         TabIndex        =   62
          Top             =   360
          Width           =   975
       End
    End
    Begin TWControls40.TWImageCombo OptionCombo 
-      Height          =   330
-      Left            =   4320
+      Height          =   270
+      Left            =   4310
       TabIndex        =   0
-      Top             =   720
+      Top             =   710
       Width           =   3015
       _ExtentX        =   5318
-      _ExtentY        =   582
+      _ExtentY        =   476
+      Appearance      =   0
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -76,13 +133,13 @@ Begin VB.UserControl SPConfigurer
       Left            =   10080
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   52
+      TabIndex        =   49
       Top             =   4080
       Width           =   4815
       Begin MSDataGridLib.DataGrid ParamsGrid 
          Height          =   1455
          Left            =   960
-         TabIndex        =   55
+         TabIndex        =   52
          Top             =   720
          Width           =   3855
          _ExtentX        =   6800
@@ -90,10 +147,13 @@ Begin VB.UserControl SPConfigurer
          _Version        =   393216
          AllowUpdate     =   -1  'True
          AllowArrows     =   -1  'True
+         Appearance      =   0
+         BorderStyle     =   0
          HeadLines       =   1
          RowHeight       =   15
          TabAction       =   2
          WrapCellPointer =   -1  'True
+         RowDividerStyle =   6
          AllowAddNew     =   -1  'True
          AllowDelete     =   -1  'True
          BeginProperty HeadFont {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -150,17 +210,21 @@ Begin VB.UserControl SPConfigurer
          EndProperty
       End
       Begin VB.TextBox ProgIdText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
-         TabIndex        =   30
+         TabIndex        =   29
          Top             =   360
          Width           =   3855
       End
       Begin VB.CheckBox CustomEnabledCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Enabled"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   0
-         TabIndex        =   29
+         TabIndex        =   28
          Top             =   0
          Width           =   2535
       End
@@ -168,7 +232,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Parameters"
          Height          =   255
          Left            =   0
-         TabIndex        =   54
+         TabIndex        =   51
          Top             =   720
          Width           =   1575
       End
@@ -176,19 +240,10 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Prog ID"
          Height          =   255
          Left            =   0
-         TabIndex        =   53
+         TabIndex        =   50
          Top             =   360
          Width           =   735
       End
-   End
-   Begin VB.CommandButton CancelButton 
-      Caption         =   "Cancel"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   5280
-      TabIndex        =   31
-      Top             =   3480
-      Width           =   975
    End
    Begin VB.PictureBox TfOutputOptionsPicture 
       BorderStyle     =   0  'None
@@ -196,17 +251,37 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   51
+      TabIndex        =   48
       Top             =   6480
       Width           =   4815
+      Begin TWControls40.TWButton OutputPathChooserButton 
+         Height          =   375
+         Left            =   4320
+         TabIndex        =   64
+         Top             =   360
+         Width           =   495
+         _ExtentX        =   873
+         _ExtentY        =   661
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Caption         =   "..."
+      End
       Begin TWControls40.TWImageCombo TickfileGranularityCombo 
-         Height          =   330
+         Height          =   270
          Left            =   960
-         TabIndex        =   27
+         TabIndex        =   26
          Top             =   840
          Width           =   3375
          _ExtentX        =   5953
-         _ExtentY        =   582
+         _ExtentY        =   476
+         Appearance      =   0
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -219,15 +294,9 @@ Begin VB.UserControl SPConfigurer
          MouseIcon       =   "SPConfigurer.ctx":001C
          Text            =   ""
       End
-      Begin VB.CommandButton OutputPathChooserButton 
-         Caption         =   "..."
-         Height          =   375
-         Left            =   4320
-         TabIndex        =   26
-         Top             =   360
-         Width           =   495
-      End
       Begin VB.TextBox OutputTickfilePathText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   25
@@ -235,7 +304,9 @@ Begin VB.UserControl SPConfigurer
          Width           =   3375
       End
       Begin VB.CheckBox TfOutputEnabledCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Enabled"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   0
          TabIndex        =   24
@@ -246,7 +317,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Granularity"
          Height          =   255
          Left            =   0
-         TabIndex        =   64
+         TabIndex        =   61
          Top             =   840
          Width           =   855
       End
@@ -254,7 +325,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Output path"
          Height          =   375
          Left            =   0
-         TabIndex        =   61
+         TabIndex        =   58
          Top             =   360
          Width           =   975
       End
@@ -265,26 +336,19 @@ Begin VB.UserControl SPConfigurer
       Left            =   10080
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   50
+      TabIndex        =   47
       Top             =   6480
       Width           =   4815
       Begin VB.CheckBox BrEnabledCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Enabled"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   0
-         TabIndex        =   28
+         TabIndex        =   27
          Top             =   0
          Width           =   2535
       End
-   End
-   Begin VB.CommandButton ApplyButton 
-      Caption         =   "Apply"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   6360
-      TabIndex        =   32
-      Top             =   3480
-      Width           =   975
    End
    Begin VB.PictureBox QtOptionsPicture 
       BorderStyle     =   0  'None
@@ -292,11 +356,13 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   45
+      TabIndex        =   42
       Top             =   4080
       Visible         =   0   'False
       Width           =   4815
       Begin VB.TextBox QtConnectRetryIntervalText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   22
@@ -305,6 +371,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox QtProviderKeyText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   21
@@ -312,7 +380,9 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.CheckBox QtKeepConnectionCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Keep connection"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   2520
          TabIndex        =   23
@@ -321,7 +391,9 @@ Begin VB.UserControl SPConfigurer
          Width           =   1935
       End
       Begin VB.CheckBox QtEnabledCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Enabled"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   0
          TabIndex        =   17
@@ -329,6 +401,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   2535
       End
       Begin VB.TextBox QtPasswordText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          IMEMode         =   3  'DISABLE
          Left            =   960
@@ -338,6 +412,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox QtPortText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   19
@@ -346,6 +422,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox QtServerText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   18
@@ -356,7 +434,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Connection retry interval"
          Height          =   375
          Left            =   0
-         TabIndex        =   60
+         TabIndex        =   57
          Top             =   1800
          Width           =   975
       End
@@ -364,7 +442,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Provider key"
          Height          =   255
          Left            =   0
-         TabIndex        =   59
+         TabIndex        =   56
          Top             =   1440
          Width           =   975
       End
@@ -372,7 +450,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Password"
          Height          =   255
          Left            =   0
-         TabIndex        =   48
+         TabIndex        =   45
          Top             =   1080
          Width           =   735
       End
@@ -380,7 +458,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Port"
          Height          =   255
          Left            =   0
-         TabIndex        =   47
+         TabIndex        =   44
          Top             =   720
          Width           =   615
       End
@@ -388,7 +466,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   46
+         TabIndex        =   43
          Top             =   360
          Width           =   615
       End
@@ -399,12 +477,14 @@ Begin VB.UserControl SPConfigurer
       Left            =   0
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   39
+      TabIndex        =   36
       Top             =   6480
       Visible         =   0   'False
       Width           =   4815
       Begin VB.CheckBox DbUseAsyncWritesCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Use async writes"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   2520
          TabIndex        =   16
@@ -413,7 +493,9 @@ Begin VB.UserControl SPConfigurer
          Width           =   1935
       End
       Begin VB.CheckBox DBUseAsyncReadsCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Use async reads"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   2520
          TabIndex        =   15
@@ -422,13 +504,14 @@ Begin VB.UserControl SPConfigurer
          Width           =   1935
       End
       Begin TWControls40.TWImageCombo DbTypeCombo 
-         Height          =   330
+         Height          =   270
          Left            =   960
          TabIndex        =   11
          Top             =   720
          Width           =   1335
          _ExtentX        =   2355
-         _ExtentY        =   582
+         _ExtentY        =   476
+         Appearance      =   0
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -442,7 +525,9 @@ Begin VB.UserControl SPConfigurer
          Text            =   ""
       End
       Begin VB.CheckBox DbEnabledCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Enabled"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   0
          TabIndex        =   9
@@ -450,6 +535,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   2535
       End
       Begin VB.TextBox DbDatabaseText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   12
@@ -457,6 +544,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox DbServerText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   10
@@ -464,6 +553,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox DbUsernameText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   13
@@ -471,6 +562,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox DbPasswordText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          IMEMode         =   3  'DISABLE
          Left            =   960
@@ -483,7 +576,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Database"
          Height          =   255
          Left            =   0
-         TabIndex        =   44
+         TabIndex        =   41
          Top             =   1080
          Width           =   975
       End
@@ -491,7 +584,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   43
+         TabIndex        =   40
          Top             =   360
          Width           =   975
       End
@@ -499,7 +592,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "DB Type"
          Height          =   255
          Left            =   0
-         TabIndex        =   42
+         TabIndex        =   39
          Top             =   720
          Width           =   975
       End
@@ -507,7 +600,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Username"
          Height          =   255
          Left            =   0
-         TabIndex        =   41
+         TabIndex        =   38
          Top             =   1440
          Width           =   975
       End
@@ -515,7 +608,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Password"
          Height          =   255
          Left            =   0
-         TabIndex        =   40
+         TabIndex        =   37
          Top             =   1800
          Width           =   975
       End
@@ -526,18 +619,19 @@ Begin VB.UserControl SPConfigurer
       Left            =   0
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   35
+      TabIndex        =   32
       Top             =   4080
       Visible         =   0   'False
       Width           =   4815
       Begin TWControls40.TWImageCombo TwsLogLevelCombo 
-         Height          =   330
+         Height          =   270
          Left            =   3480
          TabIndex        =   8
          Top             =   360
          Width           =   1335
          _ExtentX        =   2355
-         _ExtentY        =   582
+         _ExtentY        =   476
+         Appearance      =   0
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -551,7 +645,9 @@ Begin VB.UserControl SPConfigurer
          Text            =   ""
       End
       Begin VB.CheckBox TwsKeepConnectionCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Keep connection"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   2520
          TabIndex        =   7
@@ -560,6 +656,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1935
       End
       Begin VB.TextBox TwsConnectRetryIntervalText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   6
@@ -568,6 +666,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox TwsProviderKeyText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   5
@@ -575,7 +675,9 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.CheckBox TwsEnabledCheck 
+         Appearance      =   0  'Flat
          Caption         =   "Enabled"
+         ForeColor       =   &H80000008&
          Height          =   255
          Left            =   0
          TabIndex        =   1
@@ -583,6 +685,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   2535
       End
       Begin VB.TextBox TWSClientIdText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   4
@@ -591,6 +695,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox TWSPortText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   3
@@ -599,6 +705,8 @@ Begin VB.UserControl SPConfigurer
          Width           =   1335
       End
       Begin VB.TextBox TWSServerText 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          Height          =   285
          Left            =   960
          TabIndex        =   2
@@ -609,7 +717,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "TWS Log Level"
          Height          =   375
          Left            =   2520
-         TabIndex        =   58
+         TabIndex        =   55
          Top             =   360
          Width           =   975
       End
@@ -617,7 +725,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Connection retry interval"
          Height          =   375
          Left            =   0
-         TabIndex        =   57
+         TabIndex        =   54
          Top             =   1800
          Width           =   975
       End
@@ -625,7 +733,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Provider key"
          Height          =   255
          Left            =   0
-         TabIndex        =   56
+         TabIndex        =   53
          Top             =   1440
          Width           =   975
       End
@@ -633,7 +741,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Client id"
          Height          =   255
          Left            =   0
-         TabIndex        =   38
+         TabIndex        =   35
          Top             =   1080
          Width           =   615
       End
@@ -641,7 +749,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Port"
          Height          =   255
          Left            =   0
-         TabIndex        =   37
+         TabIndex        =   34
          Top             =   720
          Width           =   615
       End
@@ -649,19 +757,40 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   36
+         TabIndex        =   33
          Top             =   360
          Width           =   615
       End
    End
    Begin VB.ListBox CategoryList 
-      Height          =   3765
+      Appearance      =   0  'Flat
+      Height          =   3735
       ItemData        =   "SPConfigurer.ctx":0070
       Left            =   120
       List            =   "SPConfigurer.ctx":0072
-      TabIndex        =   33
+      TabIndex        =   30
       Top             =   120
       Width           =   2055
+   End
+   Begin VB.Label CategoryLabel 
+      Alignment       =   2  'Center
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00FE8100&
+      Height          =   255
+      Left            =   2400
+      TabIndex        =   31
+      Top             =   240
+      Width           =   4815
    End
    Begin VB.Line Line1 
       BorderColor     =   &H00E7D395&
@@ -681,7 +810,7 @@ Begin VB.UserControl SPConfigurer
       BackStyle       =   0  'Transparent
       Height          =   615
       Left            =   2280
-      TabIndex        =   49
+      TabIndex        =   46
       Top             =   720
       Width           =   1935
    End
@@ -692,30 +821,9 @@ Begin VB.UserControl SPConfigurer
       Visible         =   0   'False
       Width           =   7500
    End
-   Begin VB.Label CategoryLabel 
-      Alignment       =   2  'Center
-      Appearance      =   0  'Flat
-      BackColor       =   &H80000005&
-      BackStyle       =   0  'Transparent
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
-         Charset         =   0
-         Weight          =   700
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      ForeColor       =   &H00FE8100&
-      Height          =   255
-      Left            =   2400
-      TabIndex        =   34
-      Top             =   240
-      Width           =   4815
-   End
    Begin VB.Shape Shape1 
-      BackStyle       =   1  'Opaque
       BorderColor     =   &H00E7D395&
+      BorderWidth     =   2
       FillColor       =   &H80000005&
       Height          =   495
       Left            =   2280
@@ -740,6 +848,7 @@ Option Explicit
 '@================================================================================
 
 Implements CollectionChangeListener
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -861,6 +970,8 @@ Private mReadOnly                   As Boolean
 
 Private mPermittedServiceProviderRoles As ServiceProviderRoles
 
+Private mTheme                                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -942,6 +1053,26 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -1444,6 +1575,26 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If Value Is Nothing Then Exit Property
+
+Set mTheme = Value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================
