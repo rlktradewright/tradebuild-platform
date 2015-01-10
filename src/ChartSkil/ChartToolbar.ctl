@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.UserControl ChartToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -16,7 +16,7 @@ Begin VB.UserControl ChartToolbar
       BackColor       =   -2147483643
       ImageWidth      =   16
       ImageHeight     =   16
-      MaskColor       =   12632256
+      MaskColor       =   8421376
       _Version        =   393216
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
          NumListImages   =   17
@@ -98,7 +98,7 @@ Begin VB.UserControl ChartToolbar
       BackColor       =   -2147483643
       ImageWidth      =   16
       ImageHeight     =   16
-      MaskColor       =   12632256
+      MaskColor       =   8421376
       _Version        =   393216
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
          NumListImages   =   17
@@ -314,6 +314,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IThemeable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -369,6 +371,8 @@ Private mMultichartRef                          As WeakReference
 Private WithEvents mBarSeries                   As BarSeries
 Attribute mBarSeries.VB_VarHelpID = -1
 
+Private mTheme                                  As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -386,6 +390,26 @@ Private Sub UserControl_Terminate()
 gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartToolbar terminated"
 Debug.Print "ChartToolbar terminated"
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '================================================================================
 ' Control Event Handlers
@@ -523,7 +547,6 @@ End Sub
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
 Const ProcName As String = "Enabled"
-
 On Error GoTo Err
 
 Enabled = UserControl.Enabled
@@ -537,7 +560,6 @@ End Property
 Public Property Let Enabled( _
                 ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
-
 On Error GoTo Err
 
 UserControl.Enabled = Value
@@ -555,6 +577,24 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = Value
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
 End Property
 
 '@================================================================================
