@@ -3,6 +3,7 @@ Begin VB.UserControl Chart
    Alignable       =   -1  'True
    AutoRedraw      =   -1  'True
    BackColor       =   &H00FFFFFF&
+   BackStyle       =   0  'Transparent
    ClientHeight    =   7575
    ClientLeft      =   0
    ClientTop       =   0
@@ -313,32 +314,10 @@ mChartBackGradientFillColors(0) = PropDfltChartBackColor
 Set mController = New ChartController
 mController.Chart = Me
 
-Exit Sub
+Set mEPhost = New ExtendedPropertyHost
 
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub UserControl_InitProperties()
-Const ProcName As String = "UserControl_InitProperties"
-
-On Error GoTo Err
-
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart initialising properties"
-
+Style = gChartStylesManager.DefaultStyle
 Initialise
-
-'HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
-'VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
-'Autoscrolling = PropDfltAutoscrolling
-'PointerCrosshairsColor = PropDfltPointerCrosshairsColor
-'PointerDiscColor = PropDfltPointerDiscColor
-'PointerStyle = PropDfltPointerStyle
-'HorizontalScrollBarVisible = PropDfltHorizontalScrollBarVisible
-''TwipsPerPeriod = PropDfltTwipsPerPeriod
-'XAxisVisible = PropDfltXAxisVisible
-'YAxisWidthCm = PropDfltYAxisWidthCm
-'YAxisVisible = PropDfltYAxisVisible
 
 Exit Sub
 
@@ -433,47 +412,6 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-Const ProcName As String = "UserControl_ReadProperties"
-
-On Error GoTo Err
-
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart reading properties"
-
-Initialise
-
-'Autoscrolling = PropBag.ReadProperty(PropNameAutoscrolling, PropDfltAutoscrolling)
-'ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
-'HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
-'HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameHorizontalScrollBarVisible, PropDfltHorizontalScrollBarVisible)
-'PointerCrosshairsColor = PropBag.ReadProperty(PropNamePointerCrosshairsColor, PropDfltPointerCrosshairsColor)
-'PointerDiscColor = PropBag.ReadProperty(PropNamePointerDiscColor, PropDfltPointerDiscColor)
-'PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
-'TwipsPerPeriod = PropBag.ReadProperty(PropNameTwipsPerPeriod, PropDfltTwipsPerPeriod)
-'VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
-'XAxisVisible = PropBag.ReadProperty(PropNameXAxisVisible, PropDfltXAxisVisible)
-'YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
-'YAxisVisible = PropBag.ReadProperty(PropNameYAxisVisible, PropDfltYAxisVisible)
-
-HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
-VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
-Autoscrolling = PropDfltAutoscrolling
-PointerCrosshairsColor = PropDfltPointerCrosshairsColor
-PointerDiscColor = PropDfltPointerDiscColor
-PointerStyle = PropDfltPointerStyle
-HorizontalScrollBarVisible = PropDfltHorizontalScrollBarVisible
-'TwipsPerPeriod = PropDfltTwipsPerPeriod
-XAxisVisible = PropDfltXAxisVisible
-YAxisWidthCm = PropDfltYAxisWidthCm
-YAxisVisible = PropDfltYAxisVisible
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
 Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
 
@@ -500,26 +438,6 @@ End Sub
 Private Sub UserControl_Terminate()
 gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart terminated"
 Debug.Print "ChartSkil chart terminated"
-End Sub
-
-Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
-On Error Resume Next
-
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart writing properties"
-
-'PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
-'PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
-'PropBag.WriteProperty PropNameAutoscrolling, Autoscrolling, PropDfltAutoscrolling
-'PropBag.WriteProperty PropNameChartBackColor, ChartBackColor
-'PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
-'PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
-'PropBag.WriteProperty PropNamePointerStyle, mPointerStyle, PropDfltPointerStyle
-'PropBag.WriteProperty PropNameHorizontalScrollBarVisible, HorizontalScrollBarVisible, PropDfltHorizontalScrollBarVisible
-'PropBag.WriteProperty PropNameTwipsPerPeriod, TwipsPerPeriod, PropDfltTwipsPerPeriod
-'PropBag.WriteProperty PropNameXAxisVisible, XAxisVisible, PropDfltXAxisVisible
-'PropBag.WriteProperty PropNameYAxisVisible, YAxisVisible, PropDfltYAxisVisible
-'PropBag.WriteProperty PropNameYAxisWidthCm, YAxisWidthCm, PropDfltYAxisWidthCm
-
 End Sub
 
 '@================================================================================
@@ -1452,9 +1370,9 @@ End Property
 
 Public Property Let HorizontalScrollBarVisible(ByVal Value As Boolean)
 Const ProcName As String = "HorizontalScrollBarVisible"
-
 On Error GoTo Err
 
+gLogger.Log "HorizontalScrollBarVisible = " & Value, ProcName, ModuleName
 setProperty GChart.gHorizontalScrollBarVisibleProperty, Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHorizontalScrollBarVisible, Value
 PropertyChanged PropNameHorizontalScrollBarVisible
@@ -2672,10 +2590,6 @@ Private Sub Initialise()
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Static sNotFirstTime As Boolean
-
-Dim btn As Button
-
 gLogger.Log "Initialising chart", ProcName, ModuleName
 
 Set mPeriods = New Periods
@@ -2683,17 +2597,6 @@ mPeriods.Chart = Me
 
 Set mRegions = New ChartRegions
 mRegions.Initialise Me, mPeriods
-
-If Not sNotFirstTime Then
-    Set mEPhost = New ExtendedPropertyHost
-    If mStyle Is Nothing Then
-        gLogger.Log "No chart style currently defined", ProcName, ModuleName
-        Style = gChartStylesManager.DefaultStyle
-    Else
-        gLogger.Log "Using chart style", ProcName, ModuleName, , mStyle.Name
-    End If
-    sNotFirstTime = True
-End If
 
 mRegions.DefaultDataRegionStyle = DefaultRegionStyle
 mRegions.DefaultYAxisRegionStyle = DefaultYAxisRegionStyle
@@ -2713,14 +2616,6 @@ mScaleHeight = -100
 mScaleTop = 100
 
 HScroll.Value = 0
-
-'If Style Is Nothing Then
-'    ' set a (possibly) temporary style for the saved properties to be applied to. Note that
-'    ' this style is not added to the chart style manager, so it cannot be added by the application
-'    ' (or the user) to any other chart. And modifying this style only affects this particular
-'    ' chart.
-'    Style = gDefaultChartStyle
-'End If
 
 Resize True, True
 
@@ -2747,18 +2642,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub mapRegion(pRegion As ChartRegion)
-Dim index As Long
-Dim yIndex As Long
-Dim mapHandle As Long
-Dim btn As Button
-
 Const ProcName As String = "mapRegion"
-
 On Error GoTo Err
 
 If pRegion Is Nothing Then Exit Sub
 
+Dim index As Long
 index = pRegion.handle
+
+Dim mapHandle As Long
 mapHandle = mRegionMap.Append(pRegion)
 
 ChartRegionPicture(index).Tag = mapHandle
@@ -2794,6 +2686,7 @@ RegionDividerPicture(index).ZOrder 0
 RegionDividerPicture(index).Visible = (Not mRegionMap.IsFirst(mapHandle))
 pRegion.Divider = RegionDividerPicture(index)
 
+Dim yIndex As Long
 yIndex = pRegion.YAxisRegion.handle
 
 Load YRegionDividerPicture(yIndex)
