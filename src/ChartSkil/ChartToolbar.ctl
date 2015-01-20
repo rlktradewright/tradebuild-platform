@@ -187,7 +187,7 @@ Begin VB.UserControl ChartToolbar
       DisabledImageList=   "ImageList4"
       _Version        =   393216
       BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-         NumButtons      =   17
+         NumButtons      =   19
          BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "showbars"
             Object.ToolTipText     =   "Bar chart"
@@ -207,73 +207,79 @@ Begin VB.UserControl ChartToolbar
             Style           =   2
          EndProperty
          BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Object.Visible         =   0   'False
+         EndProperty
+         BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "showcrosshair"
             Object.ToolTipText     =   "Show crosshair"
             ImageIndex      =   4
             Style           =   2
          EndProperty
-         BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "showdisccursor"
             Object.ToolTipText     =   "Show cursor"
             ImageIndex      =   5
             Style           =   2
          EndProperty
-         BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button7 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Object.Visible         =   0   'False
+         EndProperty
+         BeginProperty Button8 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "thinnerbars"
             Object.ToolTipText     =   "Thinner bars"
             ImageIndex      =   6
          EndProperty
-         BeginProperty Button7 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button9 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "thickerbars"
             Object.ToolTipText     =   "Thicker bars"
             ImageIndex      =   7
          EndProperty
-         BeginProperty Button8 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button10 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "reducespacing"
             Object.ToolTipText     =   "Reduce bar spacing"
             ImageIndex      =   8
          EndProperty
-         BeginProperty Button9 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button11 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "increasespacing"
             Object.ToolTipText     =   "Increase bar spacing"
             ImageIndex      =   9
          EndProperty
-         BeginProperty Button10 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scaledown"
             Object.ToolTipText     =   "Compress vertical scale"
             ImageIndex      =   10
          EndProperty
-         BeginProperty Button11 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scaleup"
             Object.ToolTipText     =   "Expand vertical scale"
             ImageIndex      =   11
          EndProperty
-         BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button14 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrolldown"
             Object.ToolTipText     =   "Scroll down"
             ImageIndex      =   12
          EndProperty
-         BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button15 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrollup"
             Object.ToolTipText     =   "Scroll up"
             ImageIndex      =   13
          EndProperty
-         BeginProperty Button14 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button16 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrollleft"
             Object.ToolTipText     =   "Scroll left"
             ImageIndex      =   14
          EndProperty
-         BeginProperty Button15 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button17 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrollright"
             Object.ToolTipText     =   "Scroll right"
             ImageIndex      =   15
          EndProperty
-         BeginProperty Button16 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button18 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrollend"
             Object.ToolTipText     =   "Scroll to end"
             ImageIndex      =   16
          EndProperty
-         BeginProperty Button17 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button19 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "autoscale"
             Object.ToolTipText     =   "Autoscale"
             ImageIndex      =   17
