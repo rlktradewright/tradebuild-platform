@@ -319,6 +319,8 @@ Set mEPhost = New ExtendedPropertyHost
 Style = gChartStylesManager.DefaultStyle
 Initialise
 
+PointerStyle = PointerCrosshairs
+
 Exit Sub
 
 Err:
