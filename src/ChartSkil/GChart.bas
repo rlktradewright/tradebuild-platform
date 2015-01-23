@@ -52,6 +52,9 @@ Public Const DefaultStyleName                           As String = "Platform De
 Public Const DefaultPeriodWidth                         As Long = 7
 Public Const DefaultYAxisWidthCm                        As Single = 1.8
 
+Public Const DefaultGridlineColor                       As Long = &HE8E8E8
+Public Const DefaultRegionBackColor                     As Long = &HF8F8F8
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -107,10 +110,9 @@ Public Property Get gDefaultChartStyle() As ChartStyle
 Const ProcName As String = "gDefaultChartStyle"
 On Error GoTo Err
 
-Dim lCrosshairsLineStyle As LineStyle
-
 gLogger.Log "Generating default chart style: " & DefaultStyleName, ProcName, ModuleName
 
+Dim lCrosshairsLineStyle As LineStyle
 Set lCrosshairsLineStyle = New LineStyle
 lCrosshairsLineStyle.Color = vbRed
 lCrosshairsLineStyle.LineStyle = LineSolid

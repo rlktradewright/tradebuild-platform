@@ -68,7 +68,7 @@ mArea.Left = 0
 mArea.Right = 1
 mArea.Bottom = 0
 mArea.Top = 1
-calculateGradientFillParameters
+calculateGradientFillParameters mColors
 End Sub
 
 '@================================================================================
@@ -95,12 +95,11 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 ReDim mColors(0) As Long
 mColors(0) = Value
-calculateGradientFillParameters
+calculateGradientFillParameters mColors
 
 Exit Property
 
@@ -156,7 +155,7 @@ Const ProcName As String = "Fill"
 
 On Error GoTo Err
 
-If mRecalcRequired Then calculateGradientFillParameters
+If mRecalcRequired Then calculateGradientFillParameters mColors
 
 If mGradientFillMode = GRADIENT_FILL_TRIANGLE Then
     GradientFill hDC, _
@@ -184,34 +183,40 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub calculateGradientFillParameters()
+Private Sub calculateGradientFillParameters(ByRef pColors() As Long)
 Const ProcName As String = "calculateGradientFillParameters"
-
 On Error GoTo Err
 
-Select Case UBound(mColors)
+ReDim lColors(UBound(pColors)) As Long
+
+Dim i As Long
+For i = 0 To UBound(pColors)
+    lColors(i) = NormalizeColor(pColors(i))
+Next
+
+Select Case UBound(lColors)
 Case 0
     ReDim mVertices(1) As TRIVERTEX
     ReDim mMeshRect(0) As GRADIENT_RECT
-    setVertex 0, mArea.Left, mArea.Top, 0
-    setVertex 1, mArea.Right + 1, mArea.Bottom, 0
+    setVertex 0, mArea.Left, mArea.Top, 0, lColors
+    setVertex 1, mArea.Right + 1, mArea.Bottom, 0, lColors
     setMeshRect 0, 0, 1
     mGradientFillMode = GRADIENT_FILL_RECT_H
 Case 1
     ReDim mVertices(1) As TRIVERTEX
     ReDim mMeshRect(0) As GRADIENT_RECT
-    setVertex 0, mArea.Left, mArea.Top, 0
-    setVertex 1, mArea.Right + 1, mArea.Bottom, 1
+    setVertex 0, mArea.Left, mArea.Top, 0, lColors
+    setVertex 1, mArea.Right + 1, mArea.Bottom, 1, lColors
     setMeshRect 0, 0, 1
     mGradientFillMode = GRADIENT_FILL_RECT_H
 Case 2
     ReDim mVertices(4) As TRIVERTEX
     ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
-    setVertex 0, mArea.Left, mArea.Top, 0
-    setVertex 1, mArea.Right, mArea.Top, 1
-    setVertex 2, (mArea.Left + mArea.Right + 1) / 2, (mArea.Top + mArea.Bottom) / 2, 2
-    setVertex 3, mArea.Right + 1, mArea.Bottom, 1
-    setVertex 4, mArea.Left, mArea.Bottom, 0
+    setVertex 0, mArea.Left, mArea.Top, 0, lColors
+    setVertex 1, mArea.Right, mArea.Top, 1, lColors
+    setVertex 2, (mArea.Left + mArea.Right + 1) / 2, (mArea.Top + mArea.Bottom) / 2, 2, lColors
+    setVertex 3, mArea.Right + 1, mArea.Bottom, 1, lColors
+    setVertex 4, mArea.Left, mArea.Bottom, 0, lColors
     setMeshTriangle 0, 0, 1, 2
     setMeshTriangle 1, 1, 3, 2
     setMeshTriangle 2, 3, 4, 2
@@ -220,11 +225,11 @@ Case 2
 Case 3
     ReDim mVertices(4) As TRIVERTEX
     ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
-    setVertex 0, mArea.Left, mArea.Top, 0
-    setVertex 1, mArea.Right + 1, mArea.Top, 1
-    setVertex 2, mArea.Right + 1, mArea.Bottom, 2
-    setVertex 3, mArea.Left, mArea.Bottom, 3
-    setVertex 4, (mArea.Left + mArea.Right + 1) / 2, (mArea.Top + mArea.Bottom) / 2, 0, calculateMidColor
+    setVertex 0, mArea.Left, mArea.Top, 0, lColors
+    setVertex 1, mArea.Right + 1, mArea.Top, 1, lColors
+    setVertex 2, mArea.Right + 1, mArea.Bottom, 2, lColors
+    setVertex 3, mArea.Left, mArea.Bottom, 3, lColors
+    setVertex 4, (mArea.Left + mArea.Right + 1) / 2, (mArea.Top + mArea.Bottom) / 2, 0, lColors, calculateMidColor(lColors)
     setMeshTriangle 0, 0, 1, 4
     setMeshTriangle 1, 1, 2, 4
     setMeshTriangle 2, 2, 3, 4
@@ -233,11 +238,11 @@ Case 3
 Case 4
     ReDim mVertices(4) As TRIVERTEX
     ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
-    setVertex 0, mArea.Left, mArea.Top, 0
-    setVertex 1, mArea.Right + 1, mArea.Top, 1
-    setVertex 2, mArea.Right + 1, mArea.Bottom, 2
-    setVertex 3, mArea.Left, mArea.Bottom, 3
-    setVertex 4, (mArea.Left + mArea.Right + 1) / 2, (mArea.Top + mArea.Bottom) / 2, 4
+    setVertex 0, mArea.Left, mArea.Top, 0, lColors
+    setVertex 1, mArea.Right + 1, mArea.Top, 1, lColors
+    setVertex 2, mArea.Right + 1, mArea.Bottom, 2, lColors
+    setVertex 3, mArea.Left, mArea.Bottom, 3, lColors
+    setVertex 4, (mArea.Left + mArea.Right + 1) / 2, (mArea.Top + mArea.Bottom) / 2, 4, lColors
     setMeshTriangle 0, 0, 1, 4
     setMeshTriangle 1, 1, 2, 4
     setMeshTriangle 2, 2, 3, 4
@@ -252,17 +257,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function calculateMidColor() As Long
-Dim sumColors As Currency
-Dim i As Long
+Private Function calculateMidColor(ByRef pColors() As Long) As Long
 Const ProcName As String = "calculateMidColor"
-
 On Error GoTo Err
 
-For i = 0 To UBound(mColors)
-    sumColors = sumColors + mColors(i)
+Dim sumColors As Currency
+Dim i As Long
+For i = 0 To UBound(pColors)
+    sumColors = sumColors + pColors(i)
 Next
-calculateMidColor = CLng(sumColors / (UBound(mColors) + 1))
+calculateMidColor = CLng(sumColors / (UBound(pColors) + 1))
 
 Exit Function
 
@@ -293,7 +297,6 @@ Private Sub setMeshTriangle( _
                 ByVal vertex2 As Long, _
                 ByVal vertex3 As Long)
 Const ProcName As String = "setMeshTriangle"
-
 On Error GoTo Err
 
 mMeshTriangle(index).vertex1 = vertex1
@@ -311,14 +314,14 @@ Private Sub setVertex( _
                 ByVal X As Double, _
                 ByVal Y As Double, _
                 ByVal colorIndex As Long, _
+                ByRef pColors() As Long, _
                 Optional ByVal Color As Long = -1)
 Const ProcName As String = "setVertex"
-
 On Error GoTo Err
 
 mVertices(index).X = X
 mVertices(index).Y = Y
-If Color = -1 Then Color = mColors(colorIndex)
+If Color = -1 Then Color = pColors(colorIndex)
 mVertices(index).Red = Color And &HFF&
 mVertices(index).Green = (Color And &HFF00&) / &H100&
 mVertices(index).Blue = (Color And &HFF0000) / &H10000

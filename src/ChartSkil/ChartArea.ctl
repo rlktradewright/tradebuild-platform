@@ -171,6 +171,7 @@ Attribute MouseUp.VB_UserMemId = -607
 Event PointerModeChanged()
 Event PeriodsChanged(ev As CollectionChangeEventData)
 Event RegionSelected(ByVal Region As ChartRegion)
+Event StyleChanged(ByVal pNewStyle As ChartStyle)
 
 '================================================================================
 ' Enums
@@ -578,14 +579,18 @@ Private Sub ChartRegionPicture_MouseMove(index As Integer, _
                                 Shift As Integer, _
                                 X As Single, _
                                 Y As Single)
-Dim lregion As ChartRegion
-
 Const ProcName As String = "ChartRegionPicture_MouseMove"
-
 On Error GoTo Err
 
 If index = 0 Then Exit Sub
 
+Static sPrevX As Single
+Static sPrevY As Single
+If X = sPrevX And Y = sPrevY Then Exit Sub
+sPrevX = X
+sPrevY = Y
+
+Dim lregion As ChartRegion
 Set lregion = getDataRegionFromPictureIndex(index)
 
 If CBool(Button And MouseButtonConstants.vbLeftButton) Then
@@ -662,7 +667,6 @@ End Sub
 
 Private Sub HScroll_Change()
 Const ProcName As String = "HScroll_Change"
-
 On Error GoTo Err
 
 LastVisiblePeriod = Round((CLng(HScroll.Value) - CLng(HScroll.Min)) / (CLng(HScroll.Max) - CLng(HScroll.Min)) * (mPeriods.CurrentPeriodNumber + ChartWidth - 1))
@@ -692,7 +696,6 @@ Private Sub RegionDividerPicture_MouseDown( _
                             X As Single, _
                             Y As Single)
 Const ProcName As String = "RegionDividerPicture_MouseDown"
-
 On Error GoTo Err
 
 If CBool(Button And MouseButtonConstants.vbLeftButton) Then
@@ -718,8 +721,13 @@ Private Sub RegionDividerPicture_MouseMove( _
                             X As Single, _
                             Y As Single)
 Const ProcName As String = "RegionDividerPicture_MouseMove"
-
 On Error GoTo Err
+
+Static sPrevX As Single
+Static sPrevY As Single
+If X = sPrevX And Y = sPrevY Then Exit Sub
+sPrevX = X
+sPrevY = Y
 
 If Not CBool(Button And MouseButtonConstants.vbLeftButton) Then Exit Sub
 If Y = mLeftDragStartPosnY Then Exit Sub
@@ -748,7 +756,6 @@ Private Sub RegionDividerPicture_MouseUp( _
                             X As Single, _
                             Y As Single)
 Const ProcName As String = "RegionDividerPicture_MouseUp"
-
 On Error GoTo Err
 
 mUserResizingRegions = False
@@ -770,7 +777,6 @@ End Sub
 
 Private Sub XAxisPicture_Click()
 Const ProcName As String = "XAxisPicture_Click"
-
 On Error GoTo Err
 
 If mXAxisRegion Is Nothing Then Exit Sub
@@ -786,7 +792,6 @@ End Sub
 
 Private Sub XAxisPicture_DblClick()
 Const ProcName As String = "XAxisPicture_DblClick"
-
 On Error GoTo Err
 
 If mXAxisRegion Is Nothing Then Exit Sub
@@ -802,7 +807,6 @@ End Sub
 
 Private Sub XAxisPicture_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Const ProcName As String = "XAxisPicture_MouseDown"
-
 On Error GoTo Err
 
 If mXAxisRegion Is Nothing Then Exit Sub
@@ -821,8 +825,13 @@ End Sub
 
 Private Sub XAxisPicture_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Const ProcName As String = "XAxisPicture_MouseMove"
-
 On Error GoTo Err
+
+Static sPrevX As Single
+Static sPrevY As Single
+If X = sPrevX And Y = sPrevY Then Exit Sub
+sPrevX = X
+sPrevY = Y
 
 If mXAxisRegion Is Nothing Then Exit Sub
 mXAxisRegion.MouseMove Button, Shift, X, Y
@@ -840,7 +849,6 @@ End Sub
 
 Private Sub XAxisPicture_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Const ProcName As String = "XAxisPicture_MouseUp"
-
 On Error GoTo Err
 
 If mXAxisRegion Is Nothing Then Exit Sub
@@ -863,7 +871,6 @@ End Sub
 
 Private Sub YAxisPicture_Click(index As Integer)
 Const ProcName As String = "YAxisPicture_Click"
-
 On Error GoTo Err
 
 getYAxisRegionFromPictureIndex(index).Click
@@ -878,7 +885,6 @@ End Sub
 
 Private Sub YAxisPicture_DblClick(index As Integer)
 Const ProcName As String = "YAxisPicture_DblClick"
-
 On Error GoTo Err
 
 getYAxisRegionFromPictureIndex(index).DblCLick
@@ -893,7 +899,6 @@ End Sub
 
 Private Sub YAxisPicture_MouseDown(index As Integer, Button As Integer, Shift As Integer, X As Single, Y As Single)
 Const ProcName As String = "YAxisPicture_MouseDown"
-
 On Error GoTo Err
 
 getYAxisRegionFromPictureIndex(index).MouseDown Button, Shift, X, Y
@@ -911,8 +916,13 @@ End Sub
 
 Private Sub YAxisPicture_MouseMove(index As Integer, Button As Integer, Shift As Integer, X As Single, Y As Single)
 Const ProcName As String = "YAxisPicture_MouseMove"
-
 On Error GoTo Err
+
+Static sPrevX As Single
+Static sPrevY As Single
+If X = sPrevX And Y = sPrevY Then Exit Sub
+sPrevX = X
+sPrevY = Y
 
 getYAxisRegionFromPictureIndex(index).MouseMove Button, Shift, X, Y
 
@@ -929,7 +939,6 @@ End Sub
 
 Private Sub YAxisPicture_MouseUp(index As Integer, Button As Integer, Shift As Integer, X As Single, Y As Single)
 Const ProcName As String = "YAxisPicture_MouseUp"
-
 On Error GoTo Err
 
 getYAxisRegionFromPictureIndex(index).MouseUp Button, Shift, X, Y
@@ -1024,11 +1033,10 @@ End Sub
 '================================================================================
 
 Private Sub mRegions_CollectionChanged(ev As CollectionChangeEventData)
-Dim rgn As ChartRegion
-
 Const ProcName As String = "mRegions_CollectionChanged"
-
 On Error GoTo Err
+
+Dim rgn As ChartRegion
 
 Select Case ev.changeType
 Case CollItemAdded
@@ -1083,7 +1091,6 @@ End Property
 
 Friend Property Get Availableheight() As Long
 Const ProcName As String = "Availableheight"
-
 On Error GoTo Err
 
 Availableheight = IIf(XAxisVisible, XAxisPicture.Top, IIf(HorizontalScrollBarVisible, HScroll.Top, UserControl.ScaleHeight)) - _
@@ -1112,7 +1119,6 @@ End Property
 
 Public Property Let ChartBackColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "ChartBackColor"
-
 On Error GoTo Err
 
 setProperty GChart.gChartBackColorProperty, Value
@@ -1134,7 +1140,6 @@ End Property
 Public Property Get ChartWidth() As Double
 Attribute ChartWidth.VB_MemberFlags = "400"
 Const ProcName As String = "ChartWidth"
-
 On Error GoTo Err
 
 ChartWidth = YAxisPosition - mScaleLeft
@@ -1191,7 +1196,6 @@ End Property
 
 Public Property Let CrosshairLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "CrosshairLineStyle"
-
 On Error GoTo Err
 
 Dim prevValue As LineStyle
@@ -1224,7 +1228,6 @@ End Property
 Public Property Get CurrentPeriodNumber() As Long
 Attribute CurrentPeriodNumber.VB_MemberFlags = "400"
 Const ProcName As String = "CurrentPeriodNumber"
-
 On Error GoTo Err
 
 CurrentPeriodNumber = mPeriods.CurrentPeriodNumber
@@ -1247,7 +1250,6 @@ End Property
 
 Public Property Let DefaultRegionStyle(ByVal Value As ChartRegionStyle)
 Const ProcName As String = "DefaultRegionStyle"
-
 On Error GoTo Err
 
 Dim prevValue As ChartRegionStyle
@@ -1279,7 +1281,6 @@ End Property
 
 Public Property Let DefaultYAxisRegionStyle(ByVal Value As ChartRegionStyle)
 Const ProcName As String = "DefaultYAxisRegionStyle"
-
 On Error GoTo Err
 
 Dim prevValue As ChartRegionStyle
@@ -1316,7 +1317,6 @@ End Property
 
 Public Property Let FirstVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "FirstVisiblePeriod"
-
 On Error GoTo Err
 
 ScrollX Value - mScaleLeft + 1
@@ -1359,7 +1359,6 @@ Public Property Get HorizontalScrollBarVisible() As Boolean
 Attribute HorizontalScrollBarVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
 Attribute HorizontalScrollBarVisible.VB_MemberFlags = "400"
 Const ProcName As String = "HorizontalScrollBarVisible"
-
 On Error GoTo Err
 
 HorizontalScrollBarVisible = mEPhost.GetValue(GChart.gHorizontalScrollBarVisibleProperty)
@@ -1403,7 +1402,6 @@ End Property
 
 Public Property Let LastVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "LastVisiblePeriod"
-
 On Error GoTo Err
 
 ScrollX Value - mYAxisPosition + 1
@@ -1454,8 +1452,8 @@ Public Property Let PointerCrosshairsColor(ByVal Value As OLE_COLOR)
 Attribute PointerCrosshairsColor.VB_ProcData.VB_Invoke_PropertyPut = ";Appearance"
 Attribute PointerCrosshairsColor.VB_MemberFlags = "400"
 Const ProcName As String = "PointerCrosshairsColor"
-
 On Error GoTo Err
+
 CrosshairLineStyle.Color = Value
 PropertyChanged PropNamePointerCrosshairsColor
 
@@ -1472,14 +1470,13 @@ PointerDiscColor = mPointerDiscColor
 End Property
 
 Public Property Let PointerDiscColor(ByVal Value As OLE_COLOR)
-Dim Region As ChartRegion
 Const ProcName As String = "PointerDiscColor"
-
 On Error GoTo Err
 
 mPointerDiscColor = Value
-For Each Region In mRegions
-    Region.PointerDiscColor = Value
+Dim lregion As ChartRegion
+For Each lregion In mRegions
+    lregion.PointerDiscColor = Value
 Next
 PropertyChanged PropNamePointerDiscColor
 
@@ -1495,10 +1492,7 @@ Set PointerIcon = mPointerIcon
 End Property
 
 Public Property Let PointerIcon(ByVal Value As IPictureDisp)
-Dim Region As ChartRegion
-
 Const ProcName As String = "PointerIcon"
-
 On Error GoTo Err
 
 If Value Is Nothing Then Exit Property
@@ -1507,8 +1501,9 @@ If Value Is mPointerIcon Then Exit Property
 Set mPointerIcon = Value
 
 If mPointerStyle = PointerCustom Then
-    For Each Region In mRegions
-        Region.PointerStyle = PointerCustom
+    Dim lregion As ChartRegion
+    For Each lregion In mRegions
+        lregion.PointerStyle = PointerCustom
     Next
 End If
 
@@ -1567,7 +1562,6 @@ End Property
 
 Public Property Let SessionEndTime(ByVal val As Date)
 Const ProcName As String = "SessionEndTime"
-
 On Error GoTo Err
 
 mPeriods.SessionEndTime = val
@@ -1604,6 +1598,8 @@ If mStyle Is Nothing Then Set mStyle = gChartStylesManager.DefaultStyle
 gLogger.Log "Using chart style", ProcName, ModuleName, , mStyle.Name
 mEPhost.Style = mStyle.ExtendedPropertyHost
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingStyle, mStyle.Name
+
+RaiseEvent StyleChanged(mStyle)
 
 Exit Property
 
@@ -1648,7 +1644,6 @@ End Property
 Public Property Let VerticalGridTimePeriod( _
                 ByVal Value As TimePeriod)
 Const ProcName As String = "VerticalGridTimePeriod"
-
 On Error GoTo Err
 
 mPeriods.VerticalGridTimePeriod = Value
@@ -1699,7 +1694,6 @@ End Property
 
 Public Property Let XAxisRegionStyle(ByVal Value As ChartRegionStyle)
 Const ProcName As String = "XAxisRegionStyle"
-
 On Error GoTo Err
 
 Dim prevValue As ChartRegionStyle
@@ -1745,7 +1739,6 @@ End Property
 
 Public Property Let XAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "XAxisVisible"
-
 On Error GoTo Err
 
 setProperty GChart.gXAxisVisibleProperty, Value
@@ -1779,7 +1772,6 @@ End Property
 
 Public Property Let YAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "YAxisVisible"
-
 On Error GoTo Err
 
 setProperty GChart.gYAxisVisibleProperty, Value
@@ -1800,7 +1792,6 @@ End Property
 
 Public Property Let YAxisWidthCm(ByVal Value As Single)
 Const ProcName As String = "YAxisWidthCm"
-
 On Error GoTo Err
 
 setProperty GChart.gYAxisWidthCmProperty, Value
@@ -1915,7 +1906,6 @@ End Sub
 
 Public Sub Finish()
 Const ProcName As String = "Finish"
-
 On Error GoTo Err
 
 DisableDrawing
@@ -1933,12 +1923,10 @@ Public Function GetXFromTimestamp( _
                 ByVal Timestamp As Date, _
                 Optional ByVal forceNewPeriod As Boolean, _
                 Optional ByVal duplicateNumber As Long) As Double
-Dim lPeriod As Period
-Dim periodEndtime As Date
-
 Const ProcName As String = "GetXFromTimestamp"
-
 On Error GoTo Err
+
+Dim lPeriod As Period
 
 Select Case TimePeriod.Units
 Case TimePeriodNone, _
@@ -1965,6 +1953,7 @@ Case TimePeriodNone, _
         End If
     End If
     
+    Dim periodEndtime As Date
     periodEndtime = BarEndTime(lPeriod.Timestamp, _
                             TimePeriod, _
                             SessionStartTime)
@@ -1994,17 +1983,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub HideGrid()
-Dim Region As ChartRegion
-
 Const ProcName As String = "HideGrid"
-
 On Error GoTo Err
 
 If mHideGrid Then Exit Sub
 
 mHideGrid = True
-For Each Region In mRegions
-    Region.HideGrid
+Dim lregion As ChartRegion
+For Each lregion In mRegions
+    lregion.HideGrid
 Next
 
 Exit Sub
@@ -2014,9 +2001,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
-
 Const ProcName As String = "IsTimeInSession"
-
 On Error GoTo Err
 
 IsTimeInSession = mPeriods.IsTimeInSession(Timestamp)
@@ -2085,7 +2070,6 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -2097,10 +2081,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ScrollX(ByVal Value As Long)
-Dim Region As ChartRegion
-
 Const ProcName As String = "ScrollX"
-
 On Error GoTo Err
 
 #If trace Then
@@ -2130,8 +2111,9 @@ If Not IsDrawingEnabled Then
     Exit Sub
 End If
 
-For Each Region In mRegions
-    Region.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
+Dim lregion As ChartRegion
+For Each lregion In mRegions
+    lregion.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
 Next
 
 mXAxisRegion.SetPeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1
@@ -2148,15 +2130,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetPointerModeDefault()
-Dim Region As ChartRegion
-
 Const ProcName As String = "SetPointerModeDefault"
-
 On Error GoTo Err
 
 mPointerMode = PointerModeDefault
-For Each Region In mRegions
-    Region.SetPointerModeDefault
+Dim lregion As ChartRegion
+For Each lregion In mRegions
+    lregion.SetPointerModeDefault
 Next
 
 RaiseEvent PointerModeChanged
@@ -2169,16 +2149,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetPointerModeSelection()
-Dim Region As ChartRegion
-
 Const ProcName As String = "SetPointerModeSelection"
-
 On Error GoTo Err
 
 mPointerMode = PointerModeSelection
 
-For Each Region In mRegions
-    Region.SetPointerModeSelection
+Dim lregion As ChartRegion
+For Each lregion In mRegions
+    lregion.SetPointerModeSelection
 Next
 
 RaiseEvent PointerModeChanged
@@ -2193,10 +2171,7 @@ End Sub
 Public Sub SetPointerModeTool( _
                 Optional ByVal toolPointerStyle As PointerStyles = PointerTool, _
                 Optional ByVal icon As IPictureDisp)
-Dim Region As ChartRegion
-
 Const ProcName As String = "SetPointerModeTool"
-
 On Error GoTo Err
 
 mPointerMode = PointerModeTool
@@ -2212,8 +2187,10 @@ Case PointerCustom
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "toolPointerStyle must be a member of the PointerStyles enum"
 End Select
-For Each Region In mRegions
-    Region.SetPointerModeTool toolPointerStyle, icon
+
+Dim lregion As ChartRegion
+For Each lregion In mRegions
+    lregion.SetPointerModeTool toolPointerStyle, icon
 Next
 
 RaiseEvent PointerModeChanged
@@ -2226,17 +2203,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ShowGrid()
-Dim Region As ChartRegion
-
 Const ProcName As String = "ShowGrid"
-
 On Error GoTo Err
 
 If Not mHideGrid Then Exit Sub
 
 mHideGrid = False
-For Each Region In mRegions
-    Region.ShowGrid
+
+Dim lregion As ChartRegion
+For Each lregion In mRegions
+    lregion.ShowGrid
 Next
 
 Exit Sub
@@ -2251,7 +2227,6 @@ End Sub
 
 Private Function calcScaleLeft() As Single
 Const ProcName As String = "calcScaleLeft"
-
 On Error GoTo Err
 
 calcScaleLeft = mYAxisPosition + _
@@ -2299,7 +2274,6 @@ Private Function convertChartRegionPictureMouseXtoContainerCoords( _
                 ByVal index As Long, _
                 ByVal X As Single) As Single
 Const ProcName As String = "convertChartRegionPictureMouseXtoContainerCoords"
-
 On Error GoTo Err
 
 convertChartRegionPictureMouseXtoContainerCoords = _
@@ -2315,7 +2289,6 @@ Private Function convertChartRegionPictureMouseYtoContainerCoords( _
                 ByVal index As Long, _
                 ByVal Y As Single) As Single
 Const ProcName As String = "convertChartRegionPictureMouseYtoContainerCoords"
-
 On Error GoTo Err
 
 convertChartRegionPictureMouseYtoContainerCoords = _
@@ -2331,7 +2304,6 @@ Private Function convertPictureMouseXtoContainerCoords( _
                 ByVal pPicture As PictureBox, _
                 ByVal X As Single) As Single
 Const ProcName As String = "convertPictureMouseXtoContainerCoords"
-
 On Error GoTo Err
 
 convertPictureMouseXtoContainerCoords = _
@@ -2352,7 +2324,6 @@ Private Function convertPictureMouseYtoContainerCoords( _
                 ByVal pPicture As PictureBox, _
                 ByVal Y As Single) As Single
 Const ProcName As String = "convertPictureMouseYtoContainerCoords"
-
 On Error GoTo Err
 
 convertPictureMouseYtoContainerCoords = _
@@ -2380,7 +2351,6 @@ Private Function convertRegionDividerPictureMouseYtoContainerCoords( _
                 ByVal index As Long, _
                 ByVal Y As Single) As Single
 Const ProcName As String = "convertRegionDividerPictureMouseYtoContainerCoords"
-
 On Error GoTo Err
 
 convertRegionDividerPictureMouseYtoContainerCoords = _
@@ -2395,7 +2365,6 @@ End Function
 Private Function convertXAxisPictureMouseXtoContainerCoords( _
                 ByVal X As Single) As Single
 Const ProcName As String = "convertXAxisPictureMouseXtoContainerCoords"
-
 On Error GoTo Err
 
 convertXAxisPictureMouseXtoContainerCoords = _
@@ -2410,7 +2379,6 @@ End Function
 Private Function convertXAxisPictureMouseYtoContainerCoords( _
                 ByVal Y As Single) As Single
 Const ProcName As String = "convertXAxisPictureMouseYtoContainerCoords"
-
 On Error GoTo Err
 
 convertXAxisPictureMouseYtoContainerCoords = _
@@ -2426,7 +2394,6 @@ Private Function convertYAxisPictureMouseXtoContainerCoords( _
                 ByVal index As Long, _
                 ByVal X As Single) As Single
 Const ProcName As String = "convertYAxisPictureMouseXtoContainerCoords"
-
 On Error GoTo Err
 
 convertYAxisPictureMouseXtoContainerCoords = _
@@ -2442,7 +2409,6 @@ Private Function convertYAxisPictureMouseYtoContainerCoords( _
                 ByVal index As Long, _
                 ByVal Y As Single) As Single
 Const ProcName As String = "convertYAxisPictureMouseYtoContainerCoords"
-
 On Error GoTo Err
 
 convertYAxisPictureMouseYtoContainerCoords = _
@@ -2456,7 +2422,6 @@ End Function
 
 Private Function createBackgroundRegionCanvas() As Canvas
 Const ProcName As String = "createBackgroundRegionCanvas"
-
 On Error GoTo Err
 
 Set createBackgroundRegionCanvas = createCanvas(ChartRegionPicture(0), RegionTypeBackground)
@@ -2471,7 +2436,6 @@ Private Function createCanvas( _
                 ByVal Surface As PictureBox, _
                 ByVal pRegionType As RegionTypes) As Canvas
 Const ProcName As String = "createCanvas"
-
 On Error GoTo Err
 
 Set createCanvas = New Canvas
@@ -2486,7 +2450,6 @@ End Function
 
 Private Function createDataRegionCanvas(ByVal pIndex As Long) As Canvas
 Const ProcName As String = "createDataRegionCanvas"
-
 On Error GoTo Err
 
 Load ChartRegionPicture(pIndex)
@@ -2500,7 +2463,6 @@ End Function
 
 Private Function createXAxisRegionCanvas() As Canvas
 Const ProcName As String = "createXAxisRegionCanvas"
-
 On Error GoTo Err
 
 Set createXAxisRegionCanvas = createCanvas(XAxisPicture, RegionTypeXAxis)
@@ -2513,7 +2475,6 @@ End Function
 
 Private Function createYAxisRegionCanvas(ByVal pIndex As Long) As Canvas
 Const ProcName As String = "createYAxisRegionCanvas"
-
 On Error GoTo Err
 
 Load YAxisPicture(pIndex)
@@ -2547,7 +2508,6 @@ End Sub
 
 Private Sub finishBackgroundCanvas()
 Const ProcName As String = "finishBackgroundCanvas"
-
 On Error GoTo Err
 
 gLogger.Log "Finish background canvas", ProcName, ModuleName, LogLevelHighDetail
@@ -2563,7 +2523,6 @@ End Sub
 Private Function getDataRegionFromPictureIndex( _
                 ByVal index As Long) As ChartRegion
 Const ProcName As String = "getDataRegionFromPictureIndex"
-
 On Error GoTo Err
 
 Set getDataRegionFromPictureIndex = mRegionMap.Item(CLng(ChartRegionPicture(index).Tag))
@@ -2577,7 +2536,6 @@ End Function
 Private Function getYAxisRegionFromPictureIndex( _
                 ByVal index As Long) As ChartRegion
 Const ProcName As String = "getYAxisRegionFromPictureIndex"
-
 On Error GoTo Err
 
 Set getYAxisRegionFromPictureIndex = mRegions.ItemFromHandle(CLng(YAxisPicture(index).Tag))
@@ -2722,7 +2680,6 @@ Const ProcName As String = "MouseMove"
 On Error GoTo Err
 
 Dim lregion As ChartRegion
-
 For Each lregion In mRegions
     If lregion Is targetRegion Then
         'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & X & " y=" & Y
@@ -2818,7 +2775,6 @@ End Sub
 
 Private Sub resizeBackground()
 Const ProcName As String = "resizeBackground"
-
 On Error GoTo Err
 
 If mRegions Is Nothing Then Exit Sub
@@ -2844,15 +2800,14 @@ Private Sub resizeX()
 Const ProcName As String = "resizeX"
 On Error GoTo Err
 
-Dim lregion As ChartRegion
-Dim lYAxisPicture As PictureBox
-
 If Not mInitialised Then Exit Sub
 
 mScaleWidth = CSng(XAxisPicture.Width) / CSng(TwipsPerPeriod)
 mScaleLeft = calcScaleLeft
 
+Dim lregion As ChartRegion
 For Each lregion In mRegionMap
+    Dim lYAxisPicture As PictureBox
     Set lYAxisPicture = YAxisPicture(lregion.YAxisRegion.handle)
     lYAxisPicture.Width = YAxisWidthCm * TwipsPerCm
     
@@ -2886,10 +2841,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setHorizontalScrollBar()
-Dim hscrollVal As Integer
-
 Const ProcName As String = "setHorizontalScrollBar"
-
 On Error GoTo Err
 
 If mPeriods.CurrentPeriodNumber + ChartWidth - 1 > 32767 Then
@@ -2902,6 +2854,7 @@ End If
 HScroll.Min = 0
 
 ' NB the following calculation has to be done using doubles as for very large charts it can cause an overflow using integers
+Dim hscrollVal As Integer
 hscrollVal = Round(CDbl(HScroll.Max) * CDbl(LastVisiblePeriod) / CDbl((mPeriods.CurrentPeriodNumber + ChartWidth - 1)))
 If hscrollVal > HScroll.Max Then
     HScroll.Value = HScroll.Max
@@ -2943,7 +2896,6 @@ Private Function setRegionDividerLocation( _
                 ByVal pRegion As ChartRegion, _
                 ByVal currTop As Long) As Long
 Const ProcName As String = "setRegionDividerLocation"
-
 On Error GoTo Err
 
 RegionDividerPicture(pRegion.handle).Top = currTop
@@ -2968,7 +2920,6 @@ Private Function setRegionViewSizeAndLocation( _
                 ByVal pRegion As ChartRegion, _
                 ByVal currTop As Long) As Long
 Const ProcName As String = "setRegionViewSizeAndLocation"
-
 On Error GoTo Err
 
 ChartRegionPicture(pRegion.handle).Height = pRegion.ActualHeight
@@ -2985,17 +2936,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setRegionViewSizes()
-Dim lregion As ChartRegion
-Dim currTop As Long
+Const ProcName As String = "setRegionViewSizes"
+On Error GoTo Err
 
 ' Now actually set the Heights and positions for the picture boxes
 
-Const ProcName As String = "setRegionViewSizes"
-
-On Error GoTo Err
-
 If Not IsDrawingEnabled Then Exit Sub
 
+Dim currTop As Long
+Dim lregion As ChartRegion
 For Each lregion In mRegionMap
     currTop = currTop + setRegionDividerLocation(lregion, currTop)
     currTop = currTop + setRegionViewSizeAndLocation(lregion, currTop)

@@ -1326,7 +1326,7 @@ Const ProcName As String = "setInitialXGridLineStyle"
 On Error GoTo Err
 
 Set mXGridLineStyle = gDefaultLineStyle.clone
-mXGridLineStyle.Color = &HD0D0D0
+mXGridLineStyle.Color = DefaultGridlineColor
 
 Exit Sub
 
@@ -1358,7 +1358,7 @@ Const ProcName As String = "setInitialYGridLineStyle"
 On Error GoTo Err
 
 Set mYGridLineStyle = gDefaultLineStyle.clone
-mYGridLineStyle.Color = &HD0D0D0
+mYGridLineStyle.Color = DefaultGridlineColor
 
 Exit Sub
 
@@ -1390,7 +1390,7 @@ Const ProcName As String = "setInitialSessionEndGridLineStyle"
 On Error GoTo Err
 
 Set mSessionEndGridLineStyle = gDefaultLineStyle.clone
-mSessionEndGridLineStyle.Color = &HD0D0D0
+mSessionEndGridLineStyle.Color = DefaultGridlineColor
 mSessionEndGridLineStyle.LineStyle = LineDash
 
 Exit Sub
@@ -1405,7 +1405,7 @@ Const ProcName As String = "setInitialSessionStartGridLineStyle"
 On Error GoTo Err
 
 Set mSessionStartGridLineStyle = gDefaultLineStyle.clone
-mSessionStartGridLineStyle.Color = &HD0D0D0
+mSessionStartGridLineStyle.Color = DefaultGridlineColor
 mSessionStartGridLineStyle.Thickness = 3
 
 Exit Sub

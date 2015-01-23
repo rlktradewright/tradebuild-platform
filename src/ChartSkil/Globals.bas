@@ -126,12 +126,10 @@ End Property
 Public Property Get gDefaultChartDataRegionStyle() As ChartRegionStyle
 Static lStyle As ChartRegionStyle
 
-Const DefaultGridlineColor As Long = &HF0F0F0
-
 If lStyle Is Nothing Then
     Set lStyle = New ChartRegionStyle
     lStyle.Autoscaling = True
-    lStyle.BackGradientFillColors = gCreateColorArray(vbWhite, vbWhite)
+    lStyle.BackGradientFillColors = gCreateColorArray(DefaultRegionBackColor, DefaultRegionBackColor)
     lStyle.CursorSnapsToTickBoundaries = True
     lStyle.CursorTextMode = CursorTextModeNone
     lStyle.CursorTextPosition = CursorTextPositionBelowLeftCursor
@@ -184,7 +182,7 @@ Dim afont As StdFont
 If lStyle Is Nothing Then
     Set lStyle = New ChartRegionStyle
     lStyle.Autoscaling = True
-    lStyle.BackGradientFillColors = gCreateColorArray(vbWhite, vbWhite)
+    lStyle.BackGradientFillColors = gCreateColorArray(DefaultRegionBackColor, DefaultRegionBackColor)
     lStyle.CursorSnapsToTickBoundaries = False
     lStyle.CursorTextMode = CursorTextModeXOnly
     lStyle.CursorTextPosition = CursorTextPositionBelowLeftCursor
@@ -236,7 +234,7 @@ Dim afont As StdFont
 If lStyle Is Nothing Then
     Set lStyle = New ChartRegionStyle
     lStyle.Autoscaling = False
-    lStyle.BackGradientFillColors = gCreateColorArray(vbWhite, vbWhite)
+    lStyle.BackGradientFillColors = gCreateColorArray(DefaultRegionBackColor, DefaultRegionBackColor)
     lStyle.CursorSnapsToTickBoundaries = True
     lStyle.CursorTextMode = CursorTextModeYOnly
     lStyle.CursorTextPosition = CursorTextPositionBelowLeftCursor
@@ -288,7 +286,7 @@ Dim afont As StdFont
 If lStyle Is Nothing Then
     Set lStyle = New ChartRegionStyle
     lStyle.Autoscaling = True
-    lStyle.BackGradientFillColors = gCreateColorArray(vbWhite, vbWhite)
+    lStyle.BackGradientFillColors = gCreateColorArray(DefaultRegionBackColor, DefaultRegionBackColor)
     lStyle.CursorSnapsToTickBoundaries = False
     lStyle.CursorTextMode = CursorTextModeNone
     lStyle.CursorTextPosition = CursorTextPositionBelowLeftCursor
@@ -301,18 +299,18 @@ If lStyle Is Nothing Then
     lStyle.MinimumHeight = 0.0001
     
     lStyle.SessionEndGridLineStyle = New LineStyle
-    lStyle.SessionEndGridLineStyle.Color = &HC0C0C0
+    lStyle.SessionEndGridLineStyle.Color = DefaultGridlineColor
     lStyle.SessionEndGridLineStyle.LineStyle = LineDash
     
     lStyle.SessionStartGridLineStyle = New LineStyle
-    lStyle.SessionStartGridLineStyle.Color = &HC0C0C0
+    lStyle.SessionStartGridLineStyle.Color = DefaultGridlineColor
     lStyle.SessionStartGridLineStyle.Thickness = 3
     
     lStyle.XCursorTextPosition = CursorTextPositionBottom
     lStyle.XCursorTextStyle = Nothing
     
     lStyle.XGridLineStyle = New LineStyle
-    lStyle.XGridLineStyle.Color = &HC0C0C0
+    lStyle.XGridLineStyle.Color = DefaultGridlineColor
     
     lStyle.XGridTextPosition = XGridTextPositionBottom
     lStyle.XGridTextStyle = Nothing
@@ -322,7 +320,7 @@ If lStyle Is Nothing Then
     lStyle.YGridlineSpacing = 0.9
     
     lStyle.YGridLineStyle = New LineStyle
-    lStyle.YGridLineStyle.Color = &HC0C0C0
+    lStyle.YGridLineStyle.Color = DefaultGridlineColor
     
     lStyle.YGridTextPosition = YGridTextPositionLeft
     lStyle.YGridTextStyle = Nothing
