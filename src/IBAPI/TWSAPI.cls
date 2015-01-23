@@ -167,10 +167,7 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-createLoggers
-
 Set mInMessageHandler = New InputMessageHandler
-Set mStatsRecorder = New PerformanceStatsRecorder
 
 mConnectionState = TwsConnectionStates.TwsConnNotConnected
 
@@ -248,6 +245,7 @@ mWriter.AddString mClientID, "Client id"
 mWriter.Send
 
 mInMessageHandler.Reset
+createPerformanceLoggers
 
 Exit Sub
 
@@ -299,6 +297,7 @@ Const ProcName As String = "mSocketHandler_Disconnected"
 On Error GoTo Err
 
 setConnectionState TwsConnectionStates.TwsConnNotConnected, pReason
+destroyPerformanceLoggers
 
 Exit Sub
 
@@ -790,6 +789,7 @@ mSocketHandler.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 Set mWriter = New BufferedWriter
 mWriter.Initialise mSocketHandler
 
+Set mStatsRecorder = New PerformanceStatsRecorder
 mInMessageHandler.Initialise lReader, mWriter, mStatsRecorder, mErrorAndNotificationConsumer, mProgramErrorHandler
 
 mSocketHandler.Connect
@@ -807,6 +807,8 @@ On Error GoTo Err
 
 mSocketHandler.Disconnect pReason
 Set mSocketHandler = Nothing
+
+destroyPerformanceLoggers
 
 Exit Sub
 
@@ -1789,30 +1791,44 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Private Sub createLoggers()
-
-Const ProcName As String = "createLoggers"
+Private Sub createPerformanceLoggers()
+Const ProcName As String = "createPerformanceLoggers"
 On Error GoTo Err
 
-If gLogger.IsLoggable(LogLevelDetail) Then
-    If mPerformanceTimerSecond Is Nothing Then
-        Set mPerformanceTimerSecond = CreateIntervalTimer(CDate(Int((Now + 2 * OneSecond) / OneSecond) * OneSecond), _
-                                                ExpiryTimeUnitDateTime, _
-                                                1000)
-        Set mPerformanceTimerPeriod = CreateIntervalTimer(CDate(Int((Now + OneMinute) / OneMinute) * OneMinute), _
-                                                ExpiryTimeUnitDateTime, _
-                                                60000)
-        mPerformanceTimerSecond.StartTimer
-        mPerformanceTimerPeriod.StartTimer
-        
-        Set mPerformanceLogger = GetLogger("tradebuild.log.ibapi.performance")
-    End If
+If Not gLogger.IsLoggable(LogLevelDetail) Then Exit Sub
+
+If mPerformanceTimerSecond Is Nothing Then
+    Set mPerformanceTimerSecond = CreateIntervalTimer(CDate(Int((Now + 2 * OneSecond) / OneSecond) * OneSecond), _
+                                            ExpiryTimeUnitDateTime, _
+                                            1000)
+    mPerformanceTimerSecond.StartTimer
+    
+    Set mPerformanceTimerPeriod = CreateIntervalTimer(CDate(Int((Now + OneMinute) / OneMinute) * OneMinute), _
+                                            ExpiryTimeUnitDateTime, _
+                                            60000)
+    mPerformanceTimerPeriod.StartTimer
+    
+    Set mPerformanceLogger = GetLogger("tradebuild.log.ibapi.performance")
 End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub destroyPerformanceLoggers()
+Set mStatsRecorder = Nothing
+
+If mPerformanceTimerPeriod Is Nothing Then Exit Sub
+
+mPerformanceTimerPeriod.StopTimer
+Set mPerformanceTimerPeriod = Nothing
+
+mPerformanceTimerSecond.StopTimer
+Set mPerformanceTimerSecond = Nothing
+
+Set mPerformanceLogger = Nothing
 End Sub
 
 Private Function getTwsContractRequestIdFromCallersRequestId(ByVal pId As Long) As Long
