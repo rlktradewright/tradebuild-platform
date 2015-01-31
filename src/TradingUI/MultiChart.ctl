@@ -2,6 +2,7 @@ VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.UserControl MultiChart 
    Alignable       =   -1  'True
+   BackColor       =   &H000000FF&
    ClientHeight    =   7710
    ClientLeft      =   0
    ClientTop       =   0
@@ -43,6 +44,7 @@ Begin VB.UserControl MultiChart
       _ExtentY        =   953
       ButtonWidth     =   609
       ButtonHeight    =   953
+      AllowCustomize  =   0   'False
       Style           =   1
       _Version        =   393216
    End
@@ -73,7 +75,7 @@ Begin VB.UserControl MultiChart
       ImageList       =   "ImageList1"
       _Version        =   393216
       BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-         NumButtons      =   5
+         NumButtons      =   4
          BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "selecttimeframe"
             Object.ToolTipText     =   "Choose the timeframe for the new chart"
@@ -93,9 +95,6 @@ Begin VB.UserControl MultiChart
             Style           =   1
          EndProperty
          BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Style           =   3
-         EndProperty
-         BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "remove"
             Object.ToolTipText     =   "Remove current chart"
             ImageIndex      =   2
@@ -510,9 +509,6 @@ Public Property Let Style(ByVal pStyle As ChartStyle)
 Const ProcName As String = "Style"
 On Error GoTo Err
 
-Dim i As Long
-Dim lChart As MarketChart
-
 Set mStyle = pStyle
 
 If Not mConfig Is Nothing Then
@@ -523,7 +519,9 @@ If Not mConfig Is Nothing Then
     End If
 End If
 
+Dim i As Long
 For i = 1 To TBChart.UBound
+    Dim lChart As MarketChart
     Set lChart = TBChart(i).object
     lChart.BaseChartController.Style = mStyle
 Next
@@ -554,6 +552,7 @@ On Error GoTo Err
 
 Set mTheme = value
 UserControl.BackColor = mTheme.ToolbarBackColor
+TBChart(0).ChartBackColor = mTheme.ToolbarBackColor
 gApplyTheme mTheme, UserControl.Controls
 
 ChartSelectorPicture.BackColor = mTheme.ToolbarBackColor

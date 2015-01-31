@@ -1,6 +1,7 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#24.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
 Begin VB.UserControl ChartStylePicker 
+   BackStyle       =   0  'Transparent
    ClientHeight    =   345
    ClientLeft      =   0
    ClientTop       =   0
@@ -235,6 +236,18 @@ Case ChartStateInitialised
 Case ChartStateLoaded
     SelectItem
 End Select
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mMarketChart_StyleChanged(ByVal pNewStyle As ChartStyle)
+Const ProcName As String = "mMarketChart_StyleChanged"
+On Error GoTo Err
+
+SelectStyle pNewStyle.Name
 
 Exit Sub
 

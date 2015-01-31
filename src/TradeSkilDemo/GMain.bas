@@ -50,6 +50,7 @@ Public Const ConfigSettingFeaturesPanelHidden       As String = "&FeaturesPanelH
 Public Const ConfigSettingFeaturesPanelPinned       As String = "&FeaturesPanelPinned"
 Public Const ConfigSettingInfoPanelHidden           As String = "&InfoPanelHidden"
 Public Const ConfigSettingInfoPanelPinned           As String = "&InfoPanelPinned"
+Public Const ConfigSettingCurrentTheme              As String = "&CurrentTheme"
 
 Public Const ConfigSettingCurrentChartStyle         As String = "&CurrentChartStyle"
 Public Const ConfigSettingCurrentHistChartStyle     As String = "&CurrentHistChartStyle"
@@ -120,8 +121,6 @@ Private mConfigEditor                               As fConfigEditor
 
 Private mSplash                                     As fSplash
 
-Private mTheme                                      As ITheme
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -163,14 +162,6 @@ Public Property Get gMainForm() As fTradeSkilDemo
 Set gMainForm = mMainForm
 End Property
 
-Public Property Let gTheme(ByVal Value As ITheme)
-Set mTheme = Value
-End Property
-
-Public Property Get gTheme() As ITheme
-Set gTheme = mTheme
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -205,21 +196,32 @@ For Each lControl In pControls
         lControl.BorderStyle = pTheme.BorderStyle
         lControl.BackColor = pTheme.TextBackColor
         lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.TextFont Is Nothing Then
+            Set lControl.Font = pTheme.TextFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
     ElseIf TypeOf lControl Is ComboBox Or _
         TypeOf lControl Is ListBox _
     Then
         lControl.Appearance = pTheme.Appearance
         lControl.BackColor = pTheme.TextBackColor
         lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.ComboFont Is Nothing Then
+            Set lControl.Font = pTheme.ComboFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
     ElseIf TypeOf lControl Is CommandButton Or _
         TypeOf lControl Is Shape _
     Then
         ' nothing for these
     ElseIf TypeOf lControl Is DTPicker Then
-        lControl.CalendarBackColor = mTheme.BackColor
-        lControl.CalendarTitleBackColor = mTheme.TextBackColor
-        lControl.CalendarTitleForeColor = mTheme.TextForeColor
-        lControl.CalendarTrailingForeColor = toneDown(mTheme.TextForeColor)
+        lControl.CalendarBackColor = pTheme.BackColor
+        lControl.CalendarForeColor = pTheme.TextForeColor
+        lControl.CalendarTitleBackColor = pTheme.TextBackColor
+        lControl.CalendarTitleForeColor = pTheme.TextForeColor
+        lControl.CalendarTrailingForeColor = AdjustColorIntensity(pTheme.TextForeColor, 0.5)
     ElseIf TypeOf lControl Is Object  Then
         On Error Resume Next
         If TypeOf lControl.object Is IThemeable Then
@@ -354,7 +356,7 @@ Do
             "Attention!")
     If userResponse = vbYes Then
         LogMessage "User editing app instance configuration: " & pAppInstanceConfig.InstanceQualifier
-        Set pAppInstanceConfig = gShowConfigEditor(mConfigStore, pAppInstanceConfig, pCentreWindow:=True)
+        Set pAppInstanceConfig = gShowConfigEditor(mConfigStore, pAppInstanceConfig, Nothing, pCentreWindow:=True)
     ElseIf userResponse = vbNo Then
         LogMessage "Creating a new default app instance configuration"
         Set pAppInstanceConfig = AddAppInstanceConfig(mConfigStore, _
@@ -383,11 +385,12 @@ End Function
 Public Sub gModelessMsgBox( _
                 ByVal prompt As String, _
                 ByVal buttons As MsgBoxStyles, _
+                ByVal pTheme As ITheme, _
                 Optional ByVal title As String)
 Const ProcName As String = "gModelessMsgBox"
 On Error GoTo Err
 
-ModelessMsgBox prompt, buttons, title, gMainForm, mTheme
+ModelessMsgBox prompt, buttons, title, gMainForm, pTheme
 
 Exit Sub
 
@@ -409,6 +412,7 @@ End Property
 Public Function gShowConfigEditor( _
                 ByVal pConfigStore As ConfigurationStore, _
                 ByVal pCurrAppInstanceConfig As ConfigurationSection, _
+                ByVal pTheme As ITheme, _
                 Optional ByVal pParentForm As Form, _
                 Optional ByVal pCentreWindow As Boolean = False) As ConfigurationSection
 Const ProcName As String = "gShowConfigEditor"
@@ -419,7 +423,7 @@ If mConfigEditor Is Nothing Then
        
     mConfigEditor.Initialise pConfigStore, pCurrAppInstanceConfig, pCentreWindow
 End If
-If Not mTheme Is Nothing Then mConfigEditor.Theme = mTheme
+If Not pTheme Is Nothing Then mConfigEditor.Theme = pTheme
 mConfigEditor.Show vbModal, pParentForm
 Set gShowConfigEditor = mConfigEditor.SelectedAppConfig
 
@@ -438,7 +442,6 @@ End Sub
 
 Public Sub gUnloadMainForm()
 Const ProcName As String = "gUnloadMainForm"
-
 On Error GoTo Err
 
 If Not mMainForm Is Nothing Then
@@ -575,7 +578,7 @@ Do While lTradeBuildAPI Is Nothing
             "Attention!")
     If userResponse = vbYes Then
         LogMessage "User editing app instance configuration: " & pAppInstanceConfig.InstanceQualifier
-        Set pAppInstanceConfig = gShowConfigEditor(pConfigStore, pAppInstanceConfig, pCentreWindow:=True)
+        Set pAppInstanceConfig = gShowConfigEditor(pConfigStore, pAppInstanceConfig, Nothing, pCentreWindow:=True)
     ElseIf userResponse = vbNo Then
         LogMessage "Creating a new default app instance configuration"
         Set pAppInstanceConfig = AddAppInstanceConfig(pConfigStore, _
@@ -693,6 +696,7 @@ Dim lConfigStore As ConfigurationStore
 Set lConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, False, ConfigFileOptionFirstArg)
 
 If Err.Number = ErrorCodes.ErrIllegalStateException Then
+    LogMessage Err.Description, LogLevelSevere
     On Error GoTo Err
     If queryReplaceConfigFile Then Set lConfigStore = createNewConfigStore
 ElseIf lConfigStore Is Nothing Then
@@ -1068,14 +1072,6 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function toneDown(ByVal pColor As Long) As Long
-If (pColor And &H80000000) Then pColor = GetSysColor(pColor And &HFFFFFF)
-
-toneDown = (((pColor And &HFF0000) / &H20000) And &HFF0000) + _
-            (((pColor And &HFF00) / &H200) And &HFF00) + _
-            ((pColor And &HFF) / &H2)
 End Function
 
 

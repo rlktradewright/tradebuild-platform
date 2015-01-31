@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -946,11 +946,11 @@ On Error GoTo Err
 Set mTheme = value
 TickerGrid.Theme = mTheme
 IncreasedValueColor = mTheme.IncreasedValueColor
+DecreasedValueColor = mTheme.DecreasedValueColor
 NegativeChangeBackColor = mTheme.NegativeChangeBackColor
 NegativeChangeForeColor = mTheme.NegativeChangeForeColor
 PositiveChangeBackColor = mTheme.PositiveChangeBackColor
 PositiveChangeForeColor = mTheme.PositiveChangeForeColor
-PositiveChangeBackColor = mTheme.PositiveChangeBackColor
 
 Exit Property
 
@@ -1076,6 +1076,56 @@ On Error GoTo Err
 
     TickerGrid.RowHeightMin = New_RowHeightMin
     PropertyChanged "RowHeightMin"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get RowForeColorOdd() As OLE_COLOR
+Const ProcName As String = "RowForeColorOdd"
+On Error GoTo Err
+
+    RowForeColorOdd = TickerGrid.RowForeColorOdd
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let RowForeColorOdd(ByVal New_RowForeColorOdd As OLE_COLOR)
+Const ProcName As String = "RowForeColorOdd"
+On Error GoTo Err
+
+    TickerGrid.RowForeColorOdd = New_RowForeColorOdd
+    PropertyChanged "RowForeColorOdd"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get RowForeColorEven() As OLE_COLOR
+Const ProcName As String = "RowForeColorEven"
+On Error GoTo Err
+
+    RowForeColorEven = TickerGrid.RowForeColorEven
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let RowForeColorEven(ByVal New_RowForeColorEven As OLE_COLOR)
+Const ProcName As String = "RowForeColorEven"
+On Error GoTo Err
+
+    TickerGrid.RowForeColorEven = New_RowForeColorEven
+    PropertyChanged "RowForeColorEven"
 
 Exit Property
 
@@ -2386,7 +2436,7 @@ With ev.Quote
         TickerGrid.CellBackColor = 0
     Else
         TickerGrid.CellBackColor = 0    ' reset backcolor to default
-        TickerGrid.CellForeColor = TickerGrid.CellBackColor
+        TickerGrid.CellForeColor = 0    ' TickerGrid.CellBackColor
         If .PriceChange = ValueChangeUp Then
             TickerGrid.CellBackColor = mIncreasedValueColor
         ElseIf .PriceChange = ValueChangeDown Then

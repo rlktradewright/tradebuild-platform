@@ -1,13 +1,13 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#235.1#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#240.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   6915
+   ClientWidth     =   6555
    ScaleHeight     =   3600
-   ScaleWidth      =   6915
+   ScaleWidth      =   6555
    Begin ChartSkil27.ChartToolbar ChartToolbar1 
       Height          =   330
       Left            =   0
@@ -207,7 +207,7 @@ Const ProcName As String = "Theme"
 On Error GoTo Err
 
 Set mTheme = value
-UserControl.BackColor = mTheme.BackColor
+UserControl.BackColor = mTheme.ToolbarBackColor
 gApplyTheme mTheme, UserControl.Controls
 
 Exit Property

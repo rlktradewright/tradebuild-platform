@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickStreamSpecifier 
    ClientHeight    =   4200
    ClientLeft      =   0
@@ -633,6 +633,8 @@ On Error GoTo Err
 Set mTheme = value
 UserControl.BackColor = mTheme.BackColor
 gApplyTheme mTheme, UserControl.Controls
+ErrorLabel.ForeColor = vbRed
+ErrorLabel.FontBold = True
 
 Exit Property
 

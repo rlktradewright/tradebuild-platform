@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#203.0#0"; "StudiesUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#211.0#0"; "StudiesUI27.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Form1"
@@ -122,12 +122,13 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pChartManager As ChartManager, _
+                ByVal pOwner As Variant, _
                 ByVal pTitle As String)
 Const ProcName As String = "initialise"
 
 On Error GoTo Err
 
-StudyPicker1.Initialise pChartManager
+StudyPicker1.Initialise pChartManager, pOwner
 Me.caption = pTitle
 
 Exit Sub

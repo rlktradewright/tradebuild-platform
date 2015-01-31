@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#279.2#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#282.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
@@ -116,14 +116,14 @@ Begin VB.Form fTradeSkilDemo
       EndProperty
    End
    Begin TradeSkilDemo27.FeaturesPanel FeaturesPanel 
-      Height          =   9675
+      Height          =   8580
       Left            =   120
       TabIndex        =   4
       Top             =   120
       Visible         =   0   'False
       Width           =   4095
       _ExtentX        =   7223
-      _ExtentY        =   17066
+      _ExtentY        =   15134
    End
 End
 Attribute VB_Name = "fTradeSkilDemo"
@@ -143,6 +143,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements DeferredAction
 Implements StateChangeListener
 
 '================================================================================
@@ -153,7 +154,9 @@ Implements StateChangeListener
 ' Constants
 '================================================================================
     
-Private Const ModuleName                    As String = "fTradeSkilDemo"
+Private Const ModuleName                            As String = "fTradeSkilDemo"
+
+Private Const DeferredActionApplyThemeToCharts      As String = "ApplyTheme"
 
 '================================================================================
 ' Enums
@@ -196,8 +199,10 @@ Private mOrderTicket                                As fOrderTicket
 
 Private WithEvents mFeaturesPanelForm               As fFeaturesPanel
 Attribute mFeaturesPanelForm.VB_VarHelpID = -1
-Private WithEvents mInfoPanelForm                    As fInfoPanel
+Private WithEvents mInfoPanelForm                   As fInfoPanel
 Attribute mInfoPanelForm.VB_VarHelpID = -1
+
+Private mTheme                                      As ITheme
 
 '================================================================================
 ' Form Event Handlers
@@ -247,7 +252,10 @@ Static prevWidth As Long
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
 
 If Me.Width < FeaturesPanel.Width + 120 Then Me.Width = FeaturesPanel.Width + 120
-If Me.Height < 9555 Then Me.Height = 9555
+
+StatusBar1.Top = Me.ScaleHeight - StatusBar1.Height
+
+If StatusBar1.Top - 120 < FeaturesPanel.Top + 8700 Then Me.Height = Me.Height + FeaturesPanel.Top + 8700 - StatusBar1.Top + 120
 
 If Me.Width = prevWidth And Me.Height = prevHeight Then Exit Sub
 
@@ -267,6 +275,13 @@ Const ProcName As String = "Form_Unload"
 On Error GoTo Err
 
 LogMessage "Unloading main form"
+
+LogMessage "Hiding forms"
+Dim f As Form
+For Each f In Forms
+    If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then f.Hide
+Next
+Me.Hide
 
 LogMessage "Shutting down clock"
 mClockDisplay.Finish
@@ -288,7 +303,6 @@ LogMessage "Closing config editor form"
 gUnloadConfigEditor
 
 LogMessage "Closing other forms"
-Dim f As Form
 For Each f In Forms
     If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then
         LogMessage "Closing form: caption=" & f.caption & "; type=" & TypeName(f)
@@ -303,6 +317,22 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+'================================================================================
+' DeferredAction Interface Members
+'================================================================================
+
+Private Sub DeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "DeferredAction_Run"
+On Error GoTo Err
+
+If Data = DeferredActionApplyThemeToCharts Then mChartForms.Theme = mTheme
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -362,11 +392,13 @@ Private Sub FeaturesPanel_Unpin()
 Const ProcName As String = "FeaturesPanel_Unpin"
 On Error GoTo Err
 
+ShowFeaturesPanelPicture.Visible = True
 FeaturesPanel.Visible = False
 mFeaturesPanelPinned = False
 Resize
 updateInstanceSettings
 
+If Not mTheme Is Nothing Then mFeaturesPanelForm.Theme = mTheme
 mFeaturesPanelForm.Show vbModeless, Me
 
 Exit Sub
@@ -395,11 +427,13 @@ Private Sub InfoPanel_Unpin()
 Const ProcName As String = "InfoPanel_Unpin"
 On Error GoTo Err
 
+ShowInfoPanelPicture.Visible = True
 InfoPanel.Visible = False
 mInfoPanelPinned = False
 Resize
 updateInstanceSettings
 
+If Not mTheme Is Nothing Then mInfoPanelForm.Theme = mTheme
 mInfoPanelForm.Show vbModeless, Me
 
 Exit Sub
@@ -499,7 +533,7 @@ Set lContracts = ev.Future.Value
 
 If lContracts.Count = 1 Then
     If IsContractExpired(lContracts.ItemAtIndex(1)) Then
-        gModelessMsgBox "Contract has expired", MsgBoxExclamation, "Attention"
+        gModelessMsgBox "Contract has expired", MsgBoxExclamation, mTheme, "Attention"
     Else
         TickerGrid1.StartTickerFromContract lContracts.ItemAtIndex(1), CLng(ev.ContinuationData)
     End If
@@ -541,6 +575,7 @@ On Error GoTo Err
 mFeaturesPanelForm.Hide
 mFeaturesPanelPinned = True
 FeaturesPanel.Visible = True
+ShowFeaturesPanelPicture.Visible = False
 Resize
 updateInstanceSettings
 
@@ -576,6 +611,7 @@ On Error GoTo Err
 mInfoPanelForm.Hide
 mInfoPanelPinned = True
 InfoPanel.Visible = True
+ShowInfoPanelPicture.Visible = False
 Resize
 updateInstanceSettings
 
@@ -685,6 +721,47 @@ End Sub
 ' Methods
 '================================================================================
 
+Friend Sub ApplyTheme(ByVal pTheme As ITheme)
+Const ProcName As String = "ApplyTheme"
+On Error GoTo Err
+
+If pTheme Is mTheme Then Exit Sub
+
+Set mTheme = pTheme
+
+If TypeOf mTheme Is BlackTheme Then
+    mAppInstanceConfig.SetSetting ConfigSettingCurrentTheme, "Black"
+ElseIf TypeOf mTheme Is BlueTheme Then
+    mAppInstanceConfig.SetSetting ConfigSettingCurrentTheme, "Blue"
+ElseIf TypeOf mTheme Is NativeTheme Then
+    mAppInstanceConfig.SetSetting ConfigSettingCurrentTheme, "Native"
+End If
+
+Me.BackColor = mTheme.BaseColor
+gApplyTheme mTheme, Me.Controls
+
+ShowFeaturesPanelPicture.BackColor = mTheme.BaseColor
+ShowInfoPanelPicture.BackColor = mTheme.BaseColor
+
+Dim lForm As Object
+For Each lForm In Forms
+    If TypeOf lForm Is IThemeable Then lForm.Theme = mTheme
+Next
+
+mChartForms.Theme = mTheme
+
+SendMessage StatusBar1.hWnd, SB_SETBKCOLOR, 0, NormalizeColor(mTheme.StatusBarBackColor)
+
+Dim lhDC As Long
+lhDC = GetDC(StatusBar1.hWnd)
+SetTextColor lhDC, NormalizeColor(mTheme.StatusBarForeColor)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Function Initialise( _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
                 ByVal pConfigStore As ConfigurationStore, _
@@ -761,37 +838,6 @@ Case WindowStateNormal
     Me.Width = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormWidth, Me.Width / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
     Me.Height = CLng(mAppInstanceConfig.GetSetting(ConfigSettingMainFormHeight, Me.Height / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 End Select
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub applyTheme(ByVal pTheme As ITheme)
-Const ProcName As String = "applyTheme"
-On Error GoTo Err
-
-gTheme = pTheme
-
-Me.BackColor = gTheme.BaseColor
-gApplyTheme gTheme, Me.Controls
-
-ShowFeaturesPanelPicture.BackColor = gTheme.BaseColor
-ShowInfoPanelPicture.BackColor = gTheme.BaseColor
-
-Dim lForm As Object
-For Each lForm In Forms
-    If TypeOf lForm Is IThemeable Then lForm.Theme = gTheme
-Next
-
-mChartForms.Theme = gTheme
-
-SendMessage StatusBar1.hWnd, SB_SETBKCOLOR, 0, NormalizeColor(gTheme.StatusBarBackColor)
-
-Dim lhDC As Long
-lhDC = GetDC(StatusBar1.hWnd)
-SetTextColor lhDC, NormalizeColor(gTheme.StatusBarForeColor)
 
 Exit Sub
 
@@ -927,10 +973,32 @@ LogMessage "Loading configuration: initialising Features Panels"
 setupFeaturesPanels
 
 LogMessage "Loading configuration: applying theme"
-applyTheme New BlackTheme
+Dim lThemeName As String
+lThemeName = mAppInstanceConfig.GetSetting(ConfigSettingCurrentTheme, "Black")
+Dim lTheme As ITheme
+If UCase$(lThemeName) = "BLACK" Then
+    Set lTheme = New BlackTheme
+ElseIf UCase$(lThemeName) = "BLUE" Then
+    Set lTheme = New BlueTheme
+ElseIf UCase$(lThemeName) = "NATIVE" Then
+    Set lTheme = New NativeTheme
+End If
+ApplyTheme lTheme
 
 Me.caption = gAppTitle & _
             " - " & mAppInstanceConfig.InstanceQualifier
+
+LogMessage "Loading configuration: showing charts"
+mChartForms.ShowCharts gMainForm
+
+LogMessage "Loading configuration: showing historical charts"
+mChartForms.ShowHistoricalCharts gMainForm
+
+LogMessage "Loading configuration: showing Features and Info panels"
+If Not mFeaturesPanelHidden Then showFeaturesPanel
+If Not mInfoPanelHidden Then showInfoPanel
+
+DeferAction Me, DeferredActionApplyThemeToCharts, 1, ExpiryTimeUnits.ExpiryTimeUnitSeconds
 
 LogMessage "Loaded configuration: " & mAppInstanceConfig.InstanceQualifier
 
@@ -951,13 +1019,11 @@ Else
     lLeft = 120 + FeaturesPanel.Width + 120
 End If
 
-StatusBar1.Top = Me.ScaleHeight - StatusBar1.Height
-
-FeaturesPanel.Height = StatusBar1.Top - FeaturesPanel.Top
+FeaturesPanel.Height = StatusBar1.Top - FeaturesPanel.Top - 120
 
 If Not mInfoPanelHidden And mInfoPanelPinned Then
     InfoPanel.Move lLeft, _
-                        StatusBar1.Top - InfoPanel.Height, _
+                        StatusBar1.Top - InfoPanel.Height - 120, _
                         Me.ScaleWidth - lLeft - 120
 End If
 
@@ -984,9 +1050,7 @@ mFeaturesPanelPinned = CBool(mAppInstanceConfig.GetSetting(ConfigSettingFeatures
 mFeaturesPanelHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingFeaturesPanelHidden, "False"))
     
 Set mFeaturesPanelForm = New fFeaturesPanel
-mFeaturesPanelForm.Initialise False, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
-
-If Not mFeaturesPanelHidden Then showFeaturesPanel
+mFeaturesPanelForm.Initialise mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
 
 Exit Sub
 
@@ -1003,9 +1067,7 @@ mInfoPanelPinned = CBool(mAppInstanceConfig.GetSetting(ConfigSettingInfoPanelPin
 mInfoPanelHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingInfoPanelHidden, "False"))
     
 Set mInfoPanelForm = New fInfoPanel
-mInfoPanelForm.Initialise False, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, mOrderTicket
-
-If Not mInfoPanelHidden Then showInfoPanel
+mInfoPanelForm.Initialise mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, mOrderTicket
 
 Exit Sub
 
@@ -1044,15 +1106,16 @@ On Error GoTo Err
 
 mFeaturesPanelHidden = False
 If mFeaturesPanelPinned Then
+    ShowFeaturesPanelPicture.Visible = False
     FeaturesPanel.Visible = True
     Resize
     Me.Refresh
 Else
+    ShowFeaturesPanelPicture.Visible = True
     mFeaturesPanelForm.Show vbModeless, Me
+    If Not mTheme Is Nothing Then mFeaturesPanelForm.Theme = mTheme
 End If
 updateInstanceSettings
-
-ShowFeaturesPanelPicture.Visible = False
 
 Exit Sub
 
@@ -1066,15 +1129,16 @@ On Error GoTo Err
 
 mInfoPanelHidden = False
 If mInfoPanelPinned Then
+    ShowInfoPanelPicture.Visible = False
     InfoPanel.Visible = True
     Resize
     Me.Refresh
 Else
+    ShowInfoPanelPicture.Visible = True
     mInfoPanelForm.Show vbModeless, Me
+    If Not mTheme Is Nothing Then mInfoPanelForm.Theme = mTheme
 End If
 updateInstanceSettings
-
-ShowInfoPanelPicture.Visible = False
 
 Exit Sub
 
@@ -1089,8 +1153,7 @@ On Error GoTo Err
 mChartForms.LoadChartsFromConfig mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts), _
                                 mTickers, _
                                 mTradeBuildAPI.BarFormatterLibManager, _
-                                mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator, _
-                                gMainForm
+                                mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator
 
 Exit Sub
 
@@ -1106,8 +1169,7 @@ mChartForms.LoadHistoricalChartsFromConfig _
                     mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts), _
                     mTradeBuildAPI.StudyLibraryManager, _
                     mTradeBuildAPI.HistoricalDataStoreInput, _
-                    mTradeBuildAPI.BarFormatterLibManager, _
-                    gMainForm
+                    mTradeBuildAPI.BarFormatterLibManager
                     
 Exit Sub
 

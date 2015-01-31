@@ -253,7 +253,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pPinned As Boolean, _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
                 ByVal pAppInstanceConfig As ConfigurationSection, _
                 ByVal pTickerGrid As TickerGrid, _
@@ -263,12 +262,12 @@ On Error GoTo Err
 
 Set mAppInstanceConfig = pAppInstanceConfig
 
-Me.Left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingInfoPanelLeft, 0)) * Screen.TwipsPerPixelX
-Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingInfoPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
-Me.Width = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingInfoPanelWidth, 650)) * Screen.TwipsPerPixelX
-Me.Height = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingInfoPanelHeight, 450)) * Screen.TwipsPerPixelY
+Me.Move CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingInfoPanelLeft, 0)) * Screen.TwipsPerPixelX, _
+        CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingInfoPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY, _
+        CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingInfoPanelWidth, 650)) * Screen.TwipsPerPixelX, _
+        CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingInfoPanelHeight, 450)) * Screen.TwipsPerPixelY
 
-InfoPanel.Initialise pPinned, pTradeBuildAPI, pAppInstanceConfig, pTickerGrid, pOrderTicket
+InfoPanel.Initialise False, pTradeBuildAPI, pAppInstanceConfig, pTickerGrid, pOrderTicket
 
 Exit Sub
 

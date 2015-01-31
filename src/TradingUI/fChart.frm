@@ -1,17 +1,17 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
+Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
 Begin VB.Form fChart 
    BorderStyle     =   5  'Sizable ToolWindow
    ClientHeight    =   6780
    ClientLeft      =   60
    ClientTop       =   330
-   ClientWidth     =   12525
+   ClientWidth     =   11280
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
    ScaleHeight     =   6780
-   ScaleWidth      =   12525
+   ScaleWidth      =   11280
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin TradingUI27.MultiChart MultiChart1 
@@ -19,9 +19,9 @@ Begin VB.Form fChart
       Height          =   5415
       Left            =   0
       TabIndex        =   3
-      Top             =   330
-      Width           =   12525
-      _ExtentX        =   22093
+      Top             =   390
+      Width           =   11280
+      _ExtentX        =   19897
       _ExtentY        =   9551
    End
    Begin MSComctlLib.ImageList ImageList1 
@@ -56,45 +56,52 @@ Begin VB.Form fChart
    End
    Begin ComCtl3.CoolBar CoolBar1 
       Align           =   1  'Align Top
-      Height          =   330
+      Height          =   390
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   12525
-      _ExtentX        =   22093
-      _ExtentY        =   582
+      Width           =   11280
+      _ExtentX        =   19897
+      _ExtentY        =   688
       BandCount       =   4
-      BackColor       =   -2147483638
       BandBorders     =   0   'False
-      _CBWidth        =   12525
-      _CBHeight       =   330
+      _CBWidth        =   11280
+      _CBHeight       =   390
       _Version        =   "6.7.9816"
-      Child1          =   "ChartToolsToolbar"
-      MinWidth1       =   1890
+      BandBackColor1  =   -2147483638
+      Child1          =   "ChartNavToolbar1"
+      MinWidth1       =   5865
       MinHeight1      =   330
-      Width1          =   1890
+      Width1          =   5865
+      UseCoolbarColors1=   0   'False
       NewRow1         =   0   'False
+      BandBackColor2  =   -2147483638
       Child2          =   "BarFormatterPicker"
       MinWidth2       =   1185
       MinHeight2      =   270
       Width2          =   1185
+      UseCoolbarColors2=   0   'False
       NewRow2         =   0   'False
+      BandBackColor3  =   -2147483638
       Child3          =   "ChartStylePicker"
       MinWidth3       =   1185
       MinHeight3      =   270
       Width3          =   1185
+      UseCoolbarColors3=   0   'False
       NewRow3         =   0   'False
-      Child4          =   "ChartNavToolbar1"
-      MinWidth4       =   6465
+      BandBackColor4  =   -2147483638
+      Child4          =   "ChartToolsToolbar"
+      MinWidth4       =   1410
       MinHeight4      =   330
-      Width4          =   6465
+      Width4          =   1410
+      UseCoolbarColors4=   0   'False
       NewRow4         =   0   'False
       Begin TradingUI27.ChartStylePicker ChartStylePicker 
          Height          =   270
-         Left            =   3735
+         Left            =   8400
          TabIndex        =   5
          ToolTipText     =   "Change the chart style"
-         Top             =   30
+         Top             =   60
          Width           =   1185
          _ExtentX        =   2090
          _ExtentY        =   476
@@ -111,12 +118,12 @@ Begin VB.Form fChart
       End
       Begin TradingUI27.BarFormatterPicker BarFormatterPicker 
          Height          =   270
-         Left            =   2310
+         Left            =   7020
          TabIndex        =   4
          ToolTipText     =   "Change the bar formatting"
-         Top             =   30
+         Top             =   60
          Width           =   1185
-         _ExtentX        =   2090
+         _ExtentX        =   12594
          _ExtentY        =   476
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
@@ -131,51 +138,46 @@ Begin VB.Form fChart
       End
       Begin TradingUI27.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   5160
+         Left            =   165
          TabIndex        =   2
-         Top             =   0
-         Width           =   6465
-         _ExtentX        =   11404
+         Top             =   30
+         Width           =   5865
+         _ExtentX        =   10345
          _ExtentY        =   582
       End
       Begin MSComctlLib.Toolbar ChartToolsToolbar 
          Height          =   330
-         Left            =   180
+         Left            =   9780
          TabIndex        =   1
-         Top             =   0
-         Width           =   1890
-         _ExtentX        =   3334
+         Top             =   30
+         Width           =   1410
+         _ExtentX        =   2487
          _ExtentY        =   582
          ButtonWidth     =   609
          ButtonHeight    =   582
+         AllowCustomize  =   0   'False
          Wrappable       =   0   'False
          Style           =   1
          ImageList       =   "ImageList1"
          _Version        =   393216
          BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-            NumButtons      =   6
+            NumButtons      =   4
             BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
                Key             =   "studies"
                Object.ToolTipText     =   "Manage the studies displayed on the chart"
                ImageIndex      =   1
             EndProperty
             BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Style           =   3
-            EndProperty
-            BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
                Key             =   "selection"
                Description     =   "Select a chart object"
                ImageIndex      =   2
             EndProperty
-            BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Style           =   3
-            EndProperty
-            BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
                Key             =   "lines"
                Object.ToolTipText     =   "Draw lines"
                ImageIndex      =   3
             EndProperty
-            BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
                Key             =   "fib"
                Object.ToolTipText     =   "Draw Fibonacci retracement lines"
                ImageIndex      =   4
@@ -277,7 +279,7 @@ Private mOwner                                  As Variant
 
 Private mIsInitialised                          As Boolean
 
-Private mTheme                                          As ITheme
+Private mTheme                                  As ITheme
 
 '================================================================================
 ' Class Event Handlers
@@ -642,6 +644,10 @@ Public Property Get IsHistorical() As Boolean
 IsHistorical = mIsHistorical
 End Property
 
+Public Property Let Owner(ByVal value As Variant)
+gSetVariant mOwner, value
+End Property
+
 Public Property Let Style(ByVal value As ChartStyle)
 Const ProcName As String = "Style"
 On Error GoTo Err
@@ -716,7 +722,7 @@ If Not pConfig Is Nothing Then setConfig pConfig
 '' we have to do something to cause Form_Load to run, otherwise MultiChart1 is
 '' not created for use below
 '
-'MultiChart1.Enabled = True
+MultiChart1.Enabled = True
 
 ChartNavToolbar1.Initialise , MultiChart1
 BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1
@@ -1102,7 +1108,8 @@ On Error GoTo Err
 If MultiChart1.Count = 0 Then Exit Sub
 gSyncStudyPicker MultiChart1.ChartManager, _
                 "Study picker for " & mSymbol & _
-                " (" & MultiChart1.TimePeriod.ToString & ")"
+                " (" & MultiChart1.TimePeriod.ToString & ")", _
+                mOwner
 
 Exit Sub
 

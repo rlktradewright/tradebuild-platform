@@ -1,18 +1,18 @@
 VERSION 5.00
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#279.1#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#282.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
    BackColor       =   &H00CDF3FF&
-   ClientHeight    =   9675
+   ClientHeight    =   8580
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   4065
    DefaultCancel   =   -1  'True
-   ScaleHeight     =   9675
+   ScaleHeight     =   8580
    ScaleWidth      =   4065
    Begin TabDlg.SSTab FeaturesSSTab 
       Height          =   9030
@@ -45,21 +45,25 @@ Begin VB.UserControl FeaturesPanel
       TabPicture(1)   =   "FeaturesPanel.ctx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LiveChartPicture"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "FeaturesPanel.ctx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "HistChartPicture"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "FeaturesPanel.ctx":0054
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "ReplayTickerPicture"
+      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "FeaturesPanel.ctx":0070
       Tab(4).ControlEnabled=   0   'False
       Tab(4).Control(0)=   "ConfigPicture"
+      Tab(4).Control(0).Enabled=   0   'False
       Tab(4).ControlCount=   1
       Begin VB.PictureBox ConfigPicture 
          Appearance      =   0  'Flat
@@ -69,28 +73,170 @@ Begin VB.UserControl FeaturesPanel
          Left            =   -75000
          ScaleHeight     =   9015
          ScaleWidth      =   4125
-         TabIndex        =   50
+         TabIndex        =   42
          Top             =   0
          Width           =   4125
+         Begin VB.Frame ChangeChartStylesFrame 
+            Caption         =   "Change chart styles"
+            Height          =   2895
+            Left            =   240
+            TabIndex        =   51
+            Top             =   4200
+            Width           =   2535
+            Begin VB.PictureBox ChangeChartStylesPicture 
+               BorderStyle     =   0  'None
+               Height          =   2535
+               Left            =   120
+               ScaleHeight     =   2535
+               ScaleWidth      =   2295
+               TabIndex        =   52
+               Top             =   240
+               Width           =   2295
+               Begin VB.CheckBox ApplyStyleHistCheck 
+                  Appearance      =   0  'Flat
+                  Caption         =   "Historical charts"
+                  ForeColor       =   &H80000008&
+                  Height          =   255
+                  Left            =   480
+                  TabIndex        =   58
+                  Top             =   1440
+                  Width           =   1935
+               End
+               Begin VB.CheckBox ApplyStyleLiveCheck 
+                  Appearance      =   0  'Flat
+                  Caption         =   "Live charts"
+                  ForeColor       =   &H80000008&
+                  Height          =   255
+                  Left            =   480
+                  TabIndex        =   57
+                  Top             =   1200
+                  Width           =   1455
+               End
+               Begin TWControls40.TWImageCombo ChartStylesCombo 
+                  Height          =   270
+                  Left            =   120
+                  TabIndex        =   54
+                  Top             =   480
+                  Width           =   2160
+                  _ExtentX        =   3810
+                  _ExtentY        =   476
+                  Appearance      =   0
+                  BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+                     Name            =   "MS Sans Serif"
+                     Size            =   8.25
+                     Charset         =   0
+                     Weight          =   400
+                     Underline       =   0   'False
+                     Italic          =   0   'False
+                     Strikethrough   =   0   'False
+                  EndProperty
+                  MouseIcon       =   "FeaturesPanel.ctx":008C
+                  Text            =   ""
+               End
+               Begin TWControls40.TWButton ApplyStyleButton 
+                  Height          =   495
+                  Left            =   120
+                  TabIndex        =   53
+                  Top             =   1920
+                  Width           =   2160
+                  _ExtentX        =   3810
+                  _ExtentY        =   873
+                  Appearance      =   0
+                  Caption         =   "Apply style"
+                  Enabled         =   0   'False
+                  BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+                     Name            =   "MS Sans Serif"
+                     Size            =   8.25
+                     Charset         =   0
+                     Weight          =   400
+                     Underline       =   0   'False
+                     Italic          =   0   'False
+                     Strikethrough   =   0   'False
+                  EndProperty
+               End
+               Begin VB.Label Label7 
+                  Caption         =   "Apply to"
+                  Height          =   255
+                  Left            =   120
+                  TabIndex        =   56
+                  Top             =   960
+                  Width           =   1575
+               End
+               Begin VB.Label Label 
+                  Caption         =   "Available styles"
+                  Height          =   255
+                  Left            =   120
+                  TabIndex        =   55
+                  Top             =   120
+                  Width           =   2055
+               End
+            End
+         End
+         Begin VB.Frame ThemeFrame 
+            Caption         =   "Theme"
+            Height          =   1815
+            Left            =   240
+            TabIndex        =   46
+            Top             =   2160
+            Width           =   2535
+            Begin VB.PictureBox ThemePicture 
+               Appearance      =   0  'Flat
+               BorderStyle     =   0  'None
+               ForeColor       =   &H80000008&
+               Height          =   1455
+               Left            =   120
+               ScaleHeight     =   1455
+               ScaleWidth      =   2295
+               TabIndex        =   47
+               Top             =   240
+               Width           =   2295
+               Begin VB.OptionButton BlueThemeOption 
+                  Caption         =   "Blue"
+                  Height          =   495
+                  Left            =   120
+                  TabIndex        =   49
+                  Top             =   480
+                  Width           =   2295
+               End
+               Begin VB.OptionButton NativeThemeOption 
+                  Caption         =   "Native"
+                  Height          =   495
+                  Left            =   120
+                  TabIndex        =   50
+                  Top             =   840
+                  Width           =   2295
+               End
+               Begin VB.OptionButton BlackThemeOption 
+                  Caption         =   "Black"
+                  Height          =   375
+                  Left            =   120
+                  TabIndex        =   48
+                  Top             =   120
+                  Width           =   1815
+               End
+            End
+         End
          Begin VB.TextBox CurrentConfigNameText 
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
             Height          =   285
             Left            =   120
             Locked          =   -1  'True
-            TabIndex        =   52
+            TabIndex        =   44
             TabStop         =   0   'False
             Top             =   420
             Width           =   3855
          End
          Begin TWControls40.TWButton ConfigEditorButton 
             Height          =   375
-            Left            =   2400
-            TabIndex        =   51
+            Left            =   240
+            TabIndex        =   43
             Top             =   1440
-            Width           =   1575
-            _ExtentX        =   0
-            _ExtentY        =   0
+            Width           =   1935
+            _ExtentX        =   3413
+            _ExtentY        =   661
+            Appearance      =   0
+            Caption         =   "Show config editor"
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
                Size            =   8.25
@@ -100,14 +246,12 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Appearance      =   0
-            Caption         =   "Show config editor"
          End
          Begin VB.Label Label6 
             Caption         =   "Current configuration is:"
             Height          =   375
             Left            =   120
-            TabIndex        =   53
+            TabIndex        =   45
             Top             =   120
             Width           =   2295
          End
@@ -120,13 +264,13 @@ Begin VB.UserControl FeaturesPanel
          Left            =   -75000
          ScaleHeight     =   9015
          ScaleWidth      =   4125
-         TabIndex        =   41
+         TabIndex        =   33
          Top             =   0
          Width           =   4125
          Begin TWControls40.TWImageCombo ReplaySpeedCombo 
             Height          =   270
             Left            =   1200
-            TabIndex        =   46
+            TabIndex        =   38
             Top             =   4080
             Width           =   2775
             _ExtentX        =   4895
@@ -141,18 +285,20 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            MouseIcon       =   "FeaturesPanel.ctx":008C
+            MouseIcon       =   "FeaturesPanel.ctx":00A8
             Text            =   ""
          End
          Begin TWControls40.TWButton StopReplayButton 
             Height          =   495
             Left            =   3360
-            TabIndex        =   45
+            TabIndex        =   37
             ToolTipText     =   "Stop tickfile replay"
             Top             =   4680
             Width           =   615
             _ExtentX        =   0
             _ExtentY        =   0
+            Appearance      =   0
+            Caption         =   "St&op"
             Enabled         =   0   'False
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -163,18 +309,18 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Appearance      =   0
-            Caption         =   "St&op"
          End
          Begin TWControls40.TWButton PauseReplayButton 
             Height          =   495
             Left            =   2640
-            TabIndex        =   44
+            TabIndex        =   36
             ToolTipText     =   "Pause tickfile replay"
             Top             =   4680
             Width           =   615
             _ExtentX        =   0
             _ExtentY        =   0
+            Appearance      =   0
+            Caption         =   "P&ause"
             Enabled         =   0   'False
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -185,18 +331,18 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Appearance      =   0
-            Caption         =   "P&ause"
          End
          Begin TWControls40.TWButton PlayTickFileButton 
             Height          =   495
             Left            =   1920
-            TabIndex        =   43
+            TabIndex        =   35
             ToolTipText     =   "Start or resume tickfile replay"
             Top             =   4680
             Width           =   615
             _ExtentX        =   0
             _ExtentY        =   0
+            Appearance      =   0
+            Caption         =   "&Play"
             Enabled         =   0   'False
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -207,13 +353,11 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Appearance      =   0
-            Caption         =   "&Play"
          End
          Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
             Height          =   3720
             Left            =   120
-            TabIndex        =   42
+            TabIndex        =   34
             Top             =   120
             Width           =   3930
             _ExtentX        =   6932
@@ -222,7 +366,7 @@ Begin VB.UserControl FeaturesPanel
          Begin MSComctlLib.ProgressBar ReplayProgressBar 
             Height          =   135
             Left            =   120
-            TabIndex        =   47
+            TabIndex        =   39
             Top             =   5640
             Visible         =   0   'False
             Width           =   3855
@@ -236,14 +380,14 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Replay speed"
             Height          =   375
             Left            =   120
-            TabIndex        =   49
+            TabIndex        =   41
             Top             =   4080
             Width           =   1095
          End
          Begin VB.Label ReplayProgressLabel 
             Height          =   255
             Left            =   120
-            TabIndex        =   48
+            TabIndex        =   40
             Top             =   5400
             Width           =   3855
          End
@@ -256,13 +400,13 @@ Begin VB.UserControl FeaturesPanel
          Left            =   -75000
          ScaleHeight     =   9015
          ScaleWidth      =   4125
-         TabIndex        =   24
+         TabIndex        =   20
          Top             =   0
          Width           =   4125
          Begin MSComCtl2.DTPicker FromDatePicker 
             Height          =   375
             Left            =   1920
-            TabIndex        =   34
+            TabIndex        =   26
             Top             =   1320
             Width           =   2055
             _ExtentX        =   3625
@@ -275,7 +419,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   67239939
+            Format          =   96010243
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -283,73 +427,27 @@ Begin VB.UserControl FeaturesPanel
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
             Height          =   285
-            Left            =   3000
-            TabIndex        =   31
+            Left            =   2760
+            TabIndex        =   23
             Text            =   "500"
             Top             =   600
-            Width           =   975
+            Width           =   1215
          End
          Begin VB.CheckBox HistSessionOnlyCheck 
             Appearance      =   0  'Flat
             Caption         =   "Session only"
             ForeColor       =   &H80000008&
             Height          =   375
-            Left            =   2760
-            TabIndex        =   30
+            Left            =   120
+            TabIndex        =   22
             Top             =   960
             Value           =   1  'Checked
             Width           =   1215
          End
-         Begin VB.Frame ChangeHistChartStylesFrame 
-            Caption         =   "Change chart styles"
-            Height          =   1335
-            Left            =   120
-            TabIndex        =   25
-            Top             =   7320
-            Width           =   3855
-            Begin VB.PictureBox ChangeHistChartStylesPicture 
-               BorderStyle     =   0  'None
-               Height          =   975
-               Left            =   60
-               ScaleHeight     =   975
-               ScaleWidth      =   3735
-               TabIndex        =   26
-               Top             =   240
-               Width           =   3735
-               Begin TWControls40.TWButton ChangeHistChartStylesButton 
-                  Height          =   495
-                  Left            =   480
-                  TabIndex        =   27
-                  Top             =   480
-                  Width           =   2775
-                  _ExtentX        =   0
-                  _ExtentY        =   0
-                  BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-                     Name            =   "MS Sans Serif"
-                     Size            =   8.25
-                     Charset         =   0
-                     Weight          =   400
-                     Underline       =   0   'False
-                     Italic          =   0   'False
-                     Strikethrough   =   0   'False
-                  EndProperty
-                  Appearance      =   0
-                  Caption         =   "Change ALL historical chart styles"
-               End
-               Begin VB.Label Label9 
-                  Caption         =   "Click this button to change the style of all existing historical charts to the style selected above."
-                  Height          =   495
-                  Left            =   120
-                  TabIndex        =   28
-                  Top             =   0
-                  Width           =   3495
-               End
-            End
-         End
          Begin TradingUI27.ContractSearch HistContractSearch 
             Height          =   4455
             Left            =   120
-            TabIndex        =   29
+            TabIndex        =   21
             Top             =   2760
             Width           =   3855
             _ExtentX        =   6800
@@ -358,7 +456,7 @@ Begin VB.UserControl FeaturesPanel
          Begin TradingUI27.TimeframeSelector HistChartTimeframeSelector 
             Height          =   270
             Left            =   1920
-            TabIndex        =   32
+            TabIndex        =   24
             Top             =   120
             Width           =   2055
             _ExtentX        =   3625
@@ -367,7 +465,7 @@ Begin VB.UserControl FeaturesPanel
          Begin MSComCtl2.DTPicker ToDatePicker 
             Height          =   375
             Left            =   1920
-            TabIndex        =   33
+            TabIndex        =   25
             Top             =   1800
             Width           =   2055
             _ExtentX        =   3625
@@ -375,13 +473,13 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   67239939
+            Format          =   96010243
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
             Height          =   270
             Left            =   1920
-            TabIndex        =   35
+            TabIndex        =   27
             Top             =   2280
             Width           =   2055
             _ExtentX        =   3625
@@ -396,14 +494,14 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            MouseIcon       =   "FeaturesPanel.ctx":00A8
+            MouseIcon       =   "FeaturesPanel.ctx":00C4
             Text            =   ""
          End
          Begin VB.Label Label5 
             Caption         =   "To"
             Height          =   255
             Left            =   120
-            TabIndex        =   40
+            TabIndex        =   32
             Top             =   1800
             Width           =   855
          End
@@ -411,7 +509,7 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "From"
             Height          =   255
             Left            =   120
-            TabIndex        =   39
+            TabIndex        =   31
             Top             =   1320
             Width           =   855
          End
@@ -419,7 +517,7 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Timeframe"
             Height          =   255
             Left            =   120
-            TabIndex        =   38
+            TabIndex        =   30
             Top             =   120
             Width           =   735
          End
@@ -427,7 +525,7 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Number of history bars"
             Height          =   495
             Left            =   120
-            TabIndex        =   37
+            TabIndex        =   29
             Top             =   600
             Width           =   1455
          End
@@ -435,7 +533,7 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Style"
             Height          =   375
             Left            =   120
-            TabIndex        =   36
+            TabIndex        =   28
             Top             =   2280
             Width           =   1455
          End
@@ -457,7 +555,7 @@ Begin VB.UserControl FeaturesPanel
             BorderStyle     =   0  'None
             Height          =   285
             Left            =   2760
-            TabIndex        =   19
+            TabIndex        =   15
             Text            =   "500"
             Top             =   600
             Width           =   1215
@@ -467,20 +565,21 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Session only"
             ForeColor       =   &H80000008&
             Height          =   375
-            Left            =   2760
-            TabIndex        =   18
+            Left            =   120
+            TabIndex        =   14
             Top             =   1080
             Value           =   1  'Checked
             Width           =   1215
          End
-         Begin TWControls40.TWButton LiveChartButton 
+         Begin TWControls40.TWButton LiveChartButton1 
             Height          =   375
             Left            =   3000
-            TabIndex        =   17
+            TabIndex        =   13
             Top             =   2040
             Width           =   975
             _ExtentX        =   0
             _ExtentY        =   0
+            Caption         =   "Show &Chart"
             Enabled         =   0   'False
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -491,53 +590,6 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Caption         =   "Show &Chart"
-         End
-         Begin VB.Frame ChangeLiveChartStylesFrame 
-            Caption         =   "Change chart styles"
-            Height          =   1335
-            Left            =   120
-            TabIndex        =   13
-            Top             =   3360
-            Width           =   3855
-            Begin VB.PictureBox ChangeLiveChartStylesPicture 
-               BorderStyle     =   0  'None
-               Height          =   975
-               Left            =   60
-               ScaleHeight     =   975
-               ScaleWidth      =   3735
-               TabIndex        =   14
-               Top             =   240
-               Width           =   3735
-               Begin TWControls40.TWButton ChangeLiveChartStylesButton 
-                  Height          =   495
-                  Left            =   480
-                  TabIndex        =   15
-                  Top             =   480
-                  Width           =   2775
-                  _ExtentX        =   0
-                  _ExtentY        =   0
-                  BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-                     Name            =   "MS Sans Serif"
-                     Size            =   8.25
-                     Charset         =   0
-                     Weight          =   400
-                     Underline       =   0   'False
-                     Italic          =   0   'False
-                     Strikethrough   =   0   'False
-                  EndProperty
-                  Appearance      =   0
-                  Caption         =   "Change ALL live chart styles"
-               End
-               Begin VB.Label Label7 
-                  Caption         =   "Click this button to change the style of all existing live charts to the style selected above."
-                  Height          =   495
-                  Left            =   120
-                  TabIndex        =   16
-                  Top             =   0
-                  Width           =   3495
-               End
-            End
          End
          Begin TWControls40.TWImageCombo LiveChartStylesCombo 
             Height          =   270
@@ -557,13 +609,13 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            MouseIcon       =   "FeaturesPanel.ctx":00C4
+            MouseIcon       =   "FeaturesPanel.ctx":00E0
             Text            =   ""
          End
          Begin TradingUI27.TimeframeSelector LiveChartTimeframeSelector 
             Height          =   270
             Left            =   1920
-            TabIndex        =   20
+            TabIndex        =   16
             Top             =   120
             Width           =   2055
             _ExtentX        =   3625
@@ -573,7 +625,7 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Timeframe"
             Height          =   255
             Left            =   120
-            TabIndex        =   23
+            TabIndex        =   19
             Top             =   120
             Width           =   735
          End
@@ -581,7 +633,7 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Number of history bars"
             Height          =   375
             Left            =   120
-            TabIndex        =   22
+            TabIndex        =   18
             Top             =   600
             Width           =   1335
          End
@@ -589,7 +641,7 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Style"
             Height          =   375
             Left            =   120
-            TabIndex        =   21
+            TabIndex        =   17
             Top             =   1560
             Width           =   1455
          End
@@ -614,14 +666,16 @@ Begin VB.UserControl FeaturesPanel
             _ExtentX        =   6800
             _ExtentY        =   9551
          End
-         Begin TWControls40.TWButton HistChartButton 
+         Begin TWControls40.TWButton LiveChartButton 
             Height          =   375
-            Left            =   720
+            Left            =   2640
             TabIndex        =   2
             Top             =   6360
-            Width           =   975
-            _ExtentX        =   0
-            _ExtentY        =   0
+            Width           =   1335
+            _ExtentX        =   2355
+            _ExtentY        =   661
+            Appearance      =   0
+            Caption         =   "Chart"
             Enabled         =   0   'False
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -632,17 +686,17 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Appearance      =   0
-            Caption         =   "Chart"
          End
          Begin TWControls40.TWButton StopTickerButton 
             Height          =   375
-            Left            =   720
+            Left            =   2640
             TabIndex        =   5
             Top             =   5880
-            Width           =   975
-            _ExtentX        =   0
-            _ExtentY        =   0
+            Width           =   1335
+            _ExtentX        =   2355
+            _ExtentY        =   661
+            Appearance      =   0
+            Caption         =   "Sto&p"
             Enabled         =   0   'False
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -653,17 +707,17 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Appearance      =   0
-            Caption         =   "Sto&p"
          End
          Begin TWControls40.TWButton OrderTicketButton 
             Height          =   375
-            Left            =   720
+            Left            =   2640
             TabIndex        =   4
             Top             =   6840
-            Width           =   975
-            _ExtentX        =   0
-            _ExtentY        =   0
+            Width           =   1335
+            _ExtentX        =   2355
+            _ExtentY        =   661
+            Appearance      =   0
+            Caption         =   "&Order ticket"
             Enabled         =   0   'False
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -674,17 +728,16 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Appearance      =   0
-            Caption         =   "&Order ticket"
          End
          Begin TWControls40.TWButton MarketDepthButton 
             Height          =   375
-            Left            =   720
+            Left            =   2640
             TabIndex        =   3
             Top             =   7320
-            Width           =   975
-            _ExtentX        =   0
-            _ExtentY        =   0
+            Width           =   1335
+            _ExtentX        =   2355
+            _ExtentY        =   661
+            Caption         =   "&Mkt depth"
             Enabled         =   0   'False
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -695,7 +748,6 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Caption         =   "&Mkt depth"
          End
       End
    End
@@ -707,9 +759,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3720
-      MouseIcon       =   "FeaturesPanel.ctx":00E0
+      MouseIcon       =   "FeaturesPanel.ctx":00FC
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":0232
+      Picture         =   "FeaturesPanel.ctx":024E
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   10
@@ -725,9 +777,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3360
-      MouseIcon       =   "FeaturesPanel.ctx":07BC
+      MouseIcon       =   "FeaturesPanel.ctx":07D8
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":090E
+      Picture         =   "FeaturesPanel.ctx":092A
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   8
@@ -743,9 +795,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3360
-      MouseIcon       =   "FeaturesPanel.ctx":0E98
+      MouseIcon       =   "FeaturesPanel.ctx":0EB4
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":0FEA
+      Picture         =   "FeaturesPanel.ctx":1006
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   9
@@ -850,7 +902,7 @@ End Enum
 
 Private Const ModuleName                            As String = "FeaturesPanel"
 
-Private Const MinimumHeightTwips                    As Long = 9675
+Private Const MinimumHeightTwips                    As Long = 8580
 Private Const MinimumWidthTwips                     As Long = 4065
 
 '@================================================================================
@@ -912,6 +964,10 @@ TickersPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
 TickersPicture.Height = UserControl.Height - TickersPicture.Top
 
 LiveContractSearch.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
+StopTickerButton.Left = UserControl.Width - StopTickerButton.Width - 8 * Screen.TwipsPerPixelX
+LiveChartButton.Left = StopTickerButton.Left
+OrderTicketButton.Left = StopTickerButton.Left
+MarketDepthButton.Left = StopTickerButton.Left
 
 LiveChartPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
 LiveChartPicture.Height = UserControl.Height - LiveChartPicture.Top
@@ -919,8 +975,7 @@ LiveChartPicture.Height = UserControl.Height - LiveChartPicture.Top
 LiveChartTimeframeSelector.Width = UserControl.Width - LiveChartTimeframeSelector.Left - 8 * Screen.TwipsPerPixelX
 NumLiveHistoryBarsText.Width = UserControl.Width - NumLiveHistoryBarsText.Left - 8 * Screen.TwipsPerPixelX
 LiveChartStylesCombo.Width = UserControl.Width - LiveChartStylesCombo.Left - 8 * Screen.TwipsPerPixelX
-LiveChartButton.Left = UserControl.Width - LiveChartButton.Width - 8 * Screen.TwipsPerPixelX
-ChangeLiveChartStylesFrame.Left = UserControl.Width - ChangeLiveChartStylesFrame.Width - 8 * Screen.TwipsPerPixelX
+LiveChartButton1.Left = UserControl.Width - LiveChartButton1.Width - 8 * Screen.TwipsPerPixelX
 
 HistChartPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
 HistChartPicture.Height = UserControl.Height - HistChartPicture.Top
@@ -928,8 +983,6 @@ HistChartPicture.Height = UserControl.Height - HistChartPicture.Top
 HistChartTimeframeSelector.Width = UserControl.Width - HistChartTimeframeSelector.Left - 8 * Screen.TwipsPerPixelX
 NumHistHistoryBarsText.Width = UserControl.Width - NumHistHistoryBarsText.Left - 8 * Screen.TwipsPerPixelX
 HistChartStylesCombo.Width = UserControl.Width - HistChartStylesCombo.Left - 8 * Screen.TwipsPerPixelX
-HistChartButton.Left = UserControl.Width - HistChartButton.Width - 8 * Screen.TwipsPerPixelX
-ChangeHistChartStylesFrame.Left = UserControl.Width - ChangeHistChartStylesFrame.Width - 8 * Screen.TwipsPerPixelX
 HistContractSearch.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
 FromDatePicker.Width = UserControl.Width - FromDatePicker.Left - 8 * Screen.TwipsPerPixelX
 ToDatePicker.Width = UserControl.Width - ToDatePicker.Left - 8 * Screen.TwipsPerPixelX
@@ -949,7 +1002,7 @@ ConfigPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
 ConfigPicture.Height = UserControl.Height - ConfigPicture.Top
 
 CurrentConfigNameText.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
-ConfigEditorButton.Left = UserControl.Width - ConfigEditorButton.Width - 8 * Screen.TwipsPerPixelX
+'ConfigEditorButton.Left = UserControl.Width - ConfigEditorButton.Width - 8 * Screen.TwipsPerPixelX
 
 End Sub
 
@@ -992,8 +1045,8 @@ Case MarketDataSourceStates.MarketDataSourceStateRunning
     If lTicker Is getSelectedDataSource Then
         If lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled Then OrderTicketButton.Enabled = True
         MarketDepthButton.Enabled = True
+        LiveChartButton1.Enabled = True
         LiveChartButton.Enabled = True
-        HistChartButton.Enabled = True
     End If
     
 Case MarketDataSourceStates.MarketDataSourceStatePaused
@@ -1002,8 +1055,8 @@ Case MarketDataSourceStates.MarketDataSourceStateStopped
     If getSelectedDataSource Is Nothing Then
         StopTickerButton.Enabled = False
         MarketDepthButton.Enabled = False
+        LiveChartButton1.Enabled = False
         LiveChartButton.Enabled = False
-        HistChartButton.Enabled = False
     End If
     
 End Select
@@ -1018,23 +1071,71 @@ End Sub
 ' Control Event Handlers
 '@================================================================================
 
-Private Sub ChangeHistChartStylesButton_Click()
-Const ProcName As String = "ChangeHistChartStylesButton_Click"
+Private Sub ApplyStyleButton_Click()
+Const ProcName As String = "ApplyStyleButton_Click"
 On Error GoTo Err
 
-setAllChartStyles HistChartStylesCombo.Text, True
+If ApplyStyleHistCheck.Value = vbChecked Then setAllChartStyles ChartStylesCombo.Text, True
+If ApplyStyleLiveCheck.Value = vbChecked Then setAllChartStyles ChartStylesCombo.Text, False
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub ApplyStyleHistCheck_Click()
+Const ProcName As String = "ApplyStyleHistCheck_Click"
+On Error GoTo Err
+
+checkReadyToApplyStyle
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub ApplyStyleLiveCheck_Click()
+Const ProcName As String = "ApplyStyleLiveCheck_Click"
+On Error GoTo Err
+
+checkReadyToApplyStyle
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub BlackThemeOption_Click()
+Const ProcName As String = "BlackThemeOption_Click"
+On Error GoTo Err
+
+gMainForm.ApplyTheme New BlackTheme
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub BlueThemeOption_Click()
+Const ProcName As String = "BlueThemeOption_Click"
+On Error GoTo Err
+
+gMainForm.ApplyTheme New BlueTheme
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ChangeLiveChartStylesButton_Click()
 Const ProcName As String = "ChangeLiveChartStylesButton_Click"
 On Error GoTo Err
 
-setAllChartStyles LiveChartStylesCombo.Text, False
 
 Exit Sub
 
@@ -1042,33 +1143,28 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub LiveChartButton_Click()
-Const ProcName As String = "LiveChartButton_Click"
+Private Sub ChartStylesCombo_Change()
+Const ProcName As String = "ChartStylesCombo_Change"
 On Error GoTo Err
 
-Dim lTicker As Ticker
-For Each lTicker In mTickerGrid.SelectedTickers
-    createChart lTicker
-Next
-
-clearSelectedTickers
+checkReadyToApplyStyle
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub HistChartButton_Click()
-Const ProcName As String = "HistChartButton_Click"
+Private Sub ChartStylesCombo_Click()
+Const ProcName As String = "ChartStylesCombo_Click"
 On Error GoTo Err
 
-LiveChartButton_Click
+checkReadyToApplyStyle
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ConfigEditorButton_Click()
@@ -1076,7 +1172,7 @@ Const ProcName As String = "ConfigEditorButton_Click"
 On Error GoTo Err
 
 Dim lNewAppInstanceConfig As ConfigurationSection
-Set lNewAppInstanceConfig = gShowConfigEditor(mConfigStore, mAppInstanceConfig, gMainForm)
+Set lNewAppInstanceConfig = gShowConfigEditor(mConfigStore, mAppInstanceConfig, mTheme, gMainForm)
 
 If lNewAppInstanceConfig Is Nothing Then Exit Sub
 
@@ -1100,10 +1196,10 @@ Case FeaturesTabIndexNumbers.FeaturesTabIndexHistoricalCharts
     HistContractSearch.SetFocus
 Case FeaturesTabIndexNumbers.FeaturesTabIndexLiveCharts
     LiveChartTimeframeSelector.SetFocus
-    If mTickerGrid.SelectedTickers.Count > 0 Then LiveChartButton.Default = True
+    If mTickerGrid.SelectedTickers.Count > 0 Then LiveChartButton1.Default = True
 Case FeaturesTabIndexNumbers.FeaturesTabIndexTickers
     LiveContractSearch.SetFocus
-    If mTickerGrid.SelectedTickers.Count > 0 Then HistChartButton.Default = True
+    If mTickerGrid.SelectedTickers.Count > 0 Then LiveChartButton.Default = True
 Case FeaturesTabIndexNumbers.FeaturesTabIndexTickfileReplay
     If Not mReplayController Is Nothing Then
         If PlayTickFileButton.Enabled Then
@@ -1165,7 +1261,36 @@ Private Sub HistContractSearch_NoContracts()
 Const ProcName As String = "HistContractSearch_NoContracts"
 On Error GoTo Err
 
-gModelessMsgBox "No contracts found", vbExclamation, "Attention"
+gModelessMsgBox "No contracts found", vbExclamation, mTheme, "Attention"
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub LiveChartButton_Click()
+Const ProcName As String = "LiveChartButton_Click"
+On Error GoTo Err
+
+LiveChartButton1_Click
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub LiveChartButton1_Click()
+Const ProcName As String = "LiveChartButton1_Click"
+On Error GoTo Err
+
+Dim lTicker As Ticker
+For Each lTicker In mTickerGrid.SelectedTickers
+    createChart lTicker
+Next
+
+clearSelectedTickers
 
 Exit Sub
 
@@ -1220,7 +1345,7 @@ Private Sub LiveContractSearch_NoContracts()
 Const ProcName As String = "LiveContractSearch_NoContracts"
 On Error GoTo Err
 
-gModelessMsgBox "No contracts found", vbExclamation, "Attention"
+gModelessMsgBox "No contracts found", vbExclamation, mTheme, "Attention"
 
 Exit Sub
 
@@ -1243,6 +1368,18 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub NativeThemeOption_Click()
+Const ProcName As String = "NativeThemeOption_Click"
+On Error GoTo Err
+
+gMainForm.ApplyTheme New NativeTheme
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub NumHistHistoryBarsText_Validate(Cancel As Boolean)
@@ -1527,8 +1664,18 @@ Const ProcName As String = "Theme"
 On Error GoTo Err
 
 If Value Is Nothing Then Exit Property
+If Value Is mTheme Then Exit Property
 
 Set mTheme = Value
+
+If TypeOf mTheme Is BlackTheme Then
+    BlackThemeOption.Value = True
+ElseIf TypeOf mTheme Is BlueTheme Then
+    BlueThemeOption.Value = True
+ElseIf TypeOf mTheme Is NativeTheme Then
+    NativeThemeOption.Value = True
+End If
+
 gApplyTheme mTheme, UserControl.Controls
 
 PinPicture.BackColor = UserControl.BackColor
@@ -1607,6 +1754,7 @@ LogMessage "Initialising Features Panel: Setting up timeframeselectors"
 setupTimeframeSelectors
 
 LogMessage "Initialising Features Panel: setting current chart styles"
+loadStyleComboItems ChartStylesCombo.ComboItems
 setCurrentChartStyles
 
 FromDatePicker.Value = DateAdd("m", -1, Now)
@@ -1650,6 +1798,20 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub checkReadyToApplyStyle()
+Const ProcName As String = "checkReadyToApplyStyles"
+On Error GoTo Err
+
+ApplyStyleButton.Enabled = (ApplyStyleHistCheck.Value = vbChecked Or _
+                            ApplyStyleLiveCheck.Value = vbChecked) And _
+                            ChartStylesCombo.Text <> ""
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub clearSelectedTickers()
 Const ProcName As String = "clearSelectedTickers"
 On Error GoTo Err
@@ -1687,7 +1849,7 @@ mChartForms.Add pTicker, _
                 CreateChartSpecifier(CLng(NumLiveHistoryBarsText.Text), Not (LiveSessionOnlyCheck = vbChecked)), _
                 ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text), _
                 gMainForm, _
-                gTheme
+                mTheme
 
 Exit Sub
 
@@ -1728,9 +1890,9 @@ For Each lContract In pContracts
                         mTradeBuildAPI.BarFormatterLibManager, _
                         lConfig, _
                         CreateChartSpecifier(CLng(NumHistHistoryBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), fromDate, toDate), _
-                        ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text), _
+                        ChartStylesManager.Item(HistChartStylesCombo.SelectedItem.Text), _
                         gMainForm, _
-                        gTheme
+                        mTheme
 
 Next
 
@@ -1756,40 +1918,39 @@ Private Sub handleSelectedTickers()
 Const ProcName As String = "handleSelectedTickers"
 On Error GoTo Err
 
-If mTickerGrid.SelectedTickers.Count = 0 Then
-    StopTickerButton.Enabled = False
-    LiveChartButton.Enabled = False
-    HistChartButton.Enabled = False
-    MarketDepthButton.Enabled = False
-    OrderTicketButton.Enabled = False
-Else
-    StopTickerButton.Enabled = True
+StopTickerButton.Enabled = False
+LiveChartButton1.Enabled = False
+LiveChartButton.Enabled = False
+MarketDepthButton.Enabled = False
+OrderTicketButton.Enabled = False
+
+If mTickerGrid.SelectedTickers.Count = 0 Then Exit Sub
     
-    LiveChartButton.Enabled = False
-    HistChartButton.Enabled = False
-    MarketDepthButton.Enabled = False
-    OrderTicketButton.Enabled = False
-    
-    If FeaturesSSTab.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexLiveCharts Then
-        LiveChartButton.Default = True
-    ElseIf FeaturesSSTab.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexTickers Then
-        HistChartButton.Default = True
-    End If
-    
-    Dim lTicker As Ticker
-    Set lTicker = getSelectedDataSource
-    If lTicker Is Nothing Then
-    ElseIf lTicker.State = MarketDataSourceStateRunning Then
-        LiveChartButton.Enabled = True
-        HistChartButton.Enabled = True
-        Dim lContract As IContract
-        Set lContract = lTicker.ContractFuture.Value
-        If lContract.Specifier.SecType <> SecTypeIndex Then
-            If lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled Then OrderTicketButton.Enabled = True
-            MarketDepthButton.Enabled = True
-        End If
-    End If
+StopTickerButton.Enabled = True
+LiveChartButton1.Enabled = True
+LiveChartButton.Enabled = True
+MarketDepthButton.Enabled = True
+
+If FeaturesSSTab.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexLiveCharts Then
+    LiveChartButton1.Default = True
+ElseIf FeaturesSSTab.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexTickers Then
+    LiveChartButton.Default = True
 End If
+
+Dim lTicker As Ticker
+Set lTicker = getSelectedDataSource
+
+If lTicker Is Nothing Then Exit Sub
+
+MarketDepthButton.Enabled = False
+If lTicker.State <> MarketDataSourceStateRunning Then Exit Sub
+
+Dim lContract As IContract
+Set lContract = lTicker.ContractFuture.Value
+If lContract.Specifier.SecType = SecTypeIndex Then Exit Sub
+
+If lTicker.IsLiveOrdersEnabled Or lTicker.IsSimulatedOrdersEnabled Then OrderTicketButton.Enabled = True
+MarketDepthButton.Enabled = True
 
 Exit Sub
 
@@ -1820,6 +1981,12 @@ On Error GoTo Err
 
 mChartForms.SetStyle ChartStylesManager.Item(pStyleName), pHistorical
 
+If pHistorical Then
+    HistChartStylesCombo.Text = pStyleName
+Else
+    LiveChartStylesCombo.Text = pStyleName
+End If
+
 Exit Sub
 
 Err:
@@ -1833,8 +2000,8 @@ On Error GoTo Err
 Dim tp As TimePeriod
 Set tp = LiveChartTimeframeSelector.TimePeriod
 
-LiveChartButton.ToolTipText = "Show " & tp.ToString & " chart"
-HistChartButton.ToolTipText = LiveChartButton.ToolTipText
+LiveChartButton1.ToolTipText = "Show " & tp.ToString & " chart"
+LiveChartButton.ToolTipText = LiveChartButton1.ToolTipText
 
 Exit Sub
 
@@ -1959,12 +2126,15 @@ On Error GoTo Err
 
 If Not pTicker.State = MarketDataSourceStateRunning Then Exit Sub
 
+Dim lContract As IContract
+Set lContract = pTicker.ContractFuture.Value
+If lContract.Specifier.SecType = SecTypeIndex Then Exit Sub
+
 Dim mktDepthForm As New fMarketDepth
 mktDepthForm.NumberOfRows = 100
 mktDepthForm.Ticker = pTicker
-mktDepthForm.Theme = mTheme
 
-If Not gTheme Is Nothing Then mktDepthForm.Theme = gTheme
+If Not mTheme Is Nothing Then mktDepthForm.Theme = mTheme
 mktDepthForm.Show vbModeless, gMainForm
 
 Exit Sub
@@ -1978,7 +2148,7 @@ Const ProcName As String = "showOrderTicket"
 On Error GoTo Err
 
 If getSelectedDataSource Is Nothing Then
-    gModelessMsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
+    gModelessMsgBox "No ticker selected - please select a ticker", vbExclamation, mTheme, "Error"
 Else
     mOrderTicket.Show vbModeless, gMainForm
     mOrderTicket.Ticker = getSelectedDataSource
@@ -2017,8 +2187,8 @@ On Error GoTo Err
 PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
 StopReplayButton.Enabled = False
+LiveChartButton1.Enabled = False
 LiveChartButton.Enabled = False
-HistChartButton.Enabled = False
 If Not mReplayController Is Nothing Then
     mReplayController.StopReplay
     Set mReplayController = Nothing

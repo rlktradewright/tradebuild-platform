@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#232.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#240.1#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -74,6 +74,8 @@ Event KeyUp(KeyCode As Integer, Shift As Integer)
 Attribute KeyUp.VB_UserMemId = -604
 
 Event StateChange(ev As StateChangeEventData)
+
+Event StyleChanged(ByVal pNewStyle As ChartStyle)
 
 Event TimePeriodChange()
 
@@ -299,6 +301,10 @@ End Sub
 
 Private Sub Chart1_KeyUp(KeyCode As Integer, Shift As Integer)
 RaiseEvent KeyUp(KeyCode, Shift)
+End Sub
+
+Private Sub Chart1_StyleChanged(ByVal pNewStyle As ChartStyle)
+RaiseEvent StyleChanged(pNewStyle)
 End Sub
 
 '@================================================================================

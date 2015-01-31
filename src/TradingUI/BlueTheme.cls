@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "BlueTheme"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -54,6 +54,10 @@ Private Const ModuleName                            As String = "BlueTheme"
 ' ITheme Interface Members
 '@================================================================================
 
+Private Property Get ITheme_AlertFont() As stdole.Font
+
+End Property
+
 Private Property Get ITheme_AlertForeColor() As stdole.OLE_COLOR
 ITheme_AlertForeColor = &HA8F0&
 End Property
@@ -63,7 +67,7 @@ ITheme_Appearance = AppearanceFlat
 End Property
 
 Private Property Get ITheme_BackColor() As stdole.OLE_COLOR
-ITheme_BackColor = &H404040
+ITheme_BackColor = &HBCA369
 End Property
 
 Private Property Get ITheme_BackColorAsk() As stdole.OLE_COLOR
@@ -79,7 +83,21 @@ ITheme_BackColorTrade = &HC1F7CA
 End Property
 
 Private Property Get ITheme_BaseCOlor() As stdole.OLE_COLOR
-ITheme_BaseCOlor = &H0&
+ITheme_BaseCOlor = &H683200
+End Property
+
+Private Property Get ITheme_BaseFont() As stdole.Font
+Static sFont As StdFont
+If sFont Is Nothing Then
+    Set sFont = New StdFont
+    sFont.Bold = False
+    sFont.Italic = False
+    sFont.Name = "Segoe UI"
+    sFont.Size = 8
+    sFont.Strikethrough = False
+    sFont.Underline = False
+End If
+Set ITheme_BaseFont = sFont
 End Property
 
 Private Property Get ITheme_BorderStyle() As BorderStyleSettings
@@ -87,19 +105,37 @@ ITheme_BorderStyle = BorderStyleNone
 End Property
 
 Private Property Get ITheme_ButtonBackColor() As stdole.OLE_COLOR
-ITheme_ButtonBackColor = &H505050
+ITheme_ButtonBackColor = &HFFE6CE
+End Property
+
+Private Property Get ITheme_ButtonFont() As stdole.Font
+Static sFont As StdFont
+If sFont Is Nothing Then
+    Set sFont = New StdFont
+    sFont.Bold = False
+    sFont.Italic = False
+    sFont.Name = "Segoe UI"
+    sFont.Size = 8
+    sFont.Strikethrough = False
+    sFont.Underline = False
+End If
+Set ITheme_ButtonFont = sFont
 End Property
 
 Private Property Get ITheme_ButtonForeColor() As stdole.OLE_COLOR
-ITheme_ButtonForeColor = &HE0E0E0
+ITheme_ButtonForeColor = &H0&
+End Property
+
+Private Property Get ITheme_ComboFont() As stdole.Font
+
 End Property
 
 Private Property Get ITheme_CoolbarBackColor() As stdole.OLE_COLOR
-ITheme_CoolbarBackColor = &H404040
+ITheme_CoolbarBackColor = &H9E8D70
 End Property
 
 Private Property Get ITheme_DecreasedValueColor() As stdole.OLE_COLOR
-ITheme_DecreasedValueColor = &H4444EB
+ITheme_DecreasedValueColor = &H90FA5
 End Property
 
 Private Property Get ITheme_DefaultBorderColor() As stdole.OLE_COLOR
@@ -108,6 +144,14 @@ End Property
 
 Private Property Get ITheme_DisabledBackColor() As stdole.OLE_COLOR
 ITheme_DisabledBackColor = &H909090
+End Property
+
+Private Property Get ITheme_DisabledFont() As stdole.Font
+
+End Property
+
+Private Property Get ITheme_DisabledForeColor() As stdole.OLE_COLOR
+
 End Property
 
 Private Property Get ITheme_FocusBorderColor() As stdole.OLE_COLOR
@@ -131,11 +175,29 @@ ITheme_ForeColorTrade = &H202020
 End Property
 
 Private Property Get ITheme_GridBackColorFixed() As stdole.OLE_COLOR
-ITheme_GridBackColorFixed = &H404040
+ITheme_GridBackColorFixed = &H9E8D70
+End Property
+
+Private Property Get ITheme_GridFont() As stdole.Font
+Static sFont As StdFont
+If sFont Is Nothing Then
+    Set sFont = New StdFont
+    sFont.Bold = False
+    sFont.Italic = False
+    sFont.Name = "Segoe UI"
+    sFont.Size = 10
+    sFont.Strikethrough = False
+    sFont.Underline = False
+End If
+Set ITheme_GridFont = sFont
+End Property
+
+Private Property Get ITheme_GridFontFixed() As stdole.Font
+
 End Property
 
 Private Property Get ITheme_GridForeColor() As stdole.OLE_COLOR
-ITheme_GridForeColor = &HE0E0E0
+ITheme_GridForeColor = &HFFFFFF
 End Property
 
 Private Property Get ITheme_GridForeColorFixed() As stdole.OLE_COLOR
@@ -147,27 +209,43 @@ ITheme_GridLineColor = &H444444
 End Property
 
 Private Property Get ITheme_GridLineColorFixed() As stdole.OLE_COLOR
-ITheme_GridLineColorFixed = &H505050
+ITheme_GridLineColorFixed = &H808080
 End Property
 
 Private Property Get ITheme_GridRowBackColorEven() As stdole.OLE_COLOR
-ITheme_GridRowBackColorEven = &H606060
+ITheme_GridRowBackColorEven = &HCEB892
 End Property
 
 Private Property Get ITheme_GridRowBackColorOdd() As stdole.OLE_COLOR
-ITheme_GridRowBackColorOdd = &H808080
+ITheme_GridRowBackColorOdd = &HBCA885
+End Property
+
+Private Property Get ITheme_GridRowForeColorEven() As stdole.OLE_COLOR
+
+End Property
+
+Private Property Get ITheme_GridRowForeColorOdd() As stdole.OLE_COLOR
+
 End Property
 
 Private Property Get ITheme_IncreasedValueColor() As stdole.OLE_COLOR
-ITheme_IncreasedValueColor = &H72D813
+ITheme_IncreasedValueColor = &HB7E43
 End Property
 
 Private Property Get ITheme_MouseoverBackColor() As stdole.OLE_COLOR
-ITheme_MouseoverBackColor = &HD28400
+ITheme_MouseoverBackColor = &HFFB36C
+End Property
+
+Private Property Get ITheme_MouseoverFont() As stdole.Font
+
+End Property
+
+Private Property Get ITheme_MouseOverForeColor() As stdole.OLE_COLOR
+
 End Property
 
 Private Property Get ITheme_NegativeChangeBackColor() As stdole.OLE_COLOR
-ITheme_NegativeChangeBackColor = &H4444EB
+ITheme_NegativeChangeBackColor = &H80
 End Property
 
 Private Property Get ITheme_NegativeChangeForeColor() As stdole.OLE_COLOR
@@ -187,11 +265,19 @@ ITheme_PositiveChangeForeColor = &HFFFFFF
 End Property
 
 Private Property Get ITheme_PushedBackColor() As stdole.OLE_COLOR
-ITheme_PushedBackColor = &HFFA50F
+ITheme_PushedBackColor = &HFF9433
+End Property
+
+Private Property Get ITheme_PushedFont() As stdole.Font
+
+End Property
+
+Private Property Get ITheme_PushedForeColor() As stdole.OLE_COLOR
+
 End Property
 
 Private Property Get ITheme_StatusBarBackColor() As stdole.OLE_COLOR
-ITheme_StatusBarBackColor = &HD7BD97
+ITheme_StatusBarBackColor = &HFFDFC1
 End Property
 
 Private Property Get ITheme_StatusBarForeColor() As stdole.OLE_COLOR
@@ -199,7 +285,7 @@ ITheme_StatusBarForeColor = &HC0C0C0
 End Property
 
 Private Property Get ITheme_TabstripBackColor() As stdole.OLE_COLOR
-ITheme_TabstripBackColor = &H303030
+ITheme_TabstripBackColor = &HFFB16A
 End Property
 
 Private Property Get ITheme_TabstripForeColor() As stdole.OLE_COLOR
@@ -207,15 +293,19 @@ ITheme_TabstripForeColor = &HFFFF&
 End Property
 
 Private Property Get ITheme_TextBackColor() As stdole.OLE_COLOR
-ITheme_TextBackColor = &H6D6D6D
+ITheme_TextBackColor = &HFFF9F2
+End Property
+
+Private Property Get ITheme_TextFont() As stdole.Font
+
 End Property
 
 Private Property Get ITheme_TextForeColor() As stdole.OLE_COLOR
-ITheme_TextForeColor = &HE0E0E0
+ITheme_TextForeColor = &H404040
 End Property
 
 Private Property Get ITheme_ToolbarBackColor() As stdole.OLE_COLOR
-ITheme_ToolbarBackColor = &H404040
+ITheme_ToolbarBackColor = &H9E8D70
 End Property
 
 '@================================================================================

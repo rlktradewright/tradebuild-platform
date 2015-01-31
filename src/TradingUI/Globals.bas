@@ -134,21 +134,38 @@ For Each lControl In pControls
         lControl.BorderStyle = pTheme.BorderStyle
         lControl.BackColor = pTheme.TextBackColor
         lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.TextFont Is Nothing Then
+            Set lControl.Font = pTheme.TextFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
     ElseIf TypeOf lControl Is ComboBox Or _
         TypeOf lControl Is ListBox _
     Then
         lControl.Appearance = pTheme.Appearance
         lControl.BackColor = pTheme.TextBackColor
         lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.ComboFont Is Nothing Then
+            Set lControl.Font = pTheme.ComboFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
     ElseIf TypeOf lControl Is CommandButton Or _
         TypeOf lControl Is Shape _
     Then
         ' nothing for these
     ElseIf TypeOf lControl Is CoolBar Then
-        SetWindowThemeOff FindWindowEx(lControl.hWnd, 0, "ReBarWindow32", vbNullString)
+        gLogger.Log "Setting window theme off for " & lControl.Name, ProcName, ModuleName
+        Dim lhWnd As Long
+        lhWnd = FindWindowEx(lControl.hWnd, 0, "ReBarWindow32", vbNullString)
+        If lhWnd = 0 Then lhWnd = lControl.hWnd
+        gLogger.Log "Setting window theme off for &H" & Hex(lhWnd), ProcName, ModuleName
+        SetWindowThemeOff lhWnd
         lControl.BackColor = pTheme.CoolbarBackColor
         Dim lBand As Band
         For Each lBand In lControl.Bands
+            gLogger.Log "Setting backcolor for band in " & lControl.Name & " to &h" & Hex(pTheme.CoolbarBackColor), ProcName, ModuleName
+            lBand.UseCoolbarColors = False
             lBand.BackColor = pTheme.CoolbarBackColor
         Next
     ElseIf TypeOf lControl Is Toolbar Then
@@ -235,6 +252,20 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Sub gSetStudyPickerTheme(ByVal pTheme As ITheme)
+Const ProcName As String = "gSetStudyPickerTheme"
+On Error GoTo Err
+
+If Not mStudyPickerForm Is Nothing Then
+    If Not pTheme Is Nothing Then mStudyPickerForm.Theme = pTheme
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
 If IsObject(pSource) Then
     Set pTarget = pSource
@@ -251,11 +282,9 @@ Public Sub gShowStudyPicker( _
 Const ProcName As String = "gShowStudyPicker"
 On Error GoTo Err
 
-If mStudyPickerForm Is Nothing Then
-    Set mStudyPickerForm = New fStudyPicker
-    If Not pTheme Is Nothing Then mStudyPickerForm.Theme = pTheme
-End If
-mStudyPickerForm.Initialise chartMgr, Title
+If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
+If Not pTheme Is Nothing Then mStudyPickerForm.Theme = pTheme
+mStudyPickerForm.Initialise chartMgr, pOwner, Title
 mStudyPickerForm.Show vbModeless, pOwner
 
 Exit Sub
@@ -266,12 +295,13 @@ End Sub
 
 Public Sub gSyncStudyPicker( _
                 ByVal chartMgr As ChartManager, _
-                ByVal Title As String)
+                ByVal Title As String, _
+                ByVal pOwner As Variant)
 Const ProcName As String = "gSyncStudyPicker"
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.Initialise chartMgr, Title
+mStudyPickerForm.Initialise chartMgr, pOwner, Title
 
 Exit Sub
 
@@ -284,7 +314,7 @@ Const ProcName As String = "gUnsyncStudyPicker"
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.Initialise Nothing, "Study picker"
+mStudyPickerForm.Initialise Nothing, Empty, "Study picker"
 
 Exit Sub
 
@@ -313,8 +343,17 @@ lResult = SetClassLong(lhWnd, GCLP_HBRBACKGROUND, lBrush)
 End Sub
 
 Public Sub SetWindowThemeOff(ByVal phWnd As Long)
+Const ProcName As String = "SetWindowThemeOff"
+On Error GoTo Err
+
 Dim result As Long
 result = SetWindowTheme(phWnd, vbNullString, "")
+If result <> 0 Then gLogger.Log "Error " & result & " setting window theme off", ProcName, ModuleName
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

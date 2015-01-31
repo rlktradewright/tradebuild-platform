@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#271.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#280.1#0"; "TradingUI27.ocx"
 Begin VB.Form fMarketDepth 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Market Depth"
@@ -85,7 +85,7 @@ Private mTheme                                      As ITheme
 
 Private Sub Form_Load()
 
-Me.left = Screen.Width - Me.Width
+Me.Left = Screen.Width - Me.Width
 Me.Top = Screen.Height - Me.Height
 
 End Sub
@@ -99,9 +99,9 @@ If Me.ScaleWidth = 0 And _
     Me.ScaleHeight = 0 Then Exit Sub
 
 If Me.ScaleWidth / 2 - CentreButton.Width / 2 > 0 Then
-    CentreButton.left = Me.ScaleWidth / 2 - CentreButton.Width / 2
+    CentreButton.Left = Me.ScaleWidth / 2 - CentreButton.Width / 2
 Else
-    CentreButton.left = 0
+    CentreButton.Left = 0
 End If
 
 DOMDisplay1.Width = Me.ScaleWidth
@@ -130,7 +130,7 @@ Private Sub ErrorListener_Notify(ev As ErrorEventData)
 Const ProcName As String = "ErrorListener_Notify"
 On Error GoTo Err
 
-gModelessMsgBox "Market depth is not available: " & ev.ErrorMessage, MsgBoxExclamation, "Attention"
+gModelessMsgBox "Market depth is not available: " & ev.ErrorMessage, MsgBoxExclamation, mTheme, "Attention"
 Unload Me
 
 Exit Sub

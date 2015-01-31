@@ -94,12 +94,22 @@ For Each lControl In pControls
         lControl.BorderStyle = pTheme.BorderStyle
         lControl.BackColor = pTheme.TextBackColor
         lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.TextFont Is Nothing Then
+            Set lControl.Font = pTheme.TextFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
     ElseIf TypeOf lControl Is ComboBox Or _
         TypeOf lControl Is ListBox _
     Then
         lControl.Appearance = pTheme.Appearance
         lControl.BackColor = pTheme.TextBackColor
         lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.ComboFont Is Nothing Then
+            Set lControl.Font = pTheme.ComboFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
     ElseIf TypeOf lControl Is CommandButton Or _
         TypeOf lControl Is Shape _
     Then
