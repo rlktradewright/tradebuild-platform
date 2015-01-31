@@ -159,12 +159,22 @@ For Each lControl In pControls
         lControl.BorderStyle = pTheme.BorderStyle
         lControl.BackColor = pTheme.TextBackColor
         lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.TextFont Is Nothing Then
+            Set lControl.Font = pTheme.TextFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
     ElseIf TypeOf lControl Is ComboBox Or _
         TypeOf lControl Is ListBox _
     Then
         lControl.Appearance = pTheme.Appearance
         lControl.BackColor = pTheme.TextBackColor
         lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.ComboFont Is Nothing Then
+            Set lControl.Font = pTheme.ComboFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
     ElseIf TypeOf lControl Is CommandButton Or _
         TypeOf lControl Is Shape _
     Then
@@ -219,6 +229,12 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Public Sub gFilterNonNumericKeyPress(ByRef KeyAscii As Integer)
+If (KeyAscii < 48 Or KeyAscii > 57) Then
+    KeyAscii = 0
+End If
+End Sub
 
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
@@ -276,6 +292,10 @@ If lLogger Is Nothing Then Set lLogger = GetLogger("log")
 Set gLogger = lLogger
 End Function
 
+Public Sub gNotImplemented()
+MsgBox "This facility has not yet been implemented", , "Sorry"
+End Sub
+
 Public Function gPointStyleToString( _
                 ByVal value As PointStyles) As String
 Select Case value
@@ -286,63 +306,12 @@ Case PointSquare
 End Select
 End Function
 
-Public Sub filterNonNumericKeyPress(ByRef KeyAscii As Integer)
-If (KeyAscii < 48 Or KeyAscii > 57) Then
-    KeyAscii = 0
+Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
+If IsObject(pSource) Then
+    Set pTarget = pSource
+Else
+    pTarget = pSource
 End If
-End Sub
-
-Public Function isInteger( _
-                ByVal value As String, _
-                Optional ByVal minValue As Long = 0, _
-                Optional ByVal maxValue As Long = &H7FFFFFFF) As Boolean
-Dim quantity As Long
-
-Const ProcName As String = "isInteger"
-On Error GoTo Err
-
-If IsNumeric(value) Then
-    quantity = CLng(value)
-    If CDbl(value) - quantity = 0 Then
-        If quantity >= minValue And quantity <= maxValue Then
-            isInteger = True
-        End If
-    End If
-End If
-                
-Exit Function
-
-Err:
-If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function isPrice( _
-                ByVal value As String, _
-                ByVal ticksize As Double) As Boolean
-Dim theVal As Double
-
-Const ProcName As String = "isPrice"
-On Error GoTo Err
-
-If IsNumeric(value) Then
-    theVal = value
-    If theVal > 0 And _
-        Int(theVal / ticksize) * ticksize = theVal _
-    Then
-        isPrice = True
-    End If
-End If
-
-Exit Function
-
-Err:
-If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Sub notImplemented()
-MsgBox "This facility has not yet been implemented", , "Sorry"
 End Sub
 
 '@================================================================================

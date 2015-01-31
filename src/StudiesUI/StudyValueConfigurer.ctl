@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyValueConfigurer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   375
@@ -18,6 +18,7 @@ Begin VB.UserControl StudyValueConfigurer
       Width           =   615
       _ExtentX        =   1085
       _ExtentY        =   529
+      Caption         =   "..."
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -28,7 +29,6 @@ Begin VB.UserControl StudyValueConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "..."
    End
    Begin TWControls40.TWButton FontButton 
       Height          =   300
@@ -38,6 +38,7 @@ Begin VB.UserControl StudyValueConfigurer
       Width           =   615
       _ExtentX        =   1085
       _ExtentY        =   529
+      Caption         =   "Font..."
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -48,7 +49,6 @@ Begin VB.UserControl StudyValueConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Font..."
    End
    Begin TWControls40.TWImageCombo StyleCombo 
       Height          =   270
@@ -151,7 +151,6 @@ Begin VB.UserControl StudyValueConfigurer
       Enabled         =   -1  'True
    End
    Begin VB.Label ValueNameLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Label2"
       Height          =   375
       Left            =   0
@@ -227,7 +226,6 @@ Private Const ModuleName                            As String = "StudyValueConfi
 ' Member variables
 '@================================================================================
 
-Private mChartController As ChartController
 Private mStudyValueDef As StudyValueDefinition
 Private mStudyValueConfig As StudyValueConfiguration
 
@@ -272,7 +270,7 @@ Private Sub AdvancedButton_Click()
 Const ProcName As String = "AdvancedButton_Click"
 On Error GoTo Err
 
-notImplemented
+gNotImplemented
 
 Exit Sub
 
@@ -406,7 +404,7 @@ Private Sub ThicknessText_KeyPress(KeyAscii As Integer)
 Const ProcName As String = "ThicknessText_KeyPress"
 On Error GoTo Err
 
-filterNonNumericKeyPress KeyAscii
+gFilterNonNumericKeyPress KeyAscii
 
 Exit Sub
 
@@ -685,8 +683,7 @@ End Sub
 
 Public Sub Initialise( _
                 ByVal pStudyValueDef As StudyValueDefinition, _
-                ByVal pStudyValueConfig As StudyValueConfiguration, _
-                ByVal pChartController As ChartController)
+                ByVal pStudyValueConfig As StudyValueConfiguration)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -699,7 +696,6 @@ UpColorLabel.Visible = False
 
 Set mStudyValueDef = pStudyValueDef
 Set mStudyValueConfig = pStudyValueConfig
-Set mChartController = pChartController
 
 AutoscaleCheck = vbUnchecked
 

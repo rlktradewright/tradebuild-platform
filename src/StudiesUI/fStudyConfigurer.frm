@@ -1,4 +1,5 @@
 VERSION 5.00
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.Form fStudyConfigurer 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Configure a Study"
@@ -13,39 +14,84 @@ Begin VB.Form fStudyConfigurer
    ScaleWidth      =   13560
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
-      Height          =   5655
-      Left            =   120
-      TabIndex        =   3
-      Top             =   120
-      Width           =   12255
-      _extentx        =   21616
-      _extenty        =   9975
-   End
-   Begin VB.CommandButton AddButton 
-      Caption         =   "&Add to chart"
+   Begin TWControls40.TWButton SetDefaultButton 
       Height          =   615
       Left            =   12360
-      TabIndex        =   0
-      Top             =   240
+      TabIndex        =   3
+      Top             =   1680
       Width           =   1095
+      _ExtentX        =   1931
+      _ExtentY        =   1085
+      Caption         =   "Set as &default"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
    End
-   Begin VB.CommandButton CancelButton 
+   Begin TWControls40.TWButton CancelButton 
       Cancel          =   -1  'True
-      Caption         =   "Cancel"
       Height          =   615
       Left            =   12360
       TabIndex        =   2
       Top             =   960
       Width           =   1095
+      _ExtentX        =   1931
+      _ExtentY        =   1085
+      Caption         =   "Cancel"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
    End
-   Begin VB.CommandButton SetDefaultButton 
-      Caption         =   "Set as &default"
+   Begin TWControls40.TWButton AddButton 
       Height          =   615
       Left            =   12360
       TabIndex        =   1
-      Top             =   1680
+      Top             =   240
       Width           =   1095
+      _ExtentX        =   1931
+      _ExtentY        =   1085
+      Caption         =   "&Add to chart"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
+   Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
+      Height          =   5655
+      Left            =   120
+      TabIndex        =   0
+      Top             =   120
+      Width           =   12255
+      _ExtentX        =   21616
+      _ExtentY        =   9975
    End
 End
 Attribute VB_Name = "fStudyConfigurer"
@@ -227,7 +273,6 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pChart As ChartController, _
                 ByVal studyDef As StudyDefinition, _
                 ByVal StudyLibraryName As String, _
                 ByRef regionNames() As String, _
@@ -245,7 +290,6 @@ mCancelled = False
 Me.Caption = studyDef.name
 
 StudyConfigurer1.Initialise _
-                pChart, _
                 studyDef, _
                 StudyLibraryName, _
                 regionNames, _

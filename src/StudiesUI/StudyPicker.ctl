@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyPicker 
    ClientHeight    =   4335
    ClientLeft      =   0
@@ -16,6 +16,7 @@ Begin VB.UserControl StudyPicker
       Width           =   375
       _ExtentX        =   661
       _ExtentY        =   661
+      Caption         =   "<"
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -26,7 +27,6 @@ Begin VB.UserControl StudyPicker
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "<"
    End
    Begin TWControls40.TWButton AddButton 
       Height          =   375
@@ -36,6 +36,7 @@ Begin VB.UserControl StudyPicker
       Width           =   375
       _ExtentX        =   661
       _ExtentY        =   661
+      Caption         =   ">"
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -46,7 +47,6 @@ Begin VB.UserControl StudyPicker
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   ">"
    End
    Begin TWControls40.TWButton ChangeButton 
       Height          =   375
@@ -56,6 +56,7 @@ Begin VB.UserControl StudyPicker
       Width           =   1095
       _ExtentX        =   1931
       _ExtentY        =   661
+      Caption         =   "Change"
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -66,7 +67,6 @@ Begin VB.UserControl StudyPicker
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Change"
    End
    Begin TWControls40.TWButton ConfigureButton 
       Height          =   375
@@ -76,6 +76,7 @@ Begin VB.UserControl StudyPicker
       Width           =   1095
       _ExtentX        =   1931
       _ExtentY        =   661
+      Caption         =   "Co&nfigure"
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -86,7 +87,6 @@ Begin VB.UserControl StudyPicker
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Co&nfigure"
    End
    Begin MSComctlLib.TreeView ChartStudiesTree 
       Height          =   2535
@@ -177,7 +177,7 @@ Implements IThemeable
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "StudyPicker"
+Private Const ModuleName                        As String = "StudyPicker"
 
 '@================================================================================
 ' Enums
@@ -192,15 +192,17 @@ Private Const ModuleName                As String = "StudyPicker"
 ' Member variables
 '@================================================================================
 
-Private WithEvents mChartManager As ChartManager
+Private WithEvents mChartManager                As ChartManager
 Attribute mChartManager.VB_VarHelpID = -1
 
-Private mAvailableStudies() As StudyListEntry
+Private mAvailableStudies()                     As StudyListEntry
 
-Private mConfigForm As fStudyConfigurer
+Private mConfigForm                             As fStudyConfigurer
 Attribute mConfigForm.VB_VarHelpID = -1
 
-Private mTheme                              As ITheme
+Private mTheme                                  As ITheme
+
+Private mOwner                                  As Variant
 
 '@================================================================================
 ' UserControl Event Handlers
@@ -454,6 +456,8 @@ Set mTheme = value
 UserControl.BackColor = mTheme.BackColor
 gApplyTheme mTheme, UserControl.Controls
 
+If Not mConfigForm Is Nothing Then mConfigForm.Theme = mTheme
+
 Exit Property
 
 Err:
@@ -469,11 +473,13 @@ End Property
 '@================================================================================
 
 Public Sub Initialise( _
-                ByVal pChartManager As ChartManager)
+                ByVal pChartManager As ChartManager, _
+                ByVal pOwner As Variant)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mChartManager = pChartManager
+gSetVariant mOwner, pOwner
 
 DescriptionText = ""
 ChartStudiesTree.Nodes.Clear
@@ -566,7 +572,7 @@ On Error GoTo Err
 
 If mConfigForm Is Nothing Then
     Set mConfigForm = New fStudyConfigurer
-    If Not mTheme Is Nothing Then mConfigForm.Theme = mTheme
+    'If Not mTheme Is Nothing Then mConfigForm.Theme = mTheme
 End If
 
 Dim noParameterModification  As Boolean
@@ -576,15 +582,15 @@ If Not defaultConfiguration Is Nothing Then
     End If
 End If
 
-mConfigForm.Initialise mChartManager.Chart, _
-                        mChartManager.StudyLibraryManager.GetStudyDefinition(studyName, slName), _
+mConfigForm.Initialise mChartManager.StudyLibraryManager.GetStudyDefinition(studyName, slName), _
                         slName, _
                         mChartManager.regionNames, _
                         mChartManager.BaseStudyConfiguration, _
                         defaultConfiguration, _
                         mChartManager.StudyLibraryManager.GetStudyDefaultParameters(studyName, slName), _
                         noParameterModification
-mConfigForm.Show vbModal, UserControl.Parent
+If Not mTheme Is Nothing Then mConfigForm.Theme = mTheme
+mConfigForm.Show vbModal, mOwner
 If Not mConfigForm.Cancelled Then Set showConfigForm = mConfigForm.StudyConfiguration
 
 Exit Function
