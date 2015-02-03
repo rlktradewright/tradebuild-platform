@@ -8,7 +8,7 @@ Begin VB.UserControl ChartToolbar
    ClientWidth     =   7425
    ScaleHeight     =   3600
    ScaleWidth      =   7425
-   Begin MSComctlLib.ImageList ImageList4 
+   Begin MSComctlLib.ImageList DisabledImageList 
       Left            =   600
       Top             =   1440
       _ExtentX        =   1005
@@ -19,38 +19,38 @@ Begin VB.UserControl ChartToolbar
       MaskColor       =   8421376
       _Version        =   393216
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
-         NumListImages   =   17
+         NumListImages   =   16
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":0000
-            Key             =   ""
+            Key             =   "showbars"
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":0452
-            Key             =   ""
+            Key             =   "showcandlesticks"
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":08A4
-            Key             =   ""
+            Key             =   "showline"
          EndProperty
          BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":0CF6
-            Key             =   ""
+            Key             =   "showcrosshair"
          EndProperty
          BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":1148
-            Key             =   ""
+            Key             =   "thinnerbars"
          EndProperty
          BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":159A
-            Key             =   ""
+            Key             =   "thickerbars"
          EndProperty
          BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":19EC
-            Key             =   ""
+            Key             =   "reducespacing"
          EndProperty
          BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":1E3E
-            Key             =   ""
+            Key             =   "increasespacing"
          EndProperty
          BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":2290
@@ -62,35 +62,31 @@ Begin VB.UserControl ChartToolbar
          EndProperty
          BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":2B34
-            Key             =   ""
+            Key             =   "scrolldown"
          EndProperty
          BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":2F86
-            Key             =   ""
+            Key             =   "scrollup"
          EndProperty
          BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":33D8
-            Key             =   ""
+            Key             =   "scrollleft"
          EndProperty
          BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":382A
-            Key             =   ""
+            Key             =   "scrollright"
          EndProperty
          BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":3C7C
-            Key             =   ""
+            Key             =   "scrollend"
          EndProperty
          BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "ChartToolbar.ctx":40CE
-            Key             =   ""
-         EndProperty
-         BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":4520
-            Key             =   ""
+            Key             =   "autoscale"
          EndProperty
       EndProperty
    End
-   Begin MSComctlLib.ImageList ImageList3 
+   Begin MSComctlLib.ImageList EnabledImageList 
       Left            =   0
       Top             =   1440
       _ExtentX        =   1005
@@ -101,74 +97,70 @@ Begin VB.UserControl ChartToolbar
       MaskColor       =   8421376
       _Version        =   393216
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
-         NumListImages   =   17
+         NumListImages   =   16
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":4972
-            Key             =   "ShowBars"
+            Picture         =   "ChartToolbar.ctx":4520
+            Key             =   "showbars"
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":4DC4
-            Key             =   "ShowCandlesticks"
+            Picture         =   "ChartToolbar.ctx":4972
+            Key             =   "showcandlesticks"
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":5216
-            Key             =   "ShowLine"
+            Picture         =   "ChartToolbar.ctx":4DC4
+            Key             =   "showline"
          EndProperty
          BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":5668
-            Key             =   "ShowCrosshairs"
+            Picture         =   "ChartToolbar.ctx":5216
+            Key             =   "showcrosshair"
          EndProperty
          BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":5ABA
-            Key             =   "ShowDisc"
+            Picture         =   "ChartToolbar.ctx":5668
+            Key             =   "thinnerbars"
          EndProperty
          BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":5F0C
-            Key             =   "ThinnerBars"
+            Picture         =   "ChartToolbar.ctx":5ABA
+            Key             =   "thickerbars"
          EndProperty
          BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":635E
-            Key             =   "ThickerBars"
+            Picture         =   "ChartToolbar.ctx":5F0C
+            Key             =   "reducespacing"
          EndProperty
          BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":67B0
-            Key             =   "CloserBars"
+            Picture         =   "ChartToolbar.ctx":635E
+            Key             =   "increasespacing"
          EndProperty
          BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":6C02
-            Key             =   "WiderBars"
+            Picture         =   "ChartToolbar.ctx":67B0
+            Key             =   "scaledown"
          EndProperty
          BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":7054
-            Key             =   "IMG10"
+            Picture         =   "ChartToolbar.ctx":6C02
+            Key             =   "scaleup"
          EndProperty
          BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":74A6
-            Key             =   "IMG11"
+            Picture         =   "ChartToolbar.ctx":7054
+            Key             =   "scrolldown"
          EndProperty
          BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":78F8
-            Key             =   "IMG12"
+            Picture         =   "ChartToolbar.ctx":74A6
+            Key             =   "scrollup"
          EndProperty
          BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":7D4A
-            Key             =   "IMG13"
+            Picture         =   "ChartToolbar.ctx":78F8
+            Key             =   "scrollleft"
          EndProperty
          BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":819C
-            Key             =   "IMG14"
+            Picture         =   "ChartToolbar.ctx":7D4A
+            Key             =   "scrollright"
          EndProperty
          BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":85EE
-            Key             =   "IMG15"
+            Picture         =   "ChartToolbar.ctx":819C
+            Key             =   "scrollend"
          EndProperty
          BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":8A40
-            Key             =   "IMG16"
-         EndProperty
-         BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartToolbar.ctx":8E92
-            Key             =   ""
+            Picture         =   "ChartToolbar.ctx":85EE
+            Key             =   "autoscale"
          EndProperty
       EndProperty
    End
@@ -177,33 +169,28 @@ Begin VB.UserControl ChartToolbar
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   5865
-      _ExtentX        =   10345
+      Width           =   5520
+      _ExtentX        =   9737
       _ExtentY        =   582
       ButtonWidth     =   609
       ButtonHeight    =   582
       Style           =   1
-      ImageList       =   "ImageList3"
-      DisabledImageList=   "ImageList4"
       _Version        =   393216
       BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-         NumButtons      =   19
+         NumButtons      =   18
          BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "showbars"
             Object.ToolTipText     =   "Bar chart"
-            ImageKey        =   "ShowBars"
             Style           =   2
          EndProperty
          BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "showcandlesticks"
             Object.ToolTipText     =   "Candlestick chart"
-            ImageKey        =   "ShowCandlesticks"
             Style           =   2
          EndProperty
          BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "showline"
             Object.ToolTipText     =   "Line chart"
-            ImageKey        =   "ShowLine"
             Style           =   2
          EndProperty
          BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
@@ -212,77 +199,58 @@ Begin VB.UserControl ChartToolbar
          BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "showcrosshair"
             Object.ToolTipText     =   "Show crosshair"
-            ImageKey        =   "ShowCrosshairs"
-            Style           =   2
+            Style           =   1
          EndProperty
          BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "showdisccursor"
-            Object.ToolTipText     =   "Show cursor"
-            ImageKey        =   "ShowDisc"
-            Style           =   2
-         EndProperty
-         BeginProperty Button7 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Object.Visible         =   0   'False
          EndProperty
-         BeginProperty Button8 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button7 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "thinnerbars"
             Object.ToolTipText     =   "Thinner bars"
-            ImageKey        =   "ThinnerBars"
          EndProperty
-         BeginProperty Button9 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button8 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "thickerbars"
             Object.ToolTipText     =   "Thicker bars"
-            ImageKey        =   "ThickerBars"
          EndProperty
-         BeginProperty Button10 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button9 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "reducespacing"
             Object.ToolTipText     =   "Reduce bar spacing"
-            ImageKey        =   "CloserBars"
          EndProperty
-         BeginProperty Button11 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button10 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "increasespacing"
             Object.ToolTipText     =   "Increase bar spacing"
-            ImageKey        =   "WiderBars"
          EndProperty
-         BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button11 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scaledown"
             Object.ToolTipText     =   "Compress vertical scale"
-            ImageIndex      =   10
          EndProperty
-         BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scaleup"
             Object.ToolTipText     =   "Expand vertical scale"
-            ImageIndex      =   11
          EndProperty
-         BeginProperty Button14 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrolldown"
             Object.ToolTipText     =   "Scroll down"
-            ImageIndex      =   12
          EndProperty
-         BeginProperty Button15 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button14 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrollup"
             Object.ToolTipText     =   "Scroll up"
-            ImageIndex      =   13
          EndProperty
-         BeginProperty Button16 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button15 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrollleft"
             Object.ToolTipText     =   "Scroll left"
-            ImageIndex      =   14
          EndProperty
-         BeginProperty Button17 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button16 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrollright"
             Object.ToolTipText     =   "Scroll right"
-            ImageIndex      =   15
          EndProperty
-         BeginProperty Button18 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button17 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "scrollend"
             Object.ToolTipText     =   "Scroll to end"
-            ImageIndex      =   16
          EndProperty
-         BeginProperty Button19 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button18 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "autoscale"
             Object.ToolTipText     =   "Autoscale"
-            ImageIndex      =   17
             Style           =   1
          EndProperty
       EndProperty
@@ -326,7 +294,6 @@ Implements IThemeable
 Private Const ModuleName                        As String = "ChartToolbar"
 
 Private Const ChartNavCommandAutoScale           As String = "autoscale"
-Private Const ChartNavCommandAutoScroll          As String = "autoscroll"
 
 Private Const ChartNavCommandIncreaseSpacing     As String = "increasespacing"
 Private Const ChartNavCommandReduceSpacing       As String = "reducespacing"
@@ -369,7 +336,39 @@ Private mTheme                                  As ITheme
 '@================================================================================
 
 Private Sub UserControl_Initialize()
+Const ProcName As String = "UserControl_Initialize"
+On Error GoTo Err
+
 gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartToolbar created"
+Toolbar1.ImageList = EnabledImageList
+Toolbar1.DisabledImageList = DisabledImageList
+
+addButtonToToolbar ChartNavCommandAutoScale
+
+addButtonToToolbar ChartNavCommandIncreaseSpacing
+addButtonToToolbar ChartNavCommandReduceSpacing
+
+addButtonToToolbar ChartNavCommandScaleDown
+addButtonToToolbar ChartNavCommandScaleUp
+
+addButtonToToolbar ChartNavCommandScrollDown
+addButtonToToolbar ChartNavCommandScrollEnd
+addButtonToToolbar ChartNavCommandScrollLeft
+addButtonToToolbar ChartNavCommandScrollRight
+addButtonToToolbar ChartNavCommandScrollUp
+
+addButtonToToolbar ChartNavCommandShowBars
+addButtonToToolbar ChartNavCommandShowCandlesticks
+addButtonToToolbar ChartNavCommandShowLine
+addButtonToToolbar ChartNavCommandShowCrosshair
+
+addButtonToToolbar ChartNavCommandThickerBars
+addButtonToToolbar ChartNavCommandThinnerBars
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_Resize()
@@ -419,7 +418,11 @@ Case ChartNavCommandShowCandlesticks
 Case ChartNavCommandShowLine
     mBarSeries.Style.DisplayMode = BarDisplayModeLine
 Case ChartNavCommandShowCrosshair
-    mController.PointerStyle = PointerCrosshairs
+    If Toolbar1.Buttons(ChartNavCommandShowCrosshair).Value = tbrPressed Then
+        mController.PointerStyle = PointerCrosshairs
+    Else
+        mController.PointerStyle = PointerDisc
+    End If
 Case ChartNavCommandShowDiscCursor
     mController.PointerStyle = PointerDisc
 Case ChartNavCommandThinnerBars
@@ -627,6 +630,18 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub addButtonToToolbar(ByVal pKey As String)
+Const ProcName As String = "addButtonToToolbar"
+On Error GoTo Err
+
+Toolbar1.Buttons.Item(pKey).Image = pKey
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub setupChartNavButtons()
 
 Const ProcName As String = "setupChartNavButtons"
@@ -639,10 +654,8 @@ setupDisplayModeButtons
 
 If mRegion.PointerStyle = PointerStyles.PointerCrosshairs Then
     Toolbar1.Buttons(ChartNavCommandShowCrosshair).Value = tbrPressed
-    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).Value = tbrUnpressed
 Else
     Toolbar1.Buttons(ChartNavCommandShowCrosshair).Value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).Value = tbrPressed
 End If
 
 Toolbar1.Buttons(ChartNavCommandAutoScale).Value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
