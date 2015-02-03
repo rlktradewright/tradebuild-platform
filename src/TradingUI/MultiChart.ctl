@@ -61,7 +61,7 @@ Begin VB.UserControl MultiChart
    End
    Begin MSComctlLib.Toolbar ControlToolbar 
       Height          =   330
-      Left            =   6480
+      Left            =   6600
       TabIndex        =   0
       Top             =   6480
       Width           =   2520
@@ -85,19 +85,19 @@ Begin VB.UserControl MultiChart
          BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "change"
             Object.ToolTipText     =   "Change the timeframe for the current chart"
-            ImageIndex      =   3
+            ImageIndex      =   1
             Style           =   1
          EndProperty
          BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "add"
             Object.ToolTipText     =   "Select a new timeframe and add another chart"
-            ImageIndex      =   1
+            ImageIndex      =   2
             Style           =   1
          EndProperty
          BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "remove"
             Object.ToolTipText     =   "Remove current chart"
-            ImageIndex      =   2
+            ImageIndex      =   3
          EndProperty
       EndProperty
       Begin TradingUI27.TimeframeSelector TimeframeSelector1 
@@ -127,11 +127,11 @@ Begin VB.UserControl MultiChart
             Key             =   ""
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "MultiChart.ctx":0452
+            Picture         =   "MultiChart.ctx":059A
             Key             =   ""
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "MultiChart.ctx":08A4
+            Picture         =   "MultiChart.ctx":09EC
             Key             =   ""
          EndProperty
       EndProperty

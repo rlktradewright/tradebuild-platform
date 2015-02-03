@@ -218,6 +218,10 @@ On Error GoTo Err
 
 Dim f As fChart
 For Each f In mChartForms
+    f.Hide
+Next
+
+For Each f In mChartForms
     gLogger.Log "Closing form: caption=" & f.caption & "; type=" & TypeName(f), ProcName, ModuleName
     Unload f
 Next

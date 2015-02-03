@@ -170,6 +170,7 @@ Begin VB.Form fChart
             BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
                Key             =   "selection"
                Description     =   "Select a chart object"
+               Object.ToolTipText     =   "Show selection pointer"
                ImageIndex      =   2
             EndProperty
             BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
