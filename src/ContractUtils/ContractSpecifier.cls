@@ -343,8 +343,7 @@ jb.BeginObject
 jb.EncodeName "$ProgID"
 jb.EncodeValue ProjectName & "." & ModuleName
 
-jb.EncodeName "ComboLegs"
-jb.EncodeValue mComboLegs
+jb.EncodeNameAndValue "ComboLegs", mComboLegs, Nothing
 
 jb.EncodeName "zCurrencyCode"
 jb.EncodeValue mCurrency
@@ -352,20 +351,17 @@ jb.EncodeValue mCurrency
 jb.EncodeName "zExchange"
 jb.EncodeValue mExchange
 
-jb.EncodeName "zExpiry"
-jb.EncodeValue mExpiry
+jb.EncodeNameAndValue "zExpiry", mExpiry, ""
 
 jb.EncodeName "zLocalSymbol"
 jb.EncodeValue mLocalSymbol
 
-jb.EncodeName "zRight"
-jb.EncodeValue mRight
+jb.EncodeNameAndValue "zRight", mRight, OptNone
 
 jb.EncodeName "zSecType"
 jb.EncodeValue mSecType
 
-jb.EncodeName "zStrike"
-jb.EncodeValue mStrike
+jb.EncodeNameAndValue "zStrike", mStrike, 0#
 
 jb.EncodeName "zSymbol"
 jb.EncodeValue mSymbol

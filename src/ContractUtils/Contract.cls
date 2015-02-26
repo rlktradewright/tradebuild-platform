@@ -424,26 +424,19 @@ jb.EncodeValue ProjectName & "." & ModuleName
 jb.EncodeName "Specifier"
 jb.EncodeValue mSpecifier
 
-jb.EncodeName "DaysBeforeExpiryToSwitch"
-jb.EncodeValue mDaysBeforeExpiryToSwitch
+jb.EncodeNameAndValue "DaysBeforeExpiryToSwitch", mDaysBeforeExpiryToSwitch, 0
 
-jb.EncodeName "Description"
-jb.EncodeValue mDescription
+jb.EncodeNameAndValue "Description", mDescription, ""
 
-jb.EncodeName "ExpiryDate"
-jb.EncodeValue mExpiryDate
+jb.EncodeNameAndValue "ExpiryDate", mExpiryDate, CDate(0#)
 
-jb.EncodeName "Multiplier"
-jb.EncodeValue mMultiplier
+jb.EncodeNameAndValue "Multiplier", mMultiplier, 1
 
-jb.EncodeName "ProviderIDs"
-jb.EncodeValue mProviderIDs
+jb.EncodeNameAndValue "ProviderIDs", mProviderIDs
 
-jb.EncodeName "SessionEndTime"
-jb.EncodeValue mSessionEndTime
+jb.EncodeNameAndValue "SessionEndTime", mSessionEndTime, CDate(0#)
 
-jb.EncodeName "SessionStartTime"
-jb.EncodeValue mSessionStartTime
+jb.EncodeNameAndValue "SessionStartTime", mSessionStartTime, CDate(0#)
 
 jb.EncodeName "TickSize"
 jb.EncodeValue mTickSize
