@@ -856,7 +856,7 @@ For i = 0 To UBound(tff)
     End If
 Next
 
-FormatCombo.ComboItems(1).Selected = True
+Set FormatCombo.SelectedItem = FormatCombo.ComboItems(1)
 
 If j = -1 Then
     Erase mSupportedTickStreamFormats

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TimeframeSpecifier 
    ClientHeight    =   690
    ClientLeft      =   0
@@ -506,7 +506,7 @@ Const ProcName As String = "setUnitsSelection"
 On Error GoTo Err
 
 If mValidator.IsValidTimePeriod(GetTimePeriod(1, value)) Then
-    TimeframeUnitsCombo.ComboItems.Item(TimePeriodUnitsToString(value)).Selected = True
+    Set TimeframeUnitsCombo.SelectedItem = TimeframeUnitsCombo.ComboItems.Item(TimePeriodUnitsToString(value))
     setUnitsSelection = True
 End If
 

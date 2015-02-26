@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ChartStylePicker 
    BackStyle       =   0  'Transparent
    ClientHeight    =   345
@@ -500,7 +500,7 @@ Public Sub SelectStyle(ByVal pStyleName As String)
 Const ProcName As String = "SelectStyle"
 On Error GoTo Err
 
-Combo1.ComboItems.Item(pStyleName).Selected = True
+Set Combo1.SelectedItem = Combo1.ComboItems.Item(pStyleName)
 
 Exit Sub
 

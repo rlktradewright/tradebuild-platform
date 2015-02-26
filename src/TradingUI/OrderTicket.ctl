@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl OrderTicket 
    ClientHeight    =   6195
    ClientLeft      =   0
@@ -8,43 +8,42 @@ Begin VB.UserControl OrderTicket
    ClientWidth     =   8790
    ScaleHeight     =   6195
    ScaleWidth      =   8790
-   Begin TWControls40.TWImageCombo OrderSchemeCombo 
-      Height          =   330
-      Left            =   1320
-      TabIndex        =   0
+   Begin VB.OptionButton BracketOrderOption 
+      Caption         =   "&Bracket order"
+      Enabled         =   0   'False
+      Height          =   195
+      Left            =   1560
+      TabIndex        =   31
       Top             =   120
-      Width           =   1935
-      _ExtentX        =   3413
-      _ExtentY        =   582
-      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      MouseIcon       =   "OrderTicket.ctx":0000
-      Text            =   "Simple order"
+      Width           =   1335
+   End
+   Begin VB.OptionButton SimpleOrderOption 
+      Caption         =   "&Simple order"
+      Enabled         =   0   'False
+      Height          =   195
+      Left            =   120
+      TabIndex        =   30
+      Top             =   120
+      Width           =   1335
    End
    Begin VB.CheckBox SimulateOrdersCheck 
-      Caption         =   "Simulate orders"
+      Caption         =   "S&imulate orders"
       Height          =   195
       Left            =   3480
-      TabIndex        =   71
+      TabIndex        =   32
       Top             =   120
       Width           =   1455
    End
    Begin TWControls40.TWButton UndoButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   30
+      TabIndex        =   29
       Top             =   5250
       Visible         =   0   'False
       Width           =   1095
       _ExtentX        =   0
       _ExtentY        =   0
+      Caption         =   "&Undo"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -54,16 +53,16 @@ Begin VB.UserControl OrderTicket
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "&Undo"
    End
    Begin TWControls40.TWButton PlaceOrdersButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   25
+      TabIndex        =   24
       Top             =   1020
       Width           =   1095
       _ExtentX        =   0
       _ExtentY        =   0
+      Caption         =   "&Place orders"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -73,16 +72,16 @@ Begin VB.UserControl OrderTicket
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "&Place orders"
    End
    Begin TWControls40.TWButton ResetButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   28
+      TabIndex        =   27
       Top             =   2820
       Width           =   1095
       _ExtentX        =   0
       _ExtentY        =   0
+      Caption         =   "&Reset"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -92,17 +91,17 @@ Begin VB.UserControl OrderTicket
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "&Reset"
    End
    Begin TWControls40.TWButton CompleteOrdersButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   26
+      TabIndex        =   25
       Top             =   1620
       Visible         =   0   'False
       Width           =   1095
       _ExtentX        =   0
       _ExtentY        =   0
+      Caption         =   "Complete &order"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -112,17 +111,17 @@ Begin VB.UserControl OrderTicket
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Complete &order"
    End
    Begin TWControls40.TWButton ModifyButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   29
+      TabIndex        =   28
       Top             =   4200
       Visible         =   0   'False
       Width           =   1095
       _ExtentX        =   0
       _ExtentY        =   0
+      Caption         =   "&Modify"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -132,17 +131,17 @@ Begin VB.UserControl OrderTicket
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "&Modify"
    End
    Begin TWControls40.TWButton CancelButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   27
+      TabIndex        =   26
       Top             =   2220
       Visible         =   0   'False
       Width           =   1095
       _ExtentX        =   0
       _ExtentY        =   0
+      Caption         =   "&Cancel orders"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -152,7 +151,6 @@ Begin VB.UserControl OrderTicket
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "&Cancel"
    End
    Begin VB.PictureBox BackPicture 
       BorderStyle     =   0  'None
@@ -167,7 +165,7 @@ Begin VB.UserControl OrderTicket
          Caption         =   "Ticker"
          Height          =   1815
          Left            =   120
-         TabIndex        =   51
+         TabIndex        =   53
          Top             =   3120
          Width           =   3135
          Begin VB.PictureBox Picture3 
@@ -176,7 +174,7 @@ Begin VB.UserControl OrderTicket
             Left            =   105
             ScaleHeight     =   1455
             ScaleWidth      =   2655
-            TabIndex        =   52
+            TabIndex        =   54
             Top             =   240
             Width           =   2655
             Begin VB.TextBox VolumeText 
@@ -185,7 +183,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   960
                Locked          =   -1  'True
-               TabIndex        =   61
+               TabIndex        =   63
                TabStop         =   0   'False
                Top             =   720
                Width           =   855
@@ -196,7 +194,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   960
                Locked          =   -1  'True
-               TabIndex        =   60
+               TabIndex        =   62
                TabStop         =   0   'False
                Top             =   960
                Width           =   855
@@ -207,7 +205,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   960
                Locked          =   -1  'True
-               TabIndex        =   59
+               TabIndex        =   61
                TabStop         =   0   'False
                Top             =   1200
                Width           =   855
@@ -218,7 +216,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   1920
                Locked          =   -1  'True
-               TabIndex        =   58
+               TabIndex        =   60
                TabStop         =   0   'False
                Top             =   240
                Width           =   735
@@ -229,7 +227,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   1920
                Locked          =   -1  'True
-               TabIndex        =   57
+               TabIndex        =   59
                TabStop         =   0   'False
                Top             =   0
                Width           =   735
@@ -240,7 +238,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   1920
                Locked          =   -1  'True
-               TabIndex        =   56
+               TabIndex        =   58
                TabStop         =   0   'False
                Top             =   480
                Width           =   735
@@ -251,7 +249,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   960
                Locked          =   -1  'True
-               TabIndex        =   55
+               TabIndex        =   57
                TabStop         =   0   'False
                Top             =   480
                Width           =   855
@@ -262,7 +260,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   960
                Locked          =   -1  'True
-               TabIndex        =   54
+               TabIndex        =   56
                TabStop         =   0   'False
                Top             =   240
                Width           =   855
@@ -273,7 +271,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Left            =   960
                Locked          =   -1  'True
-               TabIndex        =   53
+               TabIndex        =   55
                TabStop         =   0   'False
                Top             =   0
                Width           =   855
@@ -282,7 +280,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Bid"
                Height          =   255
                Left            =   120
-               TabIndex        =   67
+               TabIndex        =   69
                Top             =   480
                Width           =   855
             End
@@ -290,7 +288,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Ask"
                Height          =   255
                Left            =   120
-               TabIndex        =   66
+               TabIndex        =   68
                Top             =   0
                Width           =   855
             End
@@ -298,7 +296,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Last"
                Height          =   255
                Left            =   120
-               TabIndex        =   65
+               TabIndex        =   67
                Top             =   240
                Width           =   855
             End
@@ -306,7 +304,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Volume"
                Height          =   255
                Left            =   120
-               TabIndex        =   64
+               TabIndex        =   66
                Top             =   720
                Width           =   735
             End
@@ -314,7 +312,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "High"
                Height          =   255
                Left            =   120
-               TabIndex        =   63
+               TabIndex        =   65
                Top             =   960
                Width           =   855
             End
@@ -322,7 +320,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Low"
                Height          =   255
                Left            =   120
-               TabIndex        =   62
+               TabIndex        =   64
                Top             =   1200
                Width           =   855
             End
@@ -332,7 +330,7 @@ Begin VB.UserControl OrderTicket
          Caption         =   "Order"
          Height          =   2895
          Left            =   120
-         TabIndex        =   41
+         TabIndex        =   43
          Top             =   120
          Width           =   3135
          Begin VB.PictureBox Picture2 
@@ -341,14 +339,14 @@ Begin VB.UserControl OrderTicket
             Left            =   105
             ScaleHeight     =   2535
             ScaleWidth      =   2895
-            TabIndex        =   42
+            TabIndex        =   44
             Top             =   240
             Width           =   2895
             Begin TWControls40.TWImageCombo TypeCombo 
                Height          =   330
                Index           =   0
                Left            =   960
-               TabIndex        =   3
+               TabIndex        =   2
                Top             =   1080
                Width           =   1815
                _ExtentX        =   3201
@@ -362,14 +360,14 @@ Begin VB.UserControl OrderTicket
                   Italic          =   0   'False
                   Strikethrough   =   0   'False
                EndProperty
-               MouseIcon       =   "OrderTicket.ctx":001C
+               MouseIcon       =   "OrderTicket.ctx":0000
                Text            =   ""
             End
             Begin TWControls40.TWImageCombo ActionCombo 
                Height          =   330
                Index           =   0
                Left            =   960
-               TabIndex        =   1
+               TabIndex        =   0
                Top             =   360
                Width           =   975
                _ExtentX        =   1720
@@ -383,7 +381,7 @@ Begin VB.UserControl OrderTicket
                   Italic          =   0   'False
                   Strikethrough   =   0   'False
                EndProperty
-               MouseIcon       =   "OrderTicket.ctx":0038
+               MouseIcon       =   "OrderTicket.ctx":001C
                Text            =   ""
             End
             Begin VB.TextBox StopPriceText 
@@ -391,7 +389,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   960
-               TabIndex        =   6
+               TabIndex        =   5
                Top             =   2160
                Width           =   855
             End
@@ -400,7 +398,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   960
-               TabIndex        =   5
+               TabIndex        =   4
                Top             =   1800
                Width           =   855
             End
@@ -411,7 +409,7 @@ Begin VB.UserControl OrderTicket
                Index           =   0
                Left            =   1920
                Locked          =   -1  'True
-               TabIndex        =   43
+               TabIndex        =   45
                TabStop         =   0   'False
                Top             =   1800
                Width           =   855
@@ -421,7 +419,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   960
-               TabIndex        =   4
+               TabIndex        =   3
                Top             =   1440
                Width           =   855
             End
@@ -430,7 +428,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   960
-               TabIndex        =   2
+               TabIndex        =   1
                Top             =   720
                Width           =   855
             End
@@ -446,7 +444,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Offset (ticks)"
                Height          =   255
                Left            =   0
-               TabIndex        =   50
+               TabIndex        =   52
                Top             =   1800
                Width           =   975
             End
@@ -454,7 +452,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Id"
                Height          =   255
                Left            =   0
-               TabIndex        =   49
+               TabIndex        =   51
                Top             =   0
                Width           =   255
             End
@@ -462,7 +460,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Stop price"
                Height          =   255
                Left            =   0
-               TabIndex        =   48
+               TabIndex        =   50
                Top             =   2160
                Width           =   855
             End
@@ -470,7 +468,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Price"
                Height          =   255
                Left            =   0
-               TabIndex        =   47
+               TabIndex        =   49
                Top             =   1440
                Width           =   855
             End
@@ -478,7 +476,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Type"
                Height          =   255
                Left            =   0
-               TabIndex        =   46
+               TabIndex        =   48
                Top             =   1080
                Width           =   855
             End
@@ -486,7 +484,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Quantity"
                Height          =   255
                Left            =   0
-               TabIndex        =   45
+               TabIndex        =   47
                Top             =   720
                Width           =   855
             End
@@ -495,7 +493,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   0
-               TabIndex        =   44
+               TabIndex        =   46
                Top             =   360
                Width           =   855
             End
@@ -505,7 +503,7 @@ Begin VB.UserControl OrderTicket
          Caption         =   "Options"
          Height          =   4815
          Left            =   3360
-         TabIndex        =   31
+         TabIndex        =   33
          Top             =   120
          Width           =   3975
          Begin VB.PictureBox Picture1 
@@ -514,14 +512,14 @@ Begin VB.UserControl OrderTicket
             Left            =   120
             ScaleHeight     =   4455
             ScaleWidth      =   3735
-            TabIndex        =   32
+            TabIndex        =   34
             Top             =   240
             Width           =   3735
             Begin TWControls40.TWImageCombo TriggerMethodCombo 
                Height          =   330
                Index           =   0
                Left            =   1200
-               TabIndex        =   17
+               TabIndex        =   16
                Top             =   2160
                Width           =   2535
                _ExtentX        =   4471
@@ -535,14 +533,14 @@ Begin VB.UserControl OrderTicket
                   Italic          =   0   'False
                   Strikethrough   =   0   'False
                EndProperty
-               MouseIcon       =   "OrderTicket.ctx":0054
+               MouseIcon       =   "OrderTicket.ctx":0038
                Text            =   ""
             End
             Begin TWControls40.TWImageCombo TIFCombo 
                Height          =   330
                Index           =   0
                Left            =   1200
-               TabIndex        =   7
+               TabIndex        =   6
                Top             =   0
                Width           =   1215
                _ExtentX        =   2143
@@ -556,7 +554,7 @@ Begin VB.UserControl OrderTicket
                   Italic          =   0   'False
                   Strikethrough   =   0   'False
                EndProperty
-               MouseIcon       =   "OrderTicket.ctx":0070
+               MouseIcon       =   "OrderTicket.ctx":0054
                Text            =   ""
             End
             Begin VB.CheckBox IgnoreRthCheck 
@@ -564,7 +562,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   2520
-               TabIndex        =   8
+               TabIndex        =   7
                Top             =   0
                Width           =   1215
             End
@@ -572,7 +570,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   1200
-               TabIndex        =   9
+               TabIndex        =   8
                Top             =   360
                Width           =   2535
             End
@@ -581,7 +579,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   2400
-               TabIndex        =   23
+               TabIndex        =   22
                Top             =   3000
                Width           =   1335
             End
@@ -589,7 +587,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   2760
-               TabIndex        =   15
+               TabIndex        =   14
                Top             =   1440
                Width           =   975
             End
@@ -598,7 +596,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   2400
-               TabIndex        =   21
+               TabIndex        =   20
                Top             =   2760
                Width           =   1410
             End
@@ -607,7 +605,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   1200
-               TabIndex        =   20
+               TabIndex        =   19
                Top             =   2760
                Width           =   1215
             End
@@ -616,7 +614,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   1200
-               TabIndex        =   18
+               TabIndex        =   17
                Top             =   2520
                Width           =   1095
             End
@@ -624,7 +622,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   2760
-               TabIndex        =   13
+               TabIndex        =   12
                Top             =   1080
                Width           =   975
             End
@@ -632,7 +630,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   2760
-               TabIndex        =   11
+               TabIndex        =   10
                Top             =   720
                Width           =   975
             End
@@ -640,7 +638,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   1200
-               TabIndex        =   12
+               TabIndex        =   11
                Top             =   1080
                Width           =   1575
             End
@@ -648,7 +646,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   1200
-               TabIndex        =   10
+               TabIndex        =   9
                Top             =   720
                Width           =   1575
             End
@@ -656,7 +654,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   1200
-               TabIndex        =   16
+               TabIndex        =   15
                Top             =   1800
                Width           =   735
             End
@@ -665,7 +663,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   1200
-               TabIndex        =   22
+               TabIndex        =   21
                Top             =   3000
                Width           =   855
             End
@@ -673,7 +671,7 @@ Begin VB.UserControl OrderTicket
                Height          =   285
                Index           =   0
                Left            =   1200
-               TabIndex        =   14
+               TabIndex        =   13
                Top             =   1440
                Width           =   735
             End
@@ -682,7 +680,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   1200
-               TabIndex        =   24
+               TabIndex        =   23
                Top             =   3240
                Width           =   1215
             End
@@ -691,7 +689,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   2400
-               TabIndex        =   19
+               TabIndex        =   18
                Top             =   2520
                Width           =   1335
             End
@@ -700,7 +698,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Min qty"
                Height          =   375
                Left            =   2040
-               TabIndex        =   40
+               TabIndex        =   42
                Top             =   1440
                Width           =   615
             End
@@ -708,7 +706,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Good till date"
                Height          =   255
                Left            =   0
-               TabIndex        =   39
+               TabIndex        =   41
                Top             =   1080
                Width           =   1095
             End
@@ -716,7 +714,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Good after time"
                Height          =   255
                Left            =   0
-               TabIndex        =   38
+               TabIndex        =   40
                Top             =   720
                Width           =   1095
             End
@@ -724,7 +722,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Discr amount"
                Height          =   255
                Left            =   0
-               TabIndex        =   37
+               TabIndex        =   39
                Top             =   1800
                Width           =   1095
             End
@@ -732,7 +730,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Trigger method"
                Height          =   255
                Left            =   0
-               TabIndex        =   36
+               TabIndex        =   38
                Top             =   2160
                Width           =   1095
             End
@@ -740,7 +738,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Display size"
                Height          =   255
                Left            =   0
-               TabIndex        =   35
+               TabIndex        =   37
                Top             =   1440
                Width           =   855
             End
@@ -748,7 +746,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Order ref"
                Height          =   255
                Left            =   0
-               TabIndex        =   34
+               TabIndex        =   36
                Top             =   360
                Width           =   855
             End
@@ -756,7 +754,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "TIF"
                Height          =   255
                Left            =   0
-               TabIndex        =   33
+               TabIndex        =   35
                Top             =   0
                Width           =   855
             End
@@ -785,7 +783,7 @@ Begin VB.UserControl OrderTicket
    Begin MSComctlLib.TabStrip BracketTabStrip 
       Height          =   5760
       Left            =   0
-      TabIndex        =   68
+      TabIndex        =   70
       Top             =   480
       Visible         =   0   'False
       Width           =   8850
@@ -794,7 +792,6 @@ Begin VB.UserControl OrderTicket
       MultiRow        =   -1  'True
       Style           =   2
       HotTracking     =   -1  'True
-      Separators      =   -1  'True
       _Version        =   393216
       BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
          NumTabs         =   3
@@ -826,18 +823,9 @@ Begin VB.UserControl OrderTicket
       EndProperty
       Height          =   495
       Left            =   5040
-      TabIndex        =   70
+      TabIndex        =   71
       Top             =   120
       Width           =   3615
-   End
-   Begin VB.Label Label13 
-      BackStyle       =   0  'Transparent
-      Caption         =   "Order scheme"
-      Height          =   255
-      Left            =   240
-      TabIndex        =   69
-      Top             =   120
-      Width           =   1215
    End
 End
 Attribute VB_Name = "OrderTicket"
@@ -951,7 +939,8 @@ Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
-setupOrderSchemeCombo
+BracketOrderOption.value = True
+setOrderScheme BracketOrder
 
 loadOrderFields BracketIndexes.BracketStopOrder
 loadOrderFields BracketIndexes.BracketTargetOrder
@@ -1135,6 +1124,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub BracketOrderOption_Click()
+Const ProcName As String = "BracketOrderOption_Click"
+On Error GoTo Err
+
+setOrderScheme BracketOrder
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub BracketTabStrip_Click()
 Const ProcName As String = "BracketTabStrip_Click"
 On Error GoTo Err
@@ -1223,26 +1224,13 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub OrderSchemeCombo_Click()
-Const ProcName As String = "OrderSchemeCombo_Click"
-On Error GoTo Err
-
-setOrderScheme comboItemData(OrderSchemeCombo)
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
 Private Sub PlaceOrdersButton_Click()
 Const ProcName As String = "PlaceOrdersButton_Click"
 On Error GoTo Err
 
 Dim op As IBracketOrder
 
-Select Case comboItemData(OrderSchemeCombo)
-Case OrderSchemes.SimpleOrder
+If SimpleOrderOption.value Then
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     
     If comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)) = OrderActions.OrderActionBuy Then
@@ -1280,7 +1268,7 @@ Case OrderSchemes.SimpleOrder
     
     setOrderAttributes op.EntryOrder, BracketIndexes.BracketEntryOrder
     mActiveOrderContext.ExecuteBracketOrder op
-Case OrderSchemes.BracketOrder
+ElseIf BracketOrderOption.value Then
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     If Not isValidOrder(BracketStopOrder) Then Exit Sub
     If Not isValidOrder(BracketTargetOrder) Then Exit Sub
@@ -1325,9 +1313,11 @@ Case OrderSchemes.BracketOrder
         setOrderAttributes op.TargetOrder, BracketIndexes.BracketTargetOrder
     End If
     mActiveOrderContext.ExecuteBracketOrder op
-Case OrderSchemes.OCAOrder
+    
+    Set BracketTabStrip.SelectedItem = BracketTabStrip.Tabs(BracketTabs.TabEntryOrder)
+Else
     ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-End Select
+End If
 
 Exit Sub
 
@@ -1431,7 +1421,7 @@ If mBracketOrder Is Nothing Then
         Exit Sub
     End If
     
-    If comboItemData(OrderSchemeCombo) = OrderSchemes.BracketOrder Then
+    If BracketOrderOption.value Then
         Select Case index
         Case BracketIndexes.BracketEntryOrder
             QuantityText(BracketIndexes.BracketStopOrder) = Quantity
@@ -1461,6 +1451,18 @@ On Error GoTo Err
 
 clearBracketOrder
 setupControls
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub SimpleOrderOption_Click()
+Const ProcName As String = "SimpleOrderOption_Click"
+On Error GoTo Err
+
+setOrderScheme SimpleOrder
 
 Exit Sub
 
@@ -1553,7 +1555,8 @@ lChangeType = ev.changeType
 Select Case lChangeType
 Case OrderContextReadyStateChanged
     If mActiveOrderContext.IsReady Then
-        OrderSchemeCombo.Enabled = True
+        SimpleOrderOption.Enabled = True
+        BracketOrderOption.Enabled = True
         setupControls
     Else
         disableAll NotReadyMessage
@@ -1663,21 +1666,7 @@ Public Sub SetMode(ByVal pMode As OrderTicketModes)
 Const ProcName As String = "SetMode"
 On Error GoTo Err
 
-mMode = pMode
-
-Select Case mMode
-Case OrderTicketModeLiveOnly
-    SimulateOrdersCheck.value = vbUnchecked
-    SimulateOrdersCheck.Visible = False
-Case OrderTicketModeSimulatedOnly
-    SimulateOrdersCheck.value = vbChecked
-    SimulateOrdersCheck.Visible = False
-Case OrderTicketModeLiveAndSimulated
-    SimulateOrdersCheck.value = vbUnchecked
-    SimulateOrdersCheck.Visible = True
-Case Else
-    AssertArgument False, "Invalid mode"
-End Select
+setModeNoPromptForOrderContext pMode
 
 chooseOrderContext
 
@@ -1709,7 +1698,7 @@ End Sub
 
 Public Sub ShowBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
-                ByVal pSelectedOrderNumber As Long)
+                ByVal pRole As BracketOrderRoles)
 Const ProcName As String = "ShowBracketOrder"
 On Error GoTo Err
 
@@ -1717,56 +1706,48 @@ clearBracketOrder
 
 Set mBracketOrder = pBracketOrder
 If mBracketOrder.IsSimulated Then
+    setModeNoPromptForOrderContext OrderTicketModeSimulatedOnly
     SetSimulatedOrderContext mBracketOrder.OrderContext
-    SetMode OrderTicketModeSimulatedOnly
 Else
+    setModeNoPromptForOrderContext OrderTicketModeLiveOnly
     SetLiveOrderContext mBracketOrder.OrderContext
-    SetMode OrderTicketModeLiveOnly
 End If
 
-Dim EntryOrder As IOrder
-Set EntryOrder = mBracketOrder.EntryOrder
+Dim lEntryOrder As IOrder
+Set lEntryOrder = mBracketOrder.EntryOrder
 
-Dim StopOrder As IOrder
-Set StopOrder = mBracketOrder.StopLossOrder
+Dim lStopOrder As IOrder
+Set lStopOrder = mBracketOrder.StopLossOrder
 
-Dim TargetOrder As IOrder
-Set TargetOrder = mBracketOrder.TargetOrder
+Dim lTargetOrder As IOrder
+Set lTargetOrder = mBracketOrder.TargetOrder
 
-If StopOrder Is Nothing And TargetOrder Is Nothing Then
+If lStopOrder Is Nothing And lTargetOrder Is Nothing Then
+    AssertArgument pRole = BracketOrderRoleEntry, "pRole must be BracketOrderRoleEntry for a standalone order"
+    BracketTabStrip.Visible = False
     RaiseEvent CaptionChanged("Change a single order")
 Else
+    BracketTabStrip.Visible = True
     RaiseEvent CaptionChanged("Change a bracket order")
 End If
 
-OrderSchemeCombo.Enabled = False
-BracketTabStrip.Visible = True
-If pSelectedOrderNumber <> 0 Then
-    If Not EntryOrder Is Nothing Then
-        pSelectedOrderNumber = pSelectedOrderNumber - 1
-        If pSelectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
-    End If
-    If Not StopOrder Is Nothing Then
-        pSelectedOrderNumber = pSelectedOrderNumber - 1
-        If pSelectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabStopOrder).Selected = True
-    End If
-    If Not TargetOrder Is Nothing Then
-        pSelectedOrderNumber = pSelectedOrderNumber - 1
-        If pSelectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabTargetOrder).Selected = True
-    End If
-Else
-    If isOrderModifiable(EntryOrder) Then
-        BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
-    ElseIf isOrderModifiable(StopOrder) Then
-        BracketTabStrip.Tabs(BracketTabs.TabStopOrder).Selected = True
-    ElseIf isOrderModifiable(TargetOrder) Then
-        BracketTabStrip.Tabs(BracketTabs.TabTargetOrder).Selected = True
-    End If
-End If
+SimpleOrderOption.Enabled = False
+BracketOrderOption.Enabled = False
 
-setOrderFieldValues EntryOrder, BracketIndexes.BracketEntryOrder
-setOrderFieldValues StopOrder, BracketIndexes.BracketStopOrder
-setOrderFieldValues TargetOrder, BracketIndexes.BracketTargetOrder
+Select Case pRole
+Case BracketOrderRoleEntry
+    Set BracketTabStrip.SelectedItem = BracketTabStrip.Tabs(BracketTabs.TabEntryOrder)
+Case BracketOrderRoleStopLoss
+    Set BracketTabStrip.SelectedItem = BracketTabStrip.Tabs(BracketTabs.TabStopOrder)
+Case BracketOrderRoleTarget
+    Set BracketTabStrip.SelectedItem = BracketTabStrip.Tabs(BracketTabs.TabTargetOrder)
+Case Else
+    AssertArgument False, "Invalid pRole"
+End Select
+
+setOrderFieldValues lEntryOrder, BracketIndexes.BracketEntryOrder
+setOrderFieldValues lStopOrder, BracketIndexes.BracketStopOrder
+setOrderFieldValues lTargetOrder, BracketIndexes.BracketTargetOrder
 
 configureOrderFields BracketIndexes.BracketEntryOrder
 configureOrderFields BracketIndexes.BracketStopOrder
@@ -2130,7 +2111,8 @@ Private Sub disableAll( _
 Const ProcName As String = "disableAll"
 On Error GoTo Err
 
-OrderSchemeCombo.Enabled = False
+SimpleOrderOption.Enabled = False
+BracketOrderOption.Enabled = False
 
 PlaceOrdersButton.Enabled = False
 CompleteOrdersButton.Enabled = False
@@ -2484,8 +2466,10 @@ clearOrderFields BracketIndexes.BracketEntryOrder
 clearOrderFields BracketIndexes.BracketStopOrder
 clearOrderFields BracketIndexes.BracketTargetOrder
 
-OrderSchemeCombo.Enabled = True
-selectComboEntry OrderSchemeCombo, OrderSchemes.BracketOrder
+SimpleOrderOption.Enabled = True
+BracketOrderOption.Enabled = True
+BracketOrderOption.value = True
+
 setOrderScheme OrderSchemes.BracketOrder
 
 selectComboEntry ActionCombo(BracketIndexes.BracketEntryOrder), _
@@ -2507,13 +2491,12 @@ selectComboEntry TypeCombo(BracketIndexes.BracketTargetOrder), _
 setOrderFieldsEnabling BracketIndexes.BracketTargetOrder, Nothing
 configureOrderFields BracketIndexes.BracketTargetOrder
 
-BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
+Set BracketTabStrip.SelectedItem = BracketTabStrip.Tabs(BracketTabs.TabEntryOrder)
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub selectComboEntry( _
@@ -2525,7 +2508,7 @@ On Error GoTo Err
 Dim i As Long
 For i = 1 To combo.ComboItems.Count
     If combo.ComboItems(i).Tag = ItemData Then
-        combo.Text = combo.ComboItems(i).Text
+        Set combo.SelectedItem = combo.ComboItems(i)
         Exit For
     End If
 Next
@@ -2541,9 +2524,7 @@ Private Sub setAction( _
 Const ProcName As String = "setAction"
 On Error GoTo Err
 
-If comboItemData(OrderSchemeCombo) = OrderSchemes.BracketOrder And _
-    index = BracketIndexes.BracketEntryOrder _
-Then
+If BracketOrderOption.value And index = BracketIndexes.BracketEntryOrder Then
     If comboItemData(ActionCombo(index)) = OrderActions.OrderActionSell Then
         selectComboEntry ActionCombo(BracketIndexes.BracketStopOrder), OrderActions.OrderActionBuy
         selectComboEntry ActionCombo(BracketIndexes.BracketTargetOrder), OrderActions.OrderActionBuy
@@ -2595,7 +2576,7 @@ Private Sub setComboListIndex(ByVal pCombo As TWImageCombo, ByVal pListIndex As 
 Const ProcName As String = "setComboListIndex"
 On Error GoTo Err
 
-pCombo.Text = pCombo.ComboItems(pListIndex).Text
+Set pCombo.SelectedItem = pCombo.ComboItems(pListIndex)
 
 Exit Sub
 
@@ -2610,8 +2591,34 @@ Const ProcName As String = "setInvalidControl"
 On Error GoTo Err
 
 Set mInvalidControls(index) = pControl
-If BracketTabStrip.Visible Then BracketTabStrip.Tabs(index + 1).Selected = True
+If BracketTabStrip.Visible Then Set BracketTabStrip.SelectedItem = BracketTabStrip.Tabs(index + 1)
 pControl.BackColor = ErroredFieldColor
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setModeNoPromptForOrderContext(ByVal pMode As OrderTicketModes)
+Const ProcName As String = "setModeNoPromptForOrderContext"
+On Error GoTo Err
+
+mMode = pMode
+
+Select Case mMode
+Case OrderTicketModeLiveOnly
+    SimulateOrdersCheck.value = vbUnchecked
+    SimulateOrdersCheck.Visible = False
+Case OrderTicketModeSimulatedOnly
+    SimulateOrdersCheck.value = vbChecked
+    SimulateOrdersCheck.Visible = False
+Case OrderTicketModeLiveAndSimulated
+    SimulateOrdersCheck.value = vbUnchecked
+    SimulateOrdersCheck.Visible = True
+Case Else
+    AssertArgument False, "Invalid mode"
+End Select
 
 Exit Sub
 
@@ -2682,13 +2689,13 @@ clearOrderFields orderIndex
 With pOrder
     setOrderId orderIndex, .Id
     
-    ActionCombo(orderIndex).Text = OrderActionToString(.Action)
+    selectComboEntry ActionCombo(orderIndex), .Action
     QuantityText(orderIndex) = .Quantity
-    TypeCombo(orderIndex).Text = OrderTypeToString(.OrderType)
+    selectComboEntry TypeCombo(orderIndex), .OrderType
     PriceText(orderIndex) = IIf(.LimitPrice <> 0, .LimitPrice, "")
     StopPriceText(orderIndex) = IIf(.TriggerPrice <> 0, .TriggerPrice, "")
     IgnoreRthCheck(orderIndex) = IIf(.IgnoreRegularTradingHours, vbChecked, vbUnchecked)
-    TIFCombo(orderIndex) = OrderTIFToString(.TimeInForce)
+    selectComboEntry TIFCombo(orderIndex), .TimeInForce
     OrderRefText(orderIndex) = .OriginatorRef
     AllOrNoneCheck(orderIndex) = IIf(.AllOrNone, vbChecked, vbUnchecked)
     BlockOrderCheck(orderIndex) = IIf(.BlockOrder, vbChecked, vbUnchecked)
@@ -2707,7 +2714,7 @@ With pOrder
     GoodTillDateTZText(orderIndex) = .GoodTillDateTZ
     
     ' do this last because it sets the various fields attributes
-    TypeCombo(orderIndex).Text = OrderTypeToString(.OrderType)
+    selectComboEntry TypeCombo(orderIndex), .OrderType
 End With
 
 If Not isOrderModifiable(pOrder) Then
@@ -2827,7 +2834,7 @@ Case OrderSchemes.BracketOrder
     UndoButton.Visible = False
     ResetButton.Enabled = True
     ResetButton.Enabled = True
-    BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
+    Set BracketTabStrip.SelectedItem = BracketTabStrip.Tabs(BracketTabs.TabEntryOrder)
 Case OrderSchemes.OCAOrder
     Dim OCAId As Long
     RaiseEvent CaptionChanged("Create a 'one cancels all' group")
@@ -2994,30 +3001,7 @@ Else
     OrderSimulationLabel.caption = OrdersLiveMessage
 End If
 
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setupOrderSchemeCombo()
-Const ProcName As String = "setupOrderSchemeCombo"
-On Error GoTo Err
-
-OrderSchemeCombo.ComboItems.Clear
-addItemToCombo OrderSchemeCombo, _
-            "Bracket order", _
-            OrderSchemes.BracketOrder
-addItemToCombo OrderSchemeCombo, _
-            "Simple order", _
-            OrderSchemes.SimpleOrder
-'addItemToCombo OrderSchemeCombo, _
-'            "OCA order", _
-'            OrderSchemes.OCAOrder
-'addItemToCombo OrderSchemeCombo, _
-'            "Combination order", _
-'            OrderSchemes.CombinationOrder
-setComboListIndex OrderSchemeCombo, 1
+ActionCombo(0).SetFocus
 
 Exit Sub
 
@@ -3047,7 +3031,7 @@ If mActiveOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFImmediateOrCancel) 
                 OrderTIFs.OrderTIFImmediateOrCancel
 End If
 
-setComboListIndex TIFCombo(0), 1
+setComboListIndex TIFCombo(index), 1
 
 Exit Sub
 

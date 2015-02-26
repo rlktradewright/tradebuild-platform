@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.5#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -273,11 +273,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = Value
+Theme = value
 
 Exit Property
 
@@ -435,11 +435,11 @@ Attribute Count.VB_MemberFlags = "400"
 Count = mCount
 End Property
 
-Public Property Let ForeColor(ByVal Value As OLE_COLOR)
+Public Property Let ForeColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "ForeColor"
 On Error GoTo Err
 
-TWGrid1.ForeColor = Value
+TWGrid1.ForeColor = value
 PropertyChanged PropNameForecolor
 
 Exit Property
@@ -453,8 +453,8 @@ ForeColor = TWGrid1.ForeColor
 End Property
 
 Public Property Let IncludeHistoricalContracts( _
-                ByVal Value As Boolean)
-mIncludeHistoricalContracts = Value
+                ByVal value As Boolean)
+mIncludeHistoricalContracts = value
 PropertyChanged PropNameIncludeHistoricalContracts
 End Property
 
@@ -561,12 +561,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal Value As ITheme)
+Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = Value
-TWGrid1.Theme = Value
+Set mTheme = value
+TWGrid1.Theme = value
 
 Exit Property
 
@@ -966,14 +966,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function toneDown(ByVal pColor As Long) As Long
-If (pColor And &H80000000) Then pColor = GetSysColor(pColor And &HFFFFFF)
-
-toneDown = (((pColor And &HFF0000) / &H20000) And &HFF0000) + _
-            (((pColor And &HFF00) / &H200) And &HFF00) + _
-            ((pColor And &HFF) / &H2)
-End Function
 
 Private Sub writeHeadingRow( _
                 ByVal contractSpec As IContractSpecifier)

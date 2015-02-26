@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.6#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TimeframeSelector 
    BackStyle       =   0  'Transparent
    ClientHeight    =   1710
@@ -492,10 +492,10 @@ Const ProcName As String = "selectComboEntry"
 On Error GoTo Err
 
 Dim s As String
-
 s = pTimePeriod.ToString
+
 If mValidator.IsValidTimePeriod(pTimePeriod) Then
-    TimeframeCombo.ComboItems.Item(s).Selected = True
+    Set TimeframeCombo.SelectedItem = TimeframeCombo.ComboItems.Item(s)
     Set mLatestTimePeriod = pTimePeriod
     selectComboEntry = True
 End If
