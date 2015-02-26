@@ -352,9 +352,7 @@ Private Sub TaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
 Const ProcName As String = "TaskCompletionListener_TaskCompleted"
 On Error GoTo Err
 
-Dim lContract As TwsContract
 Dim lDeferredAction As DeferredOrderAction
-
 Set lDeferredAction = ev.Cookie
 
 If ev.Cancelled Then
@@ -365,6 +363,7 @@ ElseIf ev.ErrorNumber <> 0 Then
         Assert False, "Deferred " & IIf(lDeferredAction.ActionIsModify, "modify", "place") & "order failed: " & ev.ErrorMessage, ev.ErrorNumber
     End If
 Else
+    Dim lContract As TwsContract
     Set lContract = ev.Result
     If lDeferredAction.TargetIsBracketOrder Then
         If lDeferredAction.ActionIsModify Then
@@ -424,21 +423,20 @@ Const ProcName As String = "CancelBracketOrder"
 On Error GoTo Err
 
 Dim lEntryOrder As IOrder
-Dim lStopOrder As IOrder
-Dim lTargetOrder As IOrder
-
 Set lEntryOrder = pBracketOrder.EntryOrder
+
 Select Case lEntryOrder.Status
 Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    CancelOrder lEntryOrder, OrderModeEntry    ' should automatically cancel the other orders
-                                                    ' if they have parentid set
+    CancelOrder lEntryOrder, OrderModeEntry ' should automatically cancel the other orders
+                                            ' if they have parentid set
     CancelBracketOrder = True
 End Select
 
+Dim lStopOrder As IOrder
 Set lStopOrder = pBracketOrder.StopLossOrder
 If Not lStopOrder Is Nothing Then
     Select Case lStopOrder.Status
@@ -450,13 +448,15 @@ If Not lStopOrder Is Nothing Then
         Select Case lEntryOrder.Status
         Case OrderStatuses.OrderStatusFilled, _
             OrderStatuses.OrderStatusCancelling, _
-            OrderStatuses.OrderStatusCancelled
+            OrderStatuses.OrderStatusCancelled, _
+            OrderStatuses.OrderStatusRejected
             CancelOrder lStopOrder, OrderModeStop
             CancelBracketOrder = True
         End Select
     End Select
 End If
 
+Dim lTargetOrder As IOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 If Not lTargetOrder Is Nothing Then
     Select Case lTargetOrder.Status
@@ -468,7 +468,8 @@ If Not lTargetOrder Is Nothing Then
         Select Case lEntryOrder.Status
         Case OrderStatuses.OrderStatusFilled, _
             OrderStatuses.OrderStatusCancelling, _
-            OrderStatuses.OrderStatusCancelled
+            OrderStatuses.OrderStatusCancelled, _
+            OrderStatuses.OrderStatusRejected
             CancelOrder lTargetOrder, OrderModeTarget
             CancelBracketOrder = True
         End Select
@@ -488,8 +489,8 @@ Const ProcName As String = "CancelStopOrder"
 On Error GoTo Err
 
 Dim lStopOrder As IOrder
-
 Set lStopOrder = pBracketOrder.StopLossOrder
+
 Assert Not lStopOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no stop Order"
 
 Select Case lStopOrder.Status
@@ -510,12 +511,12 @@ End Sub
 
 Public Sub CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "CancelTargetOrder"
-Dim lTargetOrder As IOrder
-
 On Error GoTo Err
-Set lTargetOrder = pBracketOrder.TargetOrder
-Assert Not lTargetOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no target Order"
 
+Dim lTargetOrder As IOrder
+Set lTargetOrder = pBracketOrder.TargetOrder
+
+Assert Not lTargetOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no target Order"
 
 Select Case lTargetOrder.Status
 Case OrderStatuses.OrderStatusCreated, _
@@ -533,7 +534,6 @@ End Sub
 Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "ExecuteBracketOrder"
 On Error GoTo Err
-
 
 If pBracketOrder.Contract.Specifier.Sectype = SecTypeCombo Then
     Dim lTask As ComboContractConversionTask
@@ -573,7 +573,6 @@ End Function
 
 Public Sub Finish()
 Const ProcName As String = "Finish"
-
 On Error GoTo Err
 
 mStateChangeListeners.Clear
@@ -716,6 +715,7 @@ Const ProcName As String = "NotifyOrderReport"
 On Error GoTo Err
 
 mOrderSubmissionListeners.SetCurrentListeners
+
 Dim i As Long
 For i = 1 To mOrderSubmissionListeners.Count
     Dim lListener As IOrderSubmissionListener
@@ -734,6 +734,7 @@ Const ProcName As String = "NotifyOrderStatusReport"
 On Error GoTo Err
 
 mOrderSubmissionListeners.SetCurrentListeners
+
 Dim i As Long
 For i = 1 To mOrderSubmissionListeners.Count
     Dim lListener As IOrderSubmissionListener
@@ -800,7 +801,6 @@ Const ProcName As String = "ResubmitStopAndTargetOrders"
 On Error GoTo Err
 
 Dim lOCAGroup As String
-
 lOCAGroup = GenerateGUIDString
 
 placeOrderEx pBracketOrder.StopLossOrder, True, "0", lOCAGroup, OrderModeStop
@@ -815,12 +815,10 @@ Public Sub ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "ResubmitStopOrder"
 On Error GoTo Err
 
-Dim lOCAGroup As String
-
-
 If pBracketOrder.TargetOrder Is Nothing Then
     placeOrderEx pBracketOrder.StopLossOrder, True, "0", "", OrderModeStop
 Else
+    Dim lOCAGroup As String
     lOCAGroup = GenerateGUIDString
     placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStop
     placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
@@ -835,11 +833,10 @@ Public Sub ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "ResubmitTargetOrder"
 On Error GoTo Err
 
-Dim lOCAGroup As String
-
 If pBracketOrder.StopLossOrder Is Nothing Then
     placeOrderEx pBracketOrder.TargetOrder, True, "0", "", OrderModeTarget
 Else
+    Dim lOCAGroup As String
     lOCAGroup = GenerateGUIDString
     placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStop
     placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
@@ -857,7 +854,6 @@ Private Sub CancelOrder( _
                 ByVal pOrder As IOrder, _
                 ByRef pOrderMode As String)
 Const ProcName As String = "CancelOrder"
-
 On Error GoTo Err
 
 logMessage "Cancel " & pOrderMode & " Order: " & _
@@ -878,22 +874,26 @@ Private Sub execBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
                 ByVal pContract As TwsContract)
 Const ProcName As String = "execBracketOrder"
-Dim lEntryOrder As IOrder
-Dim lStopOrder As IOrder
-Dim lTargetOrder As IOrder
-Dim Transmit As Boolean
-Dim lPlexId As Long
-
 On Error GoTo Err
+
+Dim lEntryOrder As IOrder
 Set lEntryOrder = pBracketOrder.EntryOrder
+
+Dim lStopOrder As IOrder
 Set lStopOrder = pBracketOrder.StopLossOrder
+
+Dim lTargetOrder As IOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 
+Dim lPlexId As Long
 lPlexId = getNextBracketId
 
 If Not lEntryOrder Is Nothing Then
     lEntryOrder.BrokerId = lPlexId + EntryOrderIdIncrement
+    
+    Dim Transmit As Boolean
     Transmit = True
+    
     If Not lStopOrder Is Nothing Then
         lStopOrder.BrokerId = lPlexId + StopOrderIdIncrement
         If lStopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then Transmit = False
@@ -926,7 +926,9 @@ If Not lEntryOrder Is Nothing Then
 Else
     ' treat the other orders as an OCA group - still to be implemented
 End If
+
 Exit Sub
+
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
@@ -983,7 +985,6 @@ Private Sub modifyABracketOrder( _
 Const ProcName As String = "modifyABracketOrder"
 On Error GoTo Err
 
-Dim lOCAGroup As String
 Dim lParentId As Long
 
 Select Case pBracketOrder.EntryOrder.Status
@@ -997,6 +998,7 @@ End Select
 
 If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0
 
+Dim lOCAGroup As String
 If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue("OCA group")
 If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue("OCA group")
 If lOCAGroup = "" Then lOCAGroup = GenerateGUIDString
@@ -1024,15 +1026,13 @@ Const ProcName As String = "notifyOpenOrder"
 On Error GoTo Err
 
 Dim lOrderReport As IOrderReport
-Dim lTimezoneName As String
-
 Set lOrderReport = New OrderReport
 
 With lOrderReport
     .Action = gTwsOrderActionToOrderAction(pOrder.Action)
     .AllOrNone = pOrder.AllOrNone
     .BlockOrder = pOrder.BlockOrder
-    .BrokerId = pOrder.BlockOrder
+    .BrokerId = pOrder.BrokerId
     .DiscretionaryAmount = pOrder.DiscretionaryAmount
     .DisplaySize = pOrder.DisplaySize
     .ETradeOnly = pOrder.ETradeOnly

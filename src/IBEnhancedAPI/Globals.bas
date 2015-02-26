@@ -332,8 +332,8 @@ With pOrder
     gOrderToTwsOrder.DisplaySize = .DisplaySize
     gOrderToTwsOrder.ETradeOnly = .ETradeOnly
     gOrderToTwsOrder.FirmQuoteOnly = .FirmQuoteOnly
-    If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & .GoodAfterTimeTZ, "")
-    If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & .GoodTillDateTZ, "")
+    If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
+    If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
     gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice

@@ -113,9 +113,18 @@ Case 451
     ' TWS sends this when it is unable to transmit the order as requested, typically because
     ' the order value exceeds some restriction
     gLog "Ignored error 451 from TWS (" & pOrderId & "): " & pErrorMsg, ModuleName, ProcName
+Case 382, 383
+    ' indicates that the order size or price exceeds the constraints specified
+    ' in TWS.
+    GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
+    notifyStatus pOrderId, OrderStatuses.OrderStatusRejected
+Case 399
+    ' contains information about the order which doesn't invalidate it - for example
+    ' order won't be submitted to exchange until start of next trading sesssioon
+    GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
 Case Else
     If Not mKnownOrders.IsCancelled(pOrderId, mTwsAPI.ClientId) Then
-        GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).BrokerId, pErrorCode, pErrorMsg
+        GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
         notifyStatus pOrderId, OrderStatuses.OrderStatusRejected
     End If
 End Select
@@ -131,18 +140,18 @@ Const ProcName As String = "IOrderInfoConsumer_NotifyExecution"
 On Error GoTo Err
 
 Static sExecutions As New EnumerableCollection
-Dim lExecReport As New Execution
-Dim lOrder As IOrder
-Dim lorderId As String
 
 If sExecutions.Contains(pExecution.ExecId) Then Exit Sub
 sExecutions.Add pExecution, pExecution.ExecId
 
+Dim lOrder As IOrder
+Dim lorderId As String
 If isKnownOrder(pExecution.OrderId) Then
     Set lOrder = GetOrder(pExecution.OrderId)
     lorderId = lOrder.Id
 End If
 
+Dim lExecReport As New Execution
 lExecReport.SecurityName = pContract.LocalSymbol & "." & pContract.Exchange
 lExecReport.AccountIdentifier = pExecution.AcctNumber
 lExecReport.Action = IIf(pExecution.Side = "BOT", OrderActionBuy, OrderActionSell)
@@ -158,11 +167,9 @@ lExecReport.TimezoneName = GetTimeZone("").StandardName
 
 If Not lOrder Is Nothing Then
     Dim lOrderSubmitter As OrderSubmitter
-    Dim qtyRemaining As Long
-    Dim statusRpt As New OrderStatusReport
-    
     Set lOrderSubmitter = GetOrderSubmitter(pExecution.OrderId)
     
+    Dim qtyRemaining As Long
     qtyRemaining = lOrder.QuantityRemaining
     
     lOrderSubmitter.NotifyExecutionReport lExecReport
@@ -190,15 +197,13 @@ Const ProcName As String = "IOrderInfoConsumer_NotifyOpenOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
-Dim lOrderReport As IOrderReport
 Dim lorderId As String
-Dim lTimezoneName As String
-
 If isKnownOrder(pOrderId) Then
     Set lOrder = GetOrder(pOrderId)
     lorderId = lOrder.Id
 End If
 
+Dim lOrderReport As IOrderReport
 Set lOrderReport = New OrderReport
 
 With lOrderReport
@@ -210,10 +215,13 @@ With lOrderReport
     .DisplaySize = pOrder.DisplaySize
     .ETradeOnly = pOrder.ETradeOnly
     .FirmQuoteOnly = pOrder.FirmQuoteOnly
-    .GoodAfterTime = TwsDateStringToDate(pOrder.GoodAfterTime, lTimezoneName)
+    
+    Dim lTimezoneName As String ' returned byref from TwsDateStringToDate
+    .GoodAfterTime = TwsDateStringToDate(pOrder.GoodAfterTime, gTwsTimezoneNameToStandardTimeZoneName(lTimezoneName))
     .GoodAfterTimeTZ = lTimezoneName
     .GoodTillDate = TwsDateStringToDate(pOrder.GoodTillDate, lTimezoneName)
     .GoodTillDateTZ = lTimezoneName
+    
     .Hidden = pOrder.Hidden
     .Id = lorderId
     .IgnoreRegularTradingHours = pOrder.OutsideRth
