@@ -1,5 +1,6 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#280.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#286.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
 Begin VB.Form fMarketDepth 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Market Depth"
@@ -13,13 +14,28 @@ Begin VB.Form fMarketDepth
    ScaleHeight     =   5895
    ScaleWidth      =   4335
    ShowInTaskbar   =   0   'False
-   Begin VB.CommandButton CentreButton 
-      Caption         =   "Centre"
+   Begin TWControls40.TWButton CentreButton 
       Height          =   375
       Left            =   1440
       TabIndex        =   1
       Top             =   0
       Width           =   1215
+      _ExtentX        =   2143
+      _ExtentY        =   661
+      Caption         =   "&Centre"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
    End
    Begin TradingUI27.DOMDisplay DOMDisplay1 
       Height          =   5520

@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#282.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#283.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
 Begin VB.UserControl InfoPanel 
    Appearance      =   0  'Flat
@@ -722,7 +722,7 @@ If os.SelectedItem Is Nothing Then
     ModifyOrderPlexButton.Enabled = False
 ElseIf os.IsSelectedItemModifiable Then
     mOrderTicket.Show vbModeless, Me
-    mOrderTicket.ShowBracketOrder os.SelectedItem, os.SelectedOrderIndex
+    mOrderTicket.ShowBracketOrder os.SelectedItem, os.SelectedOrderRole
 End If
 
 Exit Sub
@@ -1084,7 +1084,7 @@ If selection Is Nothing Then
     CancelOrderPlexButton.Enabled = False
     ModifyOrderPlexButton.Enabled = False
 Else
-    If pOrdersSummary.SelectedOrderIndex = 0 Then
+    If pOrdersSummary.SelectedOrderRole = BracketOrderRoleNone Then
         CancelOrderPlexButton.Enabled = True
     Else
         CancelOrderPlexButton.Enabled = False
