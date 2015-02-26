@@ -63,6 +63,8 @@ Private mContract                                   As IContract
 
 Private mIsSimulated                                As Boolean
 
+Private mIsDirty                                    As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -80,6 +82,8 @@ End Function
 '@================================================================================
 
 Public Property Let Contract(ByVal Value As IContract)
+If mContract Is Value Then Exit Property
+mIsDirty = True
 Set mContract = Value
 End Property
 
@@ -88,6 +92,8 @@ Set Contract = mContract
 End Property
 
 Public Property Let CumBuyPrice(ByVal Value As Double)
+If mCumBuyPrice = Value Then Exit Property
+mIsDirty = True
 mCumBuyPrice = Value
 End Property
 
@@ -96,6 +102,8 @@ CumBuyPrice = mCumBuyPrice
 End Property
 
 Public Property Let CumSellPrice(ByVal Value As Double)
+If mCumSellPrice = Value Then Exit Property
+mIsDirty = True
 mCumSellPrice = Value
 End Property
 
@@ -104,6 +112,8 @@ CumSellPrice = mCumSellPrice
 End Property
 
 Public Property Let DrawdownLastTrade(ByVal Value As Currency)
+If mDrawdownLastTrade = Value Then Exit Property
+mIsDirty = True
 mDrawdownLastTrade = Value
 End Property
 
@@ -112,6 +122,8 @@ DrawdownLastTrade = mDrawdownLastTrade
 End Property
 
 Public Property Let GroupName(ByVal Value As String)
+If mGroupName = Value Then Exit Property
+mIsDirty = True
 mGroupName = Value
 End Property
 
@@ -119,7 +131,13 @@ Public Property Get GroupName() As String
 GroupName = mGroupName
 End Property
 
+Public Property Get IsDirty() As Boolean
+IsDirty = mIsDirty
+End Property
+
 Public Property Let IsSimulated(ByVal Value As Boolean)
+If mIsSimulated = Value Then Exit Property
+mIsDirty = True
 mIsSimulated = Value
 End Property
 
@@ -128,6 +146,8 @@ IsSimulated = mIsSimulated
 End Property
 
 Public Property Let Name(ByVal Value As String)
+If mName = Value Then Exit Property
+mIsDirty = True
 mName = Value
 End Property
 
@@ -144,6 +164,8 @@ End Property
 'End Property
 
 Public Property Let ProfitLastFlat(ByVal Value As Currency)
+If mProfitLastFlat = Value Then Exit Property
+mIsDirty = True
 mProfitLastFlat = Value
 End Property
 
@@ -152,6 +174,8 @@ ProfitLastFlat = mProfitLastFlat
 End Property
 
 Public Property Let ProfitLastTrade(ByVal Value As Currency)
+If mProfitLastTrade = Value Then Exit Property
+mIsDirty = True
 mProfitLastTrade = Value
 End Property
 
@@ -160,6 +184,8 @@ ProfitLastTrade = mProfitLastTrade
 End Property
 
 Public Property Let TradingSessionStartTime(ByVal Value As Date)
+If mTradingSessionStartTime = Value Then Exit Property
+mIsDirty = True
 mTradingSessionStartTime = Value
 End Property
 
@@ -175,6 +201,10 @@ End Property
 ' Methods
 '@================================================================================
 
+Friend Sub setClean()
+mIsDirty = False
+End Sub
+
 Friend Function ToJSON() As String
 Dim jb As JSONBuilder
 Set jb = New JSONBuilder
@@ -184,35 +214,16 @@ jb.BeginObject
 jb.EncodeName "$ProgID"
 jb.EncodeValue ProjectName & "." & ModuleName
 
-jb.EncodeName "TradingSessionStartTime"
-jb.EncodeValue mTradingSessionStartTime
-
-jb.EncodeName "Contract"
-jb.EncodeValue mContract
-
-jb.EncodeName "CumBuyPrice"
-jb.EncodeValue mCumBuyPrice
-
-jb.EncodeName "CumSellPrice"
-jb.EncodeValue mCumSellPrice
-
-jb.EncodeName "GroupName"
-jb.EncodeValue mGroupName
-
-jb.EncodeName "IsSimulated"
-jb.EncodeValue mIsSimulated
-
-jb.EncodeName "Name"
-jb.EncodeValue mName
-
-jb.EncodeName "ProfitLastFlat"
-jb.EncodeValue mProfitLastFlat
-
-jb.EncodeName "ProfitLastTrade"
-jb.EncodeValue mProfitLastTrade
-
-jb.EncodeName "DrawdownLastTrade"
-jb.EncodeValue mDrawdownLastTrade
+jb.EncodeNameAndValue "TradingSessionStartTime", mTradingSessionStartTime, CDate(0#)
+jb.EncodeNameAndValue "Contract", mContract, Nothing
+jb.EncodeNameAndValue "CumBuyPrice", mCumBuyPrice, 0#
+jb.EncodeNameAndValue "CumSellPrice", mCumSellPrice, 0#
+jb.EncodeNameAndValue "GroupName", mGroupName, ""
+jb.EncodeNameAndValue "IsSimulated", mIsSimulated, False
+jb.EncodeNameAndValue "Name", mName, ""
+jb.EncodeNameAndValue "ProfitLastFlat", mProfitLastFlat, 0#
+jb.EncodeNameAndValue "ProfitLastTrade", mProfitLastTrade, 0#
+jb.EncodeNameAndValue "DrawdownLastTrade", mDrawdownLastTrade, 0#
 
 jb.EndObject
 

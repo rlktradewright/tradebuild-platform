@@ -50,9 +50,11 @@ Private mAction                             As OrderActions
 Private mAllOrNone                          As Boolean
 Private mBlockOrder                         As Boolean
 Private mBrokerId                           As String
-Private mContractSpecifier                  As IContractSpecifier
+'Private mContractSpecifier                  As IContractSpecifier
 Private mDiscretionaryAmount                As Double
 Private mDisplaySize                        As Long
+Private mErrorCode                          As Long
+Private mErrorMessage                       As String
 Private mETradeOnly                         As Boolean
 Private mFirmQuoteOnly                      As Boolean
 Private mGoodAfterTime                      As Date
@@ -86,11 +88,19 @@ Private mLastFillPrice                      As Double
 Private mOffset                             As Long
 Private mPercentOffset                      As Double
 
+Private mIsDirty                            As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+mStatus = OrderStatuses.OrderStatusCreated
+mAction = OrderActionBuy
+mOrderType = OrderTypeNone
+mStopTriggerMethod = OrderStopTriggerDefault
+mTimeInForce = OrderTIFDay
+
 Set mProviderProperties = New Parameters
 End Sub
 
@@ -112,6 +122,7 @@ End Function
 
 Public Property Let Action(ByVal Value As OrderActions)
 mAction = Value
+mIsDirty = True
 End Property
 
 Public Property Get Action() As OrderActions
@@ -120,6 +131,7 @@ End Property
 
 Public Property Let AllOrNone(ByVal Value As Boolean)
 mAllOrNone = Value
+mIsDirty = True
 End Property
 
 Public Property Get AllOrNone() As Boolean
@@ -128,6 +140,7 @@ End Property
 
 Public Property Let AveragePrice(ByVal Value As Double)
 mAveragePrice = Value
+mIsDirty = True
 End Property
 
 Public Property Get AveragePrice() As Double
@@ -136,6 +149,7 @@ End Property
 
 Public Property Let BlockOrder(ByVal Value As Boolean)
 mBlockOrder = Value
+mIsDirty = True
 End Property
 
 Public Property Get BlockOrder() As Boolean
@@ -144,22 +158,25 @@ End Property
 
 Public Property Let BrokerId(ByVal Value As String)
 mBrokerId = Value
+mIsDirty = True
 End Property
 
 Public Property Get BrokerId() As String
 BrokerId = mBrokerId
 End Property
 
-Public Property Let ContractSpecifier(ByVal Value As IContractSpecifier)
-Set mContractSpecifier = Value
-End Property
-
-Public Property Get ContractSpecifier() As IContractSpecifier
-Set ContractSpecifier = mContractSpecifier
-End Property
+'Public Property Let ContractSpecifier(ByVal Value As IContractSpecifier)
+'Set mContractSpecifier = Value
+'mIsDirty = True
+'End Property
+'
+'Public Property Get ContractSpecifier() As IContractSpecifier
+'Set ContractSpecifier = mContractSpecifier
+'End Property
 
 Public Property Let DiscretionaryAmount(ByVal Value As Double)
 mDiscretionaryAmount = Value
+mIsDirty = True
 End Property
 
 Public Property Get DiscretionaryAmount() As Double
@@ -168,14 +185,34 @@ End Property
 
 Public Property Let DisplaySize(ByVal Value As Long)
 mDisplaySize = Value
+mIsDirty = True
 End Property
 
 Public Property Get DisplaySize() As Long
 DisplaySize = mDisplaySize
 End Property
 
+Public Property Let ErrorCode(ByVal Value As Long)
+mErrorCode = Value
+mIsDirty = True
+End Property
+
+Public Property Get ErrorCode() As Long
+ErrorCode = mErrorCode
+End Property
+
+Public Property Let ErrorMessage(ByVal Value As String)
+mErrorMessage = Value
+mIsDirty = True
+End Property
+
+Public Property Get ErrorMessage() As String
+ErrorMessage = mErrorMessage
+End Property
+
 Public Property Let ETradeOnly(ByVal Value As Boolean)
 mETradeOnly = Value
+mIsDirty = True
 End Property
 
 Public Property Get ETradeOnly() As Boolean
@@ -184,6 +221,7 @@ End Property
 
 Public Property Let FillTime(ByVal Value As Date)
 mFillTime = Value
+mIsDirty = True
 End Property
 
 Public Property Get FillTime() As Date
@@ -192,6 +230,7 @@ End Property
 
 Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
 mFirmQuoteOnly = Value
+mIsDirty = True
 End Property
 
 Public Property Get FirmQuoteOnly() As Boolean
@@ -200,6 +239,7 @@ End Property
 
 Public Property Let GoodAfterTime(ByVal Value As Date)
 mGoodAfterTime = Value
+mIsDirty = True
 End Property
 
 Public Property Get GoodAfterTime() As Date
@@ -208,6 +248,7 @@ End Property
 
 Public Property Let GoodAfterTimeTZ(ByVal Value As String)
 mGoodAfterTimeTZ = Value
+mIsDirty = True
 End Property
 
 Public Property Get GoodAfterTimeTZ() As String
@@ -216,6 +257,7 @@ End Property
 
 Public Property Let GoodTillDate(ByVal Value As Date)
 mGoodTillDate = Value
+mIsDirty = True
 End Property
 
 Public Property Get GoodTillDate() As Date
@@ -224,6 +266,7 @@ End Property
 
 Public Property Let GoodTillDateTZ(ByVal Value As String)
 mGoodTillDateTZ = Value
+mIsDirty = True
 End Property
 
 Public Property Get GoodTillDateTZ() As String
@@ -232,6 +275,7 @@ End Property
 
 Public Property Let Hidden(ByVal Value As Boolean)
 mHidden = Value
+mIsDirty = True
 End Property
 
 Public Property Get Hidden() As Boolean
@@ -240,6 +284,7 @@ End Property
 
 Public Property Let Id(ByVal Value As String)
 mIdentifier = Value
+mIsDirty = True
 End Property
 
 Public Property Get Id() As String
@@ -248,14 +293,20 @@ End Property
 
 Public Property Let IgnoreRegularTradingHours(ByVal Value As Boolean)
 mIgnoreRegularTradingHours = Value
+mIsDirty = True
 End Property
 
 Public Property Get IgnoreRegularTradingHours() As Boolean
 IgnoreRegularTradingHours = mIgnoreRegularTradingHours
 End Property
 
+Public Property Get IsDirty() As Boolean
+IsDirty = mIsDirty
+End Property
+
 Public Property Let LastFillPrice(ByVal Value As Double)
 mLastFillPrice = Value
+mIsDirty = True
 End Property
 
 Public Property Get LastFillPrice() As Double
@@ -264,6 +315,7 @@ End Property
 
 Public Property Let LimitPrice(ByVal Value As Double)
 mLimitPrice = Value
+mIsDirty = True
 End Property
 
 Public Property Get LimitPrice() As Double
@@ -272,6 +324,7 @@ End Property
 
 Public Property Let MinimumQuantity(ByVal Value As Long)
 mMinimumQuantity = Value
+mIsDirty = True
 End Property
 
 Public Property Get MinimumQuantity() As Long
@@ -280,6 +333,7 @@ End Property
 
 Public Property Let NbboPriceCap(ByVal Value As Double)
 mNBBOPriceCap = Value
+mIsDirty = True
 End Property
 
 Public Property Get NbboPriceCap() As Double
@@ -288,6 +342,7 @@ End Property
 
 Public Property Let Offset(ByVal Value As Long)
 mOffset = Value
+mIsDirty = True
 End Property
 
 Public Property Get Offset() As Long
@@ -296,6 +351,7 @@ End Property
 
 Public Property Let OrderType(ByVal Value As OrderTypes)
 mOrderType = Value
+mIsDirty = True
 End Property
 
 Public Property Get OrderType() As OrderTypes
@@ -304,6 +360,7 @@ End Property
 
 Public Property Let Origin(ByVal Value As OrderOrigins)
 mOrigin = Value
+mIsDirty = True
 End Property
 
 Public Property Get Origin() As OrderOrigins
@@ -312,6 +369,7 @@ End Property
 
 Public Property Let OriginatorRef(ByVal Value As String)
 mOriginatorRef = Value
+mIsDirty = True
 End Property
 
 Public Property Get OriginatorRef() As String
@@ -320,6 +378,7 @@ End Property
 
 Public Property Let OverrideConstraints(ByVal Value As Boolean)
 mOverrideConstraints = Value
+mIsDirty = True
 End Property
 
 Public Property Get OverrideConstraints() As Boolean
@@ -328,6 +387,7 @@ End Property
 
 Public Property Let PercentOffset(ByVal Value As Double)
 mPercentOffset = Value
+mIsDirty = True
 End Property
 
 Public Property Get PercentOffset() As Double
@@ -336,6 +396,7 @@ End Property
 
 Public Property Let ContextsName(ByVal Value As String)
 mContextsName = Value
+mIsDirty = True
 End Property
 
 Public Property Get ContextsName() As String
@@ -344,6 +405,7 @@ End Property
 
 Public Property Let ProviderProperties(ByVal Value As Parameters)
 Set mProviderProperties = Value
+mIsDirty = True
 End Property
 
 Public Property Get ProviderProperties() As Parameters
@@ -352,6 +414,7 @@ End Property
 
 Public Property Let Quantity(ByVal Value As Long)
 mQuantity = Value
+mIsDirty = True
 End Property
 
 Public Property Get Quantity() As Long
@@ -360,6 +423,7 @@ End Property
 
 Public Property Let QuantityFilled(ByVal Value As Long)
 mQuantityFilled = Value
+mIsDirty = True
 End Property
 
 Public Property Get QuantityFilled() As Long
@@ -368,6 +432,7 @@ End Property
 
 Public Property Let QuantityRemaining(ByVal Value As Long)
 mQuantityRemaining = Value
+mIsDirty = True
 End Property
 
 Public Property Get QuantityRemaining() As Long
@@ -376,6 +441,7 @@ End Property
 
 Public Property Let SettlingFirm(ByVal Value As String)
 mSettlingFirm = Value
+mIsDirty = True
 End Property
 
 Public Property Get SettlingFirm() As String
@@ -384,6 +450,7 @@ End Property
 
 Public Property Let Status(ByVal Value As OrderStatuses)
 mStatus = Value
+mIsDirty = True
 End Property
 
 Public Property Get Status() As OrderStatuses
@@ -392,6 +459,7 @@ End Property
 
 Public Property Let StopTriggerMethod(ByVal Value As OrderStopTriggerMethods)
 mStopTriggerMethod = Value
+mIsDirty = True
 End Property
 
 Public Property Get StopTriggerMethod() As OrderStopTriggerMethods
@@ -400,6 +468,7 @@ End Property
 
 Public Property Let SweepToFill(ByVal Value As Boolean)
 mSweepToFill = Value
+mIsDirty = True
 End Property
 
 Public Property Get SweepToFill() As Boolean
@@ -408,6 +477,7 @@ End Property
 
 Public Property Let TimeInForce(ByVal Value As OrderTIFs)
 mTimeInForce = Value
+mIsDirty = True
 End Property
 
 Public Property Get TimeInForce() As OrderTIFs
@@ -416,6 +486,7 @@ End Property
 
 Public Property Let TriggerPrice(ByVal Value As Double)
 mTriggerPrice = Value
+mIsDirty = True
 End Property
 
 Public Property Get TriggerPrice() As Double
@@ -425,6 +496,10 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub setClean()
+mIsDirty = True
+End Sub
 
 Friend Function ToJSON() As String
 Const ProcName As String = "ToJSON"
@@ -441,92 +516,75 @@ jb.EncodeValue ProjectName & "." & ModuleName
 jb.EncodeName "Action"
 jb.EncodeValue mAction
 
-jb.EncodeName "AllOrNone"
-jb.EncodeValue mAllOrNone
+jb.EncodeNameAndValue "AllOrNone", mAllOrNone, False
 
-jb.EncodeName "AveragePrice"
-jb.EncodeValue mAveragePrice
+jb.EncodeNameAndValue "AveragePrice", mAveragePrice, 0#
 
-jb.EncodeName "BlockOrder"
-jb.EncodeValue mBlockOrder
+jb.EncodeNameAndValue "BlockOrder", mBlockOrder, False
 
 jb.EncodeName "BrokerId"
 jb.EncodeValue mBrokerId
 
-jb.EncodeName "ContractSpecifier"
-jb.EncodeValue mContractSpecifier
+'jb.EncodeName "ContractSpecifier"
+'jb.EncodeValue mContractSpecifier
 
-jb.EncodeName "DiscretionaryAmount"
-jb.EncodeValue mDiscretionaryAmount
+jb.EncodeNameAndValue "DiscretionaryAmount", mDiscretionaryAmount, 0
 
-jb.EncodeName "DisplaySize"
-jb.EncodeValue mDisplaySize
+jb.EncodeNameAndValue "DisplaySize", mDisplaySize, 0
 
-jb.EncodeName "ETradeOnly"
-jb.EncodeValue mETradeOnly
+jb.EncodeNameAndValue "ErrorCode", mErrorCode, 0
 
-jb.EncodeName "FillTime"
-jb.EncodeValue mFillTime
+jb.EncodeNameAndValue "ErrorMessage", mErrorMessage, ""
 
-jb.EncodeName "FirmQuoteOnly"
-jb.EncodeValue mFirmQuoteOnly
+jb.EncodeNameAndValue "ETradeOnly", mETradeOnly, False
 
-jb.EncodeName "GoodAfterTime"
-jb.EncodeValue mGoodAfterTime
+jb.EncodeNameAndValue "FillTime", mFillTime, CDate(0#)
 
-jb.EncodeName "GoodAfterTimeTZ"
-jb.EncodeValue mGoodAfterTimeTZ
+jb.EncodeNameAndValue "FirmQuoteOnly", mFirmQuoteOnly, False
 
-jb.EncodeName "GoodTillDate"
-jb.EncodeValue mGoodTillDate
+jb.EncodeNameAndValue "GoodAfterTime", mGoodAfterTime, CDate(0#)
 
-jb.EncodeName "GoodTillDateTZ"
-jb.EncodeValue mGoodTillDateTZ
+jb.EncodeNameAndValue "GoodAfterTimeTZ", mGoodAfterTimeTZ, ""
 
-jb.EncodeName "Hidden"
-jb.EncodeValue mHidden
+jb.EncodeNameAndValue "GoodTillDate", mGoodTillDate, CDate(0#)
+
+jb.EncodeNameAndValue "GoodTillDateTZ", mGoodTillDateTZ, ""
+
+jb.EncodeNameAndValue "Hidden", mHidden, False
 
 jb.EncodeName "Id"
 jb.EncodeValue mIdentifier
 
-jb.EncodeName "IgnoreRegularTradingHours"
-jb.EncodeValue mIgnoreRegularTradingHours
+jb.EncodeNameAndValue "IgnoreRegularTradingHours", mIgnoreRegularTradingHours, False
 
-jb.EncodeName "LastFillPrice"
-jb.EncodeValue mLastFillPrice
+jb.EncodeNameAndValue "LastFillPrice", mLastFillPrice, 0#
 
-jb.EncodeName "LimitPrice"
-jb.EncodeValue mLimitPrice
+jb.EncodeNameAndValue "LimitPrice", mLimitPrice, 0#
 
-jb.EncodeName "MinimumQuantity"
-jb.EncodeValue mMinimumQuantity
+jb.EncodeNameAndValue "MinimumQuantity", mMinimumQuantity, 0
 
-jb.EncodeName "NbboPriceCap"
-jb.EncodeValue mNBBOPriceCap
+jb.EncodeNameAndValue "NbboPriceCap", mNBBOPriceCap, 0#
 
-jb.EncodeName "Offset"
-jb.EncodeValue mOffset
+jb.EncodeNameAndValue "Offset", mOffset, 0
 
 jb.EncodeName "OrderType"
 jb.EncodeValue mOrderType
 
-jb.EncodeName "Origin"
-jb.EncodeValue mOrigin
+jb.EncodeNameAndValue "Origin", mOrigin, OriginCustomer
 
-jb.EncodeName "OriginatorRef"
-jb.EncodeValue mOriginatorRef
+jb.EncodeNameAndValue "OriginatorRef", mOriginatorRef, ""
 
-jb.EncodeName "OverrideConstraints"
-jb.EncodeValue mOverrideConstraints
+jb.EncodeNameAndValue "OverrideConstraints", mOverrideConstraints, False
 
-jb.EncodeName "PercentOffset"
-jb.EncodeValue mPercentOffset
+jb.EncodeNameAndValue "PercentOffset", mPercentOffset, 0#
 
 jb.EncodeName "ContextsName"
 jb.EncodeValue mContextsName
 
-jb.EncodeName "ProviderProperties"
-jb.EncodeValue mProviderProperties
+If mProviderProperties.Count <> 0 Then
+    jb.EncodeName "ProviderProperties"
+    jb.EncodeValue mProviderProperties
+End If
 
 jb.EncodeName "Quantity"
 jb.EncodeValue mQuantity
@@ -537,23 +595,18 @@ jb.EncodeValue mQuantityFilled
 jb.EncodeName "QuantityRemaining"
 jb.EncodeValue mQuantityRemaining
 
-jb.EncodeName "SettlingFirm"
-jb.EncodeValue mSettlingFirm
+jb.EncodeNameAndValue "SettlingFirm", mSettlingFirm, ""
 
 jb.EncodeName "Status"
 jb.EncodeValue mStatus
 
-jb.EncodeName "StopTriggerMethod"
-jb.EncodeValue mStopTriggerMethod
+jb.EncodeNameAndValue "StopTriggerMethod", mStopTriggerMethod, OrderStopTriggerDefault
 
-jb.EncodeName "SweepToFill"
-jb.EncodeValue mSweepToFill
+jb.EncodeNameAndValue "SweepToFill", mSweepToFill, False
 
-jb.EncodeName "TimeInForce"
-jb.EncodeValue mTimeInForce
+jb.EncodeNameAndValue "TimeInForce", mTimeInForce, OrderTIFDay
 
-jb.EncodeName "TriggerPrice"
-jb.EncodeValue mTriggerPrice
+jb.EncodeNameAndValue "TriggerPrice", mTriggerPrice, 0#
 
 jb.EndObject
 

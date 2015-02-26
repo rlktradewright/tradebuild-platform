@@ -129,7 +129,7 @@ End Property
 Public Property Get LongPosition() As Boolean
 End Property
 
-Public Property Get Order(ByVal pIndex As Long) As IOrder
+Public Property Get Order(ByVal pRole As BracketOrderRoles) As IOrder
 End Property
 
 Public Property Get OrderContext() As OrderContext
@@ -172,6 +172,9 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub AddBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
+End Sub
+
 Public Sub AddChangeListener(ByVal pListener As ChangeListener)
 End Sub
 
@@ -206,6 +209,9 @@ Public Sub Execute()
 End Sub
 
 Public Sub NotifyCloseout(ByVal pExec As IExecutionReport)
+End Sub
+
+Public Sub RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
 End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)

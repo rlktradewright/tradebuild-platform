@@ -218,6 +218,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gBracketOrderRoleToString(ByVal pOrderRole As BracketOrderRoles) As String
+Const ProcName As String = "gBracketOrderRoleToString"
+On Error GoTo Err
+
+Select Case pOrderRole
+Case BracketOrderRoleNone
+    gBracketOrderRoleToString = "None"
+Case BracketOrderRoleEntry
+    gBracketOrderRoleToString = "Entry"
+Case BracketOrderRoleStopLoss
+    gBracketOrderRoleToString = "Stop loss"
+Case BracketOrderRoleTarget
+    gBracketOrderRoleToString = "Target"
+Case BracketOrderRoleCloseout
+    gBracketOrderRoleToString = "Closeout"
+Case Else
+    AssertArgument False, "Invalid order role"
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gBracketStopLossTypeToOrderType( _
                 ByVal pBracketStopLossType As BracketStopLossTypes) As OrderTypes
 Const ProcName As String = "gBracketStopLossTypeToOrderType"
@@ -1165,6 +1190,8 @@ With pTargetOrder
     .BrokerId = pSourceOrder.BrokerId
     If .IsAttributeModifiable(OrderAttDiscretionaryAmount) Then .DiscretionaryAmount = pSourceOrder.DiscretionaryAmount
     If .IsAttributeModifiable(OrderAttDisplaySize) Then .DisplaySize = pSourceOrder.DisplaySize
+    .ErrorCode = pSourceOrder.ErrorCode
+    .ErrorMessage = pSourceOrder.ErrorMessage
     If .IsAttributeModifiable(OrderAttETradeOnly) Then .ETradeOnly = pSourceOrder.ETradeOnly
     .FillTime = pSourceOrder.FillTime
     If .IsAttributeModifiable(OrderAttFirmQuoteOnly) Then .FirmQuoteOnly = pSourceOrder.FirmQuoteOnly

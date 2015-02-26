@@ -488,7 +488,6 @@ End If
 Set lDataSource = mMarketDataManager.CreateMarketDataSource(lPm.ContractFuture, False)
 lDataSource.StartMarketData
 
-lPm.AddRecoverableObjectListener Me
 lPm.CompleteRecoveryInitialisation mOrderSubmitterFactory.CreateOrderSubmitter, lDataSource, Me
 
 lPm.StartRecovery

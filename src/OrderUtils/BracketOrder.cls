@@ -42,6 +42,7 @@ Event Dirty()
 Event EntryOrderFilled()
 Event EntryOrderPartiallyFilled()
 Event Execution(ByRef ev As ExecutionEventData)
+Event OrderError(ByRef ev As BracketOrderErrorEventData)
 Event SelfCancelled()
 Event StateChange(ByRef ef As StateChangeEventData)
 Event StopAdjusted()
@@ -101,30 +102,20 @@ Private Const ModuleName                As String = "BracketOrder"
 ' Member variables
 '@================================================================================
 
+Private mSummary                                    As BracketOrderSummary
+
+Private mContextsName                               As String
+Private mGroupName                                  As String
+
 Private mOrderContext                               As OrderContext
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 Private mOrderSubmitter                             As IOrderSubmitter
 Private mTimerList                                  As TimerList
 
-'Private mPositionManagerRef                         As WeakReference
-
-Private mGroupName                                  As String
-Private mContextsName                               As String
-Private mContextName                                As String
-Private mKey                                        As String
-
 Private mStateEngine                                As StateEngine
 
-Private mDescription                                As String
-Private mEntryReason                                As String
-Private mTargetReason                               As String
-Private mStopReason                                 As String
-
-Private mSize                                       As Long
-Private mCancelPrice                                As Double
 Private mCancelAfter                                As Long
-Private mCancelTime                                 As Date
 Private WithEvents mCancelTLI                       As TimerListItem
 Attribute mCancelTLI.VB_VarHelpID = -1
 
@@ -161,34 +152,22 @@ Private mIsSimulated                                As Boolean
 
 Private mChangeListeners                            As New Listeners
 Private mStateChangeListeners                       As New Listeners
-
-Private mCreationTime                               As Date
+Private mRecoverableObjectListeners                 As New Listeners
+Private mExecutionListeners                         As New Listeners
+Private mBracketOrderErrorListeners                 As New Listeners
 
 Private mApplicationIndex                           As Long
 
 Private mIsDirty                                    As Boolean
 
-Private mOrders                                     As EnumerableCollection
-
-Private mPreventUnprotectedPosition                 As Boolean
+Private mNumberOfOrders                             As Long
 
 Private WithEvents mStateTimeoutTLI                 As TimerListItem
 Attribute mStateTimeoutTLI.VB_VarHelpID = -1
 
-Private mSummary                                    As BracketOrderSummary
-
 Private mStartTime                                  As Date
 Private mEndTime                                    As Date
 Private mTimezoneName                               As String
-
-Private mCumBuyPrice                                As Double
-Private mCumSellPrice                               As Double
-
-Private mBrokerData                                 As Variant
-
-Private mRecoverableObjectListeners                 As New Listeners
-
-Private mExecutionListeners                         As New Listeners
 
 '@================================================================================
 ' Class Event Handlers
@@ -214,10 +193,10 @@ Set mSummary = New BracketOrderSummary
 
 mApplicationIndex = GBracketOrder.gNextApplicationIndex
 
-Set mOrders = New EnumerableCollection
-
 Set mStateEngine = CreateStateEngine(GBracketOrder.TableBuilder, _
                                     BracketOrderStates.BracketOrderStateCreated)
+
+mSummary.State = State
 
 Exit Sub
 
@@ -232,6 +211,10 @@ End Sub
 '@================================================================================
 ' IBracketOrder Interface Members
 '@================================================================================
+
+Private Sub IBracketOrder_AddBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
+AddBracketOrderErrorListener pListener
+End Sub
 
 Private Sub IBracketOrder_AddChangeListener(ByVal pListener As ChangeListener)
 Const ProcName As String = "IBracketOrder_AddChangeListener"
@@ -406,7 +389,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IBracketOrder_ContextName() As String
-IBracketOrder_ContextName = mContextName
+IBracketOrder_ContextName = mSummary.ContextName
 End Property
 
 Private Property Get IBracketOrder_Contract() As IContract
@@ -482,7 +465,7 @@ IBracketOrder_IsSimulated = IsSimulated
 End Property
 
 Private Property Get IBracketOrder_Key() As String
-IBracketOrder_Key = mKey
+IBracketOrder_Key = mSummary.Key
 End Property
 
 Private Property Get IBracketOrder_LongPosition() As Boolean
@@ -501,11 +484,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get IBracketOrder_Order(ByVal pIndex As Long) As IOrder
+Private Property Get IBracketOrder_Order(ByVal pRole As BracketOrderRoles) As IOrder
 Const ProcName As String = "IBracketOrder_Order"
 On Error GoTo Err
 
-Set IBracketOrder_Order = Order(pIndex)
+Set IBracketOrder_Order = Order(pRole)
 
 Exit Property
 
@@ -544,6 +527,10 @@ End Property
 Private Property Get IBracketOrder_PreventUnprotectedPosition() As Boolean
 IBracketOrder_PreventUnprotectedPosition = PreventUnprotectedPosition
 End Property
+
+Private Sub IBracketOrder_RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
+RemoveBracketOrderErrorListener pListener
+End Sub
 
 Private Sub IBracketOrder_RemoveChangeListener(ByVal pListener As ChangeListener)
 Const ProcName As String = "IBracketOrder_RemoveChangeListener"
@@ -821,12 +808,12 @@ Private Sub IRecoverable_FinishRecovery()
 Const ProcName As String = "IRecoverable_FinishRecovery"
 On Error GoTo Err
 
-If mCancelPrice <> 0# Then
+If mSummary.CancelPrice <> 0# Then
     Dim lPriceCanceller As New BracketPriceCanceller
-    lPriceCanceller.Initialise Me, mCancelPrice, mDataSource
+    lPriceCanceller.Initialise Me, mSummary.CancelPrice, mDataSource
 End If
 
-If mCancelTime <> 0 And mCancelTime > Now Then Set mCancelTLI = mTimerList.Add(Nothing, mCancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
+If mSummary.CancelTime <> 0 And mSummary.CancelTime > Now Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
     
 CheckComplete
 
@@ -841,22 +828,7 @@ Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
 Set mSummary = pData
-
-mCancelPrice = mSummary.CancelPrice
-mCancelTime = mSummary.CancelTime
-mCreationTime = mSummary.CreationTime
-CumBuyPrice = mSummary.CumBuyPrice
-CumSellPrice = mSummary.CumSellPrice
-mContextName = mSummary.ContextName
-mDescription = mSummary.Description
-mEntryReason = mSummary.EntryReason
-mGroupName = mSummary.GroupName
-mKey = mSummary.Key
-mPreventUnprotectedPosition = mSummary.PreventUnprotectedPosition
-mSize = mSummary.Size
-State = mSummary.State
-mStopReason = mSummary.StopReason
-mTargetReason = mSummary.TargetReason
+setState mSummary.State
 
 If mSummary.CloseoutOrderId <> "" And mCloseoutOrder Is Nothing And Not mOrderContext Is Nothing Then CloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
 If mSummary.EntryOrderId <> "" And mEntryOrder Is Nothing And Not mOrderContext Is Nothing Then EntryOrder = CreateAnOrder(mSummary.EntryOrderId)
@@ -902,6 +874,19 @@ End Function
 '@================================================================================
 ' mCloseoutOrder Event Handlers
 '@================================================================================
+
+Private Sub mCloseoutOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+Const ProcName As String = "mCloseoutOrder_Error"
+On Error GoTo Err
+
+handleStimulus OpStimuli.StimOrderError
+fireBracketOrderError mCloseoutOrder, pErrorCode, pErrorMsg
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 Private Sub mCloseoutOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mCloseoutOrder_Fill"
@@ -990,6 +975,19 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub mEntryOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+Const ProcName As String = "mEntryOrder_Error"
+On Error GoTo Err
+
+handleStimulus OpStimuli.StimOrderError
+fireBracketOrderError mEntryOrder, pErrorCode, pErrorMsg
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub mEntryOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mEntryOrder_Fill"
 On Error GoTo Err
@@ -1003,7 +1001,7 @@ If Not mCancelTLI Is Nothing Then
     Set mCancelTLI = Nothing
 End If
 
-mCancelPrice = 0
+mSummary.CancelPrice = 0
 
 logOrderMessage "Entry order fill (id=" & _
                     mEntryOrder.Id & "): " & _
@@ -1075,7 +1073,7 @@ On Error GoTo Err
 fireChange BracketOrderEntryOrderChanged
 Select Case mEntryOrder.Status
     Case OrderStatuses.OrderStatusFilled
-        mCancelPrice = 0
+        mSummary.CancelPrice = 0
         
         logOrderMessage "Entry order completed (id=" & _
                             mEntryOrder.Id & "): " & _
@@ -1100,7 +1098,7 @@ Select Case mEntryOrder.Status
         checkAllOrdersComplete
     Case OrderStatuses.OrderStatusRejected
         logOrderMessage "Entry order rejected (id=" & mEntryOrder.Id & ")"
-        handleStimulus OpStimuli.StimEntryOrderCancelled
+        Cancel
         checkAllOrdersComplete
 End Select
 
@@ -1123,8 +1121,6 @@ If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
 
 handleStimulus OpStimuli.StimTimeoutExpired
 
-SaveRecoveryInfo
-
 Exit Sub
 
 Err:
@@ -1140,6 +1136,19 @@ Const ProcName As String = "mStopLossOrder_Dirty"
 On Error GoTo Err
 
 setDirty
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mStopLossOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+Const ProcName As String = "mStopLossOrder_Error"
+On Error GoTo Err
+
+handleStimulus OpStimuli.StimOrderError
+fireBracketOrderError mStopLossOrder, pErrorCode, pErrorMsg
 
 Exit Sub
 
@@ -1242,6 +1251,19 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub mTargetOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+Const ProcName As String = "mTargetOrder_Error"
+On Error GoTo Err
+
+handleStimulus OpStimuli.StimOrderError
+fireBracketOrderError mTargetOrder, pErrorCode, pErrorMsg
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub mTargetOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mTargetOrder_Fill"
 On Error GoTo Err
@@ -1336,7 +1358,6 @@ Cancel
 fireChange BracketOrderSelfCancelled
 RaiseEvent SelfCancelled
 
-SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -1358,7 +1379,6 @@ On Error GoTo Err
 Assert State = BracketOrderStateCreated, "CancelAfter cannot be set after execution"
 
 mCancelAfter = Value
-SaveRecoveryInfo
 
 Exit Property
 
@@ -1372,9 +1392,7 @@ On Error GoTo Err
 
 Assert State = BracketOrderStateCreated, "CancelPrice cannot be set after execution"
 
-mCancelPrice = Value
-mSummary.CancelPrice = mCancelPrice
-SaveRecoveryInfo
+mSummary.CancelPrice = Value
 
 Exit Property
 
@@ -1383,7 +1401,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CancelPrice() As Double
-CancelPrice = mCancelPrice
+CancelPrice = mSummary.CancelPrice
 End Property
 
 Public Property Let CancelTime(ByVal Value As Date)
@@ -1392,7 +1410,6 @@ On Error GoTo Err
 
 Assert State = BracketOrderStateCreated, "CancelTime cannot be set after execution"
 
-mCancelTime = Value
 mSummary.CancelTime = Value
 
 Exit Property
@@ -1402,7 +1419,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CancelTime() As Date
-CancelTime = mCancelTime
+CancelTime = mSummary.CancelTime
 End Property
 
 Friend Property Let CloseoutOrder(ByVal Value As IOrder)
@@ -1411,7 +1428,6 @@ On Error GoTo Err
 
 Set mCloseoutOrder = Value
 mSummary.CloseoutOrderId = mCloseoutOrder.Id
-mOrders.Add mCloseoutOrder
 
 Exit Property
 
@@ -1439,7 +1455,6 @@ Friend Property Let CreationTime(ByVal Value As Date)
 Const ProcName As String = "CreationTime"
 On Error GoTo Err
 
-mCreationTime = Value
 mSummary.CreationTime = Value
 
 Exit Property
@@ -1449,23 +1464,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CreationTime() As Date
-CreationTime = mCreationTime
+CreationTime = mSummary.CreationTime
 End Property
 
 Friend Property Let CumBuyPrice(ByVal Value As Double)
-mCumBuyPrice = Value
 mSummary.CumBuyPrice = Value
 End Property
 
 Public Property Get CumBuyPrice() As Double
-CumBuyPrice = mCumBuyPrice
+CumBuyPrice = mSummary.CumBuyPrice
 End Property
 
 Friend Property Let CumSellPrice(ByVal Value As Double)
 Const ProcName As String = "CumSellPrice"
 On Error GoTo Err
 
-mCumSellPrice = Value
 mSummary.CumSellPrice = Value
 
 Exit Property
@@ -1475,17 +1488,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CumSellPrice() As Double
-CumSellPrice = mCumSellPrice
+CumSellPrice = mSummary.CumSellPrice
 End Property
 
 Public Property Let Description(ByVal Value As String)
 Const ProcName As String = "Description"
 On Error GoTo Err
 
-If mDescription = Value Then Exit Property
-mDescription = Value
 mSummary.Description = Value
-SaveRecoveryInfo
+If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 
 Exit Property
 
@@ -1494,7 +1505,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Description() As String
-Description = mDescription
+Description = mSummary.Description
 End Property
 
 Friend Property Let EntryOrder(ByVal Value As IOrder)
@@ -1506,11 +1517,7 @@ Assert mEntryOrder Is Nothing, "Entry order already exists"
 Set mEntryOrder = Value
 mSummary.EntryOrderId = mEntryOrder.Id
 
-If mOrders.Count >= 1 Then
-    mOrders.Add mEntryOrder, , 1
-Else
-    mOrders.Add mEntryOrder
-End If
+mNumberOfOrders = mNumberOfOrders + 1
 
 Exit Property
 
@@ -1527,9 +1534,9 @@ Const ProcName As String = "EntryPrice"
 On Error GoTo Err
 
 If LongPosition Then
-    EntryPrice = mCumBuyPrice / mEntryOrder.Quantity
+    EntryPrice = mSummary.CumBuyPrice / mEntryOrder.Quantity
 Else
-    EntryPrice = mCumSellPrice / mEntryOrder.Quantity
+    EntryPrice = mSummary.CumSellPrice / mEntryOrder.Quantity
 End If
 
 Exit Property
@@ -1542,10 +1549,8 @@ Public Property Let EntryReason(ByVal Value As String)
 Const ProcName As String = "EntryReason"
 On Error GoTo Err
 
-If mEntryReason = Value Then Exit Property
-mEntryReason = Value
 mSummary.EntryReason = Value
-SaveRecoveryInfo
+If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 
 Exit Property
 
@@ -1554,7 +1559,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get EntryReason() As String
-EntryReason = mEntryReason
+EntryReason = mSummary.EntryReason
 End Property
 
 Public Property Get ExitPrice() As Double
@@ -1562,9 +1567,9 @@ Const ProcName As String = "ExitPrice"
 On Error GoTo Err
 
 If LongPosition Then
-    ExitPrice = mCumSellPrice / mEntryOrder.Quantity
+    ExitPrice = mSummary.CumSellPrice / mEntryOrder.Quantity
 Else
-    ExitPrice = mCumBuyPrice / mEntryOrder.Quantity
+    ExitPrice = mSummary.CumBuyPrice / mEntryOrder.Quantity
 End If
 
 Exit Property
@@ -1606,7 +1611,7 @@ IsSimulated = mIsSimulated
 End Property
 
 Friend Property Get Key() As String
-Key = mKey
+Key = mSummary.Key
 End Property
 
 Public Property Get LongPosition() As Boolean
@@ -1621,11 +1626,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Order(ByVal pIndex As Long) As IOrder
+Public Property Get Order(ByVal pRole As BracketOrderRoles) As IOrder
 Const ProcName As String = "Order"
 On Error GoTo Err
 
-Set Order = mOrders(pIndex)
+Select Case pRole
+Case BracketOrderRoleEntry
+    Set Order = mEntryOrder
+Case BracketOrderRoleStopLoss
+    Set Order = mStopLossOrder
+Case BracketOrderRoleTarget
+    Set Order = mTargetOrder
+Case BracketOrderRoleCloseout
+    Set Order = mCloseoutOrder
+Case Else
+    AssertArgument False, "Invalid pRole"
+End Select
 
 Exit Property
 
@@ -1649,7 +1665,7 @@ Public Property Get NumberOfOrders() As Long
 Const ProcName As String = "NumberOfOrders"
 On Error GoTo Err
 
-NumberOfOrders = mOrders.Count
+NumberOfOrders = mNumberOfOrders
 
 Exit Property
 
@@ -1671,24 +1687,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-'Public Property Get PositionManager() As PositionManager
-'Set PositionManager = mPositionManagerRef.Target
-'End Property
-
 Public Property Let PreventUnprotectedPosition( _
                 ByVal Value As Boolean)
 Const ProcName As String = "PreventUnprotectedPosition"
 On Error GoTo Err
 
-If mPreventUnprotectedPosition = Value Then Exit Property
-
 Assert (Not Value) Or (State = BracketOrderStateCreated) Or (Not mStopLossOrder Is Nothing), "No stop loss order exists"
 
-mPreventUnprotectedPosition = Value
 mSummary.PreventUnprotectedPosition = Value
-SaveRecoveryInfo
+If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 
-If mPreventUnprotectedPosition Then
+If mSummary.PreventUnprotectedPosition Then
     mStateEngine.SetConditions OpConditions.CondProtected
 Else
     mStateEngine.ClearConditions OpConditions.CondProtected
@@ -1704,7 +1713,7 @@ Public Property Get PreventUnprotectedPosition() As Boolean
 Const ProcName As String = "PreventUnprotectedPosition"
 On Error GoTo Err
 
-PreventUnprotectedPosition = mPreventUnprotectedPosition
+PreventUnprotectedPosition = mSummary.PreventUnprotectedPosition
 
 Exit Property
 
@@ -1783,7 +1792,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Size() As Long
-Size = mSize
+Size = mSummary.Size
 End Property
 
 Public Property Get StartTime() As Date
@@ -1794,8 +1803,8 @@ Public Property Get EndTime() As Date
 EndTime = mEndTime
 End Property
 
-Friend Property Let State(ByVal Value As BracketOrderStates)
-Const ProcName As String = "State"
+Private Sub setState(ByVal Value As BracketOrderStates)
+Const ProcName As String = "setState"
 On Error GoTo Err
 
 Dim lConditions As OpConditions
@@ -1808,11 +1817,11 @@ mStateEngine.SetConditions lConditions
 mSummary.State = Value
 If IsComplete Then doCompletionActions
 
-Exit Property
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Property
+End Sub
 
 Public Property Get State() As BracketOrderStates
 Const ProcName As String = "State"
@@ -1832,19 +1841,12 @@ On Error GoTo Err
 
 Assert mStopLossOrder Is Nothing, "Stop loss order already exists"
 
+mNumberOfOrders = mNumberOfOrders + 1
 Set mStopLossOrder = Value
 mSummary.StopLossOrderId = mStopLossOrder.Id
 
 mStateEngine.SetConditions OpConditions.CondStopOrderExists
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
-
-If Not mEntryOrder Is Nothing Then
-    mOrders.Add mStopLossOrder, , , 1
-ElseIf Not mTargetOrder Is Nothing Then
-    mOrders.Add mStopLossOrder, , 1
-Else
-    mOrders.Add mStopLossOrder
-End If
 
 Exit Property
 
@@ -1860,10 +1862,8 @@ Public Property Let StopReason(ByVal Value As String)
 Const ProcName As String = "StopReason"
 On Error GoTo Err
 
-If mStopReason = Value Then Exit Property
-mStopReason = Value
 mSummary.StopReason = Value
-SaveRecoveryInfo
+If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 
 Exit Property
 
@@ -1872,7 +1872,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StopReason() As String
-StopReason = mStopReason
+StopReason = mSummary.StopReason
 End Property
 
 Friend Property Let TargetOrder(ByVal Value As IOrder)
@@ -1881,23 +1881,12 @@ On Error GoTo Err
 
 Assert mTargetOrder Is Nothing, "Target order already exists"
 
+mNumberOfOrders = mNumberOfOrders + 1
 Set mTargetOrder = Value
 mSummary.TargetOrderId = mTargetOrder.Id
 
 mStateEngine.SetConditions OpConditions.CondTargetOrderExists
 mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
-
-If mEntryOrder Is Nothing And _
-    mStopLossOrder Is Nothing _
-Then
-    mOrders.Add mTargetOrder
-ElseIf mEntryOrder Is Nothing Then
-    mOrders.Add mTargetOrder, , , 1
-ElseIf mStopLossOrder Is Nothing Then
-    mOrders.Add mTargetOrder, , , 1
-Else
-    mOrders.Add mTargetOrder, , , 2
-End If
 
 Exit Property
 
@@ -1913,10 +1902,8 @@ Public Property Let TargetReason(ByVal Value As String)
 Const ProcName As String = "TargetReason"
 On Error GoTo Err
 
-If mTargetReason = Value Then Exit Property
-mTargetReason = Value
 mSummary.TargetReason = Value
-SaveRecoveryInfo
+If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 
 Exit Property
 
@@ -1925,7 +1912,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TargetReason() As String
-TargetReason = mTargetReason
+TargetReason = mSummary.TargetReason
 End Property
 
 Public Property Get DataSource() As IMarketDataSource
@@ -1945,6 +1932,18 @@ If Not mEntryOrder Is Nothing Then fireChange BracketOrderEntryOrderChanged
 If Not mStopLossOrder Is Nothing Then fireChange BracketOrderStopOrderChanged
 If Not mTargetOrder Is Nothing Then fireChange BracketOrderTargetOrderChanged
 If Not mCloseoutOrder Is Nothing Then fireChange BracketOrderCloseoutOrderChanged
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub AddBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
+Const ProcName As String = "AddBracketOrderErrorListener"
+On Error GoTo Err
+
+mBracketOrderErrorListeners.Add pListener
 
 Exit Sub
 
@@ -2031,7 +2030,7 @@ Public Function Cancel(Optional ByVal evenIfFilled As Boolean = False) As Boolea
 Const ProcName As String = "Cancel"
 On Error GoTo Err
 
-mCancelPrice = 0
+mSummary.CancelPrice = 0
 If Not mCancelTLI Is Nothing Then
     If mCancelTLI.State = TimerListItemStatePending Then mCancelTLI.Cancel
     Set mCancelTLI = Nothing
@@ -2045,7 +2044,6 @@ Else
     Cancel = handleStimulus(OpStimuli.StimCancelIfNoFill)
 End If
 
-SaveRecoveryInfo
 Exit Function
 
 Err:
@@ -2100,7 +2098,6 @@ Const ProcName As String = "CheckComplete"
 On Error GoTo Err
 
 checkAllOrdersComplete
-SaveRecoveryInfo
 
 Exit Sub
 
@@ -2144,7 +2141,6 @@ logOrderMessage "Closing out: " & _
 
 handleStimulus OpStimuli.StimCloseout
 
-SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -2156,7 +2152,14 @@ Public Function ContainsOrder( _
 Const ProcName As String = "ContainsOrder"
 On Error GoTo Err
 
-ContainsOrder = mOrders.Contains(pOrder)
+AssertArgument Not pOrder Is Nothing, "pOrder is Nothing"
+
+ContainsOrder = True
+If mEntryOrder Is pOrder Then Exit Function
+If mStopLossOrder Is pOrder Then Exit Function
+If mTargetOrder Is pOrder Then Exit Function
+If mCloseoutOrder Is pOrder Then Exit Function
+ContainsOrder = False
 
 Exit Function
 
@@ -2168,22 +2171,21 @@ Friend Sub Execute()
 Const ProcName As String = "Execute"
 On Error GoTo Err
 
-Assert (Not mPreventUnprotectedPosition) Or (Not mStopLossOrder Is Nothing), "No stop loss order exists"
+Assert (Not mSummary.PreventUnprotectedPosition) Or (Not mStopLossOrder Is Nothing), "No stop loss order exists"
 
-mCreationTime = GetTimestamp
-mSummary.CreationTime = mCreationTime
+mSummary.CreationTime = GetTimestamp
 
 If mCancelAfter <> 0 Then
-    mCancelTime = mTimerList.Clock.Timestamp + CDbl(mCancelAfter) / 86400#
+    mSummary.CancelTime = mTimerList.Clock.Timestamp + CDbl(mCancelAfter) / 86400#
     mCancelAfter = 0
-    mSummary.CancelTime = mCancelTime
+    mSummary.CancelTime = mSummary.CancelTime
 End If
 
-If mCancelTime <> 0 Then Set mCancelTLI = mTimerList.Add(Nothing, mCancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
+If mSummary.CancelTime <> 0 Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
     
-If mCancelPrice <> 0# Then
+If mSummary.CancelPrice <> 0# Then
     Dim lPriceCanceller As New BracketPriceCanceller
-    lPriceCanceller.Initialise Me, mCancelPrice, mDataSource
+    lPriceCanceller.Initialise Me, mSummary.CancelPrice, mDataSource
 End If
 
 fireChange BracketOrderChangeTypes.BracketOrderCreated
@@ -2230,22 +2232,17 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-mKey = pKey
+mSummary.Key = pKey
 mContextsName = pContextsName
 mGroupName = pGroupName
 Set mOrderContext = pOrderContext
-mContextName = mOrderContext.Name
-mSummary.ContextName = mContextName
+mSummary.ContextName = mOrderContext.Name
 Set mContract = pContract
 Set mDataSource = pDataSource
 Set mOrderSubmitter = pOrderSubmitter
 mIsSimulated = pIsSimulated
 
 Set mTimerList = mOrderContext.TimerList
-
-mSummary.GroupName = mGroupName
-mSummary.Key = mKey
-mSummary.ContextsName = mContextsName
 
 Exit Sub
 
@@ -2272,6 +2269,18 @@ End If
 processExecution lExec
 
 fireChange BracketOrderPositionCloseoutNotified
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
+Const ProcName As String = "RemoveBracketOrderErrorListener"
+On Error GoTo Err
+
+mBracketOrderErrorListeners.Remove pListener
 
 Exit Sub
 
@@ -2326,6 +2335,8 @@ Public Sub SetNewEntryPrice(ByVal Value As Double)
 Const ProcName As String = "SetNewEntryPrice"
 On Error GoTo Err
 
+Assert Not mEntryOrder Is Nothing, "No entry order exists"
+
 Select Case mStateEngine.State
 Case BracketOrderStates.BracketOrderStateCancelling
     Exit Sub
@@ -2350,7 +2361,6 @@ If Value <> mEntryOrder.LimitPrice Then
     mNewEntryPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2362,6 +2372,8 @@ End Sub
 Public Sub SetNewEntryTriggerPrice(ByVal Value As Double)
 Const ProcName As String = "SetNewEntryTriggerPrice"
 On Error GoTo Err
+
+Assert Not mEntryOrder Is Nothing, "No entry order exists"
 
 Select Case mStateEngine.State
 Case BracketOrderStates.BracketOrderStateCancelling
@@ -2386,7 +2398,6 @@ If Value <> mEntryOrder.TriggerPrice Then
     mNewEntryTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2396,34 +2407,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewOrderPrice( _
-                ByVal orderIndex As Long, _
+                ByVal pRole As BracketOrderRoles, _
                 ByVal Value As Double)
 Const ProcName As String = "SetNewOrderPrice"
 On Error GoTo Err
 
-Dim lOrder As IOrder
-Set lOrder = mOrders(orderIndex)
-
-If Not mEntryOrder Is Nothing Then
-    If lOrder Is mEntryOrder Then
-        SetNewEntryPrice Value
-        Exit Sub
-    End If
-End If
-
-If Not mStopLossOrder Is Nothing Then
-    If lOrder Is mStopLossOrder Then
-        SetNewStopLossPrice Value
-        Exit Sub
-    End If
-End If
-
-If Not mTargetOrder Is Nothing Then
-    If lOrder Is mTargetOrder Then
-        SetNewTargetPrice Value
-        Exit Sub
-    End If
-End If
+Select Case pRole
+Case BracketOrderRoleEntry
+    SetNewEntryPrice Value
+Case BracketOrderRoleStopLoss
+    SetNewStopLossPrice Value
+Case BracketOrderRoleTarget
+    SetNewTargetPrice Value
+Case Else
+    AssertArgument False, "Invalid pRole"
+End Select
 
 Exit Sub
 
@@ -2432,34 +2430,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewOrderTriggerPrice( _
-                ByVal orderIndex As Long, _
+                ByVal pRole As BracketOrderRoles, _
                 ByVal Value As Double)
 Const ProcName As String = "SetNewOrderTriggerPrice"
 On Error GoTo Err
 
-Dim lOrder As IOrder
-Set lOrder = mOrders(orderIndex)
-
-If Not mEntryOrder Is Nothing Then
-    If lOrder Is mEntryOrder Then
-        SetNewEntryTriggerPrice Value
-        Exit Sub
-    End If
-End If
-
-If Not mStopLossOrder Is Nothing Then
-    If lOrder Is mStopLossOrder Then
-        SetNewStopLossTriggerPrice Value
-        Exit Sub
-    End If
-End If
-
-If Not mTargetOrder Is Nothing Then
-    If lOrder Is mTargetOrder Then
-        SetNewTargetTriggerPrice Value
-        Exit Sub
-    End If
-End If
+Select Case pRole
+Case BracketOrderRoleEntry
+    SetNewEntryTriggerPrice Value
+Case BracketOrderRoleStopLoss
+    SetNewStopLossTriggerPrice Value
+Case BracketOrderRoleTarget
+    SetNewTargetTriggerPrice Value
+Case Else
+    AssertArgument False, "Invalid pRole"
+End Select
 
 Exit Sub
 
@@ -2470,6 +2455,8 @@ End Sub
 Public Sub SetNewQuantity(ByVal Value As Long)
 Const ProcName As String = "SetNewQuantity"
 On Error GoTo Err
+
+Assert Not mEntryOrder Is Nothing, "No entry order"
 
 Select Case mStateEngine.State
 Case BracketOrderStates.BracketOrderStateCancelling
@@ -2486,7 +2473,6 @@ If Value <> mEntryOrder.Quantity Then
     mNewQuantity = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2514,7 +2500,6 @@ If Value <> mStopLossOrder.Offset Then
     mNewStopLossOffset = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2548,7 +2533,6 @@ If Value <> mStopLossOrder.LimitPrice Then
     mNewStopLossPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2576,7 +2560,6 @@ If Value <> mStopLossOrder.Quantity Then
     mNewStopLossQuantity = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2611,7 +2594,6 @@ If Value <> mStopLossOrder.TriggerPrice Then
     mNewStopLossTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2646,7 +2628,6 @@ If Value <> mTargetOrder.LimitPrice Then
     mNewTargetPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2665,7 +2646,7 @@ Case Else
     Assert False, "Action not allowed in state " & mStateEngine.State
 End Select
 
-Assert Not mTargetOrder Is Nothing, "BracketOrder::(let)NewTargetOffset", "No target order exists"
+Assert Not mTargetOrder Is Nothing, "No target order exists"
 Assert mTargetOrder.OrderType = OrderTypes.OrderTypeAutoLimit, "Can't change offset for order type " & gOrderTypeToString(mTargetOrder.OrderType)
 Assert mTargetOrder.Status = OrderStatuses.OrderStatusCreated, "Can't change target offset - order " & mTargetOrder.Id & " already placed"
 
@@ -2674,7 +2655,6 @@ If Value <> mTargetOrder.Offset Then
     mNewTargetOffset = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2695,14 +2675,13 @@ Case Else
     Assert False, "Action not allowed in state " & mStateEngine.State
 End Select
 
-Assert Not mStopLossOrder Is Nothing, "No target order exists"
+Assert Not mTargetOrder Is Nothing, "No target order exists"
 
 If Value <> mTargetOrder.Quantity Then
     logOrderMessage "Set target quantity=" & Value
     mNewTargetQuantity = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2737,7 +2716,6 @@ If Value <> mTargetOrder.TriggerPrice Then
     mNewTargetTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
-    RaiseEvent Dirty
 End If
 
 Exit Sub
@@ -2831,7 +2809,7 @@ Private Function cancelOrders() As Boolean
 Const ProcName As String = "cancelOrders"
 On Error GoTo Err
 
-mCancelPrice = 0
+mSummary.CancelPrice = 0
 If Not mCancelTLI Is Nothing Then
     mCancelTLI.Cancel
     Set mCancelTLI = Nothing
@@ -3149,7 +3127,7 @@ For Each lAction In pActions
     Case OpActions.ActCancelTimeout
         doActions = cancelStateTimeout
     Case OpActions.ActLog
-        gLog "Stimulus " & gOpStimuliToString(pStimulus) & " occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mKey & ")", ProcName, ModuleName, , LogLevelSevere
+        gLog "Stimulus " & gOpStimuliToString(pStimulus) & " occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mSummary.Key & ")", ProcName, ModuleName, , LogLevelSevere
         doActions = Empty
     Case Else
         Assert False, "Invalid Action " & lAction
@@ -3175,6 +3153,35 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub fireBracketOrderError( _
+                ByVal pOrder As IOrder, _
+                ByVal pErrorCode As Long, _
+                ByVal pErrorMsg As String)
+Const ProcName As String = "fireBracketOrderError"
+On Error GoTo Err
+
+Dim ev As BracketOrderErrorEventData
+Set ev.Source = Me
+Set ev.AffectedOrder = pOrder
+ev.ErrorCode = pErrorCode
+ev.ErrorMsg = pErrorMsg
+
+mBracketOrderErrorListeners.SetCurrentListeners
+Dim i As Long
+For i = 1 To mBracketOrderErrorListeners.Count
+    Dim lListener As IBracketOrderErrorListener
+    Set lListener = mBracketOrderErrorListeners.GetListener(i)
+    lListener.NotifyBracketOrderError ev
+Next
+
+RaiseEvent OrderError(ev)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub fireChange( _
                 ByVal pChangeType As BracketOrderChangeTypes)
@@ -3294,7 +3301,7 @@ For i = 0 To UBound(lActions)
     lActionsString = lActionsString & gOpActionsToString(lActions(i)) & IIf(i = UBound(lActions), "", ",")
 Next
 
-gLog "Handling bracket order stimulus (" & mKey & "): " & vbCrLf & _
+gLog "Handling bracket order stimulus (" & mSummary.Key & "): " & vbCrLf & _
                 "    prior state=" & gBracketOrderStatesToString(lPrevState) & _
                 "; stimulus=" & gOpStimuliToString(pStimulus) & _
                 "; conditions=" & gOpConditionsToString(lConditions) & _
@@ -3424,16 +3431,16 @@ Private Sub processExecution( _
 Const ProcName As String = "processExecution"
 On Error GoTo Err
 
-If mSize = 0 Then
+If mSummary.Size = 0 Then
     mStartTime = pExec.FillTime
     mTimezoneName = pExec.TimezoneName
 End If
 
 If pExec.Action = OrderActionBuy Then
-    CumBuyPrice = mCumBuyPrice + pExec.Quantity * pExec.Price
+    CumBuyPrice = mSummary.CumBuyPrice + pExec.Quantity * pExec.Price
     setSize Size + pExec.Quantity
 Else
-    CumSellPrice = mCumSellPrice + pExec.Quantity * pExec.Price
+    CumSellPrice = mSummary.CumSellPrice + pExec.Quantity * pExec.Price
     setSize Size - pExec.Quantity
 End If
     
@@ -3524,12 +3531,10 @@ Private Sub setDirty()
 Const ProcName As String = "setDirty"
 On Error GoTo Err
 
-If Not mIsDirty Then
-    mIsDirty = True
-    RaiseEvent Dirty
-Else
-    mIsDirty = True
-End If
+If mIsDirty Then Exit Sub
+
+mIsDirty = True
+RaiseEvent Dirty
 
 Exit Sub
 
@@ -3541,10 +3546,9 @@ Private Sub setSize(ByVal Value As Long)
 Const ProcName As String = "setSize"
 On Error GoTo Err
 
-mSize = Value
 mSummary.Size = Value
 
-If mSize <> 0 Then
+If mSummary.Size <> 0 Then
     mStateEngine.SetConditions OpConditions.CondSizeNonZero
 Else
     mStateEngine.ClearConditions OpConditions.CondSizeNonZero

@@ -57,6 +57,8 @@ Private Const ModuleName                        As String = "PositionManager"
 ' Member variables
 '@================================================================================
 
+Private mSummary                                As PositionManagerSummary
+
 Private mOrderManager                           As OrderManager
 
 Private mContractFuture                         As IFuture
@@ -71,9 +73,6 @@ Attribute mSession.VB_VarHelpID = -1
 Private mIsInitialised                          As Boolean
 Private mIsFinished                             As Boolean
 
-Private mName                                   As String
-
-Private mGroupName                              As String
 Private mApplicationIndex                       As Long
 
 Private mProviderIsReady                        As Boolean
@@ -84,8 +83,6 @@ Private WithEvents mOrders                      As Orders
 Attribute mOrders.VB_VarHelpID = -1
 Private mExecutions                             As Executions
 
-Private mIsSimulated                            As Boolean
-
 Private WithEvents mOrderContexts               As OrderContexts
 Attribute mOrderContexts.VB_VarHelpID = -1
 
@@ -95,8 +92,6 @@ Attribute mOrderContexts.VB_VarHelpID = -1
 ' is ended when all OrderContexts have completed.
 Private mEndingSession As Boolean
 
-Private mCumBuyPrice                            As Double
-Private mCumSellPrice                           As Double
 Private mQuantityOutstanding                    As Long
 
 Private mSessionProfit                          As Currency
@@ -104,16 +99,12 @@ Private mMaxSessionProfit                       As Currency
 Private mMaxSessionLoss                         As Currency
 Private mSessionDrawdown                        As Currency
 
-Private mProfitLastFlat                         As Currency
 Private mProfitThisTrade                        As Currency
 Private mMaxProfitThisTrade                     As Currency
 Private mMaxLossThisTrade                       As Currency
 Private mDrawdownThisTrade                      As Currency
 Private mTradeStartTime                         As Date
 Private mTradeStartTimezoneName                 As String
-
-Private mProfitLastTrade                        As Currency
-Private mDrawdownLastTrade                      As Currency
 
 Private mTickValue                              As Currency
 Private mTickSize                               As Double
@@ -126,8 +117,6 @@ Private mProfitListeners                        As Listeners
 Private mChangeListeners                        As Listeners
 
 Private mRecovering                             As Boolean
-
-Private mInitialSessionStartTime                As Date
 
 Private WithEvents mClosePositionsTask          As ClosePositionsTask
 Attribute mClosePositionsTask.VB_VarHelpID = -1
@@ -143,11 +132,15 @@ Private mFinishRecoveryPending                  As Boolean
 
 Private mBracketOrderRecoveryController         As BracketOrderRecoveryCtlr
 
+Private mInitialRecoveryDataSaved               As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+Set mSummary = New PositionManagerSummary
+
 mApplicationIndex = GPositionManager.gNextApplicationIndex
 
 Set mBracketOrders = New BracketOrders
@@ -266,6 +259,7 @@ Private Sub IOrderSubmissionListener_NotifyError(ByVal pOrderId As String, ByVal
 Const ProcName As String = "IOrderSubmissionListener_NotifyError"
 On Error GoTo Err
 
+mOrders.Item(pOrderId).NotifyError pErrorCode, pErrorMsg
 RaiseEvent OrderError(pOrderId, pErrorCode, pErrorMsg)
 
 Exit Sub
@@ -291,12 +285,12 @@ Else
     Else
         Set lExec = New Execution
         lExec.Id = pExecutionReport.Id
-        If mIsSimulated Then lExec.IsSimulated = True
+        If mSummary.IsSimulated Then lExec.IsSimulated = True
         lExec.SyncToExecutionReport pExecutionReport
     End If
     
-    lExec.GroupName = mGroupName
-    lExec.PositionManagerName = mName
+    lExec.GroupName = mSummary.GroupName
+    lExec.PositionManagerName = mSummary.Name
     If Not mBracketOrderRecoveryController Is Nothing Then
         lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
         lExec.SaveRecoveryInfo
@@ -345,7 +339,7 @@ End Sub
 '@================================================================================
 
 Private Property Get IPositionMember_PositionManagerName() As String
-IPositionMember_PositionManagerName = mName
+IPositionMember_PositionManagerName = mSummary.Name
 End Property
 
 '@================================================================================
@@ -380,16 +374,9 @@ Private Sub IRecoverable_LoadRecoveryData(ByVal pData As Variant)
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
-Dim lSummary As PositionManagerSummary
-Set lSummary = pData
+Set mSummary = pData
 
-init lSummary.Name, lSummary.GroupName, lSummary.IsSimulated, CreateFuture(lSummary.Contract)
-mCumBuyPrice = lSummary.CumBuyPrice
-mCumSellPrice = lSummary.CumSellPrice
-mDrawdownLastTrade = lSummary.DrawdownLastTrade
-mProfitLastFlat = lSummary.ProfitLastFlat
-mProfitLastTrade = lSummary.ProfitLastTrade
-mInitialSessionStartTime = lSummary.TradingSessionStartTime
+init CreateFuture(mSummary.Contract)
 
 mIsInitialised = True
 
@@ -405,7 +392,7 @@ IRecoverable_ProgId = ProjectName & "." & ModuleName
 End Property
 
 Private Property Get IRecoverable_RecoveryData() As Variant
-Set IRecoverable_RecoveryData = generateRecoveryData
+Set IRecoverable_RecoveryData = mSummary
 End Property
 
 Private Sub IRecoverable_RemoveRecoverableObjectListener(ByVal pListener As IRecoverableObjectListener)
@@ -469,6 +456,8 @@ On Error GoTo Err
 Dim lObj As IRecoverable
 Select Case ev.changeType
 Case CollItemAdded
+    If Not mInitialRecoveryDataSaved Then SaveRecoveryInfo
+
     Dim lBracketOrder As IBracketOrder
     Set lBracketOrder = ev.AffectedItem
     lBracketOrder.AddChangeListener Me
@@ -652,7 +641,7 @@ Const ProcName As String = "DrawdownLastTrade"
 On Error GoTo Err
 
 checkInitialised
-DrawdownLastTrade = mDrawdownLastTrade
+DrawdownLastTrade = mSummary.DrawdownLastTrade
 
 Exit Property
 
@@ -694,7 +683,7 @@ IsFinished = mIsFinished
 End Property
 
 Public Property Get GroupName() As String
-GroupName = mGroupName
+GroupName = mSummary.GroupName
 End Property
 
 Public Property Get IsRiskUnlimited() As Boolean
@@ -715,7 +704,7 @@ Const ProcName As String = "IsSimulated"
 On Error GoTo Err
 
 checkInitialised
-IsSimulated = mIsSimulated
+IsSimulated = mSummary.IsSimulated
 
 Exit Property
 
@@ -774,7 +763,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Name() As String
-Name = mName
+Name = mSummary.Name
 End Property
 
 Public Property Get OrderContexts() As OrderContexts
@@ -859,7 +848,7 @@ Const ProcName As String = "ProfitLastTrade"
 On Error GoTo Err
 
 checkInitialised
-ProfitLastTrade = mProfitLastTrade
+ProfitLastTrade = mSummary.ProfitLastTrade
 
 Exit Property
 
@@ -994,6 +983,7 @@ If mMaxProfitThisTrade <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.Prof
 If mMaxLossThisTrade <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeTradeMaxLoss
 If mDrawdownThisTrade <> 0 Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeTradeDrawdown
     
+ev.ProfitTypes = lProfitTypes
 pListener.NotifyProfit ev
 
 Exit Sub
@@ -1052,6 +1042,7 @@ AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is nothing"
 checkInitialised
 
 Set mOrderSubmitter = pOrderSubmitter
+mOrderSubmitter.AddOrderSubmissionListener Me
 mOrderSubmitter.AddStateChangeListener Me
 
 If Not pDataSource Is Nothing Then
@@ -1076,7 +1067,7 @@ End If
 Set mBracketOrderRecoveryController = pBracketOrderRecoveryCtlr
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
 
-Set mOrderContexts = mOrderManager.CreateOrderContexts(mName, mContractFuture, mOrderSubmitter, mDataSource, mGroupName, mIsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+Set mOrderContexts = mOrderManager.CreateOrderContexts(mSummary.Name, mContractFuture, mOrderSubmitter, mDataSource, mSummary.GroupName, mSummary.IsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 
 Exit Sub
 
@@ -1119,6 +1110,10 @@ Assert pName <> "", "A name must be supplied"
 AssertArgument Not pOrderSubmitterFactory Is Nothing, "pOrderSubmitterFactory Is Nothing"
 AssertArgument Not pDataSource Is Nothing, "pDataSource is nothing"
 
+mSummary.Name = pName
+mSummary.GroupName = pGroupName
+mSummary.IsSimulated = pIsSimulated
+
 PreInitialise pOrderManager
 
 Set mDataSource = pDataSource
@@ -1140,7 +1135,7 @@ End If
     
 Set mMoneyManager = pMoneyManager
 
-init pName, pGroupName, pIsSimulated, mDataSource.ContractFuture
+init mDataSource.ContractFuture
 
 If Not mSession Is Nothing Then checkSetupNewSession
 
@@ -1227,10 +1222,10 @@ Const ProcName As String = "calcProfits"
 On Error GoTo Err
 
 If mTickSize = 0 Then Exit Sub
-If mCumSellPrice = 0 And mCumBuyPrice = 0 And mQuantityOutstanding = 0 Then Exit Sub
+If mSummary.CumSellPrice = 0 And mSummary.CumBuyPrice = 0 And mQuantityOutstanding = 0 Then Exit Sub
 
 Dim lProfit As Currency
-lProfit = mTickValue * (mCumSellPrice + mQuantityOutstanding * Price - mCumBuyPrice) / mTickSize
+lProfit = mTickValue * (mSummary.CumSellPrice + mQuantityOutstanding * Price - mSummary.CumBuyPrice) / mTickSize
 
 If lProfit = mSessionProfit Then Exit Sub
     
@@ -1255,7 +1250,7 @@ If mSessionProfit < mMaxSessionProfit Then
     lProfitTypes = lProfitTypes Or ProfitTypeSessionDrawdown
 End If
 
-mProfitThisTrade = mSessionProfit - mProfitLastFlat
+mProfitThisTrade = mSessionProfit - mSummary.ProfitLastFlat
 lProfitTypes = lProfitTypes Or ProfitTypeTradeProfit
 
 If mProfitThisTrade > mMaxProfitThisTrade Then
@@ -1278,14 +1273,14 @@ End If
 fireProfit lProfitTypes
 
 If lProfitTypes And ProfitTypes.ProfitTypeSessionProfit Then
-    gLogProfit mSessionProfit, mIsSimulated, Me
-    gLogDrawDown mSessionDrawdown, mIsSimulated, Me
+    gLogProfit mSessionProfit, mSummary.IsSimulated, Me
+    gLogDrawDown mSessionDrawdown, mSummary.IsSimulated, Me
 End If
 If lProfitTypes And ProfitTypeSessionMaxProfit Then
-    gLogMaxProfit mMaxSessionProfit, mIsSimulated, Me
+    gLogMaxProfit mMaxSessionProfit, mSummary.IsSimulated, Me
 End If
 If lProfitTypes And ProfitTypeSessionMaxLoss Then
-    gLogMaxLoss mMaxSessionLoss, mIsSimulated, Me
+    gLogMaxLoss mMaxSessionLoss, mSummary.IsSimulated, Me
 End If
 
 Exit Sub
@@ -1313,14 +1308,14 @@ If mMoneyManager.CloseAll(mSessionProfit, _
                             lEndSession) _
 Then
     If Not mClosingPosition Then
-        gLogMoneyManagement "Close all positions: " & msg, mIsSimulated, Me
+        gLogMoneyManagement "Close all positions: " & msg, mSummary.IsSimulated, Me
         ClosePositions
     End If
 Else
     If lEndSession And Not mClosingPosition Then
         If Not mEndingSession Then
             mEndingSession = True
-            gLogMoneyManagement "Ending Session: " & msg, mIsSimulated, Me
+            gLogMoneyManagement "Ending Session: " & msg, mSummary.IsSimulated, Me
         End If
     End If
 End If
@@ -1342,7 +1337,7 @@ On Error GoTo Err
 
 If Int(mSession.SessionCurrentTime) = 0# Then Exit Sub
 
-If mInitialSessionStartTime = 0# Then mInitialSessionStartTime = mSession.CurrentSessionStartTime
+If mSummary.TradingSessionStartTime = 0# Then mSummary.TradingSessionStartTime = mSession.CurrentSessionStartTime
     
 If Not needExistingBracketOrders Then setupNewSession
 
@@ -1356,10 +1351,11 @@ Private Sub DeleteRecoveryInfo()
 Const ProcName As String = "deleteRecoveryInfo"
 On Error GoTo Err
 
-If Not mBracketOrderRecoveryController Is Nothing Then
-    gLog "Deleting order recovery info for Position Manager", ProcName, ModuleName, mName
-    mBracketOrderRecoveryController.DeleteRecoveryInfo mName
-End If
+If mBracketOrderRecoveryController Is Nothing Then Exit Sub
+
+mInitialRecoveryDataSaved = False
+gLog "Deleting order recovery info for Position Manager", ProcName, ModuleName, mSummary.Name
+mBracketOrderRecoveryController.DeleteRecoveryInfo mSummary.Name
 
 Exit Sub
 
@@ -1382,6 +1378,9 @@ mRecoverableObjectListeners.Clear
 mOrderContexts.Finish
 Set mOrderContexts = Nothing
 Set mMoneyManager = Nothing
+
+mOrderSubmitter.RemoveOrderSubmissionListener Me
+mOrderSubmitter.RemoveStateChangeListener Me
 Set mOrderSubmitter = Nothing
 
 Set mBracketOrders = Nothing
@@ -1498,35 +1497,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function generateRecoveryData() As Object
-Const ProcName As String = "generateRecoveryData"
-On Error GoTo Err
-
-If Not mContractFuture.IsAvailable Then Exit Function
-If Not mSessionFuture.IsAvailable Then Exit Function
-
-Dim lPmSummary As PositionManagerSummary
-Set lPmSummary = New PositionManagerSummary
-
-lPmSummary.Contract = mContractFuture.Value
-lPmSummary.CumBuyPrice = mCumBuyPrice
-lPmSummary.CumSellPrice = mCumSellPrice
-lPmSummary.DrawdownLastTrade = mDrawdownLastTrade
-lPmSummary.GroupName = mGroupName
-lPmSummary.Name = mName
-lPmSummary.IsSimulated = mIsSimulated
-lPmSummary.ProfitLastFlat = mProfitLastFlat
-lPmSummary.TradingSessionStartTime = mInitialSessionStartTime
-lPmSummary.ProfitLastTrade = mProfitLastTrade
-
-Set generateRecoveryData = lPmSummary
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Function haveActiveBracketOrders() As Boolean
 Const ProcName As String = "haveActiveBracketOrders"
 On Error GoTo Err
@@ -1558,22 +1528,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub init( _
-                ByVal pName As String, _
-                ByVal pGroupName As String, _
-                ByVal pIsSimulated As Boolean, _
                 ByVal pContractFuture As IFuture)
 Const ProcName As String = "init"
 On Error GoTo Err
 
-mName = pName
-mGroupName = pGroupName
-mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
 
 If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
-    Set mOrderContexts = mOrderManager.GetOrderContexts(mName, mIsSimulated)
+    Set mOrderContexts = mOrderManager.GetOrderContexts(mSummary.Name, mSummary.IsSimulated)
     If mOrderContexts Is Nothing Then _
-        Set mOrderContexts = mOrderManager.CreateOrderContexts(pName, mContractFuture, mOrderSubmitter, mDataSource, mGroupName, mIsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+        Set mOrderContexts = mOrderManager.CreateOrderContexts(mSummary.Name, mContractFuture, mOrderSubmitter, mDataSource, mSummary.GroupName, mSummary.IsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 End If
 
 If mContractFuture.IsAvailable Then
@@ -1670,14 +1634,14 @@ End If
 mQuantityOutstanding = mQuantityOutstanding + gGetSignedQuantity(pExec)
 
 If gGetSignedQuantity(pExec) > 0 Then
-    mCumBuyPrice = mCumBuyPrice + (pExec.Price * gGetSignedQuantity(pExec))
+    mSummary.CumBuyPrice = mSummary.CumBuyPrice + (pExec.Price * gGetSignedQuantity(pExec))
 Else
-    mCumSellPrice = mCumSellPrice + (pExec.Price * pExec.Quantity)
+    mSummary.CumSellPrice = mSummary.CumSellPrice + (pExec.Price * pExec.Quantity)
 End If
 
 If mQuantityOutstanding <> 0 Then
     'we need to notify the position change before the Profit
-    gLogPosition mQuantityOutstanding, mIsSimulated, Me
+    gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
 
     If mQuantityOutstanding < 0 Then
         If mLastAsk <> 0 Then
@@ -1692,21 +1656,21 @@ Else
     'we need to notify the position change after the final Profit
     calcProfits
     
-    gLogPosition mQuantityOutstanding, mIsSimulated, Me
+    gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
     gLogTradeProfile FormatTimestamp(mTradeStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             FormatTimestamp(pExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             mTradeStartTimezoneName & "," & _
             mProfitThisTrade & "," & _
             mMaxProfitThisTrade & "," & _
             mMaxLossThisTrade, _
-            mIsSimulated, _
+            mSummary.IsSimulated, _
             Me
-    mProfitLastTrade = mProfitThisTrade
-    mDrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
+    mSummary.ProfitLastTrade = mProfitThisTrade
+    mSummary.DrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
     mProfitThisTrade = 0
     mMaxProfitThisTrade = 0
     mMaxLossThisTrade = 0
-    mProfitLastFlat = mSessionProfit
+    mSummary.ProfitLastFlat = mSessionProfit
     mDrawdownThisTrade = 0
     
     If Not mMoneyManager Is Nothing Then mMoneyManager.NotifyPositionFlat
@@ -1727,9 +1691,14 @@ Private Sub SaveRecoveryInfo()
 Const ProcName As String = "SaveRecoveryInfo"
 On Error GoTo Err
 
+If Not mContractFuture.IsAvailable Then Exit Sub
+If Not mSessionFuture.IsAvailable Then Exit Sub
+If Not mSummary.IsDirty Then Exit Sub
 If mRecoverableObjectListeners Is Nothing Or mRecoverableObjectListeners.Count = 0 Then Exit Sub
 
+mInitialRecoveryDataSaved = True
 fireRecoveryDataChanged
+mSummary.setClean
 
 Exit Sub
 
@@ -1743,6 +1712,8 @@ On Error GoTo Err
 
 Dim lContract As IContract
 Set lContract = mContractFuture.Value
+
+mSummary.Contract = lContract
 mTickValue = lContract.TickValue
 mTickSize = lContract.TickSize
 mCurrencyCode = lContract.Specifier.CurrencyCode
@@ -1763,18 +1734,18 @@ mBracketOrders.Clear
 mOrders.Clear
 mExecutions.Clear
 
-mInitialSessionStartTime = mSession.CurrentSessionStartTime
+mSummary.TradingSessionStartTime = mSession.CurrentSessionStartTime
 
-mCumBuyPrice = 0
-mCumSellPrice = 0
+mSummary.CumBuyPrice = 0
+mSummary.CumSellPrice = 0
 mQuantityOutstanding = 0
 
-mProfitLastTrade = mProfitThisTrade
-mDrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
+mSummary.ProfitLastTrade = mProfitThisTrade
+mSummary.DrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
 mProfitThisTrade = 0
 mMaxProfitThisTrade = 0
 mMaxLossThisTrade = 0
-mProfitLastFlat = mSessionProfit
+mSummary.ProfitLastFlat = mSessionProfit
 
 mSessionProfit = 0
 mMaxSessionProfit = 0
@@ -1782,9 +1753,9 @@ mMaxSessionLoss = 0
 mSessionDrawdown = 0
 
 mDrawdownThisTrade = 0
-mTradeStartTime = mInitialSessionStartTime
+mTradeStartTime = mSummary.TradingSessionStartTime
 
-SaveRecoveryInfo
+If mInitialRecoveryDataSaved Then SaveRecoveryInfo
 
 Exit Sub
 
@@ -1818,12 +1789,12 @@ Private Function stillInInitialSession() As Boolean
 Const ProcName As String = "stillInInitialSession"
 On Error GoTo Err
 
-If mSession.CurrentSessionStartTime = mInitialSessionStartTime Then
+If mSession.CurrentSessionStartTime = mSummary.TradingSessionStartTime Then
     stillInInitialSession = True
 Else
     gLog "Session start times: current=" & FormatTimestamp(mSession.CurrentSessionStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & _
-            "; initial=" & FormatTimestamp(mInitialSessionStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs), _
-        ProcName, ModuleName, mName, LogLevelDetail
+            "; initial=" & FormatTimestamp(mSummary.TradingSessionStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs), _
+        ProcName, ModuleName, mSummary.Name, LogLevelDetail
     stillInInitialSession = False
 End If
 

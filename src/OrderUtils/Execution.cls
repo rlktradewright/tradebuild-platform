@@ -444,11 +444,9 @@ jb.EncodeValue mGroupName
 jb.EncodeName "Id"
 jb.EncodeValue mExecId
 
-jb.EncodeName "IsLiquidation"
-jb.EncodeValue mIsLiquidation
+jb.EncodeNameAndValue "IsLiquidation", mIsLiquidation, False
 
-jb.EncodeName "IsSimulated"
-jb.EncodeValue mIsSimulated
+jb.EncodeNameAndValue "IsSimulated", mIsSimulated, False
 
 jb.EncodeName "OrderId"
 jb.EncodeValue mOrderId

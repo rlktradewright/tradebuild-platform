@@ -47,9 +47,9 @@ Private Const ModuleName                As String = "BracketOrderSummary"
 ' Member variables
 '@================================================================================
 
-Private mContextsName                        As String
+'Private mContextsName                        As String
 Private mContextName                        As String
-Private mGroupName As String
+'Private mGroupName As String
 
 Private mState As BracketOrderStates
 Private mKey As String
@@ -138,14 +138,14 @@ Public Property Get ContextName() As String
 ContextName = mContextName
 End Property
 
-Public Property Let ContextsName(ByVal Value As String)
-If mContextsName <> Value Then setDirty
-mContextsName = Value
-End Property
-
-Public Property Get ContextsName() As String
-ContextsName = mContextsName
-End Property
+'Public Property Let ContextsName(ByVal Value As String)
+'If mContextsName <> Value Then setDirty
+'mContextsName = Value
+'End Property
+'
+'Public Property Get ContextsName() As String
+'ContextsName = mContextsName
+'End Property
 
 Public Property Let CreationTime(ByVal Value As Date)
 If mCreationTime <> Value Then setDirty
@@ -201,17 +201,17 @@ Public Property Get EntryReason() As String
 EntryReason = mEntryReason
 End Property
 
+'Public Property Let GroupName(ByVal Value As String)
+'If mGroupName <> Value Then setDirty
+'mGroupName = Value
+'End Property
+'
+'Public Property Get GroupName() As String
+'GroupName = mGroupName
+'End Property
+
 Public Property Get IsDirty() As Boolean
 IsDirty = mIsDirty
-End Property
-
-Public Property Let GroupName(ByVal Value As String)
-If mGroupName <> Value Then setDirty
-mGroupName = Value
-End Property
-
-Public Property Get GroupName() As String
-GroupName = mGroupName
 End Property
 
 Public Property Let Key(ByVal Value As String)
@@ -303,47 +303,36 @@ jb.BeginObject
 jb.EncodeName "$ProgID"
 jb.EncodeValue ProjectName & "." & ModuleName
 
-jb.EncodeName "CancelPrice"
-jb.EncodeValue mCancelPrice
+jb.EncodeNameAndValue "CancelPrice", mCancelPrice, 0#
 
-jb.EncodeName "CancelTime"
-jb.EncodeValue mCancelTime
+jb.EncodeNameAndValue "CancelTime", mCancelTime, CDate(0#)
 
-jb.EncodeName "CloseoutOrderId"
-jb.EncodeValue mCloseoutOrderId
+jb.EncodeNameAndValue "CloseoutOrderId", mCloseoutOrderId, ""
 
 jb.EncodeName "ContextName"
 jb.EncodeValue mContextName
 
-jb.EncodeName "ContextsName"
-jb.EncodeValue mContextsName
+'jb.EncodeName "ContextsName"
+'jb.EncodeValue mContextsName
 
 jb.EncodeName "CreationTime"
 jb.EncodeValue mCreationTime
 
-jb.EncodeName "CumBuyPrice"
-jb.EncodeValue mCumBuyPrice
+jb.EncodeNameAndValue "CumBuyPrice", mCumBuyPrice, 0#
 
-jb.EncodeName "CumSellPrice"
-jb.EncodeValue mCumSellPrice
+jb.EncodeNameAndValue "CumSellPrice", mCumSellPrice, 0#
 
-jb.EncodeName "Description"
-jb.EncodeValue mDescription
+jb.EncodeNameAndValue "Description", mDescription, ""
 
 jb.EncodeName "EntryOrderId"
 jb.EncodeValue mEntryOrderId
 
-jb.EncodeName "EntryReason"
-jb.EncodeValue mEntryReason
+jb.EncodeNameAndValue "EntryReason", mEntryReason, ""
 
 jb.EncodeName "Key"
 jb.EncodeValue mKey
 
-jb.EncodeName "ContextsName"
-jb.EncodeValue mContextsName
-
-jb.EncodeName "PreventUnprotectedPosition"
-jb.EncodeValue mPreventUnprotectedPosition
+jb.EncodeNameAndValue "PreventUnprotectedPosition", mPreventUnprotectedPosition, False
 
 jb.EncodeName "Size"
 jb.EncodeValue mSize
@@ -351,20 +340,16 @@ jb.EncodeValue mSize
 jb.EncodeName "State"
 jb.EncodeValue mState
 
-jb.EncodeName "StopLossOrderId"
-jb.EncodeValue mStopLossOrderId
+jb.EncodeNameAndValue "StopLossOrderId", mStopLossOrderId, ""
 
-jb.EncodeName "StopReason"
-jb.EncodeValue mStopReason
+jb.EncodeNameAndValue "StopReason", mStopReason, ""
 
-jb.EncodeName "TargetOrderId"
-jb.EncodeValue mTargetOrderId
+jb.EncodeNameAndValue "TargetOrderId", mTargetOrderId, ""
 
-jb.EncodeName "TargetReason"
-jb.EncodeValue mTargetReason
+jb.EncodeNameAndValue "TargetReason", mTargetReason, ""
 
-jb.EncodeName "GroupName"
-jb.EncodeValue mGroupName
+'jb.EncodeName "GroupName"
+'jb.EncodeValue mGroupName
 
 jb.EndObject
 

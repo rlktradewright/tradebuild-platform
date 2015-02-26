@@ -181,6 +181,10 @@ Public Enum OpStimuli
 
     ' This stimulus indicates that a state timeout has expired.
     StimTimeoutExpired
+    
+    ' This stimulus indicates that a message (potentially an error) has
+    ' been notified with regard to an order
+    StimOrderError
 
 End Enum
 
@@ -333,6 +337,8 @@ Case StimEntryOrderFill
     gOpStimuliToString = "Entry order fill"
 Case StimTimeoutExpired
     gOpStimuliToString = "Timeout expired"
+Case StimOrderError
+    gOpStimuliToString = "Order error"
 Case Else
     AssertArgument False, "Invalid stimulus"
 End Select
@@ -404,6 +410,25 @@ mTableBuilder.AddStateTableEntry _
 '=======================================================================
 '                       State:      BracketOrderStateSubmitted
 '=======================================================================
+
+' TWS tells us that an error has occurred regarding an order. As this is
+' not a protected bracket order, we take no action.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateSubmitted, _
+            OpStimuli.StimOrderError, _
+            SpecialConditions.NoConditions, _
+            OpConditions.CondProtected, _
+            BracketOrderStates.BracketOrderStateSubmitted
+
+' TWS tells us that an error has occurred regarding an order. As this is
+' a protected bracket order, we kill all orders.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateSubmitted, _
+            OpStimuli.StimOrderError, _
+            CondProtected, _
+            SpecialConditions.NoConditions, _
+            BracketOrderStates.BracketOrderStateCancelling, _
+            OpActions.ActCancelOrders
 
 ' TWS tells us that the entry order has been filled. Nothing to do here.
 mTableBuilder.AddStateTableEntry _

@@ -108,6 +108,18 @@ End Property
 Public Property Get DisplaySize() As Long
 End Property
 
+Public Property Let ErrorCode(ByVal Value As Long)
+End Property
+
+Public Property Get ErrorCode() As Long
+End Property
+
+Public Property Let ErrorMessage(ByVal Value As String)
+End Property
+
+Public Property Get ErrorMessage() As String
+End Property
+
 Public Property Let ETradeOnly(ByVal Value As Boolean)
 End Property
 
@@ -323,6 +335,9 @@ End Function
 
 Public Function IsModifiable() As Boolean
 End Function
+
+Public Sub NotifyError(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+End Sub
 
 Public Sub NotifyFill(ByVal pExec As IExecutionReport)
 End Sub

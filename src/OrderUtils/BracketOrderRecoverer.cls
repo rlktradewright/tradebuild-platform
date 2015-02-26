@@ -266,6 +266,9 @@ pOrder.SyncToOrderReport pOrderReport
 mPositionManager.OrderSubmitter.NotifyRecoveredOrder pOrder
 
 If pOrder.Id <> mBracketOrder.EntryOrder.Id And pOrder.Status = OrderStatusSubmitted Then
+    ' this order is not the entry order, but its status is Submitted. This means
+    ' that the entry order must have received at least one fill.
+    ' 23/2/15 So why do I set the entry order status to Filled?????
     mBracketOrder.EntryOrder.Status = OrderStatusFilled
 End If
 

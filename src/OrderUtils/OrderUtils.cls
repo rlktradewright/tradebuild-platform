@@ -65,6 +65,14 @@ Public Enum BracketOrderChangeTypes
     BracketOrderPositionCloseoutNotified
 End Enum
 
+Public Enum BracketOrderRoles
+    BracketOrderRoleNone = 0
+    BracketOrderRoleEntry = 1
+    BracketOrderRoleStopLoss
+    BracketOrderRoleTarget
+    BracketOrderRoleCloseout
+End Enum
+
 Public Enum BracketOrderStates
     BracketOrderStateCreated = 1   ' indicates that the bracket order has been created but none of the orders have yet been placed
     BracketOrderStateSubmitted     ' indicates that all the orders in the bracket order have been placed
@@ -144,6 +152,39 @@ Public Enum OrderOrigins
     OriginFirm = 1
 End Enum
 
+''
+'
+'
+' @param OrderStatusCreated
+'   The order has been created but not yet transmitted to the broker
+'
+' @param OrderStatusRejected
+'   The order has been transmitted to the broket but has been rejected
+'   by the broker for some reason.
+'
+' @param OrderStatusPendingSubmit
+'   The order has been transmitted to the broker, but no confirmation has
+'   yet been received that it has been accepted.
+'
+' @param OrderStatusPreSubmitted
+'   The order has been accepted by the broker, but the conditions for it
+'   to be activated have not yet been met.
+'
+' @param OrderStatusSubmitted
+'   The order has been activated at the order destination.
+'
+' @param OrderStatusFilled
+'   The order has been completely filled.
+'
+' @param OrderStatusCancelling
+'   A request to cancel the order has been sent, but confirmation of
+'   the cancel has not yet been received.
+'
+' @param OrderStatusCancelled
+'   The order has been cancelled.
+'
+'@/
+'
 Public Enum OrderStatuses
     OrderStatusCreated = 0
     OrderStatusRejected = 1
@@ -259,6 +300,13 @@ Public Type BracketOrderProfile
     TargetReason        As String
 End Type
 
+Public Type BracketOrderErrorEventData
+    Source              As Object
+    AffectedOrder       As IOrder
+    ErrorCode           As Long
+    ErrorMsg            As String
+End Type
+
 Public Type ExecutionEventData
     Source              As Object
     ExecutionReport     As IExecutionReport
@@ -336,6 +384,18 @@ Const ProcName As String = "BracketEntryTypeToShortString"
 On Error GoTo Err
 
 BracketEntryTypeToShortString = gBracketEntryTypeToShortString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function BracketOrderRoleToString(ByVal pOrderRole As BracketOrderRoles) As String
+Const ProcName As String = "BracketOrderRoleToString"
+On Error GoTo Err
+
+BracketOrderRoleToString = gBracketOrderRoleToString(pOrderRole)
 
 Exit Function
 
