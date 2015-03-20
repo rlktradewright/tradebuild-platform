@@ -476,11 +476,9 @@ On Error GoTo Err
 
 Debug.Print "Running in development environment: " & CStr(inDev)
 
-InitialiseTWUtilities
+If showCommandLineOptions() Then Exit Sub
 
 Set mFatalErrorHandler = New FatalErrorHandler
-
-If showCommandLineOptions() Then Exit Sub
 
 ApplicationGroupName = "TradeWright"
 ApplicationName = gAppTitle
@@ -701,8 +699,11 @@ If Err.Number = ErrorCodes.ErrIllegalStateException Then
     If queryReplaceConfigFile Then Set lConfigStore = createNewConfigStore
 ElseIf lConfigStore Is Nothing Then
     On Error GoTo Err
+    LogMessage "The configuration file does not exist."
     If queryCreateNewConfigFile Then Set lConfigStore = createNewConfigStore
 ElseIf Not IsValidConfigurationFile(lConfigStore) Then
+    LogMessage "The configuration file is invalid."
+    Set lConfigStore = Nothing
     On Error GoTo Err
     If queryReplaceConfigFile Then Set lConfigStore = createNewConfigStore
 End If
@@ -738,7 +739,6 @@ Const ProcName As String = "queryCreateNewConfigFile"
 On Error GoTo Err
 
 Dim userResponse As Long
-LogMessage "The configuration file does not exist."
 userResponse = MsgBox("The configuration file does not exist." & vbCrLf & vbCrLf & _
         "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
         "The default configuration will connect to TWS running on the " & vbCrLf & _
@@ -766,7 +766,6 @@ Const ProcName As String = "queryReplaceConfigFile"
 On Error GoTo Err
 
 Dim userResponse As Long
-LogMessage "The configuration file format is not correct for this program."
 userResponse = MsgBox("The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
         "This may be because you have installed a new version of " & vbCrLf & _
         "the program, or because the file has been corrupted." & vbCrLf & vbCrLf & _
