@@ -204,6 +204,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements DeferredAction
 Implements IGenericTickListener
 Implements IThemeable
 Implements StateChangeListener
@@ -371,6 +372,25 @@ End Sub
 Private Sub Form_Terminate()
 Const ProcName As String = "Form_Terminate"
 LogMessage "Chart form terminated", LogLevelDetail
+End Sub
+
+'================================================================================
+' DeferredAction Interface Members
+'================================================================================
+
+Private Sub DeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "DeferredAction_Run"
+On Error GoTo Err
+
+Set mTheme = Data
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -665,9 +685,7 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
-Me.BackColor = mTheme.BackColor
-gApplyTheme mTheme, Me.Controls
+DeferAction Me, value, 1, ExpiryTimeUnitSeconds
 
 Exit Property
 
