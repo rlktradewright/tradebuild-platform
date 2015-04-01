@@ -108,7 +108,7 @@ Public Const WindowStateNormal                      As String = "Normal"
 
 Private mIsInDev                                    As Boolean
 
-Public mConfigStore                                 As ConfigurationStore
+Private mConfigStore                                As ConfigurationStore
 Private mConfigChangeMonitor                        As ConfigChangeMonitor
 
 Private mEditConfig                                 As Boolean

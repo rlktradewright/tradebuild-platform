@@ -1,8 +1,8 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#119.0#0"; "TradeBuildUI27.ocx"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#207.0#0"; "StudiesUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#123.0#0"; "TradeBuildUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#213.0#0"; "StudiesUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -19,6 +19,7 @@ Begin VB.UserControl ConfigManager
       Width           =   735
       _ExtentX        =   1296
       _ExtentY        =   661
+      Caption         =   "New"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -28,7 +29,6 @@ Begin VB.UserControl ConfigManager
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "New"
    End
    Begin TWControls40.TWButton DeleteConfigButton 
       Height          =   375
@@ -38,6 +38,7 @@ Begin VB.UserControl ConfigManager
       Width           =   735
       _ExtentX        =   1296
       _ExtentY        =   661
+      Caption         =   "Delete"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -47,7 +48,6 @@ Begin VB.UserControl ConfigManager
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Delete"
    End
    Begin TradeBuildUI27.SPConfigurer SPConfigurer1 
       Height          =   4005
@@ -215,9 +215,9 @@ Event SelectedItemChanged()
 
 Private Const ModuleName                    As String = "ConfigManager"
 
-Private Const ConfigNameAppConfig           As String = "AppConfig"
-Private Const ConfigNameAppConfigs          As String = "AppConfigs"
-Private Const ConfigNameTradeBuild          As String = "TradeBuild"
+'Private Const ConfigNameAppConfig           As String = "AppConfig"
+'Private Const ConfigNameAppConfigs          As String = "AppConfigs"
+'Private Const ConfigNameTradeBuild          As String = "TradeBuild"
 
 Private Const ConfigNodeServiceProviders    As String = "Service Providers"
 Private Const ConfigNodeStudyLibraries      As String = "Study Libraries"
@@ -634,7 +634,7 @@ End If
     
 LogMessage "Locating config definitions in config file", LogLevelDetail
 
-Set mAppConfigs = mConfigStore.GetConfigurationSection("/" & ConfigNameAppConfigs)
+Set mAppConfigs = GetAppInstanceConfigs(mConfigStore)
 
 LogMessage "Loading config definitions into ConfigManager control", LogLevelDetail
 
@@ -716,7 +716,7 @@ Private Function findConfig( _
 Const ProcName As String = "findConfig"
 On Error GoTo Err
 
-Set findConfig = mAppConfigs.GetConfigurationSection(ConfigNameAppConfig & "(" & name & ")")
+Set findConfig = getAppInstanceConfig(mConfigStore, name)
 
 Exit Function
 
@@ -815,7 +815,7 @@ SPConfigurer1.Left = Box1.Left
 SPConfigurer1.Top = Box1.Top
 SPConfigurer1.Visible = True
 SPConfigurer1.Initialise gPermittedServiceProviderRoles, _
-                        mCurrAppConfig.GetConfigurationSection(ConfigNameTradeBuild), _
+                        GetTradeBuildConfig(mCurrAppConfig), _
                         False
 
 Exit Sub
@@ -832,7 +832,7 @@ hideConfigControls
 StudyLibConfigurer1.Left = Box1.Left
 StudyLibConfigurer1.Top = Box1.Top
 StudyLibConfigurer1.Visible = True
-StudyLibConfigurer1.Initialise mCurrAppConfig.GetConfigurationSection(ConfigNameTradeBuild)
+StudyLibConfigurer1.Initialise GetTradeBuildConfig(mCurrAppConfig)
 
 Exit Sub
 

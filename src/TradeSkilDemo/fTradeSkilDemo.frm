@@ -171,6 +171,7 @@ Private Const DeferredActionApplyThemeToCharts      As String = "ApplyTheme"
 
 Private WithEvents mTradeBuildAPI                   As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
+Private mConfigStore                                As ConfigurationStore
 
 Private WithEvents mTickers                         As Tickers
 Attribute mTickers.VB_VarHelpID = -1
@@ -1025,12 +1026,12 @@ Private Sub setupFeaturesPanels()
 Const ProcName As String = "setupFeaturesPanels"
 On Error GoTo Err
 
-FeaturesPanel.Initialise True, mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
+FeaturesPanel.Initialise True, mTradeBuildAPI, mConfigStore, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
 mFeaturesPanelPinned = CBool(mAppInstanceConfig.GetSetting(ConfigSettingFeaturesPanelPinned, "True"))
 mFeaturesPanelHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingFeaturesPanelHidden, "False"))
     
 Set mFeaturesPanelForm = New fFeaturesPanel
-mFeaturesPanelForm.Initialise mTradeBuildAPI, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
+mFeaturesPanelForm.Initialise mTradeBuildAPI, mConfigStore, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
 
 Exit Sub
 

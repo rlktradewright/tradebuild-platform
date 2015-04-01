@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#282.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#288.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
    BackColor       =   &H00CDF3FF&
@@ -45,25 +45,21 @@ Begin VB.UserControl FeaturesPanel
       TabPicture(1)   =   "FeaturesPanel.ctx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LiveChartPicture"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "FeaturesPanel.ctx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "HistChartPicture"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "FeaturesPanel.ctx":0054
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "ReplayTickerPicture"
-      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "FeaturesPanel.ctx":0070
       Tab(4).ControlEnabled=   0   'False
       Tab(4).Control(0)=   "ConfigPicture"
-      Tab(4).Control(0).Enabled=   0   'False
       Tab(4).ControlCount=   1
       Begin VB.PictureBox ConfigPicture 
          Appearance      =   0  'Flat
@@ -76,12 +72,34 @@ Begin VB.UserControl FeaturesPanel
          TabIndex        =   42
          Top             =   0
          Width           =   4125
+         Begin TWControls40.TWImageCombo CurrentConfigCombo 
+            Height          =   270
+            Left            =   240
+            TabIndex        =   58
+            Top             =   390
+            Width           =   3615
+            _ExtentX        =   6376
+            _ExtentY        =   476
+            Appearance      =   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            Locked          =   -1  'True
+            MouseIcon       =   "FeaturesPanel.ctx":008C
+            Text            =   ""
+         End
          Begin VB.Frame ChangeChartStylesFrame 
             Caption         =   "Change chart styles"
             Height          =   2895
             Left            =   240
-            TabIndex        =   51
-            Top             =   4200
+            TabIndex        =   50
+            Top             =   3720
             Width           =   2535
             Begin VB.PictureBox ChangeChartStylesPicture 
                BorderStyle     =   0  'None
@@ -89,7 +107,7 @@ Begin VB.UserControl FeaturesPanel
                Left            =   120
                ScaleHeight     =   2535
                ScaleWidth      =   2295
-               TabIndex        =   52
+               TabIndex        =   51
                Top             =   240
                Width           =   2295
                Begin VB.CheckBox ApplyStyleHistCheck 
@@ -98,7 +116,7 @@ Begin VB.UserControl FeaturesPanel
                   ForeColor       =   &H80000008&
                   Height          =   255
                   Left            =   480
-                  TabIndex        =   58
+                  TabIndex        =   57
                   Top             =   1440
                   Width           =   1935
                End
@@ -108,14 +126,14 @@ Begin VB.UserControl FeaturesPanel
                   ForeColor       =   &H80000008&
                   Height          =   255
                   Left            =   480
-                  TabIndex        =   57
+                  TabIndex        =   56
                   Top             =   1200
                   Width           =   1455
                End
                Begin TWControls40.TWImageCombo ChartStylesCombo 
                   Height          =   270
                   Left            =   120
-                  TabIndex        =   54
+                  TabIndex        =   53
                   Top             =   480
                   Width           =   2160
                   _ExtentX        =   3810
@@ -130,13 +148,13 @@ Begin VB.UserControl FeaturesPanel
                      Italic          =   0   'False
                      Strikethrough   =   0   'False
                   EndProperty
-                  MouseIcon       =   "FeaturesPanel.ctx":008C
+                  MouseIcon       =   "FeaturesPanel.ctx":00A8
                   Text            =   ""
                End
                Begin TWControls40.TWButton ApplyStyleButton 
                   Height          =   495
                   Left            =   120
-                  TabIndex        =   53
+                  TabIndex        =   52
                   Top             =   1920
                   Width           =   2160
                   _ExtentX        =   3810
@@ -158,7 +176,7 @@ Begin VB.UserControl FeaturesPanel
                   Caption         =   "Apply to"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   56
+                  TabIndex        =   55
                   Top             =   960
                   Width           =   1575
                End
@@ -166,7 +184,7 @@ Begin VB.UserControl FeaturesPanel
                   Caption         =   "Available styles"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   55
+                  TabIndex        =   54
                   Top             =   120
                   Width           =   2055
                End
@@ -176,8 +194,8 @@ Begin VB.UserControl FeaturesPanel
             Caption         =   "Theme"
             Height          =   1815
             Left            =   240
-            TabIndex        =   46
-            Top             =   2160
+            TabIndex        =   45
+            Top             =   1680
             Width           =   2535
             Begin VB.PictureBox ThemePicture 
                Appearance      =   0  'Flat
@@ -187,14 +205,14 @@ Begin VB.UserControl FeaturesPanel
                Left            =   120
                ScaleHeight     =   1455
                ScaleWidth      =   2295
-               TabIndex        =   47
+               TabIndex        =   46
                Top             =   240
                Width           =   2295
                Begin VB.OptionButton BlueThemeOption 
                   Caption         =   "Blue"
                   Height          =   495
                   Left            =   120
-                  TabIndex        =   49
+                  TabIndex        =   48
                   Top             =   480
                   Width           =   2295
                End
@@ -202,7 +220,7 @@ Begin VB.UserControl FeaturesPanel
                   Caption         =   "Native"
                   Height          =   495
                   Left            =   120
-                  TabIndex        =   50
+                  TabIndex        =   49
                   Top             =   840
                   Width           =   2295
                End
@@ -210,28 +228,17 @@ Begin VB.UserControl FeaturesPanel
                   Caption         =   "Black"
                   Height          =   375
                   Left            =   120
-                  TabIndex        =   48
+                  TabIndex        =   47
                   Top             =   120
                   Width           =   1815
                End
             End
          End
-         Begin VB.TextBox CurrentConfigNameText 
-            Appearance      =   0  'Flat
-            BorderStyle     =   0  'None
-            Height          =   285
-            Left            =   120
-            Locked          =   -1  'True
-            TabIndex        =   44
-            TabStop         =   0   'False
-            Top             =   420
-            Width           =   3855
-         End
          Begin TWControls40.TWButton ConfigEditorButton 
             Height          =   375
             Left            =   240
             TabIndex        =   43
-            Top             =   1440
+            Top             =   840
             Width           =   1935
             _ExtentX        =   3413
             _ExtentY        =   661
@@ -250,8 +257,8 @@ Begin VB.UserControl FeaturesPanel
          Begin VB.Label Label6 
             Caption         =   "Current configuration is:"
             Height          =   375
-            Left            =   120
-            TabIndex        =   45
+            Left            =   240
+            TabIndex        =   44
             Top             =   120
             Width           =   2295
          End
@@ -285,7 +292,7 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            MouseIcon       =   "FeaturesPanel.ctx":00A8
+            MouseIcon       =   "FeaturesPanel.ctx":00C4
             Text            =   ""
          End
          Begin TWControls40.TWButton StopReplayButton 
@@ -419,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   96010243
+            Format          =   102105091
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -473,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   96010243
+            Format          =   102105091
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -494,7 +501,7 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            MouseIcon       =   "FeaturesPanel.ctx":00C4
+            MouseIcon       =   "FeaturesPanel.ctx":00E0
             Text            =   ""
          End
          Begin VB.Label Label5 
@@ -609,7 +616,7 @@ Begin VB.UserControl FeaturesPanel
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            MouseIcon       =   "FeaturesPanel.ctx":00E0
+            MouseIcon       =   "FeaturesPanel.ctx":00FC
             Text            =   ""
          End
          Begin TradingUI27.TimeframeSelector LiveChartTimeframeSelector 
@@ -759,9 +766,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3720
-      MouseIcon       =   "FeaturesPanel.ctx":00FC
+      MouseIcon       =   "FeaturesPanel.ctx":0118
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":024E
+      Picture         =   "FeaturesPanel.ctx":026A
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   10
@@ -777,9 +784,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3360
-      MouseIcon       =   "FeaturesPanel.ctx":07D8
+      MouseIcon       =   "FeaturesPanel.ctx":07F4
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":092A
+      Picture         =   "FeaturesPanel.ctx":0946
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   8
@@ -795,9 +802,9 @@ Begin VB.UserControl FeaturesPanel
       ForeColor       =   &H80000008&
       Height          =   240
       Left            =   3360
-      MouseIcon       =   "FeaturesPanel.ctx":0EB4
+      MouseIcon       =   "FeaturesPanel.ctx":0ED0
       MousePointer    =   99  'Custom
-      Picture         =   "FeaturesPanel.ctx":1006
+      Picture         =   "FeaturesPanel.ctx":1022
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   9
@@ -910,6 +917,7 @@ Private Const MinimumWidthTwips                     As Long = 4065
 '@================================================================================
 
 Private mTradeBuildAPI                              As TradeBuildAPI
+Private mConfigStore                                As ConfigurationStore
 Private mAppInstanceConfig                          As ConfigurationSection
 
 Private WithEvents mTickerGrid                      As TickerGrid
@@ -1001,8 +1009,7 @@ ReplayProgressBar.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
 ConfigPicture.Width = UserControl.Width + 4 * Screen.TwipsPerPixelX
 ConfigPicture.Height = UserControl.Height - ConfigPicture.Top
 
-CurrentConfigNameText.Width = UserControl.Width - 16 * Screen.TwipsPerPixelX
-'ConfigEditorButton.Left = UserControl.Width - ConfigEditorButton.Width - 8 * Screen.TwipsPerPixelX
+CurrentConfigCombo.Width = UserControl.Width - CurrentConfigCombo.Left - 16 * Screen.TwipsPerPixelX
 
 End Sub
 
@@ -1183,6 +1190,24 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub CurrentConfigCombo_Click()
+Const ProcName As String = "CurrentConfigCombo_Click"
+On Error GoTo Err
+
+Dim lNewAppInstanceConfig As ConfigurationSection
+Set lNewAppInstanceConfig = getAppInstanceConfig(mConfigStore, CurrentConfigCombo.Text)
+
+If lNewAppInstanceConfig Is mAppInstanceConfig Then Exit Sub
+
+gMainForm.Shutdown
+gLoadMainForm lNewAppInstanceConfig
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub FeaturesSSTab_Click(PreviousTab As Integer)
@@ -1716,6 +1741,7 @@ End Sub
 Public Sub Initialise( _
                 ByVal pPinned As Boolean, _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal pAppInstanceConfig As ConfigurationSection, _
                 ByVal pTickerGrid As TickerGrid, _
                 ByVal pInfoPanel As InfoPanel, _
@@ -1734,6 +1760,7 @@ Else
 End If
 
 Set mTradeBuildAPI = pTradeBuildAPI
+Set mConfigStore = pConfigStore
 Set mTickers = mTradeBuildAPI.Tickers
 Set mAppInstanceConfig = pAppInstanceConfig
 Set mTickerGrid = pTickerGrid
@@ -1761,7 +1788,19 @@ FromDatePicker.Value = DateAdd("m", -1, Now)
 FromDatePicker.Value = Empty    ' clear the checkbox
 ToDatePicker.Value = Now
 
-CurrentConfigNameText = mAppInstanceConfig.InstanceQualifier
+Dim lAppConfigs As ConfigurationSection
+Set lAppConfigs = GetAppInstanceConfigs(mConfigStore)
+
+Dim lAppConfig As ConfigurationSection
+For Each lAppConfig In lAppConfigs
+    If lAppConfig Is GetDefaultAppInstanceConfig(mConfigStore) Then
+        CurrentConfigCombo.ComboItems.Add , lAppConfig.InstanceQualifier, "(Default) " & lAppConfig.InstanceQualifier
+    Else
+        CurrentConfigCombo.ComboItems.Add , lAppConfig.InstanceQualifier, lAppConfig.InstanceQualifier
+    End If
+Next
+
+CurrentConfigCombo.SelectedItem = CurrentConfigCombo.ComboItems.Item(mAppInstanceConfig.InstanceQualifier)
 
 Exit Sub
 

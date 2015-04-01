@@ -268,6 +268,7 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pTradeBuildAPI As TradeBuildAPI, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal pAppInstanceConfig As ConfigurationSection, _
                 ByVal pTickerGrid As TickerGrid, _
                 ByVal pInfoPanel As InfoPanel, _
@@ -284,7 +285,7 @@ Me.Move CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLef
         CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelWidth, 280)) * Screen.TwipsPerPixelX, _
         CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelHeight, 650)) * Screen.TwipsPerPixelY
 
-FeaturesPanel.Initialise False, pTradeBuildAPI, pAppInstanceConfig, pTickerGrid, pInfoPanel, pInfoPanelFloating, pChartForms, pOrderTicket
+FeaturesPanel.Initialise False, pTradeBuildAPI, pConfigStore, pAppInstanceConfig, pTickerGrid, pInfoPanel, pInfoPanelFloating, pChartForms, pOrderTicket
 
 Exit Sub
 
