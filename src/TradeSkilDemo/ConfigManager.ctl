@@ -215,10 +215,6 @@ Event SelectedItemChanged()
 
 Private Const ModuleName                    As String = "ConfigManager"
 
-'Private Const ConfigNameAppConfig           As String = "AppConfig"
-'Private Const ConfigNameAppConfigs          As String = "AppConfigs"
-'Private Const ConfigNameTradeBuild          As String = "TradeBuild"
-
 Private Const ConfigNodeServiceProviders    As String = "Service Providers"
 Private Const ConfigNodeStudyLibraries      As String = "Study Libraries"
 
