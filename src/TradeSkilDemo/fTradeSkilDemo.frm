@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#282.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#288.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
@@ -143,7 +143,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements DeferredAction
 Implements StateChangeListener
 
 '================================================================================
@@ -236,46 +235,6 @@ On Error GoTo Err
 
 updateInstanceSettings
 
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub Form_Resize()
-Const ProcName As String = "Form_Resize"
-On Error GoTo Err
-
-Static prevHeight As Long
-Static prevWidth As Long
-
-If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
-
-If Me.Width < FeaturesPanel.Width + 120 Then Me.Width = FeaturesPanel.Width + 120
-
-StatusBar1.Top = Me.ScaleHeight - StatusBar1.Height
-
-If StatusBar1.Top - 120 < FeaturesPanel.Top + 8700 Then Me.Height = Me.Height + FeaturesPanel.Top + 8700 - StatusBar1.Top + 120
-
-If Me.Width = prevWidth And Me.Height = prevHeight Then Exit Sub
-
-prevWidth = Me.Width
-prevHeight = Me.Height
-
-Resize
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub Form_Unload(Cancel As Integer)
-Const ProcName As String = "Form_Unload"
-On Error GoTo Err
-
-LogMessage "Unloading main form"
-
 LogMessage "Hiding forms"
 Dim f As Form
 For Each f In Forms
@@ -319,25 +278,45 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-'================================================================================
-' DeferredAction Interface Members
-'================================================================================
-
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub Form_Resize()
+Const ProcName As String = "Form_Resize"
 On Error GoTo Err
 
-If Data = DeferredActionApplyThemeToCharts Then mChartForms.Theme = mTheme
+Static prevHeight As Long
+Static prevWidth As Long
+
+If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
+
+If Me.Width < FeaturesPanel.Width + 120 Then Me.Width = FeaturesPanel.Width + 120
+
+StatusBar1.Top = Me.ScaleHeight - StatusBar1.Height
+
+If StatusBar1.Top - 120 < FeaturesPanel.Top + 8700 Then Me.Height = Me.Height + FeaturesPanel.Top + 8700 - StatusBar1.Top + 120
+
+If Me.Width = prevWidth And Me.Height = prevHeight Then Exit Sub
+
+prevWidth = Me.Width
+prevHeight = Me.Height
+
+Resize
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-'================================================================================
-' StateChangeListener Interface Members
-'================================================================================
+Private Sub Form_Unload(Cancel As Integer)
+Const ProcName As String = "Form_Unload"
+On Error GoTo Err
+
+LogMessage "Unloading main form"
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
 
 Private Sub StateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "StateChangeListener_Change"
@@ -994,11 +973,12 @@ mChartForms.ShowCharts gMainForm
 LogMessage "Loading configuration: showing historical charts"
 mChartForms.ShowHistoricalCharts gMainForm
 
+LogMessage "Loading configuration: applying theme to charts"
+mChartForms.Theme = mTheme
+
 LogMessage "Loading configuration: showing Features and Info panels"
 If Not mFeaturesPanelHidden Then showFeaturesPanel
 If Not mInfoPanelHidden Then showInfoPanel
-
-DeferAction Me, DeferredActionApplyThemeToCharts, 1, ExpiryTimeUnits.ExpiryTimeUnitSeconds
 
 LogMessage "Loaded configuration: " & mAppInstanceConfig.InstanceQualifier
 
