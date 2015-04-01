@@ -154,6 +154,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function GetAppInstanceConfigs( _
+                ByVal pConfigStore As ConfigurationStore) As ConfigurationSection
+Const ProcName As String = "GetAppInstanceConfigs"
+On Error GoTo Err
+
+Set GetAppInstanceConfigs = getAppInstanceConfigsSection(pConfigStore)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function GetDefaultAppInstanceConfig( _
                 ByVal pConfigStore As ConfigurationStore) As ConfigurationSection
 Const ProcName As String = "GetDefaultAppInstanceConfig"
@@ -169,6 +182,19 @@ For Each section In sections
         Exit Function
     End If
 Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetTradeBuildConfig( _
+                ByVal pAppInstanceConfig As ConfigurationSection) As ConfigurationSection
+Const ProcName As String = "GetTradeBuildConfig"
+On Error GoTo Err
+
+Set GetTradeBuildConfig = pAppInstanceConfig.AddConfigurationSection(ConfigNameTradeBuild)
 
 Exit Function
 
