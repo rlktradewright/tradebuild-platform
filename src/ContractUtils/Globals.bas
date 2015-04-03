@@ -886,6 +886,7 @@ addExchangeCode "EUREXUS"
 addExchangeCode "FTA"
 addExchangeCode "FWB"
 
+addExchangeCode "GEMINI"
 addExchangeCode "GLOBEX"
 
 addExchangeCode "HKFE"
