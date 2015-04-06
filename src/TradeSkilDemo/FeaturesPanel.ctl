@@ -426,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   102105091
+            Format          =   96927747
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -480,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   102105091
+            Format          =   96927747
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -880,7 +880,14 @@ Implements IThemeable
 ' Events
 '@================================================================================
 
+Event ConfigsChanged()
 Event Hide()
+Event HistContractSearchCancelled()
+Event HistContractSearchCleared()
+Event HistContractsLoaded(ByVal pContracts As IContracts)
+Event LiveContractSearchCancelled()
+Event LiveContractSearchCleared()
+Event LiveContractsLoaded(ByVal pContracts As IContracts)
 Event MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
 Event MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
 Event Mouseup(Button As Integer, Shift As Integer, x As Single, y As Single)
@@ -1139,17 +1146,6 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub ChangeLiveChartStylesButton_Click()
-Const ProcName As String = "ChangeLiveChartStylesButton_Click"
-On Error GoTo Err
-
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
 Private Sub ChartStylesCombo_Change()
 Const ProcName As String = "ChartStylesCombo_Change"
 On Error GoTo Err
@@ -1181,10 +1177,13 @@ On Error GoTo Err
 Dim lNewAppInstanceConfig As ConfigurationSection
 Set lNewAppInstanceConfig = gShowConfigEditor(mConfigStore, mAppInstanceConfig, mTheme, gMainForm)
 
-If lNewAppInstanceConfig Is Nothing Then Exit Sub
-
-gMainForm.Shutdown
-gLoadMainForm lNewAppInstanceConfig
+If lNewAppInstanceConfig Is Nothing Then
+    SetupCurrentConfigCombo
+    RaiseEvent ConfigsChanged
+Else
+    gMainForm.Shutdown
+    gLoadMainForm lNewAppInstanceConfig
+End If
 
 Exit Sub
 
@@ -1197,7 +1196,7 @@ Const ProcName As String = "CurrentConfigCombo_Click"
 On Error GoTo Err
 
 Dim lNewAppInstanceConfig As ConfigurationSection
-Set lNewAppInstanceConfig = getAppInstanceConfig(mConfigStore, CurrentConfigCombo.Text)
+Set lNewAppInstanceConfig = getAppInstanceConfig(mConfigStore, CurrentConfigCombo.SelectedItem.Key)
 
 If lNewAppInstanceConfig Is mAppInstanceConfig Then Exit Sub
 
@@ -1282,6 +1281,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+Private Sub HistContractSearch_Cancelled()
+RaiseEvent HistContractSearchCancelled
+End Sub
+
+Private Sub HistContractSearch_Cleared()
+RaiseEvent HistContractSearchCleared
+End Sub
+
+Private Sub HistContractSearch_ContractsLoaded(ByVal pContracts As IContracts)
+RaiseEvent HistContractsLoaded(pContracts)
+End Sub
+
 Private Sub HistContractSearch_NoContracts()
 Const ProcName As String = "HistContractSearch_NoContracts"
 On Error GoTo Err
@@ -1364,6 +1375,18 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub LiveContractSearch_Cancelled()
+RaiseEvent LiveContractSearchCancelled
+End Sub
+
+Private Sub LiveContractSearch_Cleared()
+RaiseEvent LiveContractSearchCleared
+End Sub
+
+Private Sub LiveContractSearch_ContractsLoaded(ByVal pContracts As IContracts)
+RaiseEvent LiveContractsLoaded(pContracts)
 End Sub
 
 Private Sub LiveContractSearch_NoContracts()
@@ -1721,6 +1744,54 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub CancelHistContractSearch()
+Const ProcName As String = "CancelHistContractSearch"
+On Error GoTo Err
+
+HistContractSearch.CancelSearch
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub CancelLiveContractSearch()
+Const ProcName As String = "CancelLiveContractSearch"
+On Error GoTo Err
+
+LiveContractSearch.CancelSearch
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ClearHistContractSearch()
+Const ProcName As String = "ClearHistContractSearch"
+On Error GoTo Err
+
+HistContractSearch.Clear
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ClearLiveContractSearch()
+Const ProcName As String = "ClearLiveContractSearch"
+On Error GoTo Err
+
+LiveContractSearch.Clear
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
@@ -1788,6 +1859,47 @@ FromDatePicker.Value = DateAdd("m", -1, Now)
 FromDatePicker.Value = Empty    ' clear the checkbox
 ToDatePicker.Value = Now
 
+SetupCurrentConfigCombo
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub LoadHistContractsForUserChoice( _
+                ByVal pContracts As IContracts)
+Const ProcName As String = "LoadHistContractsForUserChoice"
+On Error GoTo Err
+
+HistContractSearch.LoadContracts pContracts, 0
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub LoadLiveContractsForUserChoice( _
+                ByVal pContracts As IContracts, _
+                ByVal pPreferredTickerGridIndex)
+Const ProcName As String = "LoadLiveContractsForUserChoice"
+On Error GoTo Err
+
+LiveContractSearch.LoadContracts pContracts, pPreferredTickerGridIndex
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetupCurrentConfigCombo()
+Const ProcName As String = "SetupCurrentConfigCombo"
+On Error GoTo Err
+
+CurrentConfigCombo.ComboItems.Clear
+
 Dim lAppConfigs As ConfigurationSection
 Set lAppConfigs = GetAppInstanceConfigs(mConfigStore)
 
@@ -1800,21 +1912,8 @@ For Each lAppConfig In lAppConfigs
     End If
 Next
 
-CurrentConfigCombo.SelectedItem = CurrentConfigCombo.ComboItems.Item(mAppInstanceConfig.InstanceQualifier)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub LoadContractsForUserChoice( _
-                ByVal pContracts As IContracts, _
-                ByVal pPreferredTickerGridIndex)
-Const ProcName As String = "LoadContractsForUserChoice"
-On Error GoTo Err
-
-LiveContractSearch.LoadContracts pContracts, pPreferredTickerGridIndex
+Set CurrentConfigCombo.SelectedItem = CurrentConfigCombo.ComboItems.Item(mAppInstanceConfig.InstanceQualifier)
+CurrentConfigCombo.Refresh
 
 Exit Sub
 
@@ -1827,6 +1926,7 @@ Const ProcName As String = "ShowTickersPane"
 On Error GoTo Err
 
 If FeaturesSSTab.Tab <> FeaturesTabIndexNumbers.FeaturesTabIndexTickers Then FeaturesTabStrip.Tabs(FeaturesTabIndexNumbers.FeaturesTabIndexTickers + 1).Selected = True
+
 Exit Sub
 
 Err:

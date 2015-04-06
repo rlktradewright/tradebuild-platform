@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#24.2#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSearch 
    ClientHeight    =   3870
    ClientLeft      =   0
@@ -8,34 +8,26 @@ Begin VB.UserControl ContractSearch
    DefaultCancel   =   -1  'True
    ScaleHeight     =   3870
    ScaleWidth      =   4800
+   Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
+      Height          =   3150
+      Left            =   0
+      TabIndex        =   3
+      Top             =   0
+      Width           =   4815
+      _ExtentX        =   8493
+      _ExtentY        =   5556
+      ForeColor       =   -2147483640
+   End
    Begin TWControls40.TWButton ClearButton 
       Height          =   330
-      Left            =   1680
+      Left            =   1920
       TabIndex        =   2
       Top             =   3480
       Visible         =   0   'False
-      Width           =   1335
-      _ExtentX        =   0
-      _ExtentY        =   0
-      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
+      Width           =   1215
+      _ExtentX        =   2143
+      _ExtentY        =   582
       Caption         =   "Clear"
-   End
-   Begin TWControls40.TWButton ActionButton 
-      Height          =   330
-      Left            =   3120
-      TabIndex        =   3
-      Top             =   3480
-      Width           =   1335
-      _ExtentX        =   0
-      _ExtentY        =   0
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -46,31 +38,41 @@ Begin VB.UserControl ContractSearch
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Command1"
    End
-   Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
-      Height          =   3690
-      Left            =   0
+   Begin TWControls40.TWButton ActionButton 
+      Height          =   330
+      Left            =   3240
       TabIndex        =   0
-      Top             =   0
-      Width           =   3375
-      _ExtentX        =   3863
-      _ExtentY        =   5556
-      ForeColor       =   -2147483640
+      Top             =   3480
+      Width           =   1215
+      _ExtentX        =   2143
+      _ExtentY        =   582
+      Caption         =   "Command1"
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
    End
    Begin TradingUI27.ContractSelector ContractSelector1 
       Height          =   3255
       Left            =   0
-      TabIndex        =   1
+      TabIndex        =   4
       Top             =   0
-      Width           =   4455
-      _ExtentX        =   0
-      _ExtentY        =   0
+      Visible         =   0   'False
+      Width           =   4815
+      _ExtentX        =   8493
+      _ExtentY        =   5741
    End
    Begin VB.Label MessageLabel 
       Height          =   375
       Left            =   0
-      TabIndex        =   4
+      TabIndex        =   1
       Top             =   3480
       Width           =   3015
    End
@@ -98,6 +100,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IContractFetchListener
 Implements IThemeable
 
 '@================================================================================
@@ -105,6 +108,12 @@ Implements IThemeable
 '@================================================================================
 
 Event Action()
+
+Event Cancelled()
+
+Event Cleared()
+
+Event ContractsLoaded(ByVal pContracts As IContracts)
 
 Event Error(ev As ErrorEventData)
 
@@ -134,6 +143,9 @@ Private Const PropNameRowBackColorOdd               As String = "RowBackColorOdd
 Private Const PropNameTextBackColor                 As String = "TextBackColor"
 Private Const PropNameTextForeColor                 As String = "TextForeColor"
 
+Private Const CancelCaption                         As String = "Cancel"
+Private Const ClearCaption                          As String = "Clear"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -141,7 +153,8 @@ Private Const PropNameTextForeColor                 As String = "TextForeColor"
 Private mContractStorePrimary                       As IContractStore
 Private mContractStoreSecondary                     As IContractStore
 
-Private mContracts                                  As IContracts
+Private mContractsBuilder                           As IContractsBuilder
+Private mSortKeys()                                 As ContractSortKeyIds
 
 Private mLoadingContracts                           As Boolean
 
@@ -153,6 +166,13 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mCookie                                     As Variant
 
 Private mTheme                                      As ITheme
+
+Private WithEvents mContractSelectorInitialisationTC    As TaskController
+Attribute mContractSelectorInitialisationTC.VB_VarHelpID = -1
+
+Private mCancelInitiatedByUser                      As Boolean
+
+Private mSingleContracts                            As IContracts
 
 '@================================================================================
 ' Class Event Handlers
@@ -170,6 +190,15 @@ Private Sub UserControl_Initialize()
 Set mFutureWaiter = New FutureWaiter
 ContractSpecBuilder1.Visible = True
 ContractSelector1.Visible = False
+
+ReDim mSortKeys(6) As ContractSortKeyIds
+mSortKeys(0) = ContractSortKeySecType
+mSortKeys(1) = ContractSortKeySymbol
+mSortKeys(2) = ContractSortKeyExchange
+mSortKeys(3) = ContractSortKeyCurrency
+mSortKeys(4) = ContractSortKeyExpiry
+mSortKeys(5) = ContractSortKeyStrike
+mSortKeys(6) = ContractSortKeyRight
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -203,7 +232,6 @@ End Sub
 
 Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
-
 On Error GoTo Err
 
 If UserControl.Height <= ContractSelector1.Height Then UserControl.Height = ContractSelector1.Height
@@ -245,6 +273,44 @@ PropBag.WriteProperty PropNameTextForeColor, TextForeColor, vbWindowText
 End Sub
 
 '@================================================================================
+' IContractFetchListener Interface Members
+'@================================================================================
+
+Private Sub IContractFetchListener_FetchCancelled(ByVal pCookie As Variant)
+
+End Sub
+
+Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
+
+End Sub
+
+Private Sub IContractFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
+
+End Sub
+
+Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As IContract)
+Const ProcName As String = "IContractFetchListener_NotifyContract"
+On Error GoTo Err
+
+If mContractsBuilder Is Nothing Then
+    Set mContractsBuilder = New ContractsBuilder
+    mContractsBuilder.Contracts.SortKeys = mSortKeys
+End If
+
+mContractsBuilder.Add pContract
+
+If mContractsBuilder.Contracts.Count Mod 200 = 0 Then
+    MessageLabel.caption = getContractsCountMessage(mContractsBuilder.Contracts.Count)
+    MessageLabel.Refresh
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' IThemeable Interface Members
 '@================================================================================
 
@@ -276,9 +342,16 @@ If ContractSelector1.Visible Then
     RaiseEvent Action
     mCookie = Empty
 Else
-    mFutureWaiter.Add FetchContracts(ContractSpecBuilder1.ContractSpecifier, mContractStorePrimary, mContractStoreSecondary)
+    Set mSingleContracts = Nothing
+    mFutureWaiter.Add FetchContracts(ContractSpecBuilder1.ContractSpecifier, mContractStorePrimary, mContractStoreSecondary, Me)
     mLoadingContracts = True
     ActionButton.Enabled = False
+    ClearButton.Visible = True
+    ClearButton.caption = CancelCaption
+    ClearButton.Enabled = True
+    ContractSelector1.Clear
+    ContractSelector1.Visible = True
+    ContractSpecBuilder1.Visible = False
     UserControl.MousePointer = MousePointerConstants.vbHourglass
     MessageLabel.caption = "Searching..."
 End If
@@ -290,11 +363,29 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ClearButton_Click()
-ContractSpecBuilder1.Visible = True
-ContractSelector1.Visible = False
-ContractSpecBuilder1.SetFocus
-ClearButton.Visible = False
-MessageLabel.caption = ""
+Const ProcName As String = "ClearButton_Click"
+On Error GoTo Err
+
+If ClearButton.caption = CancelCaption Then
+    mCancelInitiatedByUser = True
+    CancelSearch
+Else
+    Clear
+    RaiseEvent Cleared
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub ContractSelector1_SelectionChanged()
+ActionButton.Enabled = True
+End Sub
+
+Private Sub ContractSelector1_SelectionCleared()
+ActionButton.Enabled = False
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
@@ -309,6 +400,46 @@ End If
 End Sub
 
 '@================================================================================
+' mContractSelectorInitialisationTC Event Handlers
+'@================================================================================
+
+Private Sub mContractSelectorInitialisationTC_Completed(ev As TaskCompletionEventData)
+Const ProcName As String = "mContractSelectorInitialisationTC_Completed"
+On Error GoTo Err
+
+If ev.Cancelled Then
+    Clear
+    MessageLabel.caption = "Cancelled"
+    If mCancelInitiatedByUser Then
+        RaiseEvent Cancelled
+        mCancelInitiatedByUser = False
+    End If
+ElseIf ev.ErrorNumber <> 0 Then
+    Clear
+    
+    Dim lEv As ErrorEventData
+    Set lEv.Source = Me
+    lEv.ErrorCode = ev.ErrorNumber
+    lEv.ErrorMessage = ev.ErrorMessage
+    lEv.ErrorSource = ev.ErrorSource
+    RaiseEvent Error(lEv)
+Else
+    contractSelectorCompletion
+    Dim lContractsSuppliedByCaller As Boolean
+    lContractsSuppliedByCaller = CBool(ev.Cookie)
+    If Not lContractsSuppliedByCaller Then RaiseEvent ContractsLoaded(ev.result)
+End If
+
+UserControl.MousePointer = MousePointerConstants.vbDefault
+
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mFutureWaiter Event Handlers
 '@================================================================================
 
@@ -316,22 +447,17 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsCancelled Then Exit Sub
-
-MessageLabel.caption = ""
-UserControl.MousePointer = MousePointerConstants.vbDefault
-ActionButton.Enabled = True
-mLoadingContracts = False
-
-If ContractSpecBuilder1.IsReady Then
-    ActionButton.Enabled = True
-    ActionButton.Default = True
-Else
-    ActionButton.Enabled = False
-    ActionButton.Default = False
-End If
-
-If ev.Future.IsFaulted Then
+If ev.Future.IsCancelled Then
+    UserControl.MousePointer = MousePointerConstants.vbDefault
+    Clear
+    If mCancelInitiatedByUser Then
+        RaiseEvent Cancelled
+        mCancelInitiatedByUser = False
+    End If
+ElseIf ev.Future.IsFaulted Then
+    UserControl.MousePointer = MousePointerConstants.vbDefault
+    Clear
+    
     Dim lEv As ErrorEventData
     Set lEv.Source = Me
     lEv.ErrorCode = ev.Future.ErrorNumber
@@ -339,9 +465,16 @@ If ev.Future.IsFaulted Then
     lEv.ErrorSource = ev.Future.ErrorSource
     RaiseEvent Error(lEv)
 Else
-    Set mContracts = ev.Future.value
-    handleContractsLoaded
+    MessageLabel.caption = getContractsCountMessage(mContractsBuilder.Contracts.Count)
+    Set mContractSelectorInitialisationTC = handleContractsLoaded(mContractsBuilder.Contracts, False)
+    If mContractSelectorInitialisationTC Is Nothing Then
+        ClearButton.caption = ClearCaption
+        UserControl.MousePointer = MousePointerConstants.vbDefault
+        RaiseEvent ContractsLoaded(mContractsBuilder.Contracts)
+    End If
 End If
+
+Set mContractsBuilder = Nothing
 
 Exit Sub
 
@@ -492,8 +625,8 @@ Attribute SelectedContracts.VB_MemberFlags = "400"
 Const ProcName As String = "SelectedContracts"
 On Error GoTo Err
 
-If mContracts.Count = 1 Then
-    Set SelectedContracts = mContracts
+If Not mSingleContracts Is Nothing Then
+    Set SelectedContracts = mSingleContracts
 Else
     Set SelectedContracts = ContractSelector1.SelectedContracts
 End If
@@ -562,6 +695,45 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub CancelSearch()
+Const ProcName As String = "CancelSearch"
+On Error GoTo Err
+
+If Not mContractsBuilder Is Nothing Then
+    mFutureWaiter.Cancel
+ElseIf Not mContractSelectorInitialisationTC Is Nothing Then
+    mContractSelectorInitialisationTC.CancelTask
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub Clear()
+Const ProcName As String = "Clear"
+On Error GoTo Err
+
+Set mSingleContracts = Nothing
+ContractSpecBuilder1.Visible = True
+ContractSelector1.Visible = False
+ContractSelector1.Clear
+ClearButton.caption = ClearCaption
+ClearButton.Visible = False
+MessageLabel.caption = ""
+
+setActionButton
+
+On Error Resume Next    ' SetFocus gives an error if the control is not visible
+ContractSpecBuilder1.SetFocus
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub Initialise( _
                 ByVal pContractStorePrimary As IContractStore, _
                 ByVal pContractStoreSecondary As IContractStore)
@@ -577,13 +749,26 @@ On Error GoTo Err
 
 AssertArgument Not pContracts Is Nothing, "pContracts is Nothing"
 
+If pContracts.Count = 1 Then Exit Sub   ' to prevent Action event firing
+
 ActionButton.Enabled = True
 ActionButton.Default = True
 
-Set mContracts = pContracts
 gSetVariant mCookie, pCookie
 
-handleContractsLoaded
+UserControl.MousePointer = MousePointerConstants.vbHourglass
+ClearButton.caption = CancelCaption
+ClearButton.Visible = True
+ClearButton.Enabled = True
+
+ContractSelector1.Visible = True
+ContractSpecBuilder1.Visible = False
+
+Set mContractSelectorInitialisationTC = handleContractsLoaded(pContracts, True)
+If mContractSelectorInitialisationTC Is Nothing Then
+    ClearButton.caption = ClearCaption
+    UserControl.MousePointer = MousePointerConstants.vbDefault
+End If
 
 Exit Sub
 
@@ -595,42 +780,14 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub handleContractsLoaded()
-Const ProcName As String = "handleContractsLoaded"
+Private Sub contractSelectorCompletion()
+Const ProcName As String = "contractSelectorCompletion"
 On Error GoTo Err
 
-If mContracts.Count = 0 Then
-    MessageLabel.caption = "No contracts"
-    RaiseEvent NoContracts
-ElseIf mContracts.Count = 1 Then
-    If IncludeHistoricalContracts Or Not IsContractExpired(mContracts.ItemAtIndex(1)) Then
-        RaiseEvent Action
-        mCookie = Empty
-    Else
-        MessageLabel.caption = "Contract expired"
-        RaiseEvent NoContracts
-    End If
-Else
-    setupContractSelector mContracts, mAllowMultipleSelection
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setupContractSelector( _
-                ByVal pContracts As IContracts, _
-                ByVal pAllowMultipleSelection As Boolean)
-Const ProcName As String = "setupContractSelector"
-On Error GoTo Err
-
-ContractSelector1.Initialise pContracts, pAllowMultipleSelection
-MessageLabel.caption = ContractSelector1.Count & IIf(ContractSelector1.Count = 1, " contract", " contracts")
-ContractSelector1.Visible = True
-ContractSpecBuilder1.Visible = False
-ClearButton.Visible = True
+mLoadingContracts = False
+MessageLabel.caption = getContractsCountMessage(ContractSelector1.Count)
+ActionButton.Enabled = False
+ClearButton.caption = ClearCaption
 
 On Error Resume Next    ' because SetFocus gives an error if called during a Form_Load event
 ContractSelector1.SetFocus
@@ -640,3 +797,65 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getContractsCountMessage(ByVal pCount As Long) As String
+getContractsCountMessage = pCount & IIf(pCount = 1, " contract", " contracts")
+End Function
+
+Private Function handleContractsLoaded( _
+                ByVal pContracts As IContracts, _
+                ByVal pContractsSuppliedByCaller As Boolean) As TaskController
+Const ProcName As String = "handleContractsLoaded"
+On Error GoTo Err
+
+If pContracts.Count = 0 Then
+    MessageLabel.caption = "No contracts"
+    RaiseEvent NoContracts
+ElseIf pContracts.Count = 1 Then
+    Set mSingleContracts = pContracts
+    If IncludeHistoricalContracts Or Not IsContractExpired(mSingleContracts.ItemAtIndex(1)) Then
+        RaiseEvent Action
+        mCookie = Empty
+    Else
+        MessageLabel.caption = "Contract expired"
+        RaiseEvent NoContracts
+    End If
+Else
+    Set handleContractsLoaded = setupContractSelector(pContracts, mAllowMultipleSelection, pContractsSuppliedByCaller)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub setActionButton()
+If ContractSpecBuilder1.IsReady Then
+    ActionButton.Enabled = True
+    ActionButton.Default = True
+Else
+    ActionButton.Enabled = False
+    ActionButton.Default = False
+End If
+End Sub
+
+Private Function setupContractSelector( _
+                ByVal pContracts As IContracts, _
+                ByVal pAllowMultipleSelection As Boolean, _
+                ByVal pContractsSuppliedByCaller As Boolean) As TaskController
+Const ProcName As String = "setupContractSelector"
+On Error GoTo Err
+
+If pContracts.Count <= 20 Then
+    ContractSelector1.Initialise pContracts, pAllowMultipleSelection
+    contractSelectorCompletion
+Else
+    Set setupContractSelector = ContractSelector1.InitialiseAsync(pContracts, pAllowMultipleSelection, pContractsSuppliedByCaller)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function

@@ -35,6 +35,7 @@ Option Explicit
 
 Implements IContractSelector
 Implements IThemeable
+Implements Task
 
 '@================================================================================
 ' Events
@@ -57,6 +58,8 @@ Event KeyDown(KeyCode As Integer, Shift As Integer)
 Attribute KeyDown.VB_UserMemId = -602
 Event DblClick()
 Attribute DblClick.VB_UserMemId = -601
+Event SelectionChanged()
+Event SelectionCleared()
 
 '@================================================================================
 ' Enums
@@ -129,6 +132,9 @@ Private mSelectedRows                               As Collection
 Private mCount                                      As Long
 
 Private mTheme                                      As ITheme
+
+Private mTaskContext                                As TaskContext
+Private mFirstTime                                  As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -286,6 +292,75 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
+' Task Interface Members
+'@================================================================================
+
+Private Sub Task_Cancel()
+Const ProcName As String = "Task_Cancel"
+On Error GoTo Err
+
+TWGrid1.Clear
+TWGrid1.Redraw = True
+mTaskContext.Finish Empty, True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Task_run()
+Const ProcName As String = "Task_Run"
+On Error GoTo Err
+
+If mTaskContext.CancelPending Then
+    TWGrid1.Clear
+    TWGrid1.Redraw = True
+    mTaskContext.Finish Empty, True
+    Exit Sub
+End If
+
+Static et As ElapsedTimer
+Static sCounter As Long
+
+If mFirstTime Then
+    mFirstTime = False
+    sCounter = 0
+    Set et = New ElapsedTimer
+    et.StartTiming
+End If
+
+If processNextContract Then
+    sCounter = sCounter + 1
+    'If sCounter Mod 250 = 0 Then
+    If sCounter = 250 Then
+        'TWGrid1.Redraw = True
+        'TWGrid1.Redraw = False
+    End If
+Else
+    TWGrid1.Redraw = True
+    
+    gLogger.Log "Loaded " & CStr(mContracts.Count) & " contracts: elapsed time (millisecs)", ProcName, ModuleName, LogLevelDetail, Int(et.ElapsedTimeMicroseconds / 1000#)
+    Set et = Nothing
+    mTaskContext.Finish mContracts, False
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
+Set mTaskContext = RHS
+mFirstTime = True
+End Property
+
+Private Property Get Task_TaskName() As String
+
+End Property
+
+'@================================================================================
 ' Control Event Handlers
 '@================================================================================
 
@@ -305,7 +380,10 @@ lCol = TWGrid1.col
 Dim lColSel As Long
 lColSel = TWGrid1.ColSel
 
-If TWGrid1.RowData(lRow) = 0 Then Exit Sub
+If TWGrid1.RowData(lRow) = 0 Then
+    RaiseEvent Click
+    Exit Sub
+End If
 
 If Not mControlDown Or Not mAllowMultipleSelection Then
     deselectSelectedContracts
@@ -314,6 +392,11 @@ Else
     toggleRowSelection lRow
 End If
 
+If mSelectedRows.Count > 0 Then
+    RaiseEvent SelectionChanged
+Else
+    RaiseEvent SelectionCleared
+End If
 RaiseEvent Click
 
 Exit Sub
@@ -582,64 +665,11 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub Initialise( _
-                ByVal pContracts As IContracts, _
-                ByVal pAllowMultipleSelection As Boolean)
-Const ProcName As String = "Initialise"
+Public Sub Clear()
+Const ProcName As String = "Clear"
 On Error GoTo Err
 
-mAllowMultipleSelection = pAllowMultipleSelection
-
 TWGrid1.Clear
-
-TWGrid1.Redraw = False
-
-Set mContracts = pContracts
-mContracts.SortKeys = mSortKeys
-
-Dim et As New ElapsedTimer
-et.StartTiming
-gLogger.Log "Sorted contracts: elapsed time (millisecs):", ProcName, ModuleName, LogLevelDetail, Int(et.ElapsedTimeMicroseconds / 1000#)
-Set mSelectedRows = New Collection
-
-Dim lRow As Long
-lRow = -1
-
-Dim lIndex As Long
-Dim lContract As Contract
-For Each lContract In mContracts
-    lIndex = lIndex + 1
-    Dim lContractSpec As IContractSpecifier
-    Set lContractSpec = lContract.Specifier
-    
-    If IncludeHistoricalContracts Or Not IsContractExpired(lContract) Then
-        lRow = lRow + 1
-        If lRow > TWGrid1.Rows - 1 Then TWGrid1.Rows = TWGrid1.Rows + 1
-        
-        TWGrid1.Row = lRow
-        
-        If needHeadingRow(lContractSpec) Then
-            writeHeadingRow lContractSpec
-            lRow = lRow + 1
-            If lRow > TWGrid1.Rows - 1 Then TWGrid1.Rows = TWGrid1.Rows + 1
-            TWGrid1.Row = lRow
-        End If
-        
-        TWGrid1.RowData(lRow) = lIndex
-        
-        writeRow lContract
-        
-        mCurrSectype = lContractSpec.secType
-        mCurrCurrency = lContractSpec.CurrencyCode
-        mCurrExchange = lContractSpec.Exchange
-    End If
-Next
-
-TWGrid1.Redraw = True
-
-mCurrSectype = SecTypeNone
-mCurrCurrency = ""
-mCurrExchange = ""
 
 Exit Sub
 
@@ -647,6 +677,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub Initialise( _
+                ByVal pContracts As IContracts, _
+                ByVal pAllowMultipleSelection As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+doInitialise False, pContracts, pAllowMultipleSelection, Empty
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function InitialiseAsync( _
+                ByVal pContracts As IContracts, _
+                ByVal pAllowMultipleSelection As Boolean, _
+                ByVal pCookie As Variant) As TaskController
+Const ProcName As String = "InitialiseAsync"
+On Error GoTo Err
+
+Set InitialiseAsync = doInitialise(True, pContracts, pAllowMultipleSelection, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+                
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -681,6 +740,46 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function doInitialise( _
+                ByVal pAsync As Boolean, _
+                ByVal pContracts As IContracts, _
+                ByVal pAllowMultipleSelection As Boolean, _
+                ByVal pCookie As Variant) As TaskController
+Const ProcName As String = "doInitialise"
+On Error GoTo Err
+
+mCount = 0
+mAllowMultipleSelection = pAllowMultipleSelection
+
+TWGrid1.Clear
+TWGrid1.Redraw = False
+TWGrid1.Rows = 20
+
+Set mContracts = pContracts
+mContracts.SortKeys = mSortKeys
+
+Set mSelectedRows = New Collection
+
+If pAsync Then
+    Set doInitialise = StartTask(Me, PriorityHigh, , pCookie)
+Else
+    Dim et As New ElapsedTimer
+    et.StartTiming
+    
+    Do While processNextContract: Loop
+    
+    TWGrid1.Redraw = True
+    
+    gLogger.Log "Loaded " & CStr(mContracts.Count) & " contracts: elapsed time (millisecs)", ProcName, ModuleName, LogLevelDetail, Int(et.ElapsedTimeMicroseconds / 1000#)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 
 Private Sub highlightRow(ByVal rowNumber As Long)
 Const ProcName As String = "highlightRow"
@@ -872,6 +971,67 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function processNextContract() As Boolean
+Const ProcName As String = "processNextContract"
+On Error GoTo Err
+
+Static en As Enumerator
+If en Is Nothing Then Set en = mContracts.Enumerator
+
+Static sIndex As Long
+Static sRow As Long
+
+If Not en.MoveNext Then
+    Set en = Nothing
+    sIndex = 0
+    sRow = 0
+    mCurrSectype = SecTypeNone
+    mCurrCurrency = ""
+    mCurrExchange = ""
+
+    processNextContract = False
+    Exit Function
+End If
+
+sIndex = sIndex + 1
+
+Dim lContract As IContract
+Set lContract = en.Current
+
+Dim lContractSpec As IContractSpecifier
+Set lContractSpec = lContract.Specifier
+
+If IncludeHistoricalContracts Or Not IsContractExpired(lContract) Then
+    If sRow > TWGrid1.Rows - 1 Then TWGrid1.Rows = sRow + 1
+    
+    TWGrid1.Row = sRow
+    
+    If needHeadingRow(lContractSpec) Then
+        writeHeadingRow lContractSpec
+        sRow = sRow + 1
+        If sRow > TWGrid1.Rows - 1 Then TWGrid1.Rows = sRow + 1
+        TWGrid1.Row = sRow
+    End If
+    
+    TWGrid1.RowData(sRow) = sIndex
+    
+    writeRow lContract
+    
+    mCurrSectype = lContractSpec.secType
+    mCurrCurrency = lContractSpec.CurrencyCode
+    mCurrExchange = lContractSpec.Exchange
+    
+    sRow = sRow + 1
+End If
+
+processNextContract = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub selectContract( _
                 ByVal Row As Long)
 Const ProcName As String = "selectContract"
@@ -896,7 +1056,7 @@ TWGrid1.FillStyle = TwGridFillRepeat
 TWGrid1.FixedRows = 0
 TWGrid1.FixedCols = 0
 TWGrid1.HighLight = TwGridHighlightNever
-TWGrid1.Rows = 1
+TWGrid1.Rows = 20
 TWGrid1.SelectionMode = TwGridSelectionByRow
 TWGrid1.FocusRect = TwGridFocusNone
 TWGrid1.PopupScrollbars = True

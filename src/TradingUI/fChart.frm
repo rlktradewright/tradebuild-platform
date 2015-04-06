@@ -685,7 +685,13 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-DeferAction Me, value, 1, ExpiryTimeUnitSeconds
+If mTheme Is Nothing Then
+    DeferAction Me, value, 1, ExpiryTimeUnitSeconds
+Else
+    Set mTheme = value
+    Me.BackColor = mTheme.BackColor
+    gApplyTheme mTheme, Me.Controls
+End If
 
 Exit Property
 

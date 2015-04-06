@@ -48,6 +48,9 @@ Private mChartForms                                 As New EnumerableCollection
 
 Private mTheme                                      As ITheme
 
+Private mChartsVisible                              As Boolean
+Private mHistoricalChartsVisible                    As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -68,11 +71,16 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If value Is mTheme Then Exit Property
+
 Set mTheme = value
 
 Dim l As fChart
 For Each l In mChartForms
-    l.Theme = mTheme
+    If (l.IsHistorical And mHistoricalChartsVisible) Or _
+        (Not l.IsHistorical And mChartsVisible) Then
+        l.Theme = mTheme
+    End If
 Next
 
 gSetStudyPickerTheme mTheme
@@ -116,8 +124,8 @@ Dim lChartForm As New fChart
 lChartForm.Initialise pDataSource, pPeriodLength, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, lConfig, pSpec, pStyle, pOwner
 mChartForms.Add lChartForm
 
-If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
 If Not IsMissing(pOwner) Then lChartForm.Show vbModeless, pOwner
+If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
 
 Exit Sub
 
@@ -140,8 +148,8 @@ Dim lChartForm As New fChart
 AddFromConfig = lChartForm.LoadFromConfig(pDataSource, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, pConfig, pOwner)
 If AddFromConfig Then
     mChartForms.Add lChartForm
-    If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
     If Not IsMissing(pOwner) Then lChartForm.Show vbModeless, pOwner
+    If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
 Else
     Unload lChartForm
 End If
@@ -176,8 +184,8 @@ Dim lChartForm As New fChart
 lChartForm.InitialiseHistoric pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, lConfig, pSpec, pStyle, pOwner
 mChartForms.Add lChartForm
 
-If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
 If Not IsMissing(pOwner) Then lChartForm.Show vbModeless, pOwner
+If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
 
 Exit Sub
 
@@ -200,8 +208,8 @@ Dim lChartForm As New fChart
 AddHistoricFromConfig = lChartForm.LoadHistoricFromConfig(pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, pConfig)
 If AddHistoricFromConfig Then
     mChartForms.Add lChartForm
-    If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
     If Not IsMissing(pOwner) Then lChartForm.Show vbModeless, pOwner
+    If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
 Else
     Unload lChartForm
 End If
@@ -237,6 +245,8 @@ Public Sub HideCharts()
 Const ProcName As String = "HideCharts"
 On Error GoTo Err
 
+mChartsVisible = False
+
 Dim lChart As fChart
 For Each lChart In mChartForms
     If Not lChart.IsHistorical Then lChart.Hide
@@ -251,6 +261,8 @@ End Sub
 Public Sub HideHistoricalCharts()
 Const ProcName As String = "HideHistoricalCharts"
 On Error GoTo Err
+
+mHistoricalChartsVisible = False
 
 Dim lChart As fChart
 For Each lChart In mChartForms
@@ -277,7 +289,7 @@ Dim lRemovableCSs As New Collection
 
 Dim chartConfig As ConfigurationSection
 For Each chartConfig In pConfig
-    If Not createChartFromConfig(chartConfig, pTickers, pBarFormatterLibManager, pTimePeriodValidator, pTheme) Then lRemovableCSs.Add chartConfig
+    If Not createChartFromConfig(chartConfig, pTickers, pBarFormatterLibManager, pTimePeriodValidator) Then lRemovableCSs.Add chartConfig
 Next
 
 For Each chartConfig In lRemovableCSs
@@ -287,7 +299,10 @@ Next
 If Not IsMissing(pOwner) Then
     Dim lChart As fChart
     For Each lChart In mChartForms
-        If Not lChart.IsHistorical Then lChart.Show vbModeless, pOwner
+        If Not lChart.IsHistorical Then
+            lChart.Show vbModeless, pOwner
+            If Not pTheme Is Nothing Then lChart.Theme = pTheme
+        End If
     Next
 End If
 
@@ -315,7 +330,10 @@ Next
 If Not IsMissing(pOwner) Then
     Dim lChart As fChart
     For Each lChart In mChartForms
-        If lChart.IsHistorical Then lChart.Show vbModeless, pOwner
+        If lChart.IsHistorical Then
+            lChart.Show vbModeless, pOwner
+            If Not pTheme Is Nothing Then lChart.Theme = pTheme
+        End If
     Next
 End If
 
@@ -345,10 +363,15 @@ Public Sub ShowCharts(ByVal pOwner As Object)
 Const ProcName As String = "ShowCharts"
 On Error GoTo Err
 
+mChartsVisible = True
+
 Dim lChart As fChart
 For Each lChart In mChartForms
-    If Not lChart.IsHistorical Then lChart.Show vbModeless, pOwner
-    lChart.Owner = pOwner
+    If Not lChart.IsHistorical Then
+        lChart.Show vbModeless, pOwner
+        If Not mTheme Is Nothing Then lChart.Theme = mTheme
+        lChart.Owner = pOwner
+    End If
 Next
 
 Exit Sub
@@ -361,9 +384,15 @@ Public Sub ShowHistoricalCharts(ByVal pOwner As Object)
 Const ProcName As String = "ShowHistoricalCharts"
 On Error GoTo Err
 
+mHistoricalChartsVisible = True
+
 Dim lChart As fChart
 For Each lChart In mChartForms
-    If lChart.IsHistorical Then lChart.Show vbModeless, pOwner
+    If lChart.IsHistorical Then
+        lChart.Show vbModeless, pOwner
+        If Not mTheme Is Nothing Then lChart.Theme = mTheme
+        lChart.Owner = pOwner
+    End If
 Next
 
 Exit Sub
@@ -380,8 +409,7 @@ Private Function createChartFromConfig( _
                 ByVal pChartConfig As ConfigurationSection, _
                 ByVal pTickers As Tickers, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
-                ByVal pTimePeriodValidator As ITimePeriodValidator, _
-                ByVal pTheme As ITheme) As Boolean
+                ByVal pTimePeriodValidator As ITimePeriodValidator) As Boolean
 Const ProcName As String = "createChartFromConfig"
 On Error GoTo Err
 
@@ -404,7 +432,7 @@ Else
                     pTimePeriodValidator, _
                     pChartConfig, _
                     , _
-                    pTheme)
+                    Nothing)
 End If
 
 Exit Function
@@ -431,7 +459,7 @@ createHistoricalChartFromConfig = AddHistoricFromConfig(CreateFuture(lContract),
                                                     pBarFormatterLibManager, _
                                                     pChartConfig, _
                                                     , _
-                                                    pTheme)
+                                                    Nothing)
 
 Exit Function
 

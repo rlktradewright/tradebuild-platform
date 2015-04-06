@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#288.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#288.7#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
@@ -352,6 +352,18 @@ End Sub
 ' Form Control Event Handlers
 '================================================================================
 
+Private Sub FeaturesPanel_ConfigsChanged()
+Const ProcName As String = "FeaturesPanel_ConfigsChanged"
+On Error GoTo Err
+
+mFeaturesPanelForm.SetupCurrentConfigCombo
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub FeaturesPanel_Hide()
 Const ProcName As String = "FeaturesPanel_Hide"
 On Error GoTo Err
@@ -366,6 +378,78 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub FeaturesPanel_HistContractSearchCancelled()
+Const ProcName As String = "FeaturesPanel_HistContractSearchCancelled"
+On Error GoTo Err
+
+mFeaturesPanelForm.CancelHistContractSearch
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub FeaturesPanel_HistContractSearchCleared()
+Const ProcName As String = "FeaturesPanel_HistContractSearchCleared"
+On Error GoTo Err
+
+mFeaturesPanelForm.ClearHistContractSearch
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub FeaturesPanel_HistContractsLoaded(ByVal pContracts As IContracts)
+Const ProcName As String = "FeaturesPanel_HistContractsLoaded"
+On Error GoTo Err
+
+mFeaturesPanelForm.LoadHistContractsForUserChoice pContracts
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub FeaturesPanel_LiveContractSearchCancelled()
+Const ProcName As String = "FeaturesPanel_LiveContractSearchCancelled"
+On Error GoTo Err
+
+mFeaturesPanelForm.CancelLiveContractSearch
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub FeaturesPanel_LiveContractSearchCleared()
+Const ProcName As String = "FeaturesPanel_LiveContractSearchCleared"
+On Error GoTo Err
+
+mFeaturesPanelForm.ClearLiveContractSearch
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub FeaturesPanel_LiveContractsLoaded(ByVal pContracts As IContracts)
+Const ProcName As String = "FeaturesPanel_LiveContractsLoaded"
+On Error GoTo Err
+
+mFeaturesPanelForm.LoadLiveContractsForUserChoice pContracts, 0
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub FeaturesPanel_Unpin()
@@ -520,7 +604,9 @@ If lContracts.Count = 1 Then
 Else
     If mFeaturesPanelHidden Then showFeaturesPanel
     FeaturesPanel.ShowTickersPane
-    FeaturesPanel.LoadContractsForUserChoice lContracts, CLng(ev.ContinuationData)
+    FeaturesPanel.LoadLiveContractsForUserChoice lContracts, CLng(ev.ContinuationData)
+    mFeaturesPanelForm.ShowTickersPane
+    mFeaturesPanelForm.LoadLiveContractsForUserChoice lContracts, CLng(ev.ContinuationData)
 End If
 
 Exit Sub
@@ -532,6 +618,18 @@ End Sub
 '================================================================================
 ' mFeaturesPanelForm Event Handlers
 '================================================================================
+
+Private Sub mFeaturesPanelForm_ConfigsChanged()
+Const ProcName As String = "mFeaturesPanelForm_ConfigsChanged"
+On Error GoTo Err
+
+FeaturesPanel.SetupCurrentConfigCombo
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 Private Sub mFeaturesPanelForm_Hide()
 Const ProcName As String = "mFeaturesPanelForm_Hide"
@@ -546,6 +644,78 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mFeaturesPanelForm_HistContractSearchCancelled()
+Const ProcName As String = "mFeaturesPanelForm_HistContractSearchCancelled"
+On Error GoTo Err
+
+FeaturesPanel.CancelHistContractSearch
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mFeaturesPanelForm_HistContractSearchCleared()
+Const ProcName As String = "mFeaturesPanelForm_HistContractSearchCleared"
+On Error GoTo Err
+
+FeaturesPanel.ClearHistContractSearch
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mFeaturesPanelForm_HistContractsLoaded(ByVal pContracts As IContracts)
+Const ProcName As String = "mFeaturesPanelForm_HistContractsLoaded"
+On Error GoTo Err
+
+FeaturesPanel.LoadHistContractsForUserChoice pContracts
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub mFeaturesPanelForm_LiveContractSearchCancelled()
+Const ProcName As String = "mFeaturesPanelForm_LiveContractSearchCancelled"
+On Error GoTo Err
+
+FeaturesPanel.CancelLiveContractSearch
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mFeaturesPanelForm_LiveContractSearchCleared()
+Const ProcName As String = "mFeaturesPanelForm_LiveContractSearchCleared"
+On Error GoTo Err
+
+FeaturesPanel.ClearLiveContractSearch
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mFeaturesPanelForm_LiveContractsLoaded(ByVal pContracts As IContracts)
+Const ProcName As String = "mFeaturesPanelForm_LiveContractsLoaded"
+On Error GoTo Err
+
+FeaturesPanel.LoadLiveContractsForUserChoice pContracts, 0
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub mFeaturesPanelForm_Pin()
@@ -612,6 +782,12 @@ On Error GoTo Err
 If ev.Future.IsFaulted Then
     LogMessage "Order recovery failed"
 ElseIf ev.Future.IsAvailable Then
+    
+    If Not mPreviousMainForm Is Nothing Then
+        Unload mPreviousMainForm
+        Set mPreviousMainForm = Nothing
+    End If
+    
     LogMessage "Order recovery completed    "
     loadAppInstanceConfig
     
@@ -621,10 +797,6 @@ ElseIf ev.Future.IsAvailable Then
 
     gUnloadSplashScreen
     
-    If Not mPreviousMainForm Is Nothing Then
-        Unload mPreviousMainForm
-        Set mPreviousMainForm = Nothing
-    End If
 End If
 
 Exit Sub

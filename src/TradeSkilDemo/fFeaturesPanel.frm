@@ -49,7 +49,14 @@ Implements IThemeable
 ' Events
 '@================================================================================
 
+Event ConfigsChanged()
 Event Hide()
+Event HistContractSearchCancelled()
+Event HistContractSearchCleared()
+Event HistContractsLoaded(ByVal pContracts As IContracts)
+Event LiveContractSearchCancelled()
+Event LiveContractSearchCleared()
+Event LiveContractsLoaded(ByVal pContracts As IContracts)
 Event Pin()
 
 '@================================================================================
@@ -72,30 +79,11 @@ Private Const ModuleName                            As String = "fFeaturesPane"
 
 Private mAppInstanceConfig                          As ConfigurationSection
 
-'Private mMouseDown                                  As Boolean
-'Private mLeftAtMousedown                            As Single
-'Private mTopAtMouseDown                             As Single
-'Private mMouseXAtMousedown                          As Single
-'Private mMouseYAtMouseDown                          As Single
-
 Private mTheme                                      As ITheme
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-'Private Sub Form_Activate()
-'Const ProcName As String = "Form_Activate"
-'On Error GoTo Err
-'
-'Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLeft, 0)) * Screen.TwipsPerPixelX
-'Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
-'
-'Exit Sub
-'
-'Err:
-'gNotifyUnhandledError ProcName, ModuleName, ProjectName
-'End Sub
 
 Private Sub Form_Deactivate()
 Const ProcName As String = "Form_Deactivate"
@@ -157,58 +145,37 @@ End Property
 ' Controls Event Handlers
 '@================================================================================
 
-Private Sub FeaturesPanel_Hide()
-Const ProcName As String = "FeaturesPanel_Hide"
-On Error GoTo Err
-
-RaiseEvent Hide
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
+Private Sub FeaturesPanel_ConfigsChanged()
+RaiseEvent ConfigsChanged
 End Sub
 
-'Private Sub FeaturesPanel_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
-'Const ProcName As String = "FeaturesPanel_MouseDown"
-'On Error GoTo Err
-'
-'mMouseDown = True
-'mLeftAtMousedown = Me.Left
-'mTopAtMouseDown = Me.Top
-'mMouseXAtMousedown = x
-'mMouseYAtMouseDown = y
-'
-'Exit Sub
-'
-'Err:
-'gNotifyUnhandledError ProcName, ModuleName
-'End Sub
+Private Sub FeaturesPanel_Hide()
+RaiseEvent Hide
+End Sub
 
-'Private Sub FeaturesPanel_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
-'Const ProcName As String = "FeaturesPanel_MouseMove"
-'On Error GoTo Err
-'
-''If mMouseDown Then moveMe x, y
-'
-'Exit Sub
-'
-'Err:
-'gNotifyUnhandledError ProcName, ModuleName
-'End Sub
+Private Sub FeaturesPanel_HistContractSearchCancelled()
+RaiseEvent HistContractSearchCancelled
+End Sub
 
-'Private Sub FeaturesPanel_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
-'Const ProcName As String = "FeaturesPanel_MouseUp"
-'On Error GoTo Err
-'
-'If mMouseDown Then moveMe x, y
-'mMouseDown = False
-'
-'Exit Sub
-'
-'Err:
-'gNotifyUnhandledError ProcName, ModuleName
-'End Sub
+Private Sub FeaturesPanel_HistContractSearchCleared()
+RaiseEvent HistContractSearchCleared
+End Sub
+
+Private Sub FeaturesPanel_HistContractsLoaded(ByVal pContracts As IContracts)
+RaiseEvent HistContractsLoaded(pContracts)
+End Sub
+
+Private Sub FeaturesPanel_LiveContractSearchCancelled()
+RaiseEvent LiveContractSearchCancelled
+End Sub
+
+Private Sub FeaturesPanel_LiveContractSearchCleared()
+RaiseEvent LiveContractSearchCleared
+End Sub
+
+Private Sub FeaturesPanel_LiveContractsLoaded(ByVal pContracts As IContracts)
+RaiseEvent LiveContractsLoaded(pContracts)
+End Sub
 
 Private Sub FeaturesPanel_Pin()
 Const ProcName As String = "FeaturesPanel_Pin"
@@ -254,6 +221,54 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub CancelHistContractSearch()
+Const ProcName As String = "CancelHistContractSearch"
+On Error GoTo Err
+
+FeaturesPanel.CancelHistContractSearch
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub CancelLiveContractSearch()
+Const ProcName As String = "CancelLiveContractSearch"
+On Error GoTo Err
+
+FeaturesPanel.CancelLiveContractSearch
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub ClearHistContractSearch()
+Const ProcName As String = "ClearHistContractSearch"
+On Error GoTo Err
+
+FeaturesPanel.ClearHistContractSearch
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ClearLiveContractSearch()
+Const ProcName As String = "ClearLiveContractSearch"
+On Error GoTo Err
+
+FeaturesPanel.ClearLiveContractSearch
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
@@ -293,21 +308,60 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub LoadHistContractsForUserChoice( _
+                ByVal pContracts As IContracts)
+Const ProcName As String = "LoadHistContractsForUserChoice"
+On Error GoTo Err
+
+FeaturesPanel.LoadHistContractsForUserChoice pContracts
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub LoadLiveContractsForUserChoice( _
+                ByVal pContracts As IContracts, _
+                ByVal pPreferredTickerGridIndex)
+Const ProcName As String = "LoadLiveContractsForUserChoice"
+On Error GoTo Err
+
+FeaturesPanel.LoadLiveContractsForUserChoice pContracts, pPreferredTickerGridIndex
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetupCurrentConfigCombo()
+Const ProcName As String = "SetupCurrentConfigCombo"
+On Error GoTo Err
+
+FeaturesPanel.SetupCurrentConfigCombo
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ShowTickersPane()
+Const ProcName As String = "ShowTickersPane"
+On Error GoTo Err
+
+FeaturesPanel.ShowTickersPane
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-'Private Sub moveMe(ByVal x As Single, ByVal y As Single)
-'Const ProcName As String = "moveMe"
-'On Error GoTo Err
-'
-'Me.Move mLeftAtMousedown + x - mMouseXAtMousedown, mTopAtMouseDown + y - mMouseYAtMouseDown
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
 
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
