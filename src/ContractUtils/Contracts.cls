@@ -396,6 +396,8 @@ Private Sub setSortKeys( _
 Const ProcName As String = "setSortKeys"
 On Error GoTo Err
 
+If sortKeysEqual(mSortKeys, Value) Then Exit Sub
+
 If UBound(Value) < 0 Then
     ReDim mSortKeys(0) As ContractSortKeyIds
     mSortKeys(0) = ContractSortKeyNone
@@ -420,4 +422,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
                 
+Private Function sortKeysEqual( _
+                ByRef pKeys1() As ContractSortKeyIds, _
+                ByRef pKeys2() As ContractSortKeyIds) As Boolean
+Const ProcName As String = "sortKeysEqual"
+On Error GoTo Err
 
+If UBound(pKeys1) < 0 And UBound(pKeys2) < 0 Then
+    sortKeysEqual = True
+ElseIf UBound(pKeys1) <> UBound(pKeys2) Then
+    sortKeysEqual = False
+Else
+    sortKeysEqual = True
+    Dim i As Long
+    For i = 0 To UBound(pKeys1)
+        If pKeys1(i) <> pKeys2(i) Then
+            sortKeysEqual = False
+            Exit For
+        End If
+    Next
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
