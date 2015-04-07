@@ -437,12 +437,13 @@ Private Function convertTwsDateStringToTimestamp(ByVal pTwsDateString As String)
 Const ProcName As String = "convertTwsDateStringToTimestamp"
 On Error GoTo Err
 
-'convertTwsDateStringToTimestamp = ConvertDateUTCToTZ( _
-'                                        ConvertDateTzToUTC(TwsDateStringToDate(pTwsDateString), mTwsTimezone), _
-'                                        mTargetTimezone)
-convertTwsDateStringToTimestamp = ConvertDateUTCToTZ( _
-                                        ConvertDateLocalToUTC(TwsDateStringToDate(pTwsDateString)), _
-                                        mTargetTimezone)
+If Len(pTwsDateString) = Len("YYYYMMDD") Then
+    convertTwsDateStringToTimestamp = TwsDateStringToDate(pTwsDateString)
+Else
+    convertTwsDateStringToTimestamp = ConvertDateUTCToTZ( _
+                                            ConvertDateLocalToUTC(TwsDateStringToDate(pTwsDateString)), _
+                                            mTargetTimezone)
+End If
 
 Exit Function
 
