@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -278,6 +278,7 @@ Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
 ReDim mTickerTable(TickerTableEntriesInitial - 1) As TickerTableEntry
+setupColumnMap TickerGridColumns.MaxColumn
 
 calcAverageCharacterWidths UserControl.Font
 
@@ -1994,6 +1995,10 @@ TickerGrid.Redraw = True
 
 loadColumnMap
 
+' adjust columns to take account of column map
+setupDefaultTickerGridColumns
+setupDefaultTickerGridHeaders
+
 If mConfig.GetSetting(ConfigSettingPositiveChangeBackColor) <> "" Then mPositiveChangeBackColor = mConfig.GetSetting(ConfigSettingPositiveChangeBackColor)
 If mConfig.GetSetting(ConfigSettingPositiveChangeForeColor) <> "" Then mPositiveChangeForeColor = mConfig.GetSetting(ConfigSettingPositiveChangeForeColor)
 If mConfig.GetSetting(ConfigSettingNegativeChangeBackColor) <> "" Then mNegativeChangeBackColor = mConfig.GetSetting(ConfigSettingNegativeChangeBackColor)
@@ -2909,7 +2914,7 @@ Private Sub setColumnWidth( _
 Const ProcName As String = "setColumnWidth"
 On Error GoTo Err
 
-TickerGrid.ColWidth(mColumnMap(pCol)) = IIf(isLetters, mLetterWidth, mDigitWidth) * widthChars
+TickerGrid.ColWidth(pCol) = IIf(isLetters, mLetterWidth, mDigitWidth) * widthChars
 
 Exit Sub
 
@@ -3088,8 +3093,6 @@ On Error GoTo Err
 
 gLogger.Log "Setting up default ticker grid columns", ProcName, ModuleName, LogLevelDetail
 
-setupColumnMap TickerGridColumns.MaxColumn
-
 TickerGrid.Redraw = False
 
 setupTickerGridColumn TickerGridColumns.Selector, TickerGridColumnWidths.SelectorWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
@@ -3132,31 +3135,31 @@ Private Sub setupDefaultTickerGridHeaders()
 Const ProcName As String = "setupDefaultTickerGridHeaders"
 On Error GoTo Err
 
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Selector)) = ""
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.TickerName)) = "Name"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.CurrencyCode)) = "Curr"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.BidSize)) = "Bid Size"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Bid)) = "Bid"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Ask)) = "Ask"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.AskSize)) = "Ask Size"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Trade)) = "Last"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.TradeSize)) = "Last Size"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Volume)) = "Volume"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Change)) = "Chg"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.ChangePercent)) = "Chg %"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.HighPrice)) = "High"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.LowPrice)) = "Low"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.OpenPrice)) = "Open"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.ClosePrice)) = "Close"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.OpenInterest)) = "Open interest"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Description)) = "Description"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Symbol)) = "Symbol"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.secType)) = "Sec Type"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Expiry)) = "Expiry"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Exchange)) = "Exchange"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.OptionRight)) = "Right"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Strike)) = "Strike"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.ErrorText)) = "Error message"
+setupTickerGridHeader TickerGridColumns.Selector, ""
+setupTickerGridHeader TickerGridColumns.TickerName, "Name"
+setupTickerGridHeader TickerGridColumns.CurrencyCode, "Curr"
+setupTickerGridHeader TickerGridColumns.BidSize, "Bid Size"
+setupTickerGridHeader TickerGridColumns.Bid, "Bid"
+setupTickerGridHeader TickerGridColumns.Ask, "Ask"
+setupTickerGridHeader TickerGridColumns.AskSize, "Ask Size"
+setupTickerGridHeader TickerGridColumns.Trade, "Last"
+setupTickerGridHeader TickerGridColumns.TradeSize, "Last Size"
+setupTickerGridHeader TickerGridColumns.Volume, "Volume"
+setupTickerGridHeader TickerGridColumns.Change, "Chg"
+setupTickerGridHeader TickerGridColumns.ChangePercent, "Chg %"
+setupTickerGridHeader TickerGridColumns.HighPrice, "High"
+setupTickerGridHeader TickerGridColumns.LowPrice, "Low"
+setupTickerGridHeader TickerGridColumns.OpenPrice, "Open"
+setupTickerGridHeader TickerGridColumns.ClosePrice, "Close"
+setupTickerGridHeader TickerGridColumns.OpenInterest, "Open interest"
+setupTickerGridHeader TickerGridColumns.Description, "Description"
+setupTickerGridHeader TickerGridColumns.Symbol, "Symbol"
+setupTickerGridHeader TickerGridColumns.secType, "Sec Type"
+setupTickerGridHeader TickerGridColumns.Expiry, "Expiry"
+setupTickerGridHeader TickerGridColumns.Exchange, "Exchange"
+setupTickerGridHeader TickerGridColumns.OptionRight, "Right"
+setupTickerGridHeader TickerGridColumns.Strike, "Strike"
+setupTickerGridHeader TickerGridColumns.ErrorText, "Error message"
 
 Exit Sub
 
@@ -3211,19 +3214,19 @@ Private Sub setupSummaryTickerGridHeaders()
 Const ProcName As String = "setupSummaryTickerGridHeaders"
 On Error GoTo Err
 
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Selector)) = ""
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.TickerName)) = "Name"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.BidSize)) = "Bid Size"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Bid)) = "Bid"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Ask)) = "Ask"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.AskSize)) = "Ask Size"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Trade)) = "Last"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.TradeSize)) = "Last Size"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Volume)) = "Volume"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Change)) = "Chg"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.ChangePercent)) = "Chg %"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.OpenInterest)) = "Open interest"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.ErrorText)) = "Error message"
+setupTickerGridHeader TickerGridSummaryColumns.Selector, ""
+setupTickerGridHeader TickerGridSummaryColumns.TickerName, "Name"
+setupTickerGridHeader TickerGridSummaryColumns.BidSize, "Bid Size"
+setupTickerGridHeader TickerGridSummaryColumns.Bid, "Bid"
+setupTickerGridHeader TickerGridSummaryColumns.Ask, "Ask"
+setupTickerGridHeader TickerGridSummaryColumns.AskSize, "Ask Size"
+setupTickerGridHeader TickerGridSummaryColumns.Trade, "Last"
+setupTickerGridHeader TickerGridSummaryColumns.TradeSize, "Last Size"
+setupTickerGridHeader TickerGridSummaryColumns.Volume, "Volume"
+setupTickerGridHeader TickerGridSummaryColumns.Change, "Chg"
+setupTickerGridHeader TickerGridSummaryColumns.ChangePercent, "Chg %"
+setupTickerGridHeader TickerGridSummaryColumns.OpenInterest, "Open interest"
+setupTickerGridHeader TickerGridSummaryColumns.ErrorText, "Error message"
 
 Exit Sub
 
@@ -3240,6 +3243,8 @@ Private Sub setupTickerGridColumn( _
 Const ProcName As String = "setupTickerGridColumn"
 On Error GoTo Err
 
+columnNumber = mColumnMap(columnNumber)
+
 With TickerGrid
     
     If (columnNumber + 1) > .Cols Then
@@ -3254,6 +3259,20 @@ With TickerGrid
     .ColAlignment(columnNumber) = align
     .ColAlignmentFixed(columnNumber) = TwGridAlignCenterCenter
 End With
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setupTickerGridHeader( _
+                ByVal columnNumber As Long, _
+                ByVal pHeading As String)
+Const ProcName As String = "setupTickerGridHeader"
+On Error GoTo Err
+
+TickerGrid.TextMatrix(0, mColumnMap(columnNumber)) = pHeading
 
 Exit Sub
 

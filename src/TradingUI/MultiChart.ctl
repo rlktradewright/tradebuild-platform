@@ -558,20 +558,27 @@ gApplyTheme mTheme, UserControl.Controls
 ChartSelectorPicture.BackColor = mTheme.ToolbarBackColor
 ChartSelectorPicture.ForeColor = mTheme.TabstripForeColor
 
+Dim failpoint As String
+failpoint = "100"
 Set ChartSelectorToolbar.ImageList = Nothing
 
 Dim i As Long
 For i = 1 To ChartSelectorToolbar.Buttons.Count
     Dim lButtonInfo As TWButtonInfo
+    failpoint = "200"
     With ChartSelectorToolbar.Buttons(i)
+        failpoint = "300"
         gCreateButtonInfo lButtonInfo, .Key, .Key, .Style, .value, .ToolTipText, True
+        failpoint = "400"
         gSetButtonImageInImageList ChartSelectorImageList, lButtonInfo, ChartSelectorPicture
     End With
 Next
 
+failpoint = "500"
 Set ChartSelectorToolbar.ImageList = ChartSelectorImageList
         
 For i = 1 To ChartSelectorToolbar.Buttons.Count
+    failpoint = "600"
     With ChartSelectorToolbar.Buttons(i)
         .Image = Empty
         .Image = .Key
@@ -581,7 +588,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, failpoint
 End Property
 
 Public Property Get Theme() As ITheme
