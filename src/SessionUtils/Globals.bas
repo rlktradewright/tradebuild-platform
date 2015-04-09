@@ -63,52 +63,45 @@ Public Function gCalcOffsetSessionTimes( _
                 ByVal pStartTime As Date, _
                 ByVal pEndTime As Date) As SessionTimes
 Const ProcName As String = "gCalcOffsetSessionTimes"
-
 On Error GoTo Err
 
 Dim lDatumSessionTimes As SessionTimes
-Dim lTargetWorkingDayNum As Long
-Dim lTargetDate As Date
-
 lDatumSessionTimes = gCalcSessionTimes(pTimestamp, pStartTime, pEndTime)
 
-If sessionSpansMidnight(pStartTime, pEndTime) Then
-    lTargetWorkingDayNum = WorkingDayNumber(lDatumSessionTimes.StartTime) + pOffset + 1
-    lTargetDate = WorkingDayDate(lTargetWorkingDayNum, Int(pTimestamp))
-    gCalcOffsetSessionTimes.StartTime = lTargetDate - 1 + pStartTime
-    gCalcOffsetSessionTimes.EndTime = lTargetDate + pEndTime
-Else
-    lTargetWorkingDayNum = WorkingDayNumber(lDatumSessionTimes.StartTime) + pOffset
-    lTargetDate = WorkingDayDate(lTargetWorkingDayNum, Int(pTimestamp))
-    gCalcOffsetSessionTimes.StartTime = lTargetDate + pStartTime
-    gCalcOffsetSessionTimes.EndTime = lTargetDate + pEndTime
-End If
+Dim lTargetWorkingDayNum As Long
+lTargetWorkingDayNum = WorkingDayNumber(lDatumSessionTimes.StartTime) + pOffset
+If sessionSpansMidnight(pStartTime, pEndTime) Then lTargetWorkingDayNum = lTargetWorkingDayNum + 1
+
+Dim lTargetDate As Date
+lTargetDate = WorkingDayDate(lTargetWorkingDayNum, Int(lDatumSessionTimes.StartTime))
+
+With gCalcOffsetSessionTimes
+    .StartTime = lTargetDate + pStartTime
+    If sessionSpansMidnight(pStartTime, pEndTime) Then .StartTime = .StartTime - 1
+    .EndTime = lTargetDate + pEndTime
+End With
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-                
 End Function
 
 ' !!!!!!!!!!!!!!!!!!!!!!!!!!!
 ' calcSessionTimes needs to be amended
-' to take acCount of holidays
+' to take account of holidays
 Public Function gCalcSessionTimes( _
                 ByVal pTimestamp As Date, _
                 ByVal pStartTime As Date, _
                 ByVal pEndTime As Date) As SessionTimes
-
-
 Const ProcName As String = "gCalcSessionTimes"
 On Error GoTo Err
-
-Dim lWeekday As VbDayOfWeek
 
 gCalcSessionTimes = gGetSessionTimesIgnoringWeekend(pTimestamp, _
                         pStartTime, _
                         pEndTime)
 
+Dim lWeekday As VbDayOfWeek
 lWeekday = DatePart("w", gCalcSessionTimes.StartTime)
 If sessionSpansMidnight(pStartTime, pEndTime) Then
     ' session DOES span midnight

@@ -91,7 +91,7 @@ Case TimePeriodMinute
 Case TimePeriodHour
     gBarEndTime = startTime + (BarTimePeriod.Length / 24) - OneMicroSecond
 Case TimePeriodDay
-    gBarEndTime = WorkingDayDate(WorkingDayNumber(startTime) + BarTimePeriod.Length, startTime)
+    gBarEndTime = GetOffsetSessionTimes(Timestamp, BarTimePeriod.Length, SessionStartTime, SessionEndTime).startTime
 Case TimePeriodWeek
     gBarEndTime = startTime + 7 * BarTimePeriod.Length
 Case TimePeriodMonth
@@ -104,13 +104,17 @@ Case TimePeriodVolume, _
     gBarEndTime = Timestamp
 End Select
 
-Dim lSessionTimes  As SessionTimes
-
-lSessionTimes = GetSessionTimesIgnoringWeekend(startTime, SessionStartTime, SessionEndTime)
-
-' adjust if bar is at end of session but doesn not fit exactly into session
-If startTime < lSessionTimes.startTime And gBarEndTime > lSessionTimes.startTime Then gBarEndTime = Int(gBarEndTime) + SessionStartTime
-
+Select Case BarTimePeriod.Units
+    Case TimePeriodSecond, _
+            TimePeriodMinute, _
+            TimePeriodHour
+        
+        ' adjust if bar is at end of session but does not fit exactly into session
+        
+        Dim lNextSessionTimes  As SessionTimes
+        lNextSessionTimes = GetOffsetSessionTimes(startTime, 1, SessionStartTime, SessionEndTime)
+        If gBarEndTime > lNextSessionTimes.startTime Then gBarEndTime = lNextSessionTimes.startTime
+End Select
 
 Exit Function
 
@@ -168,18 +172,20 @@ Case TimePeriodHour
                 (60 * BarTimePeriod.Length * Int((theTimeMins - sessionOffset) / (60 * BarTimePeriod.Length)) + _
                     sessionOffset) / 1440
 Case TimePeriodDay
-    Dim workingDayNum As Long
-    If theTime < SessionStartTime Then
+    If theTime < SessionStartTime And SessionStartTime < 0.5 Then
         theDate = theDate - 1
+    ElseIf theTime >= SessionStartTime And SessionStartTime >= 0.5 Then
+        theDate = theDate + 1
     End If
     
     If BarTimePeriod.Length = 1 Then
-        gBarStartTime = theDate + SessionStartTime
+        gBarStartTime = theDate
     Else
+        Dim workingDayNum As Long
         workingDayNum = WorkingDayNumber(theDate)
         
         gBarStartTime = WorkingDayDate(1 + BarTimePeriod.Length * Int((workingDayNum - 1) / BarTimePeriod.Length), _
-                                        theDate) + SessionStartTime
+                                        theDate)
     End If
 Case TimePeriodWeek
     Dim weekNum As Long
