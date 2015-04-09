@@ -155,16 +155,13 @@ For Each lControl In pControls
     Then
         ' nothing for these
     ElseIf TypeOf lControl Is CoolBar Then
-        gLogger.Log "Setting window theme off for " & lControl.Name, ProcName, ModuleName
         Dim lhWnd As Long
         lhWnd = FindWindowEx(lControl.hWnd, 0, "ReBarWindow32", vbNullString)
         If lhWnd = 0 Then lhWnd = lControl.hWnd
-        gLogger.Log "Setting window theme off for &H" & Hex(lhWnd), ProcName, ModuleName
         SetWindowThemeOff lhWnd
         lControl.BackColor = pTheme.CoolbarBackColor
         Dim lBand As Band
         For Each lBand In lControl.Bands
-            gLogger.Log "Setting backcolor for band in " & lControl.Name & " to &h" & Hex(pTheme.CoolbarBackColor), ProcName, ModuleName
             lBand.UseCoolbarColors = False
             lBand.BackColor = pTheme.CoolbarBackColor
         Next
