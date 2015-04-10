@@ -80,19 +80,16 @@ Public Function GetDelayTillNextSubmission(ByRef pReason As String) As Long
 Const ProcName As String = "GetDelayTillNextSubmission"
 On Error GoTo Err
 
+If submittedHistDataRequests.Count < submittedHistDataRequests.CyclicSize Then Exit Function
+    
 Dim lTimestamp As Date
-Dim lEarliestSubmissionTime As Date
-
 lTimestamp = GetTimestamp
-
-If submittedHistDataRequests.Count = submittedHistDataRequests.CyclicSize Then
-    lEarliestSubmissionTime = submittedHistDataRequests.GetSValue(1).Timestamp + TwsHistRequestPeriod
-    If lTimestamp < lEarliestSubmissionTime Then
-        GetDelayTillNextSubmission = ((lEarliestSubmissionTime - lTimestamp) * 86400) * 1000
-        pReason = "overall pacing"
-    Else
-        GetDelayTillNextSubmission = 0
-    End If
+    
+Dim lEarliestSubmissionTime As Date
+lEarliestSubmissionTime = submittedHistDataRequests.GetSValue(1).Timestamp + TwsHistRequestPeriod
+If lTimestamp < lEarliestSubmissionTime Then
+    GetDelayTillNextSubmission = ((lEarliestSubmissionTime - lTimestamp) * 86400) * 1000
+    pReason = "overall pacing"
 Else
     GetDelayTillNextSubmission = 0
 End If
@@ -132,19 +129,19 @@ Public Function RecordSubmission(ByRef pRequest As TwsHistoricalDataRequest) As 
 Const ProcName As String = "RecordSubmission"
 On Error GoTo Err
 
-Dim lTimestamp As Date
-Dim lKey As String
 
+Dim lTimestamp As Date
 lTimestamp = GetTimestamp
 
 submittedHistDataRequests.AddValue pRequest, 0, lTimestamp, 0
 
+Dim lKey As String
 lKey = historicalDataRequestToString(pRequest)
 On Error Resume Next
 requestTimes.Remove lKey
 On Error GoTo Err
 
-requestTimes.Add pRequest, lKey
+requestTimes.Add lTimestamp, lKey
 
 Dim lCache As ValueCache
 
@@ -180,11 +177,10 @@ Private Function getContractAndTickTypeCache(ByRef pRequest As TwsHistoricalData
 Const ProcName As String = "getContractAndTickTypeCache"
 On Error GoTo Err
 
-Dim lCache As ValueCache
 Dim lKey As String
-
 lKey = contractAndTickTypeToString(pRequest)
 
+Dim lCache As ValueCache
 On Error Resume Next
 Set lCache = requestTimesForContractAndTickType(lKey)
 On Error GoTo Err
@@ -207,7 +203,6 @@ Const ProcName As String = "getEarliestTimeForContractAndTickType"
 On Error GoTo Err
 
 Dim lCache As ValueCache
-
 Set lCache = getContractAndTickTypeCache(pRequest)
 
 If lCache.Count = lCache.CyclicSize Then

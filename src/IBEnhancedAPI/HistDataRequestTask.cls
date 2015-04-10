@@ -738,6 +738,7 @@ Case BarTypes.BarTypeTrade
 Case Else
 End Select
 
+If Left$(pTwsRequest.Duration, 2) = "0 " Then pTwsRequest.Duration = ""
 generateTwsHistoricalDataRequest = (pTwsRequest.Duration <> "")
 
 Exit Function

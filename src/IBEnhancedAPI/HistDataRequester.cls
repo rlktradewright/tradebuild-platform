@@ -75,10 +75,14 @@ Attribute mTwsAPI.VB_VarHelpID = -1
 
 Private mRequests()                                 As HistoricalDataRequestTableEntry
 Private mRequestsIndex                              As Long
+
 Private mFirstFreeRequestsEntry                     As Long
+
 Private mFirstPendingRequestsEntry                  As Long
 Private mLastPendingRequestsEntry                   As Long
-Private mLastPriorityPendingRequestsEntry           As Long
+
+Private mFirstPendingPriorityRequestsEntry          As Long
+Private mLastPendingPriorityRequestsEntry           As Long
 
 Private mTaskContext                                As TaskContext
 
@@ -96,8 +100,9 @@ Private Sub Class_Initialize()
 ReDim mRequests(7) As HistoricalDataRequestTableEntry
 mFirstFreeRequestsEntry = NullIndex
 mFirstPendingRequestsEntry = NullIndex
+mFirstPendingPriorityRequestsEntry = NullIndex
 mLastPendingRequestsEntry = NullIndex
-mLastPriorityPendingRequestsEntry = NullIndex
+mLastPendingPriorityRequestsEntry = NullIndex
 End Sub
 
 '@================================================================================
@@ -467,18 +472,58 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function removeEntry( _
+                ByVal pIndex As Long, _
+                ByRef pFirstQueueIndex As Long, _
+                ByRef pLastQueueIndex As Long) As Boolean
+Dim lIndex As Long
+lIndex = pFirstQueueIndex
+
+Dim lPrevIndex As Long
+lPrevIndex = NullIndex
+
+Do While lIndex <> pIndex And lIndex <> NullIndex
+    lPrevIndex = lIndex
+    lIndex = mRequests(lIndex).Next
+Loop
+
+If lIndex <> NullIndex Then
+    If lIndex = pFirstQueueIndex Then pFirstQueueIndex = mRequests(lIndex).Next
+    If lIndex = pLastQueueIndex Then pLastQueueIndex = lPrevIndex
+    
+    If lPrevIndex <> NullIndex Then mRequests(lPrevIndex).Next = mRequests(lIndex).Next
+End If
+removeEntry = (lIndex <> NullIndex)
+End Function
+
 Private Function getDelayTillEarliestSubmission(ByRef pReason As String) As Long
 Const ProcName As String = "getDelayTillEarliestSubmission"
 On Error GoTo Err
 
-Dim lCurrIndex As Long
-Dim lTimestamp As Date
-Dim lEarliest As Date
-Dim lEarliestReason As String
+getDelayTillEarliestSubmission = getDelayTillEarliestSubmissionInQueue(pReason, mFirstPendingPriorityRequestsEntry)
 
+If getDelayTillEarliestSubmission = 0 Then getDelayTillEarliestSubmission = getDelayTillEarliestSubmissionInQueue(pReason, mFirstPendingRequestsEntry)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getDelayTillEarliestSubmissionInQueue(ByRef pReason As String, ByVal pFirstPendingEntry As Long) As Long
+Const ProcName As String = "getDelayTillEarliestSubmissionInQueue"
+On Error GoTo Err
+
+Dim lTimestamp As Date
 lTimestamp = GetTimestamp
+
+Dim lEarliest As Date
 lEarliest = MaxDate
-lCurrIndex = mFirstPendingRequestsEntry
+
+Dim lCurrIndex As Long
+lCurrIndex = pFirstPendingEntry
+
+Dim lEarliestReason As String
 
 Do While lCurrIndex <> NullIndex
     setEarliestSubmissionTime lCurrIndex
@@ -491,7 +536,7 @@ Loop
 
 If lEarliest <> MaxDate And lEarliest <> 0# Then
     pReason = lEarliestReason
-    getDelayTillEarliestSubmission = (lEarliest - lTimestamp) * 86400# * 1000#
+    getDelayTillEarliestSubmissionInQueue = (lEarliest - lTimestamp) * 86400# * 1000#
 End If
 
 Exit Function
@@ -500,34 +545,39 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getReadyRequestIndexes() As Long()
- Const ProcName As String = "getReadyRequestIndexes"
+Private Function getNextReadyRequest() As Long
+Const ProcName As String = "getNextReadyRequest"
 On Error GoTo Err
 
-Dim lCurrIndex As Long
+getNextReadyRequest = getNextReadyRequestFromQueue(mFirstPendingPriorityRequestsEntry)
+If getNextReadyRequest = NullIndex Then getNextReadyRequest = getNextReadyRequestFromQueue(mFirstPendingRequestsEntry)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getNextReadyRequestFromQueue(ByVal pFirstPendingEntry As Long) As Long
+Const ProcName As String = "getNextReadyRequestFromQueue"
+On Error GoTo Err
+
+getNextReadyRequestFromQueue = NullIndex
+
 Dim lTimestamp As Date
-
-ReDim lRequestIndexes(3) As Long
-Dim lRequestIndexesIndex As Long
-
-lRequestIndexes(0) = NullIndex  ' ensure the array has at least one entry
-
 lTimestamp = GetTimestamp
-lCurrIndex = mFirstPendingRequestsEntry
+
+Dim lCurrIndex As Long
+lCurrIndex = pFirstPendingEntry
 
 Do While lCurrIndex <> NullIndex
     setEarliestSubmissionTime lCurrIndex
     If mRequests(lCurrIndex).EarliestSubmissionTime <= lTimestamp Then
-        lRequestIndexesIndex = lRequestIndexesIndex + 1
-        If lRequestIndexesIndex > UBound(lRequestIndexes) Then ReDim Preserve lRequestIndexes(2 * (UBound(lRequestIndexes) + 1) - 1) As Long
-        lRequestIndexes(lRequestIndexesIndex) = lCurrIndex
+        getNextReadyRequestFromQueue = lCurrIndex
+        Exit Do
     End If
     lCurrIndex = mRequests(lCurrIndex).Next
 Loop
-
-ReDim Preserve lRequestIndexes(lRequestIndexesIndex) As Long
-
-getReadyRequestIndexes = lRequestIndexes
 
 Exit Function
 
@@ -540,19 +590,10 @@ Const ProcName As String = "queueEntry"
 On Error GoTo Err
 
 If pPriority Then
-    If mFirstPendingRequestsEntry = NullIndex Then
-        mFirstPendingRequestsEntry = pIndex
-        mLastPendingRequestsEntry = pIndex
-        mRequests(pIndex).Next = NullIndex
-    ElseIf mLastPriorityPendingRequestsEntry = NullIndex Then
-        mRequests(pIndex).Next = mFirstPendingRequestsEntry
-        mFirstPendingRequestsEntry = pIndex
-    Else
-        If mLastPendingRequestsEntry = mLastPriorityPendingRequestsEntry Then mLastPendingRequestsEntry = pIndex
-        mRequests(pIndex).Next = mRequests(mLastPriorityPendingRequestsEntry).Next
-        mRequests(mLastPriorityPendingRequestsEntry).Next = pIndex
-    End If
-    mLastPriorityPendingRequestsEntry = pIndex
+    If mFirstPendingPriorityRequestsEntry = NullIndex Then mFirstPendingPriorityRequestsEntry = pIndex
+    If mLastPendingPriorityRequestsEntry <> NullIndex Then mRequests(mLastPendingPriorityRequestsEntry).Next = pIndex
+    mLastPendingPriorityRequestsEntry = pIndex
+    mRequests(mLastPendingPriorityRequestsEntry).Next = NullIndex
 Else
     If mFirstPendingRequestsEntry = NullIndex Then mFirstPendingRequestsEntry = pIndex
     If mLastPendingRequestsEntry <> NullIndex Then mRequests(mLastPendingRequestsEntry).Next = pIndex
@@ -562,11 +603,18 @@ End If
 
 mRequests(pIndex).State = StateRequestQueued
 
-gLog "Queue entry " & pIndex & _
-            "; FirstEntry=" & mFirstPendingRequestsEntry & _
-            "; LastEntry=" & mLastPendingRequestsEntry & _
-            "; LastPriorityEntry=" & mLastPriorityPendingRequestsEntry, _
-            ModuleName, ProcName, , LogLevelDetail
+If pPriority Then
+    gLog "Queue priority entry " & pIndex & _
+                "; FirstPriorityEntry=" & mFirstPendingPriorityRequestsEntry & _
+                "; LastPriorityEntry=" & mLastPendingPriorityRequestsEntry, _
+                ModuleName, ProcName, , LogLevelDetail
+Else
+    gLog "Queue entry " & pIndex & _
+                "; FirstEntry=" & mFirstPendingRequestsEntry & _
+                "; LastEntry=" & mLastPendingRequestsEntry, _
+                ModuleName, ProcName, , LogLevelDetail
+End If
+
 Exit Sub
 
 Err:
@@ -599,19 +647,26 @@ Private Sub schedulePaced()
 Const ProcName As String = "schedulePaced"
 On Error GoTo Err
 
-Dim lDelay As Long
 Dim lReason As String
-
+Dim lDelay As Long
 lDelay = mPacer.GetDelayTillNextSubmission(lReason)
 
 If lDelay = 0 Then
-    lDelay = submitEntries(getReadyRequestIndexes, lReason)
+    Dim lIndex As Long
+    lIndex = getNextReadyRequest
+    If lIndex <> NullIndex Then
+        submitEntry lIndex
+        Exit Sub
+    End If
+
+    lDelay = mPacer.GetDelayTillNextSubmission(lReason)
     If lDelay = 0 Then lDelay = getDelayTillEarliestSubmission(lReason)
-    If lDelay = 0 Then lDelay = -1
 End If
     
-If lDelay <> -1 Then gLog "Delay till next request (millisecs): " & lDelay & ": " & lReason, ModuleName, ProcName
-mTaskContext.Suspend lDelay
+If lDelay <> 0 Then
+    gLog "Delay till next request (millisecs): " & lDelay & ": " & lReason, ModuleName, ProcName
+    mTaskContext.Suspend lDelay
+End If
 
 Exit Sub
 
@@ -663,28 +718,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function submitEntries(ByRef pIndexes() As Long, ByRef pReason As String) As Long
-Const ProcName As String = "submitEntries"
-On Error GoTo Err
-
-Dim i As Long: i = 1    ' first index in pIndexes is always NullIndex
-Dim lDelay As Long
-
-Do While lDelay = 0 And i <= UBound(pIndexes) And mConcurrentHistDataRequests < MaxConcurrentHistDataRequests
-    submitEntry pIndexes(i)
-    mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
-    lDelay = mPacer.GetDelayTillNextSubmission(pReason)
-    i = i + 1
-Loop
-
-submitEntries = lDelay
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Sub submitEntry(ByVal pIndex As Long)
 Const ProcName As String = "submitEntry"
 On Error GoTo Err
@@ -693,6 +726,8 @@ mTwsAPI.RequestHistoricalData pIndex, mRequests(pIndex).Request
 mRequests(pIndex).ActualSubmissionTime = mPacer.RecordSubmission(mRequests(pIndex).Request)
 mRequests(pIndex).State = StateRequestInProgress
 unqueueEntry pIndex
+
+mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
 
 Exit Sub
 
@@ -704,30 +739,22 @@ Private Sub unqueueEntry(ByVal pIndex As Long)
 Const ProcName As String = "unqueueEntry"
 On Error GoTo Err
 
-Dim lIndex As Long
-Dim lPrevIndex As Long
+Assert (mFirstPendingRequestsEntry <> NullIndex And mLastPendingRequestsEntry <> NullIndex) Or _
+    (mFirstPendingPriorityRequestsEntry <> NullIndex And mLastPendingPriorityRequestsEntry <> NullIndex), "No pending entries"
 
-Assert mFirstPendingRequestsEntry <> NullIndex And mLastPendingRequestsEntry <> NullIndex, "No pending entries"
-
-lIndex = mFirstPendingRequestsEntry
-lPrevIndex = NullIndex
-Do While lIndex <> pIndex
-    lPrevIndex = lIndex
-    lIndex = mRequests(lIndex).Next
-    Assert lIndex <> NullIndex, "Can't find entry to be removed"
-Loop
-
-If lIndex = mFirstPendingRequestsEntry Then mFirstPendingRequestsEntry = mRequests(lIndex).Next
-If lIndex = mLastPendingRequestsEntry Then mLastPendingRequestsEntry = lPrevIndex
-If lIndex = mLastPriorityPendingRequestsEntry Then mLastPriorityPendingRequestsEntry = lPrevIndex
-
-If lPrevIndex <> NullIndex Then mRequests(lPrevIndex).Next = mRequests(lIndex).Next
-
-gLogger.Log "Unqueue entry " & pIndex & _
-            "; FirstEntry=" & mFirstPendingRequestsEntry & _
-            "; LastEntry=" & mLastPendingRequestsEntry & _
-            "; LastPriorityEntry=" & mLastPriorityPendingRequestsEntry, _
-            ProcName, ModuleName, LogLevelMediumDetail
+If removeEntry(pIndex, mFirstPendingPriorityRequestsEntry, mLastPendingPriorityRequestsEntry) Then
+    gLogger.Log "Unqueue priority entry " & pIndex & _
+                "; FirstPriorityEntry=" & mFirstPendingPriorityRequestsEntry & _
+                "; LastPriorityEntry=" & mLastPendingPriorityRequestsEntry, _
+                ProcName, ModuleName, LogLevelMediumDetail
+ElseIf removeEntry(pIndex, mFirstPendingRequestsEntry, mLastPendingRequestsEntry) Then
+    gLogger.Log "Unqueue entry " & pIndex & _
+                "; FirstEntry=" & mFirstPendingRequestsEntry & _
+                "; LastEntry=" & mLastPendingRequestsEntry, _
+                ProcName, ModuleName, LogLevelMediumDetail
+Else
+    Assert False, "Entry not found"
+End If
             
 Exit Sub
 
