@@ -109,14 +109,14 @@ On Error GoTo Err
 pReason = ""
 
 GetEarliestSubmissionTime = getEarliestTimeForIdenticalRequest(pRequest)
-If GetEarliestSubmissionTime <> 0 Then pReason = "identical request"
+If GetEarliestSubmissionTime <> 0 Then pReason = "identical request: " & historicalDataRequestToString(pRequest)
 
 Dim lContractTime As Date
 lContractTime = getEarliestTimeForContractAndTickType(pRequest)
 
 If lContractTime > GetEarliestSubmissionTime Then
     GetEarliestSubmissionTime = lContractTime
-    pReason = "same contract and tick type"
+    pReason = "same contract and tick type: " & historicalDataRequestToString(pRequest)
 End If
 
 Exit Function

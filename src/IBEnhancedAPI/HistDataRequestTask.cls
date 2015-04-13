@@ -513,6 +513,39 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function generateRequestEndTime(ByVal pWorkingBarSpecifier As BarDataSpecifier, _
+                ByVal pSessionStartTime As Date, _
+                ByVal pSessionEndTime As Date) As String
+Const ProcName As String = "generateRequestEndTime"
+On Error GoTo Err
+
+Dim lEndTime As Date
+lEndTime = ConvertDateUTCToLocal( _
+                ConvertDateTzToUTC( _
+                    normaliseTime( _
+                        pWorkingBarSpecifier.ToDate, _
+                        pSessionStartTime, _
+                        pSessionEndTime, _
+                        pWorkingBarSpecifier.IncludeBarsOutsideSession), _
+                    mTargetTimezone))
+
+Select Case pWorkingBarSpecifier.BarTimePeriod.Units
+Case TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear
+    lEndTime = Int(lEndTime) - 1
+End Select
+
+generateRequestEndTime = Format(lEndTime, "yyyymmdd hh\:nn\:ss")
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+
 Private Function generateTwsHistoricalDataRequest( _
                 ByRef pTwsRequest As TwsHistoricalDataRequest, _
                 ByVal pWorkingBarSpecifier As BarDataSpecifier, _
@@ -563,8 +596,7 @@ Set pTwsRequest.Contract = mTwsContractDetails.Summary
 '                   52 W
 '                   1 Y
  
-pTwsRequest.EndDateTime = Format(ConvertDateUTCToLocal(ConvertDateTzToUTC(normaliseTime(pWorkingBarSpecifier.ToDate, pSessionStartTime, pSessionEndTime, pWorkingBarSpecifier.IncludeBarsOutsideSession), mTargetTimezone)), _
-                                "yyyymmdd hh\:nn\:ss")
+pTwsRequest.EndDateTime = generateRequestEndTime(pWorkingBarSpecifier, pSessionStartTime, pSessionEndTime)
 
 With pWorkingBarSpecifier
     Dim numBarsInsession As Long
@@ -598,7 +630,6 @@ With pWorkingBarSpecifier
             pTwsRequest.Duration = permittedHistDays(.ToDate, 34) & " D"
         End If
     Case TimePeriodUnits.TimePeriodMinute
-        
         numBarsInsession = NumberOfBarsInSession(.BarTimePeriod, pSessionStartTime, pSessionEndTime)
         
         Select Case .BarTimePeriod.Length
@@ -660,6 +691,7 @@ With pWorkingBarSpecifier
         End Select
     Case TimePeriodUnits.TimePeriodMonth
         pTwsRequest.BarSizeSetting = "1 day"
+        pTwsRequest.EndDateTime = Int(pTwsRequest.EndDateTime)
         If .MaxNumberOfBars <= 12 Then
             pTwsRequest.Duration = permittedHistMonths(.ToDate, .MaxNumberOfBars) & " M"
         Else
@@ -670,7 +702,6 @@ With pWorkingBarSpecifier
             End If
         End If
     Case TimePeriodUnits.TimePeriodSecond
-        
         numBarsInsession = NumberOfBarsInSession(.BarTimePeriod, pSessionStartTime, pSessionEndTime)
         
         Select Case .BarTimePeriod.Length
@@ -705,6 +736,7 @@ With pWorkingBarSpecifier
         End Select
     Case TimePeriodUnits.TimePeriodWeek
         pTwsRequest.BarSizeSetting = "1 day"
+        pTwsRequest.EndDateTime = Int(pTwsRequest.EndDateTime)
         If .MaxNumberOfBars <= 52 Then
             pTwsRequest.Duration = permittedHistWeeks(.ToDate, .MaxNumberOfBars) & " W"
         Else
@@ -965,6 +997,7 @@ On Error GoTo Err
 
 permittedHistDays = DateDiff("d", DateAdd("yyyy", -1, Now), reqEndDate)
 If permittedHistDays > desiredBars Then permittedHistDays = desiredBars
+If permittedHistDays < 0 Then permittedHistDays = 0
 
 Exit Function
 
@@ -980,6 +1013,7 @@ On Error GoTo Err
 
 permittedHistMonths = DateDiff("m", DateAdd("m", 1, DateAdd("yyyy", -1, Now)), reqEndDate)
 If permittedHistMonths > desiredBars Then permittedHistMonths = desiredBars
+If permittedHistMonths < 0 Then permittedHistMonths = 0
 
 Exit Function
 
@@ -997,6 +1031,7 @@ On Error GoTo Err
 
 permittedHistSeconds = DateDiff("s", DateAdd("yyyy", -1, Now), reqEndDate) + 86398
 If permittedHistSeconds > desiredBars Then permittedHistSeconds = desiredBars
+If permittedHistSeconds < 0 Then permittedHistSeconds = 0
 
 Exit Function
 
@@ -1012,6 +1047,7 @@ On Error GoTo Err
 
 permittedHistWeeks = DateDiff("w", DateAdd("w", 1, DateAdd("yyyy", -1, Now)), reqEndDate)
 If permittedHistWeeks > desiredBars Then permittedHistWeeks = desiredBars
+If permittedHistWeeks < 0 Then permittedHistWeeks = 0
 
 Exit Function
 
