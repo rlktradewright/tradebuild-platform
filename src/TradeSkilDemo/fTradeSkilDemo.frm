@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#288.7#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#289.1#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
@@ -190,6 +190,8 @@ Private WithEvents mOrderRecoveryFutureWaiter       As FutureWaiter
 Attribute mOrderRecoveryFutureWaiter.VB_VarHelpID = -1
 Private WithEvents mContractsFutureWaiter           As FutureWaiter
 Attribute mContractsFutureWaiter.VB_VarHelpID = -1
+Private WithEvents mChartsCreationFutureWaiter      As FutureWaiter
+Attribute mChartsCreationFutureWaiter.VB_VarHelpID = -1
 
 Private mChartForms                                 As New ChartForms
 
@@ -212,6 +214,7 @@ Private Sub Form_Initialize()
 InitialiseCommonControls
 Set mOrderRecoveryFutureWaiter = New FutureWaiter
 Set mContractsFutureWaiter = New FutureWaiter
+Set mChartsCreationFutureWaiter = New FutureWaiter
 End Sub
 
 Private Sub Form_Load()
@@ -583,10 +586,26 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
+' mChartsCreationFutureWaiter Event Handlers
+'================================================================================
+
+Private Sub mChartsCreationFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mChartsCreationFutureWaiter_WaitAllCompleted"
+On Error GoTo Err
+
+loadAppInstanceCompletion
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
 ' mContractsFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub mContractsFutureWaiter_WaitCompleted(ev As TWUtilities40.FutureWaitCompletedEventData)
+Private Sub mContractsFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mContractsFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
@@ -790,12 +809,6 @@ ElseIf ev.Future.IsAvailable Then
     
     LogMessage "Order recovery completed    "
     loadAppInstanceConfig
-    
-    Me.Show vbModeless
-    If Not mFeaturesPanelPinned And Not mFeaturesPanelHidden Then mFeaturesPanelForm.Show vbModeless, Me
-    If Not mInfoPanelPinned And Not mInfoPanelHidden Then mInfoPanelForm.Show vbModeless, Me
-
-    gUnloadSplashScreen
     
 End If
 
@@ -1113,16 +1126,26 @@ LogMessage "Loading configuration: loading default study configurations"
 LoadDefaultStudyConfigurationsFromConfig mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionDefaultStudyConfigs)
 
 LogMessage "Loading configuration: creating charts"
-startCharts
+mChartsCreationFutureWaiter.Add startCharts
 
 LogMessage "Loading configuration: creating historical charts"
-startHistoricalCharts
+mChartsCreationFutureWaiter.Add startHistoricalCharts
 
 LogMessage "Loading configuration: initialising Info Panels"
 setupInfoPanels
 
 LogMessage "Loading configuration: initialising Features Panels"
 setupFeaturesPanels
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub loadAppInstanceCompletion()
+Const ProcName As String = "loadAppInstanceCompletion"
+On Error GoTo Err
 
 LogMessage "Loading configuration: applying theme"
 Dim lThemeName As String
@@ -1140,6 +1163,8 @@ ApplyTheme lTheme
 Me.caption = gAppTitle & _
             " - " & mAppInstanceConfig.InstanceQualifier
 
+Me.Show vbModeless
+
 LogMessage "Loading configuration: showing charts"
 mChartForms.ShowCharts gMainForm
 
@@ -1154,6 +1179,8 @@ If Not mFeaturesPanelHidden Then showFeaturesPanel
 If Not mInfoPanelHidden Then showInfoPanel
 
 LogMessage "Loaded configuration: " & mAppInstanceConfig.InstanceQualifier
+
+gUnloadSplashScreen
 
 Exit Sub
 
@@ -1299,36 +1326,39 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub startCharts()
+Private Function startCharts() As IFuture
 Const ProcName As String = "startCharts"
 On Error GoTo Err
 
-mChartForms.LoadChartsFromConfig mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts), _
+Set startCharts = CreateFutureFromTask( _
+                        mChartForms.LoadChartsFromConfigAsync( _
+                                mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts), _
                                 mTickers, _
                                 mTradeBuildAPI.BarFormatterLibManager, _
-                                mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator
+                                mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator))
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
-Private Sub startHistoricalCharts()
+Private Function startHistoricalCharts() As IFuture
 Const ProcName As String = "startHistoricalCharts"
 On Error GoTo Err
 
-mChartForms.LoadHistoricalChartsFromConfig _
-                    mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts), _
-                    mTradeBuildAPI.StudyLibraryManager, _
-                    mTradeBuildAPI.HistoricalDataStoreInput, _
-                    mTradeBuildAPI.BarFormatterLibManager
+Set startHistoricalCharts = CreateFutureFromTask( _
+                        mChartForms.LoadHistoricalChartsFromConfigAsync( _
+                                mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts), _
+                                mTradeBuildAPI.StudyLibraryManager, _
+                                mTradeBuildAPI.HistoricalDataStoreInput, _
+                                mTradeBuildAPI.BarFormatterLibManager))
                     
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub StopSelectedTickers()
 Const ProcName As String = "StopSelectedTickers"
