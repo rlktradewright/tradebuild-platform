@@ -108,7 +108,7 @@ End If
 Set ITheme_BaseFont = sFont
 End Property
 
-Private Property Get ITheme_BorderStyle() As BorderStyleSettings
+Private Property Get ITheme_BorderStyle() As TWUtilities40.BorderStyleSettings
 ITheme_BorderStyle = BorderStyleNone
 End Property
 

@@ -67,13 +67,17 @@ Private mHistoricalChartsVisible                    As Boolean
 ' Properties
 '@================================================================================
 
-Public Property Let Theme(ByVal value As ITheme)
+Friend Property Get Enumerator() As Enumerator
+Set Enumerator = mChartForms.Enumerator
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If value Is mTheme Then Exit Property
+If Value Is mTheme Then Exit Property
 
-Set mTheme = value
+Set mTheme = Value
 
 Dim l As fChart
 For Each l In mChartForms
@@ -220,6 +224,67 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Function CreateChartFromConfig( _
+                ByVal pChartConfig As ConfigurationSection, _
+                ByVal pTickers As Tickers, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pTimePeriodValidator As ITimePeriodValidator) As Boolean
+Const ProcName As String = "CreateChartFromConfig"
+On Error GoTo Err
+
+Dim lTickerKey As String
+lTickerKey = pChartConfig.GetSetting(ConfigSettingDataSourceKey, "")
+
+Dim lTicker As Ticker
+If lTickerKey = "" Then
+    Set lTicker = pTickers.GetTicker(pChartConfig.InstanceQualifier)
+Else
+    Set lTicker = pTickers.GetTicker(lTickerKey)
+End If
+
+If lTicker Is Nothing Then
+    CreateChartFromConfig = False
+Else
+    CreateChartFromConfig = AddFromConfig(lTicker, _
+                    lTicker.Timeframes, _
+                    pBarFormatterLibManager, _
+                    pTimePeriodValidator, _
+                    pChartConfig, _
+                    , _
+                    Nothing)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function CreateHistoricalChartFromConfig( _
+                ByVal pChartConfig As ConfigurationSection, _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager) As Boolean
+Const ProcName As String = "CreateHistoricalChartFromConfig"
+On Error GoTo Err
+
+Dim lContract As IContract
+Set lContract = LoadContractFromConfig(pChartConfig.GetConfigurationSection(ConfigSectionContract))
+
+CreateHistoricalChartFromConfig = AddHistoricFromConfig(CreateFuture(lContract), _
+                                                    pStudyLibraryManager.CreateStudyManager, _
+                                                    pHistDataStore, _
+                                                    pBarFormatterLibManager, _
+                                                    pChartConfig, _
+                                                    , _
+                                                    Nothing)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
@@ -289,7 +354,7 @@ Dim lRemovableCSs As New Collection
 
 Dim chartConfig As ConfigurationSection
 For Each chartConfig In pConfig
-    If Not createChartFromConfig(chartConfig, pTickers, pBarFormatterLibManager, pTimePeriodValidator) Then lRemovableCSs.Add chartConfig
+    If Not CreateChartFromConfig(chartConfig, pTickers, pBarFormatterLibManager, pTimePeriodValidator) Then lRemovableCSs.Add chartConfig
 Next
 
 For Each chartConfig In lRemovableCSs
@@ -312,6 +377,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function LoadChartsFromConfigAsync( _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pTickers As Tickers, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pTimePeriodValidator As ITimePeriodValidator, _
+                Optional ByVal pOwner As Variant, _
+                Optional ByVal pTheme As ITheme, _
+                Optional ByVal pPriority As TaskPriorities, _
+                Optional ByVal pName As String, _
+                Optional ByVal pCookie As Variant) As TaskController
+Const ProcName As String = "LoadChartsFromConfigAsync"
+On Error GoTo Err
+
+Dim t As New ChartFormsLoadTask
+t.Initialise Me, pConfig, pTickers, pBarFormatterLibManager, pTimePeriodValidator, pOwner, pTheme
+Set LoadChartsFromConfigAsync = StartTask(t, pPriority, pName, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+
 Public Sub LoadHistoricalChartsFromConfig( _
                 ByVal pConfig As ConfigurationSection, _
                 ByVal pStudyLibraryManager As StudyLibraryManager, _
@@ -324,7 +413,7 @@ On Error GoTo Err
 
 Dim chartConfig As ConfigurationSection
 For Each chartConfig In pConfig
-    createHistoricalChartFromConfig chartConfig, pStudyLibraryManager, pHistDataStore, pBarFormatterLibManager, pTheme
+    CreateHistoricalChartFromConfig chartConfig, pStudyLibraryManager, pHistDataStore, pBarFormatterLibManager
 Next
 
 If Not IsMissing(pOwner) Then
@@ -342,6 +431,30 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function LoadHistoricalChartsFromConfigAsync( _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                Optional ByVal pOwner As Variant, _
+                Optional ByVal pTheme As ITheme, _
+                Optional ByVal pPriority As TaskPriorities, _
+                Optional ByVal pName As String, _
+                Optional ByVal pCookie As Variant) As TaskController
+Const ProcName As String = "LoadHistoricalChartsFromConfigAsync"
+On Error GoTo Err
+
+Dim t As New ChartFormsLoadTask
+t.InitialiseHistorical Me, pConfig, pStudyLibraryManager, pHistDataStore, pBarFormatterLibManager, pOwner, pTheme
+Set LoadHistoricalChartsFromConfigAsync = StartTask(t, pPriority, pName, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 
 Public Sub SetStyle(ByVal pStyle As ChartStyle, ByVal pHistorical As Boolean)
 Const ProcName As String = "SetStyle"
@@ -404,68 +517,6 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function createChartFromConfig( _
-                ByVal pChartConfig As ConfigurationSection, _
-                ByVal pTickers As Tickers, _
-                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
-                ByVal pTimePeriodValidator As ITimePeriodValidator) As Boolean
-Const ProcName As String = "createChartFromConfig"
-On Error GoTo Err
-
-Dim lTickerKey As String
-lTickerKey = pChartConfig.GetSetting(ConfigSettingDataSourceKey, "")
-
-Dim lTicker As Ticker
-If lTickerKey = "" Then
-    Set lTicker = pTickers.GetTicker(pChartConfig.InstanceQualifier)
-Else
-    Set lTicker = pTickers.GetTicker(lTickerKey)
-End If
-
-If lTicker Is Nothing Then
-    createChartFromConfig = False
-Else
-    createChartFromConfig = AddFromConfig(lTicker, _
-                    lTicker.Timeframes, _
-                    pBarFormatterLibManager, _
-                    pTimePeriodValidator, _
-                    pChartConfig, _
-                    , _
-                    Nothing)
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function createHistoricalChartFromConfig( _
-                ByVal pChartConfig As ConfigurationSection, _
-                ByVal pStudyLibraryManager As StudyLibraryManager, _
-                ByVal pHistDataStore As IHistoricalDataStore, _
-                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
-                ByVal pTheme As ITheme) As Boolean
-Const ProcName As String = "createHistoricalChartFromConfig"
-On Error GoTo Err
-
-Dim lContract As IContract
-Set lContract = LoadContractFromConfig(pChartConfig.GetConfigurationSection(ConfigSectionContract))
-
-createHistoricalChartFromConfig = AddHistoricFromConfig(CreateFuture(lContract), _
-                                                    pStudyLibraryManager.CreateStudyManager, _
-                                                    pHistDataStore, _
-                                                    pBarFormatterLibManager, _
-                                                    pChartConfig, _
-                                                    , _
-                                                    Nothing)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 
 

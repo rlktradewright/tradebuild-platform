@@ -1678,7 +1678,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get BorderStyle() As BorderStyleSettings
+Public Property Get BorderStyle() As TWUtilities40.BorderStyleSettings
 Const ProcName As String = "BorderStyle"
 On Error GoTo Err
 
@@ -1690,7 +1690,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let BorderStyle(ByVal value As BorderStyleSettings)
+Public Property Let BorderStyle(ByVal value As TWUtilities40.BorderStyleSettings)
 Const ProcName As String = "BorderStyle"
 On Error GoTo Err
 
