@@ -67,6 +67,8 @@ Private mStudyLibManager                                As StudyLibraryManager
 Private mStudyManager                                   As StudyManager
 Private mBarFormatterLibManager                         As BarFormatterLibManager
 
+Private mIncludeBarsOutsideSession                      As Boolean
+
 Private mRegionEntries                                  As Collection
 
 ' we use this collection to locate studyConfigurations from Study objects
@@ -410,13 +412,15 @@ End Function
 Friend Sub Initialise( _
                 ByVal pChart As ChartController, _
                 ByVal pStudyManager As StudyManager, _
-                ByVal pBarFormatterLibManager As BarFormatterLibManager)
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pIncludeBarsOutsideSession As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mStudyManager = pStudyManager
 Set mStudyLibManager = mStudyManager.StudyLibraryManager
 Set mBarFormatterLibManager = pBarFormatterLibManager
+mIncludeBarsOutsideSession = pIncludeBarsOutsideSession
 Set mChartController = pChart
 Set mPeriods = mChartController.Periods
 
@@ -428,11 +432,13 @@ End Sub
 
 Public Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection, _
-                ByVal BaseStudy As IStudy)
+                ByVal BaseStudy As IStudy, _
+                ByVal pIncludeBarsOutsideSession As Boolean)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
 Set mConfig = config
+mIncludeBarsOutsideSession = pIncludeBarsOutsideSession
 
 If Not mConfig Is Nothing Then
     Dim baseStudySect As ConfigurationSection
@@ -650,6 +656,7 @@ Dim lStudy As IStudy
 Set lStudy = mStudyManager.AddStudy(studyConfig.Name, _
                             studyConfig.UnderlyingStudy, _
                             InputValueNames, _
+                            mIncludeBarsOutsideSession, _
                             studyConfig.Parameters, _
                             studyConfig.StudyLibraryName)
 ' AddStudy will have replaced any $DEFAULT input Value names with
