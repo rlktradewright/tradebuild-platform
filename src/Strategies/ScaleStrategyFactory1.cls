@@ -122,6 +122,7 @@ linputvaluenames(0) = "$default"
 Set S.ATR = pContext.AddStudy("ATR", _
                         lTimeframe, _
                         linputvaluenames, _
+                        pParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                         params, _
                         2)
 

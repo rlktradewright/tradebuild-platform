@@ -199,6 +199,7 @@ linputvaluenames(0) = "$default"
 Set mSwing = pContext.AddStudy("Swing", _
                             mTimeframe.BarStudy, _
                             linputvaluenames, _
+                            mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                             params, _
                             3, _
                             , _
@@ -214,6 +215,7 @@ linputvaluenames(0) = "$default"
 Set mBoll = pContext.AddStudy("Bollinger Bands", _
                         mTimeframe.BarStudy, _
                         linputvaluenames, _
+                        mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                         params, _
                         3, _
                         , _
@@ -228,6 +230,7 @@ linputvaluenames(0) = "$default"
 Set mMACD = pContext.AddStudy("MACD", _
                         mTimeframe.BarStudy, _
                         linputvaluenames, _
+                        mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                         params, _
                         10, _
                         , _

@@ -148,6 +148,7 @@ If lMinimumSwingTicks <> 0 Then
     Set S.Swing = pContext.AddStudy("Swing", _
                                 S.Timeframe.BarStudy, _
                                 linputvaluenames, _
+                                mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                                 params, _
                                 3)
 End If
@@ -175,6 +176,7 @@ Then
         Set S.LongMA = pContext.AddStudy("Simple Moving Average", _
                                 S.LongTimeframe.BarStudy, _
                                 linputvaluenames, _
+                                mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                                 params, _
                                 3)
     End If
@@ -186,6 +188,7 @@ Then
         Set S.LongBoll = pContext.AddStudy("Bollinger Bands", _
                                 S.LongTimeframe.BarStudy, _
                                 linputvaluenames, _
+                                mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                                 params, _
                                 3)
     End If
@@ -205,6 +208,7 @@ Then
     Set S.MACDStudy = pContext.AddStudy("MACD", _
                             S.Timeframe.BarStudy, _
                             linputvaluenames, _
+                            mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                             params, _
                             10)
 End If
@@ -228,6 +232,7 @@ Then
     Set S.StopMA = pContext.AddStudy("Exponential Moving Average", _
                             S.StopTimeframe.BarStudy, _
                             linputvaluenames, _
+                            mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                             params, _
                             2)
 
@@ -238,6 +243,7 @@ Then
     Set S.StopMA = pContext.AddStudy("Bollinger Bands", _
                             S.StopTimeframe.BarStudy, _
                             linputvaluenames, _
+                            mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
                             params, _
                             2)
 End If
