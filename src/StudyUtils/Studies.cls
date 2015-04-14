@@ -48,7 +48,7 @@ Private Const ModuleName                As String = "Studies"
 ' Types
 '@================================================================================
 
-Private Type StudyTableEntry
+Private Type LinkedStudyTableEntry
     theStudy            As IStudy
     studyToNotify       As IStudy
     ValueName           As String
@@ -62,7 +62,7 @@ End Type
 'Private mUnderlyingStudy As IStudy
 Private mDefaultValuename As String
 
-Private mStudyTable() As StudyTableEntry
+Private mStudyTable() As LinkedStudyTableEntry
 Private mNextStudyTableIndex As Long
 
 '@================================================================================
@@ -70,7 +70,7 @@ Private mNextStudyTableIndex As Long
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mStudyTable(3) As StudyTableEntry
+ReDim mStudyTable(3) As LinkedStudyTableEntry
 End Sub
 
 '@================================================================================
@@ -92,20 +92,19 @@ End Property
 Public Sub Add( _
                 ByVal Study As IStudy, _
                 ByRef ValueNames() As String)
-Dim tableEntry As StudyTableEntry
-Dim inputDefs As StudyInputDefinitions
-Dim i As Long
-
 Const ProcName As String = "Add"
 On Error GoTo Err
 
+Dim inputDefs As StudyInputDefinitions
 Set inputDefs = Study.StudyDefinition.StudyInputDefinitions
 
+Dim i As Long
 For i = 0 To UBound(ValueNames)
     If ValueNames(i) <> "" Then
         If mNextStudyTableIndex > UBound(mStudyTable) Then
-            ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As StudyTableEntry
+            ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As LinkedStudyTableEntry
         End If
+        Dim tableEntry As LinkedStudyTableEntry
         Set tableEntry.theStudy = Study
         Set tableEntry.studyToNotify = Study.BaseStudy
         tableEntry.ValueName = UCase$(ValueNames(i))
@@ -125,17 +124,16 @@ Public Sub AddEx( _
                 ByVal Study As IStudy, _
                 ByRef ValueNames() As String, _
                 ByRef NotifyNames() As String)
-Dim tableEntry As StudyTableEntry
-Dim i As Long
-
 Const ProcName As String = "AddEx"
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To UBound(ValueNames)
     If ValueNames(i) <> "" Then
         If mNextStudyTableIndex > UBound(mStudyTable) Then
-            ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As StudyTableEntry
+            ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As LinkedStudyTableEntry
         End If
+        Dim tableEntry As LinkedStudyTableEntry
         Set tableEntry.theStudy = Study
         Set tableEntry.studyToNotify = Study.BaseStudy
         tableEntry.ValueName = UCase$(ValueNames(i))
@@ -209,9 +207,9 @@ Public Sub NotifyValueTicksize( _
 Const ProcName As String = "NotifyValueTicksize"
 On Error GoTo Err
 
-Dim i As Long
-
 ValueName = UCase$(ValueName)
+
+Dim i As Long
 For i = 0 To mNextStudyTableIndex - 1
     If mStudyTable(i).ValueName = ValueName Then
         mStudyTable(i).theStudy.SetInputTicksize mStudyTable(i).NotifyName, TickSize

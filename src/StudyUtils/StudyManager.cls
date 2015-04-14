@@ -89,6 +89,8 @@ Public Type StudyTableEntry
     ' level studies
     NumberOfCachedValues    As Long
     
+    IncludeDataOutsideSession   As Boolean
+    
     ' set when this study has been added to the
     ' underlying study
     StudyStarted            As Boolean
@@ -106,6 +108,7 @@ Private mStudyInputHandlers                         As New Collection
 Private mStudyLibraryManager                        As StudyLibraryManager
 
 Private mUseLocalTimeForStudies                     As Boolean
+Private mIncludeDataOutsideSession                  As Boolean
 
 Private mSessionFuture                              As IFuture
 Private mSession                                    As Session
@@ -300,6 +303,7 @@ End Function
 Public Function AddStudy(ByVal Name As String, _
                 ByVal underlyingStudy As IStudy, _
                 ByRef InputValueNames() As String, _
+                ByVal pIncludeDataOutsideSession As Boolean, _
                 Optional ByVal Parameters As Parameters, _
                 Optional ByVal libraryName As String, _
                 Optional ByVal numberOfValuesToCache As Long) As IStudy
@@ -308,6 +312,8 @@ On Error GoTo Err
 
 AssertArgument Not underlyingStudy Is Nothing, "Underlying study must not be nothing"
 AssertArgument mStudiesCollection.Contains(underlyingStudy.Id), "Underlying study Id is invalid"
+
+mIncludeDataOutsideSession = pIncludeDataOutsideSession
 
 Dim params As Parameters
 Set params = mStudyLibraryManager.GetStudyDefaultParameters(Name, libraryName)
@@ -330,6 +336,7 @@ Set lStudy = findStudy(Name, _
                         underlyingStudy.Id, _
                         InputValueNames, _
                         numberOfValuesToCache, _
+                        mIncludeDataOutsideSession, _
                         Parameters)
 If Not lStudy Is Nothing Then
     ' study already added
@@ -498,11 +505,14 @@ Set lStudyInputHandler = mInputs(pInputHandle).StudyInputHandler
 If Not mSessionBuilder Is Nothing Then
     mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
 End If
-If mUseLocalTimeForStudies Then ev.sVal.Timestamp = ConvertDateTzToLocal(ev.sVal.Timestamp, mSession.TimeZone)
 
-Dim lStudy As IStudy
-Set lStudy = lStudyInputHandler
-lStudy.Notify ev
+If mIncludeDataOutsideSession Or mSession.IsTimeInSession(ev.sVal.Timestamp) Then
+    If mUseLocalTimeForStudies Then ev.sVal.Timestamp = ConvertDateTzToLocal(ev.sVal.Timestamp, mSession.TimeZone)
+    
+    Dim lStudy As IStudy
+    Set lStudy = lStudyInputHandler
+    lStudy.Notify ev
+End If
 
 Exit Sub
 
@@ -574,6 +584,7 @@ Private Function findStudy(ByVal StudyName As String, _
                 ByVal UnderlyingStudyID As String, _
                 ByRef InputValueNames() As String, _
                 ByVal numberOfValuesToCache As Long, _
+                ByVal pIncludeDataOutsideSession As Boolean, _
                 ByVal Parameters As Parameters) As IStudy
 Const ProcName As String = "findStudy"
 On Error GoTo Err
@@ -593,7 +604,8 @@ For Each var In mStudiesCollection
         UnderlyingStudyID = StudyEntry.UnderlyingStudyID And _
         numberOfValuesToCache = StudyEntry.NumberOfCachedValues And _
         stringArraysEqual(InputValueNames, StudyEntry.InputValueNames) And _
-        Parameters.Equals(StudyEntry.Study.Parameters) _
+        Parameters.Equals(StudyEntry.Study.Parameters) And _
+        pIncludeDataOutsideSession = StudyEntry.IncludeDataOutsideSession _
     Then
         ' this study has already been added
         Set findStudy = StudyEntry.Study

@@ -271,12 +271,13 @@ End Function
 Public Function CreateBarStudy( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pStudyBase As IStudyBase, _
+                ByVal pIncludeDataOutsideSession As Boolean, _
                 Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
 Const ProcName As String = "CreateBarStudy"
 On Error GoTo Err
 
 If pTimePeriod.Length = 0 Then
-    Set CreateBarStudy = setupUserDefinedBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+    Set CreateBarStudy = setupUserDefinedBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
 Else
     Select Case pTimePeriod.Units
     Case TimePeriodSecond, _
@@ -286,13 +287,13 @@ Else
             TimePeriodWeek, _
             TimePeriodMonth, _
             TimePeriodYear
-        Set CreateBarStudy = setupConstantTimeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+        Set CreateBarStudy = setupConstantTimeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
     Case TimePeriodTickMovement
-        Set CreateBarStudy = setupConstantMomentumBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+        Set CreateBarStudy = setupConstantMomentumBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
     Case TimePeriodTickVolume
-        Set CreateBarStudy = setupConstantTickVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+        Set CreateBarStudy = setupConstantTickVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
     Case TimePeriodVolume
-        Set CreateBarStudy = setupConstantVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+        Set CreateBarStudy = setupConstantVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
     End Select
 End If
 
@@ -517,7 +518,8 @@ Private Function setupBarStudy( _
                 ByVal pStudyName As String, _
                 ByVal pStudyBase As IStudyBase, _
                 ByVal pParams As Parameters, _
-                ByVal pInitialBarsFuture As IFuture) As IBarStudy
+                ByVal pInitialBarsFuture As IFuture, _
+                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
 Const ProcName As String = "setupBarStudy"
 On Error GoTo Err
 
@@ -537,6 +539,7 @@ Dim lBarStudy As IBarStudy
 Set lBarStudy = pStudyBase.StudyManager.AddStudy(pStudyName, _
                                         pStudyBase.BaseStudy, _
                                         InputValueNames, _
+                                        pIncludeDataOutsideSession, _
                                         pParams)
 If Not pInitialBarsFuture Is Nothing Then lBarStudy.InitialBarsFuture = pInitialBarsFuture
 Set setupBarStudy = lBarStudy
@@ -550,14 +553,15 @@ End Function
 Private Function setupConstantMomentumBarsStudy( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pStudyBase As IStudyBase, _
-                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+                ByVal pInitialBarsFuture As IFuture, _
+                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
 Const ProcName As String = "setupConstantMomentumBarsStudy"
 On Error GoTo Err
 
 Dim lParams As New Parameters
 lParams.SetParameterValue ConstMomentumBarsParamTicksPerBar, pTimePeriod.Length
 
-Set setupConstantMomentumBarsStudy = setupBarStudy(ConstMomentumBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupConstantMomentumBarsStudy = setupBarStudy(ConstMomentumBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
 
 Exit Function
 
@@ -568,14 +572,15 @@ End Function
 Private Function setupConstantTickVolumeBarsStudy( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pStudyBase As IStudyBase, _
-                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+                ByVal pInitialBarsFuture As IFuture, _
+                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
 Const ProcName As String = "setupConstantTickVolumeBarsStudy"
 On Error GoTo Err
 
 Dim lParams As New Parameters
 lParams.SetParameterValue ConstTickVolumeBarsParamTicksPerBar, pTimePeriod.Length
 
-Set setupConstantTickVolumeBarsStudy = setupBarStudy(ConstTickVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupConstantTickVolumeBarsStudy = setupBarStudy(ConstTickVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
 
 Exit Function
 
@@ -586,7 +591,8 @@ End Function
 Private Function setupConstantTimeBarsStudy( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pStudyBase As IStudyBase, _
-                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+                ByVal pInitialBarsFuture As IFuture, _
+                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
 Const ProcName As String = "setupConstantTimeBarsStudy"
 On Error GoTo Err
 
@@ -595,7 +601,7 @@ lParams.SetParameterValue ConstTimeBarsParamBarLength, pTimePeriod.Length
 lParams.SetParameterValue ConstTimeBarsParamTimeUnits, _
                         TimePeriodUnitsToString(pTimePeriod.Units)
 
-Set setupConstantTimeBarsStudy = setupBarStudy(ConstTimeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupConstantTimeBarsStudy = setupBarStudy(ConstTimeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
 
 Exit Function
 
@@ -606,14 +612,15 @@ End Function
 Private Function setupConstantVolumeBarsStudy( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pStudyBase As IStudyBase, _
-                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+                ByVal pInitialBarsFuture As IFuture, _
+                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
 Const ProcName As String = "setupConstantVolumeBarsStudy"
 On Error GoTo Err
 
 Dim lParams As New Parameters
 lParams.SetParameterValue ConstVolumeBarsParamVolPerBar, pTimePeriod.Length
 
-Set setupConstantVolumeBarsStudy = setupBarStudy(ConstVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupConstantVolumeBarsStudy = setupBarStudy(ConstVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
 
 Exit Function
 
@@ -624,13 +631,14 @@ End Function
 Private Function setupUserDefinedBarsStudy( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pStudyBase As IStudyBase, _
-                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+                ByVal pInitialBarsFuture As IFuture, _
+                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
 Const ProcName As String = "setupUserDefinedBarsStudy"
 On Error GoTo Err
 
 Dim lParams As New Parameters
 
-Set setupUserDefinedBarsStudy = setupBarStudy(UserDefinedBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+Set setupUserDefinedBarsStudy = setupBarStudy(UserDefinedBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
 
 Exit Function
 
