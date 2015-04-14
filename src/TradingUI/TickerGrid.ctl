@@ -2720,7 +2720,9 @@ Private Sub notifyTickerSymbolEntry()
 Const ProcName As String = "notifyTickerSymbolEntry"
 On Error GoTo Err
 
-RaiseEvent TickerSymbolEntered(getTickerNameColumnValue(mTickerSymbolRow), mTickerSymbolRow)
+Dim lSymbol As String
+lSymbol = getTickerNameColumnValue(mTickerSymbolRow)
+If lSymbol <> "" Then RaiseEvent TickerSymbolEntered(lSymbol, mTickerSymbolRow)
 stopEnteringTickerSymbol
 
 Exit Sub
