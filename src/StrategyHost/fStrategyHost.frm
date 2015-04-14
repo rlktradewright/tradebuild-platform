@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#253.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#263.0#0"; "TradingUI27.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
    ClientHeight    =   8475
@@ -120,8 +120,8 @@ Begin VB.Form fStrategyHost
       TabCaption(1)   =   "Tick files"
       TabPicture(1)   =   "fStrategyHost.frx":008C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Picture2(1)"
-      Tab(1).Control(1)=   "Picture3"
+      Tab(1).Control(0)=   "Picture3"
+      Tab(1).Control(1)=   "Picture2(1)"
       Tab(1).ControlCount=   2
       TabCaption(2)   =   "Parameters"
       TabPicture(2)   =   "fStrategyHost.frx":00A8
@@ -142,39 +142,39 @@ Begin VB.Form fStrategyHost
       TabCaption(5)   =   "Results"
       TabPicture(5)   =   "fStrategyHost.frx":00FC
       Tab(5).ControlEnabled=   0   'False
-      Tab(5).Control(0)=   "AskSizeText"
-      Tab(5).Control(0).Enabled=   0   'False
-      Tab(5).Control(1)=   "TradeSizeText"
-      Tab(5).Control(1).Enabled=   0   'False
-      Tab(5).Control(2)=   "BidSizeText"
-      Tab(5).Control(2).Enabled=   0   'False
-      Tab(5).Control(3)=   "AskText"
-      Tab(5).Control(3).Enabled=   0   'False
-      Tab(5).Control(4)=   "TradeText"
-      Tab(5).Control(4).Enabled=   0   'False
-      Tab(5).Control(5)=   "BidText"
-      Tab(5).Control(5).Enabled=   0   'False
-      Tab(5).Control(6)=   "MoreButton"
-      Tab(5).Control(7)=   "Label7"
-      Tab(5).Control(8)=   "MicrosecsPerEventLabel"
-      Tab(5).Control(9)=   "EventsPerSecondLabel"
-      Tab(5).Control(10)=   "Label3"
-      Tab(5).Control(11)=   "PercentCompleteLabel"
-      Tab(5).Control(12)=   "Label2"
+      Tab(5).Control(0)=   "TheTime"
+      Tab(5).Control(1)=   "Label14"
+      Tab(5).Control(2)=   "Position"
+      Tab(5).Control(3)=   "MaxProfit"
+      Tab(5).Control(4)=   "Label5"
+      Tab(5).Control(5)=   "Label12"
+      Tab(5).Control(6)=   "Drawdown"
+      Tab(5).Control(7)=   "Profit"
+      Tab(5).Control(8)=   "Label4"
+      Tab(5).Control(9)=   "Label9"
+      Tab(5).Control(10)=   "Label10"
+      Tab(5).Control(11)=   "Label8"
+      Tab(5).Control(12)=   "Label1"
       Tab(5).Control(13)=   "EventsPlayedLabel"
-      Tab(5).Control(14)=   "Label1"
-      Tab(5).Control(15)=   "Label8"
-      Tab(5).Control(16)=   "Label10"
-      Tab(5).Control(17)=   "Label9"
-      Tab(5).Control(18)=   "Label4"
-      Tab(5).Control(19)=   "Profit"
-      Tab(5).Control(20)=   "Drawdown"
-      Tab(5).Control(21)=   "Label12"
-      Tab(5).Control(22)=   "Label5"
-      Tab(5).Control(23)=   "MaxProfit"
-      Tab(5).Control(24)=   "Position"
-      Tab(5).Control(25)=   "Label14"
-      Tab(5).Control(26)=   "TheTime"
+      Tab(5).Control(14)=   "Label2"
+      Tab(5).Control(15)=   "PercentCompleteLabel"
+      Tab(5).Control(16)=   "Label3"
+      Tab(5).Control(17)=   "EventsPerSecondLabel"
+      Tab(5).Control(18)=   "MicrosecsPerEventLabel"
+      Tab(5).Control(19)=   "Label7"
+      Tab(5).Control(20)=   "MoreButton"
+      Tab(5).Control(21)=   "BidText"
+      Tab(5).Control(21).Enabled=   0   'False
+      Tab(5).Control(22)=   "TradeText"
+      Tab(5).Control(22).Enabled=   0   'False
+      Tab(5).Control(23)=   "AskText"
+      Tab(5).Control(23).Enabled=   0   'False
+      Tab(5).Control(24)=   "BidSizeText"
+      Tab(5).Control(24).Enabled=   0   'False
+      Tab(5).Control(25)=   "TradeSizeText"
+      Tab(5).Control(25).Enabled=   0   'False
+      Tab(5).Control(26)=   "AskSizeText"
+      Tab(5).Control(26).Enabled=   0   'False
       Tab(5).ControlCount=   27
       Begin VB.PictureBox LogPicture 
          BorderStyle     =   0  'None
@@ -935,7 +935,7 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private Sub Form_Initialize()
 Me.ScaleMode = vbTwips
-InitCommonControls
+InitialiseCommonControls
 Set mFutureWaiter = New FutureWaiter
 End Sub
 
