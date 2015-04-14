@@ -105,7 +105,6 @@ Private mAccumulatedVolume                          As Long
 Private mFromSessionStart                           As Date
 
 Private mTwsContractDetails                         As TwsContractDetails
-'Private mTwsTimezone                                As TimeZone
 
 Private mListener                                   As IBarFetchListener
 Private mFetcher                                    As HistoricalDataFetcher
@@ -534,7 +533,7 @@ Case TimePeriodDay, _
         TimePeriodWeek, _
         TimePeriodMonth, _
         TimePeriodYear
-    lEndTime = Int(lEndTime) - 1
+    lEndTime = Int(lEndTime)
 End Select
 
 generateRequestEndTime = Format(lEndTime, "yyyymmdd hh\:nn\:ss")
@@ -1062,7 +1061,16 @@ On Error GoTo Err
 Set mRetrievalSessionBuilder = createNewSessionBuilder
 
 If mTWSBarsCollectionsIndex > 0 Then
-    mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage
+    Select Case mWorkingBarSpecifier.BarTimePeriod.Units
+    Case TimePeriodDay, _
+            TimePeriodWeek, _
+            TimePeriodMonth, _
+            TimePeriodYear
+        mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage - 1
+    Case Else
+        mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage
+    End Select
+    
 End If
 
 mFirstBarTimeInMessage = 0
