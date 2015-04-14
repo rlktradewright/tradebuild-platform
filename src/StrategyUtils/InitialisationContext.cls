@@ -235,6 +235,7 @@ End Property
 Public Function AddStudy(ByVal pName As String, _
                 ByVal pUnderlyingStudy As IStudy, _
                 ByRef pInputValueNames() As String, _
+                ByVal pIncludeDataOutsideSession As Boolean, _
                 Optional ByVal pParams As Parameters, _
                 Optional ByVal pNumberOfValuesToCache As Long, _
                 Optional ByVal pLibraryName As String, _
@@ -242,7 +243,7 @@ Public Function AddStudy(ByVal pName As String, _
 Const ProcName As String = "AddStudy"
 On Error GoTo Err
 
-Set AddStudy = mStudyManager.AddStudy(pName, pUnderlyingStudy, pInputValueNames, pParams, pLibraryName, pNumberOfValuesToCache)
+Set AddStudy = mStudyManager.AddStudy(pName, pUnderlyingStudy, pInputValueNames, pIncludeDataOutsideSession, pParams, pLibraryName, pNumberOfValuesToCache)
 
 Dim lTC As TaskController
 Set lTC = mStudyManager.StartStudy(AddStudy, 0)

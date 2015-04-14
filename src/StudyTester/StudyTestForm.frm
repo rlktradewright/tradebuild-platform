@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFlxGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#213.0#0"; "StudiesUI27.ocx"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#245.0#0"; "ChartSkil27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#214.0#0"; "StudiesUI27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#246.0#0"; "ChartSkil27.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.7"
@@ -1146,7 +1146,7 @@ On Error GoTo Err
 
 initialiseChart
 
-Set mChartManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager)
+Set mChartManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, True)
 
 Set mSourceStudy = mStudyManager.CreateStudyInputHandler(IIf(TestDataFilenameText = "", _
                                                 "Test data", _
@@ -1171,7 +1171,7 @@ mChartManager.SetInputRegion mVolumeInputHandle, VolumeRegionName
 Dim studyConfig As StudyConfiguration
 Set studyConfig = createBarsStudyConfig
 studyConfig.UnderlyingStudy = mSourceStudy
-Set mBarsStudy = mStudyManager.AddStudy(studyConfig.Name, mSourceStudy, studyConfig.InputValueNames, studyConfig.Parameters, studyConfig.StudyLibraryName)
+Set mBarsStudy = mStudyManager.AddStudy(studyConfig.Name, mSourceStudy, studyConfig.InputValueNames, True, studyConfig.Parameters, studyConfig.StudyLibraryName)
 studyConfig.Study = mBarsStudy
 mChartManager.StartStudy mBarsStudy
 
