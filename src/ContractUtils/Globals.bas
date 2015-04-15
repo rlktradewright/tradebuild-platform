@@ -941,6 +941,7 @@ addExchangeCode "PSX"
 addExchangeCode "RDBK"
 
 addExchangeCode "SBF"
+addExchangeCode "SEHK"
 addExchangeCode "SFB"
 addExchangeCode "SGX"
 addExchangeCode "SMART"
