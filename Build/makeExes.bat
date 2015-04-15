@@ -34,15 +34,15 @@ call makeExe TradeSkilDemo
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\CommandLineUtils
 
-call makeExe gbd
-call makeExe gccd
-call makeExe gcd
-call makeExe gtd
-call makeExe gxd
-call makeExe ltz
-call makeExe uccd
-call makeExe ucd
-call makeExe uxd
+call makeExe gbd CONSOLE
+call makeExe gccd CONSOLE
+call makeExe gcd CONSOLE
+call makeExe gtd CONSOLE
+call makeExe gxd CONSOLE
+call makeExe ltz CONSOLE
+call makeExe uccd CONSOLE
+call makeExe ucd CONSOLE
+call makeExe uxd CONSOLE
 
 popd
 
