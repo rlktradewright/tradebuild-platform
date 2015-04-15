@@ -1,0 +1,11 @@
+*.dll
+*.exe
+*.exp
+*.lib
+*.msi
+*.msm
+*.oca
+*.ocx
+*.SCC
+*.suo
+*.vbw
