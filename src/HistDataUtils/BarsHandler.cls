@@ -214,9 +214,9 @@ On Error GoTo Err
 Dim lBarStudy As IBarStudy
 
 If pUpdateLatestBar Then
-    Set lBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, fetchLatestBar(pHistDataStore, pContractFuture, pClockFuture, mTimePeriod, pBarType))
+    Set lBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, True, fetchLatestBar(pHistDataStore, pContractFuture, pClockFuture, mTimePeriod, pBarType))
 Else
-    Set lBarStudy = CreateBarStudy(mTimePeriod, mStudyBase)
+    Set lBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, True)
 End If
 Set createABarStudy = lBarStudy
 

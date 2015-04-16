@@ -110,7 +110,8 @@ End Function
 Public Function CreateChartManager( _
                 ByVal pChart As ChartController, _
                 ByVal pStudyManager As StudyManager, _
-                ByVal pBarFormatterLibManager As BarFormatterLibManager) As ChartManager
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pIncludeBarsOutsideSession As Boolean) As ChartManager
 Const ProcName As String = "CreateChartManager"
 On Error GoTo Err
 
@@ -118,7 +119,7 @@ AssertArgument Not pChart Is Nothing, "pChart Is Nothing"
 AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
 
 Set CreateChartManager = New ChartManager
-CreateChartManager.Initialise pChart, pStudyManager, pBarFormatterLibManager
+CreateChartManager.Initialise pChart, pStudyManager, pBarFormatterLibManager, pIncludeBarsOutsideSession
 
 Exit Function
 

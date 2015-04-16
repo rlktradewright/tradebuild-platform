@@ -232,7 +232,7 @@ Else
     lFetchBarsNeeded = True
 End If
 
-Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase)
+Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, pIncludeBarsOutsideSession)
 logAMessage "starting BarStudy", ProcName
 mStudyBase.StudyManager.StartStudy mBarStudy, 0
 

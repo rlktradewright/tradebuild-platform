@@ -16,7 +16,7 @@ if "%1" == "N" set BINARY_COMPAT=N
 pushd %TB-PLATFORM-PROJECTS-PATH%
 
 call makedll SessionUtils dll %BINARY_COMPAT%
-call makedll ContractUtils dll %BINARY_COMPAT%
+call makedll ContractUtils dll %BINARY_COMPAT% compat
 call makedll BarUtils dll %BINARY_COMPAT%
 call makedll TickUtils ocx %BINARY_COMPAT%
 call makedll StudyUtils dll %BINARY_COMPAT%
@@ -33,7 +33,7 @@ call makedll TickerUtils dll %BINARY_COMPAT%
 call makedll StrategyUtils dll %BINARY_COMPAT%
 call makedll WorkspaceUtils dll %BINARY_COMPAT%
 
-call makedll ChartSkil ocx %BINARY_COMPAT%
+call makedll ChartSkil ocx %BINARY_COMPAT% compat
 call makedll BarFormatters dll %BINARY_COMPAT%
 call makedll ChartUtils dll %BINARY_COMPAT%
 call makedll ChartTools dll %BINARY_COMPAT%
