@@ -2,10 +2,13 @@
 *.exe
 *.exp
 *.lib
+*.log
 *.msi
 *.msm
+*.obj
 *.oca
 *.ocx
 *.SCC
 *.suo
+*.tmp
 *.vbw
