@@ -690,7 +690,6 @@ With pWorkingBarSpecifier
         End Select
     Case TimePeriodUnits.TimePeriodMonth
         pTwsRequest.BarSizeSetting = "1 day"
-        pTwsRequest.EndDateTime = Int(pTwsRequest.EndDateTime)
         If .MaxNumberOfBars <= 12 Then
             pTwsRequest.Duration = permittedHistMonths(.ToDate, .MaxNumberOfBars) & " M"
         Else
@@ -735,7 +734,6 @@ With pWorkingBarSpecifier
         End Select
     Case TimePeriodUnits.TimePeriodWeek
         pTwsRequest.BarSizeSetting = "1 day"
-        pTwsRequest.EndDateTime = Int(pTwsRequest.EndDateTime)
         If .MaxNumberOfBars <= 52 Then
             pTwsRequest.Duration = permittedHistWeeks(.ToDate, .MaxNumberOfBars) & " W"
         Else

@@ -666,6 +666,8 @@ End If
 If lDelay <> 0 Then
     gLog "Delay till next request (millisecs): " & lDelay & ": " & lReason, ModuleName, ProcName
     mTaskContext.Suspend lDelay
+Else
+    mTaskContext.Suspend -1
 End If
 
 Exit Sub
