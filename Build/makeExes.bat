@@ -10,7 +10,7 @@ pushd %TB-PLATFORM-PROJECTS-PATH%\IBEnhancedAPI
 call makeExe ContractDataTest1
 call makeExe MarketDataTest1
 call makeExe HistDataTest1
-call makeExe OrdersTest1
+call makeExe IBOrdersTest1
 
 popd
 
