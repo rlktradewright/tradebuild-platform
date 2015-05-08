@@ -2,7 +2,7 @@
 
 :: makeTradeWrightCommonProjects.bat
 ::
-:: builds all the dll and ocx projects
+:: builds all the .dll and .ocx projects
 ::
 :: Parameters:
 ::   %1 Binary compatibility setting- 'P' (project)or 'B' (binary)
@@ -15,48 +15,48 @@ if "%1" == "N" set BINARY_COMPAT=N
 
 pushd %TB-PLATFORM-PROJECTS-PATH%
 
-call makedll SessionUtils dll %BINARY_COMPAT%
-call makedll ContractUtils dll %BINARY_COMPAT% compat
-call makedll BarUtils dll %BINARY_COMPAT%
-call makedll TickUtils ocx %BINARY_COMPAT%
-call makedll StudyUtils dll %BINARY_COMPAT%
+call makedll.bat SessionUtils SessionUtils .dll %BINARY_COMPAT%
+call makedll.bat ContractUtils ContractUtils .dll %BINARY_COMPAT% /compat
+call makedll.bat BarUtils BarUtils .dll %BINARY_COMPAT%
+call makedll.bat TickUtils TickUtils .ocx %BINARY_COMPAT%
+call makedll.bat StudyUtils StudyUtils .dll %BINARY_COMPAT%
 
-call makedll TickfileUtils dll %BINARY_COMPAT%
-call makedll HistDataUtils dll %BINARY_COMPAT%
+call makedll.bat TickfileUtils TickfileUtils .dll %BINARY_COMPAT%
+call makedll.bat HistDataUtils HistDataUtils .dll %BINARY_COMPAT%
 
-call makedll TradingDO dll %BINARY_COMPAT%
-call makedll TimeframeUtils dll %BINARY_COMPAT%
-call makedll TradingDbApi dll %BINARY_COMPAT%
-call makedll MarketDataUtils dll %BINARY_COMPAT%
-call makedll OrderUtils dll %BINARY_COMPAT%
-call makedll TickerUtils dll %BINARY_COMPAT%
-call makedll StrategyUtils dll %BINARY_COMPAT%
-call makedll WorkspaceUtils dll %BINARY_COMPAT%
+call makedll.bat TradingDO TradingDO .dll %BINARY_COMPAT%
+call makedll.bat TimeframeUtils TimeframeUtils .dll %BINARY_COMPAT%
+call makedll.bat TradingDbApi TradingDbApi .dll %BINARY_COMPAT%
+call makedll.bat MarketDataUtils MarketDataUtils .dll %BINARY_COMPAT%
+call makedll.bat OrderUtils OrderUtils .dll %BINARY_COMPAT%
+call makedll.bat TickerUtils TickerUtils .dll %BINARY_COMPAT%
+call makedll.bat StrategyUtils StrategyUtils .dll %BINARY_COMPAT%
+call makedll.bat WorkspaceUtils WorkspaceUtils .dll %BINARY_COMPAT%
 
-call makedll ChartSkil ocx %BINARY_COMPAT% compat
-call makedll BarFormatters dll %BINARY_COMPAT%
-call makedll ChartUtils dll %BINARY_COMPAT%
-call makedll ChartTools dll %BINARY_COMPAT%
+call makedll.bat ChartSkil ChartSkil .ocx %BINARY_COMPAT% /compat
+call makedll.bat BarFormatters BarFormatters .dll %BINARY_COMPAT%
+call makedll.bat ChartUtils ChartUtils .dll %BINARY_COMPAT%
+call makedll.bat ChartTools ChartTools .dll %BINARY_COMPAT%
 
-call makedll StudiesUI ocx %BINARY_COMPAT%
-call makedll TradingUI ocx %BINARY_COMPAT%
+call makedll.bat StudiesUI StudiesUI .ocx %BINARY_COMPAT%
+call makedll.bat TradingUI TradingUI .ocx %BINARY_COMPAT%
 
-call makedll CommonStudiesLib dll %BINARY_COMPAT%
+call makedll.bat CommonStudiesLib CommonStudiesLib .dll %BINARY_COMPAT%
 
-call makedll TradeBuild dll %BINARY_COMPAT%
-call makedll Strategies dll %BINARY_COMPAT%
-call makedll ConfigUtils dll %BINARY_COMPAT%
-call makedll TradeBuildUI ocx %BINARY_COMPAT%
+call makedll.bat TradeBuild TradeBuild .dll %BINARY_COMPAT%
+call makedll.bat Strategies Strategies .dll %BINARY_COMPAT%
+call makedll.bat ConfigUtils ConfigUtils .dll %BINARY_COMPAT%
+call makedll.bat TradeBuildUI TradeBuildUI .ocx %BINARY_COMPAT%
 
-call makedll TBDataCollector dll %BINARY_COMPAT%
+call makedll.bat TBDataCollector TBDataCollector .dll %BINARY_COMPAT%
 
-call makedll IBAPI dll %BINARY_COMPAT%
-call makedll IBEnhancedAPI dll %BINARY_COMPAT%
-call makedll IBTwsSP dll %BINARY_COMPAT%
-call makedll TBInfoBase dll %BINARY_COMPAT%
-call makedll TickfileSP dll %BINARY_COMPAT%
+call makedll.bat IBAPI IBAPI .dll %BINARY_COMPAT%
+call makedll.bat IBEnhAPI IBEnhAPI .dll %BINARY_COMPAT%
+call makedll.bat IBTwsSP IBTwsSP .dll %BINARY_COMPAT%
+call makedll.bat TBInfoBase TBInfoBase .dll %BINARY_COMPAT%
+call makedll.bat TickfileSP TickfileSP .dll %BINARY_COMPAT%
 
 :: NB: QuoteTracker Service Provider is no longer supported
-rem call makedll QuoteTrackerSP dll %BINARY_COMPAT%
+rem call makedll.bat QuoteTrackerSP QuoteTrackerSP .dll %BINARY_COMPAT%
 
 popd

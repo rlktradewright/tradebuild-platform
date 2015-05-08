@@ -1,4 +1,5 @@
 :: unregisters the TradeBuild Platform dlls
+@setlocal
 
 %TB-PLATFORM-PROJECTS-DRIVE%
 path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build;%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build\Subscripts;%PATH%

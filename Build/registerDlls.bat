@@ -1,3 +1,4 @@
+@setlocal
 :: registers the TradeBuild Platform dlls
 
 %TB-PLATFORM-PROJECTS-DRIVE%
