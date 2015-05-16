@@ -1,0 +1,111 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+  Persistable = 0  'NotPersistable
+  DataBindingBehavior = 0  'vbNone
+  DataSourceBehavior  = 0  'vbNone
+  MTSTransactionMode  = 0  'NotAnMTSObject
+END
+Attribute VB_Name = "ContractComparable"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = True
+Option Explicit
+
+''
+' Description here
+'
+'@/
+
+'@================================================================================
+' Interfaces
+'@================================================================================
+
+Implements Comparable
+
+'@================================================================================
+' Events
+'@================================================================================
+
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
+' Types
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+Private Const ModuleName                            As String = "ContractComparable"
+
+'@================================================================================
+' Member variables
+'@================================================================================
+
+Private mSortKeys()                                 As ContractSortKeyIds
+Private mContractSpec                               As IContractSpecifier
+
+'@================================================================================
+' Class Event Handlers
+'@================================================================================
+
+'@================================================================================
+' Comparable Interface Members
+'@================================================================================
+
+Private Function Comparable_CompareTo(ByVal pObj As Comparable) As Long
+Const ProcName As String = "Comparable_CompareTo"
+On Error GoTo Err
+
+Assert TypeOf pObj Is ContractComparable, "Type of pobj is not ContractComparable"
+
+Dim lComparable As ContractComparable
+Set lComparable = pObj
+Comparable_CompareTo = gContractSpecsCompare(mContractSpec, lComparable.ContractSpec, mSortKeys)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+Friend Property Get ContractSpec() As IContractSpecifier
+Set ContractSpec = mContractSpec
+End Property
+
+'@================================================================================
+' Methods
+'@================================================================================
+
+Friend Sub Initialise(ByVal pContractSpec As IContractSpecifier, ByRef pSortkeys() As ContractSortKeyIds)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mContractSpec = pContractSpec
+mSortKeys = pSortkeys
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+                
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+
+
+
