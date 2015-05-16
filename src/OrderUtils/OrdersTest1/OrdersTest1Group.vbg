@@ -1,6 +1,0 @@
-VBGROUP 5.0
-Project=..\OrderUtils.vbp
-StartupProject=OrdersTest1.vbp
-Project=..\..\IBAPI\IBAPI.vbp
-Project=..\..\TradingUI\TradingUI.vbp
-Project=..\..\IBEnhancedAPI\IBEnhancedAPI.vbp
