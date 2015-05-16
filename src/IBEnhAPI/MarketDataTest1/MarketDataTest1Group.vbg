@@ -1,0 +1,7 @@
+VBGROUP 5.0
+StartupProject=MarketDataTest1.vbp
+Project=..\IBEnhancedAPI.vbp
+Project=..\..\ContractUtils\ContractUtils.vbp
+Project=..\..\MarketDataUtils\MarketDataUtils.vbp
+Project=..\..\IBAPI\IBAPI.vbp
+Project=..\..\TickUtils\TickUtils.vbp

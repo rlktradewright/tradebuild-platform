@@ -1,0 +1,5 @@
+VBGROUP 5.0
+StartupProject=HistDataTest1.vbp
+Project=..\..\IBAPI\IBAPI.vbp
+Project=..\IBEnhancedAPI.vbp
+Project=..\..\HistDataUtils\HistDataUtils.vbp
