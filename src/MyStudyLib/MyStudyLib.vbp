@@ -1,0 +1,55 @@
+Type=OleDll
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
+Reference=*\G{E28CCDAF-C082-4B45-AC09-1594A56F20E8}#4c.0#0#..\StudyUtils\StudyUtils2-6.dll#TradeWright Study Utilities v2.6
+Reference=*\G{76D7EB11-112B-4B1C-AD21-EBFF4C9996C1}#4b.0#0#..\TimeframeUtils\TimeframeUtils2-6.dll#TradeWright Timeframe Utilities v2.6
+Reference=*\G{4E990061-92D4-4DF7-9794-92C37C4FCB4A}#17.0#0#..\..\TradeWright Common\TWUtilities\TWUtilities30.dll#TradeWright Utility Services v3.0
+Class=StudyLib; StudyLib.cls
+Module=Globals; Globals.bas
+Class=RSI; RSI.cls
+Module=GRsi; GRSI.bas
+Startup="(None)"
+HelpFile=""
+Title="MyStudyLib"
+ExeName32="MyStudyLib2-5.dll"
+Command32=""
+Name="MyStudyLib26"
+HelpContextID="0"
+Description="TradeWright Sample Study Library version 2.6"
+CompatibleMode="1"
+CompatibleEXE32="MyStudyLib2-5.dll"
+MajorVer=2
+MinorVer=5
+RevisionVer=14
+AutoIncrementVer=1
+ServerSupportFiles=0
+DllBaseAddress=&H4ff20000
+CompilationType=0
+OptimizationType=0
+FavorPentiumPro(tm)=0
+CodeViewDebugInfo=0
+NoAliasing=0
+BoundsCheck=0
+OverflowCheck=0
+FlPointCheck=0
+FDIVCheck=0
+UnroundedFP=0
+StartMode=1
+Unattended=0
+Retained=0
+ThreadPerObject=0
+MaxNumberOfThreads=1
+ThreadingModel=1
+
+[MS Transaction Server]
+AutoRefresh=1
+
+[RVB]
+DeleteClass1=DHTMLPage1
+DeleteClass2=RSI1
+DeleteClass3=DataEnvironment1
+DeleteClass4=MyStudy
+DeleteClass5=MyStudy
+DeleteClass6=MyStudy
+DeleteClass7=MyStudy
+DeleteClass8=MyStudy
+DeleteClass9=Module1
