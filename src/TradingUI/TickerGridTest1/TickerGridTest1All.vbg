@@ -1,5 +1,0 @@
-VBGROUP 5.0
-StartupProject=TickerGridTest1.vbp
-Project=..\..\MarketDataUtils\MarketDataUtils.vbp
-Project=..\TradingUI.vbp
-Project=..\..\IBAPI\IBAPI.vbp

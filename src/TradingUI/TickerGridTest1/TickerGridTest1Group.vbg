@@ -1,8 +1,0 @@
-VBGROUP 5.0
-StartupProject=TickerGridTest1.vbp
-Project=..\TradingUI.vbp
-Project=..\..\IBEnhancedAPI\IBEnhancedAPI.vbp
-Project=..\..\IBAPI\IBAPI.vbp
-Project=..\..\ContractUtils\ContractUtils.vbp
-Project=..\..\MarketDataUtils\MarketDataUtils.vbp
-Project=..\..\..\TradeWright Common\TWControls\TWControls.vbp
