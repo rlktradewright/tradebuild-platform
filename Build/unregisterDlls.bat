@@ -4,12 +4,12 @@ setlocal
 :: unregisters the TradeBuild Platform dlls
 
 %TB-PLATFORM-PROJECTS-DRIVE%
-path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build\Subscripts;%PATH%
-path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build;%PATH%
-
-pushd %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Bin
+path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\Subscripts;%PATH%
+path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build;%PATH%
 
 call setMyVersion
+
+pushd %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Bin\TradeWright.TradeBuild.Platform
 
 call unregisterComponent.bat SessionUtils dll 
 if errorlevel 1 goto :err
@@ -32,13 +32,7 @@ if errorlevel 1 goto :err
 call unregisterComponent.bat HistDataUtils dll 
 if errorlevel 1 goto :err
 
-call unregisterComponent.bat TradingDO dll 
-if errorlevel 1 goto :err
-
 call unregisterComponent.bat TimeframeUtils dll 
-if errorlevel 1 goto :err
-
-call unregisterComponent.bat TradingDBApi dll 
 if errorlevel 1 goto :err
 
 call unregisterComponent.bat MarketDataUtils dll 
@@ -92,13 +86,24 @@ if errorlevel 1 goto :err
 call unregisterComponent.bat TBDataCollector dll 
 if errorlevel 1 goto :err
 
+popd
 
 
+pushd %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Bin\TradeWright.TradeBuild.ServiceProviders
+
+call unregisterComponent.bat TradingDO dll 
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat TradingDBApi dll 
+if errorlevel 1 goto :err
 
 call unregisterComponent.bat IBAPI dll
 if errorlevel 1 goto :err
 
 call unregisterComponent.bat IBEnhAPI dll
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat IBTwsSP dll
 if errorlevel 1 goto :err
 
 call unregisterComponent.bat TBInfoBase dll

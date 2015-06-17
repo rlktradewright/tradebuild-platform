@@ -2,7 +2,7 @@
 setlocal
 
 %TB-PLATFORM-PROJECTS-DRIVE%
-pushd %TB-PLATFORM-PROJECTS-DRIVE%\%TB-PLATFORM-PROJECTS-PATH%\Bin\ExternalComponents
+pushd %TB-PLATFORM-PROJECTS-DRIVE%\%TB-PLATFORM-PROJECTS-PATH%\Bin\TradeWright.TradeBuild.ExternalComponents
 
 regsvr32 -U COMCT332.OCX
 if errorlevel 1 pause
