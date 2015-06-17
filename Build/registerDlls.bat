@@ -1,75 +1,121 @@
-@setlocal
+@echo off
+setlocal
+
 :: registers the TradeBuild Platform dlls
 
 %TB-PLATFORM-PROJECTS-DRIVE%
-path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build;%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build\Subscripts;%PATH%
+path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build\Subscripts;%PATH%
+path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build;%PATH%
 
 pushd %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Bin
 
-call setVersion
-SET VERSION=%TB-PLATFORM-MAJOR%%TB-PLATFORM-MINOR%
+call setMyVersion
 
-regsvr32 SessionUtils%VERSION%.dll
+call registerComponent.bat SessionUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 ContractUtils%VERSION%.dll
+call registerComponent.bat ContractUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 BarUtils%VERSION%.dll
+call registerComponent.bat BarUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 TickUtils%VERSION%.dll
+call registerComponent.bat TickUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 StudyUtils%VERSION%.dll
+call registerComponent.bat StudyUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 TickfileUtils%VERSION%.dll
+call registerComponent.bat TickfileUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 HistDataUtils%VERSION%.dll
+call registerComponent.bat HistDataUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 TradingDO%VERSION%.dll
+call registerComponent.bat TradingDO dll
+if errorlevel 1 goto :err
 
-regsvr32 TimeframeUtils%VERSION%.dll
+call registerComponent.bat TimeframeUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 TradingDBApi%VERSION%.dll
+call registerComponent.bat TradingDBApi dll
+if errorlevel 1 goto :err
 
-regsvr32 MarketDataUtils%VERSION%.dll
+call registerComponent.bat MarketDataUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 OrderUtils%VERSION%.dll
+call registerComponent.bat OrderUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 TickerUtils%VERSION%.dll
+call registerComponent.bat TickerUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 StrategyUtils%VERSION%.dll
+call registerComponent.bat StrategyUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 WorkspaceUtils%VERSION%.dll
+call registerComponent.bat WorkspaceUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 ChartSkil%VERSION%.ocx
+call registerComponent.bat ChartSkil ocx
+if errorlevel 1 goto :err
 
-regsvr32 BarFormatters%VERSION%.dll
+call registerComponent.bat BarFormatters dll
+if errorlevel 1 goto :err
 
-regsvr32 ChartUtils%VERSION%.dll
+call registerComponent.bat ChartUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 ChartTools%VERSION%.dll
+call registerComponent.bat ChartTools dll
+if errorlevel 1 goto :err
 
-regsvr32 StudiesUI%VERSION%.ocx
+call registerComponent.bat StudiesUI ocx
+if errorlevel 1 goto :err
 
-regsvr32 TradingUI%VERSION%.ocx
+call registerComponent.bat TradingUI ocx
+if errorlevel 1 goto :err
 
-regsvr32 CommonStudiesLib%VERSION%.dll
+call registerComponent.bat CommonStudiesLib dll
+if errorlevel 1 goto :err
 
-regsvr32 TradeBuild%VERSION%.dll
+call registerComponent.bat TradeBuild dll
+if errorlevel 1 goto :err
 
-regsvr32 Strategies%VERSION%.dll
+call registerComponent.bat Strategies dll
+if errorlevel 1 goto :err
 
-regsvr32 ConfigUtils%VERSION%.dll
+call registerComponent.bat ConfigUtils dll
+if errorlevel 1 goto :err
 
-regsvr32 TradeBuildUI%VERSION%.ocx
+call registerComponent.bat TradeBuildUI ocx
+if errorlevel 1 goto :err
 
-regsvr32 TBDataCollector%VERSION%.dll
+call registerComponent.bat TBDataCollector dll
+if errorlevel 1 goto :err
 
-regsvr32 IBAPI970.dll
-regsvr32 IBEnhAPI%VERSION%.dll
-regsvr32 TBInfoBase%VERSION%.dll
-regsvr32 TickfileSP%VERSION%.dll
 
-rem regsvr32 QuoteTrackerSP%VERSION%.dll
+
+call registerComponent.bat IBAPI dll
+if errorlevel 1 goto :err
+
+call registerComponent.bat IBEnhAPI dll
+if errorlevel 1 goto :err
+
+call registerComponent.bat TBInfoBase dll
+if errorlevel 1 goto :err
+
+call registerComponent.bat TickfileSP dll
+if errorlevel 1 goto :err
+
+rem call registerComponent.bat QuoteTrackerSP dll
+if errorlevel 1 goto :err
 
 popd
+
+exit /B
+
+:err
+popd
+pause
+exit /B 1
 
 

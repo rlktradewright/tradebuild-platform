@@ -1,0 +1,8 @@
+..\Bin\TradeWright.TradeBuild.ExternalComponents\mscomctl.OCX
+..\Bin\TradeWright.TradeBuild.ExternalComponents\MSCOMCT2.OCX
+..\Bin\TradeWright.TradeBuild.ExternalComponents\COMCT332.OCX
+..\Bin\TradeWright.TradeBuild.ExternalComponents\COMDLG32.OCX
+..\Bin\TradeWright.TradeBuild.ExternalComponents\MSWINSCK.OCX
+..\Bin\TradeWright.TradeBuild.ExternalComponents\MSFLXGRD.OCX
+..\Bin\TradeWright.TradeBuild.ExternalComponents\MSDATGRD.OCX
+

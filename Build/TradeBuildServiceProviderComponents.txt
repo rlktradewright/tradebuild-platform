@@ -1,0 +1,11 @@
+..\bin\CommonStudiesLib27.dll
+
+..\bin\IBAPI27.dll
+..\bin\IBEnhAPI27.dll
+..\bin\IBTwsSP27.dll
+
+..\bin\TradingDO27.dll
+..\bin\TradingDbApi27.dll
+..\bin\TBInfoBase27.dll
+
+..\bin\TickfileSP27.dll
