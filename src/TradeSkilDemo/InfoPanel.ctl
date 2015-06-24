@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#283.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#289.1#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
 Begin VB.UserControl InfoPanel 
    Appearance      =   0  'Flat
    BackColor       =   &H00CDF3FF&
@@ -74,7 +74,6 @@ Begin VB.UserControl InfoPanel
       _ExtentY        =   7858
       _Version        =   393216
       Style           =   1
-      Tab             =   1
       TabsPerRow      =   6
       TabHeight       =   520
       ForeColor       =   -2147483630
@@ -89,14 +88,14 @@ Begin VB.UserControl InfoPanel
       EndProperty
       TabCaption(0)   =   "&1. Orders"
       TabPicture(0)   =   "InfoPanel.ctx":1494
-      Tab(0).ControlEnabled=   0   'False
+      Tab(0).ControlEnabled=   -1  'True
       Tab(0).Control(0)=   "OrdersPicture"
+      Tab(0).Control(0).Enabled=   0   'False
       Tab(0).ControlCount=   1
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "InfoPanel.ctx":14B0
-      Tab(1).ControlEnabled=   -1  'True
+      Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "ExecutionsPicture"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "&3. Log"
       TabPicture(2)   =   "InfoPanel.ctx":14CC
@@ -124,7 +123,7 @@ Begin VB.UserControl InfoPanel
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   4160
-         Left            =   -75000
+         Left            =   0
          ScaleHeight     =   4155
          ScaleWidth      =   12255
          TabIndex        =   11
@@ -287,7 +286,7 @@ Begin VB.UserControl InfoPanel
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   4155
-         Left            =   0
+         Left            =   -75000
          ScaleHeight     =   4155
          ScaleWidth      =   12255
          TabIndex        =   15
