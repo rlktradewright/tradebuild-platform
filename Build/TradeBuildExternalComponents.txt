@@ -5,4 +5,5 @@
 ..\Bin\TradeWright.TradeBuild.ExternalComponents\MSWINSCK.OCX
 ..\Bin\TradeWright.TradeBuild.ExternalComponents\MSFLXGRD.OCX
 ..\Bin\TradeWright.TradeBuild.ExternalComponents\MSDATGRD.OCX
+..\Bin\TradeWright.TradeBuild.ExternalComponents\TABCTL32.OCX
 

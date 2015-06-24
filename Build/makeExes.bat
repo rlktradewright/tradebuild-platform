@@ -10,9 +10,9 @@ call setMyVersion.bat
 
 set DEP=/DEP:%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\ExternalDependencies.txt
 
-:: ========================================================
-:: Test projects
-::
+echo =================================
+echo Making test projects
+
 pushd %TB-PLATFORM-PROJECTS-PATH%\src\IBEnhAPI
 
 call makeExe.bat ContractDataTest1 ContractDataTest1 /M:E %DEP%
@@ -46,10 +46,8 @@ if errorlevel 1 pause
 
 popd
 
-::
-:: ========================================================
-:: Deliverable projects
-::
+echo =================================
+echo Making deliverable projects
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\src
 
@@ -73,10 +71,9 @@ if errorlevel 1 pause
 
 popd
 
-::
-:: ========================================================
-:: Command line utility projects
-::
+echo =================================
+echo Making command line utility projects
+
 pushd %TB-PLATFORM-PROJECTS-PATH%\src\CommandLineUtils
 
 call makeExe.bat gbd gbd /CONSOLE /NOV6CC /M:E %DEP%

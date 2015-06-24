@@ -1,6 +1,9 @@
 @echo off
 setlocal
 
+echo =================================
+echo Making assembly manifest for TradeWright.TradeBuild.ExternalComponents
+
 generateManifest /Ass:TradeWright.TradeBuild.ExternalComponents,2.7.0.209,"TradeBuild External Components",TradeBuildExternalComponents.txt ^
                  /Out:..\Bin\TradeWright.TradeBuild.ExternalComponents\TradeWright.TradeBuild.ExternalComponents.manifest ^
                  /Inline

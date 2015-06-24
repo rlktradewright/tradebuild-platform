@@ -1,6 +1,9 @@
 @echo off
 setlocal
 
+echo =================================
+echo Making assembly manifest for TradeWright.TradeBuild.Platform
+
 generateManifest /Ass:TradeWright.TradeBuild.Platform,2.7.0.209,"TradeBuild Platform",TradeBuildPlatformComponents.txt ^
                  /Out:..\Bin\TradeWright.TradeBuild.Platform\TradeWright.TradeBuild.Platform.manifest ^
                  /Inline

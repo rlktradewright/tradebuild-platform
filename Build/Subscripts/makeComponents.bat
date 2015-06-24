@@ -11,7 +11,10 @@ if "%1" == "P" set BINARY_COMPAT=P
 if "%1" == "B" set BINARY_COMPAT=B
 if "%1" == "N" set BINARY_COMPAT=N
 
-pushd %TB-PLATFORM-PROJECTS-PATH%
+pushd %TB-PLATFORM-PROJECTS-PATH%\src
+
+echo =================================
+echo Making components for TradeWright.TradeBuild.Platform
 
 set BIN-PATH=%BIN-PATH%\TradeWright.TradeBuild.Platform
 call makedll.bat SessionUtils SessionUtils /T:DLL /B:%BINARY_COMPAT%
@@ -83,6 +86,11 @@ if errorlevel 1 pause
 
 call makedll.bat TBDataCollector TBDataCollector /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
+
+
+
+echo =================================
+echo Making components for TradeWright.TradeBuild.ServiceProviders
 
 set BIN-PATH=%BIN-PATH%\TradeWright.TradeBuild.ServiceProviders
 call makedll.bat IBAPI IBAPI /T:DLL /B:%BINARY_COMPAT%
