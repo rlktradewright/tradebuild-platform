@@ -1,6 +1,6 @@
-:: makeTradeWrightCommonProjects.bat
+:: makeComponents.bat
 ::
-:: builds all the /T:DLL and /T:OCX projects
+:: builds all the dll and ocx projects
 ::
 :: Parameters:
 ::   %1 Binary compatibility setting- 'P' (project)or 'B' (binary)

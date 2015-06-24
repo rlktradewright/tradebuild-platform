@@ -6,4 +6,9 @@ path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\..\Build\Subscripts
 
 set BIN-PATH=%TB-PLATFORM-PROJECTS-PATH%\..\Bin
 
+call setMyVersion.bat
+
 call makeComponents P
+
+call makeTradeBuildPlatformAssemblyManifest.bat
+call makeTradeBuildServiceProvidersAssemblyManifest.bat
