@@ -4,6 +4,9 @@ setlocal
 echo =================================
 echo Making assembly manifest for TradeWright.TradeBuild.Platform
 
+%TB-PLATFORM-PROJECTS-DRIVE%
+path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\Subscripts;%PATH%
+
 call setMyVersion.bat
 
 generateManifest /Ass:TradeWright.TradeBuild.Platform,%VB6-BUILD-MAJOR%.%VB6-BUILD-MINOR%.0.%VB6-BUILD-REVISION%,"TradeBuild Platform",TradeBuildPlatformComponents.txt ^
