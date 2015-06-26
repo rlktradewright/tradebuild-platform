@@ -7,3 +7,5 @@
 ..\Bin\TradeWright.TradeBuild.ExternalComponents\MSDATGRD.OCX
 ..\Bin\TradeWright.TradeBuild.ExternalComponents\TABCTL32.OCX
 
+// needed by TradeBuild.Common
+..\Bin\TradeWright.TradeBuild.ExternalComponents\TLBINF32.DLL
