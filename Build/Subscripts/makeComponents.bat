@@ -13,10 +13,12 @@ if "%1" == "N" set BINARY_COMPAT=N
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\src
 
+set BIN_PATH_ROOT=%BIN-PATH%
+
 echo =================================
 echo Making components for TradeWright.TradeBuild.Platform
 
-set BIN-PATH=%BIN-PATH%\TradeWright.TradeBuild.Platform
+set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
 call makedll.bat SessionUtils SessionUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat ContractUtils ContractUtils /T:DLL /B:%BINARY_COMPAT% /c
@@ -33,19 +35,19 @@ if errorlevel 1 pause
 call makedll.bat HistDataUtils HistDataUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
-set BIN-PATH=%BIN-PATH%\TradeWright.TradeBuild.ServiceProviders
+set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 call makedll.bat TradingDO TradingDO /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
-set BIN-PATH=%BIN-PATH%\TradeWright.TradeBuild.Platform
+set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
 call makedll.bat TimeframeUtils TimeframeUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
-set BIN-PATH=%BIN-PATH%\TradeWright.TradeBuild.ServiceProviders
+set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 call makedll.bat TradingDbApi TradingDbApi /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
-set BIN-PATH=%BIN-PATH%\TradeWright.TradeBuild.Platform
+set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
 call makedll.bat MarketDataUtils MarketDataUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat OrderUtils OrderUtils /T:DLL /B:%BINARY_COMPAT%
@@ -92,7 +94,7 @@ if errorlevel 1 pause
 echo =================================
 echo Making components for TradeWright.TradeBuild.ServiceProviders
 
-set BIN-PATH=%BIN-PATH%\TradeWright.TradeBuild.ServiceProviders
+set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 call makedll.bat IBAPI IBAPI /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
