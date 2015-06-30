@@ -25,7 +25,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Configurable
+Implements IConfigurable
 Implements IGraphicObjectStyle
 
 '@================================================================================
@@ -91,11 +91,11 @@ mStyleType = "Data Point Styles"
 End Sub
 
 '@================================================================================
-' Configurable Interface Members
+' IConfigurable Interface Members
 '@================================================================================
 
-Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
-Const ProcName As String = "Configurable_ConfigurationSection"
+Private Property Let IConfigurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "IConfigurable_ConfigurationSection"
 On Error GoTo Err
 
 ConfigurationSection = RHS
@@ -106,8 +106,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
-Const ProcName As String = "Configurable_LoadFromConfig"
+Private Sub IConfigurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "IConfigurable_LoadFromConfig"
 On Error GoTo Err
 
 LoadFromConfig pConfig
@@ -118,8 +118,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Configurable_RemoveFromConfig()
-Const ProcName As String = "Configurable_RemoveFromConfig"
+Private Sub IConfigurable_RemoveFromConfig()
+Const ProcName As String = "IConfigurable_RemoveFromConfig"
 On Error GoTo Err
 
 RemoveFromConfig

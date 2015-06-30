@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Enumerable
+Implements IEnumerable
 
 '@================================================================================
 ' Events
@@ -91,17 +91,17 @@ Debug.Print "Bars terminated"
 End Sub
 
 '@================================================================================
-' Enumerable Interface Members
+' IEnumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As Enumerator
-Set Enumerable_Enumerator = CreateEnumerator(Me)
+Private Property Get IEnumerable_Enumerator() As Enumerator
+Set IEnumerable_Enumerator = CreateEnumerator(Me)
 End Property
 
-Private Function Enumerable_nextItem( _
+Private Function IEnumerable_nextItem( _
                 item As Variant, _
                 cookie As Variant) As Boolean
-Const ProcName As String = "Enumerable_nextItem"
+Const ProcName As String = "IEnumerable_nextItem"
 On Error GoTo Err
 
 If IsEmpty(cookie) Then
@@ -115,7 +115,7 @@ End If
 
 Set item = mBarsCache.GetValue(CLng(cookie))
 cookie = cookie + 1
-Enumerable_nextItem = True
+IEnumerable_nextItem = True
 
 Exit Function
 
@@ -123,8 +123,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub Enumerable_remove(cookie As Variant)
-Const ProcName As String = "Enumerable_remove"
+Private Sub IEnumerable_remove(cookie As Variant)
+Const ProcName As String = "IEnumerable_remove"
 On Error GoTo Err
 
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Remove not sUpported"
@@ -135,10 +135,10 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Function Enumerable_skip( _
+Private Function IEnumerable_skip( _
                 ByVal numToSkip As Long, _
                 cookie As Variant) As Boolean
-Const ProcName As String = "Enumerable_skip"
+Const ProcName As String = "IEnumerable_skip"
 On Error GoTo Err
 
 If IsEmpty(cookie) Then
@@ -154,7 +154,7 @@ If cookie > mBarsCache.Count Then
     Exit Function
 End If
 
-Enumerable_skip = True
+IEnumerable_skip = True
 
 Exit Function
 
@@ -162,8 +162,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Enumerable_UpdateSequence() As Long
-Enumerable_UpdateSequence = mUpdateSequence
+Private Property Get IEnumerable_UpdateSequence() As Long
+IEnumerable_UpdateSequence = mUpdateSequence
 End Property
 
 '@================================================================================
@@ -662,7 +662,7 @@ End Function
 '   The object which is to act as a listener.
 '@/
 Public Sub AddCollectionChangeListener( _
-                ByVal listener As CollectionChangeListener)
+                ByVal listener As ICollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
@@ -725,7 +725,7 @@ End Function
 '   The object which is to be unregistered.
 '@/
 Public Sub RemoveCollectionChangeListener( _
-                ByVal listener As CollectionChangeListener)
+                ByVal listener As ICollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
@@ -758,7 +758,7 @@ Set ev.AffectedItem = affectedObject
 
 Dim i As Long
 For i = 1 To mChangeListeners.Count
-    Dim listener As CollectionChangeListener
+    Dim listener As ICollectionChangeListener
     Set listener = mChangeListeners(i)
     listener.change ev
 Next

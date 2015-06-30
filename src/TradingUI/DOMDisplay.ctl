@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl DOMDisplay 
    ClientHeight    =   1725
    ClientLeft      =   0
@@ -42,7 +42,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements DeferredAction
+Implements IDeferredAction
 Implements IMarketDepthListener
 Implements IThemeable
 
@@ -242,11 +242,11 @@ DOMGrid.col = 0
 End Sub
 
 '@================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 If Data = DeferredCommandCentre Then

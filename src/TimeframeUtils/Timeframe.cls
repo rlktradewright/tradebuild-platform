@@ -167,7 +167,7 @@ End Property
 '@================================================================================
 
 Public Sub AddStateChangeListener( _
-                ByVal pListener As StateChangeListener)
+                ByVal pListener As IStateChangeListener)
 Const ProcName As String = "AddStateChangeListener"
 On Error GoTo Err
 
@@ -206,7 +206,7 @@ Friend Sub Initialise( _
                 ByVal pBarType As BarTypes, _
                 ByVal pFromTime As Date, _
                 ByVal pToTime As Date, _
-                ByVal pStateChangeListener As StateChangeListener, _
+                ByVal pStateChangeListener As IStateChangeListener, _
                 ByVal pIncludeBarsOutsideSession As Boolean, _
                 ByVal pExcludeCurrentbar As Boolean, _
                 ByVal pClockFuture As IFuture)
@@ -264,7 +264,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStateChangeListener( _
-                ByVal pListener As StateChangeListener)
+                ByVal pListener As IStateChangeListener)
 mStateChangeListeners.Remove pListener
 End Sub
 
@@ -305,7 +305,7 @@ ev.State = newState
 mStateChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mStateChangeListeners.Count
-    Dim lListener As StateChangeListener
+    Dim lListener As IStateChangeListener
     Set lListener = mStateChangeListeners.GetListener(i)
     lListener.Change ev
 Next

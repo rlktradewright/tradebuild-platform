@@ -1,9 +1,9 @@
 VERSION 5.00
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
-Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
+Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#263.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
    ClientHeight    =   8475
@@ -127,7 +127,6 @@ Begin VB.Form fStrategyHost
       TabPicture(2)   =   "fStrategyHost.frx":00A8
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Picture4"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Listeners"
       TabPicture(3)   =   "fStrategyHost.frx":00C4
@@ -213,7 +212,7 @@ Begin VB.Form fStrategyHost
             Top             =   0
             Width           =   10650
             _ExtentX        =   18785
-            _ExtentY        =   4207
+            _ExtentY        =   4101
          End
       End
       Begin VB.PictureBox Picture1 
@@ -809,7 +808,7 @@ Option Explicit
 
 Implements IGenericTickListener
 Implements IStrategyHost
-Implements LogListener
+Implements ILogListener
 
 '================================================================================
 ' Events
@@ -1310,15 +1309,15 @@ IStrategyHost_UseMoneyManagement = IIf(NoMoneyManagement = vbChecked, False, Tru
 End Property
 
 '================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '================================================================================
 
-Private Sub LogListener_Finish()
+Private Sub ILogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal pLogrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal pLogrec As LogRecord)
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 Select Case pLogrec.InfoType
@@ -1763,7 +1762,7 @@ Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
 On Error GoTo Err
 
-Static formatter As LogFormatter
+Static formatter As ILogFormatter
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal, , False, False)
 formatLogRecord = formatter.FormatRecord(Logrec)
 

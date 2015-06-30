@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TaskCompletionListener
+Implements ITaskCompletionListener
 
 '@================================================================================
 ' Events
@@ -103,11 +103,11 @@ Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
-' TaskCompletionListener Interface Members
+' ITaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_taskCompleted(ev As TaskCompletionEventData)
-Const ProcName As String = "TaskCompletionListener_taskCompleted"
+Private Sub ITaskCompletionListener_taskCompleted(ev As TaskCompletionEventData)
+Const ProcName As String = "ITaskCompletionListener_taskCompleted"
 On Error GoTo Err
 
 If ev.ErrorNumber <> 0 Then

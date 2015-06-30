@@ -17,7 +17,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Enumerable
+Implements IEnumerable
 Implements IMarketDataManager
 
 '@================================================================================
@@ -75,26 +75,26 @@ Set mTickers = New EnumerableCollection
 End Sub
 
 '@================================================================================
-' Enumerable Interface Members
+' IEnumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As Enumerator
-Set Enumerable_Enumerator = GetEnumerator
+Private Property Get IEnumerable_Enumerator() As Enumerator
+Set IEnumerable_Enumerator = GetEnumerator
 End Property
 
-Private Function Enumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
+Private Function IEnumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
 
 End Function
 
-Private Sub Enumerable_Remove(pCookie As Variant)
+Private Sub IEnumerable_Remove(pCookie As Variant)
 
 End Sub
 
-Private Function Enumerable_Skip(ByVal numToSkip As Long, pCookie As Variant) As Boolean
+Private Function IEnumerable_Skip(ByVal numToSkip As Long, pCookie As Variant) As Boolean
 
 End Function
 
-Private Property Get Enumerable_UpdateSequence() As Long
+Private Property Get IEnumerable_UpdateSequence() As Long
 
 End Property
 
@@ -107,7 +107,7 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pkey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
@@ -223,7 +223,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub AddCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Public Sub AddCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
@@ -240,7 +240,7 @@ Public Function CreateTicker( _
                 Optional ByVal pIsRecoverable As Boolean = True, _
                 Optional ByVal pkey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As StateChangeListener) As Ticker
+                Optional ByVal pStateChangeListener As IStateChangeListener) As Ticker
 Const ProcName As String = "CreateTicker"
 On Error GoTo Err
 
@@ -432,7 +432,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
@@ -540,7 +540,7 @@ If mCollectionChangeListeners.Count <> 0 Then
     mCollectionChangeListeners.SetCurrentListeners
     Dim i As Long
     For i = 1 To mCollectionChangeListeners.Count
-        Dim lListener As CollectionChangeListener
+        Dim lListener As ICollectionChangeListener
         Set lListener = mCollectionChangeListeners.GetListener(i)
         lListener.Change ev
     Next

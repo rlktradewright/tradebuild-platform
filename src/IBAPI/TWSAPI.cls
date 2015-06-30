@@ -130,7 +130,7 @@ Private mPort                                       As String
 
 Private mClientID                                   As Long
 
-Private mProgramErrorHandler                        As ProgramErrorListener
+Private mProgramErrorHandler                        As IProgramErrorListener
 Private mErrorAndNotificationConsumer               As IErrorAndNotificationConsumer
 Private mConnectionStatusConsumer                   As IConnectionStatusConsumer
 
@@ -438,11 +438,11 @@ Public Property Get Port() As String
 Port = mPort
 End Property
 
-Public Property Let ProgramErrorHandler(ByVal Value As ProgramErrorListener)
+Public Property Let ProgramErrorHandler(ByVal Value As IProgramErrorListener)
 Set mProgramErrorHandler = Value
 End Property
 
-Public Property Get ProgramErrorHandler() As ProgramErrorListener
+Public Property Get ProgramErrorHandler() As IProgramErrorListener
 Set ProgramErrorHandler = mProgramErrorHandler
 End Property
 

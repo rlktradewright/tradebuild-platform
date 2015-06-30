@@ -80,7 +80,7 @@ Private mIsConnected                                As Boolean
 
 Private mConnectionRetryIntervalSecs                As Long
 
-Private mProgramErrorHandler                        As ProgramErrorListener
+Private mProgramErrorHandler                        As IProgramErrorListener
 
 '@================================================================================
 ' Class Event Handlers
@@ -343,7 +343,7 @@ Friend Sub Initialise( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pBufferedReader As BufferedReader, _
-                ByVal pProgramErrorHandler As ProgramErrorListener)
+                ByVal pProgramErrorHandler As IProgramErrorListener)
 If pServer = "" Then pServer = "127.0.0.1"
 mServer = pServer
 mPort = pPort

@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -96,11 +96,11 @@ Private mUnableToReplay                             As Boolean
 '@================================================================================
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
-Const ProcName As String = "Task_Cancel"
+Private Sub ITask_Cancel()
+Const ProcName As String = "ITask_Cancel"
 On Error GoTo Err
 
 StopReplay
@@ -111,8 +111,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Task_Run()
-Const ProcName As String = "Task_Run"
+Private Sub ITask_Run()
+Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
 If mUnableToReplay Then
@@ -129,11 +129,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
 Set mTaskContext = Value
 End Property
 
-Private Property Get Task_TaskName() As String
+Private Property Get ITask_TaskName() As String
 
 End Property
 

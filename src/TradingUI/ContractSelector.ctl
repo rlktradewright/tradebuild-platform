@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -35,7 +35,7 @@ Option Explicit
 
 Implements IContractSelector
 Implements IThemeable
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -292,11 +292,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
-Const ProcName As String = "Task_Cancel"
+Private Sub ITask_Cancel()
+Const ProcName As String = "ITask_Cancel"
 On Error GoTo Err
 
 TWGrid1.Clear
@@ -309,8 +309,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_Run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
@@ -351,12 +351,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
+Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 mFirstTime = True
 End Property
 
-Private Property Get Task_TaskName() As String
+Private Property Get ITask_TaskName() As String
 
 End Property
 

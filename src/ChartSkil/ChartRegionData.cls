@@ -17,7 +17,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements Task
+Implements ITask
 
 '================================================================================
 ' Events
@@ -132,15 +132,15 @@ Debug.Print "ChartRegionData terminated"
 End Sub
 
 '================================================================================
-' Task Interface Members
+' ITask Interface Members
 '================================================================================
 
-Private Sub Task_cancel()
+Private Sub ITask_cancel()
 mTaskContext.Finish Empty, True
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
 Static i As Long
@@ -162,12 +162,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
+Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.Name
+Private Property Get ITask_TaskName() As String
+ITask_TaskName = mTaskContext.Name
 End Property
 
 '================================================================================

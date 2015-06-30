@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements DeferredAction
+Implements IDeferredAction
 
 '@================================================================================
 ' Events
@@ -71,11 +71,11 @@ Private mDatabaseWrites                             As Long
 '@================================================================================
 
 '@================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 mDeferredWriteInProgress = False

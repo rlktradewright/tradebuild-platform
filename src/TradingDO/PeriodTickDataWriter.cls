@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '@===============================================================================
 
-Implements Task
+Implements ITask
 
 '@===============================================================================
 ' Events
@@ -93,15 +93,14 @@ Private mData()                         As Byte
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
 Debug.Print "PeriodTickDataWriter terminated"
-'If gLogger.IsLoggable(LogLevelHighDetail) Then logMessage pMsg:=taskName & ": terminated", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
 End Sub
 
 '@===============================================================================
-' Task Interface Members
+' ITask Interface Members
 '@===============================================================================
 
-Private Sub Task_Cancel()
-Const ProcName As String = "Task_Cancel"
+Private Sub ITask_Cancel()
+Const ProcName As String = "ITask_Cancel"
 
 
 On Error GoTo Err
@@ -125,8 +124,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 
 On Error GoTo Err
 
@@ -139,12 +138,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
+Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 
-Private Property Get Task_taskName() As String
-Task_taskName = mTaskContext.Name
+Private Property Get ITask_taskName() As String
+ITask_taskName = mTaskContext.Name
 End Property
 
 '@===============================================================================

@@ -204,10 +204,10 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements DeferredAction
+Implements IDeferredAction
 Implements IGenericTickListener
 Implements IThemeable
-Implements StateChangeListener
+Implements IStateChangeListener
 
 '================================================================================
 ' Events
@@ -375,11 +375,11 @@ LogMessage "Chart form terminated", LogLevelDetail
 End Sub
 
 '================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '================================================================================
 
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 Set mTheme = Data
@@ -453,11 +453,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 If ev.State = MarketDataSourceStates.MarketDataSourceStateRunning Then

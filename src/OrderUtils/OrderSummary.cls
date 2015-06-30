@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements JSONable
+Implements IJSONable
 
 '@================================================================================
 ' Events
@@ -105,11 +105,11 @@ Set mProviderProperties = New Parameters
 End Sub
 
 '@================================================================================
-' JSONable Interface Members
+' IJSONAble Interface Members
 '@================================================================================
 
-Private Function JSONable_ToJSON() As String
-JSONable_ToJSON = ToJSON
+Private Function IJSONAble_ToJSON() As String
+IJSONAble_ToJSON = ToJSON
 End Function
 
 '@================================================================================

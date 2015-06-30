@@ -68,14 +68,14 @@ End Property
 '@================================================================================
 
 Public Sub AddCollectionChangeListener( _
-                ByVal Value As CollectionChangeListener)
+                ByVal Value As ICollectionChangeListener)
 End Sub
 
 Public Function Item(ByVal pIndex As Variant) As IComboleg
 Attribute Item.VB_UserMemId = 0
 End Function
 
-Public Sub RemoveCollectionChangeListener(ByVal Value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal Value As ICollectionChangeListener)
 End Sub
 
 '@================================================================================

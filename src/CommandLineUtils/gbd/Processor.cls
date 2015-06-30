@@ -22,8 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements CollectionChangeListener
-Implements LogListener
+Implements ICollectionChangeListener
+Implements ILogListener
 
 '@================================================================================
 ' Events
@@ -80,11 +80,11 @@ If gLogToConsole Then GetLogger("").AddLogListener Me
 End Sub
 
 '@================================================================================
-' CollectionChangeListener Interface Members
+' ICollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
-Const ProcName As String = "CollectionChangeListener_Change"
+Private Sub ICollectionChangeListener_Change(ev As CollectionChangeEventData)
+Const ProcName As String = "ICollectionChangeListener_Change"
 On Error GoTo Err
 
 outputBar
@@ -97,16 +97,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '@================================================================================
 
-Private Sub LogListener_Finish()
+Private Sub ILogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
-Static formatter As LogFormatter
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal Logrec As LogRecord)
+Static formatter As ILogFormatter
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter

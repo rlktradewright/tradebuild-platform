@@ -352,7 +352,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
@@ -565,7 +565,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
@@ -663,8 +663,8 @@ End If
 Set sp = mServiceProviderConfig.AddConfigurationSection(ConfigSectionServiceProvider & _
                                                             "(" & Name & ")", _
                                                             Description)
-sp.setAttribute AttributeNameServiceProviderEnabled, CStr(Enabled)
-sp.setAttribute AttributeNameServiceProviderProgId, progId
+sp.SetAttribute AttributeNameServiceProviderEnabled, CStr(Enabled)
+sp.SetAttribute AttributeNameServiceProviderProgId, progId
 
 Set props = sp.AddConfigurationSection(ConfigSectionProperties)
 
@@ -947,7 +947,7 @@ Set ev.AffectedItem = affectedObject
 mCollectionChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mCollectionChangeListeners.Count
-    Dim lListener As CollectionChangeListener
+    Dim lListener As ICollectionChangeListener
     Set lListener = mCollectionChangeListeners.GetListener(i)
     lListener.Change ev
 Next
@@ -1056,10 +1056,10 @@ For Each sp In mServiceProviderConfig
     Dim spName As String
     spName = sp.InstanceQualifier
         
-    If Not CBool(sp.getAttribute(AttributeNameEnabled, "False")) Then
+    If Not CBool(sp.GetAttribute(AttributeNameEnabled, "False")) Then
         gLogger.Log "Not creating disabled service provider: " & spName, ProcName, ModuleName
     Else
-        spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
+        spProgId = sp.GetAttribute(AttributeNameServiceProviderProgId)
         AssertArgument spProgId <> "", "Service provider ProgId not specified"
         
         Set Params = New Parameters

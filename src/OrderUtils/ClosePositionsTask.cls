@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
+Implements IChangeListener
 
 '@================================================================================
 ' Events
@@ -70,11 +70,11 @@ Private mLastExecutionReport                        As IExecutionReport
 '@================================================================================
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 Dim lOrderContext As OrderContext

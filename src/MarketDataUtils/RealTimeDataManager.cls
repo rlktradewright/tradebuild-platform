@@ -56,7 +56,7 @@ Private mDataManager                                As MarketDataManager
 
 Private mConfig                                     As ConfigurationSection
 
-Private mDefaultStateChangeListener                 As StateChangeListener
+Private mDefaultStateChangeListener                 As IStateChangeListener
 
 '@================================================================================
 ' Class Event Handlers
@@ -71,7 +71,7 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
@@ -152,7 +152,7 @@ Public Function CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
@@ -194,7 +194,7 @@ Friend Sub Initialise( _
                 ByVal pFactory As IMarketDataFactory, _
                 ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pOptions As MarketDataSourceOptions, _
-                ByVal pDefaultStateChangeListener As StateChangeListener, _
+                ByVal pDefaultStateChangeListener As IStateChangeListener, _
                 ByVal pNumberOfMarketDepthRows As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err

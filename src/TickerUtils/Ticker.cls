@@ -17,7 +17,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ErrorListener
+Implements IErrorListener
 Implements IGenericTickListener
 Implements IGenericTickSource
 Implements IMarketDataSource
@@ -25,7 +25,7 @@ Implements IMarketDepthListener
 Implements IPriceChangeListener
 Implements IQuoteListener
 Implements IRawMarketDepthListener
-Implements StateChangeListener
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -123,11 +123,11 @@ Debug.Print "Ticker terminated"
 End Sub
 
 '@================================================================================
-' ErrorListener Interface Members
+' IErrorListener Interface Members
 '@================================================================================
 
-Private Sub ErrorListener_Notify(ev As ErrorEventData)
-Const ProcName As String = "ErrorListener_Notify"
+Private Sub IErrorListener_Notify(ev As ErrorEventData)
+Const ProcName As String = "IErrorListener_Notify"
 On Error GoTo Err
 
 fireError ev
@@ -192,7 +192,7 @@ End Sub
 ' IMarketDataSource Interface Members
 '@================================================================================
 
-Private Sub IMarketDataSource_AddErrorListener(ByVal pListener As ErrorListener)
+Private Sub IMarketDataSource_AddErrorListener(ByVal pListener As IErrorListener)
 AddErrorListener pListener
 End Sub
 
@@ -216,7 +216,7 @@ Private Sub IMarketDataSource_AddRawMarketDepthListener(ByVal pListener As IRawM
 AddRawMarketDepthListener pListener
 End Sub
 
-Private Sub IMarketDataSource_AddStateChangeListener(ByVal pListener As StateChangeListener)
+Private Sub IMarketDataSource_AddStateChangeListener(ByVal pListener As IStateChangeListener)
 AddStateChangeListener pListener
 End Sub
 
@@ -328,7 +328,7 @@ Private Sub IMarketDataSource_RefreshTicks(ByVal pListener As IGenericTickListen
 RefreshTicks pListener
 End Sub
 
-Private Sub IMarketDataSource_RemoveErrorListener(ByVal pListener As ErrorListener)
+Private Sub IMarketDataSource_RemoveErrorListener(ByVal pListener As IErrorListener)
 RemoveErrorListener pListener
 End Sub
 
@@ -356,7 +356,7 @@ Private Sub IMarketDataSource_RemoveRawMarketDepthListener(ByVal pListener As IR
 RemoveRawMarketDepthListener pListener
 End Sub
 
-Private Sub IMarketDataSource_RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Private Sub IMarketDataSource_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 RemoveStateChangeListener pListener
 End Sub
 
@@ -505,11 +505,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 fireStateChange ev
@@ -959,7 +959,7 @@ End Property
 '@================================================================================
 
 Public Sub AddErrorListener( _
-                ByVal pListener As ErrorListener)
+                ByVal pListener As IErrorListener)
 Const ProcName As String = "AddErrorListener"
 On Error GoTo Err
 
@@ -1034,7 +1034,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "AddStateChangeListener"
 On Error GoTo Err
 
@@ -1322,7 +1322,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveErrorListener(ByVal pListener As ErrorListener)
+Public Sub RemoveErrorListener(ByVal pListener As IErrorListener)
 Const ProcName As String = "RemoveErrorListener"
 On Error GoTo Err
 
@@ -1407,7 +1407,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "RemoveStateChangeListener"
 On Error GoTo Err
 
@@ -1539,7 +1539,7 @@ If mErrorListeners.Count <> 0 Then
     mErrorListeners.SetCurrentListeners
     Dim i As Long
     For i = 1 To mErrorListeners.Count
-        Dim lListener As ErrorListener
+        Dim lListener As IErrorListener
         Set lListener = mErrorListeners.GetListener(i)
         lListener.Notify lEv
     Next
@@ -1884,7 +1884,7 @@ If mStateChangeListeners.Count <> 0 Then
     mStateChangeListeners.SetCurrentListeners
     Dim i As Long
     For i = 1 To mStateChangeListeners.Count
-        Dim lListener As StateChangeListener
+        Dim lListener As IStateChangeListener
         Set lListener = mStateChangeListeners.GetListener(i)
         lListener.Change lEv
     Next

@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -79,11 +79,11 @@ Debug.Print "ContractsRetrievalTask terminated"
 End Sub
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
-Const ProcName As String = "Task_Cancel"
+Private Sub ITask_Cancel()
+Const ProcName As String = "ITask_Cancel"
 On Error GoTo Err
 
 doCancel
@@ -94,8 +94,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
@@ -142,7 +142,7 @@ If Err.Number = 3265 Then
     
     logMessage pMsg:="ContractsRetrievalTask restarted after receiving the following error", _
                 pMsgQualifier:="Error " & Err.Number & ": " & Err.Description, _
-                pProcName:="Task_run"
+                pProcName:="ITask_run"
     Set mInstrEnumerator = Nothing
     Exit Sub
 End If
@@ -150,14 +150,14 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext( _
+Private Property Let ITask_TaskContext( _
                 ByVal value As TaskContext)
-Const ProcName As String = "Task_TaskContext"
+Const ProcName As String = "ITask_TaskContext"
 Set mTaskContext = value
 End Property
 
-Private Property Get Task_taskName() As String
-Task_taskName = mTaskContext.Name
+Private Property Get ITask_taskName() As String
+ITask_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================

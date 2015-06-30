@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Stringable
+Implements IStringable
 
 '@================================================================================
 ' Events
@@ -54,11 +54,11 @@ Private mText As String
 '@================================================================================
 
 '@================================================================================
-' Stringable Interface Members
+' IStringable Interface Members
 '@================================================================================
 
-Private Function Stringable_ToString() As String
-Stringable_ToString = ToString
+Private Function IStringable_ToString() As String
+IStringable_ToString = ToString
 End Function
 
 '@================================================================================
@@ -69,16 +69,16 @@ End Function
 ' Properties
 '@================================================================================
 
-Friend Property Let Position(ByVal value As StudyPoint)
-mPosition = value
+Friend Property Let Position(ByVal Value As StudyPoint)
+mPosition = Value
 End Property
 
 Public Property Get Position() As StudyPoint
 Position = mPosition
 End Property
 
-Friend Property Let Text(ByVal value As String)
-mText = value
+Friend Property Let Text(ByVal Value As String)
+mText = Value
 End Property
 
 Public Property Get Text() As String

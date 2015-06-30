@@ -31,8 +31,8 @@ Option Explicit
 '@================================================================================
 
 Implements IContract
-Implements JSONable
-Implements Stringable
+Implements IJSONable
+Implements IStringable
 
 '@================================================================================
 ' Events
@@ -125,19 +125,19 @@ IContract_ToString = ToString
 End Function
 
 '@================================================================================
-' JSONable Interface Members
+' IJSONable Interface Members
 '@================================================================================
 
-Private Function JSONable_ToJSON() As String
-JSONable_ToJSON = ToJSON
+Private Function IJsonable_ToJSON() As String
+IJsonable_ToJSON = ToJSON
 End Function
 
 '@================================================================================
-' Stringable Interface Members
+' IStringable Interface Members
 '@================================================================================
 
-Private Function Stringable_ToString() As String
-Stringable_ToString = ToString
+Private Function IStringable_ToString() As String
+IStringable_ToString = ToString
 End Function
 
 '@================================================================================

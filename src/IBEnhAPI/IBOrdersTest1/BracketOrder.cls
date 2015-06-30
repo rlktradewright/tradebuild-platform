@@ -198,13 +198,13 @@ End Property
 Private Property Get IBracketOrder_TargetReason() As String
 End Property
 
-Private Sub IBracketOrder_AddChangeListener(ByVal pListener As ChangeListener)
+Private Sub IBracketOrder_AddChangeListener(ByVal pListener As IChangeListener)
 End Sub
 
 Private Sub IBracketOrder_AddExecutionListener(ByVal pListener As IExecutionListener)
 End Sub
 
-Private Sub IBracketOrder_AddStateChangeListener(ByVal pListener As StateChangeListener)
+Private Sub IBracketOrder_AddStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPrice As Double, Optional ByVal pQuantity As Long = -1)
@@ -231,13 +231,13 @@ End Function
 Private Sub IBracketOrder_Execute()
 End Sub
 
-Private Sub IBracketOrder_RemoveChangeListener(ByVal pListener As ChangeListener)
+Private Sub IBracketOrder_RemoveChangeListener(ByVal pListener As IChangeListener)
 End Sub
 
 Private Sub IBracketOrder_RemoveExecutionListener(ByVal pListener As IExecutionListener)
 End Sub
 
-Private Sub IBracketOrder_RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Private Sub IBracketOrder_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Private Sub IBracketOrder_SetNewEntryPrice(ByVal Value As Double)

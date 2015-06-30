@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#265.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Ticker Grid Test1"
    ClientHeight    =   10065
@@ -77,9 +77,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements DeferredAction
+Implements IDeferredAction
 Implements ITwsConnectionStateListener
-Implements LogListener
+Implements ILogListener
 
 '@================================================================================
 ' Events
@@ -205,11 +205,11 @@ TerminateTWUtilities
 End Sub
 
 '@================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 Select Case CLng(Data)
@@ -256,15 +256,15 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 End Sub
 
 '@================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '@================================================================================
 
-Private Sub LogListener_Finish()
+Private Sub ILogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal Logrec As LogRecord)
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 If Len(LogText.Text) >= 32767 Then
@@ -449,7 +449,7 @@ End Sub
 
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
-Static formatter As LogFormatter
+Static formatter As ILogFormatter
 
 On Error GoTo Err
 

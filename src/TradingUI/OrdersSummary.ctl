@@ -114,8 +114,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
-Implements CollectionChangeListener
+Implements IChangeListener
+Implements ICollectionChangeListener
 Implements IBracketOrderErrorListener
 Implements IProfitListener
 Implements IThemeable
@@ -381,8 +381,8 @@ End Sub
 ' ChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 If TypeOf ev.Source Is IBracketOrder Then
@@ -493,11 +493,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' CollectionChangeListener Interface Members
+' ICollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
-0 Const ProcName As String = "CollectionChangeListener_Change"
+Private Sub ICollectionChangeListener_Change(ev As CollectionChangeEventData)
+0 Const ProcName As String = "ICollectionChangeListener_Change"
 On Error GoTo Err
 
 If TypeOf ev.Source Is BracketOrders Then

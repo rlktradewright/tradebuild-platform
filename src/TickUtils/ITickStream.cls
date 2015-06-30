@@ -79,7 +79,7 @@ End Property
 Public Sub AddGenericTickListener(ByVal pListener As IGenericTickListener)
 End Sub
 
-Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Sub Finish()
@@ -88,7 +88,7 @@ End Sub
 Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
 End Sub
 
-Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Sub Start()

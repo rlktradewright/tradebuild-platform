@@ -77,7 +77,7 @@ Private mServerVersion                              As Long
 Private mNextOrderID                                As Long
 
 Private mErrorAndNotificationConsumer               As IErrorAndNotificationConsumer
-Private mProgramErrorHandler                        As ProgramErrorListener
+Private mProgramErrorHandler                        As IProgramErrorListener
 
 Private mLogTwsMessages                             As Boolean
 
@@ -248,7 +248,7 @@ Friend Sub Initialise( _
                 ByVal pWriter As BufferedWriter, _
                 ByVal pStatsRecorder As PerformanceStatsRecorder, _
                 ByVal pErrorAndNotificationConsumer As IErrorAndNotificationConsumer, _
-                ByVal pProgramErrorHandler As ProgramErrorListener)
+                ByVal pProgramErrorHandler As IProgramErrorListener)
 Set mReader = pReader
 Set mWriter = pWriter
 Set mStatsRecorder = pStatsRecorder
@@ -304,7 +304,7 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Private Sub checkmessages(ByRef pMessageID As Long, ByRef pVersion As Long)
+Private Sub checkmessages(ByRef pMessageId As Long, ByRef pVersion As Long)
 Const ProcName As String = "checkmessages"
 On Error GoTo Err
 
@@ -313,10 +313,10 @@ Do While Not mReader.AtEnd
         mReader.BeginMessage mLogTwsMessages
         getPerformanceTimer.StartTiming
         
-        getMessageIDandVersion mReader, pMessageID, pVersion
-        getMessage pMessageID, pVersion
+        getMessageIDandVersion mReader, pMessageId, pVersion
+        getMessage pMessageId, pVersion
         
-        updateStats pMessageID, getPerformanceTimer.ElapsedTimeMicroseconds
+        updateStats pMessageId, getPerformanceTimer.ElapsedTimeMicroseconds
         mReader.EndMessage
     mReader.EndCheckpointScope
 Loop
@@ -1045,11 +1045,11 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Private Sub getMessage(ByVal pMessageID As TwsSocketInMsgTypes, ByVal pVersion As Long)
+Private Sub getMessage(ByVal pMessageId As TwsSocketInMsgTypes, ByVal pVersion As Long)
 Const ProcName As String = "getMessage"
 On Error GoTo Err
 
-Select Case pMessageID
+Select Case pMessageId
 Case TwsSocketInMsgTypes.TICK_PRICE
     getTickPrice pVersion
 Case TwsSocketInMsgTypes.TICK_SIZE
@@ -1138,13 +1138,13 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Private Sub getMessageIDandVersion(ByVal pReader As BufferedReader, ByRef pMessageID As Long, ByRef pVersion As Long)
+Private Sub getMessageIDandVersion(ByVal pReader As BufferedReader, ByRef pMessageId As Long, ByRef pVersion As Long)
 Const ProcName As String = "getMessageIDandVersion"
 On Error GoTo Err
 
-If pReader.GetLongCheckpointed(pMessageID, "Msg id") Then
+If pReader.GetLongCheckpointed(pMessageId, "Msg id") Then
     pReader.AppendToMessage "("
-    pReader.AppendToMessage gInputMessageIdToString(pMessageID)
+    pReader.AppendToMessage gInputMessageIdToString(pMessageId)
     pReader.AppendToMessage ") "
 End If
     
@@ -2007,14 +2007,14 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Private Sub updateStats(ByVal pMessageID As Long, ByVal pMessageElapsedTime As Single)
+Private Sub updateStats(ByVal pMessageId As Long, ByVal pMessageElapsedTime As Single)
 Static sEventCount As Long
 
 Const ProcName As String = "updateStats"
 On Error GoTo Err
 
 If mLogTwsMessages Then
-    mStatsRecorder.UpdateMessageTypeStats pMessageID, pMessageElapsedTime
+    mStatsRecorder.UpdateMessageTypeStats pMessageId, pMessageElapsedTime
     sEventCount = sEventCount + 1
     
     

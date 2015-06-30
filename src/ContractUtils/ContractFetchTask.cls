@@ -23,7 +23,7 @@ Option Explicit
 '@================================================================================
 
 Implements IContractFetchListener
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -178,15 +178,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
+Private Sub ITask_Cancel()
 
 End Sub
 
-Private Sub Task_Run()
-Const ProcName As String = "Task_Run"
+Private Sub ITask_Run()
+Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
 Dim lContractStore As IContractStore
@@ -205,8 +205,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal Value As TaskContext)
-Const ProcName As String = "Task_TaskContext"
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
+Const ProcName As String = "ITask_TaskContext"
 On Error GoTo Err
 
 Set mTaskContext = Value
@@ -217,11 +217,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get Task_TaskName() As String
-Const ProcName As String = "Task_TaskName"
+Private Property Get ITask_TaskName() As String
+Const ProcName As String = "ITask_TaskName"
 On Error GoTo Err
 
-Task_TaskName = mTaskContext.Name
+ITask_TaskName = mTaskContext.Name
 
 Exit Property
 

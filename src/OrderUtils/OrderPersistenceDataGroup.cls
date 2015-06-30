@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Enumerable
+Implements IEnumerable
 
 '@================================================================================
 ' Events
@@ -65,14 +65,14 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' Enumerable Interface Members
+' IEnumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As Enumerator
-Const ProcName As String = "Enumerable_Enumerator"
+Private Property Get IEnumerable_Enumerator() As Enumerator
+Const ProcName As String = "IEnumerable_Enumerator"
 On Error GoTo Err
 
-Set Enumerable_Enumerator = mOrderPersistenceItems.Enumerator
+Set IEnumerable_Enumerator = mOrderPersistenceItems.Enumerator
 
 Exit Property
 
@@ -80,16 +80,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function Enumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
+Private Function IEnumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
 End Function
 
-Private Sub Enumerable_Remove(cookie As Variant)
+Private Sub IEnumerable_Remove(cookie As Variant)
 End Sub
 
-Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
+Private Function IEnumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
 End Function
 
-Private Property Get Enumerable_UpdateSequence() As Long
+Private Property Get IEnumerable_UpdateSequence() As Long
 End Property
 
 '@================================================================================

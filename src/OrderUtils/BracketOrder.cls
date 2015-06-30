@@ -26,7 +26,7 @@ Option Explicit
 Implements IBracketOrder
 Implements IPositionMember
 Implements IRecoverable
-Implements Stringable
+Implements IStringable
 
 '@================================================================================
 ' Events
@@ -216,7 +216,7 @@ Private Sub IBracketOrder_AddBracketOrderErrorListener(ByVal pListener As IBrack
 AddBracketOrderErrorListener pListener
 End Sub
 
-Private Sub IBracketOrder_AddChangeListener(ByVal pListener As ChangeListener)
+Private Sub IBracketOrder_AddChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "IBracketOrder_AddChangeListener"
 On Error GoTo Err
 
@@ -240,7 +240,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_AddStateChangeListener(ByVal pListener As StateChangeListener)
+Private Sub IBracketOrder_AddStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "IBracketOrder_AddStateChangeListener"
 On Error GoTo Err
 
@@ -532,7 +532,7 @@ Private Sub IBracketOrder_RemoveBracketOrderErrorListener(ByVal pListener As IBr
 RemoveBracketOrderErrorListener pListener
 End Sub
 
-Private Sub IBracketOrder_RemoveChangeListener(ByVal pListener As ChangeListener)
+Private Sub IBracketOrder_RemoveChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "IBracketOrder_RemoveChangeListener"
 On Error GoTo Err
 
@@ -556,7 +556,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_RemoveStateChangeListener(ByVal pListener As TWUtilities40.StateChangeListener)
+Private Sub IBracketOrder_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "IBracketOrder_RemoveStateChangeListener"
 On Error GoTo Err
 
@@ -864,11 +864,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Stringable Interface Members
+' IStringable Interface Members
 '@================================================================================
 
-Private Function Stringable_ToString() As String
-Stringable_ToString = ToString
+Private Function IStringable_ToString() As String
+IStringable_ToString = ToString
 End Function
 
 '@================================================================================
@@ -1951,7 +1951,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub AddChangeListener(ByVal pListener As ChangeListener)
+Public Sub AddChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "AddChangeListener"
 On Error GoTo Err
 
@@ -1981,7 +1981,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "AddStateChangeListener"
 On Error GoTo Err
 
@@ -2288,7 +2288,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
+Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "RemoveChangeListener"
 On Error GoTo Err
 
@@ -2312,7 +2312,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "RemoveStateChangeListener"
 On Error GoTo Err
 
@@ -3196,7 +3196,7 @@ mChangeListeners.SetCurrentListeners
 
 Dim i As Long
 For i = 1 To mChangeListeners.Count
-    Dim lListener As ChangeListener
+    Dim lListener As IChangeListener
     Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next
@@ -3246,7 +3246,7 @@ ev.State = pState
 mStateChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mStateChangeListeners.Count
-    Dim lListener As StateChangeListener
+    Dim lListener As IStateChangeListener
     Set lListener = mStateChangeListeners.GetListener(i)
     lListener.Change ev
 Next

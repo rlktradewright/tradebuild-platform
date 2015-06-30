@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements DeferredAction
+Implements IDeferredAction
 
 '@================================================================================
 ' Events
@@ -75,11 +75,11 @@ Private mAreasToRedrawIndex As Long
 '@================================================================================
 
 '================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '================================================================================
 
-Private Sub DeferredAction_run(ByVal data As Variant)
-Const ProcName As String = "DeferredAction_run"
+Private Sub IDeferredAction_run(ByVal data As Variant)
+Const ProcName As String = "IDeferredAction_run"
 On Error GoTo Err
 
 #If trace Then

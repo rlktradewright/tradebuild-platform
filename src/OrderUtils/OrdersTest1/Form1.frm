@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#289.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   12540
@@ -93,11 +93,11 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
-Implements ErrorListener
+Implements IChangeListener
+Implements IErrorListener
 Implements IOrderSubmissionListener
 Implements ITwsConnectionStateListener
-Implements LogListener
+Implements ILogListener
 
 '@================================================================================
 ' Events
@@ -217,11 +217,11 @@ mClient.Finish
 End Sub
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 Dim lChangeType As PositionManagerChangeTypes
@@ -247,11 +247,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' ErrorListener Interface Members
+' IErrorListener Interface Members
 '@================================================================================
 
-Private Sub ErrorListener_Notify(ev As ErrorEventData)
-Const ProcName As String = "ErrorListener_Notify"
+Private Sub IErrorListener_Notify(ev As ErrorEventData)
+Const ProcName As String = "IErrorListener_Notify"
 On Error GoTo Err
 
 LogMessage "Error " & ev.ErrorCode & ": " & ev.ErrorMessage
@@ -320,15 +320,15 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 End Sub
 
 '@================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '@================================================================================
 
-Private Sub LogListener_Finish()
+Private Sub ILogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal Logrec As LogRecord)
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 If Len(LogText.Text) >= 32767 Then
@@ -553,7 +553,7 @@ End Sub
 
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
-Static formatter As LogFormatter
+Static formatter As ILogFormatter
 
 On Error GoTo Err
 

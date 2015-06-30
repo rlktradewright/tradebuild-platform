@@ -60,8 +60,8 @@ Private mConnectionRetryIntervalSecs                As Long
 
 Private mTwsConnectionStateListeners                As Listeners
 
-Private mApiErrorListener                           As ErrorListener
-Private mApiNotificationListener                    As NotificationListener
+Private mApiErrorListener                           As IErrorListener
+Private mApiNotificationListener                    As INotificationListener
 
 Private mContractCache                              As New TwsContractCache
 
@@ -416,9 +416,9 @@ Friend Sub Initialise( _
                 ByVal pConnectionRetryIntervalSecs As Long, _
                 ByVal pDeferConnection As Boolean, _
                 ByVal pConnectionStateListener As ITwsConnectionStateListener, _
-                ByVal pProgramErrorHandler As ProgramErrorListener, _
-                ByVal pApiErrorListener As ErrorListener, _
-                ByVal pApiNotificationListener As NotificationListener)
+                ByVal pProgramErrorHandler As IProgramErrorListener, _
+                ByVal pApiErrorListener As IErrorListener, _
+                ByVal pApiNotificationListener As INotificationListener)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 

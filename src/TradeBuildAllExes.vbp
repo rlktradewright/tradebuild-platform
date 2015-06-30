@@ -1,0 +1,23 @@
+VBGROUP 5.0
+StartupProject=TradeSkilDemo\TradeSkilDemo.vbp
+Project=IBEnhAPI\ContractDataTest1\ContractDataTest1.vbp
+Project=IBEnhAPI\MarketDataTest1\MarketDataTest1.vbp
+Project=IBEnhAPI\HistDataTest1\HistDataTest1.vbp
+Project=IBEnhAPI\IBOrdersTest1\IBOrdersTest1.vbp
+Project=OrderUtils\OrdersTest1\OrdersTest1.vbp
+Project=TradingUI\MarketChartTest1\MarketChartTest1.vbp
+Project=TradingUI\TickerGridTest1\TickerGridTest1.vbp
+Project=ChartDemo\ChartDemo.vbp
+Project=StudyTester\StudyTester.vbp
+Project=DataCollector\DataCollector.vbp
+Project=TickfileManager\TickfileManager.vbp
+Project=StrategyHost\StrategyHost.vbp
+Project=CommandLineUtils\gbd\gbd.vbp
+Project=CommandLineUtils\gccd\gccd.vbp
+Project=CommandLineUtils\gcd\gcd.vbp
+Project=CommandLineUtils\gtd\gtd.vbp
+Project=CommandLineUtils\gxd\gxd.vbp
+Project=CommandLineUtils\ltz\ltz.vbp
+Project=CommandLineUtils\uccd\uccd.vbp
+Project=CommandLineUtils\ucd\ucd.vbp
+Project=CommandLineUtils\uxd\uxd.vbp

@@ -55,7 +55,7 @@ Private mDataManager                                As MarketDataManager
 Private mOptions                                    As MarketDataSourceOptions
 Private mNumberOfMarketDepthRows                    As Long
 
-Private mDefaultStateChangeListener                 As StateChangeListener
+Private mDefaultStateChangeListener                 As IStateChangeListener
 
 Private mPrimaryContractStore                       As IContractStore
 Private mSecondaryContractStore                     As IContractStore
@@ -118,7 +118,7 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
@@ -219,7 +219,7 @@ Public Function CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
@@ -275,7 +275,7 @@ Friend Sub Initialise( _
                 ByVal pPrimaryContractStore As IContractStore, _
                 ByVal pSecondaryContractStore As IContractStore, _
                 ByVal pOptions As MarketDataSourceOptions, _
-                ByVal pDefaultStateChangeListener As StateChangeListener, _
+                ByVal pDefaultStateChangeListener As IStateChangeListener, _
                 ByVal pNumberOfMarketDepthRows As Long, _
                 ByVal pReplaySpeed As Long, _
                 ByVal pReplayProgressEventInterval As Long, _

@@ -31,7 +31,7 @@ Option Explicit
 '@================================================================================
 
 Implements IContracts
-Implements Stringable
+Implements IStringable
 
 '@================================================================================
 ' Events
@@ -86,7 +86,7 @@ End Sub
 ' IContracts Interface Members
 '@================================================================================
 
-Private Sub IContracts_AddCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Private Sub IContracts_AddCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "IContracts_AddCollectionChangeListener"
 On Error GoTo Err
 
@@ -150,7 +150,7 @@ Private Function IContracts_NewEnum() As stdole.IUnknown
 Set IContracts_NewEnum = NewEnum
 End Function
 
-Private Sub IContracts_RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Private Sub IContracts_RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "IContracts_RemoveCollectionChangeListener"
 On Error GoTo Err
 
@@ -183,11 +183,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
-' Stringable Interface Members
+' IStringable Interface Members
 '@================================================================================
 
-Private Function Stringable_ToString() As String
-Stringable_ToString = ToString
+Private Function IStringable_ToString() As String
+IStringable_ToString = ToString
 End Function
 
 '@================================================================================
@@ -249,7 +249,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
@@ -304,7 +304,7 @@ Set NewEnum = mContracts.Enumerator
 End Function
 
 Public Sub RemoveCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
@@ -379,7 +379,7 @@ Set ev.AffectedItem = affectedObject
 mChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mChangeListeners.Count
-    Dim lListener As CollectionChangeListener
+    Dim lListener As ICollectionChangeListener
     Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next

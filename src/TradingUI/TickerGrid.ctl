@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -44,12 +44,12 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements DeferredAction
-Implements ErrorListener
+Implements IDeferredAction
+Implements IErrorListener
 Implements IQuoteListener
 Implements IPriceChangeListener
 Implements IThemeable
-Implements StateChangeListener
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -454,11 +454,11 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 Dim lTicker As IMarketDataSource
@@ -473,11 +473,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' ErrorListener Interface Members
+' IErrorListener Interface Members
 '@================================================================================
 
-Private Sub ErrorListener_Notify(ev As ErrorEventData)
-Const ProcName As String = "ErrorListener_Notify"
+Private Sub IErrorListener_Notify(ev As ErrorEventData)
+Const ProcName As String = "IErrorListener_Notify"
 On Error GoTo Err
 
 RaiseEvent Error(ev)
@@ -509,7 +509,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' PriceChangeListener Interface Members
+' IPriceChangeListener Interface Members
 '@================================================================================
 
 Private Sub IPriceChangeListener_Change(ev As PriceChangeEventData)
@@ -548,7 +548,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' QuoteListener Interface Members
+' IQuoteListener Interface Members
 '@================================================================================
 
 Private Sub IQuoteListener_Ask(ev As QuoteEventData)
@@ -663,11 +663,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 processTickerState ev.Source

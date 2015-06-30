@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements DeferredAction
+Implements IDeferredAction
 
 '@================================================================================
 ' Events
@@ -51,11 +51,11 @@ Private Const ModuleName                    As String = "DeferredCancelStatus"
 '@================================================================================
 
 '@================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_run(ByVal data As Variant)
-Const ProcName As String = "DeferredAction_run"
+Private Sub IDeferredAction_run(ByVal data As Variant)
+Const ProcName As String = "IDeferredAction_run"
 Dim lMapEntry As OrderIdMapEntry
 On Error GoTo Err
 

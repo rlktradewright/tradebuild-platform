@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Enumerable
+Implements IEnumerable
 
 '@================================================================================
 ' Events
@@ -77,14 +77,14 @@ previousEntryIndex(mLastIndex) = mFirstIndex
 End Sub
 
 '@================================================================================
-' Enumerable Interface Members
+' IEnumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As Enumerator
-Set Enumerable_Enumerator = getEnumerator
+Private Property Get IEnumerable_Enumerator() As Enumerator
+Set IEnumerable_Enumerator = getEnumerator
 End Property
 
-Private Function Enumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
+Private Function IEnumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
 If cookie = &H7FFFFFFF Then Exit Function
 If IsEmpty(cookie) Then cookie = mFirstIndex
 
@@ -95,16 +95,16 @@ If cookie = mLastIndex Then
 End If
 
 Set Item = Me.Item(CLng(cookie))
-Enumerable_NextItem = True
+IEnumerable_NextItem = True
 
 End Function
 
-Private Sub Enumerable_Remove(cookie As Variant)
+Private Sub IEnumerable_Remove(cookie As Variant)
 Remove cookie
 End Sub
 
-Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
-Const ProcName As String = "Enumerable_Skip"
+Private Function IEnumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
+Const ProcName As String = "IEnumerable_Skip"
 On Error GoTo Err
 
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Skip not supported"
@@ -115,8 +115,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Enumerable_UpdateSequence() As Long
-Enumerable_UpdateSequence = mUpdateSequence
+Private Property Get IEnumerable_UpdateSequence() As Long
+IEnumerable_UpdateSequence = mUpdateSequence
 End Property
 
 '@================================================================================

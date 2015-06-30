@@ -73,7 +73,7 @@ Option Explicit
 '@================================================================================
 
 Implements ITwsConnectionStateListener
-Implements LogListener
+Implements ILogListener
 
 '@================================================================================
 ' Events
@@ -177,15 +177,15 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 End Sub
 
 '@================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '@================================================================================
 
-Private Sub LogListener_Finish()
+Private Sub ILogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal Logrec As LogRecord)
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 If Len(LogText.Text) >= 32767 Then
@@ -337,7 +337,7 @@ End Sub
 
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
-Static formatter As LogFormatter
+Static formatter As ILogFormatter
 
 On Error GoTo Err
 

@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -56,11 +56,11 @@ Private mListener                                   As IQuoteListener
 '@================================================================================
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
-Const ProcName As String = "Task_Cancel"
+Private Sub ITask_Cancel()
+Const ProcName As String = "ITask_Cancel"
 On Error GoTo Err
 
 mTaskContext.Finish Empty, True
@@ -71,8 +71,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
@@ -94,15 +94,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
+Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 
-Private Property Get Task_TaskName() As String
-Const ProcName As String = "Task_TaskName"
+Private Property Get ITask_TaskName() As String
+Const ProcName As String = "ITask_TaskName"
 On Error GoTo Err
 
-Task_TaskName = mTaskContext.Name
+ITask_TaskName = mTaskContext.Name
 
 Exit Property
 

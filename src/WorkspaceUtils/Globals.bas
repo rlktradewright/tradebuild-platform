@@ -107,7 +107,7 @@ End Sub
 
 'Public Function gNotifyExistingCollectionMembers( _
 '                ByVal pCollection As Variant, _
-'                ByVal pListener As CollectionChangeListener, _
+'                ByVal pListener As ICollectionChangeListener, _
 '                ByVal pSource As Object)
 'Const ProcName As String = "gNotifyExistingCollectionMembers"
 'On Error GoTo Err
@@ -123,7 +123,7 @@ End Sub
 '    For Each lItem In pCollection
 '        notifyCollectionMember lItem, pSource, pListener
 '    Next
-'ElseIf TypeOf pCollection Is Enumerable Then
+'ElseIf TypeOf pCollection Is IEnumerable Then
 '    Dim enColl As Enumerable
 '    Set enColl = pCollection
 '

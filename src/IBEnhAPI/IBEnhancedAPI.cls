@@ -100,9 +100,9 @@ Public Function GetClient( _
                 Optional ByVal pConnectionRetryIntervalSecs As Long = 60, _
                 Optional ByVal pDeferConnection As Boolean, _
                 Optional ByVal pConnectionStateListener As ITwsConnectionStateListener, _
-                Optional ByVal pProgramErrorHandler As ProgramErrorListener, _
-                Optional ByVal pApiErrorListener As ErrorListener, _
-                Optional ByVal pApiNotificationListener As NotificationListener) As Client
+                Optional ByVal pProgramErrorHandler As IProgramErrorListener, _
+                Optional ByVal pApiErrorListener As IErrorListener, _
+                Optional ByVal pApiNotificationListener As INotificationListener) As Client
 Const ProcName As String = "GetClient"
 On Error GoTo Err
 

@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Configurable
+Implements IConfigurable
 
 '@================================================================================
 ' Events
@@ -68,11 +68,11 @@ GChart.gRegisterProperties
 End Sub
 
 '@================================================================================
-' Configurable Interface Members
+' IConfigurable Interface Members
 '@================================================================================
 
-Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
-Const ProcName As String = "Configurable_ConfigurationSection"
+Private Property Let IConfigurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "IConfigurable_ConfigurationSection"
 On Error GoTo Err
 
 ConfigurationSection = RHS
@@ -83,8 +83,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
-Const ProcName As String = "Configurable_LoadFromConfig"
+Private Sub IConfigurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "IConfigurable_LoadFromConfig"
 On Error GoTo Err
 
 LoadFromConfig pConfig
@@ -95,8 +95,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Configurable_RemoveFromConfig()
-Const ProcName As String = "Configurable_RemoveFromConfig"
+Private Sub IConfigurable_RemoveFromConfig()
+Const ProcName As String = "IConfigurable_RemoveFromConfig"
 On Error GoTo Err
 
 RemoveFromConfig
@@ -662,7 +662,7 @@ Else
 End If
 End Function
 
-Private Function getConfigurableObject(ByVal pValue As Variant) As Configurable
+Private Function getConfigurableObject(ByVal pValue As Variant) As IConfigurable
 Set getConfigurableObject = pValue
 End Function
 
@@ -700,7 +700,7 @@ End Sub
 
 Private Sub loadObjectFromConfig( _
                 ByVal pExtProp As ExtendedProperty, _
-                ByVal pNewObject As Configurable)
+                ByVal pNewObject As IConfigurable)
 Dim lConfig As ConfigurationSection
 Const ProcName As String = "loadObjectFromConfig"
 On Error GoTo Err
@@ -740,7 +740,7 @@ Private Sub removeConfigForNonObject(ByVal pExtProp As ExtendedProperty)
 mConfig.RemoveSetting getConfigName(pExtProp)
 End Sub
 
-Private Sub removeConfigForObject(ByVal pExtProp As ExtendedProperty, ByVal pOldvalue As Configurable)
+Private Sub removeConfigForObject(ByVal pExtProp As ExtendedProperty, ByVal pOldvalue As IConfigurable)
 mConfig.RemoveConfigurationSection getConfigName(pExtProp)
 ' Don't execute the following line because the old value may be from the parent style,
 ' and we don't want to remove that from the config

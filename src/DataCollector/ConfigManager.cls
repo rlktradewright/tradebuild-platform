@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
+Implements IChangeListener
 
 '@================================================================================
 ' Events
@@ -83,12 +83,12 @@ UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change( _
+Private Sub IChangeListener_Change( _
                 ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 If ev.Source Is mConfigStore Then
@@ -258,7 +258,7 @@ On Error GoTo Err
 mConfigStorename = configFilename
 
 On Error Resume Next
-Dim lBaseConfigFile As ConfigStoreProvider
+Dim lBaseConfigFile As IConfigStoreProvider
 Set lBaseConfigFile = LoadConfigProviderFromXMLFile(mConfigStorename)
 On Error GoTo Err
 

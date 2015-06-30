@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Task
+Implements ITask
 Implements IValueReplayTask
 
 '@================================================================================
@@ -125,19 +125,19 @@ IValueReplayTask_ValueNames = mValueNames
 End Property
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub task_cancel()
+Private Sub ITask_cancel()
 doCancel
 End Sub
 
-Private Property Get task_TaskName() As String
-task_TaskName = mTaskContext.Name
+Private Property Get ITask_TaskName() As String
+ITask_TaskName = mTaskContext.Name
 End Property
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
 If mSourceStudy.NumberOfCachedValues = 0 Then
@@ -206,7 +206,7 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
+Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 

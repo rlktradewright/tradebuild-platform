@@ -23,7 +23,7 @@ Option Explicit
 '@================================================================================
 
 Implements IGenericTickListener
-Implements DeferredAction
+Implements IDeferredAction
 
 '@================================================================================
 ' Events
@@ -115,11 +115,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_Run(ByVal pData As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal pData As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 mEnumerationInProgess = True

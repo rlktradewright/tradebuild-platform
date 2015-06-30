@@ -22,10 +22,10 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
+Implements IChangeListener
 Implements IOrderRecoveryListener
 Implements IRecoverableObjectListener
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -105,11 +105,11 @@ mState = RecoveryStateStarting
 End Sub
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 Dim lOrderContext As OrderContext
@@ -244,15 +244,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
+Private Sub ITask_Cancel()
 mTaskContext.Finish Empty, True
 End Sub
 
-Private Sub Task_Run()
-Const ProcName As String = "Task_Run"
+Private Sub ITask_Run()
+Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
@@ -360,12 +360,12 @@ ErrWithRestoreData:
 restoreOrderPersistenceDataAndFail ProcName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
 Set mTaskContext = Value
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.Name
+Private Property Get ITask_TaskName() As String
+ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================

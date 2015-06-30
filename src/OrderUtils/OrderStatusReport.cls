@@ -23,8 +23,8 @@ Option Explicit
 '@================================================================================
 
 Implements IOrderStatusReport
-Implements JSONable
-Implements Stringable
+Implements IJSONable
+Implements IStringable
 
 '@================================================================================
 ' Events
@@ -73,19 +73,19 @@ IOrderStatusReport_Status = mStatus
 End Property
 
 '@================================================================================
-' JSONable Interface Members
+' IJSONAble Interface Members
 '@================================================================================
 
-Private Function JSONable_ToJSON() As String
-JSONable_ToJSON = ToJSON
+Private Function IJSONAble_ToJSON() As String
+IJSONAble_ToJSON = ToJSON
 End Function
 
 '@================================================================================
-' Stringable Interface Members
+' IStringable Interface Members
 '@================================================================================
 
-Private Function Stringable_ToString() As String
-Stringable_ToString = ToJSON
+Private Function IStringable_ToString() As String
+IStringable_ToString = ToJSON
 End Function
 
 '@================================================================================

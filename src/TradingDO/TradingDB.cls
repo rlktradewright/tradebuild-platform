@@ -25,7 +25,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Stringable
+Implements IStringable
 
 '@================================================================================
 ' Events
@@ -87,11 +87,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Stringable Interface Members
+' IStringable Interface Members
 '@================================================================================
 
-Private Function Stringable_ToString() As String
-Stringable_ToString = ToString
+Private Function IStringable_ToString() As String
+IStringable_ToString = ToString
 End Function
 
 '@===============================================================================

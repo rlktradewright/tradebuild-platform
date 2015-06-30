@@ -22,8 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Configurable
-Implements Enumerable
+Implements IConfigurable
+Implements IEnumerable
 
 '@================================================================================
 ' Events
@@ -73,11 +73,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Configurable Interface Members
+' IConfigurable Interface Members
 '@================================================================================
 
-Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
-Const ProcName As String = "Configurable_ConfigurationSection"
+Private Property Let IConfigurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "IConfigurable_ConfigurationSection"
 On Error GoTo Err
 
 ConfigurationSection = RHS
@@ -88,8 +88,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
-Const ProcName As String = "Configurable_LoadFromConfig"
+Private Sub IConfigurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "IConfigurable_LoadFromConfig"
 On Error GoTo Err
 
 LoadFromConfig pConfig
@@ -100,8 +100,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Configurable_RemoveFromConfig()
-Const ProcName As String = "Configurable_RemoveFromConfig"
+Private Sub IConfigurable_RemoveFromConfig()
+Const ProcName As String = "IConfigurable_RemoveFromConfig"
 On Error GoTo Err
 
 RemoveFromConfig
@@ -113,23 +113,23 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Enumerable Interface Members
+' IEnumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As Enumerator
-Set Enumerable_Enumerator = getEnumerator
+Private Property Get IEnumerable_Enumerator() As Enumerator
+Set IEnumerable_Enumerator = getEnumerator
 End Property
 
-Private Function Enumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
+Private Function IEnumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
 End Function
 
-Private Sub Enumerable_Remove(cookie As Variant)
+Private Sub IEnumerable_Remove(cookie As Variant)
 End Sub
 
-Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
+Private Function IEnumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
 End Function
 
-Private Property Get Enumerable_UpdateSequence() As Long
+Private Property Get IEnumerable_UpdateSequence() As Long
 End Property
 
 '@================================================================================

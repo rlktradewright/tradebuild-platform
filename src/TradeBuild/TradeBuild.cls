@@ -219,7 +219,7 @@ Public Function CreateTradeBuildAPI( _
                                 SPRoleHistoricalDataInput + _
                                 SPRoleContractDataPrimary + _
                                 SPRoleRealtimeData, _
-                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pDefaultStateChangeListener As IStateChangeListener, _
                 Optional ByVal pMarketDataSourceOptions As MarketDataSourceOptions = MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone, _
                 Optional ByVal pNumberOfMarketDepthRows As Long = 20) As TradeBuildAPI
 Const ProcName As String = "CreateTradeBuildAPI"
@@ -246,7 +246,7 @@ Public Function CreateTradeBuildAPIFromConfig( _
                                 SPRoleHistoricalDataInput + _
                                 SPRoleContractDataPrimary + _
                                 SPRoleRealtimeData, _
-                Optional ByVal pDefaultStateChangeListener As StateChangeListener) As TradeBuildAPI
+                Optional ByVal pDefaultStateChangeListener As IStateChangeListener) As TradeBuildAPI
 Const ProcName As String = "CreateTradeBuildAPIFromConfig"
 On Error GoTo Err
 
@@ -272,7 +272,7 @@ Public Function CreateTradeBuildAPIWithDefaultProviders( _
                                 SPRoleContractDataPrimary + _
                                 SPRoleRealtimeData, _
                 Optional ByVal pScopeName As String, _
-                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pDefaultStateChangeListener As IStateChangeListener, _
                 Optional ByVal pTwsServer As String, _
                 Optional ByVal pTwsPort As Long = 7496, _
                 Optional ByVal pTwsClientId As Long = -1, _
@@ -346,8 +346,8 @@ On Error GoTo Err
 Dim lSPConfig As ConfigurationSection
 Set lSPConfig = pSPsConfig.AddConfigurationSection(ConfigSectionServiceProvider & _
                                                 "(" & pSPName & ")")
-lSPConfig.setAttribute AttributeNameServiceProviderEnabled, CStr(pEnabled)
-lSPConfig.setAttribute AttributeNameServiceProviderProgId, pSPProgId
+lSPConfig.SetAttribute AttributeNameServiceProviderEnabled, CStr(pEnabled)
+lSPConfig.SetAttribute AttributeNameServiceProviderProgId, pSPProgId
 
 Set createSPConfigSection = lSPConfig
 
@@ -367,10 +367,10 @@ On Error GoTo Err
 Dim lDataSourceConfig As ConfigurationSection
 Set lDataSourceConfig = pConfig.AddConfigurationSection(ConfigSectionMarketDataSources)
 
-lDataSourceConfig.setAttribute ConfigSettingNoImpliedTrades, CStr((pMarketDataSourceOptions And MarketDataSourceOptNoImpliedTrades) = MarketDataSourceOptNoImpliedTrades)
-lDataSourceConfig.setAttribute ConfigSettingNoVolumeAdjustments, CStr((pMarketDataSourceOptions And MarketDataSourceOptNoVolumeAdjustments) = MarketDataSourceOptNoVolumeAdjustments)
-lDataSourceConfig.setAttribute ConfigSettingUseExchangeTimezone, CStr((pMarketDataSourceOptions And MarketDataSourceOptUseExchangeTimeZone) = MarketDataSourceOptUseExchangeTimeZone)
-lDataSourceConfig.setAttribute ConfigSettingNumberOfMarketDepthRows, CStr(pNumberOfMarketDepthRows)
+lDataSourceConfig.SetAttribute ConfigSettingNoImpliedTrades, CStr((pMarketDataSourceOptions And MarketDataSourceOptNoImpliedTrades) = MarketDataSourceOptNoImpliedTrades)
+lDataSourceConfig.SetAttribute ConfigSettingNoVolumeAdjustments, CStr((pMarketDataSourceOptions And MarketDataSourceOptNoVolumeAdjustments) = MarketDataSourceOptNoVolumeAdjustments)
+lDataSourceConfig.SetAttribute ConfigSettingUseExchangeTimezone, CStr((pMarketDataSourceOptions And MarketDataSourceOptUseExchangeTimeZone) = MarketDataSourceOptUseExchangeTimeZone)
+lDataSourceConfig.SetAttribute ConfigSettingNumberOfMarketDepthRows, CStr(pNumberOfMarketDepthRows)
 
 Exit Sub
 
@@ -510,11 +510,11 @@ End Sub
 Private Sub setProperty( _
                 ByVal props As ConfigurationSection, _
                 ByVal Name As String, _
-                ByVal value As String)
+                ByVal Value As String)
 Const ProcName As String = "setProperty"
 On Error GoTo Err
 
-props.SetSetting "." & ConfigSectonProperty & "(" & Name & ")", value
+props.SetSetting "." & ConfigSectonProperty & "(" & Name & ")", Value
 
 Exit Sub
 

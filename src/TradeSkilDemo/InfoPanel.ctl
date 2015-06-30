@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#289.1#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl InfoPanel 
    Appearance      =   0  'Flat
    BackColor       =   &H00CDF3FF&
@@ -378,8 +378,8 @@ Option Explicit
 '@================================================================================
 
 Implements IThemeable
-Implements LogListener
-Implements StateChangeListener
+Implements ILogListener
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -527,15 +527,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '================================================================================
 
-Private Sub LogListener_Finish()
+Private Sub ILogListener_Finish()
 'nothing to do
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal Logrec As LogRecord)
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 If Len(LogText.Text) >= 32767 Then
@@ -561,8 +561,8 @@ End Sub
 ' StateChangeListener Interface Members
 '================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 Dim lTicker As Ticker
@@ -1002,7 +1002,7 @@ Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
 On Error GoTo Err
 
-Static formatter As LogFormatter
+Static formatter As ILogFormatter
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)
 formatLogRecord = formatter.FormatRecord(Logrec)
 

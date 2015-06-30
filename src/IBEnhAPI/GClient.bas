@@ -62,9 +62,9 @@ Public Function gGetClient( _
                 ByVal pConnectionRetryIntervalSecs As Long, _
                 ByVal pDeferConnection As Boolean, _
                 ByVal pConnectionStateListener As ITwsConnectionStateListener, _
-                ByVal pProgramErrorHandler As ProgramErrorListener, _
-                ByVal pApiErrorListener As ErrorListener, _
-                ByVal pApiNotificationListener As NotificationListener) As Client
+                ByVal pProgramErrorHandler As IProgramErrorListener, _
+                ByVal pApiErrorListener As IErrorListener, _
+                ByVal pApiNotificationListener As INotificationListener) As Client
 Const ProcName As String = "gGetClient"
 On Error GoTo Err
 

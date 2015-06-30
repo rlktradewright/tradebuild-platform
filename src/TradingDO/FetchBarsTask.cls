@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -89,11 +89,11 @@ Debug.Print "FetchBarsTask terminated"
 End Sub
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
-Const ProcName As String = "Task_Cancel"
+Private Sub ITask_Cancel()
+Const ProcName As String = "ITask_Cancel"
 On Error GoTo Err
 
 mFutureBuilder.Cancel
@@ -106,8 +106,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
@@ -156,12 +156,12 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal value As TaskContext)
+Private Property Let ITask_TaskContext(ByVal value As TaskContext)
 Set mTaskContext = value
 End Property
 
-Private Property Get Task_taskName() As String
-Task_taskName = mTaskContext.Name
+Private Property Get ITask_taskName() As String
+ITask_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================

@@ -17,7 +17,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ErrorListener
+Implements IErrorListener
 
 '@================================================================================
 ' Events
@@ -49,7 +49,7 @@ Private mMarketDataSourcesConfig                    As ConfigurationSection
 Private mMarketDataSourceOptions                    As MarketDataSourceOptions
 Private mNumberOfMarketDepthRows                    As Long
 
-Private mDefaultStateChangeListener                 As StateChangeListener
+Private mDefaultStateChangeListener                 As IStateChangeListener
 
 Private mOrderManager                               As New OrderManager
 
@@ -92,10 +92,10 @@ Debug.Print "TradeBuildAPI terminated"
 End Sub
 
 '@================================================================================
-' ErrorListener Event Handlers
+' IErrorListener Event Handlers
 '@================================================================================
 
-Private Sub ErrorListener_Notify(ev As ErrorEventData)
+Private Sub IErrorListener_Notify(ev As ErrorEventData)
 On Error Resume Next
 mServiceProviders.RemoveAll
 End Sub
@@ -212,7 +212,7 @@ Public Property Get TickfileStoreOutput() As ITickfileStore
 Set TickfileStoreOutput = ServiceProviders.TickfileStoreOutput
 End Property
 
-Friend Property Get DefaultStateChangeListener() As StateChangeListener
+Friend Property Get DefaultStateChangeListener() As IStateChangeListener
 Set DefaultStateChangeListener = mDefaultStateChangeListener
 End Property
 
@@ -350,7 +350,7 @@ End Function
 Friend Sub Initialise( _
                 ByVal pScopeName As String, _
                 ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
-                ByVal pDefaultStateChangeListener As StateChangeListener, _
+                ByVal pDefaultStateChangeListener As IStateChangeListener, _
                 ByVal pMarketDataSourceOptions As MarketDataSourceOptions, _
                 ByVal pNumberOfMarketDepthRows As Long)
 Const ProcName As String = "Initialise"
@@ -377,7 +377,7 @@ Friend Sub InitialiseFromConfig( _
                 ByVal pTradeBuildConfig As ConfigurationSection, _
                 ByVal pScopeName As String, _
                 ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
-                ByVal pDefaultStateChangeListener As StateChangeListener)
+                ByVal pDefaultStateChangeListener As IStateChangeListener)
 Const ProcName As String = "InitialiseFromConfig"
 On Error GoTo Err
 
@@ -427,7 +427,7 @@ End Sub
 Friend Sub InitialiseWithDefaultProviders( _
                 ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
                 ByVal pScopeName As String, _
-                ByVal pDefaultStateChangeListener As StateChangeListener, _
+                ByVal pDefaultStateChangeListener As IStateChangeListener, _
                 ByVal pTwsServer As String, _
                 ByVal pTwsPort As Long, _
                 ByVal pClientId As Long, _

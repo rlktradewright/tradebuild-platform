@@ -175,13 +175,13 @@ End Property
 Public Sub AddBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
 End Sub
 
-Public Sub AddChangeListener(ByVal pListener As ChangeListener)
+Public Sub AddChangeListener(ByVal pListener As IChangeListener)
 End Sub
 
 Public Sub AddExecutionListener(ByVal pListener As IExecutionListener)
 End Sub
 
-Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Sub AdjustStop(ByVal pStopTriggerPrice As Double, Optional ByVal pQuantity As Long = -1)
@@ -214,13 +214,13 @@ End Sub
 Public Sub RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
 End Sub
 
-Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
+Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
 End Sub
 
 Public Sub RemoveExecutionListener(ByVal pListener As IExecutionListener)
 End Sub
 
-Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Sub SetNewEntryPrice(ByVal Value As Double)

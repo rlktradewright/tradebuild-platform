@@ -362,7 +362,7 @@ On Error GoTo Err
 
 LogMessage "No configuration file exists - creating skeleton configuration file"
 
-Dim lBaseConfigFile As ConfigStoreProvider
+Dim lBaseConfigFile As IConfigStoreProvider
 Set lBaseConfigFile = CreateXMLConfigurationProvider(App.ProductName, ConfigFileVersion)
 
 Dim lConfigStore As ConfigurationStore
@@ -409,7 +409,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getConfigFile() As ConfigStoreProvider
+Private Function getConfigFile() As IConfigStoreProvider
 Const ProcName As String = "getConfigFile"
 On Error GoTo Err
 

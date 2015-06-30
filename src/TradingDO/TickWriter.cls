@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TaskCompletionListener
+Implements ITaskCompletionListener
 
 '@================================================================================
 ' Events
@@ -86,12 +86,12 @@ Set mTimerList = GetGlobalTimerList
 End Sub
 
 '@================================================================================
-' TaskCompletionListener Interface Members
+' ITaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_TaskCompleted( _
+Private Sub ITaskCompletionListener_TaskCompleted( _
                 ev As TaskCompletionEventData)
- Const ProcName As String = "TaskCompletionListener_taskCompleted"
+ Const ProcName As String = "ITaskCompletionListener_taskCompleted"
 On Error GoTo Err
 
 If ev.Cancelled Then

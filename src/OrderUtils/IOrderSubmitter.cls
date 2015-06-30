@@ -70,7 +70,7 @@ End Property
 Public Sub AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
 End Sub
 
-Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
@@ -113,7 +113,7 @@ End Sub
 Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
 End Sub
 
-Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Sub ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)

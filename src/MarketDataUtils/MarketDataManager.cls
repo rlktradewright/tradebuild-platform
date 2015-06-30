@@ -102,7 +102,7 @@ End Property
 Friend Function CreateMarketDataSource( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pKey As String, _
-                ByVal pStateChangeListener As StateChangeListener, _
+                ByVal pStateChangeListener As IStateChangeListener, _
                 ByVal pIsRecoverable As Boolean, _
                 ByVal pUseLocalTimeForStudies As Boolean, _
                 ByVal pTickfileStreamId As Long) As IMarketDataSource

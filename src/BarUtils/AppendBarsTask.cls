@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -59,15 +59,15 @@ Private mEt                                 As New ElapsedTimer
 '@================================================================================
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_cancel()
+Private Sub ITask_cancel()
 
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
 ' do this here to allow for the case mNumberToAppend=0
@@ -95,12 +95,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
 Set mTaskContext = Value
 End Property
 
-Private Property Get Task_taskName() As String
-Task_taskName = mTaskContext.Name
+Private Property Get ITask_taskName() As String
+ITask_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================

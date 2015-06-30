@@ -22,8 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements StateChangeListener
-Implements TaskCompletionListener
+Implements IStateChangeListener
+Implements ITaskCompletionListener
 
 '@================================================================================
 ' Events
@@ -77,10 +77,10 @@ Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
@@ -105,11 +105,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' TaskCompletionListener Interface Members
+' ITaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
-Const ProcName As String = "TaskCompletionListener_TaskCompleted"
+Private Sub ITaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
+Const ProcName As String = "ITaskCompletionListener_TaskCompleted"
 On Error GoTo Err
 
 mStudiesOutstanding = mStudiesOutstanding - 1

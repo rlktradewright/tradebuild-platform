@@ -22,8 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements DeferredAction
-Implements StateChangeListener
+Implements IDeferredAction
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -66,11 +66,11 @@ Private mContracts                                  As IContracts
 '@================================================================================
 
 '@================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 RaiseEvent ShowContractSelector
@@ -82,11 +82,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 If mContractsFuture.IsCancelled Then

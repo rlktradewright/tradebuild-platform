@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#243.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#247.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -14,7 +14,7 @@ Begin VB.UserControl ChartNavToolbar
       TabIndex        =   0
       Top             =   0
       Width           =   5865
-      _ExtentX        =   10345
+      _ExtentX        =   9737
       _ExtentY        =   582
    End
 End
@@ -34,7 +34,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
+Implements IChangeListener
 Implements IThemeable
 
 '@================================================================================
@@ -84,11 +84,11 @@ Debug.Print "ChartNavToolbar terminated"
 End Sub
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 Dim changeType As MultiChartChangeTypes

@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements LogListener
+Implements ILogListener
 
 '@================================================================================
 ' Events
@@ -75,11 +75,11 @@ End Sub
 ' InfoListener Interface Members
 '@================================================================================
 
-Private Sub LogListener_finish()
+Private Sub ILogListener_finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal logrec As LogRecord)
+Private Sub ILogListener_Notify(ByVal logrec As LogRecord)
 gCon.WriteErrorLine VariantToString(logrec.Data)
 End Sub
 

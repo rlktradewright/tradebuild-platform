@@ -23,13 +23,13 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
+Implements IChangeListener
 Implements IGenericTickListener
 Implements IOrderAuthoriser
 Implements IOrderSubmissionListener
 Implements IPositionMember
 Implements IRecoverable
-Implements StateChangeListener
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -158,11 +158,11 @@ Debug.Print "PositionManager terminated"
 End Sub
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 If TypeOf ev.Source Is IBracketOrder Then
@@ -408,11 +408,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 If ev.Source Is mOrderSubmitter Then
@@ -481,8 +481,8 @@ End Sub
 ' mClosePositionsTask Event Handlers
 '@================================================================================
 
-Private Sub mClosePositionsTask_PositionClosed()
-Const ProcName As String = "mClosePositionsTask_PositionClosed"
+Private Sub mClosePositionsITask_PositionClosed()
+Const ProcName As String = "mClosePositionsITask_PositionClosed"
 On Error GoTo Err
 
 fireChange PositionClosed
@@ -937,7 +937,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub AddChangeListener(ByVal pListener As ChangeListener)
+Public Sub AddChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "AddChangeListener"
 On Error GoTo Err
 
@@ -1151,7 +1151,7 @@ Friend Sub PreInitialise(ByVal pOrderManager As OrderManager)
 Set mOrderManager = pOrderManager
 End Sub
 
-Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
+Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "RemoveChangeListener"
 On Error GoTo Err
 
@@ -1439,7 +1439,7 @@ ev.changeType = changeType
 mChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mChangeListeners.Count
-    Dim lListener As ChangeListener
+    Dim lListener As IChangeListener
     Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next

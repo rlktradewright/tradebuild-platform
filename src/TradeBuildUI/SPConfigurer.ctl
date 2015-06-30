@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl SPConfigurer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   12750
@@ -18,6 +18,7 @@ Begin VB.UserControl SPConfigurer
       Width           =   975
       _ExtentX        =   1720
       _ExtentY        =   661
+      Caption         =   "Apply"
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -28,7 +29,6 @@ Begin VB.UserControl SPConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Apply"
    End
    Begin TWControls40.TWButton CancelButton 
       Height          =   375
@@ -38,6 +38,7 @@ Begin VB.UserControl SPConfigurer
       Width           =   975
       _ExtentX        =   1720
       _ExtentY        =   661
+      Caption         =   "Cancel"
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -48,7 +49,6 @@ Begin VB.UserControl SPConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Cancel"
    End
    Begin VB.PictureBox TfInputOptionsPicture 
       BorderStyle     =   0  'None
@@ -67,6 +67,7 @@ Begin VB.UserControl SPConfigurer
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   661
+         Caption         =   "..."
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -76,7 +77,6 @@ Begin VB.UserControl SPConfigurer
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Caption         =   "..."
       End
       Begin VB.TextBox InputTickfilePathText 
          Appearance      =   0  'Flat
@@ -262,6 +262,7 @@ Begin VB.UserControl SPConfigurer
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   661
+         Caption         =   "..."
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -271,7 +272,6 @@ Begin VB.UserControl SPConfigurer
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Caption         =   "..."
       End
       Begin TWControls40.TWImageCombo TickfileGranularityCombo 
          Height          =   270
@@ -847,7 +847,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements CollectionChangeListener
+Implements ICollectionChangeListener
 Implements IThemeable
 
 '@================================================================================
@@ -1035,12 +1035,12 @@ UserControl.Height = OutlineBox.Height
 End Sub
 
 '@================================================================================
-' CollectionChangeListener Interface Members
+' ICollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change( _
+Private Sub ICollectionChangeListener_Change( _
                 ev As CollectionChangeEventData)
-Const ProcName As String = "CollectionChangeListener_Change"
+Const ProcName As String = "ICollectionChangeListener_Change"
 On Error GoTo Err
 
 If ev.Source Is mCustomParams Then

@@ -78,7 +78,7 @@ End Property
 '@================================================================================
 
 Public Sub AddCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 End Sub
 
 Public Function ItemAtIndex(ByVal pIndex As Long) As IContract
@@ -94,7 +94,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
 End Function
 
 Public Sub RemoveCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 End Sub
 
 Public Function ToString() As String

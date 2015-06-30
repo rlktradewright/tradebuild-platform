@@ -24,7 +24,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -76,11 +76,11 @@ Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
-Const ProcName As String = "Task_Cancel"
+Private Sub ITask_Cancel()
+Const ProcName As String = "ITask_Cancel"
 On Error GoTo Err
 
 mTaskContext.Finish Empty, True
@@ -92,8 +92,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
@@ -158,8 +158,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal Value As TaskContext)
-Const ProcName As String = "Task_TaskContext"
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
+Const ProcName As String = "ITask_TaskContext"
 On Error GoTo Err
 
 Set mTaskContext = Value
@@ -170,8 +170,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.Name
+Private Property Get ITask_TaskName() As String
+ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================

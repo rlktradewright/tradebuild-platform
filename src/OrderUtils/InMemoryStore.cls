@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Enumerable
+Implements IEnumerable
 
 '@================================================================================
 ' Events
@@ -53,15 +53,15 @@ Private mOrderPersistenceDataGroups                 As New EnumerableCollection
 '@================================================================================
 
 '@================================================================================
-' Enumerable Interface Members
+' IEnumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As Enumerator
-Set Enumerable_Enumerator = Enumerator
+Private Property Get IEnumerable_Enumerator() As Enumerator
+Set IEnumerable_Enumerator = Enumerator
 End Property
 
-Private Function Enumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
-Const ProcName As String = "Enumerable_NextItem"
+Private Function IEnumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
+Const ProcName As String = "IEnumerable_NextItem"
 On Error GoTo Err
 
 Dim lCookie As EnumerationCookie
@@ -75,7 +75,7 @@ If IsEmpty(pCookie) Then
     Set lCookie.Current = lGroupsEn
     
     If Not lGroupsEn.MoveNext Then
-        Enumerable_NextItem = False
+        IEnumerable_NextItem = False
         Exit Function
     End If
     
@@ -86,12 +86,12 @@ Else
     
     If lItemsEn.MoveNext Then
         Set Item = lItemsEn.Current
-        Enumerable_NextItem = True
+        IEnumerable_NextItem = True
         Exit Function
     End If
     
     If Not lGroupsEn.MoveNext Then
-        Enumerable_NextItem = False
+        IEnumerable_NextItem = False
         Exit Function
     End If
 End If
@@ -103,9 +103,9 @@ pCookie = lCookie
 
 If lItemsEn.MoveNext Then
     Set Item = lItemsEn.Current
-    Enumerable_NextItem = True
+    IEnumerable_NextItem = True
 Else
-    Enumerable_NextItem = False
+    IEnumerable_NextItem = False
 End If
         
 Exit Function
@@ -114,15 +114,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub Enumerable_Remove(pCookie As Variant)
+Private Sub IEnumerable_Remove(pCookie As Variant)
 
 End Sub
 
-Private Function Enumerable_Skip(ByVal numToSkip As Long, pCookie As Variant) As Boolean
+Private Function IEnumerable_Skip(ByVal numToSkip As Long, pCookie As Variant) As Boolean
 
 End Function
 
-Private Property Get Enumerable_UpdateSequence() As Long
+Private Property Get IEnumerable_UpdateSequence() As Long
 
 End Property
 

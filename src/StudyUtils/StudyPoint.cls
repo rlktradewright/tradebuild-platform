@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Stringable
+Implements IStringable
 
 '@================================================================================
 ' Events
@@ -53,11 +53,11 @@ Private mY As Double
 '@================================================================================
 
 '@================================================================================
-' Stringable Interface Members
+' IStringable Interface Members
 '@================================================================================
 
-Private Function Stringable_ToString() As String
-Stringable_ToString = ToString
+Private Function IStringable_ToString() As String
+IStringable_ToString = ToString
 End Function
 
 '@================================================================================
@@ -68,8 +68,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Friend Property Let X(ByVal value As Date)
-mX = value
+Friend Property Let X(ByVal Value As Date)
+mX = Value
 End Property
 
 Public Property Get X() As Date

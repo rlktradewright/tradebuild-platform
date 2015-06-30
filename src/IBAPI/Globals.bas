@@ -332,7 +332,7 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Sub gHandleUnexpectedError( _
-                ByVal pErrorHandler As ProgramErrorListener, _
+                ByVal pErrorHandler As IProgramErrorListener, _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
@@ -375,7 +375,7 @@ Err.Raise errNum, errSource, errDesc
 End Sub
 
 Public Sub gNotifyUnhandledError( _
-                ByVal pErrorHandler As ProgramErrorListener, _
+                ByVal pErrorHandler As IProgramErrorListener, _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _

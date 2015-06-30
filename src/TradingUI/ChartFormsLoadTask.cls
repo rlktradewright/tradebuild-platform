@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -73,15 +73,15 @@ Private mState                                      As LoadStates
 '@================================================================================
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
+Private Sub ITask_Cancel()
 
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_Run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
 Static sRemovableCSs As New EnumerableCollection
@@ -144,11 +144,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal value As TaskContext)
+Private Property Let ITask_TaskContext(ByVal value As TaskContext)
 Set mTaskContext = value
 End Property
 
-Private Property Get Task_TaskName() As String
+Private Property Get ITask_TaskName() As String
 
 End Property
 

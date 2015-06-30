@@ -87,7 +87,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "AddStateChangeListener"
 On Error GoTo Err
 
@@ -161,7 +161,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "RemoveStateChangeListener"
 On Error GoTo Err
 
@@ -188,7 +188,7 @@ ev.State = pState
 mStateChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mStateChangeListeners.Count
-    Dim lListener As StateChangeListener
+    Dim lListener As IStateChangeListener
     Set lListener = mStateChangeListeners.GetListener(i)
     lListener.Change ev
 Next

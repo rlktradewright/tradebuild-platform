@@ -46,7 +46,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements CollectionChangeListener
+Implements ICollectionChangeListener
 Implements IThemeable
 
 '@================================================================================
@@ -180,12 +180,12 @@ Debug.Print "ExecutionsSummary control terminated"
 End Sub
 
 '@================================================================================
-' CollectionChangeListener Interface Members
+' ICollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change( _
+Private Sub ICollectionChangeListener_Change( _
                 ev As CollectionChangeEventData)
-Const ProcName As String = "CollectionChangeListener_Change"
+Const ProcName As String = "ICollectionChangeListener_Change"
 On Error GoTo Err
 
 If ev.changeType <> CollItemAdded Then Exit Sub

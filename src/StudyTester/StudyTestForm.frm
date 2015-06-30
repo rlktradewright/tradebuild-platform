@@ -1,9 +1,9 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFlxGrd.ocx"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#214.0#0"; "StudiesUI27.ocx"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#246.0#0"; "ChartSkil27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#217.0#0"; "StudiesUI27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#249.0#0"; "ChartSkil27.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.7"
@@ -76,33 +76,21 @@ Begin VB.Form StudyTestForm
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Label2"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "Label1"
-      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "Label19"
-      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "StudiesCombo"
-      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "LibToAddText"
-      Tab(1).Control(4).Enabled=   0   'False
       Tab(1).Control(5)=   "AddLibButton"
-      Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "StudyLibraryList"
-      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).Control(7)=   "RemoveLibButton"
-      Tab(1).Control(7).Enabled=   0   'False
       Tab(1).Control(8)=   "StudyConfigurer1"
-      Tab(1).Control(8).Enabled=   0   'False
       Tab(1).Control(9)=   "ErrorText"
-      Tab(1).Control(9).Enabled=   0   'False
       Tab(1).ControlCount=   10
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Chart1"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "ChartToolbar1"
-      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).ControlCount=   2
       Begin VB.TextBox ErrorText 
          BackColor       =   &H8000000F&
@@ -298,7 +286,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements LogListener
+Implements ILogListener
                                     
 '================================================================================
 ' Events
@@ -414,14 +402,14 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '================================================================================
 
-Private Sub LogListener_Finish()
+Private Sub ILogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
+Private Sub ILogListener_Notify(ByVal Logrec As LogRecord)
 ErrorText = CStr(Logrec.Data)
 End Sub
 
@@ -1094,7 +1082,7 @@ Const ProcName As String = "studyValueToString"
 Dim failPoint As String
 On Error GoTo Err
 
-Dim lObj As Stringable
+Dim lObj As IStringable
 
 Select Case pValueMode
 Case ValueModeNone

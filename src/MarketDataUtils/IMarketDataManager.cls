@@ -72,7 +72,7 @@ Public Function CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
 End Function
 
 Public Sub Finish()

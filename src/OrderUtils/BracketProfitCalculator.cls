@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
+Implements IChangeListener
 Implements IGenericTickListener
 Implements IExecutionListener
 
@@ -80,11 +80,11 @@ Private mDrawdownNotificationThreshold              As Currency
 '@================================================================================
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 Select Case ev.changeType
@@ -213,7 +213,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub AddChangeListener(ByVal pListener As ChangeListener)
+Public Sub AddChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "AddChangeListener"
 On Error GoTo Err
 
@@ -275,7 +275,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
+Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "RemoveChangeListener"
 On Error GoTo Err
 
@@ -397,7 +397,7 @@ ev.changeType = changeType
 mChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mChangeListeners.Count
-    Dim lListener As ChangeListener
+    Dim lListener As IChangeListener
     Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next

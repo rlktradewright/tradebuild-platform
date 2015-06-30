@@ -23,7 +23,7 @@ Option Explicit
 '@================================================================================
 
 Implements IHistoricalDataStore
-Implements TaskCompletionListener
+Implements ITaskCompletionListener
 
 '@================================================================================
 ' Events
@@ -148,11 +148,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' TaskCompletionListener Interface Members
+' ITaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
-Const ProcName As String = "TaskCompletionListener_TaskCompleted"
+Private Sub ITaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
+Const ProcName As String = "ITaskCompletionListener_TaskCompleted"
 On Error GoTo Err
 
 mTaskControllers.Remove ev.Source

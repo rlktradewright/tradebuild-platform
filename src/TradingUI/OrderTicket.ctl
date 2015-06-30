@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl OrderTicket 
    ClientHeight    =   6195
    ClientLeft      =   0
@@ -853,10 +853,10 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
+Implements IChangeListener
 Implements IGenericTickListener
 Implements IThemeable
-Implements StateChangeListener
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -966,8 +966,8 @@ End Sub
 ' ChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "ChangeListener_Change"
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 Dim op As IBracketOrder
@@ -1075,11 +1075,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 Dim lState As MarketDataSourceStates

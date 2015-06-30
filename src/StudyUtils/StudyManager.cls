@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TaskCompletionListener
+Implements ITaskCompletionListener
 
 '@================================================================================
 ' Events
@@ -157,12 +157,12 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' TaskCompletionListener Interface Members
+' ITaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_taskCompleted( _
+Private Sub ITaskCompletionListener_taskCompleted( _
                 ev As TaskCompletionEventData)
-Const ProcName As String = "TaskCompletionListener_taskCompleted"
+Const ProcName As String = "ITaskCompletionListener_taskCompleted"
 On Error GoTo Err
 
 Dim result As ValueReplayResult

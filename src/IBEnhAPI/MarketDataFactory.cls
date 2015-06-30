@@ -26,7 +26,7 @@ Implements IMarketDataConsumer
 Implements IMarketDepthConsumer
 Implements IMarketDataFactory
 Implements ITwsConnectionStateListener
-Implements StateChangeListener
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -485,11 +485,11 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 End Sub
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 Dim lBuilder As TickStreamBuilder

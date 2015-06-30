@@ -17,7 +17,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements CollectionChangeListener
+Implements ICollectionChangeListener
 
 
 '@================================================================================
@@ -111,11 +111,11 @@ Private mTickfileOutputMonitor                          As ITickfileOutputMonito
 '@================================================================================
 
 '@================================================================================
-' CollectionChangeListener Interface Members
+' ICollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
-Const ProcName As String = "CollectionChangeListener_Change"
+Private Sub ICollectionChangeListener_Change(ev As CollectionChangeEventData)
+Const ProcName As String = "ICollectionChangeListener_Change"
 On Error GoTo Err
 
 If ev.ChangeType = CollItemAdded Then

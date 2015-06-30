@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.Form fDataCollectorUI 
    Caption         =   "TradeBuild Data Collector Version 2.7"
@@ -340,13 +340,13 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements DeferredAction
+Implements IDeferredAction
 Implements IBarOutputMonitor
 Implements IGenericTickListener
 Implements IRawMarketDepthListener
-Implements StateChangeListener
+Implements IStateChangeListener
 Implements ITickfileOutputMonitor
-Implements LogListener
+Implements ILogListener
 
 '================================================================================
 ' Events
@@ -410,7 +410,7 @@ Private mLineSpacing As Integer
 
 Private mStartStopTimePanel As Panel
 
-Private mFormatter As LogFormatter
+Private mFormatter As ILogFormatter
 
 Private mConfigManager As ConfigManager
 
@@ -518,11 +518,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '================================================================================
 
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 startCollecting "Restarting collection"
@@ -746,12 +746,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '================================================================================
 
-Private Sub LogListener_finish()
+Private Sub ILogListener_finish()
 'nothing to do
-Const ProcName As String = "LogListener_finish"
+Const ProcName As String = "ILogListener_finish"
 On Error GoTo Err
 
 
@@ -762,8 +762,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub LogListener_Notify(ByVal logrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal logrec As LogRecord)
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 If Len(LogText.Text) >= 32767 Then
@@ -789,8 +789,8 @@ End Sub
 ' StateChangeListener Interface Members
 '================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 Dim tli As TimerListItem

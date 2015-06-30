@@ -691,7 +691,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddChangeListener( _
-                ByVal pListener As ChangeListener)
+                ByVal pListener As IChangeListener)
 Const ProcName As String = "AddChangeListener"
 On Error GoTo Err
 
@@ -887,7 +887,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
+Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "RemoveChangeListener"
 On Error GoTo Err
 
@@ -1049,7 +1049,7 @@ ev.changeType = changeType
 mChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mChangeListeners.Count
-    Dim lListener As ChangeListener
+    Dim lListener As IChangeListener
     Set lListener = mChangeListeners.GetListener(i)
     lListener.Change ev
 Next

@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Enumerable
+Implements IEnumerable
 
 '@================================================================================
 ' Events
@@ -53,14 +53,14 @@ Private mTS                                         As TextStream
 '@================================================================================
 
 '@================================================================================
-' Enumerable Interface Members
+' IEnumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As Enumerator
-Const ProcName As String = "Enumerable_Enumerator"
+Private Property Get IEnumerable_Enumerator() As Enumerator
+Const ProcName As String = "IEnumerable_Enumerator"
 On Error GoTo Err
 
-Set Enumerable_Enumerator = GetEnumerator(Me)
+Set IEnumerable_Enumerator = getEnumerator(Me)
 
 Exit Property
 
@@ -68,18 +68,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function Enumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
-Const ProcName As String = "Enumerable_NextItem"
+Private Function IEnumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
+Const ProcName As String = "IEnumerable_NextItem"
 On Error GoTo Err
 
 Dim lLine As String
 If mTS Is Nothing Then
-    Enumerable_NextItem = False
+    IEnumerable_NextItem = False
 ElseIf getNextLine(lLine) Then
     Item = lLine
-    Enumerable_NextItem = True
+    IEnumerable_NextItem = True
 Else
-    Enumerable_NextItem = False
+    IEnumerable_NextItem = False
 End If
 
 Exit Function
@@ -88,8 +88,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub Enumerable_Remove(cookie As Variant)
-Const ProcName As String = "Enumerable_Remove"
+Private Sub IEnumerable_Remove(cookie As Variant)
+Const ProcName As String = "IEnumerable_Remove"
 On Error GoTo Err
 
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Remove not supported"
@@ -100,8 +100,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
-Const ProcName As String = "Enumerable_Skip"
+Private Function IEnumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
+Const ProcName As String = "IEnumerable_Skip"
 On Error GoTo Err
 
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Skip not supported"
@@ -112,7 +112,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Enumerable_UpdateSequence() As Long
+Private Property Get IEnumerable_UpdateSequence() As Long
 
 End Property
 
@@ -128,11 +128,11 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function GetEnumerator() As Enumerator
+Friend Function getEnumerator() As Enumerator
 Const ProcName As String = "GetEnumerator"
 On Error GoTo Err
 
-Set GetEnumerator = CreateEnumerator(Me)
+Set getEnumerator = CreateEnumerator(Me)
 
 Exit Function
 

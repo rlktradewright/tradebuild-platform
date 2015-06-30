@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#263.0#0"; "TradingUI27.ocx"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.7"
    ClientHeight    =   7875
@@ -50,19 +50,12 @@ Begin VB.Form MainForm
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "ReplayProgressLabel"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "ReplayContractLabel"
-      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "ReplayProgressBar"
-      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "ConvertButton"
-      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "StopButton"
-      Tab(1).Control(4).Enabled=   0   'False
       Tab(1).Control(5)=   "Frame4"
-      Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "TickfileOrganiser1"
-      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).ControlCount=   7
       TabCaption(2)   =   "Contract details"
       TabPicture(2)   =   "MainForm.frx":0038
@@ -90,7 +83,7 @@ Begin VB.Form MainForm
          Top             =   960
          Width           =   2415
          _ExtentX        =   4260
-         _ExtentY        =   6509
+         _ExtentY        =   5556
          ForeColor       =   -2147483640
       End
       Begin VB.CommandButton ConfigureButton 
@@ -956,7 +949,7 @@ Option Explicit
 
 Implements IBarOutputMonitor
 Implements ITickfileOutputMonitor
-Implements LogListener
+Implements ILogListener
 
 '================================================================================
 ' Events
@@ -1033,7 +1026,7 @@ Private mInFormatValue                              As String
 
 Private mTickFileSpecifiers                         As TickFileSpecifiers
 
-Private mLogFormatter                               As LogFormatter
+Private mLogFormatter                               As ILogFormatter
 
 Private mIsInDev                                    As Boolean
 
@@ -1226,14 +1219,14 @@ Private Sub ITickfileOutputMonitor_NotifyReady(ByVal pSource As Object)
 End Sub
 
 '================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '================================================================================
 
-Private Sub LogListener_finish()
+Private Sub ILogListener_finish()
 End Sub
 
-Private Sub LogListener_Notify(ByVal logrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal logrec As LogRecord)
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 StatusText.SelStart = Len(StatusText.Text)

@@ -32,7 +32,7 @@ Option Explicit
 
 Implements IGenericTickListener
 Implements ITickfileReplayMonitor
-Implements Task
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -223,17 +223,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
+Private Sub ITask_Cancel()
 End Sub
 
-Private Sub Task_Run()
-Const ProcName As String = "Task_Run"
+Private Sub ITask_Run()
+Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Task_Run"
+'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  ITask_Run"
 
 If mTaskContext.CancelPending Then
     StopReplay
@@ -274,12 +274,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
 Set mTaskContext = Value
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.Name
+Private Property Get ITask_TaskName() As String
+ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================

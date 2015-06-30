@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements DeferredAction
+Implements IDeferredAction
 Implements IGenericTickListener
 Implements IMarketDataErrorListener
 
@@ -148,11 +148,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' DeferredAction Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "DeferredAction_Run"
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
 Dim lData As DeferredNotificationActionData
@@ -214,7 +214,7 @@ End Sub
 '@================================================================================
 
 Private Sub IMarketDataErrorListener_NotifyMarketDataError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDataError"
+Const ProcName As String = "IMarketDataIErrorListener_NotifyMarketDataError"
 On Error GoTo Err
 
 NotifyMarketDataError pErrorCode, pErrorMessage
@@ -226,7 +226,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataErrorListener_NotifyMarketDepthError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDepthError"
+Const ProcName As String = "IMarketDataIErrorListener_NotifyMarketDepthError"
 On Error GoTo Err
 
 NotifyMarketDepthError pErrorCode, pErrorMessage

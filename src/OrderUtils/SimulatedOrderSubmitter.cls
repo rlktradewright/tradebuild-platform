@@ -172,7 +172,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_AddStateChangeListener(ByVal pListener As StateChangeListener)
+Private Sub IOrderSubmitter_AddStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "IOrderSubmitter_AddStateChangeListener"
 On Error GoTo Err
 
@@ -481,7 +481,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Private Sub IOrderSubmitter_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "IOrderSubmitter_RemoveStateChangeListener"
 On Error GoTo Err
 
@@ -625,7 +625,7 @@ ev.State = mState
 mStateChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mStateChangeListeners.Count
-    Dim lListener As StateChangeListener
+    Dim lListener As IStateChangeListener
     Set lListener = mStateChangeListeners.GetListener(i)
     lListener.Change ev
 Next

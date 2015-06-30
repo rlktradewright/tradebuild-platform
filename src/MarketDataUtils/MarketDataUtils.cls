@@ -82,7 +82,7 @@ Public Function CreateRealtimeDataManager( _
                 ByVal pMarketDataFactory As IMarketDataFactory, _
                 Optional ByVal pStudyLibManager As StudyLibraryManager, _
                 Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
-                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pDefaultStateChangeListener As IStateChangeListener, _
                 Optional ByVal pNumberOfMarketDepthRows As Long = 20) As IMarketDataManager
 Const ProcName As String = "CreateRealtimeDataManager"
 On Error GoTo Err
@@ -106,7 +106,7 @@ Public Function CreateTickDataManager( _
                 Optional ByVal pPrimaryContractStore As IContractStore, _
                 Optional ByVal pSecondaryContractStore As IContractStore, _
                 Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
-                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pDefaultStateChangeListener As IStateChangeListener, _
                 Optional ByVal pNumberOfMarketDepthRows As Long = 20, _
                 Optional ByVal pReplaySpeed As Long = 1, _
                 Optional ByVal pReplayProgressEventInterval As Long = 1000, _

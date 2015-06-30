@@ -31,7 +31,7 @@ Option Explicit
 '@================================================================================
 
 Implements IComboLegs
-Implements JSONable
+Implements IJSONable
 
 '@================================================================================
 ' Events
@@ -75,7 +75,7 @@ End Sub
 ' IComboLegs Interface Members
 '@================================================================================
 
-Private Sub IComboLegs_AddCollectionChangeListener(ByVal Value As CollectionChangeListener)
+Private Sub IComboLegs_AddCollectionChangeListener(ByVal Value As ICollectionChangeListener)
 AddCollectionChangeListener Value
 End Sub
 
@@ -87,16 +87,16 @@ Private Function IComboLegs_Item(ByVal pIndex As Variant) As IComboleg
 Set IComboLegs_Item = Item(pIndex)
 End Function
 
-Private Sub IComboLegs_RemoveCollectionChangeListener(ByVal Value As CollectionChangeListener)
+Private Sub IComboLegs_RemoveCollectionChangeListener(ByVal Value As ICollectionChangeListener)
 RemoveCollectionChangeListener Value
 End Sub
 
 '@================================================================================
-' JSONable Interface Members
+' IJSONable Interface Members
 '@================================================================================
 
-Private Function JSONable_ToJSON() As String
-JSONable_ToJSON = ToJSON
+Private Function IJsonable_ToJSON() As String
+IJsonable_ToJSON = ToJSON
 End Function
 
 '@================================================================================
@@ -154,7 +154,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddCollectionChangeListener( _
-                ByVal Value As CollectionChangeListener)
+                ByVal Value As ICollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 
 On Error GoTo Err
@@ -246,7 +246,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal Value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal Value As ICollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
 
@@ -269,7 +269,7 @@ End Sub
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As ComboLeg)
-Dim listener As CollectionChangeListener
+Dim listener As ICollectionChangeListener
 Dim i As Long
 Dim ev As CollectionChangeEventData
 Const ProcName As String = "fireChange"

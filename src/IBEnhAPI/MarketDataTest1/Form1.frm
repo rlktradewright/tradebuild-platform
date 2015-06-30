@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#237.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   9585
@@ -71,7 +71,8 @@ Begin VB.Form Form1
       Top             =   120
       Width           =   3615
       _ExtentX        =   6376
-      _ExtentY        =   6509
+      _ExtentY        =   5556
+      ForeColor       =   -2147483640
       ModeAdvanced    =   -1  'True
    End
    Begin VB.TextBox BidSizeText 
@@ -340,10 +341,10 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ErrorListener
+Implements IErrorListener
 Implements IGenericTickListener
-Implements LogListener
-Implements NotificationListener
+Implements ILogListener
+Implements INotificationListener
 Implements ITwsConnectionStateListener
 
 '@================================================================================
@@ -427,10 +428,10 @@ mClient.Finish
 End Sub
 
 '@================================================================================
-' ErrorListener Interface Members
+' IErrorListener Interface Members
 '@================================================================================
 
-Private Sub ErrorListener_Notify(ev As ErrorEventData)
+Private Sub IErrorListener_Notify(ev As ErrorEventData)
 Dim lIndex As Long: lIndex = getDataSourceIndex(ev.Source)
 
 StartTickerButton(lIndex).Enabled = True
@@ -539,15 +540,15 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 End Sub
 
 '@================================================================================
-' LogListener Interface Members
+' ILogListener Interface Members
 '@================================================================================
 
-Private Sub LogListener_Finish()
+Private Sub ILogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
-Const ProcName As String = "LogListener_Notify"
+Private Sub ILogListener_Notify(ByVal Logrec As LogRecord)
+Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
 If Len(LogText.Text) >= 32767 Then
@@ -570,10 +571,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' NotificationListener Interface Members
+' INotificationListener Interface Members
 '@================================================================================
 
-Private Sub NotificationListener_Notify(ev As NotificationEventData)
+Private Sub INotificationListener_Notify(ev As NotificationEventData)
 LogMessage "Notification " & ev.EventCode & ": " & ev.EventMessage
 End Sub
 
@@ -751,7 +752,7 @@ End Sub
 
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
-Static formatter As LogFormatter
+Static formatter As ILogFormatter
 
 On Error GoTo Err
 

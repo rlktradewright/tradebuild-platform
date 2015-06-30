@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Comparable
+Implements IComparable
 
 '@================================================================================
 ' Events
@@ -54,10 +54,10 @@ Private mContractSpec                               As IContractSpecifier
 '@================================================================================
 
 '@================================================================================
-' Comparable Interface Members
+' IComparable Interface Members
 '@================================================================================
 
-Private Function Comparable_CompareTo(ByVal pObj As Comparable) As Long
+Private Function IComparable_CompareTo(ByVal pObj As IComparable) As Long
 Const ProcName As String = "Comparable_CompareTo"
 On Error GoTo Err
 
@@ -65,7 +65,7 @@ Assert TypeOf pObj Is ContractComparable, "Type of pobj is not ContractComparabl
 
 Dim lComparable As ContractComparable
 Set lComparable = pObj
-Comparable_CompareTo = gContractSpecsCompare(mContractSpec, lComparable.ContractSpec, mSortKeys)
+IComparable_CompareTo = gContractSpecsCompare(mContractSpec, lComparable.ContractSpec, mSortKeys)
 
 Exit Function
 

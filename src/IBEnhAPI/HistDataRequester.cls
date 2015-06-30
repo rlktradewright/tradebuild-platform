@@ -24,8 +24,8 @@ Option Explicit
 
 Implements IHistDataConsumer
 Implements ITwsConnectionStateListener
-Implements StateChangeListener
-Implements Task
+Implements IStateChangeListener
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -187,11 +187,11 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 End Sub
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 Dim tli As TimerListItem
@@ -205,15 +205,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
+Private Sub ITask_Cancel()
 
 End Sub
 
-Private Sub Task_Run()
-Const ProcName As String = "Task_Run"
+Private Sub ITask_Run()
+Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
 doSchedule
@@ -224,12 +224,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
+Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.Name
+Private Property Get ITask_TaskName() As String
+ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================

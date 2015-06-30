@@ -22,8 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ChangeListener
-Implements Task
+Implements IChangeListener
+Implements ITask
 
 '@================================================================================
 ' Events
@@ -61,17 +61,17 @@ Private mWorkspaces                         As WorkSpaces
 '@================================================================================
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As ChangeEventData)
+Private Sub IChangeListener_Change(ev As ChangeEventData)
 Dim pm As PositionManager
 Dim changeType As PositionManagerChangeTypes
 
-Const ProcName As String = "ChangeListener_Change"
+Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
-Set pm = ev.source
+Set pm = ev.Source
 changeType = ev.changeType
 Select Case changeType
 Case PositionManagerChangeTypes.PositionClosed
@@ -97,22 +97,22 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' Task Interface Members
+' ITask Interface Members
 '@================================================================================
 
-Private Sub Task_Cancel()
+Private Sub ITask_Cancel()
     
 End Sub
 
-Private Sub Task_run()
-Const ProcName As String = "Task_run"
+Private Sub ITask_run()
+Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
 initiateCloses
 If mNumberRemaining = 0 Then
     mTaskContext.Finish 0, False
 Else
-    mTaskContext.suspend -1
+    mTaskContext.Suspend -1
 End If
 
 Exit Sub
@@ -121,12 +121,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
 Set mTaskContext = Value
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.Name
+Private Property Get ITask_TaskName() As String
+ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================

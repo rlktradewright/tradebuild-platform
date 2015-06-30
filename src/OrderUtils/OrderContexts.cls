@@ -30,8 +30,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Enumerable
-Implements StateChangeListener
+Implements IEnumerable
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -107,14 +107,14 @@ Debug.Print "OrderContexts terminated"
 End Sub
 
 '@================================================================================
-' Enumerable Interface Members
+' IEnumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As Enumerator
-Const ProcName As String = "Enumerable_Enumerator"
+Private Property Get IEnumerable_Enumerator() As Enumerator
+Const ProcName As String = "IEnumerable_Enumerator"
 On Error GoTo Err
 
-Set Enumerable_Enumerator = Enumerator
+Set IEnumerable_Enumerator = Enumerator
 
 Exit Property
 
@@ -122,24 +122,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function Enumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
+Private Function IEnumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
 End Function
 
-Private Sub Enumerable_Remove(pCookie As Variant)
+Private Sub IEnumerable_Remove(pCookie As Variant)
 End Sub
 
-Private Function Enumerable_Skip(ByVal numToSkip As Long, pCookie As Variant) As Boolean
+Private Function IEnumerable_Skip(ByVal numToSkip As Long, pCookie As Variant) As Boolean
 End Function
 
-Private Property Get Enumerable_UpdateSequence() As Long
+Private Property Get IEnumerable_UpdateSequence() As Long
 End Property
 
 '@================================================================================
-' StateChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
 Select Case ev.State
@@ -310,7 +310,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
@@ -448,7 +448,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
@@ -493,7 +493,7 @@ On Error GoTo Err
 mCollectionChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mCollectionChangeListeners.Count
-    Dim lListener As CollectionChangeListener
+    Dim lListener As ICollectionChangeListener
     Set lListener = mCollectionChangeListeners.GetListener(i)
     lListener.Change ev
 Next

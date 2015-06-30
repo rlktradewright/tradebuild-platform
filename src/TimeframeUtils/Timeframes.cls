@@ -126,7 +126,7 @@ Public Function Add( _
                 ByRef Key As String, _
                 ByVal NumberOfBarsToFetch As Long, _
                 Optional ByVal pFromTime As Date, _
-                Optional ByVal pStateChangeListener As StateChangeListener, _
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
                 Optional ByVal IncludeBarsOutsideSession As Boolean, _
                 Optional ByVal ExcludeCurrentbar As Boolean) As Timeframe
 Const ProcName As String = "Add"
@@ -164,7 +164,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
@@ -208,7 +208,7 @@ Public Function AddHistorical( _
                 ByVal NumberOfBarsToFetch As Long, _
                 Optional ByVal FromTime As Date, _
                 Optional ByVal ToTime As Date, _
-                Optional ByVal pStateChangeListener As StateChangeListener, _
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
                 Optional ByVal IncludeBarsOutsideSession As Boolean) As Timeframe
 Const ProcName As String = "AddHistorical"
 On Error GoTo Err
@@ -340,7 +340,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
@@ -362,7 +362,7 @@ Private Function addTimeframe( _
                 ByVal NumberOfBarsToFetch As Long, _
                 ByVal FromTime As Date, _
                 ByVal ToTime As Date, _
-                ByVal pStateChangeListener As StateChangeListener, _
+                ByVal pStateChangeListener As IStateChangeListener, _
                 ByVal IncludeBarsOutsideSession As Boolean, _
                 ByVal ExcludeCurrentbar As Boolean) As Timeframe
 Const ProcName As String = "addTimeframe"
@@ -454,7 +454,7 @@ Set ev.AffectedItem = affectedObject
 mCollectionChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mCollectionChangeListeners.Count
-    Dim lListener As CollectionChangeListener
+    Dim lListener As ICollectionChangeListener
     Set lListener = mCollectionChangeListeners.GetListener(i)
     lListener.Change ev
 Next

@@ -128,7 +128,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
@@ -238,7 +238,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
@@ -268,7 +268,7 @@ Set ev.AffectedItem = affectedObject
 mCollectionChangeListeners.SetCurrentListeners
 Dim i As Long
 For i = 1 To mCollectionChangeListeners.Count
-    Dim lListener As CollectionChangeListener
+    Dim lListener As ICollectionChangeListener
     Set lListener = mCollectionChangeListeners.GetListener(i)
     lListener.Change ev
 Next

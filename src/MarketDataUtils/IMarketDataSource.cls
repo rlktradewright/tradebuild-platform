@@ -121,7 +121,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub AddErrorListener(ByVal pListener As ErrorListener)
+Public Sub AddErrorListener(ByVal pListener As IErrorListener)
 End Sub
 
 Public Sub AddGenericTickListener(ByVal pListener As IGenericTickListener)
@@ -139,7 +139,7 @@ End Sub
 Public Sub AddRawMarketDepthListener(ByVal pListener As IRawMarketDepthListener)
 End Sub
 
-Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Function ConvertTickToQuote(ByRef pTick As GenericTick) As Quote
@@ -172,7 +172,7 @@ End Sub
 Public Sub RefreshTicks(ByVal pListener As IGenericTickListener)
 End Sub
 
-Public Sub RemoveErrorListener(ByVal pListener As ErrorListener)
+Public Sub RemoveErrorListener(ByVal pListener As IErrorListener)
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -193,7 +193,7 @@ End Sub
 Public Sub RemoveRawMarketDepthListener(ByVal pListener As IRawMarketDepthListener)
 End Sub
 
-Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Sub StartMarketData()

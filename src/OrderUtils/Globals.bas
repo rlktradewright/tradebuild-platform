@@ -1260,7 +1260,7 @@ End Sub
 Private Sub notifyCollectionMember( _
                 ByVal pItem As Variant, _
                 ByVal pSource As Object, _
-                ByVal pListener As CollectionChangeListener)
+                ByVal pListener As ICollectionChangeListener)
 Dim ev As CollectionChangeEventData
 Const ProcName As String = "notifyCollectionMember"
 On Error GoTo Err
