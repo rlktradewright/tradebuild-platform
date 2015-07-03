@@ -317,9 +317,9 @@ Select Case pBarTimePeriod.Units
     Case TimePeriodWeek
         MaxNumberOfBarsInTimespan = Int(((lEndTime - lStartTime) / 7 + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
     Case TimePeriodMonth
-        MaxNumberOfBarsInTimespan = Int(((Month(lEndTime) - Month(lStartTime)) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+        MaxNumberOfBarsInTimespan = Int(((Year(lEndTime) - Year(lStartTime)) * 12 + Month(lEndTime) - Month(lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
     Case TimePeriodYear
-        MaxNumberOfBarsInTimespan = Int(((Year(lEndTime) - Year(lStartTime)) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+        MaxNumberOfBarsInTimespan = Int((Year(lEndTime) - Year(lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
 End Select
 
 Exit Function
