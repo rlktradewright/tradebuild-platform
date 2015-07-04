@@ -2,6 +2,11 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TradeBuildPlatformSetup", "TradeBuildPlatformSetup\TradeBuildPlatformSetup.vdproj", "{F1A9F6A2-9408-4CD7-B706-1D87EB315762}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EC9232A3-FE53-438A-B41A-1E7526108FD7} = {EC9232A3-FE53-438A-B41A-1E7526108FD7}
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TradeBuildPlatformMerge", "TradeBuildPlatformMerge\TradeBuildPlatformMerge.vdproj", "{EC9232A3-FE53-438A-B41A-1E7526108FD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +18,10 @@ Global
 		{F1A9F6A2-9408-4CD7-B706-1D87EB315762}.Debug|Default.Build.0 = Debug
 		{F1A9F6A2-9408-4CD7-B706-1D87EB315762}.Release|Default.ActiveCfg = Release
 		{F1A9F6A2-9408-4CD7-B706-1D87EB315762}.Release|Default.Build.0 = Release
+		{EC9232A3-FE53-438A-B41A-1E7526108FD7}.Debug|Default.ActiveCfg = Debug
+		{EC9232A3-FE53-438A-B41A-1E7526108FD7}.Debug|Default.Build.0 = Debug
+		{EC9232A3-FE53-438A-B41A-1E7526108FD7}.Release|Default.ActiveCfg = Release
+		{EC9232A3-FE53-438A-B41A-1E7526108FD7}.Release|Default.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
