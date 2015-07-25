@@ -120,8 +120,8 @@ Begin VB.Form fStrategyHost
       TabCaption(1)   =   "Tick files"
       TabPicture(1)   =   "fStrategyHost.frx":008C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Picture3"
-      Tab(1).Control(1)=   "Picture2(1)"
+      Tab(1).Control(0)=   "Picture2(1)"
+      Tab(1).Control(1)=   "Picture3"
       Tab(1).ControlCount=   2
       TabCaption(2)   =   "Parameters"
       TabPicture(2)   =   "fStrategyHost.frx":00A8
@@ -141,39 +141,39 @@ Begin VB.Form fStrategyHost
       TabCaption(5)   =   "Results"
       TabPicture(5)   =   "fStrategyHost.frx":00FC
       Tab(5).ControlEnabled=   0   'False
-      Tab(5).Control(0)=   "TheTime"
-      Tab(5).Control(1)=   "Label14"
-      Tab(5).Control(2)=   "Position"
-      Tab(5).Control(3)=   "MaxProfit"
-      Tab(5).Control(4)=   "Label5"
-      Tab(5).Control(5)=   "Label12"
-      Tab(5).Control(6)=   "Drawdown"
-      Tab(5).Control(7)=   "Profit"
-      Tab(5).Control(8)=   "Label4"
-      Tab(5).Control(9)=   "Label9"
-      Tab(5).Control(10)=   "Label10"
-      Tab(5).Control(11)=   "Label8"
-      Tab(5).Control(12)=   "Label1"
+      Tab(5).Control(0)=   "AskSizeText"
+      Tab(5).Control(0).Enabled=   0   'False
+      Tab(5).Control(1)=   "TradeSizeText"
+      Tab(5).Control(1).Enabled=   0   'False
+      Tab(5).Control(2)=   "BidSizeText"
+      Tab(5).Control(2).Enabled=   0   'False
+      Tab(5).Control(3)=   "AskText"
+      Tab(5).Control(3).Enabled=   0   'False
+      Tab(5).Control(4)=   "TradeText"
+      Tab(5).Control(4).Enabled=   0   'False
+      Tab(5).Control(5)=   "BidText"
+      Tab(5).Control(5).Enabled=   0   'False
+      Tab(5).Control(6)=   "MoreButton"
+      Tab(5).Control(7)=   "Label7"
+      Tab(5).Control(8)=   "MicrosecsPerEventLabel"
+      Tab(5).Control(9)=   "EventsPerSecondLabel"
+      Tab(5).Control(10)=   "Label3"
+      Tab(5).Control(11)=   "PercentCompleteLabel"
+      Tab(5).Control(12)=   "Label2"
       Tab(5).Control(13)=   "EventsPlayedLabel"
-      Tab(5).Control(14)=   "Label2"
-      Tab(5).Control(15)=   "PercentCompleteLabel"
-      Tab(5).Control(16)=   "Label3"
-      Tab(5).Control(17)=   "EventsPerSecondLabel"
-      Tab(5).Control(18)=   "MicrosecsPerEventLabel"
-      Tab(5).Control(19)=   "Label7"
-      Tab(5).Control(20)=   "MoreButton"
-      Tab(5).Control(21)=   "BidText"
-      Tab(5).Control(21).Enabled=   0   'False
-      Tab(5).Control(22)=   "TradeText"
-      Tab(5).Control(22).Enabled=   0   'False
-      Tab(5).Control(23)=   "AskText"
-      Tab(5).Control(23).Enabled=   0   'False
-      Tab(5).Control(24)=   "BidSizeText"
-      Tab(5).Control(24).Enabled=   0   'False
-      Tab(5).Control(25)=   "TradeSizeText"
-      Tab(5).Control(25).Enabled=   0   'False
-      Tab(5).Control(26)=   "AskSizeText"
-      Tab(5).Control(26).Enabled=   0   'False
+      Tab(5).Control(14)=   "Label1"
+      Tab(5).Control(15)=   "Label8"
+      Tab(5).Control(16)=   "Label10"
+      Tab(5).Control(17)=   "Label9"
+      Tab(5).Control(18)=   "Label4"
+      Tab(5).Control(19)=   "Profit"
+      Tab(5).Control(20)=   "Drawdown"
+      Tab(5).Control(21)=   "Label12"
+      Tab(5).Control(22)=   "Label5"
+      Tab(5).Control(23)=   "MaxProfit"
+      Tab(5).Control(24)=   "Position"
+      Tab(5).Control(25)=   "Label14"
+      Tab(5).Control(26)=   "TheTime"
       Tab(5).ControlCount=   27
       Begin VB.PictureBox LogPicture 
          BorderStyle     =   0  'None
@@ -1322,23 +1322,9 @@ On Error GoTo Err
 
 Select Case pLogrec.InfoType
 Case "log"
-    Dim lMessage As String
-    lMessage = formatLogRecord(pLogrec)
-    
-    Dim lBytesNeeded As Long
-    lBytesNeeded = Len(LogText.Text) + Len(lMessage) - 32767
-    If lBytesNeeded > 0 Then
-        ' clear some space at the start of the textbox
-        LogText.SelStart = 0
-        LogText.SelLength = 4 * lBytesNeeded
-        LogText.SelText = ""
-    End If
-    
-    LogText.SelStart = Len(LogText.Text)
-    LogText.SelLength = 0
-    If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
-    LogText.SelText = lMessage
-    LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
+    writeLogText formatLogRecord(pLogrec, True)
+Case "strategy.tradereason"
+    writeLogText formatLogRecord(pLogrec, False)
 Case "position.profit"
     Profit.Caption = Format(pLogrec.Data, "0.00")
     mSessionProfit = pLogrec.Data
@@ -1758,13 +1744,20 @@ MaxProfit.Caption = ""
 Position.Caption = ""
 End Sub
 
-Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
+Private Function formatLogRecord(ByVal pLogrec As LogRecord, ByVal pIncludeTimestamp As Boolean) As String
 Const ProcName As String = "formatLogRecord"
 On Error GoTo Err
 
 Static formatter As ILogFormatter
-If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal, , False, False)
-formatLogRecord = formatter.FormatRecord(Logrec)
+Static formatterWithTimestamp As ILogFormatter
+
+If pIncludeTimestamp Then
+    If formatterWithTimestamp Is Nothing Then Set formatterWithTimestamp = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal, , True, False)
+    formatLogRecord = formatterWithTimestamp.FormatRecord(pLogrec)
+Else
+    If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(, , False, False)
+    formatLogRecord = formatter.FormatRecord(pLogrec)
+End If
 
 Exit Function
 
@@ -1996,6 +1989,7 @@ GetLogger("position.bracketorderprofilestruct").AddLogListener Me
 GetLogger("position.position").AddLogListener Me
 GetLogger("position.order").AddLogListener Me
 GetLogger("position.moneymanagement").AddLogListener Me
+GetLogger("strategy.tradereason").AddLogListener Me
 
 Exit Sub
 
@@ -2003,7 +1997,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub writeLogText(ByVal pMessage As String)
+Const ProcName As String = "writeLogText"
+On Error GoTo Err
 
+Dim lBytesNeeded As Long
+
+lBytesNeeded = Len(LogText.Text) + Len(pMessage) - 32767
+If lBytesNeeded > 0 Then
+    ' clear some space at the start of the textbox
+    LogText.SelStart = 0
+    LogText.SelLength = 4 * lBytesNeeded
+    LogText.SelText = ""
+End If
+
+LogText.SelStart = Len(LogText.Text)
+LogText.SelLength = 0
+If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
+LogText.SelText = pMessage
+LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
 
