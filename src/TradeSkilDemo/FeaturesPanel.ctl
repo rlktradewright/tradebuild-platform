@@ -426,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   68157443
+            Format          =   27328515
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -480,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   68157443
+            Format          =   27328515
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -1705,6 +1705,10 @@ End Property
 
 Public Property Get MinimumWidth() As Long
 MinimumWidth = MinimumWidthTwips
+End Property
+
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
 End Property
 
 Public Property Let Theme(ByVal Value As ITheme)

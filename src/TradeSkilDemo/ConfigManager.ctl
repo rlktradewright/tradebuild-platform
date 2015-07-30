@@ -1,8 +1,8 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#123.0#0"; "TradeBuildUI27.ocx"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#213.0#0"; "StudiesUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#128.0#0"; "TradeBuildUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#217.0#0"; "StudiesUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -525,6 +525,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
 End Property
 
 Public Property Get SelectedAppConfig() As ConfigurationSection
