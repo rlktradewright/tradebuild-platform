@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TimeframeSpecifier 
    ClientHeight    =   690
    ClientLeft      =   0
@@ -31,14 +31,15 @@ Begin VB.UserControl TimeframeSpecifier
    Begin VB.TextBox TimeframeLengthText 
       BorderStyle     =   0  'None
       Height          =   285
-      Left            =   840
+      Left            =   1560
       TabIndex        =   0
       Top             =   0
-      Width           =   1335
+      Width           =   615
    End
    Begin VB.Label LengthLabel 
-      BackStyle       =   0  'Transparent
+      Appearance      =   0  'Flat
       Caption         =   "Length"
+      ForeColor       =   &H80000008&
       Height          =   255
       Left            =   0
       TabIndex        =   3
@@ -46,8 +47,9 @@ Begin VB.UserControl TimeframeSpecifier
       Width           =   855
    End
    Begin VB.Label UnitsLabel 
-      BackStyle       =   0  'Transparent
+      Appearance      =   0  'Flat
       Caption         =   "Units"
+      ForeColor       =   &H80000008&
       Height          =   255
       Left            =   0
       TabIndex        =   2
@@ -97,16 +99,12 @@ Event Change()
 Private Const ModuleName                                As String = "TimeFrameSpecifier"
 
 Private Const PropNameBackcolor                         As String = "BackColor"
-Private Const PropNameDefaultLength                     As String = "DefaultLength"
-Private Const PropNameDefaultUnits                      As String = "DefaultUnits"
 Private Const PropNameEnabled                           As String = "Enabled"
 Private Const PropNameForecolor                         As String = "ForeColor"
 Private Const PropNameTextBackColor                     As String = "TextBackColor"
 Private Const PropNameTextForeColor                     As String = "TextForeColor"
 
 Private Const PropDfltBackColor                         As Long = vbButtonFace
-Private Const PropDfltDefaultLength                     As Long = 5
-Private Const PropDfltDefaultUnits                      As Long = TimePeriodUnits.TimePeriodMinute
 Private Const PropDfltEnabled                           As Boolean = True
 Private Const PropDfltForeColor                         As Long = vbButtonText
 Private Const PropDfltTextBackColor                     As Long = vbWindowBackground
@@ -133,19 +131,15 @@ BackColor = PropDfltBackColor
 ForeColor = PropDfltForeColor
 TextBackColor = UserControl.Ambient.BackColor
 TextForeColor = UserControl.Ambient.ForeColor
-Set mDefaultTimePeriod = GetTimePeriod(PropDfltDefaultLength, PropDfltDefaultUnits)
 Enabled = PropDfltEnabled
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-
 On Error Resume Next
 
 BackColor = PropBag.ReadProperty(PropNameBackcolor, PropDfltBackColor)
 ForeColor = PropBag.ReadProperty(PropNameForecolor, PropDfltForeColor)
 
-Set DefaultTimePeriod = GetTimePeriod(PropBag.ReadProperty(PropNameDefaultLength, PropDfltDefaultLength), _
-                                    PropBag.ReadProperty(PropNameDefaultUnits, PropDfltDefaultUnits))
 Enabled = PropBag.ReadProperty(PropNameEnabled, PropDfltEnabled)
 
 TextBackColor = PropBag.ReadProperty(PropNameTextBackColor, PropDfltTextBackColor)
@@ -183,8 +177,6 @@ End Sub
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 On Error Resume Next
 PropBag.WriteProperty PropNameBackcolor, BackColor, PropDfltBackColor
-PropBag.WriteProperty PropNameDefaultLength, DefaultTimePeriod.Length, PropDfltDefaultLength
-PropBag.WriteProperty PropNameDefaultUnits, DefaultTimePeriod.Units, PropDfltDefaultUnits
 PropBag.WriteProperty PropNameEnabled, Enabled, PropDfltEnabled
 PropBag.WriteProperty PropNameForecolor, ForeColor, PropDfltForeColor
 PropBag.WriteProperty PropNameTextBackColor, TextBackColor, PropDfltTextBackColor
@@ -216,7 +208,7 @@ End Property
 '@================================================================================
 
 Private Sub TimeframeLengthText_Change()
-RaiseEvent Change
+checkChange
 End Sub
 
 Private Sub TimeframeLengthText_KeyPress(KeyAscii As Integer)
@@ -238,11 +230,11 @@ KeyAscii = 0
 End Sub
 
 Private Sub TimeframeUnitsCombo_Change()
-RaiseEvent Change
+checkChange
 End Sub
 
 Private Sub TimeframeUnitsCombo_Click()
-RaiseEvent Change
+checkChange
 End Sub
 
 '@================================================================================
@@ -258,8 +250,7 @@ Public Property Let BackColor( _
 Const ProcName As String = "backColor"
 On Error GoTo Err
 
-TimeframeLengthText.BackColor = value
-TimeframeUnitsCombo.BackColor = value
+UserControl.BackColor = value
 
 PropertyChanged PropNameBackcolor
 
@@ -273,7 +264,7 @@ Public Property Get BackColor() As OLE_COLOR
 Const ProcName As String = "backColor"
 On Error GoTo Err
 
-BackColor = TimeframeUnitsCombo.BackColor
+BackColor = UserControl.BackColor
 
 Exit Property
 
@@ -300,12 +291,7 @@ On Error GoTo Err
 
 AssertArgument Not value Is Nothing, "Value cannot be Nothing"
 
-Set mDefaultTimePeriod = value
-PropertyChanged PropNameDefaultLength
-PropertyChanged PropNameDefaultUnits
-
-TimeframeLengthText = value.Length
-setUnitsSelection value.Units
+setTimeframeSelection value.Length, value.Units
 
 Exit Property
 
@@ -349,8 +335,7 @@ Public Property Let ForeColor( _
 Const ProcName As String = "ForeColor"
 On Error GoTo Err
 
-TimeframeLengthText.ForeColor = value
-TimeframeUnitsCombo.ForeColor = value
+UserControl.ForeColor = value
 
 PropertyChanged PropNameForecolor
 
@@ -364,7 +349,7 @@ Public Property Get ForeColor() As OLE_COLOR
 Const ProcName As String = "ForeColor"
 On Error GoTo Err
 
-ForeColor = TimeframeUnitsCombo.ForeColor
+ForeColor = UserControl.ForeColor
 
 Exit Property
 
@@ -430,10 +415,13 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-BackColor = value.BackColor
-ForeColor = value.ForeColor
-TextBackColor = value.TextBackColor
-TextForeColor = value.TextForeColor
+Set mTheme = value
+BackColor = mTheme.BackColor
+ForeColor = mTheme.ForeColor
+TextBackColor = mTheme.TextBackColor
+TextForeColor = mTheme.TextForeColor
+
+gApplyTheme mTheme, UserControl.Controls
 
 Exit Property
 
@@ -449,7 +437,8 @@ Public Property Get TimePeriod() As TimePeriod
 Const ProcName As String = "TimePeriod"
 On Error GoTo Err
 
-Set TimePeriod = GetTimePeriod(CLng(TimeframeLengthText.Text), TimePeriodUnitsFromString(TimeframeUnitsCombo.SelectedItem.Text))
+Set mDefaultTimePeriod = GetTimePeriod(CLng(TimeframeLengthText.Text), TimePeriodUnitsFromString(TimeframeUnitsCombo.SelectedItem.Text))
+Set TimePeriod = mDefaultTimePeriod
 
 Exit Property
 
@@ -470,8 +459,6 @@ AssertArgument Not pValidator Is Nothing, "pValidator cannot be Nothing"
 
 Set mValidator = pValidator
 setupTimeframeUnitsCombo
-
-DefaultTimePeriod = mDefaultTimePeriod
 
 Exit Sub
 
@@ -500,14 +487,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function setUnitsSelection( _
-                ByVal value As TimePeriodUnits) As Boolean
-Const ProcName As String = "setUnitsSelection"
+Private Sub checkChange()
+If TimeframeLengthText.Text <> "" And Not TimeframeUnitsCombo.SelectedItem Is Nothing Then
+    RaiseEvent Change
+End If
+End Sub
+
+Private Function setTimeframeSelection( _
+                ByVal pLength As Long, _
+                ByVal pUnits As TimePeriodUnits) As Boolean
+Const ProcName As String = "setTimeframeSelection"
 On Error GoTo Err
 
-If mValidator.IsValidTimePeriod(GetTimePeriod(1, value)) Then
-    Set TimeframeUnitsCombo.SelectedItem = TimeframeUnitsCombo.ComboItems.Item(TimePeriodUnitsToString(value))
-    setUnitsSelection = True
+If mValidator.IsValidTimePeriod(GetTimePeriod(pLength, pUnits)) Then
+    TimeframeLengthText.Text = CStr(pLength)
+    Set TimeframeUnitsCombo.SelectedItem = TimeframeUnitsCombo.ComboItems.Item(TimePeriodUnitsToString(pUnits))
+    setTimeframeSelection = True
 End If
 
 Exit Function
@@ -530,19 +525,17 @@ AddItem TimePeriodYear
 AddItem TimePeriodVolume
 AddItem TimePeriodTickVolume
 AddItem TimePeriodTickMovement
-'If setUnitsSelection(mDefaultUnits) Then
-'ElseIf setUnitsSelection(TimePeriodMinute) Then
-'ElseIf setUnitsSelection(TimePeriodHour) Then
-'ElseIf setUnitsSelection(TimePeriodDay) Then
-'ElseIf setUnitsSelection(TimePeriodWeek) Then
-'ElseIf setUnitsSelection(TimePeriodMonth) Then
-'Else
-'    setUnitsSelection (TimePeriodYear)
-'End If
+
+If setTimeframeSelection(15, TimePeriodMinute) Then
+ElseIf setTimeframeSelection(1, TimePeriodHour) Then
+ElseIf setTimeframeSelection(1, TimePeriodDay) Then
+ElseIf setTimeframeSelection(1, TimePeriodWeek) Then
+ElseIf setTimeframeSelection(1, TimePeriodMonth) Then
+ElseIf setTimeframeSelection(1, TimePeriodYear) Then
+End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub

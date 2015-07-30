@@ -219,6 +219,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gGetParentForm(ByVal pObject As Object) As Form
+Const ProcName As String = "gGetParentForm"
+On Error GoTo Err
+
+Dim lParent As Object
+Set lParent = pObject
+
+Do While Not TypeOf lParent Is Form
+    Set lParent = lParent.Parent
+Loop
+
+Set gGetParentForm = lParent
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _

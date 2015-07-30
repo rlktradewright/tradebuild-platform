@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TimeframeSelector 
    BackStyle       =   0  'Transparent
    ClientHeight    =   1710
@@ -127,6 +127,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub UserControl_Terminate()
+Const ProcName As String = "UserControl_Terminate"
+On Error GoTo Err
+
+If Not mSpecifier Is Nothing Then Unload mSpecifier
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 On Error Resume Next
 PropBag.WriteProperty PropNameBackcolor, BackColor, PropDfltBackColor
@@ -165,16 +177,26 @@ Private Sub TimeframeCombo_Click()
 Const ProcName As String = "TimeframeCombo_Click"
 On Error GoTo Err
 
-Dim tp As TimePeriod
-
 If TimeframeCombo.Text = TimeframeCustom Then
     If mSpecifier Is Nothing Then
         Set mSpecifier = New fTimeframeSpecifier
         mSpecifier.Theme = mTheme
         mSpecifier.Initialise mValidator
     End If
-    mSpecifier.Show vbModal
+    
+    Dim myPosition As GDI_POINT
+    myPosition.X = 0
+    myPosition.Y = UserControl.Height / Screen.TwipsPerPixelY
+    MapWindowPoints UserControl.hWnd, 0, VarPtr(myPosition), 1
+    mSpecifier.Move myPosition.X * Screen.TwipsPerPixelX, _
+                    myPosition.Y * Screen.TwipsPerPixelY
+    
+    mSpecifier.ZOrder 0
+    mSpecifier.Show vbModal, gGetParentForm(UserControl.Parent)
+    
+    
     If Not mSpecifier.Cancelled Then
+        Dim tp As TimePeriod
         Set tp = mSpecifier.TimePeriod
         selectComboEntry tp
         RaiseEvent Click
@@ -297,8 +319,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-BackColor = value.TextBackColor
-ForeColor = value.TextForeColor
+Set mTheme = value
+BackColor = mTheme.TextBackColor
+ForeColor = mTheme.TextForeColor
+If Not mSpecifier Is Nothing Then mSpecifier.Theme = mTheme
 
 Exit Property
 
