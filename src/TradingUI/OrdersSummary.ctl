@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "Msflxgrd.ocx"
 Begin VB.UserControl OrdersSummary 
    Alignable       =   -1  'True
    ClientHeight    =   4245
@@ -830,7 +830,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 BracketOrderGrid.BackColorBkg = mTheme.TextBackColor
 BracketOrderGrid.BackColor = mTheme.TextBackColor
 BracketOrderGrid.BackColorFixed = mTheme.GridBackColorFixed

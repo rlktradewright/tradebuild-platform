@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#29.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSearch 
    ClientHeight    =   3870
    ClientLeft      =   0
@@ -676,7 +676,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 UserControl.BackColor = mTheme.BackColor
 UserControl.ForeColor = mTheme.GridForeColor
 gApplyTheme mTheme, UserControl.Controls

@@ -899,9 +899,10 @@ Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If Value Is Nothing Then Exit Property
-
+If mTheme Is Value Then Exit Property
 Set mTheme = Value
+If mTheme Is Nothing Then Exit Property
+
 gApplyTheme mTheme, UserControl.Controls
 
 ClosePositionsButton.BackColor = &HFF&

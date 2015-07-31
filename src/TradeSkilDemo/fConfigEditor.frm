@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.6#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.Form fConfigEditor 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Configuration editor"
@@ -22,6 +22,7 @@ Begin VB.Form fConfigEditor
       Width           =   975
       _ExtentX        =   1720
       _ExtentY        =   873
+      Caption         =   "Close"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -31,8 +32,6 @@ Begin VB.Form fConfigEditor
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Close"
-      Object.Default         =   -1  'True
    End
    Begin TWControls40.TWButton ConfigureButton 
       Height          =   495
@@ -42,6 +41,7 @@ Begin VB.Form fConfigEditor
       Width           =   1815
       _ExtentX        =   3201
       _ExtentY        =   873
+      Caption         =   "Load Selected &Configuration"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -51,8 +51,6 @@ Begin VB.Form fConfigEditor
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Load Selected &Configuration"
-      Object.Default         =   -1  'True
    End
    Begin TradeSkilDemo27.ConfigManager ConfigManager1 
       Height          =   4095
@@ -258,9 +256,10 @@ Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If Value Is Nothing Then Exit Property
-
+If mTheme Is Value Then Exit Property
 Set mTheme = Value
+If mTheme Is Nothing Then Exit Property
+
 Me.BackColor = mTheme.BackColor
 gApplyTheme mTheme, Me.Controls
 
@@ -285,10 +284,10 @@ Set mConfig = pCurrAppInstanceConfig
 
 If pCentreWindow Then
     mOverridePositionSettings = True
-    Me.left = CLng((Screen.Width - Me.Width) / 2)
+    Me.Left = CLng((Screen.Width - Me.Width) / 2)
     Me.Top = CLng((Screen.Height - Me.Height) / 2)
 Else
-    Me.left = CLng(mConfig.GetSetting(ConfigSettingConfigEditorLeft, 0)) * Screen.TwipsPerPixelX
+    Me.Left = CLng(mConfig.GetSetting(ConfigSettingConfigEditorLeft, 0)) * Screen.TwipsPerPixelX
     Me.Top = CLng(mConfig.GetSetting(ConfigSettingConfigEditorTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 End If
 
@@ -332,7 +331,7 @@ If mOverridePositionSettings Then Exit Sub
 
 If Not mConfig Is Nothing Then
     mConfig.AddPrivateConfigurationSection ConfigSectionConfigEditor
-    mConfig.SetSetting ConfigSettingConfigEditorLeft, Me.left / Screen.TwipsPerPixelX
+    mConfig.SetSetting ConfigSettingConfigEditorLeft, Me.Left / Screen.TwipsPerPixelX
     mConfig.SetSetting ConfigSettingConfigEditorTop, Me.Top / Screen.TwipsPerPixelY
 End If
 

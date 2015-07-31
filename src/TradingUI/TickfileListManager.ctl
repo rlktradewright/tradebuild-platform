@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickfileListManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   2805
@@ -29,6 +29,7 @@ Begin VB.UserControl TickfileListManager
       Width           =   315
       _ExtentX        =   556
       _ExtentY        =   873
+      Caption         =   "ò"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "Wingdings"
          Size            =   18
@@ -38,7 +39,6 @@ Begin VB.UserControl TickfileListManager
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "ò"
    End
    Begin TWControls40.TWButton RemoveButton 
       Height          =   615
@@ -48,6 +48,7 @@ Begin VB.UserControl TickfileListManager
       Width           =   315
       _ExtentX        =   556
       _ExtentY        =   1085
+      Caption         =   "X"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   12
@@ -57,7 +58,6 @@ Begin VB.UserControl TickfileListManager
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "X"
    End
    Begin TWControls40.TWButton UpButton 
       Height          =   495
@@ -67,6 +67,7 @@ Begin VB.UserControl TickfileListManager
       Width           =   315
       _ExtentX        =   556
       _ExtentY        =   873
+      Caption         =   "ñ"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "Wingdings"
          Size            =   18
@@ -76,7 +77,6 @@ Begin VB.UserControl TickfileListManager
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "ñ"
    End
    Begin VB.ListBox TickFileList 
       Appearance      =   0  'Flat
@@ -386,7 +386,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 gApplyTheme mTheme, UserControl.Controls
 
 Exit Property

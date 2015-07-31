@@ -426,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   27328515
+            Format          =   97452035
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -480,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   27328515
+            Format          =   97452035
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -1715,10 +1715,10 @@ Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If Value Is Nothing Then Exit Property
-If Value Is mTheme Then Exit Property
-
+If mTheme Is Value Then Exit Property
 Set mTheme = Value
+If mTheme Is Nothing Then Exit Property
+
 
 If TypeOf mTheme Is BlackTheme Then
     BlackThemeOption.Value = True

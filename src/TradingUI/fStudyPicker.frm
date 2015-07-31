@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#211.0#0"; "StudiesUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#217.0#0"; "StudiesUI27.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Form1"
@@ -102,7 +102,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 Me.BackColor = mTheme.BackColor
 gApplyTheme mTheme, Me.Controls
 

@@ -415,7 +415,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 BackColor = mTheme.BackColor
 ForeColor = mTheme.ForeColor
 TextBackColor = mTheme.TextBackColor

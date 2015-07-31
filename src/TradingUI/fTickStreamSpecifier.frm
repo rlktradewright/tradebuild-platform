@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.5#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.Form fTickStreamSpecifier 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Tickstream specifier"
@@ -32,6 +32,8 @@ Begin VB.Form fTickStreamSpecifier
       Width           =   735
       _ExtentX        =   0
       _ExtentY        =   0
+      Appearance      =   0
+      Caption         =   "Ok"
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -42,8 +44,6 @@ Begin VB.Form fTickStreamSpecifier
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Appearance      =   0
-      Caption         =   "Ok"
    End
    Begin TWControls40.TWButton CancelButton 
       Cancel          =   -1  'True
@@ -54,6 +54,8 @@ Begin VB.Form fTickStreamSpecifier
       Width           =   735
       _ExtentX        =   0
       _ExtentY        =   0
+      Appearance      =   0
+      Caption         =   "Cancel"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -63,8 +65,6 @@ Begin VB.Form fTickStreamSpecifier
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Appearance      =   0
-      Caption         =   "Cancel"
    End
 End
 Attribute VB_Name = "fTickStreamSpecifier"
@@ -200,7 +200,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 Me.BackColor = mTheme.BackColor
 gApplyTheme mTheme, Me.Controls
 

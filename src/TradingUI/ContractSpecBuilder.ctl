@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.5#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
    ClientHeight    =   3330
@@ -16,6 +16,8 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   1335
       _ExtentX        =   0
       _ExtentY        =   0
+      Appearance      =   0
+      Caption         =   "Advanced <<"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -25,8 +27,6 @@ Begin VB.UserControl ContractSpecBuilder
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Appearance      =   0
-      Caption         =   "Advanced <<"
    End
    Begin TWControls40.TWImageCombo CurrencyCombo 
       Height          =   270
@@ -399,11 +399,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = Value
+Theme = value
 
 Exit Property
 
@@ -689,24 +689,24 @@ End Sub
 '@================================================================================
 
 Public Property Let BackColor( _
-                ByVal Value As OLE_COLOR)
-UserControl.BackColor = Value
+                ByVal value As OLE_COLOR)
+UserControl.BackColor = value
 
-LocalSymbolLabel.BackColor = Value
+LocalSymbolLabel.BackColor = value
 
-SymbolLabel.BackColor = Value
+SymbolLabel.BackColor = value
 
-TypeLabel.BackColor = Value
+TypeLabel.BackColor = value
 
-ExpiryLabel.BackColor = Value
+ExpiryLabel.BackColor = value
 
-ExchangeLabel.BackColor = Value
+ExchangeLabel.BackColor = value
 
-CurrencyLabel.BackColor = Value
+CurrencyLabel.BackColor = value
 
-StrikePriceLabel.BackColor = Value
+StrikePriceLabel.BackColor = value
 
-RightLabel.BackColor = Value
+RightLabel.BackColor = value
 End Property
 
 Public Property Get BackColor() As OLE_COLOR
@@ -715,22 +715,22 @@ BackColor = UserControl.BackColor
 End Property
 
 Public Property Let ContractSpecifier( _
-                ByVal Value As IContractSpecifier)
+                ByVal value As IContractSpecifier)
 Const ProcName As String = "ContractSpecifier"
 On Error GoTo Err
 
-If Value Is Nothing Then
+If value Is Nothing Then
     Clear
     Exit Property
 End If
-LocalSymbolText = Value.LocalSymbol
-SymbolText = Value.Symbol
-ExchangeCombo = Value.Exchange
-TypeCombo = SecTypeToString(Value.secType)
-CurrencyCombo = Value.CurrencyCode
-ExpiryText = Value.Expiry
-StrikePriceText = Value.Strike
-RightCombo = OptionRightToString(Value.Right)
+LocalSymbolText = value.LocalSymbol
+SymbolText = value.Symbol
+ExchangeCombo = value.Exchange
+TypeCombo = SecTypeToString(value.secType)
+CurrencyCombo = value.CurrencyCode
+ExpiryText = value.Expiry
+StrikePriceText = value.Strike
+RightCombo = OptionRightToString(value.Right)
 
 Exit Property
 
@@ -759,25 +759,25 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ForeColor( _
-                ByVal Value As OLE_COLOR)
+                ByVal value As OLE_COLOR)
 Const ProcName As String = "foreColor"
 On Error GoTo Err
 
-LocalSymbolLabel.ForeColor = Value
+LocalSymbolLabel.ForeColor = value
 
-SymbolLabel.ForeColor = Value
+SymbolLabel.ForeColor = value
 
-TypeLabel.ForeColor = Value
+TypeLabel.ForeColor = value
 
-ExpiryLabel.ForeColor = Value
+ExpiryLabel.ForeColor = value
 
-ExchangeLabel.ForeColor = Value
+ExchangeLabel.ForeColor = value
 
-CurrencyLabel.ForeColor = Value
+CurrencyLabel.ForeColor = value
 
-StrikePriceLabel.ForeColor = Value
+StrikePriceLabel.ForeColor = value
 
-RightLabel.ForeColor = Value
+RightLabel.ForeColor = value
 
 Exit Property
 
@@ -795,8 +795,8 @@ IsReady = mReady
 End Property
 
 Public Property Let ModeAdvanced( _
-                ByVal Value As Boolean)
-mModeAdvanced = Value
+                ByVal value As Boolean)
+mModeAdvanced = value
 resize
 End Property
                 
@@ -804,7 +804,7 @@ Public Property Get ModeAdvanced() As Boolean
 ModeAdvanced = mModeAdvanced
 End Property
 
-Public Property Let TextBackColor(ByVal Value As OLE_COLOR)
+Public Property Let TextBackColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "TextBackColor"
 On Error GoTo Err
 
@@ -812,7 +812,7 @@ Dim lControl As Control
 For Each lControl In UserControl.Controls
     If TypeOf lControl Is TextBox Or _
         TypeOf lControl Is TWImageCombo _
-    Then lControl.BackColor = Value
+    Then lControl.BackColor = value
 Next
 
 Exit Property
@@ -825,7 +825,7 @@ Public Property Get TextBackColor() As OLE_COLOR
 TextBackColor = LocalSymbolText.BackColor
 End Property
 
-Public Property Let TextForeColor(ByVal Value As OLE_COLOR)
+Public Property Let TextForeColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "TextForeColor"
 On Error GoTo Err
 
@@ -833,7 +833,7 @@ Dim lControl As Control
 For Each lControl In UserControl.Controls
     If TypeOf lControl Is TextBox Or _
         TypeOf lControl Is TWImageCombo _
-    Then lControl.ForeColor = Value
+    Then lControl.ForeColor = value
 Next
 
 Exit Property
@@ -846,11 +846,14 @@ Public Property Get TextForeColor() As OLE_COLOR
 TextForeColor = LocalSymbolText.ForeColor
 End Property
 
-Public Property Let Theme(ByVal Value As ITheme)
+Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = Value
+If mTheme Is value Then Exit Property
+Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 gApplyTheme mTheme, UserControl.Controls
 UserControl.BackColor = mTheme.BackColor
 UserControl.ForeColor = mTheme.ForeColor

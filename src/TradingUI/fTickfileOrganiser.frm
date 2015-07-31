@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#23.5#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.Form fTickfileOrganiser 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Tickfile Organiser"
@@ -32,6 +32,7 @@ Begin VB.Form fTickfileOrganiser
       Width           =   735
       _ExtentX        =   0
       _ExtentY        =   0
+      Caption         =   "Cancel"
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -41,7 +42,6 @@ Begin VB.Form fTickfileOrganiser
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Cancel"
    End
    Begin TWControls40.TWButton OkButton 
       Default         =   -1  'True
@@ -52,6 +52,7 @@ Begin VB.Form fTickfileOrganiser
       Width           =   735
       _ExtentX        =   0
       _ExtentY        =   0
+      Caption         =   "&Ok"
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -62,7 +63,6 @@ Begin VB.Form fTickfileOrganiser
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "&Ok"
    End
 End
 Attribute VB_Name = "fTickfileOrganiser"
@@ -239,7 +239,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 Me.BackColor = mTheme.BackColor
 gApplyTheme mTheme, Me.Controls
 

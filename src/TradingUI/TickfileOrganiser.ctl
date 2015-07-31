@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickfileOrganiser 
    BackStyle       =   0  'Transparent
    ClientHeight    =   2295
@@ -16,6 +16,7 @@ Begin VB.UserControl TickfileOrganiser
       Width           =   1215
       _ExtentX        =   2143
       _ExtentY        =   661
+      Caption         =   "Add &streams..."
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -26,7 +27,6 @@ Begin VB.UserControl TickfileOrganiser
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Add &streams..."
    End
    Begin TWControls40.TWButton AddTickfilesButton 
       Height          =   375
@@ -36,6 +36,7 @@ Begin VB.UserControl TickfileOrganiser
       Width           =   1215
       _ExtentX        =   2143
       _ExtentY        =   661
+      Caption         =   "Add &files..."
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -46,7 +47,6 @@ Begin VB.UserControl TickfileOrganiser
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Add &files..."
    End
    Begin TWControls40.TWButton ClearButton 
       Height          =   375
@@ -56,6 +56,7 @@ Begin VB.UserControl TickfileOrganiser
       Width           =   735
       _ExtentX        =   1296
       _ExtentY        =   661
+      Caption         =   "Clear"
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -66,7 +67,6 @@ Begin VB.UserControl TickfileOrganiser
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Clear"
    End
    Begin TradingUI27.TickfileListManager TickfileListManager1 
       Height          =   1920
@@ -344,7 +344,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 UserControl.BackColor = mTheme.BackColor
 UserControl.ForeColor = mTheme.GridForeColor
 gApplyTheme mTheme, UserControl.Controls

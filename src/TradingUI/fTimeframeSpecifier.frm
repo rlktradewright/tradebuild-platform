@@ -250,6 +250,8 @@ On Error GoTo Err
 
 If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 applyTheme
 
 Exit Property

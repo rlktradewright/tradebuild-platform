@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#276.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
 Begin VB.Form fOrderTicket 
    BorderStyle     =   4  'Fixed ToolWindow
    ClientHeight    =   6135
@@ -231,9 +231,10 @@ Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If Value Is Nothing Then Exit Property
-
+If mTheme Is Value Then Exit Property
 Set mTheme = Value
+If mTheme Is Nothing Then Exit Property
+
 Me.BackColor = mTheme.BackColor
 gApplyTheme mTheme, Me.Controls
 
@@ -257,7 +258,7 @@ On Error GoTo Err
 
 Set mAppInstanceConfig = pAppInstanceConfig
 
-Me.left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
+Me.Left = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
 Me.Top = CLng(mAppInstanceConfig.GetSetting(ConfigSettingOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 
 Exit Sub
@@ -291,7 +292,7 @@ On Error GoTo Err
 
 If Not mAppInstanceConfig Is Nothing Then
     mAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionOrderTicket
-    mAppInstanceConfig.SetSetting ConfigSettingOrderTicketLeft, Me.left / Screen.TwipsPerPixelX
+    mAppInstanceConfig.SetSetting ConfigSettingOrderTicketLeft, Me.Left / Screen.TwipsPerPixelX
     mAppInstanceConfig.SetSetting ConfigSettingOrderTicketTop, Me.Top / Screen.TwipsPerPixelY
 End If
 

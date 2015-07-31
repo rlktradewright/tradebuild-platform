@@ -71,13 +71,13 @@ Friend Property Get Enumerator() As Enumerator
 Set Enumerator = mChartForms.Enumerator
 End Property
 
-Public Property Let Theme(ByVal Value As ITheme)
+Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If Value Is mTheme Then Exit Property
-
-Set mTheme = Value
+If mTheme Is value Then Exit Property
+Set mTheme = value
+If mTheme Is Nothing Then Exit Property
 
 Dim l As fChart
 For Each l In mChartForms

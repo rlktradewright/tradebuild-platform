@@ -685,6 +685,8 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
+
 If mTheme Is Nothing Then
     DeferAction Me, value, 1, ExpiryTimeUnitSeconds
 Else

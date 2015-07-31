@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#27.1#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyLibConfigurer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   4755
@@ -17,6 +17,7 @@ Begin VB.UserControl StudyLibConfigurer
       Width           =   375
       _ExtentX        =   661
       _ExtentY        =   1085
+      Caption         =   "X"
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -27,7 +28,6 @@ Begin VB.UserControl StudyLibConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "X"
    End
    Begin TWControls40.TWButton DownButton 
       Height          =   495
@@ -37,6 +37,7 @@ Begin VB.UserControl StudyLibConfigurer
       Width           =   375
       _ExtentX        =   661
       _ExtentY        =   873
+      Caption         =   "ò"
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "Wingdings"
@@ -47,7 +48,6 @@ Begin VB.UserControl StudyLibConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "ò"
    End
    Begin TWControls40.TWButton UpButton 
       Height          =   495
@@ -57,6 +57,7 @@ Begin VB.UserControl StudyLibConfigurer
       Width           =   375
       _ExtentX        =   661
       _ExtentY        =   873
+      Caption         =   "ñ"
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "Wingdings"
@@ -67,7 +68,6 @@ Begin VB.UserControl StudyLibConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "ñ"
    End
    Begin TWControls40.TWButton AddButton 
       Height          =   615
@@ -77,6 +77,7 @@ Begin VB.UserControl StudyLibConfigurer
       Width           =   375
       _ExtentX        =   661
       _ExtentY        =   1085
+      Caption         =   "+"
       DefaultBorderColor=   15793920
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -87,7 +88,6 @@ Begin VB.UserControl StudyLibConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "+"
    End
    Begin TWControls40.TWButton ApplyButton 
       Height          =   375
@@ -97,6 +97,7 @@ Begin VB.UserControl StudyLibConfigurer
       Width           =   975
       _ExtentX        =   1720
       _ExtentY        =   661
+      Caption         =   "Apply"
       DefaultBorderColor=   15793920
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -108,7 +109,6 @@ Begin VB.UserControl StudyLibConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Apply"
    End
    Begin TWControls40.TWButton CancelButton 
       Height          =   375
@@ -118,6 +118,7 @@ Begin VB.UserControl StudyLibConfigurer
       Width           =   975
       _ExtentX        =   1720
       _ExtentY        =   661
+      Caption         =   "Cancel"
       DefaultBorderColor=   15793920
       Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -129,7 +130,6 @@ Begin VB.UserControl StudyLibConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Caption         =   "Cancel"
    End
    Begin VB.Frame Frame1 
       Caption         =   "Library details"
@@ -710,7 +710,10 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
+If mTheme Is value Then Exit Property
 Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+
 UserControl.BackColor = mTheme.BackColor
 gApplyTheme mTheme, UserControl.Controls
 
