@@ -209,8 +209,8 @@ Set params = New Parameters
 params.SetParameterValue "Periods", mParams.GetParameterValue(ParamBollingerPeriods)
 params.SetParameterValue "Standard deviations", 2
 params.SetParameterValue "Mov avg type", mParams.GetParameterValue(ParamBollingerMovingAverageType)
-params.SetParameterValue "Centre band width", mParams.GetParameterValue(ParamBollingerCentreBandWidthTicks)
-params.SetParameterValue "Edge band width", mParams.GetParameterValue(ParamBollingerEdgeBandWidthTicks)
+params.SetParameterValue "Centre band width", mParams.GetParameterValue(ParamBollingerCentreBandWidthTicks) * mTickSize
+params.SetParameterValue "Edge band width", mParams.GetParameterValue(ParamBollingerEdgeBandWidthTicks) * mTickSize
 linputvaluenames(0) = "$default"
 Set mBoll = pContext.AddStudy("Bollinger Bands", _
                         mTimeframe.BarStudy, _

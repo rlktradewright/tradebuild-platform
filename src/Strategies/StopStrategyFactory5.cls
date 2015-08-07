@@ -171,7 +171,7 @@ Then
     
     If lLongMAPeriods <> 0 Then
         Set params = New Parameters
-        params.SetParameterValue "periods", lLongMAPeriods
+        params.SetParameterValue "Periods", lLongMAPeriods
         linputvaluenames(0) = "$default"
         Set S.LongMA = pContext.AddStudy("Simple Moving Average", _
                                 S.LongTimeframe.BarStudy, _
@@ -183,8 +183,8 @@ Then
     
     If lLongBollPeriods <> 0 Then
         Set params = New Parameters
-        params.SetParameterValue "periods", lLongBollPeriods
-        params.SetParameterValue "deviations", 2
+        params.SetParameterValue "Periods", lLongBollPeriods
+        params.SetParameterValue "Standard deviations", 2
         Set S.LongBoll = pContext.AddStudy("Bollinger Bands", _
                                 S.LongTimeframe.BarStudy, _
                                 linputvaluenames, _
