@@ -705,6 +705,38 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub gLogOrderMessage( _
+                ByVal pMessage As String, _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pContract As IContract, _
+                ByVal pKey As String, _
+                ByVal pIsSimulated As Boolean, _
+                ByVal pSource As Object)
+Const ProcName As String = "gLogOrderMessage"
+On Error GoTo Err
+
+Dim lTickPart As String
+Dim lTimePart As String
+
+If pDataSource Is Nothing Then
+ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
+Else
+    If pDataSource.IsTickReplay Then lTimePart = FormatTimestamp(pDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "  "
+    If pDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
+        lTickPart = "Curr price=" & gPriceToString(pDataSource.CurrentTick(TickTypeTrade).Price, pContract) & "; "
+    End If
+End If
+
+gLogOrder lTimePart & pMessage & " (" & lTickPart & "id=" & pKey & ")", _
+        pIsSimulated, _
+        pSource
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub gLogPosition( _
                 ByVal pData As Variant, _
                 ByVal pSimulated As Boolean, _

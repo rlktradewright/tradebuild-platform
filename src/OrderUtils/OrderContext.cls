@@ -438,7 +438,7 @@ Public Function Buy(ByRef Number As Long, _
 Const ProcName As String = "Buy"
 On Error GoTo Err
 
-gLog "Buy: " & mContract.Specifier.LocalSymbol & _
+gLog "Buy" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.LocalSymbol & _
                 " number=" & Number & _
                 "; BracketEntryType=" & gBracketEntryTypeToShortString(BracketEntryType) & _
                 "; buyPrice=" & BuyPrice & _
@@ -610,7 +610,7 @@ lBracketOrder.Checkpoint
 
 Set CreateBracketOrder = lBracketOrder
 
-logOrderMessage "Created bracket order: " & lBracketOrder.ToString, lBracketOrder.Key
+gLogOrderMessage "Created bracket order: " & lBracketOrder.ToString, mDataSource, mContract, lBracketOrder.Key, mIsSimulated, Me
 
 Exit Function
 
@@ -696,7 +696,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
                                 pBracketOrder.Risk, _
                                 msg) _
         Then
-            logOrderMessage "Rejected by money management: " & msg, pBracketOrder.Key
+            gLogOrderMessage "Rejected by money management: " & msg, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
             Set pBracketOrder = Nothing
             Exit Sub
         End If
@@ -707,7 +707,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
     End If
 End If
 
-logOrderMessage "Execute bracket order", pBracketOrder.Key
+gLogOrderMessage "Execute bracket order: ", mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
 
 mActiveBracketOrders.Add pBracketOrder
 If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
@@ -1030,7 +1030,7 @@ Const ProcName As String = "Sell"
 
 On Error GoTo Err
 
-gLog "Sell" & mContract.Specifier.LocalSymbol & _
+gLog "Sell" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.LocalSymbol & _
                 " number=" & Number & _
                 "; BracketEntryType=" & gBracketEntryTypeToShortString(BracketEntryType) & _
                 "; sellPrice=" & sellPrice & _
@@ -1292,32 +1292,6 @@ Else
     isDataSourceRunning = (mDataSource.State = MarketDataSourceStateRunning)
 End If
 End Function
-
-Private Sub logOrderMessage( _
-                ByVal pMessage As String, _
-                ByVal pKey As String)
-Const ProcName As String = "logOrderMessage"
-On Error GoTo Err
-
-Dim lTickPart As String
-Dim lTimePart As String
-
-If isDataSourceRunning Then
-    If mDataSource.IsTickReplay Then lTimePart = FormatTimestamp(mDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
-    If mDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
-        lTickPart = "Curr price=" & priceToString(mDataSource.CurrentTick(TickTypeTrade).Price) & "; "
-    End If
-End If
-
-gLogOrder lTimePart & "  " & pMessage & " (" & lTickPart & IIf(pKey <> "", "; id=" & pKey, "") & ")", _
-        mIsSimulated, _
-        Me
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 Private Function nextKey() As String
 Const ProcName As String = "nextKey"
