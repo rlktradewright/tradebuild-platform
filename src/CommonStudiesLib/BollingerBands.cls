@@ -68,11 +68,6 @@ Private mDevs As Double
 
 Private mNumberOfValuesToCache As Long
 
-'Private mBottomCache As ValueCache
-'Private mCentreCache As ValueCache
-'Private mTopCache As ValueCache
-'Private mSpreadCache As ValueCache
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -418,7 +413,7 @@ On Error GoTo Err
 
 InCentreBand = Centre(ref)
 If IsEmpty(InCentreBand.Value) Then Exit Property
-bandUpper = InCentreBand.Value + (mCentreBandWidth / 2)
+bandUpper = InCentreBand.Value + (mCentreBandWidth / 2#)
 bandLower = bandUpper - mCentreBandWidth
 
 InCentreBand.Value = (Value <= bandUpper _
@@ -459,7 +454,7 @@ On Error GoTo Err
 RangeIntersectsCentreBand = Centre(ref)
 If IsEmpty(RangeIntersectsCentreBand.Value) Then Exit Property
 
-bandUpper = RangeIntersectsCentreBand.Value + (mCentreBandWidth / 2)
+bandUpper = RangeIntersectsCentreBand.Value + (mCentreBandWidth / 2#)
 bandLower = bandUpper - mCentreBandWidth
 
 If highValue >= bandLower And highValue <= bandUpper Then
