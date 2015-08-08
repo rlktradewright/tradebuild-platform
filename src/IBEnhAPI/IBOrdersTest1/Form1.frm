@@ -2,14 +2,47 @@ VERSION 5.00
 Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   7710
+   ClientHeight    =   7800
    ClientLeft      =   60
    ClientTop       =   450
    ClientWidth     =   11475
    LinkTopic       =   "Form1"
-   ScaleHeight     =   7710
+   ScaleHeight     =   7800
    ScaleWidth      =   11475
    StartUpPosition =   3  'Windows Default
+   Begin VB.CommandButton ConnectButton 
+      Caption         =   "Connect"
+      Height          =   255
+      Left            =   7440
+      TabIndex        =   3
+      Top             =   120
+      Width           =   975
+   End
+   Begin VB.TextBox ClientIdText 
+      Alignment       =   1  'Right Justify
+      Height          =   285
+      Left            =   5640
+      TabIndex        =   2
+      Text            =   "1143256749"
+      Top             =   120
+      Width           =   1455
+   End
+   Begin VB.TextBox PortText 
+      Alignment       =   1  'Right Justify
+      Height          =   285
+      Left            =   3480
+      TabIndex        =   1
+      Text            =   "7497"
+      Top             =   120
+      Width           =   855
+   End
+   Begin VB.TextBox ServerText 
+      Height          =   285
+      Left            =   840
+      TabIndex        =   0
+      Top             =   120
+      Width           =   1695
+   End
    Begin VB.TextBox ContractText 
       Alignment       =   2  'Center
       Enabled         =   0   'False
@@ -23,97 +56,97 @@ Begin VB.Form Form1
          Strikethrough   =   0   'False
       EndProperty
       Height          =   495
-      Left            =   3000
+      Left            =   3120
       Locked          =   -1  'True
-      TabIndex        =   23
+      TabIndex        =   27
       TabStop         =   0   'False
-      Top             =   120
+      Top             =   1560
       Width           =   8175
    End
    Begin VB.CommandButton BuyBracketButton 
       Caption         =   "Buy"
       Height          =   495
-      Left            =   10320
-      TabIndex        =   22
-      Top             =   960
+      Left            =   10440
+      TabIndex        =   26
+      Top             =   2400
       Width           =   855
    End
    Begin VB.CommandButton SellBracketButton 
       Caption         =   "Sell"
       Height          =   495
-      Left            =   10320
-      TabIndex        =   21
-      Top             =   1560
+      Left            =   10440
+      TabIndex        =   25
+      Top             =   3000
       Width           =   855
    End
    Begin VB.TextBox TargetTriggerPriceText 
       Height          =   285
-      Left            =   9000
-      TabIndex        =   19
-      Top             =   1680
+      Left            =   9120
+      TabIndex        =   23
+      Top             =   3120
       Width           =   975
    End
    Begin VB.TextBox TargetPriceText 
       Height          =   285
-      Left            =   7920
-      TabIndex        =   18
-      Top             =   1680
+      Left            =   8040
+      TabIndex        =   22
+      Top             =   3120
       Width           =   975
    End
    Begin VB.ComboBox TargetOrderTypeCombo 
       Height          =   315
-      Left            =   6360
-      TabIndex        =   17
-      Top             =   1680
+      Left            =   6480
+      TabIndex        =   21
+      Top             =   3120
       Width           =   1455
    End
    Begin VB.TextBox StopLossTriggerPriceText 
       Height          =   285
-      Left            =   9000
-      TabIndex        =   15
-      Top             =   1320
+      Left            =   9120
+      TabIndex        =   19
+      Top             =   2760
       Width           =   975
    End
    Begin VB.TextBox StopLossPriceText 
       Height          =   285
-      Left            =   7920
-      TabIndex        =   14
-      Top             =   1320
+      Left            =   8040
+      TabIndex        =   18
+      Top             =   2760
       Width           =   975
    End
    Begin VB.ComboBox StopLossOrderTypeCombo 
       Height          =   315
-      Left            =   6360
-      TabIndex        =   13
-      Top             =   1320
+      Left            =   6480
+      TabIndex        =   17
+      Top             =   2760
       Width           =   1455
    End
    Begin VB.TextBox EntryTriggerPriceText 
       Height          =   285
-      Left            =   9000
-      TabIndex        =   9
-      Top             =   960
+      Left            =   9120
+      TabIndex        =   13
+      Top             =   2400
       Width           =   975
    End
    Begin VB.TextBox EntryPriceText 
       Height          =   285
-      Left            =   7920
-      TabIndex        =   8
-      Top             =   960
+      Left            =   8040
+      TabIndex        =   12
+      Top             =   2400
       Width           =   975
    End
    Begin VB.ComboBox EntryOrderTypeCombo 
       Height          =   315
-      Left            =   6360
-      TabIndex        =   6
-      Top             =   960
+      Left            =   6480
+      TabIndex        =   10
+      Top             =   2400
       Width           =   1455
    End
    Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
       Height          =   3690
-      Left            =   120
-      TabIndex        =   0
-      Top             =   120
+      Left            =   240
+      TabIndex        =   4
+      Top             =   1560
       Width           =   2295
       _ExtentX        =   4048
       _ExtentY        =   5556
@@ -123,26 +156,26 @@ Begin VB.Form Form1
    Begin VB.CommandButton SellButton 
       Caption         =   "Sell"
       Height          =   495
-      Left            =   4200
-      TabIndex        =   3
-      Top             =   1320
+      Left            =   4320
+      TabIndex        =   7
+      Top             =   2760
       Width           =   855
    End
    Begin VB.CommandButton BuyButton 
       Caption         =   "Buy"
       Height          =   495
-      Left            =   4200
-      TabIndex        =   2
-      Top             =   720
+      Left            =   4320
+      TabIndex        =   6
+      Top             =   2160
       Width           =   855
    End
    Begin VB.TextBox QuantityText 
       Alignment       =   1  'Right Justify
       Height          =   330
-      Left            =   3000
-      TabIndex        =   1
+      Left            =   3120
+      TabIndex        =   5
       Text            =   "1"
-      Top             =   720
+      Top             =   2160
       Width           =   855
    End
    Begin VB.TextBox LogText 
@@ -151,65 +184,91 @@ Begin VB.Form Form1
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   4
+      TabIndex        =   8
       TabStop         =   0   'False
       Top             =   4800
       Width           =   11295
    End
+   Begin VB.Label ClientIdLabel 
+      Caption         =   "Client id"
+      Height          =   375
+      Left            =   4800
+      TabIndex        =   30
+      Top             =   120
+      Width           =   855
+   End
+   Begin VB.Label PortLabel 
+      Caption         =   "Port"
+      Height          =   375
+      Left            =   2760
+      TabIndex        =   29
+      Top             =   120
+      Width           =   495
+   End
+   Begin VB.Label Label 
+      Caption         =   "Server"
+      Height          =   255
+      Index           =   1
+      Left            =   240
+      TabIndex        =   28
+      Top             =   120
+      Width           =   615
+   End
    Begin VB.Label Label5 
       Caption         =   "Target"
       Height          =   375
-      Left            =   5520
-      TabIndex        =   20
-      Top             =   1680
+      Left            =   5640
+      TabIndex        =   24
+      Top             =   3120
       Width           =   1455
    End
    Begin VB.Label Label8 
       Caption         =   "Stop loss"
       Height          =   375
-      Left            =   5520
-      TabIndex        =   16
-      Top             =   1320
+      Left            =   5640
+      TabIndex        =   20
+      Top             =   2760
       Width           =   1455
    End
    Begin VB.Label Label4 
       Caption         =   "Entry"
       Height          =   375
-      Left            =   5520
-      TabIndex        =   12
-      Top             =   960
+      Left            =   5640
+      TabIndex        =   16
+      Top             =   2400
       Width           =   1455
    End
    Begin VB.Label Label3 
       Caption         =   "Trigger price"
       Height          =   375
-      Left            =   9000
-      TabIndex        =   11
-      Top             =   720
+      Left            =   9120
+      TabIndex        =   15
+      Top             =   2160
       Width           =   1095
    End
    Begin VB.Label Label2 
       Caption         =   "Price"
       Height          =   375
-      Left            =   7920
-      TabIndex        =   10
-      Top             =   720
+      Left            =   8040
+      TabIndex        =   14
+      Top             =   2160
       Width           =   1455
    End
    Begin VB.Label Label1 
       Caption         =   "Order type"
       Height          =   375
-      Left            =   6360
-      TabIndex        =   7
-      Top             =   720
+      Left            =   6480
+      TabIndex        =   11
+      Top             =   2160
       Width           =   1455
    End
    Begin VB.Label Label 
       Caption         =   "Qty"
       Height          =   255
-      Left            =   2520
-      TabIndex        =   5
-      Top             =   720
+      Index           =   0
+      Left            =   2640
+      TabIndex        =   9
+      Top             =   2160
       Width           =   375
    End
 End
@@ -284,22 +343,13 @@ Debug.Print "Running in development environment: " & CStr(inDev)
 InitialiseTWUtilities
 Set mUnhandledErrorHandler = UnhandledErrorHandler
 ApplicationGroupName = "TradeWright"
-ApplicationName = "OrdersTest1"
+ApplicationName = "IBOrdersTest127"
 SetupDefaultLogging Command
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
 
 setupEntryOrderTypeCombo
 setupStopLossOrderTypeCombo
 setupTargetOrderTypeCombo
-
-mClientId = 1132256741
-Set mClient = GetClient("Sven", 7497, mClientId, , , , Me)
-
-Set mOrderSubmitter = mClient.CreateOrderSubmitter
-mOrderSubmitter.AddOrderSubmissionListener Me
-Set mContractStore = mClient.GetContractStore
-
-Set mFutureWaiter = New FutureWaiter
 
 Exit Sub
 
@@ -354,6 +404,8 @@ Case ApiConnConnecting
 Case ApiConnConnected
     mClient.SetTwsLogLevel TwsLogLevelDetail
     LogMessage "Connected to TWS: " & pMessage
+    ConnectButton.Caption = "Disconnect"
+    ConnectButton.Enabled = True
 Case ApiConnFailed
     LogMessage "Failed to connect to TWS: " & pMessage
 End Select
@@ -438,6 +490,23 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub ConnectButton_Click()
+If ConnectButton.Caption = "Connect" Then
+    ConnectButton.Enabled = False
+    
+    mClientId = CLng(ClientIdText.Text)
+    Set mClient = GetClient(ServerText.Text, CLng(PortText.Text), mClientId, , , , Me)
+    
+    Set mOrderSubmitter = mClient.CreateOrderSubmitter
+    mOrderSubmitter.AddOrderSubmissionListener Me
+    Set mContractStore = mClient.GetContractStore
+    
+    Set mFutureWaiter = New FutureWaiter
+Else
+    mClient.Finish
+End If
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
