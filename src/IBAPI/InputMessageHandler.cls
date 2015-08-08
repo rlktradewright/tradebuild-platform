@@ -563,7 +563,6 @@ Else
     End If
 End If
 
-'If lContract.Multiplier <> 1# Then lContract.Multiplier = lContract.Multiplier / lContractDetails.PriceMagnifier
 lContractDetails.MinTick = lContractDetails.MinTick * lContractDetails.PriceMagnifier
     
 If pVersion >= 4 Then lContractDetails.UnderConId = mReader.GetLong("UnderConId")
@@ -798,7 +797,8 @@ With lContract
     .Expiry = mReader.GetString("Expiry")
     .Strike = mReader.GetDouble("Strike")
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
-    If pVersion >= 9 Then .Multiplier = mReader.GetString("Multiplier")
+    If pVersion >= 9 Then .Multiplier = mReader.GetLong("Multiplier")
+    If .Multiplier = 0 Then .Multiplier = 1
     .Exchange = mReader.GetString("Exchange")
     .CurrencyCode = mReader.GetString("Currency")
     .LocalSymbol = mReader.GetString("Local Symbol")
@@ -1210,7 +1210,8 @@ With lContract
     .Expiry = mReader.GetString("Expiry")
     .Strike = mReader.GetDouble("Strike")
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
-    If pVersion >= 32 Then .Multiplier = mReader.GetString("Multiplier")
+    If pVersion >= 32 Then .Multiplier = mReader.GetLong("Multiplier")
+    If .Multiplier = 0 Then .Multiplier = 1
     .Exchange = mReader.GetString("Exchange")
     .CurrencyCode = mReader.GetString("Currency")
     If pVersion >= 2 Then .LocalSymbol = mReader.GetString("Local Symbol")
@@ -1549,6 +1550,7 @@ lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
 
 If pVersion >= 7 Then
     lContract.Multiplier = mReader.GetLong("Multiplier")
+    If lContract.Multiplier = 0 Then lContract.Multiplier = 1
     lContract.PrimaryExch = mReader.GetString("Primary exchg")
 End If
 
@@ -1595,7 +1597,8 @@ lContract.Sectype = gTwsSecTypeFromString(mReader.GetString("SecType"))
 lContract.Expiry = mReader.GetString("Expiry")
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
-lContract.Multiplier = mReader.GetString("Multiplier")
+lContract.Multiplier = mReader.GetLong("Multiplier")
+If lContract.Multiplier = 0 Then lContract.Multiplier = 1
 lContract.Exchange = mReader.GetString("Exchange")
 lContract.CurrencyCode = mReader.GetString("Currency")
 lContract.LocalSymbol = mReader.GetString("LocalSymbol")
