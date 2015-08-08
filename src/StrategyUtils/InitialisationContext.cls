@@ -201,13 +201,13 @@ End Property
 ' <code>Study</code> object.
 '
 ' @remarks
-'   This method can only be called during the <code>Strategy</code> object&#39;s
+'   This method can only be called during the <code>Strategy</code> object's
 '   <code>Initialise</code> method. Calling it elsewhere results in an
 '   <code>ErrIllegalStateException</code> error being raised. If a <code>Strategy</code>
 '   object needs to create studies at other times, it must use the
 '   <code>Ticker.StudyManager.addStudy</code> method.
 '
-'   Note that the <code>Strategy</code> object&#39;s <code>Start</code> method
+'   Note that the <code>Strategy</code> object's <code>Start</code> method
 '   is not called until all studies created using this method have been fully initialised,
 '   and all timeframes created using the <code>addTimeframe</code> method have had their
 '   historical data fully loaded, and .
@@ -264,13 +264,13 @@ End Function
 ' its name.
 '
 ' @remarks
-'   This method can only be called during the <code>IStrategy</code> object&#39;s
+'   This method can only be called during the <code>IStrategy</code> object's
 '   <code>Initialise</code> method. Calling it elsewhere results in an
 '   <code>ErrIllegalStateException</code> error being raised. If a <code>Strategy</code>
 '   object needs to create timeframes at other times, it must use the <code>Ticker.Timeframes.Add</code>
 '   method.
 '
-'   Note that the <code>Strategy</code> object&#39;s <code>Start</code> method
+'   Note that the <code>Strategy</code> object's <code>Start</code> method
 '   is not called until all timeframes created using this method have had their
 '   historical data fully loaded, and all studies created using the <code>addStudy</code>
 '   method have been fully initialised.
