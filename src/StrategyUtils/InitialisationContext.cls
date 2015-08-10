@@ -298,7 +298,7 @@ On Error GoTo Err
 
 Dim lTimeframe As Timeframe
 If mTicker.IsTickReplay Then
-    Set lTimeframe = mTimeframes.AddHistorical(pTimePeriod, "", pNumberOfBarsToFetch, , mInitialTimestamp, , pIncludeBarsOutsideSession)
+    Set lTimeframe = mTimeframes.AddHistorical(pTimePeriod, "", pNumberOfBarsToFetch, , BarStartTime(mInitialTimestamp, pTimePeriod, mContract.SessionStartTime), , pIncludeBarsOutsideSession)
 Else
     Set lTimeframe = mTimeframes.Add(pTimePeriod, "", pNumberOfBarsToFetch, , , pIncludeBarsOutsideSession)
 End If
