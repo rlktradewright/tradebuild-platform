@@ -254,9 +254,15 @@ Private Sub IStrategy_NotifyTick(ByVal pType As TickTypes)
 Const ProcName As String = "IStrategy_NotifyTick"
 On Error GoTo Err
 
+Static sFirstBarProcessed As Boolean
+
 If Not mContext.ReceivedFirstBidAndAsk Then Exit Sub
-If mBars.TickVolume <> 1 Then Exit Sub
 If pType <> TickTypes.TickTypeTrade Then Exit Sub
+
+If mBars.TickVolume <> 1 Then
+    If sFirstBarProcessed Then Exit Sub
+    sFirstBarProcessed = True
+End If
 
 mTimestamp = mContext.TimeStamp
 
