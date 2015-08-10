@@ -347,6 +347,7 @@ InitialiseTWUtilities
 Set mUnhandledErrorHandler = UnhandledErrorHandler
 ApplicationGroupName = "TradeWright"
 ApplicationName = "IBOrdersTest127"
+DefaultLogLevel = LogLevelHighDetail
 SetupDefaultLogging Command
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
 
