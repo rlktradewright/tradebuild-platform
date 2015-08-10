@@ -79,9 +79,12 @@ Private mStopStrategyFactory                        As IPosnMgmtStrtgyFactory
 Private mParams                                     As Parameters
 
 Private mInitialisationContext                      As New InitialisationContext
+Private mInitialisationCompleted                    As Boolean
 
 Private mTickers                                    As Tickers
 Private mIsTickfileReplay                           As Boolean
+
+Private mStartReplayWhenReady                       As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -194,9 +197,13 @@ Friend Sub InitialisationCompleted()
 Const ProcName As String = "InitialisationCompleted"
 On Error GoTo Err
 
+mInitialisationCompleted = True
+
 Dim lTradingContext As New TradingContext
 lTradingContext.Initialise mStrategy, mTicker
 mStrategy.Start lTradingContext, mStopStrategyFactory
+
+startReplayIfReady
 
 Exit Sub
 
@@ -293,10 +300,8 @@ Public Sub StartReplay()
 Const ProcName As String = "StartReplay"
 On Error GoTo Err
 
-If Not mReplayController Is Nothing Then
-    LogMessage "Tickfile replay started"
-    Set mTickfileReplayTC = mReplayController.StartReplay
-End If
+mStartReplayWhenReady = True
+startReplayIfReady
 
 Exit Sub
 
@@ -459,6 +464,23 @@ If getStrategyHost.LogProfitProfile Then
                                     includeLogLevel:=False)
     GetLogger("position.profitprofile").AddLogListener lLogfile
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub startReplayIfReady()
+Const ProcName As String = "startReplayIfReady"
+On Error GoTo Err
+
+If mReplayController Is Nothing Then Exit Sub
+If Not mInitialisationCompleted Then Exit Sub
+If Not mStartReplayWhenReady Then Exit Sub
+
+LogMessage "Tickfile replay started"
+Set mTickfileReplayTC = mReplayController.StartReplay
 
 Exit Sub
 
