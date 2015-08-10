@@ -310,6 +310,9 @@ Implements ILogListener
 
 Private Const ModuleName                            As String = "Form1"
 
+Private Const CaptionConnect                        As String = "Connect"
+Private Const CaptionDisconnect                     As String = "Disconnect"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -350,6 +353,8 @@ GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will
 setupEntryOrderTypeCombo
 setupStopLossOrderTypeCombo
 setupTargetOrderTypeCombo
+
+ConnectButton.Caption = CaptionConnect
 
 Exit Sub
 
@@ -404,7 +409,7 @@ Case ApiConnConnecting
 Case ApiConnConnected
     mClient.SetTwsLogLevel TwsLogLevelDetail
     LogMessage "Connected to TWS: " & pMessage
-    ConnectButton.Caption = "Disconnect"
+    ConnectButton.Caption = CaptionDisconnect
     ConnectButton.Enabled = True
 Case ApiConnFailed
     LogMessage "Failed to connect to TWS: " & pMessage
@@ -493,7 +498,7 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ConnectButton_Click()
-If ConnectButton.Caption = "Connect" Then
+If ConnectButton.Caption = CaptionConnect Then
     ConnectButton.Enabled = False
     
     mClientId = CLng(ClientIdText.Text)
@@ -506,6 +511,7 @@ If ConnectButton.Caption = "Connect" Then
     Set mFutureWaiter = New FutureWaiter
 Else
     mClient.Finish
+    ConnectButton.Caption = CaptionConnect
 End If
 End Sub
 
