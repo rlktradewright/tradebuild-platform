@@ -492,13 +492,13 @@ If mBarNumber - lSwingHighPoint.BarNumber > 3 Then
     If lPotentialSwingHighPoint.Value = MinDouble Then
         mContext.LogTradeReason "    reject: more than 3 Bars since swing high at " & FormatTimestamp(lSwingHighPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
         okToSell = False
-    ElseIf mBarNumber - lSwingHighPoint.BarNumber > 3 Then
+    ElseIf mBarNumber - lPotentialSwingHighPoint.BarNumber > 3 Then
         mContext.LogTradeReason "    reject: more than 3 Bars since potential swing high at " & FormatTimestamp(lPotentialSwingHighPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
         okToSell = False
-    ElseIf mBarNumber - lSwingHighPoint.BarNumber = 1 Then
+    ElseIf mBarNumber - lPotentialSwingHighPoint.BarNumber = 1 Then
         mContext.LogTradeReason "    reject: signal bar is potential swing high"
         okToSell = False
-    ElseIf mBarNumber = lSwingHighPoint.BarNumber Then
+    ElseIf mBarNumber = lPotentialSwingHighPoint.BarNumber Then
         mContext.LogTradeReason "    reject: potential new swing high this bar"
         okToSell = False
     End If
