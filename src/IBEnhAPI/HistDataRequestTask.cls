@@ -257,7 +257,7 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     Set mTargetSession = mTargetSessionBuilder.Session
     
     failpoint = "Calculate max number of bars"
-    If mTargetBarSpecifier.MaxNumberOfBars = 0 Then
+    If mTargetBarSpecifier.MaxNumberOfBars <= 0 Then
         mTargetBarSpecifier.MaxNumberOfBars = MaxNumberOfBarsInTimespan( _
                                                     mTargetBarSpecifier.BarTimePeriod, _
                                                     mTargetBarSpecifier.FromDate, _
