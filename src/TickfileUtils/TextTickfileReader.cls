@@ -127,12 +127,12 @@ Dim ev As GenericTickEventData
 
 Static sFoundFirstRecord As Boolean
 If Not sFoundFirstRecord Then
+    sFoundFirstRecord = True
     If mTickfileSpec.FromDate <> 0# Then
         ' run asynchronously so as to avoid holding up other things
         findFirstRecord
         Exit Function
     End If
-    sFoundFirstRecord = True
 End If
 
 If mPendingImpliedVolumeTick Then
