@@ -1319,7 +1319,7 @@ Public Property Let FirstVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "FirstVisiblePeriod"
 On Error GoTo Err
 
-ScrollX Value - mScaleLeft + 1
+ScrollX Value - Int(mScaleLeft + 1)
 
 Exit Property
 
@@ -2239,6 +2239,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function calcScaleWidth() As Single
+Const ProcName As String = "calcScaleWidth"
+On Error GoTo Err
+
+calcScaleWidth = CSng(XAxisPicture.Width) / CSng(TwipsPerPeriod)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+
 Private Sub Clear()
 Const ProcName As String = "Clear"
 On Error GoTo Err
@@ -2500,6 +2513,8 @@ mXAxisRegion.BaseStyle = XAxisRegionStyle
 mXAxisRegion.Bottom = 0
 mXAxisRegion.Top = 1
 
+mXAxisRegion.IsDrawingEnabled = IsDrawingEnabled
+
 Exit Sub
 
 Err:
@@ -2570,7 +2585,7 @@ Set mBackGroundViewport = CreateViewport(Nothing, RegionTypeBackground)
 mPointerMode = PointerModes.PointerModeDefault
 
 mYAxisPosition = 1
-mScaleWidth = CSng(XAxisPicture.Width) / CSng(TwipsPerPeriod) - 0.5!
+mScaleWidth = calcScaleWidth
 mScaleLeft = calcScaleLeft
 mScaleHeight = -100
 mScaleTop = 100
@@ -2802,7 +2817,7 @@ On Error GoTo Err
 
 If Not mInitialised Then Exit Sub
 
-mScaleWidth = CSng(XAxisPicture.Width) / CSng(TwipsPerPeriod)
+mScaleWidth = calcScaleWidth
 mScaleLeft = calcScaleLeft
 
 Dim lregion As ChartRegion
