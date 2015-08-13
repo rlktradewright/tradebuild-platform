@@ -130,10 +130,10 @@ Private Sub ILogListener_Finish()
 End Sub
 
 Private Sub ILogListener_Notify(ByVal Logrec As LogRecord)
-Static formatter As ILogFormatter
 Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
+Static formatter As ILogFormatter
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter
 gCon.WriteLineToConsole formatter.FormatRecord(Logrec)
 
