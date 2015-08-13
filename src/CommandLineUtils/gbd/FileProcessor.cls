@@ -1,0 +1,305 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+  Persistable = 0  'NotPersistable
+  DataBindingBehavior = 0  'vbNone
+  DataSourceBehavior  = 0  'vbNone
+  MTSTransactionMode  = 0  'NotAnMTSObject
+END
+Attribute VB_Name = "FileProcessor"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
+Option Explicit
+
+''
+' Description here
+'
+'@/
+
+'@================================================================================
+' Interfaces
+'@================================================================================
+
+Implements ICollectionChangeListener
+Implements IProcessor
+
+'@================================================================================
+' Events
+'@================================================================================
+
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
+' Types
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+
+Private Const ModuleName                    As String = "FileProcessor"
+
+'@================================================================================
+' Member variables
+'@================================================================================
+
+Private mSelfRef As Object
+
+Private mStudyLibraryManager As New StudyLibraryManager
+
+Private mTickfileSpec As New TickfileSpecifier
+Private mTimePeriod As TimePeriod
+
+Private WithEvents mReplayController As ReplayController
+Attribute mReplayController.VB_VarHelpID = -1
+
+Private WithEvents mReplayTaskController As TaskController
+Attribute mReplayTaskController.VB_VarHelpID = -1
+
+Private mNumber As Long
+Private mSessionOnly As Boolean
+
+Private WithEvents mTimer As IntervalTimer
+Attribute mTimer.VB_VarHelpID = -1
+
+Private WithEvents mFutureWaiter As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mBars As Bars
+Private mBar As Bar
+
+'@================================================================================
+' Class Event Handlers
+'@================================================================================
+
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
+End Sub
+
+'@================================================================================
+' ICollectionChangeListener Interface Members
+'@================================================================================
+
+Private Sub ICollectionChangeListener_Change(ev As CollectionChangeEventData)
+Const ProcName As String = "ICollectionChangeListener_Change"
+On Error GoTo Err
+
+gOutputBar mBar
+Set mBar = ev.AffectedItem
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IProcessor Interface Members
+'@================================================================================
+
+Private Sub IProcessor_StartData()
+Const ProcName As String = "IProcessor_StartData"
+On Error GoTo Err
+
+mStudyLibraryManager.AddBuiltInStudyLibrary
+
+Dim lTickfileSpecs As New TickFileSpecifiers
+lTickfileSpecs.Add mTickfileSpec
+
+Dim lTickDataManager As TickfileDataManager
+Set lTickDataManager = CreateTickDataManager(lTickfileSpecs, _
+                                            CreateTickfileStore(TickfileReadOnly), _
+                                            mStudyLibraryManager, _
+                                            , _
+                                            , _
+                                            MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments, _
+                                            , _
+                                            , _
+                                            0)
+Set mReplayController = lTickDataManager.ReplayController
+
+Dim lTickers As Tickers
+Set lTickers = CreateTickers(lTickDataManager, mStudyLibraryManager)
+
+Dim lContractFuture As IFuture
+Set lContractFuture = mReplayController.TickStream(0).ContractFuture
+mFutureWaiter.Add lContractFuture
+
+Dim lticker As Ticker
+Set lticker = lTickers.CreateTicker(lContractFuture, False)
+
+Dim lTimeframe As Timeframe
+Set lTimeframe = lticker.Timeframes.Add(mTimePeriod, _
+                                        "", _
+                                        0, _
+                                        0, _
+                                        , _
+                                        Not mSessionOnly)
+
+If lTimeframe.BarsFuture.IsAvailable Then
+    Set mBars = lTimeframe.BarsFuture.Value
+    mBars.AddCollectionChangeListener Me
+Else
+    mFutureWaiter.Add lTimeframe.BarsFuture
+End If
+
+lticker.StartMarketData
+
+Set mReplayTaskController = mReplayController.StartReplay
+
+Set mTimer = CreateIntervalTimer(1000, , 1000)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IProcessor_StopData()
+Const ProcName As String = "IProcessor_StopData"
+On Error GoTo Err
+
+mReplayController.StopReplay
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+If TypeOf ev.Future.Value Is Bars Then
+    Set mBars = ev.Future.Value
+    mBars.AddCollectionChangeListener Me
+ElseIf TypeOf ev.Future.Value Is IContract Then
+    Dim lContract As IContract
+    Set lContract = ev.Future.Value
+    gSecType = lContract.Specifier.sectype
+    gTickSize = lContract.TickSize
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mReplayTaskController Event Handlers
+'@================================================================================
+
+Private Sub mReplayTaskController_Completed(ev As TaskCompletionEventData)
+Const ProcName As String = "mReplayTaskController_Completed"
+On Error GoTo Err
+
+Finish
+Set gProcessor = Nothing
+gLogCompletion
+Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mTickfileManager Event Handlers
+'@================================================================================
+
+Private Sub mReplayController_NotifyEvent(ev As NotificationEventData)
+Const ProcName As String = "mReplayController_NotifyEvent"
+On Error GoTo Err
+
+LogMessage TypeName(ev.Source) & " :" & ev.EventMessage
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mReplayController_ReplayProgress(ByVal pTickfileTimestamp As Date, ByVal pEventsPlayed As Long, ByVal pPercentComplete As Long)
+Const ProcName As String = "mReplayController_ReplayProgress"
+On Error GoTo Err
+
+gCon.WriteLineToConsole "Processing tickfile: events processed=" & pEventsPlayed & "; percent complete=" & Format(pPercentComplete, "0.0")
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+'@================================================================================
+' Methods
+'@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pTickfileName As String, _
+                ByVal pFromDate As Date, _
+                ByVal pToDate As Date, _
+                ByVal pNumber As Long, _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pSessionOnly As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mSelfRef = Me
+
+mNumber = pNumber
+mSessionOnly = pSessionOnly
+
+mTickfileSpec.FileName = pTickfileName
+mTickfileSpec.FromDate = pFromDate
+mTickfileSpec.ToDate = pToDate
+
+Set mTimePeriod = pTimePeriod
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+gOutputBar mBar
+mBars.RemoveCollectionChangeListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub mTimer_TimerExpired(ev As TimerExpiredEventData)
+Static lCounter As Long
+lCounter = lCounter + 1
+gCon.WriteLineToConsole "Timer tick " & lCounter
+End Sub

@@ -22,8 +22,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements ICollectionChangeListener
+Implements IBarFetchListener
 Implements ILogListener
+Implements IProcessor
 
 '@================================================================================
 ' Events
@@ -47,48 +48,72 @@ Private Const ModuleName                    As String = "Processor"
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTB As TradeBuildAPI
-Attribute mTB.VB_VarHelpID = -1
-
-Private mTicker As Ticker
-Attribute mTicker.VB_VarHelpID = -1
-
-Private WithEvents mReplayController As ReplayController
-Attribute mReplayController.VB_VarHelpID = -1
-
-Private mFromDate As Date
-Private mToDate As Date
-Private mNumber As Long
-Private mBarLength As Long
-Private mBarUnits As TimePeriodUnits
-Private mSessionOnly As Boolean
-
-Private mBarStudy As IStudy
-Private mBars As Bars
-
-Private mBar As Bar
-
-Private WithEvents mFutureWaiter As FutureWaiter
+Private WithEvents mFutureWaiter            As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mContractStore                      As IContractStore
+Private mHistDataStore                      As IHistoricalDataStore
+Private mContractSpec                       As IContractSpecifier
+Private mFromDate                           As Date
+Private mToDate                             As Date
+Private mNumber                             As Long
+Private mTimePeriod                         As TimePeriod
+Private mSessionOnly                        As Boolean
+                
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
 If gLogToConsole Then GetLogger("").AddLogListener Me
 End Sub
 
 '@================================================================================
-' ICollectionChangeListener Interface Members
+' IBarFetchListener Interface Members
 '@================================================================================
 
-Private Sub ICollectionChangeListener_Change(ev As CollectionChangeEventData)
-Const ProcName As String = "ICollectionChangeListener_Change"
+Private Sub IBarFetchListener_FetchCancelled(ByVal pCookie As Variant)
+Const ProcName As String = "IBarFetchListener_FetchCancelled"
 On Error GoTo Err
 
-outputBar
-Set mBar = ev.AffectedItem
+gCon.WriteLineToConsole "Cancelled"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBarFetchListener_FetchCompleted(ByVal pCookie As Variant)
+Const ProcName As String = "IBarFetchListener_FetchCompleted"
+On Error GoTo Err
+
+gLogCompletion
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBarFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
+Const ProcName As String = "IBarFetchListener_FetchFailed"
+On Error GoTo Err
+
+gCon.WriteLineToConsole "Fetch failed: " & pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)
+Const ProcName As String = "IBarFetchListener_NotifyBar"
+On Error GoTo Err
+
+gOutputBar pBar
 
 Exit Sub
 
@@ -119,8 +144,63 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' IProcessor Interface Members
+'@================================================================================
+
+Private Sub IProcessor_StartData()
+Const ProcName As String = "IProcessor_StartData"
+On Error GoTo Err
+
+Dim lContractFuture As IFuture
+Set lContractFuture = FetchContract(mContractSpec, mContractStore)
+mFutureWaiter.Add lContractFuture
+
+mFutureWaiter.Add mHistDataStore.FetchBars( _
+                        CreateBarDataSpecifierFuture( _
+                            lContractFuture, _
+                            mTimePeriod, _
+                            mFromDate, _
+                            mToDate, _
+                            mNumber, _
+                            BarTypes.BarTypeTrade, _
+                            CreateClockFuture(lContractFuture), _
+                            , _
+                            Not mSessionOnly), _
+                        Me)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IProcessor_StopData()
+Const ProcName As String = "IProcessor_StopData"
+On Error GoTo Err
+
+mFutureWaiter.Cancel
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitAllCompleted(ev As TWUtilities40.FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
+On Error GoTo Err
+
+Finish
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
@@ -128,8 +208,12 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
-Set mBars = ev.Future.Value
-mBars.AddCollectionChangeListener Me
+If TypeOf ev.Future.Value Is IContract Then
+    Dim lContract As IContract
+    Set lContract = ev.Future.Value
+    gSecType = lContract.Specifier.sectype
+    gTickSize = lContract.TickSize
+End If
 
 Exit Sub
 
@@ -138,56 +222,8 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mTB Event Handlers
-'@================================================================================
-
-Private Sub mTB_Notification(ev As NotificationEventData)
-Const ProcName As String = "mTB_Notification"
-On Error GoTo Err
-
-If ev.EventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
-    Dim spe As ServiceProviderError
-    Set spe = mTB.GetServiceProviderError
-    gCon.WriteLineToConsole "Service provider error " & spe.ErrorCode & _
-                            ": " & spe.Message & _
-                            " (" & spe.ServiceProviderName & ")"
-Else
-    gCon.WriteLineToConsole ev.EventMessage
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' Properties
 '@================================================================================
-
-Friend Property Let Ticker( _
-                ByVal Value As Ticker)
-Set mTicker = Value
-End Property
-
-Friend Property Let Timeframe( _
-                ByVal Value As Timeframe)
-Const ProcName As String = "Timeframe"
-On Error GoTo Err
-
-If Value.BarsFuture.IsAvailable Then
-    Set mBars = Value.BarsFuture.Value
-    mBars.AddCollectionChangeListener Me
-Else
-    Set mFutureWaiter = New FutureWaiter
-    mFutureWaiter.Add Value.BarsFuture
-End If
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
 
 '@================================================================================
 ' Methods
@@ -197,9 +233,8 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-outputBar
-mBars.RemoveCollectionChangeListener Me
 GetLogger("").RemoveLogListener Me
+Set gProcessor = Nothing
 
 Exit Sub
 
@@ -207,16 +242,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Initialise(ByVal pTB As TradeBuildAPI)
-Set mTB = pTB
-End Sub
-
-Friend Sub StopData()
-Const ProcName As String = "StopData"
+Friend Sub Initialise( _
+                ByVal pContractStore As IContractStore, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pFromDate As Date, _
+                ByVal pToDate As Date, _
+                ByVal pNumber As Long, _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pSessionOnly As Boolean)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If Not mTicker Is Nothing Then mTicker.Finish
-If Not mBars Is Nothing Then mBars.RemoveCollectionChangeListener Me
+Set mContractStore = pContractStore
+Set mHistDataStore = pHistDataStore
+Set mContractSpec = pContractSpec
+mFromDate = pFromDate
+mToDate = pToDate
+mNumber = pNumber
+Set mTimePeriod = pTimePeriod
+mSessionOnly = pSessionOnly
 
 Exit Sub
 
@@ -228,34 +273,4 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Sub outputBar()
-Dim sv As SValue
-
-Const ProcName As String = "outputBar"
-On Error GoTo Err
-
-If mBar Is Nothing Then Exit Sub
-
-gCon.WriteString FormatTimestamp(mBar.TimeStamp, TimestampDateAndTimeISO8601)
-gCon.WriteString ","
-gCon.WriteString mTicker.FormatPrice(mBar.OpenValue)
-gCon.WriteString ","
-gCon.WriteString mTicker.FormatPrice(mBar.HighValue)
-gCon.WriteString ","
-gCon.WriteString mTicker.FormatPrice(mBar.LowValue)
-gCon.WriteString ","
-gCon.WriteString mTicker.FormatPrice(mBar.CloseValue)
-gCon.WriteString ","
-gCon.WriteString mBar.Volume
-gCon.WriteString ","
-gCon.WriteString mBar.TickVolume
-gCon.WriteString ","
-gCon.WriteLine mBar.OpenInterest
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 

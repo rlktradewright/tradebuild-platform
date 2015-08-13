@@ -46,6 +46,8 @@ Private Const NumberCommand                 As String = "NUMBER"
 Private Const TimeframeCommand              As String = "TIMEFRAME"
 Private Const SessCommand                   As String = "SESS"
 Private Const NonSessCommand                As String = "NONSESS"
+Private Const MillisecsCommand              As String = "MILLISECS"
+Private Const NoMillisecsCommand            As String = "NOMILLISECS"
 Private Const HelpCommand                   As String = "HELP"
 Private Const Help1Command                  As String = "?"
 
@@ -62,28 +64,33 @@ Private mIsInDev                                    As Boolean
 
 Public gCon                                         As Console
 
-Private mSwitch As Switches
+Public gSecType                                     As SecurityTypes
+Public gTickSize                                    As Double
 
-Private mTickfileName As String
+Public gLogToConsole                                As Boolean
 
-Private mLineNumber As Long
-Private mContractSpec As IContractSpecifier
-Private mFrom As Date
-Private mTo As Date
-Private mNumber As Long
-Private mBarLength As Long
-Private mBarUnits As TimePeriodUnits
-Private mSessionOnly As Boolean
+Public gProcessor                                   As IProcessor
 
-' this is public so that the Processor object can
-' kill itself when it has finished replaying
-Public gProcessor As Processor
+Private mSwitch                                     As Switches
 
-Public gLogToConsole As Boolean
+Private mTickfileName                               As String
+
+Private mLineNumber                                 As Long
+Private mContractSpec                               As IContractSpecifier
+Private mFrom                                       As Date
+Private mTo                                         As Date
+Private mNumber                                     As Long
+Private mTimePeriod                                 As TimePeriod
+Private mSessionOnly                                As Boolean
 
 Private mFatalErrorHandler                          As FatalErrorHandler
 
-Private mTB                                         As TradeBuildAPI
+Private mIncludeMillisecs                           As Boolean
+
+Private mHistDataStore                              As IHistoricalDataStore
+Private mContractStore                              As IContractStore
+
+Private mNumberOfBarsWritten                        As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -148,9 +155,21 @@ Public Sub gHandleUnexpectedError( _
                 Optional ByRef pErrorSource As String)
 Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
+
+Public Sub gLogCompletion()
+Const ProcName As String = "gLogCompletion"
+On Error GoTo Err
+
+gCon.WriteLineToConsole "Completed. Number of bars output = " & CStr(mNumberOfBarsWritten)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gNotifyUnhandledError( _
@@ -162,9 +181,39 @@ Public Sub gNotifyUnhandledError( _
                 Optional ByRef pErrorSource As String)
 Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
+
+Public Sub gOutputBar(ByVal pBar As Bar)
+Const ProcName As String = "gOutputBar"
+On Error GoTo Err
+
+If pBar Is Nothing Then Exit Sub
+
+gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateAndTimeISO8601 Or (Not mIncludeMillisecs And TimestampNoMillisecs))
+gCon.WriteString ","
+gCon.WriteString FormatPrice(pBar.OpenValue, gSecType, gTickSize)
+gCon.WriteString ","
+gCon.WriteString FormatPrice(pBar.HighValue, gSecType, gTickSize)
+gCon.WriteString ","
+gCon.WriteString FormatPrice(pBar.LowValue, gSecType, gTickSize)
+gCon.WriteString ","
+gCon.WriteString FormatPrice(pBar.CloseValue, gSecType, gTickSize)
+gCon.WriteString ","
+gCon.WriteString pBar.Volume
+gCon.WriteString ","
+gCon.WriteString pBar.TickVolume
+gCon.WriteString ","
+gCon.WriteLine pBar.OpenInterest
+
+mNumberOfBarsWritten = mNumberOfBarsWritten + 1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Main()
@@ -201,13 +250,13 @@ Then
     showUsage
 ElseIf clp.Switch(SwitchFromDb) Then
     mSwitch = FromDb
-    If setupServiceProviders(clp.switchValue(SwitchFromDb)) Then process
+    If setupDbProviders(clp.switchValue(SwitchFromDb)) Then process
 ElseIf clp.Switch(SwitchFromFile) Then
     mSwitch = FromFile
-    If setupServiceProviders(clp.switchValue(SwitchFromFile)) Then process
+    If setupFileProviders(clp.switchValue(SwitchFromFile)) Then process
 ElseIf clp.Switch(SwitchFromTws) Then
     mSwitch = FromTws
-    If setupServiceProviders(clp.switchValue(SwitchFromTws)) Then process
+    If setupTwsProviders(clp.switchValue(SwitchFromTws)) Then process
 Else
     showUsage
 End If
@@ -273,6 +322,10 @@ Do While inString <> gCon.EofString
             processSessCommand
         Case NonSessCommand
             processNonSessCommand
+        Case MillisecsCommand
+            mIncludeMillisecs = True
+        Case NoMillisecsCommand
+            mIncludeMillisecs = False
         Case HelpCommand, Help1Command
             showStdInHelp
         Case Else
@@ -291,29 +344,17 @@ End Sub
 
 Private Sub processContractCommand( _
                 ByVal params As String)
-'params: shortname,sectype,exchange,symbol,currency,expiry,strike,right
-Dim validParams As Boolean
-Dim clp As CommandLineParser
-Dim shortname As String
-Dim sectypeStr As String
-Dim sectype As SecurityTypes
-Dim exchange As String
-Dim symbol As String
-Dim currencyCode As String
-Dim expiry As String
-Dim strikeStr As String
-Dim strike As Double
-Dim optRightStr As String
-Dim optRight As OptionRights
-
 Const ProcName As String = "processContractCommand"
 On Error GoTo Err
 
-If Not gProcessor Is Nothing Then
+'params: shortname,sectype,exchange,symbol,currency,expiry,strike,right
+
+If Trim$(params) = "" Then
     showContractHelp
     Exit Sub
 End If
 
+Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(params, InputSep)
 
 If clp.Arg(1) = "?" Or _
@@ -324,17 +365,34 @@ Then
     Exit Sub
 End If
 
+Dim validParams As Boolean
 validParams = True
 
+Dim sectypeStr As String
 sectypeStr = Trim$(clp.Arg(1))
+
+Dim exchange As String
 exchange = Trim$(clp.Arg(2))
+
+Dim shortname As String
 shortname = Trim$(clp.Arg(0))
+
+Dim symbol As String
 symbol = Trim$(clp.Arg(3))
+
+Dim currencyCode As String
 currencyCode = Trim$(clp.Arg(4))
+
+Dim expiry As String
 expiry = Trim$(clp.Arg(5))
+
+Dim strikeStr As String
 strikeStr = Trim$(clp.Arg(6))
+
+Dim optRightStr As String
 optRightStr = Trim$(clp.Arg(7))
 
+Dim sectype As SecurityTypes
 sectype = SecTypeFromString(sectypeStr)
 If sectypeStr <> "" And sectype = SecTypeNone Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid sectype '" & sectypeStr & "'"
@@ -360,6 +418,7 @@ If expiry <> "" Then
     End If
 End If
             
+Dim strike As Double
 If strikeStr <> "" Then
     If IsNumeric(strikeStr) Then
         strike = CDbl(strikeStr)
@@ -369,6 +428,7 @@ If strikeStr <> "" Then
     End If
 End If
 
+Dim optRight As OptionRights
 optRight = OptionRightFromString(optRightStr)
 If optRightStr <> "" And optRight = OptNone Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid right '" & optRightStr & "'"
@@ -449,24 +509,28 @@ On Error GoTo Err
 If mSwitch <> FromFile And mContractSpec Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
 ElseIf mSwitch <> FromFile And mFrom = 0 And mNumber = 0 Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - either from time or number of bars must be specified"
-ElseIf mBarUnits = TimePeriodNone Then
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - either 'from' time or number of bars must be specified"
+ElseIf mFrom > mTo Then
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - 'from' time must not be after 'to' time"
+ElseIf mTimePeriod Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - timeframe not specified"
 ElseIf Not gProcessor Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - already running"
 Else
+    mNumberOfBarsWritten = 0
        
-    Set gProcessor = New Processor
-    gProcessor.Initialise mTB
+    If mSwitch = FromFile Then
+        Dim lFileProcessor As New FileProcessor
+        lFileProcessor.Initialise mTickfileName, mFrom, mTo, mNumber, mTimePeriod, mSessionOnly
+        Set gProcessor = lFileProcessor
+    Else
+        Dim lProcessor As New Processor
+        lProcessor.Initialise mContractStore, mHistDataStore, mContractSpec, mFrom, mTo, mNumber, mTimePeriod, mSessionOnly
+        Set gProcessor = lProcessor
+    End If
     
-    Select Case mSwitch
-    Case FromDb, FromTws
-        Dim sbp As New StreamBasedProcessor
-        sbp.StartData mTB, mContractSpec, mFrom, mTo, mNumber, mBarLength, mBarUnits, mSessionOnly
-    Case FromFile
-        Dim fbp As New FileBasedProcessor
-        fbp.StartData mTB, mTickfileName, mFrom, mTo, mNumber, mBarLength, mBarUnits, mSessionOnly
-    End Select
+    gProcessor.StartData
+    
 End If
 
 Exit Sub
@@ -483,7 +547,6 @@ If gProcessor Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot stop - not started"
 Else
     gProcessor.StopData
-    Set gProcessor = Nothing
 End If
 
 Exit Sub
@@ -494,15 +557,19 @@ End Sub
 
 Private Sub processTimeframeCommand( _
                 ByVal params As String)
-Dim clp As CommandLineParser
-
 Const ProcName As String = "processTimeframeCommand"
 On Error GoTo Err
 
+If Trim$(params) = "" Then
+    showTimeframeHelp
+    Exit Sub
+End If
+
+Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(params, " ")
 
-mBarLength = 0
-mBarUnits = TimePeriodNone
+Dim lBarLength As Long
+Dim lBarUnits As TimePeriodUnits
 
 If clp.NumberOfArgs < 1 Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid timeframe - the bar length must be supplied"
@@ -510,17 +577,26 @@ If clp.NumberOfArgs < 1 Then
 End If
 
 If Not IsInteger(clp.Arg(0), 1) Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar length '" & Trim$(clp.Arg(0)) & ": must be an integer > 0"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar length '" & Trim$(clp.Arg(0)) & "': must be an integer > 0"
     Exit Sub
 End If
-mBarLength = CLng(clp.Arg(0))
+lBarLength = CLng(clp.Arg(0))
 
-mBarUnits = TimePeriodMinute
+lBarUnits = TimePeriodMinute
 If Trim$(clp.Arg(1)) <> "" Then
-    mBarUnits = TimePeriodUnitsFromString(clp.Arg(1))
-    If mBarUnits = TimePeriodNone Then
-        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar units '" & Trim$(clp.Arg(1)) & ": must be one of s,m,h,d,w,mm,v,tv,tm"
+    lBarUnits = TimePeriodUnitsFromString(clp.Arg(1))
+    If lBarUnits = TimePeriodNone Then
+        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar units '" & Trim$(clp.Arg(1)) & "': must be one of s,m,h,d,w,mm,v,tv,tm"
     Exit Sub
+    End If
+End If
+
+Set mTimePeriod = GetTimePeriod(lBarLength, lBarUnits)
+
+If mSwitch <> FromFile Then
+    If Not mHistDataStore.TimePeriodValidator.IsValidTimePeriod(mTimePeriod) Then
+        gCon.WriteErrorLine ("Unsupported time period: " & mTimePeriod.ToString)
+        Exit Sub
     End If
 End If
 
@@ -548,27 +624,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function setupCommonStudiesLib() As Boolean
-Dim sl As Object
-Const ProcName As String = "setupCommonStudiesLib"
-On Error GoTo Err
-
-Set sl = mTB.StudyLibraryManager.AddStudyLibrary(BuiltInStudyLibraryProgId, True, BuiltInStudyLibraryName)
-If sl Is Nothing Then
-    gCon.WriteErrorLine "Common studies library is not installed"
-Else
-    setupCommonStudiesLib = True
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function setupDbServiceProviders( _
+Private Function setupDbProviders( _
                 ByVal switchValue As String) As Boolean
-Const ProcName As String = "setupDbServiceProviders"
+Const ProcName As String = "setupDbProviders"
 On Error GoTo Err
 
 Dim clp As CommandLineParser
@@ -604,37 +662,16 @@ If dbtype = DbNone Then
     Exit Function
 End If
 
-setupDbServiceProviders = True
-    
 On Error Resume Next
-Dim sp As Object
-Set sp = mTB.ServiceProviders.Add( _
-                ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
-                Enabled:=True, _
-                ParamString:="Database Name=" & database & _
-                            ";Database Type=" & dbtypeStr & _
-                            ";Server=" & server & _
-                            ";User name=" & username & _
-                            ";Password=" & password, _
-                Description:="Enable contract data from TradeBuild's database")
-If sp Is Nothing Then
-    gCon.WriteErrorLine "Required contract info service provider is not installed"
-    setupDbServiceProviders = False
-End If
 
-Set sp = mTB.ServiceProviders.Add( _
-                ProgId:="TBInfoBase27.HistDataServiceProvider", _
-                Enabled:=True, _
-                ParamString:="Database Name=" & database & _
-                            ";Database Type=" & dbtypeStr & _
-                            ";Server=" & server & _
-                            ";User name=" & username & _
-                            ";Password=" & password, _
-                Description:="Enable historical bar data storage/retrieval to/from TradeBuild's database")
-If sp Is Nothing Then
-    gCon.WriteErrorLine "Required historical data service provider is not installed"
-    setupDbServiceProviders = False
-End If
+Dim lDbClient As DBClient
+Set lDbClient = CreateTradingDBClient(dbtype, server, database, username, password)
+
+
+Set mHistDataStore = lDbClient.HistoricalDataStore
+Set mContractStore = lDbClient.ContractStore
+
+setupDbProviders = True
 
 Exit Function
 
@@ -642,27 +679,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function setupFileServiceProviders( _
+Private Function setupFileProviders( _
                 ByVal switchValue As String) As Boolean
-Const ProcName As String = "setupFileServiceProviders"
+Const ProcName As String = "setupFileProviders"
 On Error GoTo Err
-
-setupFileServiceProviders = True
 
 mTickfileName = switchValue
+setupFileProviders = True
     
-On Error Resume Next
-Dim sp As Object
-Set sp = mTB.ServiceProviders.Add( _
-                ProgId:="TickfileSP27.TickfileServiceProvider", _
-                Enabled:=True, _
-                ParamString:="Role=Input", _
-                Description:="Historical tick data input from files")
-If sp Is Nothing Then
-    gCon.WriteErrorLine "Required tickfile service provider is not installed"
-    setupFileServiceProviders = False
-End If
-
 Exit Function
 
 Err:
@@ -670,12 +694,10 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
-Private Function setupTwsServiceProviders( _
+Private Function setupTwsProviders( _
                 ByVal switchValue As String) As Boolean
-Const ProcName As String = "setupTwsServiceProviders"
+Const ProcName As String = "setupTwsProviders"
 On Error GoTo Err
-
-setupTwsServiceProviders = True
 
 On Error Resume Next
 
@@ -697,77 +719,23 @@ If port = "" Then
     port = 7496
 ElseIf Not IsInteger(port, 0) Then
     gCon.WriteErrorLine "Error: port must be an integer > 0"
-    setupTwsServiceProviders = False
+    setupTwsProviders = False
 End If
     
 If clientId = "" Then
     clientId = &H7A92DC3F
 ElseIf Not IsInteger(clientId, 0) Then
     gCon.WriteErrorLine "Error: clientId must be an integer >= 0"
-    setupTwsServiceProviders = False
+    setupTwsProviders = False
 End If
+
+Dim lTwsClient As Client
+Set lTwsClient = GetClient(server, CLng(port), CLng(clientId))
+
+Set mHistDataStore = lTwsClient.GetHistoricalDataStore
+Set mContractStore = lTwsClient.GetContractStore
     
-If setupTwsServiceProviders Then
-    mTB.ServiceProviders.Add _
-                        ProgId:=SPProgIdTwsRealtimeData, _
-                        Enabled:=True, _
-                        ParamString:="Server=" & server & _
-                                    ";Port=" & port & _
-                                    ";Client Id=" & clientId & _
-                                    ";Provider Key=IB;Keep Connection=True;Role=Primary", _
-                        Description:="Enable contract info from TWS"
-End If
-
-If setupTwsServiceProviders Then
-    mTB.ServiceProviders.Add _
-                        ProgId:=SPProgIdTwsContractData, _
-                        Enabled:=True, _
-                        ParamString:="Server=" & server & _
-                                    ";Port=" & port & _
-                                    ";Client Id=" & clientId & _
-                                    ";Provider Key=IB;Keep Connection=True;Role=Primary", _
-                        Description:="Enable contract info from TWS"
-End If
-
-If setupTwsServiceProviders Then
-    mTB.ServiceProviders.Add _
-                        ProgId:=SPProgIdTwsBarData, _
-                        Enabled:=True, _
-                        ParamString:="Server=" & server & _
-                                    ";Port=" & port & _
-                                    ";Client Id=" & clientId & _
-                                    ";Provider Key=IB;Keep Connection=True", _
-                        Description:="Enable historical data from TWS"
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function setupServiceProviders( _
-                ByVal switchValue As String) As Boolean
-Dim failpoint As Long
-Const ProcName As String = "setupServiceProviders"
-On Error GoTo Err
-
-setupServiceProviders = True
-
-Set mTB = CreateTradeBuildAPI(SPRoleContractDataPrimary Or SPRoleHistoricalDataInput Or SPRoleTickfileInput Or SPRoleRealtimeData)
-
-Select Case mSwitch
-Case FromDb
-    If Not setupDbServiceProviders(switchValue) Then setupServiceProviders = False
-Case FromFile
-    If Not setupFileServiceProviders(switchValue) Then setupServiceProviders = False
-Case FromTws
-    If Not setupTwsServiceProviders(switchValue) Then setupServiceProviders = False
-End Select
-
-If Not setupCommonStudiesLib Then setupServiceProviders = False
-
-mTB.StartServiceProviders
+setupTwsProviders = True
 
 Exit Function
 
@@ -783,13 +751,19 @@ Private Sub showStdInHelp()
 gCon.WriteLineToConsole "StdIn Format:"
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "#comment"
+
 showContractHelp
+
 gCon.WriteLineToConsole "from starttime"
 gCon.WriteLineToConsole "to endtime"
 gCon.WriteLineToConsole "number n               # -1 => return all available bars"
+
 showTimeframeHelp
+
 gCon.WriteLineToConsole "nonsess                # include bars outside session"
 gCon.WriteLineToConsole "sess                   # include only bars within the session"
+gCon.WriteLineToConsole "millisecs              # include millisecs in bar timestamps"
+gCon.WriteLineToConsole "nomillisecs            # exclude millisecs in bar timestamps (default)"
 gCon.WriteLineToConsole "start"
 gCon.WriteLineToConsole "stop"
 End Sub
@@ -798,7 +772,8 @@ Private Sub showTimeframeHelp()
 gCon.WriteLineToConsole "timeframe timeframespec"
 gCon.WriteLineToConsole "  where"
 gCon.WriteLineToConsole "    timeframespec  ::= length [units]"
-gCon.WriteLineToConsole "    units          ::=     m   minutes (default)"
+gCon.WriteLineToConsole "    units          ::=     s   seconds"
+gCon.WriteLineToConsole "                           m   minutes (default)"
 gCon.WriteLineToConsole "                           h   hours"
 gCon.WriteLineToConsole "                           d   days"
 gCon.WriteLineToConsole "                           w   weeks"
