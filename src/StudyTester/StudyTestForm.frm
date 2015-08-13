@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "Msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#217.0#0"; "StudiesUI27.ocx"
@@ -75,22 +75,24 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "&Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label2"
-      Tab(1).Control(1)=   "Label1"
-      Tab(1).Control(2)=   "Label19"
-      Tab(1).Control(3)=   "StudiesCombo"
-      Tab(1).Control(4)=   "LibToAddText"
-      Tab(1).Control(5)=   "AddLibButton"
-      Tab(1).Control(6)=   "StudyLibraryList"
-      Tab(1).Control(7)=   "RemoveLibButton"
-      Tab(1).Control(8)=   "StudyConfigurer1"
-      Tab(1).Control(9)=   "ErrorText"
+      Tab(1).Control(0)=   "ErrorText"
+      Tab(1).Control(1)=   "StudyConfigurer1"
+      Tab(1).Control(2)=   "RemoveLibButton"
+      Tab(1).Control(3)=   "StudyLibraryList"
+      Tab(1).Control(4)=   "AddLibButton"
+      Tab(1).Control(5)=   "LibToAddText"
+      Tab(1).Control(6)=   "StudiesCombo"
+      Tab(1).Control(7)=   "Label19"
+      Tab(1).Control(8)=   "Label1"
+      Tab(1).Control(9)=   "Label2"
       Tab(1).ControlCount=   10
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Chart1"
-      Tab(2).Control(1)=   "ChartToolbar1"
+      Tab(2).Control(0)=   "ChartToolbar1"
+      Tab(2).Control(0).Enabled=   0   'False
+      Tab(2).Control(1)=   "Chart1"
+      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).ControlCount=   2
       Begin VB.TextBox ErrorText 
          BackColor       =   &H8000000F&
@@ -882,6 +884,7 @@ Chart1.ClearChart
 Chart1.ChartBackColor = vbWhite
 Chart1.PointerStyle = PointerCrosshairs
 Chart1.HorizontalScrollBarVisible = True
+Chart1.XAxisVisible = True
 
 If Not mBars Is Nothing Then Chart1.TimePeriod = mBars.BarTimePeriod
 
@@ -1216,6 +1219,7 @@ On Error GoTo Err
 Dim lBar As BarUtils27.Bar
 
 logErrorsToForm
+Chart1.DisableDrawing
 
 For Each lBar In mBars
     failPoint = "processing bar " & lBar.BarNumber
@@ -1228,6 +1232,7 @@ For Each lBar In mBars
     processStudyValues pStudyConfig, lBar.BarNumber
 Next
 
+Chart1.EnableDrawing
 stopLoggingErrorsToForm
 
 Exit Sub
