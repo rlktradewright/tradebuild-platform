@@ -733,7 +733,6 @@ End Sub
 
 Private Function getNameWhereCondition( _
                 ByVal pName As String) As String
-Dim rs As Recordset
 Dim exchg As Exchange
 Dim cond As New SimpleConditionBuilder
 Dim clp As CommandLineParser

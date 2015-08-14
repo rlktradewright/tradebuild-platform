@@ -69,9 +69,6 @@ Private mInstrument                         As instrument
 Private mListener                           As IBarFetchListener
 Private mCookie                             As Variant
 
-Private mBarsBuilder                        As BarsBuilder
-Private mSessionBuilder                     As SessionBuilder
-
 Private WithEvents mFutureWaiter            As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mFutureBuilder                      As New FutureBuilder

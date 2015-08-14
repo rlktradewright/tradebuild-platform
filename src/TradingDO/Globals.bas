@@ -156,8 +156,6 @@ Public Const TimeZoneColumnName                 As String = GenericColumnName
 
 Private mSqlBadWords()                          As Variant
 
-Private mLogTokens(9)                           As String
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================

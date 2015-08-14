@@ -61,8 +61,6 @@ Attribute mFetchInstrumentsTC.VB_VarHelpID = -1
 
 Private mInstrEnumerator                    As Enumerator
 
-Private mHandle                             As Long
-
 Private WithEvents mFutureBuilder           As FutureBuilder
 Attribute mFutureBuilder.VB_VarHelpID = -1
 
