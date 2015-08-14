@@ -90,9 +90,7 @@ Begin VB.Form StudyTestForm
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "ChartToolbar1"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "Chart1"
-      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).ControlCount=   2
       Begin VB.TextBox ErrorText 
          BackColor       =   &H8000000F&
@@ -351,6 +349,8 @@ Private mIsInDev                        As Boolean
 Private mBars                           As Bars
 
 Private mGrid                           As GridManager
+
+Private mAccumulatedVolume              As Long
 
 '================================================================================
 ' Form Event Handlers
@@ -852,16 +852,7 @@ Private Function getVolume(ByVal pBar As BarUtils27.Bar, ByVal pQuarter As Long)
 Const ProcName As String = "getVolume"
 On Error GoTo Err
 
-Select Case pQuarter
-Case 1
-    getVolume = Int(pBar.Volume / 4)
-Case 2
-    getVolume = Int(2 * pBar.Volume / 4) - Int(pBar.Volume / 4)
-Case 2
-    getVolume = Int(3 * pBar.Volume / 4) - Int(2 * pBar.Volume / 4) - Int(pBar.Volume / 4)
-Case 4
-    getVolume = pBar.Volume
-End Select
+getVolume = Int(pQuarter * pBar.Volume / 4)
 
 Exit Function
 
@@ -930,29 +921,31 @@ Const ProcName As String = "loadBarToChart"
 Dim failPoint As String
 On Error GoTo Err
 
-failPoint = "notifying open value for bar " & pBar.BarNumber
+failPoint = "notifying open value for bar " & pBar.barNumber
 notifyPrice pBar.OpenValue, pBar.TimeStamp
 
-failPoint = "notifying volume at open for bar " & pBar.BarNumber
-NotifyVolume getVolume(pBar, 1), pBar.TimeStamp
+failPoint = "notifying volume at open for bar " & pBar.barNumber
+NotifyVolume mAccumulatedVolume + Int(pBar.Volume / 4), pBar.TimeStamp
         
-failPoint = "notifying high value for bar " & pBar.BarNumber
-notifyPrice pBar.HighValue, pBar.TimeStamp
-
-failPoint = "notifying volume at high for bar " & pBar.BarNumber
-NotifyVolume getVolume(pBar, 2), pBar.TimeStamp
-        
-failPoint = "notifying low value for bar " & pBar.BarNumber
+failPoint = "notifying low value for bar " & pBar.barNumber
 notifyPrice pBar.LowValue, pBar.TimeStamp
 
-failPoint = "notifying volume at low for bar " & pBar.BarNumber
-NotifyVolume getVolume(pBar, 3), pBar.TimeStamp
+failPoint = "notifying volume at high for bar " & pBar.barNumber
+NotifyVolume mAccumulatedVolume + Int(2 * pBar.Volume / 4), pBar.TimeStamp
+        
+failPoint = "notifying high value for bar " & pBar.barNumber
+notifyPrice pBar.HighValue, pBar.TimeStamp
+
+failPoint = "notifying volume at low for bar " & pBar.barNumber
+NotifyVolume mAccumulatedVolume + Int(3 * pBar.Volume / 4), pBar.TimeStamp
             
-failPoint = "notifying close value for bar " & pBar.BarNumber
+failPoint = "notifying close value for bar " & pBar.barNumber
 notifyPrice pBar.CloseValue, pBar.TimeStamp
 
-failPoint = "notifying volume at low for bar " & pBar.BarNumber
-NotifyVolume getVolume(pBar, 4), pBar.TimeStamp
+failPoint = "notifying volume at close for bar " & pBar.barNumber
+NotifyVolume mAccumulatedVolume + pBar.Volume, pBar.TimeStamp
+
+mAccumulatedVolume = mAccumulatedVolume + pBar.Volume
 
 Exit Sub
 
@@ -964,9 +957,9 @@ Private Sub loadBarToGrid(ByVal pBar As BarUtils27.Bar)
 Const ProcName As String = "loadBarToGrid"
 On Error GoTo Err
 
-mGrid.Row = pBar.BarNumber
+mGrid.Row = pBar.barNumber
 
-mGrid.SetCellLong TestDataGridColumns.BarNumber, CStr(pBar.BarNumber)
+mGrid.SetCellLong TestDataGridColumns.barNumber, CStr(pBar.barNumber)
 
 mGrid.SetCellDate TestDataGridColumns.TimeStamp, CStr(pBar.TimeStamp)
 
@@ -993,12 +986,13 @@ Dim lBar As BarUtils27.Bar
 mGrid.Redraw = False
 mGrid.SetupDataColumns
 
+mAccumulatedVolume = 0
 For Each lBar In mBars
     loadBarToGrid lBar
     
     loadBarToChart lBar
     
-    showBarNumber lBar.BarNumber
+    showBarNumber lBar.barNumber
     
 Next
 
@@ -1221,15 +1215,16 @@ Dim lBar As BarUtils27.Bar
 logErrorsToForm
 Chart1.DisableDrawing
 
+mAccumulatedVolume = 0
 For Each lBar In mBars
-    failPoint = "processing bar " & lBar.BarNumber
+    failPoint = "processing bar " & lBar.barNumber
     loadBarToChart lBar
     
     failPoint = "adding bar number"
-    showBarNumber lBar.BarNumber
+    showBarNumber lBar.barNumber
     
-    failPoint = "getting study values for bar " & lBar.BarNumber
-    processStudyValues pStudyConfig, lBar.BarNumber
+    failPoint = "getting study values for bar " & lBar.barNumber
+    processStudyValues pStudyConfig, lBar.barNumber
 Next
 
 Chart1.EnableDrawing
