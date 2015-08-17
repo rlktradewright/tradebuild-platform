@@ -108,11 +108,12 @@ End If
 Dim lPermittedSPRoles As ServiceProviderRoles
 lPermittedSPRoles = SPRoleContractDataPrimary + _
                     SPRoleHistoricalDataInput + _
-                    SPRoleRealtimeData + _
                     SPRoleOrderSubmissionLive + _
                     SPRoleOrderSubmissionSimulated
 
 If Not lLiveTrades And Not lNoUI Then lPermittedSPRoles = lPermittedSPRoles + SPRoleTickfileInput
+
+If lClp.Switch("tws") Then lPermittedSPRoles = lPermittedSPRoles + SPRoleRealtimeData
 
 Set gTB = CreateTradeBuildAPI(, lPermittedSPRoles)
 
@@ -121,9 +122,6 @@ If lClp.Switch("tws") Then
         MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Sub
     End If
-Else
-    MsgBox "/tws not supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
-    Exit Sub
 End If
 
 If lClp.Switch("db") Then
@@ -170,7 +168,10 @@ If lNoUI Then
 Else
     Set mForm = New fStrategyHost
     
-    mForm.SymbolText.Text = lSymbol
+    If lClp.Switch("tws") Then
+        mForm.SymbolText.Enabled = True
+        mForm.SymbolText.Text = lSymbol
+    End If
     mForm.ResultsPathText = lResultsPath
     mForm.NoMoneyManagement = IIf(lUseMoneyManagement, 0, 1)
     mForm.StrategyCombo.Text = lStrategyClassName

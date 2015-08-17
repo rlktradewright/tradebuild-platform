@@ -107,20 +107,21 @@ Begin VB.Form fStrategyHost
       _Version        =   393216
       Style           =   1
       Tabs            =   6
-      Tab             =   5
       TabsPerRow      =   6
       TabHeight       =   520
       TabCaption(0)   =   "Controls"
       TabPicture(0)   =   "fStrategyHost.frx":0070
-      Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "Picture1"
-      Tab(0).Control(1)=   "Picture2(0)"
+      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).Control(0)=   "Picture2(0)"
+      Tab(0).Control(0).Enabled=   0   'False
+      Tab(0).Control(1)=   "Picture1"
+      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "Tick files"
       TabPicture(1)   =   "fStrategyHost.frx":008C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Picture2(1)"
-      Tab(1).Control(1)=   "Picture3"
+      Tab(1).Control(0)=   "Picture3"
+      Tab(1).Control(1)=   "Picture2(1)"
       Tab(1).ControlCount=   2
       TabCaption(2)   =   "Parameters"
       TabPicture(2)   =   "fStrategyHost.frx":00A8
@@ -139,7 +140,7 @@ Begin VB.Form fStrategyHost
       Tab(4).ControlCount=   1
       TabCaption(5)   =   "Results"
       TabPicture(5)   =   "fStrategyHost.frx":00FC
-      Tab(5).ControlEnabled=   -1  'True
+      Tab(5).ControlEnabled=   0   'False
       Tab(5).Control(0)=   "TheTime"
       Tab(5).Control(0).Enabled=   0   'False
       Tab(5).Control(1)=   "Label14"
@@ -238,7 +239,7 @@ Begin VB.Form fStrategyHost
       Begin VB.PictureBox Picture1 
          BorderStyle     =   0  'None
          Height          =   1695
-         Left            =   -74880
+         Left            =   120
          ScaleHeight     =   1695
          ScaleWidth      =   10695
          TabIndex        =   50
@@ -256,6 +257,7 @@ Begin VB.Form fStrategyHost
             Width           =   4335
          End
          Begin VB.TextBox SymbolText 
+            Enabled         =   0   'False
             Height          =   285
             Left            =   720
             TabIndex        =   0
@@ -369,7 +371,7 @@ Begin VB.Form fStrategyHost
       Begin VB.TextBox AskSizeText 
          Alignment       =   1  'Right Justify
          Height          =   285
-         Left            =   1800
+         Left            =   -73200
          Locked          =   -1  'True
          TabIndex        =   46
          TabStop         =   0   'False
@@ -379,7 +381,7 @@ Begin VB.Form fStrategyHost
       Begin VB.TextBox TradeSizeText 
          Alignment       =   1  'Right Justify
          Height          =   285
-         Left            =   1800
+         Left            =   -73200
          Locked          =   -1  'True
          TabIndex        =   45
          TabStop         =   0   'False
@@ -389,7 +391,7 @@ Begin VB.Form fStrategyHost
       Begin VB.TextBox BidSizeText 
          Alignment       =   1  'Right Justify
          Height          =   285
-         Left            =   1800
+         Left            =   -73200
          Locked          =   -1  'True
          TabIndex        =   44
          TabStop         =   0   'False
@@ -399,7 +401,7 @@ Begin VB.Form fStrategyHost
       Begin VB.TextBox AskText 
          Alignment       =   1  'Right Justify
          Height          =   285
-         Left            =   960
+         Left            =   -74040
          Locked          =   -1  'True
          TabIndex        =   43
          TabStop         =   0   'False
@@ -409,7 +411,7 @@ Begin VB.Form fStrategyHost
       Begin VB.TextBox TradeText 
          Alignment       =   1  'Right Justify
          Height          =   285
-         Left            =   960
+         Left            =   -74040
          Locked          =   -1  'True
          TabIndex        =   42
          TabStop         =   0   'False
@@ -419,7 +421,7 @@ Begin VB.Form fStrategyHost
       Begin VB.TextBox BidText 
          Alignment       =   1  'Right Justify
          Height          =   285
-         Left            =   960
+         Left            =   -74040
          Locked          =   -1  'True
          TabIndex        =   41
          TabStop         =   0   'False
@@ -429,7 +431,7 @@ Begin VB.Form fStrategyHost
       Begin VB.CommandButton MoreButton 
          Caption         =   "More >>>"
          Height          =   375
-         Left            =   6600
+         Left            =   -68400
          TabIndex        =   14
          Top             =   480
          Width           =   975
@@ -615,7 +617,7 @@ Begin VB.Form fStrategyHost
          BorderStyle     =   0  'None
          Height          =   1365
          Index           =   0
-         Left            =   -74880
+         Left            =   120
          ScaleHeight     =   1365
          ScaleWidth      =   7455
          TabIndex        =   22
@@ -625,7 +627,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label Label7 
          Caption         =   "Microsecs per event"
          Height          =   195
-         Left            =   3720
+         Left            =   -71280
          TabIndex        =   65
          Top             =   2280
          Width           =   1575
@@ -634,7 +636,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   " "
          Height          =   195
-         Left            =   5400
+         Left            =   -69600
          TabIndex        =   64
          Top             =   2280
          Width           =   855
@@ -643,7 +645,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   " "
          Height          =   195
-         Left            =   5400
+         Left            =   -69600
          TabIndex        =   63
          Top             =   2040
          Width           =   855
@@ -651,7 +653,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label Label3 
          Caption         =   "Events per second"
          Height          =   195
-         Left            =   3720
+         Left            =   -71280
          TabIndex        =   62
          Top             =   2040
          Width           =   1335
@@ -660,7 +662,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   " "
          Height          =   195
-         Left            =   5400
+         Left            =   -69600
          TabIndex        =   61
          Top             =   1800
          Width           =   855
@@ -668,7 +670,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label Label2 
          Caption         =   "Percent complete"
          Height          =   195
-         Left            =   3720
+         Left            =   -71280
          TabIndex        =   60
          Top             =   1800
          Width           =   1335
@@ -677,7 +679,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   " "
          Height          =   195
-         Left            =   5400
+         Left            =   -69600
          TabIndex        =   59
          Top             =   1560
          Width           =   855
@@ -685,7 +687,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label Label1 
          Caption         =   "Events played"
          Height          =   195
-         Left            =   3720
+         Left            =   -71280
          TabIndex        =   58
          Top             =   1560
          Width           =   1335
@@ -694,7 +696,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   "Bid"
          Height          =   195
-         Left            =   120
+         Left            =   -74880
          TabIndex        =   40
          Top             =   960
          Width           =   735
@@ -703,7 +705,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   "Last"
          Height          =   195
-         Left            =   120
+         Left            =   -74880
          TabIndex        =   39
          Top             =   720
          Width           =   735
@@ -712,7 +714,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   "Ask"
          Height          =   195
-         Left            =   120
+         Left            =   -74880
          TabIndex        =   15
          Top             =   480
          Width           =   735
@@ -720,7 +722,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label Label4 
          Caption         =   "Profit/Loss"
          Height          =   195
-         Left            =   3720
+         Left            =   -71280
          TabIndex        =   38
          Top             =   480
          Width           =   855
@@ -729,7 +731,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   " "
          Height          =   195
-         Left            =   5400
+         Left            =   -69600
          TabIndex        =   37
          Top             =   480
          Width           =   855
@@ -738,7 +740,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   " "
          Height          =   195
-         Left            =   5400
+         Left            =   -69600
          TabIndex        =   36
          Top             =   720
          Width           =   855
@@ -746,7 +748,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label Label12 
          Caption         =   "Drawdown"
          Height          =   195
-         Left            =   3720
+         Left            =   -71280
          TabIndex        =   35
          Top             =   720
          Width           =   855
@@ -754,7 +756,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label Label5 
          Caption         =   "Max profit"
          Height          =   195
-         Left            =   3720
+         Left            =   -71280
          TabIndex        =   34
          Top             =   960
          Width           =   855
@@ -763,7 +765,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   " "
          Height          =   195
-         Left            =   5400
+         Left            =   -69600
          TabIndex        =   33
          Top             =   960
          Width           =   855
@@ -772,7 +774,7 @@ Begin VB.Form fStrategyHost
          Alignment       =   1  'Right Justify
          Caption         =   " "
          Height          =   195
-         Left            =   5400
+         Left            =   -69600
          TabIndex        =   32
          Top             =   1200
          Width           =   855
@@ -780,7 +782,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label Label14 
          Caption         =   "Position"
          Height          =   195
-         Left            =   3720
+         Left            =   -71280
          TabIndex        =   31
          Top             =   1200
          Width           =   855
@@ -788,7 +790,7 @@ Begin VB.Form fStrategyHost
       Begin VB.Label TheTime 
          Caption         =   " "
          Height          =   255
-         Left            =   945
+         Left            =   -74055
          TabIndex        =   30
          Top             =   1320
          Width           =   2415
