@@ -199,7 +199,7 @@ Public Property Get OpenInterest() As Long
 OpenInterest = mOpenInterest
 End Property
 
-Public Property Get OpenInterestChanged() As Long
+Public Property Get OpenInterestChanged() As Boolean
 OpenInterestChanged = CBool(mBarChanges And BarChangeOpenInterestChanged)
 End Property
 
@@ -215,7 +215,7 @@ Public Property Get Volume() As Long
 Volume = mVolume
 End Property
 
-Public Property Get VolumeChanged() As Long
+Public Property Get VolumeChanged() As Boolean
 VolumeChanged = CBool(mBarChanges And BarChangeVolumeChanged)
 End Property
 
@@ -229,6 +229,7 @@ Const ProcName As String = "IncrementTickVolume"
 On Error GoTo Err
 
 mTickVolume = mTickVolume + increment
+mBarChanges = 0
 fireChange BarTickVolumeChanged
 
 Exit Sub
@@ -343,7 +344,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetBarChanged()
-mBarChanges = (BarChangeOpenChanged Or BarChangeHighChanged Or BarChangeLowChanged Or BarChangeCloseChanged Or BarChangeVolumeChanged Or BarChangeOpenInterestChanged)
+mBarChanges = 0
+If mOpen <> MaxDouble Then mBarChanges = BarChangeOpenChanged
+If mHigh <> MinDouble Then mBarChanges = mBarChanges Or BarChangeHighChanged
+If mLow <> MaxDouble Then mBarChanges = mBarChanges Or BarChangeLowChanged
+If mClose <> MaxDouble Then mBarChanges = mBarChanges Or BarChangeCloseChanged
+If mOpenInterest <> 0 Then mBarChanges = mBarChanges Or BarChangeOpenInterestChanged
+If mVolume <> 0 Then mBarChanges = mBarChanges Or BarChangeVolumeChanged
 End Sub
 
 Public Function ToString() As String

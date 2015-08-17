@@ -966,7 +966,7 @@ Const ProcName As String = "createNewTimeframes"
 On Error GoTo Err
 
 Dim lStudyBase As IStudyBase
-Set lStudyBase = CreateStudyBaseForNullInput(pStudyManager)
+Set lStudyBase = CreateStudyBaseForTickDataInput(pStudyManager, Nothing, pContractFuture)
 
 Dim lTimeframes As Timeframes
 Set lTimeframes = CreateTimeframes(lStudyBase, pContractFuture, pHistDataStore)

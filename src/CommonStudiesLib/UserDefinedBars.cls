@@ -204,6 +204,7 @@ On Error GoTo Err
 
 If ev.ChangeType = CollItemAdded Then
     Set mBar = mBars.Bar(0)
+    mTimestamp = mBar.Timestamp
     notifyBarValues
 End If
 

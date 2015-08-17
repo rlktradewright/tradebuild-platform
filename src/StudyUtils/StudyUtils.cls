@@ -410,13 +410,12 @@ Const ProcName As String = "CreateStudyBaseForTickDataInput"
 On Error GoTo Err
 
 AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-AssertArgument Not pTickSource Is Nothing, "pTickSource Is Nothing"
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture Is Nothing"
 
 Dim lStudyBase As New StudyBaseForTickDataInput
 lStudyBase.Initialise pStudyManager, pContractFuture
 
-pTickSource.AddGenericTickListener lStudyBase
+If Not pTickSource Is Nothing Then pTickSource.AddGenericTickListener lStudyBase
 
 Set CreateStudyBaseForTickDataInput = lStudyBase
 

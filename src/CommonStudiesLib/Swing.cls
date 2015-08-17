@@ -168,10 +168,10 @@ If mStudyFoundation.IsNewBar Then
         mCurrentBarLow = currValue
         
         initialiseSwingHighPoint mPotentialSwingHighPoint, ev.sVal
-        mPotentialSwingHighPoint.Value = Empty
+        'mPotentialSwingHighPoint.Value = Empty
         
         initialiseSwingLowPoint mPotentialSwingLowPoint, ev.sVal
-        mPotentialSwingLowPoint.Value = Empty
+        'mPotentialSwingLowPoint.Value = Empty
         
         mSwingHighCache.AddValue mPotentialSwingHighPoint, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
         mSwingHighLineCache.AddValue Nothing, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
@@ -732,7 +732,7 @@ Set impliedSwingLowStudyPoint = CreateStudyPoint(impliedSwingLow.Timestamp, impl
 'mLowBeforeHighPoint = mLowAfterHighPoint
 mHighBeforeLowPoint = mHighAfterLowPoint
 
-updateSwingHighType prevSwingLow, impliedSwingLow
+updateSwingLowType prevSwingLow, impliedSwingLow
 
 mSwingLowCache.AddValue impliedSwingLow, impliedSwingLow.BarNumber, impliedSwingLow.Timestamp, impliedSwingLow.BarStartTime
 notifySwingLowPoint

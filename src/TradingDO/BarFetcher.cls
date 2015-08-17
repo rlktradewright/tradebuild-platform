@@ -77,7 +77,7 @@ Private mDB                                 As TradingDB
 Private mAsynchronous                       As Boolean
 
 Private mSessionBuilder                     As SessionBuilder
-Private WithEvents mSession                 As Session
+Private mSession                            As Session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mCustomSessionBuilder               As SessionBuilder
@@ -166,7 +166,7 @@ Case Fetching
     mTaskContext.Suspend -1
 Case ProcessingBars
     If Not mRs.BOF Then
-        If filterByTime(mRs("DateTime")) Then processBar
+        If filterByTime(barTimestamp) Then processBar barTimestamp, openValue, highValue, lowValue, closeValue, volume, tickVolume
         mRs.MovePrevious
     Else
         returnAsyncResults
@@ -372,23 +372,6 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' mSession Event Handlers
-'@================================================================================
-
-Private Sub mSession_SessionStarted(ev As SessionEventData)
-Const ProcName As String = "mSession_SessionStarted"
-On Error GoTo Err
-
-mAccumulatedVolume = 0
-
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' mTargetBarsBuilder Event Handlers
 '@================================================================================
 
@@ -396,10 +379,9 @@ Private Sub mTargetBarsBuilder_BarAdded(ByVal pBar As Bar)
 Const ProcName As String = "mTargetBarsBuilder_BarAdded"
 On Error GoTo Err
 
+Set mCurrentBar = pBar
 fireNotifyBar mCurrentBar
 
-Set mCurrentBar = pBar
-    
 Exit Sub
 
 Err:
@@ -529,6 +511,18 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function barTimestamp() As Date
+Const ProcName As String = "barTimestamp"
+On Error GoTo Err
+
+barTimestamp = mRs("DateTime")
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function closeValue() As Double
 Const ProcName As String = "closeValue"
@@ -699,6 +693,11 @@ Const ProcName As String = "filterByTime"
 On Error GoTo Err
 
 mSessionBuilder.SetSessionCurrentTime timestamp
+
+Dim lSessEv As SessionEventData
+lSessEv = mSessionBuilder.SetSessionCurrentTime(timestamp)
+If lSessEv.ChangeType = SessionChangeStart Then mAccumulatedVolume = 0
+
 If Not mCustomSessionBuilder Is Nothing Then
     mCustomSessionBuilder.SetSessionCurrentTime timestamp
     If Not mCustomSession.IsTimeInSession(timestamp) Then Exit Function
@@ -912,6 +911,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function getNumberOfPrices( _
+                ByVal pOpenValue As Double, _
+                ByVal pHighValue As Double, _
+                ByVal pLowValue As Double, _
+                ByVal pCloseValue As Double) As Long
+getNumberOfPrices = 1
+If pOpenValue <> pHighValue Then getNumberOfPrices = getNumberOfPrices + 1
+If pOpenValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
+If pCloseValue <> pHighValue And pCloseValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
+End Function
+
 Private Function highValue() As Double
 Const ProcName As String = "highValue"
 On Error GoTo Err
@@ -998,6 +1008,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub notifyBarValue( _
+                ByVal pValue As Double, _
+                ByVal pNumberOfPrices As Long, _
+                ByRef pNumberOfPricesNotified As Long, _
+                ByVal pTimestamp As Date, _
+                ByVal pTickVolumePerNotify As Long, _
+                ByVal pTickVolume As Long, _
+                ByVal pVolumePerNotify As Long, _
+                ByVal pVolume As Long)
+Const ProcName As String = "notifyBarValue"
+On Error GoTo Err
+
+Dim lValue As SValue
+lValue.timestamp = pTimestamp
+
+lValue.value = pValue
+mTargetBarsBuilder.notifyValue lValue
+pNumberOfPricesNotified = pNumberOfPricesNotified + 1
+
+mTargetBarsBuilder.IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, pTickVolumePerNotify, pTickVolume)
+lValue.value = mAccumulatedVolume + IIf(pNumberOfPricesNotified < pNumberOfPrices, pNumberOfPricesNotified * pVolumePerNotify, pVolume)
+mTargetBarsBuilder.NotifyVolume lValue
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Function openInterest() As Long
 Const ProcName As String = "openInterest"
 On Error GoTo Err
@@ -1022,52 +1061,55 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub processBar()
+Private Sub processBar( _
+    ByVal pTimestamp As Date, _
+    ByVal pOpenValue As Double, _
+    ByVal pHighValue As Double, _
+    ByVal pLowValue As Double, _
+    ByVal pCloseValue As Double, _
+    ByVal pVolume As Long, _
+    ByVal pTickVolume As Long)
 Const ProcName As String = "processBar"
 On Error GoTo Err
 
-mTargetBarsBuilder.NotifyValue toSValue(openValue)
+Dim lNumberOfPrices As Long
+lNumberOfPrices = getNumberOfPrices(pOpenValue, pHighValue, pLowValue, pCloseValue)
 
-If Not mNotifiedFirstVolume Then
-    ' send an initial volume of 1, because the first volume notification
-    ' is used by the bar studies to set the accum volume at end of
-    ' previous bar
-    mTargetBarsBuilder.NotifyVolume toSValue(1)
-    mAccumulatedVolume = 1
-    mNotifiedFirstVolume = True
-End If
+Dim lNumberOfPricesNotified As Long
 
-If closeValue >= openValue Then
-    mTargetBarsBuilder.NotifyValue toSValue(lowValue)
-    mTargetBarsBuilder.IncrementTickVolume Int(tickVolume / 3) - 2
-    mTargetBarsBuilder.NotifyVolume toSValue(mAccumulatedVolume + Int(volume / 3))
-    
-    mTargetBarsBuilder.NotifyValue toSValue(lowValue)
-    mTargetBarsBuilder.NotifyValue toSValue(highValue)
-    mTargetBarsBuilder.IncrementTickVolume Int(tickVolume / 3) - 2
-    mTargetBarsBuilder.NotifyVolume toSValue(mAccumulatedVolume + 2 * Int(volume / 3))
+Dim lTickVolumePerNotify As Long
+lTickVolumePerNotify = Int((pTickVolume - lNumberOfPrices) / lNumberOfPrices)
+If lTickVolumePerNotify < 0 Then lTickVolumePerNotify = 0
 
-    mTargetBarsBuilder.NotifyValue toSValue(highValue)
-    mTargetBarsBuilder.NotifyValue toSValue(closeValue)
-    mTargetBarsBuilder.IncrementTickVolume tickVolume - 2 * Int(tickVolume / 3) - 2
-    mTargetBarsBuilder.NotifyVolume toSValue(mAccumulatedVolume + volume)
+Dim lVolumePerNotify As Long
+lVolumePerNotify = Int((pVolume - lNumberOfPrices) / lNumberOfPrices)
+If lVolumePerNotify < 0 Then lVolumePerNotify = 0
+
+notifyBarValue pOpenValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+
+If pCloseValue = pHighValue Then
+    If pLowValue = pOpenValue And pLowValue = pHighValue Then
+    ElseIf pLowValue = pOpenValue Then
+        notifyBarValue pHighValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    Else
+        notifyBarValue pLowValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+        notifyBarValue pHighValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    End If
+ElseIf pCloseValue = pLowValue Then
+    If pHighValue = pOpenValue And pHighValue = pLowValue Then
+    ElseIf pHighValue = pOpenValue Then
+        notifyBarValue pLowValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    Else
+        notifyBarValue pHighValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+        notifyBarValue pLowValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    End If
 Else
-    mTargetBarsBuilder.NotifyValue toSValue(highValue)
-    mTargetBarsBuilder.IncrementTickVolume Int(tickVolume / 3) - 2
-    mTargetBarsBuilder.NotifyVolume toSValue(mAccumulatedVolume + Int(volume / 3))
-    
-    mTargetBarsBuilder.NotifyValue toSValue(highValue)
-    mTargetBarsBuilder.NotifyValue toSValue(lowValue)
-    mTargetBarsBuilder.IncrementTickVolume Int(tickVolume / 3) - 2
-    mTargetBarsBuilder.NotifyVolume toSValue(mAccumulatedVolume + 2 * Int(volume / 3))
-
-    mTargetBarsBuilder.NotifyValue toSValue(lowValue)
-    mTargetBarsBuilder.NotifyValue toSValue(closeValue)
-    mTargetBarsBuilder.IncrementTickVolume tickVolume - 2 * Int(tickVolume / 3) - 2
-    mTargetBarsBuilder.NotifyVolume toSValue(mAccumulatedVolume + volume)
+    If pLowValue <> pOpenValue Then notifyBarValue pLowValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    If pHighValue <> pOpenValue Then notifyBarValue pHighValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    notifyBarValue pCloseValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
 End If
 
-mAccumulatedVolume = mAccumulatedVolume + volume
+mAccumulatedVolume = mAccumulatedVolume + pVolume
 
 Exit Sub
 
@@ -1084,7 +1126,7 @@ If Not mRs.BOF Then
 End If
 
 Do While Not mRs.BOF
-    If filterByTime(mRs("DateTime")) Then processBar
+    If filterByTime(barTimestamp) Then processBar barTimestamp, openValue, highValue, lowValue, closeValue, volume, tickVolume
     mRs.MovePrevious
 Loop
 
@@ -1118,17 +1160,17 @@ Do While tdd.GetNextTick(tick)
     Case TickTypeBid
         If mSpecifier.barType = BarTypeBid Then
             val.value = tick.price
-            mInterimBarsBuilder.NotifyValue val
+            mInterimBarsBuilder.notifyValue val
         End If
     Case TickTypeAsk
         If mSpecifier.barType = BarTypeAsk Then
             val.value = tick.price
-            mInterimBarsBuilder.NotifyValue val
+            mInterimBarsBuilder.notifyValue val
         End If
     Case TickTypeTrade
         If mSpecifier.barType = BarTypeTrade Then
             val.value = tick.price
-            mInterimBarsBuilder.NotifyValue val
+            mInterimBarsBuilder.notifyValue val
         End If
     Case TickTypeVolume
         If mSpecifier.barType = BarTypeTrade Then
@@ -1180,7 +1222,7 @@ If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
 gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
 mTaskContext.Finish mTargetBarsBuilder.Bars, False
-fireNotifyBar mCurrentBar
+'fireNotifyBar mCurrentBar
 fireFetchCompleted
 
 Exit Sub
@@ -1333,20 +1375,6 @@ Const ProcName As String = "tickVolume"
 On Error GoTo Err
 
 tickVolume = mRs("tickVolume")
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function toSValue( _
-                ByVal value As Variant) As SValue
-Const ProcName As String = "toSValue"
-On Error GoTo Err
-
-toSValue.value = value
-toSValue.timestamp = mRs("datetime")
 
 Exit Function
 
