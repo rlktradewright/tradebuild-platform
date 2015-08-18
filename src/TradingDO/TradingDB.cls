@@ -167,7 +167,8 @@ Public Function FetchBars( _
                 Optional ByVal customSessionStartTime As Date, _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade) As Bars
+                Optional ByVal barType As BarTypes = BarTypeTrade, _
+                Optional ByVal pListener As IBarFetchListener) As Bars
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
@@ -182,7 +183,8 @@ Set FetchBars = lInstrument.FetchBars(BarTimePeriod, _
                                         customSessionStartTime, _
                                         customSessionEndTime, _
                                         includeBarsOutsideSession, _
-                                        barType)
+                                        barType, _
+                                        pListener)
 
 Exit Function
 

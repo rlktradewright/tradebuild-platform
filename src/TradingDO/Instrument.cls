@@ -252,7 +252,7 @@ On Error GoTo Err
 If mDataObj.RuleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
 
 If Name <> "" Then
-    Dim instrmnt As Instrument
+    Dim instrmnt As instrument
     Set instrmnt = mDB.InstrumentFactory.LoadByName(value.ExchangeName & "/" & _
                                                     value.Name & "/" & _
                                                     Name)
@@ -748,7 +748,8 @@ Public Function FetchBars( _
                 Optional ByVal customSessionStartTime As Date, _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade) As Bars
+                Optional ByVal barType As BarTypes = BarTypeTrade, _
+                Optional ByVal pListener As IBarFetchListener) As Bars
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
@@ -781,7 +782,7 @@ Dim bf As BarFetcher
 Set bf = New BarFetcher
 bf.Initialise mDB, Me
 
-Set FetchBars = bf.FetchBars(Specifier)
+Set FetchBars = bf.FetchBars(Specifier, pListener)
 Set bf = Nothing
 
 Exit Function
