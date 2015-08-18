@@ -665,7 +665,7 @@ End If
 On Error Resume Next
 
 Dim lDbClient As DBClient
-Set lDbClient = CreateTradingDBClient(dbtype, server, database, username, password)
+Set lDbClient = CreateTradingDBClient(dbtype, server, database, username, password, True)
 
 
 Set mHistDataStore = lDbClient.HistoricalDataStore
