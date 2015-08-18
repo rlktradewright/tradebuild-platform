@@ -64,6 +64,10 @@ Private mUseSynchronousWrites                       As Boolean
 ' Properties
 '@================================================================================
 
+'@================================================================================
+' Methods
+'@================================================================================
+
 Public Property Get ContractStore() As IContractStore
 Const ProcName As String = "ContractStore"
 On Error GoTo Err
@@ -98,6 +102,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Friend Sub Initialise( _
+                ByVal pTradingDBFuture As IFuture, _
+                ByVal pUseSynchronousReads As Boolean, _
+                ByVal pUseSynchronousWrites As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mTradingDBFuture = pTradingDBFuture
+mUseSynchronousReads = pUseSynchronousReads
+mUseSynchronousWrites = pUseSynchronousWrites
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Property Get TickfileStore() As ITickfileStore
 Const ProcName As String = "TickfileStore"
 On Error GoTo Err
@@ -118,27 +139,6 @@ End Property
 Public Property Get TradingDBFuture() As IFuture
 Set TradingDBFuture = mTradingDBFuture
 End Property
-
-'@================================================================================
-' Methods
-'@================================================================================
-
-Friend Sub Initialise( _
-                ByVal pTradingDBFuture As IFuture, _
-                ByVal pUseSynchronousReads As Boolean, _
-                ByVal pUseSynchronousWrites As Boolean)
-Const ProcName As String = "Initialise"
-On Error GoTo Err
-
-Set mTradingDBFuture = pTradingDBFuture
-mUseSynchronousReads = pUseSynchronousReads
-mUseSynchronousWrites = pUseSynchronousWrites
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Helper Functions

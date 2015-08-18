@@ -205,8 +205,7 @@ If mUseSynchronousReads Then
                                     mBarSpec.CustomSessionStartTime, _
                                     mBarSpec.CustomSessionEndTime, _
                                     mBarSpec.IncludeBarsOutsideSession, _
-                                    mBarSpec.BarType, _
-                                    mListener)
+                                    mBarSpec.BarType)
     mFutureBuilder.Complete
     mHistDataStore.FetchBuilderFinished Me
 Else
