@@ -286,6 +286,7 @@ If mCurrColour = Red Or _
     (mCurrColour = Pink And mPrevColour = Green) _
 Then
     If mOrderContextBuyDummy.PendingSize <> 0 Then
+        mContext.LogTradeReason "Previous signal cancelled - cancelling pending buy orders"
         mBracketOrderBuyDummy.Cancel
         If mOrderContextBuy.PendingSize <> 0 Then
             mBracketOrderBuy.Cancel
@@ -295,6 +296,7 @@ ElseIf mCurrColour = Green Or _
         (mCurrColour = Amber And mPrevColour = Red) _
 Then
     If mOrderContextSellDummy.PendingSize <> 0 Then
+        mContext.LogTradeReason "Previous signal cancelled - cancelling pending sell orders"
         mBracketOrderSellDummy.Cancel
         If mOrderContextSell.PendingSize <> 0 Then
             mBracketOrderSell.Cancel
