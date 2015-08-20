@@ -981,7 +981,7 @@ End Function
 
 Friend Sub NotifyPositionCloseout( _
                 ByVal pExec As IExecutionReport)
-Const ProcName As String = "NotifyCloseout"
+Const ProcName As String = "NotifyPositionCloseout"
 On Error GoTo Err
 
 Dim lBracketOrder As IBracketOrder

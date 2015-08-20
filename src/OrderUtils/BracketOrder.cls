@@ -2277,7 +2277,7 @@ If Size = 0 Then Exit Sub
 
 Dim lExec As New Execution
 lExec.SyncToExecutionReport pExec
-lExec.Quantity = Size
+lExec.Quantity = -Size
 If Size > 0 Then
     lExec.Action = OrderActionSell
 Else

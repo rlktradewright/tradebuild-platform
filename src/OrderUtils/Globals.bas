@@ -727,7 +727,7 @@ Else
     End If
 End If
 
-gLogOrder lTimePart & pMessage & " (" & lTickPart & "id=" & pKey & ")", _
+gLogOrder lTimePart & IIf(pIsSimulated, "(simulated) ", "") & pMessage & " (" & lTickPart & "id=" & pKey & ")", _
         pIsSimulated, _
         pSource
 
@@ -1213,45 +1213,45 @@ With pTargetOrder
     .Initialise .GroupName, pSourceOrder.ContextsName, pSourceOrder.ContractSpecifier, pSourceOrder.OrderContext
     
     ' do this first because modifiability of other attributes may depend on the OrderType
-    If .IsAttributeModifiable(OrderAttOrderType) Then .OrderType = pSourceOrder.OrderType
+    .OrderType = pSourceOrder.OrderType
     
     .Action = pSourceOrder.Action
-    If .IsAttributeModifiable(OrderAttAllOrNone) Then .AllOrNone = pSourceOrder.AllOrNone
+    .AllOrNone = pSourceOrder.AllOrNone
     .AveragePrice = pSourceOrder.AveragePrice
-    If .IsAttributeModifiable(OrderAttBlockOrder) Then .BlockOrder = pSourceOrder.BlockOrder
+    .BlockOrder = pSourceOrder.BlockOrder
     .BrokerId = pSourceOrder.BrokerId
-    If .IsAttributeModifiable(OrderAttDiscretionaryAmount) Then .DiscretionaryAmount = pSourceOrder.DiscretionaryAmount
-    If .IsAttributeModifiable(OrderAttDisplaySize) Then .DisplaySize = pSourceOrder.DisplaySize
+    .DiscretionaryAmount = pSourceOrder.DiscretionaryAmount
+    .DisplaySize = pSourceOrder.DisplaySize
     .ErrorCode = pSourceOrder.ErrorCode
     .ErrorMessage = pSourceOrder.ErrorMessage
-    If .IsAttributeModifiable(OrderAttETradeOnly) Then .ETradeOnly = pSourceOrder.ETradeOnly
+    .ETradeOnly = pSourceOrder.ETradeOnly
     .FillTime = pSourceOrder.FillTime
-    If .IsAttributeModifiable(OrderAttFirmQuoteOnly) Then .FirmQuoteOnly = pSourceOrder.FirmQuoteOnly
-    If .IsAttributeModifiable(OrderAttGoodAfterTime) Then .GoodAfterTime = pSourceOrder.GoodAfterTime
-    If .IsAttributeModifiable(OrderAttGoodAfterTimeTZ) Then .GoodAfterTimeTZ = pSourceOrder.GoodAfterTimeTZ
-    If .IsAttributeModifiable(OrderAttGoodTillDate) Then .GoodTillDate = pSourceOrder.GoodTillDate
-    If .IsAttributeModifiable(OrderAttGoodTillDateTZ) Then .GoodTillDateTZ = pSourceOrder.GoodTillDateTZ
-    If .IsAttributeModifiable(OrderAttHidden) Then .Hidden = pSourceOrder.Hidden
+    .FirmQuoteOnly = pSourceOrder.FirmQuoteOnly
+    .GoodAfterTime = pSourceOrder.GoodAfterTime
+    .GoodAfterTimeTZ = pSourceOrder.GoodAfterTimeTZ
+    .GoodTillDate = pSourceOrder.GoodTillDate
+    .GoodTillDateTZ = pSourceOrder.GoodTillDateTZ
+    .Hidden = pSourceOrder.Hidden
     .Id = pSourceOrder.Id
-    If .IsAttributeModifiable(OrderAttIgnoreRTH) Then .IgnoreRegularTradingHours = pSourceOrder.IgnoreRegularTradingHours
+    .IgnoreRegularTradingHours = pSourceOrder.IgnoreRegularTradingHours
     .IsSimulated = pSourceOrder.IsSimulated
     .LastFillPrice = pSourceOrder.LastFillPrice
-    If .IsAttributeModifiable(OrderAttLimitPrice) Then .LimitPrice = pSourceOrder.LimitPrice
-    If .IsAttributeModifiable(OrderAttMinimumQuantity) Then .MinimumQuantity = pSourceOrder.MinimumQuantity
-    If .IsAttributeModifiable(OrderAttNBBOPriceCap) Then .NbboPriceCap = pSourceOrder.NbboPriceCap
+    .LimitPrice = pSourceOrder.LimitPrice
+    .MinimumQuantity = pSourceOrder.MinimumQuantity
+    .NbboPriceCap = pSourceOrder.NbboPriceCap
     .Offset = pSourceOrder.Offset
-    If .IsAttributeModifiable(OrderAttOrigin) Then .Origin = pSourceOrder.Origin
-    If .IsAttributeModifiable(OrderAttOriginatorRef) Then .OriginatorRef = pSourceOrder.OriginatorRef
-    If .IsAttributeModifiable(OrderAttOverrideConstraints) Then .OverrideConstraints = pSourceOrder.OverrideConstraints
-    If .IsAttributeModifiable(OrderAttPercentOffset) Then .PercentOffset = pSourceOrder.PercentOffset
-    If .IsAttributeModifiable(OrderAttQuantity) Then .Quantity = pSourceOrder.Quantity
+    .Origin = pSourceOrder.Origin
+    .OriginatorRef = pSourceOrder.OriginatorRef
+    .OverrideConstraints = pSourceOrder.OverrideConstraints
+    .PercentOffset = pSourceOrder.PercentOffset
+    .Quantity = pSourceOrder.Quantity
     .QuantityFilled = pSourceOrder.QuantityFilled
     .QuantityRemaining = pSourceOrder.QuantityRemaining
-    If .IsAttributeModifiable(OrderAttSettlingFirm) Then .SettlingFirm = pSourceOrder.SettlingFirm
-    If .IsAttributeModifiable(OrderAttStopTriggerMethod) Then .StopTriggerMethod = pSourceOrder.StopTriggerMethod
-    If .IsAttributeModifiable(OrderAttSweepToFill) Then .SweepToFill = pSourceOrder.SweepToFill
-    If .IsAttributeModifiable(OrderAttTimeInForce) Then .TimeInForce = pSourceOrder.TimeInForce
-    If .IsAttributeModifiable(OrderAttTriggerPrice) Then .TriggerPrice = pSourceOrder.TriggerPrice
+    .SettlingFirm = pSourceOrder.SettlingFirm
+    .StopTriggerMethod = pSourceOrder.StopTriggerMethod
+    .SweepToFill = pSourceOrder.SweepToFill
+    .TimeInForce = pSourceOrder.TimeInForce
+    .TriggerPrice = pSourceOrder.TriggerPrice
 
     ' do this last to prevent status influencing whether attributes are modifiable
     .Status = pSourceOrder.Status
