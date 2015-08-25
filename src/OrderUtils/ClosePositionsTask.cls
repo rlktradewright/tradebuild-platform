@@ -272,14 +272,6 @@ If Not mBalancingOrderContext.IsReady Then Exit Sub
 Dim lContract As IContract
 Set lContract = mPositionManager.DataSource.ContractFuture.Value
 
-gLogOrder _
-        "Close positions at market: (Curr price=" & _
-            FormatPrice(mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price, _
-                        lContract.Specifier.SecType, _
-                        lContract.TickSize) & ")", _
-        mPositionManager.IsSimulated, _
-        Me
-
 If mBalancingOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFDay) Then mBalancingOrderContext.TemplateOrder.TimeInForce = OrderTIFs.OrderTIFDay
 Set mBalancingBracketOrder = _
                 mBalancingOrderContext.CreateBracketOrder( _
@@ -297,6 +289,17 @@ Set mBalancingBracketOrder = _
                             0#, _
                             0, _
                             0#)
+
+gLogOrderMessage "Close positions at market: (Curr price=" & _
+                FormatPrice(mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price, _
+                            lContract.Specifier.SecType, _
+                            lContract.TickSize) & ")", _
+                mPositionManager.DataSource, _
+                lContract, _
+                mBalancingBracketOrder.Key, _
+                mPositionManager.IsSimulated, _
+                Me
+
 mBalancingOrderContext.ExecuteBracketOrder mBalancingBracketOrder
 
 Set mBalancingOrderContext = Nothing
