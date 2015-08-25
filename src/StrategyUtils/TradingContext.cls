@@ -374,7 +374,19 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LogTradeReason(ByVal pReason As String, Optional ByVal pLogLevel As LogLevels = LogLevels.LogLevelNormal)
-mTradeReasonLogger.Log pLogLevel, FormatTimestamp(Timestamp, TimestampDateAndTimeISO8601) & "  " & pReason
+If pReason = "" Then Exit Sub
+
+Dim lTimepart As String
+lTimepart = FormatTimestamp(Timestamp, TimestampDateAndTimeISO8601) & "  "
+
+If InStr(1, pReason, vbCrLf) = 0 Then
+    mTradeReasonLogger.Log pLogLevel, lTimepart & pReason
+Else
+    Dim lSpacer As String
+    lSpacer = Space(Len(lTimepart))
+    mTradeReasonLogger.Log pLogLevel, lTimepart & Replace$(pReason, vbCrLf, vbCrLf & lSpacer)
+End If
+
 End Sub
 
 Public Sub StartTickData(ByVal pStrategy As IPositionMgmtStrategy)
