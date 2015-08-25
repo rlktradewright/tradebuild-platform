@@ -125,7 +125,7 @@ If lClp.Switch("tws") Then
 End If
 
 If lClp.Switch("db") Then
-    If Not setupDbServiceProviders(lClp.switchValue("db"), Not lNoUI) Then
+    If Not setupDbServiceProviders(lClp.switchValue("db"), Not (lLiveTrades Or lNoUI)) Then
         MsgBox "Error setting up database service providers - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Sub
     End If
