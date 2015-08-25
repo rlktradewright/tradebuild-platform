@@ -98,7 +98,6 @@ Private mTotalBarsRetrieved                         As Long
 
 Private WithEvents mTargetBarsBuilder               As BarsBuilder
 Attribute mTargetBarsBuilder.VB_VarHelpID = -1
-Private mCurrentBar                                 As Bar
 
 Private mAccumulatedVolume                          As Long
 
@@ -188,8 +187,6 @@ ElseIf mState = ProcessingBars Then
     If mCurrTWSBarsCollectionIndex < 0 Then
         gLog "Time to process " & sTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(et.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
         mHistDataRequester.UnregisterHistoricalDataRequestTask mRequesterId
-        
-        notifyCurrentBar
         
         mFutureBuilder.Value = mTargetBarsBuilder.Bars
         mFutureBuilder.Complete
@@ -292,8 +289,7 @@ Private Sub mTargetBarsBuilder_BarAdded(ByVal pBar As Bar)
 Const ProcName As String = "mBarsBuilder_BarAdded"
 On Error GoTo Err
 
-notifyCurrentBar
-Set mCurrentBar = pBar
+fireNotifyBar pBar
 
 Exit Sub
 
@@ -371,7 +367,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyBar(ByRef pBar As TwsBar)
+Friend Sub notifyBar(ByRef pBar As TwsBar)
 Const ProcName As String = "NotifyBar"
 On Error GoTo Err
 
@@ -385,20 +381,6 @@ If Not notifyTimestamp(lTimestamp, mWorkingBarSpecifier.FromDate, mRetrievalSess
 
 mNumberOfBarsInMessage = mNumberOfBarsInMessage + 1
 mTWSBarsCollections(mTWSBarsCollectionsIndex).Add pBar
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub notifyCurrentBar()
-Const ProcName As String = "notifyCurrentBar"
-On Error GoTo Err
-
-If Not mListener Is Nothing Then
-    If Not mCurrentBar Is Nothing Then mListener.NotifyBar mCookie, mCurrentBar
-End If
 
 Exit Sub
 
@@ -505,6 +487,20 @@ If mTWSBarsCollectionsIndex > UBound(mTWSBarsCollections) Then ReDim Preserve mT
 mTotalBarsRetrieved = mTotalBarsRetrieved + mNumberOfBarsInMessage
 
 mTaskContext.Continue
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub fireNotifyBar(ByVal pBar As Bar)
+Const ProcName As String = "fireNotifyBar"
+On Error GoTo Err
+
+If mListener Is Nothing Then Exit Sub
+
+If Not pBar Is Nothing Then mListener.notifyBar mCookie, pBar
 
 Exit Sub
 
