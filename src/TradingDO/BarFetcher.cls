@@ -379,8 +379,8 @@ Private Sub mTargetBarsBuilder_BarAdded(ByVal pBar As Bar)
 Const ProcName As String = "mTargetBarsBuilder_BarAdded"
 On Error GoTo Err
 
-fireNotifyBar mCurrentBar
 Set mCurrentBar = pBar
+fireNotifyBar mCurrentBar
 
 Exit Sub
 
@@ -1131,8 +1131,6 @@ Do While Not mRs.BOF
     If filterByTime(barTimestamp) Then processBar barTimestamp, openValue, highValue, lowValue, closeValue, volume, tickVolume
     mRs.MovePrevious
 Loop
-
-fireNotifyBar mCurrentBar
 
 Exit Sub
 
