@@ -125,17 +125,17 @@ newStopOffsetTicks = Int((S.InitialStopFactor * mInitialATR / mTickSize) + 0.999
 If mLongPosition Then
     Set mAdditionalBracketOrder = mOrderContext.Buy(Number:=mUnitSize, _
                     BracketEntryType:=BracketEntryTypeMarket, _
-                    buyPrice:=0, _
-                    buyOffset:=0, _
-                    triggerPrice:=0, _
+                    EntryPrice:=0, _
+                    EntryOffset:=0, _
+                    EntryTriggerPrice:=0, _
                     BracketStopLossType:=BracketStopLossTypeAuto, _
-                    stopPrice:=0, _
-                    stopOffset:=-newStopOffsetTicks, _
-                    stopLimitPrice:=0, _
+                    StopLossPrice:=0, _
+                    StopLossOffset:=-newStopOffsetTicks, _
+                    StopLossLimitPrice:=0, _
                     BracketTargetType:=BracketTargetTypeNone, _
-                    targetPrice:=0, _
-                    targetOffset:=0, _
-                    targetTriggerPrice:=0)
+                    TargetPrice:=0, _
+                    TargetOffset:=0, _
+                    TargetTriggerPrice:=0)
     If Not mAdditionalBracketOrder Is Nothing Then
         mAdditionalBracketOrders.Add mAdditionalBracketOrder
         mAdditionalBracketOrder.EntryReason = "A" & mNumberOfIncrements
@@ -143,17 +143,17 @@ If mLongPosition Then
 Else
     Set mAdditionalBracketOrder = mOrderContext.Sell(Number:=mUnitSize, _
                     BracketEntryType:=BracketEntryTypeMarket, _
-                    sellPrice:=0, _
-                    sellOffset:=0, _
-                    triggerPrice:=0, _
+                    EntryPrice:=0, _
+                    EntryOffset:=0, _
+                    EntryTriggerPrice:=0, _
                     BracketStopLossType:=BracketStopLossTypeAuto, _
-                    stopPrice:=0, _
-                    stopOffset:=newStopOffsetTicks, _
-                    stopLimitPrice:=0, _
+                    StopLossPrice:=0, _
+                    StopLossOffset:=newStopOffsetTicks, _
+                    StopLossLimitPrice:=0, _
                     BracketTargetType:=BracketTargetTypeNone, _
-                    targetPrice:=0, _
-                    targetOffset:=0, _
-                    targetTriggerPrice:=0)
+                    TargetPrice:=0, _
+                    TargetOffset:=0, _
+                    TargetTriggerPrice:=0)
     If Not mAdditionalBracketOrder Is Nothing Then
         mAdditionalBracketOrders.Add mAdditionalBracketOrder
         mAdditionalBracketOrder.EntryReason = "A" & mNumberOfIncrements

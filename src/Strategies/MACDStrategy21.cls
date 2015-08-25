@@ -749,18 +749,18 @@ End If
 Set mBracketOrderBuyDummy = mOrderContextBuyDummy.Buy( _
                     Number:=1, _
                     BracketEntryType:=BracketEntryTypeStop, _
-                    buyPrice:=0, _
-                    buyOffset:=0, _
-                    triggerPrice:=lTriggerPrice, _
+                    EntryPrice:=0, _
+                    EntryOffset:=0, _
+                    EntryTriggerPrice:=lTriggerPrice, _
                     BracketStopLossType:=BracketStopLossTypeStop, _
-                    stopPrice:=stopPrice, _
-                    stopOffset:=0, _
-                    stopLimitPrice:=0, _
+                    StopLossPrice:=stopPrice, _
+                    StopLossOffset:=0, _
+                    StopLossLimitPrice:=0, _
                     BracketTargetType:=BracketTargetTypeNone, _
-                    targetPrice:=0, _
-                    targetOffset:=0, _
-                    targetTriggerPrice:=0, _
-                    pCancelPrice:=cancelPrice)
+                    TargetPrice:=0, _
+                    TargetOffset:=0, _
+                    TargetTriggerPrice:=0, _
+                    cancelPrice:=cancelPrice)
 
 mContext.ApplyPositionManagementStrategy mBracketOrderBuyDummy, mStopStrategyFactory.CreateStrategy(mContext)
 
@@ -781,19 +781,19 @@ End If
 Set mBracketOrderBuy = mOrderContextBuy.Buy( _
                     Number:=UnitSize(risk), _
                     BracketEntryType:=BracketEntryTypeStopLimit, _
-                    buyPrice:=lTriggerPrice, _
-                    buyOffset:=-mEntryLimitOffsetTicks, _
-                    triggerPrice:=lTriggerPrice, _
+                    EntryPrice:=lTriggerPrice, _
+                    EntryOffset:=-mEntryLimitOffsetTicks, _
+                    EntryTriggerPrice:=lTriggerPrice, _
                     BracketStopLossType:=BracketStopLossTypeStop, _
-                    stopPrice:=stopPrice, _
-                    stopOffset:=0, _
-                    stopLimitPrice:=0, _
+                    StopLossPrice:=stopPrice, _
+                    StopLossOffset:=0, _
+                    StopLossLimitPrice:=0, _
                     BracketTargetType:=BracketTargetTypeNone, _
-                    targetPrice:=0, _
-                    targetOffset:=0, _
-                    targetTriggerPrice:=0, _
-                    pCancelPrice:=cancelPrice, _
-                    pCancelAfter:=300)
+                    TargetPrice:=0, _
+                    TargetOffset:=0, _
+                    TargetTriggerPrice:=0, _
+                    cancelPrice:=cancelPrice, _
+                    CancelAfter:=300)
 mContext.ApplyPositionManagementStrategy mBracketOrderBuy, mStopStrategyFactory.CreateStrategy(mContext)
 'mContext.ApplyPositionManagementStrategy mBracketOrderBuy, mScalingStrategyFactory.CreateStrategy(mContext)
 
@@ -824,18 +824,18 @@ End If
 Set mBracketOrderSellDummy = mOrderContextSellDummy.Sell( _
                     Number:=1, _
                     BracketEntryType:=BracketEntryTypes.BracketEntryTypeStop, _
-                    sellPrice:=0, _
-                    sellOffset:=0, _
-                    triggerPrice:=lTriggerPrice, _
+                    EntryPrice:=0, _
+                    EntryOffset:=0, _
+                    EntryTriggerPrice:=lTriggerPrice, _
                     BracketStopLossType:=BracketStopLossTypeStop, _
-                    stopPrice:=stopPrice, _
-                    stopOffset:=0, _
-                    stopLimitPrice:=0, _
+                    StopLossPrice:=stopPrice, _
+                    StopLossOffset:=0, _
+                    StopLossLimitPrice:=0, _
                     BracketTargetType:=BracketTargetTypeNone, _
-                    targetPrice:=0, _
-                    targetOffset:=0, _
-                    targetTriggerPrice:=0, _
-                    pCancelPrice:=cancelPrice)
+                    TargetPrice:=0, _
+                    TargetOffset:=0, _
+                    TargetTriggerPrice:=0, _
+                    cancelPrice:=cancelPrice)
 
 mContext.ApplyPositionManagementStrategy mBracketOrderSellDummy, mStopStrategyFactory.CreateStrategy(mContext)
 
@@ -856,19 +856,19 @@ End If
 Set mBracketOrderSell = mOrderContextSell.Sell( _
                     Number:=UnitSize(risk), _
                     BracketEntryType:=BracketEntryTypeStopLimit, _
-                    sellPrice:=lTriggerPrice, _
-                    sellOffset:=mEntryLimitOffsetTicks, _
-                    triggerPrice:=lTriggerPrice, _
+                    EntryPrice:=lTriggerPrice, _
+                    EntryOffset:=mEntryLimitOffsetTicks, _
+                    EntryTriggerPrice:=lTriggerPrice, _
                     BracketStopLossType:=BracketStopLossTypeStop, _
-                    stopPrice:=stopPrice, _
-                    stopOffset:=0, _
-                    stopLimitPrice:=0, _
+                    StopLossPrice:=stopPrice, _
+                    StopLossOffset:=0, _
+                    StopLossLimitPrice:=0, _
                     BracketTargetType:=BracketTargetTypeNone, _
-                    targetPrice:=0, _
-                    targetOffset:=0, _
-                    targetTriggerPrice:=0, _
-                    pCancelPrice:=cancelPrice, _
-                    pCancelAfter:=300)
+                    TargetPrice:=0, _
+                    TargetOffset:=0, _
+                    TargetTriggerPrice:=0, _
+                    cancelPrice:=cancelPrice, _
+                    CancelAfter:=300)
 mContext.ApplyPositionManagementStrategy mBracketOrderSell, mStopStrategyFactory.CreateStrategy(mContext)
 'mContext.ApplyPositionManagementStrategy mBracketOrderSell, mScalingStrategyFactory.CreateStrategy(mContext)
 
