@@ -123,7 +123,7 @@ On Error GoTo 0
 ' now buy or sell the required amount
 newStopOffsetTicks = Int((S.InitialStopFactor * mInitialATR / mTickSize) + 0.9999)
 If mLongPosition Then
-    Set mAdditionalBracketOrder = mOrderContext.buy(Number:=mUnitSize, _
+    Set mAdditionalBracketOrder = mOrderContext.Buy(Number:=mUnitSize, _
                     BracketEntryType:=BracketEntryTypeMarket, _
                     buyPrice:=0, _
                     buyOffset:=0, _
@@ -141,7 +141,7 @@ If mLongPosition Then
         mAdditionalBracketOrder.EntryReason = "A" & mNumberOfIncrements
     End If
 Else
-    Set mAdditionalBracketOrder = mOrderContext.sell(Number:=mUnitSize, _
+    Set mAdditionalBracketOrder = mOrderContext.Sell(Number:=mUnitSize, _
                     BracketEntryType:=BracketEntryTypeMarket, _
                     sellPrice:=0, _
                     sellOffset:=0, _
