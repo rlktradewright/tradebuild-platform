@@ -79,7 +79,7 @@ Public Enum BracketOrderStates
     BracketOrderStateCancelling    ' indicates that the bracket order is in the process of being cancelled
     BracketOrderStateClosingOut    ' indicates that the bracket order is being closed out. (When a bracket order has been closed out, there are no outstanding orders and no net Size - note that this may require a closeout order to be placed to negate any existing Size
     BracketOrderStateClosed        ' indicates that all orders have been completed
-    BracketOrderStateAwaitingOtherOrderCancel  ' indicates that a cancellation notification for either the stop order or the target order, when both exist, has been received
+    BracketOrderStateAwaitingOtherOrderCancel  ' indicates that a cancellation notification for either the stop-loss order or the target order, when both exist, has been received
 End Enum
 
 Public Enum BracketStopLossTypes
@@ -159,7 +159,7 @@ End Enum
 '   The order has been created but not yet transmitted to the broker
 '
 ' @param OrderStatusRejected
-'   The order has been transmitted to the broket but has been rejected
+'   The order has been transmitted to the broker but has been rejected
 '   by the broker for some reason.
 '
 ' @param OrderStatusPendingSubmit

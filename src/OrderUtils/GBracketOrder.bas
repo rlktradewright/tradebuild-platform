@@ -22,7 +22,7 @@ Public Enum OpActions
     ' may still be work to do, for example logging or notifying listeners.
     ActCancelOrders
     
-    ' This Action cancels the stop order if it exists and its current
+    ' This Action cancels the stop-loss order if it exists and its current
     ' status indicates that it is not already either filled, cancelled or
     ' cancelling. Note that where the order has not yet been placed,
     ' there may still be work to do, for example logging or notifying
@@ -36,14 +36,14 @@ Public Enum OpActions
     ' listeners.
     ActCancelTargetOrder
     
-    ' This Action resubmits the stop order (with a new order id). If a
-    ' target order exists, then the ocaGroup of the stop order is set to
+    ' This Action resubmits the stop-loss order (with a new order id). If a
+    ' target order exists, then the ocaGroup of the stop-loss order is set to
     ' the ocaGroup of the target order
     ActResubmitStopOrder
     
     ' This Action resubmits the target order (with a new order id). If a
-    ' stop order exists, then the ocaGroup of the target order is set to
-    ' the ocaGroup of the stop order
+    ' stop-loss order exists, then the ocaGroup of the target order is set to
+    ' the ocaGroup of the stop-loss order
     ActResubmitTargetOrder
     
     ' This Action resubmits the both the stop and target orders (with new
@@ -80,7 +80,7 @@ Public Enum OpConditions
     ' has been requested, provided that the entry order has not been filled
     CondNoFillCancellation = &H1&
 
-    ' This condition indicates that a notification that the stop order has been
+    ' This condition indicates that a notification that the stop-loss order has been
     ' cancelled has been received via the API. This can be in the form of either
     ' an orderStatus message with status 'cancelled', or an errorMessage with
     ' errorCode = 202, or an errorMessage with errorCode = 201 (indicating
@@ -94,7 +94,7 @@ Public Enum OpConditions
     ' that the order has been rejected for some reason).
     CondTargetOrderCancelled = &H4&
 
-    ' This condition indicates that the stop order exists.
+    ' This condition indicates that the stop-loss order exists.
     CondStopOrderExists = &H8&
 
     ' This condition indicates that the target order exists.
@@ -150,7 +150,7 @@ Public Enum OpStimuli
     StimEntryOrderCancelled
     
     ' This stimulus indicates that the API has generated a notification
-    ' that the stop order has been cancelled. This can be in the
+    ' that the stop-loss order has been cancelled. This can be in the
     ' form of either an orderStatus message with status 'cancelled', or
     ' an errorMessage with errorCode = 202, or an errorMessage with
     ' errorCode = 201 (indicating that the order has been rejected for
@@ -387,7 +387,7 @@ mTableBuilder.AddStateTableEntry _
             OpActions.ActPlaceOrders
 
 ' The application requests that the bracket order be executed: it is
-' protected and there is a stop order. We do that and go to submitted state.
+' protected and there is a stop-loss order. We do that and go to submitted state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCreated, _
             OpStimuli.StimExecute, _
@@ -397,7 +397,7 @@ mTableBuilder.AddStateTableEntry _
             OpActions.ActPlaceOrders
 
 ' The application requests that the bracket order be executed: it is
-' protected and there is NO stop order. This is a programming error!
+' protected and there is NO stop-loss order. This is a programming error!
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCreated, _
             OpStimuli.StimExecute, _
@@ -522,7 +522,7 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelStopOrder, OpActions.ActCancelTargetOrder
 
-' We are notified that the stop order has been cancelled, and there is no target
+' We are notified that the stop-loss order has been cancelled, and there is no target
 ' order. This could be because it has been rejected by TWS, or because the user
 ' has cancelled it at TWS. We can't tell which of these is the case, so we
 ' cancel all orders and, as this is a protected bracket order, go into closing out state,
@@ -536,7 +536,7 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActCancelOrders
 
-' We are notified that the stop order has been cancelled, and there is no target
+' We are notified that the stop-loss order has been cancelled, and there is no target
 ' order. This could be because it has been rejected by TWS, or because the user
 ' has cancelled it at TWS. We can't tell which of these is the case, so we
 ' cancel all orders and, as this is NOT a protected bracket order, go into cancelling state.
@@ -548,7 +548,7 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelOrders
 
-' We are notified that the stop order has been cancelled, and there IS a target
+' We are notified that the stop-loss order has been cancelled, and there IS a target
 ' order. This could be because it has been rejected by TWS, or because the user
 ' has cancelled it at TWS, or because the target order has been filled. We can't
 ' tell which of these is the case, so, as this is a protected bracket order, we enter
@@ -561,7 +561,7 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpActions.ActSetTimeout
 
-' We are notified that the stop order has been cancelled, and there IS a target
+' We are notified that the stop-loss order has been cancelled, and there IS a target
 ' order. This could be because it has been rejected by TWS, or because the user
 ' has cancelled it at TWS, or because the target order has been filled. We can't
 ' tell which of these is the case, but, as this is NOT a protected bracket order, we
@@ -575,8 +575,8 @@ mTableBuilder.AddStateTableEntry _
             SpecialActions.NoAction
 
 ' We are notified that the target order has been cancelled, and there IS a
-' stop order. This could be because it has been rejected by TWS, or because the
-' user has cancelled it at TWS, or because the stop order has been filled and
+' stop-loss order. This could be because it has been rejected by TWS, or because the
+' user has cancelled it at TWS, or because the stop-loss order has been filled and
 ' not yet notified.  We can't tell which of these is the case, so, as this is
 ' a protected bracket order, we enter the 'awaiting other order cancel' state
 ' and set a timeout.
@@ -590,7 +590,7 @@ mTableBuilder.AddStateTableEntry _
 
 ' We are notified that the target order has been cancelled, and there IS a stop
 ' order. This could be because it has been rejected by TWS, or because the user
-' has cancelled it at TWS, or because the stop order has been filled. We can't
+' has cancelled it at TWS, or because the stop-loss order has been filled. We can't
 ' tell which of these is the case, but, as this is NOT a protected bracket order, we
 ' don't care so we do nothing and enter the cancelling state.
 mTableBuilder.AddStateTableEntry _
@@ -654,7 +654,7 @@ mTableBuilder.AddStateTableEntry _
             SpecialConditions.NoConditions, _
             BracketOrderStates.BracketOrderStateCancelling
 
-' We are notified that the stop order has been cancelled. Now we just need
+' We are notified that the stop-loss order has been cancelled. Now we just need
 ' to wait for any other orders to be cancelled.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
@@ -703,8 +703,8 @@ mTableBuilder.AddStateTableEntry _
 ' time that we requested TWS to cancel the order and TWS's cancellation
 ' request arriving at the IB servers or the exchange). The original
 ' cancellation request from the application was to cancel only if there have
-' been no fills. There now has been a fill. There is a stop order but no target
-' order, and the stop order has not been cancelled, so we just return to the
+' been no fills. There now has been a fill. There is a stop-loss order but no target
+' order, and the stop-loss order has not been cancelled, so we just return to the
 ' submitted state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
@@ -717,8 +717,8 @@ mTableBuilder.AddStateTableEntry _
 ' time that we requested TWS to cancel the order and TWS's cancellation
 ' request arriving at the IB servers or the exchange). The original
 ' cancellation request from the application was to cancel only if there have
-' been no fills. There now has been a fill. There is a stop order but no target
-' order, and the stop order has been cancelled, so we resubmit the stop order
+' been no fills. There now has been a fill. There is a stop-loss order but no target
+' order, and the stop-loss order has been cancelled, so we resubmit the stop-loss order
 ' and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
@@ -746,7 +746,7 @@ mTableBuilder.AddStateTableEntry _
 ' time that we requested TWS to cancel the order and TWS's cancellation
 ' request arriving at the IB servers or the exchange). The original
 ' cancellation request from the application was to cancel only if there have
-' been no fills. There now has been a fill. There is a stop order and a target
+' been no fills. There now has been a fill. There is a stop-loss order and a target
 ' order, but neither has been cancelled, so we return to the submitted state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
@@ -759,9 +759,9 @@ mTableBuilder.AddStateTableEntry _
 ' time that we requested TWS to cancel the order and TWS's cancellation
 ' request arriving at the IB servers or the exchange). The original
 ' cancellation request from the application was to cancel only if there have
-' been no fills. There now has been a fill. There is a stop order and a target
-' order, and the stop order has been cancelled but not the target order, so we
-' resubmit the stop order and return to the submitted state.
+' been no fills. There now has been a fill. There is a stop-loss order and a target
+' order, and the stop-loss order has been cancelled but not the target order, so we
+' resubmit the stop-loss order and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
@@ -789,8 +789,8 @@ mTableBuilder.AddStateTableEntry _
 ' time that we requested TWS to cancel the order and TWS's cancellation
 ' request arriving at the IB servers or the exchange). The original
 ' cancellation request from the application was to cancel only if there have
-' been no fills. There now has been a fill. There is a stop order and a target
-' order, and the target order has been cancelled but not the stop order, so we
+' been no fills. There now has been a fill. There is a stop-loss order and a target
+' order, and the target order has been cancelled but not the stop-loss order, so we
 ' resubmit the target order and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
@@ -804,8 +804,8 @@ mTableBuilder.AddStateTableEntry _
 ' time that we requested TWS to cancel the order and TWS's cancellation
 ' request arriving at the IB servers or the exchange). The original
 ' cancellation request from the application was to cancel only if there have
-' been no fills. There now has been a fill. There is a stop order and a target
-' order, and both have been cancelled, so we resubmit both the stop order and
+' been no fills. There now has been a fill. There is a stop-loss order and a target
+' order, and both have been cancelled, so we resubmit both the stop-loss order and
 ' the target order, and return to the submitted state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
@@ -858,7 +858,7 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActPlaceCloseoutOrder
             
-' A stop order cancellation has occurred. Enter closing out state.
+' A stop-loss order cancellation has occurred. Enter closing out state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
             OpStimuli.StimStopOrderCancelled, _
@@ -918,7 +918,7 @@ mTableBuilder.AddStateTableEntry _
             SpecialConditions.NoConditions, _
             BracketOrderStates.BracketOrderStateClosingOut
 
-' The stop order has been cancelled, nothing for us to do.
+' The stop-loss order has been cancelled, nothing for us to do.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimStopOrderCancelled, _

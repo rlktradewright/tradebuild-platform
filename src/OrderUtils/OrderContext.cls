@@ -75,7 +75,7 @@ Private mClosedBracketOrders            As BracketOrders
     
 Private mCompletedSize                  As Long
     ' the total Size for all completed bracket orders (may be non-zero if one
-    ' or more completed bracket orders has no target or stop orders)
+    ' or more completed bracket orders has no target or stop-loss orders)
     
 Private mPermittedOrderProperties       As IPermittedOrderProperties
 
@@ -375,8 +375,8 @@ End Sub
 ' @param TriggerPrice   used with BracketEntryTypeMarketIfTouched, BracketEntryTypeLimitIfTouched,
 '                       BracketEntryTypeStop and BracketEntryTypeStopLimit to specify the Price
 '                       at which the order is triggered
-' @param BracketStopLossType  the type of stop loss order to place:
-'           BracketStopLossTypeNone               no stop loss order
+' @param BracketStopLossType  the type of stop-loss order to place:
+'           BracketStopLossTypeNone               no stop-loss order
 '           BracketStopLossTypeStop               use a stop order
 '           BracketStopLossTypeStopLimit          use a stop limit order
 '           BracketStopLossTypeBid                use a stop order at the current Bid (see StopOffset)
@@ -385,7 +385,7 @@ End Sub
 '           BracketStopLossTypeAuto               use a stop order at the fill Price for the
 '                                           entry order (see StopOffset)
 ' @param StopPrice      the trigger Price for BracketStopLossTypeStop and BracketStopLossTypeStopLimit
-' @param StopOffset     number of ticks to modify the StopPrice. For example, for a stop loss
+' @param StopOffset     number of ticks to modify the StopPrice. For example, for a stop-loss
 '                       order 4 ticks below the entry order fill Price, use BracketStopLossTypeAuto
 '                       and set StopOffset to -4
 ' @param StopLimitPrice the limit Price for BracketStopLossTypeStopLimit
@@ -410,7 +410,7 @@ End Sub
 '                       falls to this Price before the entry order is filled, then the order
 '                       is cancelled
 ' @param EntryTIF       specifies the time in force for the entry order
-' @param StopTIF        specifies the time in force for the stop loss order
+' @param StopTIF        specifies the time in force for the stop-loss order
 ' @param TargetTIF      specifies the time in force for the target order
 '
 ' @see
@@ -1379,9 +1379,9 @@ Case BracketStopLossTypeAsk
 Case BracketStopLossTypeLast
 Case BracketStopLossTypeAuto
 Case Else
-    AssertArgument False, "Invalid stop loss type"
+    AssertArgument False, "Invalid stop-loss type"
 End Select
-AssertArgument IsBracketStopLossTypeSupported(pBracketStopLossType), "Invalid stop loss type"
+AssertArgument IsBracketStopLossTypeSupported(pBracketStopLossType), "Invalid stop-loss type"
 End Sub
 
 Private Sub validateBracketTargetType(ByVal pBracketTargetType As BracketTargetTypes)
@@ -1397,6 +1397,6 @@ Case BracketTargetTypeAuto
 Case Else
     AssertArgument False, "Invalid target type"
 End Select
-AssertArgument IsBracketTargetTypeSupported(pBracketTargetType), "Invalid stop loss type"
+AssertArgument IsBracketTargetTypeSupported(pBracketTargetType), "Invalid stop-loss type"
 End Sub
 

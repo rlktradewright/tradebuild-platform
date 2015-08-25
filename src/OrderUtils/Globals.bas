@@ -228,7 +228,7 @@ Case BracketOrderRoleNone
 Case BracketOrderRoleEntry
     gBracketOrderRoleToString = "Entry"
 Case BracketOrderRoleStopLoss
-    gBracketOrderRoleToString = "Stop loss"
+    gBracketOrderRoleToString = "stop-loss"
 Case BracketOrderRoleTarget
     gBracketOrderRoleToString = "Target"
 Case BracketOrderRoleCloseout
@@ -721,13 +721,18 @@ Dim lTimePart As String
 If pDataSource Is Nothing Then
 ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
 Else
-    If pDataSource.IsTickReplay Then lTimePart = FormatTimestamp(pDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "  "
+    If pDataSource.IsTickReplay Then lTimePart = FormatTimestamp(pDataSource.Timestamp, TimestampDateAndTimeISO8601) & "  "
     If pDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
         lTickPart = "Curr price=" & gPriceToString(pDataSource.CurrentTick(TickTypeTrade).Price, pContract) & "; "
     End If
 End If
 
-gLogOrder lTimePart & IIf(pIsSimulated, "(simulated) ", "") & pMessage & " (" & lTickPart & "id=" & pKey & ")", _
+gLogOrder lTimePart & _
+            IIf(pIsSimulated, "(simulated) ", "") & _
+            pMessage & _
+            " (" & lTickPart & _
+            IIf(pKey <> "", "id=" & pKey, "") & _
+            ")", _
         pIsSimulated, _
         pSource
 
