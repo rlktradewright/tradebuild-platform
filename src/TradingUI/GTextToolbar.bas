@@ -73,6 +73,7 @@ pImageList.ListImages.Add , IIf(pButton.Style <> tbrSeparator, pButton.Key, ""),
 Exit Sub
 
 Err:
+If Err.Number = 35602 Then Resume Next  'Key is not unique in collection
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -83,8 +84,10 @@ Const ProcName As String = "gAddButtonToToolbar"
 On Error GoTo Err
 
 If pButton.Style <> tbrSeparator Then
-    Set gAddButtonToToolbar = pToolbar.Buttons.Add(, pButton.Key, , pButton.Style, IIf(pButton.Style <> tbrSeparator, pButton.Key, Empty))
-    With pToolbar.Buttons.Item(pButton.Key)
+    Dim lKey As String
+    lKey = GenerateGUIDString
+    Set gAddButtonToToolbar = pToolbar.Buttons.Add(, lKey, , pButton.Style, IIf(pButton.Style <> tbrSeparator, pButton.Key, Empty))
+    With pToolbar.Buttons.Item(lKey)
         .Enabled = pButton.Enabled
         .ToolTipText = pButton.ToolTipText
         .value = pButton.value
