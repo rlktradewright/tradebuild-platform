@@ -158,6 +158,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get CancelPending() As Boolean
+Const ProcName As String = "CancelPending"
+On Error GoTo Err
+
+Dim lBracketOrder As IBracketOrder
+For Each lBracketOrder In mActiveBracketOrders
+    If lBracketOrder.Cancel(pEvenIfFilled:=False) Then CancelPending = True
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get ClosedBracketOrders() As BracketOrders
 Set ClosedBracketOrders = mClosedBracketOrders
 End Property
@@ -426,7 +441,7 @@ Public Function Buy(ByRef Number As Long, _
                     ByVal StopLossOffset As Long, _
                     ByVal StopLossLimitPrice As Long, _
                     ByVal BracketTargetType As BracketTargetTypes, _
-                    ByVal TargetPrice As Double, _
+                    ByVal targetPrice As Double, _
                     ByVal TargetOffset As Long, _
                     ByVal TargetTriggerPrice As Double, _
                     Optional ByVal EntryTIF As OrderTIFs = OrderTIFDay, _
@@ -449,7 +464,7 @@ gLog "Buy" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.Loc
                 "; StopLossOffset=" & StopLossOffset & _
                 "; StopLossLimitPrice=" & StopLossLimitPrice & _
                 "; BracketTargetType=" & gBracketTargetTypeToShortString(BracketTargetType) & _
-                "; TargetPrice=" & TargetPrice & _
+                "; TargetPrice=" & targetPrice & _
                 "; TargetOffset=" & TargetOffset & _
                 "; TargetTriggerPrice=" & TargetTriggerPrice & _
                 "; EntryTIF=" & gOrderTIFToString(EntryTIF) & _
@@ -468,7 +483,7 @@ Set Buy = CreateBracketOrder(OrderActions.OrderActionBuy, _
                                 StopLossOffset, _
                                 StopLossLimitPrice, _
                                 BracketTargetType, _
-                                TargetPrice, _
+                                targetPrice, _
                                 TargetOffset, _
                                 TargetTriggerPrice)
                                 
@@ -493,21 +508,6 @@ On Error GoTo Err
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
     If lBracketOrder.Cancel(pEvenIfFilled:=True) Then Cancel = True
-Next
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function CancelPending() As Boolean
-Const ProcName As String = "CancelPending"
-On Error GoTo Err
-
-Dim lBracketOrder As IBracketOrder
-For Each lBracketOrder In mActiveBracketOrders
-    If lBracketOrder.Cancel(pEvenIfFilled:=False) Then CancelPending = True
 Next
 
 Exit Function
@@ -543,7 +543,7 @@ Public Function CreateBuyBracketOrder( _
                 ByVal StopLossOffset As Long, _
                 ByVal StopLossLimitPrice As Long, _
                 ByVal BracketTargetType As BracketTargetTypes, _
-                ByVal TargetPrice As Double, _
+                ByVal targetPrice As Double, _
                 ByVal TargetOffset As Long, _
                 ByVal TargetTriggerPrice As Double) As IBracketOrder
 Const ProcName As String = "CreateBuyBracketOrder"
@@ -561,7 +561,7 @@ Set CreateBuyBracketOrder = CreateBracketOrder(OrderActions.OrderActionBuy, _
                                         StopLossOffset, _
                                         StopLossLimitPrice, _
                                         BracketTargetType, _
-                                        TargetPrice, _
+                                        targetPrice, _
                                         TargetOffset, _
                                         TargetTriggerPrice)
 
@@ -647,7 +647,7 @@ Public Function CreateSellBracketOrder( _
                 ByVal StopLossOffset As Long, _
                 ByVal StopLossLimitPrice As Long, _
                 ByVal BracketTargetType As BracketTargetTypes, _
-                ByVal TargetPrice As Double, _
+                ByVal targetPrice As Double, _
                 ByVal TargetOffset As Long, _
                 ByVal TargetTriggerPrice As Double) As IBracketOrder
 Const ProcName As String = "CreateSellBracketOrder"
@@ -665,7 +665,7 @@ Set CreateSellBracketOrder = CreateBracketOrder(OrderActions.OrderActionSell, _
                                     StopLossOffset, _
                                     StopLossLimitPrice, _
                                     BracketTargetType, _
-                                    TargetPrice, _
+                                    targetPrice, _
                                     TargetOffset, _
                                     TargetTriggerPrice)
 
@@ -738,19 +738,6 @@ Next
 Set mClosedBracketOrders = Nothing
 
 Set mOrderSubmitter = Nothing
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function GetAccountBalance() As Double
-Const ProcName As String = "GetAccountBalance"
-
-On Error GoTo Err
-
-GetAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need to fix this up
 
 Exit Function
 
@@ -1017,7 +1004,7 @@ Public Function Sell(ByRef Number As Long, _
                     ByVal StopLossOffset As Long, _
                     ByVal StopLossLimitPrice As Long, _
                     ByVal BracketTargetType As BracketTargetTypes, _
-                    ByVal TargetPrice As Double, _
+                    ByVal targetPrice As Double, _
                     ByVal TargetOffset As Long, _
                     ByVal TargetTriggerPrice As Double, _
                     Optional ByVal EntryTIF As OrderTIFs = OrderTIFDay, _
@@ -1041,7 +1028,7 @@ gLog "Sell" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.Lo
                 "; StopLossOffset=" & StopLossOffset & _
                 "; StopLossLimitPrice=" & StopLossLimitPrice & _
                 "; BracketTargetType=" & gBracketTargetTypeToShortString(BracketTargetType) & _
-                "; TargetPrice=" & TargetPrice & _
+                "; TargetPrice=" & targetPrice & _
                 "; TargetOffset=" & TargetOffset & _
                 "; TargetTriggerPrice=" & TargetTriggerPrice & _
                 "; EntryTIF=" & gOrderTIFToString(EntryTIF) & _
@@ -1060,7 +1047,7 @@ Set Sell = CreateBracketOrder(OrderActions.OrderActionSell, _
                                 StopLossOffset, _
                                 StopLossLimitPrice, _
                                 BracketTargetType, _
-                                TargetPrice, _
+                                targetPrice, _
                                 TargetOffset, _
                                 TargetTriggerPrice)
 
