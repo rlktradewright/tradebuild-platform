@@ -3009,7 +3009,7 @@ If Not mEntryOrder Is Nothing Then
     If mNewEntryPrice >= 0 And _
         mNewEntryPrice <> mEntryOrder.LimitPrice _
     Then
-        Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change Price - order " & mEntryOrder.Id & " already filled"
+        Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change price - order " & mEntryOrder.Id & " already filled"
         mEntryOrder.LimitPrice = mNewEntryPrice
         updateEntry = True
     End If
