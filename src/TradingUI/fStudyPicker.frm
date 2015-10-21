@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#217.0#0"; "StudiesUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#220.0#0"; "StudiesUI27.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Form1"
@@ -78,11 +78,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -98,12 +98,12 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
-Set mTheme = value
+If mTheme Is Value Then Exit Property
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 Me.BackColor = mTheme.BackColor
@@ -132,7 +132,7 @@ Const ProcName As String = "initialise"
 On Error GoTo Err
 
 StudyPicker1.Initialise pChartManager, pOwner
-Me.caption = pTitle
+Me.Caption = pTitle
 
 Exit Sub
 

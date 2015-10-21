@@ -80,6 +80,16 @@ End Enum
 ' Types
 '@================================================================================
 
+Public Type TWChartButtonInfo
+    Caption         As String
+    Key             As String
+    Style           As ButtonStyleConstants
+    Value           As ValueConstants
+    ToolTipText     As String
+    Enabled         As Boolean
+    ChartIndex      As Long
+End Type
+
 '@================================================================================
 ' Constants
 '@================================================================================
