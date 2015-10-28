@@ -6,16 +6,15 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IStrategy"
+Attribute VB_Name = "BracketOrderHandler"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
-' This interface must be implemented by classes that operate as trading strategies
-' within the TradeBuild Strategy Host program.
+' Description here
 '
 '@/
 
@@ -39,11 +38,14 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "IStrategy"
+Private Const ModuleName                            As String = "BracketOrderHandler"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private WithEvents mBracketOrder                    As BracketOrder
+Private mStrategy                                   As Object
 
 '@================================================================================
 ' Class Event Handlers
@@ -54,72 +56,71 @@ Private Const ModuleName                    As String = "IStrategy"
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mBracketOrder Event Handlers
 '@================================================================================
+
+Private Sub mBracketOrder_Completed()
+Const ProcName As String = "mBracketOrder_Completed"
+On Error GoTo Err
+
+If TypeOf mStrategy Is IStrategy Then
+
+ElseIf TypeOf mStrategy Is IStopStrategy Then
+
+ElseIf TypeOf mStrategy Is IScaleStrategy Then
+
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub mBracketOrder_EntryOrderPartiallyFilled()
+Const ProcName As String = "mBracketOrder_EntryOrderPartiallyFilled"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub mBracketOrder_StopAdjusted()
+Const ProcName As String = "mBracketOrder_StopAdjusted"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get Name() As String
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub DefineDefaultParameters()
+Friend Sub Initialise( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pStrategy As Object)
+Set mBracketOrder = pBracketOrder
+Set mStrategy = pStrategy
 End Sub
 
-''
-' Called to enable the <code>Strategy</code> object to initialise itself, for example
-' by creating any necessary timeframes and studies.
-'
-' @param StrategyContext
-'   The <code>StrategyContext</code> object to be used by this <code>Strategy</code>.
-' @param pParams
-'   The parameters for this <code>Strategy</code>.
-'@/
-Public Sub Initialise( _
-                ByVal pInitialisationContext As InitialisationContext)
-End Sub
-
-Public Sub NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyNoLivePositions()
-End Sub
-
-Public Sub NotifyNoSimulatedPositions()
-End Sub
-
-''
-' Called for each tick in the underlying <code>Ticker</code> object.
-'
-' @remarks
-'   The relevant prices and sizes relating to this tick can be obtained using the
-'   revelant properties of the <code>TradingContext</code> object, such as
-'   <code>AskPrice</code>, <code>AskPriceString</code>, <code>AskSize</code> etc.
-' @param pType
-'   The type of tick that has occurred.
-'@/
-Public Sub NotifyTick(ByVal pType As TickTypes)
-End Sub
-
-''
-' Called after historic price data has been loaded,
-' but before the first tick is notified.
-Public Sub Start(ByVal pTradingContext As TradingContext)
-End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 

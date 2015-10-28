@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IPosnMgmtStrtgyFactory"
+Attribute VB_Name = "IScaleStrategyFactory"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IPosnMgmtStrtgyFactory"
+Private Const ModuleName                            As String = "IScaleStrategyFactory"
 
 '@================================================================================
 ' Member variables
@@ -60,21 +60,19 @@ Private Const ModuleName                            As String = "IPosnMgmtStrtgy
 ' Properties
 '@================================================================================
 
-Public Property Get DefaultParameters() As Parameters
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Public Function CreateStrategy( _
-                ByVal pTradingContext As TradingContext) As IPositionMgmtStrategy
+                ByVal pTradingContext As TradingContext) As IScaleStrategy
 End Function
 
+Public Sub DefineDefaultParameters()
+End Sub
 
 Public Sub Initialise( _
-                ByVal pInitialisationContext As InitialisationContext, _
-                ByVal pParams As Parameters)
+                ByVal pInitialisationContext As InitialisationContext)
 End Sub
 
 '@================================================================================

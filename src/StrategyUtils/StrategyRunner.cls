@@ -17,18 +17,12 @@ Option Explicit
 ' Description
 '================================================================================
 '
-'
-'================================================================================
-' Amendment history
-'================================================================================
-'
-'
-'
-'
 
 '================================================================================
 ' Interfaces
 '================================================================================
+
+Implements IChangeListener
 
 '================================================================================
 ' Events
@@ -66,25 +60,31 @@ Attribute mReplayController.VB_VarHelpID = -1
 Private WithEvents mTickfileReplayTC                As TaskController
 Attribute mTickfileReplayTC.VB_VarHelpID = -1
 
-'Private mAccount As IAccount
-
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mTicker                                     As Ticker
 
 Private mStrategy                                   As IStrategy
-Private mStopStrategyFactory                        As IPosnMgmtStrtgyFactory
+Private mStrategyResourceContext                    As New ResourceContext
 
+Private mStopStrategyFactory                        As IStopStrategyFactory
+Private mStopStrategyResourceContext                As New ResourceContext
+
+Private mDefaultParameters                          As Parameters
 Private mParams                                     As Parameters
 
-Private mInitialisationContext                      As New InitialisationContext
+Private mInitialisationContext                      As InitialisationContext
 Private mInitialisationCompleted                    As Boolean
+
+Private mTradingContext                             As TradingContext
 
 Private mTickers                                    As Tickers
 Private mIsTickfileReplay                           As Boolean
 
 Private mStartReplayWhenReady                       As Boolean
+
+Private mBracketOrderNotificationRequests           As New EnumerableCollection
 
 '================================================================================
 ' Class Event Handlers
@@ -93,6 +93,47 @@ Private mStartReplayWhenReady                       As Boolean
 Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
 Randomize
+End Sub
+
+'@================================================================================
+' IChangeListener Interface Members
+'@================================================================================
+
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
+On Error GoTo Err
+
+If TypeOf ev.Source Is IBracketOrder Then
+    If ev.ChangeType = BracketOrderChangeTypes.BracketOrderCompleted Then
+        Dim lBracketOrder As IBracketOrder
+        Set lBracketOrder = ev.Source
+        lBracketOrder.RemoveChangeListener Me
+        
+        setStrategyRunner mStrategy, mStrategyResourceContext
+        mStrategy.NotifyBracketOrderCompletion mStrategyResourceContext.GetResourceIdForBracketOrder(lBracketOrder)
+        gClearStrategyRunner
+    End If
+ElseIf TypeOf ev.Source Is PositionManager Then
+    Dim lPositionManager As PositionManager
+    Set lPositionManager = ev.Source
+    If ev.ChangeType = PositionManagerChangeTypes.PositionSizeChanged Then
+        If lPositionManager.PositionSize = 0 And _
+            lPositionManager.PendingPositionSize = 0 Then
+            setStrategyRunner mStrategy, mStrategyResourceContext
+            If lPositionManager.IsSimulated Then
+                mStrategy.NotifyNoSimulatedPositions
+            Else
+                mStrategy.NotifyNoLivePositions
+            End If
+            gClearStrategyRunner
+        End If
+    End If
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -176,6 +217,22 @@ End Sub
 ' Properties
 '================================================================================
 
+Public Property Get DefaultParameters() As Parameters
+Set DefaultParameters = mDefaultParameters
+End Property
+
+Public Property Get Parameters() As Parameters
+Set Parameters = mParams
+End Property
+
+Public Property Get StopStrategyFactory() As IStopStrategyFactory
+Set StopStrategyFactory = mStopStrategyFactory
+End Property
+
+Public Property Get StopStrategyResourceContext() As ResourceContext
+Set StopStrategyResourceContext = mStopStrategyResourceContext
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -184,8 +241,13 @@ Friend Sub InitialisationContextIsReady(ByVal pContext As InitialisationContext)
 Const ProcName As String = "InitialisationContextIsReady"
 On Error GoTo Err
 
-mStrategy.Initialise pContext, mParams
-mStopStrategyFactory.Initialise pContext, mParams
+setStrategyRunner mStrategy, mStrategyResourceContext
+mStrategy.Initialise pContext
+gClearStrategyRunner
+
+setStrategyRunner mStopStrategyFactory, mStopStrategyResourceContext
+mStopStrategyFactory.Initialise pContext
+gClearStrategyRunner
 
 Exit Sub
 
@@ -198,10 +260,17 @@ Const ProcName As String = "InitialisationCompleted"
 On Error GoTo Err
 
 mInitialisationCompleted = True
+Set mInitialisationContext = Nothing
 
-Dim lTradingContext As New TradingContext
-lTradingContext.Initialise mStrategy, mTicker
-mStrategy.Start lTradingContext, mStopStrategyFactory
+mTicker.PositionManager.AddChangeListener Me
+mTicker.PositionManagerSimulated.AddChangeListener Me
+
+Set mTradingContext = New TradingContext
+mTradingContext.Initialise Me, mStrategy, mTicker
+
+setStrategyRunner mStrategy, mStrategyResourceContext
+mStrategy.Start mTradingContext
+gClearStrategyRunner
 
 startReplayIfReady
 
@@ -280,15 +349,76 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+Friend Sub RequestBracketOrderNotification( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pStrategy As Object)
+Const ProcName As String = "RequestBracketOrderNotification"
+On Error GoTo Err
+
+Dim lKey As String: lKey = GetObjectKey(pBracketOrder)
+
+Dim lRequests As Collection
+If mBracketOrderNotificationRequests.Contains(lKey) Then
+    Set lRequests = mBracketOrderNotificationRequests.Item(lKey)
+    lRequests.Add pStrategy
+Else
+    Set lRequests = New Collection
+    lRequests.Add pStrategy
+    mBracketOrderNotificationRequests.Add lRequests, lKey
+End If
+
+pBracketOrder.AddChangeListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetCurrent( _
+                ByVal pStrategy As Object, _
+                ByVal pResourceContext As ResourceContext)
+Const ProcName As String = "SetCurrent"
+On Error GoTo Err
+
+If pResourceContext Is Nothing Then Set pResourceContext = mStrategyResourceContext
+setStrategyRunner pStrategy, pResourceContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetNotCurrent()
+gClearStrategyRunner
+End Sub
+
 Public Function SetStrategy( _
                 ByVal pStrategy As IStrategy, _
-                ByVal pStopStrategyFactory As IPosnMgmtStrtgyFactory) As Parameters
+                ByVal pStopStrategyFactory As IStopStrategyFactory) As Parameters
 Const ProcName As String = "SetStrategy"
 On Error GoTo Err
 
 Set mStrategy = pStrategy
 Set mStopStrategyFactory = pStopStrategyFactory
-Set SetStrategy = mergeParameters(pStrategy.DefaultParameters, pStopStrategyFactory.DefaultParameters)
+
+Dim lStrategyParams As New Parameters
+Set mDefaultParameters = lStrategyParams
+
+setStrategyRunner mStrategy, mStrategyResourceContext
+mStrategy.DefineDefaultParameters
+gClearStrategyRunner
+
+Dim lStopStrategyFactoryParams As New Parameters
+Set mDefaultParameters = lStopStrategyFactoryParams
+
+setStrategyRunner mStopStrategyFactory, mStopStrategyResourceContext
+mStopStrategyFactory.DefineDefaultParameters
+Set mDefaultParameters = Nothing
+
+Set SetStrategy = mergeParameters(lStrategyParams, lStopStrategyFactoryParams)
+gClearStrategyRunner
 
 Exit Function
 
@@ -328,6 +458,7 @@ If getStrategyHost.LogParameters Then
     gStrategyLogger.Log LogLevelNormal, s
 End If
 
+Set mInitialisationContext = New InitialisationContext
 mInitialisationContext.Initialise getStrategyHost, Me, mTicker
 
 
@@ -390,17 +521,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub setStrategyRunner( _
+                ByVal pStrategy As Object, _
+                ByVal pResourceContext As ResourceContext)
+Const ProcName As String = "setStrategyRunner"
+On Error GoTo Err
+
+gSetStrategyRunner Me, mInitialisationContext, mTradingContext, pResourceContext, pStrategy
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub setupLogging(ByVal pSymbol As String)
 Const ProcName As String = "setupLogging"
 On Error GoTo Err
-
-If getStrategyHost.UseMoneyManagement Then
-'    Set mAccount = New cAccount
-'    mAccount.Load "rlk"
-'    Set mMoneyManager = New cMoneyManager
-'    mMoneyManager.account = mAccount
-'    mEngine.moneyManager = mMoneyManager
-End If
 
 Dim lResultsPath As String
 lResultsPath = getStrategyHost.ResultsPath
