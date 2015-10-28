@@ -1096,6 +1096,15 @@ Case TwsStopTriggerMethods.TwsStopTriggerMidPoint
 End Select
 End Function
 
+Public Sub gWSAIoctlCompletionRoutine( _
+                ByVal dwError As Long, _
+                ByVal cbTransferred As Long, _
+                ByVal lpOverlapped As Long, _
+                ByVal dwFlags As Long)
+                
+End Sub
+
+
 '================================================================================
 ' Helper Functions
 '================================================================================
