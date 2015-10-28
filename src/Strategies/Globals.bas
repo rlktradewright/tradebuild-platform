@@ -49,7 +49,7 @@ Public Const ConfirmedBarsForSwing As Long = 0
 Public Const ConfirmedBarsForTrail As Long = 0
 
 Public Const EntryBreakoutThresholdTicks = 4
-Public Const EntryLimitOffsetTicks As Integer = 1
+Public Const EntryLimitOffsetTicks As Integer = -1
 
 Public Const IncludeBarsOutsideSession As Boolean = False
 Public Const InitialStopFactor As Double = 2#

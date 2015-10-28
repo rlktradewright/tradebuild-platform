@@ -17,7 +17,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements IPositionMgmtStrategy
+Implements IScaleStrategy
 
 '================================================================================
 ' Events
@@ -77,15 +77,15 @@ Debug.Print "CScaleStrategy1 terminated"
 End Sub
 
 '================================================================================
-' IPositionMgmtStrategy Interface Members
+' IScaleStrategy Interface Members
 '================================================================================
 
-Private Property Get IPositionMgmtStrategy_Name() As String
-IPositionMgmtStrategy_Name = "ScaleStrategy1"
+Private Property Get IScaleStrategy_Name() As String
+IScaleStrategy_Name = "ScaleStrategy1"
 End Property
 
-Private Sub IPositionMgmtStrategy_NotifyTick(ByVal pType As TickTypes)
-Const ProcName As String = "IPositionMgmtStrategy_NotifyTick"
+Private Sub IScaleStrategy_NotifyTick(ByVal pType As TickTypes)
+Const ProcName As String = "IScaleStrategy_NotifyTick"
 On Error GoTo Err
 
 Dim newValue As Double
@@ -112,11 +112,11 @@ mNumberOfIncrements = mNumberOfIncrements + 1
 ' first change the stop loss for all existing BracketOrderes
 stopIncrement = Int((S.StopIncrementFactor * mInitialATR / mTickSize) + 0.9999) * mTickSize
 
-mInitialBracketOrder.AdjustStop mInitialBracketOrder.StopLossOrder.triggerPrice + IIf(mLongPosition, stopIncrement, -stopIncrement)
+mInitialBracketOrder.AdjustStop mInitialBracketOrder.StopLossOrder.TriggerPrice + IIf(mLongPosition, stopIncrement, -stopIncrement)
 
 On Error Resume Next
 For Each plex In mAdditionalBracketOrders
-    plex.AdjustStop plex.StopLossOrder.triggerPrice + IIf(mLongPosition, stopIncrement, -stopIncrement)
+    plex.AdjustStop plex.StopLossOrder.TriggerPrice + IIf(mLongPosition, stopIncrement, -stopIncrement)
 Next
 On Error GoTo 0
 
@@ -168,10 +168,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IPositionMgmtStrategy_Start( _
+Private Sub IScaleStrategy_Start( _
                 ByVal pContext As TradingContext, _
                 ByVal pBracketOrder As IBracketOrder)
-Const ProcName As String = "IPositionMgmtStrategy_Start"
+Const ProcName As String = "IScaleStrategy_Start"
 On Error GoTo Err
 
 Set mContext = pContext
@@ -227,7 +227,7 @@ mInitialEntryPrice = mInitialBracketOrder.EntryOrder.AveragePrice
 mContext.StartTickData Me
 
 mInitialATR = S.ATR.ATR(1).Value
-mUnitSize = Int((S.RiskIncrementPercent * mOrderContext.GetAccountBalance / 100) / (mTickValue * mInitialATR / mTickSize))
+mUnitSize = Int((S.RiskIncrementPercent * AccountBalance / 100) / (mTickValue * mInitialATR / mTickSize))
 If mUnitSize = 0 Then mUnitSize = 1
 
 priceIncrement = Int((S.ScaleThresholdFactor * mInitialATR / mTickSize) + 0.9999) * mTickSize
@@ -240,17 +240,22 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub mInitialBracketOrder_StopAdjusted()
-Dim plex As IBracketOrder
-Dim newStop As Double
+Const ProcName As String = "mInitialBracketOrder_StopAdjusted"
+On Error GoTo Err
 
-'If Not internal Then Exit Sub
+Dim newStop As Double: newStop = mInitialBracketOrder.StopLossOrder.TriggerPrice
 
-newStop = mInitialBracketOrder.StopLossOrder.triggerPrice
 On Error Resume Next    ' it's possible some of the order plexes have already been stopped out
+
+Dim plex As IBracketOrder
 For Each plex In mAdditionalBracketOrders
     plex.AdjustStop newStop
 Next
-On Error GoTo 0
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================

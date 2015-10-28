@@ -44,21 +44,17 @@ Private Const ModuleName                            As String = "StopStrategy5St
 ' Member variables
 '@================================================================================
 
-Public Timeframe As Timeframe
-Public LongTimeframe As Timeframe
-Public Swing As Swing
-Public MACDStudy As MACD
-Public ListenerKey As String
+Public LongTimeframe As ResourceIdentifier
 
-Public StopTimeframe As Timeframe
-Public StopMA As EMA
-Public Boll As BollingerBands
+Public StopTimeframe As ResourceIdentifier
+Public StopMA As ResourceIdentifier
+Public Boll As ResourceIdentifier
 
-Public LongBoll As BollingerBands
+Public LongBoll As ResourceIdentifier
 
-Public BreakevenTimeframe As Timeframe
+Public BreakevenTimeframe As ResourceIdentifier
 
-Public LongMA As SMA
+Public LongMA As ResourceIdentifier
 
 Public BreakEvenThresholdTicks As Long
 Public BreakevenBarThresholdTicks As Integer

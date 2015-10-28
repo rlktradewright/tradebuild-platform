@@ -62,27 +62,10 @@ Private Const MessagePrefix                         As String = ">>>>>>>>>>>>>>>
 ' Member variables
 '@================================================================================
 
-Private mContext As TradingContext
-Private WithEvents mPositionManagerDummy As PositionManager
-Attribute mPositionManagerDummy.VB_VarHelpID = -1
-Private mParams As Parameters
-
-Private mOrderContextBuyDummy As OrderContext
-Private mOrderContextSellDummy As OrderContext
-Private WithEvents mBracketOrderBuyDummy As BracketOrder
-Attribute mBracketOrderBuyDummy.VB_VarHelpID = -1
-Private WithEvents mBracketOrderSellDummy As BracketOrder
-Attribute mBracketOrderSellDummy.VB_VarHelpID = -1
-
-Private mOrderContextBuy As OrderContext
-Private mOrderContextSell As OrderContext
-Private WithEvents mBracketOrderBuy As BracketOrder
-Attribute mBracketOrderBuy.VB_VarHelpID = -1
-Private WithEvents mBracketOrderSell As BracketOrder
-Attribute mBracketOrderSell.VB_VarHelpID = -1
-
-Private mStopStrategyFactory As IPosnMgmtStrtgyFactory
-Private mScalingStrategyFactory As IPosnMgmtStrtgyFactory
+Private mBracketOrderBuy As ResourceIdentifier
+Private mBracketOrderSell As ResourceIdentifier
+Private mBracketOrderBuyDummy As ResourceIdentifier
+Private mBracketOrderSellDummy As ResourceIdentifier
 
 Private mMaxInitialStop As Double
 Private mStopBreakoutThresholdTicks As Integer
@@ -91,20 +74,6 @@ Private mEntryLimitOffsetTicks As Integer
 
 Private mPrevColour As Colours
 Private mCurrColour As Colours
-
-' Normal timeframe studies
-Private mBars As Bars
-Private mTimeframe As Timeframe
-Private mBoll As BollingerBands
-Private mSwing As Swing
-Private mMACD As MACD
-
-Private mTickSize As Double
-Private mTickValue As Double
-Private mLastMinute As Date
-Private mLastHalfHour As Date
-Private mTimestamp As Date
-Private mBarNumber As Long
 
 Private mNoTradeThisBar  As Boolean
 
@@ -133,112 +102,83 @@ End Sub
 ' IStrategy Interface Members
 '@================================================================================
 
-Private Property Get IStrategy_DefaultParameters() As Parameters
-Const ProcName As String = "IStrategy_DefaultParameters"
+Private Sub IStrategy_DefineDefaultParameters()
+Const ProcName As String = "IStrategy_DefineDefaultParameters"
 On Error GoTo Err
 
-Dim lParams As New Parameters
-lParams.SetParameterValue ParamBarLength, BarLength
-lParams.SetParameterValue ParamBarUnit, BarUnit
-lParams.SetParameterValue ParamIncludeBarsOutsideSession, IncludeBarsOutsideSession
-lParams.SetParameterValue ParamBollingerPeriods, BollingerPeriods
-lParams.SetParameterValue ParamBollingerMovingAverageType, BollingerMovingAverageType
-lParams.SetParameterValue ParamMinimumSwingTicks, MinimumSwingTicks
-lParams.SetParameterValue ParamEntryLimitOffsetTicks, EntryLimitOffsetTicks
-lParams.SetParameterValue ParamMaxInitialStopTicks, MaxInitialStopTicks
-lParams.SetParameterValue ParamEntryBreakoutThresholdTicks, EntryBreakoutThresholdTicks
-lParams.SetParameterValue ParamSwingToBreakevenTicks, SwingToBreakevenTicks
-lParams.SetParameterValue ParamRiskUnitPercent, RiskUnitPercent
-lParams.SetParameterValue ParamMaxTradeSize, MaxTradeSize
-lParams.SetParameterValue ParamBollingerCentreBandWidthTicks, BollCentreBandwidthTicks
-lParams.SetParameterValue ParamBollingerEdgeBandWidthTicks, BollEdgeBandwidthTicks
+DefineParameter ParamBarLength, BarLength
+DefineParameter ParamBarUnit, BarUnit
+DefineParameter ParamIncludeBarsOutsideSession, IncludeBarsOutsideSession
+DefineParameter ParamBollingerPeriods, BollingerPeriods
+DefineParameter ParamBollingerMovingAverageType, BollingerMovingAverageType
+DefineParameter ParamMinimumSwingTicks, MinimumSwingTicks
+DefineParameter ParamEntryLimitOffsetTicks, EntryLimitOffsetTicks
+DefineParameter ParamMaxInitialStopTicks, MaxInitialStopTicks
+DefineParameter ParamEntryBreakoutThresholdTicks, EntryBreakoutThresholdTicks
+DefineParameter ParamSwingToBreakevenTicks, SwingToBreakevenTicks
+DefineParameter ParamRiskUnitPercent, RiskUnitPercent
+DefineParameter ParamMaxTradeSize, MaxTradeSize
+DefineParameter ParamBollingerCentreBandWidthTicks, BollCentreBandwidthTicks
+DefineParameter ParamBollingerEdgeBandWidthTicks, BollEdgeBandwidthTicks
 
-Set IStrategy_DefaultParameters = lParams
-
-Exit Property
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Property
+End Sub
 
 Public Sub IStrategy_Initialise( _
-                ByVal pContext As InitialisationContext, _
-                ByVal pParams As Parameters)
+                ByVal pContext As InitialisationContext)
 Const ProcName As String = "IStrategy_Initialise"
 On Error GoTo Err
 
-processParameters pParams
+processParameters
 
-Dim lContract As IContract
-Set lContract = pContext.Contract
-mTickSize = lContract.TickSize
-mTickValue = lContract.TickValue
-mLastMinute = pContext.Session.CurrentSessionEndTime - (1 / 1440)
-mLastHalfHour = pContext.Session.CurrentSessionEndTime - (30 / 1440)
+mMaxInitialStop = GetParameterValue(ParamMaxInitialStopTicks) * TickSize
+mSwingToBreakeven = GetParameterValue(ParamSwingToBreakevenTicks) * TickSize
 
-mMaxInitialStop = mParams.GetParameterValue(ParamMaxInitialStopTicks) * mTickSize
-mSwingToBreakeven = mParams.GetParameterValue(ParamSwingToBreakevenTicks) * mTickSize
+Dim lTimeframe As ResourceIdentifier
+Set lTimeframe = DeclareTimeframe( _
+                        GetParameterValue(ParamBarLength), _
+                        GetParameterValue(ParamBarUnit), _
+                        500, _
+                        GetParameterValue(ParamIncludeBarsOutsideSession), _
+                        True)
 
-'--------------------------------------------------------------------------------
-' Studies for the normal timeframe
-'--------------------------------------------------------------------------------
-Set mTimeframe = pContext.AddTimeframe(GetTimePeriod(mParams.GetParameterValue(ParamBarLength), _
-                                                TimePeriodUnitsFromString(mParams.GetParameterValue(ParamBarUnit))), _
-                                500, _
-                                mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
-                                True)
-
-ReDim linputvaluenames(0) As String
-
-Dim params As Parameters
-
-Set params = New Parameters
-params.SetParameterValue "Minimum swing (ticks)", mParams.GetParameterValue(ParamMinimumSwingTicks)
-params.SetParameterValue "Include implicit swing points", "Y"
-linputvaluenames(0) = "$default"
-Set mSwing = pContext.AddStudy("Swing", _
-                            mTimeframe.BarStudy, _
-                            linputvaluenames, _
-                            mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
-                            params, _
-                            3, _
-                            , _
-                            True)
-
-Set params = New Parameters
-params.SetParameterValue "Periods", mParams.GetParameterValue(ParamBollingerPeriods)
-params.SetParameterValue "Standard deviations", 2
-params.SetParameterValue "Mov avg type", mParams.GetParameterValue(ParamBollingerMovingAverageType)
-params.SetParameterValue "Centre band width", mParams.GetParameterValue(ParamBollingerCentreBandWidthTicks) * mTickSize
-params.SetParameterValue "Edge band width", mParams.GetParameterValue(ParamBollingerEdgeBandWidthTicks) * mTickSize
-linputvaluenames(0) = "$default"
-Set mBoll = pContext.AddStudy("Bollinger Bands", _
-                        mTimeframe.BarStudy, _
-                        linputvaluenames, _
-                        mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
-                        params, _
+Dim lSwing As ResourceIdentifier
+Set lSwing = DeclareStudy( _
+                        "Swing", _
+                        lTimeframe, _
+                        "Minimum swing (ticks)=" & GetParameterValue(ParamMinimumSwingTicks) & _
+                            ";Include implicit swing points=Y", _
+                        GetParameterValue(ParamIncludeBarsOutsideSession), _
                         3, _
-                        , _
                         True)
 
-Set params = New Parameters
-params.SetParameterValue "Short Periods", 5
-params.SetParameterValue "Mov avg type", "SMA"
-params.SetParameterValue "Long Periods", 34
-params.SetParameterValue "Smoothing Periods", 5
-linputvaluenames(0) = "$default"
-Set mMACD = pContext.AddStudy("MACD", _
-                        mTimeframe.BarStudy, _
-                        linputvaluenames, _
-                        mParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
-                        params, _
+Dim lBoll As ResourceIdentifier
+Set lBoll = DeclareStudy( _
+                        "Bollinger Bands", _
+                        lTimeframe, _
+                        "Periods=" & GetParameterValue(ParamBollingerPeriods) & _
+                            ";Standard deviations=2" & _
+                            ";Mov avg type=" & GetParameterValue(ParamBollingerMovingAverageType) & _
+                            ";Centre band width=" & GetParameterValue(ParamBollingerCentreBandWidthTicks) * TickSize & _
+                            ";Edge band width=" & GetParameterValue(ParamBollingerEdgeBandWidthTicks) * TickSize, _
+                        GetParameterValue(ParamIncludeBarsOutsideSession), _
+                        3, _
+                        True)
+
+Dim lMACD  As ResourceIdentifier
+Set lMACD = DeclareStudy( _
+                        "MACD", _
+                        lTimeframe, _
+                        "Short Periods=5" & _
+                            ";Mov avg type=SMA" & _
+                            ";Long Periods=34" & _
+                            ";Smoothing Periods=5", _
+                        GetParameterValue(ParamIncludeBarsOutsideSession), _
                         10, _
-                        , _
                         True)
-
-'--------------------------------------------------------------------------------
-' Other initialisation
-'--------------------------------------------------------------------------------
 
 Exit Sub
 
@@ -250,29 +190,42 @@ Private Property Get IStrategy_Name() As String
 IStrategy_Name = "MACDStrategy21"
 End Property
 
+Private Sub IStrategy_NotifyBracketOrderCompletion( _
+                ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "IStrategy_NotifyBracketOrderCompletion"
+On Error GoTo Err
+
+checkTradingOpportunity
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategy_NotifyNoLivePositions()
+' nothing to do here
+End Sub
+
+Private Sub IStrategy_NotifyNoSimulatedPositions()
+Const ProcName As String = "IStrategy_NotifyNoSimulatedPositions"
+On Error GoTo Err
+
+checkTradingOpportunity
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub IStrategy_NotifyTick(ByVal pType As TickTypes)
 Const ProcName As String = "IStrategy_NotifyTick"
 On Error GoTo Err
 
-Static sFirstBarProcessed As Boolean
+If Not IsCurrentTickTrade Then Exit Sub
+If Not isNewBar Then Exit Sub
 
-If Not mContext.ReceivedFirstBidAndAsk Then Exit Sub
-If pType <> TickTypes.TickTypeTrade Then Exit Sub
-
-If mBars.TickVolume <> 1 Then
-    If sFirstBarProcessed Then Exit Sub
-    sFirstBarProcessed = True
-End If
-
-mTimestamp = mContext.TimeStamp
-
-If mTimestamp >= mLastMinute Then
-    mContext.LogTradeReason "Closing any outstanding position"
-    mContext.PositionManager.ClosePositions
-    Exit Sub
-End If
-
-mBarNumber = mBars.Bar.BarNumber
 mNoTradeThisBar = False
 
 checkTradingOpportunity
@@ -285,30 +238,9 @@ End Sub
 
 ' occurs after historic price data has been loaded,
 ' but before the first tick is notified
-Public Sub IStrategy_Start(ByVal pTradingContext As TradingContext, _
-                ByVal pStopStrategyFactory As IPosnMgmtStrtgyFactory)
+Public Sub IStrategy_Start(ByVal pTradingContext As TradingContext)
 Const ProcName As String = "IStrategy_Start"
 On Error GoTo Err
-
-Set mStopStrategyFactory = pStopStrategyFactory
-
-Set mContext = pTradingContext
-
-Set mPositionManagerDummy = mContext.PositionManagerDummy
-
-Set mOrderContextBuyDummy = mContext.PositionManagerDummy.OrderContexts.Add("BUY")
-mOrderContextBuyDummy.PreventUnprotectedPositions = True
-
-Set mOrderContextSellDummy = mContext.PositionManagerDummy.OrderContexts.Add("SELL")
-mOrderContextSellDummy.PreventUnprotectedPositions = True
-
-Set mOrderContextBuy = mContext.PositionManager.OrderContexts.Add("BUY")
-mOrderContextBuy.PreventUnprotectedPositions = True
-
-Set mOrderContextSell = mContext.PositionManager.OrderContexts.Add("SELL")
-mOrderContextSell.PreventUnprotectedPositions = True
-
-Set mBars = mContext.GetBars(mTimeframe)
 
 mCurrColour = getColour(0)
 mPrevColour = mCurrColour
@@ -326,88 +258,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mBracketOrderBuyDummy Event Handlers
-'@================================================================================
-
-Private Sub mBracketOrderBuyDummy_Completed()
-Const ProcName As String = "mBracketOrderBuyDummy_Completed"
-On Error GoTo Err
-
-checkTradingOpportunity
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mBracketOrderBuyDummy_SelfCancelled()
-Const ProcName As String = "mBracketOrderBuyDummy_SelfCancelled"
-On Error GoTo Err
-
-checkTradingOpportunity
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mBracketOrderSellDummy Event Handlers
-'@================================================================================
-
-Private Sub mBracketOrderSellDummy_Completed()
-Const ProcName As String = "mBracketOrderSellDummy_Completed"
-On Error GoTo Err
-
-checkTradingOpportunity
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mBracketOrderSellDummy_SelfCancelled()
-Const ProcName As String = "mBracketOrderSellDummy_SelfCancelled"
-On Error GoTo Err
-
-checkTradingOpportunity
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mPositionManagerDummy Event Handlers
-'@================================================================================
-
-Private Sub mPositionManagerDummy_Change(ev As ChangeEventData)
-Const ProcName As String = "mPositionManagerDummy_Change"
-On Error GoTo Err
-
-Dim l As PositionManagerChangeTypes
-l = ev.ChangeType
-Select Case l
-Case PositionSizeChanged
-    If mPositionManagerDummy.PositionSize = 0 And _
-        mPositionManagerDummy.PendingPositionSize = 0 Then checkTradingOpportunity
-Case ProviderReadinessChanged
-
-Case PositionClosed
-
-End Select
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' Properties
 '@================================================================================
 
@@ -419,12 +269,12 @@ Private Function CancelPendingBuyOrders() As Boolean
 Const ProcName As String = "CancelPendingBuyOrders"
 On Error GoTo Err
 
-If mOrderContextBuyDummy.PendingSize = 0 Then Exit Function
+If PendingSimulatedBuySize = 0 Then Exit Function
 
-mContext.LogTradeReason "Previous signal cancelled - cancelling pending buy orders"
-mBracketOrderBuyDummy.Cancel
-If mOrderContextBuy.PendingSize <> 0 Then
-    mBracketOrderBuy.Cancel
+LogTradeMessage "Previous signal cancelled - cancelling pending buy orders"
+Cancel mBracketOrderBuyDummy
+If PendingbuySize <> 0 Then
+    Cancel mBracketOrderBuy
 End If
 
 CancelPendingBuyOrders = True
@@ -439,12 +289,12 @@ Private Function CancelPendingSellOrders() As Boolean
 Const ProcName As String = "CancelPendingSellOrders"
 On Error GoTo Err
 
-If mOrderContextSellDummy.PendingSize = 0 Then Exit Function
+If PendingSimulatedSellSize = 0 Then Exit Function
 
-mContext.LogTradeReason "Previous signal cancelled - cancelling pending sell orders"
-mBracketOrderSellDummy.Cancel
-If mOrderContextSell.PendingSize <> 0 Then
-    mBracketOrderSell.Cancel
+LogTradeMessage "Previous signal cancelled - cancelling pending sell orders"
+Cancel mBracketOrderSellDummy
+If PendingsellSize <> 0 Then
+    Cancel mBracketOrderSell
 End If
 
 CancelPendingSellOrders = True
@@ -483,7 +333,7 @@ If Not IsPotentialBuy(lMessage) Then Exit Function
 
 If IsConfirmedBuy(lMessage) Then IsBuySignal = True
 
-If mOrderContextBuyDummy.PendingSize = 0 Then mContext.LogTradeReason lMessage
+If PendingSimulatedBuySize = 0 Then LogTradeMessage lMessage
 
 Exit Function
 
@@ -495,35 +345,29 @@ Private Function IsConfirmedBuy(lMessage) As Boolean
 Const ProcName As String = "IsConfirmedBuy"
 On Error GoTo Err
 
-Dim lSwingLowPoint As SwingPoint
-lSwingLowPoint = mSwing.SwingLowPoint(0)
-
-Dim lPotentialSwingLowPoint As SwingPoint
-lPotentialSwingLowPoint = mSwing.PotentialSwingLowPoint
-
-If mBarNumber - lSwingLowPoint.BarNumber <= 3 Then
+If CurrentBarNumber - SwingLowBarNumber() <= 3 Then
     IsConfirmedBuy = True
-ElseIf lPotentialSwingLowPoint.Value = MaxDouble Then
-    lMessage = lMessage & getRejectMessage("more than 3 Bars since swing low at ") & FormatTimestamp(lSwingLowPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+ElseIf PotentialSwingLow() = MaxDouble Then
+    lMessage = lMessage & getRejectMessage("more than 3 Bars since swing low at ") & FormatTimestamp(SwingLowTime(), TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
     IsConfirmedBuy = False
-ElseIf mBarNumber - lPotentialSwingLowPoint.BarNumber > 3 Then
-    lMessage = lMessage & getRejectMessage("more than 3 Bars since potential swing low at ") & FormatTimestamp(lPotentialSwingLowPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+ElseIf CurrentBarNumber - PotentialSwingLowBarNumber() > 3 Then
+    lMessage = lMessage & getRejectMessage("more than 3 Bars since potential swing low at ") & FormatTimestamp(PotentialSwingLowTime(), TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
     IsConfirmedBuy = False
-ElseIf mBarNumber - lPotentialSwingLowPoint.BarNumber = 1 Then
+ElseIf CurrentBarNumber - PotentialSwingLowBarNumber() = 1 Then
     lMessage = lMessage & getRejectMessage("signal bar is potential swing low")
     IsConfirmedBuy = False
-ElseIf mBarNumber = lPotentialSwingLowPoint.BarNumber Then
+ElseIf CurrentBarNumber = PotentialSwingLowBarNumber() Then
     lMessage = lMessage & getRejectMessage("potential new swing low this bar")
     IsConfirmedBuy = False
 Else
     IsConfirmedBuy = True
 End If
 
-If mBoll.InTopBand(mBars.HighValue(-1)).Value Then
+If BollingerInTopBand(HighValue(-1)) Then
     lMessage = lMessage & getRejectMessage("signal bar high is in top Bollinger band")
     IsConfirmedBuy = False
 End If
-If mTimestamp >= mLastHalfHour Then
+If MinutesToEndOfTradingSession <= 30# Then
     lMessage = lMessage & getRejectMessage("within last half-hour of session")
     IsConfirmedBuy = False
 End If
@@ -540,35 +384,29 @@ Private Function IsConfirmedSell(lMessage) As Boolean
 Const ProcName As String = "IsConfirmedSell"
 On Error GoTo Err
 
-Dim lSwingHighPoint As SwingPoint
-lSwingHighPoint = mSwing.SwingHighPoint(0)
-
-Dim lPotentialSwingHighPoint As SwingPoint
-lPotentialSwingHighPoint = mSwing.PotentialSwingHighPoint
-
-If mBarNumber - lSwingHighPoint.BarNumber <= 3 Then
+If CurrentBarNumber - SwingHighBarNumber() <= 3 Then
     IsConfirmedSell = True
-ElseIf lPotentialSwingHighPoint.Value = MinDouble Then
-    lMessage = lMessage & getRejectMessage("more than 3 Bars since swing high at ") & FormatTimestamp(lSwingHighPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+ElseIf PotentialSwingHigh() = MinDouble Then
+    lMessage = lMessage & getRejectMessage("more than 3 Bars since swing high at ") & FormatTimestamp(SwingHighTime(), TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
     IsConfirmedSell = False
-ElseIf mBarNumber - lPotentialSwingHighPoint.BarNumber > 3 Then
-    lMessage = lMessage & getRejectMessage("more than 3 Bars since potential swing high at ") & FormatTimestamp(lPotentialSwingHighPoint.BarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+ElseIf CurrentBarNumber - PotentialSwingHighBarNumber() > 3 Then
+    lMessage = lMessage & getRejectMessage("more than 3 Bars since potential swing high at ") & FormatTimestamp(PotentialSwingHighTime(), TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
     IsConfirmedSell = False
-ElseIf mBarNumber - lPotentialSwingHighPoint.BarNumber = 1 Then
+ElseIf CurrentBarNumber - PotentialSwingHighBarNumber() = 1 Then
     lMessage = lMessage & getRejectMessage("signal bar is potential swing high")
     IsConfirmedSell = False
-ElseIf mBarNumber = lPotentialSwingHighPoint.BarNumber Then
+ElseIf CurrentBarNumber = PotentialSwingHighBarNumber() Then
     lMessage = lMessage & getRejectMessage("potential new swing high this bar")
     IsConfirmedSell = False
 Else
     IsConfirmedSell = True
 End If
 
-If mBoll.InBottomBand(mBars.LowValue(-1)).Value Then
+If BollingerInBottomBand(LowValue(-1)) Then
     lMessage = lMessage & getRejectMessage("signal bar low is in bottom Bollinger band")
     IsConfirmedSell = False
 End If
-If mTimestamp >= mLastHalfHour Then
+If MinutesToEndOfTradingSession <= 30# Then
     lMessage = lMessage & getRejectMessage("within last half-hour of session")
     IsConfirmedSell = False
 End If
@@ -581,11 +419,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function IsEndOfSession() As Boolean
+Const ProcName As String = "IsEndOfSession"
+On Error GoTo Err
+
+If MinutesToEndOfTradingSession < 1# Then
+    LogTradeMessage "Approaching end of session: closing any outstanding position"
+    CloseAllPositions
+    IsEndOfSession = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function IsInEstablishedPosition() As Boolean
 Const ProcName As String = "IsInEstablishedPosition"
 On Error GoTo Err
 
-IsInEstablishedPosition = mPositionManagerDummy.PositionSize <> 0
+IsInEstablishedPosition = TotalSimulatedPositionSize <> 0
 
 Exit Function
 
@@ -597,7 +451,7 @@ Private Function IsPendingBuyOrders() As Boolean
 Const ProcName As String = "IsPendingBuyOrders"
 On Error GoTo Err
 
-IsPendingBuyOrders = mOrderContextBuyDummy.PendingSize <> 0
+IsPendingBuyOrders = PendingSimulatedBuySize <> 0
 
 Exit Function
 
@@ -609,7 +463,7 @@ Private Function IsPendingSellOrders() As Boolean
 Const ProcName As String = "IsPendingSellOrders"
 On Error GoTo Err
 
-IsPendingSellOrders = mOrderContextSellDummy.PendingSize <> 0
+IsPendingSellOrders = PendingSimulatedSellSize <> 0
 
 Exit Function
 
@@ -653,7 +507,7 @@ If Not IsPotentialSell(lMessage) Then Exit Function
 
 If IsConfirmedSell(lMessage) Then IsSellSignal = True
 
-If mOrderContextSellDummy.PendingSize = 0 Then mContext.LogTradeReason lMessage
+If PendingSimulatedSellSize = 0 Then LogTradeMessage lMessage
 
 Exit Function
 
@@ -667,26 +521,26 @@ On Error GoTo Err
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceLong
-If lTriggerPrice >= mBracketOrderBuyDummy.EntryOrder.triggerPrice Then Exit Sub
+If lTriggerPrice >= EntryTriggerPrice(mBracketOrderBuyDummy) Then Exit Sub
 
-Dim stopPrice As Double
-Dim breakevenPrice As Double
-Dim cancelPrice As Double
-Dim risk As Double
+Dim lStopPrice As Double
+Dim lBreakevenPrice As Double
+Dim lCancelPrice As Double
+Dim lRisk As Double
 
-calcPricesForBuy lTriggerPrice, stopPrice, breakevenPrice, cancelPrice, risk
-mBracketOrderBuyDummy.SetNewEntryTriggerPrice lTriggerPrice
-mBracketOrderBuyDummy.SetNewStopLossTriggerPrice stopPrice
+calcPricesForBuy lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice, lRisk
+SetNewEntryTriggerPrice mBracketOrderBuyDummy, lTriggerPrice
+SetNewStopLossTriggerPrice mBracketOrderBuyDummy, lStopPrice
 
-mBracketOrderBuyDummy.Update
+Update mBracketOrderBuyDummy
     
-If mOrderContextBuy.PendingSize = 0 Then Exit Sub
+If PendingbuySize = 0 Then Exit Sub
 
-mBracketOrderBuy.SetNewQuantity UnitSize(risk)
-mBracketOrderBuy.SetNewEntryTriggerPrice lTriggerPrice
-mBracketOrderBuy.SetNewEntryPrice lTriggerPrice - mEntryLimitOffsetTicks * mTickSize
-mBracketOrderBuy.SetNewStopLossTriggerPrice stopPrice
-mBracketOrderBuy.Update
+SetNewQuantity mBracketOrderBuy, UnitSize(lRisk)
+SetNewEntryTriggerPrice mBracketOrderBuy, lTriggerPrice
+SetNewEntryPrice mBracketOrderBuy, lTriggerPrice - mEntryLimitOffsetTicks * TickSize
+SetNewStopLossTriggerPrice mBracketOrderBuy, lStopPrice
+Update mBracketOrderBuy
 
 Exit Sub
 
@@ -700,26 +554,26 @@ On Error GoTo Err
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceShort
-If lTriggerPrice <= mBracketOrderSellDummy.EntryOrder.triggerPrice Then Exit Sub
+If lTriggerPrice <= EntryTriggerPrice(mBracketOrderSellDummy) Then Exit Sub
 
-Dim stopPrice As Double
-Dim breakevenPrice As Double
-Dim cancelPrice As Double
-Dim risk As Double
+Dim lStopPrice As Double
+Dim lBreakevenPrice As Double
+Dim lCancelPrice As Double
+Dim lRisk As Double
 
-calcPricesForSell lTriggerPrice, stopPrice, breakevenPrice, cancelPrice, risk
-mBracketOrderSellDummy.SetNewEntryTriggerPrice lTriggerPrice
-mBracketOrderSellDummy.SetNewStopLossTriggerPrice stopPrice
+calcPricesForSell lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice, lRisk
+SetNewEntryTriggerPrice mBracketOrderSellDummy, lTriggerPrice
+SetNewStopLossTriggerPrice mBracketOrderSellDummy, lStopPrice
 
-mBracketOrderSellDummy.Update
+Update mBracketOrderSellDummy
     
-If mOrderContextSell.PendingSize = 0 Then Exit Sub
+If PendingsellSize = 0 Then Exit Sub
 
-mBracketOrderSell.SetNewQuantity UnitSize(risk)
-mBracketOrderSell.SetNewEntryTriggerPrice lTriggerPrice
-mBracketOrderSell.SetNewEntryPrice lTriggerPrice + mEntryLimitOffsetTicks * mTickSize
-mBracketOrderSell.SetNewStopLossTriggerPrice stopPrice
-mBracketOrderSell.Update
+SetNewQuantity mBracketOrderSell, UnitSize(lRisk)
+SetNewEntryTriggerPrice mBracketOrderSell, lTriggerPrice
+SetNewEntryPrice mBracketOrderSell, lTriggerPrice + mEntryLimitOffsetTicks * TickSize
+SetNewStopLossTriggerPrice mBracketOrderSell, lStopPrice
+Update mBracketOrderSell
 
 Exit Sub
 
@@ -735,34 +589,21 @@ On Error GoTo Err
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceLong
 
-Dim stopPrice As Double
-Dim breakevenPrice As Double
-Dim cancelPrice As Double
-Dim risk As Double
+Dim lStopPrice As Double
+Dim lBreakevenPrice As Double
+Dim lCancelPrice As Double
+Dim lRisk As Double
 
-calcPricesForBuy lTriggerPrice, stopPrice, breakevenPrice, cancelPrice, risk
-If stopPrice = 0 Then
-    mContext.LogTradeReason "    reject: trigger price too close to breakeven price"
+If Not calcPricesForBuy(lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice, lRisk) Then
     Exit Sub
 End If
 
-Set mBracketOrderBuyDummy = mOrderContextBuyDummy.Buy( _
-                    Number:=1, _
-                    BracketEntryType:=BracketEntryTypeStop, _
-                    EntryPrice:=0, _
-                    EntryOffset:=0, _
-                    EntryTriggerPrice:=lTriggerPrice, _
-                    BracketStopLossType:=BracketStopLossTypeStop, _
-                    StopLossPrice:=stopPrice, _
-                    StopLossOffset:=0, _
-                    StopLossLimitPrice:=0, _
-                    BracketTargetType:=BracketTargetTypeNone, _
-                    TargetPrice:=0, _
-                    TargetOffset:=0, _
-                    TargetTriggerPrice:=0, _
-                    cancelPrice:=cancelPrice)
-
-mContext.ApplyPositionManagementStrategy mBracketOrderBuyDummy, mStopStrategyFactory.CreateStrategy(mContext)
+Set mBracketOrderBuyDummy = BuySimulated( _
+                                Number:=1, _
+                                EntryOrder:=DeclareEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
+                                StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
+                                CancelPrice:=lCancelPrice, _
+                                NotifyCompletion:=True)
 
 If mBracketOrderBuyDummy Is Nothing Then
     mNoTradeThisBar = True
@@ -771,31 +612,19 @@ If mBracketOrderBuyDummy Is Nothing Then
     Exit Sub
 End If
 
-If mOrderContextBuy.ActiveSize <> 0 Or mOrderContextBuy.PendingSize <> 0 Then Exit Sub
+If ActiveBuySize <> 0 Or PendingbuySize <> 0 Then Exit Sub
 
-If UnitSize(risk) = 0 Then
-    mContext.LogTradeReason "    reject: allowable initial risk exceeded"
-    Exit Sub
-End If
+If UnitSize(lRisk) = 0 Then Exit Sub
 
-Set mBracketOrderBuy = mOrderContextBuy.Buy( _
-                    Number:=UnitSize(risk), _
-                    BracketEntryType:=BracketEntryTypeStopLimit, _
-                    EntryPrice:=lTriggerPrice, _
-                    EntryOffset:=-mEntryLimitOffsetTicks, _
-                    EntryTriggerPrice:=lTriggerPrice, _
-                    BracketStopLossType:=BracketStopLossTypeStop, _
-                    StopLossPrice:=stopPrice, _
-                    StopLossOffset:=0, _
-                    StopLossLimitPrice:=0, _
-                    BracketTargetType:=BracketTargetTypeNone, _
-                    TargetPrice:=0, _
-                    TargetOffset:=0, _
-                    TargetTriggerPrice:=0, _
-                    cancelPrice:=cancelPrice, _
-                    CancelAfter:=300)
-mContext.ApplyPositionManagementStrategy mBracketOrderBuy, mStopStrategyFactory.CreateStrategy(mContext)
-'mContext.ApplyPositionManagementStrategy mBracketOrderBuy, mScalingStrategyFactory.CreateStrategy(mContext)
+Set mBracketOrderBuy = Buy( _
+                            Number:=UnitSize(lRisk), _
+                            EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
+                                                        price:=lTriggerPrice, _
+                                                        Offset:=mEntryLimitOffsetTicks, _
+                                                        TriggerPrice:=lTriggerPrice), _
+                            StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
+                            CancelPrice:=lCancelPrice, _
+                            CancelAfter:=300)
 
 Exit Sub
 
@@ -810,34 +639,21 @@ On Error GoTo Err
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceShort
 
-Dim stopPrice As Double
-Dim breakevenPrice As Double
-Dim cancelPrice As Double
-Dim risk As Double
+Dim lStopPrice As Double
+Dim lBreakevenPrice As Double
+Dim lCancelPrice As Double
+Dim lRisk As Double
 
-calcPricesForSell lTriggerPrice, stopPrice, breakevenPrice, cancelPrice, risk
-If stopPrice = 0 Then
-    mContext.LogTradeReason "    reject: trigger price too close to breakeven price"
+If Not calcPricesForSell(lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice, lRisk) Then
     Exit Sub
 End If
 
-Set mBracketOrderSellDummy = mOrderContextSellDummy.Sell( _
-                    Number:=1, _
-                    BracketEntryType:=BracketEntryTypes.BracketEntryTypeStop, _
-                    EntryPrice:=0, _
-                    EntryOffset:=0, _
-                    EntryTriggerPrice:=lTriggerPrice, _
-                    BracketStopLossType:=BracketStopLossTypeStop, _
-                    StopLossPrice:=stopPrice, _
-                    StopLossOffset:=0, _
-                    StopLossLimitPrice:=0, _
-                    BracketTargetType:=BracketTargetTypeNone, _
-                    TargetPrice:=0, _
-                    TargetOffset:=0, _
-                    TargetTriggerPrice:=0, _
-                    cancelPrice:=cancelPrice)
-
-mContext.ApplyPositionManagementStrategy mBracketOrderSellDummy, mStopStrategyFactory.CreateStrategy(mContext)
+Set mBracketOrderSellDummy = SellSimulated( _
+                                Number:=1, _
+                                EntryOrder:=DeclareEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
+                                StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
+                                CancelPrice:=lCancelPrice, _
+                                NotifyCompletion:=True)
 
 If mBracketOrderSellDummy Is Nothing Then
     mNoTradeThisBar = True
@@ -846,31 +662,19 @@ If mBracketOrderSellDummy Is Nothing Then
     Exit Sub
 End If
 
-If mOrderContextSell.ActiveSize <> 0 Or mOrderContextSell.PendingSize <> 0 Then Exit Sub
+If ActivesellSize <> 0 Or PendingsellSize <> 0 Then Exit Sub
 
-If UnitSize(risk) = 0 Then
-    mContext.LogTradeReason "    reject: allowable initial risk exceeded"
-    Exit Sub
-End If
+If UnitSize(lRisk) = 0 Then Exit Sub
 
-Set mBracketOrderSell = mOrderContextSell.Sell( _
-                    Number:=UnitSize(risk), _
-                    BracketEntryType:=BracketEntryTypeStopLimit, _
-                    EntryPrice:=lTriggerPrice, _
-                    EntryOffset:=mEntryLimitOffsetTicks, _
-                    EntryTriggerPrice:=lTriggerPrice, _
-                    BracketStopLossType:=BracketStopLossTypeStop, _
-                    StopLossPrice:=stopPrice, _
-                    StopLossOffset:=0, _
-                    StopLossLimitPrice:=0, _
-                    BracketTargetType:=BracketTargetTypeNone, _
-                    TargetPrice:=0, _
-                    TargetOffset:=0, _
-                    TargetTriggerPrice:=0, _
-                    cancelPrice:=cancelPrice, _
-                    CancelAfter:=300)
-mContext.ApplyPositionManagementStrategy mBracketOrderSell, mStopStrategyFactory.CreateStrategy(mContext)
-'mContext.ApplyPositionManagementStrategy mBracketOrderSell, mScalingStrategyFactory.CreateStrategy(mContext)
+Set mBracketOrderSell = Sell( _
+                            Number:=UnitSize(lRisk), _
+                            EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
+                                                        price:=lTriggerPrice, _
+                                                        Offset:=-mEntryLimitOffsetTicks, _
+                                                        TriggerPrice:=lTriggerPrice), _
+                            StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
+                            CancelPrice:=lCancelPrice, _
+                            CancelAfter:=300)
 
 Exit Sub
 
@@ -882,82 +686,94 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub calcPricesForBuy( _
-                ByVal triggerPrice As Double, _
-                ByRef stopPrice As Double, _
-                ByRef breakevenPrice As Double, _
-                ByRef cancelPrice As Double, _
-                ByRef risk As Double)
+Private Function calcPricesForBuy( _
+                ByVal pTriggerPrice As Double, _
+                ByRef pStopPrice As Double, _
+                ByRef pBreakevenPrice As Double, _
+                ByRef pCancelPrice As Double, _
+                ByRef pRisk As Double) As Boolean
 Const ProcName As String = "calcPricesForBuy"
 On Error GoTo Err
 
-Dim SwingLow As Double
-SwingLow = IIf(mSwing.SwingLowPoint(0).Value < mSwing.PotentialSwingLowPoint.Value, mSwing.SwingLowPoint(0).Value, mSwing.PotentialSwingLowPoint.Value)
+Dim lSwingLow As Double
+lSwingLow = IIf(SwingLow < PotentialSwingLow, SwingLow, PotentialSwingLow)
 If mSwingToBreakeven <> 0 Then
-    If (triggerPrice - SwingLow) > 0.5 * mSwingToBreakeven Then Exit Sub
-    breakevenPrice = SwingLow + mSwingToBreakeven
+    If (pTriggerPrice - lSwingLow) > 0.5 * mSwingToBreakeven Then
+        LogTradeMessage "    reject: trigger price too close to breakeven price"
+        Exit Function
+    End If
+    pBreakevenPrice = lSwingLow + mSwingToBreakeven
 End If
 
-stopPrice = SwingLow - mStopBreakoutThresholdTicks * mTickSize
+pStopPrice = lSwingLow - mStopBreakoutThresholdTicks * TickSize
 
-If stopPrice < triggerPrice - mMaxInitialStop Then
-    stopPrice = triggerPrice - mMaxInitialStop
+If pStopPrice < pTriggerPrice - mMaxInitialStop Then
+    pStopPrice = pTriggerPrice - mMaxInitialStop
 End If
 
-risk = (triggerPrice + mEntryLimitOffsetTicks * mTickSize - stopPrice) * mTickValue / mTickSize
+pRisk = (pTriggerPrice + mEntryLimitOffsetTicks * TickSize - pStopPrice) * TickValue / TickSize
 
-If mSwing.PotentialSwingLowPoint.Value = MaxDouble Then
-    cancelPrice = mSwing.SwingLowPoint(0).Value
+If PotentialSwingLow = MaxDouble Then
+    pCancelPrice = SwingLow
 Else
-    cancelPrice = mSwing.PotentialSwingLowPoint.Value
+    pCancelPrice = PotentialSwingLow
 End If
 
-Exit Sub
+calcPricesForBuy = True
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
-Private Sub calcPricesForSell( _
-                ByVal triggerPrice As Double, _
-                ByRef stopPrice As Double, _
-                ByRef breakevenPrice As Double, _
-                ByRef cancelPrice As Double, _
-                ByRef risk As Double)
+Private Function calcPricesForSell( _
+                ByVal pTriggerPrice As Double, _
+                ByRef pStopPrice As Double, _
+                ByRef pBreakevenPrice As Double, _
+                ByRef pCancelPrice As Double, _
+                ByRef pRisk As Double) As Boolean
 Const ProcName As String = "calcPricesForSell"
 On Error GoTo Err
 
-Dim SwingHigh As Double
-SwingHigh = IIf(mSwing.SwingHighPoint(0).Value > mSwing.PotentialSwingHighPoint.Value, mSwing.SwingHighPoint(0).Value, mSwing.PotentialSwingHighPoint.Value)
+Dim lSwingHigh As Double
+lSwingHigh = IIf(SwingHigh > PotentialSwingHigh, SwingHigh, PotentialSwingHigh)
 If mSwingToBreakeven <> 0 Then
-    If (SwingHigh - triggerPrice) > 0.5 * mSwingToBreakeven Then Exit Sub
-    breakevenPrice = SwingHigh - mSwingToBreakeven
+    If (lSwingHigh - pTriggerPrice) > 0.5 * mSwingToBreakeven Then
+        LogTradeMessage "    reject: trigger price too close to breakeven price"
+        Exit Function
+    End If
+    pBreakevenPrice = lSwingHigh - mSwingToBreakeven
 End If
 
-stopPrice = SwingHigh + mStopBreakoutThresholdTicks * mTickSize
+pStopPrice = lSwingHigh + mStopBreakoutThresholdTicks * TickSize
 
-If stopPrice > triggerPrice + mMaxInitialStop Then
-    stopPrice = triggerPrice + mMaxInitialStop
+If pStopPrice > pTriggerPrice + mMaxInitialStop Then
+    pStopPrice = pTriggerPrice + mMaxInitialStop
 End If
 
-risk = (stopPrice - triggerPrice - mEntryLimitOffsetTicks * mTickSize) * mTickValue / mTickSize
+pRisk = (pStopPrice - pTriggerPrice - mEntryLimitOffsetTicks * TickSize) * TickValue / TickSize
 
-If mSwing.PotentialSwingHighPoint.Value = MinDouble Then
-    cancelPrice = mSwing.SwingHighPoint(0).Value
+If PotentialSwingHigh = MinDouble Then
+    pCancelPrice = SwingHigh
 Else
-    cancelPrice = mSwing.PotentialSwingHighPoint.Value
+    pCancelPrice = PotentialSwingHigh
 End If
 
-Exit Sub
+calcPricesForSell = True
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 
-End Sub
+End Function
 
 Private Sub checkTradingOpportunity()
 Const ProcName As String = "checkTradingOpportunity"
 On Error GoTo Err
+
+If IsEndOfSession Then Exit Sub
 
 If IsInEstablishedPosition Then Exit Sub
 
@@ -996,16 +812,16 @@ Const ProcName As String = "getColour"
 On Error GoTo Err
 
 Dim lMACDUp As Boolean
-lMACDUp = mMACD.MACDUp(ref).Value
+lMACDUp = MACDvalueUp(ref)
 
 Dim lMACDDown As Boolean
-lMACDDown = mMACD.MACDDown(ref).Value
+lMACDDown = MACDValueDown(ref)
 
 Dim lMACDHistUp As Boolean
-lMACDHistUp = mMACD.MACDHistUp(ref).Value
+lMACDHistUp = MACDHistUp(ref)
 
 Dim lMACDHistDown As Boolean
-lMACDHistDown = mMACD.MACDHistDown(ref).Value
+lMACDHistDown = MACDHistDown(ref)
 
 If lMACDUp And lMACDHistUp Then
     getColour = Green
@@ -1023,24 +839,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function getRejectMessage(pReason As String) As String
+getRejectMessage = vbCrLf & Space(Len(MessagePrefix)) & "reject: " & pReason
+End Function
+
 Private Function getTriggerPriceLong() As Double
-getTriggerPriceLong = mBars.CloseValue(-1) + mEntryBreakoutThresholdTicks * mTickSize
+getTriggerPriceLong = CloseValue(-1) + mEntryBreakoutThresholdTicks * TickSize
 End Function
 
 Private Function getTriggerPriceShort() As Double
-getTriggerPriceShort = mBars.CloseValue(-1) - mEntryBreakoutThresholdTicks * mTickSize
+getTriggerPriceShort = CloseValue(-1) - mEntryBreakoutThresholdTicks * TickSize
 End Function
 
-Private Sub processParameters(ByVal pParams As Parameters)
+Private Function isNewBar() As Boolean
+Static sCurrentBarNumer As Long
+If CurrentBarNumber <> sCurrentBarNumer Then
+    sCurrentBarNumer = CurrentBarNumber
+    isNewBar = True
+End If
+End Function
+
+Private Sub processParameters()
 Const ProcName As String = "processParameters"
 On Error GoTo Err
 
-Set mParams = pParams
-mEntryBreakoutThresholdTicks = mParams.GetParameterValue(ParamEntryBreakoutThresholdTicks)
-mStopBreakoutThresholdTicks = mParams.GetParameterValue(ParamBreakoutThresholdTicks)
-mEntryLimitOffsetTicks = mParams.GetParameterValue(ParamEntryLimitOffsetTicks)
-mRiskUnitPercent = mParams.GetParameterValue(ParamRiskUnitPercent)
-mMaxTradeSize = mParams.GetParameterValue(ParamMaxTradeSize)
+mEntryBreakoutThresholdTicks = GetParameterValue(ParamEntryBreakoutThresholdTicks)
+mStopBreakoutThresholdTicks = GetParameterValue(ParamBreakoutThresholdTicks)
+mEntryLimitOffsetTicks = GetParameterValue(ParamEntryLimitOffsetTicks)
+mRiskUnitPercent = GetParameterValue(ParamRiskUnitPercent)
+mMaxTradeSize = GetParameterValue(ParamMaxTradeSize)
 
 Exit Sub
 
@@ -1048,18 +875,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getRejectMessage(pReason As String) As String
-getRejectMessage = vbCrLf & Space(Len(MessagePrefix)) & "reject: " & pReason
-End Function
-
-
 Private Function UnitSize(ByVal risk As Double) As Long
 Const ProcName As String = "UnitSize"
 On Error GoTo Err
 
-UnitSize = Int((mRiskUnitPercent * mOrderContextBuy.GetAccountBalance / 100) / risk)
+UnitSize = Int((mRiskUnitPercent * AccountBalance / 100) / risk)
 If UnitSize > mMaxTradeSize Then UnitSize = mMaxTradeSize
 'If UnitSize = 0 Then UnitSize = 1
+If UnitSize = 0 Then LogTradeMessage "    reject: allowable initial risk exceeded"
 
 Exit Function
 
