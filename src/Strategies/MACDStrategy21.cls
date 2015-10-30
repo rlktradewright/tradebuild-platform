@@ -203,6 +203,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IStrategy_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
+' nothing to do here
+End Sub
+
+Private Sub IStrategy_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
+' nothing to do here
+End Sub
+
 Private Sub IStrategy_NotifyNoLivePositions()
 ' nothing to do here
 End Sub
@@ -273,7 +281,7 @@ If PendingSimulatedBuySize = 0 Then Exit Function
 
 LogTradeMessage "Previous signal cancelled - cancelling pending buy orders"
 Cancel mBracketOrderBuyDummy
-If PendingbuySize <> 0 Then
+If PendingBuySize <> 0 Then
     Cancel mBracketOrderBuy
 End If
 
@@ -293,7 +301,7 @@ If PendingSimulatedSellSize = 0 Then Exit Function
 
 LogTradeMessage "Previous signal cancelled - cancelling pending sell orders"
 Cancel mBracketOrderSellDummy
-If PendingsellSize <> 0 Then
+If PendingSellSize <> 0 Then
     Cancel mBracketOrderSell
 End If
 
@@ -534,7 +542,7 @@ SetNewStopLossTriggerPrice mBracketOrderBuyDummy, lStopPrice
 
 Update mBracketOrderBuyDummy
     
-If PendingbuySize = 0 Then Exit Sub
+If PendingBuySize = 0 Then Exit Sub
 
 SetNewQuantity mBracketOrderBuy, UnitSize(lRisk)
 SetNewEntryTriggerPrice mBracketOrderBuy, lTriggerPrice
@@ -567,7 +575,7 @@ SetNewStopLossTriggerPrice mBracketOrderSellDummy, lStopPrice
 
 Update mBracketOrderSellDummy
     
-If PendingsellSize = 0 Then Exit Sub
+If PendingSellSize = 0 Then Exit Sub
 
 SetNewQuantity mBracketOrderSell, UnitSize(lRisk)
 SetNewEntryTriggerPrice mBracketOrderSell, lTriggerPrice
@@ -612,7 +620,7 @@ If mBracketOrderBuyDummy Is Nothing Then
     Exit Sub
 End If
 
-If ActiveBuySize <> 0 Or PendingbuySize <> 0 Then Exit Sub
+If ActiveBuySize <> 0 Or PendingBuySize <> 0 Then Exit Sub
 
 If UnitSize(lRisk) = 0 Then Exit Sub
 
@@ -662,7 +670,7 @@ If mBracketOrderSellDummy Is Nothing Then
     Exit Sub
 End If
 
-If ActivesellSize <> 0 Or PendingsellSize <> 0 Then Exit Sub
+If ActiveSellSize <> 0 Or PendingSellSize <> 0 Then Exit Sub
 
 If UnitSize(lRisk) = 0 Then Exit Sub
 
@@ -812,7 +820,7 @@ Const ProcName As String = "getColour"
 On Error GoTo Err
 
 Dim lMACDUp As Boolean
-lMACDUp = MACDvalueUp(ref)
+lMACDUp = MACDValueUp(ref)
 
 Dim lMACDDown As Boolean
 lMACDDown = MACDValueDown(ref)

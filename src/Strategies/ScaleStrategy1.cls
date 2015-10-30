@@ -84,6 +84,18 @@ Private Property Get IScaleStrategy_Name() As String
 IScaleStrategy_Name = "ScaleStrategy1"
 End Property
 
+Private Sub IScaleStrategy_NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
+
+End Sub
+
+Private Sub IScaleStrategy_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
+
+End Sub
+
+Private Sub IScaleStrategy_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
+
+End Sub
+
 Private Sub IScaleStrategy_NotifyTick(ByVal pType As TickTypes)
 Const ProcName As String = "IScaleStrategy_NotifyTick"
 On Error GoTo Err

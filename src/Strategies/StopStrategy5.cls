@@ -105,6 +105,18 @@ Private Property Get IStopStrategy_Name() As String
 IStopStrategy_Name = "StopStrategy5"
 End Property
 
+Private Sub IStopStrategy_NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
+
+End Sub
+
+Private Sub IStopStrategy_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
+
+End Sub
+
+Private Sub IStopStrategy_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
+
+End Sub
+
 Private Sub IStopStrategy_NotifyTick(ByVal pType As TickTypes)
 Const ProcName As String = "IStopStrategy_NotifyTick"
 On Error GoTo Err
