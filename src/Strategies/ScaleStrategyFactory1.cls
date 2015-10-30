@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IPosnMgmtStrtgyFactory
+Implements IScaleStrategyFactory
 
 '@================================================================================
 ' Events
@@ -53,12 +53,12 @@ Private S                                           As New ScaleStrategy1Static
 '@================================================================================
 
 '@================================================================================
-' IPosnMgmtStrtgyFactory Interface Members
+' IScaleStrategyFactory Interface Members
 '@================================================================================
 
-Private Function IPosnMgmtStrtgyFactory_CreateStrategy( _
-                ByVal pTradingContext As TradingContext) As IPositionMgmtStrategy
-Const ProcName As String = "IPosnMgmtStrtgyFactory_CreateStrategy"
+Private Function IScaleStrategyFactory_CreateStrategy( _
+                ByVal pTradingContext As TradingContext) As IScaleStrategy
+Const ProcName As String = "IScaleStrategyFactory_CreateStrategy"
 On Error GoTo Err
 
 
@@ -69,8 +69,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get IPosnMgmtStrtgyFactory_DefaultParameters() As Parameters
-Const ProcName As String = "IPosnMgmtStrtgyFactory_DefaultParameters"
+Private Sub IScaleStrategyFactory_DefineDefaultParameters()
+Const ProcName As String = "IScaleStrategyFactory_DefineDefaultParameters"
 On Error GoTo Err
 
 Dim lParams As New Parameters
@@ -86,43 +86,42 @@ lParams.SetParameterValue ParamRiskIncrementPercent, RiskIncrementPercent
 lParams.SetParameterValue ParamScaleThresholdFactor, ScaleThresholdFactor
 lParams.SetParameterValue ParamStopIncrementFactor, StopIncrementFactor
 
-Exit Property
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Property
+End Sub
 
-Private Sub IPosnMgmtStrtgyFactory_Initialise( _
-                ByVal pContext As InitialisationContext, _
-                ByVal pParams As Parameters)
-Const ProcName As String = "IPosnMgmtStrtgyFactory_Initialise"
+Private Sub IScaleStrategyFactory_Initialise( _
+                ByVal pContext As InitialisationContext)
+Const ProcName As String = "IScaleStrategyFactory_Initialise"
 On Error GoTo Err
 
-processParameters pParams
+processParameters
 
 Dim lBarLength As Long
-lBarLength = pParams.GetParameterValue(ParamBarLength)
+lBarLength = GetParameterValue(ParamBarLength)
 
 Dim lBarUnit As TimePeriodUnits
-lBarUnit = TimePeriodUnitsFromString(pParams.GetParameterValue(ParamBarUnit))
+lBarUnit = TimePeriodUnitsFromString(GetParameterValue(ParamBarUnit))
 
 Dim lTimeframe As Timeframe
 Set lTimeframe = pContext.AddTimeframe(GetTimePeriod(lBarLength, _
                                                 lBarUnit), _
                                 500, _
-                                pParams.GetParameterValue(ParamIncludeBarsOutsideSession))
+                                GetParameterValue(ParamIncludeBarsOutsideSession))
 
 Dim params As Parameters
 
 Set params = New Parameters
-params.SetParameterValue "Periods", pParams.GetParameterValue(ParamATRPeriods)
+params.SetParameterValue "Periods", GetParameterValue(ParamATRPeriods)
 
 ReDim linputvaluenames(0) As String
 linputvaluenames(0) = "$default"
 Set S.ATR = pContext.AddStudy("ATR", _
                         lTimeframe, _
                         linputvaluenames, _
-                        pParams.GetParameterValue(ParamIncludeBarsOutsideSession), _
+                        GetParameterValue(ParamIncludeBarsOutsideSession), _
                         params, _
                         2)
 
@@ -148,16 +147,16 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub processParameters(ByVal pParams As Parameters)
+Private Sub processParameters()
 Const ProcName As String = "processParameters"
 On Error GoTo Err
 
-S.InitialStopFactor = pParams.GetParameterValue(ParamInitialStopFactor)
-S.MaxIncrements = pParams.GetParameterValue(ParamMaxIncrements)
-S.RiskUnitPercent = pParams.GetParameterValue(ParamRiskUnitPercent)
-S.RiskIncrementPercent = pParams.GetParameterValue(ParamRiskIncrementPercent)
-S.ScaleThresholdFactor = pParams.GetParameterValue(ParamScaleThresholdFactor)
-S.StopIncrementFactor = pParams.GetParameterValue(ParamStopIncrementFactor)
+S.InitialStopFactor = GetParameterValue(ParamInitialStopFactor)
+S.MaxIncrements = GetParameterValue(ParamMaxIncrements)
+S.RiskUnitPercent = GetParameterValue(ParamRiskUnitPercent)
+S.RiskIncrementPercent = GetParameterValue(ParamRiskIncrementPercent)
+S.ScaleThresholdFactor = GetParameterValue(ParamScaleThresholdFactor)
+S.StopIncrementFactor = GetParameterValue(ParamStopIncrementFactor)
 
 Exit Sub
 

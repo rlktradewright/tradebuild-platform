@@ -46,13 +46,22 @@ Private Const ModuleName                            As String = "TradingContext"
 ' Member variables
 '@================================================================================
 
+Private mStrategyRunner                             As StrategyRunner
+
 Private mTicker                                     As Ticker
+Private mContract                                   As IContract
+Private mSession                                    As Session
 
 Private mPositionManager                            As PositionManager
 Private WithEvents mBracketOrders                   As BracketOrders
 Attribute mBracketOrders.VB_VarHelpID = -1
 
-Private mPositionManagerDummy                       As PositionManager
+Private mOrderContextBuy                            As OrderContext
+Private mOrderContextBuySimulated                   As OrderContext
+Private mOrderContextSell                           As OrderContext
+Private mOrderContextSellSimulated                  As OrderContext
+
+Private mPositionManagerSimulated                   As PositionManager
 Private mTimeframes                                 As Timeframes
 
 Private mTradeReasonLogger                          As Logger
@@ -63,10 +72,11 @@ Private mStrategy                                   As IStrategy
 
 Private mPositionMgmgtStrategies                    As Collection
 Private mActivePositionMgmgtStrategies              As Collection
-
-Private mReceivedFirstBidAndAsk                     As Boolean
+Private mPositionMgmgtResourceContexts              As Collection
 
 Private mClock                                      As Clock
+
+Private mCurrentTick                                As GenericTick
 
 '@================================================================================
 ' Class Event Handlers
@@ -81,6 +91,7 @@ mTradeReasonLogger.LogToParent = True
 
 Set mPositionMgmgtStrategies = New Collection
 Set mActivePositionMgmgtStrategies = New Collection
+Set mPositionMgmgtResourceContexts = New Collection
 
 Exit Sub
 
@@ -107,14 +118,31 @@ Static sGotFirstBid As Boolean
    
 If ev.Tick.TickType = TickTypeAsk Then sGotFirstAsk = True
 If ev.Tick.TickType = TickTypeBid Then sGotFirstBid = True
-If sGotFirstAsk And sGotFirstBid Then mReceivedFirstBidAndAsk = True
 
-Dim lPMStrategy As IPositionMgmtStrategy
+If Not (sGotFirstAsk And sGotFirstBid) Then Exit Sub
+
+Select Case ev.Tick.TickType
+Case TickTypes.TickTypeAsk, _
+        TickTypes.TickTypeBid, _
+        TickTypes.TickTypeTrade, _
+        TickTypes.TickTypeVolume
+Case Else
+    Exit Sub
+End Select
+
+mCurrentTick = ev.Tick
+
+Dim lPMStrategy As IStopStrategy
 For Each lPMStrategy In mActivePositionMgmgtStrategies
+    mStrategyRunner.SetCurrent lPMStrategy, mPositionMgmgtResourceContexts.Item(GetObjectKey(lPMStrategy))
     lPMStrategy.NotifyTick ev.Tick.TickType
+    mStrategyRunner.SetNotCurrent
 Next
 
-mStrategy.NotifyTick ev.Tick.TickType
+
+mStrategyRunner.SetCurrent mStrategy, Nothing
+mStrategy.NotifyTick mCurrentTick.TickType
+mStrategyRunner.SetNotCurrent
 
 Exit Sub
 
@@ -184,7 +212,7 @@ Public Property Get Contract() As IContract
 Const ProcName As String = "Contract"
 On Error GoTo Err
 
-Set Contract = mTicker.ContractFuture.Value
+Set Contract = mContract
 
 Exit Property
 
@@ -192,11 +220,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get DefaultOrderContext() As OrderContext
-Const ProcName As String = "DefaultOrderContext"
+Public Property Get CurrentTick() As GenericTick
+CurrentTick = mCurrentTick
+End Property
+
+Public Property Get DefaultBuyOrderContext() As OrderContext
+Const ProcName As String = "DefaultBuyOrderContext"
 On Error GoTo Err
 
-Set DefaultOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+Set DefaultBuyOrderContext = mOrderContextBuy
 
 Exit Property
 
@@ -204,11 +236,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get DefaultOrderContextDummy() As OrderContext
-Const ProcName As String = "DefaultOrderContextDummy"
+Public Property Get DefaultBuyOrderContextSimulated() As OrderContext
+Const ProcName As String = "DefaultBuyOrderContextSimulated"
 On Error GoTo Err
 
-Set DefaultOrderContextDummy = mPositionManagerDummy.OrderContexts.DefaultOrderContext
+Set DefaultBuyOrderContextSimulated = mOrderContextBuySimulated
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get DefaultSellOrderContext() As OrderContext
+Const ProcName As String = "DefaultSellOrderContext"
+On Error GoTo Err
+
+Set DefaultSellOrderContext = mOrderContextSell
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get DefaultSellOrderContextSimulated() As OrderContext
+Const ProcName As String = "DefaultSellOrderContextSimulated"
+On Error GoTo Err
+
+Set DefaultSellOrderContextSimulated = mOrderContextSellSimulated
 
 Exit Property
 
@@ -264,11 +320,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PositionManagerDummy() As PositionManager
-Const ProcName As String = "PositionManagerDummy"
+Public Property Get PositionManagerSimulated() As PositionManager
+Const ProcName As String = "PositionManagerSimulated"
 On Error GoTo Err
 
-Set PositionManagerDummy = mPositionManagerDummy
+Set PositionManagerSimulated = mPositionManagerSimulated
 
 Exit Property
 
@@ -276,8 +332,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get ReceivedFirstBidAndAsk() As Boolean
-ReceivedFirstBidAndAsk = mReceivedFirstBidAndAsk
+Public Property Get Session() As Session
+Set Session = mSession
 End Property
 
 Public Property Get TickNumber() As Long
@@ -327,12 +383,24 @@ End Property
 
 Public Sub ApplyPositionManagementStrategy( _
                 ByVal pBracketOrder As IBracketOrder, _
-                ByVal pStrategy As IPositionMgmtStrategy)
+                ByVal pStrategy As Object, _
+                ByVal pResourceContext As ResourceContext)
 Const ProcName As String = "ApplyPositionManagementStrategy"
 On Error GoTo Err
 
 mPositionMgmgtStrategies.Add pStrategy
-pStrategy.Start Me, pBracketOrder
+mPositionMgmgtResourceContexts.Add pResourceContext, GetObjectKey(pStrategy)
+
+mStrategyRunner.SetCurrent pStrategy, pResourceContext
+mStrategyRunner.RequestBracketOrderNotification pBracketOrder, pStrategy
+If TypeOf pStrategy Is IStopStrategy Then
+    Dim lStopStrategy As IStopStrategy: Set lStopStrategy = pStrategy
+    lStopStrategy.Start Me, pBracketOrder
+Else
+    Dim lScaleStrategy As IScaleStrategy: Set lScaleStrategy = pStrategy
+    lScaleStrategy.Start Me, pBracketOrder
+End If
+mStrategyRunner.SetNotCurrent
 
 Exit Sub
 
@@ -340,12 +408,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function GetBars( _
-                ByVal pTimeframe As Timeframe) As Bars
+Public Function getBars( _
+                ByVal pTimeframe As Timeframe) As BarUtils27.Bars
 Const ProcName As String = "GetBars"
 On Error GoTo Err
 
-Set GetBars = pTimeframe.BarStudy.BarsFuture.Value
+Set getBars = pTimeframe.BarStudy.BarsFuture.Value
 
 Exit Function
 
@@ -354,18 +422,30 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
+                ByVal pStrategyRunner As StrategyRunner, _
                 ByVal pStrategy As IStrategy, _
                 ByVal pTicker As Ticker)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+Set mStrategyRunner = pStrategyRunner
 Set mStrategy = pStrategy
+
 Set mTicker = pTicker
 Set mClock = pTicker.ClockFuture.Value
+Set mContract = mTicker.ContractFuture.Value
+Set mSession = mTicker.SessionFuture.Value
 mTicker.AddGenericTickListener Me
+
 Set mPositionManager = mTicker.PositionManager
 Set mBracketOrders = mPositionManager.BracketOrders
-Set mPositionManagerDummy = mTicker.PositionManagerSimulated
+Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
+
+Set mOrderContextBuy = mPositionManager.OrderContexts.Add("BUY")
+Set mOrderContextSell = mPositionManager.OrderContexts.Add("SELL")
+
+Set mOrderContextBuySimulated = mPositionManagerSimulated.OrderContexts.Add("BUY")
+Set mOrderContextSellSimulated = mPositionManagerSimulated.OrderContexts.Add("SELL")
 
 Exit Sub
 
@@ -374,10 +454,22 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LogTradeReason(ByVal pReason As String, Optional ByVal pLogLevel As LogLevels = LogLevels.LogLevelNormal)
-mTradeReasonLogger.Log pLogLevel, FormatTimestamp(Timestamp, TimestampDateAndTimeISO8601) & "  " & pReason
+If pReason = "" Then Exit Sub
+
+Dim lTimepart As String
+lTimepart = FormatTimestamp(Timestamp, TimestampDateAndTimeISO8601) & "  "
+
+If InStr(1, pReason, vbCrLf) = 0 Then
+    mTradeReasonLogger.Log pLogLevel, lTimepart & pReason
+Else
+    Dim lSpacer As String
+    lSpacer = Space(Len(lTimepart))
+    mTradeReasonLogger.Log pLogLevel, lTimepart & Replace$(pReason, vbCrLf, vbCrLf & lSpacer)
+End If
+
 End Sub
 
-Public Sub StartTickData(ByVal pStrategy As IPositionMgmtStrategy)
+Public Sub StartTickData(ByVal pStrategy As IStopStrategy)
 Const ProcName As String = "StartTickData"
 On Error GoTo Err
 
@@ -389,7 +481,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub StopTickData(ByVal pStrategy As IPositionMgmtStrategy)
+Public Sub StopTickData(ByVal pStrategy As IStopStrategy)
 Const ProcName As String = "StopTickData"
 On Error GoTo Err
 

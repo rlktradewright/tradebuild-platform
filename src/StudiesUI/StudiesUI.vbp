@@ -27,6 +27,7 @@ Name="StudiesUI27"
 HelpContextID="0"
 Description="TradeWright Studies UI Controls v2.7"
 CompatibleMode=2
+VersionCompatible32="1"
 CompatibleEXE32="..\..\Bin\TradeWright.TradeBuild.Platform\StudiesUI27.ocx"
 MajorVer=2
 MinorVer=7

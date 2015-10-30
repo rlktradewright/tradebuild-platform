@@ -861,8 +861,8 @@ Public Property Let Action(ByVal Value As OrderActions)
 Const ProcName As String = "Action"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttAction
 If Value = mSummary.Action Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttAction
 setDirty
 mSummary.Action = Value
 
@@ -880,8 +880,8 @@ Public Property Let AllOrNone(ByVal Value As Boolean)
 Const ProcName As String = "AllOrNone"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttAllOrNone
 If Value = mSummary.AllOrNone Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttAllOrNone
 setDirty
 mSummary.AllOrNone = Value
 
@@ -907,8 +907,8 @@ Public Property Let BlockOrder(ByVal Value As Boolean)
 Const ProcName As String = "BlockOrder"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttBlockOrder
 If Value = mSummary.BlockOrder Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttBlockOrder
 setDirty
 mSummary.BlockOrder = Value
 
@@ -938,8 +938,8 @@ Public Property Let DiscretionaryAmount(ByVal Value As Double)
 Const ProcName As String = "DiscretionaryAmount"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttDiscretionaryAmount
 If Value = mSummary.DiscretionaryAmount Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttDiscretionaryAmount
 setDirty
 mSummary.DiscretionaryAmount = Value
 
@@ -957,8 +957,8 @@ Public Property Let DisplaySize(ByVal Value As Long)
 Const ProcName As String = "DisplaySize"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttDisplaySize
 If Value = mSummary.DisplaySize Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttDisplaySize
 setDirty
 mSummary.DisplaySize = Value
 
@@ -992,8 +992,8 @@ Public Property Let ETradeOnly(ByVal Value As Boolean)
 Const ProcName As String = "ETradeOnly"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttETradeOnly
 If Value = mSummary.ETradeOnly Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttETradeOnly
 setDirty
 mSummary.ETradeOnly = Value
 
@@ -1019,8 +1019,8 @@ Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
 Const ProcName As String = "FirmQuoteOnly"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttFirmQuoteOnly
 If Value = mSummary.FirmQuoteOnly Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttFirmQuoteOnly
 setDirty
 mSummary.FirmQuoteOnly = Value
 
@@ -1038,8 +1038,8 @@ Public Property Let GoodAfterTime(ByVal Value As Date)
 Const ProcName As String = "GoodAfterTime"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttGoodAfterTime
 If Value = mSummary.GoodAfterTime Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttGoodAfterTime
 setDirty
 mSummary.GoodAfterTime = Value
 
@@ -1057,8 +1057,8 @@ Public Property Let GoodAfterTimeTZ(ByVal Value As String)
 Const ProcName As String = "GoodAfterTimeTZ"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttGoodAfterTimeTZ
 If Value = mSummary.GoodAfterTimeTZ Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttGoodAfterTimeTZ
 setDirty
 mSummary.GoodAfterTimeTZ = Value
 
@@ -1076,8 +1076,8 @@ Public Property Let GoodTillDate(ByVal Value As Date)
 Const ProcName As String = "GoodTillDate"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttGoodTillDate
 If Value = mSummary.GoodTillDate Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttGoodTillDate
 setDirty
 mSummary.GoodTillDate = Value
 
@@ -1095,8 +1095,8 @@ Public Property Let GoodTillDateTZ(ByVal Value As String)
 Const ProcName As String = "GoodTillDateTZ"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttGoodTillDateTZ
 If Value = mSummary.GoodTillDateTZ Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttGoodTillDateTZ
 setDirty
 mSummary.GoodTillDateTZ = Value
 
@@ -1118,8 +1118,8 @@ Public Property Let Hidden(ByVal Value As Boolean)
 Const ProcName As String = "Hidden"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttHidden
 If Value = mSummary.Hidden Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttHidden
 setDirty
 mSummary.Hidden = Value
 
@@ -1145,8 +1145,8 @@ Public Property Let IgnoreRegularTradingHours(ByVal Value As Boolean)
 Const ProcName As String = "IgnoreRegularTradingHours"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttIgnoreRTH
 If Value = mSummary.IgnoreRegularTradingHours Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttIgnoreRTH
 setDirty
 mSummary.IgnoreRegularTradingHours = Value
 
@@ -1191,8 +1191,8 @@ Public Property Let LimitPrice(ByVal Value As Double)
 Const ProcName As String = "LimitPrice"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttLimitPrice
 If Value = mSummary.LimitPrice Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttLimitPrice
 setDirty
 mSummary.LimitPrice = Value
 
@@ -1210,8 +1210,8 @@ Public Property Let MinimumQuantity(ByVal Value As Long)
 Const ProcName As String = "MinimumQuantity"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttMinimumQuantity
 If Value = mSummary.MinimumQuantity Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttMinimumQuantity
 setDirty
 mSummary.MinimumQuantity = Value
 
@@ -1229,8 +1229,8 @@ Public Property Let NbboPriceCap(ByVal Value As Double)
 Const ProcName As String = "NbboPriceCap"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttNBBOPriceCap
 If Value = mSummary.NbboPriceCap Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttNBBOPriceCap
 setDirty
 mSummary.NbboPriceCap = Value
 
@@ -1264,11 +1264,11 @@ Public Property Let OrderType(ByVal Value As OrderTypes)
 Const ProcName As String = "OrderType"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttOrderType
 If Not mOrderContext Is Nothing Then
     If Not mOrderContext.IsOrderTypeSupported(Value) Then attributeValueNotSupported OrderAttributes.OrderAttOrderType, Value
 End If
 If Value = mSummary.OrderType Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttOrderType
 setDirty
 mSummary.OrderType = Value
 
@@ -1286,8 +1286,8 @@ Public Property Let Origin(ByVal Value As OrderOrigins)
 Const ProcName As String = "Origin"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttOrigin
 If Value = mSummary.Origin Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttOrigin
 setDirty
 mSummary.Origin = Value
 
@@ -1305,8 +1305,8 @@ Public Property Let OriginatorRef(ByVal Value As String)
 Const ProcName As String = "OriginatorRef"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttOriginatorRef
 If Value = mSummary.OriginatorRef Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttOriginatorRef
 setDirty
 mSummary.OriginatorRef = Value
 
@@ -1324,8 +1324,8 @@ Public Property Let OverrideConstraints(ByVal Value As Boolean)
 Const ProcName As String = "OverrideConstraints"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttOverrideConstraints
 If Value = mSummary.OverrideConstraints Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttOverrideConstraints
 setDirty
 mSummary.OverrideConstraints = Value
 
@@ -1343,8 +1343,8 @@ Public Property Let PercentOffset(ByVal Value As Double)
 Const ProcName As String = "PercentOffset"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttPercentOffset
 If Value = mSummary.PercentOffset Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttPercentOffset
 setDirty
 mSummary.PercentOffset = Value
 
@@ -1371,8 +1371,8 @@ Public Property Let Quantity(ByVal Value As Long)
 Const ProcName As String = "Quantity"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttQuantity
 If Value = mSummary.Quantity Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttQuantity
 mSummary.Quantity = Value
 setDirty
 mSummary.QuantityRemaining = mSummary.Quantity - mSummary.QuantityFilled
@@ -1407,8 +1407,8 @@ Public Property Let SettlingFirm(ByVal Value As String)
 Const ProcName As String = "SettlingFirm"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttSettlingFirm
 If Value = mSummary.SettlingFirm Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttSettlingFirm
 setDirty
 mSummary.SettlingFirm = Value
 
@@ -1451,11 +1451,11 @@ Public Property Let StopTriggerMethod(ByVal Value As OrderStopTriggerMethods)
 Const ProcName As String = "StopTriggerMethod"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttStopTriggerMethod
 If Not mOrderContext Is Nothing Then
     If Not mOrderContext.IsStopTriggerMethodSupported(Value) Then attributeValueNotSupported OrderAttributes.OrderAttStopTriggerMethod, Value
 End If
 If Value = mSummary.StopTriggerMethod Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttStopTriggerMethod
 setDirty
 mSummary.StopTriggerMethod = Value
 
@@ -1473,8 +1473,8 @@ Public Property Let SweepToFill(ByVal Value As Boolean)
 Const ProcName As String = "SweepToFill"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttSweepToFill
 If Value = mSummary.SweepToFill Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttSweepToFill
 setDirty
 mSummary.SweepToFill = Value
 
@@ -1494,11 +1494,11 @@ On Error GoTo Err
 
 AssertArgument gIsValidTIF(Value), "Value must be a member of the OrderTifs enum"
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttTimeInForce
 If Not mOrderContext Is Nothing Then
     If Not mOrderContext.IsOrderTifSupported(Value) Then attributeValueNotSupported OrderAttributes.OrderAttTimeInForce, Value
 End If
 If Value = mSummary.TimeInForce Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttTimeInForce
 setDirty
 mSummary.TimeInForce = Value
 
@@ -1516,8 +1516,8 @@ Public Property Let TriggerPrice(ByVal Value As Double)
 Const ProcName As String = "TriggerPrice"
 On Error GoTo Err
 
-checkAttributeModificationPermitted OrderAttributes.OrderAttTriggerPrice
 If Value = mSummary.TriggerPrice Then Exit Property
+checkAttributeModificationPermitted OrderAttributes.OrderAttTriggerPrice
 setDirty
 mSummary.TriggerPrice = Value
 

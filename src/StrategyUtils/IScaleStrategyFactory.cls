@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IPositionMgmtStrategy"
+Attribute VB_Name = "IScaleStrategyFactory"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IPositionMgmtStrategy"
+Private Const ModuleName                            As String = "IScaleStrategyFactory"
 
 '@================================================================================
 ' Member variables
@@ -60,25 +60,24 @@ Private Const ModuleName                            As String = "IPositionMgmtSt
 ' Properties
 '@================================================================================
 
-Public Property Get Name() As String
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub Start( _
-                ByVal pContext As TradingContext, _
-                ByVal pBracketOrder As IBracketOrder)
+Public Function CreateStrategy( _
+                ByVal pTradingContext As TradingContext) As IScaleStrategy
+End Function
+
+Public Sub DefineDefaultParameters()
 End Sub
 
-Public Sub NotifyTick(ByVal pType As TickTypes)
+Public Sub Initialise( _
+                ByVal pInitialisationContext As InitialisationContext)
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
 
 
 

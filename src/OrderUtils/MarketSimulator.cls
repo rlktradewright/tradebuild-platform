@@ -275,19 +275,20 @@ End Select
 
 Dim lSimulatorOrder As SimulatorOrder
 
-If mAllOrders.Contains(pOrder.Id) And pOrder.BrokerId = "" Then
+If Not mAllOrders.Contains(pOrder.Id) Then
+    ' this is a new order
+    Set lSimulatorOrder = createSimulatorOrder(pOrder, pParentId, pOcaGroup, pTransmit, pListener)
+ElseIf pOrder.BrokerId = "" Then
     ' the order is being re-placed (typically re-placing a stoploss or target order
     ' after it was cancelled while trying to cancel a bracket order, but the entry
     ' order was subsequently filled)
     mAllOrders.Remove pOrder.Id
     Set lSimulatorOrder = createSimulatorOrder(pOrder, pParentId, pOcaGroup, pTransmit, pListener)
-ElseIf mAllOrders.Contains(pOrder.Id) Then
-    Set lSimulatorOrder = mAllOrders(pOrder.Id)
+Else
     ' the order is being updated
+    Set lSimulatorOrder = mAllOrders(pOrder.Id)
     gSyncToOrder lSimulatorOrder.Order, pOrder
     lSimulatorOrder.Transmit = pTransmit
-Else
-    Set lSimulatorOrder = createSimulatorOrder(pOrder, pParentId, pOcaGroup, pTransmit, pListener)
 End If
 
 queueOrder lSimulatorOrder
@@ -592,6 +593,9 @@ Private Sub processAsk(ByVal Timestamp As Date, _
 Const ProcName As String = "processAsk"
 On Error GoTo Err
 
+' filter out occasional zeros in tick data
+If Ask = 0# Then Exit Sub
+
 mAsk = Ask
 
 If mActiveOrders.Count = 0 Then Exit Sub
@@ -637,6 +641,9 @@ Private Sub processBid(ByVal Timestamp As Date, _
                 ByVal Bid As Double)
 Const ProcName As String = "processBid"
 On Error GoTo Err
+
+' filter out occasional zeros in tick data
+If Bid = 0# Then Exit Sub
 
 mBid = Bid
 
@@ -684,6 +691,9 @@ Private Sub processTrade(ByVal pTimestamp As Date, _
 Const ProcName As String = "processTrade"
 On Error GoTo Err
 
+' filter out occasional zeros in tick data
+If pTrade = 0# Then Exit Sub
+
 If mActiveOrders.Count = 0 Then Exit Sub
 
 mEnumerationInProgess = True
@@ -706,14 +716,19 @@ Do While en.MoveNext
         lOrder.ParentId = "" _
     Then
         Select Case lOrder.Order.OrderType
-            Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
-                If lOrder.Order.Action = OrderActions.OrderActionBuy And _
-                    pTrade >= lOrder.Order.TriggerPrice Then
-                    setSubmitOrder lOrder
-                ElseIf lOrder.Order.Action = OrderActions.OrderActionSell And _
-                    pTrade <= lOrder.Order.TriggerPrice Then
-                    setSubmitOrder lOrder
+        Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
+            If (lOrder.Order.Action = OrderActions.OrderActionBuy And _
+                    pTrade >= lOrder.Order.TriggerPrice) Or _
+                (lOrder.Order.Action = OrderActions.OrderActionSell And _
+                pTrade <= lOrder.Order.TriggerPrice) Then
+                If mSimulateExchangeDelays Then
+                    setOrderStatus lOrder, OrderStatuses.OrderStatusSubmitted
+                    DeferAction Me, lOrder, delay, ExpiryTimeUnits.ExpiryTimeUnitMilliseconds
+                Else
+                    lOrder.AtExchange = True
+                    setOrderStatus lOrder, OrderStatuses.OrderStatusSubmitted
                 End If
+            End If
         End Select
     ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusCancelling Then
         If lOrder.AtExchange Then
@@ -971,16 +986,6 @@ Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
         setOrderStatus pOrder, OrderStatuses.OrderStatusPendingSubmit
     Case OrderStatuses.OrderStatusPendingSubmit
         setOrderStatus pOrder, OrderStatuses.OrderStatusPreSubmitted
-    Case OrderStatuses.OrderStatusPreSubmitted
-        ' this case occurs when the condition for the order to be triggered
-        ' has been reached
-        If mSimulateExchangeDelays Then
-            setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
-            DeferAction Me, pOrder, delay, ExpiryTimeUnits.ExpiryTimeUnitMilliseconds
-        Else
-            pOrder.AtExchange = True
-            setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
-        End If
     Case Else
         AssertArgument True, "Order type " & pOrder.Order.OrderType & " invalid for submission"
     End Select

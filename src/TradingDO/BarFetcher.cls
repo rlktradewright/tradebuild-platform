@@ -409,11 +409,13 @@ End Property
 '@================================================================================
 
 Friend Function FetchBars( _
-                ByVal Specifier As BarDataSpecifier) As Bars
+                ByVal Specifier As BarDataSpecifier, _
+                ByVal pListener As IBarFetchListener) As Bars
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
 mAsynchronous = False
+Set mBarListener = pListener
 
 initialiseFetch Specifier
 
@@ -1024,7 +1026,7 @@ Dim lValue As SValue
 lValue.timestamp = pTimestamp
 
 lValue.value = pValue
-mTargetBarsBuilder.notifyValue lValue
+mTargetBarsBuilder.NotifyValue lValue
 pNumberOfPricesNotified = pNumberOfPricesNotified + 1
 
 mTargetBarsBuilder.IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, pTickVolumePerNotify, pTickVolume)
@@ -1160,17 +1162,17 @@ Do While tdd.GetNextTick(tick)
     Case TickTypeBid
         If mSpecifier.barType = BarTypeBid Then
             val.value = tick.price
-            mInterimBarsBuilder.notifyValue val
+            mInterimBarsBuilder.NotifyValue val
         End If
     Case TickTypeAsk
         If mSpecifier.barType = BarTypeAsk Then
             val.value = tick.price
-            mInterimBarsBuilder.notifyValue val
+            mInterimBarsBuilder.NotifyValue val
         End If
     Case TickTypeTrade
         If mSpecifier.barType = BarTypeTrade Then
             val.value = tick.price
-            mInterimBarsBuilder.notifyValue val
+            mInterimBarsBuilder.NotifyValue val
         End If
     Case TickTypeVolume
         If mSpecifier.barType = BarTypeTrade Then
@@ -1222,7 +1224,8 @@ If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
 gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
 mTaskContext.Finish mTargetBarsBuilder.Bars, False
-'fireNotifyBar mCurrentBar
+
+fireNotifyBar mCurrentBar
 fireFetchCompleted
 
 Exit Sub

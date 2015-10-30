@@ -55,6 +55,9 @@ Private mSession                                    As Session
 Private mClock                                      As Clock
 Private mInitialTimestamp                           As Date
 
+Private mPositionManager                            As PositionManager
+Private mPositionManagerSimulated                   As PositionManager
+
 Private mStudyManager                               As StudyManager
 Private mTimeframes                                 As Timeframes
 
@@ -66,7 +69,7 @@ Private mStrategyRunner                             As StrategyRunner
 Private mBarsOutstanding                            As Long
 Private mStudiesOutstanding                         As Long
 
-Private mStudiesMap                                 As New Collection
+Private mStudiesMap                                 As New EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
@@ -180,6 +183,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get PositionManager() As PositionManager
+Set PositionManager = mPositionManager
+End Property
+
+Public Property Get PositionManagerSimulated() As PositionManager
+Set PositionManagerSimulated = mPositionManagerSimulated
+End Property
+
 Public Property Get Session() As Session
 Const ProcName As String = "Session"
 On Error GoTo Err
@@ -201,13 +212,13 @@ End Property
 ' <code>Study</code> object.
 '
 ' @remarks
-'   This method can only be called during the <code>Strategy</code> object&#39;s
+'   This method can only be called during the <code>Strategy</code> object's
 '   <code>Initialise</code> method. Calling it elsewhere results in an
 '   <code>ErrIllegalStateException</code> error being raised. If a <code>Strategy</code>
 '   object needs to create studies at other times, it must use the
 '   <code>Ticker.StudyManager.addStudy</code> method.
 '
-'   Note that the <code>Strategy</code> object&#39;s <code>Start</code> method
+'   Note that the <code>Strategy</code> object's <code>Start</code> method
 '   is not called until all studies created using this method have been fully initialised,
 '   and all timeframes created using the <code>addTimeframe</code> method have had their
 '   historical data fully loaded, and .
@@ -252,7 +263,10 @@ If Not lTC Is Nothing Then
     mStudiesOutstanding = mStudiesOutstanding + 1
 End If
 
-If pShowInChart Then addStudyToMap getStrategyHost.AddStudy(pName, mStudiesMap.Item(pUnderlyingStudy.InstancePath), pInputValueNames, pParams, pNumberOfValuesToCache, pLibraryName)
+If Not pShowInChart Then
+ElseIf Not studyAlreadyMapped(AddStudy) Then
+    addStudyToMap getStrategyHost.AddStudy(pName, mStudiesMap.Item(pUnderlyingStudy.InstancePath), pInputValueNames, pParams, pNumberOfValuesToCache, pLibraryName)
+End If
 
 Exit Function
 
@@ -264,13 +278,13 @@ End Function
 ' its name.
 '
 ' @remarks
-'   This method can only be called during the <code>IStrategy</code> object&#39;s
+'   This method can only be called during the <code>IStrategy</code> object's
 '   <code>Initialise</code> method. Calling it elsewhere results in an
 '   <code>ErrIllegalStateException</code> error being raised. If a <code>Strategy</code>
 '   object needs to create timeframes at other times, it must use the <code>Ticker.Timeframes.Add</code>
 '   method.
 '
-'   Note that the <code>Strategy</code> object&#39;s <code>Start</code> method
+'   Note that the <code>Strategy</code> object's <code>Start</code> method
 '   is not called until all timeframes created using this method have had their
 '   historical data fully loaded, and all studies created using the <code>addStudy</code>
 '   method have been fully initialised.
@@ -298,7 +312,7 @@ On Error GoTo Err
 
 Dim lTimeframe As Timeframe
 If mTicker.IsTickReplay Then
-    Set lTimeframe = mTimeframes.AddHistorical(pTimePeriod, "", pNumberOfBarsToFetch, , mInitialTimestamp, , pIncludeBarsOutsideSession)
+    Set lTimeframe = mTimeframes.AddHistorical(pTimePeriod, "", pNumberOfBarsToFetch, , BarStartTime(mInitialTimestamp, pTimePeriod, mContract.SessionStartTime), , pIncludeBarsOutsideSession)
 Else
     Set lTimeframe = mTimeframes.Add(pTimePeriod, "", pNumberOfBarsToFetch, , , pIncludeBarsOutsideSession)
 End If
@@ -310,7 +324,10 @@ If Not sTimeframes.Contains(lTimeframe) Then
     mBarsOutstanding = mBarsOutstanding + 1
 End If
 
-If pShowInChart Then addStudyToMap getStrategyHost.AddTimeframe(pTimePeriod, pNumberOfBarsToFetch, pIncludeBarsOutsideSession).BarStudy
+If Not pShowInChart Then
+ElseIf Not studyAlreadyMapped(lTimeframe.BarStudy) Then
+    addStudyToMap getStrategyHost.AddTimeframe(pTimePeriod, pNumberOfBarsToFetch, pIncludeBarsOutsideSession).BarStudy
+End If
 
 Set AddTimeframe = lTimeframe
 
@@ -333,6 +350,8 @@ Set mStrategyRunner = pStrategyRunner
 Set mTicker = pTicker
 Set mTimeframes = mTicker.Timeframes
 Set mStudyManager = mTicker.StudyBase.StudyManager
+Set mPositionManager = mTicker.PositionManager
+Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
 
 mFutureWaiter.Add mTicker.ContractFuture
 mFutureWaiter.Add mTicker.SessionFuture
@@ -364,11 +383,31 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub checkReady()
+Const ProcName As String = "checkReady"
+On Error GoTo Err
+
 If Not mSession Is Nothing And Not mContract Is Nothing And Not mClock Is Nothing Then mStrategyRunner.InitialisationContextIsReady Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getStrategyHost() As IStrategyHost
 Set getStrategyHost = mStrategyHostRef.Target
+End Function
+
+Private Function studyAlreadyMapped(ByVal pStudy As IStudy) As Boolean
+Const ProcName As String = "studyAlreadyMapped"
+On Error GoTo Err
+
+studyAlreadyMapped = mStudiesMap.Contains(pStudy.InstancePath)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

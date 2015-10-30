@@ -6,16 +6,15 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "HostController"
+Attribute VB_Name = "IStopStrategyFactory"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
-' This class provides the means for a <code>Strategy</code> object to interact with
-' the Strategy Host program running it.
+' Description here
 '
 '@/
 
@@ -39,18 +38,11 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "HostController"
+Private Const ModuleName                            As String = "IStopStrategyFactory"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
-
-Private mTicker                                     As Ticker
-
-Private mStrategy                                   As IStrategy
-Private mStopStrategyFactory                        As IPosnMgmtStrtgyFactory
-
-Private mParams                                     As Parameters
 
 '@================================================================================
 ' Class Event Handlers
@@ -69,6 +61,24 @@ Private mParams                                     As Parameters
 '@================================================================================
 
 '@================================================================================
+' Methods
+'@================================================================================
+
+Public Function CreateStrategy( _
+                ByVal pTradingContext As TradingContext) As IStopStrategy
+End Function
+
+Public Sub DefineDefaultParameters()
+End Sub
+
+Public Sub Initialise( _
+                ByVal pInitialisationContext As InitialisationContext)
+End Sub
+
+'@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
+
 

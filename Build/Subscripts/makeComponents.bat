@@ -54,8 +54,6 @@ call makedll.bat OrderUtils OrderUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat TickerUtils TickerUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
-call makedll.bat StrategyUtils StrategyUtils /T:DLL /B:%BINARY_COMPAT%
-if errorlevel 1 pause
 call makedll.bat WorkspaceUtils WorkspaceUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
@@ -76,6 +74,8 @@ if errorlevel 1 pause
 call makedll.bat CommonStudiesLib CommonStudiesLib /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
+call makedll.bat StrategyUtils StrategyUtils /T:DLL /B:%BINARY_COMPAT%
+if errorlevel 1 pause
 call makedll.bat Strategies Strategies /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 

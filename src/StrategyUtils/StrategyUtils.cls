@@ -30,6 +30,52 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum EntryOrderTypes
+    EntryOrderTypeNone = 0
+    EntryOrderTypeMarket = 1
+    EntryOrderTypeMarketOnOpen = &H100000
+    EntryOrderTypeMarketOnClose = 2
+    EntryOrderTypeMarketIfTouched = &H20000
+    EntryOrderTypeMarketToLimit = &H400&
+    EntryOrderTypeBid = &H1000000
+    EntryOrderTypeAsk = &H2000000
+    EntryOrderTypeLast = &H4000000
+    EntryOrderTypeLimit = 4
+    EntryOrderTypeLimitOnOpen = &H200000
+    EntryOrderTypeLimitOnClose = 8
+    EntryOrderTypeLimitIfTouched = &H10000
+    EntryOrderTypeStop = &H20&
+    EntryOrderTypeStopLimit = &H40&
+End Enum
+
+Public Enum OrderTIFs
+    OrderTIFNone = 0
+    OrderTIFDay = 1
+    OrderTIFGoodTillCancelled = 2
+    OrderTIFImmediateOrCancel = 4
+End Enum
+
+Public Enum StopLossOrderTypes
+    StopLossOrderTypeNone = 0
+    StopLossOrderTypeStop = &H20&
+    StopLossOrderTypeStopLimit = &H40&
+    StopLossOrderTypeBid = &H1000000
+    StopLossOrderTypeAsk = &H2000000
+    StopLossOrderTypeLast = &H4000000
+    StopLossOrderTypeAuto = &H8000000
+End Enum
+
+Public Enum TargetOrderTypes
+    TargetOrderTypeNone = 0
+    TargetOrderTypeLimit = 4
+    TargetOrderTypeLimitIfTouched = &H10000
+    TargetOrderTypeMarketIfTouched = &H20000
+    TargetOrderTypeBid = &H1000000
+    TargetOrderTypeAsk = &H2000000
+    TargetOrderTypeLast = &H4000000
+    TargetOrderTypeAuto = &H8000000
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -85,8 +131,3 @@ End Function
 '@================================================================================
 
 
-
-
-Private Sub Class_Initialize()
-
-End Sub

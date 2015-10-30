@@ -680,8 +680,8 @@ Set lSummary = pOpi.Data
 
 If Not mOrderIdToBracketOrderRecoverer.Contains(lSummary.Id) Then
     ' this can happen because order cancellations for stop/target orders
-    ' may be received after the execution for the target/stop order
-    ' have been received. If the target/stop order made the position
+    ' may be received after the execution for the target/stop-loss order
+    ' have been received. If the target/stop-loss order made the position
     ' flat, then a 'DELETE' item would have been recorded, but only those
     ' items recorded before the delete are actually deleted.
     processOrder = False

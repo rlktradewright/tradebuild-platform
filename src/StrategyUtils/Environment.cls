@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IPosnMgmtStrtgyFactory"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Name = "Environment"
+Attribute VB_GlobalNameSpace = True
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IPosnMgmtStrtgyFactory"
+Private Const ModuleName                            As String = "Environment"
 
 '@================================================================================
 ' Member variables
@@ -60,27 +60,97 @@ Private Const ModuleName                            As String = "IPosnMgmtStrtgy
 ' Properties
 '@================================================================================
 
-Public Property Get DefaultParameters() As Parameters
+Public Property Get ContractIdentifier() As String
+Const ProcName As String = "ContractIdentifier"
+On Error GoTo Err
+
+ContractIdentifier = getContract.Specifier.ToString
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get MinutesToEndOfTradingSession() As Double
+MinutesToEndOfTradingSession = (gTradingContext.Session.CurrentSessionEndTime - Timestamp) * 1440#
+End Property
+
+Public Property Get TickSize() As Double
+TickSize = getContract.TickSize
+End Property
+
+Public Property Get TickValue() As Double
+TickValue = getContract.TickValue
+End Property
+
+Public Property Get Timestamp() As Date
+Timestamp = gTradingContext.Timestamp
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function CreateStrategy( _
-                ByVal pTradingContext As TradingContext) As IPositionMgmtStrategy
+Public Sub DefineParameter( _
+                ByVal Name As String, _
+                Optional ByVal DefaultValue As String)
+Const ProcName As String = "DefineParameter"
+On Error GoTo Err
+
+Assert Not gStrategyRunner.DefaultParameters Is Nothing, "Can't define parameters at this point"
+AssertArgument Name <> "", "Parameter name must be supplied"
+
+gStrategyRunner.DefaultParameters.SetParameterValue Name, DefaultValue
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function GetParameterValue( _
+                ByVal Name As String, _
+                Optional ByVal DefaultValue As String) As String
+Const ProcName As String = "GetParameterValue"
+On Error GoTo Err
+
+Assert Not gInitialisationContext Is Nothing Or gTradingContext Is Nothing, "Can't get parameters at this point"
+AssertArgument Name <> "", "Parameter name must be supplied"
+
+GetParameterValue = gStrategyRunner.Parameters.GetParameterValue(Name, DefaultValue)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Sub LogTradeMessage(ByVal Message As String)
+Const ProcName As String = "LogTradeMessage"
+On Error GoTo Err
 
-Public Sub Initialise( _
-                ByVal pInitialisationContext As InitialisationContext, _
-                ByVal pParams As Parameters)
+gTradingContext.LogTradeReason Message
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-
+Private Function getContract() As icontract
+If Not gInitialisationContext Is Nothing Then
+    Set getContract = gInitialisationContext.Contract
+ElseIf Not gTradingContext Is Nothing Then
+    Set getContract = gTradingContext.Contract
+Else
+    Assert False, "No contract identifier available at this point"
+End If
+End Function
 
 

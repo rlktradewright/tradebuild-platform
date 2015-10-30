@@ -256,14 +256,14 @@ Const ProcName As String = "IOrderSubmitter_CancelStopOrder"
 On Error GoTo Err
 
 Set Stoporder = pBracketOrder.StopLossOrder
-Assert Not Stoporder Is Nothing, "bracket order has no stop order"
+Assert Not Stoporder Is Nothing, "bracket order has no stop-loss order"
 
 Select Case Stoporder.Status
 Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
-    Assert True, "Stop order state invalid for cancellation"
+    Assert True, "stop-loss order state invalid for cancellation"
 Case Else
     mSimulator.CancelOrder Stoporder.Id
 End Select

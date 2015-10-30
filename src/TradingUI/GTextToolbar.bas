@@ -22,15 +22,6 @@ Option Explicit
 ' Types
 '@================================================================================
 
-Public Type TWButtonInfo
-    caption         As String
-    Key             As String
-    Style           As ButtonStyleConstants
-    value           As ValueConstants
-    ToolTipText     As String
-    Enabled         As Boolean
-End Type
-
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -63,22 +54,23 @@ Private Const ModuleName                            As String = "GTextToolbar"
 
 Public Sub gAddButtonImageToImageList( _
                 ByVal pImageList As ImageList, _
-                ByRef pButton As TWButtonInfo, _
+                ByRef pButton As TWChartButtonInfo, _
                 ByVal pPicture As PictureBox)
 Const ProcName As String = "gAddButtonImageToImageList"
 On Error GoTo Err
 
-pImageList.ListImages.Add , IIf(pButton.Style <> tbrSeparator, pButton.Key, ""), getButtonImage(pButton.caption, pPicture)
+pImageList.ListImages.Add , IIf(pButton.Style <> tbrSeparator, pButton.Key, ""), getButtonImage(pButton.Caption, pPicture)
 
 Exit Sub
 
 Err:
+If Err.Number = 35602 Then Resume Next  'Key is not unique in collection
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function gAddButtonToToolbar( _
                 ByVal pToolbar As Toolbar, _
-                ByRef pButton As TWButtonInfo) As Button
+                ByRef pButton As TWChartButtonInfo) As Button
 Const ProcName As String = "gAddButtonToToolbar"
 On Error GoTo Err
 
@@ -87,7 +79,8 @@ If pButton.Style <> tbrSeparator Then
     With pToolbar.Buttons.Item(pButton.Key)
         .Enabled = pButton.Enabled
         .ToolTipText = pButton.ToolTipText
-        .value = pButton.value
+        .Value = pButton.Value
+        .Tag = pButton
     End With
 Else
     Set gAddButtonToToolbar = pToolbar.Buttons.Add(, , , pButton.Style)
@@ -123,22 +116,23 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gCreateButtonInfo( _
-                ByRef pInfo As TWButtonInfo, _
+                ByRef pInfo As TWChartButtonInfo, _
                 ByVal pCaption As String, _
-                ByVal pKey As String, _
                 ByVal pStyle As ButtonStyleConstants, _
                 ByVal pValue As ValueConstants, _
                 ByVal pTooltipText As String, _
-                ByVal pEnabled As Boolean)
+                ByVal pEnabled As Boolean, _
+                ByVal pChartIndex As Long)
 Const ProcName As String = "gCreateButtonInfo"
 On Error GoTo Err
 
-pInfo.caption = pCaption
+pInfo.Caption = pCaption
 pInfo.Enabled = pEnabled
-pInfo.Key = pKey
+pInfo.Key = GenerateGUIDString
 pInfo.Style = pStyle
 pInfo.ToolTipText = pTooltipText
-pInfo.value = pValue
+pInfo.Value = pValue
+pInfo.ChartIndex = pChartIndex
 
 Exit Sub
 
@@ -146,21 +140,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gSetButtonImageInImageList(ByVal pImageList As ImageList, ByRef pButton As TWButtonInfo, ByVal pPicture As PictureBox)
+Public Sub gSetButtonImageInImageList(ByVal pImageList As ImageList, ByRef pButton As TWChartButtonInfo, ByVal pPicture As PictureBox)
 Const ProcName As String = "gSetButtonImageInImageList"
 On Error GoTo Err
 
 pImageList.ListImages.Remove pButton.Key
-pImageList.ListImages.Add , pButton.Key, getButtonImage(pButton.caption, pPicture)
+gAddButtonImageToImageList pImageList, pButton, pPicture
 
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Resume Next
+If Err.Number = 35601 Then Resume Next  'Element not found
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gSetupToolbar(ByVal pToolbar As Toolbar, ByVal pBackColor As Long, ByVal pForeColor As Long, ByVal pImageList As ImageList, ByRef pButtons() As TWButtonInfo, ByVal pPicture As PictureBox)
+Public Sub gSetupToolbar(ByVal pToolbar As Toolbar, ByVal pBackColor As Long, ByVal pForeColor As Long, ByVal pImageList As ImageList, ByRef pButtons() As TWChartButtonInfo, ByVal pPicture As PictureBox)
 Const ProcName As String = "gSetupToolbar"
 On Error GoTo Err
 
@@ -176,7 +170,7 @@ pImageList.ListImages.Clear
 
 Dim i As Long
 For i = 0 To UBound(pButtons)
-    gAdjustToolbarPictureSize pButtons(i).caption, pPicture
+    gAdjustToolbarPictureSize pButtons(i).Caption, pPicture
 Next
 
 For i = 0 To UBound(pButtons)

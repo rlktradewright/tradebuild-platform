@@ -85,7 +85,7 @@ Private Const ModuleName                As String = "BracketOrder"
 '    BracketOrderStateClosed
 '
 '    ' This state indicates that a cancellation notification for either
-'    ' the stop order or the target order, when both exist, has been received.
+'    ' the stop-loss order or the target order, when both exist, has been received.
 '    ' We don't know whether the order was cancelled because the user/broker
 '    ' cancelled it, or because the other order was filled. So in this
 '    ' state we wait for the other order to be either cancelled or
@@ -892,14 +892,15 @@ Private Sub mCloseoutOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mCloseoutOrder_Fill"
 On Error GoTo Err
 
+gLogOrderMessage "Closeout order fill: (id=" & _
+                    mCloseoutOrder.Id & "): " & _
+                    gOrderActionToString(mCloseoutOrder.Action) & " " & pExec.Quantity & " at " & _
+                    pExec.Price, _
+                mDataSource, mContract, Key, mIsSimulated, Me
+
 fireChange BracketOrderCloseoutOrderChanged
 
 processExecution pExec
-
-logOrderMessage "Closeout order fill: (id=" & _
-                    mCloseoutOrder.Id & "): " & _
-                    gOrderActionToString(mCloseoutOrder.Action) & " " & pExec.Quantity & " at " & _
-                    pExec.Price
 
 RaiseEvent CloseoutOrderPartiallyFilled
 
@@ -926,31 +927,34 @@ Private Sub mCloseoutOrder_StatusChanged()
 Const ProcName As String = "mCloseoutOrder_StatusChanged"
 On Error GoTo Err
 
-fireChange BracketOrderCloseoutOrderChanged
 Select Case mCloseoutOrder.Status
-    Case OrderStatuses.OrderStatusFilled
-        logOrderMessage "Closeout order completed (id=" & _
-                            mCloseoutOrder.Id & "): " & _
-                            gOrderActionToString(mCloseoutOrder.Action) & " " & mCloseoutOrder.QuantityFilled & " at " & _
-                            mCloseoutOrder.AveragePrice
-                            
-        RaiseEvent CloseoutOrderFilled
-
-        checkAllOrdersComplete
-        
-        Assert Size = 0, "Closeout incomplete: Size remaining is " & Size
-        
-    Case OrderStatuses.OrderStatusPendingSubmit
-    Case OrderStatuses.OrderStatusCancelling
-    Case OrderStatuses.OrderStatusPreSubmitted
-    Case OrderStatuses.OrderStatusSubmitted
-    Case OrderStatuses.OrderStatusCancelled
-        logOrderMessage "Closeout order cancelled (id=" & _
-                            mCloseoutOrder.Id & ")"
-    Case OrderStatuses.OrderStatusRejected
-        logOrderMessage "Closeout order rejected (id=" & _
-                            mCloseoutOrder.Id & ")"
+Case OrderStatuses.OrderStatusFilled
+    gLogOrderMessage "Closeout order completed (id=" & _
+                        mCloseoutOrder.Id & "): " & _
+                        gOrderActionToString(mCloseoutOrder.Action) & " " & mCloseoutOrder.QuantityFilled & " at " & _
+                        mCloseoutOrder.AveragePrice, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+Case OrderStatuses.OrderStatusPendingSubmit
+Case OrderStatuses.OrderStatusCancelling
+Case OrderStatuses.OrderStatusPreSubmitted
+Case OrderStatuses.OrderStatusSubmitted
+Case OrderStatuses.OrderStatusCancelled
+    gLogOrderMessage "Closeout order cancelled (id=" & _
+                        mCloseoutOrder.Id & "): ", _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+Case OrderStatuses.OrderStatusRejected
+    gLogOrderMessage "Closeout order rejected (id=" & _
+                        mCloseoutOrder.Id & "): ", _
+                    mDataSource, mContract, Key, mIsSimulated, Me
 End Select
+
+fireChange BracketOrderCloseoutOrderChanged
+
+If mCloseoutOrder.Status = OrderStatuses.OrderStatusFilled Then
+    Assert Size = 0, "Closeout incomplete: Size remaining is " & Size
+    RaiseEvent CloseoutOrderFilled
+    checkAllOrdersComplete
+End If
 
 SaveRecoveryInfo
 Exit Sub
@@ -992,6 +996,12 @@ Private Sub mEntryOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mEntryOrder_Fill"
 On Error GoTo Err
 
+gLogOrderMessage "Entry order fill (id=" & _
+                    mEntryOrder.Id & "): " & _
+                    gOrderActionToString(mEntryOrder.Action) & " " & pExec.Quantity & " at " & _
+                    pExec.Price, _
+                mDataSource, mContract, Key, mIsSimulated, Me
+
 fireChange BracketOrderEntryOrderChanged
 
 processExecution pExec
@@ -1002,11 +1012,6 @@ If Not mCancelTLI Is Nothing Then
 End If
 
 mSummary.CancelPrice = 0
-
-logOrderMessage "Entry order fill (id=" & _
-                    mEntryOrder.Id & "): " & _
-                    gOrderActionToString(mEntryOrder.Action) & " " & pExec.Quantity & " at " & _
-                    pExec.Price
 
 'If Not mStopLossOrder Is Nothing Then
 '    Dim Risk As Currency
@@ -1028,17 +1033,13 @@ logOrderMessage "Entry order fill (id=" & _
 placePeggedOrders
         
 If Not mStopLossOrder Is Nothing Then
-    If mStopLossOrder.Quantity <> Abs(Size) And _
-        Abs(Size) <> 0 _
-    Then
+    If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
         AdjustStop mStopLossOrder.TriggerPrice, Abs(Size)
     End If
 End If
 
 If Not mTargetOrder Is Nothing Then
-    If mTargetOrder.Quantity <> Abs(Size) And _
-        Abs(Size) <> 0 _
-    Then
+    If mTargetOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
         AdjustTarget mTargetOrder.LimitPrice, Abs(Size)
     End If
 End If
@@ -1070,36 +1071,41 @@ Private Sub mEntryOrder_StatusChanged()
 Const ProcName As String = "mEntryOrder_StatusChanged"
 On Error GoTo Err
 
-fireChange BracketOrderEntryOrderChanged
 Select Case mEntryOrder.Status
-    Case OrderStatuses.OrderStatusFilled
-        mSummary.CancelPrice = 0
-        
-        logOrderMessage "Entry order completed (id=" & _
-                            mEntryOrder.Id & "): " & _
-                            gOrderActionToString(mEntryOrder.Action) & " " & mEntryOrder.QuantityFilled & " at " & _
-                            mEntryOrder.AveragePrice
-        
-        RaiseEvent EntryOrderFilled
-        
-        checkAllOrdersComplete
-    
-    Case OrderStatuses.OrderStatusPendingSubmit
-    Case OrderStatuses.OrderStatusCancelling
-    Case OrderStatuses.OrderStatusPreSubmitted
-    Case OrderStatuses.OrderStatusSubmitted
-        
-        If mEntryOrder.QuantityFilled > 0 Then
-            placePeggedOrders
-        End If
-    Case OrderStatuses.OrderStatusCancelled
-        logOrderMessage "Entry order cancelled (id=" & mEntryOrder.Id & ")"
-        handleStimulus OpStimuli.StimEntryOrderCancelled
-        checkAllOrdersComplete
-    Case OrderStatuses.OrderStatusRejected
-        logOrderMessage "Entry order rejected (id=" & mEntryOrder.Id & ")"
-        Cancel
-        checkAllOrdersComplete
+Case OrderStatuses.OrderStatusFilled
+    gLogOrderMessage "Entry order completed (id=" & _
+                        mEntryOrder.Id & "): " & _
+                        gOrderActionToString(mEntryOrder.Action) & " " & mEntryOrder.QuantityFilled & " at " & _
+                        mEntryOrder.AveragePrice, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+Case OrderStatuses.OrderStatusCancelled
+    gLogOrderMessage "Entry order cancelled (id=" & mEntryOrder.Id & "): ", _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+Case OrderStatuses.OrderStatusRejected
+    gLogOrderMessage "Entry order rejected (id=" & mEntryOrder.Id & ")", _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+End Select
+
+fireChange BracketOrderEntryOrderChanged
+
+Select Case mEntryOrder.Status
+Case OrderStatuses.OrderStatusFilled
+    mSummary.CancelPrice = 0
+    RaiseEvent EntryOrderFilled
+    checkAllOrdersComplete
+Case OrderStatuses.OrderStatusPendingSubmit
+Case OrderStatuses.OrderStatusCancelling
+Case OrderStatuses.OrderStatusPreSubmitted
+Case OrderStatuses.OrderStatusSubmitted
+    If mEntryOrder.QuantityFilled > 0 Then
+        placePeggedOrders
+    End If
+Case OrderStatuses.OrderStatusCancelled
+    handleStimulus OpStimuli.StimEntryOrderCancelled
+    checkAllOrdersComplete
+Case OrderStatuses.OrderStatusRejected
+    Cancel
+    checkAllOrdersComplete
 End Select
 
 SaveRecoveryInfo
@@ -1160,19 +1166,18 @@ Private Sub mStopLossOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mStopLossOrder_Fill"
 On Error GoTo Err
 
+gLogOrderMessage "Stop-loss order fill (id=" & _
+                    mStopLossOrder.Id & "): " & _
+                    gOrderActionToString(mStopLossOrder.Action) & " " & pExec.Quantity & " at " & _
+                    pExec.Price, _
+                mDataSource, mContract, Key, mIsSimulated, Me
+
 fireChange BracketOrderStopOrderChanged
 
 processExecution pExec
 
-logOrderMessage "Stop order fill (id=" & _
-                        mStopLossOrder.Id & "): " & _
-                        gOrderActionToString(mStopLossOrder.Action) & " " & pExec.Quantity & " at " & _
-                        pExec.Price
-
 If Not mTargetOrder Is Nothing Then
-    If mTargetOrder.Quantity <> Abs(Size) And _
-        Abs(Size) <> 0 _
-    Then
+    If mTargetOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
         AdjustTarget mTargetOrder.LimitPrice, Abs(Size)
     End If
 End If
@@ -1202,30 +1207,37 @@ Private Sub mStopLossOrder_StatusChanged()
 Const ProcName As String = "mStopLossOrder_StatusChanged"
 On Error GoTo Err
 
-fireChange BracketOrderStopOrderChanged
 Select Case mStopLossOrder.Status
-    Case OrderStatuses.OrderStatusFilled
-        logOrderMessage "Stop order completed (id=" & _
-                            mStopLossOrder.Id & "): " & _
-                            gOrderActionToString(mStopLossOrder.Action) & " " & mStopLossOrder.QuantityFilled & " at " & _
-                            mStopLossOrder.AveragePrice
-        
-        RaiseEvent StopOrderFilled
-        
-        checkAllOrdersComplete
-    
-    Case OrderStatuses.OrderStatusPendingSubmit
-    Case OrderStatuses.OrderStatusCancelling
-    Case OrderStatuses.OrderStatusPreSubmitted
-    Case OrderStatuses.OrderStatusSubmitted
-    Case OrderStatuses.OrderStatusCancelled
-        logOrderMessage "Stop order cancelled (id=" & mStopLossOrder.Id & ")"
-        handleStimulus OpStimuli.StimStopOrderCancelled
-        checkAllOrdersComplete
-    Case OrderStatuses.OrderStatusRejected
-        logOrderMessage "Stop order rejected (id=" & mStopLossOrder.Id & ")"
-        handleStimulus OpStimuli.StimStopOrderCancelled
-        checkAllOrdersComplete
+Case OrderStatuses.OrderStatusFilled
+    gLogOrderMessage "Stop-loss order completed (id=" & _
+                        mStopLossOrder.Id & "): " & _
+                        gOrderActionToString(mStopLossOrder.Action) & " " & mStopLossOrder.QuantityFilled & " at " & _
+                        mStopLossOrder.AveragePrice, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+Case OrderStatuses.OrderStatusCancelled
+    gLogOrderMessage "Stop-loss order cancelled (id=" & mStopLossOrder.Id & ")", _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+Case OrderStatuses.OrderStatusRejected
+    gLogOrderMessage "Stop-loss order rejected (id=" & mStopLossOrder.Id & ")", _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+End Select
+
+fireChange BracketOrderStopOrderChanged
+
+Select Case mStopLossOrder.Status
+Case OrderStatuses.OrderStatusFilled
+    RaiseEvent StopOrderFilled
+    checkAllOrdersComplete
+Case OrderStatuses.OrderStatusPendingSubmit
+Case OrderStatuses.OrderStatusCancelling
+Case OrderStatuses.OrderStatusPreSubmitted
+Case OrderStatuses.OrderStatusSubmitted
+Case OrderStatuses.OrderStatusCancelled
+    handleStimulus OpStimuli.StimStopOrderCancelled
+    checkAllOrdersComplete
+Case OrderStatuses.OrderStatusRejected
+    handleStimulus OpStimuli.StimStopOrderCancelled
+    checkAllOrdersComplete
 End Select
 
 SaveRecoveryInfo
@@ -1268,19 +1280,18 @@ Private Sub mTargetOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mTargetOrder_Fill"
 On Error GoTo Err
 
+gLogOrderMessage "Target order fill (id=" & _
+                    mTargetOrder.Id & "): " & _
+                    gOrderActionToString(mTargetOrder.Action) & " " & pExec.Quantity & " at " & _
+                    pExec.Price, _
+                mDataSource, mContract, Key, mIsSimulated, Me
+
 fireChange BracketOrderTargetOrderChanged
 
 processExecution pExec
 
-logOrderMessage "Target order fill (id=" & _
-                        mTargetOrder.Id & "): " & _
-                        gOrderActionToString(mTargetOrder.Action) & " " & pExec.Quantity & " at " & _
-                        pExec.Price
-
 If Not mStopLossOrder Is Nothing Then
-    If mStopLossOrder.Quantity <> Abs(Size) And _
-        Abs(Size) <> 0 _
-    Then
+    If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
         AdjustStop mStopLossOrder.TriggerPrice, Abs(Size)
     End If
 End If
@@ -1310,30 +1321,36 @@ Private Sub mTargetOrder_StatusChanged()
 Const ProcName As String = "mTargetOrder_StatusChanged"
 On Error GoTo Err
 
-fireChange BracketOrderTargetOrderChanged
 Select Case mTargetOrder.Status
-    Case OrderStatuses.OrderStatusFilled
-        logOrderMessage "Target order completed (id=" & _
-                            mTargetOrder.Id & "): " & _
-                            gOrderActionToString(mTargetOrder.Action) & " " & mTargetOrder.QuantityFilled & " at " & _
-                            mTargetOrder.AveragePrice
-        
-        RaiseEvent TargetOrderFilled
-        
-        checkAllOrdersComplete
-    
-    Case OrderStatuses.OrderStatusCancelling
-    Case OrderStatuses.OrderStatusPendingSubmit
-    Case OrderStatuses.OrderStatusSubmitted
-    Case OrderStatuses.OrderStatusCancelled
-        logOrderMessage "Target order cancelled (id=" & mTargetOrder.Id & ")"
-        handleStimulus OpStimuli.StimTargetOrderCancelled
-        checkAllOrdersComplete
-    Case OrderStatuses.OrderStatusRejected
-        logOrderMessage "Target order rejected (id=" & mTargetOrder.Id & ")"
-        handleStimulus OpStimuli.StimTargetOrderCancelled
-        checkAllOrdersComplete
-    
+Case OrderStatuses.OrderStatusFilled
+    gLogOrderMessage "Target order completed (id=" & _
+                        mTargetOrder.Id & "): " & _
+                        gOrderActionToString(mTargetOrder.Action) & " " & mTargetOrder.QuantityFilled & " at " & _
+                        mTargetOrder.AveragePrice, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+Case OrderStatuses.OrderStatusCancelled
+    gLogOrderMessage "Target order cancelled (id=" & mTargetOrder.Id & ")", _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+Case OrderStatuses.OrderStatusRejected
+    gLogOrderMessage "Target order rejected (id=" & mTargetOrder.Id & ")", _
+                    mDataSource, mContract, Key, mIsSimulated, Me
+End Select
+
+fireChange BracketOrderTargetOrderChanged
+
+Select Case mTargetOrder.Status
+Case OrderStatuses.OrderStatusFilled
+    RaiseEvent TargetOrderFilled
+    checkAllOrdersComplete
+Case OrderStatuses.OrderStatusCancelling
+Case OrderStatuses.OrderStatusPendingSubmit
+Case OrderStatuses.OrderStatusSubmitted
+Case OrderStatuses.OrderStatusCancelled
+    handleStimulus OpStimuli.StimTargetOrderCancelled
+    checkAllOrdersComplete
+Case OrderStatuses.OrderStatusRejected
+    handleStimulus OpStimuli.StimTargetOrderCancelled
+    checkAllOrdersComplete
 End Select
 
 SaveRecoveryInfo
@@ -1353,7 +1370,8 @@ On Error GoTo Err
 
 If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
 
-logOrderMessage "Cancel time expired"
+gLogOrderMessage "Cancel time expired", _
+                mDataSource, mContract, Key, mIsSimulated, Me
 Cancel
 fireChange BracketOrderSelfCancelled
 RaiseEvent SelfCancelled
@@ -1692,7 +1710,7 @@ Public Property Let PreventUnprotectedPosition( _
 Const ProcName As String = "PreventUnprotectedPosition"
 On Error GoTo Err
 
-Assert (Not Value) Or (State = BracketOrderStateCreated) Or (Not mStopLossOrder Is Nothing), "No stop loss order exists"
+Assert (Not Value) Or (State = BracketOrderStateCreated) Or (Not mStopLossOrder Is Nothing), "No stop-loss order exists"
 
 mSummary.PreventUnprotectedPosition = Value
 If State <> BracketOrderStateCreated Then SaveRecoveryInfo
@@ -1839,7 +1857,7 @@ Friend Property Let StopLossOrder(ByVal Value As IOrder)
 Const ProcName As String = "StopLossOrder"
 On Error GoTo Err
 
-Assert mStopLossOrder Is Nothing, "Stop loss order already exists"
+Assert mStopLossOrder Is Nothing, "stop-loss order already exists"
 
 mNumberOfOrders = mNumberOfOrders + 1
 Set mStopLossOrder = Value
@@ -2135,9 +2153,10 @@ Public Sub CloseOut()
 Const ProcName As String = "CloseOut"
 On Error GoTo Err
 
-logOrderMessage "Closing out: " & _
+gLogOrderMessage "Closing out: " & _
                     "size=" & Size & _
-                    "; pending size=" & PendingSize
+                    "; pending size=" & PendingSize, _
+                mDataSource, mContract, Key, mIsSimulated, Me
 
 handleStimulus OpStimuli.StimCloseout
 
@@ -2171,7 +2190,7 @@ Friend Sub Execute()
 Const ProcName As String = "Execute"
 On Error GoTo Err
 
-Assert (Not mSummary.PreventUnprotectedPosition) Or (Not mStopLossOrder Is Nothing), "No stop loss order exists"
+Assert (Not mSummary.PreventUnprotectedPosition) Or (Not mStopLossOrder Is Nothing), "No stop-loss order exists"
 
 mSummary.CreationTime = GetTimestamp
 
@@ -2259,7 +2278,7 @@ If Size = 0 Then Exit Sub
 
 Dim lExec As New Execution
 lExec.SyncToExecutionReport pExec
-lExec.Quantity = Size
+lExec.Quantity = -Size
 If Size > 0 Then
     lExec.Action = OrderActionSell
 Else
@@ -2325,7 +2344,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SelfCancel(ByVal pReason As String)
-logOrderMessage pReason
+gLogOrderMessage pReason, _
+                mDataSource, mContract, Key, mIsSimulated, Me
 Cancel
 fireChange BracketOrderSelfCancelled
 RaiseEvent SelfCancelled
@@ -2357,7 +2377,8 @@ Select Case mEntryOrder.OrderType
 End Select
 
 If Value <> mEntryOrder.LimitPrice Then
-    logOrderMessage "Set entry price=" & gPriceToString(Value, mContract)
+    gLogOrderMessage "Set entry price=" & gPriceToString(Value, mContract), _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewEntryPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2394,7 +2415,8 @@ Select Case mEntryOrder.OrderType
 End Select
 
 If Value <> mEntryOrder.TriggerPrice Then
-    logOrderMessage "Set entry trigger price=" & gPriceToString(Value, mContract)
+    gLogOrderMessage "Set entry trigger price=" & gPriceToString(Value, mContract), _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewEntryTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2469,7 +2491,8 @@ End Select
 Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change quantity - order " & EntryOrder.Id & " already filled"
 
 If Value <> mEntryOrder.Quantity Then
-    logOrderMessage "Set quantity=" & Value
+    gLogOrderMessage "Set quantity=" & Value, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewQuantity = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2491,12 +2514,13 @@ Case Else
     Assert False, "Action not allowed in state " & mStateEngine.State
 End Select
 
-Assert Not mStopLossOrder Is Nothing, "No stop loss order exists"
+Assert Not mStopLossOrder Is Nothing, "No stop-loss order exists"
 Assert mStopLossOrder.OrderType = OrderTypes.OrderTypeAutoStop, "Can't change offset for order type " & gOrderTypeToString(mEntryOrder.OrderType)
 Assert mStopLossOrder.Status = OrderStatuses.OrderStatusCreated, "Can't change stop offset - order " & mStopLossOrder.Id & " already placed"
 
 If Value <> mStopLossOrder.Offset Then
-    logOrderMessage "Set stop offset=" & Value
+    gLogOrderMessage "Set stop-loss offset=" & Value, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewStopLossOffset = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2520,7 +2544,7 @@ Case Else
     Assert False, "Action not allowed in state " & mStateEngine.State
 End Select
 
-Assert Not mStopLossOrder Is Nothing, "No stop loss order exists"
+Assert Not mStopLossOrder Is Nothing, "No stop-loss order exists"
 
 Select Case mStopLossOrder.OrderType
 Case OrderTypes.OrderTypeStopLimit
@@ -2529,7 +2553,8 @@ Case Else
 End Select
 
 If Value <> mStopLossOrder.LimitPrice Then
-    logOrderMessage "Set stop price=" & gPriceToString(Value, mContract)
+    gLogOrderMessage "Set stop-loss price=" & gPriceToString(Value, mContract), _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewStopLossPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2553,10 +2578,11 @@ Case Else
     Assert False, "Action not allowed in state " & mStateEngine.State
 End Select
 
-Assert Not mStopLossOrder Is Nothing, "No stop loss order exists"
+Assert Not mStopLossOrder Is Nothing, "No stop-loss order exists"
 
 If Value <> mStopLossOrder.Quantity Then
-    logOrderMessage "Set stop quantity=" & Value
+    gLogOrderMessage "Set stop-loss quantity=" & Value, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewStopLossQuantity = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2580,7 +2606,7 @@ Case Else
     Assert False, "Action not allowed in state " & mStateEngine.State
 End Select
 
-Assert Not mStopLossOrder Is Nothing, "No stop loss order exists"
+Assert Not mStopLossOrder Is Nothing, "No stop-loss order exists"
 
 Select Case mStopLossOrder.OrderType
     Case OrderTypes.OrderTypeStop, _
@@ -2590,7 +2616,8 @@ Select Case mStopLossOrder.OrderType
 End Select
 
 If Value <> mStopLossOrder.TriggerPrice Then
-    logOrderMessage "Set stop trigger price=" & gPriceToString(Value, mContract)
+    gLogOrderMessage "Set stop-loss trigger price=" & gPriceToString(Value, mContract), _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewStopLossTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2624,7 +2651,8 @@ Case Else
 End Select
 
 If Value <> mTargetOrder.LimitPrice Then
-    logOrderMessage "Set target price=" & gPriceToString(Value, mContract)
+    gLogOrderMessage "Set target price=" & gPriceToString(Value, mContract), _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewTargetPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2651,7 +2679,8 @@ Assert mTargetOrder.OrderType = OrderTypes.OrderTypeAutoLimit, "Can't change off
 Assert mTargetOrder.Status = OrderStatuses.OrderStatusCreated, "Can't change target offset - order " & mTargetOrder.Id & " already placed"
 
 If Value <> mTargetOrder.Offset Then
-    logOrderMessage "Set target offset=" & Value
+    gLogOrderMessage "Set target offset=" & Value, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewTargetOffset = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2678,7 +2707,8 @@ End Select
 Assert Not mTargetOrder Is Nothing, "No target order exists"
 
 If Value <> mTargetOrder.Quantity Then
-    logOrderMessage "Set target quantity=" & Value
+    gLogOrderMessage "Set target quantity=" & Value, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewTargetQuantity = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2712,7 +2742,8 @@ Case Else
 End Select
 
 If Value <> mTargetOrder.TriggerPrice Then
-    logOrderMessage "Set target trigger price=" & gPriceToString(Value, mContract)
+    gLogOrderMessage "Set target trigger price=" & gPriceToString(Value, mContract), _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mNewTargetTriggerPrice = Value
     setDirty
     fireChange BracketOrderChangeTypes.BracketOrderChangesPending
@@ -2773,7 +2804,8 @@ If (Not updateEntry) And (Not updateStop) And (Not updateTarget) Then
     Exit Sub
 End If
 
-logOrderMessage "Update bracket order"
+gLogOrderMessage "Update bracket order", _
+                mDataSource, mContract, Key, mIsSimulated, Me
 
 If State <> BracketOrderStateCreated Then
     mOrderSubmitter.ModifyBracketOrder Me, updateEntry, updateStop, updateTarget, False
@@ -2854,10 +2886,11 @@ If Not mStopLossOrder Is Nothing Then StopLossOrderId = mStopLossOrder.Id
 
 Dim TargetOrderId As String
 If Not mTargetOrder Is Nothing Then TargetOrderId = mTargetOrder.Id
-logOrderMessage "Cancel orders: " & _
-                EntryOrder.Id & _
-                ", " & StopLossOrderId & _
-                ", " & TargetOrderId
+gLogOrderMessage "Cancel orders: " & _
+                    EntryOrder.Id & _
+                    ", " & StopLossOrderId & _
+                    ", " & TargetOrderId, _
+                mDataSource, mContract, Key, mIsSimulated, Me
 
 Exit Function
 
@@ -2890,7 +2923,8 @@ Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    logOrderMessage "Cancel order: id=" & mStopLossOrder.Id
+    gLogOrderMessage "Cancel order: id=" & mStopLossOrder.Id, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mOrderSubmitter.CancelStopOrder Me
 End Select
 
@@ -2912,7 +2946,8 @@ Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    logOrderMessage "Cancel order: id=" & mTargetOrder.Id
+    gLogOrderMessage "Cancel order: id=" & mTargetOrder.Id, _
+                    mDataSource, mContract, Key, mIsSimulated, Me
     mOrderSubmitter.CancelTargetOrder Me
 End Select
 
@@ -2974,7 +3009,7 @@ If Not mEntryOrder Is Nothing Then
     If mNewEntryPrice >= 0 And _
         mNewEntryPrice <> mEntryOrder.LimitPrice _
     Then
-        Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change Price - order " & mEntryOrder.Id & " already filled"
+        Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change price - order " & mEntryOrder.Id & " already filled"
         mEntryOrder.LimitPrice = mNewEntryPrice
         updateEntry = True
     End If
@@ -3321,33 +3356,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub logOrderMessage( _
-                ByVal pMessage As String)
-Const ProcName As String = "logOrderMessage"
-On Error GoTo Err
-
-Dim lTickPart As String
-Dim lTimePart As String
-
-If mDataSource Is Nothing Then
-ElseIf mDataSource.State <> MarketDataSourceStateRunning Then
-Else
-    If mDataSource.IsTickReplay Then lTimePart = FormatTimestamp(mDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "  "
-    If mDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
-        lTickPart = "Curr price=" & gPriceToString(mDataSource.CurrentTick(TickTypeTrade).Price, mContract) & "; "
-    End If
-End If
-
-gLogOrder lTimePart & pMessage & " (" & lTickPart & "id=" & Key & ")", _
-        mIsSimulated, _
-        Me
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Function placeCloseoutOrder()
 Const ProcName As String = "placeCloseoutOrder"
 On Error GoTo Err
@@ -3460,8 +3468,9 @@ Const ProcName As String = "resubmitStopOrder"
 On Error GoTo Err
 
 mOrderSubmitter.ResubmitStopOrder Me
-logOrderMessage "Resubmit stop order: id=" & mStopLossOrder.Id & _
-            "; new broker id=" & mStopLossOrder.BrokerId
+gLogOrderMessage "Resubmit stop-loss order: id=" & mStopLossOrder.Id & _
+                    "; new broker id=" & mStopLossOrder.BrokerId, _
+                mDataSource, mContract, Key, mIsSimulated, Me
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
 
 Exit Function
@@ -3475,10 +3484,12 @@ Const ProcName As String = "resubmitStopAndTargetOrders"
 On Error GoTo Err
 
 mOrderSubmitter.ResubmitStopAndTargetOrders Me
-logOrderMessage "Resubmit stop order: id=" & mStopLossOrder.Id & _
-            "; new broker id=" & mStopLossOrder.BrokerId
-logOrderMessage "Resubmit target order: id=" & mTargetOrder.Id & _
-            "; new broker id=" & mTargetOrder.BrokerId
+gLogOrderMessage "Resubmit stop-loss order: id=" & mStopLossOrder.Id & _
+                    "; new broker id=" & mStopLossOrder.BrokerId, _
+                mDataSource, mContract, Key, mIsSimulated, Me
+gLogOrderMessage "Resubmit target order: id=" & mTargetOrder.Id & _
+                    "; new broker id=" & mTargetOrder.BrokerId, _
+                mDataSource, mContract, Key, mIsSimulated, Me
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
 mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
 
@@ -3494,8 +3505,9 @@ Const ProcName As String = "resubmitTargetOrder"
 On Error GoTo Err
 
 mOrderSubmitter.ResubmitTargetOrder Me
-logOrderMessage "Resubmit target order: id=" & mTargetOrder.Id & _
-            "; new broker id=" & mTargetOrder.BrokerId
+gLogOrderMessage "Resubmit target order: id=" & mTargetOrder.Id & _
+                    "; new broker id=" & mTargetOrder.BrokerId, _
+                mDataSource, mContract, Key, mIsSimulated, Me
 mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
 
 Exit Function

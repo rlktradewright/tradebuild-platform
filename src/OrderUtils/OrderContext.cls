@@ -75,7 +75,7 @@ Private mClosedBracketOrders            As BracketOrders
     
 Private mCompletedSize                  As Long
     ' the total Size for all completed bracket orders (may be non-zero if one
-    ' or more completed bracket orders has no target or stop orders)
+    ' or more completed bracket orders has no target or stop-loss orders)
     
 Private mPermittedOrderProperties       As IPermittedOrderProperties
 
@@ -150,6 +150,21 @@ On Error GoTo Err
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
     ActiveSize = ActiveSize + lBracketOrder.Size
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get CancelPending() As Boolean
+Const ProcName As String = "CancelPending"
+On Error GoTo Err
+
+Dim lBracketOrder As IBracketOrder
+For Each lBracketOrder In mActiveBracketOrders
+    If lBracketOrder.Cancel(pEvenIfFilled:=False) Then CancelPending = True
 Next
 
 Exit Property
@@ -375,8 +390,8 @@ End Sub
 ' @param TriggerPrice   used with BracketEntryTypeMarketIfTouched, BracketEntryTypeLimitIfTouched,
 '                       BracketEntryTypeStop and BracketEntryTypeStopLimit to specify the Price
 '                       at which the order is triggered
-' @param BracketStopLossType  the type of stop loss order to place:
-'           BracketStopLossTypeNone               no stop loss order
+' @param BracketStopLossType  the type of stop-loss order to place:
+'           BracketStopLossTypeNone               no stop-loss order
 '           BracketStopLossTypeStop               use a stop order
 '           BracketStopLossTypeStopLimit          use a stop limit order
 '           BracketStopLossTypeBid                use a stop order at the current Bid (see StopOffset)
@@ -385,7 +400,7 @@ End Sub
 '           BracketStopLossTypeAuto               use a stop order at the fill Price for the
 '                                           entry order (see StopOffset)
 ' @param StopPrice      the trigger Price for BracketStopLossTypeStop and BracketStopLossTypeStopLimit
-' @param StopOffset     number of ticks to modify the StopPrice. For example, for a stop loss
+' @param StopOffset     number of ticks to modify the StopPrice. For example, for a stop-loss
 '                       order 4 ticks below the entry order fill Price, use BracketStopLossTypeAuto
 '                       and set StopOffset to -4
 ' @param StopLimitPrice the limit Price for BracketStopLossTypeStopLimit
@@ -410,7 +425,7 @@ End Sub
 '                       falls to this Price before the entry order is filled, then the order
 '                       is cancelled
 ' @param EntryTIF       specifies the time in force for the entry order
-' @param StopTIF        specifies the time in force for the stop loss order
+' @param StopTIF        specifies the time in force for the stop-loss order
 ' @param TargetTIF      specifies the time in force for the target order
 '
 ' @see
@@ -418,65 +433,65 @@ End Sub
 '@/
 Public Function Buy(ByRef Number As Long, _
                     ByVal BracketEntryType As BracketEntryTypes, _
-                    ByVal BuyPrice As Double, _
-                    ByVal BuyOffset As Long, _
-                    ByVal TriggerPrice As Double, _
+                    ByVal EntryPrice As Double, _
+                    ByVal EntryOffset As Long, _
+                    ByVal EntryTriggerPrice As Double, _
                     ByVal BracketStopLossType As BracketStopLossTypes, _
-                    ByVal StopPrice As Double, _
-                    ByVal StopOffset As Long, _
-                    ByVal StopLimitPrice As Long, _
+                    ByVal StopLossPrice As Double, _
+                    ByVal StopLossOffset As Long, _
+                    ByVal StopLossLimitPrice As Long, _
                     ByVal BracketTargetType As BracketTargetTypes, _
                     ByVal targetPrice As Double, _
                     ByVal TargetOffset As Long, _
                     ByVal TargetTriggerPrice As Double, _
-                    Optional ByVal entryTIF As OrderTIFs = OrderTIFDay, _
-                    Optional ByVal stopTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
-                    Optional ByVal targetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
-                    Optional ByVal pCancelPrice As Double, _
-                    Optional ByVal pCancelAfter As Long) As IBracketOrder
+                    Optional ByVal EntryTIF As OrderTIFs = OrderTIFDay, _
+                    Optional ByVal StopTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
+                    Optional ByVal TargetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
+                    Optional ByVal CancelPrice As Double, _
+                    Optional ByVal CancelAfter As Long) As IBracketOrder
 
 Const ProcName As String = "Buy"
 On Error GoTo Err
 
-gLog "Buy: " & mContract.Specifier.LocalSymbol & _
+gLog "Buy" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.LocalSymbol & _
                 " number=" & Number & _
                 "; BracketEntryType=" & gBracketEntryTypeToShortString(BracketEntryType) & _
-                "; buyPrice=" & BuyPrice & _
-                "; buyOffset=" & BuyOffset & _
-                "; triggerPrice=" & TriggerPrice & _
+                "; EntryPrice=" & EntryPrice & _
+                "; EntryOffset=" & EntryOffset & _
+                "; EntryTriggerPrice=" & EntryTriggerPrice & _
                 "; BracketStopLossType=" & gBracketStopLossTypeToShortString(BracketStopLossType) & _
-                "; stopPrice=" & StopPrice & _
-                "; stopOffset=" & StopOffset & _
-                "; stopLimitPrice=" & StopLimitPrice & _
+                "; StopLossPrice=" & StopLossPrice & _
+                "; StopLossOffset=" & StopLossOffset & _
+                "; StopLossLimitPrice=" & StopLossLimitPrice & _
                 "; BracketTargetType=" & gBracketTargetTypeToShortString(BracketTargetType) & _
-                "; targetPrice=" & targetPrice & _
-                "; targetOffset=" & TargetOffset & _
-                "; targetTriggerPrice=" & TargetTriggerPrice & _
-                "; entryTIF=" & gOrderTIFToString(entryTIF) & _
-                "; stopTIF=" & gOrderTIFToString(stopTIF) & _
-                "; targetTIF=" & gOrderTIFToString(targetTIF), _
+                "; TargetPrice=" & targetPrice & _
+                "; TargetOffset=" & TargetOffset & _
+                "; TargetTriggerPrice=" & TargetTriggerPrice & _
+                "; EntryTIF=" & gOrderTIFToString(EntryTIF) & _
+                "; StopTIF=" & gOrderTIFToString(StopTIF) & _
+                "; TargetTIF=" & gOrderTIFToString(TargetTIF), _
     ProcName, ModuleName
                 
 Set Buy = CreateBracketOrder(OrderActions.OrderActionBuy, _
                                 Number, _
                                 BracketEntryType, _
-                                BuyPrice, _
-                                BuyOffset, _
-                                TriggerPrice, _
+                                EntryPrice, _
+                                EntryOffset, _
+                                EntryTriggerPrice, _
                                 BracketStopLossType, _
-                                StopPrice, _
-                                StopOffset, _
-                                StopLimitPrice, _
+                                StopLossPrice, _
+                                StopLossOffset, _
+                                StopLossLimitPrice, _
                                 BracketTargetType, _
                                 targetPrice, _
                                 TargetOffset, _
                                 TargetTriggerPrice)
                                 
-Buy.EntryOrder.TimeInForce = entryTIF
-If Not Buy.StopLossOrder Is Nothing Then Buy.StopLossOrder.TimeInForce = stopTIF
-If Not Buy.TargetOrder Is Nothing Then Buy.TargetOrder.TimeInForce = targetTIF
-Buy.CancelPrice = pCancelPrice
-Buy.CancelAfter = pCancelAfter
+Buy.EntryOrder.TimeInForce = EntryTIF
+If Not Buy.StopLossOrder Is Nothing Then Buy.StopLossOrder.TimeInForce = StopTIF
+If Not Buy.TargetOrder Is Nothing Then Buy.TargetOrder.TimeInForce = TargetTIF
+Buy.CancelPrice = CancelPrice
+Buy.CancelAfter = CancelAfter
 
 ExecuteBracketOrder Buy, True
 
@@ -493,21 +508,6 @@ On Error GoTo Err
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
     If lBracketOrder.Cancel(pEvenIfFilled:=True) Then Cancel = True
-Next
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function CancelPending() As Boolean
-Const ProcName As String = "CancelPending"
-On Error GoTo Err
-
-Dim lBracketOrder As IBracketOrder
-For Each lBracketOrder In mActiveBracketOrders
-    If lBracketOrder.Cancel(pEvenIfFilled:=False) Then CancelPending = True
 Next
 
 Exit Function
@@ -535,13 +535,13 @@ End Sub
 Public Function CreateBuyBracketOrder( _
                 ByRef Number As Long, _
                 ByVal BracketEntryType As BracketEntryTypes, _
-                ByVal BuyPrice As Double, _
-                ByVal BuyOffset As Long, _
-                ByVal TriggerPrice As Double, _
+                ByVal EntryPrice As Double, _
+                ByVal EntryOffset As Long, _
+                ByVal EntryTriggerPrice As Double, _
                 ByVal BracketStopLossType As BracketStopLossTypes, _
-                ByVal StopPrice As Double, _
-                ByVal StopOffset As Long, _
-                ByVal StopLimitPrice As Long, _
+                ByVal StopLossPrice As Double, _
+                ByVal StopLossOffset As Long, _
+                ByVal StopLossLimitPrice As Long, _
                 ByVal BracketTargetType As BracketTargetTypes, _
                 ByVal targetPrice As Double, _
                 ByVal TargetOffset As Long, _
@@ -553,13 +553,13 @@ On Error GoTo Err
 Set CreateBuyBracketOrder = CreateBracketOrder(OrderActions.OrderActionBuy, _
                                         Number, _
                                         BracketEntryType, _
-                                        BuyPrice, _
-                                        BuyOffset, _
-                                        TriggerPrice, _
+                                        EntryPrice, _
+                                        EntryOffset, _
+                                        EntryTriggerPrice, _
                                         BracketStopLossType, _
-                                        StopPrice, _
-                                        StopOffset, _
-                                        StopLimitPrice, _
+                                        StopLossPrice, _
+                                        StopLossOffset, _
+                                        StopLossLimitPrice, _
                                         BracketTargetType, _
                                         targetPrice, _
                                         TargetOffset, _
@@ -574,13 +574,13 @@ End Function
 Friend Function CreateBracketOrder(ByVal pAction As OrderActions, _
                     ByVal pNumber As Long, _
                     ByVal pBracketEntryType As BracketEntryTypes, _
-                    ByVal pPrice As Double, _
-                    ByVal pOffset As Long, _
-                    ByVal pTriggerPrice As Double, _
+                    ByVal pEntryPrice As Double, _
+                    ByVal pEntryOffset As Long, _
+                    ByVal pEntryTriggerPrice As Double, _
                     ByVal pBracketStopLossType As BracketStopLossTypes, _
-                    ByVal pStopTriggerPrice As Double, _
-                    ByVal pStopOffset As Long, _
-                    ByVal pStopLimitPrice As Double, _
+                    ByVal pStopLossTriggerPrice As Double, _
+                    ByVal pStopLossOffset As Long, _
+                    ByVal pStopLossLimitPrice As Double, _
                     ByVal pBracketTargetType As BracketTargetTypes, _
                     ByVal pTargetPrice As Double, _
                     ByVal pTargetOffset As Long, _
@@ -600,9 +600,9 @@ Set lBracketOrder = New BracketOrder
 lBracketOrder.Initialise nextKey, mContextsName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
 lBracketOrder.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
-lBracketOrder.EntryOrder = createEntryOrder(pAction, pNumber, pBracketEntryType, pPrice, pTriggerPrice, pOffset)
+lBracketOrder.EntryOrder = createEntryOrder(pAction, pNumber, pBracketEntryType, pEntryPrice, pEntryTriggerPrice, pEntryOffset)
 
-If pBracketStopLossType <> BracketStopLossTypeNone Then lBracketOrder.StopLossOrder = createStopLossOrder(IIf(pAction = OrderActionBuy, OrderActions.OrderActionSell, OrderActions.OrderActionBuy), pNumber, pBracketStopLossType, pStopLimitPrice, pStopTriggerPrice, pStopOffset)
+If pBracketStopLossType <> BracketStopLossTypeNone Then lBracketOrder.StopLossOrder = createStopLossOrder(IIf(pAction = OrderActionBuy, OrderActions.OrderActionSell, OrderActions.OrderActionBuy), pNumber, pBracketStopLossType, pStopLossLimitPrice, pStopLossTriggerPrice, pStopLossOffset)
 
 If pBracketTargetType <> BracketTargetTypeNone Then lBracketOrder.TargetOrder = createTargetOrder(IIf(pAction = OrderActionBuy, OrderActions.OrderActionSell, OrderActions.OrderActionBuy), pNumber, pBracketTargetType, pTargetPrice, pTargetTriggerPrice, pTargetOffset)
 
@@ -610,7 +610,7 @@ lBracketOrder.Checkpoint
 
 Set CreateBracketOrder = lBracketOrder
 
-logOrderMessage "Created bracket order: " & lBracketOrder.ToString, lBracketOrder.Key
+gLogOrderMessage "Created bracket order: " & lBracketOrder.ToString, mDataSource, mContract, lBracketOrder.Key, mIsSimulated, Me
 
 Exit Function
 
@@ -639,13 +639,13 @@ End Function
 Public Function CreateSellBracketOrder( _
                 ByRef Number As Long, _
                 ByVal BracketEntryType As BracketEntryTypes, _
-                ByVal BuyPrice As Double, _
-                ByVal BuyOffset As Long, _
-                ByVal TriggerPrice As Double, _
+                ByVal EntryPrice As Double, _
+                ByVal EntryOffset As Long, _
+                ByVal EntryTriggerPrice As Double, _
                 ByVal BracketStopLossType As BracketStopLossTypes, _
-                ByVal StopPrice As Double, _
-                ByVal StopOffset As Long, _
-                ByVal StopLimitPrice As Long, _
+                ByVal StopLossPrice As Double, _
+                ByVal StopLossOffset As Long, _
+                ByVal StopLossLimitPrice As Long, _
                 ByVal BracketTargetType As BracketTargetTypes, _
                 ByVal targetPrice As Double, _
                 ByVal TargetOffset As Long, _
@@ -657,13 +657,13 @@ On Error GoTo Err
 Set CreateSellBracketOrder = CreateBracketOrder(OrderActions.OrderActionSell, _
                                     Number, _
                                     BracketEntryType, _
-                                    BuyPrice, _
-                                    BuyOffset, _
-                                    TriggerPrice, _
+                                    EntryPrice, _
+                                    EntryOffset, _
+                                    EntryTriggerPrice, _
                                     BracketStopLossType, _
-                                    StopPrice, _
-                                    StopOffset, _
-                                    StopLimitPrice, _
+                                    StopLossPrice, _
+                                    StopLossOffset, _
+                                    StopLossLimitPrice, _
                                     BracketTargetType, _
                                     targetPrice, _
                                     TargetOffset, _
@@ -696,7 +696,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
                                 pBracketOrder.Risk, _
                                 msg) _
         Then
-            logOrderMessage "Rejected by money management: " & msg, pBracketOrder.Key
+            gLogOrderMessage "Rejected by money management: " & msg, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
             Set pBracketOrder = Nothing
             Exit Sub
         End If
@@ -707,7 +707,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
     End If
 End If
 
-logOrderMessage "Execute bracket order", pBracketOrder.Key
+gLogOrderMessage "Execute bracket order: ", mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
 
 mActiveBracketOrders.Add pBracketOrder
 If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
@@ -738,19 +738,6 @@ Next
 Set mClosedBracketOrders = Nothing
 
 Set mOrderSubmitter = Nothing
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function GetAccountBalance() As Double
-Const ProcName As String = "GetAccountBalance"
-
-On Error GoTo Err
-
-GetAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need to fix this up
 
 Exit Function
 
@@ -981,7 +968,7 @@ End Function
 
 Friend Sub NotifyPositionCloseout( _
                 ByVal pExec As IExecutionReport)
-Const ProcName As String = "NotifyCloseout"
+Const ProcName As String = "NotifyPositionCloseout"
 On Error GoTo Err
 
 Dim lBracketOrder As IBracketOrder
@@ -1009,66 +996,66 @@ End Sub
 
 Public Function Sell(ByRef Number As Long, _
                     ByVal BracketEntryType As BracketEntryTypes, _
-                    ByVal sellPrice As Double, _
-                    ByVal sellOffset As Long, _
-                    ByVal TriggerPrice As Double, _
+                    ByVal EntryPrice As Double, _
+                    ByVal EntryOffset As Long, _
+                    ByVal EntryTriggerPrice As Double, _
                     ByVal BracketStopLossType As BracketStopLossTypes, _
-                    ByVal StopPrice As Double, _
-                    ByVal StopOffset As Long, _
-                    ByVal StopLimitPrice As Long, _
+                    ByVal StopLossPrice As Double, _
+                    ByVal StopLossOffset As Long, _
+                    ByVal StopLossLimitPrice As Long, _
                     ByVal BracketTargetType As BracketTargetTypes, _
                     ByVal targetPrice As Double, _
                     ByVal TargetOffset As Long, _
                     ByVal TargetTriggerPrice As Double, _
-                    Optional ByVal entryTIF As OrderTIFs = OrderTIFDay, _
-                    Optional ByVal stopTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
-                    Optional ByVal targetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
-                    Optional ByVal pCancelPrice As Double, _
-                    Optional ByVal pCancelAfter As Long) As IBracketOrder
+                    Optional ByVal EntryTIF As OrderTIFs = OrderTIFDay, _
+                    Optional ByVal StopTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
+                    Optional ByVal TargetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
+                    Optional ByVal CancelPrice As Double, _
+                    Optional ByVal CancelAfter As Long) As IBracketOrder
 
 Const ProcName As String = "Sell"
 
 On Error GoTo Err
 
-gLog "Sell" & mContract.Specifier.LocalSymbol & _
+gLog "Sell" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.LocalSymbol & _
                 " number=" & Number & _
                 "; BracketEntryType=" & gBracketEntryTypeToShortString(BracketEntryType) & _
-                "; sellPrice=" & sellPrice & _
-                "; sellOffset=" & sellOffset & _
-                "; triggerPrice=" & TriggerPrice & _
+                "; EntryPrice=" & EntryPrice & _
+                "; EntryOffset=" & EntryOffset & _
+                "; EntryTriggerPrice=" & EntryTriggerPrice & _
                 "; BracketStopLossType=" & gBracketStopLossTypeToShortString(BracketStopLossType) & _
-                "; stopPrice=" & StopPrice & _
-                "; stopOffset=" & StopOffset & _
-                "; stopLimitPrice=" & StopLimitPrice & _
+                "; StopLossPrice=" & StopLossPrice & _
+                "; StopLossOffset=" & StopLossOffset & _
+                "; StopLossLimitPrice=" & StopLossLimitPrice & _
                 "; BracketTargetType=" & gBracketTargetTypeToShortString(BracketTargetType) & _
-                "; targetPrice=" & targetPrice & _
-                "; targetOffset=" & TargetOffset & _
-                "; targetTriggerPrice=" & TargetTriggerPrice & _
-                "; entryTIF=" & gOrderTIFToString(entryTIF) & _
-                "; stopTIF=" & gOrderTIFToString(stopTIF) & _
-                "; targetTIF=" & gOrderTIFToString(targetTIF), _
+                "; TargetPrice=" & targetPrice & _
+                "; TargetOffset=" & TargetOffset & _
+                "; TargetTriggerPrice=" & TargetTriggerPrice & _
+                "; EntryTIF=" & gOrderTIFToString(EntryTIF) & _
+                "; EtopTIF=" & gOrderTIFToString(StopTIF) & _
+                "; TargetTIF=" & gOrderTIFToString(TargetTIF), _
     ProcName, ModuleName
                 
 Set Sell = CreateBracketOrder(OrderActions.OrderActionSell, _
                                 Number, _
                                 BracketEntryType, _
-                                sellPrice, _
-                                sellOffset, _
-                                TriggerPrice, _
+                                EntryPrice, _
+                                EntryOffset, _
+                                EntryTriggerPrice, _
                                 BracketStopLossType, _
-                                StopPrice, _
-                                StopOffset, _
-                                StopLimitPrice, _
+                                StopLossPrice, _
+                                StopLossOffset, _
+                                StopLossLimitPrice, _
                                 BracketTargetType, _
                                 targetPrice, _
                                 TargetOffset, _
                                 TargetTriggerPrice)
 
-Sell.EntryOrder.TimeInForce = entryTIF
-If Not Sell.StopLossOrder Is Nothing Then Sell.StopLossOrder.TimeInForce = stopTIF
-If Not Sell.TargetOrder Is Nothing Then Sell.TargetOrder.TimeInForce = targetTIF
-Sell.CancelPrice = pCancelPrice
-Sell.CancelAfter = pCancelAfter
+Sell.EntryOrder.TimeInForce = EntryTIF
+If Not Sell.StopLossOrder Is Nothing Then Sell.StopLossOrder.TimeInForce = StopTIF
+If Not Sell.TargetOrder Is Nothing Then Sell.TargetOrder.TimeInForce = TargetTIF
+Sell.CancelPrice = CancelPrice
+Sell.CancelAfter = CancelAfter
 
 ExecuteBracketOrder Sell, True
 
@@ -1293,32 +1280,6 @@ Else
 End If
 End Function
 
-Private Sub logOrderMessage( _
-                ByVal pMessage As String, _
-                ByVal pKey As String)
-Const ProcName As String = "logOrderMessage"
-On Error GoTo Err
-
-Dim lTickPart As String
-Dim lTimePart As String
-
-If isDataSourceRunning Then
-    If mDataSource.IsTickReplay Then lTimePart = FormatTimestamp(mDataSource.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
-    If mDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
-        lTickPart = "Curr price=" & priceToString(mDataSource.CurrentTick(TickTypeTrade).Price) & "; "
-    End If
-End If
-
-gLogOrder lTimePart & "  " & pMessage & " (" & lTickPart & IIf(pKey <> "", "; id=" & pKey, "") & ")", _
-        mIsSimulated, _
-        Me
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Function nextKey() As String
 Const ProcName As String = "nextKey"
 On Error GoTo Err
@@ -1405,9 +1366,9 @@ Case BracketStopLossTypeAsk
 Case BracketStopLossTypeLast
 Case BracketStopLossTypeAuto
 Case Else
-    AssertArgument False, "Invalid stop loss type"
+    AssertArgument False, "Invalid stop-loss type"
 End Select
-AssertArgument IsBracketStopLossTypeSupported(pBracketStopLossType), "Invalid stop loss type"
+AssertArgument IsBracketStopLossTypeSupported(pBracketStopLossType), "Invalid stop-loss type"
 End Sub
 
 Private Sub validateBracketTargetType(ByVal pBracketTargetType As BracketTargetTypes)
@@ -1423,6 +1384,6 @@ Case BracketTargetTypeAuto
 Case Else
     AssertArgument False, "Invalid target type"
 End Select
-AssertArgument IsBracketTargetTypeSupported(pBracketTargetType), "Invalid stop loss type"
+AssertArgument IsBracketTargetTypeSupported(pBracketTargetType), "Invalid stop-loss type"
 End Sub
 

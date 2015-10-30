@@ -6,16 +6,15 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IStrategy"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Name = "SMA"
+Attribute VB_GlobalNameSpace = True
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
 ''
-' This interface must be implemented by classes that operate as trading strategies
-' within the TradeBuild Strategy Host program.
+' Description here
 '
 '@/
 
@@ -39,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "IStrategy"
+Private Const ModuleName                            As String = "SMA"
 
 '@================================================================================
 ' Member variables
@@ -61,65 +60,48 @@ Private Const ModuleName                    As String = "IStrategy"
 ' Properties
 '@================================================================================
 
-Public Property Get Name() As String
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub DefineDefaultParameters()
-End Sub
+Public Function SMA( _
+                Optional ByVal Ref As Long, _
+                Optional ByVal SMAid As ResourceIdentifier) As Variant
+Const ProcName As String = "SMA"
+On Error GoTo Err
 
-''
-' Called to enable the <code>Strategy</code> object to initialise itself, for example
-' by creating any necessary timeframes and studies.
-'
-' @param StrategyContext
-'   The <code>StrategyContext</code> object to be used by this <code>Strategy</code>.
-' @param pParams
-'   The parameters for this <code>Strategy</code>.
-'@/
-Public Sub Initialise( _
-                ByVal pInitialisationContext As InitialisationContext)
-End Sub
+SMA = getSMA(SMAid).ma(Ref).Value
 
-Public Sub NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
-End Sub
+Exit Function
 
-Public Sub NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyNoLivePositions()
-End Sub
-
-Public Sub NotifyNoSimulatedPositions()
-End Sub
-
-''
-' Called for each tick in the underlying <code>Ticker</code> object.
-'
-' @remarks
-'   The relevant prices and sizes relating to this tick can be obtained using the
-'   revelant properties of the <code>TradingContext</code> object, such as
-'   <code>AskPrice</code>, <code>AskPriceString</code>, <code>AskSize</code> etc.
-' @param pType
-'   The type of tick that has occurred.
-'@/
-Public Sub NotifyTick(ByVal pType As TickTypes)
-End Sub
-
-''
-' Called after historic price data has been loaded,
-' but before the first tick is notified.
-Public Sub Start(ByVal pTradingContext As TradingContext)
-End Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function getSMA( _
+                ByVal SMA As ResourceIdentifier) As CmnStudiesLib27.SMA
+Const ProcName As String = "getBB"
+On Error GoTo Err
+
+If SMA Is Nothing Then Set SMA = gResourceContext.PrimarySMA
+Assert Not SMA Is Nothing, "No SMA currently defined"
+
+Dim lObj As Object
+Set lObj = SMA.Resource
+AssertArgument TypeOf lObj Is CmnStudiesLib27.SMA, "ResourceIdentifier does not refer to an SMA study"
+
+Set getSMA = lObj
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+
 
 

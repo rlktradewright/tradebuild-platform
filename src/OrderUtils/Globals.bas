@@ -228,7 +228,7 @@ Case BracketOrderRoleNone
 Case BracketOrderRoleEntry
     gBracketOrderRoleToString = "Entry"
 Case BracketOrderRoleStopLoss
-    gBracketOrderRoleToString = "Stop loss"
+    gBracketOrderRoleToString = "stop-loss"
 Case BracketOrderRoleTarget
     gBracketOrderRoleToString = "Target"
 Case BracketOrderRoleCloseout
@@ -698,6 +698,43 @@ Static lLogger As Logger
 Static lLoggerSimulated As Logger
 
 logInfotypeData "orderdetail", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gLogOrderMessage( _
+                ByVal pMessage As String, _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pContract As IContract, _
+                ByVal pKey As String, _
+                ByVal pIsSimulated As Boolean, _
+                ByVal pSource As Object)
+Const ProcName As String = "gLogOrderMessage"
+On Error GoTo Err
+
+Dim lTickPart As String
+Dim lTimePart As String
+
+If pDataSource Is Nothing Then
+ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
+Else
+    If pDataSource.IsTickReplay Then lTimePart = FormatTimestamp(pDataSource.Timestamp, TimestampDateAndTimeISO8601) & "  "
+    If pDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
+        lTickPart = "Curr price=" & gPriceToString(pDataSource.CurrentTick(TickTypeTrade).Price, pContract) & "; "
+    End If
+End If
+
+gLogOrder lTimePart & _
+            IIf(pIsSimulated, "(simulated) ", "") & _
+            pMessage & _
+            " (" & lTickPart & _
+            IIf(pKey <> "", "id=" & pKey, "") & _
+            ")", _
+        pIsSimulated, _
+        pSource
 
 Exit Sub
 
@@ -1181,45 +1218,45 @@ With pTargetOrder
     .Initialise .GroupName, pSourceOrder.ContextsName, pSourceOrder.ContractSpecifier, pSourceOrder.OrderContext
     
     ' do this first because modifiability of other attributes may depend on the OrderType
-    If .IsAttributeModifiable(OrderAttOrderType) Then .OrderType = pSourceOrder.OrderType
+    .OrderType = pSourceOrder.OrderType
     
     .Action = pSourceOrder.Action
-    If .IsAttributeModifiable(OrderAttAllOrNone) Then .AllOrNone = pSourceOrder.AllOrNone
+    .AllOrNone = pSourceOrder.AllOrNone
     .AveragePrice = pSourceOrder.AveragePrice
-    If .IsAttributeModifiable(OrderAttBlockOrder) Then .BlockOrder = pSourceOrder.BlockOrder
+    .BlockOrder = pSourceOrder.BlockOrder
     .BrokerId = pSourceOrder.BrokerId
-    If .IsAttributeModifiable(OrderAttDiscretionaryAmount) Then .DiscretionaryAmount = pSourceOrder.DiscretionaryAmount
-    If .IsAttributeModifiable(OrderAttDisplaySize) Then .DisplaySize = pSourceOrder.DisplaySize
+    .DiscretionaryAmount = pSourceOrder.DiscretionaryAmount
+    .DisplaySize = pSourceOrder.DisplaySize
     .ErrorCode = pSourceOrder.ErrorCode
     .ErrorMessage = pSourceOrder.ErrorMessage
-    If .IsAttributeModifiable(OrderAttETradeOnly) Then .ETradeOnly = pSourceOrder.ETradeOnly
+    .ETradeOnly = pSourceOrder.ETradeOnly
     .FillTime = pSourceOrder.FillTime
-    If .IsAttributeModifiable(OrderAttFirmQuoteOnly) Then .FirmQuoteOnly = pSourceOrder.FirmQuoteOnly
-    If .IsAttributeModifiable(OrderAttGoodAfterTime) Then .GoodAfterTime = pSourceOrder.GoodAfterTime
-    If .IsAttributeModifiable(OrderAttGoodAfterTimeTZ) Then .GoodAfterTimeTZ = pSourceOrder.GoodAfterTimeTZ
-    If .IsAttributeModifiable(OrderAttGoodTillDate) Then .GoodTillDate = pSourceOrder.GoodTillDate
-    If .IsAttributeModifiable(OrderAttGoodTillDateTZ) Then .GoodTillDateTZ = pSourceOrder.GoodTillDateTZ
-    If .IsAttributeModifiable(OrderAttHidden) Then .Hidden = pSourceOrder.Hidden
+    .FirmQuoteOnly = pSourceOrder.FirmQuoteOnly
+    .GoodAfterTime = pSourceOrder.GoodAfterTime
+    .GoodAfterTimeTZ = pSourceOrder.GoodAfterTimeTZ
+    .GoodTillDate = pSourceOrder.GoodTillDate
+    .GoodTillDateTZ = pSourceOrder.GoodTillDateTZ
+    .Hidden = pSourceOrder.Hidden
     .Id = pSourceOrder.Id
-    If .IsAttributeModifiable(OrderAttIgnoreRTH) Then .IgnoreRegularTradingHours = pSourceOrder.IgnoreRegularTradingHours
+    .IgnoreRegularTradingHours = pSourceOrder.IgnoreRegularTradingHours
     .IsSimulated = pSourceOrder.IsSimulated
     .LastFillPrice = pSourceOrder.LastFillPrice
-    If .IsAttributeModifiable(OrderAttLimitPrice) Then .LimitPrice = pSourceOrder.LimitPrice
-    If .IsAttributeModifiable(OrderAttMinimumQuantity) Then .MinimumQuantity = pSourceOrder.MinimumQuantity
-    If .IsAttributeModifiable(OrderAttNBBOPriceCap) Then .NbboPriceCap = pSourceOrder.NbboPriceCap
+    .LimitPrice = pSourceOrder.LimitPrice
+    .MinimumQuantity = pSourceOrder.MinimumQuantity
+    .NbboPriceCap = pSourceOrder.NbboPriceCap
     .Offset = pSourceOrder.Offset
-    If .IsAttributeModifiable(OrderAttOrigin) Then .Origin = pSourceOrder.Origin
-    If .IsAttributeModifiable(OrderAttOriginatorRef) Then .OriginatorRef = pSourceOrder.OriginatorRef
-    If .IsAttributeModifiable(OrderAttOverrideConstraints) Then .OverrideConstraints = pSourceOrder.OverrideConstraints
-    If .IsAttributeModifiable(OrderAttPercentOffset) Then .PercentOffset = pSourceOrder.PercentOffset
-    If .IsAttributeModifiable(OrderAttQuantity) Then .Quantity = pSourceOrder.Quantity
+    .Origin = pSourceOrder.Origin
+    .OriginatorRef = pSourceOrder.OriginatorRef
+    .OverrideConstraints = pSourceOrder.OverrideConstraints
+    .PercentOffset = pSourceOrder.PercentOffset
+    .Quantity = pSourceOrder.Quantity
     .QuantityFilled = pSourceOrder.QuantityFilled
     .QuantityRemaining = pSourceOrder.QuantityRemaining
-    If .IsAttributeModifiable(OrderAttSettlingFirm) Then .SettlingFirm = pSourceOrder.SettlingFirm
-    If .IsAttributeModifiable(OrderAttStopTriggerMethod) Then .StopTriggerMethod = pSourceOrder.StopTriggerMethod
-    If .IsAttributeModifiable(OrderAttSweepToFill) Then .SweepToFill = pSourceOrder.SweepToFill
-    If .IsAttributeModifiable(OrderAttTimeInForce) Then .TimeInForce = pSourceOrder.TimeInForce
-    If .IsAttributeModifiable(OrderAttTriggerPrice) Then .TriggerPrice = pSourceOrder.TriggerPrice
+    .SettlingFirm = pSourceOrder.SettlingFirm
+    .StopTriggerMethod = pSourceOrder.StopTriggerMethod
+    .SweepToFill = pSourceOrder.SweepToFill
+    .TimeInForce = pSourceOrder.TimeInForce
+    .TriggerPrice = pSourceOrder.TriggerPrice
 
     ' do this last to prevent status influencing whether attributes are modifiable
     .Status = pSourceOrder.Status

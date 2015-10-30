@@ -246,11 +246,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -281,22 +281,22 @@ On Error GoTo Err
 
 Select Case UCase$(Button.Key)
 Case "ADD"
-    If ControlToolbar.Buttons("add").value = tbrPressed Then
-        ControlToolbar.Buttons("change").value = tbrUnpressed
+    If ControlToolbar.Buttons("add").Value = tbrPressed Then
+        ControlToolbar.Buttons("change").Value = tbrUnpressed
         showTimeframeSelector
     Else
         hideTimeframeSelector
     End If
 Case "CHANGE"
-    If ControlToolbar.Buttons("change").value = tbrPressed Then
-        ControlToolbar.Buttons("add").value = tbrUnpressed
+    If ControlToolbar.Buttons("change").Value = tbrPressed Then
+        ControlToolbar.Buttons("add").Value = tbrUnpressed
         showTimeframeSelector
     Else
         hideTimeframeSelector
     End If
 Case "REMOVE"
-    ControlToolbar.Buttons("add").value = tbrUnpressed
-    ControlToolbar.Buttons("change").value = tbrUnpressed
+    ControlToolbar.Buttons("add").Value = tbrUnpressed
+    ControlToolbar.Buttons("change").Value = tbrUnpressed
     Remove mCurrentIndex
 End Select
 
@@ -328,11 +328,10 @@ Private Sub TBChart_TimePeriodChange(index As Integer)
 Const ProcName As String = "TBChart_TimePeriodChange"
 On Error GoTo Err
 
-Dim lButtonInfo As TWButtonInfo
+Dim lButtonInfo As TWChartButtonInfo
 With ChartSelectorToolbar.Buttons(getIndexFromChartControlIndex(index))
-    Dim lCaption As String
-    lCaption = TBChart(index).TimePeriod.ToShortString
-    gCreateButtonInfo lButtonInfo, lCaption, lCaption, .Style, .value, generateTooltipText(TBChart(index).TimePeriod), .Enabled
+    lButtonInfo = .Tag
+    lButtonInfo.Caption = TBChart(index).TimePeriod.ToShortString
     gSetButtonImageInImageList ChartSelectorImageList, lButtonInfo, ChartSelectorPicture
     .Key = lButtonInfo.Key
     .Image = lButtonInfo.Key
@@ -350,14 +349,14 @@ Private Sub TimeframeSelector1_Click()
 Const ProcName As String = "TimeframeSelector1_Click"
 On Error GoTo Err
 
-If ControlToolbar.Buttons("add").value = tbrPressed Then
+If ControlToolbar.Buttons("add").Value = tbrPressed Then
     Add TimeframeSelector1.TimePeriod
     hideTimeframeSelector
-    ControlToolbar.Buttons("add").value = tbrUnpressed
+    ControlToolbar.Buttons("add").Value = tbrUnpressed
 Else
     Chart.ChangeTimePeriod TimeframeSelector1.TimePeriod
     hideTimeframeSelector
-    ControlToolbar.Buttons("change").value = tbrUnpressed
+    ControlToolbar.Buttons("change").Value = tbrUnpressed
 End If
 
 Exit Sub
@@ -388,7 +387,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-' do not make this Public because the value returned cannot be handled by non-friend
+' do not make this Public because the Value returned cannot be handled by non-friend
 ' components
 Friend Property Get Chart( _
                 Optional ByVal index As Long = -1) As MarketChart
@@ -431,15 +430,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If mConfig Is value Then Exit Property
+If mConfig Is Value Then Exit Property
 If Not mConfig Is Nothing Then mConfig.Remove
-If value Is Nothing Then Exit Property
+If Value Is Nothing Then Exit Property
 
-Set mConfig = value
+Set mConfig = Value
 
 gLogger.Log "MultiChart added to config at: " & mConfig.Path, ProcName, ModuleName
 
@@ -464,11 +463,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = value
+UserControl.Enabled = Value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -546,12 +545,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
-Set mTheme = value
+If mTheme Is Value Then Exit Property
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.ToolbarBackColor
@@ -567,11 +566,11 @@ Set ChartSelectorToolbar.ImageList = Nothing
 
 Dim i As Long
 For i = 1 To ChartSelectorToolbar.Buttons.Count
-    Dim lButtonInfo As TWButtonInfo
+    Dim lButtonInfo As TWChartButtonInfo
     failpoint = "200"
     With ChartSelectorToolbar.Buttons(i)
         failpoint = "300"
-        gCreateButtonInfo lButtonInfo, .Key, .Key, .Style, .value, .ToolTipText, True
+        lButtonInfo = .Tag
         failpoint = "400"
         gSetButtonImageInImageList ChartSelectorImageList, lButtonInfo, ChartSelectorPicture
     End With
@@ -680,8 +679,8 @@ If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
 End If
 
-If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).value = tbrUnpressed
-lButton.value = tbrPressed
+If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
+lButton.Value = tbrPressed
 switchToChart lButton.index
 Add = mCurrentIndex
 
@@ -935,7 +934,7 @@ On Error GoTo Err
 
 AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
 
-ChartSelectorToolbar.Buttons.Item(index).value = tbrPressed
+ChartSelectorToolbar.Buttons.Item(index).Value = tbrPressed
 switchToChart index
 fireChange MultiChartSelectionChanged
 
@@ -957,15 +956,14 @@ On Error GoTo Err
 If pPeriodLength Is Nothing Then
     Set addChartSelectorButton = ChartSelectorToolbar.Buttons.Add(, , "")
 Else
-    Dim lButtonInfo As TWButtonInfo
+    Dim lButtonInfo As TWChartButtonInfo
     Dim lCaption As String
     lCaption = pPeriodLength.ToShortString
-    gCreateButtonInfo lButtonInfo, lCaption, lCaption, tbrButtonGroup, tbrUnpressed, generateTooltipText(pPeriodLength), True
+    gCreateButtonInfo lButtonInfo, lCaption, tbrButtonGroup, tbrUnpressed, generateTooltipText(pPeriodLength), True, TBChart.UBound
     gAddButtonImageToImageList ChartSelectorImageList, lButtonInfo, ChartSelectorPicture
     If ChartSelectorImageList.ListImages.Count = 1 Then Set ChartSelectorToolbar.ImageList = ChartSelectorImageList
     Set addChartSelectorButton = gAddButtonToToolbar(ChartSelectorToolbar, lButtonInfo)
 End If
-addChartSelectorButton.Tag = TBChart.UBound
 
 ControlToolbar.Buttons("remove").Enabled = True
 
@@ -1073,7 +1071,9 @@ Private Function getChartControlIndexFromIndex(index) As Long
 Const ProcName As String = "getChartControlIndexFromIndex"
 On Error GoTo Err
 
-getChartControlIndexFromIndex = ChartSelectorToolbar.Buttons(index).Tag
+Dim l As TWChartButtonInfo
+l = ChartSelectorToolbar.Buttons(index).Tag
+getChartControlIndexFromIndex = l.ChartIndex
 
 Exit Function
 
