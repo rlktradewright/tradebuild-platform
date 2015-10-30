@@ -56,7 +56,7 @@ End Enum
 
 Private Const ModuleName                            As String = "MACDStrategy21"
 
-Private Const MessagePrefix                         As String = ">>>>>>>>>>>>>>>> "
+Private Const MessagePrefix                         As String = ">>> "
 
 '@================================================================================
 ' Member variables
