@@ -52,6 +52,12 @@ Public Const ConfigSettingSessionStartTime              As String = "&SessionSta
 Public Const ConfigSettingTickSize                      As String = "&TickSize"
 Public Const ConfigSettingTimezoneName                  As String = "&Timezone"
 
+Public Const DefaultDaysBeforeExpiryToSwitch            As Long = 0
+Public Const DefaultExpiry                              As String = ""
+Public Const DefaultMultiplier                          As Double = 1#
+Public Const DefaultTickSize                            As Double = 0.01
+Public Const DefaultTimezoneName                        As String = "Eastern Standard Time"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -359,14 +365,14 @@ Dim lContract As New Contract
 lContract.Specifier = gLoadContractSpecFromConfig(pConfig.AddConfigurationSection(ConfigSectionContractSpecifier))
 
 With pConfig
-    lContract.DaysBeforeExpiryToSwitch = .GetSetting(ConfigSettingDaysBeforeExpiryToSwitch, "1")
+    lContract.DaysBeforeExpiryToSwitch = .GetSetting(ConfigSettingDaysBeforeExpiryToSwitch, DefaultDaysBeforeExpiryToSwitch)
     lContract.Description = .GetSetting(ConfigSettingDescription, "")
-    lContract.ExpiryDate = CDate(.GetSetting(ConfigSettingExpiryDate, ""))
-    lContract.Multiplier = .GetSetting(ConfigSettingMultiplier, "1")
+    lContract.ExpiryDate = CDate(.GetSetting(ConfigSettingExpiryDate, DefaultExpiry))
+    lContract.Multiplier = .GetSetting(ConfigSettingMultiplier, DefaultMultiplier)
     lContract.SessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
     lContract.SessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
-    lContract.TickSize = .GetSetting(ConfigSettingTickSize, "0.01")
-    lContract.TimezoneName = .GetSetting(ConfigSettingTimezoneName, "")
+    lContract.TickSize = .GetSetting(ConfigSettingTickSize, DefaultTickSize)
+    lContract.TimezoneName = .GetSetting(ConfigSettingTimezoneName, DefaultTimezoneName)
 End With
 
 Set gLoadContractFromConfig = lContract
