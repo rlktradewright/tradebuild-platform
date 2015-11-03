@@ -351,7 +351,7 @@ jb.EncodeValue mCurrency
 jb.EncodeName "zExchange"
 jb.EncodeValue mExchange
 
-jb.EncodeNameAndValue "zExpiry", mExpiry, ""
+jb.EncodeNameAndValue "zExpiry", mExpiry, DefaultExpiry
 
 jb.EncodeName "zLocalSymbol"
 jb.EncodeValue mLocalSymbol

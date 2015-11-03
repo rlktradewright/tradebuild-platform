@@ -69,41 +69,41 @@ Public Property Get Contract() As IContract
 Set Contract = mContract
 End Property
 
-Public Property Let DaysBeforeExpiryToSwitch(ByVal value As Long)
-mContract.DaysBeforeExpiryToSwitch = value
+Public Property Let DaysBeforeExpiryToSwitch(ByVal Value As Long)
+mContract.DaysBeforeExpiryToSwitch = Value
 End Property
 
-Public Property Let Description(ByVal value As String)
-mContract.Description = value
+Public Property Let Description(ByVal Value As String)
+mContract.Description = Value
 End Property
 
-Public Property Let ExpiryDate(ByVal value As Date)
-mContract.ExpiryDate = value
+Public Property Let ExpiryDate(ByVal Value As Date)
+mContract.ExpiryDate = Value
 End Property
 
-Public Property Let Multiplier(ByVal value As Double)
-mContract.Multiplier = value
+Public Property Let Multiplier(ByVal Value As Double)
+mContract.Multiplier = Value
 End Property
 
-Public Property Let ProviderIDs(ByVal value As Parameters)
-mContract.ProviderIDs = value
+Public Property Let ProviderIDs(ByVal Value As Parameters)
+mContract.ProviderIDs = Value
 End Property
 
-Public Property Let SessionStartTime(ByVal value As Date)
-mContract.SessionStartTime = TimeValue(value)
+Public Property Let SessionStartTime(ByVal Value As Date)
+mContract.SessionStartTime = TimeValue(Value)
 End Property
 
-Public Property Let SessionEndTime(ByVal value As Date)
-mContract.SessionEndTime = TimeValue(value)
+Public Property Let SessionEndTime(ByVal Value As Date)
+mContract.SessionEndTime = TimeValue(Value)
 End Property
 
-Public Property Let TickSize(ByVal value As Double)
-mContract.TickSize = value
+Public Property Let TickSize(ByVal Value As Double)
+mContract.TickSize = Value
 End Property
 
 Public Property Let TimezoneName( _
-                ByVal value As String)
-mContract.TimezoneName = value
+                ByVal Value As String)
+mContract.TimezoneName = Value
 End Property
 
 '@================================================================================
@@ -144,8 +144,6 @@ On Error GoTo Err
 
 Set mContract = New Contract
 mContract.Specifier = Specifier
-mContract.TimezoneName = ""
-mContract.DaysBeforeExpiryToSwitch = 1
 
 Exit Sub
 

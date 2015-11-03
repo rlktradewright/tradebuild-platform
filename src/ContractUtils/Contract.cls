@@ -72,6 +72,13 @@ Private mTimezoneName As String
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+mDaysBeforeExpiryToSwitch = DefaultDaysBeforeExpiryToSwitch
+mMultiplier = DefaultMultiplier
+mTickSize = DefaultTickSize
+mTimezoneName = DefaultTimezoneName
+End Sub
+
 '@================================================================================
 ' IContract Interface Members
 '@================================================================================
@@ -424,25 +431,23 @@ jb.EncodeValue ProjectName & "." & ModuleName
 jb.EncodeName "Specifier"
 jb.EncodeValue mSpecifier
 
-jb.EncodeNameAndValue "DaysBeforeExpiryToSwitch", mDaysBeforeExpiryToSwitch, 0
+jb.EncodeNameAndValue "DaysBeforeExpiryToSwitch", mDaysBeforeExpiryToSwitch, DefaultDaysBeforeExpiryToSwitch
 
 jb.EncodeNameAndValue "Description", mDescription, ""
 
 jb.EncodeNameAndValue "ExpiryDate", mExpiryDate, CDate(0#)
 
-jb.EncodeNameAndValue "Multiplier", mMultiplier, 1
+jb.EncodeNameAndValue "Multiplier", mMultiplier, DefaultMultiplier
 
-jb.EncodeNameAndValue "ProviderIDs", mProviderIDs
+jb.EncodeNameAndValue "ProviderIDs", mProviderIDs, Nothing
 
 jb.EncodeNameAndValue "SessionEndTime", mSessionEndTime, CDate(0#)
 
 jb.EncodeNameAndValue "SessionStartTime", mSessionStartTime, CDate(0#)
 
-jb.EncodeName "TickSize"
-jb.EncodeValue mTickSize
+jb.EncodeNameAndValue "TickSize", mTickSize, DefaultTickSize
 
-jb.EncodeName "TimezoneName"
-jb.EncodeValue mTimezoneName
+jb.EncodeNameAndValue "TimezoneName", mTimezoneName, DefaultTimezoneName
 
 jb.EndObject
 
