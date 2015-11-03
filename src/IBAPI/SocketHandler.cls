@@ -51,50 +51,6 @@ Event Disconnected(ByVal pReason As String)
 ' Types
 '@================================================================================
 
-Private Type TcpKeepalive
-    Onoff As Long
-    KeepaliveTime As Long
-    KeepaliveInterval As Long
-End Type
-
-Private Type WSAOVERLAPPED
-    Internal As Long
-    InternalHigh As Long
-    Offset As Long
-    OffsetHigh As Long
-    hEvent As Long
-End Type
-
-
-Const SOL_SOCKET = 65535      ' Options for socket level.
-Const SO_KEEPALIVE = &H8&     ' Keep connections alive.
-
-Const IOC_IN                    As Long = &H80000000
-Const IOC_VENDOR                As Long = &H18000000
-Const SIO_KEEPALIVE_VALS        As Long = IOC_IN Or IOC_VENDOR Or 4
-
-Const WSA_IO_PENDING            As Long = 997
-
-Private Declare Function WSAGetLastError Lib "ws2_32.dll" () As Long
-
-Private Declare Function WSAIoctl Lib "ws2_32.dll" ( _
-                ByVal s As Long, _
-                ByVal dwIoControlCode As Long, _
-                ByVal lpvInBuffer As Long, _
-                ByVal cbInBuffer As Long, _
-                ByVal lpvOutBuffer As Long, _
-                ByVal cbOutBuffer, _
-                ByRef lpcbBytesReturned As Long, _
-                ByRef lpOverlapped As WSAOVERLAPPED, _
-                ByVal lpCompletionRoutine) As Long
-  
-Private Declare Function setsockopt Lib "wsock32.dll" ( _
-                ByVal s As Long, _
-                ByVal level As Long, _
-                ByVal optname As Long, _
-                ByVal optval As Long, _
-                ByVal optlen As Long) As Long
-
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -192,7 +148,7 @@ Dim result As Long
 result = WSAIoctl(mSocket.SocketHandle, _
         SIO_KEEPALIVE_VALS, _
         VarPtr(ka), _
-        12, _
+        Len(ka), _
         VarPtr(oBuf(0)), _
         0, _
         bytesReturned, _
