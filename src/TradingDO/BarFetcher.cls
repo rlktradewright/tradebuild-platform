@@ -694,11 +694,11 @@ Private Function filterByTime( _
 Const ProcName As String = "filterByTime"
 On Error GoTo Err
 
-mSessionBuilder.SetSessionCurrentTime timestamp
-
 Dim lSessEv As SessionEventData
 lSessEv = mSessionBuilder.SetSessionCurrentTime(timestamp)
-If lSessEv.ChangeType = SessionChangeStart Then mAccumulatedVolume = 0
+If lSessEv.ChangeType = SessionChangeStart Then
+    mAccumulatedVolume = 0
+End If
 
 If Not mCustomSessionBuilder Is Nothing Then
     mCustomSessionBuilder.SetSessionCurrentTime timestamp
