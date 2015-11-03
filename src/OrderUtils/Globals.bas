@@ -228,7 +228,7 @@ Case BracketOrderRoleNone
 Case BracketOrderRoleEntry
     gBracketOrderRoleToString = "Entry"
 Case BracketOrderRoleStopLoss
-    gBracketOrderRoleToString = "stop-loss"
+    gBracketOrderRoleToString = "Stop-loss"
 Case BracketOrderRoleTarget
     gBracketOrderRoleToString = "Target"
 Case BracketOrderRoleCloseout
