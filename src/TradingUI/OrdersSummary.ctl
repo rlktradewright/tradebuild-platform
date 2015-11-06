@@ -416,7 +416,7 @@ If TypeOf ev.Source Is IBracketOrder Then
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .EntryGridOffset, lBracketOrder.EntryOrder, .secType, .TickSize
             If lBracketOrder.EntryOrder.ErrorMessage = "" Then clearErrorMessage lBracketOrder.EntryOrder, lBracketOrderIndex
-        Case BracketOrderChangeTypes.BracketOrderStopOrderChanged
+        Case BracketOrderChangeTypes.BracketOrderStopLossOrderChanged
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .StopLossGridOffset, lBracketOrder.StopLossOrder, .secType, .TickSize
             If lBracketOrder.StopLossOrder.ErrorMessage = "" Then clearErrorMessage lBracketOrder.StopLossOrder, lBracketOrderIndex

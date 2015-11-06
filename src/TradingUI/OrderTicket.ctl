@@ -939,7 +939,7 @@ Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
-BracketOrderOption.Value = True
+BracketOrderOption.value = True
 setOrderScheme BracketOrder
 
 loadOrderFields BracketIndexes.BracketStopOrder
@@ -994,7 +994,7 @@ Case BracketOrderChangeTypes.BracketOrderSelfCancelled
 Case BracketOrderChangeTypes.BracketOrderEntryOrderChanged
     If op.EntryOrder.Status = OrderStatusFilled Then disableOrderFields BracketIndexes.BracketEntryOrder
     setOrderFieldValues op.EntryOrder, BracketIndexes.BracketEntryOrder
-Case BracketOrderChangeTypes.BracketOrderStopOrderChanged
+Case BracketOrderChangeTypes.BracketOrderStopLossOrderChanged
     If op.StopLossOrder.Status = OrderStatusFilled Then disableOrderFields BracketIndexes.BracketStopOrder
     setOrderFieldValues op.StopLossOrder, BracketIndexes.BracketStopOrder
 Case BracketOrderChangeTypes.BracketOrderTargetOrderChanged
@@ -1062,11 +1062,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = Value
+Theme = value
 
 Exit Property
 
@@ -1230,7 +1230,7 @@ On Error GoTo Err
 
 Dim op As IBracketOrder
 
-If SimpleOrderOption.Value Then
+If SimpleOrderOption.value Then
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     
     If comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)) = OrderActions.OrderActionBuy Then
@@ -1268,7 +1268,7 @@ If SimpleOrderOption.Value Then
     
     setOrderAttributes op.EntryOrder, BracketIndexes.BracketEntryOrder
     mActiveOrderContext.ExecuteBracketOrder op
-ElseIf BracketOrderOption.Value Then
+ElseIf BracketOrderOption.value Then
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     If Not isValidOrder(BracketStopOrder) Then Exit Sub
     If Not isValidOrder(BracketTargetOrder) Then Exit Sub
@@ -1421,7 +1421,7 @@ If mBracketOrder Is Nothing Then
         Exit Sub
     End If
     
-    If BracketOrderOption.Value Then
+    If BracketOrderOption.value Then
         Select Case index
         Case BracketIndexes.BracketEntryOrder
             QuantityText(BracketIndexes.BracketStopOrder) = Quantity
@@ -1589,11 +1589,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
-                ByVal Value As Boolean)
+                ByVal value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = Value
+UserControl.Enabled = value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -1602,12 +1602,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal Value As ITheme)
+Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is Value Then Exit Property
-Set mTheme = Value
+If mTheme Is value Then Exit Property
+Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor
@@ -1804,7 +1804,7 @@ Private Sub chooseOrderContext()
 Const ProcName As String = "chooseOrderContext"
 On Error GoTo Err
 
-If SimulateOrdersCheck.Value = vbUnchecked Then
+If SimulateOrdersCheck.value = vbUnchecked Then
     If mLiveOrderContext Is Nothing Then
         RaiseEvent NeedLiveOrderContext
     Else
@@ -2471,7 +2471,7 @@ clearOrderFields BracketIndexes.BracketTargetOrder
 
 SimpleOrderOption.Enabled = True
 BracketOrderOption.Enabled = True
-BracketOrderOption.Value = True
+BracketOrderOption.value = True
 
 setOrderScheme OrderSchemes.BracketOrder
 
@@ -2527,7 +2527,7 @@ Private Sub setAction( _
 Const ProcName As String = "setAction"
 On Error GoTo Err
 
-If BracketOrderOption.Value And index = BracketIndexes.BracketEntryOrder Then
+If BracketOrderOption.value And index = BracketIndexes.BracketEntryOrder Then
     If comboItemData(ActionCombo(index)) = OrderActions.OrderActionSell Then
         selectComboEntry ActionCombo(BracketIndexes.BracketStopOrder), OrderActions.OrderActionBuy
         selectComboEntry ActionCombo(BracketIndexes.BracketTargetOrder), OrderActions.OrderActionBuy
@@ -2543,18 +2543,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setActiveOrderContext(ByVal Value As OrderContext)
+Private Sub setActiveOrderContext(ByVal value As OrderContext)
 Const ProcName As String = "setActiveOrderContext"
 On Error GoTo Err
 
-If Value Is mActiveOrderContext Then Exit Sub
+If value Is mActiveOrderContext Then Exit Sub
 
 If Not mDataSource Is Nothing Then
     mDataSource.RemoveGenericTickListener Me
     mDataSource.RemoveStateChangeListener Me
 End If
 
-Set mActiveOrderContext = Value
+Set mActiveOrderContext = value
 Set mContract = gGetContractFromContractFuture(mActiveOrderContext.ContractFuture)
 
 Set mDataSource = mActiveOrderContext.DataSource
@@ -2611,13 +2611,13 @@ mMode = pMode
 
 Select Case mMode
 Case OrderTicketModeLiveOnly
-    SimulateOrdersCheck.Value = vbUnchecked
+    SimulateOrdersCheck.value = vbUnchecked
     SimulateOrdersCheck.Visible = False
 Case OrderTicketModeSimulatedOnly
-    SimulateOrdersCheck.Value = vbChecked
+    SimulateOrdersCheck.value = vbChecked
     SimulateOrdersCheck.Visible = False
 Case OrderTicketModeLiveAndSimulated
-    SimulateOrdersCheck.Value = vbUnchecked
+    SimulateOrdersCheck.value = vbUnchecked
     SimulateOrdersCheck.Visible = True
 Case Else
     AssertArgument False, "Invalid mode"
