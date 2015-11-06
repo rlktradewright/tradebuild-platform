@@ -215,6 +215,7 @@ getUsageString = _
             "strategyhost  [symbol]" & vbCrLf & _
             "              [strategy class name]" & vbCrLf & _
             "              [/tws:[Server],[Port],[ClientId]" & vbCrLf & _
+            "              [/db:[server],[servertype],[database]" & vbCrLf & _
             "              [/livetrades]" & vbCrLf & _
             "              [/logpath:path]" & vbCrLf & _
             "              [/noUI]" & vbCrLf & _
