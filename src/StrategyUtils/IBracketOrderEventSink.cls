@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IScaleStrategy"
+Attribute VB_Name = "IBracketOrderEventSink"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IScaleStrategy"
+Private Const ModuleName                            As String = "IBracketOrderEventSink"
 
 '@================================================================================
 ' Member variables
@@ -60,25 +60,22 @@ Private Const ModuleName                            As String = "IScaleStrategy"
 ' Properties
 '@================================================================================
 
-Public Property Get Name() As String
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub NotifyTick(ByVal TickType As TickTypes)
+Public Sub NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
 End Sub
 
-Public Sub Start( _
-                ByVal TradingContext As TradingContext, _
-                ByVal BracketOrder As ResourceIdentifier)
+Public Sub NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
+End Sub
+
+Public Sub NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
 
 
 

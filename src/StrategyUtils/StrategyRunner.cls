@@ -84,7 +84,9 @@ Private mIsTickfileReplay                           As Boolean
 
 Private mStartReplayWhenReady                       As Boolean
 
-Private mBracketOrderNotificationRequests           As New EnumerableCollection
+Private mBracketOrderNotificationRequests           As New BracketOrderNotifyReqs
+
+Private mBracketOrderMapping                        As New EnumerableCollection
 
 '================================================================================
 ' Class Event Handlers
@@ -104,15 +106,27 @@ Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 If TypeOf ev.Source Is IBracketOrder Then
-    If ev.ChangeType = BracketOrderChangeTypes.BracketOrderCompleted Then
-        Dim lBracketOrder As IBracketOrder
-        Set lBracketOrder = ev.Source
-        lBracketOrder.RemoveChangeListener Me
-        
-        setStrategyRunner mStrategy, mStrategyResourceContext
-        mStrategy.NotifyBracketOrderCompletion mStrategyResourceContext.GetResourceIdForBracketOrder(lBracketOrder)
+    If ev.ChangeType = BracketOrderChangeTypes.BracketOrderCreated Then Exit Sub
+    
+    Dim lBracketOrder As IBracketOrder
+    Set lBracketOrder = ev.Source
+    
+    Dim en As Enumerator: Set en = mBracketOrderNotificationRequests.GetEnumerator(lBracketOrder)
+    Dim lRequest As NotificationRequest
+    Do While en.MoveNext
+        Set lRequest = en.Current
+        setStrategyRunner lRequest.EventSink, lRequest.ResourceContext
+        If ev.ChangeType = BracketOrderChangeTypes.BracketOrderCompleted Then
+            lBracketOrder.RemoveChangeListener Me
+            lRequest.EventSink.NotifyBracketOrderCompletion GetResourceIdForBracketOrder(lBracketOrder)
+        ElseIf ev.ChangeType = BracketOrderChangeTypes.BracketOrderEntryOrderFilled Then
+            lRequest.EventSink.NotifyBracketOrderFill GetResourceIdForBracketOrder(lBracketOrder)
+        ElseIf ev.ChangeType = BracketOrderChangeTypes.BracketOrderStopLossOrderChanged Then
+            lRequest.EventSink.NotifyBracketOrderStopLossAdjusted GetResourceIdForBracketOrder(lBracketOrder)
+        End If
         gClearStrategyRunner
-    End If
+    Loop
+    
 ElseIf TypeOf ev.Source Is PositionManager Then
     Dim lPositionManager As PositionManager
     Set lPositionManager = ev.Source
@@ -237,6 +251,19 @@ End Property
 ' Methods
 '================================================================================
 
+Public Function GetResourceIdForBracketOrder( _
+                ByVal pBracketOrder As IBracketOrder) As ResourceIdentifier
+Const ProcName As String = "GetResourceIdForBracketOrder"
+On Error GoTo Err
+
+Set GetResourceIdForBracketOrder = mBracketOrderMapping.Item(GetObjectKey(pBracketOrder))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Friend Sub InitialisationContextIsReady(ByVal pContext As InitialisationContext)
 Const ProcName As String = "InitialisationContextIsReady"
 On Error GoTo Err
@@ -301,6 +328,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub MapBracketOrderToResourceId( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pIdentifer As ResourceIdentifier)
+Const ProcName As String = "MapBracketOrderToResourceId"
+On Error GoTo Err
+
+mBracketOrderMapping.Add pIdentifer, GetObjectKey(pBracketOrder)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub PrepareSymbol( _
                 ByVal pSymbol As String)
 Const ProcName As String = "PrepareSymbol"
@@ -351,22 +392,12 @@ End Sub
 
 Friend Sub RequestBracketOrderNotification( _
                 ByVal pBracketOrder As IBracketOrder, _
-                ByVal pStrategy As Object)
+                ByVal pStrategy As Object, _
+                ByVal pResourceContext As ResourceContext)
 Const ProcName As String = "RequestBracketOrderNotification"
 On Error GoTo Err
 
-Dim lKey As String: lKey = GetObjectKey(pBracketOrder)
-
-Dim lRequests As Collection
-If mBracketOrderNotificationRequests.Contains(lKey) Then
-    Set lRequests = mBracketOrderNotificationRequests.Item(lKey)
-    lRequests.Add pStrategy
-Else
-    Set lRequests = New Collection
-    lRequests.Add pStrategy
-    mBracketOrderNotificationRequests.Add lRequests, lKey
-End If
-
+mBracketOrderNotificationRequests.Add pBracketOrder, pStrategy, pResourceContext
 pBracketOrder.AddChangeListener Me
 
 Exit Sub

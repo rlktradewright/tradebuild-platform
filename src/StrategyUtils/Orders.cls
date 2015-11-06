@@ -125,7 +125,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get EntryPrice(ByVal BracketOrder As ResourceIdentifier) As Double
+Public Property Get AveragePrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
+Const ProcName As String = "AveragePrice"
+On Error GoTo Err
+
+AveragePrice = getBracketOrder(BracketOrder).EntryOrder.AveragePrice
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get EntryPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
 Const ProcName As String = "EntryPrice"
 On Error GoTo Err
 
@@ -137,7 +149,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get EntryOffset(ByVal BracketOrder As ResourceIdentifier) As Long
+Public Property Get EntryOffset(Optional ByVal BracketOrder As ResourceIdentifier) As Long
 Const ProcName As String = "EntryOffset"
 On Error GoTo Err
 
@@ -149,7 +161,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get EntryTriggerPrice(ByVal BracketOrder As ResourceIdentifier) As Double
+Public Property Get EntryTriggerPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
 Const ProcName As String = "EntryTriggerPrice"
 On Error GoTo Err
 
@@ -161,11 +173,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get IsCompleted(ByVal BracketOrder As ResourceIdentifier)
+Public Property Get IsBuy(Optional ByVal BracketOrder As ResourceIdentifier) As Boolean
+Const ProcName As String = "IsBuy"
+On Error GoTo Err
+
+IsBuy = getBracketOrder(BracketOrder).LongPosition
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IsCompleted(Optional ByVal BracketOrder As ResourceIdentifier) As Boolean
 Const ProcName As String = "IsCompleted"
 On Error GoTo Err
 
 IsCompleted = (getBracketOrder(BracketOrder).State = BracketOrderStateClosed)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IsSell(Optional ByVal BracketOrder As ResourceIdentifier) As Boolean
+Const ProcName As String = "IsSell"
+On Error GoTo Err
+
+IsSell = Not getBracketOrder(BracketOrder).LongPosition
 
 Exit Property
 
@@ -233,6 +269,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get PrimaryBracketOrder() As ResourceIdentifier
+Const ProcName As String = "PrimaryBracketOrder"
+On Error GoTo Err
+
+Set PrimaryBracketOrder = gResourceContext.PrimaryBracketOrder
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get QuantityFilled(Optional ByVal BracketOrder As ResourceIdentifier) As Long
+Const ProcName As String = "QuantityFilled"
+On Error GoTo Err
+
+QuantityFilled = getBracketOrder(BracketOrder).EntryOrder.QuantityFilled
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get Size(ByVal OrderContext As ResourceIdentifier) As Long
 Const ProcName As String = "Size"
 On Error GoTo Err
@@ -245,7 +305,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get StopLossPrice(ByVal BracketOrder As ResourceIdentifier) As Double
+Public Property Get StopLossPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
 Const ProcName As String = "StopLossPrice"
 On Error GoTo Err
 
@@ -257,7 +317,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get StopLossOffset(ByVal BracketOrder As ResourceIdentifier) As Long
+Public Property Get StopLossOffset(Optional ByVal BracketOrder As ResourceIdentifier) As Long
 Const ProcName As String = "StopLossOffset"
 On Error GoTo Err
 
@@ -269,7 +329,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get StopLossTriggerPrice(ByVal BracketOrder As ResourceIdentifier) As Double
+Public Property Get StopLossTriggerPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
 Const ProcName As String = "StopLossTriggerPrice"
 On Error GoTo Err
 
@@ -281,7 +341,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TargetPrice(ByVal BracketOrder As ResourceIdentifier) As Double
+Public Property Get TargetPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
 Const ProcName As String = "TargetPrice"
 On Error GoTo Err
 
@@ -293,7 +353,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TargetOffset(ByVal BracketOrder As ResourceIdentifier) As Long
+Public Property Get TargetOffset(Optional ByVal BracketOrder As ResourceIdentifier) As Long
 Const ProcName As String = "TargetOffset"
 On Error GoTo Err
 
@@ -305,7 +365,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TargetTriggerPrice(ByVal BracketOrder As ResourceIdentifier) As Double
+Public Property Get TargetTriggerPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
 Const ProcName As String = "TargetTriggerPrice"
 On Error GoTo Err
 
@@ -369,6 +429,21 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub AdjustStop( _
+                ByVal StopTriggerPrice As Double, _
+                Optional ByVal Quantity As Long = -1, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "AdjustStop"
+On Error GoTo Err
+
+getBracketOrder(BracketOrder).AdjustStop StopTriggerPrice, Quantity
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Function Buy( _
                 ByVal Number As Long, _
                 ByVal EntryOrder As ResourceIdentifier, _
@@ -409,9 +484,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub Cancel(ByVal BracketOrder As ResourceIdentifier, _
-                Optional ByVal EvenIfFilled As Boolean)
-Const ProcName As String = "Cancel"
+Public Sub CancelBracketOrder( _
+                Optional ByVal EvenIfFilled As Boolean, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "CancelBracketOrder"
 On Error GoTo Err
 
 getBracketOrder(BracketOrder).Cancel EvenIfFilled
@@ -420,6 +496,10 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ClearPrimaryBracketOrder()
+gResourceContext.ClearPrimaryBracketOrder
 End Sub
 
 Public Sub CloseAllPositions()
@@ -486,9 +566,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Sub SetEntryReason( _
+                ByVal Reason As String, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "SetEntryReason"
+On Error GoTo Err
+
+getBracketOrder(BracketOrder).EntryReason = Reason
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub SetNewEntryPrice( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Price As Double)
+                ByVal Price As Double, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewEntryPrice"
 On Error GoTo Err
 
@@ -501,8 +595,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewEntryTriggerPrice( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Price As Double)
+                ByVal Price As Double, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewEntryTriggerPrice"
 On Error GoTo Err
 
@@ -515,8 +609,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewQuantity( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Quantity As Long)
+                ByVal Quantity As Double, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewQuantity"
 On Error GoTo Err
 
@@ -529,8 +623,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossOffset( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Offset As Long)
+                ByVal Offset As Long, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewStopLossOffset"
 On Error GoTo Err
 
@@ -543,8 +637,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossPrice( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Price As Double)
+                ByVal Price As Double, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewStopLossPrice"
 On Error GoTo Err
 
@@ -557,8 +651,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossTriggerPrice( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Price As Double)
+                ByVal Price As Double, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
+
 Const ProcName As String = "SetNewStopLossTriggerPrice"
 On Error GoTo Err
 
@@ -571,8 +666,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetOffset( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Offset As Long)
+                ByVal Offset As Long, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewTargetOffset"
 On Error GoTo Err
 
@@ -585,8 +680,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetPrice( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Price As Double)
+                ByVal Price As Double, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewEntryTriggerPrice"
 On Error GoTo Err
 
@@ -599,8 +694,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetTriggerPrice( _
-                ByVal BracketOrder As ResourceIdentifier, _
-                ByVal Price As Double)
+                ByVal Price As Double, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewTargetTriggerPrice "
 On Error GoTo Err
 
@@ -612,8 +707,49 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub SetPrimaryBracketOrder(ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "SetPrimaryBracketOrder"
+On Error GoTo Err
+
+AssertArgument TypeOf BracketOrder.Resource Is IBracketOrder, "BracketOrder is not a BracketOrder object"
+gResourceContext.SetPrimaryBracketOrder BracketOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetStopReason( _
+                ByVal Reason As String, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "SetStopReason "
+On Error GoTo Err
+
+getBracketOrder(BracketOrder).StopReason = Reason
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetTargetReason( _
+                ByVal Reason As String, _
+                Optional ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "SetTargetReason"
+On Error GoTo Err
+
+getBracketOrder(BracketOrder).TargetReason = Reason
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub Update( _
-                ByVal BracketOrder As ResourceIdentifier)
+                Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "Update"
 On Error GoTo Err
 
@@ -685,10 +821,11 @@ Else
                             pCancelAfter)
 End If
 
-augmentBracketOrder lBracketOrder, pNotifyCompletion
-
 Set buyOrSell = gCreateResourceIdentifier(lBracketOrder)
-gResourceContext.MapBracketOrderToResourceId lBracketOrder, buyOrSell
+gStrategyRunner.MapBracketOrderToResourceId lBracketOrder, buyOrSell
+
+requestNotification lBracketOrder, pNotifyCompletion
+createAttachedStrategies lBracketOrder
 
 Exit Function
 
@@ -696,20 +833,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub augmentBracketOrder( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pNotifyCompletion As Boolean)
-Const ProcName As String = "augmentBracketOrder"
+Private Sub createAttachedStrategies( _
+                ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "createAttachedStrategies"
 On Error GoTo Err
-
-If pNotifyCompletion Then gStrategyRunner.RequestBracketOrderNotification pBracketOrder, gStrategy
 
 If TypeOf gStrategy Is IStrategy Then
     If Not gStrategyRunner.StopStrategyFactory Is Nothing Then
         gTradingContext.ApplyPositionManagementStrategy _
                     pBracketOrder, _
                     gStrategyRunner.StopStrategyFactory.CreateStrategy(gTradingContext), _
-                    gStrategyRunner.StopStrategyResourceContext
+                    gStrategyRunner.StopStrategyResourceContext.Clone
 '    elseif Not gStrategyRunner.ScaleStrategyFactory Is Nothing Then
 '        gTradingContext.ApplyPositionManagementStrategy _
 '                    pBracketOrder, _
@@ -800,7 +934,7 @@ End Function
 
 Private Function getBracketOrder( _
                 ByVal pBracketOrderIdentifier As ResourceIdentifier) As IBracketOrder
-AssertArgument Not pBracketOrderIdentifier Is Nothing, "BracketOrder must be supplied"
+If pBracketOrderIdentifier Is Nothing Then Set pBracketOrderIdentifier = gResourceContext.PrimaryBracketOrder
 
 Dim lObj As Object
 Set lObj = pBracketOrderIdentifier.Resource
@@ -855,6 +989,20 @@ AssertArgument lOrderSpec.OrderRole = pRole, "Order specifier not correct role (
 
 Set getOrderSpecifier = lOrderSpec
 End Function
+
+Private Sub requestNotification( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pNotifyCompletion As Boolean)
+Const ProcName As String = "requestNotification"
+On Error GoTo Err
+
+If pNotifyCompletion Then gStrategyRunner.RequestBracketOrderNotification pBracketOrder, gStrategy, gResourceContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
 

@@ -51,7 +51,7 @@ Private mPrimaryMACD                                As ResourceIdentifier
 Private mPrimarySMA                                 As ResourceIdentifier
 Private mPrimarySwing                               As ResourceIdentifier
 
-Private mBracketOrderMapping                        As New EnumerableCollection
+Private mPrimaryBracketOrder                        As ResourceIdentifier
 
 '@================================================================================
 ' Class Event Handlers
@@ -71,6 +71,10 @@ Private mBracketOrderMapping                        As New EnumerableCollection
 
 Friend Property Get PrimaryBollingerBands() As ResourceIdentifier
 Set PrimaryBollingerBands = mPrimaryBollingerBands
+End Property
+
+Friend Property Get PrimaryBracketOrder() As ResourceIdentifier
+Set PrimaryBracketOrder = mPrimaryBracketOrder
 End Property
 
 Friend Property Get PrimaryMACD() As ResourceIdentifier
@@ -97,31 +101,25 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function GetResourceIdForBracketOrder( _
-                ByVal pBracketOrder As IBracketOrder) As ResourceIdentifier
-Const ProcName As String = "GetResourceIdForBracketOrder"
-On Error GoTo Err
+Friend Sub ClearPrimaryBracketOrder()
+Set mPrimaryBracketOrder = Nothing
+End Sub
 
-Set GetResourceIdForBracketOrder = mBracketOrderMapping.Item(GetObjectKey(pBracketOrder))
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Function Clone() As ResourceContext
+Set Clone = New ResourceContext
+Clone.CloneFrom Me
 End Function
 
-Friend Sub MapBracketOrderToResourceId( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pIdentifer As ResourceIdentifier)
-Const ProcName As String = "MapBracketOrderToResourceId"
-On Error GoTo Err
+Friend Sub CloneFrom(ByVal o As ResourceContext)
+Set mPrimaryTimeframe = o.PrimaryTimeframe
+Set mPrimaryBollingerBands = o.PrimaryBollingerBands
+Set mPrimaryMACD = o.PrimaryMACD
+Set mPrimarySMA = o.PrimarySMA
+Set mPrimarySwing = o.PrimarySwing
+End Sub
 
-mBracketOrderMapping.Add pIdentifer, GetObjectKey(pBracketOrder)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Sub SetPrimaryBracketOrder(ByVal BracketOrder As ResourceIdentifier)
+Set mPrimaryBracketOrder = BracketOrder
 End Sub
 
 Friend Sub SetPrimaryStudyOfType(ByVal pStudy As ResourceIdentifier)

@@ -84,15 +84,6 @@ Public Sub Initialise( _
                 ByVal pInitialisationContext As InitialisationContext)
 End Sub
 
-Public Sub NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
 Public Sub NotifyNoLivePositions()
 End Sub
 

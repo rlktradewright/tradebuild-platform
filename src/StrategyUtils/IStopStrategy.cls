@@ -67,21 +67,12 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub NotifyTick(ByVal TickType As TickTypes)
+End Sub
+
 Public Sub Start( _
-                ByVal pContext As TradingContext, _
-                ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
-End Sub
-
-Public Sub NotifyTick(ByVal pType As TickTypes)
+                ByVal Context As TradingContext, _
+                ByVal BracketOrder As ResourceIdentifier)
 End Sub
 
 '@================================================================================

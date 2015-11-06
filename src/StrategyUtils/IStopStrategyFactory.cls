@@ -65,14 +65,14 @@ Private Const ModuleName                            As String = "IStopStrategyFa
 '@================================================================================
 
 Public Function CreateStrategy( _
-                ByVal pTradingContext As TradingContext) As IStopStrategy
+                ByVal TradingContext As TradingContext) As IStopStrategy
 End Function
 
 Public Sub DefineDefaultParameters()
 End Sub
 
 Public Sub Initialise( _
-                ByVal pInitialisationContext As InitialisationContext)
+                ByVal InitialisationContext As InitialisationContext)
 End Sub
 
 '@================================================================================

@@ -392,13 +392,13 @@ mPositionMgmgtStrategies.Add pStrategy
 mPositionMgmgtResourceContexts.Add pResourceContext, GetObjectKey(pStrategy)
 
 mStrategyRunner.SetCurrent pStrategy, pResourceContext
-mStrategyRunner.RequestBracketOrderNotification pBracketOrder, pStrategy
+mStrategyRunner.RequestBracketOrderNotification pBracketOrder, pStrategy, pResourceContext
 If TypeOf pStrategy Is IStopStrategy Then
     Dim lStopStrategy As IStopStrategy: Set lStopStrategy = pStrategy
-    lStopStrategy.Start Me, pBracketOrder
+    lStopStrategy.Start Me, mStrategyRunner.GetResourceIdForBracketOrder(pBracketOrder)
 Else
     Dim lScaleStrategy As IScaleStrategy: Set lScaleStrategy = pStrategy
-    lScaleStrategy.Start Me, pBracketOrder
+    lScaleStrategy.Start Me, mStrategyRunner.GetResourceIdForBracketOrder(pBracketOrder)
 End If
 mStrategyRunner.SetNotCurrent
 
@@ -414,6 +414,26 @@ Const ProcName As String = "GetBars"
 On Error GoTo Err
 
 Set getBars = pTimeframe.BarStudy.BarsFuture.Value
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetStudyValue( _
+                ByVal Study As ResourceIdentifier, _
+                Optional ByVal ValueName As String, _
+                Optional ByVal Ref) As Variant
+Const ProcName As String = "GetStudyValue"
+On Error GoTo Err
+
+AssertArgument Not Study Is Nothing, "Study is nothing"
+AssertArgument TypeOf Study.Resource Is IStudy, "Study does not refer to a Study object"
+
+Dim lStudy As IStudy: Set lStudy = Study.Resource
+If ValueName = "" Then ValueName = lStudy.StudyDefinition.DefaultValueName
+GetStudyValue = lStudy.GetStudyValue(ValueName, Ref).Value
 
 Exit Function
 

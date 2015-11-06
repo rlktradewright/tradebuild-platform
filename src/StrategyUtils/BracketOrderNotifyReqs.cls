@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IScaleStrategy"
+Attribute VB_Name = "BracketOrderNotifyReqs"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -38,11 +38,13 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IScaleStrategy"
+Private Const ModuleName                            As String = "BracketOrderNotifyReqs"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mBracketOrderNotificationRequests           As New EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,25 +62,58 @@ Private Const ModuleName                            As String = "IScaleStrategy"
 ' Properties
 '@================================================================================
 
-Public Property Get Name() As String
-End Property
+Friend Function GetEnumerator(pBracketOrder) As Enumerator
+Const ProcName As String = "GetEnumerator"
+On Error GoTo Err
+
+Dim lKey As String: lKey = GetObjectKey(pBracketOrder)
+AssertArgument mBracketOrderNotificationRequests.Contains(lKey), "No notification requests for pBracketOrder"
+
+Dim lRequests As EnumerableCollection
+Set lRequests = mBracketOrderNotificationRequests.Item(lKey)
+
+Set GetEnumerator = lRequests.Enumerator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub NotifyTick(ByVal TickType As TickTypes)
-End Sub
+Friend Sub Add( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pStrategy As Object, _
+                ByVal pResourceContext As ResourceContext)
+Const ProcName As String = "Add"
+On Error GoTo Err
 
-Public Sub Start( _
-                ByVal TradingContext As TradingContext, _
-                ByVal BracketOrder As ResourceIdentifier)
+Dim lKey As String: lKey = GetObjectKey(pBracketOrder)
+
+Dim lRequests As EnumerableCollection
+If mBracketOrderNotificationRequests.Contains(lKey) Then
+    Set lRequests = mBracketOrderNotificationRequests.Item(lKey)
+Else
+    Set lRequests = New EnumerableCollection
+    mBracketOrderNotificationRequests.Add lRequests, lKey
+End If
+
+Dim lNotificationRequest As New NotificationRequest
+lNotificationRequest.Initialise pStrategy, pResourceContext
+lRequests.Add lNotificationRequest
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
 
 
 
