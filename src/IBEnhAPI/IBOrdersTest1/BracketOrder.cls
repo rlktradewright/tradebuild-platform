@@ -127,6 +127,9 @@ End Property
 Private Property Get IBracketOrder_EntryPrice() As Double
 End Property
 
+Private Property Let IBracketOrder_EntryReason(ByVal RHS As String)
+End Property
+
 Private Property Get IBracketOrder_EntryReason() As String
 End Property
 
@@ -188,11 +191,17 @@ Private Property Get IBracketOrder_StopLossOrder() As IOrder
 Set IBracketOrder_StopLossOrder = StopLossOrder
 End Property
 
+Private Property Let IBracketOrder_StopReason(ByVal RHS As String)
+End Property
+
 Private Property Get IBracketOrder_StopReason() As String
 End Property
 
 Private Property Get IBracketOrder_TargetOrder() As IOrder
 Set IBracketOrder_TargetOrder = TargetOrder
+End Property
+
+Private Property Let IBracketOrder_TargetReason(ByVal RHS As String)
 End Property
 
 Private Property Get IBracketOrder_TargetReason() As String
