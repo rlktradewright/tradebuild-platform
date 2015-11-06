@@ -28,6 +28,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IBracketOrderEventSink
 Implements IStrategy
 
 '@================================================================================
@@ -62,8 +63,8 @@ Private Const MessagePrefix                         As String = ">>> "
 ' Member variables
 '@================================================================================
 
-Private mBracketOrderBuy As ResourceIdentifier
-Private mBracketOrderSell As ResourceIdentifier
+'Private mBracketOrderBuy As ResourceIdentifier
+'Private mBracketOrderSell As ResourceIdentifier
 Private mBracketOrderBuyDummy As ResourceIdentifier
 Private mBracketOrderSellDummy As ResourceIdentifier
 
@@ -84,6 +85,8 @@ Private mBackstopMAOffset As Integer
 
 Private mSwingToBreakeven As Double
 
+Private mCurrentBarNumber As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -96,6 +99,31 @@ End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "MACDStrategy21 terminated"
+End Sub
+
+'@================================================================================
+' IBracketOrderEventSink Interface Members
+'@================================================================================
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderCompletion( _
+                ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "IBracketOrderEventSink_NotifyBracketOrderCompletion"
+On Error GoTo Err
+
+checkTradingOpportunity
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
+' nothing to do here
+End Sub
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
+' nothing to do here
 End Sub
 
 '@================================================================================
@@ -190,27 +218,6 @@ Private Property Get IStrategy_Name() As String
 IStrategy_Name = "MACDStrategy21"
 End Property
 
-Private Sub IStrategy_NotifyBracketOrderCompletion( _
-                ByVal BracketOrder As ResourceIdentifier)
-Const ProcName As String = "IStrategy_NotifyBracketOrderCompletion"
-On Error GoTo Err
-
-checkTradingOpportunity
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IStrategy_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
-' nothing to do here
-End Sub
-
-Private Sub IStrategy_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
-' nothing to do here
-End Sub
-
 Private Sub IStrategy_NotifyNoLivePositions()
 ' nothing to do here
 End Sub
@@ -232,6 +239,7 @@ Const ProcName As String = "IStrategy_NotifyTick"
 On Error GoTo Err
 
 If Not IsCurrentTickTrade Then Exit Sub
+If mNoTradeThisBar Then Exit Sub
 If Not isNewBar Then Exit Sub
 
 mNoTradeThisBar = False
@@ -280,9 +288,9 @@ On Error GoTo Err
 If PendingSimulatedBuySize = 0 Then Exit Function
 
 LogTradeMessage "Previous signal cancelled - cancelling pending buy orders"
-Cancel mBracketOrderBuyDummy
+CancelBracketOrder False, mBracketOrderBuyDummy
 If PendingBuySize <> 0 Then
-    Cancel mBracketOrderBuy
+    CancelBracketOrder
 End If
 
 CancelPendingBuyOrders = True
@@ -300,9 +308,9 @@ On Error GoTo Err
 If PendingSimulatedSellSize = 0 Then Exit Function
 
 LogTradeMessage "Previous signal cancelled - cancelling pending sell orders"
-Cancel mBracketOrderSellDummy
+CancelBracketOrder False, mBracketOrderSellDummy
 If PendingSellSize <> 0 Then
-    Cancel mBracketOrderSell
+    CancelBracketOrder
 End If
 
 CancelPendingSellOrders = True
@@ -353,18 +361,18 @@ Private Function IsConfirmedBuy(lMessage) As Boolean
 Const ProcName As String = "IsConfirmedBuy"
 On Error GoTo Err
 
-If CurrentBarNumber - SwingLowBarNumber() <= 3 Then
+If mCurrentBarNumber - SwingLowBarNumber() <= 3 Then
     IsConfirmedBuy = True
 ElseIf PotentialSwingLow() = MaxDouble Then
     lMessage = lMessage & getRejectMessage("more than 3 Bars since swing low at ") & FormatTimestamp(SwingLowTime(), TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
     IsConfirmedBuy = False
-ElseIf CurrentBarNumber - PotentialSwingLowBarNumber() > 3 Then
+ElseIf mCurrentBarNumber - PotentialSwingLowBarNumber() > 3 Then
     lMessage = lMessage & getRejectMessage("more than 3 Bars since potential swing low at ") & FormatTimestamp(PotentialSwingLowTime(), TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
     IsConfirmedBuy = False
-ElseIf CurrentBarNumber - PotentialSwingLowBarNumber() = 1 Then
+ElseIf mCurrentBarNumber - PotentialSwingLowBarNumber() = 1 Then
     lMessage = lMessage & getRejectMessage("signal bar is potential swing low")
     IsConfirmedBuy = False
-ElseIf CurrentBarNumber = PotentialSwingLowBarNumber() Then
+ElseIf mCurrentBarNumber = PotentialSwingLowBarNumber() Then
     lMessage = lMessage & getRejectMessage("potential new swing low this bar")
     IsConfirmedBuy = False
 Else
@@ -392,18 +400,18 @@ Private Function IsConfirmedSell(lMessage) As Boolean
 Const ProcName As String = "IsConfirmedSell"
 On Error GoTo Err
 
-If CurrentBarNumber - SwingHighBarNumber() <= 3 Then
+If mCurrentBarNumber - SwingHighBarNumber() <= 3 Then
     IsConfirmedSell = True
 ElseIf PotentialSwingHigh() = MinDouble Then
     lMessage = lMessage & getRejectMessage("more than 3 Bars since swing high at ") & FormatTimestamp(SwingHighTime(), TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
     IsConfirmedSell = False
-ElseIf CurrentBarNumber - PotentialSwingHighBarNumber() > 3 Then
+ElseIf mCurrentBarNumber - PotentialSwingHighBarNumber() > 3 Then
     lMessage = lMessage & getRejectMessage("more than 3 Bars since potential swing high at ") & FormatTimestamp(PotentialSwingHighTime(), TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
     IsConfirmedSell = False
-ElseIf CurrentBarNumber - PotentialSwingHighBarNumber() = 1 Then
+ElseIf mCurrentBarNumber - PotentialSwingHighBarNumber() = 1 Then
     lMessage = lMessage & getRejectMessage("signal bar is potential swing high")
     IsConfirmedSell = False
-ElseIf CurrentBarNumber = PotentialSwingHighBarNumber() Then
+ElseIf mCurrentBarNumber = PotentialSwingHighBarNumber() Then
     lMessage = lMessage & getRejectMessage("potential new swing high this bar")
     IsConfirmedSell = False
 Else
@@ -537,18 +545,18 @@ Dim lCancelPrice As Double
 Dim lRisk As Double
 
 calcPricesForBuy lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice, lRisk
-SetNewEntryTriggerPrice mBracketOrderBuyDummy, lTriggerPrice
-SetNewStopLossTriggerPrice mBracketOrderBuyDummy, lStopPrice
+SetNewEntryTriggerPrice lTriggerPrice, mBracketOrderBuyDummy
+SetNewStopLossTriggerPrice lStopPrice, mBracketOrderBuyDummy
 
 Update mBracketOrderBuyDummy
     
 If PendingBuySize = 0 Then Exit Sub
 
-SetNewQuantity mBracketOrderBuy, UnitSize(lRisk)
-SetNewEntryTriggerPrice mBracketOrderBuy, lTriggerPrice
-SetNewEntryPrice mBracketOrderBuy, lTriggerPrice - mEntryLimitOffsetTicks * TickSize
-SetNewStopLossTriggerPrice mBracketOrderBuy, lStopPrice
-Update mBracketOrderBuy
+SetNewQuantity UnitSize(lRisk)
+SetNewEntryTriggerPrice lTriggerPrice
+SetNewEntryPrice lTriggerPrice - mEntryLimitOffsetTicks * TickSize
+SetNewStopLossTriggerPrice lStopPrice
+Update
 
 Exit Sub
 
@@ -570,18 +578,18 @@ Dim lCancelPrice As Double
 Dim lRisk As Double
 
 calcPricesForSell lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice, lRisk
-SetNewEntryTriggerPrice mBracketOrderSellDummy, lTriggerPrice
-SetNewStopLossTriggerPrice mBracketOrderSellDummy, lStopPrice
+SetNewEntryTriggerPrice lTriggerPrice, mBracketOrderSellDummy
+SetNewStopLossTriggerPrice lStopPrice, mBracketOrderSellDummy
 
 Update mBracketOrderSellDummy
     
 If PendingSellSize = 0 Then Exit Sub
 
-SetNewQuantity mBracketOrderSell, UnitSize(lRisk)
-SetNewEntryTriggerPrice mBracketOrderSell, lTriggerPrice
-SetNewEntryPrice mBracketOrderSell, lTriggerPrice + mEntryLimitOffsetTicks * TickSize
-SetNewStopLossTriggerPrice mBracketOrderSell, lStopPrice
-Update mBracketOrderSell
+SetNewQuantity UnitSize(lRisk)
+SetNewEntryTriggerPrice lTriggerPrice
+SetNewEntryPrice lTriggerPrice + mEntryLimitOffsetTicks * TickSize
+SetNewStopLossTriggerPrice lStopPrice
+Update
 
 Exit Sub
 
@@ -624,7 +632,7 @@ If ActiveBuySize <> 0 Or PendingBuySize <> 0 Then Exit Sub
 
 If UnitSize(lRisk) = 0 Then Exit Sub
 
-Set mBracketOrderBuy = Buy( _
+SetPrimaryBracketOrder Buy( _
                             Number:=UnitSize(lRisk), _
                             EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
                                                         price:=lTriggerPrice, _
@@ -674,7 +682,7 @@ If ActiveSellSize <> 0 Or PendingSellSize <> 0 Then Exit Sub
 
 If UnitSize(lRisk) = 0 Then Exit Sub
 
-Set mBracketOrderSell = Sell( _
+SetPrimaryBracketOrder Sell( _
                             Number:=UnitSize(lRisk), _
                             EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
                                                         price:=lTriggerPrice, _
@@ -860,9 +868,9 @@ getTriggerPriceShort = CloseValue(-1) - mEntryBreakoutThresholdTicks * TickSize
 End Function
 
 Private Function isNewBar() As Boolean
-Static sCurrentBarNumer As Long
-If CurrentBarNumber <> sCurrentBarNumer Then
-    sCurrentBarNumer = CurrentBarNumber
+Dim lBarNumber As Long: lBarNumber = CurrentBarNumber
+If lBarNumber <> mCurrentBarNumber Then
+    mCurrentBarNumber = lBarNumber
     isNewBar = True
 End If
 End Function

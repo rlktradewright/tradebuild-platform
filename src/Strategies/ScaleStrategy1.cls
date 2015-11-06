@@ -17,6 +17,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements IBracketOrderEventSink
 Implements IScaleStrategy
 
 '================================================================================
@@ -42,10 +43,7 @@ Private Const ModuleName                            As String = "ScaleStrategy1"
 '================================================================================
 
 Private mContext As TradingContext
-Private mOrderContext As OrderContext
 
-Private WithEvents mInitialBracketOrder As BracketOrder
-Attribute mInitialBracketOrder.VB_VarHelpID = -1
 Private WithEvents mAdditionalBracketOrder As BracketOrder   ' use this to catch the
 Attribute mAdditionalBracketOrder.VB_VarHelpID = -1
                                                         ' fill event
@@ -77,6 +75,78 @@ Debug.Print "CScaleStrategy1 terminated"
 End Sub
 
 '================================================================================
+' IBracketOrderEventSink Interface Members
+'================================================================================
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "IBracketOrderEventSink_NotifyBracketOrderCompletion"
+On Error GoTo Err
+
+If Not BracketOrder Is PrimaryBracketOrder Then Exit Sub
+If S.MaxIncrements = 0 Then Exit Sub     ' nothing to do
+
+ClearPrimaryBracketOrder
+Set mAdditionalBracketOrder = Nothing
+Set mAdditionalBracketOrders = Nothing
+mContext.StopTickData Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "IBracketOrderEventSink_NotifyBracketOrderFill"
+On Error GoTo Err
+
+If S.MaxIncrements = 0 Then Exit Sub     ' nothing to do
+
+Dim priceIncrement As Double
+
+If BracketOrder Is PrimaryBracketOrder Then
+    mLongPosition = IsBuy
+    
+    mInitialEntryPrice = AveragePrice
+    
+    mContext.StartTickData Me
+    
+    mInitialATR = mContext.GetStudyValue(S.ATR)
+    mUnitSize = Int((S.RiskIncrementPercent * AccountBalance / 100) / (mTickValue * mInitialATR / mTickSize))
+    If mUnitSize = 0 Then mUnitSize = 1
+    
+    priceIncrement = Int((S.ScaleThresholdFactor * mInitialATR / mTickSize) + 0.9999) * mTickSize
+    mNextPriceThreshold = mInitialEntryPrice + IIf(mLongPosition, priceIncrement, -priceIncrement)
+Else
+    If mNumberOfIncrements = S.MaxIncrements Then mContext.StopTickData Me
+    priceIncrement = Int((S.ScaleThresholdFactor * mInitialATR / mTickSize) + 0.9999) * mTickSize
+    mNextPriceThreshold = AveragePrice(mAdditionalBracketOrder) + IIf(mLongPosition, priceIncrement, -priceIncrement)
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "IBracketOrderEventSink_NotifyBracketOrderStopLossAdjusted"
+On Error GoTo Err
+
+If Not BracketOrder Is PrimaryBracketOrder Then Exit Sub
+
+Dim bo As ResourceIdentifier
+For Each bo In mAdditionalBracketOrders
+    If Not IsCompleted(bo) Then AdjustStop StopLossTriggerPrice, , bo
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
 ' IScaleStrategy Interface Members
 '================================================================================
 
@@ -84,29 +154,13 @@ Private Property Get IScaleStrategy_Name() As String
 IScaleStrategy_Name = "ScaleStrategy1"
 End Property
 
-Private Sub IScaleStrategy_NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
-
-End Sub
-
-Private Sub IScaleStrategy_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
-
-End Sub
-
-Private Sub IScaleStrategy_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
-
-End Sub
-
 Private Sub IScaleStrategy_NotifyTick(ByVal pType As TickTypes)
 Const ProcName As String = "IScaleStrategy_NotifyTick"
 On Error GoTo Err
 
-Dim newValue As Double
-Dim newStopOffsetTicks As Double
-Dim stopIncrement As Double
-Dim plex As IBracketOrder
-
 If pType <> TickTypes.TickTypeTrade Then Exit Sub
 
+Dim newValue As Double
 newValue = mContext.TradeQuote.price
 
 If mLongPosition Then
@@ -122,53 +176,39 @@ End If
 mNumberOfIncrements = mNumberOfIncrements + 1
 
 ' first change the stop loss for all existing BracketOrderes
+Dim stopIncrement As Double
 stopIncrement = Int((S.StopIncrementFactor * mInitialATR / mTickSize) + 0.9999) * mTickSize
 
-mInitialBracketOrder.AdjustStop mInitialBracketOrder.StopLossOrder.TriggerPrice + IIf(mLongPosition, stopIncrement, -stopIncrement)
+AdjustStop StopLossTriggerPrice + IIf(mLongPosition, stopIncrement, -stopIncrement)
 
-On Error Resume Next
-For Each plex In mAdditionalBracketOrders
-    plex.AdjustStop plex.StopLossOrder.TriggerPrice + IIf(mLongPosition, stopIncrement, -stopIncrement)
+Dim bo As ResourceIdentifier
+For Each bo In mAdditionalBracketOrders
+    If Not IsCompleted(bo) Then AdjustStop StopLossTriggerPrice(bo) + IIf(mLongPosition, stopIncrement, -stopIncrement), , bo
 Next
 On Error GoTo 0
 
 ' now buy or sell the required amount
+Dim newStopOffsetTicks As Double
 newStopOffsetTicks = Int((S.InitialStopFactor * mInitialATR / mTickSize) + 0.9999)
 If mLongPosition Then
-    Set mAdditionalBracketOrder = mOrderContext.Buy(Number:=mUnitSize, _
-                    BracketEntryType:=BracketEntryTypeMarket, _
-                    EntryPrice:=0, _
-                    EntryOffset:=0, _
-                    EntryTriggerPrice:=0, _
-                    BracketStopLossType:=BracketStopLossTypeAuto, _
-                    StopLossPrice:=0, _
-                    StopLossOffset:=-newStopOffsetTicks, _
-                    StopLossLimitPrice:=0, _
-                    BracketTargetType:=BracketTargetTypeNone, _
-                    TargetPrice:=0, _
-                    TargetOffset:=0, _
-                    TargetTriggerPrice:=0)
+    Set mAdditionalBracketOrder = Buy( _
+                    Number:=mUnitSize, _
+                    EntryOrder:=DeclareEntryOrder(EntryOrderTypeMarket), _
+                    StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeAuto, Offset:=-newStopOffsetTicks), _
+                    NotifyCompletion:=True)
     If Not mAdditionalBracketOrder Is Nothing Then
         mAdditionalBracketOrders.Add mAdditionalBracketOrder
-        mAdditionalBracketOrder.EntryReason = "A" & mNumberOfIncrements
+        setEntryReason "A" & mNumberOfIncrements, mAdditionalBracketOrder
     End If
 Else
-    Set mAdditionalBracketOrder = mOrderContext.Sell(Number:=mUnitSize, _
-                    BracketEntryType:=BracketEntryTypeMarket, _
-                    EntryPrice:=0, _
-                    EntryOffset:=0, _
-                    EntryTriggerPrice:=0, _
-                    BracketStopLossType:=BracketStopLossTypeAuto, _
-                    StopLossPrice:=0, _
-                    StopLossOffset:=newStopOffsetTicks, _
-                    StopLossLimitPrice:=0, _
-                    BracketTargetType:=BracketTargetTypeNone, _
-                    TargetPrice:=0, _
-                    TargetOffset:=0, _
-                    TargetTriggerPrice:=0)
+    Set mAdditionalBracketOrder = Sell( _
+                    Number:=mUnitSize, _
+                    EntryOrder:=DeclareEntryOrder(EntryOrderTypeMarket), _
+                    StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeAuto, Offset:=newStopOffsetTicks), _
+                    NotifyCompletion:=True)
     If Not mAdditionalBracketOrder Is Nothing Then
         mAdditionalBracketOrders.Add mAdditionalBracketOrder
-        mAdditionalBracketOrder.EntryReason = "A" & mNumberOfIncrements
+        setEntryReason "A" & mNumberOfIncrements, mAdditionalBracketOrder
     End If
 End If
 
@@ -181,88 +221,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IScaleStrategy_Start( _
-                ByVal pContext As TradingContext, _
-                ByVal pBracketOrder As IBracketOrder)
+                ByVal TradingContext As TradingContext, _
+                ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "IScaleStrategy_Start"
 On Error GoTo Err
 
-Set mContext = pContext
-Set mInitialBracketOrder = pBracketOrder
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'================================================================================
-' mAdditionalBracketOrder Event Handlers
-'================================================================================
-
-Private Sub mAdditionalBracketOrder_EntryOrderPartiallyFilled()
-Dim priceIncrement As Double
-
-If mNumberOfIncrements = S.MaxIncrements Then mContext.StopTickData Me
-priceIncrement = Int((S.ScaleThresholdFactor * mInitialATR / mTickSize) + 0.9999) * mTickSize
-mNextPriceThreshold = mAdditionalBracketOrder.EntryOrder.AveragePrice + IIf(mLongPosition, priceIncrement, -priceIncrement)
-End Sub
-
-'================================================================================
-' mInitialBracketOrder Event Handlers
-'================================================================================
-
-Private Sub mInitialBracketOrder_Completed()
-Dim i As Long
-
-If S.MaxIncrements = 0 Then Exit Sub     ' nothing to do
-
-Set mInitialBracketOrder = Nothing
-Set mAdditionalBracketOrder = Nothing
-For i = mAdditionalBracketOrders.Count To 1 Step -1
-    mAdditionalBracketOrders.Remove i
-Next
-mContext.StopTickData Me
-End Sub
-
-Private Sub mInitialBracketOrder_EntryOrderPartiallyFilled()
-Dim priceIncrement As Double
-
-Const ProcName As String = "mInitialBracketOrder_EntryOrderPartiallyFilled"
-On Error GoTo Err
-
-If S.MaxIncrements = 0 Then Exit Sub     ' nothing to do
-
-mLongPosition = IIf(mInitialBracketOrder.EntryOrder.Action = OrderActionBuy, True, False)
-
-mInitialEntryPrice = mInitialBracketOrder.EntryOrder.AveragePrice
-
-mContext.StartTickData Me
-
-mInitialATR = S.ATR.ATR(1).Value
-mUnitSize = Int((S.RiskIncrementPercent * AccountBalance / 100) / (mTickValue * mInitialATR / mTickSize))
-If mUnitSize = 0 Then mUnitSize = 1
-
-priceIncrement = Int((S.ScaleThresholdFactor * mInitialATR / mTickSize) + 0.9999) * mTickSize
-mNextPriceThreshold = mInitialEntryPrice + IIf(mLongPosition, priceIncrement, -priceIncrement)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub mInitialBracketOrder_StopAdjusted()
-Const ProcName As String = "mInitialBracketOrder_StopAdjusted"
-On Error GoTo Err
-
-Dim newStop As Double: newStop = mInitialBracketOrder.StopLossOrder.TriggerPrice
-
-On Error Resume Next    ' it's possible some of the order plexes have already been stopped out
-
-Dim plex As IBracketOrder
-For Each plex In mAdditionalBracketOrders
-    plex.AdjustStop newStop
-Next
+Set mContext = TradingContext
+SetPrimaryBracketOrder BracketOrder
 
 Exit Sub
 

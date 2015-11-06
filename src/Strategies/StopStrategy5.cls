@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IBracketOrderEventSink
 Implements IStopStrategy
 
 '@================================================================================
@@ -42,16 +43,9 @@ Implements IStopStrategy
 
 Private Const ModuleName                            As String = "StopStrategy5"
 
-Private Const DummyLowCurr                          As Double = 922337203685477.5807@
-Private Const DummyHighCurr                         As Double = -922337203685477.5807@
-
 '@================================================================================
 ' Member variables
 '@================================================================================
-
-Private WithEvents mBracketOrder As BracketOrder
-Attribute mBracketOrder.VB_VarHelpID = -1
-Private mStopOrder As IOrder
 
 Private mEntryOrderFilled As Boolean
 Private mEntryPrice As Double
@@ -98,24 +92,140 @@ Debug.Print "StopStrategy5 terminated"
 End Sub
 
 '================================================================================
+' IBracketOrderEventSink Interface Members
+'================================================================================
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "IBracketOrderEventSink_NotifyBracketOrderCompletion"
+On Error GoTo Err
+
+If mReceivingTicks Then StopTickData Me
+mReceivingTicks = False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
+Const ProcName As String = "IBracketOrderEventSink_NotifyBracketOrderFill"
+On Error GoTo Err
+
+mEntryOrderFilled = True
+SetStopReason "IS/0"
+mEntryPrice = AveragePrice
+
+If S.RewardToRiskRatio <> 0 Then
+    If mLongPosition Then
+        mTargetPrice = mEntryPrice + S.RewardToRiskRatio * (mEntryPrice - mInitialStopPrice)
+    Else
+        mTargetPrice = mEntryPrice - S.RewardToRiskRatio * (mInitialStopPrice - mEntryPrice)
+    End If
+End If
+
+If Not mReceivingTicks Then
+    mReceivingTicks = True
+    StartTickData Me
+    mHighest = CloseValue(0)
+    mLowest = mHighest
+End If
+
+If Not S.BreakevenTimeframe Is Nothing And mBreakevenEntryBar <> 0 Then
+    mBreakevenEntryBar = BarNumber(0, S.BreakevenTimeframe)
+End If
+
+If mReferenceBar <> 0 Then Exit Sub ' means reference point was set via the ReferencePoint
+                                    ' property or this is not the first partial fill
+                                    
+
+mReferenceBar = BarNumber(0)
+
+If mTrailStop Then Exit Sub
+
+Dim swingLow1 As Double
+Dim swingLow2 As Double
+Dim swingHigh1 As Double
+Dim swingHigh2 As Double
+
+If mLongPosition Then
+    swingLow1 = IIf(IsEmpty(SwingLow()), MaxDouble, SwingLow())
+    swingLow2 = IIf(IsEmpty(SwingLow(-1)), MaxDouble, SwingLow(-1))
+    If PotentialSwingLow() = MaxDouble Then
+        mNextSwingStopCandidate = swingLow1
+        If Not S.UseIntermediateStops Then
+            mReferencePrice = swingLow1
+'        ElseIf swingLow2 < swingLow1 Then
+'            mReferencePrice = swingLow2
+        Else
+            mReferencePrice = swingLow1
+        End If
+    Else
+        mInitialSwingStartPrice = PotentialSwingLow()
+        If Not S.UseIntermediateStops Then
+            mReferencePrice = PotentialSwingLow()
+'        ElseIf swingLow1 < PotentialSwingLow() Then
+''            mReferencePrice = swingLow2
+''                        ' this should really be swingLow1 but testing seems to give
+''                        ' better results with swingLow2
+'            If swingLow2 < swingLow1 Then
+'                mReferencePrice = swingLow2
+'            Else
+'                mReferencePrice = swingLow1
+'        Else
+            mReferencePrice = PotentialSwingLow()
+        End If
+    End If
+Else
+    swingHigh1 = IIf(IsEmpty(SwingHigh()), MinDouble, SwingHigh())
+    swingHigh2 = IIf(IsEmpty(SwingHigh(-1)), MinDouble, SwingHigh(-1))
+    If PotentialSwingHigh() = MinDouble Then
+        mInitialSwingStartPrice = swingHigh1
+        If Not S.UseIntermediateStops Then
+            mReferencePrice = swingHigh1
+'        ElseIf swingHigh2 > swingHigh1 Then
+'            mReferencePrice = swingHigh2
+        Else
+            mReferencePrice = swingHigh1
+        End If
+    Else
+        mInitialSwingStartPrice = PotentialSwingHigh()
+        If Not S.UseIntermediateStops Then
+            mReferencePrice = PotentialSwingHigh()
+'        ElseIf swingHigh1 > PotentialSwingHigh() Then
+''            mReferencePrice = swingHigh2
+''                        ' this should really be swingHigh1 but testing seems to give
+''                        ' better results with swingHigh2
+'            If swingHigh2 > swingHigh1 Then
+'                mReferencePrice = swingHigh2
+'            Else
+'                mReferencePrice = swingHigh1
+'            End If
+        Else
+            mReferencePrice = PotentialSwingHigh()
+        End If
+    End If
+End If
+mInitialReferencePrice = mReferencePrice
+If mInitialReferencePrice = 0 Then Stop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBracketOrderEventSink_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
+
+End Sub
+
+'================================================================================
 ' IStopStrategy Interface Members
 '================================================================================
 
 Private Property Get IStopStrategy_Name() As String
 IStopStrategy_Name = "StopStrategy5"
 End Property
-
-Private Sub IStopStrategy_NotifyBracketOrderCompletion(ByVal BracketOrder As ResourceIdentifier)
-
-End Sub
-
-Private Sub IStopStrategy_NotifyBracketOrderFill(ByVal BracketOrder As ResourceIdentifier)
-
-End Sub
-
-Private Sub IStopStrategy_NotifyBracketOrderStopLossAdjusted(ByVal BracketOrder As ResourceIdentifier)
-
-End Sub
 
 Private Sub IStopStrategy_NotifyTick(ByVal pType As TickTypes)
 Const ProcName As String = "IStopStrategy_NotifyTick"
@@ -140,7 +250,7 @@ If Not S.UseIntermediateStops Then
                 mReferencePrice = mInitialReferencePrice
                 mSwingCount = 0
                 mRestartCount = mRestartCount + 1
-                mBracketOrder.StopReason = "IS/" & mRestartCount
+                SetStopReason "IS/" & mRestartCount
                 mHighest = price
             End If
         Else
@@ -150,24 +260,24 @@ If Not S.UseIntermediateStops Then
                 mReferencePrice = mInitialReferencePrice
                 mSwingCount = 0
                 mRestartCount = mRestartCount + 1
-                mBracketOrder.StopReason = "IS/" & mRestartCount
+                SetStopReason "IS/" & mRestartCount
                 mLowest = price
             End If
         End If
     End If
 End If
 
-'If mBracketOrder.State = BracketOrderStateClosed Then
-'    mContext.StopTickData Me
-'    Set mBracketOrder = Nothing
-'    Exit Sub
-'End If
+If IsCompleted Then
+    StopTickData Me
+    ClearPrimaryBracketOrder
+    Exit Sub
+End If
 
 ' NB: can't maintain current stop in a static
 ' variable, since stops may be altered by other
 ' code outside this strategy
 Dim currentStop As Double
-currentStop = mStopOrder.TriggerPrice
+currentStop = StopLossTriggerPrice
 
 Dim newStop As Double
 newStop = currentStop
@@ -183,7 +293,7 @@ If Not S.LongBoll Is Nothing Then
 '        If price >= mLongBoll.centre Then
 '            If mEntryPrice > newStop Then
 '                newStop = mEntryPrice
-'                mBracketOrder.stopReason = "LBE/" & mRestartCount
+'                SetStopReason  "LBE/" & mRestartCount
 '            End If
 '        End If
     Else
@@ -196,7 +306,7 @@ If Not S.LongBoll Is Nothing Then
 '        If price <= mLongBoll.centre Then
 '            If mEntryPrice < newStop Then
 '                newStop = mEntryPrice
-'                mBracketOrder.stopReason = "LBE/" & mRestartCount
+'                SetStopReason  "LBE/" & mRestartCount
 '            End If
 '        End If
     End If
@@ -227,7 +337,7 @@ If S.SwingToMoveStopTicks > 0 And mNextSwingStopCandidate <> 0 Then
         ElseIf (price - mNextSwingStopCandidate) >= S.SwingToMoveStopTicks * mTickSize Then
             If (mNextSwingStopCandidate - S.BreakoutThresholdTicks * mTickSize) > newStop Then
                 newStop = mNextSwingStopCandidate - S.BreakoutThresholdTicks * mTickSize
-                mBracketOrder.StopReason = "SM/" & mRestartCount
+                SetStopReason "SM/" & mRestartCount
             End If
             mLastActivatedSwingStopCandidate = mNextSwingStopCandidate
             calcNextSwingStopCandidate price
@@ -238,7 +348,7 @@ If S.SwingToMoveStopTicks > 0 And mNextSwingStopCandidate <> 0 Then
         ElseIf (mNextSwingStopCandidate - price) >= S.BreakoutThresholdTicks * mTickSize Then
             If (mNextSwingStopCandidate + S.BreakoutThresholdTicks * mTickSize) < newStop Then
                 newStop = mNextSwingStopCandidate + S.BreakoutThresholdTicks * mTickSize
-                mBracketOrder.StopReason = "SM/" & mRestartCount
+                SetStopReason "SM/" & mRestartCount
             End If
             mLastActivatedSwingStopCandidate = mNextSwingStopCandidate
             calcNextSwingStopCandidate price
@@ -250,14 +360,14 @@ If mLongPosition Then
     If mBreakevenPrice > 0 And price >= mBreakevenPrice Then
         If mEntryPrice > newStop Then
             newStop = mEntryPrice
-            mBracketOrder.StopReason = "SB/" & mRestartCount
+            SetStopReason "SB/" & mRestartCount
         End If
     End If
 Else
     If mBreakevenPrice > 0 And price <= mBreakevenPrice Then
         If mEntryPrice < newStop Then
             newStop = mEntryPrice
-            mBracketOrder.StopReason = "SB/" & mRestartCount
+            SetStopReason "SB/" & mRestartCount
         End If
     End If
 End If
@@ -271,7 +381,7 @@ ElseIf mLongPosition Then
             ' MA, we'll stop trailing and keep the stop below the bar
             ' before that one.
             newStop = LowValue(-2, S.LongTimeframe) - S.BreakoutThresholdTicks * mTickSize
-            mBracketOrder.StopReason = "LMA/" & mRestartCount
+            SetStopReason "LMA/" & mRestartCount
             mLongTrailStop = False
         End If
     Else
@@ -288,7 +398,7 @@ ElseIf mLongPosition Then
             End If
             If Err.Number = 0 Then
                 On Error GoTo 0
-                mBracketOrder.StopReason = "LMA/" & mRestartCount
+                SetStopReason "LMA/" & mRestartCount
                 mLongTrailStop = True
             Else
                 On Error GoTo 0
@@ -302,7 +412,7 @@ Else
             ' MA, we'll stop trailing and keep the stop above the bar
             ' before that one.
             newStop = HighValue(-2, S.LongTimeframe) + S.BreakoutThresholdTicks * mTickSize
-            mBracketOrder.StopReason = "LMA/" & mRestartCount
+            SetStopReason "LMA/" & mRestartCount
             mLongTrailStop = False
         End If
     Else
@@ -319,7 +429,7 @@ Else
             End If
             If Err.Number = 0 Then
                 On Error GoTo 0
-                mBracketOrder.StopReason = "LMA/" & mRestartCount
+                SetStopReason "LMA/" & mRestartCount
                 mLongTrailStop = True
             Else
                 On Error GoTo 0
@@ -332,7 +442,7 @@ End If
 ' of each bar so exit if not a new bar
 If Not isNewBar Then
     If newStop <> currentStop Then
-        mBracketOrder.AdjustStop newStop, mBracketOrder.EntryOrder.QuantityFilled
+        AdjustStop newStop, QuantityFilled
         mStopChanged = True
     End If
     Exit Sub
@@ -350,7 +460,7 @@ If mLongPosition Then
             backStop = (Int(SMA(0, S.StopMA) / mTickSize) - 1) * mTickSize
             If backStop > newStop Then
                 newStop = backStop
-                mBracketOrder.StopReason = "BS/" & mRestartCount
+                SetStopReason "BS/" & mRestartCount
             End If
         End If
     End If
@@ -363,7 +473,7 @@ Else
             backStop = (Int((SMA(, S.StopMA) / mTickSize) + 0.99999) + 1) * mTickSize
             If backStop < newStop Then
                 newStop = backStop
-                mBracketOrder.StopReason = "BS/" & mRestartCount
+                SetStopReason "BS/" & mRestartCount
             End If
         End If
     End If
@@ -379,7 +489,7 @@ If Not mTrailStop Then
         End If
         
         If S.TicksSwingToTrail > 0 And HighValue(-1) > (mReferencePrice + S.TicksSwingToTrail * mTickSize) Then
-            mBracketOrder.StopReason = "ST/" & mRestartCount
+            SetStopReason "ST/" & mRestartCount
             mTrailStop = True
         End If
         
@@ -388,7 +498,7 @@ If Not mTrailStop Then
                 If LowValue(-1, S.BreakevenTimeframe) >= mEntryPrice + S.BreakevenBarThresholdTicks * mTickSize Then
                     If mEntryPrice > newStop Then
                         newStop = mEntryPrice
-                        mBracketOrder.StopReason = "BB/" & mRestartCount
+                        SetStopReason "BB/" & mRestartCount
                     End If
                 End If
             End If
@@ -401,7 +511,7 @@ If Not mTrailStop Then
             Then
                 If mEntryPrice > newStop Then
                     newStop = mEntryPrice
-                    mBracketOrder.StopReason = "BE/" & mRestartCount
+                    SetStopReason "BE/" & mRestartCount
                 End If
             End If
         End If
@@ -412,7 +522,7 @@ If Not mTrailStop Then
             Then
                 If SwingLow(0) > newStop Then
                     newStop = SwingLow(0) - S.BreakoutThresholdTicks * mTickSize
-                    mBracketOrder.StopReason = "CS/" & mRestartCount
+                    SetStopReason "CS/" & mRestartCount
                 End If
             End If
         End If
@@ -422,7 +532,7 @@ If Not mTrailStop Then
                 MACDStrengthCount(0) = S.ConfirmedBarsForExit _
             Then
                 newStop = LowValue(-1) - S.BreakoutThresholdTicks * mTickSize
-                mBracketOrder.StopReason = "CE/" & mRestartCount
+                SetStopReason "CE/" & mRestartCount
             End If
         End If
         
@@ -433,7 +543,7 @@ If Not mTrailStop Then
                 MACDStrengthCount(0) = S.ConfirmedBarsForTrailing _
             Then
                 mTrailStop = True
-                mBracketOrder.StopReason = "CT/" & mRestartCount
+                SetStopReason "CT/" & mRestartCount
             End If
         End If
         
@@ -446,7 +556,7 @@ If Not mTrailStop Then
                                     (Int(S.RetracementStopFactor * (mHighest - mInitialStopPrice) / mTickSize) - 1) * mTickSize
                 If retracementStop > newStop Then
                     newStop = retracementStop
-                    mBracketOrder.StopReason = "RS/" & mRestartCount
+                    SetStopReason "RS/" & mRestartCount
                 End If
             End If
         End If
@@ -463,21 +573,21 @@ If Not mTrailStop Then
 '                    mTrailStopSMAPeriods = 0 _
 '                Then
                     mTrailStop = True
-                    mBracketOrder.StopReason = "TS/" & mRestartCount
+                    SetStopReason "TS/" & mRestartCount
 '                ElseIf mReferencePrice <= S.StopMA.ma Then
 '                    mTrailStop = True
-'                    mBracketOrder.stopReason = "TM/" & mRestartCount
+'                    SetStopReason  "TM/" & mRestartCount
 '                Else
 '                    If mReferencePrice - S.BreakoutThresholdTicks * mTickSize > newStop Then
 '                        newStop = mReferencePrice - S.BreakoutThresholdTicks * mTickSize
-'                        mBracketOrder.stopReason = "S" & mSwingCount & "/" & mRestartCount
+'                        SetStopReason  "S" & mSwingCount & "/" & mRestartCount
 '                    End If
 '                End If
             Else
                 If S.UseIntermediateStops And _
                     (mReferencePrice - S.BreakoutThresholdTicks * mTickSize) > newStop Then
                     newStop = mReferencePrice - S.BreakoutThresholdTicks * mTickSize
-                    mBracketOrder.StopReason = "S1/" & mRestartCount
+                    SetStopReason "S1/" & mRestartCount
                 End If
             End If
         End If
@@ -489,7 +599,7 @@ If Not mTrailStop Then
         End If
         
         If S.TicksSwingToTrail > 0 And LowValue(-1) < (mReferencePrice - S.TicksSwingToTrail * mTickSize) Then
-            mBracketOrder.StopReason = "ST/" & mRestartCount
+            SetStopReason "ST/" & mRestartCount
             mTrailStop = True
         End If
         
@@ -498,7 +608,7 @@ If Not mTrailStop Then
                 If HighValue(-1, S.BreakevenTimeframe) <= mEntryPrice - S.BreakevenBarThresholdTicks * mTickSize Then
                     If mEntryPrice < newStop Then
                         newStop = mEntryPrice
-                        mBracketOrder.StopReason = "BB/" & mRestartCount
+                        SetStopReason "BB/" & mRestartCount
                     End If
                 End If
             End If
@@ -511,7 +621,7 @@ If Not mTrailStop Then
             Then
                 If mEntryPrice < newStop Then
                     newStop = mEntryPrice
-                    mBracketOrder.StopReason = "BE/" & mRestartCount
+                    SetStopReason "BE/" & mRestartCount
                 End If
             End If
         End If
@@ -522,7 +632,7 @@ If Not mTrailStop Then
             Then
                 If SwingHigh(0) > newStop Then
                     newStop = SwingHigh(0) + S.BreakoutThresholdTicks * mTickSize
-                    mBracketOrder.StopReason = "CS/" & mRestartCount
+                    SetStopReason "CS/" & mRestartCount
                 End If
             End If
         End If
@@ -532,7 +642,7 @@ If Not mTrailStop Then
                 MACDStrengthCount(0) = S.ConfirmedBarsForExit _
             Then
                 newStop = HighValue(-1) + S.BreakoutThresholdTicks * mTickSize
-                mBracketOrder.StopReason = "CE/" & mRestartCount
+                SetStopReason "CE/" & mRestartCount
             End If
         End If
         
@@ -543,7 +653,7 @@ If Not mTrailStop Then
                 MACDStrengthCount(0) = S.ConfirmedBarsForTrailing _
             Then
                 mTrailStop = True
-                mBracketOrder.StopReason = "CT/" & mRestartCount
+                SetStopReason "CT/" & mRestartCount
             End If
         End If
         
@@ -556,7 +666,7 @@ If Not mTrailStop Then
                                     (Int(S.RetracementStopFactor * (mInitialStopPrice - mLowest) / mTickSize) + 1) * mTickSize
                 If retracementStop < newStop Then
                     newStop = retracementStop
-                    mBracketOrder.StopReason = "RS/" & mRestartCount
+                    SetStopReason "RS/" & mRestartCount
                 End If
             End If
         End If
@@ -573,21 +683,21 @@ If Not mTrailStop Then
 '                    mTrailStopSMAPeriods = 0 _
 '                Then
                     mTrailStop = True
-                    mBracketOrder.StopReason = "TS/" & mRestartCount
+                    SetStopReason "TS/" & mRestartCount
 '                ElseIf mReferencePrice >= S.StopMA.ma Then
 '                    mTrailStop = True
-'                    mBracketOrder.stopReason = "TM/" & mRestartCount
+'                    SetStopReason  "TM/" & mRestartCount
 '                Else
 '                    If mReferencePrice + S.BreakoutThresholdTicks * mTickSize < newStop Then
 '                        newStop = mReferencePrice + S.BreakoutThresholdTicks * mTickSize
-'                        mBracketOrder.stopReason = "S" & mSwingCount & "/" & mRestartCount
+'                        SetStopReason  "S" & mSwingCount & "/" & mRestartCount
 '                    End If
 '                End If
             Else
                 If S.UseIntermediateStops And _
                     (mReferencePrice + S.BreakoutThresholdTicks * mTickSize) < newStop Then
                     newStop = mReferencePrice + S.BreakoutThresholdTicks * mTickSize
-                    mBracketOrder.StopReason = "S1/" & mRestartCount
+                    SetStopReason "S1/" & mRestartCount
                 End If
             End If
         End If
@@ -620,7 +730,7 @@ ElseIf mLongTrailStop Then
             lowStop = LowValue(-2, S.LongTimeframe) - S.BreakoutThresholdTicks * mTickSize
             If lowStop > currentStop And lowStop > newStop Then
                 newStop = lowStop
-                mBracketOrder.StopReason = "LMA/" & mRestartCount
+                SetStopReason "LMA/" & mRestartCount
             End If
         End If
     Else
@@ -628,14 +738,14 @@ ElseIf mLongTrailStop Then
             highStop = HighValue(-2, S.LongTimeframe) + S.BreakoutThresholdTicks * mTickSize
             If highStop < currentStop And highStop < newStop Then
                 newStop = highStop
-                mBracketOrder.StopReason = "LMA/" & mRestartCount
+                SetStopReason "LMA/" & mRestartCount
             End If
         End If
     End If
 End If
 
 If newStop <> currentStop Then
-    mBracketOrder.AdjustStop newStop, mBracketOrder.EntryOrder.QuantityFilled
+    AdjustStop newStop, QuantityFilled
     mStopChanged = True
 End If
 
@@ -646,148 +756,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IStopStrategy_Start( _
-                ByVal pContext As TradingContext, _
-                ByVal pBracketOrder As IBracketOrder)
+                ByVal TradingContext As TradingContext, _
+                ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "IStopStrategy_Start"
 On Error GoTo Err
 
 mTickSize = TickSize
 
-Set mBracketOrder = pBracketOrder
-mLongPosition = IIf(mBracketOrder.EntryOrder.Action = OrderActionBuy, True, False)
-Set mStopOrder = mBracketOrder.StopLossOrder
-mInitialStopPrice = mStopOrder.TriggerPrice
+SetPrimaryBracketOrder BracketOrder
+mLongPosition = IsBuy
+mInitialStopPrice = StopLossTriggerPrice
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'================================================================================
-' mBracketOrder Event Handlers
-'================================================================================
-
-Private Sub mBracketOrder_Completed()
-Const ProcName As String = "mBracketOrder_Completed"
-On Error GoTo Err
-
-If mReceivingTicks Then StopTickData Me
-mReceivingTicks = False
-Set mBracketOrder = Nothing
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mBracketOrder_EntryOrderPartiallyFilled()
-Const ProcName As String = "mBracketOrder_EntryOrderPartiallyFilled"
-On Error GoTo Err
-
-Dim swingLow1 As Double
-Dim swingLow2 As Double
-Dim swingHigh1 As Double
-Dim swingHigh2 As Double
-
-mEntryOrderFilled = True
-mBracketOrder.StopReason = "IS/0"
-mEntryPrice = mBracketOrder.EntryOrder.AveragePrice
-
-If S.RewardToRiskRatio <> 0 Then
-    If mLongPosition Then
-        mTargetPrice = mEntryPrice + S.RewardToRiskRatio * (mEntryPrice - mInitialStopPrice)
-    Else
-        mTargetPrice = mEntryPrice - S.RewardToRiskRatio * (mInitialStopPrice - mEntryPrice)
-    End If
-End If
-
-If Not mReceivingTicks Then
-    mReceivingTicks = True
-    StartTickData Me
-    mHighest = CloseValue(0)
-    mLowest = mHighest
-End If
-
-If Not S.BreakevenTimeframe Is Nothing And mBreakevenEntryBar <> 0 Then
-    mBreakevenEntryBar = BarNumber(0, S.BreakevenTimeframe)
-End If
-
-If mReferenceBar <> 0 Then Exit Sub ' means reference point was set via the ReferencePoint
-                                    ' property or this is not the first partial fill
-                                    
-
-mReferenceBar = BarNumber(0)
-
-If mTrailStop Then Exit Sub
-
-If mLongPosition Then
-    swingLow1 = IIf(IsEmpty(SwingLow(-1)), DummyLowCurr, SwingLow(-1))
-    swingLow2 = IIf(IsEmpty(SwingLow(-2)), DummyLowCurr, SwingLow(-2))
-    If PotentialSwingLow() = MaxDouble Then
-        mNextSwingStopCandidate = swingLow1
-        If Not S.UseIntermediateStops Then
-            mReferencePrice = swingLow1
-'        ElseIf swingLow2 < swingLow1 Then
-'            mReferencePrice = swingLow2
-        Else
-            mReferencePrice = swingLow1
-        End If
-    Else
-        mInitialSwingStartPrice = SwingLow(0)
-        If Not S.UseIntermediateStops Then
-            mReferencePrice = SwingLow(0)
-'        ElseIf swingLow1 < SwingLow(0,) Then
-''            mReferencePrice = swingLow2
-''                        ' this should really be swingLow1 but testing seems to give
-''                        ' better results with swingLow2
-'            If swingLow2 < swingLow1 Then
-'                mReferencePrice = swingLow2
-'            Else
-'                mReferencePrice = swingLow1
-'            End If
-        Else
-            mReferencePrice = SwingLow(0)
-        End If
-    End If
-Else
-    swingHigh1 = IIf(IsEmpty(SwingHigh(-1)), DummyHighCurr, SwingHigh(-1))
-    swingHigh2 = IIf(IsEmpty(SwingHigh(-2)), DummyHighCurr, SwingHigh(-2))
-    If PotentialSwingHigh() = MinDouble Then
-        mInitialSwingStartPrice = swingHigh1
-        If Not S.UseIntermediateStops Then
-            mReferencePrice = swingHigh1
-'        ElseIf swingHigh2 > swingHigh1 Then
-'            mReferencePrice = swingHigh2
-        Else
-            mReferencePrice = swingHigh1
-        End If
-    Else
-        mInitialSwingStartPrice = SwingHigh(0)
-        If Not S.UseIntermediateStops Then
-            mReferencePrice = SwingHigh(0)
-'        ElseIf swingHigh1 > SwingHigh(0,) Then
-''            mReferencePrice = swingHigh2
-''                        ' this should really be swingHigh1 but testing seems to give
-''                        ' better results with swingHigh2
-'            If swingHigh2 > swingHigh1 Then
-'                mReferencePrice = swingHigh2
-'            Else
-'                mReferencePrice = swingHigh1
-'            End If
-        Else
-            mReferencePrice = SwingHigh(0)
-        End If
-    End If
-End If
-mInitialReferencePrice = mReferencePrice
-If mInitialReferencePrice = 0 Then Stop
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -914,10 +897,10 @@ If mLongPosition Then
         i = i + 1
     Loop
     newStop = LowValue(i)
-    currentStop = mStopOrder.TriggerPrice
+    currentStop = StopLossTriggerPrice
     If newStop > currentStop Then
-        mBracketOrder.AdjustStop newStop, mBracketOrder.EntryOrder.QuantityFilled
-        mBracketOrder.StopReason = reason
+        AdjustStop newStop, QuantityFilled
+        SetStopReason reason
         mStopChanged = True
     End If
 Else
@@ -932,10 +915,10 @@ Else
         i = i + 1
     Loop
     newStop = HighValue(i)
-    currentStop = mStopOrder.TriggerPrice
+    currentStop = StopLossTriggerPrice
     If newStop < currentStop Then
-        mBracketOrder.AdjustStop newStop, mBracketOrder.EntryOrder.QuantityFilled
-        mBracketOrder.StopReason = reason
+        AdjustStop newStop, QuantityFilled
+        SetStopReason reason
         mStopChanged = True
     End If
 End If

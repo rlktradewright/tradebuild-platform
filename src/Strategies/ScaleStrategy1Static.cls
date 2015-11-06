@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "ScaleStrategy1S
 ' Member variables
 '@================================================================================
 
-Public ATR                                          As ATR
+Public ATR                                          As ResourceIdentifier
 Public MaxIncrements                                As Long
 
 ' the percentage of account balance when 1 unit of contracts

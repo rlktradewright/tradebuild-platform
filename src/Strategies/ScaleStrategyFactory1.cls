@@ -102,27 +102,20 @@ processParameters
 Dim lBarLength As Long
 lBarLength = GetParameterValue(ParamBarLength)
 
-Dim lBarUnit As TimePeriodUnits
-lBarUnit = TimePeriodUnitsFromString(GetParameterValue(ParamBarUnit))
+Dim lBarUnit As String
+lBarUnit = GetParameterValue(ParamBarUnit)
 
-Dim lTimeframe As Timeframe
-Set lTimeframe = pContext.AddTimeframe(GetTimePeriod(lBarLength, _
-                                                lBarUnit), _
+Dim lTimeframe As ResourceIdentifier
+Set lTimeframe = DeclareTimeframe(lBarLength, _
+                                lBarUnit, _
                                 500, _
                                 GetParameterValue(ParamIncludeBarsOutsideSession))
 
-Dim params As Parameters
-
-Set params = New Parameters
-params.SetParameterValue "Periods", GetParameterValue(ParamATRPeriods)
-
-ReDim linputvaluenames(0) As String
-linputvaluenames(0) = "$default"
-Set S.ATR = pContext.AddStudy("ATR", _
+Set S.ATR = DeclareStudy( _
+                        "ATR", _
                         lTimeframe, _
-                        linputvaluenames, _
+                        "Periods=" & GetParameterValue(ParamATRPeriods), _
                         GetParameterValue(ParamIncludeBarsOutsideSession), _
-                        params, _
                         2)
 
 Exit Sub
