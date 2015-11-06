@@ -33,24 +33,25 @@ Implements IStringable
 '@================================================================================
 
 Event Change(ByRef ev As ChangeEventData)
+Event ChangesApplied()
 Event ChangesCancelled()
-Event Clean()
+Event ChangesPending()
+Event CloseoutOrderChanged()
+Event CloseoutOrderCreated()
 Event CloseoutOrderFilled()
-Event CloseoutOrderPartiallyFilled()
 Event Completed()
-Event Dirty()
+Event EntryOrderChanged()
 Event EntryOrderFilled()
-Event EntryOrderPartiallyFilled()
 Event Execution(ByRef ev As ExecutionEventData)
 Event OrderError(ByRef ev As BracketOrderErrorEventData)
+Event PositionCloseoutNotified()
 Event SelfCancelled()
+Event SizeChanged()
 Event StateChange(ByRef ef As StateChangeEventData)
-Event StopAdjusted()
-Event StopOrderFilled()
-Event StopOrderPartiallyFilled()
-Event TargetAdjusted()
+Event StopLossOrderChanged()
+Event StopLossOrderFilled()
+Event TargetOrderChanged()
 Event TargetOrderFilled()
-Event TargetOrderPartiallyFilled()
 
 '@================================================================================
 ' Constants
@@ -256,7 +257,7 @@ Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPrice As Double, Optional
 Const ProcName As String = "IBracketOrder_AdjustStop"
 On Error GoTo Err
 
-AdjustStop pStopTriggerPrice, pQuantity
+AdjustStopLoss pStopTriggerPrice, pQuantity
 
 Exit Sub
 
@@ -422,6 +423,10 @@ End Property
 
 Private Property Get IBracketOrder_EntryPrice() As Double
 IBracketOrder_EntryPrice = EntryPrice
+End Property
+
+Private Property Let IBracketOrder_EntryReason(ByVal RHS As String)
+EntryReason = RHS
 End Property
 
 Private Property Get IBracketOrder_EntryReason() As String
@@ -744,12 +749,20 @@ Private Property Get IBracketOrder_StopLossOrder() As IOrder
 Set IBracketOrder_StopLossOrder = mStopLossOrder
 End Property
 
+Private Property Let IBracketOrder_StopReason(ByVal RHS As String)
+StopReason = RHS
+End Property
+
 Private Property Get IBracketOrder_StopReason() As String
 IBracketOrder_StopReason = StopReason
 End Property
 
 Private Property Get IBracketOrder_TargetOrder() As IOrder
 Set IBracketOrder_TargetOrder = mTargetOrder
+End Property
+
+Private Property Let IBracketOrder_TargetReason(ByVal RHS As String)
+TargetReason = RHS
 End Property
 
 Private Property Get IBracketOrder_TargetReason() As String
@@ -898,11 +911,11 @@ gLogOrderMessage "Closeout order fill: (id=" & _
                     pExec.Price, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 
-fireChange BracketOrderCloseoutOrderChanged
 
 processExecution pExec
 
-RaiseEvent CloseoutOrderPartiallyFilled
+fireChange BracketOrderCloseoutOrderFilled
+RaiseEvent CloseoutOrderFilled
 
 SaveRecoveryInfo
 Exit Sub
@@ -916,6 +929,7 @@ Const ProcName As String = "mCloseoutOrder_PropertyChanged"
 On Error GoTo Err
 
 fireChange BracketOrderCloseoutOrderChanged
+RaiseEvent CloseoutOrderChanged
 
 Exit Sub
 
@@ -949,10 +963,10 @@ Case OrderStatuses.OrderStatusRejected
 End Select
 
 fireChange BracketOrderCloseoutOrderChanged
+RaiseEvent CloseoutOrderChanged
 
 If mCloseoutOrder.Status = OrderStatuses.OrderStatusFilled Then
     Assert Size = 0, "Closeout incomplete: Size remaining is " & Size
-    RaiseEvent CloseoutOrderFilled
     checkAllOrdersComplete
 End If
 
@@ -1002,8 +1016,6 @@ gLogOrderMessage "Entry order fill (id=" & _
                     pExec.Price, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 
-fireChange BracketOrderEntryOrderChanged
-
 processExecution pExec
 
 If Not mCancelTLI Is Nothing Then
@@ -1034,7 +1046,7 @@ placePeggedOrders
         
 If Not mStopLossOrder Is Nothing Then
     If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustStop mStopLossOrder.TriggerPrice, Abs(Size)
+        AdjustStopLoss mStopLossOrder.TriggerPrice, Abs(Size)
     End If
 End If
 
@@ -1044,9 +1056,12 @@ If Not mTargetOrder Is Nothing Then
     End If
 End If
 
-RaiseEvent EntryOrderPartiallyFilled
-
 handleStimulus OpStimuli.StimEntryOrderFill
+
+If State <> BracketOrderStateCancelling Then
+    fireChange BracketOrderEntryOrderFilled
+    RaiseEvent EntryOrderFilled
+End If
 
 SaveRecoveryInfo
 Exit Sub
@@ -1060,6 +1075,7 @@ Const ProcName As String = "mEntryOrder_PropertyChanged"
 On Error GoTo Err
 
 fireChange BracketOrderEntryOrderChanged
+RaiseEvent EntryOrderChanged
 
 Exit Sub
 
@@ -1087,6 +1103,7 @@ Case OrderStatuses.OrderStatusRejected
 End Select
 
 fireChange BracketOrderEntryOrderChanged
+RaiseEvent EntryOrderChanged
 
 Select Case mEntryOrder.Status
 Case OrderStatuses.OrderStatusFilled
@@ -1172,8 +1189,6 @@ gLogOrderMessage "Stop-loss order fill (id=" & _
                     pExec.Price, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 
-fireChange BracketOrderStopOrderChanged
-
 processExecution pExec
 
 If Not mTargetOrder Is Nothing Then
@@ -1182,7 +1197,8 @@ If Not mTargetOrder Is Nothing Then
     End If
 End If
 
-RaiseEvent StopOrderPartiallyFilled
+fireChange BracketOrderStopLossOrderFilled
+RaiseEvent StopLossOrderFilled
 
 SaveRecoveryInfo
 Exit Sub
@@ -1195,7 +1211,8 @@ Private Sub mStopLossOrder_PropertyChanged()
 Const ProcName As String = "mStopLossOrder_PropertyChanged"
 On Error GoTo Err
 
-fireChange BracketOrderStopOrderChanged
+fireChange BracketOrderStopLossOrderChanged
+RaiseEvent StopLossOrderChanged
 
 Exit Sub
 
@@ -1222,11 +1239,12 @@ Case OrderStatuses.OrderStatusRejected
                     mDataSource, mContract, Key, mIsSimulated, Me
 End Select
 
-fireChange BracketOrderStopOrderChanged
+fireChange BracketOrderStopLossOrderChanged
+RaiseEvent StopLossOrderChanged
 
 Select Case mStopLossOrder.Status
 Case OrderStatuses.OrderStatusFilled
-    RaiseEvent StopOrderFilled
+    RaiseEvent StopLossOrderFilled
     checkAllOrdersComplete
 Case OrderStatuses.OrderStatusPendingSubmit
 Case OrderStatuses.OrderStatusCancelling
@@ -1286,17 +1304,16 @@ gLogOrderMessage "Target order fill (id=" & _
                     pExec.Price, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 
-fireChange BracketOrderTargetOrderChanged
-
 processExecution pExec
 
 If Not mStopLossOrder Is Nothing Then
     If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustStop mStopLossOrder.TriggerPrice, Abs(Size)
+        AdjustStopLoss mStopLossOrder.TriggerPrice, Abs(Size)
     End If
 End If
 
-RaiseEvent TargetOrderPartiallyFilled
+fireChange BracketOrderTargetOrderFilled
+RaiseEvent TargetOrderFilled
 
 SaveRecoveryInfo
 Exit Sub
@@ -1310,6 +1327,7 @@ Const ProcName As String = "mTargetOrder_PropertyChanged"
 On Error GoTo Err
 
 fireChange BracketOrderTargetOrderChanged
+RaiseEvent TargetOrderChanged
 
 Exit Sub
 
@@ -1337,6 +1355,7 @@ Case OrderStatuses.OrderStatusRejected
 End Select
 
 fireChange BracketOrderTargetOrderChanged
+RaiseEvent TargetOrderChanged
 
 Select Case mTargetOrder.Status
 Case OrderStatuses.OrderStatusFilled
@@ -1946,10 +1965,22 @@ Const ProcName As String = "Activate"
 On Error GoTo Err
 
 fireChange BracketOrderCreated
-If Not mEntryOrder Is Nothing Then fireChange BracketOrderEntryOrderChanged
-If Not mStopLossOrder Is Nothing Then fireChange BracketOrderStopOrderChanged
-If Not mTargetOrder Is Nothing Then fireChange BracketOrderTargetOrderChanged
-If Not mCloseoutOrder Is Nothing Then fireChange BracketOrderCloseoutOrderChanged
+If Not mEntryOrder Is Nothing Then
+    fireChange BracketOrderEntryOrderChanged
+    RaiseEvent EntryOrderChanged
+End If
+If Not mStopLossOrder Is Nothing Then
+    fireChange BracketOrderStopLossOrderChanged
+    RaiseEvent StopLossOrderChanged
+End If
+If Not mTargetOrder Is Nothing Then
+    fireChange BracketOrderTargetOrderChanged
+    RaiseEvent TargetOrderChanged
+End If
+If Not mCloseoutOrder Is Nothing Then
+    fireChange BracketOrderCloseoutOrderChanged
+    RaiseEvent CloseoutOrderChanged
+End If
 
 Exit Sub
 
@@ -2012,9 +2043,9 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub AdjustStop(ByVal stopTriggerPrice As Double, _
+Public Sub AdjustStopLoss(ByVal stopTriggerPrice As Double, _
                     Optional ByVal Quantity As Long = -1)
-Const ProcName As String = "AdjustStop"
+Const ProcName As String = "AdjustStopLoss"
 On Error GoTo Err
 
 SetNewStopLossTriggerPrice stopTriggerPrice
@@ -2103,7 +2134,6 @@ mTargetOrder.setClean
 mIsDirty = False
 fireChange BracketOrderChangeTypes.BracketOrderChangesCancelled
 RaiseEvent ChangesCancelled
-RaiseEvent Clean
 
 Exit Sub
 
@@ -2278,7 +2308,7 @@ If Size = 0 Then Exit Sub
 
 Dim lExec As New Execution
 lExec.SyncToExecutionReport pExec
-lExec.Quantity = -Size
+lExec.Quantity = Abs(Size)
 If Size > 0 Then
     lExec.Action = OrderActionSell
 Else
@@ -2288,7 +2318,7 @@ End If
 processExecution lExec
 
 fireChange BracketOrderPositionCloseoutNotified
-
+RaiseEvent PositionCloseoutNotified
 Exit Sub
 
 Err:
@@ -2381,7 +2411,6 @@ If Value <> mEntryOrder.LimitPrice Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewEntryPrice = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2419,7 +2448,6 @@ If Value <> mEntryOrder.TriggerPrice Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewEntryTriggerPrice = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2495,7 +2523,6 @@ If Value <> mEntryOrder.Quantity Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewQuantity = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2523,7 +2550,6 @@ If Value <> mStopLossOrder.Offset Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewStopLossOffset = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2557,7 +2583,6 @@ If Value <> mStopLossOrder.LimitPrice Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewStopLossPrice = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2585,7 +2610,6 @@ If Value <> mStopLossOrder.Quantity Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewStopLossQuantity = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2620,7 +2644,6 @@ If Value <> mStopLossOrder.TriggerPrice Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewStopLossTriggerPrice = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2655,7 +2678,6 @@ If Value <> mTargetOrder.LimitPrice Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewTargetPrice = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2683,7 +2705,6 @@ If Value <> mTargetOrder.Offset Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewTargetOffset = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2711,7 +2732,6 @@ If Value <> mTargetOrder.Quantity Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewTargetQuantity = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2746,7 +2766,6 @@ If Value <> mTargetOrder.TriggerPrice Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     mNewTargetTriggerPrice = Value
     setDirty
-    fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 End If
 
 Exit Sub
@@ -2804,7 +2823,7 @@ If (Not updateEntry) And (Not updateStop) And (Not updateTarget) Then
     Exit Sub
 End If
 
-gLogOrderMessage "Update bracket order", _
+gLogOrderMessage "Update bracket order: " & ToString, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 
 If State <> BracketOrderStateCreated Then
@@ -2815,17 +2834,18 @@ Checkpoint
 
 If updateEntry Then
     fireChange BracketOrderEntryOrderChanged
+    RaiseEvent EntryOrderChanged
 End If
 If updateStop Then
-    fireChange BracketOrderStopOrderChanged
-    RaiseEvent StopAdjusted
+    fireChange BracketOrderStopLossOrderChanged
+    RaiseEvent StopLossOrderChanged
 End If
 If updateTarget Then
     fireChange BracketOrderTargetOrderChanged
-    RaiseEvent TargetAdjusted
+    RaiseEvent TargetOrderChanged
 End If
 fireChange BracketOrderChangeTypes.BracketOrderChangesApplied
-RaiseEvent Clean
+RaiseEvent ChangesApplied
 
 Exit Sub
 
@@ -3370,6 +3390,7 @@ mCloseoutOrder.OrderType = OrderTypes.OrderTypeMarket
 mCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
 
 fireChange BracketOrderCloseoutOrderCreated
+RaiseEvent CloseoutOrderCreated
 mOrderSubmitter.ModifyBracketOrder Me, False, False, False, True
 
 Exit Function
@@ -3456,6 +3477,7 @@ If Size = 0 Then mEndTime = pExec.FillTime
 
 fireExecution pExec
 fireChange BracketOrderChangeTypes.BracketOrderSizeChanged
+RaiseEvent SizeChanged
 
 Exit Sub
 
@@ -3536,7 +3558,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
-' Set the 'dirty' flag, and raise a Dirty event if one has not already
+' Set the 'dirty' flag, and raise a ChangesPending event if one has not already
 ' been raised.
 '@/
 Private Sub setDirty()
@@ -3546,7 +3568,8 @@ On Error GoTo Err
 If mIsDirty Then Exit Sub
 
 mIsDirty = True
-RaiseEvent Dirty
+fireChange BracketOrderChangeTypes.BracketOrderChangesPending
+RaiseEvent ChangesPending
 
 Exit Sub
 

@@ -108,6 +108,9 @@ End Property
 Public Property Get EntryPrice() As Double
 End Property
 
+Public Property Let EntryReason(ByVal Value As String)
+End Property
+
 Public Property Get EntryReason() As String
 End Property
 
@@ -159,10 +162,16 @@ End Property
 Public Property Get StopLossOrder() As IOrder
 End Property
 
+Public Property Let StopReason(ByVal Value As String)
+End Property
+
 Public Property Get StopReason() As String
 End Property
 
 Public Property Get TargetOrder() As IOrder
+End Property
+
+Public Property Let TargetReason(ByVal Value As String)
 End Property
 
 Public Property Get TargetReason() As String

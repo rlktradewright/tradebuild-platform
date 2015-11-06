@@ -53,10 +53,14 @@ Public Enum BracketOrderChangeTypes
     BracketOrderCompleted
     BracketOrderSelfCancelled
     BracketOrderEntryOrderChanged
-    BracketOrderStopOrderChanged
+    BracketOrderEntryOrderFilled
+    BracketOrderStopLossOrderChanged
+    BracketOrderStopLossOrderFilled
     BracketOrderTargetOrderChanged
+    BracketOrderTargetOrderFilled
     BracketOrderCloseoutOrderCreated
     BracketOrderCloseoutOrderChanged
+    BracketOrderCloseoutOrderFilled
     BracketOrderSizeChanged
     BracketOrderStateChanged
     BracketOrderChangesPending

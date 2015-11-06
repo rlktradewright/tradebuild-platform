@@ -707,7 +707,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
     End If
 End If
 
-gLogOrderMessage "Execute bracket order: ", mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
+gLogOrderMessage "Execute bracket order: " & pBracketOrder.ToString, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
 
 mActiveBracketOrders.Add pBracketOrder
 If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
