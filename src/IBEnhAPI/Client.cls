@@ -495,7 +495,7 @@ Private Function getAPIInstance( _
 Const ProcName As String = "getAPIInstance"
 On Error GoTo Err
 
-Set getAPIInstance = GetAPI(pServer, pPort, pClientId)
+Set getAPIInstance = GetAPI(pServer, pPort, pClientId, mConnectionRetryIntervalSecs)
 getAPIInstance.ConnectionStatusConsumer = Me
 
 Exit Function
