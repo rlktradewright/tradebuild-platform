@@ -1,5 +1,6 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractsConfigurer 
    ClientHeight    =   4305
    ClientLeft      =   0
@@ -7,6 +8,75 @@ Begin VB.UserControl ContractsConfigurer
    ClientWidth     =   7800
    ScaleHeight     =   4305
    ScaleWidth      =   7800
+   Begin TWControls40.TWButton RemoveButton 
+      Height          =   495
+      Left            =   6600
+      TabIndex        =   2
+      Top             =   1320
+      Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   873
+      Caption         =   "&Delete"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
+   Begin TWControls40.TWButton EditButton 
+      Height          =   495
+      Left            =   6600
+      TabIndex        =   1
+      Top             =   720
+      Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   873
+      Caption         =   "&Edit"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
+   Begin TWControls40.TWButton AddButton 
+      Height          =   495
+      Left            =   6600
+      TabIndex        =   0
+      Top             =   120
+      Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   873
+      Caption         =   "&Add"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
    Begin MSComctlLib.TreeView ContractsTV 
       Height          =   3735
       Left            =   120
@@ -21,36 +91,6 @@ Begin VB.UserControl ContractsConfigurer
       Style           =   7
       Checkboxes      =   -1  'True
       Appearance      =   0
-   End
-   Begin VB.CommandButton RemoveButton 
-      Caption         =   "&Delete"
-      Enabled         =   0   'False
-      Height          =   495
-      Left            =   6600
-      TabIndex        =   2
-      ToolTipText     =   "Delete"
-      Top             =   1320
-      Width           =   735
-   End
-   Begin VB.CommandButton EditButton 
-      Caption         =   "&Edit"
-      Enabled         =   0   'False
-      Height          =   495
-      Left            =   6600
-      Picture         =   "ContractsConfigurer.ctx":0000
-      TabIndex        =   1
-      ToolTipText     =   "Move up"
-      Top             =   720
-      Width           =   735
-   End
-   Begin VB.CommandButton AddButton 
-      Caption         =   "&Add"
-      Height          =   495
-      Left            =   6600
-      TabIndex        =   0
-      ToolTipText     =   "Add new"
-      Top             =   120
-      Width           =   735
    End
    Begin VB.Shape OutlineBox 
       Height          =   4000
@@ -67,14 +107,11 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-''
-' Description here
-'
-'@/
-
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -106,6 +143,8 @@ Private mActionAdd                          As Boolean
 
 Private mReadOnly                           As Boolean
 
+Private mTheme                                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -124,8 +163,24 @@ UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -200,7 +255,7 @@ Const ProcName As String = "RemoveButton_Click"
 On Error GoTo Err
 
 mContractsConfig.RemoveConfigurationSection ContractsTV.SelectedItem.Tag
-ContractsTV.Nodes.Remove ContractsTV.SelectedItem.index
+ContractsTV.Nodes.Remove ContractsTV.SelectedItem.Index
 
 Exit Sub
 
@@ -242,6 +297,27 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If mTheme Is Value Then Exit Property
+Set mTheme = Value
+If mTheme Is Nothing Then Exit Property
+
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Methods
@@ -374,6 +450,7 @@ On Error GoTo Err
 
 Set mContractSpecForm = New fContractSpec
 mContractSpecForm.Initialise contractSpec, enabled, writeBidAskBars, includeMktDepth
+mContractSpecForm.Theme = mTheme
 mContractSpecForm.Show vbModal
 
 Exit Sub

@@ -1,6 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#8.0#0"; "TradeBuildUI27.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#135.0#0"; "TradeBuildUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ConfigViewer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   13740
@@ -10,6 +11,75 @@ Begin VB.UserControl ConfigViewer
    DefaultCancel   =   -1  'True
    ScaleHeight     =   13740
    ScaleWidth      =   16680
+   Begin TWControls40.TWButton SaveConfigButton 
+      Height          =   375
+      Left            =   1680
+      TabIndex        =   3
+      Top             =   3600
+      Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   661
+      Caption         =   "Save"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
+   Begin TWControls40.TWButton NewConfigButton 
+      Height          =   375
+      Left            =   840
+      TabIndex        =   2
+      Top             =   3600
+      Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   661
+      Caption         =   "New"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
+   Begin TWControls40.TWButton DeleteConfigButton 
+      Height          =   375
+      Left            =   0
+      TabIndex        =   1
+      Top             =   3600
+      Width           =   735
+      _ExtentX        =   1296
+      _ExtentY        =   661
+      Caption         =   "Delete"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
    Begin DataCollector27.ContractsConfigurer ContractsConfigurer1 
       Height          =   4005
       Left            =   8520
@@ -44,32 +114,6 @@ Begin VB.UserControl ConfigViewer
          Top             =   600
          Width           =   2055
       End
-   End
-   Begin VB.CommandButton DeleteConfigButton 
-      Caption         =   "Delete"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   0
-      TabIndex        =   1
-      Top             =   3600
-      Width           =   735
-   End
-   Begin VB.CommandButton NewConfigButton 
-      Caption         =   "New"
-      Height          =   375
-      Left            =   840
-      TabIndex        =   2
-      Top             =   3600
-      Width           =   735
-   End
-   Begin VB.CommandButton SaveConfigButton 
-      Caption         =   "Save"
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   1680
-      TabIndex        =   3
-      Top             =   3600
-      Width           =   735
    End
    Begin MSComctlLib.TreeView ConfigsTV 
       Height          =   3495
@@ -204,14 +248,11 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-''
-' Description here
-'
-'@/
-
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -252,6 +293,8 @@ Private mReadOnly                           As Boolean
 
 Private mDefaultConfigNode                  As Node
 
+Private mTheme                                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -268,6 +311,26 @@ Exit Sub
 Err:
 UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
+
+'@================================================================================
+' IThemeable Interface Members
+'@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Control Event Handlers
@@ -584,6 +647,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If mTheme Is Value Then Exit Property
+Set mTheme = Value
+If mTheme Is Nothing Then Exit Property
+
+UserControl.BackColor = mTheme.BackColor
+gApplyTheme mTheme, UserControl.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -624,7 +708,7 @@ Public Function Initialise( _
                 ByVal pconfigManager As ConfigManager, _
                 ByVal readonly As Boolean) As Boolean
 Dim AppConfig As ConfigurationSection
-Dim index As Long
+Dim Index As Long
 Dim newnode As Node
 
 Const ProcName As String = "Initialise"
@@ -640,7 +724,7 @@ For Each AppConfig In mConfigManager
         newnode.Bold = True
         Set mDefaultConfigNode = newnode
     End If
-    index = index + 1
+    Index = Index + 1
 Next
 
 If Not mDefaultConfigNode Is Nothing Then
@@ -704,7 +788,7 @@ If MsgBox("Do you want to delete this configuration?" & vbCrLf & _
         vbYesNo Or vbQuestion, _
         "Attention!") = vbYes Then
     mConfigManager.DeleteCurrent
-    ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.index
+    ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.Index
     If mCurrConfigNode Is mDefaultConfigNode Then Set mDefaultConfigNode = Nothing
     Set mCurrConfigNode = Nothing
 End If

@@ -166,6 +166,79 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub gApplyTheme(ByVal pTheme As ITheme, ByVal pControls As Object)
+Const ProcName As String = "gApplyTheme"
+On Error GoTo Err
+
+If pTheme Is Nothing Then Exit Sub
+
+Dim lControl As Control
+For Each lControl In pControls
+    If TypeOf lControl Is Label Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is CheckBox Or _
+        TypeOf lControl Is Frame Or _
+        TypeOf lControl Is OptionButton _
+    Then
+        SetWindowThemeOff lControl.hWnd
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is PictureBox Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BorderStyle = pTheme.BorderStyle
+        lControl.BackColor = pTheme.BackColor
+        lControl.ForeColor = pTheme.ForeColor
+    ElseIf TypeOf lControl Is TextBox Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BorderStyle = pTheme.BorderStyle
+        lControl.BackColor = pTheme.TextBackColor
+        lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.TextFont Is Nothing Then
+            Set lControl.Font = pTheme.TextFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
+    ElseIf TypeOf lControl Is ComboBox Or _
+        TypeOf lControl Is ListBox _
+    Then
+        lControl.Appearance = pTheme.Appearance
+        lControl.BackColor = pTheme.TextBackColor
+        lControl.ForeColor = pTheme.TextForeColor
+        If Not pTheme.ComboFont Is Nothing Then
+            Set lControl.Font = pTheme.ComboFont
+        ElseIf Not pTheme.BaseFont Is Nothing Then
+            Set lControl.Font = pTheme.BaseFont
+        End If
+    ElseIf TypeOf lControl Is CommandButton Or _
+        TypeOf lControl Is Shape _
+    Then
+        ' nothing for these
+    ElseIf TypeOf lControl Is Object  Then
+        On Error Resume Next
+        If TypeOf lControl.object Is IThemeable Then
+            If Err.Number = 0 Then
+                On Error GoTo Err
+                Dim lThemeable As IThemeable
+                Set lThemeable = lControl.object
+                lThemeable.Theme = pTheme
+            Else
+                On Error GoTo Err
+            End If
+        Else
+            On Error GoTo Err
+        End If
+    End If
+Next
+        
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub gHandleFatalError()
 On Error Resume Next    ' ignore any further errors that might arise
 
@@ -655,6 +728,11 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Public Sub SetWindowThemeOff(ByVal phWnd As Long)
+Dim result As Long
+result = SetWindowTheme(phWnd, vbNullString, "")
+End Sub
 
 Private Sub showConfig()
 Dim f As fConfig

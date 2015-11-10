@@ -1,16 +1,68 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.Form fDataCollectorUI 
+   Appearance      =   0  'Flat
+   BackColor       =   &H80000005&
+   BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Data Collector Version 2.7"
    ClientHeight    =   4230
-   ClientLeft      =   60
-   ClientTop       =   390
+   ClientLeft      =   45
+   ClientTop       =   375
    ClientWidth     =   5280
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
    ScaleHeight     =   4230
    ScaleWidth      =   5280
    StartUpPosition =   3  'Windows Default
+   Begin TWControls40.TWButton ShowHideMonitorButton 
+      Height          =   315
+      Left            =   2040
+      TabIndex        =   1
+      Top             =   390
+      Width           =   1815
+      _ExtentX        =   3201
+      _ExtentY        =   556
+      Caption         =   "Hide activity monitor"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
+   Begin TWControls40.TWButton StartStopButton 
+      Height          =   495
+      Left            =   4560
+      TabIndex        =   0
+      Top             =   120
+      Width           =   615
+      _ExtentX        =   1085
+      _ExtentY        =   873
+      Caption         =   "Start"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
    Begin MSComctlLib.StatusBar StatusBar1 
       Align           =   2  'Align Bottom
       Height          =   375
@@ -25,7 +77,7 @@ Begin VB.Form fDataCollectorUI
          NumPanels       =   1
          BeginProperty Panel1 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
             AutoSize        =   1
-            Object.Width           =   8784
+            Object.Width           =   9260
          EndProperty
       EndProperty
    End
@@ -51,23 +103,14 @@ Begin VB.Form fDataCollectorUI
       Top             =   360
       Width           =   615
    End
-   Begin VB.CommandButton ShowHideMonitorButton 
-      Caption         =   "Hide activity monitor"
-      Height          =   375
-      Left            =   2040
-      TabIndex        =   6
-      ToolTipText     =   "Shows or hides the activity monitor"
-      Top             =   360
-      Width           =   1695
-   End
    Begin TabDlg.SSTab ActivityMonitor 
-      Height          =   3135
-      Left            =   0
-      TabIndex        =   3
+      Height          =   3195
+      Left            =   -30
+      TabIndex        =   4
       Top             =   720
-      Width           =   5295
-      _ExtentX        =   9340
-      _ExtentY        =   5530
+      Width           =   5355
+      _ExtentX        =   9446
+      _ExtentY        =   5636
       _Version        =   393216
       Style           =   1
       TabHeight       =   494
@@ -84,49 +127,91 @@ Begin VB.Form fDataCollectorUI
       TabCaption(0)   =   "&Activity"
       TabPicture(0)   =   "fQuoteServerUI.frx":0000
       Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "TickerScroll"
+      Tab(0).Control(0)=   "TickersContainerPicture"
       Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "TickersContainerPicture"
+      Tab(0).Control(1)=   "TickerScroll"
       Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&Log"
       TabPicture(1)   =   "fQuoteServerUI.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LogText"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Configuration"
       TabPicture(2)   =   "fQuoteServerUI.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ConfigDetailsButton"
-      Tab(2).Control(1)=   "ConfigNameText"
-      Tab(2).Control(2)=   "Label4"
-      Tab(2).ControlCount=   3
-      Begin VB.CommandButton ConfigDetailsButton 
-         Caption         =   "Details..."
-         Height          =   375
-         Left            =   -71640
-         TabIndex        =   26
-         Top             =   2160
-         Width           =   735
+      Tab(2).Control(0)=   "ConfigurationPicture"
+      Tab(2).Control(0).Enabled=   0   'False
+      Tab(2).ControlCount=   1
+      Begin VB.PictureBox ConfigurationPicture 
+         BorderStyle     =   0  'None
+         Height          =   2895
+         Left            =   -74970
+         ScaleHeight     =   2895
+         ScaleWidth      =   5265
+         TabIndex        =   24
+         Top             =   300
+         Width           =   5265
+         Begin VB.TextBox ConfigNameText 
+            Height          =   285
+            Left            =   840
+            Locked          =   -1  'True
+            TabIndex        =   25
+            Top             =   600
+            Width           =   3495
+         End
+         Begin TWControls40.TWButton ConfigDetailsButton 
+            Height          =   375
+            Left            =   3600
+            TabIndex        =   27
+            Top             =   1800
+            Width           =   735
+            _ExtentX        =   1296
+            _ExtentY        =   661
+            Caption         =   "Details..."
+            DefaultBorderColor=   15793920
+            DisabledBackColor=   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseOverBackColor=   0
+            PushedBackColor =   0
+         End
+         Begin VB.Label Label4 
+            Caption         =   "Current configuration:"
+            Height          =   375
+            Left            =   480
+            TabIndex        =   26
+            Top             =   360
+            Width           =   1695
+         End
       End
-      Begin VB.TextBox ConfigNameText 
-         Height          =   285
-         Left            =   -74400
-         Locked          =   -1  'True
-         TabIndex        =   25
-         Top             =   960
-         Width           =   3495
+      Begin VB.VScrollBar TickerScroll 
+         Height          =   2880
+         Left            =   5040
+         TabIndex        =   5
+         Top             =   300
+         Width           =   255
       End
       Begin VB.PictureBox TickersContainerPicture 
          Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
-         Height          =   2655
-         Left            =   120
-         ScaleHeight     =   2625
-         ScaleWidth      =   4785
+         Height          =   2850
+         HelpContextID   =   30
+         Left            =   0
+         ScaleHeight     =   2850
+         ScaleWidth      =   5010
          TabIndex        =   7
-         Top             =   360
-         Width           =   4815
+         Top             =   300
+         Width           =   5010
          Begin VB.PictureBox TickersPicture 
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
@@ -134,14 +219,14 @@ Begin VB.Form fDataCollectorUI
             Height          =   285
             Left            =   0
             ScaleHeight     =   285
-            ScaleWidth      =   4815
+            ScaleWidth      =   5055
             TabIndex        =   8
             Top             =   0
-            Width           =   4815
+            Width           =   5055
             Begin VB.TextBox ShortNameText 
                Height          =   285
                Index           =   4
-               Left            =   3840
+               Left            =   3960
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
                TabIndex        =   13
@@ -153,7 +238,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.TextBox ShortNameText 
                Height          =   285
                Index           =   0
-               Left            =   0
+               Left            =   120
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
                TabIndex        =   12
@@ -165,7 +250,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.TextBox ShortNameText 
                Height          =   285
                Index           =   1
-               Left            =   960
+               Left            =   1080
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
                TabIndex        =   11
@@ -177,7 +262,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.TextBox ShortNameText 
                Height          =   285
                Index           =   2
-               Left            =   1920
+               Left            =   2040
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
                TabIndex        =   10
@@ -189,7 +274,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.TextBox ShortNameText 
                Height          =   285
                Index           =   3
-               Left            =   2880
+               Left            =   3000
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
                TabIndex        =   9
@@ -201,7 +286,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.Label DataLightLabel 
                Height          =   285
                Index           =   4
-               Left            =   4560
+               Left            =   4680
                TabIndex        =   18
                Top             =   0
                Width           =   255
@@ -209,7 +294,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.Label DataLightLabel 
                Height          =   285
                Index           =   0
-               Left            =   720
+               Left            =   840
                TabIndex        =   17
                Top             =   0
                Width           =   255
@@ -217,7 +302,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.Label DataLightLabel 
                Height          =   285
                Index           =   3
-               Left            =   3600
+               Left            =   3720
                TabIndex        =   16
                Top             =   0
                Width           =   255
@@ -225,7 +310,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.Label DataLightLabel 
                Height          =   285
                Index           =   2
-               Left            =   2640
+               Left            =   2760
                TabIndex        =   15
                Top             =   0
                Width           =   255
@@ -233,7 +318,7 @@ Begin VB.Form fDataCollectorUI
             Begin VB.Label DataLightLabel 
                Height          =   285
                Index           =   1
-               Left            =   1680
+               Left            =   1800
                TabIndex        =   14
                Top             =   0
                Width           =   255
@@ -241,46 +326,23 @@ Begin VB.Form fDataCollectorUI
          End
       End
       Begin VB.TextBox LogText 
-         Height          =   2655
-         Left            =   -74880
+         BorderStyle     =   0  'None
+         Height          =   2895
+         Left            =   -74970
          MaxLength       =   65535
          MultiLine       =   -1  'True
          ScrollBars      =   3  'Both
-         TabIndex        =   5
-         Top             =   360
-         Width           =   5055
+         TabIndex        =   6
+         Top             =   300
+         Width           =   5280
       End
-      Begin VB.VScrollBar TickerScroll 
-         Height          =   2700
-         Left            =   4920
-         TabIndex        =   4
-         Top             =   360
-         Width           =   255
-      End
-      Begin VB.Label Label4 
-         Caption         =   "Current configuration:"
-         Height          =   375
-         Left            =   -74760
-         TabIndex        =   24
-         Top             =   720
-         Width           =   1695
-      End
-   End
-   Begin VB.CommandButton StartStopButton 
-      Caption         =   "Start"
-      Height          =   495
-      Left            =   4560
-      TabIndex        =   0
-      ToolTipText     =   "Starts or stops data collection"
-      Top             =   120
-      Width           =   615
    End
    Begin VB.TextBox ConnectionStatusText 
       BackColor       =   &H8000000F&
       Height          =   255
       Left            =   3480
       Locked          =   -1  'True
-      TabIndex        =   1
+      TabIndex        =   2
       TabStop         =   0   'False
       ToolTipText     =   "Indicates the health of the connection to the realtime data source: green is ok, red is error"
       Top             =   120
@@ -311,7 +373,7 @@ Begin VB.Form fDataCollectorUI
       Caption         =   "Connection status"
       Height          =   255
       Left            =   2040
-      TabIndex        =   2
+      TabIndex        =   3
       Top             =   120
       Width           =   1335
    End
@@ -419,6 +481,8 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mConnected As Boolean
 
+Private mTheme As ITheme
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -433,6 +497,8 @@ ReDim mTickers(99) As TickerTableEntry
 Set mFormatter = CreateBasicLogFormatter(TimestampTimeOnlyLocal)
 GetLogger("log").AddLogListener Me
 Set mFutureWaiter = New FutureWaiter
+
+Set mTheme = New BlackTheme
 
 Exit Sub
 
@@ -817,6 +883,7 @@ On Error GoTo Err
 
 Dim f As New fConfig
 f.Initialise mConfigManager, True
+f.Theme = mTheme
 f.Show vbModeless
 
 Exit Sub
@@ -1061,18 +1128,18 @@ Private Sub mDataCollector_TickerAdded(ByVal pTicker As Ticker)
 Const ProcName As String = "mDataCollector_TickerAdded"
 On Error GoTo Err
 
-Dim index As Long
-index = pTicker.Handle
+Dim Index As Long
+Index = pTicker.Handle
 
-If index > UBound(mTickers) Then
-    ReDim Preserve mTickers(index / 100 * 100 + 99) As TickerTableEntry
+If Index > UBound(mTickers) Then
+    ReDim Preserve mTickers(Index / 100 * 100 + 99) As TickerTableEntry
 End If
-Set mTickers(index).Ticker = pTicker
-Set mTickers(index).tli = Nothing
+Set mTickers(Index).Ticker = pTicker
+Set mTickers(Index).tli = Nothing
 
-If index > ShortNameText.UBound Then
+If Index > ShortNameText.UBound Then
     Dim i As Long
-    For i = ShortNameText.UBound + 1 To index
+    For i = ShortNameText.UBound + 1 To Index
         Load ShortNameText(i)
         ShortNameText(i).Left = ShortNameText(i - 5).Left
         ShortNameText(i).Top = ShortNameText(i - 5).Top + mLineSpacing
@@ -1088,9 +1155,9 @@ If index > ShortNameText.UBound Then
     Next
 End If
 
-mFutureWaiter.Add pTicker.ContractFuture, index
-ShortNameText(index).Visible = True
-DataLightLabel(index).Visible = True
+mFutureWaiter.Add pTicker.ContractFuture, Index
+ShortNameText(Index).Visible = True
+DataLightLabel(Index).Visible = True
 
 pTicker.AddGenericTickListener Me
 pTicker.AddRawMarketDepthListener Me
@@ -1145,6 +1212,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+applyTheme mTheme
+
 mNoDataRestartSecs = pNoDataRestartSecs
 Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
 
@@ -1152,6 +1221,7 @@ Set mDataCollector = pDataCollector
 
 Set mConfigManager = pconfigManager
 ConfigNameText = configName
+Me.Caption = "Data Collector: " & configName
 
 If showMonitor Then
     mActivityMonitorVisible = True
@@ -1195,6 +1265,25 @@ End Sub
 ' Helper Functions
 '================================================================================
 
+Private Sub applyTheme(ByVal pTheme As ITheme)
+Const ProcName As String = "applyTheme"
+On Error GoTo Err
+
+Me.BackColor = mTheme.BaseColor
+gApplyTheme mTheme, Me.Controls
+
+SendMessage StatusBar1.hWnd, SB_SETBKCOLOR, 0, NormalizeColor(mTheme.StatusBarBackColor)
+
+Dim lhDC As Long
+lhDC = GetDC(StatusBar1.hWnd)
+SetTextColor lhDC, NormalizeColor(mTheme.StatusBarForeColor)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub clearTickers()
 Const ProcName As String = "clearTickers"
 On Error GoTo Err
@@ -1202,7 +1291,7 @@ On Error GoTo Err
 Dim i As Long
 For i = 0 To ShortNameText.UBound
     ShortNameText(i).Text = ""
-    DataLightLabel(i).BackColor = vbButtonFace
+    DataLightLabel(i).BackColor = mTheme.BackColor
 Next
 
 Exit Sub
@@ -1521,22 +1610,22 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub switchDataLightOn( _
-                ByVal index As Long)
+                ByVal Index As Long)
 Const ProcName As String = "switchDataLightOn"
 On Error GoTo Err
 
 If Not mActivityMonitorVisible Then Exit Sub
 
-If Not mTickers(index).tli Is Nothing Then
-    mTickers(index).tli.RemoveStateChangeListener Me
-    mTickers(index).tli.Cancel
+If Not mTickers(Index).tli Is Nothing Then
+    mTickers(Index).tli.RemoveStateChangeListener Me
+    mTickers(Index).tli.Cancel
 End If
 
-Set mTickers(index).tli = mTimerList.Add(index, 200, ExpiryTimeUnitMilliseconds)
-mTickers(index).tli.AddStateChangeListener Me
+Set mTickers(Index).tli = mTimerList.Add(Index, 200, ExpiryTimeUnitMilliseconds)
+mTickers(Index).tli.AddStateChangeListener Me
 
-DataLightLabel(index).BackColor = vbGreen
-DataLightLabel(index).Refresh
+DataLightLabel(Index).BackColor = Rnd() * &HFFFFFF
+DataLightLabel(Index).Refresh
 ConnectionStatusText.BackColor = vbGreen
 
 Exit Sub
@@ -1546,18 +1635,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub switchDataLightOff( _
-                ByVal index As Long)
+                ByVal Index As Long)
 Const ProcName As String = "switchDataLightOff"
 On Error GoTo Err
 
-If Not mTickers(index).tli Is Nothing Then
-    mTickers(index).tli.RemoveStateChangeListener Me
-    mTickers(index).tli.Cancel
-    Set mTickers(index).tli = Nothing
+If Not mTickers(Index).tli Is Nothing Then
+    mTickers(Index).tli.RemoveStateChangeListener Me
+    mTickers(Index).tli.Cancel
+    Set mTickers(Index).tli = Nothing
 End If
 
-DataLightLabel(index).BackColor = vbButtonFace
-DataLightLabel(index).Refresh
+DataLightLabel(Index).BackColor = mTheme.BackColor
+DataLightLabel(Index).Refresh
 
 Exit Sub
 

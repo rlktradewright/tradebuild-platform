@@ -18,8 +18,8 @@ Begin VB.Form fConfig
       TabIndex        =   0
       Top             =   120
       Width           =   10095
-      _ExtentX        =   17806
-      _ExtentY        =   7223
+      _extentx        =   17806
+      _extenty        =   7223
    End
 End
 Attribute VB_Name = "fConfig"
@@ -29,14 +29,11 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-''
-' Description here
-'
-'@/
-
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -54,11 +51,13 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "fConfig"
+Private Const ModuleName                            As String = "fConfig"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mTheme                                      As ITheme
 
 '@================================================================================
 ' Class Event Handlers
@@ -92,8 +91,24 @@ UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IThemeable Interface Members
 '@================================================================================
+
+Private Property Get IThemeable_Theme() As ITheme
+Set IThemeable_Theme = Theme
+End Property
+
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Const ProcName As String = "IThemeable_Theme"
+On Error GoTo Err
+
+Theme = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -102,6 +117,27 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get Theme() As ITheme
+Set Theme = mTheme
+End Property
+
+Public Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+If mTheme Is Value Then Exit Property
+Set mTheme = Value
+If mTheme Is Nothing Then Exit Property
+
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Methods
