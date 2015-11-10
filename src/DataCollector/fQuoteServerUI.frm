@@ -533,8 +533,7 @@ Case QueryUnloadConstants.vbAppWindows
 Case QueryUnloadConstants.vbFormCode
 Case QueryUnloadConstants.vbFormControlMenu
     If mCollectingData Then
-        If MsgBox("Please confirm that you wish to stop data collection", _
-                    vbYesNo + vbDefaultButton2 + vbQuestion) = vbNo Then Cancel = True
+        Cancel = stopCollecting("Data collection stopped by user", True)
     End If
 End Select
 
@@ -1580,15 +1579,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub stopCollecting( _
+Private Function stopCollecting( _
                 ByVal message As String, _
-                ByVal confirm As Boolean)
+                ByVal confirm As Boolean) As Boolean
 Const ProcName As String = "stopCollecting"
 On Error GoTo Err
 
 If confirm Then
     If MsgBox("Please confirm that you wish to stop data collection", _
-                vbYesNo + vbDefaultButton2 + vbQuestion) <> vbYes Then Exit Sub
+                vbYesNo + vbDefaultButton2 + vbQuestion) <> vbYes Then
+        stopCollecting = False
+        Exit Function
+    End If
 End If
 
 LogMessage message
@@ -1603,11 +1605,13 @@ For i = 0 To UBound(mTickers)
     End If
 Next
 
-Exit Sub
+stopCollecting = True
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub switchDataLightOn( _
                 ByVal Index As Long)
