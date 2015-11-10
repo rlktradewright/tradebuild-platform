@@ -135,59 +135,59 @@ Begin VB.Form fStrategyHost
       TabCaption(3)   =   "Results"
       TabPicture(3)   =   "fStrategyHost.frx":00C4
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "TheTime"
+      Tab(3).Control(0)=   "AskSizeText"
       Tab(3).Control(0).Enabled=   0   'False
-      Tab(3).Control(1)=   "Label14"
+      Tab(3).Control(1)=   "TradeSizeText"
       Tab(3).Control(1).Enabled=   0   'False
-      Tab(3).Control(2)=   "Position"
+      Tab(3).Control(2)=   "BidSizeText"
       Tab(3).Control(2).Enabled=   0   'False
-      Tab(3).Control(3)=   "MaxProfit"
+      Tab(3).Control(3)=   "AskText"
       Tab(3).Control(3).Enabled=   0   'False
-      Tab(3).Control(4)=   "Label5"
+      Tab(3).Control(4)=   "TradeText"
       Tab(3).Control(4).Enabled=   0   'False
-      Tab(3).Control(5)=   "Label12"
+      Tab(3).Control(5)=   "BidText"
       Tab(3).Control(5).Enabled=   0   'False
-      Tab(3).Control(6)=   "Drawdown"
+      Tab(3).Control(6)=   "MoreButton"
       Tab(3).Control(6).Enabled=   0   'False
-      Tab(3).Control(7)=   "Profit"
+      Tab(3).Control(7)=   "Label7"
       Tab(3).Control(7).Enabled=   0   'False
-      Tab(3).Control(8)=   "Label4"
+      Tab(3).Control(8)=   "MicrosecsPerEventLabel"
       Tab(3).Control(8).Enabled=   0   'False
-      Tab(3).Control(9)=   "Label9"
+      Tab(3).Control(9)=   "EventsPerSecondLabel"
       Tab(3).Control(9).Enabled=   0   'False
-      Tab(3).Control(10)=   "Label10"
+      Tab(3).Control(10)=   "Label3"
       Tab(3).Control(10).Enabled=   0   'False
-      Tab(3).Control(11)=   "Label8"
+      Tab(3).Control(11)=   "PercentCompleteLabel"
       Tab(3).Control(11).Enabled=   0   'False
-      Tab(3).Control(12)=   "Label1"
+      Tab(3).Control(12)=   "Label2"
       Tab(3).Control(12).Enabled=   0   'False
       Tab(3).Control(13)=   "EventsPlayedLabel"
       Tab(3).Control(13).Enabled=   0   'False
-      Tab(3).Control(14)=   "Label2"
+      Tab(3).Control(14)=   "Label1"
       Tab(3).Control(14).Enabled=   0   'False
-      Tab(3).Control(15)=   "PercentCompleteLabel"
+      Tab(3).Control(15)=   "Label8"
       Tab(3).Control(15).Enabled=   0   'False
-      Tab(3).Control(16)=   "Label3"
+      Tab(3).Control(16)=   "Label10"
       Tab(3).Control(16).Enabled=   0   'False
-      Tab(3).Control(17)=   "EventsPerSecondLabel"
+      Tab(3).Control(17)=   "Label9"
       Tab(3).Control(17).Enabled=   0   'False
-      Tab(3).Control(18)=   "MicrosecsPerEventLabel"
+      Tab(3).Control(18)=   "Label4"
       Tab(3).Control(18).Enabled=   0   'False
-      Tab(3).Control(19)=   "Label7"
+      Tab(3).Control(19)=   "Profit"
       Tab(3).Control(19).Enabled=   0   'False
-      Tab(3).Control(20)=   "MoreButton"
+      Tab(3).Control(20)=   "Drawdown"
       Tab(3).Control(20).Enabled=   0   'False
-      Tab(3).Control(21)=   "BidText"
+      Tab(3).Control(21)=   "Label12"
       Tab(3).Control(21).Enabled=   0   'False
-      Tab(3).Control(22)=   "TradeText"
+      Tab(3).Control(22)=   "Label5"
       Tab(3).Control(22).Enabled=   0   'False
-      Tab(3).Control(23)=   "AskText"
+      Tab(3).Control(23)=   "MaxProfit"
       Tab(3).Control(23).Enabled=   0   'False
-      Tab(3).Control(24)=   "BidSizeText"
+      Tab(3).Control(24)=   "Position"
       Tab(3).Control(24).Enabled=   0   'False
-      Tab(3).Control(25)=   "TradeSizeText"
+      Tab(3).Control(25)=   "Label14"
       Tab(3).Control(25).Enabled=   0   'False
-      Tab(3).Control(26)=   "AskSizeText"
+      Tab(3).Control(26)=   "TheTime"
       Tab(3).Control(26).Enabled=   0   'False
       Tab(3).ControlCount=   27
       Begin VB.PictureBox LogPicture 
@@ -230,6 +230,15 @@ Begin VB.Form fStrategyHost
          TabIndex        =   39
          Top             =   480
          Width           =   10695
+         Begin VB.CheckBox ShowChartCheck 
+            Caption         =   "Show chart"
+            Height          =   195
+            Left            =   6000
+            TabIndex        =   54
+            Top             =   840
+            Value           =   1  'Checked
+            Width           =   1815
+         End
          Begin VB.ComboBox StopStrategyFactoryCombo 
             Appearance      =   0  'Flat
             Height          =   315
@@ -266,32 +275,32 @@ Begin VB.Form fStrategyHost
             Caption         =   "Dummy profit profile"
             Height          =   195
             Left            =   6000
-            TabIndex        =   7
-            Top             =   1080
+            TabIndex        =   5
+            Top             =   1320
             Width           =   1935
          End
          Begin VB.CheckBox ProfitProfileCheck 
             Caption         =   "Profit profile"
             Height          =   195
             Left            =   6000
-            TabIndex        =   6
-            Top             =   840
+            TabIndex        =   4
+            Top             =   1080
             Width           =   1455
          End
          Begin VB.CheckBox NoMoneyManagement 
             Caption         =   "No money management"
             Height          =   195
             Left            =   6000
-            TabIndex        =   8
-            Top             =   1320
+            TabIndex        =   6
+            Top             =   1560
             Width           =   2055
          End
          Begin VB.CheckBox SeparateSessionsCheck 
             Caption         =   "Separate session per tick file"
             Height          =   195
             Left            =   8040
-            TabIndex        =   9
-            Top             =   840
+            TabIndex        =   7
+            Top             =   1080
             Value           =   1  'Checked
             Width           =   2415
          End
@@ -300,7 +309,7 @@ Begin VB.Form fStrategyHost
             Enabled         =   0   'False
             Height          =   375
             Left            =   9600
-            TabIndex        =   5
+            TabIndex        =   12
             Top             =   360
             Width           =   1095
          End
@@ -310,7 +319,7 @@ Begin VB.Form fStrategyHost
             Enabled         =   0   'False
             Height          =   375
             Left            =   9600
-            TabIndex        =   4
+            TabIndex        =   11
             Top             =   0
             Width           =   1095
          End
@@ -318,24 +327,24 @@ Begin VB.Form fStrategyHost
             Caption         =   "Live trades"
             Height          =   195
             Left            =   8040
-            TabIndex        =   10
-            Top             =   1080
+            TabIndex        =   8
+            Top             =   1320
             Width           =   2415
          End
          Begin VB.TextBox ResultsPathText 
             Height          =   255
             Left            =   6960
-            TabIndex        =   11
-            Top             =   1560
+            TabIndex        =   9
+            Top             =   1800
             Width           =   1995
          End
          Begin VB.CommandButton ResultsPathButton 
             Caption         =   "..."
             Height          =   255
             Left            =   9000
-            TabIndex        =   12
+            TabIndex        =   10
             ToolTipText     =   "Select results path"
-            Top             =   1560
+            Top             =   1800
             Width           =   375
          End
          Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
@@ -360,7 +369,7 @@ Begin VB.Form fStrategyHost
             Height          =   255
             Left            =   6000
             TabIndex        =   40
-            Top             =   1560
+            Top             =   1800
             Width           =   975
          End
       End
@@ -849,6 +858,8 @@ Private mEventsCurrTickfile                             As Long
 Private WithEvents mFutureWaiter                        As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mShowChart                                      As Boolean
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -903,10 +914,12 @@ If Not mStrategyRunner Is Nothing Then
     mStrategyRunner.StopTesting
 End If
 
-LogMessage "Finishing charts"
-PriceChart.Finish
-ProfitChart.Finish
-TradeChart.Finish
+If mShowChart Then
+    LogMessage "Finishing charts"
+    PriceChart.Finish
+    ProfitChart.Finish
+    TradeChart.Finish
+End If
 
 LogMessage "Closing other forms"
 Dim f As Form
@@ -970,6 +983,8 @@ Private Function IStrategyHost_AddStudy( _
 Const ProcName As String = "IStrategyHost_AddStudy"
 On Error GoTo Err
 
+If Not mShowChart Then Exit Function
+
 Dim lChartManager As ChartManager
 Set lChartManager = PriceChart.ChartManager
 
@@ -1002,6 +1017,8 @@ Private Function IStrategyHost_AddTimeframe( _
                 Optional ByVal pIncludeBarsOutsideSession As Boolean) As Timeframe
 Const ProcName As String = "IStrategyHost_AddTimeframe"
 On Error GoTo Err
+
+If Not mShowChart Then Exit Function
 
 Dim lIndex As Long
 If TickfileOrganiser1.TickfileCount <> 0 Then
@@ -1065,7 +1082,7 @@ mElapsedSecsCurrTickfile = 0
 mTotalEvents = mTotalEvents + mEventsCurrTickfile
 mEventsCurrTickfile = 0
 
-PriceChart.BaseChartController.EnableDrawing
+If mShowChart Then PriceChart.BaseChartController.EnableDrawing
 
 If mTickfileIndex = TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
     Set mPriceStudyBase = Nothing
@@ -1148,8 +1165,10 @@ EventsPlayedLabel.Caption = lTotalEvents
 EventsPerSecondLabel.Caption = Int(lTotalEvents / lTotalElapsedSecs)
 MicrosecsPerEventLabel.Caption = Int(lTotalElapsedSecs * 1000000 / lTotalEvents)
 
-PriceChart.BaseChartController.EnableDrawing
-PriceChart.BaseChartController.DisableDrawing
+If mShowChart Then
+    PriceChart.BaseChartController.EnableDrawing
+    PriceChart.BaseChartController.DisableDrawing
+End If
 
 Exit Sub
 
@@ -1199,12 +1218,13 @@ If mPriceStudyBase Is Nothing Then
         mFutureWaiter.Add mTicker.ClockFuture
     Else
         initialisePriceChart
+        mStrategyRunner.StartStrategy mParams
     End If
 Else
     mTicker.AddGenericTickListener Me
     mStrategyRunner.StartReplay
     mReplayStartTime = GetTimestamp
-    PriceChart.BaseChartController.DisableDrawing
+    If mShowChart Then PriceChart.BaseChartController.DisableDrawing
 End If
 If mProfitStudyBase Is Nothing Then initialiseProfitChart
 If mTradeStudyBase Is Nothing Then initialiseTradeChart
@@ -1264,35 +1284,7 @@ Case "position.bracketorderprofilestruct"
     Dim lBracketOrderProfile As BracketOrderProfile
     lBracketOrderProfile = pLogrec.Data
     
-    Dim lBracketOrderLine As ChartSkil27.Line
-    Set lBracketOrderLine = mBracketOrderLineSeries.Add
-    lBracketOrderLine.Point1 = NewPoint(mPricePeriods(BarStartTime(lBracketOrderProfile.StartTime, mPriceChartTimePeriod, mContract.SessionStartTime)).PeriodNumber, lBracketOrderProfile.EntryPrice)
-    
-    Dim lLineEndBarStartTime As Date
-    lLineEndBarStartTime = BarStartTime(lBracketOrderProfile.EndTime, mPriceChartTimePeriod, mContract.SessionStartTime)
-    
-    On Error Resume Next
-    Dim lPeriod As Period
-    Set lPeriod = mPricePeriods(lLineEndBarStartTime)
-    On Error GoTo 0
-    If lPeriod Is Nothing Then
-        ' this occurs when the execution that finished the order plex occurred
-        ' at the start of a new bar but before the first price for the bar
-        ' was reported. So add the bar now
-        mPricePeriods.Add lLineEndBarStartTime
-    End If
-    lBracketOrderLine.Point2 = NewPoint(mPricePeriods(lLineEndBarStartTime).PeriodNumber, lBracketOrderProfile.ExitPrice)
-    
-    If lBracketOrderProfile.Action = OrderActionBuy Then
-        lBracketOrderLine.Color = vbBlue
-    Else
-        lBracketOrderLine.Color = vbRed
-    End If
-    'If lBracketOrderProfile.QuantityOutstanding <> 0 Then
-        lBracketOrderLine.ArrowEndStyle = ArrowClosed
-        lBracketOrderLine.ArrowEndWidth = 8
-        lBracketOrderLine.ArrowEndLength = 12
-    'End If
+    showBracketOrderLine lBracketOrderProfile
     
     sBracketOrderNumber = sBracketOrderNumber + 1
     Set lListItem = BracketOrderList.ListItems.Add(, "K" & sBracketOrderNumber, lBracketOrderProfile.Key)
@@ -1354,6 +1346,7 @@ If TypeOf ev.Future.Value Is Clock Then
     Dim lClock As Clock
     Set lClock = ev.Future.Value
     initialisePriceChart lClock.TimeStamp
+    mStrategyRunner.StartStrategy mParams
 End If
 
 Exit Sub
@@ -1419,6 +1412,8 @@ Private Sub BracketOrderList_DblClick()
 Const ProcName As String = "BracketOrderList_DblClick"
 On Error GoTo Err
 
+If Not mShowChart Then Exit Sub
+
 Dim ListItem As ListItem
 Set ListItem = BracketOrderList.SelectedItem
 
@@ -1435,34 +1430,6 @@ Exit Sub
 Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
-
-'Private Sub ListenerFilenameText_Change()
-'Dim fileListener As cFileListener
-'Set fileListener = mStrategyListener
-'fileListener.FileName = ListenerFilenameText
-'End Sub
-
-'Private Sub ListenerTypeCombo_Click()
-'Select Case ListenerTypeCombo
-'Case "File listener"
-'    Dim fileListener As cFileListener
-'    Set fileListener = New cFileListener
-'    Set mStrategyListener = fileListener
-'    fileListener.Overwrite = True
-'    SelectListenerFileButton.Enabled = True
-'    ListenerFilenameText.Enabled = True
-'    RawDataCheck.Enabled = True
-'    fileListener.FileName = ListenerFilenameText
-'    fileListener.raw = IIf(RawDataCheck = vbChecked, True, False)
-'Case "Swing writer"
-'    Dim swingWriter As RLKSwingWriter
-'    Set swingWriter = New RLKSwingWriter
-'    Set mStrategyListener = swingWriter
-'    SelectListenerFileButton.Enabled = False
-'    ListenerFilenameText.Enabled = False
-'    RawDataCheck.Enabled = False
-'End Select
-'End Sub
 
 Private Sub MoreButton_Click()
 Const ProcName As String = "MoreButton_Click"
@@ -1524,6 +1491,8 @@ On Error GoTo Err
 
 StartButton.Enabled = False
 StopButton.Enabled = True
+
+mShowChart = (ShowChartCheck = vbChecked)
 
 PriceChart.Clear
 ProfitChart.BaseChartController.ClearChart
@@ -1664,6 +1633,8 @@ Private Sub initialisePriceChart(Optional ByVal pTimestamp As Date)
 Const ProcName As String = "initialisePriceChart"
 On Error GoTo Err
 
+If Not mShowChart Then Exit Sub
+
 PriceChart.Initialise CreateTimeframes(mPriceStudyBase, _
                                     mTicker.ContractFuture, _
                                     gTB.HistoricalDataStoreInput, _
@@ -1671,8 +1642,6 @@ PriceChart.Initialise CreateTimeframes(mPriceStudyBase, _
                     gTB.HistoricalDataStoreInput.TimePeriodValidator, _
                     CreateChartSpecifier(200, , , pTimestamp), _
                     ChartStylesManager.DefaultStyle
-
-mStrategyRunner.StartStrategy mParams
 
 Exit Sub
 
@@ -1683,6 +1652,8 @@ End Sub
 Private Sub initialiseProfitChart()
 Const ProcName As String = "initialiseProfitChart"
 On Error GoTo Err
+
+If Not mShowChart Then Exit Sub
 
 Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                     gTB.StudyLibraryManager.CreateStudyManager( _
@@ -1704,6 +1675,8 @@ End Sub
 Private Sub initialiseTradeChart()
 Const ProcName As String = "initialiseTradeChart"
 On Error GoTo Err
+
+If Not mShowChart Then Exit Sub
 
 Set mTradeStudyBase = CreateStudyBaseForUserBarsInput( _
                                     gTB.StudyLibraryManager.CreateStudyManager( _
@@ -1887,6 +1860,48 @@ GetLogger("position.ordersimulated").AddLogListener Me
 GetLogger("position.moneymanagement").AddLogListener Me
 GetLogger("position.moneymanagementsimulated").AddLogListener Me
 GetLogger("strategy.tradereason").AddLogListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub showBracketOrderLine(ByRef pBracketOrderProfile As BracketOrderProfile)
+Const ProcName As String = "showBracketOrderLine"
+On Error GoTo Err
+
+If Not mShowChart Then Exit Sub
+
+Dim lBracketOrderLine As ChartSkil27.Line
+Set lBracketOrderLine = mBracketOrderLineSeries.Add
+lBracketOrderLine.Point1 = NewPoint(mPricePeriods(BarStartTime(pBracketOrderProfile.StartTime, mPriceChartTimePeriod, mContract.SessionStartTime)).PeriodNumber, pBracketOrderProfile.EntryPrice)
+
+Dim lLineEndBarStartTime As Date
+lLineEndBarStartTime = BarStartTime(pBracketOrderProfile.EndTime, mPriceChartTimePeriod, mContract.SessionStartTime)
+
+On Error Resume Next
+Dim lPeriod As Period
+Set lPeriod = mPricePeriods(lLineEndBarStartTime)
+On Error GoTo 0
+If lPeriod Is Nothing Then
+    ' this occurs when the execution that finished the order plex occurred
+    ' at the start of a new bar but before the first price for the bar
+    ' was reported. So add the bar now
+    mPricePeriods.Add lLineEndBarStartTime
+End If
+lBracketOrderLine.Point2 = NewPoint(mPricePeriods(lLineEndBarStartTime).PeriodNumber, pBracketOrderProfile.ExitPrice)
+
+If pBracketOrderProfile.Action = OrderActionBuy Then
+    lBracketOrderLine.Color = vbBlue
+Else
+    lBracketOrderLine.Color = vbRed
+End If
+'If pBracketOrderProfile.QuantityOutstanding <> 0 Then
+    lBracketOrderLine.ArrowEndStyle = ArrowClosed
+    lBracketOrderLine.ArrowEndWidth = 8
+    lBracketOrderLine.ArrowEndLength = 12
+'End If
 
 Exit Sub
 

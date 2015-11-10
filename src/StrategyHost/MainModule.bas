@@ -219,7 +219,6 @@ getUsageString = _
             "              [/livetrades]" & vbCrLf & _
             "              [/logpath:path]" & vbCrLf & _
             "              [/noUI]" & vbCrLf & _
-            "              [/port:portnumber]" & vbCrLf & _
             "              [/resultsPath:path]" & vbCrLf & _
             "              [/run]" & vbCrLf & _
             "              [/useMoneyManagement  |  /umm]"
