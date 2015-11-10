@@ -533,7 +533,7 @@ Case QueryUnloadConstants.vbAppWindows
 Case QueryUnloadConstants.vbFormCode
 Case QueryUnloadConstants.vbFormControlMenu
     If mCollectingData Then
-        Cancel = stopCollecting("Data collection stopped by user", True)
+        Cancel = Not stopCollecting("Data collection stopped by user", True)
     End If
 End Select
 
