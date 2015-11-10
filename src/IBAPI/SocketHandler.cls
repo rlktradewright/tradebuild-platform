@@ -111,7 +111,7 @@ End Sub
 Private Sub mSocket_Close()
 Const ProcName As String = "mSocket_Close"
 On Error GoTo Err
-mSocket.Close
+ReleaseSocket
 handleTwsDisconnection "closed by peer", False
 Exit Sub
 Err:
@@ -121,19 +121,6 @@ End Sub
 Private Sub mSocket_Connect()
 Const ProcName As String = "mSocket_Connect"
 On Error GoTo Err
-
-If mRetryingConnection Then
-    ' this means we have been waiting for Tws to start. If we try to start tickers
-    ' too soon after Tws accepts socket connections, Tws gives a 'max number of
-    ' tickers reached' error. So we'll cancel this connection and connect again in
-    ' 10 seconds
-    gLog "Tws is now available - connecting again in 10 seconds to allow Tws Time to initialise", ModuleName, ProcName
-    mSocket.Close
-    Set mConnectionTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds)
-    mConnectionTimer.StartTimer
-    mRetryingConnection = False
-    Exit Sub
-End If
 
 Dim ka As TcpKeepalive
 ka.Onoff = 1
@@ -435,6 +422,7 @@ Const ProcName As String = "ReleaseSocket"
 On Error GoTo Err
 
 If Not mSocket Is Nothing Then
+    gLog "Releasing socket: " & getConnectionString, ModuleName, ProcName
     mSocket.Close
     Set mSocket = Nothing
     Unload mWinsockForm
