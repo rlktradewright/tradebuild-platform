@@ -647,6 +647,9 @@ If mReplayController Is Nothing Then Exit Sub
 If Not mInitialisationCompleted Then Exit Sub
 If Not mStartReplayWhenReady Then Exit Sub
 
+mInitialisationCompleted = False
+mStartReplayWhenReady = False
+
 LogMessage "Tickfile replay started"
 Set mTickfileReplayTC = mReplayController.StartReplay
 

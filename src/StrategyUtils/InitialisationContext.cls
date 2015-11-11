@@ -265,7 +265,11 @@ End If
 
 If Not pShowInChart Then
 ElseIf Not studyAlreadyMapped(AddStudy) Then
-    addStudyToMap getStrategyHost.AddStudy(pName, mStudiesMap.Item(pUnderlyingStudy.InstancePath), pInputValueNames, pParams, pNumberOfValuesToCache, pLibraryName)
+    If mStudiesMap.Contains(pUnderlyingStudy.InstancePath) Then
+        Dim lChartStudy As IStudy
+        Set lChartStudy = getStrategyHost.AddStudy(pName, mStudiesMap.Item(pUnderlyingStudy.InstancePath), pInputValueNames, pParams, pNumberOfValuesToCache, pLibraryName)
+        If Not lChartStudy Is Nothing Then addStudyToMap lChartStudy
+    End If
 End If
 
 Exit Function
@@ -326,7 +330,9 @@ End If
 
 If Not pShowInChart Then
 ElseIf Not studyAlreadyMapped(lTimeframe.BarStudy) Then
-    addStudyToMap getStrategyHost.AddTimeframe(pTimePeriod, pNumberOfBarsToFetch, pIncludeBarsOutsideSession).BarStudy
+    Dim lChartTimeframe As Timeframe
+    Set lChartTimeframe = getStrategyHost.AddTimeframe(pTimePeriod, pNumberOfBarsToFetch, pIncludeBarsOutsideSession)
+    If Not lChartTimeframe Is Nothing Then addStudyToMap lChartTimeframe.BarStudy
 End If
 
 Set AddTimeframe = lTimeframe
