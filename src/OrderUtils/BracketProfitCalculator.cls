@@ -75,6 +75,8 @@ Private mProfitNotificationThreshold                As Currency
 Private mLossNotificationThreshold                  As Currency
 Private mDrawdownNotificationThreshold              As Currency
 
+Private mListeningToData                            As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -123,19 +125,15 @@ Private Sub IExecutionListener_NotifyExecution(ev As ExecutionEventData)
 Const ProcName As String = "IExecutionListener_NotifyExecution"
 On Error GoTo Err
 
+If Not mListeningToData Then listenToData
+
 If ev.ExecutionReport.Action = OrderActionBuy Then
     mCumBuyPrice = mCumBuyPrice + ev.ExecutionReport.Quantity * ev.ExecutionReport.Price
 Else
     mCumSellPrice = mCumSellPrice + ev.ExecutionReport.Quantity * ev.ExecutionReport.Price
 End If
 
-If mLastTrade <> MaxDouble Then
-    ProcessTradePrice mLastTrade
-ElseIf mBracketOrder.LongPosition Then
-    ProcessBidPrice mLastBid
-Else
-    ProcessAskPrice mLastAsk
-End If
+calcProfitUsingLastReceivedPrices
 
 Exit Sub
 
@@ -249,26 +247,17 @@ Set mBracketOrder = pBracketOrder
 mBracketOrder.AddExecutionListener Me
 mBracketOrder.AddChangeListener Me
 
-mCumBuyPrice = pBracketOrder.CumBuyPrice
-mCumSellPrice = pBracketOrder.CumSellPrice
-
 Set mContractFuture = pDataSource.ContractFuture
-
 Set mDataSource = pDataSource
-mDataSource.AddGenericTickListener Me
 
-If mDataSource.State = MarketDataSourceStateRunning And _
-    (mCumBuyPrice <> 0# Or mCumSellPrice <> 0#) _
-Then
-    Dim lAskTick As GenericTick
-    lAskTick = mDataSource.CurrentTick(TickTypeAsk)
-    If lAskTick.Timestamp <> 0# Then ProcessAskPrice lAskTick.Price
-    
-    Dim lBidTick As GenericTick
-    lBidTick = mDataSource.CurrentTick(TickTypeBid)
-    If lBidTick.Timestamp <> 0# Then ProcessBidPrice lBidTick.Price
+If mBracketOrder.Size <> 0 Then
+    mCumBuyPrice = pBracketOrder.CumBuyPrice
+    mCumSellPrice = pBracketOrder.CumSellPrice
+
+    listenToData
+    calcInitialProfit
 End If
-    
+
 Exit Sub
 
 Err:
@@ -303,7 +292,48 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function calcProfitLoss(ByVal Value As Double)
+Private Sub calcInitialProfit()
+Const ProcName As String = "calcInitialProfit"
+On Error GoTo Err
+
+If mDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+
+Dim lAskTick As GenericTick
+lAskTick = mDataSource.CurrentTick(TickTypeAsk)
+If lAskTick.Timestamp <> 0# Then mLastAsk = lAskTick.Price
+
+Dim lBidTick As GenericTick
+lBidTick = mDataSource.CurrentTick(TickTypeBid)
+If lBidTick.Timestamp <> 0# Then mLastBid = lBidTick.Price
+
+Dim lTradeTick As GenericTick
+lTradeTick = mDataSource.CurrentTick(TickTypeTrade)
+
+mLastTrade = MaxDouble
+
+If mLastBid <> 0# And _
+    lTradeTick.Timestamp <> 0# And _
+    lTradeTick.Timestamp >= lBidTick.Timestamp And _
+    lTradeTick.Price < mLastBid Then
+    mLastTrade = lTradeTick.Price
+End If
+
+If mLastAsk <> 0# And _
+    lTradeTick.Timestamp <> 0# And _
+    lTradeTick.Timestamp >= lAskTick.Timestamp And _
+    lTradeTick.Price > mLastAsk Then
+    mLastTrade = lTradeTick.Price
+End If
+
+calcProfitUsingLastReceivedPrices
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub calcProfitLoss(ByVal Value As Double)
 Const ProcName As String = "calcProfitLoss"
 On Error GoTo Err
 
@@ -317,7 +347,7 @@ If sValueFactor = 0 Then
     sValueFactor = lContract.Multiplier
 End If
 
-If Value = 0 Then Exit Function
+If Value = 0 Then Exit Sub
 
 Dim lProfit As Currency
 lProfit = (mCumSellPrice + mBracketOrder.Size * Value - mCumBuyPrice) * sValueFactor
@@ -379,11 +409,29 @@ If lNotifyProfit Then
     End If
 End If
 
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
+
+Private Sub calcProfitUsingLastReceivedPrices()
+Const ProcName As String = "calcProfitUsingLastReceivedPrices"
+On Error GoTo Err
+
+If mLastTrade <> MaxDouble Then
+    ProcessTradePrice mLastTrade
+ElseIf mBracketOrder.LongPosition Then
+    ProcessBidPrice mLastBid
+Else
+    ProcessAskPrice mLastAsk
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As ProfitChangeTypes)
@@ -438,6 +486,19 @@ For i = 1 To mProfitListeners.Count
 Next
 
 RaiseEvent Profit(ev)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub listenToData()
+Const ProcName As String = "listenToData"
+On Error GoTo Err
+
+mDataSource.AddGenericTickListener Me
+mListeningToData = True
 
 Exit Sub
 
