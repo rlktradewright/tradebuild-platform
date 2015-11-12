@@ -174,6 +174,8 @@ Private mCancelInitiatedByUser                      As Boolean
 
 Private mSingleContracts                            As IContracts
 
+Private mHistoricalContractsFound                   As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -292,15 +294,27 @@ Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVa
 Const ProcName As String = "IContractFetchListener_NotifyContract"
 On Error GoTo Err
 
+If Not IncludeHistoricalContracts And IsContractExpired(pContract) Then
+    mHistoricalContractsFound = True
+    Exit Sub
+End If
+
 If mContractsBuilder Is Nothing Then
     Set mContractsBuilder = New ContractsBuilder
     mContractsBuilder.Contracts.SortKeys = mSortKeys
+    ActionButton.Enabled = False
+    ClearButton.Visible = True
+    ClearButton.Caption = CancelCaption
+    ClearButton.Enabled = True
+    ContractSelector1.Clear
+    ContractSelector1.Visible = True
+    ContractSpecBuilder1.Visible = False
 End If
 
 mContractsBuilder.Add pContract
 
-If mContractsBuilder.Contracts.Count Mod 200 = 0 Then
-    MessageLabel.caption = getContractsCountMessage(mContractsBuilder.Contracts.Count)
+If mContractsBuilder.Contracts.Count Mod 100 = 0 Then
+    MessageLabel.Caption = getContractsCountMessage(mContractsBuilder.Contracts.Count)
     MessageLabel.Refresh
 End If
 
@@ -343,17 +357,11 @@ If ContractSelector1.Visible Then
     mCookie = Empty
 Else
     Set mSingleContracts = Nothing
+    mHistoricalContractsFound = False
     mFutureWaiter.Add FetchContracts(ContractSpecBuilder1.ContractSpecifier, mContractStorePrimary, mContractStoreSecondary, Me)
     mLoadingContracts = True
-    ActionButton.Enabled = False
-    ClearButton.Visible = True
-    ClearButton.caption = CancelCaption
-    ClearButton.Enabled = True
-    ContractSelector1.Clear
-    ContractSelector1.Visible = True
-    ContractSpecBuilder1.Visible = False
     UserControl.MousePointer = MousePointerConstants.vbHourglass
-    MessageLabel.caption = "Searching..."
+    MessageLabel.Caption = "Searching..."
 End If
 
 Exit Sub
@@ -366,7 +374,7 @@ Private Sub ClearButton_Click()
 Const ProcName As String = "ClearButton_Click"
 On Error GoTo Err
 
-If ClearButton.caption = CancelCaption Then
+If ClearButton.Caption = CancelCaption Then
     mCancelInitiatedByUser = True
     CancelSearch
 Else
@@ -409,7 +417,7 @@ On Error GoTo Err
 
 If ev.Cancelled Then
     Clear
-    MessageLabel.caption = "Cancelled"
+    MessageLabel.Caption = "Cancelled"
     If mCancelInitiatedByUser Then
         RaiseEvent Cancelled
         mCancelInitiatedByUser = False
@@ -465,12 +473,22 @@ ElseIf ev.Future.IsFaulted Then
     lEv.ErrorSource = ev.Future.ErrorSource
     RaiseEvent Error(lEv)
 Else
-    MessageLabel.caption = getContractsCountMessage(mContractsBuilder.Contracts.Count)
-    Set mContractSelectorInitialisationTC = handleContractsLoaded(mContractsBuilder.Contracts, False)
-    If mContractSelectorInitialisationTC Is Nothing Then
-        ClearButton.caption = ClearCaption
+    If mContractsBuilder Is Nothing Then
+        If mHistoricalContractsFound Then
+            MessageLabel.Caption = "No unexpired contracts"
+        Else
+            MessageLabel.Caption = "No contracts"
+        End If
         UserControl.MousePointer = MousePointerConstants.vbDefault
-        RaiseEvent ContractsLoaded(mContractsBuilder.Contracts)
+        RaiseEvent NoContracts
+    Else
+        MessageLabel.Caption = getContractsCountMessage(mContractsBuilder.Contracts.Count)
+        Set mContractSelectorInitialisationTC = handleContractsLoaded(mContractsBuilder.Contracts, False)
+        If mContractSelectorInitialisationTC Is Nothing Then
+            ClearButton.Caption = ClearCaption
+            UserControl.MousePointer = MousePointerConstants.vbDefault
+            RaiseEvent ContractsLoaded(mContractsBuilder.Contracts)
+        End If
     End If
 End If
 
@@ -488,12 +506,12 @@ End Sub
 
 Public Property Let ActionButtonCaption( _
                 ByVal value As String)
-ActionButton.caption = value
+ActionButton.Caption = value
 PropertyChanged PropNameActionButtonCaption
 End Property
 
 Public Property Get ActionButtonCaption() As String
-ActionButtonCaption = ActionButton.caption
+ActionButtonCaption = ActionButton.Caption
 End Property
 
 Public Property Get AllowMultipleSelection() As Boolean
@@ -722,9 +740,9 @@ Set mSingleContracts = Nothing
 ContractSpecBuilder1.Visible = True
 ContractSelector1.Visible = False
 ContractSelector1.Clear
-ClearButton.caption = ClearCaption
+ClearButton.Caption = ClearCaption
 ClearButton.Visible = False
-MessageLabel.caption = ""
+MessageLabel.Caption = ""
 
 setActionButton
 
@@ -760,7 +778,7 @@ ActionButton.Default = True
 gSetVariant mCookie, pCookie
 
 UserControl.MousePointer = MousePointerConstants.vbHourglass
-ClearButton.caption = CancelCaption
+ClearButton.Caption = CancelCaption
 ClearButton.Visible = True
 ClearButton.Enabled = True
 
@@ -769,7 +787,7 @@ ContractSpecBuilder1.Visible = False
 
 Set mContractSelectorInitialisationTC = handleContractsLoaded(pContracts, True)
 If mContractSelectorInitialisationTC Is Nothing Then
-    ClearButton.caption = ClearCaption
+    ClearButton.Caption = ClearCaption
     UserControl.MousePointer = MousePointerConstants.vbDefault
 End If
 
@@ -788,9 +806,9 @@ Const ProcName As String = "contractSelectorCompletion"
 On Error GoTo Err
 
 mLoadingContracts = False
-MessageLabel.caption = getContractsCountMessage(ContractSelector1.Count)
+MessageLabel.Caption = getContractsCountMessage(ContractSelector1.Count)
 ActionButton.Enabled = False
-ClearButton.caption = ClearCaption
+ClearButton.Caption = ClearCaption
 
 On Error Resume Next    ' because SetFocus gives an error if called during a Form_Load event
 ContractSelector1.SetFocus
@@ -811,18 +829,10 @@ Private Function handleContractsLoaded( _
 Const ProcName As String = "handleContractsLoaded"
 On Error GoTo Err
 
-If pContracts.Count = 0 Then
-    MessageLabel.caption = "No contracts"
-    RaiseEvent NoContracts
-ElseIf pContracts.Count = 1 Then
+If pContracts.Count = 1 Then
     Set mSingleContracts = pContracts
-    If IncludeHistoricalContracts Or Not IsContractExpired(mSingleContracts.ItemAtIndex(1)) Then
-        RaiseEvent Action
-        mCookie = Empty
-    Else
-        MessageLabel.caption = "Contract expired"
-        RaiseEvent NoContracts
-    End If
+    RaiseEvent Action
+    mCookie = Empty
 Else
     Set handleContractsLoaded = setupContractSelector(pContracts, mAllowMultipleSelection, pContractsSuppliedByCaller)
 End If
