@@ -106,12 +106,6 @@ Private mKey                        As String
 
 Private mIsFinished                 As Boolean
 
-Private mErrorListeners             As New Listeners
-Private mGenericTickListeners       As New Listeners
-Private mMarketDepthListeners       As New Listeners
-Private mPriceChangeListeners       As New Listeners
-Private mQuoteListeners             As New Listeners
-Private mRawMarketDepthListeners    As New Listeners
 Private mStateChangeListeners       As New Listeners
 
 '@================================================================================
@@ -963,7 +957,7 @@ Public Sub AddErrorListener( _
 Const ProcName As String = "AddErrorListener"
 On Error GoTo Err
 
-mErrorListeners.Add pListener
+mDataSource.AddErrorListener pListener
 
 Exit Sub
 
@@ -976,7 +970,7 @@ Public Sub AddGenericTickListener( _
 Const ProcName As String = "AddGenericTickListener"
 On Error GoTo Err
 
-mGenericTickListeners.Add pListener
+mDataSource.AddGenericTickListener pListener
 
 Exit Sub
 
@@ -989,7 +983,7 @@ Public Sub AddMarketDepthListener( _
 Const ProcName As String = "AddMarketDepthListener"
 On Error GoTo Err
 
-mMarketDepthListeners.Add pListener
+mDataSource.AddMarketDepthListener pListener
 
 Exit Sub
 
@@ -1002,7 +996,7 @@ Public Sub AddPriceChangeListener( _
 Const ProcName As String = "AddPriceChangeListener"
 On Error GoTo Err
 
-mPriceChangeListeners.Add pListener
+mDataSource.AddPriceChangeListener pListener
 
 Exit Sub
 
@@ -1014,7 +1008,7 @@ Public Sub AddQuoteListener(ByVal pListener As IQuoteListener)
 Const ProcName As String = "AddQuoteListener"
 On Error GoTo Err
 
-mQuoteListeners.Add pListener
+mDataSource.AddQuoteListener pListener
 
 Exit Sub
 
@@ -1026,7 +1020,7 @@ Public Sub AddRawMarketDepthListener(ByVal pListener As IRawMarketDepthListener)
 Const ProcName As String = "AddRawMarketDepthListener"
 On Error GoTo Err
 
-mRawMarketDepthListeners.Add pListener
+mDataSource.AddRawMarketDepthListener pListener
 
 Exit Sub
 
@@ -1326,7 +1320,7 @@ Public Sub RemoveErrorListener(ByVal pListener As IErrorListener)
 Const ProcName As String = "RemoveErrorListener"
 On Error GoTo Err
 
-mErrorListeners.Remove pListener
+mDataSource.RemoveErrorListener pListener
 
 Exit Sub
 
@@ -1351,7 +1345,7 @@ Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
 Const ProcName As String = "RemoveGenericTickListener"
 On Error GoTo Err
 
-mGenericTickListeners.Remove pListener
+mDataSource.RemoveGenericTickListener pListener
 
 Exit Sub
 
@@ -1363,7 +1357,7 @@ Public Sub RemoveMarketDepthListener(ByVal pListener As IMarketDepthListener)
 Const ProcName As String = "RemoveMarketDepthListener"
 On Error GoTo Err
 
-mMarketDepthListeners.Remove pListener
+mDataSource.RemoveMarketDepthListener pListener
 
 Exit Sub
 
@@ -1375,7 +1369,7 @@ Public Sub RemovePriceChangeListener(ByVal pListener As IPriceChangeListener)
 Const ProcName As String = "RemovePriceChangeListener"
 On Error GoTo Err
 
-mPriceChangeListeners.Remove pListener
+mDataSource.RemovePriceChangeListener pListener
 
 Exit Sub
 
@@ -1387,7 +1381,7 @@ Public Sub RemoveQuoteListener(ByVal pListener As IQuoteListener)
 Const ProcName As String = "RemoveQuoteListener"
 On Error GoTo Err
 
-mQuoteListeners.Remove pListener
+mDataSource.RemoveQuoteListener pListener
 
 Exit Sub
 
@@ -1399,7 +1393,7 @@ Public Sub RemoveRawMarketDepthListener(ByVal pListener As IRawMarketDepthListen
 Const ProcName As String = "RemoveRawMarketDepthListener"
 On Error GoTo Err
 
-mRawMarketDepthListeners.Remove pListener
+mDataSource.RemoveRawMarketDepthListener pListener
 
 Exit Sub
 
@@ -1483,16 +1477,6 @@ Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.Ask lEv
-    Next
-End If
-
 RaiseEvent Ask(lEv)
 
 Exit Sub
@@ -1509,16 +1493,6 @@ Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.Bid lEv
-    Next
-End If
-
 RaiseEvent Bid(lEv)
 
 Exit Sub
@@ -1534,16 +1508,6 @@ On Error GoTo Err
 Dim lEv As ErrorEventData
 lEv = ev
 Set lEv.Source = Me
-
-If mErrorListeners.Count <> 0 Then
-    mErrorListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mErrorListeners.Count
-        Dim lListener As IErrorListener
-        Set lListener = mErrorListeners.GetListener(i)
-        lListener.Notify lEv
-    Next
-End If
 
 RaiseEvent Error(lEv)
 
@@ -1562,16 +1526,6 @@ Dim lEv As GenericTickEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mGenericTickListeners.Count <> 0 Then
-    mGenericTickListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mGenericTickListeners.Count
-        Dim lListener As IGenericTickListener
-        Set lListener = mGenericTickListeners.GetListener(i)
-        lListener.NotifyTick lEv
-    Next
-End If
-
 RaiseEvent GenericTick(lEv)
 
 Exit Sub
@@ -1588,16 +1542,6 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
-
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.High lEv
-    Next
-End If
 
 RaiseEvent High(lEv)
 
@@ -1616,16 +1560,6 @@ Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.Low lEv
-    Next
-End If
-
 RaiseEvent Low(lEv)
 
 Exit Sub
@@ -1642,16 +1576,6 @@ On Error GoTo Err
 Dim lEv As GenericTickEventData
 lEv = ev
 Set lEv.Source = Me
-
-If mGenericTickListeners.Count <> 0 Then
-    mGenericTickListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mGenericTickListeners.Count
-        Dim lListener As IGenericTickListener
-        Set lListener = mGenericTickListeners.GetListener(i)
-        lListener.NoMoreTicks lEv
-    Next
-End If
 
 RaiseEvent NoMoreTicks(lEv)
 
@@ -1670,16 +1594,6 @@ Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.SessionOpen lEv
-    Next
-End If
-
 RaiseEvent SessionOpen(lEv)
 
 Exit Sub
@@ -1697,16 +1611,6 @@ Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.OpenInterest lEv
-    Next
-End If
-
 RaiseEvent OpenInterest(lEv)
 
 Exit Sub
@@ -1722,16 +1626,6 @@ On Error GoTo Err
 Dim lEv As PriceChangeEventData
 lEv = ev
 Set lEv.Source = Me
-
-If mPriceChangeListeners.Count <> 0 Then
-    mPriceChangeListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mPriceChangeListeners.Count
-        Dim lListener As IPriceChangeListener
-        Set lListener = mPriceChangeListeners.GetListener(i)
-        lListener.Change lEv
-    Next
-End If
 
 RaiseEvent PriceChange(lEv)
 
@@ -1750,16 +1644,6 @@ Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.PreviousClose lEv
-    Next
-End If
-
 RaiseEvent PreviousClose(lEv)
 
 Exit Sub
@@ -1775,16 +1659,6 @@ On Error GoTo Err
 Dim lEv As RawMarketDepthEventData
 lEv = ev
 Set lEv.Source = Me
-
-If mRawMarketDepthListeners.Count <> 0 Then
-    mRawMarketDepthListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mRawMarketDepthListeners.Count
-        Dim lListener As IRawMarketDepthListener
-        Set lListener = mRawMarketDepthListeners.GetListener(i)
-        lListener.ResetMarketDepth lEv
-    Next
-End If
 
 RaiseEvent RawMarketDepthReset(lEv)
 
@@ -1802,16 +1676,6 @@ Dim lEv As MarketDepthEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mMarketDepthListeners.Count <> 0 Then
-    mMarketDepthListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mMarketDepthListeners.Count
-        Dim lListener As IMarketDepthListener
-        Set lListener = mMarketDepthListeners.GetListener(i)
-        lListener.ResetMarketDepth lEv
-    Next
-End If
-
 RaiseEvent DOMReset(lEv)
 
 Exit Sub
@@ -1828,16 +1692,6 @@ Dim lEv As RawMarketDepthEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mRawMarketDepthListeners.Count <> 0 Then
-    mRawMarketDepthListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mRawMarketDepthListeners.Count
-        Dim lListener As IRawMarketDepthListener
-        Set lListener = mRawMarketDepthListeners.GetListener(i)
-        lListener.UpdateMarketDepth lEv
-    Next
-End If
-
 RaiseEvent RawMarketDepthUpdate(lEv)
 
 Exit Sub
@@ -1853,16 +1707,6 @@ On Error GoTo Err
 Dim lEv As MarketDepthEventData
 lEv = ev
 Set lEv.Source = Me
-
-If mMarketDepthListeners.Count <> 0 Then
-    mMarketDepthListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mMarketDepthListeners.Count
-        Dim lListener As IMarketDepthListener
-        Set lListener = mMarketDepthListeners.GetListener(i)
-        lListener.SetMarketDepthCell lEv
-    Next
-End If
 
 RaiseEvent DOMSetCell(lEv)
 
@@ -1906,16 +1750,6 @@ Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.Trade lEv
-    Next
-End If
-
 RaiseEvent Trade(lEv)
 
 Exit Sub
@@ -1932,16 +1766,6 @@ On Error GoTo Err
 Dim lEv As QuoteEventData
 lEv = ev
 Set lEv.Source = Me
-
-If mQuoteListeners.Count <> 0 Then
-    mQuoteListeners.SetCurrentListeners
-    Dim i As Long
-    For i = 1 To mQuoteListeners.Count
-        Dim lListener As IQuoteListener
-        Set lListener = mQuoteListeners.GetListener(i)
-        lListener.Volume lEv
-    Next
-End If
 
 RaiseEvent Volume(lEv)
 
