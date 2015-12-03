@@ -80,7 +80,6 @@ On Error GoTo Err
 
 mDeferredWriteInProgress = False
 WriteBar
-mLastWriteTime = GetTimestamp
 
 Exit Sub
 
@@ -151,6 +150,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+mLastWriteTime = GetTimestamp
+
 Set mBar = pBar
 mBarType = pBarType
 Set mTimePeriod = pTimePeriod
@@ -213,6 +214,7 @@ End If
 
 mBarWriter.WriteBar mBar, mBarType, mTimePeriod
 mDatabaseWrites = mDatabaseWrites + 1
+mLastWriteTime = GetTimestamp
 
 Exit Sub
 
