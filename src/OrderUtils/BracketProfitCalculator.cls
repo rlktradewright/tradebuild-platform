@@ -75,7 +75,7 @@ Private mProfitNotificationThreshold                As Currency
 Private mLossNotificationThreshold                  As Currency
 Private mDrawdownNotificationThreshold              As Currency
 
-Private mListeningToData                            As Boolean
+Private mAnExecutionHasOccurred                     As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -96,7 +96,7 @@ Case BracketOrderChangeTypes.BracketOrderSelfCancelled
     Set mBracketOrder = Nothing
     mDataSource.RemoveGenericTickListener Me
 Case BracketOrderChangeTypes.BracketOrderCompleted
-    If mBracketOrder.Size = 0 Then
+    If mAnExecutionHasOccurred And mBracketOrder.Size = 0 Then
         logBracketProfile
         mDataSource.RemoveGenericTickListener Me
     End If
@@ -125,7 +125,8 @@ Private Sub IExecutionListener_NotifyExecution(ev As ExecutionEventData)
 Const ProcName As String = "IExecutionListener_NotifyExecution"
 On Error GoTo Err
 
-If Not mListeningToData Then listenToData
+If Not mAnExecutionHasOccurred Then listenToData
+mAnExecutionHasOccurred = True
 
 If ev.ExecutionReport.Action = OrderActionBuy Then
     mCumBuyPrice = mCumBuyPrice + ev.ExecutionReport.Quantity * ev.ExecutionReport.Price
@@ -498,7 +499,6 @@ Const ProcName As String = "listenToData"
 On Error GoTo Err
 
 mDataSource.AddGenericTickListener Me
-mListeningToData = True
 
 Exit Sub
 
