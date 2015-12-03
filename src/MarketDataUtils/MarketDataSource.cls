@@ -1529,8 +1529,6 @@ If Not (State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunni
 subscribeToMarketData
 storeSettings
 
-Refresh
-
 Exit Sub
 
 Err:
