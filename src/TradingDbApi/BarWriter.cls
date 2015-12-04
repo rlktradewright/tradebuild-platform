@@ -131,7 +131,7 @@ With pBar
     If mUseSynchronousWrites Then
         mInstrument.WriteBar .TimeStamp, _
                             pBarType, _
-                            pTimePeriod.Length, _
+                            getBarLengthMinutes(pTimePeriod), _
                             .OpenValue, _
                             .HighValue, _
                             .LowValue, _
@@ -142,7 +142,7 @@ With pBar
     Else
         mInstrument.WriteBarAsync(.TimeStamp, _
                                 pBarType, _
-                                pTimePeriod.Length, _
+                                getBarLengthMinutes(pTimePeriod), _
                                 .OpenValue, _
                                 .HighValue, _
                                 .LowValue, _
@@ -347,6 +347,27 @@ End Sub
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
+
+Private Function getBarLengthMinutes(ByVal pPeriod As TimePeriod) As Long
+Const ProcName As String = "getBarLengthMinutes"
+On Error GoTo Err
+
+Select Case pPeriod.Units
+Case TimePeriodMinute
+    AssertArgument pPeriod.Length = 1 Or pPeriod.Length = 5 Or pPeriod.Length = 15, "Unsupported bar length"
+    getBarLengthMinutes = pPeriod.Length
+Case TimePeriodHour
+    AssertArgument pPeriod.Length = 1, "Unsupported bar length"
+    getBarLengthMinutes = 60
+Case Else
+    AssertArgument False, "Unsupported bar length"
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub logMessage( _
                 ByRef pMsg As String, _
