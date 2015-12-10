@@ -89,7 +89,7 @@ Private mSuppliedTaskName                       As String
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-Debug.Print "BarWriter terminated"
+'Debug.Print "BarWriter terminated"
 'If gLogger.IsLoggable(LogLevelHighDetail) Then logMessage pMsg:=taskName & ": terminated", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
 End Sub
 
@@ -202,7 +202,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     logMessage pMsg:=taskName & ": " & s, pProcName:=ProcName
     
     If gIsStateSet(mConnection.State, adStateOpen) Then
-        Debug.Print "BarWriter: close connection(error)"
+        'Debug.Print "BarWriter: close connection(error)"
         mConnection.Close
     End If
     
@@ -376,7 +376,7 @@ Private Sub connectToDB()
 Const ProcName As String = "connectToDB"
 On Error GoTo Err
 
-Debug.Print "BarWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
+'Debug.Print "BarWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
 Set mCmd = Nothing
 If mConnector Is Nothing Then Set mConnector = mDB.GetConnector
 If mAsynchronous Then

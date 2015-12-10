@@ -92,7 +92,7 @@ Private mData()                         As Byte
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-Debug.Print "PeriodTickDataWriter terminated"
+'Debug.Print "PeriodTickDataWriter terminated"
 End Sub
 
 '@===============================================================================
@@ -208,7 +208,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     logMessage pMsg:=taskName & ": " & errorMsg, pProcName:=ProcName
     
     If gIsStateSet(mConnection.State, adStateOpen) Then
-        Debug.Print "PeriodTickDataWriter: close connection(error)"
+        'Debug.Print "PeriodTickDataWriter: close connection(error)"
         mConnection.Close
     End If
     If mAsynchronous Then
@@ -374,7 +374,7 @@ Private Sub connectToDB()
 Const ProcName As String = "connectToDB"
 On Error GoTo Err
 
-Debug.Print "PeriodTickDataWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
+'Debug.Print "PeriodTickDataWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
 If mConnector Is Nothing Then Set mConnector = mDB.GetConnector
 If mAsynchronous Then
     mConnector.ConnectAsync
