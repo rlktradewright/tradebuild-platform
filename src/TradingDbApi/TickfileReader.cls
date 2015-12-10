@@ -211,7 +211,16 @@ Const ProcName As String = "ITickfileReader_PrepareTickfile"
 On Error GoTo Err
 
 Set mInputTickfileSpecifier = pTickfileSpec
-mFutureWaiter.Add mInputTickfileSpecifier.ContractFuture
+
+' we retrieve our own contract definition, because the one supplied may not be defined
+' in this database. Note that we don't use the short name from the source contract as
+' this database may use a different convention for short name (eg "FTSE 100 Future Sep 09"
+' instead of "ZU9")
+With mInputTickfileSpecifier.Contract.Specifier
+    Set mTargetContractSpec = CreateContractSpecifier("", .Symbol, .Exchange, .SecType, .CurrencyCode, .Expiry, .Strike, .Right)
+End With
+
+checkFetchContract
 
 ITickfileReader_PrepareTickfile = True
 
@@ -273,20 +282,7 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
-If TypeOf ev.Future.Value Is IContract Then
-    Dim lContract As IContract
-    Set lContract = ev.Future.Value
-    
-    ' we retrieve our own contract definition, because the one supplied may not be defined
-    ' in this database. Note that we don't use the short name from the source contract as
-    ' this database may use a different convention for short name (eg "FTSE 100 Future Sep 09"
-    ' instead of "ZU9")
-    With lContract.Specifier
-        Set mTargetContractSpec = CreateContractSpecifier("", .Symbol, .Exchange, .SecType, .CurrencyCode, .Expiry, .Strike, .Right)
-    End With
-
-    checkFetchContract
-ElseIf TypeOf ev.Future.Value Is TradingDB Then
+If TypeOf ev.Future.Value Is TradingDB Then
     Set mTradingDB = ev.Future.Value
     
     checkFetchContract
@@ -383,7 +379,7 @@ Private Sub checkFetchContract()
 Const ProcName As String = "checkFetchContract"
 On Error GoTo Err
 
-If mTradingDB Is Nothing Or mTargetContractSpec Is Nothing Then Exit Sub
+If mTradingDB Is Nothing Then Exit Sub
 
 If mUseSynchronousReads Then
     logMessage "Fetching contract synchronously", ProcName, mTargetContractSpec.ToString
@@ -523,6 +519,7 @@ Else
     Set mContract = mContracts.ItemAtIndex(1)
     
     With mInputTickfileSpecifier
+        .Contract = mContract
         If .EntireSession Then
             Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimeZoneName))
             Set mSession = mSessionBuilder.Session
@@ -543,7 +540,6 @@ Else
         If mUseSynchronousReads Then
             logMessage "Fetching ticks synchronously", ProcName, , LogLevelHighDetail
             Set mTickStream = mTradingDB.FetchTicks(mContract.Specifier, .FromDate, .ToDate)
-            mTickStream.StartStream False
         Else
             logMessage "Fetching ticks asynchronously", ProcName, , LogLevelHighDetail
             Set mFetchTicksTC = mTradingDB.FetchTicksAsync(mContract.Specifier, .FromDate, .ToDate)
