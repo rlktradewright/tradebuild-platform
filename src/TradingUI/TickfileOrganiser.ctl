@@ -217,7 +217,11 @@ TickfileListManager1.AddTickfileNames tickfileNames
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    MsgBox "An error has occurred: " & Err.Description, vbExclamation, "Ooops!"
+Else
+    gNotifyUnhandledError ProcName, ModuleName
+End If
 End Sub
 
 Private Sub AddTickstreamsButton_Click()
@@ -244,7 +248,6 @@ End Sub
 
 Private Sub ClearButton_Click()
 Const ProcName As String = "ClearButton_Click"
-
 On Error GoTo Err
 
 TickfileListManager1.Clear

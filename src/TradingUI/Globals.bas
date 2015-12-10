@@ -64,6 +64,8 @@ Public Const WindowStateNormal                      As String = "Normal"
 
 Public Const NullIndex                              As Long = -1
 
+Public Const TickfileListExtension                  As String = "tfl"
+
 '@================================================================================
 ' Member variables
 '@================================================================================

@@ -418,11 +418,11 @@ Public Property Get TickfileSpecifiers() As TickfileSpecifiers
 Const ProcName As String = "TickfileSpecifiers"
 On Error GoTo Err
 
-Dim i As Long
-Dim tfs As New TickfileSpecifiers
-
 If TickFileList.ListCount = 0 Then Exit Property
 
+Dim tfs As New TickfileSpecifiers
+
+Dim i As Long
 For i = 0 To TickFileList.ListCount - 1
     tfs.Add mTickfileSpecifiers.Item(TickFileList.ItemData(i))
 Next
@@ -446,30 +446,21 @@ On Error GoTo Err
 
 Dim i As Long
 For i = 0 To UBound(fileNames)
-    TickFileList.AddItem fileNames(i)
-    adjustScrollSize fileNames(i)
+    Dim lfilename As String: lfilename = fileNames(i)
     
-    Dim tfs As TickfileSpecifier
-    Set tfs = New TickfileSpecifier
-    mTickfileSpecifiers.Add tfs
-    tfs.FileName = fileNames(i)
-    TickFileList.ItemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
-
-    ' set up the FormatID - we set it to the first one that matches
-    ' the file extension
-    Dim fileExt As String
-    fileExt = Right$(tfs.FileName, _
-                    Len(tfs.FileName) - InStrRev(tfs.FileName, "."))
+    Dim lFileExt As String: lFileExt = getFileExtension(lfilename)
+                    
+    If lFileExt <> TickfileListExtension Then
+        Dim tfs As TickfileSpecifier
+        Set tfs = New TickfileSpecifier
+        tfs.FileName = lfilename
+        
+        addTickfileSpecifier tfs
     
-    Dim k As Long
-    For k = 0 To UBound(mSupportedTickfileFormats)
-        If mSupportedTickfileFormats(k).FormatType = TickfileModeFileBased Then
-            If UCase$(fileExt) = UCase$(mSupportedTickfileFormats(k).FileExtension) Then
-                tfs.TickfileFormatID = mSupportedTickfileFormats(k).FormalID
-                Exit For
-            End If
-        End If
-    Next
+        setFormatId tfs, lFileExt
+    Else
+        processTickfileListFile lfilename
+    End If
 Next
 
 setScrollSize
@@ -487,13 +478,9 @@ Public Sub AddTickfileSpecifiers( _
 Const ProcName As String = "AddTickfileSpecifiers"
 On Error GoTo Err
 
-Dim i As Long
-
-For i = 1 To pTickfileSpecifiers.Count
-    TickFileList.AddItem pTickfileSpecifiers.Item(i).FileName
-    adjustScrollSize pTickfileSpecifiers.Item(i).FileName
-    mTickfileSpecifiers.Add pTickfileSpecifiers.Item(i)
-    TickFileList.ItemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
+Dim lTfs As TickfileSpecifier
+For Each lTfs In pTickfileSpecifiers
+    addTickfileSpecifier lTfs
 Next
 
 setScrollSize
@@ -541,6 +528,23 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub addTickfileSpecifier(ByVal pTfs As TickfileSpecifier)
+Const ProcName As String = "addTickfileSpecifier"
+On Error GoTo Err
+
+mTickfileSpecifiers.Add pTfs
+
+Dim s As String: s = pTfs.ToString
+TickFileList.AddItem s
+adjustScrollSize s
+TickFileList.ItemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub adjustScrollSize(ByVal pText As String)
 Const ProcName As String = "adjustScrollSize"
 On Error GoTo Err
@@ -557,6 +561,10 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getFileExtension(ByVal pFilename As String) As String
+getFileExtension = Right$(pFilename, Len(pFilename) - InStrRev(pFilename, "."))
+End Function
 
 Private Sub getSupportedTickfileFormats()
 On Error GoTo Err
@@ -594,6 +602,22 @@ Err:
 
 End Sub
 
+Private Sub processTickfileListFile(ByVal pFilename As String)
+Const ProcName As String = "processTickfileListFile"
+On Error GoTo Err
+
+Dim lTfs As TickfileSpecifier
+For Each lTfs In GenerateTickfileSpecifiersFromFile(pFilename)
+    addTickfileSpecifier lTfs
+    setFormatId lTfs, getFileExtension(lTfs.FileName)
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub setDownButton()
 Const ProcName As String = "setDownButton"
 On Error GoTo Err
@@ -607,6 +631,29 @@ For i = 0 To TickFileList.ListCount - 2
     End If
 Next
 DownButton.Enabled = False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setFormatId(ByVal pTfs As TickfileSpecifier, ByVal pFileExt As String)
+Const ProcName As String = "setFormatId"
+On Error GoTo Err
+
+' set up the FormatID - we set it to the first one that matches
+' the file extension
+
+Dim k As Long
+For k = 0 To UBound(mSupportedTickfileFormats)
+    If mSupportedTickfileFormats(k).FormatType = TickfileModeFileBased Then
+        If UCase$(pFileExt) = UCase$(mSupportedTickfileFormats(k).FileExtension) Then
+            pTfs.TickfileFormatID = mSupportedTickfileFormats(k).FormalID
+            Exit For
+        End If
+    End If
+Next
 
 Exit Sub
 
