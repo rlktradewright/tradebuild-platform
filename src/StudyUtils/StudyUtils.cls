@@ -347,7 +347,7 @@ Public Function CreateStudyBaseForDoubleInput( _
                 ByVal pStudyManager As StudyManager, _
                 Optional ByVal pQuantum As Double = 0#, _
                 Optional ByVal pName As String) As IStudyBase
-Const ProcName As String = "CreateStudyBaseForTickDataInput"
+Const ProcName As String = "CreateStudyBaseForDoubleInput"
 On Error GoTo Err
 
 AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
