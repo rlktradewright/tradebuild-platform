@@ -120,10 +120,11 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
+If Not gCon Is Nothing Then
+    gCon.WriteErrorLine Err.Description
+    If Err.Source <> "" Then gCon.WriteErrorLine Err.Source
+End If
 TerminateTWUtilities
-
-    
 End Sub
 
 '@================================================================================
@@ -188,7 +189,8 @@ Dim strike As Double
 Dim optRightStr As String
 Dim optRight As OptionRights
 
-If Not gProcessor Is Nothing Then
+If gProcessor Is Nothing Then
+ElseIf gProcessor.IsRunning Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot set contract - already running"
     Exit Sub
 End If
@@ -256,6 +258,7 @@ If validParams Then
                                             expiry, _
                                             strike, _
                                             optRight)
+    gProcessor.SetContract mContractSpec
 End If
 End Sub
 
@@ -274,7 +277,7 @@ If gProcessor Is Nothing Then
 ElseIf gProcessor.IsPaused Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Already paused"
 Else
-    gProcessor.pauseData
+    gProcessor.PauseData
 End If
 End Sub
 
@@ -310,11 +313,10 @@ If mContractSpec Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
 ElseIf mFrom = 0 Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - from time not specified"
-ElseIf gProcessor Is Nothing Then
-    Set gProcessor = New Processor
-    gProcessor.startData mDBClient, mContractSpec, mFrom, mTo, mSpeed, mRaw
 ElseIf gProcessor.IsPaused Then
-    gProcessor.resumeData
+    gProcessor.ResumeData
+ElseIf Not gProcessor.IsRunning Then
+    gProcessor.StartData mFrom, mTo, mSpeed, mRaw
 Else
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - already running"
 End If
@@ -383,6 +385,9 @@ If setupServiceProviders Then
     If mDBClient Is Nothing Then
         gCon.WriteErrorLine "Error: can't access database"
         setupServiceProviders = False
+    Else
+        Set gProcessor = New Processor
+        gProcessor.Initialise mDBClient
     End If
 End If
 

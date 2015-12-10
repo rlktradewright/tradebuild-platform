@@ -64,10 +64,23 @@ Attribute mDataSource.VB_VarHelpID = -1
 Private mPaused                             As Boolean
 
 Private mTickfileStore                      As ITickfileStore
+Private mContractStore                      As IContractStore
+
+Private WithEvents mFutureWaiter            As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mSpecifier                          As IContractSpecifier
+Private mContract                           As IContract
+
+Private mRunning                            As Boolean
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
+End Sub
 
 '@================================================================================
 ' QuoteListener Interface Members
@@ -136,8 +149,34 @@ End Sub
 
 Private Sub mController_TickfileCompleted(ev As TickfileEventData, ByVal pEventsPlayed As Long)
 gCon.WriteLineToConsole "Replay completed"
-mDataSource.RemoveGenericTickListener Me
-Set gProcessor = Nothing
+mDataSource.RemoveQuoteListener Me
+mRunning = False
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+If ev.Future.IsFaulted Then
+    gCon.WriteErrorLine "Contract fetch failed with error : " & ev.Future.ErrorMessage
+    Exit Sub
+End If
+
+If ev.Future.IsCancelled Then Exit Sub
+
+If ev.Future.IsAvailable Then
+    Dim lContracts As IContracts
+    Set lContracts = ev.Future.value
+    If lContracts.Count = 0 Then
+        gCon.WriteErrorLine "No contract found for: " & mSpecifier.ToString
+    ElseIf lContracts.Count > 1 Then
+        gCon.WriteErrorLine "Contract not uniquely specified: " & mSpecifier.ToString
+    Else
+        Set mContract = lContracts.ItemAtIndex(1)
+    End If
+End If
+
 End Sub
 
 '@================================================================================
@@ -146,6 +185,10 @@ End Sub
 
 Friend Property Get IsPaused() As Boolean
 IsPaused = mPaused
+End Property
+
+Friend Property Get IsRunning() As Boolean
+IsRunning = mRunning
 End Property
 
 Friend Property Let Speed( _
@@ -157,25 +200,38 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub pauseData()
+Friend Sub Initialise( _
+                ByVal client As DBClient)
+Set mContractStore = client.ContractStore
+Set mTickfileStore = client.TickfileStore
+End Sub
+
+Friend Sub PauseData()
 mController.PauseReplay
 End Sub
 
-Friend Sub resumeData()
+Friend Sub ResumeData()
 If mPaused Then mController.ResumeReplay
 End Sub
 
-Friend Sub startData( _
-                ByVal client As DBClient, _
-                ByVal spec As IContractSpecifier, _
+Friend Sub SetContract( _
+                ByVal spec As IContractSpecifier)
+Set mSpecifier = spec
+mFutureWaiter.Add mContractStore.FetchContracts(mSpecifier)
+End Sub
+
+Friend Sub StartData( _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date, _
                 ByVal Speed As Long, _
                 ByVal raw As Boolean)
-Set mTickfileStore = client.TickfileStore
+If mContract Is Nothing Then
+    gCon.WriteErrorLine "No contract"
+    Exit Sub
+End If
 
 Dim tfs As New TickfileSpecifier
-tfs.ContractFuture = FetchContract(spec, client.ContractStore)
+tfs.Contract = mContract
 If fromDate < 1 Then fromDate = Date + fromDate
 tfs.fromDate = fromDate
 If toDate = 0 Then toDate = Now
@@ -189,7 +245,7 @@ tfs.TickfileFormatID = inFormats(0).FormalID
 Dim tfSpecs As New TickFileSpecifiers
 tfSpecs.Add tfs
 
-Set mDataManager = CreateTickDataManager(tfSpecs, mTickfileStore, Nothing, client.ContractStore, , MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments + MarketDataSourceOptUseExchangeTimeZone, , , Speed)
+Set mDataManager = CreateTickDataManager(tfSpecs, mTickfileStore, Nothing, mContractStore, , MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments + MarketDataSourceOptUseExchangeTimeZone, , , Speed)
 Set mController = mDataManager.ReplayController
 
 Set mDataSource = mDataManager.CreateMarketDataSource(mController.TickStream(0).ContractFuture, False)
@@ -197,6 +253,8 @@ mDataSource.AddQuoteListener Me
 mDataSource.StartMarketData
 
 mController.StartReplay
+
+mRunning = True
 End Sub
 
 Friend Sub stopData()
