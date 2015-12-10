@@ -179,14 +179,14 @@ Const ProcName As String = "ITickfileReplayMonitor_NotifyReady"
 On Error GoTo Err
 
 Set mTickfileSpec = pTickfileSpec
-If Not mTickfileSpec.ContractFuture Is Nothing Then
-    mFutureWaiter.Add mTickfileSpec.ContractFuture
+If Not mTickfileSpec.Contract Is Nothing Then
+    setContract mTickfileSpec.Contract
+    StartReplay
 ElseIf Not pContractSpec Is Nothing Then
     
     'now query the Contract Store(s) to see if we can
     ' determine the canonical contract for this contract spec
-    mTickfileSpec.ContractFuture = getContractFuture(pContractSpec)
-
+    getContractFuture pContractSpec
 Else
     ' we have no way to determine what the contract is
     fireNotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "No contract details found for tickfile"
@@ -295,11 +295,8 @@ If ev.Future.IsFaulted Then
 ElseIf ev.Future.IsCancelled Then
     mTickfileReplayController.StopReplay
 Else
-    Set mContract = ev.Future.Value
-    mContractFutureBuilder.Value = mContract
-    mContractFutureBuilder.Complete
-    Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
-    mTickScheduler.AddPlayer Me
+    mTickfileSpec.Contract = ev.Future.Value
+    setContract ev.Future.Value
     StartReplay
 End If
 
@@ -595,28 +592,35 @@ Dim lEv As NotificationEventData
 Set lEv.Source = Me
 lEv.EventCode = pEventCode
 lEv.EventMessage = pEventMessage & ": " & _
-                gTickfileSpecifierToString(mTickfileSpec)
+                mTickfileSpec.ToString
 mTickfileReplayController.NotifyEvent lEv
 End Sub
 
-Private Function getContractFuture(ByVal pContractSpec As IContractSpecifier) As IFuture
+Private Sub getContractFuture(ByVal pContractSpec As IContractSpecifier)
 Const ProcName As String = "getContractFuture"
 On Error GoTo Err
 
 If mPrimaryContractStore Is Nothing Then
     fireNotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "No contract store is available"
     mTickfileReplayController.NotifyCantPlay Me
-    Exit Function
+    Exit Sub
 End If
     
-Set getContractFuture = FetchContract(pContractSpec, mPrimaryContractStore, mSecondaryContractStore)
-mFutureWaiter.Add getContractFuture
+mFutureWaiter.Add FetchContract(pContractSpec, mPrimaryContractStore, mSecondaryContractStore)
 
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
+
+Private Sub setContract(ByVal pContract As IContract)
+Set mContract = pContract
+mContractFutureBuilder.Value = mContract
+mContractFutureBuilder.Complete
+Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
+mTickScheduler.AddPlayer Me
+End Sub
 
 Private Sub StartReplay()
 Const ProcName As String = "StartReplay"

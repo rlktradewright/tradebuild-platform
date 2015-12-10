@@ -60,10 +60,10 @@ Private Const ModuleName                            As String = "ITickfileSpecif
 ' Properties
 '@================================================================================
 
-Public Property Let ContractFuture(ByVal RHS As IFuture)
+Public Property Let Contract(ByVal RHS As IContract)
 End Property
 
-Public Property Get ContractFuture() As IFuture
+Public Property Get Contract() As IContract
 End Property
 
 Public Property Let EntireSession(ByVal RHS As Boolean)
@@ -99,6 +99,9 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function ToString() As String
+End Function
 
 '@================================================================================
 ' Helper Functions

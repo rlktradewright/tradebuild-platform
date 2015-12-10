@@ -317,14 +317,14 @@ Dim thisSessionTimes As SessionTimes
 
 currSessionStart = FromDate
 
-Dim lTickfileSpecifiers As New TickFileSpecifiers
+Dim lTickFileSpecifiers As New TickFileSpecifiers
 Dim tfs As TickfileSpecifier
 
 If pCompleteSessionsOnly Then
     Do While currSessionStart < replayToDate
         Set tfs = New TickfileSpecifier
-        lTickfileSpecifiers.Add tfs
-        tfs.ContractFuture = CreateFuture(lCurrContract)
+        lTickFileSpecifiers.Add tfs
+        tfs.Contract = lCurrContract
         tfs.TickfileFormatID = pTickfileFormatID
         
         If lUseCustomSessionTimes Then
@@ -368,11 +368,11 @@ If pCompleteSessionsOnly Then
         End If
         
     Loop
-    AssertArgument lTickfileSpecifiers.Count <> 0, "No trading sessions in specified date range"
+    AssertArgument lTickFileSpecifiers.Count <> 0, "No trading sessions in specified date range"
 Else
     Set tfs = New TickfileSpecifier
-    lTickfileSpecifiers.Add tfs
-    tfs.ContractFuture = CreateFuture(lCurrContract)
+    lTickFileSpecifiers.Add tfs
+    tfs.Contract = lCurrContract
     tfs.TickfileFormatID = pTickfileFormatID
 
     tfs.FromDate = FromDate
@@ -397,9 +397,9 @@ Else
                         Set lCurrContract = aContract
                         
                         Set tfs = New TickfileSpecifier
-                        lTickfileSpecifiers.Add tfs
+                        lTickFileSpecifiers.Add tfs
                         
-                        tfs.ContractFuture = CreateFuture(lCurrContract)
+                        tfs.Contract = lCurrContract
                         tfs.TickfileFormatID = pTickfileFormatID
                     
                         tfs.FromDate = currSessionStart
@@ -419,7 +419,20 @@ Else
 
 End If
 
-Set GenerateTickfileSpecifiers = lTickfileSpecifiers
+Set GenerateTickfileSpecifiers = lTickFileSpecifiers
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GenerateTickfileSpecifiersFromFile( _
+                ByVal pFilename As String) As TickFileSpecifiers
+Const ProcName As String = "GenerateTickfileSpecifiersFromFile"
+On Error GoTo Err
+
+Set GenerateTickfileSpecifiersFromFile = gParseTickfileListFile(pFilename)
 
 Exit Function
 
@@ -445,7 +458,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
 
 '@================================================================================
 ' Helper Functions

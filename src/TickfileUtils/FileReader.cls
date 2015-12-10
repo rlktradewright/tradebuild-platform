@@ -222,11 +222,8 @@ Const ProcName As String = "convertLocalDateToExchangeTimezone"
 On Error GoTo Err
 
 Static sTimezone As TimeZone
-If sTimezone Is Nothing Then
-    Dim lContract As IContract
-    Set lContract = mTickfileSpec.ContractFuture.Value
-    Set sTimezone = GetTimeZone(lContract.TimezoneName)
-End If
+If sTimezone Is Nothing Then Set sTimezone = GetTimeZone(mTickfileSpec.Contract.TimezoneName)
+
 convertLocalDateToExchangeTimezone = ConvertDateUTCToTZ(ConvertDateLocalToUTC(pTime), sTimezone)
 
 Exit Function
@@ -425,7 +422,7 @@ If mTickFileVersion = TickFileVersions.TradeBuildV3 Then
 Else
     Dim xmlContract As String
     xmlContract = Right$(lBuffer, Len(lBuffer) - Len(CONTRACT_DETAILS_MARKER))
-    mTickfileSpec.ContractFuture = CreateFuture(CreateContractFromXML(xmlContract))
+    mTickfileSpec.Contract = CreateContractFromXML(xmlContract)
 End If
 
 getTradeBuildContractInfo = True

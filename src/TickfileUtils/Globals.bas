@@ -492,17 +492,13 @@ On Error GoTo Err
 
 If pTickfileSpec.Filename <> "" Then
     gTickfileSpecifierToString = pTickfileSpec.Filename
+ElseIf Not pTickfileSpec.Contract Is Nothing Then
+    gTickfileSpecifierToString = "Contract: " & _
+                                Replace(pTickfileSpec.Contract.Specifier.ToString, vbCrLf, "; ") & _
+                            ": From: " & FormatDateTime(pTickfileSpec.FromDate, vbGeneralDate) & _
+                            " To: " & FormatDateTime(pTickfileSpec.ToDate, vbGeneralDate)
 Else
-    If pTickfileSpec.ContractFuture.IsAvailable Then
-        Dim lContract As IContract
-        Set lContract = pTickfileSpec.ContractFuture.Value
-        gTickfileSpecifierToString = "Contract: " & _
-                                    Replace(lContract.Specifier.ToString, vbCrLf, "; ") & _
-                                ": From: " & FormatDateTime(pTickfileSpec.FromDate, vbGeneralDate) & _
-                                " To: " & FormatDateTime(pTickfileSpec.ToDate, vbGeneralDate)
-    Else
-        gTickfileSpecifierToString = "Contract: unknown"
-    End If
+    gTickfileSpecifierToString = "Contract: unknown"
 End If
 
 Exit Function

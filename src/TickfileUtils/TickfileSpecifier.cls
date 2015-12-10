@@ -52,7 +52,7 @@ Private Const ModuleName                    As String = "TickfileSpecifier"
 
 Private mTickfileFormatID       As String
 Private mFilename               As String
-Private mContractFuture         As IFuture
+Private mContract               As IContract
 Private mFromDate               As Date
 Private mToDate                 As Date
 Private mEntireSession          As Boolean
@@ -65,12 +65,12 @@ Private mEntireSession          As Boolean
 ' ITickfileSpecifier Interface Members
 '@================================================================================
 
-Private Property Let ITickfileSpecifier_ContractFuture(ByVal RHS As IFuture)
-Set mContractFuture = RHS
+Private Property Let ITickfileSpecifier_Contract(ByVal RHS As IContract)
+Set mContract = RHS
 End Property
 
-Private Property Get ITickfileSpecifier_ContractFuture() As IFuture
-Set ITickfileSpecifier_ContractFuture = mContractFuture
+Private Property Get ITickfileSpecifier_Contract() As IContract
+Set ITickfileSpecifier_Contract = mContract
 End Property
 
 Private Property Let ITickfileSpecifier_EntireSession(ByVal RHS As Boolean)
@@ -113,6 +113,10 @@ Private Property Get ITickfileSpecifier_ToDate() As Date
 ITickfileSpecifier_ToDate = mToDate
 End Property
 
+Private Function ITickfileSpecifier_ToString() As String
+ITickfileSpecifier_ToString = ToString
+End Function
+
 '@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
@@ -121,12 +125,12 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Let ContractFuture(ByVal Value As IFuture)
-Set mContractFuture = Value
+Public Property Let Contract(ByVal Value As IContract)
+Set mContract = Value
 End Property
 
-Public Property Get ContractFuture() As IFuture
-Set ContractFuture = mContractFuture
+Public Property Get Contract() As IContract
+Set Contract = mContract
 End Property
 
 Public Property Let EntireSession(ByVal Value As Boolean)
@@ -172,6 +176,41 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function ToString() As String
+Const ProcName As String = "ToString"
+On Error GoTo Err
+
+If Filename <> "" Then
+    ToString = Filename
+ElseIf Contract Is Nothing Then
+    ToString = "???"
+Else
+    ToString = Contract.Specifier.LocalSymbol
+End If
+
+If EntireSession Then ToString = ToString & " Sessions"
+If FromDate <> 0 And ToDate <> 0 Then
+    ToString = ToString & " (" & _
+                FormatDateTime(FromDate, vbGeneralDate) & _
+                " - " & _
+                FormatDateTime(ToDate, vbGeneralDate) & _
+                ")"
+ElseIf FromDate <> 0 Then
+    ToString = ToString & " (From " & _
+                FormatDateTime(FromDate, vbGeneralDate) & _
+                ")"
+ElseIf ToDate <> 0 Then
+    ToString = ToString & " (To " & _
+                FormatDateTime(ToDate, vbGeneralDate) & _
+                ")"
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions
