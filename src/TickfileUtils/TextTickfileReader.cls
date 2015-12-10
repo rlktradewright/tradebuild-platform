@@ -601,7 +601,7 @@ With mRecordTable(mCurrentRecordIndex).Tick
              Exit Function
         End If
         
-        If .TickSize = 0 Then Exit Function
+        'If .TickSize = 0 Then Exit Function
         
         processLastSizeCorrection
         ev.Tick.TickType = TickTypeTrade
