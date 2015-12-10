@@ -66,7 +66,7 @@ Attribute mBarStudySupport.VB_VarHelpID = -1
 
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
-Private WithEvents mBar As Bar
+Private WithEvents mBar As BarUtils27.Bar
 Attribute mBar.VB_VarHelpID = -1
 
 Private mPriceTickSize As Double
