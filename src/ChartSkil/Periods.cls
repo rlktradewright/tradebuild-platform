@@ -288,8 +288,7 @@ On Error GoTo Err
 Dim lPeriod As Period
 
 Select Case TimePeriod.Units
-Case TimePeriodNone, _
-        TimePeriodSecond, _
+Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
         TimePeriodDay, _
@@ -318,7 +317,10 @@ Case TimePeriodNone, _
                             mSessionStartTime)
     GetXFromTimestamp = lPeriod.PeriodNumber + (Timestamp - lPeriod.Timestamp) / (periodEndtime - lPeriod.Timestamp)
     
-Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
+Case TimePeriodNone, _
+        TimePeriodVolume, _
+        TimePeriodTickVolume, _
+        TimePeriodTickMovement
     If Not forceNewPeriod Then
         On Error Resume Next
         Set lPeriod = ItemDup(Timestamp, duplicateNumber)
