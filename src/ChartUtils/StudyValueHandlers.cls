@@ -154,6 +154,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Sub Update()
+Const ProcName As String = "Update"
+On Error GoTo Err
+
+Dim lSvh As StudyValueHandler
+For Each lSvh In mStudyValueHandlers
+    lSvh.Update
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

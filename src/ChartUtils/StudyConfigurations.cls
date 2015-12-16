@@ -199,6 +199,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub Update()
+Const ProcName As String = "Update"
+On Error GoTo Err
+
+Dim lSc As StudyConfiguration
+For Each lSc In mStudyConfigurations
+    lSc.Update
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

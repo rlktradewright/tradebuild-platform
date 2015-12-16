@@ -448,6 +448,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub Update()
+Const ProcName As String = "Update"
+On Error GoTo Err
+
+If Not mStudyValueHandlers Is Nothing Then mStudyValueHandlers.Update
+If Not mStudyConfigs Is Nothing Then mStudyConfigs.Update
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

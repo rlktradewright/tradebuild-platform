@@ -615,6 +615,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Sub UpdateLastBar()
+Const ProcName As String = "UpdateLastBar"
+On Error GoTo Err
+
+If Not mBaseStudyConfig Is Nothing Then mBaseStudyConfig.Update
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
