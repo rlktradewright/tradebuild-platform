@@ -919,7 +919,7 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:TradeBuild Platform"
+        "ProductName" = "8:TradeBuild Platform 2.7"
         "ProductCode" = "8:{BD2414F8-88C3-4C6E-8D81-2F2A5D94C2F4}"
         "PackageCode" = "8:{1D03D4A2-B9D1-4CCD-A716-5F6110E17810}"
         "UpgradeCode" = "8:{FC02A17D-3EC9-48CE-8C96-AA7172A9ABFE}"
