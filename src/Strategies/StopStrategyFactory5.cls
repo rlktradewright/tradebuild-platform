@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IStopStrategyFactory
+Implements IPosnMgmtStrtgyFactory
 
 '@================================================================================
 ' Events
@@ -53,17 +53,17 @@ Private S                                           As New StopStrategy5Static
 '@================================================================================
 
 '@================================================================================
-' IStopStrategyFactory Interface Members
+' IPosnMgmtStrtgyFactory Interface Members
 '@================================================================================
 
-Private Function IStopStrategyFactory_CreateStrategy( _
-                ByVal pTradingContext As TradingContext) As IStopStrategy
-Const ProcName As String = "IStopStrategyFactory_CreateStrategy"
+Private Function IPosnMgmtStrtgyFactory_CreateStrategy( _
+                ByVal pTradingContext As TradingContext) As IPositionMgmtStrategy
+Const ProcName As String = "IPosnMgmtStrtgyFactory_CreateStrategy"
 On Error GoTo Err
 
 Dim l As New StopStrategy5
 l.Initialise S
-Set IStopStrategyFactory_CreateStrategy = l
+Set IPosnMgmtStrtgyFactory_CreateStrategy = l
 
 Exit Function
 
@@ -71,8 +71,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IStopStrategyFactory_DefineDefaultParameters()
-Const ProcName As String = "IStopStrategyFactory_DefineDefaultParameters"
+Private Sub IPosnMgmtStrtgyFactory_DefineDefaultParameters()
+Const ProcName As String = "IPosnMgmtStrtgyFactory_DefineDefaultParameters"
 On Error GoTo Err
 
 DefineParameter ParamBarLength, BarLength
@@ -111,9 +111,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStopStrategyFactory_Initialise( _
+Private Sub IPosnMgmtStrtgyFactory_Initialise( _
                 ByVal pContext As InitialisationContext)
-Const ProcName As String = "IStopStrategyFactory_Initialise"
+Const ProcName As String = "IPosnMgmtStrtgyFactory_Initialise"
 On Error GoTo Err
 
 processParameters

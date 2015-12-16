@@ -23,7 +23,7 @@ Option Explicit
 '@================================================================================
 
 Implements IBracketOrderEventSink
-Implements IStopStrategy
+Implements IPositionMgmtStrategy
 
 '@================================================================================
 ' Events
@@ -220,15 +220,15 @@ Private Sub IBracketOrderEventSink_NotifyBracketOrderStopLossAdjusted(ByVal Brac
 End Sub
 
 '================================================================================
-' IStopStrategy Interface Members
+' IPositionMgmtStrategy Interface Members
 '================================================================================
 
-Private Property Get IStopStrategy_Name() As String
-IStopStrategy_Name = "StopStrategy5"
+Private Property Get IPositionMgmtStrategy_Name() As String
+IPositionMgmtStrategy_Name = "StopStrategy5"
 End Property
 
-Private Sub IStopStrategy_NotifyTick(ByVal pType As TickTypes)
-Const ProcName As String = "IStopStrategy_NotifyTick"
+Private Sub IPositionMgmtStrategy_NotifyTick(ByVal pType As TickTypes)
+Const ProcName As String = "IPositionMgmtStrategy_NotifyTick"
 On Error GoTo Err
 
 If Not IsCurrentTickTrade Then Exit Sub
@@ -755,10 +755,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStopStrategy_Start( _
+Private Sub IPositionMgmtStrategy_Start( _
                 ByVal TradingContext As TradingContext, _
                 ByVal BracketOrder As ResourceIdentifier)
-Const ProcName As String = "IStopStrategy_Start"
+Const ProcName As String = "IPositionMgmtStrategy_Start"
 On Error GoTo Err
 
 mTickSize = TickSize

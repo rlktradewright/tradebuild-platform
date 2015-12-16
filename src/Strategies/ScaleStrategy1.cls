@@ -18,7 +18,7 @@ Option Explicit
 '================================================================================
 
 Implements IBracketOrderEventSink
-Implements IScaleStrategy
+Implements IPositionMgmtStrategy
 
 '================================================================================
 ' Events
@@ -147,15 +147,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' IScaleStrategy Interface Members
+' IPositionMgmtStrategy Interface Members
 '================================================================================
 
-Private Property Get IScaleStrategy_Name() As String
-IScaleStrategy_Name = "ScaleStrategy1"
+Private Property Get IPositionMgmtStrategy_Name() As String
+IPositionMgmtStrategy_Name = "ScaleStrategy1"
 End Property
 
-Private Sub IScaleStrategy_NotifyTick(ByVal pType As TickTypes)
-Const ProcName As String = "IScaleStrategy_NotifyTick"
+Private Sub IPositionMgmtStrategy_NotifyTick(ByVal pType As TickTypes)
+Const ProcName As String = "IPositionMgmtStrategy_NotifyTick"
 On Error GoTo Err
 
 If pType <> TickTypes.TickTypeTrade Then Exit Sub
@@ -175,7 +175,7 @@ End If
 
 mNumberOfIncrements = mNumberOfIncrements + 1
 
-' first change the stop loss for all existing BracketOrderes
+' first change the stop loss for all existing BracketOrders
 Dim stopIncrement As Double
 stopIncrement = Int((S.StopIncrementFactor * mInitialATR / mTickSize) + 0.9999) * mTickSize
 
@@ -220,10 +220,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IScaleStrategy_Start( _
+Private Sub IPositionMgmtStrategy_Start( _
                 ByVal TradingContext As TradingContext, _
                 ByVal BracketOrder As ResourceIdentifier)
-Const ProcName As String = "IScaleStrategy_Start"
+Const ProcName As String = "IPositionMgmtStrategy_Start"
 On Error GoTo Err
 
 Set mContext = TradingContext

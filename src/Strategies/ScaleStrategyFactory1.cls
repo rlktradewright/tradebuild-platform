@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IScaleStrategyFactory
+Implements IPosnMgmtStrtgyFactory
 
 '@================================================================================
 ' Events
@@ -53,12 +53,12 @@ Private S                                           As New ScaleStrategy1Static
 '@================================================================================
 
 '@================================================================================
-' IScaleStrategyFactory Interface Members
+' IPosnMgmtStrtgyFactory Interface Members
 '@================================================================================
 
-Private Function IScaleStrategyFactory_CreateStrategy( _
-                ByVal pTradingContext As TradingContext) As IScaleStrategy
-Const ProcName As String = "IScaleStrategyFactory_CreateStrategy"
+Private Function IPosnMgmtStrtgyFactory_CreateStrategy( _
+                ByVal pTradingContext As TradingContext) As IPositionMgmtStrategy
+Const ProcName As String = "IPosnMgmtStrtgyFactory_CreateStrategy"
 On Error GoTo Err
 
 
@@ -69,8 +69,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IScaleStrategyFactory_DefineDefaultParameters()
-Const ProcName As String = "IScaleStrategyFactory_DefineDefaultParameters"
+Private Sub IPosnMgmtStrtgyFactory_DefineDefaultParameters()
+Const ProcName As String = "IPosnMgmtStrtgyFactory_DefineDefaultParameters"
 On Error GoTo Err
 
 Dim lParams As New Parameters
@@ -92,9 +92,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IScaleStrategyFactory_Initialise( _
+Private Sub IPosnMgmtStrtgyFactory_Initialise( _
                 ByVal pContext As InitialisationContext)
-Const ProcName As String = "IScaleStrategyFactory_Initialise"
+Const ProcName As String = "IPosnMgmtStrtgyFactory_Initialise"
 On Error GoTo Err
 
 processParameters
