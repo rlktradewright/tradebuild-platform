@@ -20,6 +20,7 @@ Name="TimeframeUtils27"
 HelpContextID="0"
 Description="TradeWright Timeframe Utilities v2.7"
 CompatibleMode="2"
+VersionCompatible32="1"
 CompatibleEXE32="..\..\Bin\TradeWright.TradeBuild.Platform\TimeframeUtils27.dll"
 MajorVer=2
 MinorVer=7

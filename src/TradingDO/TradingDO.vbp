@@ -42,6 +42,7 @@ Name="TradingDO27"
 HelpContextID="0"
 Description="TradeWright Trading Data Objects v2.7"
 CompatibleMode="2"
+VersionCompatible32="1"
 CompatibleEXE32="..\..\Bin\TradeWright.TradeBuild.ServiceProviders\TradingDO27.dll"
 MajorVer=2
 MinorVer=7
