@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "Msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#217.0#0"; "StudiesUI27.ocx"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#249.0#0"; "ChartSkil27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#224.0#0"; "StudiesUI27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#256.0#0"; "ChartSkil27.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.7"
@@ -75,22 +75,22 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "&Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ErrorText"
-      Tab(1).Control(1)=   "StudyConfigurer1"
-      Tab(1).Control(2)=   "RemoveLibButton"
-      Tab(1).Control(3)=   "StudyLibraryList"
-      Tab(1).Control(4)=   "AddLibButton"
-      Tab(1).Control(5)=   "LibToAddText"
-      Tab(1).Control(6)=   "StudiesCombo"
-      Tab(1).Control(7)=   "Label19"
-      Tab(1).Control(8)=   "Label1"
-      Tab(1).Control(9)=   "Label2"
+      Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(1)=   "Label1"
+      Tab(1).Control(2)=   "Label19"
+      Tab(1).Control(3)=   "StudiesCombo"
+      Tab(1).Control(4)=   "LibToAddText"
+      Tab(1).Control(5)=   "AddLibButton"
+      Tab(1).Control(6)=   "StudyLibraryList"
+      Tab(1).Control(7)=   "RemoveLibButton"
+      Tab(1).Control(8)=   "StudyConfigurer1"
+      Tab(1).Control(9)=   "ErrorText"
       Tab(1).ControlCount=   10
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ChartToolbar1"
-      Tab(2).Control(1)=   "Chart1"
+      Tab(2).Control(0)=   "Chart1"
+      Tab(2).Control(1)=   "ChartToolbar1"
       Tab(2).ControlCount=   2
       Begin VB.TextBox ErrorText 
          BackColor       =   &H8000000F&
@@ -921,28 +921,28 @@ Const ProcName As String = "loadBarToChart"
 Dim failPoint As String
 On Error GoTo Err
 
-failPoint = "notifying open value for bar " & pBar.barNumber
+failPoint = "notifying open value for bar " & pBar.BarNumber
 notifyPrice pBar.OpenValue, pBar.TimeStamp
 
-failPoint = "notifying volume at open for bar " & pBar.barNumber
+failPoint = "notifying volume at open for bar " & pBar.BarNumber
 NotifyVolume mAccumulatedVolume + Int(pBar.Volume / 4), pBar.TimeStamp
         
-failPoint = "notifying low value for bar " & pBar.barNumber
+failPoint = "notifying low value for bar " & pBar.BarNumber
 notifyPrice pBar.LowValue, pBar.TimeStamp
 
-failPoint = "notifying volume at high for bar " & pBar.barNumber
+failPoint = "notifying volume at high for bar " & pBar.BarNumber
 NotifyVolume mAccumulatedVolume + Int(2 * pBar.Volume / 4), pBar.TimeStamp
         
-failPoint = "notifying high value for bar " & pBar.barNumber
+failPoint = "notifying high value for bar " & pBar.BarNumber
 notifyPrice pBar.HighValue, pBar.TimeStamp
 
-failPoint = "notifying volume at low for bar " & pBar.barNumber
+failPoint = "notifying volume at low for bar " & pBar.BarNumber
 NotifyVolume mAccumulatedVolume + Int(3 * pBar.Volume / 4), pBar.TimeStamp
             
-failPoint = "notifying close value for bar " & pBar.barNumber
+failPoint = "notifying close value for bar " & pBar.BarNumber
 notifyPrice pBar.CloseValue, pBar.TimeStamp
 
-failPoint = "notifying volume at close for bar " & pBar.barNumber
+failPoint = "notifying volume at close for bar " & pBar.BarNumber
 NotifyVolume mAccumulatedVolume + pBar.Volume, pBar.TimeStamp
 
 mAccumulatedVolume = mAccumulatedVolume + pBar.Volume
@@ -957,9 +957,9 @@ Private Sub loadBarToGrid(ByVal pBar As BarUtils27.Bar)
 Const ProcName As String = "loadBarToGrid"
 On Error GoTo Err
 
-mGrid.Row = pBar.barNumber
+mGrid.Row = pBar.BarNumber
 
-mGrid.SetCellLong TestDataGridColumns.barNumber, CStr(pBar.barNumber)
+mGrid.SetCellLong TestDataGridColumns.BarNumber, CStr(pBar.BarNumber)
 
 mGrid.SetCellDate TestDataGridColumns.TimeStamp, CStr(pBar.TimeStamp)
 
@@ -992,7 +992,7 @@ For Each lBar In mBars
     
     loadBarToChart lBar
     
-    showBarNumber lBar.barNumber
+    showBarNumber lBar.BarNumber
     
 Next
 
@@ -1217,14 +1217,14 @@ Chart1.DisableDrawing
 
 mAccumulatedVolume = 0
 For Each lBar In mBars
-    failPoint = "processing bar " & lBar.barNumber
+    failPoint = "processing bar " & lBar.BarNumber
     loadBarToChart lBar
     
     failPoint = "adding bar number"
-    showBarNumber lBar.barNumber
+    showBarNumber lBar.BarNumber
     
-    failPoint = "getting study values for bar " & lBar.barNumber
-    processStudyValues pStudyConfig, lBar.barNumber
+    failPoint = "getting study values for bar " & lBar.BarNumber
+    processStudyValues pStudyConfig, lBar.BarNumber
 Next
 
 Chart1.EnableDrawing
