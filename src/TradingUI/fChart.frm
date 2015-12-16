@@ -751,9 +751,9 @@ If Not pConfig Is Nothing Then setConfig pConfig
 '
 MultiChart1.Enabled = True
 
-ChartNavToolbar1.Initialise , MultiChart1
-BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1
-ChartStylePicker.Initialise , MultiChart1
+ChartNavToolbar1.Initialise , MultiChart1.Object
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.Object
+ChartStylePicker.Initialise , MultiChart1.Object
 
 MultiChart1.Add pPeriodLength
 
@@ -790,9 +790,9 @@ mIsHistorical = True
 MultiChart1.Initialise createNewTimeframes(pStudyManager, pContractFuture, pHistDataStore), pHistDataStore.TimePeriodValidator, pSpec, pStyle, pBarFormatterLibManager
 setConfig pConfig
 
-ChartNavToolbar1.Initialise , MultiChart1
-BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1
-ChartStylePicker.Initialise , MultiChart1
+ChartNavToolbar1.Initialise , MultiChart1.Object
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.Object
+ChartStylePicker.Initialise , MultiChart1.Object
 
 MultiChart1.Add pPeriodLength
 
@@ -834,9 +834,9 @@ Set mBarFormatterLibManager = pBarFormatterLibManager
 
 MultiChart1.Enabled = True
 
-ChartNavToolbar1.Initialise , MultiChart1
-BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1
-ChartStylePicker.Initialise , MultiChart1
+ChartNavToolbar1.Initialise , MultiChart1.Object
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.Object
+ChartStylePicker.Initialise , MultiChart1.Object
 
 Set mConfig = pConfig
 mIsHistorical = False
@@ -874,9 +874,9 @@ Set mBarFormatterLibManager = pBarFormatterLibManager
 
 MultiChart1.Enabled = True
 
-ChartNavToolbar1.Initialise , MultiChart1
-BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1
-ChartStylePicker.Initialise , MultiChart1
+ChartNavToolbar1.Initialise , MultiChart1.Object
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.Object
+ChartStylePicker.Initialise , MultiChart1.Object
 
 Set mConfig = pConfig
 mIsHistorical = True
@@ -1046,7 +1046,7 @@ Else
         "  L=" & mCurrentLow & _
         "  C=" & mPreviousClose
 End If
-Me.caption = s
+Me.Caption = s
 
 Exit Sub
 
