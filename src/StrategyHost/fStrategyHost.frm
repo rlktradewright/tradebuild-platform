@@ -3,21 +3,21 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#299.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#300.1#0"; "TradingUI27.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
-   ClientHeight    =   9300
+   ClientHeight    =   9225
    ClientLeft      =   60
    ClientTop       =   450
    ClientWidth     =   11040
    LinkTopic       =   "Form1"
-   ScaleHeight     =   9300
+   ScaleHeight     =   9225
    ScaleWidth      =   11040
    StartUpPosition =   3  'Windows Default
    Begin TabDlg.SSTab SSTab1 
       Height          =   5655
       Left            =   0
-      TabIndex        =   31
+      TabIndex        =   32
       Top             =   3600
       Width           =   11055
       _ExtentX        =   19500
@@ -42,43 +42,35 @@ Begin VB.Form fStrategyHost
       TabPicture(2)   =   "fStrategyHost.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "TradeChart"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Bracket order details"
       TabPicture(3)   =   "fStrategyHost.frx":0054
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "BracketOrderList"
       Tab(3).ControlCount=   1
-      Begin TradingUI27.MultiChart PriceChart 
+      Begin TradingUI27.MarketChart ProfitChart 
          Height          =   5295
-         Left            =   0
-         TabIndex        =   40
-         Top             =   360
+         Left            =   -75000
+         TabIndex        =   53
+         Top             =   330
          Width           =   11055
          _ExtentX        =   19500
          _ExtentY        =   9340
       End
-      Begin TradingUI27.MarketChart TradeChart 
-         Height          =   3615
-         Left            =   -75000
-         TabIndex        =   39
-         Top             =   300
-         Width           =   10455
-         _ExtentX        =   18441
-         _ExtentY        =   6376
-      End
-      Begin TradingUI27.MarketChart ProfitChart 
+      Begin TradingUI27.MultiChart PriceChart 
          Height          =   5295
-         Left            =   -75000
-         TabIndex        =   33
-         Top             =   300
-         Width           =   7695
-         _ExtentX        =   13573
+         Left            =   0
+         TabIndex        =   52
+         Top             =   330
+         Width           =   11055
+         _ExtentX        =   19500
          _ExtentY        =   9340
       End
       Begin MSComctlLib.ListView BracketOrderList 
          Height          =   5295
          Left            =   -75000
-         TabIndex        =   32
+         TabIndex        =   33
          Top             =   300
          Width           =   10995
          _ExtentX        =   19394
@@ -95,11 +87,20 @@ Begin VB.Form fStrategyHost
          Appearance      =   0
          NumItems        =   0
       End
+      Begin TradingUI27.MarketChart TradeChart 
+         Height          =   5295
+         Left            =   -75000
+         TabIndex        =   54
+         Top             =   330
+         Width           =   11055
+         _ExtentX        =   19500
+         _ExtentY        =   9340
+      End
    End
    Begin TabDlg.SSTab SSTab2 
       Height          =   3495
       Left            =   0
-      TabIndex        =   17
+      TabIndex        =   18
       Top             =   120
       Width           =   10935
       _ExtentX        =   19288
@@ -130,60 +131,33 @@ Begin VB.Form fStrategyHost
       TabCaption(3)   =   "Results"
       TabPicture(3)   =   "fStrategyHost.frx":00C4
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "TheTime"
-      Tab(3).Control(0).Enabled=   0   'False
-      Tab(3).Control(1)=   "Label14"
-      Tab(3).Control(1).Enabled=   0   'False
-      Tab(3).Control(2)=   "Position"
-      Tab(3).Control(2).Enabled=   0   'False
-      Tab(3).Control(3)=   "MaxProfit"
-      Tab(3).Control(3).Enabled=   0   'False
-      Tab(3).Control(4)=   "Label5"
-      Tab(3).Control(4).Enabled=   0   'False
-      Tab(3).Control(5)=   "Label12"
-      Tab(3).Control(5).Enabled=   0   'False
-      Tab(3).Control(6)=   "Drawdown"
-      Tab(3).Control(6).Enabled=   0   'False
-      Tab(3).Control(7)=   "Profit"
-      Tab(3).Control(7).Enabled=   0   'False
-      Tab(3).Control(8)=   "Label4"
-      Tab(3).Control(8).Enabled=   0   'False
-      Tab(3).Control(9)=   "Label9"
-      Tab(3).Control(9).Enabled=   0   'False
-      Tab(3).Control(10)=   "Label10"
-      Tab(3).Control(10).Enabled=   0   'False
-      Tab(3).Control(11)=   "Label8"
-      Tab(3).Control(11).Enabled=   0   'False
-      Tab(3).Control(12)=   "Label1"
-      Tab(3).Control(12).Enabled=   0   'False
+      Tab(3).Control(0)=   "MoreButton"
+      Tab(3).Control(1)=   "BidSizeLabel"
+      Tab(3).Control(2)=   "BidLabel"
+      Tab(3).Control(3)=   "TradeSizeLabel"
+      Tab(3).Control(4)=   "TradeLabel"
+      Tab(3).Control(5)=   "AskSizeLabel"
+      Tab(3).Control(6)=   "AskLabel"
+      Tab(3).Control(7)=   "Label7"
+      Tab(3).Control(8)=   "MicrosecsPerEventLabel"
+      Tab(3).Control(9)=   "EventsPerSecondLabel"
+      Tab(3).Control(10)=   "Label3"
+      Tab(3).Control(11)=   "PercentCompleteLabel"
+      Tab(3).Control(12)=   "Label2"
       Tab(3).Control(13)=   "EventsPlayedLabel"
-      Tab(3).Control(13).Enabled=   0   'False
-      Tab(3).Control(14)=   "Label2"
-      Tab(3).Control(14).Enabled=   0   'False
-      Tab(3).Control(15)=   "PercentCompleteLabel"
-      Tab(3).Control(15).Enabled=   0   'False
-      Tab(3).Control(16)=   "Label3"
-      Tab(3).Control(16).Enabled=   0   'False
-      Tab(3).Control(17)=   "EventsPerSecondLabel"
-      Tab(3).Control(17).Enabled=   0   'False
-      Tab(3).Control(18)=   "MicrosecsPerEventLabel"
-      Tab(3).Control(18).Enabled=   0   'False
-      Tab(3).Control(19)=   "Label7"
-      Tab(3).Control(19).Enabled=   0   'False
-      Tab(3).Control(20)=   "AskLabel"
-      Tab(3).Control(20).Enabled=   0   'False
-      Tab(3).Control(21)=   "AskSizeLabel"
-      Tab(3).Control(21).Enabled=   0   'False
-      Tab(3).Control(22)=   "TradeLabel"
-      Tab(3).Control(22).Enabled=   0   'False
-      Tab(3).Control(23)=   "TradeSizeLabel"
-      Tab(3).Control(23).Enabled=   0   'False
-      Tab(3).Control(24)=   "BidLabel"
-      Tab(3).Control(24).Enabled=   0   'False
-      Tab(3).Control(25)=   "BidSizeLabel"
-      Tab(3).Control(25).Enabled=   0   'False
-      Tab(3).Control(26)=   "MoreButton"
-      Tab(3).Control(26).Enabled=   0   'False
+      Tab(3).Control(14)=   "Label1"
+      Tab(3).Control(15)=   "Label8"
+      Tab(3).Control(16)=   "Label10"
+      Tab(3).Control(17)=   "Label9"
+      Tab(3).Control(18)=   "Label4"
+      Tab(3).Control(19)=   "Profit"
+      Tab(3).Control(20)=   "Drawdown"
+      Tab(3).Control(21)=   "Label12"
+      Tab(3).Control(22)=   "Label5"
+      Tab(3).Control(23)=   "MaxProfit"
+      Tab(3).Control(24)=   "Position"
+      Tab(3).Control(25)=   "Label14"
+      Tab(3).Control(26)=   "TheTime"
       Tab(3).ControlCount=   27
       Begin VB.PictureBox LogPicture 
          BorderStyle     =   0  'None
@@ -191,7 +165,7 @@ Begin VB.Form fStrategyHost
          Left            =   -74880
          ScaleHeight     =   3075
          ScaleWidth      =   10680
-         TabIndex        =   37
+         TabIndex        =   38
          Top             =   360
          Width           =   10675
          Begin VB.TextBox LogText 
@@ -211,7 +185,7 @@ Begin VB.Form fStrategyHost
             Locked          =   -1  'True
             MultiLine       =   -1  'True
             ScrollBars      =   3  'Both
-            TabIndex        =   38
+            TabIndex        =   39
             Top             =   0
             Width           =   10695
          End
@@ -222,14 +196,23 @@ Begin VB.Form fStrategyHost
          Left            =   120
          ScaleHeight     =   2895
          ScaleWidth      =   10695
-         TabIndex        =   34
+         TabIndex        =   35
          Top             =   480
          Width           =   10695
+         Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
+            Height          =   2535
+            Left            =   0
+            TabIndex        =   1
+            Top             =   360
+            Width           =   5655
+            _ExtentX        =   9975
+            _ExtentY        =   4471
+         End
          Begin VB.CheckBox ShowChartCheck 
             Caption         =   "Show chart"
             Height          =   195
             Left            =   6000
-            TabIndex        =   4
+            TabIndex        =   5
             Top             =   840
             Value           =   1  'Checked
             Width           =   1815
@@ -241,7 +224,7 @@ Begin VB.Form fStrategyHost
             Left            =   6000
             List            =   "fStrategyHost.frx":00E7
             Sorted          =   -1  'True
-            TabIndex        =   3
+            TabIndex        =   4
             Top             =   360
             Width           =   3495
          End
@@ -262,7 +245,7 @@ Begin VB.Form fStrategyHost
             Left            =   6000
             List            =   "fStrategyHost.frx":0115
             Sorted          =   -1  'True
-            TabIndex        =   2
+            TabIndex        =   3
             Top             =   0
             Width           =   3495
          End
@@ -270,7 +253,7 @@ Begin VB.Form fStrategyHost
             Caption         =   "Dummy profit profile"
             Height          =   195
             Left            =   6000
-            TabIndex        =   6
+            TabIndex        =   7
             Top             =   1320
             Width           =   1935
          End
@@ -278,7 +261,7 @@ Begin VB.Form fStrategyHost
             Caption         =   "Profit profile"
             Height          =   195
             Left            =   6000
-            TabIndex        =   5
+            TabIndex        =   6
             Top             =   1080
             Width           =   1455
          End
@@ -286,7 +269,7 @@ Begin VB.Form fStrategyHost
             Caption         =   "No money management"
             Height          =   195
             Left            =   6000
-            TabIndex        =   7
+            TabIndex        =   8
             Top             =   1560
             Width           =   2055
          End
@@ -294,7 +277,7 @@ Begin VB.Form fStrategyHost
             Caption         =   "Separate session per tick file"
             Height          =   195
             Left            =   8040
-            TabIndex        =   8
+            TabIndex        =   9
             Top             =   1080
             Value           =   1  'Checked
             Width           =   2415
@@ -304,7 +287,7 @@ Begin VB.Form fStrategyHost
             Enabled         =   0   'False
             Height          =   375
             Left            =   9600
-            TabIndex        =   13
+            TabIndex        =   14
             Top             =   360
             Width           =   1095
          End
@@ -314,7 +297,7 @@ Begin VB.Form fStrategyHost
             Enabled         =   0   'False
             Height          =   375
             Left            =   9600
-            TabIndex        =   12
+            TabIndex        =   13
             Top             =   0
             Width           =   1095
          End
@@ -322,14 +305,14 @@ Begin VB.Form fStrategyHost
             Caption         =   "Live trades"
             Height          =   195
             Left            =   8040
-            TabIndex        =   9
+            TabIndex        =   10
             Top             =   1320
             Width           =   2415
          End
          Begin VB.TextBox ResultsPathText 
             Height          =   255
             Left            =   6960
-            TabIndex        =   10
+            TabIndex        =   11
             Top             =   1800
             Width           =   1995
          End
@@ -337,25 +320,16 @@ Begin VB.Form fStrategyHost
             Caption         =   "..."
             Height          =   255
             Left            =   9000
-            TabIndex        =   11
+            TabIndex        =   12
             ToolTipText     =   "Select results path"
             Top             =   1800
             Width           =   375
-         End
-         Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
-            Height          =   2445
-            Left            =   0
-            TabIndex        =   1
-            Top             =   360
-            Width           =   5610
-            _ExtentX        =   9895
-            _ExtentY        =   4313
          End
          Begin VB.Label Label 
             Caption         =   "Symbol"
             Height          =   375
             Left            =   0
-            TabIndex        =   36
+            TabIndex        =   37
             Top             =   0
             Width           =   735
          End
@@ -363,7 +337,7 @@ Begin VB.Form fStrategyHost
             Caption         =   "Results path"
             Height          =   255
             Left            =   6000
-            TabIndex        =   35
+            TabIndex        =   36
             Top             =   1800
             Width           =   975
          End
@@ -372,7 +346,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Less <<<"
          Height          =   375
          Left            =   -68400
-         TabIndex        =   15
+         TabIndex        =   16
          Top             =   480
          Width           =   975
       End
@@ -382,13 +356,13 @@ Begin VB.Form fStrategyHost
          Left            =   -74880
          ScaleHeight     =   3090
          ScaleWidth      =   10695
-         TabIndex        =   19
+         TabIndex        =   20
          Top             =   360
          Width           =   10695
          Begin MSDataGridLib.DataGrid ParamGrid 
             Height          =   2985
             Left            =   0
-            TabIndex        =   14
+            TabIndex        =   15
             Top             =   0
             Width           =   10695
             _ExtentX        =   18865
@@ -463,7 +437,7 @@ Begin VB.Form fStrategyHost
          Left            =   120
          ScaleHeight     =   1365
          ScaleWidth      =   7455
-         TabIndex        =   18
+         TabIndex        =   19
          Top             =   360
          Width           =   7455
       End
@@ -474,7 +448,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   255
          Left            =   -72960
-         TabIndex        =   54
+         TabIndex        =   2
          Top             =   960
          Width           =   735
       End
@@ -485,7 +459,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   255
          Left            =   -73800
-         TabIndex        =   53
+         TabIndex        =   34
          Top             =   960
          Width           =   735
       End
@@ -496,7 +470,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   255
          Left            =   -72960
-         TabIndex        =   52
+         TabIndex        =   40
          Top             =   720
          Width           =   735
       End
@@ -507,7 +481,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   255
          Left            =   -73800
-         TabIndex        =   51
+         TabIndex        =   41
          Top             =   720
          Width           =   735
       End
@@ -518,7 +492,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   255
          Left            =   -72960
-         TabIndex        =   50
+         TabIndex        =   51
          Top             =   480
          Width           =   735
       End
@@ -529,7 +503,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   255
          Left            =   -73800
-         TabIndex        =   49
+         TabIndex        =   50
          Top             =   480
          Width           =   735
       End
@@ -537,7 +511,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Microsecs per event"
          Height          =   195
          Left            =   -71280
-         TabIndex        =   48
+         TabIndex        =   49
          Top             =   2280
          Width           =   1575
       End
@@ -549,7 +523,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   195
          Left            =   -69600
-         TabIndex        =   47
+         TabIndex        =   48
          Top             =   2280
          Width           =   855
       End
@@ -561,7 +535,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   195
          Left            =   -69600
-         TabIndex        =   46
+         TabIndex        =   47
          Top             =   2040
          Width           =   855
       End
@@ -569,7 +543,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Events per second"
          Height          =   195
          Left            =   -71280
-         TabIndex        =   45
+         TabIndex        =   46
          Top             =   2040
          Width           =   1335
       End
@@ -581,7 +555,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   195
          Left            =   -69600
-         TabIndex        =   44
+         TabIndex        =   45
          Top             =   1800
          Width           =   855
       End
@@ -589,7 +563,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Percent complete"
          Height          =   195
          Left            =   -71280
-         TabIndex        =   43
+         TabIndex        =   44
          Top             =   1800
          Width           =   1335
       End
@@ -601,7 +575,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   195
          Left            =   -69600
-         TabIndex        =   42
+         TabIndex        =   43
          Top             =   1560
          Width           =   855
       End
@@ -609,7 +583,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Events played"
          Height          =   195
          Left            =   -71280
-         TabIndex        =   41
+         TabIndex        =   42
          Top             =   1560
          Width           =   1335
       End
@@ -618,7 +592,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Bid"
          Height          =   195
          Left            =   -74880
-         TabIndex        =   30
+         TabIndex        =   31
          Top             =   960
          Width           =   735
       End
@@ -627,7 +601,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Last"
          Height          =   195
          Left            =   -74880
-         TabIndex        =   29
+         TabIndex        =   30
          Top             =   720
          Width           =   735
       End
@@ -636,7 +610,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Ask"
          Height          =   195
          Left            =   -74880
-         TabIndex        =   16
+         TabIndex        =   17
          Top             =   480
          Width           =   735
       End
@@ -644,7 +618,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Profit/Loss"
          Height          =   195
          Left            =   -71280
-         TabIndex        =   28
+         TabIndex        =   29
          Top             =   480
          Width           =   855
       End
@@ -656,7 +630,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   195
          Left            =   -69600
-         TabIndex        =   27
+         TabIndex        =   28
          Top             =   480
          Width           =   855
       End
@@ -668,7 +642,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   195
          Left            =   -69600
-         TabIndex        =   26
+         TabIndex        =   27
          Top             =   720
          Width           =   855
       End
@@ -676,7 +650,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Drawdown"
          Height          =   195
          Left            =   -71280
-         TabIndex        =   25
+         TabIndex        =   26
          Top             =   720
          Width           =   855
       End
@@ -684,7 +658,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Max profit"
          Height          =   195
          Left            =   -71280
-         TabIndex        =   24
+         TabIndex        =   25
          Top             =   960
          Width           =   855
       End
@@ -696,7 +670,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   195
          Left            =   -69600
-         TabIndex        =   23
+         TabIndex        =   24
          Top             =   960
          Width           =   855
       End
@@ -708,7 +682,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   195
          Left            =   -69600
-         TabIndex        =   22
+         TabIndex        =   23
          Top             =   1200
          Width           =   855
       End
@@ -716,7 +690,7 @@ Begin VB.Form fStrategyHost
          Caption         =   "Position"
          Height          =   195
          Left            =   -71280
-         TabIndex        =   21
+         TabIndex        =   22
          Top             =   1200
          Width           =   855
       End
@@ -727,7 +701,7 @@ Begin VB.Form fStrategyHost
          ForeColor       =   &H80000008&
          Height          =   255
          Left            =   -73815
-         TabIndex        =   20
+         TabIndex        =   21
          Top             =   1320
          Width           =   1815
       End
@@ -855,23 +829,20 @@ Private mParams                                         As Parameters
 Private mStrategyRunner                                 As StrategyRunner
 Attribute mStrategyRunner.VB_VarHelpID = -1
 
-Private mCurrTickfileIndex                              As Long
-
 Private mPriceStudyBase                                 As StudyBaseForTickDataInput
 
+Private mTimeframes                                     As EnumerableCollection
 Private mPriceChartTimePeriod                           As TimePeriod
 Private mPriceChartIndex                                As Long
 
 Private mProfitStudyBase                                As StudyBaseForDoubleInput
 
 Private mTradeStudyBase                                 As StudyBaseForUserBarsInput
-Private mTradeBar                                       As BarUtils27.Bar
 Private mTradeBarNumber                                 As Long
 
 Private mPosition                                       As Long
 Private mOverallProfit                                  As Double
 Private mSessionProfit                                  As Double
-Private mProfitTimestamp                                As Date
 Private mMaxProfit                                      As Double
 Private mDrawdown                                       As Double
 
@@ -1107,13 +1078,19 @@ Const ProcName As String = "IStrategyHost_AddTimeframe"
 On Error GoTo Err
 
 If Not mShowChart Then Exit Function
-
-Dim lIndex As Long
-If TickfileOrganiser1.TickfileCount <> 0 Then
-    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.Symbol, False, pNumberOfBarsToFetch, pIncludeBarsOutsideSession)
-Else
-    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.LocalSymbol, True, pNumberOfBarsToFetch, pIncludeBarsOutsideSession)
+If mTimeframes.Contains(pTimePeriod.ToString) Then
+    Set IStrategyHost_AddTimeframe = mTimeframes.Item(pTimePeriod.ToString)
+    Exit Function
 End If
+    
+Dim lIndex As Long
+If mIsTickReplay Then
+    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.Symbol, True)  ' False)
+Else
+    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.LocalSymbol, True)
+End If
+
+mTimeframes.Add PriceChart.Timeframe, pTimePeriod.ToString
 
 monitorTimeframe PriceChart.Timeframe(lIndex)
 
@@ -1121,6 +1098,7 @@ If mPriceChartIndex = 0 Then
     mPriceChartIndex = lIndex
     Set mPriceChartTimePeriod = pTimePeriod
 End If
+
 If mPricePeriods Is Nothing Then Set mPricePeriods = PriceChart.BaseChartController.Periods
 If mBracketOrderLineSeries Is Nothing Then Set mBracketOrderLineSeries = PriceChart.BaseChartController.Regions.Item(ChartRegionNamePrice).AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerHighestUser)
 
@@ -1166,25 +1144,43 @@ Private Sub IStrategyHost_NotifyReplayCompleted()
 Const ProcName As String = "IStrategyHost_NotifyReplayCompleted"
 On Error GoTo Err
 
+mTicker.RemoveGenericTickListener Me
+mTicker.Finish
+
 mTotalElapsedSecs = mTotalElapsedSecs + mElapsedSecsCurrTickfile
 mElapsedSecsCurrTickfile = 0
 
 mTotalEvents = mTotalEvents + mEventsCurrTickfile
 mEventsCurrTickfile = 0
 
-If mShowChart Then PriceChart.BaseChartController.EnableDrawing
+If mShowChart Then
+    If mIsTickReplay Then
+        ' ensure final bars in charts are displayed
+        PriceChart.UpdateLastBar
+        ProfitChart.UpdateLastBar
+        TradeChart.UpdateLastBar
+    End If
+    PriceChart.BaseChartController.EnableDrawing
+    ProfitChart.EnableDrawing
+    TradeChart.EnableDrawing
+End If
 
-If mTickfileIndex = TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
+If mTickfileIndex = TickfileOrganiser1.TickfileSpecifiers.Count - 1 Then
     Set mPriceStudyBase = Nothing
+    Set mProfitStudyBase = Nothing
+    Set mTradeStudyBase = Nothing
+    mTradeBarNumber = 0
     StartButton.Enabled = True
     StopButton.Enabled = False
 Else
-    mTickfileIndex = mTickfileIndex + 1
-    TickfileOrganiser1.ListIndex = mTickfileIndex
+    mOverallProfit = mOverallProfit + mSessionProfit
     If SeparateSessionsCheck = vbChecked Then
-        clearFields
-        mStrategyRunner.PrepareTickFile TickfileOrganiser1.TickFileSpecifiers(mTickfileIndex)
+        clearPriceAndProfitFields
+    Else
     End If
+    mSessionProfit = 0
+    
+    startNextTickfile
 End If
 
 Exit Sub
@@ -1246,7 +1242,7 @@ TheTime.Caption = FormatTimestamp(pTickfileTimestamp, TimestampDateAndTimeISO860
 
 processDrawdown
 processMaxProfit
-processProfit
+processProfit pTickfileTimestamp
 
 mEventsCurrTickfile = pEventsPlayed
 Dim lTotalEvents As Long
@@ -1303,28 +1299,11 @@ mSecType = mContract.Specifier.SecType
 mTickSize = mContract.TickSize
 Set mSession = mTicker.SessionFuture.Value
 
-If mPriceStudyBase Is Nothing Then
-    Set mPriceStudyBase = New StudyBaseForTickDataInput
-    mPriceStudyBase.Initialise gTB.StudyLibraryManager.CreateStudyManager( _
-                                                        mContract.SessionStartTime, _
-                                                        mContract.SessionEndTime, _
-                                                        GetTimeZone(mContract.TimeZoneName)), _
-                                mTicker.ContractFuture
-    
-    If mIsTickReplay Then
-        mFutureWaiter.Add mTicker.ClockFuture
-    Else
-        initialisePriceChart
-        mStrategyRunner.StartStrategy mParams
-    End If
-Else
-    mTicker.AddGenericTickListener Me
-    mStrategyRunner.StartReplay
-    mReplayStartTime = GetTimestamp
-    If mShowChart Then PriceChart.BaseChartController.DisableDrawing
-End If
+If mPriceStudyBase Is Nothing Then initialisePriceChart
 If mProfitStudyBase Is Nothing Then initialiseProfitChart
 If mTradeStudyBase Is Nothing Then initialiseTradeChart
+
+mStrategyRunner.StartStrategy CreateObject(StrategyCombo.Text), mParams
 
 Me.Caption = "TradeBuild Strategy Trader - " & _
             StrategyCombo.Text & " - " & _
@@ -1363,8 +1342,7 @@ Case "strategy.tradereason"
     writeLogText formatLogRecord(pLogrec, False)
 Case "position.profit"
     mSessionProfit = pLogrec.Data
-    mProfitTimestamp = mTicker.TimeStamp
-    If Not mIsTickReplay Then processProfit
+    processProfit mTicker.TimeStamp
 Case "position.drawdown"
     mDrawdown = pLogrec.Data
     If Not mIsTickReplay Then processDrawdown
@@ -1399,21 +1377,26 @@ Case "position.bracketorderprofilestruct"
     lListItem.SubItems(BOListColumns.ColumnStopReason - 1) = lBracketOrderProfile.StopReason
     lListItem.SubItems(BOListColumns.ColumnTargetReason - 1) = lBracketOrderProfile.TargetReason
 Case "position.position"
-    Dim lNewPosition As Long
-    lNewPosition = pLogrec.Data
-    If (mPosition = 0 And lNewPosition <> 0) Or _
-        (mPosition > 0 And lNewPosition <= 0) Or _
-        (mPosition < 0 And lNewPosition >= 0) _
+    Dim lPrevPosition As Long: lPrevPosition = mPosition
+    
+    mPosition = pLogrec.Data
+    Position.Caption = mPosition
+    
+    If (mPosition <> 0 And lPrevPosition = 0) Or _
+        (mPosition > 0 And lPrevPosition < 0) Or _
+        (mPosition < 0 And lPrevPosition > 0) _
     Then
-        processProfit
+        If mIsTickReplay Then
+            TradeChart.EnableDrawing
+            TradeChart.DisableDrawing
+        End If
         mTradeBarNumber = mTradeBarNumber + 1
         If mShowChart Then
+            LogMessage "New trade bar: " & mTradeBarNumber & " at " & mTicker.TimeStamp
             mTradeStudyBase.NotifyBarNumber mTradeBarNumber, mTicker.TimeStamp
             mTradeStudyBase.NotifyValue mOverallProfit + mSessionProfit, mTicker.TimeStamp
         End If
     End If
-    mPosition = lNewPosition
-    Position.Caption = mPosition
 Case "position.order", _
     "position.moneymanagement"
     LogMessage CStr(pLogrec.Data)
@@ -1442,8 +1425,7 @@ If Not ev.Future.IsAvailable Then Exit Sub
 If TypeOf ev.Future.Value Is Clock Then
     Dim lClock As Clock
     Set lClock = ev.Future.Value
-    initialisePriceChart lClock.TimeStamp
-    mStrategyRunner.StartStrategy mParams
+    mStrategyRunner.StartStrategy CreateObject(StrategyCombo.Text), mParams
 End If
 
 Exit Sub
@@ -1461,22 +1443,6 @@ Const ProcName As String = "mSession_SessionStarted"
 On Error GoTo Err
 
 If mShowChart Then mProfitStudyBase.NotifyValue mOverallProfit, mTicker.TimeStamp
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'================================================================================
-' mTradeBarsBuilder Event Handlers
-'================================================================================
-
-Private Sub mTradeBarsBuilder_BarAdded(ByVal pBar As BarUtils27.Bar)
-Const ProcName As String = "mTradeBarsBuilder_BarAdded"
-On Error GoTo Err
-
-Set mTradeBar = pBar
 
 Exit Sub
 
@@ -1514,10 +1480,10 @@ If Not mShowChart Then Exit Sub
 Dim ListItem As ListItem
 Set ListItem = BracketOrderList.SelectedItem
 
-Dim PeriodNumber As Long
-PeriodNumber = mPricePeriods(BarStartTime(CDate(ListItem.SubItems(BOListColumns.ColumnStartTime - 1)), mPriceChartTimePeriod, mContract.SessionStartTime)).PeriodNumber
-PriceChart.BaseChartController(0).LastVisiblePeriod = _
-            PeriodNumber + _
+Dim lPeriodNumber As Long
+lPeriodNumber = mPricePeriods(BarStartTime(CDate(ListItem.SubItems(BOListColumns.ColumnStartTime - 1)), mPriceChartTimePeriod, mContract.SessionStartTime)).PeriodNumber
+PriceChart.BaseChartController(1).LastVisiblePeriod = _
+            lPeriodNumber + _
             Int((PriceChart.BaseChartController.LastVisiblePeriod - _
             PriceChart.BaseChartController.FirstVisiblePeriod) / 2) - 1
 SSTab1.Tab = 0
@@ -1574,17 +1540,20 @@ ProfitChart.BaseChartController.ClearChart
 TradeChart.BaseChartController.ClearChart
 BracketOrderList.ListItems.Clear
 
-mCurrTickfileIndex = -1
-
-clearFields
+clearPriceAndProfitFields
+clearPerformanceFields
 
 mOverallProfit = 0#
 mSessionProfit = 0#
-Set mTradeBar = Nothing
+
+Set mBracketOrderLineSeries = Nothing
+Set mPricePeriods = Nothing
+mPriceChartIndex = 0
+
+mTickfileIndex = -1
 
 If TickfileOrganiser1.TickfileCount <> 0 Then
-    TickfileOrganiser1.ListIndex = 0
-    mStrategyRunner.PrepareTickFile TickfileOrganiser1.TickFileSpecifiers(1)
+    startNextTickfile
 Else
     mStrategyRunner.PrepareSymbol SymbolText.Text
 End If
@@ -1613,7 +1582,7 @@ Private Sub StopStrategyFactoryCombo_Change()
 Const ProcName As String = "StopStrategyFactoryCombo_Change"
 On Error GoTo Err
 
-SetStrategy
+getDefaultParams
 
 Exit Sub
 
@@ -1625,7 +1594,7 @@ Private Sub StopStrategyFactoryCombo_Click()
 Const ProcName As String = "StopStrategyFactoryCombo_Click"
 On Error GoTo Err
 
-SetStrategy
+getDefaultParams
 
 Exit Sub
 
@@ -1637,7 +1606,7 @@ Private Sub StrategyCombo_Change()
 Const ProcName As String = "StrategyCombo_Change"
 On Error GoTo Err
 
-SetStrategy
+getDefaultParams
 
 Exit Sub
 
@@ -1649,7 +1618,7 @@ Private Sub StrategyCombo_Click()
 Const ProcName As String = "StrategyCombo_Click"
 On Error GoTo Err
 
-SetStrategy
+getDefaultParams
 
 Exit Sub
 
@@ -1670,7 +1639,18 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub clearFields()
+Private Sub clearPerformanceFields()
+EventsPlayedLabel = ""
+PercentCompleteLabel = ""
+EventsPerSecondLabel = ""
+MicrosecsPerEventLabel = ""
+mTotalElapsedSecs = 0#
+mElapsedSecsCurrTickfile = 0#
+mTotalEvents = 0
+mEventsCurrTickfile = 0
+End Sub
+
+Private Sub clearPriceAndProfitFields()
 BidLabel = ""
 BidSizeLabel = ""
 AskLabel = ""
@@ -1704,19 +1684,52 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub getDefaultParams()
+Const ProcName As String = "getDefaultParams"
+On Error GoTo Err
+
+If StrategyCombo.Text = "" Then Exit Sub
+If StopStrategyFactoryCombo.Text = "" Then Exit Sub
+
+Set mStrategyRunner = CreateStrategyRunner(Me)
+Dim lPMFactories As New Collection
+lPMFactories.Add CreateObject(StopStrategyFactoryCombo.Text)
+Set mParams = mStrategyRunner.GetDefaultParameters(CreateObject(StrategyCombo.Text), lPMFactories)
+
+Set ParamGrid.DataSource = mParams
+ParamGrid.Columns(0).Width = ParamGrid.Width / 2
+ParamGrid.Columns(1).Width = ParamGrid.Width / 2
+
+StartButton.Enabled = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub initialisePriceChart(Optional ByVal pTimestamp As Date)
 Const ProcName As String = "initialisePriceChart"
 On Error GoTo Err
 
 If Not mShowChart Then Exit Sub
 
+Set mPriceStudyBase = New StudyBaseForTickDataInput
+mPriceStudyBase.Initialise gTB.StudyLibraryManager.CreateStudyManager( _
+                                                    mContract.SessionStartTime, _
+                                                    mContract.SessionEndTime, _
+                                                    GetTimeZone(mContract.TimeZoneName)), _
+                            mTicker.ContractFuture
+    
 PriceChart.Initialise CreateTimeframes(mPriceStudyBase, _
                                     mTicker.ContractFuture, _
                                     gTB.HistoricalDataStoreInput, _
                                     mTicker.ClockFuture), _
                     gTB.HistoricalDataStoreInput.TimePeriodValidator, _
-                    CreateChartSpecifier(200, , , pTimestamp), _
+                    CreateChartSpecifier(0), _
                     ChartStylesManager.DefaultStyle
+
+Set mTimeframes = New EnumerableCollection
 
 Exit Sub
 
@@ -1735,11 +1748,15 @@ Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
+
+If mIsTickReplay Then ProfitChart.UpdatePerTick = False
+ProfitChart.DisableDrawing
 ProfitChart.ShowChart CreateTimeframes(mProfitStudyBase), _
                         GetTimePeriod(1, TimePeriodDay), _
                         CreateChartSpecifier(0), _
                         ChartStylesManager.DefaultStyle, _
                         pTitle:="Profit by Session"
+ProfitChart.PriceRegion.YScaleQuantum = 0.01
 
 Exit Sub
 
@@ -1758,11 +1775,15 @@ Set mTradeStudyBase = CreateStudyBaseForUserBarsInput( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
+
+If mIsTickReplay Then TradeChart.UpdatePerTick = False
+TradeChart.DisableDrawing
 TradeChart.ShowChart CreateTimeframes(mTradeStudyBase), _
-                        GetTimePeriod(0, TimePeriodNone), _
-                        CreateChartSpecifier(0), _
-                        ChartStylesManager.DefaultStyle, _
-                        pTitle:="Profit by Trade"
+                    GetTimePeriod(0, TimePeriodNone), _
+                    CreateChartSpecifier(0), _
+                    ChartStylesManager.DefaultStyle, _
+                    pTitle:="Profit by Trade"
+TradeChart.PriceRegion.YScaleQuantum = 0.01
 
 Exit Sub
 
@@ -1813,41 +1834,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processProfit()
+Private Sub processProfit(ByVal pTimestamp As Date)
 Const ProcName As String = "processProfit"
 On Error GoTo Err
 
 Profit.Caption = Format(mSessionProfit, "0.00")
 
-If mShowChart Then
-    mProfitStudyBase.NotifyValue mOverallProfit + mSessionProfit, mProfitTimestamp
-    
-    If Not mTradeBar Is Nothing Then
-        mTradeStudyBase.NotifyValue mOverallProfit + mSessionProfit, mProfitTimestamp
-    End If
+If mShowChart And mPosition <> 0 Then
+    mProfitStudyBase.NotifyValue mOverallProfit + mSessionProfit, pTimestamp
+    mTradeStudyBase.NotifyValue mOverallProfit + mSessionProfit, pTimestamp
 End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub SetStrategy()
-Const ProcName As String = "SetStrategy"
-On Error GoTo Err
-
-If StrategyCombo.Text = "" Then Exit Sub
-If StopStrategyFactoryCombo.Text = "" Then Exit Sub
-
-Set mStrategyRunner = CreateStrategyRunner(Me)
-Set mParams = mStrategyRunner.SetStrategy(CreateObject(StrategyCombo.Text), CreateObject(StopStrategyFactoryCombo.Text))
-
-Set ParamGrid.DataSource = mParams
-ParamGrid.Columns(0).Width = ParamGrid.Width / 2
-ParamGrid.Columns(1).Width = ParamGrid.Width / 2
-
-StartButton.Enabled = True
 
 Exit Sub
 
@@ -2036,6 +2032,20 @@ End If
     lBracketOrderLine.ArrowEndWidth = 8
     lBracketOrderLine.ArrowEndLength = 12
 'End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub startNextTickfile()
+Const ProcName As String = "startNextTickfile"
+On Error GoTo Err
+
+mTickfileIndex = mTickfileIndex + 1
+TickfileOrganiser1.ListIndex = mTickfileIndex
+mStrategyRunner.PrepareTickFile TickfileOrganiser1.TickfileSpecifiers(mTickfileIndex + 1)
 
 Exit Sub
 
