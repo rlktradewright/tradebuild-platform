@@ -276,7 +276,7 @@ Public Function CreateBarStudy( _
 Const ProcName As String = "CreateBarStudy"
 On Error GoTo Err
 
-If pTimePeriod.Length = 0 Then
+If pTimePeriod.Units = TimePeriodNone Or pTimePeriod.Length = 0 Then
     Set CreateBarStudy = setupUserDefinedBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
 Else
     Select Case pTimePeriod.Units
@@ -524,11 +524,11 @@ On Error GoTo Err
 
 If pStudyName = UserDefinedBarsStudyName Then
     ReDim InputValueNames(1) As String
-    InputValueNames(0) = InputNameValue
+    InputValueNames(0) = DefaultStudyValueName
     InputValueNames(1) = InputNameBarNumber
 Else
     ReDim InputValueNames(3) As String
-    InputValueNames(0) = InputNameTrade
+    InputValueNames(0) = DefaultStudyValueName
     InputValueNames(1) = InputNameVolume
     InputValueNames(2) = InputNameTickVolume
     InputValueNames(3) = InputNameOpenInterest

@@ -42,8 +42,6 @@ Implements IStudyBase
 
 Private Const ModuleName                            As String = "StudyBaseForIntegerInput"
 
-Private Const ValueInputName                        As String = "value"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -104,7 +102,7 @@ mInputHandle = mStudyManager.AddInput(mStudyInputHandler, _
                         ValueInputName, _
                         "Value", _
                         StudyInputTypes.InputTypeInteger, _
-                        False, _
+                        True, _
                         1)
 
 Exit Sub

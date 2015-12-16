@@ -42,9 +42,6 @@ Implements IStudyBase
 
 Private Const ModuleName                            As String = "StudyBaseForUserBarsInput"
 
-Private Const ValueInputName                        As String = "value"
-Private Const BarNumberInputName                    As String = "bar number"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -113,7 +110,7 @@ mBarNumberInputHandle = mStudyManager.AddInput(mStudyInputHandler, _
                         BarNumberInputName, _
                         "Bar number", _
                         StudyInputTypes.InputTypeInteger, _
-                        True, _
+                        False, _
                         1)
 
 Exit Sub

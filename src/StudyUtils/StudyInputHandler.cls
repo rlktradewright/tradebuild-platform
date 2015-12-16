@@ -57,8 +57,6 @@ Private mListeners                      As StudyValueListeners
 
 Private mTickSizes                      As Collection
 
-'Private mSessionFuture                  As IFuture
-
 Private mTimestamp                      As Date
 
 '@================================================================================
@@ -323,17 +321,12 @@ End Property
 
 Public Property Let Name(ByVal Value As String)
 mName = Value
-'mIdent = mName
 mStudyDef.Name = mName
 End Property
 
 Public Property Get Name() As String
 Name = mName
 End Property
-
-'Public Property Get SessionFuture() As IFuture
-'Set SessionFuture = mSessionFuture
-'End Property
 
 Public Property Get Timestamp() As Date
 Const ProcName As String = "Timestamp"
@@ -364,7 +357,10 @@ Dim valueDef As StudyValueDefinition
 Set valueDef = mStudyDef.StudyValueDefinitions.Add(Name)
 
 valueDef.Description = Description
-valueDef.IsDefault = IsDefault
+If IsDefault Then
+    valueDef.IsDefault = True
+    mStudies.DefaultValueName = Name
+End If
 valueDef.ValueMode = ValueModeNone
 Select Case ValueType
 Case InputTypeNone
@@ -389,9 +385,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-'Friend Sub Initialise( _
-'                ByVal Name As String, _
-'                ByVal pSessionFuture As IFuture)
 Friend Sub Initialise( _
                 ByVal Name As String)
 Const ProcName As String = "Initialise"
@@ -400,39 +393,12 @@ On Error GoTo Err
 mName = Name
 mIdent = GenerateGUIDString
 mStudyDef.Name = mName
-'Set mSessionFuture = pSessionFuture
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-''
-'' Links a <code>Session</code> object to this <code>InputStudy</code>
-'' object so that it will have identical properties to the <code>InputStudy</code>
-'' object's own <code>Session</code> object.
-''
-'' This method succeeds only if the <code>Session</code> object to be linked has
-'' its <code>IsLinkable</code> property set to <code>True</code>.
-''
-'' @param pSessionToLink the <code>Session</code> object which is to be linked to this
-''               <code>InputStudy</code> object.
-'' @see UnlinkSession
-''
-''@/
-'Friend Sub linkSession( _
-'                ByVal pSessionToLink As Session)
-'Const ProcName As String = "linkSession"
-'On Error GoTo Err
-'
-'mSessionBuilder.linkSession pSessionToLink
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
 
 Friend Sub SetInputTicksize( _
                 ByVal Name As String, _
@@ -454,42 +420,6 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
 End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-'Public Sub SetSessionCurrentTime( _
-'                ByVal currentTime As Date)
-'Const ProcName As String = "SetSessionCurrentTime"
-'On Error GoTo Err
-'
-'mTimestamp = currentTime
-'mSessionBuilder.SetSessionCurrentTime currentTime
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
-                
-'''
-'' Unlinks a <code>Session</code> object from this <code>InputStudy</code>
-'' object.
-''
-'' @param objectToUnlink the <code>Session</code> object which is to be unlinked from this
-''               <code>InputStudy</code> object.
-'' @see linkSession
-''
-''@/
-'Friend Sub UnlinkSession( _
-'                ByVal objectToUnlink As Session)
-'Const ProcName As String = "UnlinkSession"
-'On Error GoTo Err
-'
-'mSessionBuilder.UnlinkSession objectToUnlink
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
 
 '@================================================================================
 ' Helper Functions

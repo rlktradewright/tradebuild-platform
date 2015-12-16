@@ -285,21 +285,6 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-''
-' Summary. Longer Description
-'
-' @remarks
-'   If one or more of the the inputValueNames argument entries is the
-'   value defined by the global <code>DefaultStudyValueName</code> property,
-'   then on exit from the method it will have been replaced by the
-'   corresponding default value Name for the underlying study.
-' @return
-'   Description
-' @param Name
-'   Description
-' @see
-'
-'@/
 Public Function AddStudy(ByVal Name As String, _
                 ByVal underlyingStudy As IStudy, _
                 ByRef InputValueNames() As String, _
@@ -325,11 +310,6 @@ If Not Parameters Is Nothing Then
     Next
 End If
     
-Dim i As Long
-For i = 0 To UBound(InputValueNames)
-    If UCase$(InputValueNames(i)) = DefaultStudyValueNameStr Then InputValueNames(i) = underlyingStudy.StudyDefinition.DefaultValueName
-Next
-
 Dim lStudy As IStudy
 Set lStudy = findStudy(Name, _
                         libraryName, _
@@ -360,6 +340,7 @@ Set studyInputDefs = lStudy.StudyDefinition.StudyInputDefinitions
 
 Dim inValueNames() As String
 ReDim inValueNames(UBound(InputValueNames)) As String
+Dim i As Long
 For i = 0 To UBound(InputValueNames)
     inValueNames(i) = InputValueNames(i)
     lStudy.SetInputTicksize studyInputDefs.Item(i + 1).Name, _
