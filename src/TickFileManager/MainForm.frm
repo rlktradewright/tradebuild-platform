@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#299.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#300.0#0"; "TradingUI27.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.7"
    ClientHeight    =   7875
@@ -49,23 +49,30 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Tickfile selection"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ReplayProgressLabel"
-      Tab(1).Control(1)=   "ReplayContractLabel"
-      Tab(1).Control(2)=   "ReplayProgressBar"
+      Tab(1).Control(0)=   "TickfileOrganiser1"
+      Tab(1).Control(0).Enabled=   0   'False
+      Tab(1).Control(1)=   "Frame4"
+      Tab(1).Control(1).Enabled=   0   'False
+      Tab(1).Control(2)=   "StopButton"
+      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "ConvertButton"
-      Tab(1).Control(4)=   "StopButton"
-      Tab(1).Control(5)=   "Frame4"
-      Tab(1).Control(6)=   "TickfileOrganiser1"
+      Tab(1).Control(3).Enabled=   0   'False
+      Tab(1).Control(4)=   "ReplayProgressBar"
+      Tab(1).Control(4).Enabled=   0   'False
+      Tab(1).Control(5)=   "ReplayContractLabel"
+      Tab(1).Control(5).Enabled=   0   'False
+      Tab(1).Control(6)=   "ReplayProgressLabel"
+      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).ControlCount=   7
       TabCaption(2)   =   "Contract details"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label11"
-      Tab(2).Control(1)=   "ContractDetailsText"
-      Tab(2).Control(1).Enabled=   0   'False
+      Tab(2).Control(0)=   "ContractSpecBuilder1"
+      Tab(2).Control(1)=   "Frame2"
       Tab(2).Control(2)=   "GetContractButton"
-      Tab(2).Control(3)=   "Frame2"
-      Tab(2).Control(4)=   "ContractSpecBuilder1"
+      Tab(2).Control(3)=   "ContractDetailsText"
+      Tab(2).Control(3).Enabled=   0   'False
+      Tab(2).Control(4)=   "Label11"
       Tab(2).ControlCount=   5
       Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
          Height          =   4215
