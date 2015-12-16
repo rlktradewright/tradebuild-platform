@@ -100,7 +100,8 @@ Case TimePeriodYear
     gBarEndTime = DateAdd("yyyy", BarTimePeriod.Length, startTime)
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
-        TimePeriodTickMovement
+        TimePeriodTickMovement, _
+        TimePeriodNone
     gBarEndTime = Timestamp
 End Select
 
@@ -208,7 +209,8 @@ Case TimePeriodYear
     gBarStartTime = DateSerial(1900 + BarTimePeriod.Length * Int((Year(theDate) - 1900) / BarTimePeriod.Length), 1, 1)
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
-        TimePeriodTickMovement
+        TimePeriodTickMovement, _
+        TimePeriodNone
     gBarStartTime = Timestamp
 End Select
 

@@ -354,7 +354,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyOpenInterest( _
-                oi As SValue)
+                ByRef oi As SValue)
 Const ProcName As String = "NotifyOpenInterest"
 On Error GoTo Err
 
@@ -388,14 +388,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyValue( _
-                Value As SValue)
+                ByRef Value As SValue)
 Const ProcName As String = "NotifyValue"
 On Error GoTo Err
 
 If IsEmpty(Value.Value) Then Exit Sub
 
-If mBarTimePeriod.Length = 0 Then
-    ' the caller will sUpply Bar numbers
+If mBarTimePeriod.Units = TimePeriodNone Or mBarTimePeriod.Length = 0 Then
+    ' the caller sUpplies Bar numbers
     If newBar(Value.BarNumber) Then
         createNewBar Value.BarStartTime, Value.Value, 0, 0
     Else
@@ -457,7 +457,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyVolume( _
-                vol As SValue)
+                ByRef vol As SValue)
 Const ProcName As String = "NotifyVolume"
 On Error GoTo Err
 
@@ -547,8 +547,8 @@ Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession
 
 Dim lBar As New Bar
 
-If mBarTimePeriod.Length = 0 Then
-    ' the caller supplies Bar numbers
+If mBarTimePeriod.Units = TimePeriodNone Or mBarTimePeriod.Length = 0 Then
+    lBar.BarNumber = mCurrentBarNumber
     lBar.Timestamp = Timestamp
 Else
     mCurrentBarNumber = mCurrentBarNumber + 1
@@ -587,7 +587,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function newBar(BarNumber As Long) As Boolean
+Private Function newBar(ByVal BarNumber As Long) As Boolean
 Const ProcName As String = "newBar"
 On Error GoTo Err
 

@@ -291,7 +291,7 @@ Const ProcName As String = "MaxNumberOfBarsInTimespan"
 On Error GoTo Err
 
 AssertArgument pStartTime <> 0, "pStartTime must be supplied"
-
+AssertArgument pBarTimePeriod.Length <> 0, "pBarTimePeriod.Length is 0"
 Select Case pBarTimePeriod.Units
     Case TimePeriodNone, TimePeriodTickMovement, TimePeriodTickVolume, TimePeriodVolume
         AssertArgument False, "Must be a fixed time period"
