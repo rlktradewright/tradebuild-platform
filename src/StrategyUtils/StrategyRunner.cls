@@ -66,10 +66,10 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mTicker                                     As Ticker
 
 Private mStrategy                                   As IStrategy
-Private mStrategyResourceContext                    As New ResourceContext
+Private mStrategyResourceContext                    As ResourceContext
 
-Private mStopStrategyFactory                        As IStopStrategyFactory
-Private mStopStrategyResourceContext                As New ResourceContext
+Private mPositionManagementStrategyFactories        As Collection
+Private mPosnMgmtStrategyResourceContexts           As Collection
 
 Private mDefaultParameters                          As Parameters
 Private mParams                                     As Parameters
@@ -80,7 +80,6 @@ Private mInitialisationCompleted                    As Boolean
 Private mTradingContext                             As TradingContext
 
 Private mTickers                                    As Tickers
-Private mIsTickfileReplay                           As Boolean
 
 Private mStartReplayWhenReady                       As Boolean
 
@@ -239,17 +238,25 @@ Public Property Get Parameters() As Parameters
 Set Parameters = mParams
 End Property
 
-Public Property Get StopStrategyFactory() As IStopStrategyFactory
-Set StopStrategyFactory = mStopStrategyFactory
-End Property
-
-Public Property Get StopStrategyResourceContext() As ResourceContext
-Set StopStrategyResourceContext = mStopStrategyResourceContext
+Friend Property Get PositionManagementStrategyFactories() As Collection
+Set PositionManagementStrategyFactories = mPositionManagementStrategyFactories
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Function GetPositionManagementStrategyResourceContext(ByVal pFactory As IPosnMgmtStrtgyFactory) As ResourceContext
+Const ProcName As String = "GetPositionManagementStrategyResourceContext"
+On Error GoTo Err
+
+Set GetPositionManagementStrategyResourceContext = mPosnMgmtStrategyResourceContexts(GetObjectKey(pFactory))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Function GetResourceIdForBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder) As ResourceIdentifier
@@ -268,13 +275,21 @@ Friend Sub InitialisationContextIsReady(ByVal pContext As InitialisationContext)
 Const ProcName As String = "InitialisationContextIsReady"
 On Error GoTo Err
 
+Set mStrategyResourceContext = New ResourceContext
 setStrategyRunner mStrategy, mStrategyResourceContext
 mStrategy.Initialise pContext
 gClearStrategyRunner
 
-setStrategyRunner mStopStrategyFactory, mStopStrategyResourceContext
-mStopStrategyFactory.Initialise pContext
-gClearStrategyRunner
+Set mPosnMgmtStrategyResourceContexts = New Collection
+
+Dim lPMFactory As IPosnMgmtStrtgyFactory
+For Each lPMFactory In mPositionManagementStrategyFactories
+    Dim lResourceContext As New ResourceContext
+    mPosnMgmtStrategyResourceContexts.Add lResourceContext, GetObjectKey(lPMFactory)
+    setStrategyRunner mPositionManagementStrategyFactories, lResourceContext
+    lPMFactory.Initialise pContext
+    gClearStrategyRunner
+Next
 
 Exit Sub
 
@@ -347,7 +362,6 @@ Public Sub PrepareSymbol( _
 Const ProcName As String = "PrepareSymbol"
 On Error GoTo Err
 
-mIsTickfileReplay = False
 Set mTickers = getStrategyHost.RealtimeTickers
 mFutureWaiter.Add FetchContract(CreateContractSpecifier(pSymbol), mContractStorePrimary, mContractStoreSecondary)
 
@@ -363,8 +377,6 @@ On Error GoTo Err
 
 Assert mReplayController Is Nothing, "mReplayController is not Nothing "
     
-mIsTickfileReplay = False
-
 Dim lTickfiles As New TickFileSpecifiers
 lTickfiles.Add pTickfile
 
@@ -425,31 +437,36 @@ Friend Sub SetNotCurrent()
 gClearStrategyRunner
 End Sub
 
-Public Function SetStrategy( _
+Public Function GetDefaultParameters( _
                 ByVal pStrategy As IStrategy, _
-                ByVal pStopStrategyFactory As IStopStrategyFactory) As Parameters
-Const ProcName As String = "SetStrategy"
+                ByVal pPositionManagementStrategyFactories As Collection) As Parameters
+Const ProcName As String = "GetDefaultParameters"
 On Error GoTo Err
 
 Set mStrategy = pStrategy
-Set mStopStrategyFactory = pStopStrategyFactory
+Set mPositionManagementStrategyFactories = pPositionManagementStrategyFactories
 
-Dim lStrategyParams As New Parameters
-Set mDefaultParameters = lStrategyParams
+Dim lParams As New Parameters
+Set mDefaultParameters = lParams
 
-setStrategyRunner mStrategy, mStrategyResourceContext
+setStrategyRunner mStrategy, Nothing
 mStrategy.DefineDefaultParameters
 gClearStrategyRunner
 
-Dim lStopStrategyFactoryParams As New Parameters
-Set mDefaultParameters = lStopStrategyFactoryParams
+Dim lPMFactory As IPosnMgmtStrtgyFactory
+For Each lPMFactory In mPositionManagementStrategyFactories
+    Dim lPMFactoryParams As New Parameters
+    Set mDefaultParameters = lPMFactoryParams
+    
+    setStrategyRunner lPMFactory, Nothing
+    lPMFactory.DefineDefaultParameters
+    gClearStrategyRunner
+    
+    Set lParams = mergeParameters(lParams, lPMFactoryParams)
+Next
 
-setStrategyRunner mStopStrategyFactory, mStopStrategyResourceContext
-mStopStrategyFactory.DefineDefaultParameters
 Set mDefaultParameters = Nothing
-
-Set SetStrategy = mergeParameters(lStrategyParams, lStopStrategyFactoryParams)
-gClearStrategyRunner
+Set GetDefaultParameters = lParams
 
 Exit Function
 
@@ -471,10 +488,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StartStrategy( _
+                ByVal pStrategy As IStrategy, _
                 ByVal pParams As Parameters)
 Const ProcName As String = "StartStrategy"
 On Error GoTo Err
 
+Set mStrategy = pStrategy
 Set mParams = pParams
 
 If getStrategyHost.LogParameters Then
@@ -489,6 +508,7 @@ If getStrategyHost.LogParameters Then
     gStrategyLogger.Log LogLevelNormal, s
 End If
 
+mInitialisationCompleted = False
 Set mInitialisationContext = New InitialisationContext
 mInitialisationContext.Initialise getStrategyHost, Me, mTicker
 
@@ -647,7 +667,6 @@ If mReplayController Is Nothing Then Exit Sub
 If Not mInitialisationCompleted Then Exit Sub
 If Not mStartReplayWhenReady Then Exit Sub
 
-mInitialisationCompleted = False
 mStartReplayWhenReady = False
 
 LogMessage "Tickfile replay started"

@@ -132,7 +132,7 @@ End Select
 
 mCurrentTick = ev.Tick
 
-Dim lPMStrategy As IStopStrategy
+Dim lPMStrategy As IPositionMgmtStrategy
 For Each lPMStrategy In mActivePositionMgmgtStrategies
     mStrategyRunner.SetCurrent lPMStrategy, mPositionMgmgtResourceContexts.Item(GetObjectKey(lPMStrategy))
     lPMStrategy.NotifyTick ev.Tick.TickType
@@ -383,7 +383,7 @@ End Property
 
 Public Sub ApplyPositionManagementStrategy( _
                 ByVal pBracketOrder As IBracketOrder, _
-                ByVal pStrategy As Object, _
+                ByVal pStrategy As IPositionMgmtStrategy, _
                 ByVal pResourceContext As ResourceContext)
 Const ProcName As String = "ApplyPositionManagementStrategy"
 On Error GoTo Err
@@ -393,13 +393,7 @@ mPositionMgmgtResourceContexts.Add pResourceContext, GetObjectKey(pStrategy)
 
 mStrategyRunner.SetCurrent pStrategy, pResourceContext
 mStrategyRunner.RequestBracketOrderNotification pBracketOrder, pStrategy, pResourceContext
-If TypeOf pStrategy Is IStopStrategy Then
-    Dim lStopStrategy As IStopStrategy: Set lStopStrategy = pStrategy
-    lStopStrategy.Start Me, mStrategyRunner.GetResourceIdForBracketOrder(pBracketOrder)
-Else
-    Dim lScaleStrategy As IScaleStrategy: Set lScaleStrategy = pStrategy
-    lScaleStrategy.Start Me, mStrategyRunner.GetResourceIdForBracketOrder(pBracketOrder)
-End If
+pStrategy.Start Me, mStrategyRunner.GetResourceIdForBracketOrder(pBracketOrder)
 mStrategyRunner.SetNotCurrent
 
 Exit Sub
@@ -489,7 +483,7 @@ End If
 
 End Sub
 
-Public Sub StartTickData(ByVal pStrategy As IStopStrategy)
+Public Sub StartTickData(ByVal pStrategy As IPositionMgmtStrategy)
 Const ProcName As String = "StartTickData"
 On Error GoTo Err
 
@@ -501,7 +495,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub StopTickData(ByVal pStrategy As IStopStrategy)
+Public Sub StopTickData(ByVal pStrategy As IPositionMgmtStrategy)
 Const ProcName As String = "StopTickData"
 On Error GoTo Err
 

@@ -839,17 +839,13 @@ Const ProcName As String = "createAttachedStrategies"
 On Error GoTo Err
 
 If TypeOf gStrategy Is IStrategy Then
-    If Not gStrategyRunner.StopStrategyFactory Is Nothing Then
+    Dim lFactory As IPosnMgmtStrtgyFactory
+    For Each lFactory In gStrategyRunner.PositionManagementStrategyFactories
         gTradingContext.ApplyPositionManagementStrategy _
                     pBracketOrder, _
-                    gStrategyRunner.StopStrategyFactory.CreateStrategy(gTradingContext), _
-                    gStrategyRunner.StopStrategyResourceContext.Clone
-'    elseif Not gStrategyRunner.ScaleStrategyFactory Is Nothing Then
-'        gTradingContext.ApplyPositionManagementStrategy _
-'                    pBracketOrder, _
-'                    gStrategyRunner.ScaleStrategyFactory.CreateStrategy(gTradingContext), _
-'                    gStrategyRunner.ScaleStrategyResourceContext
-    End If
+                    lFactory.CreateStrategy(gTradingContext), _
+                    gStrategyRunner.GetPositionManagementStrategyResourceContext(lFactory).Clone
+    Next
 End If
 
 Exit Sub

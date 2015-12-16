@@ -308,7 +308,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub StartTickData(ByVal pStrategy As IStopStrategy)
+Public Sub StartTickData(ByVal pStrategy As IPositionMgmtStrategy)
 Const ProcName As String = "StartTickData"
 On Error GoTo Err
 
@@ -320,7 +320,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub StopTickData(ByVal pStrategy As IStopStrategy)
+Public Sub StopTickData(ByVal pStrategy As IPositionMgmtStrategy)
 Const ProcName As String = "StopTickData"
 On Error GoTo Err
 
