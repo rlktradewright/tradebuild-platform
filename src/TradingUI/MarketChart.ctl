@@ -173,11 +173,6 @@ Private mDeferStart                                     As Boolean
 
 Private mMinimumTicksHeight                             As Long
 
-'' this is a temporary style that is used initially to apply property bag settings.
-'' This prevents the property bag settings from overriding any style that is later
-'' applied.
-'Private mInitialStyle                                   As ChartStyle
-
 Private mInitialised                                    As Boolean
 
 Private mExcludeCurrentBar                              As Boolean
@@ -200,71 +195,18 @@ mPrevHeight = UserControl.Height
 
 mUpdatePerTick = True
 
-'Set mInitialStyle = ChartStylesManager.Add(GenerateGUIDString, ChartStylesManager.DefaultStyle, pTemporary:=True)
-
-End Sub
-
-Private Sub UserControl_InitProperties()
-On Error Resume Next
-
-'mInitialStyle.HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
-'mInitialStyle.VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
-'mInitialStyle.Autoscrolling = PropDfltAutoscroll
-'mInitialStyle.ChartBackColor = PropDfltChartBackColor
-'PointerStyle = PropDfltPointerStyle
-'PointerCrosshairsColor = PropDfltPointerCrosshairsColor
-'PointerDiscColor = PropDfltPointerDiscColor
-'mInitialStyle.HorizontalScrollBarVisible = PropDfltShowHorizontalScrollBar
-'mInitialStyle.PeriodWidth = PropDfltPeriodWidth
-'mInitialStyle.YAxisWidthCm = PropDfltYAxisWidthCm
-
-End Sub
-
-Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-On Error Resume Next
-
-'mInitialStyle.HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
-'mInitialStyle.VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
-'mInitialStyle.Autoscrolling = PropBag.ReadProperty(PropNameAutoscroll, PropDfltAutoscroll)
-'mInitialStyle.ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor)
-'' if no ChartBackColor has been set, we'll just use the ChartSkil default
-'
-'PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
-'PointerCrosshairsColor = PropBag.ReadProperty(PropNamePointerCrosshairsColor, PropDfltPointerCrosshairsColor)
-'PointerDiscColor = PropBag.ReadProperty(PropNamePointerDiscColor, PropDfltPointerDiscColor)
-'mInitialStyle.HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameShowHorizontalScrollBar, PropDfltShowHorizontalScrollBar)
-'mInitialStyle.PeriodWidth = PropBag.ReadProperty(PropNamePeriodWidth, PropDfltPeriodWidth)
-'mInitialStyle.YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
 End Sub
 
 Private Sub UserControl_Resize()
-'If UserControl.Width <> mPrevWidth Then
-    mPrevWidth = UserControl.Width
-'End If
-'If UserControl.Height <> mPrevHeight Then
-    Chart1.Height = UserControl.Height
-    mPrevHeight = UserControl.Height
-'End If
+mPrevWidth = UserControl.Width
+Chart1.Height = UserControl.Height
+mPrevHeight = UserControl.Height
 End Sub
 
 Private Sub UserControl_Terminate()
 Const ProcName As String = "UserControl_Terminate"
 gLogger.Log "MarketChart terminated", ProcName, ModuleName, LogLevelDetail
 Debug.Print "MarketChart terminated"
-End Sub
-
-Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
-On Error Resume Next
-'PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, mInitialStyle.HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
-'PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, mInitialStyle.VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
-'PropBag.WriteProperty PropNameAutoscroll, mInitialStyle.Autoscrolling, PropDfltAutoscroll
-'PropBag.WriteProperty PropNameChartBackColor, mInitialStyle.ChartBackColor, PropDfltChartBackColor
-'PropBag.WriteProperty PropNamePointerStyle, PointerStyle, PropDfltPointerStyle
-'PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
-'PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
-'PropBag.WriteProperty PropNameShowHorizontalScrollBar, mInitialStyle.HorizontalScrollBarVisible, PropDfltShowHorizontalScrollBar
-'PropBag.WriteProperty PropNamePeriodWidth, mInitialStyle.PeriodWidth, PropDfltPeriodWidth
-'PropBag.WriteProperty PropNameYAxisWidthCm, mInitialStyle.YAxisWidthCm, PropDfltYAxisWidthCm
 End Sub
 
 '@================================================================================
@@ -988,14 +930,6 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-'' update the number of bars in case this chart is reloaded from the config
-'If Not mChartSpec Is Nothing Then
-'    If mChartSpec.InitialNumberOfBars < Chart1.Periods.Count Then
-'        Set mChartSpec = CreateChartSpecifier(Chart1.Periods.Count, mChartSpec.IncludeBarsOutsideSession)
-'        storeSettings
-'    End If
-'End If
-
 If Not mManager Is Nothing Then mManager.Finish
 
 Set mManager = Nothing
@@ -1195,7 +1129,6 @@ Dim studyValueConfig As StudyValueConfiguration
 Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(StudyValueConfigNameBar)
 studyValueConfig.ChartRegionName = ChartRegionNamePrice
 studyValueConfig.IncludeInChart = True
-'studyValueConfig.Layer = 200
 studyValueConfig.BarFormatterFactoryName = mBarFormatterFactoryName
 studyValueConfig.BarFormatterLibraryName = mBarFormatterLibraryName
 
@@ -1473,9 +1406,6 @@ On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
-'If mDataSource Is Nothing Then Exit Sub
-
-'mConfig.SetSetting ConfigSettingDataSourceKey, mKey
 mConfig.SetSetting ConfigSettingTimePeriod, mTimePeriod.ToString
 If Not mChartSpec Is Nothing Then mChartSpec.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartSpecifier)
 mConfig.SetSetting ConfigSettingIsHistoricChart, CStr(mIsHistoricChart)
