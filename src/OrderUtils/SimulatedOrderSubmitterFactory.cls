@@ -110,7 +110,7 @@ Set lSubmitter = mSubmitters.Item(GetObjectKey(lDataSource))
 
 Dim lSimulator As MarketSimulator
 Dim lKey As String
-lKey = lContract.Specifier.Key
+lKey = GetObjectKey(lContract)
 If mSimulators.Contains(lKey) Then
     Set lSimulator = mSimulators.Item(lKey)
 Else
