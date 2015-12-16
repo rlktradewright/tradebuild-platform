@@ -190,6 +190,7 @@ Else
 End If
 
 If EntireSession Then ToString = ToString & " Sessions"
+
 If FromDate <> 0 And ToDate <> 0 Then
     ToString = ToString & " (" & _
                 FormatDateTime(FromDate, vbGeneralDate) & _

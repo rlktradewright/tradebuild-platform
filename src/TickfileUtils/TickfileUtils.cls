@@ -332,13 +332,11 @@ If pCompleteSessionsOnly Then
             tfs.FromDate = thisSessionTimes.StartTime
             tfs.ToDate = thisSessionTimes.EndTime
             tfs.EntireSession = False
-            tfs.Filename = generateNonSessionFilename(lCurrContract, tfs.FromDate, tfs.ToDate)
         Else
             tfs.FromDate = currSessionStart
             tfs.EntireSession = True
-            tfs.Filename = generateSessionFilename(lCurrContract, currSessionStart)
-            
         End If
+        tfs.Filename = tfs.ToString
         
         currSessionStart = currSessionStart + 1
         
@@ -392,7 +390,6 @@ Else
                         (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
                     Then
                         tfs.ToDate = currSessionStart
-                        tfs.Filename = generateNonSessionFilename(lCurrContract, tfs.FromDate, tfs.ToDate)
                         
                         Set lCurrContract = aContract
                         
@@ -403,6 +400,7 @@ Else
                         tfs.TickfileFormatID = pTickfileFormatID
                     
                         tfs.FromDate = currSessionStart
+                        tfs.Filename = tfs.ToString
                         Exit Do
                     End If
                 Loop
@@ -415,7 +413,7 @@ Else
     Loop
         
     tfs.ToDate = replayToDate
-    tfs.Filename = generateNonSessionFilename(lCurrContract, tfs.FromDate, tfs.ToDate)
+    tfs.Filename = tfs.ToString
 
 End If
 
@@ -483,40 +481,40 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function generateNonSessionFilename( _
-                ByVal pContract As IContract, _
-                ByVal pFromDate As Date, _
-                ByVal pToDate As Date) As String
-Const ProcName As String = "generateNonSessionFilename"
-On Error GoTo Err
-
-generateNonSessionFilename = pContract.Specifier.LocalSymbol & " (" & _
-                        FormatDateTime(pFromDate, vbGeneralDate) & _
-                        "-" & _
-                        FormatDateTime(pToDate, vbGeneralDate) & _
-                        ")"
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function generateSessionFilename( _
-                ByVal pContract As IContract, _
-                ByVal pSessionStart As Date) As String
-Const ProcName As String = "generateSessionFilename"
-On Error GoTo Err
-
-generateSessionFilename = pContract.Specifier.LocalSymbol & " (" & _
-                        "Session: " & _
-                        FormatDateTime(DateValue(pSessionStart), vbShortDate) & _
-                        ")"
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
+'Private Function generateNonSessionFilename( _
+'                ByVal pContract As IContract, _
+'                ByVal pFromDate As Date, _
+'                ByVal pToDate As Date) As String
+'Const ProcName As String = "generateNonSessionFilename"
+'On Error GoTo Err
+'
+'generateNonSessionFilename = pContract.Specifier.LocalSymbol & " (" & _
+'                        FormatDateTime(pFromDate, vbGeneralDate) & _
+'                        "-" & _
+'                        FormatDateTime(pToDate, vbGeneralDate) & _
+'                        ")"
+'
+'Exit Function
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Function
+'
+'Private Function generateSessionFilename( _
+'                ByVal pContract As IContract, _
+'                ByVal pSessionStart As Date) As String
+'Const ProcName As String = "generateSessionFilename"
+'On Error GoTo Err
+'
+'generateSessionFilename = pContract.Specifier.LocalSymbol & " (" & _
+'                        "Session: " & _
+'                        FormatDateTime(DateValue(pSessionStart), vbShortDate) & _
+'                        ")"
+'
+'Exit Function
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Function
 
 
