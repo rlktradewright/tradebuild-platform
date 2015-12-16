@@ -107,7 +107,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub customNotify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 ' will never get called because mStoch will be called instead
 Const ProcName As String = "customNotify"
 On Error GoTo Err
@@ -187,7 +187,7 @@ End Function
 '@================================================================================
 
 Private Sub IStudyValueListener_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Static sPrevVal As Variant
 Dim newev As StudyValueEventData
 
@@ -438,7 +438,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 

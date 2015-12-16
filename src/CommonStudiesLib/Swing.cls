@@ -144,7 +144,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub customNotify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "customNotify"
 On Error GoTo Err
 
@@ -1012,7 +1012,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub shiftBarHighsAndLows(ev As StudyValueEventData)
+Private Sub shiftBarHighsAndLows(ByRef ev As StudyValueEventData)
 Const ProcName As String = "shiftBarHighsAndLows"
 On Error GoTo Err
 
@@ -1032,7 +1032,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub updateCurrentLineEnds(ev As StudyValueEventData)
+Private Sub updateCurrentLineEnds(ByRef ev As StudyValueEventData)
 Const ProcName As String = "updateCurrentLineEnds"
 On Error GoTo Err
 
@@ -1272,7 +1272,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 

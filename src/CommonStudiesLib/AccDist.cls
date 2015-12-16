@@ -67,7 +67,7 @@ Private mAccDistCache As ValueCache
 
 Private mBarsBuilder As BarsBuilder
 Private mBars As Bars
-Private mCurrentBar As Bar
+Private mCurrentBar As BarUtils27.Bar
 Private mCurrentBarVolume As Long
 
 Private WithEvents mFutureWaiter As FutureWaiter
@@ -121,7 +121,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub customNotify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Static sPrevVal As Variant
 Dim evOut As StudyValueEventData
 
@@ -145,7 +145,7 @@ Else
     sPrevVal = ev.sVal.Value
     
     mBarsBuilder.notifyValue ev.sVal
-    
+
     If mStudyFoundation.IsNewBar Then
         Set mCurrentBar = mBars.Bar(0)
     End If
@@ -435,7 +435,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 

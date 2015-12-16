@@ -147,7 +147,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub customNotify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Static sPrevVal As Variant
 Dim gainsAvg As SValue
 Dim lossesAvg As SValue
@@ -493,7 +493,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 

@@ -61,6 +61,7 @@ Private mStudyFoundation As StudyFoundation
 
 Private mBarsBuilder As BarsBuilder
 Private mBarNumber As Long
+Private mBarStartTime As Date
 
 Private WithEvents mBarStudySupport As BarStudySupport
 Attribute mBarStudySupport.VB_VarHelpID = -1
@@ -259,7 +260,7 @@ Private Function customGetStudyValue( _
 Const ProcName As String = "customGetStudyValue"
 On Error GoTo Err
 
-Dim Bar As Bar
+Dim Bar As BarUtils27.Bar
 Set Bar = mBars.Bar(ref)
 
 Dim sv As SValue
@@ -297,7 +298,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub customNotify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "customNotify"
 On Error GoTo Err
 
@@ -308,10 +309,12 @@ mTimestamp = ev.sVal.Timestamp
 ev.valueName = UCase$(ev.valueName)
 If ev.valueName = UserDefinedBarsInputValueUCase Then
     ev.sVal.BarNumber = mBarNumber
+    ev.sVal.BarStartTime = mBarStartTime
     mBarStudySupport.BarsBuilder.notifyValue ev.sVal
 ElseIf ev.valueName = UserDefinedBarsInputBarNumberUCase Then
     Assert ev.sVal.Value = mBarNumber + 1, "Bar number out of sequence"
     mBarNumber = ev.sVal.Value
+    mBarStartTime = ev.sVal.Timestamp
 Else
     AssertArgument False, "Invalid input Value name: " & ev.valueName
 End If
@@ -647,7 +650,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 

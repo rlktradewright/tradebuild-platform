@@ -102,7 +102,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub customNotify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Dim newValue As Double
 Dim evOut As StudyValueEventData
 Static accelAdjustedThisbar As Boolean
@@ -472,7 +472,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 

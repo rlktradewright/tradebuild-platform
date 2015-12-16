@@ -251,7 +251,7 @@ End Sub
 Private Function customGetStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
-Dim Bar As Bar
+Dim Bar As BarUtils27.Bar
 Dim sv As SValue
 
 Const ProcName As String = "customGetStudyValue"
@@ -297,7 +297,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub customNotify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 
 Const ProcName As String = "customNotify"
 On Error GoTo Err
@@ -661,7 +661,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 

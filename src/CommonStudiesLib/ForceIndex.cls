@@ -103,7 +103,7 @@ End Sub
 ' historic values are notified first (from oldest to most recent), followed by
 ' realtime values as they occur.
 Private Sub customNotify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Static sPrevInputVal As Variant ' use a variant here, because we cannot assume that
                             ' the Price input Value will not be Empty. Although
                             ' the Price input will usually be a security's price
@@ -468,7 +468,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Notify( _
-                ev As StudyValueEventData)
+                ByRef ev As StudyValueEventData)
 Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 
