@@ -246,11 +246,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = Value
+Theme = value
 
 Exit Property
 
@@ -281,22 +281,22 @@ On Error GoTo Err
 
 Select Case UCase$(Button.Key)
 Case "ADD"
-    If ControlToolbar.Buttons("add").Value = tbrPressed Then
-        ControlToolbar.Buttons("change").Value = tbrUnpressed
+    If ControlToolbar.Buttons("add").value = tbrPressed Then
+        ControlToolbar.Buttons("change").value = tbrUnpressed
         showTimeframeSelector
     Else
         hideTimeframeSelector
     End If
 Case "CHANGE"
-    If ControlToolbar.Buttons("change").Value = tbrPressed Then
-        ControlToolbar.Buttons("add").Value = tbrUnpressed
+    If ControlToolbar.Buttons("change").value = tbrPressed Then
+        ControlToolbar.Buttons("add").value = tbrUnpressed
         showTimeframeSelector
     Else
         hideTimeframeSelector
     End If
 Case "REMOVE"
-    ControlToolbar.Buttons("add").Value = tbrUnpressed
-    ControlToolbar.Buttons("change").Value = tbrUnpressed
+    ControlToolbar.Buttons("add").value = tbrUnpressed
+    ControlToolbar.Buttons("change").value = tbrUnpressed
     Remove mCurrentIndex
 End Select
 
@@ -349,14 +349,14 @@ Private Sub TimeframeSelector1_Click()
 Const ProcName As String = "TimeframeSelector1_Click"
 On Error GoTo Err
 
-If ControlToolbar.Buttons("add").Value = tbrPressed Then
+If ControlToolbar.Buttons("add").value = tbrPressed Then
     Add TimeframeSelector1.TimePeriod
     hideTimeframeSelector
-    ControlToolbar.Buttons("add").Value = tbrUnpressed
+    ControlToolbar.Buttons("add").value = tbrUnpressed
 Else
     Chart.ChangeTimePeriod TimeframeSelector1.TimePeriod
     hideTimeframeSelector
-    ControlToolbar.Buttons("change").Value = tbrUnpressed
+    ControlToolbar.Buttons("change").value = tbrUnpressed
 End If
 
 Exit Sub
@@ -430,15 +430,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal Value As ConfigurationSection)
+                ByVal value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If mConfig Is Value Then Exit Property
+If mConfig Is value Then Exit Property
 If Not mConfig Is Nothing Then mConfig.Remove
-If Value Is Nothing Then Exit Property
+If value Is Nothing Then Exit Property
 
-Set mConfig = Value
+Set mConfig = value
 
 gLogger.Log "MultiChart added to config at: " & mConfig.Path, ProcName, ModuleName
 
@@ -463,11 +463,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
-                ByVal Value As Boolean)
+                ByVal value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = Value
+UserControl.Enabled = value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -545,12 +545,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal Value As ITheme)
+Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is Value Then Exit Property
-Set mTheme = Value
+If mTheme Is value Then Exit Property
+Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.ToolbarBackColor
@@ -679,8 +679,8 @@ If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
 End If
 
-If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
-lButton.Value = tbrPressed
+If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).value = tbrUnpressed
+lButton.value = tbrPressed
 switchToChart lButton.index
 Add = mCurrentIndex
 
@@ -934,9 +934,26 @@ On Error GoTo Err
 
 AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
 
-ChartSelectorToolbar.Buttons.Item(index).Value = tbrPressed
+ChartSelectorToolbar.Buttons.Item(index).value = tbrPressed
 switchToChart index
 fireChange MultiChartSelectionChanged
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub UpdateLastBar()
+Const ProcName As String = "UpdateLastBar"
+On Error GoTo Err
+
+Dim i As Long
+For i = 1 To ChartSelectorToolbar.Buttons.Count
+    Dim lChart As MarketChart
+    Set lChart = TBChart(getChartControlIndexFromIndex(i)).object
+    lChart.UpdateLastBar
+Next
 
 Exit Sub
 

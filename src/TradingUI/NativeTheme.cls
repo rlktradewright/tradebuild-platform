@@ -70,7 +70,7 @@ Private Property Get ITheme_AlertForeColor() As stdole.OLE_COLOR
 ITheme_AlertForeColor = &H80&
 End Property
 
-Private Property Get ITheme_Appearance() As AppearanceSettings
+Private Property Get ITheme_Appearance() As TWUtilities40.AppearanceSettings
 ITheme_Appearance = AppearanceFlat
 End Property
 

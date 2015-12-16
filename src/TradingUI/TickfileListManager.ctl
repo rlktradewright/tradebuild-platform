@@ -534,7 +534,7 @@ On Error GoTo Err
 
 mTickfileSpecifiers.Add pTfs
 
-Dim s As String: s = pTfs.ToString
+Dim s As String: s = pTfs.FileName
 TickFileList.AddItem s
 adjustScrollSize s
 TickFileList.ItemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count

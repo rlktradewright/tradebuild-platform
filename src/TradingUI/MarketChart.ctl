@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#249.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#256.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -1138,6 +1138,18 @@ Assert mLoadedFromConfig And mState = ChartStates.ChartStateBlank, "Start method
 
 mDeferStart = False
 prepareChart
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub UpdateLastBar()
+Const ProcName As String = "UpdateLastBar"
+On Error GoTo Err
+
+mManager.UpdateLastBar
 
 Exit Sub
 
