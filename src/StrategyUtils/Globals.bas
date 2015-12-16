@@ -47,8 +47,11 @@ Private Const ModuleName                            As String = "Globals"
 ' Member variables
 '@================================================================================
 
-Private mContexts                                   As Contexts
-Private mPrevContexts                               As Contexts
+'Private mContexts                                   As Contexts
+Private mContextsStack()                            As Contexts
+Private mContextsIndex                              As Long
+
+Private mInitialised                                As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -67,11 +70,11 @@ Private mPrevContexts                               As Contexts
 '@================================================================================
 
 Public Property Get gInitialisationContext() As InitialisationContext
-Set gInitialisationContext = mContexts.InitialisationContext
+Set gInitialisationContext = mContextsStack(mContextsIndex).InitialisationContext
 End Property
 
 Public Property Get gResourceContext() As ResourceContext
-Set gResourceContext = mContexts.ResourceContext
+Set gResourceContext = mContextsStack(mContextsIndex).ResourceContext
 End Property
 
 Public Property Get gStrategyLogger() As Logger
@@ -81,15 +84,15 @@ Set gStrategyLogger = sLogger
 End Property
 
 Public Property Get gStrategyRunner() As StrategyRunner
-Set gStrategyRunner = mContexts.StrategyRunner
+Set gStrategyRunner = mContextsStack(mContextsIndex).StrategyRunner
 End Property
 
 Public Property Get gStrategy() As Object
-Set gStrategy = mContexts.Strategy
+Set gStrategy = mContextsStack(mContextsIndex).Strategy
 End Property
 
 Public Property Get gTradingContext() As TradingContext
-Set gTradingContext = mContexts.TradingContext
+Set gTradingContext = mContextsStack(mContextsIndex).TradingContext
 End Property
 
 '@================================================================================
@@ -132,12 +135,12 @@ UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoin
 End Sub
 
 Public Sub gClearStrategyRunner()
-mContexts = mPrevContexts
-Set mPrevContexts.StrategyRunner = Nothing
-Set mPrevContexts.InitialisationContext = Nothing
-Set mPrevContexts.TradingContext = Nothing
-Set mPrevContexts.ResourceContext = Nothing
-Set mPrevContexts.Strategy = Nothing
+Set mContextsStack(mContextsIndex).InitialisationContext = Nothing
+Set mContextsStack(mContextsIndex).ResourceContext = Nothing
+Set mContextsStack(mContextsIndex).Strategy = Nothing
+Set mContextsStack(mContextsIndex).StrategyRunner = Nothing
+Set mContextsStack(mContextsIndex).TradingContext = Nothing
+mContextsIndex = mContextsIndex - 1
 End Sub
 
 Public Sub gSetStrategyRunner( _
@@ -146,13 +149,19 @@ Public Sub gSetStrategyRunner( _
                 ByVal pTradingContext As TradingContext, _
                 ByVal pResourceContext As ResourceContext, _
                 ByVal pStrategy As Object)
-Assert mPrevContexts.StrategyRunner Is Nothing, "Strategy switching error"
-mPrevContexts = mContexts
-Set mContexts.StrategyRunner = pStrategyRunner
-Set mContexts.InitialisationContext = pInitialisationContext
-Set mContexts.TradingContext = pTradingContext
-Set mContexts.ResourceContext = pResourceContext
-Set mContexts.Strategy = pStrategy
+If Not mInitialised Then
+    ReDim mContextsStack(7) As Contexts
+    mContextsIndex = -1
+    mInitialised = True
+End If
+
+mContextsIndex = mContextsIndex + 1
+If mContextsIndex > UBound(mContextsStack) Then ReDim Preserve mContextsStack((2 * (UBound(mContextsStack) + 1)) - 1) As Contexts
+Set mContextsStack(mContextsIndex).StrategyRunner = pStrategyRunner
+Set mContextsStack(mContextsIndex).InitialisationContext = pInitialisationContext
+Set mContextsStack(mContextsIndex).TradingContext = pTradingContext
+Set mContextsStack(mContextsIndex).ResourceContext = pResourceContext
+Set mContextsStack(mContextsIndex).Strategy = pStrategy
 End Sub
 
 '@================================================================================
