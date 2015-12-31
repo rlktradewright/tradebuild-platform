@@ -115,6 +115,13 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
+Static sStarted As Boolean
+If Not sStarted Then
+    sStarted = True
+    RaiseEvent ReplayStarted
+    If mNumberOfPlayersAwaitingReady = 0 Then mTickScheduler.StartScheduling
+End If
+
 If mUnableToReplay Then
     mTickScheduler.StopScheduling
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "One of more files was invalid"
@@ -449,12 +456,7 @@ On Error GoTo Err
 Assert Not mReplayInProgress, "Replay has already been started"
     
 mReplayInProgress = True
-
-If mNumberOfPlayersAwaitingReady = 0 Then mTickScheduler.StartScheduling
-
 Set StartReplay = StartTask(Me, PriorityNormal)
-
-RaiseEvent ReplayStarted
 
 Exit Function
 
