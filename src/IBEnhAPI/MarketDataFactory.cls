@@ -281,7 +281,7 @@ With mMarketDataTable(lIndex)
         .PrevBidSize = pSize
     
     Case TwsTickTypes.TwsTickAskSize
-        If lTick.Size = .PrevAskSize Then
+        If pSize = .PrevAskSize Then
             ' this happens when Tws has sent a tick price including the
             ' Size. It then sends the Size again as a ticksize
             Exit Sub
@@ -294,7 +294,7 @@ With mMarketDataTable(lIndex)
         .PrevAskSize = pSize
     
     Case TwsTickTypes.TwsTickLastSize
-        If lTick.Size = .PrevTradeSize Then
+        If pSize = .PrevTradeSize Then
             ' this happens when Tws has sent a tick price including the
             ' Size. It then sends the Size again as a ticksize
             Exit Sub
