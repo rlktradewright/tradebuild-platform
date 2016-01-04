@@ -232,7 +232,7 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As IStudy, _
+                ByVal UnderlyingStudy As IStudy, _
                 ByVal pSessionFuture As IFuture)
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
@@ -599,32 +599,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Initialise( _
-                ByVal StudyManager As StudyManager, _
-                ByVal Id As String, _
-                ByVal Parameters As Parameters, _
-                ByVal numberOfValuesToCache As Long, _
-                ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pStudyFoundation As StudyFoundation)
 Const ProcName As String = "IStudy_Initialise"
 On Error GoTo Err
 
-Set mStudyFoundation = New StudyFoundation
-mStudyFoundation.Initialise StudyManager, _
-                            Me, _
-                            Id, _
-                            Parameters, _
-                            numberOfValuesToCache, _
-                            inputValueNames, _
-                            underlyingStudy
-                            
+Set mStudyFoundation = pStudyFoundation
 
-customInitialise Id, _
-                Parameters, _
-                numberOfValuesToCache, _
-                inputValueNames, _
-                underlyingStudy, _
-                pSessionFuture
+customInitialise mStudyFoundation.Id, _
+                mStudyFoundation.Parameters, _
+                mStudyFoundation.numberOfCachedValues, _
+                mStudyFoundation.inputValueNames, _
+                mStudyFoundation.UnderlyingStudy, _
+                mStudyFoundation.SessionFuture
 
 Exit Sub
 
@@ -654,6 +640,14 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Property Get IStudy_LibraryName() As String
+IStudy_LibraryName = mStudyFoundation.LibraryName
+End Property
+
+Private Property Get IStudy_Name() As String
+IStudy_Name = mStudyFoundation.name
 End Property
 
 Private Sub IStudy_Notify( _
@@ -751,6 +745,18 @@ Const ProcName As String = "IStudy_StudyDefinition"
 On Error GoTo Err
 
 Set IStudy_StudyDefinition = customStudyDefinition
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Property Get IStudy_UnderlyingStudy() As IStudy
+Const ProcName As String = "IStudy_UnderlyingStudy"
+On Error GoTo Err
+
+Set IStudy_UnderlyingStudy = mStudyFoundation.UnderlyingStudy
 
 Exit Property
 

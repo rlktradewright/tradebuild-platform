@@ -286,22 +286,22 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function AddStudy(ByVal Name As String, _
-                ByVal underlyingStudy As IStudy, _
+                ByVal pUnderlyingStudy As IStudy, _
                 ByRef InputValueNames() As String, _
                 ByVal pIncludeDataOutsideSession As Boolean, _
                 Optional ByVal Parameters As Parameters, _
-                Optional ByVal libraryName As String, _
-                Optional ByVal numberOfValuesToCache As Long) As IStudy
+                Optional ByVal LibraryName As String, _
+                Optional ByVal pNumberOfValuesToCache As Long) As IStudy
 Const ProcName As String = "AddStudy"
 On Error GoTo Err
 
-AssertArgument Not underlyingStudy Is Nothing, "Underlying study must not be nothing"
-AssertArgument mStudiesCollection.Contains(underlyingStudy.Id), "Underlying study Id is invalid"
+AssertArgument Not pUnderlyingStudy Is Nothing, "Underlying study must not be nothing"
+AssertArgument mStudiesCollection.Contains(pUnderlyingStudy.Id), "Underlying study Id is invalid"
 
 mIncludeDataOutsideSession = pIncludeDataOutsideSession
 
 Dim params As Parameters
-Set params = mStudyLibraryManager.GetStudyDefaultParameters(Name, libraryName)
+Set params = mStudyLibraryManager.GetStudyDefaultParameters(Name, LibraryName)
 
 If Not Parameters Is Nothing Then
     Dim param As Parameter
@@ -312,10 +312,10 @@ End If
     
 Dim lStudy As IStudy
 Set lStudy = findStudy(Name, _
-                        libraryName, _
-                        underlyingStudy.Id, _
+                        LibraryName, _
+                        pUnderlyingStudy.Id, _
                         InputValueNames, _
-                        numberOfValuesToCache, _
+                        pNumberOfValuesToCache, _
                         mIncludeDataOutsideSession, _
                         Parameters)
 If Not lStudy Is Nothing Then
@@ -324,7 +324,7 @@ If Not lStudy Is Nothing Then
     Exit Function
 End If
 
-Set lStudy = mStudyLibraryManager.CreateStudy(Name, libraryName)
+Set lStudy = mStudyLibraryManager.CreateStudy(Name, LibraryName)
 
 AssertArgument Not lStudy Is Nothing, "Can't create study " & Name
                                                 
@@ -332,8 +332,8 @@ Dim StudyEntry As StudyTableEntry
 Set StudyEntry.Study = lStudy
 Set StudyEntry.StudyMgr = Me
 StudyEntry.StudyName = UCase$(Name)
-StudyEntry.LibName = UCase$(libraryName)
-StudyEntry.NumberOfCachedValues = numberOfValuesToCache
+StudyEntry.LibName = UCase$(LibraryName)
+StudyEntry.NumberOfCachedValues = pNumberOfValuesToCache
 
 Dim studyInputDefs As StudyInputDefinitions
 Set studyInputDefs = lStudy.StudyDefinition.StudyInputDefinitions
@@ -344,29 +344,34 @@ Dim i As Long
 For i = 0 To UBound(InputValueNames)
     inValueNames(i) = InputValueNames(i)
     lStudy.SetInputTicksize studyInputDefs.Item(i + 1).Name, _
-                            underlyingStudy.GetValueTicksize(InputValueNames(i))
+                            pUnderlyingStudy.GetValueTicksize(InputValueNames(i))
 Next
 StudyEntry.InputValueNames = inValueNames
-StudyEntry.UnderlyingStudyID = underlyingStudy.Id
+StudyEntry.UnderlyingStudyID = pUnderlyingStudy.Id
 
 StudyEntry.StudyID = GenerateGUIDString
 
 ' find the relevant StudyInputHandler object to get the Session object
 Dim UnderlyingStudyEntry As StudyTableEntry
-UnderlyingStudyEntry = mStudiesCollection(underlyingStudy.Id)
+UnderlyingStudyEntry = mStudiesCollection(pUnderlyingStudy.Id)
 '
 ' we give the new study its own Session that will be used while replaying
 ' historical data. When that is complete and StartStudy is called, we'll
 ' link that Session object to the relevant StudyInputHandler object
 Set StudyEntry.SessionBuilderFuture = CreateSessionBuilderFuture(mSessionFuture)
 
-StudyEntry.Study.Initialise Me, _
-                            StudyEntry.StudyID, _
-                            Parameters, _
-                            numberOfValuesToCache, _
-                            InputValueNames, _
-                            UnderlyingStudyEntry.Study, _
-                            CreateSessionFuture(StudyEntry.SessionBuilderFuture)
+Dim lStudyFoundation As New StudyFoundation
+lStudyFoundation.Initialise Name, _
+            LibraryName, _
+            Me, _
+            StudyEntry.Study, _
+            StudyEntry.StudyID, _
+                        Parameters, _
+                        pNumberOfValuesToCache, _
+                        InputValueNames, _
+                        UnderlyingStudyEntry.Study, _
+                        CreateSessionFuture(StudyEntry.SessionBuilderFuture)
+StudyEntry.Study.Initialise lStudyFoundation
                             
 mStudiesCollection.Add StudyEntry, StudyEntry.StudyID
 Set AddStudy = lStudy

@@ -59,7 +59,6 @@ End Type
 ' Member variables
 '@================================================================================
 
-'Private mUnderlyingStudy As IStudy
 Private mDefaultValuename As String
 
 Private mStudyTable() As LinkedStudyTableEntry

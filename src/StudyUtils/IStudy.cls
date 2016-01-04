@@ -75,6 +75,14 @@ Public Property Get InstancePath() As String
 
 End Property
 
+Public Property Get LibraryName() As String
+
+End Property
+
+Public Property Get Name() As String
+
+End Property
+
 Public Property Get NumberOfBarsRequired() As Long
 
 End Property
@@ -87,25 +95,29 @@ Public Property Get StudyDefinition() As StudyDefinition
 
 End Property
 
+Public Property Get UnderlyingStudy() As IStudy
+
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Public Function AddStudy( _
                 ByVal pStudy As IStudy, _
-                ByRef ValueNames() As String, _
-                ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal TaskName As String, _
-                Optional ByVal taskData As Variant) As TaskController
+                ByRef pValueNames() As String, _
+                ByVal pNumberOfValuesToReplay As Long, _
+                Optional ByVal pTaskName As String, _
+                Optional ByVal pTaskData As Variant) As TaskController
                 
 End Function
                 
 Public Function AddStudyValueListener( _
-                ByVal listener As IStudyValueListener, _
-                ByVal ValueName As String, _
-                ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal TaskName As String, _
-                Optional ByVal taskData As Variant) As TaskController
+                ByVal pListener As IStudyValueListener, _
+                ByVal pValueName As String, _
+                ByVal pNumberOfValuesToReplay As Long, _
+                Optional ByVal pTaskName As String, _
+                Optional ByVal pTaskData As Variant) As TaskController
                 
 End Function
 
@@ -121,13 +133,7 @@ Public Function GetValueTicksize( _
 End Function
      
 Public Sub Initialise( _
-                ByVal StudyManager As StudyManager, _
-                ByVal Id As String, _
-                ByVal params As Parameters, _
-                ByVal numberOfValuesToCache As Long, _
-                ByRef ValueNames() As String, _
-                ByVal underlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pStudyFoundation As StudyFoundation)
 
 End Sub
 
@@ -142,13 +148,13 @@ Public Function NumberOfCachedValues( _
 End Function
 
 Public Sub RemoveStudyValueListener( _
-                ByVal listener As IStudyValueListener)
+                ByVal pListener As IStudyValueListener)
                 
 End Sub
 
 Public Sub SetInputTicksize( _
-                ByVal InputName As String, _
-                ByVal TickSize As Double)
+                ByVal pInputName As String, _
+                ByVal pTickSize As Double)
                 
 End Sub
      

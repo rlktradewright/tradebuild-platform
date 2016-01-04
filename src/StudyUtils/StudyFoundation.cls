@@ -53,6 +53,9 @@ End Type
 ' Member variables
 '@================================================================================
 
+Private mName As String
+Private mLibraryName As String
+
 Private mStudyManagerRef As WeakReference
 
 Private mStudyRef As WeakReference
@@ -61,7 +64,7 @@ Private mShortName As String
 Private mIdent As String
 
 Private mInputValueNames() As String
-Private mUnderlyingStudy As IStudy
+Private mUnderlyingStudyRef As WeakReference
 
 Private mParams As Parameters
 Private mStudies As Studies
@@ -78,6 +81,8 @@ Private mIsNewBar As Boolean
 Private mReplayUsingStudyValues As Boolean
 
 Private mNumberOfValuesToCache As Long
+
+Private mSessionFuture As IFuture
 
 '@================================================================================
 ' Class Event Handlers
@@ -142,6 +147,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get InputValueNames() As String()
+InputValueNames = mInputValueNames
+End Property
+
 Public Property Get InstanceName() As String
 Const ProcName As String = "InstanceName"
 On Error GoTo Err
@@ -163,7 +172,7 @@ On Error GoTo Err
 InstancePath = mShortName & "(" & _
                 Join(mInputValueNames, ",") & "," & _
                 ParamsToString & ")." & _
-                mUnderlyingStudy.InstancePath
+                UnderlyingStudy.InstancePath
 
 Exit Property
 
@@ -183,6 +192,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get LibraryName() As String
+LibraryName = mLibraryName
+End Property
+
 Public Property Get LocalBarNumber() As Long
 Const ProcName As String = "LocalBarNumber"
 On Error GoTo Err
@@ -193,6 +206,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Name() As String
+Name = mName
 End Property
 
 Public Property Get Parameters() As Parameters
@@ -218,6 +235,18 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get SessionFuture() As IFuture
+Set SessionFuture = mSessionFuture
+End Property
+
+Public Property Get StudyManager() As StudyManager
+Set StudyManager = mStudyManagerRef.Target
+End Property
+
+Public Property Get UnderlyingStudy() As IStudy
+Set UnderlyingStudy = mUnderlyingStudyRef.Target
 End Property
 
 '@================================================================================
@@ -400,7 +429,7 @@ Public Function GetStudyValue( _
                 ByVal ref As Long) As SValue
 Const ProcName As String = "GetStudyValue"
 On Error GoTo Err
-
+Dim UnderlyingStudy
 Dim valueCache As valueCache
 Set valueCache = FindValueCache(ValueName)
 GetStudyValue = valueCache.GetSValue(ref)
@@ -412,15 +441,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Initialise( _
+                ByVal pName As String, _
+                ByVal pLibraryName As String, _
                 ByVal pStudyManager As StudyManager, _
                 ByVal Study As IStudy, _
                 ByVal Id As String, _
                 ByVal Parameters As Parameters, _
-                ByVal numberOfValuesToCache As Long, _
+                ByVal pNumberOfValuesToCache As Long, _
                 ByRef InputValueNames() As String, _
-                ByVal underlyingStudy As IStudy)
+                ByVal pUnderlyingStudy As IStudy, _
+                ByVal pSessionFuture As IFuture)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
+
+mName = pName
+mLibraryName = pLibraryName
 
 Set mStudyManagerRef = CreateWeakReference(pStudyManager)
 Set mStudyRef = CreateWeakReference(Study)
@@ -428,7 +463,7 @@ mShortName = Study.StudyDefinition.ShortName
 mIdent = Id
 Set mParams = Parameters
 mInputValueNames = InputValueNames
-Set mUnderlyingStudy = underlyingStudy
+Set mUnderlyingStudyRef = CreateWeakReference(pUnderlyingStudy)
 
 Set mStudies = New Studies
 mStudies.DefaultValueName = Study.StudyDefinition.DefaultValueName
@@ -436,8 +471,10 @@ mStudies.DefaultValueName = Study.StudyDefinition.DefaultValueName
 Set mListeners = New StudyValueListeners
 mListeners.DefaultValueName = Study.StudyDefinition.DefaultValueName
 
-mNumberOfValuesToCache = numberOfValuesToCache
+mNumberOfValuesToCache = pNumberOfValuesToCache
 createValueCaches mNumberOfValuesToCache
+
+Set mSessionFuture = pSessionFuture
 
 Exit Sub
 
@@ -699,9 +736,5 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function StudyManager() As StudyManager
-Set StudyManager = mStudyManagerRef.Target
 End Function
 

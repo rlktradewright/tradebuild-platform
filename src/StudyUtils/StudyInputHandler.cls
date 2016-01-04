@@ -173,13 +173,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Initialise( _
-                ByVal StudyManager As StudyManager, _
-                ByVal Id As String, _
-                ByVal Parameters As Parameters, _
-                ByVal numberOfValuesToCache As Long, _
-                ValueNames() As String, _
-                ByVal underlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pStudyFoundation As StudyFoundation)
 
 Const ProcName As String = "Study_Initialise"
 On Error GoTo Err
@@ -214,6 +208,14 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Property Get IStudy_LibraryName() As String
+
+End Property
+
+Private Property Get IStudy_Name() As String
+IStudy_Name = mName
 End Property
 
 Private Sub IStudy_Notify( _
@@ -311,6 +313,10 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
+Private Property Get IStudy_UnderlyingStudy() As IStudy
+Set IStudy_UnderlyingStudy = Nothing
+End Property
+
 '@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
@@ -378,6 +384,7 @@ Case InputTypeBoolean
 End Select
     
 mTickSizes.Add TickSize, Name
+If IsDefault Then mTickSizes.Add TickSize, DefaultStudyValueNameStr
 
 Exit Sub
 

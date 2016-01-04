@@ -223,6 +223,7 @@ valueNames(0) = "in"
 
 Dim lparams As Parameters
 Dim lStudy As IStudy
+Dim lSf As New StudyFoundation
 
 Select Case UCase$(maType)
 Case UCase$(EmaShortName)
@@ -231,30 +232,27 @@ Case UCase$(EmaShortName)
     Set lStudy = lEMA
     Set lparams = GEMA.defaultParameters
     lparams.SetParameterValue ParamPeriods, periods
-    lStudy.Initialise StudyManager, _
-                    GenerateGUIDString, _
-                    lparams, _
-                    numberOfValuesToCache, _
-                    valueNames, _
-                    Nothing, _
-                    Nothing
-                    
-    Set gCreateMA = lEMA
 Case Else
     Dim lSMA As SMA
     Set lSMA = New SMA
     Set lStudy = lSMA
     Set lparams = GSMA.defaultParameters
     lparams.SetParameterValue ParamPeriods, periods
-    lStudy.Initialise StudyManager, _
-                    GenerateGUIDString, _
-                    lparams, _
-                    numberOfValuesToCache, _
-                    valueNames, _
-                    Nothing, _
-                    Nothing
-    Set gCreateMA = lSMA
 End Select
+
+lSf.Initialise "", _
+            "", _
+            StudyManager, _
+            lStudy, _
+            GenerateGUIDString, _
+            lparams, _
+            numberOfValuesToCache, _
+            valueNames, _
+            Nothing, _
+            Nothing
+lStudy.Initialise lSf
+                
+Set gCreateMA = lStudy
 
 Exit Function
 

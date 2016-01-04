@@ -138,26 +138,6 @@ End Property
 ' Methods
 '@================================================================================
 
-'''
-'' Notify each new bar to the <code>BarStudy</code> object as it is created.
-''
-''@/
-'Public Sub NotifyBar(ByVal pBar As Bar)
-'End Sub
-
-'''
-'' Switches the <code>BarStudy</code> from its current <code>InputStudy</code>
-'' to the specified <code>InputStudy</code>.
-''
-'' @param newUnderlyingStudy The <code>InputStudy</code> from which this <code>BarStudy</code>
-''                           will now receive input.
-''
-''@/
-'Public Sub SwitchUnderlyingStudy( _
-'                ByVal newUnderlyingStudy As StudyInputHandler)
-'
-'End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
