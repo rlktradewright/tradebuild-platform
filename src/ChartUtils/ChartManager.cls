@@ -500,7 +500,7 @@ On Error GoTo Err
 
 If oldStudyConfig.Study Is BaseStudy Then
     newStudyConfig.Study = oldStudyConfig.Study
-    BaseStudyConfiguration = newStudyConfig
+    SetBaseStudyConfiguration newStudyConfig
     Set ReplaceStudyConfiguration = newStudyConfig.Study
 Else
     UnApplyStudyConfiguration oldStudyConfig
@@ -1038,24 +1038,20 @@ If mBaseStudy Is Nothing Then
     
     RaiseEvent StudyAdded(mBaseStudyConfig)
     AddDependentStudies studyConfig
-
 ElseIf Not studyConfig.Study Is mBaseStudy Then
-    
-    ApplyStudyConfiguration studyConfig
     UnApplyStudyConfiguration mBaseStudyConfig
+    ApplyStudyConfiguration studyConfig
     
     reconfigureChildStudies mBaseStudyConfig, studyConfig
     
     setBaseStudyConfig studyConfig
 Else
-    
-    ApplyStudyConfiguration studyConfig
     UnApplyStudyConfiguration mBaseStudyConfig
+    ApplyStudyConfiguration studyConfig
     
     moveChildStudyConfigs mBaseStudyConfig, studyConfig
 
     setBaseStudyConfig studyConfig
-    
 End If
 
 RaiseEvent BaseStudyConfigurationChanged(studyConfig)
