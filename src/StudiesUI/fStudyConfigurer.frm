@@ -99,7 +99,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
 Option Explicit
 
 '@================================================================================
@@ -254,7 +253,6 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
 Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
@@ -283,7 +281,6 @@ Friend Sub Initialise( _
                 ByVal defaultConfiguration As StudyConfiguration, _
                 ByVal defaultParameters As Parameters, _
                 ByVal noParameterModification As Boolean)
-                
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 

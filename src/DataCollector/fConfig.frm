@@ -18,8 +18,8 @@ Begin VB.Form fConfig
       TabIndex        =   0
       Top             =   120
       Width           =   10095
-      _extentx        =   17806
-      _extenty        =   7223
+      _ExtentX        =   17806
+      _ExtentY        =   7223
    End
 End
 Attribute VB_Name = "fConfig"
@@ -126,7 +126,6 @@ Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is Value Then Exit Property
 Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 

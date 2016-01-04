@@ -19,7 +19,7 @@ Begin VB.Form fChart
       Height          =   5415
       Left            =   0
       TabIndex        =   3
-      Top             =   390
+      Top             =   330
       Width           =   11280
       _ExtentX        =   19897
       _ExtentY        =   9551
@@ -56,17 +56,17 @@ Begin VB.Form fChart
    End
    Begin ComCtl3.CoolBar CoolBar1 
       Align           =   1  'Align Top
-      Height          =   390
+      Height          =   330
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   11280
       _ExtentX        =   19897
-      _ExtentY        =   688
+      _ExtentY        =   582
       BandCount       =   4
       BandBorders     =   0   'False
       _CBWidth        =   11280
-      _CBHeight       =   390
+      _CBHeight       =   330
       _Version        =   "6.7.9816"
       BandBackColor1  =   -2147483638
       Child1          =   "ChartNavToolbar1"
@@ -101,7 +101,7 @@ Begin VB.Form fChart
          Left            =   8400
          TabIndex        =   5
          ToolTipText     =   "Change the chart style"
-         Top             =   60
+         Top             =   30
          Width           =   1185
          _ExtentX        =   2090
          _ExtentY        =   476
@@ -118,10 +118,10 @@ Begin VB.Form fChart
       End
       Begin TradingUI27.BarFormatterPicker BarFormatterPicker 
          Height          =   270
-         Left            =   7020
+         Left            =   6990
          TabIndex        =   4
          ToolTipText     =   "Change the bar formatting"
-         Top             =   60
+         Top             =   30
          Width           =   1185
          _ExtentX        =   12594
          _ExtentY        =   476
@@ -140,18 +140,18 @@ Begin VB.Form fChart
          Height          =   330
          Left            =   165
          TabIndex        =   2
-         Top             =   30
+         Top             =   0
          Width           =   5865
          _ExtentX        =   10345
          _ExtentY        =   582
       End
       Begin MSComctlLib.Toolbar ChartToolsToolbar 
          Height          =   330
-         Left            =   9780
+         Left            =   9810
          TabIndex        =   1
-         Top             =   30
-         Width           =   1410
-         _ExtentX        =   2487
+         Top             =   0
+         Width           =   1470
+         _ExtentX        =   2593
          _ExtentY        =   582
          ButtonWidth     =   609
          ButtonHeight    =   582
@@ -204,7 +204,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements IDeferredAction
 Implements IGenericTickListener
 Implements IThemeable
 Implements IStateChangeListener
@@ -372,25 +371,6 @@ End Sub
 Private Sub Form_Terminate()
 Const ProcName As String = "Form_Terminate"
 LogMessage "Chart form terminated", LogLevelDetail
-End Sub
-
-'================================================================================
-' IDeferredAction Interface Members
-'================================================================================
-
-Private Sub IDeferredAction_Run(ByVal Data As Variant)
-Const ProcName As String = "IDeferredAction_Run"
-On Error GoTo Err
-
-Set mTheme = Data
-Me.BackColor = mTheme.BackColor
-gApplyTheme mTheme, Me.Controls
-
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -685,15 +665,11 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
-
-If mTheme Is Nothing Then
-    DeferAction Me, value, 1, ExpiryTimeUnitSeconds
-Else
-    Set mTheme = value
-    Me.BackColor = mTheme.BackColor
-    gApplyTheme mTheme, Me.Controls
-End If
+Set mTheme = value
+If mTheme Is Nothing Then Exit Property
+    
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
 
 Exit Property
 
@@ -751,9 +727,9 @@ If Not pConfig Is Nothing Then setConfig pConfig
 '
 MultiChart1.Enabled = True
 
-ChartNavToolbar1.Initialise , MultiChart1.Object
-BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.Object
-ChartStylePicker.Initialise , MultiChart1.Object
+ChartNavToolbar1.Initialise , MultiChart1.object
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.object
+ChartStylePicker.Initialise , MultiChart1.object
 
 MultiChart1.Add pPeriodLength
 
@@ -790,9 +766,9 @@ mIsHistorical = True
 MultiChart1.Initialise createNewTimeframes(pStudyManager, pContractFuture, pHistDataStore), pHistDataStore.TimePeriodValidator, pSpec, pStyle, pBarFormatterLibManager
 setConfig pConfig
 
-ChartNavToolbar1.Initialise , MultiChart1.Object
-BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.Object
-ChartStylePicker.Initialise , MultiChart1.Object
+ChartNavToolbar1.Initialise , MultiChart1.object
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.object
+ChartStylePicker.Initialise , MultiChart1.object
 
 MultiChart1.Add pPeriodLength
 
@@ -834,9 +810,9 @@ Set mBarFormatterLibManager = pBarFormatterLibManager
 
 MultiChart1.Enabled = True
 
-ChartNavToolbar1.Initialise , MultiChart1.Object
-BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.Object
-ChartStylePicker.Initialise , MultiChart1.Object
+ChartNavToolbar1.Initialise , MultiChart1.object
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.object
+ChartStylePicker.Initialise , MultiChart1.object
 
 Set mConfig = pConfig
 mIsHistorical = False
@@ -874,9 +850,9 @@ Set mBarFormatterLibManager = pBarFormatterLibManager
 
 MultiChart1.Enabled = True
 
-ChartNavToolbar1.Initialise , MultiChart1.Object
-BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.Object
-ChartStylePicker.Initialise , MultiChart1.Object
+ChartNavToolbar1.Initialise , MultiChart1.object
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.object
+ChartStylePicker.Initialise , MultiChart1.object
 
 Set mConfig = pConfig
 mIsHistorical = True
