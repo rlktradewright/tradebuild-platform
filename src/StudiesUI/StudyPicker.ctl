@@ -277,7 +277,7 @@ Const ProcName As String = "ChangeButton_Click"
 On Error GoTo Err
 
 Dim studyConfig As StudyConfiguration
-Set studyConfig = mChartManager.GetStudyConfig(ChartStudiesTree.SelectedItem.Key)
+Set studyConfig = mChartManager.GetStudyConfiguration(ChartStudiesTree.SelectedItem.Key)
 
 ' NB: the following line displays a modal form, so we can remove the existing
 ' study and deal with any related studies after it
@@ -311,7 +311,7 @@ Else
     ChartStudiesTree.SelectedItem.Expanded = True
     
     Dim studyConfig As StudyConfiguration
-    Set studyConfig = mChartManager.GetStudyConfig(ChartStudiesTree.SelectedItem.Key)
+    Set studyConfig = mChartManager.GetStudyConfiguration(ChartStudiesTree.SelectedItem.Key)
     
     Dim studyDef As StudyDefinition
     Set studyDef = mChartManager.StudyLibraryManager.GetStudyDefinition( _
@@ -357,7 +357,7 @@ Const ProcName As String = "RemoveButton_Click"
 On Error GoTo Err
 
 Dim studyConfig As StudyConfiguration
-Set studyConfig = mChartManager.GetStudyConfig(ChartStudiesTree.SelectedItem.Key)
+Set studyConfig = mChartManager.GetStudyConfiguration(ChartStudiesTree.SelectedItem.Key)
 mChartManager.RemoveStudyConfiguration studyConfig
 RemoveButton.Enabled = False
 ChangeButton.Enabled = False
@@ -452,7 +452,7 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
+'If mTheme Is value Then Exit Property
 Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
@@ -573,10 +573,7 @@ Private Function showConfigForm( _
 Const ProcName As String = "showConfigForm"
 On Error GoTo Err
 
-If mConfigForm Is Nothing Then
-    Set mConfigForm = New fStudyConfigurer
-    'If Not mTheme Is Nothing Then mConfigForm.Theme = mTheme
-End If
+If mConfigForm Is Nothing Then Set mConfigForm = New fStudyConfigurer
 
 Dim noParameterModification  As Boolean
 If Not defaultConfiguration Is Nothing Then

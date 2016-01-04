@@ -442,7 +442,16 @@ Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor
+
+Dim lColor As Long: lColor = ColorLabel.BackColor
+Dim lUpColor As Long: lUpColor = UpColorLabel.BackColor
+Dim lDownColor As Long: lDownColor = DownColorLabel.BackColor
+
 gApplyTheme mTheme, UserControl.Controls
+
+ColorLabel.BackColor = lColor
+UpColorLabel.BackColor = lUpColor
+DownColorLabel.BackColor = lDownColor
 
 Exit Property
 

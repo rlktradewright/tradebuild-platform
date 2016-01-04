@@ -560,7 +560,6 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub BaseStudiesTree_Click()
-Dim i As Long
 Const ProcName As String = "BaseStudiesTree_Click"
 On Error GoTo Err
 
@@ -569,6 +568,7 @@ If Not BaseStudiesTree.SelectedItem.Tag = CompatibleNode Then
     Set BaseStudiesTree.SelectedItem = mPrevSelectedBaseStudiesTreeNode
 Else
     Set mPrevSelectedBaseStudiesTreeNode = BaseStudiesTree.SelectedItem
+    Dim i As Long
     For i = 0 To mStudyDefinition.studyInputDefinitions.Count - 1
         initialiseInputValueCombo i
     Next
@@ -605,22 +605,11 @@ Set Parent = UserControl.Parent
 End Property
 
 Public Property Get StudyConfiguration() As StudyConfiguration
-Dim studyConfig As StudyConfiguration
-Dim params As Parameters
-Dim studyParamDef As StudyParameterDefinition
-Dim studyValueDefs As studyValueDefinitions
-Dim studyValueDef As StudyValueDefinition
-Dim studyValueConfig As StudyValueConfiguration
-Dim studyHorizRule As StudyHorizontalRule
-Dim regionName As String
-Dim inputValueNames() As String
-Dim i As Long
-
 Const ProcName As String = "StudyConfiguration"
 On Error GoTo Err
 
+Dim studyConfig As StudyConfiguration
 Set studyConfig = New StudyConfiguration
-'studyConfig.studyDefinition = mStudyDefinition
 studyConfig.name = mStudyname
 studyConfig.StudyLibraryName = mStudyLibraryName
 If Not BaseStudiesTree.SelectedItem Is Nothing Then
@@ -628,6 +617,7 @@ If Not BaseStudiesTree.SelectedItem Is Nothing Then
 End If
 
 ReDim inputValueNames(mStudyDefinition.studyInputDefinitions.Count - 1) As String
+Dim i As Long
 For i = 0 To UBound(inputValueNames)
     If Not InputValueCombo(i).SelectedItem Is Nothing Then
         inputValueNames(i) = InputValueCombo(i).SelectedItem.text
@@ -635,6 +625,7 @@ For i = 0 To UBound(inputValueNames)
 Next
 studyConfig.inputValueNames = inputValueNames
 
+Dim regionName As String
 If ChartRegionCombo.SelectedItem.text = RegionDefault Then
     Select Case mStudyDefinition.DefaultRegion
     Case StudyDefaultRegionNone
@@ -653,8 +644,10 @@ Else
 End If
 studyConfig.ChartRegionName = regionName
 
+Dim params As Parameters
 Set params = New Parameters
 
+Dim studyParamDef As StudyParameterDefinition
 For i = 0 To mStudyDefinition.studyParameterDefinitions.Count - 1
     Set studyParamDef = mStudyDefinition.studyParameterDefinitions.item(i + 1)
     If studyParamDef.ParameterType = ParameterTypeBoolean Then
@@ -669,15 +662,18 @@ Next
 
 studyConfig.Parameters = params
 
-Set studyValueDefs = mStudyDefinition.studyValueDefinitions
+Dim studyValueDefs As StudyValueDefinitions
+Set studyValueDefs = mStudyDefinition.StudyValueDefinitions
 
 For i = 1 To studyValueDefs.Count
+    Dim studyValueConfig As StudyValueConfiguration
     Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(studyValueDefs(i).name)
     StudyValueConfigurer(i - 1).ApplyUpdates studyValueConfig
 Next
 
 For i = 0 To 4
     If LineText(i).text <> "" Then
+        Dim studyHorizRule As StudyHorizontalRule
         Set studyHorizRule = studyConfig.StudyHorizontalRules.Add
         studyHorizRule.Y = LineText(i).text
         studyHorizRule.Color = LineColorLabel(i).BackColor
@@ -696,7 +692,6 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
 Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
@@ -738,7 +733,6 @@ Public Sub Initialise( _
                 ByVal defaultConfiguration As StudyConfiguration, _
                 ByVal defaultParameters As Parameters, _
                 ByVal noParameterModification As Boolean)
-                
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -770,10 +764,6 @@ End Sub
 Private Sub addBaseStudiesTreeEntry( _
                 ByVal studyConfig As StudyConfiguration, _
                 ByVal parentStudyConfig As StudyConfiguration)
-Dim lNode As Node
-Dim parentNode As Node
-Dim childStudyConfig As StudyConfiguration
-
 Const ProcName As String = "addBaseStudiesTreeEntry"
 On Error GoTo Err
 
@@ -783,6 +773,8 @@ If Not mDefaultConfiguration Is Nothing Then
     If mDefaultConfiguration.Study Is studyConfig.Study Then Exit Sub
 End If
 
+Dim lNode As Node
+Dim parentNode As Node
 If parentStudyConfig Is Nothing Then
     Set lNode = BaseStudiesTree.Nodes.Add(, _
                                 TreeRelationshipConstants.tvwChild, _
@@ -814,6 +806,7 @@ Then
     End If
 End If
 
+Dim childStudyConfig As StudyConfiguration
 For Each childStudyConfig In studyConfig.StudyConfigurations
     addBaseStudiesTreeEntry childStudyConfig, studyConfig
 Next
@@ -827,14 +820,13 @@ End Sub
 Private Function chooseAColor( _
                 ByVal initialColor As Long, _
                 ByVal allowNull As Boolean) As Long
-Dim simpleColorPicker As New fSimpleColorPicker
-Dim cursorpos As GDI_POINT
-
 Const ProcName As String = "chooseAColor"
 On Error GoTo Err
 
+Dim cursorpos As GDI_POINT
 GetCursorPos cursorpos
 
+Dim simpleColorPicker As New fSimpleColorPicker
 simpleColorPicker.Top = cursorpos.Y * Screen.TwipsPerPixelY
 simpleColorPicker.Left = cursorpos.X * Screen.TwipsPerPixelX
 simpleColorPicker.initialColor = initialColor
@@ -850,8 +842,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub initialiseControls()
-Dim i As Long
-
 Const ProcName As String = "initialiseControls"
 On Error GoTo Err
 
@@ -859,6 +849,7 @@ On Error Resume Next
 
 ReDim mFonts(0) As StdFont
 
+Dim i As Long
 For i = InputValueNameLabel.UBound To 1 Step -1
     Unload InputValueNameLabel(i)
 Next
@@ -917,23 +908,23 @@ End Sub
 
 Private Sub initialiseInputValueCombo( _
                 ByVal Index As Long)
-Dim lstudy As IStudy
-Dim studyValueDefs As studyValueDefinitions
-Dim valueDef As StudyValueDefinition
-Dim inputDef As StudyInputDefinition
-Dim selIndex As Long
-
 Const ProcName As String = "initialiseInputValueCombo"
 On Error GoTo Err
 
+Dim lstudy As IStudy
 Set lstudy = mCompatibleStudies(BaseStudiesTree.SelectedItem.Key)
-Set studyValueDefs = lstudy.StudyDefinition.studyValueDefinitions
+
+Dim studyValueDefs As StudyValueDefinitions
+Set studyValueDefs = lstudy.StudyDefinition.StudyValueDefinitions
+
+Dim inputDef As StudyInputDefinition
 Set inputDef = mStudyDefinition.studyInputDefinitions.item(Index + 1)
 
 InputValueCombo(Index).ComboItems.Clear
 
+Dim selIndex As Long
 selIndex = -1
-'InputValueCombo(Index).ComboItems.Add , , ""
+Dim valueDef As StudyValueDefinition
 For Each valueDef In studyValueDefs
     If typesCompatible(valueDef.ValueType, inputDef.InputType) Then
         InputValueCombo(Index).ComboItems.Add , , valueDef.name
@@ -989,8 +980,6 @@ End Function
 
 Private Sub processRegionNames( _
                 ByRef regionNames() As String)
-Dim i As Long
-
 Const ProcName As String = "processRegionNames"
 On Error GoTo Err
 
@@ -1000,6 +989,7 @@ ChartRegionCombo.ComboItems.Add , , RegionDefault
 ChartRegionCombo.ComboItems.Add , , RegionCustom
 ChartRegionCombo.ComboItems.Add , , RegionUnderlying
 
+Dim i As Long
 For i = 0 To UBound(regionNames)
     ChartRegionCombo.ComboItems.Add , , regionNames(i)
 Next
@@ -1015,26 +1005,6 @@ End Sub
 Private Sub processStudyDefinition( _
                 ByVal defaultParams As Parameters, _
                 ByVal noParameterModification As Boolean)
-Dim i As Long
-Dim j As Long
-Dim studyInputDefinitions As studyInputDefinitions
-Dim studyParameterDefinitions As studyParameterDefinitions
-Dim studyValueDefinitions As studyValueDefinitions
-Dim studyinput As StudyInputDefinition
-Dim studyParam As StudyParameterDefinition
-Dim studyValueDef As StudyValueDefinition
-Dim studyValueconfigs As StudyValueConfigurations
-Dim studyValueConfig As StudyValueConfiguration
-Dim studyHorizRules As StudyHorizontalRules
-Dim studyHorizRule As StudyHorizontalRule
-Dim firstParamIsInteger As Boolean
-Dim permittedParamValues() As Variant
-Dim permittedParamValue As Variant
-Dim numPermittedParamValues As Long
-Dim defaultParamValue As String
-Dim inputValueNames() As String
-Dim noInputModification As Boolean
-
 Const ProcName As String = "processStudyDefinition"
 On Error GoTo Err
 
@@ -1042,6 +1012,8 @@ mNextTabIndex = 2
 
 mStudyname = mStudyDefinition.name
 
+Dim studyValueconfigs As StudyValueConfigurations
+Dim studyHorizRules As StudyHorizontalRules
 If Not mDefaultConfiguration Is Nothing Then
     Set defaultParams = mDefaultConfiguration.Parameters
     Set studyValueconfigs = mDefaultConfiguration.StudyValueConfigurations
@@ -1050,6 +1022,7 @@ End If
 
 StudyDescriptionText.text = mStudyDefinition.Description
 
+Dim allowInputModification As Boolean
 If Not mDefaultConfiguration Is Nothing Then
     If mDefaultConfiguration.ChartRegionName = mDefaultConfiguration.InstanceFullyQualifiedName Then
         '
@@ -1060,7 +1033,7 @@ If Not mDefaultConfiguration Is Nothing Then
     
     If Not mDefaultConfiguration.UnderlyingStudy Is Nothing Then
         If TypeOf mDefaultConfiguration.UnderlyingStudy Is StudyInputHandler Then
-            noInputModification = True
+            allowInputModification = True
             mCompatibleStudies.Add mDefaultConfiguration.UnderlyingStudy, mDefaultConfiguration.UnderlyingStudy.Id
             BaseStudiesTree.Nodes.Clear
             BaseStudiesTree.Nodes.Add , _
@@ -1076,10 +1049,15 @@ If Not mDefaultConfiguration Is Nothing Then
     
 End If
 
+Dim studyInputDefinitions As studyInputDefinitions
 Set studyInputDefinitions = mStudyDefinition.studyInputDefinitions
+
+Dim inputValueNames() As String
 If Not mDefaultConfiguration Is Nothing Then inputValueNames = mDefaultConfiguration.inputValueNames
 
+Dim i As Long
 For i = 1 To studyInputDefinitions.Count
+    Dim studyinput As StudyInputDefinition
     Set studyinput = studyInputDefinitions.item(i)
     If i = 1 Then
         InputValueNameLabel(0).Visible = True
@@ -1099,13 +1077,16 @@ For i = 1 To studyInputDefinitions.Count
     If Not mDefaultConfiguration Is Nothing Then setComboSelection InputValueCombo(i - 1), _
                                                                     inputValueNames(i - 1)
     
-    InputValueCombo(i - 1).Enabled = Not noInputModification
+    InputValueCombo(i - 1).Enabled = Not allowInputModification
     
 Next
 
+Dim studyParameterDefinitions As studyParameterDefinitions
 Set studyParameterDefinitions = mStudyDefinition.studyParameterDefinitions
 
+Dim firstParamIsInteger As Boolean
 For i = 1 To studyParameterDefinitions.Count
+    Dim studyParam As StudyParameterDefinition
     Set studyParam = studyParameterDefinitions.item(i)
     If i = 1 Then
         ParameterNameLabel(0).Visible = True
@@ -1146,13 +1127,16 @@ For i = 1 To studyParameterDefinitions.Count
         ParameterValueCheck(i - 1).Top = ParameterValueCombo(i - 2).Top + 360
     End If
     
+    Dim permittedParamValues() As Variant
     permittedParamValues = studyParam.PermittedValues
     
+    Dim numPermittedParamValues As Long
     numPermittedParamValues = -1
     On Error Resume Next
     numPermittedParamValues = UBound(permittedParamValues)
     On Error GoTo Err
     If numPermittedParamValues <> -1 Then
+        Dim permittedParamValue As Variant
         For Each permittedParamValue In permittedParamValues
             ParameterValueCombo(i - 1).ComboItems.Add , , permittedParamValue
         Next
@@ -1192,6 +1176,8 @@ For i = 1 To studyParameterDefinitions.Count
     End If
     
     ParameterNameLabel(i - 1).Caption = studyParam.name
+    
+    Dim defaultParamValue As String
     defaultParamValue = defaultParams.GetParameterValue(studyParam.name)
     If studyParam.ParameterType = StudyParameterTypes.ParameterTypeBoolean Then
         Select Case UCase$(defaultParamValue)
@@ -1217,8 +1203,11 @@ For i = 1 To studyParameterDefinitions.Count
     End If
 Next
 
-For i = 1 To mStudyDefinition.studyValueDefinitions.Count
-    Set studyValueDef = mStudyDefinition.studyValueDefinitions(i)
+For i = 1 To mStudyDefinition.StudyValueDefinitions.Count
+    Dim studyValueDef As StudyValueDefinition
+    Set studyValueDef = mStudyDefinition.StudyValueDefinitions(i)
+    
+    Dim studyValueConfig As StudyValueConfiguration
     If Not studyValueconfigs Is Nothing Then
         Set studyValueConfig = Nothing
                 
@@ -1233,6 +1222,7 @@ Next
 
 If Not studyHorizRules Is Nothing Then
     For i = 1 To studyHorizRules.Count
+        Dim studyHorizRule As StudyHorizontalRule
         Set studyHorizRule = studyHorizRules.item(i)
         LineText(i - 1) = studyHorizRule.Y
         LineColorLabel(i - 1).BackColor = studyHorizRule.Color
@@ -1248,10 +1238,10 @@ End Sub
 Private Sub setComboSelection( _
                 ByVal combo As TWImageCombo, _
                 ByVal text As String)
-Dim item As ComboItem
 Const ProcName As String = "setComboSelection"
 On Error GoTo Err
 
+Dim item As ComboItem
 For Each item In combo.ComboItems
     If UCase$(item.text) = UCase$(text) Then
         item.selected = True
@@ -1266,8 +1256,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupBaseStudiesTree()
-Dim studyConfig As StudyConfiguration
-
 Const ProcName As String = "setupBaseStudiesTree"
 On Error GoTo Err
 
@@ -1277,8 +1265,7 @@ Set mFirstCompatibleNode = Nothing
 
 If mBaseStudyConfig Is Nothing Then Exit Sub
 
-Set studyConfig = mBaseStudyConfig
-addBaseStudiesTreeEntry studyConfig, Nothing
+addBaseStudiesTreeEntry mBaseStudyConfig, Nothing
 
 Exit Sub
 
@@ -1290,16 +1277,16 @@ End Sub
 Private Function studiesCompatible( _
                 ByVal sourceStudyDefinition As StudyDefinition, _
                 ByVal sinkStudyDefinition As StudyDefinition) As Boolean
-Dim sourceValueDef As StudyValueDefinition
-Dim sinkInputDef As StudyInputDefinition
-Dim i As Long
-
 Const ProcName As String = "studiesCompatible"
 On Error GoTo Err
 
+Dim i As Long
 For i = 1 To sinkStudyDefinition.studyInputDefinitions.Count
+    Dim sinkInputDef As StudyInputDefinition
     Set sinkInputDef = sinkStudyDefinition.studyInputDefinitions.item(i)
-    For Each sourceValueDef In sourceStudyDefinition.studyValueDefinitions
+    
+    Dim sourceValueDef As StudyValueDefinition
+    For Each sourceValueDef In sourceStudyDefinition.StudyValueDefinitions
         If typesCompatible(sourceValueDef.ValueType, sinkInputDef.InputType) Then
             studiesCompatible = True
             Exit For

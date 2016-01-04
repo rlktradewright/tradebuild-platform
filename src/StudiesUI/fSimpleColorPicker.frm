@@ -16,7 +16,6 @@ Begin VB.Form fSimpleColorPicker
    StartUpPosition =   3  'Windows Default
    Begin VB.CommandButton NoColorButton 
       Caption         =   "No color"
-      Enabled         =   0   'False
       Height          =   255
       Left            =   120
       TabIndex        =   22
