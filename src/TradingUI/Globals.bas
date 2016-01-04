@@ -301,7 +301,7 @@ Const ProcName As String = "gShowStudyPicker"
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
-If Not pTheme Is Nothing Then mStudyPickerForm.Theme = pTheme
+mStudyPickerForm.Theme = pTheme
 mStudyPickerForm.Initialise chartMgr, pOwner, Title
 mStudyPickerForm.Show vbModeless, pOwner
 

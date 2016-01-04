@@ -61,9 +61,9 @@ Begin VB.UserControl MultiChart
    End
    Begin MSComctlLib.Toolbar ControlToolbar 
       Height          =   330
-      Left            =   6600
+      Left            =   6480
       TabIndex        =   0
-      Top             =   6480
+      Top             =   6240
       Width           =   2520
       _ExtentX        =   4445
       _ExtentY        =   582
@@ -212,6 +212,8 @@ Private mTimeframes                         As Timeframes
 Private mExcludeCurrentBar                  As Boolean
 
 Private mTheme                              As ITheme
+
+Private mIsRaw                              As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -427,6 +429,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get CurrentIndex() As Long
+CurrentIndex = mCurrentIndex
 End Property
 
 Public Property Let ConfigurationSection( _
@@ -654,12 +660,13 @@ Public Function Add( _
 Const ProcName As String = "Add"
 On Error GoTo Err
 
+Assert Not mTimeframes Is Nothing, "Can't add non-raw charts to this MultiChart"
+
 Dim lChart As MarketChart
-Dim lButton As MSComctlLib.Button
-
 Set lChart = loadChartControl
-lChart.UpdatePerTick = pUpdatePerTick
+lChart.Initialise mTimeframes, pUpdatePerTick
 
+Dim lButton As MSComctlLib.Button
 Set lButton = addChartSelectorButton(pPeriodLength)
 
 ' we notify the add before calling ShowChart so that it's before
@@ -673,7 +680,7 @@ Set lChartSpec = CreateChartSpecifier( _
                         mSpec.FromTime, _
                         mSpec.toTime)
 
-lChart.ShowChart mTimeframes, pPeriodLength, lChartSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
+lChart.ShowChart pPeriodLength, lChartSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
 
 If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
@@ -683,6 +690,61 @@ If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).value = tb
 lButton.value = tbrPressed
 switchToChart lButton.index
 Add = mCurrentIndex
+
+fireChange MultiChartSelectionChanged
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+' return the index rather than the chart because the chart cannot be handled by non-friend
+' components
+Public Function AddRaw( _
+                ByVal pTimeframe As Timeframe, _
+                ByVal pStudyManager As StudyManager, _
+                Optional ByVal pLocalSymbol As String, _
+                Optional ByVal pSecType As SecurityTypes, _
+                Optional ByVal pExchange As String, _
+                Optional ByVal pTickSize As Double, _
+                Optional ByVal pSessionStartTime As Date, _
+                Optional ByVal pSessionEndTime As Date, _
+                Optional ByVal pTitle As String, _
+                Optional ByVal pUpdatePerTick As Boolean = True) As Long
+Const ProcName As String = "AddRaw"
+On Error GoTo Err
+
+Assert mTimeframes Is Nothing, "Can't add raw charts to this MultiChart"
+
+Dim lChart As MarketChart
+Set lChart = loadChartControl
+lChart.InitialiseRaw pStudyManager, pUpdatePerTick
+
+Dim lButton As MSComctlLib.Button
+Set lButton = addChartSelectorButton(pTimeframe.TimePeriod)
+
+' we notify the add before calling ShowChart so that it's before
+' the ChartStates.ChartStateInitialised and ChartStates.ChartStateLoaded events
+fireChange MultiChartAdd
+
+lChart.ShowChartRaw pTimeframe, _
+                    mStyle, _
+                    pLocalSymbol, _
+                    pSecType, _
+                    pExchange, _
+                    pTickSize, _
+                    pSessionEndTime, _
+                    pSessionStartTime, _
+                    mBarFormatterLibManager, _
+                    mBarFormatterFactoryName, _
+                    mBarFormatterLibraryName, _
+                    pTitle
+
+If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).value = tbrUnpressed
+lButton.value = tbrPressed
+switchToChart lButton.index
+AddRaw = mCurrentIndex
 
 fireChange MultiChartSelectionChanged
 
@@ -744,6 +806,26 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function GetIndexFromTimeframe(ByVal pTimeframe As Timeframe) As Long
+Const ProcName As String = "GetIndexFromTimeframe"
+On Error GoTo Err
+
+Dim i As Long
+For i = 1 To Count
+    If Timeframe(i).TimePeriod Is pTimeframe.TimePeriod Then
+        GetIndexFromTimeframe = i
+        Exit Function
+    End If
+Next
+
+AssertArgument False, "pTimeframe not found"
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Sub Finish()
 Const ProcName As String = "Finish"
@@ -807,6 +889,42 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Sub InitialiseRaw( _
+                Optional ByVal pStyle As ChartStyle, _
+                Optional ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                Optional ByVal pBarFormatterFactoryName As String, _
+                Optional ByVal pBarFormatterLibraryName As String, _
+                Optional ByVal pBackColor As Long = &HC0C0C0)
+Const ProcName As String = "InitialiseRaw"
+On Error GoTo Err
+
+AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+
+mIsRaw = True
+
+If pStyle Is Nothing Then
+    Set mStyle = ChartStylesManager.DefaultStyle
+Else
+    Set mStyle = pStyle
+End If
+
+TBChart(0).ChartBackColor = pBackColor
+
+Set mBarFormatterLibManager = pBarFormatterLibManager
+mBarFormatterFactoryName = pBarFormatterFactoryName
+mBarFormatterLibraryName = pBarFormatterLibraryName
+
+ControlToolbar.Visible = False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 
 Public Function LoadFromConfig( _
                 ByVal pConfig As ConfigurationSection, _
@@ -937,6 +1055,21 @@ AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or 
 ChartSelectorToolbar.Buttons.Item(index).value = tbrPressed
 switchToChart index
 fireChange MultiChartSelectionChanged
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetStudyManager( _
+                ByVal value As StudyManager, _
+                Optional ByVal index As Long = -1)
+Const ProcName As String = "SetStudyManager"
+On Error GoTo Err
+
+index = checkIndex(index)
+getChartFromIndex(index).StudyManager = value
 
 Exit Sub
 
@@ -1252,7 +1385,7 @@ mCurrentIndex = index
 
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, index
 
-TimeframeSelector1.SelectTimeframe lChart.TimePeriod
+If Not mIsRaw Then TimeframeSelector1.SelectTimeframe lChart.TimePeriod
 
 Set ShowChart = lChart
 

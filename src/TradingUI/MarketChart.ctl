@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#256.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#258.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -125,9 +125,6 @@ Private Const PropDfltShowHorizontalScrollBar           As Boolean = True
 Private Const PropDfltPeriodWidth                       As Long = 100
 Private Const PropDfltYAxisWidthCm                      As Single = 1.8
 
-Private Const StudyValueConfigNameBar                   As String = "Bar"
-Private Const StudyValueConfigNameVolume                As String = "Volume"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -149,7 +146,12 @@ Private mIsHistoricChart                                As Boolean
 Private mChartSpec                                      As ChartSpecifier
 Private mChartStyle                                     As ChartStyle
 
-Private mContract                                       As Contract
+Private mLocalSymbol                                    As String
+Private mSecType                                        As SecurityTypes
+Private mExchange                                       As String
+Private mTickSize                                       As Double
+Private mSessionEndTime                                 As Date
+Private mSessionStartTime                               As Date
 
 Private mPriceRegion                                    As ChartRegion
 
@@ -183,6 +185,8 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mTitle                                          As String
 
 Private mTheme                                          As ITheme
+
+Private mIsRaw                                          As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -261,7 +265,7 @@ If ev.Future.IsAvailable Then
     ' this means that the contract info is available, so we can
     ' now start the chart
 
-    Set mContract = mTimeframes.ContractFuture.value
+    setContractProperties mTimeframes.ContractFuture.value
 
     If mDeferStart Then Exit Sub
 
@@ -690,6 +694,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let StudyManager(ByVal value As StudyManager)
+Const ProcName As String = "StudyManager"
+On Error GoTo Err
+
+Set mStudyManager = value
+mManager.Finish
+Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, False)
+mManager.UpdatePerTick = mUpdatePerTick
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
@@ -768,19 +787,6 @@ Const ProcName As String = "TradeBarSeries"
 On Error GoTo Err
 
 Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries(StudyValueConfigNameBar)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Let UpdatePerTick(ByVal value As Boolean)
-Const ProcName As String = "UpdatePerTick"
-On Error GoTo Err
-
-mUpdatePerTick = value
-If Not mManager Is Nothing Then mManager.UpdatePerTick = mUpdatePerTick
 
 Exit Property
 
@@ -889,7 +895,7 @@ Dim lStudy As IStudy
 Set lStudy = mTimeframe.BarStudy
 baseStudyConfig.Parameters = lStudy.Parameters
 
-initialiseChart
+initialiseChart mChartSpec.IncludeBarsOutsideSession
 mManager.BaseStudyConfiguration = baseStudyConfig
 
 loadchart
@@ -937,7 +943,12 @@ Set mManager = Nothing
 Set mTimeframes = Nothing
 Set mTimeframe = Nothing
 
-Set mContract = Nothing
+mLocalSymbol = ""
+mSecType = SecurityTypes.SecTypeNone
+mExchange = ""
+mTickSize = 0#
+mSessionEndTime = 0#
+mSessionStartTime = 0#
 
 Set mPriceRegion = Nothing
 Set mVolumeRegion = Nothing
@@ -945,6 +956,39 @@ Set mVolumeRegion = Nothing
 Set mLoadingText = Nothing
 
 mLoadedFromConfig = False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub Initialise( _
+                ByVal pTimeframes As Timeframes, _
+                ByVal pUpdatePerTick As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Assert Not mIsRaw, "Already initialised as raw"
+Set mTimeframes = pTimeframes
+Set mStudyManager = mTimeframes.StudyBase.StudyManager
+mUpdatePerTick = pUpdatePerTick
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub InitialiseRaw( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pUpdatePerTick As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+mIsRaw = True
+Set mStudyManager = pStudyManager
+mUpdatePerTick = pUpdatePerTick
 
 Exit Sub
 
@@ -981,7 +1025,10 @@ mIsHistoricChart = CBool(mConfig.GetSetting(ConfigSettingIsHistoricChart, "False
 mBarFormatterFactoryName = mConfig.GetSetting(ConfigSettingBarFormatterFactoryName, "")
 mBarFormatterLibraryName = mConfig.GetSetting(ConfigSettingBarFormatterLibraryName, "")
 
-If Not mDeferStart Then prepareChart
+If Not mDeferStart Then
+    createTimeframe
+    prepareChart mChartSpec.IncludeBarsOutsideSession
+End If
 
 Exit Sub
 
@@ -1019,7 +1066,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ShowChart( _
-                ByVal pTimeframes As Timeframes, _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pChartSpec As ChartSpecifier, _
                 ByVal pChartStyle As ChartStyle, _
@@ -1042,7 +1088,6 @@ If Not mTimeframes Is Nothing Then
     Chart1.ClearChart
 End If
 
-Set mTimeframes = pTimeframes
 Set mStudyManager = mTimeframes.StudyBase.StudyManager
 Set mBarFormatterLibManager = pBarFormatterLibManager
 
@@ -1055,8 +1100,53 @@ mExcludeCurrentBar = pExcludeCurrentBar
 mTitle = pTitle
 
 storeSettings
+createTimeframe
+prepareChart mChartSpec.IncludeBarsOutsideSession
 
-prepareChart
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ShowChartRaw( _
+                ByVal pTimeframe As Timeframe, _
+                ByVal pChartStyle As ChartStyle, _
+                Optional ByVal pLocalSymbol As String, _
+                Optional ByVal pSecType As SecurityTypes, _
+                Optional ByVal pExchange As String, _
+                Optional ByVal pTickSize As Double, _
+                Optional ByVal pSessionStartTime As Date, _
+                Optional ByVal pSessionEndTime As Date, _
+                Optional ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                Optional ByVal pBarFormatterFactoryName As String, _
+                Optional ByVal pBarFormatterLibraryName As String, _
+                Optional ByVal pTitle As String)
+Const ProcName As String = "ShowChartRaw"
+On Error GoTo Err
+
+AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+
+setState ChartStateBlank
+
+Set mBarFormatterLibManager = pBarFormatterLibManager
+
+Set mTimeframe = pTimeframe
+Set mTimePeriod = mTimeframe.TimePeriod
+Set mChartStyle = pChartStyle
+mLocalSymbol = pLocalSymbol
+mSecType = pSecType
+mExchange = pExchange
+mTickSize = pTickSize
+mSessionEndTime = pSessionEndTime
+mSessionStartTime = pSessionStartTime
+mBarFormatterFactoryName = pBarFormatterFactoryName
+mBarFormatterLibraryName = pBarFormatterLibraryName
+mTitle = pTitle
+
+prepareChart False
 
 Exit Sub
 
@@ -1071,7 +1161,8 @@ On Error GoTo Err
 Assert mLoadedFromConfig And mState = ChartStates.ChartStateBlank, "Start method only permitted for charts loaded from configuration and with state ChartStateBlank"
 
 mDeferStart = False
-prepareChart
+createTimeframe
+prepareChart mChartSpec.IncludeBarsOutsideSession
 
 Exit Sub
 
@@ -1095,69 +1186,15 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function createBarsStudyConfig() As StudyConfiguration
-Const ProcName As String = "createBarsStudyConfig"
-On Error GoTo Err
-
-Dim studyConfig As New StudyConfiguration
-studyConfig.UnderlyingStudy = mTimeframes.StudyBase.BaseStudy
-
-Dim lStudy As IStudy
-Set lStudy = mTimeframe.BarStudy
-studyConfig.Study = lStudy
-
-Dim studyDef As StudyDefinition
-Set studyDef = lStudy.StudyDefinition
-
-studyConfig.ChartRegionName = ChartRegionNamePrice
-
-ReDim InputValueNames(3) As String
-InputValueNames(0) = InputNameTrade
-InputValueNames(1) = InputNameVolume
-InputValueNames(2) = InputNameTickVolume
-InputValueNames(3) = InputNameOpenInterest
-
-studyConfig.InputValueNames = InputValueNames
-studyConfig.Name = studyDef.Name
-
-Dim params As New Parameters
-params.SetParameterValue "Bar length", mTimePeriod.Length
-params.SetParameterValue "Time units", TimePeriodUnitsToString(mTimePeriod.Units)
-studyConfig.Parameters = params
-
-Dim studyValueConfig As StudyValueConfiguration
-Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(StudyValueConfigNameBar)
-studyValueConfig.ChartRegionName = ChartRegionNamePrice
-studyValueConfig.IncludeInChart = True
-studyValueConfig.BarFormatterFactoryName = mBarFormatterFactoryName
-studyValueConfig.BarFormatterLibraryName = mBarFormatterLibraryName
-
-If mContract Is Nothing Then
-ElseIf mContract.Specifier.secType <> SecurityTypes.SecTypeCash And _
-    mContract.Specifier.secType <> SecurityTypes.SecTypeIndex _
-Then
-    Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(StudyValueConfigNameVolume)
-    studyValueConfig.ChartRegionName = ChartRegionNameVolume
-    studyValueConfig.IncludeInChart = True
-End If
-
-Set createBarsStudyConfig = studyConfig
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Function createPriceFormatter() As PriceFormatter
 Const ProcName As String = "createPriceFormatter"
 On Error GoTo Err
 
 Set createPriceFormatter = New PriceFormatter
-If mContract Is Nothing Then
+If mTickSize = 0# Then
     createPriceFormatter.Initialise SecTypeNone, 0.0001
 Else
-    createPriceFormatter.Initialise mContract.Specifier.secType, mContract.TickSize
+    createPriceFormatter.Initialise mSecType, mTickSize
 End If
 
 Exit Function
@@ -1196,7 +1233,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub initialiseChart()
+Private Sub initialiseChart(ByVal pIncludeBarsOutsideSession As Boolean)
 Const ProcName As String = "initialiseChart"
 On Error GoTo Err
 
@@ -1205,7 +1242,7 @@ gLogger.Log "Initialising chart", ProcName, ModuleName
 Chart1.DisableDrawing
 
 If Not mInitialised Then
-    Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, mChartSpec.IncludeBarsOutsideSession)
+    Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, pIncludeBarsOutsideSession)
     mManager.UpdatePerTick = mUpdatePerTick
     If Not mConfig Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudies)
 
@@ -1241,20 +1278,15 @@ Chart1.DisableDrawing
 
 Chart1.TimePeriod = mTimePeriod
 
-If mContract Is Nothing Then
-    Chart1.SessionStartTime = 0#
-    Chart1.SessionEndTime = 0#
-Else
-    Chart1.SessionStartTime = mContract.SessionStartTime
-    Chart1.SessionEndTime = mContract.SessionEndTime
-End If
+Chart1.SessionStartTime = mSessionStartTime
+Chart1.SessionEndTime = mSessionEndTime
 
-If mContract Is Nothing Then
+If mTickSize = 0# Then
     mPriceRegion.YScaleQuantum = 0.001
 Else
-    mPriceRegion.YScaleQuantum = mContract.TickSize
-    If mMinimumTicksHeight * mContract.TickSize <> 0 Then
-        mPriceRegion.MinimumHeight = mMinimumTicksHeight * mContract.TickSize
+    mPriceRegion.YScaleQuantum = mTickSize
+    If mMinimumTicksHeight * mTickSize <> 0 Then
+        mPriceRegion.MinimumHeight = mMinimumTicksHeight * mTickSize
     End If
 End If
 
@@ -1262,16 +1294,16 @@ mPriceRegion.PriceFormatter = createPriceFormatter
 
 If mTitle <> "" Then
     mPriceRegion.Title.Text = mTitle
-ElseIf Not mContract Is Nothing Then
-    mPriceRegion.Title.Text = mContract.Specifier.LocalSymbol & _
-                    " (" & mContract.Specifier.Exchange & ") " & _
+ElseIf mLocalSymbol <> "" Then
+    mPriceRegion.Title.Text = mLocalSymbol & _
+                    " (" & mExchange & ") " & _
                     TimeframeCaption
 End If
 mPriceRegion.Title.Color = vbBlue
 
-If mContract Is Nothing Then
-ElseIf mContract.Specifier.secType <> SecurityTypes.SecTypeCash _
-    And mContract.Specifier.secType <> SecurityTypes.SecTypeIndex _
+If mSecType = SecTypeNone Then
+ElseIf mSecType <> SecurityTypes.SecTypeCash _
+    And mSecType <> SecurityTypes.SecTypeIndex _
 Then
     On Error Resume Next
     Set mVolumeRegion = Chart1.Regions.Item(ChartRegionNameVolume)
@@ -1285,7 +1317,12 @@ Then
     mVolumeRegion.Title.Color = vbBlue
 End If
 
-If mTimeframe.State <> TimeframeStateLoaded Then
+If mIsRaw Then
+    Chart1.EnableDrawing
+    setState ChartStates.ChartStateInitialised
+    mLoadingText.Text = ""
+    setState ChartStates.ChartStateLoaded
+ElseIf mTimeframe.State <> TimeframeStateLoaded Then
     mLoadingText.Text = "Fetching historical data"
     setState ChartStates.ChartStateInitialised
     Chart1.EnableDrawing    ' causes the loading text to appear
@@ -1301,7 +1338,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub loadStudiesFromConfig()
@@ -1316,18 +1352,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub prepareChart()
+Private Sub prepareChart(ByVal pIncludeBarsOutsideSession As Boolean)
 Const ProcName As String = "prepareChart"
 On Error GoTo Err
 
-createTimeframe
-initialiseChart
+initialiseChart pIncludeBarsOutsideSession
 
-If mTimeframes.ContractFuture Is Nothing Then
+If mTimeframes Is Nothing Then
+    loadchart
+ElseIf mTimeframes.ContractFuture Is Nothing Then
     setupStudies
     loadchart
 ElseIf mTimeframes.ContractFuture.IsAvailable Then
-    Set mContract = mTimeframes.ContractFuture.value
+    setContractProperties mTimeframes.ContractFuture.value
 
     setupStudies
     loadchart
@@ -1340,6 +1377,15 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setContractProperties(ByVal pContract As IContract)
+mLocalSymbol = pContract.Specifier.LocalSymbol
+mSecType = pContract.Specifier.secType
+mExchange = pContract.Specifier.Exchange
+mTickSize = pContract.TickSize
+mSessionEndTime = pContract.SessionEndTime
+mSessionStartTime = pContract.SessionStartTime
 End Sub
 
 Private Sub setLoadingText()
@@ -1391,7 +1437,11 @@ gLogger.Log "Setting up studies", ProcName, ModuleName
 If mLoadedFromConfig Then
     loadStudiesFromConfig
 Else
-    mManager.BaseStudyConfiguration = createBarsStudyConfig
+    mManager.SetBaseStudyConfiguration CreateBarsStudyConfig( _
+                                                        mTimeframe, _
+                                                        mSecType, _
+                                                        mBarFormatterFactoryName, _
+                                                        mBarFormatterLibraryName)
 End If
 
 Exit Sub
