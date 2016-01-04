@@ -19,21 +19,21 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "ChartUtils27"
-Private Const ModuleName                    As String = "Globals"
+Public Const ProjectName                        As String = "ChartUtils27"
+Private Const ModuleName                        As String = "Globals"
 
 Private Const ConfigSectionDefaultStudyConfig   As String = "DefaultStudyConfig"
 
-Public Const MinDouble                      As Double = -(2 - 2 ^ -52) * 2 ^ 1023
-Public Const MaxDouble                      As Double = (2 - 2 ^ -52) * 2 ^ 1023
+Public Const OneMicroSecond                     As Double = 1.15740740740741E-11
 
-Public Const OneMicroSecond                 As Double = 1.15740740740741E-11
+Public Const RegionNameCustom                   As String = "$custom"
+Public Const RegionNameDefault                  As String = "$default"
+Public Const RegionNameUnderlying               As String = "$underlying"
+Public Const RegionNamePrice                    As String = "Price"
+Public Const RegionNameVolume                   As String = "Volume"
 
-Public Const RegionNameCustom               As String = "$custom"
-Public Const RegionNameDefault              As String = "$default"
-Public Const RegionNameUnderlying           As String = "$underlying"
-Public Const RegionNamePrice                As String = "Price"
-Public Const RegionNameVolume               As String = "Volume"
+Public Const StudyValConfigNameBar                      As String = "Bar"
+Public Const StudyValConfigNameVolume                   As String = "Volume"
 
 '@================================================================================
 ' Enums
@@ -258,7 +258,6 @@ If Not sc Is Nothing Then
 End If
 
 Set sc = Value.Clone
-sc.UnderlyingStudy = Nothing
 mDefaultStudyConfigurations.Add sc, key
 If Not mConfig Is Nothing Then sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultStudyConfig & "(" & sc.ID & ")")
 

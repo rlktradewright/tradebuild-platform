@@ -44,7 +44,6 @@ Event StudyRemoved(ByVal studyConfig As StudyConfiguration)
 ' Constants
 '@================================================================================
 
-
 Private Const ModuleName                                As String = "ChartManager"
 
 Private Const ConfigSectionBaseStudyConfig              As String = "BaseStudyConfig"
@@ -69,7 +68,7 @@ Private mBarFormatterLibManager                         As BarFormatterLibManage
 
 Private mIncludeBarsOutsideSession                      As Boolean
 
-Private mRegionEntries                                  As Collection
+Private mRegionEntries                                  As EnumerableCollection
 
 ' we use this collection to locate studyConfigurations from Study objects
 Private mAllStudyConfigs                                As Collection
@@ -95,7 +94,7 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mRegionEntries = New Collection
+Set mRegionEntries = New EnumerableCollection
 Set mAllStudyConfigs = New Collection
 Set mInstanceFullyQualifiedNames = New Collection
 mUpdatePerTick = True
@@ -180,25 +179,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let BaseStudyConfiguration( _
-                ByVal studyConfig As StudyConfiguration)
-Const ProcName As String = "BaseStudyConfiguration"
-On Error GoTo Err
-
-AssertArgument TypeOf studyConfig.Study Is IBarStudy, "Base Study must implement the BarStudy interface"
-
-Dim sc As StudyConfiguration
-Set sc = studyConfig.Clone ' take a defensive copy
-sc.ClearStudyValueHandlers
-sc.ClearStudyConfigs
-setBaseStudyConfiguration sc
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Public Property Get Chart() As ChartController
 Const ProcName As String = "Chart"
 On Error GoTo Err
@@ -263,7 +243,8 @@ End Property
 '@================================================================================
 
 Public Function AddStudyConfiguration( _
-                ByVal studyConfig As StudyConfiguration) As IStudy
+                ByVal studyConfig As StudyConfiguration, _
+                Optional ByVal pNumberOfValuesToReplay As Long = ReplayNumbers.ReplayAll) As IStudy
 Const ProcName As String = "AddStudyConfiguration"
 On Error GoTo Err
 
@@ -272,7 +253,7 @@ Set lStudy = AddStudy(studyConfig)
 
 removeExistingStudyConfig lStudy
 
-addStudyConfig studyConfig
+ApplyStudyConfiguration studyConfig, pNumberOfValuesToReplay
 
 Set AddStudyConfiguration = lStudy
 RaiseEvent StudyAdded(studyConfig)
@@ -282,6 +263,23 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Public Sub ApplyStudyConfiguration( _
+                ByVal pStudyConfig As StudyConfiguration, _
+                Optional ByVal pNumberOfValuesToReplay As Long = ReplayNumbers.ReplayAll)
+Const ProcName As String = "ApplyStudyConfiguration"
+On Error GoTo Err
+
+setInstanceFullyQualifiedName pStudyConfig
+addStudyConfig pStudyConfig
+setupStudyValueListeners pStudyConfig, pNumberOfValuesToReplay
+setupHorizontalRules pStudyConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Sub ClearChart()
 Const ProcName As String = "ClearChart"
@@ -310,7 +308,6 @@ End Sub
 Public Sub Finish()
 On Error GoTo Err
 
-mChartController.Finish
 Set mChartController = Nothing
 Set mStudyManager = Nothing
 Set mAllStudyConfigs = Nothing
@@ -396,12 +393,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetStudyConfig( _
+Public Function GetStudyConfiguration( _
                 ByVal studyId As String) As StudyConfiguration
-Const ProcName As String = "GetStudyConfig"
+Const ProcName As String = "GetStudyConfiguration"
 On Error GoTo Err
 
-Set GetStudyConfig = mAllStudyConfigs(studyId)
+Set GetStudyConfiguration = mAllStudyConfigs(studyId)
 
 Exit Function
 
@@ -451,9 +448,7 @@ If Not mConfig Is Nothing Then
     
     studyConfig.LoadFromConfig baseStudySect
     
-    setBaseStudyConfiguration studyConfig
-    
-    'AddDependentStudies studyConfig
+    setTheBaseStudyConfiguration studyConfig
 End If
 
 Exit Sub
@@ -482,14 +477,12 @@ Public Function RemoveStudyConfiguration( _
 Const ProcName As String = "RemoveStudyConfiguration"
 On Error GoTo Err
 
-removeStudyValueListeners studyConfig
+UnApplyStudyConfiguration studyConfig
 
 Dim sc As StudyConfiguration
 For Each sc In studyConfig.StudyConfigurations
     RemoveStudyConfiguration sc
 Next
-
-removeStudyConfig studyConfig
 
 RaiseEvent StudyRemoved(studyConfig)
 
@@ -510,30 +503,16 @@ If oldStudyConfig.Study Is BaseStudy Then
     BaseStudyConfiguration = newStudyConfig
     Set ReplaceStudyConfiguration = newStudyConfig.Study
 Else
+    UnApplyStudyConfiguration oldStudyConfig
     
     Set ReplaceStudyConfiguration = AddStudy(newStudyConfig)
-    removeStudyValueListeners oldStudyConfig
+    ApplyStudyConfiguration newStudyConfig
     
     If newStudyConfig.Study Is oldStudyConfig.Study Then
-        
         moveChildStudyConfigs oldStudyConfig, newStudyConfig
-    
-        removeStudyConfig oldStudyConfig
-        
-        addStudyConfig newStudyConfig
     Else
-    
-        addStudyConfig newStudyConfig
-        
-        RaiseEvent StudyRemoved(oldStudyConfig)
-        RaiseEvent StudyAdded(newStudyConfig)
-        
         reconfigureChildStudies oldStudyConfig, newStudyConfig
-        
-        removeStudyConfig oldStudyConfig
-        
         StartStudy newStudyConfig.Study
-    
     End If
 End If
 
@@ -551,6 +530,25 @@ On Error GoTo Err
 Dim periodNumber As Long
 periodNumber = mPeriods(pTime).periodNumber
 mChartController.LastVisiblePeriod = periodNumber + Int((mChartController.LastVisiblePeriod - mChartController.FirstVisiblePeriod) / 2) - 1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetBaseStudyConfiguration( _
+                ByVal studyConfig As StudyConfiguration)
+Const ProcName As String = "SetBaseStudyConfiguration"
+On Error GoTo Err
+
+AssertArgument TypeOf studyConfig.Study Is IBarStudy, "Base Study must implement the BarStudy interface"
+
+Dim sc As StudyConfiguration
+Set sc = studyConfig.Clone ' take a defensive copy
+sc.ClearStudyValueHandlers
+sc.ClearStudyConfigs
+setTheBaseStudyConfiguration sc
 
 Exit Sub
 
@@ -615,6 +613,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Sub UnApplyStudyConfiguration( _
+                ByVal pStudyConfig As StudyConfiguration)
+Const ProcName As String = "UnApplyStudyConfiguration"
+On Error GoTo Err
+
+mChartController.DisableDrawing
+
+removeStudyConfig pStudyConfig
+removeStudyValueListeners pStudyConfig
+removeHorizontalRules pStudyConfig
+
+mChartController.EnableDrawing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub UpdateLastBar()
 Const ProcName As String = "UpdateLastBar"
 On Error GoTo Err
@@ -655,58 +672,30 @@ Private Function AddStudy( _
 Const ProcName As String = "AddStudy"
 On Error GoTo Err
 
-AssertArgument Not mBaseStudy Is Nothing, "Base Study Configuration has not yet been set"
+Assert Not mBaseStudy Is Nothing, "Base Study has not yet been set"
+AssertArgument Not studyConfig Is Nothing, "studyConfig is nothing"
 
 If studyConfig.UnderlyingStudy Is Nothing Then
     studyConfig.UnderlyingStudy = mBaseStudy
 End If
 
-Dim InputValueNames() As String
-InputValueNames = studyConfig.InputValueNames
+'Dim InputValueNames() As String
+'InputValueNames = studyConfig.InputValueNames
 
 Dim lStudy As IStudy
 Set lStudy = mStudyManager.AddStudy(studyConfig.Name, _
                             studyConfig.UnderlyingStudy, _
-                            InputValueNames, _
+                            studyConfig.InputValueNames, _
                             mIncludeBarsOutsideSession, _
                             studyConfig.Parameters, _
                             studyConfig.StudyLibraryName)
-' AddStudy will have replaced any $DEFAULT input Value names with
-' the correct default Study Value Name
-studyConfig.InputValueNames = InputValueNames
+'' AddStudy will have replaced any $DEFAULT input Value names with
+'' the correct default Study Value Name
+'studyConfig.InputValueNames = InputValueNames
 
 AssertArgument Not lStudy Is mBaseStudy, "Use the BaseStudyConfiguration property to set the base Study config"
 
 studyConfig.Study = lStudy
-
-determineDefaultRegionName studyConfig
-
-setupStudyValueListeners studyConfig
-
-If studyConfig.StudyHorizontalRules.Count > 0 Then
-    If isRegionInUse(studyConfig.ChartRegionName) Then
-        Dim Region As ChartRegion
-        Set Region = findRegion(studyConfig.ChartRegionName, lStudy.InstanceName, False)
-        
-        Dim horizRulesLineSeries As LineSeries
-        Set horizRulesLineSeries = Region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
-        horizRulesLineSeries.Extended = True
-        horizRulesLineSeries.ExtendAfter = True
-        horizRulesLineSeries.ExtendBefore = True
-        
-        Dim studyHorizRule As StudyHorizontalRule
-        For Each studyHorizRule In studyConfig.StudyHorizontalRules
-            Dim line As ChartSkil27.line
-            Set line = horizRulesLineSeries.Add
-            line.Color = studyHorizRule.Color
-            line.LineStyle = studyHorizRule.Style
-            line.Thickness = studyHorizRule.Thickness
-            line.Point1 = NewPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
-            line.Point2 = NewPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
-        Next
-        studyConfig.HorizontalRulesLineSeries = horizRulesLineSeries
-    End If
-End If
 
 Set AddStudy = lStudy
 
@@ -718,10 +707,8 @@ End Function
 
 Private Sub addStudyConfig( _
                 ByVal studyConfig As StudyConfiguration)
-Const ProcName As String = "AddStudyConfig"
+Const ProcName As String = "addStudyConfig"
 On Error GoTo Err
-
-setInstanceFullyQualifiedName studyConfig
 
 If Not studyConfig.Study Is mBaseStudy Then
     On Error Resume Next
@@ -760,34 +747,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function findRegion( _
+Private Function getRegion( _
                 ByVal regionName As String, _
                 ByVal title As String, _
                 ByVal incrementUsageCount As Boolean) As ChartRegion
-Const ProcName As String = "findRegion"
+Const ProcName As String = "getRegion"
 On Error GoTo Err
 
-On Error Resume Next
 Dim re As RegionEntry
-re = mRegionEntries(regionName)
-On Error GoTo Err
 
-Set findRegion = re.Region
-
-If findRegion Is Nothing Then
-    If mChartController.Regions.Contains(regionName) Then
-        Set findRegion = mChartController.Regions.Item(regionName)
-    Else
-        Set findRegion = mChartController.Regions.Add(20, , , , regionName)
-        findRegion.YGridlineSpacing = 0.8
-        findRegion.title.Text = title
-    End If
-    Set re.Region = findRegion
-    If incrementUsageCount Then re.usageCount = 1
-    mRegionEntries.Add re, regionName
-ElseIf incrementUsageCount Then
+If mRegionEntries.Contains(regionName) Then
+    re = mRegionEntries(regionName)
     re.usageCount = re.usageCount + 1
     mRegionEntries.Remove regionName
+    mRegionEntries.Add re, regionName
+    Set getRegion = re.Region
+Else
+    If mChartController.Regions.Contains(regionName) Then
+        Set getRegion = mChartController.Regions.Item(regionName)
+    Else
+        Set getRegion = mChartController.Regions.Add(20, , , , regionName)
+        getRegion.YGridlineSpacing = 0.8
+        getRegion.title.Text = title
+    End If
+    Set re.Region = getRegion
+    If incrementUsageCount Then re.usageCount = 1
     mRegionEntries.Add re, regionName
 End If
 
@@ -812,10 +796,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function includeStudyValueInChart( _
+Private Sub includeStudyValueInChart( _
                 ByVal studyConfig As StudyConfiguration, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
-                ByVal studyValueDef As StudyValueDefinition) As TaskController
+                ByVal studyValueDef As StudyValueDefinition, _
+                ByVal numberOfValuesToReplay As Long)
 Const ProcName As String = "includeStudyValueInChart"
 On Error GoTo Err
 
@@ -835,7 +820,7 @@ Else
 End If
 
 Dim Region As ChartRegion
-Set Region = findRegion(regionName, Study.InstanceName, True)
+Set Region = getRegion(regionName, Study.InstanceName, True)
 
 Dim lStudyValueHandler As StudyValueHandler
 Set lStudyValueHandler = studyConfig.StudyValueHandlers.Add(Me, _
@@ -850,38 +835,19 @@ Dim lTaskCompletion As TaskController
 Set lTaskCompletion = Study.AddStudyValueListener( _
                             lStudyValueHandler, _
                             studyValueConfig.ValueName, _
-                            ReplayNumbers.ReplayAll, _
+                            numberOfValuesToReplay, _
                             "AddStudyValueListener for Value " & studyValueConfig.ValueName & " to Study " & Study.InstanceName)
 
 If Not lTaskCompletion Is Nothing Then
     lTaskCompletion.AddTaskCompletionListener Me
     mChartController.DisableDrawing
 End If
-Set includeStudyValueInChart = lTaskCompletion
 
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function isRegionInUse( _
-                ByVal regionName As String) As Boolean
-Const ProcName As String = "isRegionInUse"
-On Error GoTo Err
-
-Dim re As RegionEntry
-On Error Resume Next
-re = mRegionEntries(regionName)
-On Error GoTo Err
-
-isRegionInUse = Not (re.Region Is Nothing)
-
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 Private Sub moveChildStudyConfigs( _
                 ByVal oldStudyConfig As StudyConfiguration, _
@@ -917,21 +883,16 @@ For Each oldChildStudyConfig In oldStudyConfig.StudyConfigurations
         newChildStudyConfig.ChartRegionName = newStudyConfig.ChartRegionName
     End If
     
+    RaiseEvent StudyAdded(newChildStudyConfig)
     
-    removeStudyValueListeners oldChildStudyConfig
-    
-    AddStudy newChildStudyConfig
-    
-    addStudyConfig newChildStudyConfig
+    UnApplyStudyConfiguration oldChildStudyConfig
+    ApplyStudyConfiguration newChildStudyConfig
     
     reconfigureChildStudies oldChildStudyConfig, newChildStudyConfig
-    
-    removeStudyConfig oldChildStudyConfig
     
     StartStudy newChildStudyConfig.Study
     
     RaiseEvent StudyRemoved(oldChildStudyConfig)
-    RaiseEvent StudyAdded(newChildStudyConfig)
 Next
 
 Exit Sub
@@ -985,14 +946,36 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub removeHorizontalRules(ByVal studyConfig As StudyConfiguration)
+Const ProcName As String = "removeHorizontalRules"
+On Error GoTo Err
+
+Dim horizRulesLineSeries As LineSeries
+Set horizRulesLineSeries = studyConfig.HorizontalRulesLineSeries
+
+If horizRulesLineSeries Is Nothing Then Exit Sub
+    
+Dim re As RegionEntry
+Set re.Region = Nothing
+On Error Resume Next
+re = mRegionEntries(studyConfig.ChartRegionName)
+On Error GoTo Err
+If Not re.Region Is Nothing Then
+    Dim Region As ChartRegion
+    Set Region = re.Region
+    Region.RemoveGraphicObjectSeries horizRulesLineSeries
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub removeStudyValueListeners( _
                 ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "removeStudyValueListeners"
 On Error GoTo Err
-
-mChartController.DisableDrawing
-
-Dim re As RegionEntry
 
 Dim svh As StudyValueHandler
 For Each svh In studyConfig.StudyValueHandlers
@@ -1001,6 +984,7 @@ For Each svh In studyConfig.StudyValueHandlers
     Dim regionName As String
     regionName = svh.Region.Name
     
+    Dim re As RegionEntry
     re = mRegionEntries(regionName)
     If re.usageCount = 1 Then
         mChartController.Regions.Remove re.Region
@@ -1014,22 +998,6 @@ For Each svh In studyConfig.StudyValueHandlers
 Next
 
 studyConfig.StudyValueHandlers.Clear
-
-Dim horizRulesLineSeries As LineSeries
-Set horizRulesLineSeries = studyConfig.HorizontalRulesLineSeries
-If Not horizRulesLineSeries Is Nothing Then
-    Set re.Region = Nothing
-    On Error Resume Next
-    re = mRegionEntries(studyConfig.ChartRegionName)
-    On Error GoTo Err
-    If Not re.Region Is Nothing Then
-        Dim Region As ChartRegion
-        Set Region = re.Region
-        Region.RemoveGraphicObjectSeries horizRulesLineSeries
-    End If
-End If
-
-mChartController.EnableDrawing
 
 Exit Sub
 
@@ -1058,45 +1026,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setBaseStudyConfiguration( _
+Private Sub setTheBaseStudyConfiguration( _
                 ByVal studyConfig As StudyConfiguration)
-Const ProcName As String = "setBaseStudyConfiguration"
+Const ProcName As String = "setTheBaseStudyConfiguration"
 On Error GoTo Err
 
 If mBaseStudy Is Nothing Then
     setBaseStudyConfig studyConfig
     
-    addStudyConfig studyConfig
+    ApplyStudyConfiguration studyConfig
     
-    setupStudyValueListeners mBaseStudyConfig
     RaiseEvent StudyAdded(mBaseStudyConfig)
     AddDependentStudies studyConfig
 
 ElseIf Not studyConfig.Study Is mBaseStudy Then
-    addStudyConfig studyConfig
     
-    setupStudyValueListeners studyConfig
-    removeStudyValueListeners mBaseStudyConfig
-    
-    RaiseEvent StudyRemoved(mBaseStudyConfig)
-    RaiseEvent StudyAdded(studyConfig)
+    ApplyStudyConfiguration studyConfig
+    UnApplyStudyConfiguration mBaseStudyConfig
     
     reconfigureChildStudies mBaseStudyConfig, studyConfig
     
-    removeStudyConfig mBaseStudyConfig
-
     setBaseStudyConfig studyConfig
 Else
     
-    setupStudyValueListeners studyConfig
-    removeStudyValueListeners mBaseStudyConfig
+    ApplyStudyConfiguration studyConfig
+    UnApplyStudyConfiguration mBaseStudyConfig
     
     moveChildStudyConfigs mBaseStudyConfig, studyConfig
 
-    removeStudyConfig mBaseStudyConfig
-    
     setBaseStudyConfig studyConfig
-    addStudyConfig mBaseStudyConfig
     
 End If
 
@@ -1147,39 +1105,67 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function setupStudyValueListeners( _
-                ByVal studyConfig As StudyConfiguration) As TaskController()
+Private Sub setupHorizontalRules(ByVal studyConfig As StudyConfiguration)
+Const ProcName As String = "setupHorizontalRules"
+On Error GoTo Err
+
+If studyConfig.StudyHorizontalRules.Count = 0 Then Exit Sub
+If Not mRegionEntries.Contains(studyConfig.ChartRegionName) Then Exit Sub
+
+Dim Region As ChartRegion
+Set Region = getRegion(studyConfig.ChartRegionName, studyConfig.Study.InstanceName, False)
+
+Dim horizRulesLineSeries As LineSeries
+Set horizRulesLineSeries = Region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
+horizRulesLineSeries.Extended = True
+horizRulesLineSeries.ExtendAfter = True
+horizRulesLineSeries.ExtendBefore = True
+
+Dim studyHorizRule As StudyHorizontalRule
+For Each studyHorizRule In studyConfig.StudyHorizontalRules
+    Dim line As ChartSkil27.line
+    Set line = horizRulesLineSeries.Add
+    line.Color = studyHorizRule.Color
+    line.LineStyle = studyHorizRule.Style
+    line.Thickness = studyHorizRule.Thickness
+    line.Point1 = NewPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+    line.Point2 = NewPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+Next
+studyConfig.HorizontalRulesLineSeries = horizRulesLineSeries
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setupStudyValueListeners( _
+                ByVal pStudyConfig As StudyConfiguration, _
+                ByVal pNumberOfValuesToReplay As Long)
 Const ProcName As String = "setupStudyValueListeners"
 On Error GoTo Err
 
 Dim studyValueDefs As StudyValueDefinitions
-Set studyValueDefs = studyConfig.Study.StudyDefinition.StudyValueDefinitions
+Set studyValueDefs = pStudyConfig.Study.StudyDefinition.StudyValueDefinitions
 
-Dim taskCompletions() As TaskController
-Dim taskCompletionsIndex As Long
+determineDefaultRegionName pStudyConfig
 
 Dim studyValueConfig As StudyValueConfiguration
-For Each studyValueConfig In studyConfig.StudyValueConfigurations
+For Each studyValueConfig In pStudyConfig.StudyValueConfigurations
     If studyValueConfig.IncludeInChart Then
-        Dim tc As TaskController
-        Set tc = includeStudyValueInChart(studyConfig, _
+        includeStudyValueInChart pStudyConfig, _
                                 studyValueConfig, _
-                                studyValueDefs.Item(studyValueConfig.ValueName))
+                                studyValueDefs.Item(studyValueConfig.ValueName), _
+                                pNumberOfValuesToReplay
 
-        If Not tc Is Nothing Then
-            ReDim Preserve taskCompletions(taskCompletionsIndex) As TaskController
-            Set taskCompletions(taskCompletionsIndex) = tc
-            taskCompletionsIndex = taskCompletionsIndex + 1
-        End If
     End If
 Next
 
-setupStudyValueListeners = taskCompletions
-
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
+
 
 

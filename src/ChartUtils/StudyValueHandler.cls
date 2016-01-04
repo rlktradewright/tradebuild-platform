@@ -355,7 +355,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function AddLineToChart() As line
+Private Function AddLineToChart() As ChartSkil27.line
 Const ProcName As String = "AddLineToChart"
 On Error GoTo Err
 
@@ -396,15 +396,15 @@ Private Sub processBar( _
 Const ProcName As String = "processBar"
 On Error GoTo Err
 
-If TypeName(ev.sVal.Value) = "Nothing" Then Exit Sub
+If ev.sVal.Value Is Nothing Then Exit Sub
+
+Static sCurrentBarNumber As Long
+Static sCurrentChartBar As ChartSkil27.Bar
 
 Dim lBar As BarUtils27.Bar
 Set lBar = ev.sVal.Value
 
 If mUpdatePerTick Then
-    Static sCurrentBarNumber As Long
-    Static sCurrentChartBar As ChartSkil27.Bar
-    
     If sCurrentChartBar Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then
         Set sCurrentChartBar = AddBarToChart(lBar.timestamp)
         If Not lBar.Blank Then
@@ -548,13 +548,12 @@ Private Sub processDataPoint( _
 Const ProcName As String = "processDataPoint"
 On Error GoTo Err
 
+Static sCurrentBarNumber As Long
+Static sCurrentDataPoint As DataPoint
+
 If mUpdatePerTick Then
-    Static sCurrentBarNumber As Long
-    Static sCurrentDataPoint As DataPoint
-    
     If sCurrentDataPoint Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then
         Set sCurrentDataPoint = AddDataPointToChart(ev.sVal.BarStartTime)
-        'If Not IsEmpty(mCurrentDataPointValue.Value) Then mCurrentDataPoint.DataValue = mCurrentDataPointValue.Value
     End If
     sCurrentDataPoint.DataValue = ev.sVal.Value
 
@@ -583,13 +582,13 @@ On Error GoTo Err
 
 If ev.sVal.Value Is Nothing Then Exit Sub
 
+Static sCurrentBarNumber As Long
+Static sCurrentChartLine As ChartSkil27.line
+
 Dim lStudyLine As studyLine
 Set lStudyLine = ev.sVal.Value
 
 If mUpdatePerTick Then
-    Static sCurrentBarNumber As Long
-    Static sCurrentChartLine As ChartSkil27.line
-
     If sCurrentChartLine Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then
         Set sCurrentChartLine = AddLineToChart
     End If
@@ -619,10 +618,10 @@ Private Sub processString( _
 Const ProcName As String = "processString"
 On Error GoTo Err
 
+Static sCurrentBarNumber As Long
+Static sCurrentText As ChartSkil27.Text
+
 If mUpdatePerTick Then
-    Static sCurrentBarNumber As Long
-    Static sCurrentText As ChartSkil27.Text
-    
     If sCurrentText Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then Set sCurrentText = AddTextToChart
     
     sCurrentText.Position = NewPoint( _
@@ -648,13 +647,13 @@ Private Sub processText( _
 Const ProcName As String = "processText"
 On Error GoTo Err
 
+Static sCurrentBarNumber As Long
+Static sCurrentText As ChartSkil27.Text
+
 Dim lStudyText As StudyText
 Set lStudyText = ev.sVal.Value
 
 If mUpdatePerTick Then
-    Static sCurrentBarNumber As Long
-    Static sCurrentText As ChartSkil27.Text
-    
     If sCurrentText Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then Set sCurrentText = AddTextToChart
     
     sCurrentText.Position = NewPoint( _
