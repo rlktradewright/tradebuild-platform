@@ -99,12 +99,12 @@ If mStudyDefinition Is Nothing Then
     inputDef.Description = "Volume"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(AccDistValueAccDist)
-    valueDef.Description = "The Accumulation/Distribution Value"
+    valueDef.Description = "The Accumulation/Distribution value"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     
 End If

@@ -101,14 +101,14 @@ If mStudyDefinition Is Nothing Then
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SwingInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Input Value"
+    inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingPoint)
     valueDef.Description = "Swing points"
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlack, DataPointDisplayModePoint, , , , , 5, PointSquare)
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlack, DataPointDisplayModePoint, Layer:=LayerDataPoints + 60, Linethickness:=5, PointStyle:=PointSquare)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighPoint)
@@ -116,7 +116,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue, DataPointDisplayModePoint, , , , , 5, PointSquare)
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue, DataPointDisplayModePoint, Layer:=LayerDataPoints + 60, Linethickness:=5, PointStyle:=PointSquare)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowPoint)
@@ -124,7 +124,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbRed, DataPointDisplayModePoint, , , , , 5, PointSquare)
+    valueDef.ValueStyle = gCreateDataPointStyle(vbRed, DataPointDisplayModePoint, Layer:=LayerDataPoints + 60, Linethickness:=5, PointStyle:=PointSquare)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLine)
@@ -133,7 +133,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeLine
-    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=&H808080, ArrowEndFillColor:=vbYellow, ArrowEndStyle:=ArrowClosed, Color:=&H808080)
+    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=&H808080, ArrowEndFillColor:=vbYellow, ArrowEndStyle:=ArrowClosed, Color:=&H808080, Layer:=LayerLines)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighLine)
@@ -141,7 +141,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeLine
-    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=vbBlue, ArrowEndFillColor:=vbBlue, ArrowEndStyle:=ArrowClosed, Color:=vbBlue)
+    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=vbBlue, ArrowEndFillColor:=vbBlue, ArrowEndStyle:=ArrowClosed, Color:=vbBlue, Layer:=LayerLines)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowLine)
@@ -149,7 +149,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeLine
-    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=vbRed, ArrowEndFillColor:=vbRed, ArrowEndStyle:=ArrowClosed, Color:=vbRed)
+    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=vbRed, ArrowEndFillColor:=vbRed, ArrowEndStyle:=ArrowClosed, Color:=vbRed, Layer:=LayerLines)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SwingParamMinimumSwingTicks)

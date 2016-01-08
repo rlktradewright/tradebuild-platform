@@ -19,8 +19,6 @@ Public Const ConstVolBarsInputTotalVolumeUcase As String = "TOTAL VOLUME"
 Public Const ConstVolBarsInputTickVolume As String = "Tick volume"
 Public Const ConstVolBarsInputTickVolumeUcase As String = "TICK VOLUME"
 
-Public Const ConstVolBarsValueBar As String = "Bar"
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -88,114 +86,19 @@ Dim paramDef As StudyParameterDefinition
 Const ProcName As String = "StudyDefinition"
 On Error GoTo Err
 
-ReDim ar(6) As Variant
-
 If mStudyDefinition Is Nothing Then
-    Set mStudyDefinition = New StudyDefinition
-    mStudyDefinition.name = ConstVolumeBarsStudyName
-    mStudyDefinition.NeedsBars = False
-    mStudyDefinition.ShortName = ConstVolumeBarsStudyShortName
-    mStudyDefinition.Description = "Constant volume bars " & _
-                        "divide price movement into periods (bars) of equal volume. " & _
-                        "For each period the open, high, low and close price values " & _
-                        "are determined."
-    mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
-    
-    
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputPrice)
-    inputDef.InputType = InputTypeReal
-    inputDef.Description = "Price"
-    
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputTotalVolume)
-    inputDef.InputType = InputTypeInteger
-    inputDef.Description = "Accumulated volume"
-    
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputTickVolume)
-    inputDef.InputType = InputTypeInteger
-    inputDef.Description = "Tick volume"
-    
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputOpenInterest)
-    inputDef.InputType = InputTypeInteger
-    inputDef.Description = "Open interest"
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstVolBarsValueBar)
-    valueDef.Description = "The constant volume bars"
-    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.IncludeInChart = True
-    valueDef.ValueMode = ValueModeBar
-    valueDef.ValueStyle = gCreateBarStyle
-    valueDef.ValueType = ValueTypeReal
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOpen)
-    valueDef.Description = "Bar open Value"
-    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(&H8000&)
-    valueDef.ValueType = ValueTypeReal
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHigh)
-    valueDef.Description = "Bar high Value"
-    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
-    valueDef.ValueType = ValueTypeReal
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueLow)
-    valueDef.Description = "Bar low Value"
-    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
-    valueDef.ValueType = ValueTypeReal
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueClose)
-    valueDef.Description = "Bar close Value"
-    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.IsDefault = True
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(&H80&)
-    valueDef.ValueType = ValueTypeReal
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueVolume)
-    valueDef.Description = "Bar volume"
-    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H808080, DisplayMode:=DataPointDisplayModeHistogram)
-    valueDef.ValueType = ValueTypeInteger
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueTickVolume)
-    valueDef.Description = "Bar tick volume"
-    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H800000, DisplayMode:=DataPointDisplayModeHistogram)
-    valueDef.ValueType = ValueTypeInteger
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOpenInterest)
-    valueDef.Description = "Bar open interest"
-    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H80&, DisplayMode:=DataPointDisplayModeHistogram)
-    valueDef.ValueType = ValueTypeInteger
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHL2)
-    valueDef.Description = "Bar H+L/2 Value"
-    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(&HFF&)
-    valueDef.ValueType = ValueTypeReal
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHLC3)
-    valueDef.Description = "Bar H+L+C/3 Value"
-    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(&HFF00&)
-    valueDef.ValueType = ValueTypeReal
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOHLC4)
-    valueDef.Description = "Bar O+H+L+C/4 Value"
-    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(&HFF0000)
-    valueDef.ValueType = ValueTypeReal
+    Set mStudyDefinition = gCreateBarStudyDefinition( _
+                                ConstVolumeBarsStudyName, _
+                                ConstVolumeBarsStudyShortName, _
+                                "Constant Momentum bars " & _
+                                "Constant volume bars " & _
+                                "divide price movement into periods (bars) of equal volume. " & _
+                                "For each period the open, high, low and close price values " & _
+                                "are determined.", _
+                                ConstVolBarsInputPrice, _
+                                ConstVolBarsInputTotalVolume, _
+                                ConstVolBarsInputTickVolume, _
+                                ConstVolBarsInputOpenInterest)
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstVolumeBarsParamVolPerBar)
     paramDef.Description = "The volume in each constant volume bar"

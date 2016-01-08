@@ -268,6 +268,10 @@ Public Property Get StudyLibraryName() As String
 StudyLibraryName = mStudyLibraryName
 End Property
 
+Public Property Let StudyValueConfigurations(ByVal Value As StudyValueConfigurations)
+Set mStudyValueConfigurations = Value
+End Property
+
 Public Property Get StudyValueConfigurations() As StudyValueConfigurations
 Set StudyValueConfigurations = mStudyValueConfigurations
 End Property
@@ -297,6 +301,10 @@ Set ValueSeries = mStudyValueHandlers.Item(Value).ValueSeries
 Exit Property
 
 Err:
+If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
+    Set ValueSeries = Nothing
+    Exit Function
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 

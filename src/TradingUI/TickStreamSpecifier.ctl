@@ -608,9 +608,9 @@ On Error GoTo Err
 Screen.MousePointer = vbDefault
 
 If ev.Future.IsFaulted <> 0 Then
-    ErrorLabel.caption = ev.Future.ErrorMessage
+    ErrorLabel.Caption = ev.Future.ErrorMessage
 ElseIf ev.Future.IsCancelled <> 0 Then
-    ErrorLabel.caption = "Contracts fetch Cancelled"
+    ErrorLabel.Caption = "Contracts fetch Cancelled"
 Else
     Set mContracts = ev.Future.value
     processContracts
@@ -630,7 +630,6 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
 Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
@@ -675,7 +674,7 @@ Public Sub Load()
 Const ProcName As String = "Load"
 On Error GoTo Err
 
-ErrorLabel.caption = ""
+ErrorLabel.Caption = ""
 
 Screen.MousePointer = vbHourglass
 
@@ -691,7 +690,7 @@ Exit Sub
 Err:
 Screen.MousePointer = vbDefault
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    ErrorLabel.caption = Err.Description
+    ErrorLabel.Caption = Err.Description
     Exit Sub
 End If
 gHandleUnexpectedError ProcName, ModuleName
@@ -782,10 +781,10 @@ On Error GoTo Err
 
 Dim lMsg As String
 If checkOk(lMsg) Then
-    ErrorLabel.caption = ""
+    ErrorLabel.Caption = ""
     RaiseEvent Ready
 Else
-    If pShowErrors Then ErrorLabel.caption = lMsg
+    If pShowErrors Then ErrorLabel.Caption = lMsg
     RaiseEvent NotReady
 End If
 
@@ -877,7 +876,7 @@ Private Sub processContracts()
 On Error GoTo Err
 
 If mContracts.Count = 0 Then
-    ErrorLabel.caption = "No contracts meet this specification"
+    ErrorLabel.Caption = "No contracts meet this specification"
     Exit Sub
 End If
 
@@ -887,7 +886,7 @@ If mSecType <> SecurityTypes.SecTypeFuture And _
 Then
     If mContracts.Count > 1 Then
         ' don't see how this can happen, but just in case!
-        ErrorLabel.caption = "More than one contract meets this specification"
+        ErrorLabel.Caption = "More than one contract meets this specification"
         Exit Sub
     End If
 End If
@@ -916,7 +915,7 @@ RaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
 Exit Sub
 
 Err:
-ErrorLabel.caption = Err.Description
+ErrorLabel.Caption = Err.Description
 
 End Sub
 

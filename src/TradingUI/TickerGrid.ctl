@@ -944,7 +944,6 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
 Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
@@ -979,9 +978,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get ScrollBars() As ScrollBarsSettings
-Attribute ScrollBars.VB_Description = "Specifies whether scroll bars are to be provided."
-Attribute ScrollBars.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Public Property Get ScrollBars() As TWControls40.ScrollBarsSettings
 Const ProcName As String = "ScrollBars"
 On Error GoTo Err
 
@@ -993,7 +990,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ScrollBars(ByVal New_ScrollBars As ScrollBarsSettings)
+Public Property Let ScrollBars(ByVal New_ScrollBars As TWControls40.ScrollBarsSettings)
+Attribute ScrollBars.VB_Description = "Specifies whether scroll bars are to be provided."
+Attribute ScrollBars.VB_ProcData.VB_Invoke_PropertyPut = ";Behavior"
 Const ProcName As String = "ScrollBars"
 On Error GoTo Err
 

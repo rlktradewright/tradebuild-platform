@@ -1,24 +1,24 @@
 VERSION 5.00
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.Form fStudyConfigurer 
-   BorderStyle     =   5  'Sizable ToolWindow
+   BorderStyle     =   0  'None
    Caption         =   "Configure a Study"
-   ClientHeight    =   5805
-   ClientLeft      =   60
-   ClientTop       =   330
-   ClientWidth     =   13560
+   ClientHeight    =   12810
+   ClientLeft      =   0
+   ClientTop       =   -75
+   ClientWidth     =   7320
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   5805
-   ScaleWidth      =   13560
+   ScaleHeight     =   12810
+   ScaleWidth      =   7320
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin TWControls40.TWButton SetDefaultButton 
       Height          =   615
-      Left            =   12360
-      TabIndex        =   3
-      Top             =   1680
+      Left            =   1320
+      TabIndex        =   2
+      Top             =   12120
       Width           =   1095
       _ExtentX        =   1931
       _ExtentY        =   1085
@@ -40,9 +40,9 @@ Begin VB.Form fStudyConfigurer
    Begin TWControls40.TWButton CancelButton 
       Cancel          =   -1  'True
       Height          =   615
-      Left            =   12360
-      TabIndex        =   2
-      Top             =   960
+      Left            =   6120
+      TabIndex        =   4
+      Top             =   12120
       Width           =   1095
       _ExtentX        =   1931
       _ExtentY        =   1085
@@ -62,10 +62,11 @@ Begin VB.Form fStudyConfigurer
       PushedBackColor =   0
    End
    Begin TWControls40.TWButton AddButton 
+      Default         =   -1  'True
       Height          =   615
-      Left            =   12360
-      TabIndex        =   1
-      Top             =   240
+      Left            =   4920
+      TabIndex        =   3
+      Top             =   12120
       Width           =   1095
       _ExtentX        =   1931
       _ExtentY        =   1085
@@ -85,13 +86,36 @@ Begin VB.Form fStudyConfigurer
       PushedBackColor =   0
    End
    Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
-      Height          =   5655
+      Height          =   11955
       Left            =   120
       TabIndex        =   0
       Top             =   120
-      Width           =   12255
-      _ExtentX        =   21616
-      _ExtentY        =   9975
+      Width           =   7095
+      _ExtentX        =   12515
+      _ExtentY        =   21087
+   End
+   Begin TWControls40.TWButton ApplyDefaultButton 
+      Height          =   615
+      Left            =   120
+      TabIndex        =   1
+      Top             =   12120
+      Width           =   1095
+      _ExtentX        =   1931
+      _ExtentY        =   1085
+      Caption         =   "Use default"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
    End
 End
 Attribute VB_Name = "fStudyConfigurer"
@@ -142,6 +166,8 @@ Private Const ModuleName                As String = "fStudyConfigurer"
 Private mCancelled                              As Boolean
 Private mStudyConfig                            As StudyConfiguration
 
+Private mInitialConfiguration                   As StudyConfiguration
+
 Private mTheme                                  As ITheme
 
 '@================================================================================
@@ -150,6 +176,12 @@ Private mTheme                                  As ITheme
 
 Private Sub Form_Initialize()
 StudyConfigurer1.Visible = True
+End Sub
+
+Private Sub Form_Load()
+Me.Left = 0
+Me.Top = 0
+Me.Height = Screen.Height
 End Sub
 
 '@================================================================================
@@ -183,6 +215,18 @@ On Error GoTo Err
 mCancelled = False
 Set mStudyConfig = StudyConfigurer1.StudyConfiguration
 Me.Hide
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub ApplyDefaultButton_Click()
+Const ProcName As String = "ApplyDefaultButton_Click"
+On Error GoTo Err
+
+StudyConfigurer1.ApplyDefaultConfiguration
 
 Exit Sub
 
@@ -274,29 +318,25 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal studyDef As StudyDefinition, _
-                ByVal StudyLibraryName As String, _
-                ByRef regionNames() As String, _
-                ByRef baseStudyConfig As StudyConfiguration, _
-                ByVal defaultConfiguration As StudyConfiguration, _
-                ByVal defaultParameters As Parameters, _
-                ByVal noParameterModification As Boolean)
+                ByVal pChartManager As ChartManager, _
+                ByVal pStudyName As String, _
+                ByVal pStudyLibraryName As String, _
+                ByVal pInitialConfiguration As StudyConfiguration, _
+                ByVal pNoParameterModification As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mStudyConfig = Nothing
 mCancelled = False
 
-Me.Caption = studyDef.name
+Me.Caption = pStudyName
 
 StudyConfigurer1.Initialise _
-                studyDef, _
-                StudyLibraryName, _
-                regionNames, _
-                baseStudyConfig, _
-                defaultConfiguration, _
-                defaultParameters, _
-                noParameterModification
+                pChartManager, _
+                pStudyName, _
+                pStudyLibraryName, _
+                pInitialConfiguration, _
+                pNoParameterModification
 
 Exit Sub
 

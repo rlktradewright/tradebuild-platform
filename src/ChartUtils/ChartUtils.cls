@@ -34,9 +34,6 @@ Option Explicit
 
 Private Const ModuleName                                As String = "ChartUtils"
 
-Private Const StudyValConfigNameBar                     As String = "Bar"
-Private Const StudyValConfigNameVolume                  As String = "Volume"
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -90,14 +87,6 @@ Public Property Get ChartRegionNameUnderlying() As String
 ChartRegionNameUnderlying = RegionNameUnderlying
 End Property
 
-Public Property Get StudyValueConfigNameBar() As String
-StudyValueConfigNameBar = StudyValConfigNameBar
-End Property
-
-Public Property Get StudyValueConfigNameVolume() As String
-StudyValueConfigNameVolume = StudyValConfigNameVolume
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -121,6 +110,7 @@ End Function
 Public Function CreateBarsStudyConfig( _
                 ByVal pTimeframe As Timeframe, _
                 ByVal pSecType As SecurityTypes, _
+                ByVal pStudyLibManager As StudyLibraryManager, _
                 Optional ByVal pBarFormatterFactoryName As String, _
                 Optional ByVal pBarFormatterLibraryName As String) As StudyConfiguration
 Const ProcName As String = "CreateBarsStudyConfig"
@@ -129,7 +119,8 @@ On Error GoTo Err
 Dim lStudy As IStudy
 Set lStudy = pTimeframe.BarStudy
 
-Dim studyConfig As New StudyConfiguration
+Dim studyConfig As StudyConfiguration
+Set studyConfig = gGetDefaultStudyConfiguration(lStudy.Name, pStudyLibManager, lStudy.LibraryName)
 studyConfig.Study = lStudy
 studyConfig.UnderlyingStudy = lStudy.UnderlyingStudy
 
@@ -153,19 +144,22 @@ params.SetParameterValue "Time units", TimePeriodUnitsToString(pTimeframe.TimePe
 studyConfig.Parameters = params
 
 Dim studyValueConfig As StudyValueConfiguration
-Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(StudyValConfigNameBar)
+Set studyValueConfig = studyConfig.StudyValueConfigurations.Item(BarStudyValueBar)
 studyValueConfig.ChartRegionName = ChartRegionNamePrice
 studyValueConfig.IncludeInChart = True
 studyValueConfig.BarFormatterFactoryName = pBarFormatterFactoryName
 studyValueConfig.BarFormatterLibraryName = pBarFormatterLibraryName
 
+Set studyValueConfig = studyConfig.StudyValueConfigurations.Item(BarStudyValueVolume)
 If pSecType = SecurityTypes.SecTypeNone Then
+    studyValueConfig.IncludeInChart = False
 ElseIf pSecType <> SecurityTypes.SecTypeCash And _
     pSecType <> SecurityTypes.SecTypeIndex _
 Then
-    Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(StudyValConfigNameVolume)
     studyValueConfig.ChartRegionName = ChartRegionNameVolume
     studyValueConfig.IncludeInChart = True
+Else
+    studyValueConfig.IncludeInChart = False
 End If
 
 Set CreateBarsStudyConfig = studyConfig

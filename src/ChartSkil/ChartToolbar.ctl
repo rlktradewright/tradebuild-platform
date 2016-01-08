@@ -407,7 +407,6 @@ End Property
 
 Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
 Const ProcName As String = "Toolbar1_ButtonClick"
-
 On Error GoTo Err
 
 Select Case Button.Key
@@ -503,7 +502,6 @@ End Sub
 
 Private Sub mBarSeries_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mBarSeries_PropertyChanged"
-
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -523,7 +521,6 @@ End Sub
 
 Private Sub mRegion_AutoscalingChanged()
 Const ProcName As String = "mRegion_AutoscalingChanged"
-
 On Error GoTo Err
 
 Toolbar1.Buttons(ChartNavCommandAutoScale).Value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
@@ -577,7 +574,6 @@ Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is Value Then Exit Property
 Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
@@ -602,9 +598,7 @@ Public Sub Initialise( _
                 ByVal pChartController As ChartController, _
                 ByVal pRegion As ChartRegion, _
                 ByVal pBarSeries As BarSeries)
-
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
 If Not pChartController Is Nothing And _
@@ -646,9 +640,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupChartNavButtons()
-
 Const ProcName As String = "setupChartNavButtons"
-
 On Error GoTo Err
 
 If mBarSeries Is Nothing Then Exit Sub
@@ -672,7 +664,6 @@ End Sub
 
 Private Sub setupDisplayModeButtons()
 Const ProcName As String = "setupDisplayModeButtons"
-
 On Error GoTo Err
 
 If mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeBar Then

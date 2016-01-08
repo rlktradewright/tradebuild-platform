@@ -64,6 +64,7 @@ Public Const DefaultStudyValueNameStr           As String = "$DEFAULT"
 Public Const MovingAverageStudyValueNameStr     As String = "MA"
 
 ' sub-Value names for study values in bar mode
+Public Const BarStudyValueBar                   As String = "Bar"
 Public Const BarStudyValueOpen                  As String = "Open"
 Public Const BarStudyValueHigh                  As String = "High"
 Public Const BarStudyValueLow                   As String = "Low"

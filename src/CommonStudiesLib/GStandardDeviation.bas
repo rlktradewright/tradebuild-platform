@@ -93,15 +93,15 @@ If mStudyDefinition Is Nothing Then
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SDInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Input Value"
+    inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SDValueStandardDeviation)
-    valueDef.Description = "The standard deviation Value"
+    valueDef.Description = "The standard deviation value"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
+    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, Layer:=LayerDataPoints, UpColor:=&H1D9311)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SDParamPeriods)

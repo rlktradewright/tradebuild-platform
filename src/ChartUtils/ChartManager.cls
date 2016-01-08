@@ -37,8 +37,8 @@ Implements ITaskCompletionListener
 '@================================================================================
 
 Event BaseStudyConfigurationChanged(ByVal studyConfig As StudyConfiguration)
-Event StudyAdded(ByVal studyConfig As StudyConfiguration)
-Event StudyRemoved(ByVal studyConfig As StudyConfiguration)
+Event StudyAdded(ByVal pStudy As IStudy)
+Event StudyRemoved(ByVal pStudy As IStudy)
 
 '@================================================================================
 ' Constants
@@ -71,9 +71,9 @@ Private mIncludeBarsOutsideSession                      As Boolean
 Private mRegionEntries                                  As EnumerableCollection
 
 ' we use this collection to locate studyConfigurations from Study objects
-Private mAllStudyConfigs                                As Collection
+Private mAllStudyConfigs                                As EnumerableCollection
 
-Private mInstanceFullyQualifiedNames                    As Collection
+Private mInstanceFullyQualifiedNames                    As EnumerableCollection
 
 Private mUpdatePerTick                                  As Boolean
 
@@ -95,8 +95,8 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private Sub Class_Initialize()
 Set mRegionEntries = New EnumerableCollection
-Set mAllStudyConfigs = New Collection
-Set mInstanceFullyQualifiedNames = New Collection
+Set mAllStudyConfigs = New EnumerableCollection
+Set mInstanceFullyQualifiedNames = New EnumerableCollection
 mUpdatePerTick = True
 Set mFutureWaiter = New FutureWaiter
 End Sub
@@ -256,7 +256,6 @@ removeExistingStudyConfig lStudy
 ApplyStudyConfiguration studyConfig, pNumberOfValuesToReplay
 
 Set AddStudyConfiguration = lStudy
-RaiseEvent StudyAdded(studyConfig)
 
 Exit Function
 
@@ -270,10 +269,10 @@ Public Sub ApplyStudyConfiguration( _
 Const ProcName As String = "ApplyStudyConfiguration"
 On Error GoTo Err
 
-setInstanceFullyQualifiedName pStudyConfig
+doApplyStudyConfiguration pStudyConfig
+addStudyConfigToParent pStudyConfig
 addStudyConfig pStudyConfig
-setupStudyValueListeners pStudyConfig, pNumberOfValuesToReplay
-setupHorizontalRules pStudyConfig
+RaiseEvent StudyAdded(pStudyConfig.Study)
 
 Exit Sub
 
@@ -295,8 +294,8 @@ If Not mBaseStudyConfig Is Nothing Then
     Set mBaseStudy = Nothing
 End If
 
-Set mAllStudyConfigs = New Collection
-Set mRegionEntries = New Collection
+Set mAllStudyConfigs = New EnumerableCollection
+Set mRegionEntries = New EnumerableCollection
 Set mBars = Nothing
 
 Exit Sub
@@ -477,14 +476,17 @@ Public Function RemoveStudyConfiguration( _
 Const ProcName As String = "RemoveStudyConfiguration"
 On Error GoTo Err
 
-UnApplyStudyConfiguration studyConfig
+doUnApplyStudyConfiguration studyConfig
 
 Dim sc As StudyConfiguration
 For Each sc In studyConfig.StudyConfigurations
     RemoveStudyConfiguration sc
 Next
 
-RaiseEvent StudyRemoved(studyConfig)
+removeStudyConfigFromParent studyConfig
+removeStudyConfig studyConfig
+
+RaiseEvent StudyRemoved(studyConfig.Study)
 
 Exit Function
 
@@ -503,24 +505,38 @@ If oldStudyConfig.Study Is BaseStudy Then
     SetBaseStudyConfiguration newStudyConfig
     Set ReplaceStudyConfiguration = newStudyConfig.Study
 Else
-    UnApplyStudyConfiguration oldStudyConfig
+    mChartController.DisableDrawing
     
     Set ReplaceStudyConfiguration = AddStudy(newStudyConfig)
-    ApplyStudyConfiguration newStudyConfig
+    doApplyStudyConfiguration newStudyConfig
+    
+    doUnApplyStudyConfiguration oldStudyConfig
+    
+    removeStudyConfigFromParent oldStudyConfig
+    removeStudyConfig oldStudyConfig
+    
+    addStudyConfigToParent newStudyConfig
+    addStudyConfig newStudyConfig
     
     If newStudyConfig.Study Is oldStudyConfig.Study Then
         moveChildStudyConfigs oldStudyConfig, newStudyConfig
     Else
+        RaiseEvent StudyAdded(newStudyConfig.Study)
         reconfigureChildStudies oldStudyConfig, newStudyConfig
+        RaiseEvent StudyRemoved(oldStudyConfig.Study)
         StartStudy newStudyConfig.Study
     End If
+    
+    oldStudyConfig.RemoveFromConfig
+    oldStudyConfig.Finish
+    
+    mChartController.EnableDrawing
 End If
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
 Public Sub ScrollToTime(ByVal pTime As Date)
@@ -568,12 +584,10 @@ inputDescr = mStudyManager.GetInputDescriptor(inputHandle)
 Dim lInputHandler As IStudy
 Set lInputHandler = inputDescr.StudyInputHandler
 
-On Error Resume Next
 Dim studyConfig As StudyConfiguration
-Set studyConfig = mAllStudyConfigs.Item(lInputHandler.ID)
-On Error GoTo Err
-
-If studyConfig Is Nothing Then
+If mAllStudyConfigs.Contains(lInputHandler.ID) Then
+    Set studyConfig = mAllStudyConfigs.Item(lInputHandler.ID)
+Else
     Set studyConfig = New StudyConfiguration
     studyConfig.Study = lInputHandler
     studyConfig.Name = lInputHandler.InstanceName
@@ -618,13 +632,10 @@ Public Sub UnApplyStudyConfiguration( _
 Const ProcName As String = "UnApplyStudyConfiguration"
 On Error GoTo Err
 
-mChartController.DisableDrawing
-
+doUnApplyStudyConfiguration pStudyConfig
+removeStudyConfigFromParent pStudyConfig
 removeStudyConfig pStudyConfig
-removeStudyValueListeners pStudyConfig
-removeHorizontalRules pStudyConfig
-
-mChartController.EnableDrawing
+RaiseEvent StudyRemoved(pStudyConfig.Study)
 
 Exit Sub
 
@@ -679,9 +690,6 @@ If studyConfig.UnderlyingStudy Is Nothing Then
     studyConfig.UnderlyingStudy = mBaseStudy
 End If
 
-'Dim InputValueNames() As String
-'InputValueNames = studyConfig.InputValueNames
-
 Dim lStudy As IStudy
 Set lStudy = mStudyManager.AddStudy(studyConfig.Name, _
                             studyConfig.UnderlyingStudy, _
@@ -689,9 +697,6 @@ Set lStudy = mStudyManager.AddStudy(studyConfig.Name, _
                             mIncludeBarsOutsideSession, _
                             studyConfig.Parameters, _
                             studyConfig.StudyLibraryName)
-'' AddStudy will have replaced any $DEFAULT input Value names with
-'' the correct default Study Value Name
-'studyConfig.InputValueNames = InputValueNames
 
 AssertArgument Not lStudy Is mBaseStudy, "Use the BaseStudyConfiguration property to set the base Study config"
 
@@ -710,21 +715,34 @@ Private Sub addStudyConfig( _
 Const ProcName As String = "addStudyConfig"
 On Error GoTo Err
 
-If Not studyConfig.Study Is mBaseStudy Then
-    On Error Resume Next
-    Dim parentStudyConfig As StudyConfiguration
-    Set parentStudyConfig = mAllStudyConfigs(studyConfig.UnderlyingStudy.ID)
-    On Error GoTo Err
-    If Not parentStudyConfig Is Nothing Then parentStudyConfig.StudyConfigurations.Add studyConfig
+If studyConfig.InstanceFullyQualifiedName = "" Then
+    studyConfig.InstanceFullyQualifiedName = generateInstanceFullyQualifiedName(studyConfig.Study)
 End If
 
 mAllStudyConfigs.Add studyConfig, studyConfig.Study.ID
+mInstanceFullyQualifiedNames.Add studyConfig.InstanceFullyQualifiedName, studyConfig.InstanceFullyQualifiedName
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
+Private Sub addStudyConfigToParent( _
+                ByVal studyConfig As StudyConfiguration)
+Const ProcName As String = "addStudyConfigToParent"
+On Error GoTo Err
+
+If studyConfig.Study Is mBaseStudy Then Exit Sub
+
+Dim parentStudyConfig As StudyConfiguration
+Set parentStudyConfig = getParentStudyConfig(studyConfig)
+parentStudyConfig.StudyConfigurations.Add studyConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub determineDefaultRegionName( _
@@ -746,6 +764,53 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Sub doApplyStudyConfiguration( _
+                ByVal pStudyConfig As StudyConfiguration, _
+                Optional ByVal pNumberOfValuesToReplay As Long = ReplayNumbers.ReplayAll)
+Const ProcName As String = "doApplyStudyConfiguration"
+On Error GoTo Err
+
+setupStudyValueListeners pStudyConfig, pNumberOfValuesToReplay
+setupHorizontalRules pStudyConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub doUnApplyStudyConfiguration( _
+                ByVal pStudyConfig As StudyConfiguration)
+Const ProcName As String = "doUnApplyStudyConfiguration"
+On Error GoTo Err
+
+mChartController.DisableDrawing
+
+removeStudyValueListeners pStudyConfig
+removeHorizontalRules pStudyConfig
+
+mChartController.EnableDrawing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function getParentStudyConfig(ByVal pStudyConfig As StudyConfiguration) As StudyConfiguration
+Const ProcName As String = "getParentStudyConfig"
+On Error GoTo Err
+
+If mAllStudyConfigs.Contains(pStudyConfig.UnderlyingStudy.ID) Then
+        Set getParentStudyConfig = mAllStudyConfigs(pStudyConfig.UnderlyingStudy.ID)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function getRegion( _
                 ByVal regionName As String, _
@@ -787,7 +852,7 @@ On Error GoTo Err
 
 Dim underlyingStudyConfig As StudyConfiguration
 
-Set underlyingStudyConfig = mAllStudyConfigs(pStudyConfig.UnderlyingStudy.ID)
+Set underlyingStudyConfig = getParentStudyConfig(pStudyConfig)
 getUnderlyingStudyRegionName = underlyingStudyConfig.ChartRegionName
 
 Exit Function
@@ -877,29 +942,30 @@ Dim oldChildStudyConfig As StudyConfiguration
 For Each oldChildStudyConfig In oldStudyConfig.StudyConfigurations
     Dim newChildStudyConfig As StudyConfiguration
     Set newChildStudyConfig = oldChildStudyConfig.Clone
+    newChildStudyConfig.StudyValueHandlers = New StudyValueHandlers
     
     newChildStudyConfig.UnderlyingStudy = newStudyConfig.Study
     If oldChildStudyConfig.ChartRegionName = oldStudyConfig.ChartRegionName Then
         newChildStudyConfig.ChartRegionName = newStudyConfig.ChartRegionName
     End If
     
-    RaiseEvent StudyAdded(newChildStudyConfig)
-    
-    UnApplyStudyConfiguration oldChildStudyConfig
-    ApplyStudyConfiguration newChildStudyConfig
+    doApplyStudyConfiguration newChildStudyConfig
+    doUnApplyStudyConfiguration oldChildStudyConfig
     
     reconfigureChildStudies oldChildStudyConfig, newChildStudyConfig
     
-    StartStudy newChildStudyConfig.Study
+    removeStudyConfig oldChildStudyConfig
     
-    RaiseEvent StudyRemoved(oldChildStudyConfig)
+    addStudyConfigToParent newChildStudyConfig
+    addStudyConfig newChildStudyConfig
+
+    StartStudy newChildStudyConfig.Study
 Next
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub removeExistingStudyConfig( _
@@ -907,12 +973,9 @@ Private Sub removeExistingStudyConfig( _
 Const ProcName As String = "removeExistingStudyConfig"
 On Error GoTo Err
 
-On Error Resume Next
-Dim prevStudyConfig As StudyConfiguration
-Set prevStudyConfig = mAllStudyConfigs(pStudy.ID)
-On Error GoTo Err
-
-If Not prevStudyConfig Is Nothing Then
+If mAllStudyConfigs.Contains(pStudy.ID) Then
+    Dim prevStudyConfig As StudyConfiguration
+    Set prevStudyConfig = mAllStudyConfigs(pStudy.ID)
     RemoveStudyConfiguration prevStudyConfig
 End If
 
@@ -920,7 +983,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub removeStudyConfig( _
@@ -928,17 +990,24 @@ Private Sub removeStudyConfig( _
 Const ProcName As String = "removeStudyConfig"
 On Error GoTo Err
 
-If studyConfig.Study Is mBaseStudy Then
-    mBaseStudyConfig.RemoveFromConfig
-Else
-    Dim parentStudyConfig As StudyConfiguration
-    Set parentStudyConfig = mAllStudyConfigs(studyConfig.UnderlyingStudy.ID)
-    
-    parentStudyConfig.StudyConfigurations.Remove studyConfig
-End If
-
 mAllStudyConfigs.Remove studyConfig.Study.ID
 mInstanceFullyQualifiedNames.Remove studyConfig.InstanceFullyQualifiedName
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub removeStudyConfigFromParent(ByVal pStudyConfig As StudyConfiguration)
+    Dim parentStudyConfig As StudyConfiguration
+Const ProcName As String = "removeStudyConfigFromParent"
+On Error GoTo Err
+
+If pStudyConfig.Study Is mBaseStudy Then Exit Sub
+
+Set parentStudyConfig = getParentStudyConfig(pStudyConfig)
+parentStudyConfig.StudyConfigurations.Remove pStudyConfig
 
 Exit Sub
 
@@ -1034,23 +1103,26 @@ On Error GoTo Err
 If mBaseStudy Is Nothing Then
     setBaseStudyConfig studyConfig
     
-    ApplyStudyConfiguration studyConfig
+    doApplyStudyConfiguration studyConfig
+    addStudyConfig studyConfig
     
-    RaiseEvent StudyAdded(mBaseStudyConfig)
-    AddDependentStudies studyConfig
-ElseIf Not studyConfig.Study Is mBaseStudy Then
-    UnApplyStudyConfiguration mBaseStudyConfig
-    ApplyStudyConfiguration studyConfig
-    
-    reconfigureChildStudies mBaseStudyConfig, studyConfig
-    
-    setBaseStudyConfig studyConfig
-Else
-    UnApplyStudyConfiguration mBaseStudyConfig
-    ApplyStudyConfiguration studyConfig
-    
-    moveChildStudyConfigs mBaseStudyConfig, studyConfig
+    RaiseEvent StudyAdded(studyConfig.Study)
 
+    AddDependentStudies studyConfig
+Else
+    doApplyStudyConfiguration studyConfig
+    doUnApplyStudyConfiguration mBaseStudyConfig
+    
+    If studyConfig.Study Is mBaseStudy Then
+        moveChildStudyConfigs mBaseStudyConfig, studyConfig
+    Else
+        RaiseEvent StudyAdded(studyConfig.Study)
+        reconfigureChildStudies mBaseStudyConfig, studyConfig
+    End If
+
+    removeStudyConfig mBaseStudyConfig
+    addStudyConfig studyConfig
+    
     setBaseStudyConfig studyConfig
 End If
 
@@ -1062,44 +1134,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setInstanceFullyQualifiedName( _
-                ByVal studyConfig As StudyConfiguration)
-Const ProcName As String = "setInstanceFullyQualifiedName"
+Private Function generateInstanceFullyQualifiedName( _
+                ByVal pStudy As IStudy) As String
+Const ProcName As String = "generateInstanceFullyQualifiedName"
 On Error GoTo Err
 
-Dim key As String
-key = studyConfig.Study.InstancePath
+Dim lKey As String
+lKey = pStudy.InstancePath
 
-On Error Resume Next
-Dim s As String
-s = mInstanceFullyQualifiedNames(key)
-On Error GoTo Err
-
-If s = "" Then
-    studyConfig.InstanceFullyQualifiedName = key
-Else
-    Dim keyInc As String
+If mInstanceFullyQualifiedNames.Contains(lKey) Then
     Dim i As Long
     Do
         i = i + 1
-        keyInc = key & "." & i
-        
-        On Error Resume Next
-        s = ""
-        s = mInstanceFullyQualifiedNames(keyInc)
-        On Error GoTo Err
-    
-    Loop Until s = ""
-    studyConfig.InstanceFullyQualifiedName = keyInc
+    Loop Until Not mInstanceFullyQualifiedNames.Contains(lKey & "." & i)
+    lKey = lKey & "." & i
 End If
 
-mInstanceFullyQualifiedNames.Add studyConfig.InstanceFullyQualifiedName, studyConfig.InstanceFullyQualifiedName
+generateInstanceFullyQualifiedName = lKey
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub setupHorizontalRules(ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "setupHorizontalRules"

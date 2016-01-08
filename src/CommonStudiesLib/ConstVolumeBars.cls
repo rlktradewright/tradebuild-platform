@@ -265,7 +265,7 @@ sv.BarStartTime = Bar.Timestamp
 sv.Timestamp = Bar.Timestamp
 
 Select Case UCase$(valueName)
-Case UCase$(ConstVolBarsValueBar)
+Case UCase$(BarStudyValueBar)
     Set sv.Value = Bar
 Case UCase$(BarStudyValueOpen)
         sv.Value = Bar.OpenValue
@@ -418,7 +418,7 @@ evOut.sVal.Timestamp = mTimestamp
 
 If mBar.BarChanged Then
     Set evOut.sVal.Value = mBar
-    evOut.valueName = ConstVolBarsValueBar
+    evOut.valueName = BarStudyValueBar
     mStudyFoundation.notifyValue evOut
 End If
 
@@ -689,7 +689,7 @@ Private Function IStudy_NumberOfCachedValues( _
 Const ProcName As String = "IStudy_NumberOfCachedValues"
 On Error GoTo Err
 
-If valueName = "" Or valueName = ConstVolBarsValueBar Then
+If valueName = "" Or valueName = BarStudyValueBar Then
     If mBars Is Nothing Then
         IStudy_NumberOfCachedValues = 0
     Else

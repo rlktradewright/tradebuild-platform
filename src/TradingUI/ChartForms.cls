@@ -75,7 +75,6 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
 Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
@@ -295,7 +294,7 @@ For Each f In mChartForms
 Next
 
 For Each f In mChartForms
-    gLogger.Log "Closing form: caption=" & f.caption & "; type=" & TypeName(f), ProcName, ModuleName
+    gLogger.Log "Closing form: caption=" & f.Caption & "; type=" & TypeName(f), ProcName, ModuleName
     Unload f
 Next
 mChartForms.Clear

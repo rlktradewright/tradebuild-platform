@@ -713,7 +713,6 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
 Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
@@ -786,7 +785,7 @@ Friend Property Get TradeBarSeries() As BarSeries
 Const ProcName As String = "TradeBarSeries"
 On Error GoTo Err
 
-Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries(StudyValueConfigNameBar)
+Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries(BarStudyValueBar)
 
 Exit Property
 
@@ -888,8 +887,8 @@ storeSettings
 createTimeframe
 
 baseStudyConfig.Study = mTimeframe.BarStudy
-baseStudyConfig.StudyValueConfigurations.Item(StudyValueConfigNameBar).BarFormatterFactoryName = mBarFormatterFactoryName
-baseStudyConfig.StudyValueConfigurations.Item(StudyValueConfigNameBar).BarFormatterLibraryName = mBarFormatterLibraryName
+baseStudyConfig.StudyValueConfigurations.Item(BarStudyValueBar).BarFormatterFactoryName = mBarFormatterFactoryName
+baseStudyConfig.StudyValueConfigurations.Item(BarStudyValueBar).BarFormatterLibraryName = mBarFormatterLibraryName
 
 Dim lStudy As IStudy
 Set lStudy = mTimeframe.BarStudy
@@ -1440,6 +1439,7 @@ Else
     mManager.SetBaseStudyConfiguration CreateBarsStudyConfig( _
                                                         mTimeframe, _
                                                         mSecType, _
+                                                        mStudyManager.StudyLibraryManager, _
                                                         mBarFormatterFactoryName, _
                                                         mBarFormatterLibraryName)
 End If

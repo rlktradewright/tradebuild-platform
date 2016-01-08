@@ -228,6 +228,10 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function BarStudyValueBar() As String
+BarStudyValueBar = Globals.BarStudyValueBar
+End Function
+
 Public Function BarStudyValueOpen() As String
 BarStudyValueOpen = Globals.BarStudyValueOpen
 End Function

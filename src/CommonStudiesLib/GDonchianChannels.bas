@@ -96,19 +96,19 @@ If mStudyDefinition Is Nothing Then
     inputDef.Description = "Price"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(DoncValueLower)
-    valueDef.Description = "The lower channel Value"
+    valueDef.Description = "The lower channel value"
     valueDef.IncludeInChart = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H8083FF, Layer:=LayerDataPoints + 5)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(DoncValueUpper)
-    valueDef.Description = "The upper channel Value"
+    valueDef.Description = "The upper channel value"
     valueDef.IncludeInChart = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.ValueStyle = gCreateDataPointStyle(&HD1EB43, Layer:=LayerDataPoints + 5)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(DoncParamPeriods)

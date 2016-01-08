@@ -55,6 +55,7 @@ Begin VB.UserControl StudyValueConfigurer
       Left            =   5160
       TabIndex        =   5
       Top             =   0
+      Visible         =   0   'False
       Width           =   1095
       _ExtentX        =   1931
       _ExtentY        =   476
@@ -76,6 +77,7 @@ Begin VB.UserControl StudyValueConfigurer
       Left            =   3240
       TabIndex        =   2
       Top             =   0
+      Visible         =   0   'False
       Width           =   975
       _ExtentX        =   1720
       _ExtentY        =   476
@@ -120,6 +122,7 @@ Begin VB.UserControl StudyValueConfigurer
       Text            =   "1"
       ToolTipText     =   "Choose the thickness of lines or points"
       Top             =   0
+      Visible         =   0   'False
       Width           =   495
    End
    Begin VB.CheckBox AutoscaleCheck 
@@ -138,6 +141,7 @@ Begin VB.UserControl StudyValueConfigurer
       Left            =   4800
       TabIndex        =   4
       Top             =   0
+      Visible         =   0   'False
       Width           =   255
       _ExtentX        =   450
       _ExtentY        =   529
@@ -306,7 +310,7 @@ Case ValueModeNone
         Set dpStyle = GetDefaultDataPointStyle.Clone
     End If
         
-    Select Case DisplayModeCombo.SelectedItem.text
+    Select Case DisplayModeCombo.SelectedItem.Text
     Case PointDisplayModeLine
         initialiseLineStyleCombo StyleCombo, dpStyle.LineStyle
     Case PointDisplayModePoint
@@ -495,10 +499,10 @@ Case ValueModeNone
                         -1, _
                         UpColorLabel.BackColor)
     
-    Select Case DisplayModeCombo.SelectedItem.text
+    Select Case DisplayModeCombo.SelectedItem.Text
     Case PointDisplayModeLine
         dpStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
-        Select Case StyleCombo.SelectedItem.text
+        Select Case StyleCombo.SelectedItem.Text
         Case LineStyleSolid
             dpStyle.LineStyle = LineSolid
         Case LineStyleDash
@@ -512,7 +516,7 @@ Case ValueModeNone
         End Select
     Case PointDisplayModePoint
         dpStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModePoint
-        Select Case StyleCombo.SelectedItem.text
+        Select Case StyleCombo.SelectedItem.Text
         Case PointStyleRound
             dpStyle.PointStyle = PointRound
         Case PointStyleSquare
@@ -520,7 +524,7 @@ Case ValueModeNone
         End Select
     Case PointDisplayModeSteppedLine
         dpStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModeStep
-        Select Case StyleCombo.SelectedItem.text
+        Select Case StyleCombo.SelectedItem.Text
         Case LineStyleSolid
             dpStyle.LineStyle = LineSolid
         Case LineStyleDash
@@ -534,7 +538,7 @@ Case ValueModeNone
         End Select
     Case PointDisplayModeHistogram
         dpStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
-        Select Case StyleCombo.SelectedItem.text
+        Select Case StyleCombo.SelectedItem.Text
         Case HistogramStyleNarrow
             dpStyle.HistogramBarWidth = HistogramWidthNarrow
         Case HistogramStyleMedium
@@ -546,7 +550,7 @@ Case ValueModeNone
         End Select
     End Select
     
-    dpStyle.LineThickness = ThicknessText.text
+    dpStyle.LineThickness = ThicknessText.Text
     
     pStudyValueConfig.DataPointStyle = dpStyle
 Case ValueModeLine
@@ -565,7 +569,7 @@ Case ValueModeLine
                                     -1, _
                                     DownColorLabel.BackColor)
     
-    Select Case DisplayModeCombo.SelectedItem.text
+    Select Case DisplayModeCombo.SelectedItem.Text
     Case LineDisplayModePlain
         lnStyle.ArrowEndStyle = ArrowNone
         lnStyle.ArrowStartStyle = ArrowNone
@@ -580,7 +584,7 @@ Case ValueModeLine
         lnStyle.ArrowStartStyle = ArrowClosed
     End Select
         
-    Select Case StyleCombo.SelectedItem.text
+    Select Case StyleCombo.SelectedItem.Text
     Case LineStyleSolid
         lnStyle.LineStyle = LineSolid
     Case LineStyleDash
@@ -593,7 +597,7 @@ Case ValueModeLine
         lnStyle.LineStyle = LineDashDotDot
     End Select
     
-    lnStyle.Thickness = ThicknessText.text
+    lnStyle.Thickness = ThicknessText.Text
     ' temporary fix until ChartSkil improves drawing of non-extended lines
     lnStyle.Extended = True
     
@@ -613,23 +617,23 @@ Case ValueModeBar
                         DownColorLabel.BackColor)
     brStyle.UpColor = UpColorLabel.BackColor
     
-    Select Case DisplayModeCombo.SelectedItem.text
+    Select Case DisplayModeCombo.SelectedItem.Text
     Case BarModeBar
         brStyle.DisplayMode = BarDisplayModes.BarDisplayModeBar
-        brStyle.Thickness = ThicknessText.text
+        brStyle.Thickness = ThicknessText.Text
     Case BarModeCandle
         brStyle.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick
         brStyle.SolidUpBody = False
-        brStyle.TailThickness = ThicknessText.text
+        brStyle.TailThickness = ThicknessText.Text
     Case BarModeSolidCandle
         brStyle.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick
         brStyle.SolidUpBody = True
-        brStyle.TailThickness = ThicknessText.text
+        brStyle.TailThickness = ThicknessText.Text
     Case BarModeLine
         brStyle.DisplayMode = BarDisplayModes.BarDisplayModeLine
     End Select
     
-    Select Case StyleCombo.SelectedItem.text
+    Select Case StyleCombo.SelectedItem.Text
     Case BarStyleNarrow
         brStyle.Width = BarWidthNarrow
     Case BarStyleMedium
@@ -656,7 +660,7 @@ Case ValueModeText
                                     -1, _
                                     DownColorLabel.BackColor)
     
-    Select Case DisplayModeCombo.SelectedItem.text
+    Select Case DisplayModeCombo.SelectedItem.Text
     Case TextDisplayModePlain
         txStyle.Box = False
     Case TextDisplayModeWIthBackground
@@ -677,7 +681,7 @@ Case ValueModeText
         txStyle.Font = mFont
     End If
     
-    txStyle.BoxThickness = ThicknessText.text
+    txStyle.BoxThickness = ThicknessText.Text
     ' temporary fix until ChartSkil improves drawing of non-extended texts
     txStyle.Extended = True
     
@@ -758,7 +762,7 @@ Case ValueModeNone
         initialiseHistogramStyleCombo StyleCombo, dpStyle.HistogramBarWidth
     End Select
     
-    ThicknessText.text = dpStyle.LineThickness
+    ThicknessText.Text = dpStyle.LineThickness
     
 Case ValueModeLine
     Dim lnStyle As LineStyle
@@ -792,7 +796,7 @@ Case ValueModeLine
 
     initialiseLineStyleCombo StyleCombo, lnStyle.LineStyle
     
-    ThicknessText.text = lnStyle.Thickness
+    ThicknessText.Text = lnStyle.Thickness
     
 Case ValueModeBar
     Dim brStyle As BarStyle
@@ -826,15 +830,15 @@ Case ValueModeBar
     
     initialiseBarStyleCombo StyleCombo, brStyle.Width
     
-    Select Case DisplayModeCombo.SelectedItem.text
+    Select Case DisplayModeCombo.SelectedItem.Text
     Case BarModeBar
-        ThicknessText.text = brStyle.Thickness
+        ThicknessText.Text = brStyle.Thickness
     Case BarModeCandle
-        ThicknessText.text = brStyle.TailThickness
+        ThicknessText.Text = brStyle.TailThickness
     Case BarModeSolidCandle
-        ThicknessText.text = brStyle.TailThickness
+        ThicknessText.Text = brStyle.TailThickness
     Case BarModeLine
-        ThicknessText.text = brStyle.Thickness
+        ThicknessText.Text = brStyle.Thickness
     End Select
     
 Case ValueModeText
@@ -872,7 +876,7 @@ Case ValueModeText
                                     txStyle.BoxFillStyle, _
                                     txStyle.BoxFillColor
 
-    ThicknessText.text = txStyle.BoxThickness
+    ThicknessText.Text = txStyle.BoxThickness
     
     Set mFont = txStyle.Font
     

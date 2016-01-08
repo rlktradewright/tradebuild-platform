@@ -101,7 +101,7 @@ If mStudyDefinition Is Nothing Then
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SStochInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Input Value"
+    inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SStochValueK)
     valueDef.Description = "The slow stochastic Value (%K)"
@@ -109,7 +109,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H3F5BC0, Layer:=LayerDataPoints + 1)
     valueDef.ValueType = ValueTypeReal
     valueDef.MinimumValue = -5#
     valueDef.MaximumValue = 105#
@@ -120,7 +120,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
+    valueDef.ValueStyle = gCreateDataPointStyle(&HC6A566, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     valueDef.MinimumValue = -5#
     valueDef.MaximumValue = 105#

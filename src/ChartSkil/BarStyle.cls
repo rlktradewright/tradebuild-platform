@@ -170,7 +170,6 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
@@ -199,7 +198,6 @@ End Property
 Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -242,7 +240,6 @@ End Property
 
 Public Property Let DisplayMode(ByVal Value As BarDisplayModes)
 Const ProcName As String = "DisplayMode"
-
 On Error GoTo Err
 
 setLongProperty mDisplayMode, BarPropertyDisplayMode, Value
@@ -268,7 +265,6 @@ End Property
 
 Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
-
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
@@ -296,7 +292,6 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, BarPropertyIncludeInAutoscale, Value
@@ -322,7 +317,6 @@ End Property
 
 Public Property Let layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-
 On Error GoTo Err
 
 If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid layer number"
@@ -365,7 +359,6 @@ End Property
 
 Public Property Let OutlineThickness(ByVal Value As Long)
 Const ProcName As String = "OutlineThickness"
-
 On Error GoTo Err
 
 setLongProperty mOutlineThickness, BarPropertyOutlineThickness, Value
@@ -391,7 +384,6 @@ End Property
 
 Public Property Let SolidUpBody(ByVal Value As Boolean)
 Const ProcName As String = "SolidUpBody"
-
 On Error GoTo Err
 
 setBooleanProperty mSolidUpBody, BarPropertySolidUpBody, Value
@@ -417,7 +409,6 @@ End Property
 
 Public Property Let TailThickness(ByVal Value As Long)
 Const ProcName As String = "TailThickness"
-
 On Error GoTo Err
 
 setLongProperty mTailThickness, BarPropertyTailThickness, Value
@@ -443,7 +434,6 @@ End Property
 
 Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
-
 On Error GoTo Err
 
 setLongProperty mThickness, BarPropertyThickness, Value
@@ -469,7 +459,6 @@ End Property
 
 Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
-
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
@@ -497,7 +486,6 @@ End Property
 
 Public Property Let Width(ByVal Value As Single)
 Const ProcName As String = "Width"
-
 On Error GoTo Err
 
 setSingleProperty mWidth, BarPropertyWidth, Value
@@ -528,7 +516,6 @@ End Property
 Public Sub ClearProperty( _
                 ByVal pPropFlag As BarPropertyFlags)
 Const ProcName As String = "ClearProperty"
-
 On Error GoTo Err
 
 mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
@@ -543,7 +530,6 @@ End Sub
 
 Public Function clone() As BarStyle
 Const ProcName As String = "Clone"
-
 On Error GoTo Err
 
 Set clone = New BarStyle
@@ -575,7 +561,6 @@ End Function
 Public Sub LoadFromConfig( _
                 ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
-
 On Error GoTo Err
 
 Set mConfig = pConfig
@@ -610,7 +595,6 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -640,12 +624,10 @@ End Sub
 
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
-Dim ev As PropertyChangedEventData
-
 Const ProcName As String = "firePropertyChanged"
-
 On Error GoTo Err
 
+Dim ev As PropertyChangedEventData
 Set ev.Source = Me
 ev.PropertyName = Name
 RaiseEvent PropertyChanged(ev)
@@ -754,7 +736,6 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As BarPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-
 On Error GoTo Err
 
 mPropertyFlags = gSetFlag(mPropertyFlags, flag)

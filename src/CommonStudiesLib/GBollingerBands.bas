@@ -111,19 +111,19 @@ If mStudyDefinition Is Nothing Then
     inputDef.Description = "Price"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueTop)
-    valueDef.Description = "The top Bollinger band Value"
+    valueDef.Description = "The top Bollinger band value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle
+    valueDef.ValueStyle = gCreateDataPointStyle(&HFFAA64, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueBottom)
-    valueDef.Description = "The Bottom Bollinger band Value"
+    valueDef.Description = "The Bottom Bollinger band value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle
+    valueDef.ValueStyle = gCreateDataPointStyle(&HFFAA64, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueCentre)
@@ -131,7 +131,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IncludeInChart = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(&H1D9311)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H1D9311, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueSpread)
@@ -140,7 +140,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.IsDefault = True
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
+    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamPeriods)

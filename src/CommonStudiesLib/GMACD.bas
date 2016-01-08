@@ -108,31 +108,31 @@ If mStudyDefinition Is Nothing Then
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(MACDInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Input Value"
+    inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACD)
-    valueDef.Description = "The MACD Value"
+    valueDef.Description = "The MACD value"
     valueDef.IsDefault = True
     valueDef.IncludeInChart = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H5C6FED, Layer:=LayerDataPoints + 3)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDSignal)
-    valueDef.Description = "The MACD signal Value"
+    valueDef.Description = "The MACD signal value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
+    valueDef.ValueStyle = gCreateDataPointStyle(&HDEB15F, Layer:=LayerDataPoints + 4)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDHist)
-    valueDef.Description = "The MACD histogram Value"
+    valueDef.Description = "The MACD histogram value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
+    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, Layer:=LayerDataPoints + 2, UpColor:=&H1D9311)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrengthCount)
@@ -140,28 +140,28 @@ If mStudyDefinition Is Nothing Then
                             "strength Value has not changed"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlack, DisplayMode:=DataPointDisplayModeHistogram)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H808080, DisplayMode:=DataPointDisplayModeHistogram, Layer:=LayerDataPoints + 1)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrength)
     valueDef.Description = "An indication of the strength of the current move"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
+    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, Layer:=LayerDataPoints, UpColor:=&H1D9311)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDUpperBalance)
     valueDef.Description = "The price above which is confirmed strength"
     valueDef.DefaultRegion = StudyValueDefaultRegionUnderlying
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(RGB(68, 126, 196))
+    valueDef.ValueStyle = gCreateDataPointStyle(&HC47E44, Layer:=LayerDataPoints + 20)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDLowerBalance)
     valueDef.Description = "The price below which is confirmed weakness"
     valueDef.DefaultRegion = StudyValueDefaultRegionUnderlying
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(RGB(199, 68, 65))
+    valueDef.ValueStyle = gCreateDataPointStyle(&H4144C7, Layer:=LayerDataPoints + 20)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamShortPeriods)
@@ -174,7 +174,7 @@ If mStudyDefinition Is Nothing Then
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamSmoothingPeriods)
     paramDef.Description = "The number of periods for smoothing the MACD to " & _
-                            "produce the MACD signal Value"
+                            "produce the MACD signal value"
     paramDef.ParameterType = ParameterTypeInteger
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamMAType)

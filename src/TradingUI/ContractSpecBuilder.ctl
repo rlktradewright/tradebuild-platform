@@ -850,7 +850,6 @@ Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-If mTheme Is value Then Exit Property
 Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
@@ -1068,7 +1067,7 @@ RightCombo.Width = controlWidth
 
 AdvancedButton.Top = RightCombo.Top + RightCombo.Height + lRowSpacing
 AdvancedButton.Left = UserControl.Width - AdvancedButton.Width
-AdvancedButton.caption = IIf(mModeAdvanced, "Advanced <<", "Advanced >>")
+AdvancedButton.Caption = IIf(mModeAdvanced, "Advanced <<", "Advanced >>")
 
 If UserControl.Height <> AdvancedButton.Top + AdvancedButton.Height Then UserControl.Height = AdvancedButton.Top + AdvancedButton.Height
 

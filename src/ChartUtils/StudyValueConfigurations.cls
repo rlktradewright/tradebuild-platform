@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "StudyValueConfigurations"
+Private Const ModuleName                                As String = "StudyValueConfigurations"
 
 Private Const ConfigSectionStudyValueConfig             As String = "StudyValueConfiguration"
 

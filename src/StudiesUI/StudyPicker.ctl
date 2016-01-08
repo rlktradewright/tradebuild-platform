@@ -99,6 +99,7 @@ Begin VB.UserControl StudyPicker
       _Version        =   393217
       HideSelection   =   0   'False
       LabelEdit       =   1
+      Style           =   2
       SingleSel       =   -1  'True
       Appearance      =   0
    End
@@ -255,16 +256,7 @@ slName = mAvailableStudies(StudyList.ListIndex).StudyLibrary
 Dim defaultStudyConfig As StudyConfiguration
 Set defaultStudyConfig = mChartManager.GetDefaultStudyConfiguration(mAvailableStudies(StudyList.ListIndex).name, slName)
 
-If Not defaultStudyConfig Is Nothing Then
-    addStudyToChart defaultStudyConfig
-Else
-    Dim studyConfig As StudyConfiguration
-    Set studyConfig = showConfigForm(mAvailableStudies(StudyList.ListIndex).name, _
-                mAvailableStudies(StudyList.ListIndex).StudyLibrary, _
-                defaultStudyConfig)
-    If studyConfig Is Nothing Then Exit Sub
-    addStudyToChart studyConfig
-End If
+addStudyToChart defaultStudyConfig
 
 Exit Sub
 
@@ -400,27 +392,27 @@ End Sub
 '@================================================================================
 
 Private Sub mChartManager_StudyAdded( _
-                ByVal studyConfig As ChartUtils27.StudyConfiguration)
+                ByVal pStudy As IStudy)
 Const ProcName As String = "mChartManager_StudyAdded"
 On Error GoTo Err
 
 Dim parentNode As Node
 
-If Not studyConfig.UnderlyingStudy Is Nothing Then
+If Not pStudy.UnderlyingStudy Is Nothing Then
     On Error Resume Next
-    Set parentNode = ChartStudiesTree.Nodes.item(studyConfig.UnderlyingStudy.Id)
+    Set parentNode = ChartStudiesTree.Nodes.item(pStudy.UnderlyingStudy.Id)
     On Error GoTo Err
 End If
 If parentNode Is Nothing Then
     ChartStudiesTree.Nodes.Add , _
                                 TreeRelationshipConstants.tvwChild, _
-                                studyConfig.Study.Id, _
-                                studyConfig.Study.InstanceName
+                                pStudy.Id, _
+                                pStudy.InstanceName
 Else
     ChartStudiesTree.Nodes.Add parentNode, _
                                 TreeRelationshipConstants.tvwChild, _
-                                studyConfig.Study.Id, _
-                                studyConfig.Study.InstanceName
+                                pStudy.Id, _
+                                pStudy.InstanceName
     parentNode.Expanded = True
 End If
 
@@ -431,12 +423,12 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mChartManager_StudyRemoved( _
-                ByVal studyConfig As ChartUtils27.StudyConfiguration)
+                ByVal pStudy As IStudy)
 Const ProcName As String = "mChartManager_StudyRemoved"
 On Error GoTo Err
 
 On Error Resume Next
-ChartStudiesTree.Nodes.Remove studyConfig.Study.Id
+ChartStudiesTree.Nodes.Remove pStudy.Id
 
 Exit Sub
 
@@ -569,25 +561,23 @@ End Sub
 Private Function showConfigForm( _
                 ByVal studyName As String, _
                 ByVal slName As String, _
-                ByVal defaultConfiguration As StudyConfiguration) As StudyConfiguration
+                ByVal initialConfiguration As StudyConfiguration) As StudyConfiguration
 Const ProcName As String = "showConfigForm"
 On Error GoTo Err
 
 If mConfigForm Is Nothing Then Set mConfigForm = New fStudyConfigurer
 
 Dim noParameterModification  As Boolean
-If Not defaultConfiguration Is Nothing Then
+If Not initialConfiguration Is Nothing Then
     If Not mChartManager.BaseStudy Is Nothing Then
-        If defaultConfiguration.Study Is mChartManager.BaseStudy Then noParameterModification = True
+        If initialConfiguration.Study Is mChartManager.BaseStudy Then noParameterModification = True
     End If
 End If
 
-mConfigForm.Initialise mChartManager.StudyLibraryManager.GetStudyDefinition(studyName, slName), _
+mConfigForm.Initialise mChartManager, _
+                        studyName, _
                         slName, _
-                        mChartManager.regionNames, _
-                        mChartManager.BaseStudyConfiguration, _
-                        defaultConfiguration, _
-                        mChartManager.StudyLibraryManager.GetStudyDefaultParameters(studyName, slName), _
+                        initialConfiguration, _
                         noParameterModification
 If Not mTheme Is Nothing Then mConfigForm.Theme = mTheme
 mConfigForm.Show vbModal, mOwner

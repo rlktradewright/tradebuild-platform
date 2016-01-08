@@ -100,12 +100,12 @@ If mStudyDefinition Is Nothing Then
     inputDef.Description = "Price"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(AtrValueATR)
-    valueDef.Description = "The Average True Range Value"
+    valueDef.Description = "The Average True Range value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbGreen)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H84CEAE, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(AtrParamPeriods)

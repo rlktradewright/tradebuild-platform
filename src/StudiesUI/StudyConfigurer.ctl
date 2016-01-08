@@ -4,18 +4,18 @@ Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyConfigurer 
-   ClientHeight    =   5595
+   ClientHeight    =   12015
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   12210
-   ScaleHeight     =   5595
-   ScaleWidth      =   12210
+   ClientWidth     =   7125
+   ScaleHeight     =   12015
+   ScaleWidth      =   7125
    Begin VB.Frame LinesFrame 
       Caption         =   "Horizontal lines"
       Height          =   735
-      Left            =   5040
+      Left            =   0
       TabIndex        =   25
-      Top             =   4200
+      Top             =   9840
       Width           =   7095
       Begin VB.PictureBox LinesPicture 
          Appearance      =   0  'Flat
@@ -127,10 +127,10 @@ Begin VB.UserControl StudyConfigurer
    End
    Begin VB.Frame ValuesFrame 
       Caption         =   "Output values"
-      Height          =   4095
-      Left            =   5040
+      Height          =   4815
+      Left            =   0
       TabIndex        =   16
-      Top             =   0
+      Top             =   4980
       Width           =   7095
       Begin StudiesUI27.StudyValueConfigurer StudyValueConfigurer 
          Height          =   375
@@ -138,6 +138,7 @@ Begin VB.UserControl StudyConfigurer
          Left            =   120
          TabIndex        =   39
          Top             =   480
+         Visible         =   0   'False
          Width           =   6915
          _ExtentX        =   12197
          _ExtentY        =   661
@@ -146,9 +147,9 @@ Begin VB.UserControl StudyConfigurer
          Appearance      =   0  'Flat
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
-         Height          =   3735
+         Height          =   4515
          Left            =   120
-         ScaleHeight     =   3735
+         ScaleHeight     =   4515
          ScaleWidth      =   6855
          TabIndex        =   17
          Top             =   240
@@ -232,10 +233,10 @@ Begin VB.UserControl StudyConfigurer
    Begin VB.Frame Frame1 
       Caption         =   "Parameters"
       Height          =   4935
-      Left            =   2520
-      TabIndex        =   12
+      Left            =   4200
+      TabIndex        =   13
       Top             =   0
-      Width           =   2415
+      Width           =   2895
       Begin VB.PictureBox Picture1 
          Appearance      =   0  'Flat
          BorderStyle     =   0  'None
@@ -243,15 +244,15 @@ Begin VB.UserControl StudyConfigurer
          Height          =   4575
          Left            =   120
          ScaleHeight     =   4575
-         ScaleWidth      =   2175
-         TabIndex        =   13
+         ScaleWidth      =   2655
+         TabIndex        =   14
          Top             =   240
-         Width           =   2175
+         Width           =   2655
          Begin TWControls40.TWImageCombo ParameterValueCombo 
             Height          =   270
             Index           =   0
-            Left            =   1320
-            TabIndex        =   3
+            Left            =   1800
+            TabIndex        =   4
             Top             =   480
             Width           =   855
             _ExtentX        =   1508
@@ -274,29 +275,31 @@ Begin VB.UserControl StudyConfigurer
             ForeColor       =   &H80000008&
             Height          =   255
             Index           =   0
-            Left            =   1320
-            TabIndex        =   5
+            Left            =   2400
+            TabIndex        =   6
             Top             =   1440
             Visible         =   0   'False
             Width           =   255
          End
          Begin VB.TextBox ParameterValueTemplateText 
+            Alignment       =   2  'Center
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
             Height          =   330
-            Left            =   1320
-            TabIndex        =   4
+            Left            =   1800
+            TabIndex        =   5
             TabStop         =   0   'False
             Top             =   960
             Visible         =   0   'False
             Width           =   855
          End
          Begin VB.TextBox ParameterValueText 
+            Alignment       =   2  'Center
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
             Height          =   330
             Index           =   0
-            Left            =   1320
+            Left            =   1800
             TabIndex        =   2
             Top             =   0
             Visible         =   0   'False
@@ -305,8 +308,8 @@ Begin VB.UserControl StudyConfigurer
          Begin MSComCtl2.UpDown ParameterValueUpDown 
             Height          =   330
             Index           =   0
-            Left            =   1920
-            TabIndex        =   14
+            Left            =   2415
+            TabIndex        =   3
             Top             =   0
             Visible         =   0   'False
             Width           =   255
@@ -330,36 +333,36 @@ Begin VB.UserControl StudyConfigurer
             Left            =   0
             TabIndex        =   15
             Top             =   0
-            Width           =   1335
+            Width           =   1695
          End
       End
    End
    Begin VB.TextBox StudyDescriptionText 
       BackColor       =   &H8000000F&
-      Height          =   525
+      Height          =   1245
       Left            =   0
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   11
+      TabIndex        =   12
       TabStop         =   0   'False
-      Top             =   5040
-      Width           =   12135
+      Top             =   10680
+      Width           =   7095
    End
    Begin VB.Frame Frame2 
       Caption         =   "Inputs"
       Height          =   4935
       Left            =   0
-      TabIndex        =   6
+      TabIndex        =   7
       Top             =   0
-      Width           =   2415
+      Width           =   4095
       Begin MSComctlLib.TreeView BaseStudiesTree 
          Height          =   1815
          Left            =   120
          TabIndex        =   38
          Top             =   1080
-         Width           =   2175
-         _ExtentX        =   3836
+         Width           =   3855
+         _ExtentX        =   6800
          _ExtentY        =   3201
          _Version        =   393217
          HideSelection   =   0   'False
@@ -372,18 +375,18 @@ Begin VB.UserControl StudyConfigurer
          Height          =   4575
          Left            =   120
          ScaleHeight     =   4575
-         ScaleWidth      =   2175
-         TabIndex        =   7
+         ScaleWidth      =   3855
+         TabIndex        =   8
          Top             =   240
-         Width           =   2175
+         Width           =   3855
          Begin TWControls40.TWImageCombo InputValueCombo 
             Height          =   270
             Index           =   0
             Left            =   0
             TabIndex        =   1
             Top             =   3000
-            Width           =   2175
-            _ExtentX        =   3836
+            Width           =   3855
+            _ExtentX        =   6800
             _ExtentY        =   476
             Appearance      =   0
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -403,8 +406,8 @@ Begin VB.UserControl StudyConfigurer
             Left            =   0
             TabIndex        =   0
             Top             =   240
-            Width           =   2175
-            _ExtentX        =   3836
+            Width           =   3855
+            _ExtentX        =   6800
             _ExtentY        =   476
             Appearance      =   0
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -423,7 +426,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Chart region"
             Height          =   255
             Left            =   0
-            TabIndex        =   10
+            TabIndex        =   11
             Top             =   0
             Width           =   1335
          End
@@ -431,7 +434,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Base study"
             Height          =   255
             Left            =   0
-            TabIndex        =   9
+            TabIndex        =   10
             Top             =   600
             Width           =   1215
          End
@@ -440,7 +443,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   255
             Index           =   0
             Left            =   0
-            TabIndex        =   8
+            TabIndex        =   9
             Top             =   2760
             Width           =   1455
          End
@@ -494,6 +497,8 @@ Private Const RegionUnderlying As String = "Use underlying study's region"
 ' Member variables
 '@================================================================================
 
+Private mChartManager As ChartManager
+
 Private mStudyname As String
 Private mStudyLibraryName As String
 
@@ -503,7 +508,9 @@ Private mBaseStudyConfig As StudyConfiguration
 
 Private mNextTabIndex As Long
 
-Private mDefaultConfiguration As StudyConfiguration
+Private mInitialConfiguration As StudyConfiguration
+
+Private mNoParameterModification As Boolean
 
 Private mFonts() As StdFont
 
@@ -620,13 +627,13 @@ ReDim inputValueNames(mStudyDefinition.studyInputDefinitions.Count - 1) As Strin
 Dim i As Long
 For i = 0 To UBound(inputValueNames)
     If Not InputValueCombo(i).SelectedItem Is Nothing Then
-        inputValueNames(i) = InputValueCombo(i).SelectedItem.text
+        inputValueNames(i) = InputValueCombo(i).SelectedItem.Text
     End If
 Next
 studyConfig.inputValueNames = inputValueNames
 
 Dim regionName As String
-If ChartRegionCombo.SelectedItem.text = RegionDefault Then
+If ChartRegionCombo.SelectedItem.Text = RegionDefault Then
     Select Case mStudyDefinition.DefaultRegion
     Case StudyDefaultRegionNone
         regionName = ChartRegionNameUnderlying
@@ -635,12 +642,12 @@ If ChartRegionCombo.SelectedItem.text = RegionDefault Then
     Case StudyDefaultRegionUnderlying
         regionName = ChartRegionNameUnderlying
     End Select
-ElseIf ChartRegionCombo.SelectedItem.text = RegionCustom Then
+ElseIf ChartRegionCombo.SelectedItem.Text = RegionCustom Then
     regionName = ChartRegionNameCustom
-ElseIf ChartRegionCombo.SelectedItem.text = RegionUnderlying Then
+ElseIf ChartRegionCombo.SelectedItem.Text = RegionUnderlying Then
     regionName = ChartRegionNameUnderlying
 Else
-    regionName = ChartRegionCombo.SelectedItem.text
+    regionName = ChartRegionCombo.SelectedItem.Text
 End If
 studyConfig.ChartRegionName = regionName
 
@@ -654,9 +661,9 @@ For i = 0 To mStudyDefinition.studyParameterDefinitions.Count - 1
         params.SetParameterValue ParameterNameLabel(i).Caption, _
                                 IIf(ParameterValueCheck(i) = vbChecked, "True", "False")
     ElseIf ParameterValueText(i).Visible Then
-        params.SetParameterValue ParameterNameLabel(i).Caption, ParameterValueText(i).text
+        params.SetParameterValue ParameterNameLabel(i).Caption, ParameterValueText(i).Text
     Else
-        params.SetParameterValue ParameterNameLabel(i).Caption, ParameterValueCombo(i).text
+        params.SetParameterValue ParameterNameLabel(i).Caption, ParameterValueCombo(i).Text
     End If
 Next
 
@@ -672,10 +679,10 @@ For i = 1 To studyValueDefs.Count
 Next
 
 For i = 0 To 4
-    If LineText(i).text <> "" Then
+    If LineText(i).Text <> "" Then
         Dim studyHorizRule As StudyHorizontalRule
         Set studyHorizRule = studyConfig.StudyHorizontalRules.Add
-        studyHorizRule.Y = LineText(i).text
+        studyHorizRule.Y = LineText(i).Text
         studyHorizRule.Color = LineColorLabel(i).BackColor
     End If
 Next
@@ -712,6 +719,27 @@ End Property
 ' methods
 '@================================================================================
 
+Public Sub ApplyDefaultConfiguration()
+Const ProcName As String = "ApplyDefaultConfiguration"
+On Error GoTo Err
+
+initialiseControls
+
+Dim lDefault As StudyConfiguration
+Set lDefault = mChartManager.GetDefaultStudyConfiguration(mInitialConfiguration.name, mInitialConfiguration.StudyLibraryName)
+mInitialConfiguration.StudyValueConfigurations = lDefault.StudyValueConfigurations
+
+processStudyDefinition mInitialConfiguration.StudyValueConfigurations, _
+                        lDefault.Parameters, _
+                        mInitialConfiguration.StudyHorizontalRules, _
+                        mNoParameterModification
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub Clear()
 Const ProcName As String = "Clear"
 On Error GoTo Err
@@ -726,30 +754,33 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Initialise( _
-                ByVal studyDef As StudyDefinition, _
-                ByVal StudyLibraryName As String, _
-                ByRef regionNames() As String, _
-                ByRef baseStudyConfig As StudyConfiguration, _
-                ByVal defaultConfiguration As StudyConfiguration, _
-                ByVal defaultParameters As Parameters, _
-                ByVal noParameterModification As Boolean)
+                ByVal pChartManager As ChartManager, _
+                ByVal pStudyName As String, _
+                ByVal pStudyLibraryName As String, _
+                ByVal pInitialConfiguration As StudyConfiguration, _
+                ByVal pNoParameterModification As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-AssertArgument Not (defaultConfiguration Is Nothing And defaultParameters Is Nothing), "DefaultConfiguration and DefaultParameters cannot both be Nothing"
+AssertArgument Not pInitialConfiguration Is Nothing, "initialConfiguration cannot be Nothing"
 
 initialiseControls
 
-Set mStudyDefinition = studyDef
-mStudyLibraryName = StudyLibraryName
-Set mBaseStudyConfig = baseStudyConfig
-Set mDefaultConfiguration = defaultConfiguration
+Set mChartManager = pChartManager
+Set mStudyDefinition = mChartManager.StudyLibraryManager.GetStudyDefinition(pStudyName, pStudyLibraryName)
+mStudyLibraryName = pStudyLibraryName
+Set mBaseStudyConfig = mChartManager.BaseStudyConfiguration
+Set mInitialConfiguration = pInitialConfiguration
+mNoParameterModification = pNoParameterModification
 
-processRegionNames regionNames
+processRegionNames mChartManager.RegionNames
 
 setupBaseStudiesTree
 
-processStudyDefinition defaultParameters, noParameterModification
+processStudyDefinition mInitialConfiguration.StudyValueConfigurations, _
+                        mInitialConfiguration.Parameters, _
+                        mInitialConfiguration.StudyHorizontalRules, _
+                        mNoParameterModification
 
 Exit Sub
 
@@ -769,8 +800,8 @@ On Error GoTo Err
 
 If studyConfig Is Nothing Then Exit Sub
 
-If Not mDefaultConfiguration Is Nothing Then
-    If mDefaultConfiguration.Study Is studyConfig.Study Then Exit Sub
+If Not mInitialConfiguration Is Nothing Then
+    If mInitialConfiguration.Study Is studyConfig.Study Then Exit Sub
 End If
 
 Dim lNode As Node
@@ -869,13 +900,13 @@ ParameterNameLabel(0).Visible = False
 For i = ParameterValueText.UBound To 1 Step -1
     Unload ParameterValueText(i)
 Next
-ParameterValueText(0).text = ""
+ParameterValueText(0).Text = ""
 ParameterValueText(0).Visible = False
 
 For i = ParameterValueCombo.UBound To 1 Step -1
     Unload ParameterValueCombo(i)
 Next
-ParameterValueCombo(0).text = ""
+ParameterValueCombo(0).Text = ""
 ParameterValueCombo(0).ComboItems.Clear
 ParameterValueCombo(0).Visible = False
 
@@ -892,9 +923,10 @@ ParameterValueUpDown(0).Visible = False
 For i = StudyValueConfigurer.UBound To 1 Step -1
     Unload StudyValueConfigurer(i)
 Next
+StudyValueConfigurer(0).Visible = False
 
 For i = 0 To LineText.UBound
-    LineText(i).text = ""
+    LineText(i).Text = ""
     LineColorLabel(i).BackColor = vbBlack
 Next
 
@@ -979,7 +1011,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processRegionNames( _
-                ByRef regionNames() As String)
+                ByRef RegionNames() As String)
 Const ProcName As String = "processRegionNames"
 On Error GoTo Err
 
@@ -990,8 +1022,8 @@ ChartRegionCombo.ComboItems.Add , , RegionCustom
 ChartRegionCombo.ComboItems.Add , , RegionUnderlying
 
 Dim i As Long
-For i = 0 To UBound(regionNames)
-    ChartRegionCombo.ComboItems.Add , , regionNames(i)
+For i = 0 To UBound(RegionNames)
+    ChartRegionCombo.ComboItems.Add , , RegionNames(i)
 Next
 ChartRegionCombo.ComboItems.item(1).selected = True
 ChartRegionCombo.Refresh
@@ -1003,7 +1035,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processStudyDefinition( _
-                ByVal defaultParams As Parameters, _
+                ByVal pStudyValueconfigs As StudyValueConfigurations, _
+                ByVal pParameters As Parameters, _
+                ByVal pStudyHorizRules As StudyHorizontalRules, _
                 ByVal noParameterModification As Boolean)
 Const ProcName As String = "processStudyDefinition"
 On Error GoTo Err
@@ -1012,48 +1046,36 @@ mNextTabIndex = 2
 
 mStudyname = mStudyDefinition.name
 
-Dim studyValueconfigs As StudyValueConfigurations
-Dim studyHorizRules As StudyHorizontalRules
-If Not mDefaultConfiguration Is Nothing Then
-    Set defaultParams = mDefaultConfiguration.Parameters
-    Set studyValueconfigs = mDefaultConfiguration.StudyValueConfigurations
-    Set studyHorizRules = mDefaultConfiguration.StudyHorizontalRules
-End If
-
-StudyDescriptionText.text = mStudyDefinition.Description
+StudyDescriptionText.Text = mStudyDefinition.Description
 
 Dim allowInputModification As Boolean
-If Not mDefaultConfiguration Is Nothing Then
-    If mDefaultConfiguration.ChartRegionName = mDefaultConfiguration.InstanceFullyQualifiedName Then
-        '
-        setComboSelection ChartRegionCombo, RegionCustom
+If mInitialConfiguration.ChartRegionName = mInitialConfiguration.InstanceFullyQualifiedName Then
+    setComboSelection ChartRegionCombo, RegionCustom
+Else
+    setComboSelection ChartRegionCombo, mInitialConfiguration.ChartRegionName
+End If
+
+If Not mInitialConfiguration.UnderlyingStudy Is Nothing Then
+    If TypeOf mInitialConfiguration.UnderlyingStudy Is StudyInputHandler Then
+        allowInputModification = True
+        mCompatibleStudies.Add mInitialConfiguration.UnderlyingStudy, mInitialConfiguration.UnderlyingStudy.Id
+        BaseStudiesTree.Nodes.Clear
+        BaseStudiesTree.Nodes.Add , _
+                                , _
+                                mInitialConfiguration.UnderlyingStudy.Id, _
+                                mInitialConfiguration.UnderlyingStudy.InstanceName
+        BaseStudiesTree.Nodes(1).selected = True
+        BaseStudiesTree.Enabled = False
     Else
-        setComboSelection ChartRegionCombo, mDefaultConfiguration.ChartRegionName
+        BaseStudiesTree.Nodes(mInitialConfiguration.UnderlyingStudy.Id).selected = True
     End If
-    
-    If Not mDefaultConfiguration.UnderlyingStudy Is Nothing Then
-        If TypeOf mDefaultConfiguration.UnderlyingStudy Is StudyInputHandler Then
-            allowInputModification = True
-            mCompatibleStudies.Add mDefaultConfiguration.UnderlyingStudy, mDefaultConfiguration.UnderlyingStudy.Id
-            BaseStudiesTree.Nodes.Clear
-            BaseStudiesTree.Nodes.Add , _
-                                    , _
-                                    mDefaultConfiguration.UnderlyingStudy.Id, _
-                                    mDefaultConfiguration.UnderlyingStudy.InstanceName
-            BaseStudiesTree.Nodes(1).selected = True
-            BaseStudiesTree.Enabled = False
-        Else
-            BaseStudiesTree.Nodes(mDefaultConfiguration.UnderlyingStudy.Id).selected = True
-        End If
-    End If
-    
 End If
 
 Dim studyInputDefinitions As studyInputDefinitions
 Set studyInputDefinitions = mStudyDefinition.studyInputDefinitions
 
 Dim inputValueNames() As String
-If Not mDefaultConfiguration Is Nothing Then inputValueNames = mDefaultConfiguration.inputValueNames
+inputValueNames = mInitialConfiguration.inputValueNames
 
 Dim i As Long
 For i = 1 To studyInputDefinitions.Count
@@ -1074,8 +1096,7 @@ For i = 1 To studyInputDefinitions.Count
     InputValueCombo(i - 1).ToolTipText = studyinput.Description
 
     initialiseInputValueCombo i - 1
-    If Not mDefaultConfiguration Is Nothing Then setComboSelection InputValueCombo(i - 1), _
-                                                                    inputValueNames(i - 1)
+    setComboSelection InputValueCombo(i - 1), inputValueNames(i - 1)
     
     InputValueCombo(i - 1).Enabled = Not allowInputModification
     
@@ -1093,6 +1114,9 @@ For i = 1 To studyParameterDefinitions.Count
         
         ParameterValueText(0).Visible = False
         ParameterValueText(0).TabIndex = nextTabIndex
+        
+        ParameterValueUpDown(0).Visible = False
+        ParameterValueUpDown(0).TabIndex = nextTabIndex
         
         ParameterValueCombo(0).Top = ParameterValueText(0).Top
         ParameterValueCombo(0).Visible = False
@@ -1178,7 +1202,7 @@ For i = 1 To studyParameterDefinitions.Count
     ParameterNameLabel(i - 1).Caption = studyParam.name
     
     Dim defaultParamValue As String
-    defaultParamValue = defaultParams.GetParameterValue(studyParam.name)
+    defaultParamValue = pParameters.GetParameterValue(studyParam.name)
     If studyParam.ParameterType = StudyParameterTypes.ParameterTypeBoolean Then
         Select Case UCase$(defaultParamValue)
         Case "Y", "YES", "T", "TRUE", "1"
@@ -1187,10 +1211,10 @@ For i = 1 To studyParameterDefinitions.Count
             ParameterValueCheck(i - 1) = vbUnchecked
         End Select
     ElseIf numPermittedParamValues = -1 Then
-        ParameterValueText(i - 1).text = defaultParamValue
+        ParameterValueText(i - 1).Text = defaultParamValue
         ParameterValueText(i - 1).ToolTipText = studyParam.Description
     Else
-        ParameterValueCombo(i - 1).text = defaultParamValue
+        ParameterValueCombo(i - 1).Text = defaultParamValue
         ParameterValueCombo(i - 1).ToolTipText = studyParam.Description
     End If
     
@@ -1208,22 +1232,25 @@ For i = 1 To mStudyDefinition.StudyValueDefinitions.Count
     Set studyValueDef = mStudyDefinition.StudyValueDefinitions(i)
     
     Dim studyValueConfig As StudyValueConfiguration
-    If Not studyValueconfigs Is Nothing Then
+    If Not pStudyValueconfigs Is Nothing Then
         Set studyValueConfig = Nothing
                 
         On Error Resume Next
-        Set studyValueConfig = studyValueconfigs.item(studyValueDef.name)
+        Set studyValueConfig = pStudyValueconfigs.item(studyValueDef.name)
         On Error GoTo Err
     
     End If
     loadStudyValueConfigurer i - 1
+    StudyValueConfigurer(i - 1).Visible = False
     StudyValueConfigurer(i - 1).Initialise studyValueDef, studyValueConfig
+    If Not mTheme Is Nothing Then StudyValueConfigurer(i - 1).Theme = mTheme
+    StudyValueConfigurer(i - 1).Visible = True
 Next
 
-If Not studyHorizRules Is Nothing Then
-    For i = 1 To studyHorizRules.Count
+If Not pStudyHorizRules Is Nothing Then
+    For i = 1 To pStudyHorizRules.Count
         Dim studyHorizRule As StudyHorizontalRule
-        Set studyHorizRule = studyHorizRules.item(i)
+        Set studyHorizRule = pStudyHorizRules.item(i)
         LineText(i - 1) = studyHorizRule.Y
         LineColorLabel(i - 1).BackColor = studyHorizRule.Color
     Next
@@ -1237,13 +1264,13 @@ End Sub
 
 Private Sub setComboSelection( _
                 ByVal combo As TWImageCombo, _
-                ByVal text As String)
+                ByVal Text As String)
 Const ProcName As String = "setComboSelection"
 On Error GoTo Err
 
 Dim item As ComboItem
 For Each item In combo.ComboItems
-    If UCase$(item.text) = UCase$(text) Then
+    If UCase$(item.Text) = UCase$(Text) Then
         item.selected = True
         Exit For
     End If

@@ -107,12 +107,12 @@ If mStudyDefinition Is Nothing Then
     inputDef.Description = "Price"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(PsValuePs)
-    valueDef.Description = "The parabolic stop Value"
+    valueDef.Description = "The parabolic stop value"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(&H618A55, DataPointDisplayModePoint, Linethickness:=5, PointStyle:=PointSquare)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H618A55, DataPointDisplayModePoint, Layer:=LayerDataPoints + 30, Linethickness:=5, PointStyle:=PointSquare)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(PsParamStartFactor)

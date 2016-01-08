@@ -38,8 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "StudyConfigurations"
-
+Private Const ModuleName                                As String = "StudyConfigurations"
 
 Private Const ConfigSectionStudyConfig                  As String = "StudyConfig"
 
@@ -55,7 +54,7 @@ Private Const ConfigSectionStudyConfig                  As String = "StudyConfig
 ' Member variables
 '@================================================================================
 
-Private mStudyConfigurations As Collection
+Private mStudyConfigurations                            As Collection
 
 Private mConfig                                         As ConfigurationSection
 
@@ -82,7 +81,6 @@ End Sub
 Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-
 On Error GoTo Err
 
 If Value Is mConfig Then Exit Property
@@ -97,7 +95,6 @@ End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 Count = mStudyConfigurations.Count
@@ -124,11 +121,10 @@ End Sub
 ' Only called when a chart has been cleared, so no need to worry about whether regions are
 ' still in use etc
 Friend Sub Finish()
-Dim studyConfig As StudyConfiguration
 Const ProcName As String = "Finish"
-
 On Error GoTo Err
 
+Dim studyConfig As StudyConfiguration
 For Each studyConfig In mStudyConfigurations
     studyConfig.Finish
 Next
@@ -143,7 +139,6 @@ Public Function Item( _
                 ByVal index As Variant) As StudyConfiguration
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
 Set Item = mStudyConfigurations.Item(index)
@@ -156,17 +151,15 @@ End Function
 
 Friend Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
-Dim scSect As ConfigurationSection
-Dim sc As StudyConfiguration
-
 Const ProcName As String = "LoadFromConfig"
-
 On Error GoTo Err
 
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
 
+Dim scSect As ConfigurationSection
 For Each scSect In mConfig
+    Dim sc As StudyConfiguration
     Set sc = New StudyConfiguration
     sc.LoadFromConfig scSect
     mStudyConfigurations.Add sc, sc.ID
@@ -187,7 +180,6 @@ End Function
 Public Sub Remove( _
                 ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "Remove"
-
 On Error GoTo Err
 
 mStudyConfigurations.Remove studyConfig.ID
@@ -219,11 +211,10 @@ End Sub
 '@================================================================================
 
 Private Sub storeSettings()
-Dim sc As StudyConfiguration
 Const ProcName As String = "storeSettings"
-
 On Error GoTo Err
 
+Dim sc As StudyConfiguration
 For Each sc In mStudyConfigurations
     storeStudyConfigSettings sc
 Next
@@ -237,7 +228,6 @@ End Sub
 Private Sub storeStudyConfigSettings( _
                 ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "storeStudyConfigSettings"
-
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then

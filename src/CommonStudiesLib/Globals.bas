@@ -70,6 +70,13 @@ Public Const ParamPeriods                       As String = "Periods"
 ' Enums
 '@================================================================================
 
+Public Enum MyLayerNumbers
+    LayerBars = LayerNumbers.LayerLowestUser + 25
+    LayerDataPoints = LayerNumbers.LayerLowestUser + 50
+    LayerLines = LayerNumbers.LayerLowestUser + 75
+    LayerTexts = LayerNumbers.LayerLowestUser + 100
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -100,17 +107,159 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function gCreateBarStudyDefinition( _
+                ByVal pName As String, _
+                ByVal pShortName As String, _
+                ByVal pDescription As String, _
+                ByVal pInputValueName As String, _
+                Optional ByVal pInputTotalVolumeName As String, _
+                Optional ByVal pInputTickVolumeName As String, _
+                Optional ByVal pInputOpenInterestName As String, _
+                Optional ByVal pInputBarNumberName As String) As StudyDefinition
+Const ProcName As String = "gCreateBarStudyDefinition"
+On Error GoTo Err
+
+Dim lStudyDefinition As New StudyDefinition
+lStudyDefinition.name = pName
+lStudyDefinition.NeedsBars = False
+lStudyDefinition.ShortName = pShortName
+lStudyDefinition.Description = pDescription
+lStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
+
+Dim inputDef As StudyInputDefinition
+Set inputDef = lStudyDefinition.StudyInputDefinitions.Add(pInputValueName)
+inputDef.InputType = InputTypeReal
+inputDef.Description = "Value"
+
+If pInputTotalVolumeName <> "" Then
+    Set inputDef = lStudyDefinition.StudyInputDefinitions.Add(pInputTotalVolumeName)
+    inputDef.InputType = InputTypeInteger
+    inputDef.Description = "Accumulated volume"
+End If
+
+If pInputTickVolumeName <> "" Then
+    Set inputDef = lStudyDefinition.StudyInputDefinitions.Add(pInputTickVolumeName)
+    inputDef.InputType = InputTypeInteger
+    inputDef.Description = "Tick volume"
+End If
+    
+If pInputOpenInterestName <> "" Then
+    Set inputDef = lStudyDefinition.StudyInputDefinitions.Add(pInputOpenInterestName)
+    inputDef.InputType = InputTypeInteger
+    inputDef.Description = "Open interest"
+End If
+
+If pInputBarNumberName <> "" Then
+    Set inputDef = lStudyDefinition.StudyInputDefinitions.Add(pInputBarNumberName)
+    inputDef.InputType = InputTypeInteger
+    inputDef.Description = "Bar number"
+End If
+
+Dim valueDef As StudyValueDefinition
+Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueBar)
+valueDef.Description = "The user-defined bars"
+valueDef.DefaultRegion = StudyValueDefaultRegionDefault
+valueDef.IncludeInChart = True
+valueDef.ValueMode = ValueModeBar
+valueDef.ValueStyle = gCreateBarStyle
+valueDef.ValueType = ValueTypeReal
+
+Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOpen)
+valueDef.Description = "Bar open value"
+valueDef.DefaultRegion = StudyValueDefaultRegionDefault
+valueDef.ValueMode = ValueModeNone
+valueDef.ValueStyle = gCreateDataPointStyle(&H8000&)
+valueDef.ValueType = ValueTypeReal
+
+Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHigh)
+valueDef.Description = "Bar high value"
+valueDef.DefaultRegion = StudyValueDefaultRegionDefault
+valueDef.ValueMode = ValueModeNone
+valueDef.ValueStyle = gCreateDataPointStyle(vbBlue, Layer:=LayerBars + 1)
+valueDef.ValueType = ValueTypeReal
+
+Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueLow)
+valueDef.Description = "Bar low value"
+valueDef.DefaultRegion = StudyValueDefaultRegionDefault
+valueDef.ValueMode = ValueModeNone
+valueDef.ValueStyle = gCreateDataPointStyle(vbRed, Layer:=LayerBars + 1)
+valueDef.ValueType = ValueTypeReal
+
+Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueClose)
+valueDef.Description = "Bar close value"
+valueDef.DefaultRegion = StudyValueDefaultRegionDefault
+valueDef.IsDefault = True
+valueDef.ValueMode = ValueModeNone
+valueDef.ValueStyle = gCreateDataPointStyle(&H80&, Layer:=LayerBars + 1)
+valueDef.ValueType = ValueTypeReal
+
+If pInputTotalVolumeName <> "" Then
+    Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueVolume)
+    valueDef.Description = "Bar volume"
+    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H80000001, DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H4040C0, Layer:=LayerDataPoints, UpColor:=&H40C040)
+    valueDef.ValueType = ValueTypeInteger
+End If
+
+If pInputTickVolumeName <> "" Then
+    Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueTickVolume)
+    valueDef.Description = "Bar tick volume"
+    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H800000, DisplayMode:=DataPointDisplayModeHistogram, Layer:=LayerDataPoints)
+    valueDef.ValueType = ValueTypeInteger
+End If
+
+If pInputOpenInterestName <> "" Then
+    Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOpenInterest)
+    valueDef.Description = "Bar open interest"
+    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H80&, DisplayMode:=DataPointDisplayModeHistogram, Layer:=LayerDataPoints)
+    valueDef.ValueType = ValueTypeInteger
+End If
+
+Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHL2)
+valueDef.Description = "Bar H+L/2 value"
+valueDef.DefaultRegion = StudyValueDefaultRegionDefault
+valueDef.ValueMode = ValueModeNone
+valueDef.ValueStyle = gCreateDataPointStyle(&HFF&, Layer:=LayerBars + 2)
+valueDef.ValueType = ValueTypeReal
+
+Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueHLC3)
+valueDef.Description = "Bar H+L+C/3 value"
+valueDef.DefaultRegion = StudyValueDefaultRegionDefault
+valueDef.ValueMode = ValueModeNone
+valueDef.ValueStyle = gCreateDataPointStyle(&HFF00&, Layer:=LayerBars + 2)
+valueDef.ValueType = ValueTypeReal
+
+Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueOHLC4)
+valueDef.Description = "Bar O+H+L+C/4 value"
+valueDef.DefaultRegion = StudyValueDefaultRegionDefault
+valueDef.ValueMode = ValueModeNone
+valueDef.ValueStyle = gCreateDataPointStyle(&HFF0000, Layer:=LayerBars + 2)
+valueDef.ValueType = ValueTypeReal
+
+Set gCreateBarStudyDefinition = lStudyDefinition
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gCreateBarStyle( _
-                Optional ByVal Color As Long = &H808080, _
-                Optional ByVal DisplayMode As BarDisplayModes = BarDisplayModeCandlestick, _
-                Optional ByVal DownColor As Long = &H808080, _
+                Optional ByVal Color As Long = -1, _
+                Optional ByVal DisplayMode As BarDisplayModes = BarDisplayModes.BarDisplayModeCandlestick, _
+                Optional ByVal DownColor As Long = &H7878D1, _
                 Optional ByVal IncludeInAutoscale As Boolean = True, _
-                Optional ByVal Layer As Long = LayerLowestUser, _
+                Optional ByVal Layer As Long = LayerBars, _
                 Optional ByVal OutlineThickness As Long = 1, _
-                Optional ByVal SolidUpBody As Boolean = False, _
+                Optional ByVal SolidUpBody As Boolean = True, _
                 Optional ByVal TailThickness As Long = 1, _
                 Optional ByVal Thickness As Long = 2, _
-                Optional ByVal UpColor As Long = &H808080, _
+                Optional ByVal UpColor As Long = &H9BDD9B, _
                 Optional ByVal Width As Single = 0.6) As BarStyle
 Dim lStyle As BarStyle
 Set lStyle = New BarStyle
@@ -134,6 +283,7 @@ Public Function gCreateDataPointStyle( _
                 Optional ByVal DownColor As Long = -1, _
                 Optional ByVal HistogramBarWidth As Single = 0.6, _
                 Optional ByVal IncludeInAutoscale As Boolean = True, _
+                Optional ByVal Layer As Long = LayerDataPoints, _
                 Optional ByVal LineStyle As LineStyles = LineSolid, _
                 Optional ByVal Linethickness As Long = 1, _
                 Optional ByVal PointStyle As PointStyles = PointRound, _
@@ -148,6 +298,7 @@ style.DisplayMode = DisplayMode
 style.DownColor = DownColor
 style.HistogramBarWidth = HistogramBarWidth
 style.IncludeInAutoscale = IncludeInAutoscale
+style.Layer = Layer
 style.LineStyle = LineStyle
 style.Linethickness = Linethickness
 style.PointStyle = PointStyle
@@ -180,7 +331,7 @@ Public Property Get gCreateLineStyle( _
                 Optional ByVal FixedX As Boolean = False, _
                 Optional ByVal FixedY As Boolean = False, _
                 Optional ByVal IncludeInAutoscale As Boolean = False, _
-                Optional ByVal Layer As Long = LayerHighestUser, _
+                Optional ByVal Layer As Long = LayerLines, _
                 Optional ByVal LineStyle As LineStyles = LineStyles.LineSolid, _
                 Optional ByVal Thickness As Long = 1) As LineStyle
 Dim lStyle As LineStyle
@@ -279,7 +430,7 @@ Public Function gCreateTextStyle(Optional ByVal Angle = 0, _
                 Optional ByVal HideIfBlank As Boolean = True, _
                 Optional ByVal IncludeInAutoscale As Boolean = False, _
                 Optional ByVal Justification As TextJustifyModes = TextJustifyModes.JustifyLeft, _
-                Optional ByVal Layer As Long = LayerHighestUser, _
+                Optional ByVal Layer As Long = LayerTexts, _
                 Optional ByVal MultiLine As Boolean = False, _
                 Optional ByVal PaddingX As Long = 1, _
                 Optional ByVal PaddingY As Long = 0, _

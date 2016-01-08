@@ -117,11 +117,11 @@ If mStudyDefinition Is Nothing Then
     paramDef.ParameterType = ParameterTypeInteger
 
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndex)
-    valueDef.Description = "The Force Index Value"
+    valueDef.Description = "The Force Index value"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueStyle = gCreateDataPointStyle
+    valueDef.ValueStyle = gCreateDataPointStyle(&HACD2B1, Layer:=LayerDataPoints + 2)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndexShort)
@@ -129,7 +129,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IncludeInChart = True
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H3264CD, Layer:=LayerDataPoints + 1)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndexLong)
@@ -137,7 +137,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.IncludeInChart = True
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.ValueStyle = gCreateDataPointStyle(&HDCA58D, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     
     

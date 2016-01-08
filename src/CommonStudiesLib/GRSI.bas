@@ -95,17 +95,17 @@ If mStudyDefinition Is Nothing Then
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(RsiInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Input Value"
+    inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(RsiValueRsi)
-    valueDef.Description = "The Relative Strength Index Value"
+    valueDef.Description = "The Relative Strength Index value"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.MaximumValue = 105
     valueDef.MinimumValue = -5
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(&H4040C0)
+    valueDef.ValueStyle = gCreateDataPointStyle(&H4040C0, Layer:=LayerDataPoints)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(RsiParamPeriods)

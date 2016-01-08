@@ -32,9 +32,6 @@ Public Const RegionNameUnderlying               As String = "$underlying"
 Public Const RegionNamePrice                    As String = "Price"
 Public Const RegionNameVolume                   As String = "Volume"
 
-Public Const StudyValConfigNameBar                      As String = "Bar"
-Public Const StudyValConfigNameVolume                   As String = "Volume"
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -51,7 +48,7 @@ Public Const StudyValConfigNameVolume                   As String = "Volume"
 ' Member variables
 '@================================================================================
 
-Private mDefaultStudyConfigurations         As Collection
+Private mDefaultStudyConfigurations         As EnumerableCollection
 
 Private mConfig                             As ConfigurationSection
 
@@ -215,23 +212,25 @@ On Error GoTo Err
 
 Set mConfig = config
 
-Set mDefaultStudyConfigurations = New Collection
+Set mDefaultStudyConfigurations = New EnumerableCollection
 
 Dim scSect As ConfigurationSection
 For Each scSect In mConfig
     Dim sc As StudyConfiguration
     Set sc = New StudyConfiguration
     sc.LoadFromConfig scSect
-    mDefaultStudyConfigurations.Add sc, calcDefaultStudyKey(sc.Name, sc.StudyLibraryName)
+    
+    Dim lKey As String: lKey = calcDefaultStudyKey(sc.Name, sc.StudyLibraryName)
+    If mDefaultStudyConfigurations.Contains(lKey) Then
+        gLogger.Log "Config file contains more than one default configuration for Study " & sc.Name & "(" & sc.StudyLibraryName & ")", ProcName, ModuleName
+    Else
+        mDefaultStudyConfigurations.Add sc, lKey
+    End If
 Next
 
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
-    gLogger.Log "Config file contains more than one default configuration for Study " & sc.Name & "(" & sc.StudyLibraryName & ")", ProcName, ModuleName
-    Resume Next
-End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -241,22 +240,18 @@ Const ProcName As String = "gSetDefaultStudyConfiguration"
 On Error GoTo Err
 
 If mDefaultStudyConfigurations Is Nothing Then
-    Set mDefaultStudyConfigurations = New Collection
+    Set mDefaultStudyConfigurations = New EnumerableCollection
 End If
 
 Dim key As String
 key = calcDefaultStudyKey(Value.Name, Value.StudyLibraryName)
 
-Dim sc As StudyConfiguration
-On Error Resume Next
-Set sc = mDefaultStudyConfigurations(key)
-On Error GoTo Err
-
-If Not sc Is Nothing Then
-    sc.RemoveFromConfig
+If mDefaultStudyConfigurations.Contains(key) Then
+    mDefaultStudyConfigurations.Item(key).RemoveFromConfig
     mDefaultStudyConfigurations.Remove key
 End If
 
+Dim sc As StudyConfiguration
 Set sc = Value.Clone
 mDefaultStudyConfigurations.Add sc, key
 If Not mConfig Is Nothing Then sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultStudyConfig & "(" & sc.ID & ")")
