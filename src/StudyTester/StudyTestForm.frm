@@ -2,20 +2,20 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "Msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#228.0#0"; "StudiesUI27.ocx"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#258.0#0"; "ChartSkil27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#231.0#0"; "StudiesUI27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#259.0#0"; "ChartSkil27.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.7"
-   ClientHeight    =   10365
+   ClientHeight    =   13920
    ClientLeft      =   5070
    ClientTop       =   3540
-   ClientWidth     =   12840
+   ClientWidth     =   14205
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   10365
-   ScaleWidth      =   12840
+   ScaleHeight     =   13920
+   ScaleWidth      =   14205
    Begin VB.CommandButton TestButton 
       Caption         =   "Test"
       Enabled         =   0   'False
@@ -29,20 +29,20 @@ Begin VB.Form StudyTestForm
          Strikethrough   =   0   'False
       EndProperty
       Height          =   735
-      Left            =   11640
+      Left            =   12960
       TabIndex        =   9
       ToolTipText     =   "Test the study"
       Top             =   120
       Width           =   1095
    End
    Begin TabDlg.SSTab SSTab1 
-      Height          =   9255
+      Height          =   12855
       Left            =   120
       TabIndex        =   10
       Top             =   960
-      Width           =   12615
-      _ExtentX        =   22251
-      _ExtentY        =   16325
+      Width           =   13935
+      _ExtentX        =   24580
+      _ExtentY        =   22675
       _Version        =   393216
       Style           =   1
       TabHeight       =   520
@@ -75,33 +75,43 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "&Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label2"
-      Tab(1).Control(1)=   "Label1"
-      Tab(1).Control(2)=   "Label19"
-      Tab(1).Control(3)=   "StudiesCombo"
-      Tab(1).Control(4)=   "LibToAddText"
-      Tab(1).Control(5)=   "AddLibButton"
-      Tab(1).Control(6)=   "StudyLibraryList"
-      Tab(1).Control(7)=   "RemoveLibButton"
-      Tab(1).Control(8)=   "StudyConfigurer1"
-      Tab(1).Control(9)=   "ErrorText"
+      Tab(1).Control(0)=   "ErrorText"
+      Tab(1).Control(0).Enabled=   0   'False
+      Tab(1).Control(1)=   "StudyConfigurer1"
+      Tab(1).Control(1).Enabled=   0   'False
+      Tab(1).Control(2)=   "RemoveLibButton"
+      Tab(1).Control(2).Enabled=   0   'False
+      Tab(1).Control(3)=   "StudyLibraryList"
+      Tab(1).Control(3).Enabled=   0   'False
+      Tab(1).Control(4)=   "AddLibButton"
+      Tab(1).Control(4).Enabled=   0   'False
+      Tab(1).Control(5)=   "LibToAddText"
+      Tab(1).Control(5).Enabled=   0   'False
+      Tab(1).Control(6)=   "StudiesCombo"
+      Tab(1).Control(6).Enabled=   0   'False
+      Tab(1).Control(7)=   "Label19"
+      Tab(1).Control(7).Enabled=   0   'False
+      Tab(1).Control(8)=   "Label1"
+      Tab(1).Control(8).Enabled=   0   'False
+      Tab(1).Control(9)=   "Label2"
+      Tab(1).Control(9).Enabled=   0   'False
       Tab(1).ControlCount=   10
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Chart1"
-      Tab(2).Control(1)=   "ChartToolbar1"
+      Tab(2).Control(0)=   "ChartToolbar1"
+      Tab(2).Control(1)=   "Chart1"
       Tab(2).ControlCount=   2
       Begin VB.TextBox ErrorText 
          BackColor       =   &H8000000F&
-         Height          =   2895
-         Left            =   -67560
+         Height          =   3975
+         Left            =   -74760
          Locked          =   -1  'True
          MultiLine       =   -1  'True
          ScrollBars      =   3  'Both
          TabIndex        =   19
-         Top             =   480
-         Width           =   4935
+         Top             =   3240
+         Width           =   6015
       End
       Begin ChartSkil27.ChartToolbar ChartToolbar1 
          Height          =   330
@@ -122,13 +132,13 @@ Begin VB.Form StudyTestForm
          _ExtentY        =   14843
       End
       Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
-         Height          =   5655
-         Left            =   -74760
+         Height          =   12015
+         Left            =   -68520
          TabIndex        =   16
-         Top             =   3480
-         Width           =   12255
-         _ExtentX        =   21616
-         _ExtentY        =   9975
+         Top             =   720
+         Width           =   7245
+         _ExtentX        =   12779
+         _ExtentY        =   21193
       End
       Begin VB.TextBox MinimumPriceTickText 
          Height          =   285
@@ -142,7 +152,7 @@ Begin VB.Form StudyTestForm
          Caption         =   "Remove"
          Enabled         =   0   'False
          Height          =   375
-         Left            =   -68640
+         Left            =   -69600
          TabIndex        =   7
          ToolTipText     =   "Remove the selected service provider from the list"
          Top             =   1860
@@ -151,39 +161,39 @@ Begin VB.Form StudyTestForm
       Begin VB.ListBox StudyLibraryList 
          Height          =   840
          ItemData        =   "StudyTestForm.frx":0054
-         Left            =   -72600
+         Left            =   -73080
          List            =   "StudyTestForm.frx":0056
          TabIndex        =   6
          ToolTipText     =   "Lists all studies service providers you need (except the built-in studies service provider)"
          Top             =   1860
-         Width           =   3975
+         Width           =   3495
       End
       Begin VB.CommandButton AddLibButton 
          Caption         =   "Add"
          Enabled         =   0   'False
          Height          =   375
-         Left            =   -68640
+         Left            =   -69600
          TabIndex        =   2
          ToolTipText     =   "Add this service provider to the list"
-         Top             =   1380
+         Top             =   1320
          Width           =   855
       End
       Begin VB.TextBox LibToAddText 
          Height          =   285
-         Left            =   -72600
+         Left            =   -73080
          TabIndex        =   1
          ToolTipText     =   "Enter the program id of any other studies service provider your service provider needs"
-         Top             =   1380
-         Width           =   3975
+         Top             =   1320
+         Width           =   3495
       End
       Begin VB.ComboBox StudiesCombo 
          Enabled         =   0   'False
          Height          =   315
-         Left            =   -72600
+         Left            =   -73080
          TabIndex        =   0
          ToolTipText     =   "Select the study to test"
          Top             =   540
-         Width           =   3975
+         Width           =   3495
       End
       Begin VB.CommandButton FindFileButton 
          Caption         =   "..."
@@ -205,14 +215,14 @@ Begin VB.Form StudyTestForm
          Width           =   6615
       End
       Begin MSFlexGridLib.MSFlexGrid TestDataGrid 
-         Height          =   7935
+         Height          =   11415
          Left            =   120
          TabIndex        =   11
          TabStop         =   0   'False
          Top             =   1260
          Width           =   12375
          _ExtentX        =   21828
-         _ExtentY        =   13996
+         _ExtentY        =   20135
          _Version        =   393216
          Cols            =   6
          FixedCols       =   0
@@ -231,9 +241,9 @@ Begin VB.Form StudyTestForm
       Begin VB.Label Label19 
          Caption         =   "Configure the study - selected output values will appear both on the chart and in the grid"
          Height          =   375
-         Left            =   -74760
+         Left            =   -68520
          TabIndex        =   8
-         Top             =   3120
+         Top             =   480
          Width           =   6375
       End
       Begin VB.Label Label1 
@@ -539,12 +549,10 @@ setupInitialStudies
 regionNames(0) = PriceRegionName
 regionNames(1) = VolumeRegionName
 
-StudyConfigurer1.Initialise mStudyLibraryManager.GetStudyDefinition(StudiesCombo), _
+StudyConfigurer1.Initialise mChartManager, _
+                            StudiesCombo.Text, _
                             "", _
-                            regionNames, _
-                            mChartManager.BaseStudyConfiguration, _
-                            Nothing, _
-                            mStudyLibraryManager.GetStudyDefaultParameters(StudiesCombo), _
+                            mChartManager.GetDefaultStudyConfiguration(StudiesCombo.Text, ""), _
                             False
 mIsStudySet = True
 If Not mBars Is Nothing Then TestButton.Enabled = True
@@ -597,12 +605,10 @@ mChartManager.StartStudy studyToTest
 ' objects are referenced
 regionNames(0) = PriceRegionName
 regionNames(1) = VolumeRegionName
-StudyConfigurer1.Initialise mStudyLibraryManager.GetStudyDefinition(StudiesCombo), _
+StudyConfigurer1.Initialise mChartManager, _
+                            StudiesCombo.Text, _
                             "", _
-                            regionNames, _
-                            mChartManager.BaseStudyConfiguration, _
                             testStudyConfig, _
-                            mStudyLibraryManager.GetStudyDefaultParameters(StudiesCombo), _
                             False
 
 failPoint = "setting up the Study Value grid"
