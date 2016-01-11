@@ -753,12 +753,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let layer(ByVal Value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
 
-If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid layer number"
+If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Layer number"
 
 setLongProperty mLayer, LinePropertyLayer, Value
 
@@ -768,12 +768,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get layer() As LayerNumbers
+Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
 checkPropertySet LinePropertyLayer
-layer = mLayer
+Layer = mLayer
 
 Exit Property
 
@@ -973,7 +973,7 @@ If mConfig.GetSetting(ConfigSettingFixedY) <> "" Then FixedY = mConfig.GetSettin
 
 If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetSetting(ConfigSettingLayer) <> "" Then layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
 If mConfig.GetSetting(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
 
 If mConfig.GetSetting(ConfigSettingThickness) <> "" Then Thickness = mConfig.GetSetting(ConfigSettingThickness)
@@ -1023,7 +1023,7 @@ If IsPropertySet(LinePropertyExtended) Then pDest.Extended = mExtended Else pDes
 If IsPropertySet(LinePropertyFixedX) Then pDest.FixedX = mFixedX Else pDest.ClearProperty LinePropertyFixedX
 If IsPropertySet(LinePropertyFixedY) Then pDest.FixedY = mFixedY Else pDest.ClearProperty LinePropertyFixedY
 If IsPropertySet(LinePropertyIncludeInAutoscale) Then pDest.IncludeInAutoscale = mIncludeInAutoscale Else pDest.ClearProperty LinePropertyIncludeInAutoscale
-If IsPropertySet(LinePropertyLayer) Then pDest.layer = mLayer Else pDest.ClearProperty LinePropertyLayer
+If IsPropertySet(LinePropertyLayer) Then pDest.Layer = mLayer Else pDest.ClearProperty LinePropertyLayer
 If IsPropertySet(LinePropertyLineStyle) Then pDest.LineStyle = mLineStyle Else pDest.ClearProperty LinePropertyLineStyle
 If IsPropertySet(LinePropertyOffset1) Then pDest.Offset1 = mOffset1 Else pDest.ClearProperty LinePropertyOffset1
 If IsPropertySet(LinePropertyOffset2) Then pDest.Offset2 = mOffset2 Else pDest.ClearProperty LinePropertyOffset1

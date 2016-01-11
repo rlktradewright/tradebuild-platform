@@ -1826,7 +1826,7 @@ End Property
 
 Public Function AddGraphicObjectSeries( _
                 ByVal graphObjSeries As IGraphicObjectSeries, _
-                Optional ByVal layer As Long = -1, _
+                Optional ByVal Layer As Long = LayerNone, _
                 Optional ByVal Name As String) As IGraphicObjectSeries
 Const ProcName As String = "AddGraphicObjectSeries"
 
@@ -1834,7 +1834,7 @@ On Error GoTo Err
 
 Set AddGraphicObjectSeries = mGraphObjSeriesCollection.Add( _
                                             graphObjSeries, _
-                                            mData.GetNextUserLayer(layer), _
+                                            mData.GetNextUserLayer(Layer), _
                                             Name, _
                                             mViewport, _
                                             mPeriods, _
@@ -1859,7 +1859,7 @@ If miscLines Is Nothing Then
     Set miscLines = AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerHighestUser - 1)
 End If
 Set lLine = miscLines.Add
-If pLayer <> -1 Then lLine.layer = pLayer
+If pLayer <> -1 Then lLine.Layer = pLayer
 If Not Style Is Nothing Then lLine.LocalStyle = Style
 
 Set AddLine = lLine
@@ -1897,7 +1897,7 @@ If miscTexts Is Nothing Then
 End If
 Set lText = miscTexts.Add
 If Value <> "" Then lText.Text = Value
-If pLayer <> -1 Then lText.layer = pLayer
+If pLayer <> -1 Then lText.Layer = pLayer
 If Not Style Is Nothing Then lText.LocalStyle = Style
 
 Set AddText = lText
@@ -2128,17 +2128,17 @@ Dim aTextSeries As New TextSeries
 AddGraphicObjectSeries aTextSeries
 
 Set mCursorText = aTextSeries.Add
-mCursorText.layer = LayerNumbers.LayerPointer + 1
+mCursorText.Layer = LayerNumbers.LayerPointer + 1
 mCursorText.HideIfBlank = True
 mCursorText.Extended = True ' need this so it displays when cursor is outside the period range
 
 Set mXCursorText = aTextSeries.Add
-mXCursorText.layer = LayerNumbers.LayerPointer + 1
+mXCursorText.Layer = LayerNumbers.LayerPointer + 1
 mXCursorText.HideIfBlank = True
 mXCursorText.Extended = True ' need this so it displays when cursor is outside the period range
 
 Set mYCursorText = aTextSeries.Add
-mYCursorText.layer = LayerNumbers.LayerPointer + 1
+mYCursorText.Layer = LayerNumbers.LayerPointer + 1
 mYCursorText.HideIfBlank = True
 mYCursorText.Extended = True ' need this so it displays when cursor is outside the period range
 
@@ -2517,7 +2517,7 @@ End Sub
 Public Sub SetPeriodBackgroundColor( _
                 ByVal PeriodNumber As Long, _
                 ByVal Color As Long)
-Dim layer As Long
+Dim Layer As Long
 Dim index As Long
 Dim periodrect As TRectangle
 Dim redrawAreas(0) As TRectangle
@@ -2876,7 +2876,7 @@ On Error GoTo Err
 
 drawAreas(0) = RectIntersection(mViewport.Boundary, areaToRedraw)
 
-If graphObj.layer <> LayerInvisible Then graphObj.Draw drawAreas
+If graphObj.Layer <> LayerInvisible Then graphObj.Draw drawAreas
 
 Exit Sub
 
@@ -3164,7 +3164,7 @@ If perfText Is Nothing Then
     perfText.IncludeInAutoscale = False
     perfText.MultiLine = True
     perfText.PaddingX = 0.5
-    perfText.layer = LayerTitle
+    perfText.Layer = LayerTitle
 End If
 Set getPerformanceText = perfText
 
@@ -3347,7 +3347,7 @@ On Error GoTo Err
 
 mViewport.Canvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areaToRedraw)
 drawObject graphObj, areaToRedraw
-RedrawArea areaToRedraw, graphObj.layer + 1
+RedrawArea areaToRedraw, graphObj.Layer + 1
 mViewport.Canvas.ClearClippingRegion
 
 Exit Sub

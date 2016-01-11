@@ -538,7 +538,7 @@ Dim currObjStillSelectable As Boolean
 If currObject Is Nothing Then
     startLayer = LayerMax
 Else
-    startLayer = currObject.layer
+    startLayer = currObject.Layer
 End If
 
 For i = 1 To NumberOfLayers
@@ -582,7 +582,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function GetNextUserLayer(Optional ByVal layer As Long = -1) As Long
+Friend Function GetNextUserLayer(Optional ByVal Layer As Long = LayerNone) As Long
 Const ProcName As String = "GetNextUserLayer"
 On Error GoTo Err
 
@@ -590,15 +590,15 @@ Static sNextLayer As Long
 
 If sNextLayer = 0 Then sNextLayer = LayerNumbers.LayerLowestUser
 
-If layer < LayerNumbers.LayerLowestUser Or _
-    layer > LayerNumbers.LayerHighestUser _
+If Layer < LayerNumbers.LayerLowestUser Or _
+    Layer > LayerNumbers.LayerHighestUser _
 Then
     GetNextUserLayer = sNextLayer
     If sNextLayer <> LayerNumbers.LayerHighestUser Then
         sNextLayer = sNextLayer + 1
     End If
 Else
-    GetNextUserLayer = layer
+    GetNextUserLayer = Layer
 End If
 
 Exit Function
@@ -626,7 +626,7 @@ End Sub
 Friend Sub MarkObjectsForRedraw( _
                 ByRef areasToRedraw() As TRectangle, _
                 ByVal pCount As Long)
-Dim layer As Long
+Dim Layer As Long
 Dim index As Long
 Dim i As Long
 Dim br As TRectangle
@@ -637,9 +637,9 @@ On Error GoTo Err
 
 ' mark objects that overlap the redraw area
 
-For layer = LayerMinVisible To LayerMax
-    index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
-    Do While index <> mVisibleTable(layer).lastindex
+For Layer = LayerMinVisible To LayerMax
+    index = mGraphicObjects(mVisibleTable(Layer).firstIndex).nextVisibleIndex
+    Do While index <> mVisibleTable(Layer).lastindex
         With mGraphicObjects(index)
             br = .graphObj.BoundingRectangle
             
@@ -761,7 +761,7 @@ Friend Sub RedrawArea( _
                 ByRef areaToRedraw As TRectangle, _
                 ByVal startLayer As Long, _
                 Optional ByVal objToExclude As IGraphicObject)
-Dim layer As Long
+Dim Layer As Long
 Dim index As Long
 
 Const ProcName As String = "RedrawArea"
@@ -772,9 +772,9 @@ On Error GoTo Err
 
 Dim rects(0) As TRectangle
 
-For layer = startLayer To LayerMax
-    index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
-    Do While index <> mVisibleTable(layer).lastindex
+For Layer = startLayer To LayerMax
+    index = mGraphicObjects(mVisibleTable(Layer).firstIndex).nextVisibleIndex
+    Do While index <> mVisibleTable(Layer).lastindex
         With mGraphicObjects(index)
             If Not .graphObj Is objToExclude Then
                 rects(0) = RectIntersection(areaToRedraw, .graphObj.BoundingRectangle)
@@ -971,7 +971,7 @@ With mGraphicObjects(index)
     If .visibleCycle <> mVisibleCycle Then
         .graphObj.Visible = True
         .visibleCycle = mVisibleCycle
-        lastindex = mVisibleTable(.graphObj.layer).lastindex
+        lastindex = mVisibleTable(.graphObj.Layer).lastindex
         .nextVisibleIndex = lastindex
         .prevVisibleIndex = mGraphicObjects(lastindex).prevVisibleIndex
         mGraphicObjects(.prevVisibleIndex).nextVisibleIndex = index

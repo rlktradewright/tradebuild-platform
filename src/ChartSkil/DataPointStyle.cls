@@ -333,12 +333,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let layer(ByVal Value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
 
-If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid layer number"
+If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Layer number"
 
 setLongProperty mLayer, DataPointPropertyLayer, Value
 
@@ -348,12 +348,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get layer() As LayerNumbers
+Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
 checkPropertySet DataPointPropertyLayer
-layer = mLayer
+Layer = mLayer
 
 Exit Property
 
@@ -513,7 +513,7 @@ If IsPropertySet(DataPointPropertyDisplayMode) Then clone.DisplayMode = mDisplay
 If IsPropertySet(DataPointPropertyDownColor) Then clone.DownColor = mDownColor
 If IsPropertySet(DataPointPropertyHistWidth) Then clone.HistogramBarWidth = mHistWidth
 If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
-If IsPropertySet(DataPointPropertyLayer) Then clone.layer = mLayer
+If IsPropertySet(DataPointPropertyLayer) Then clone.Layer = mLayer
 If IsPropertySet(DataPointPropertyLineStyle) Then clone.LineStyle = mLineStyle
 If IsPropertySet(DataPointPropertyLineThickness) Then clone.LineThickness = mLineThickness
 If IsPropertySet(DataPointPropertyPointStyle) Then clone.PointStyle = PointStyle
@@ -552,7 +552,7 @@ If mConfig.GetSetting(ConfigSettingHistWidth) <> "" Then HistogramBarWidth = mCo
 
 If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetSetting(ConfigSettingLayer) <> "" Then layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
 
 If mConfig.GetSetting(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
 If mConfig.GetSetting(ConfigSettingLineThickness) <> "" Then LineThickness = mConfig.GetSetting(ConfigSettingLineThickness)

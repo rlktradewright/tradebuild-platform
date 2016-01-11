@@ -772,12 +772,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let layer(ByVal Value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
 
-If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid layer number"
+If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Layer number"
 
 setLongProperty mLayer, TextPropertyLayer, Value
 
@@ -787,12 +787,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get layer() As LayerNumbers
+Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
 checkPropertySet TextPropertyLayer
-layer = mLayer
+Layer = mLayer
 
 Exit Property
 
@@ -1090,7 +1090,7 @@ If IsPropertySet(TextPropertyFont) Then clone.Font = gCloneFont(mFont)
 If IsPropertySet(TextPropertyHideIfBlank) Then clone.HideIfBlank = mHideIfBlank
 If IsPropertySet(TextPropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
 If IsPropertySet(TextPropertyJustification) Then clone.Justification = mJustification
-If IsPropertySet(TextPropertyLayer) Then clone.layer = mLayer
+If IsPropertySet(TextPropertyLayer) Then clone.Layer = mLayer
 If IsPropertySet(TextPropertyLeftMargin) Then clone.LeftMargin = mLeftMargin
 If IsPropertySet(TextPropertyMultiLine) Then clone.MultiLine = mMultiLine
 If IsPropertySet(TextPropertyOffset) Then clone.Offset = mOffset
@@ -1154,7 +1154,7 @@ If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutos
 
 If mConfig.GetSetting(ConfigSettingJustification) <> "" Then Justification = mConfig.GetSetting(ConfigSettingJustification)
 
-If mConfig.GetSetting(ConfigSettingLayer) <> "" Then layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
 
 If mConfig.GetSetting(ConfigSettingMultiline) <> "" Then MultiLine = mConfig.GetSetting(ConfigSettingMultiline)
 

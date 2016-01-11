@@ -112,7 +112,7 @@ If lStyle Is Nothing Then
     lStyle.DisplayMode = BarDisplayModeCandlestick
     lStyle.DownColor = vbBlack
     lStyle.IncludeInAutoscale = True
-    lStyle.layer = LayerLowestUser
+    lStyle.Layer = LayerLowestUser
     lStyle.OutlineThickness = 1
     lStyle.SolidUpBody = False
     lStyle.TailThickness = 1
@@ -340,7 +340,7 @@ If lStyle Is Nothing Then
     lStyle.DownColor = -1
     lStyle.HistogramBarWidth = 0.6
     lStyle.IncludeInAutoscale = True
-    lStyle.layer = LayerLowestUser + 1
+    lStyle.Layer = LayerLowestUser + 1
     lStyle.LineStyle = LineStyles.LineSolid
     lStyle.LineThickness = 1
     lStyle.PointStyle = PointRound
@@ -372,7 +372,7 @@ If lStyle Is Nothing Then
     lStyle.FixedX = False
     lStyle.FixedY = False
     lStyle.IncludeInAutoscale = False
-    lStyle.layer = LayerHighestUser
+    lStyle.Layer = LayerHighestUser
     lStyle.LineStyle = LineStyles.LineSolid
     lStyle.Thickness = 1
 End If
@@ -411,7 +411,7 @@ If lStyle Is Nothing Then
     lStyle.HideIfBlank = True
     lStyle.IncludeInAutoscale = False
     lStyle.Justification = TextJustifyModes.JustifyLeft
-    lStyle.layer = LayerHighestUser
+    lStyle.Layer = LayerHighestUser
     lStyle.MultiLine = False
     lStyle.PaddingX = 0.3
     lStyle.PaddingY = 0#
@@ -541,12 +541,12 @@ Set gCloneFont = afont
 End Function
 
 Public Function gCreateColorArray(ParamArray pColors()) As Long()
-ReDim lcolors(UBound(pColors)) As Long
+ReDim lColors(UBound(pColors)) As Long
 Dim i As Long
-For i = 0 To UBound(lcolors)
-    lcolors(i) = CLng(pColors(i))
+For i = 0 To UBound(lColors)
+    lColors(i) = CLng(pColors(i))
 Next
-gCreateColorArray = lcolors
+gCreateColorArray = lColors
 End Function
 
 Public Function gDegreesToRadians( _

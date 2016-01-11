@@ -315,11 +315,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let layer(ByVal Value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
-If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid layer number"
+If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Layer number"
 
 setLongProperty mLayer, BarPropertyLayer, Value
 
@@ -329,12 +329,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get layer() As LayerNumbers
+Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
 checkPropertySet BarPropertyLayer
-layer = mLayer
+Layer = mLayer
 
 Exit Property
 
@@ -537,7 +537,7 @@ If IsPropertySet(BarPropertyColor) Then clone.Color = mColor
 If IsPropertySet(BarPropertyDisplayMode) Then clone.DisplayMode = mDisplayMode
 If IsPropertySet(BarPropertyDownColor) Then clone.DownColor = mDownColor
 If IsPropertySet(BarPropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
-If IsPropertySet(BarPropertyLayer) Then clone.layer = mLayer
+If IsPropertySet(BarPropertyLayer) Then clone.Layer = mLayer
 If IsPropertySet(BarPropertyOutlineThickness) Then clone.OutlineThickness = mOutlineThickness
 If IsPropertySet(BarPropertySolidUpBody) Then clone.SolidUpBody = mSolidUpBody
 If IsPropertySet(BarPropertyTailThickness) Then clone.TailThickness = mTailThickness
@@ -574,7 +574,7 @@ If mConfig.GetSetting(ConfigSettingDownColor) <> "" Then DownColor = mConfig.Get
 
 If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetSetting(ConfigSettingLayer) <> "" Then layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
 
 If mConfig.GetSetting(ConfigSettingOutlineThickness) <> "" Then OutlineThickness = mConfig.GetSetting(ConfigSettingOutlineThickness)
 

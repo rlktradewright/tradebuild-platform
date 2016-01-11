@@ -166,6 +166,7 @@ Public Enum FillStyles
 End Enum
 
 Public Enum LayerNumbers
+    LayerNone = -1
     LayerMin = 0
     LayerMax = 255
     
