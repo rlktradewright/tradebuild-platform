@@ -360,20 +360,18 @@ On Error GoTo Err
 
 If IsEmpty(oi.Value) Then Exit Sub
 
+If mCurrentBar Is Nothing Then
+    ' a Bar with no price causes all sorts of problems so do nothing
+    Exit Sub
+End If
+
 If mBarTimePeriod.Length = 0 Then
     ' the caller will sUpply Bar numbers
-    If mCurrentBar Is Nothing Then
-        ' a Bar with no price causes all sorts of problems so do nothing
-        Exit Sub
-    End If
     If newBar(oi.BarNumber) Then
         createNewBar oi.BarStartTime, mCurrentBar.CloseValue, 0, mOpenInterestParser.Notify(oi.Value)
     Else
         mCurrentBar.NotifyOpenInterest mOpenInterestParser.Notify(oi.Value)
     End If
-ElseIf mCurrentBar Is Nothing Then
-        ' a Bar with no price causes all sorts of problems so do nothing
-        Exit Sub
 Else
     ' we assume that an Open interest notification belongs to the same Bar as the
     ' preceding price notification, so we don't check the Timestamp
@@ -479,7 +477,6 @@ If mBarTimePeriod.Length = 0 Then
         mCurrentBar.NotifyVolume mCurrentBar.Volume + volIncrement
     End If
 ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
-    
     If volIncrement + mCurrentBar.Volume >= mBarTimePeriod.Length Then
         
         volIncrement = volIncrement - (mBarTimePeriod.Length - mCurrentBar.Volume)
@@ -497,19 +494,15 @@ ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
         Else
             Set mCurrentBar = Nothing
         End If
-    
     Else
         mCurrentBar.NotifyVolume volIncrement + mCurrentBar.Volume
     End If
-    
-
 Else
     ' we assume that a Volume notification belongs to the same Bar as the
     ' preceding price notification, so we don't check the Timestamp
     
     mCurrentBar.NotifyVolume mCurrentBar.Volume + volIncrement
 End If
-
 
 Exit Sub
 
