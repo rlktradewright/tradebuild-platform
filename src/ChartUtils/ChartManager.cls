@@ -835,6 +835,7 @@ Else
     Else
         Set getRegion = mChartController.Regions.Add(20, , , , regionName)
         getRegion.YGridlineSpacing = 0.8
+        getRegion.YScaleQuantum = 0.01
         getRegion.title.Text = title
     End If
     Set re.Region = getRegion
