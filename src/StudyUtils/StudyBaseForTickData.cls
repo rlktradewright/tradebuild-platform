@@ -50,6 +50,7 @@ Private Const ModuleName                            As String = "StudyBaseForTic
 Private mStudyManager                               As StudyManager
 Private mStudyInputHandler                          As StudyInputHandler
 
+Private mInputHandleBarNumber                       As Long
 Private mInputHandleBid                             As Long
 Private mInputHandleAsk                             As Long
 Private mInputHandleOpenInterest                    As Long
@@ -200,6 +201,24 @@ mInputHandleVolume = mStudyManager.AddInput(mStudyInputHandler, _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
                         1)
+mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
+                        BarNumberInputName, _
+                        "Bar number", _
+                        StudyInputTypes.InputTypeInteger, _
+                        False, _
+                        1)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub NotifyBarNumber(pBarNumber As Long, ByVal pTimestamp As Date)
+Const ProcName As String = "NotifyBarNumber"
+On Error GoTo Err
+
+mStudyManager.NotifyInput mInputHandleBarNumber, pBarNumber, pTimestamp
 
 Exit Sub
 

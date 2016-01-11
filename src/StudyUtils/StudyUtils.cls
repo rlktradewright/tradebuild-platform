@@ -429,27 +429,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateStudyBaseForUserBarsInput( _
-                ByVal pStudyManager As StudyManager, _
-                Optional ByVal pQuantum As Double = 0#, _
-                Optional ByVal pName As String) As IStudyBase
-Const ProcName As String = "CreateStudyBaseForUserBarsInput"
-On Error GoTo Err
-
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-AssertArgument pQuantum >= 0, "pQuantum is negative"
-
-Dim lStudyBase As New StudyBaseForUserBarsInput
-lStudyBase.Initialise pStudyManager, pQuantum, pName
-
-Set CreateStudyBaseForUserBarsInput = lStudyBase
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Function CreateStudyPoint( _
                 ByVal X As Date, _
                 ByVal Y As Double) As StudyPoint
@@ -527,9 +506,12 @@ Const ProcName As String = "setupBarStudy"
 On Error GoTo Err
 
 If pStudyName = UserDefinedBarsStudyName Then
-    ReDim InputValueNames(1) As String
+    ReDim InputValueNames(4) As String
     InputValueNames(0) = DefaultStudyValueName
-    InputValueNames(1) = InputNameBarNumber
+    InputValueNames(1) = InputNameVolume
+    InputValueNames(2) = InputNameTickVolume
+    InputValueNames(3) = InputNameOpenInterest
+    InputValueNames(4) = InputNameBarNumber
 Else
     ReDim InputValueNames(3) As String
     InputValueNames(0) = DefaultStudyValueName

@@ -49,8 +49,8 @@ Private Const ModuleName                            As String = "StudyBaseForUse
 Private mStudyManager                               As StudyManager
 Private mStudyInputHandler                          As StudyInputHandler
 
-Private mValueInputHandle                           As Long
-Private mBarNumberInputHandle                       As Long
+Private mInputHandleValue                           As Long
+Private mInputHandleBarNumber                       As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -100,13 +100,13 @@ Set mStudyManager = pStudyManager
 If pName = "" Then pName = GenerateGUIDString
 
 Set mStudyInputHandler = mStudyManager.CreateStudyInputHandler(pName)
-mValueInputHandle = mStudyManager.AddInput(mStudyInputHandler, _
+mInputHandleValue = mStudyManager.AddInput(mStudyInputHandler, _
                         ValueInputName, _
                         "Value", _
                         StudyInputTypes.InputTypeReal, _
                         True, _
                         pQuantum)
-mBarNumberInputHandle = mStudyManager.AddInput(mStudyInputHandler, _
+mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
                         BarNumberInputName, _
                         "Bar number", _
                         StudyInputTypes.InputTypeInteger, _
@@ -123,7 +123,7 @@ Public Sub NotifyBarNumber(pBarNumber As Long, ByVal pTimestamp As Date)
 Const ProcName As String = "NotifyBarNumber"
 On Error GoTo Err
 
-mStudyManager.NotifyInput mBarNumberInputHandle, pBarNumber, pTimestamp
+mStudyManager.NotifyInput mInputHandleBarNumber, pBarNumber, pTimestamp
 
 Exit Sub
 
@@ -135,7 +135,7 @@ Public Sub NotifyValue(pValue As Double, ByVal pTimestamp As Date)
 Const ProcName As String = "NotifyValue"
 On Error GoTo Err
 
-mStudyManager.NotifyInput mValueInputHandle, pValue, pTimestamp
+mStudyManager.NotifyInput mInputHandleValue, pValue, pTimestamp
 
 Exit Sub
 

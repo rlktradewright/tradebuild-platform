@@ -362,10 +362,10 @@ Set StudyEntry.SessionBuilderFuture = CreateSessionBuilderFuture(mSessionFuture)
 
 Dim lStudyFoundation As New StudyFoundation
 lStudyFoundation.Initialise Name, _
-            LibraryName, _
-            Me, _
-            StudyEntry.Study, _
-            StudyEntry.StudyID, _
+                        LibraryName, _
+                        Me, _
+                        StudyEntry.Study, _
+                        StudyEntry.StudyID, _
                         Parameters, _
                         pNumberOfValuesToCache, _
                         InputValueNames, _
