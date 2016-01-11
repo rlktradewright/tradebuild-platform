@@ -68,7 +68,7 @@ Attribute mBarStudySupport.VB_VarHelpID = -1
 
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
-Private WithEvents mBar As BarUtils27.Bar
+Private WithEvents mBar As Barutils27.Bar
 Attribute mBar.VB_VarHelpID = -1
 
 Private mPriceTickSize As Double
@@ -252,7 +252,7 @@ End Sub
 Private Function customGetStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
-Dim Bar As BarUtils27.Bar
+Dim Bar As Barutils27.Bar
 Dim sv As SValue
 
 Const ProcName As String = "customGetStudyValue"
@@ -404,83 +404,10 @@ End Property
 '@================================================================================
 
 Private Sub notifyBarValues()
-Dim evOut As StudyValueEventData
-
 Const ProcName As String = "notifyBarValues"
 On Error GoTo Err
 
-If mBar Is Nothing Then Exit Sub
-
-evOut.sVal.BarNumber = mBar.BarNumber
-evOut.sVal.BarStartTime = mBar.Timestamp
-Set evOut.Source = Me
-evOut.sVal.Timestamp = mTimestamp
-
-If mBar.BarChanged Then
-    Set evOut.sVal.Value = mBar
-    evOut.valueName = BarStudyValueBar
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.OpenChanged Then
-    evOut.sVal.Value = mBar.OpenValue
-    evOut.valueName = BarStudyValueOpen
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.HighChanged Then
-    evOut.sVal.Value = mBar.highValue
-    evOut.valueName = BarStudyValueHigh
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.LowChanged Then
-    evOut.sVal.Value = mBar.lowValue
-    evOut.valueName = BarStudyValueLow
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.CloseChanged Then
-    evOut.sVal.Value = mBar.CloseValue
-    evOut.valueName = BarStudyValueClose
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.VolumeChanged Then
-    evOut.sVal.Value = mBar.volume
-    evOut.valueName = BarStudyValueVolume
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.OpenInterestChanged Then
-    evOut.sVal.Value = mBar.OpenInterest
-    evOut.valueName = BarStudyValueOpenInterest
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.BarChanged Then
-    evOut.sVal.Value = mBar.TickVolume
-    evOut.valueName = BarStudyValueTickVolume
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.HighChanged Or mBar.LowChanged Then
-    evOut.sVal.Value = mBar.HL2
-    evOut.valueName = BarStudyValueHL2
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.HighChanged Or mBar.LowChanged Or mBar.CloseChanged Then
-    evOut.sVal.Value = mBar.HLC3
-    evOut.valueName = BarStudyValueHLC3
-    mStudyFoundation.notifyValue evOut
-End If
-
-If mBar.OpenChanged Or mBar.HighChanged Or mBar.LowChanged Or mBar.CloseChanged Then
-    evOut.sVal.Value = mBar.OHLC4
-    evOut.valueName = BarStudyValueOHLC4
-    mStudyFoundation.notifyValue evOut
-End If
+gNotifyBarValues Me, mStudyFoundation, mBar, mTimestamp
 
 Exit Sub
 
