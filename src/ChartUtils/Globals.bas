@@ -85,14 +85,15 @@ Public Function gGetDefaultStudyConfiguration( _
 Const ProcName As String = "gGetDefaultStudyConfiguration"
 On Error GoTo Err
 
-If mDefaultStudyConfigurations Is Nothing Then Set mDefaultStudyConfigurations = New Collection
+If mDefaultStudyConfigurations Is Nothing Then Set mDefaultStudyConfigurations = New EnumerableCollection
 
-On Error Resume Next
+Dim lKey As String
+lKey = calcDefaultStudyKey(Name, studyLibName)
+
 Dim studyConfig As StudyConfiguration
-Set studyConfig = mDefaultStudyConfigurations.Item(calcDefaultStudyKey(Name, studyLibName))
-On Error GoTo Err
 
-If Not studyConfig Is Nothing Then
+If mDefaultStudyConfigurations.Contains(lKey) Then
+    Set studyConfig = mDefaultStudyConfigurations.Item(lKey)
     Set gGetDefaultStudyConfiguration = studyConfig.Clone
     ' ensure that each instance of the default study config has its own
     ' StudyValueHandlers
@@ -253,6 +254,7 @@ End If
 
 Dim sc As StudyConfiguration
 Set sc = Value.Clone
+sc.StudyValueHandlers = New StudyValueHandlers
 mDefaultStudyConfigurations.Add sc, key
 If Not mConfig Is Nothing Then sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultStudyConfig & "(" & sc.ID & ")")
 

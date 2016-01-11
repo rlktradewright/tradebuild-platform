@@ -89,8 +89,7 @@ Private mConfig As ConfigurationSection
 '@================================================================================
 
 Private Sub Class_Initialize()
-
-mLayer = LayerNumbers.LayerHighestUser
+mLayer = LayerNone
 End Sub
 
 '@================================================================================

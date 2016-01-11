@@ -110,7 +110,7 @@ Private mPrevDataPointValue                         As SValue
 Private mCurrentStringValue                         As SValue
 Private mCurrentStudyText                           As StudyText
 Private mCurrentBar                                 As BarUtils27.Bar
-Private mCurrentStudyLine                           As studyLine
+Private mCurrentStudyLine                           As StudyLine
 
 Private mDataSeries                                 As DataPointSeries
 Private mBarSeries                                  As BarSeries
@@ -585,7 +585,7 @@ If ev.sVal.Value Is Nothing Then Exit Sub
 Static sCurrentBarNumber As Long
 Static sCurrentChartLine As ChartSkil27.line
 
-Dim lStudyLine As studyLine
+Dim lStudyLine As StudyLine
 Set lStudyLine = ev.sVal.Value
 
 If mUpdatePerTick Then
@@ -681,7 +681,11 @@ Private Sub setupBarSeries( _
 Const ProcName As String = "setupBarSeries"
 On Error GoTo Err
 
-Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.Layer)
+If studyValueConfig.Layer = LayerNone Then
+    Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries)
+Else
+    Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.Layer)
+End If
 Set mValueSeries = mBarSeries
 If studyValueConfig.BarStyle Is Nothing Then studyValueConfig.BarStyle = studyValueDef.ValueStyle.Clone
 mBarSeries.Style = studyValueConfig.BarStyle
@@ -706,7 +710,11 @@ Private Sub setupDataSeries( _
 Const ProcName As String = "setupDataSeries"
 On Error GoTo Err
 
-Set mDataSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, studyValueConfig.Layer)
+If studyValueConfig.Layer = LayerNone Then
+    Set mDataSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries)
+Else
+    Set mDataSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, studyValueConfig.Layer)
+End If
 Set mValueSeries = mDataSeries
 If studyValueConfig.DataPointStyle Is Nothing Then studyValueConfig.DataPointStyle = studyValueDef.ValueStyle.Clone
 mDataSeries.Style = studyValueConfig.DataPointStyle
@@ -723,7 +731,11 @@ Private Sub setupLineSeries( _
 Const ProcName As String = "setupLineSeries"
 On Error GoTo Err
 
-Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, studyValueConfig.Layer)
+If studyValueConfig.Layer = LayerNone Then
+    Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries)
+Else
+    Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, studyValueConfig.Layer)
+End If
 Set mValueSeries = mLineSeries
 If studyValueConfig.LineStyle Is Nothing Then studyValueConfig.LineStyle = studyValueDef.ValueStyle.Clone
 mLineSeries.Style = studyValueConfig.LineStyle
@@ -740,7 +752,11 @@ Private Sub setupTextSeries( _
 Const ProcName As String = "setupTextSeries"
 On Error GoTo Err
 
-Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, studyValueConfig.Layer)
+If studyValueConfig.Layer = LayerNone Then
+    Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries)
+Else
+    Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, studyValueConfig.Layer)
+End If
 Set mValueSeries = mTextSeries
 If studyValueConfig.TextStyle Is Nothing Then studyValueConfig.TextStyle = studyValueDef.ValueStyle.Clone
 mTextSeries.Style = studyValueConfig.TextStyle
@@ -802,7 +818,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updateCurrentLine( _
-                ByVal pCurrentStudyLine As studyLine, _
+                ByVal pCurrentStudyLine As StudyLine, _
                 ByVal pIsFinalUpdate As Boolean)
 Const ProcName As String = "updateCurrentLine"
 On Error GoTo Err

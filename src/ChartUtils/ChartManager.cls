@@ -269,7 +269,7 @@ Public Sub ApplyStudyConfiguration( _
 Const ProcName As String = "ApplyStudyConfiguration"
 On Error GoTo Err
 
-doApplyStudyConfiguration pStudyConfig
+doApplyStudyConfiguration pStudyConfig, pNumberOfValuesToReplay
 addStudyConfigToParent pStudyConfig
 addStudyConfig pStudyConfig
 RaiseEvent StudyAdded(pStudyConfig.Study)
@@ -447,7 +447,7 @@ If Not mConfig Is Nothing Then
     
     studyConfig.LoadFromConfig baseStudySect
     
-    setTheBaseStudyConfiguration studyConfig
+    setTheBaseStudyConfiguration studyConfig, ReplayNumbers.ReplayAll
 End If
 
 Exit Sub
@@ -496,7 +496,8 @@ End Function
 
 Public Function ReplaceStudyConfiguration( _
                 ByVal oldStudyConfig As StudyConfiguration, _
-                ByVal newStudyConfig As StudyConfiguration) As IStudy
+                ByVal newStudyConfig As StudyConfiguration, _
+                Optional ByVal pNumberOfValuesToReplay As Long = ReplayNumbers.ReplayAll) As IStudy
 Const ProcName As String = "ReplaceStudyConfiguration"
 On Error GoTo Err
 
@@ -508,7 +509,7 @@ Else
     mChartController.DisableDrawing
     
     Set ReplaceStudyConfiguration = AddStudy(newStudyConfig)
-    doApplyStudyConfiguration newStudyConfig
+    doApplyStudyConfiguration newStudyConfig, pNumberOfValuesToReplay
     
     doUnApplyStudyConfiguration oldStudyConfig
     
@@ -522,7 +523,7 @@ Else
         moveChildStudyConfigs oldStudyConfig, newStudyConfig
     Else
         RaiseEvent StudyAdded(newStudyConfig.Study)
-        reconfigureChildStudies oldStudyConfig, newStudyConfig
+        reconfigureChildStudies oldStudyConfig, newStudyConfig, pNumberOfValuesToReplay
         RaiseEvent StudyRemoved(oldStudyConfig.Study)
         StartStudy newStudyConfig.Study
     End If
@@ -554,7 +555,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetBaseStudyConfiguration( _
-                ByVal studyConfig As StudyConfiguration)
+                ByVal studyConfig As StudyConfiguration, _
+                Optional ByVal pNumberOfValuesToReplay As Long = ReplayNumbers.ReplayAll)
 Const ProcName As String = "SetBaseStudyConfiguration"
 On Error GoTo Err
 
@@ -564,7 +566,7 @@ Dim sc As StudyConfiguration
 Set sc = studyConfig.Clone ' take a defensive copy
 sc.ClearStudyValueHandlers
 sc.ClearStudyConfigs
-setTheBaseStudyConfiguration sc
+setTheBaseStudyConfiguration sc, pNumberOfValuesToReplay
 
 Exit Sub
 
@@ -767,7 +769,7 @@ End Sub
 
 Private Sub doApplyStudyConfiguration( _
                 ByVal pStudyConfig As StudyConfiguration, _
-                Optional ByVal pNumberOfValuesToReplay As Long = ReplayNumbers.ReplayAll)
+                ByVal pNumberOfValuesToReplay As Long)
 Const ProcName As String = "doApplyStudyConfiguration"
 On Error GoTo Err
 
@@ -934,7 +936,8 @@ End Sub
 
 Private Sub reconfigureChildStudies( _
                 ByVal oldStudyConfig As StudyConfiguration, _
-                ByVal newStudyConfig As StudyConfiguration)
+                ByVal newStudyConfig As StudyConfiguration, _
+                ByVal pNumberOfValuesToReplay As Long)
 Const ProcName As String = "reconfigureChildStudies"
 On Error GoTo Err
 
@@ -949,10 +952,10 @@ For Each oldChildStudyConfig In oldStudyConfig.StudyConfigurations
         newChildStudyConfig.ChartRegionName = newStudyConfig.ChartRegionName
     End If
     
-    doApplyStudyConfiguration newChildStudyConfig
+    doApplyStudyConfiguration newChildStudyConfig, pNumberOfValuesToReplay
     doUnApplyStudyConfiguration oldChildStudyConfig
     
-    reconfigureChildStudies oldChildStudyConfig, newChildStudyConfig
+    reconfigureChildStudies oldChildStudyConfig, newChildStudyConfig, pNumberOfValuesToReplay
     
     removeStudyConfig oldChildStudyConfig
     
@@ -1096,28 +1099,29 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setTheBaseStudyConfiguration( _
-                ByVal studyConfig As StudyConfiguration)
+                ByVal studyConfig As StudyConfiguration, _
+                ByVal pNumberOfValuesToReplay As Long)
 Const ProcName As String = "setTheBaseStudyConfiguration"
 On Error GoTo Err
 
 If mBaseStudy Is Nothing Then
     setBaseStudyConfig studyConfig
     
-    doApplyStudyConfiguration studyConfig
+    doApplyStudyConfiguration studyConfig, pNumberOfValuesToReplay
     addStudyConfig studyConfig
     
     RaiseEvent StudyAdded(studyConfig.Study)
 
     AddDependentStudies studyConfig
 Else
-    doApplyStudyConfiguration studyConfig
+    doApplyStudyConfiguration studyConfig, pNumberOfValuesToReplay
     doUnApplyStudyConfiguration mBaseStudyConfig
     
     If studyConfig.Study Is mBaseStudy Then
         moveChildStudyConfigs mBaseStudyConfig, studyConfig
     Else
         RaiseEvent StudyAdded(studyConfig.Study)
-        reconfigureChildStudies mBaseStudyConfig, studyConfig
+        reconfigureChildStudies mBaseStudyConfig, studyConfig, pNumberOfValuesToReplay
     End If
 
     removeStudyConfig mBaseStudyConfig
