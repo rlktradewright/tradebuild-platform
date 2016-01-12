@@ -405,6 +405,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Function GetXFromTimestamp( _
+                ByVal pTimestamp As Date) As Double
+Const ProcName As String = "GetXFromTimestamp"
+On Error GoTo Err
+
+GetXFromTimestamp = mChartController.GetXFromTimestamp(pTimestamp)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Friend Sub Initialise( _
                 ByVal pChart As ChartController, _
                 ByVal pStudyManager As StudyManager, _

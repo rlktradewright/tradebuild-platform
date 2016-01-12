@@ -1926,60 +1926,13 @@ Public Function GetXFromTimestamp( _
 Const ProcName As String = "GetXFromTimestamp"
 On Error GoTo Err
 
-Dim lPeriod As Period
+GetXFromTimestamp = mPeriods.GetXFromTimestamp(Timestamp, forceNewPeriod, duplicateNumber)
 
-Select Case TimePeriod.Units
-Case TimePeriodNone, _
-        TimePeriodSecond, _
-        TimePeriodMinute, _
-        TimePeriodHour, _
-        TimePeriodDay, _
-        TimePeriodWeek, _
-        TimePeriodMonth, _
-        TimePeriodYear
-    
-    On Error Resume Next
-    Set lPeriod = mPeriods.Item(Timestamp)
-    On Error GoTo Err
-    
-    If lPeriod Is Nothing Then
-        If mPeriods.Count = 0 Then
-            Set lPeriod = mPeriods.AddPeriod(Timestamp)
-        ElseIf Timestamp < mPeriods.Item(1).Timestamp Then
-            Set lPeriod = mPeriods.Item(1)
-            Timestamp = lPeriod.Timestamp
-        Else
-            Set lPeriod = mPeriods.AddPeriod(Timestamp)
-        End If
-    End If
-    
-    Dim periodEndtime As Date
-    periodEndtime = BarEndTime(lPeriod.Timestamp, _
-                            TimePeriod, _
-                            SessionStartTime)
-    GetXFromTimestamp = lPeriod.PeriodNumber + (Timestamp - lPeriod.Timestamp) / (periodEndtime - lPeriod.Timestamp)
-    
-Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
-    If Not forceNewPeriod Then
-        On Error Resume Next
-        Set lPeriod = mPeriods.ItemDup(Timestamp, duplicateNumber)
-        On Error GoTo Err
-        
-        If lPeriod Is Nothing Then
-            Set lPeriod = mPeriods.AddPeriod(Timestamp, True)
-        End If
-        GetXFromTimestamp = lPeriod.PeriodNumber
-    Else
-        Set lPeriod = mPeriods.AddPeriod(Timestamp, True)
-        GetXFromTimestamp = lPeriod.PeriodNumber
-    End If
-End Select
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
 Public Sub HideGrid()

@@ -733,8 +733,8 @@ lChart.ShowChartRaw pTimeframe, _
                     pSecType, _
                     pExchange, _
                     pTickSize, _
-                    pSessionEndTime, _
                     pSessionStartTime, _
+                    pSessionEndTime, _
                     mBarFormatterLibManager, _
                     mBarFormatterFactoryName, _
                     mBarFormatterLibraryName, _

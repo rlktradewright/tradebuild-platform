@@ -594,10 +594,10 @@ If mUpdatePerTick Then
     End If
 
     sCurrentChartLine.SetPosition NewPoint( _
-                                    chartMgr.GetPeriod(lStudyLine.Point1.X).periodNumber, _
+                                    chartMgr.GetXFromTimestamp(lStudyLine.Point1.X), _
                                     lStudyLine.Point1.Y), _
                                 NewPoint( _
-                                    chartMgr.GetPeriod(lStudyLine.Point2.X).periodNumber, _
+                                    chartMgr.GetXFromTimestamp(lStudyLine.Point2.X), _
                                     lStudyLine.Point2.Y)
     If mConditionalActionsIndex >= 0 Then processConditionalActions chartMgr.GetPeriod(lStudyLine.Point1.X).timestamp, sCurrentChartLine
 Else
@@ -625,7 +625,7 @@ If mUpdatePerTick Then
     If sCurrentText Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then Set sCurrentText = AddTextToChart
     
     sCurrentText.Position = NewPoint( _
-                                    chartMgr.GetPeriod(ev.sVal.BarStartTime).periodNumber, _
+                                    chartMgr.GetXFromTimestamp(ev.sVal.BarStartTime), _
                                     0, CoordsCounterDistance, CoordsRelative)
     sCurrentText.Text = ev.sVal.Value
     If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp, sCurrentText
@@ -657,7 +657,7 @@ If mUpdatePerTick Then
     If sCurrentText Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then Set sCurrentText = AddTextToChart
     
     sCurrentText.Position = NewPoint( _
-                                    chartMgr.GetPeriod(lStudyText.Position.X).periodNumber, _
+                                    chartMgr.GetXFromTimestamp(lStudyText.Position.X), _
                                     lStudyText.Position.Y)
     sCurrentText.Offset = mTextOffset
     sCurrentText.Text = lStudyText.Text
@@ -830,10 +830,10 @@ Static sCurrentChartLine As ChartSkil27.line
 If sCurrentChartLine Is Nothing Then Set sCurrentChartLine = AddLineToChart
 
 sCurrentChartLine.SetPosition NewPoint( _
-                                chartMgr.GetPeriod(pCurrentStudyLine.Point1.X).periodNumber, _
+                                chartMgr.GetXFromTimestamp(pCurrentStudyLine.Point1.X), _
                                 pCurrentStudyLine.Point1.Y), _
                             NewPoint( _
-                                chartMgr.GetPeriod(pCurrentStudyLine.Point2.X).periodNumber, _
+                                chartMgr.GetXFromTimestamp(pCurrentStudyLine.Point2.X), _
                                 pCurrentStudyLine.Point2.Y)
 If mConditionalActionsIndex >= 0 Then processConditionalActions chartMgr.GetPeriod(pCurrentStudyLine.Point1.X).timestamp, sCurrentChartLine
 
@@ -857,7 +857,7 @@ Static sCurrentText As Text
 If sCurrentText Is Nothing Then Set sCurrentText = AddTextToChart
 
 sCurrentText.Position = NewPoint( _
-                                chartMgr.GetPeriod(pCurrentStringValue.BarStartTime).periodNumber, _
+                                chartMgr.GetXFromTimestamp(pCurrentStringValue.BarStartTime), _
                                 0, CoordsCounterDistance, CoordsRelative)
 sCurrentText.Text = pCurrentStringValue.Value
 If mConditionalActionsIndex >= 0 Then processConditionalActions pCurrentStringValue.timestamp, sCurrentText
@@ -882,7 +882,7 @@ Static sCurrentText As Text
 If sCurrentText Is Nothing Then Set sCurrentText = AddTextToChart
 
 sCurrentText.Position = NewPoint( _
-                                chartMgr.GetPeriod(pCurrentStudyText.Position.X).periodNumber, _
+                                chartMgr.GetXFromTimestamp(pCurrentStudyText.Position.X), _
                                 pCurrentStudyText.Position.Y)
 sCurrentText.Offset = mTextOffset
 sCurrentText.Text = pCurrentStudyText.Text

@@ -300,22 +300,25 @@ Case TimePeriodSecond, _
     Set lPeriod = Item(Timestamp)
     On Error GoTo Err
     
-    If lPeriod Is Nothing Then
-        If Count = 0 Then
-            Set lPeriod = AddPeriod(Timestamp)
-        ElseIf Timestamp < Item(1).Timestamp Then
-            Set lPeriod = Item(1)
-            Timestamp = lPeriod.Timestamp
-        Else
-            Set lPeriod = AddPeriod(Timestamp)
-        End If
+    If Not lPeriod Is Nothing Then
+        GetXFromTimestamp = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
+    ElseIf Count = 0 Then
+        Set lPeriod = AddPeriod(Timestamp)
+        GetXFromTimestamp = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
+    ElseIf Timestamp >= Item(1).Timestamp Then
+        Set lPeriod = AddPeriod(Timestamp)
+        GetXFromTimestamp = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
+    Else
+        Dim lFirstPeriodStart As Date: lFirstPeriodStart = Item(1).Timestamp
+        Dim lBarStartTime As Date
+        Dim lOffset As Long: lOffset = 0
+        Do
+            lOffset = lOffset - 1
+            lBarStartTime = OffsetBarStartTime(lFirstPeriodStart, TimePeriod, lOffset, mSessionStartTime, mSessionEndTime)
+        Loop While lBarStartTime > Timestamp
+
+        GetXFromTimestamp = getInterpolatedX(Timestamp, lOffset, lBarStartTime)
     End If
-    
-    Dim periodEndtime As Date
-    periodEndtime = BarEndTime(lPeriod.Timestamp, _
-                            TimePeriod, _
-                            mSessionStartTime)
-    GetXFromTimestamp = lPeriod.PeriodNumber + (Timestamp - lPeriod.Timestamp) / (periodEndtime - lPeriod.Timestamp)
     
 Case TimePeriodNone, _
         TimePeriodVolume, _
@@ -634,7 +637,25 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
 
+Private Function getInterpolatedX( _
+                ByVal pTimestamp As Date, _
+                ByVal pPeriodX As Long, _
+                ByVal pPeriodTimestamp As Date)
+Const ProcName As String = "getInterpolatedX"
+On Error GoTo Err
+
+Dim periodEndtime As Date
+periodEndtime = BarEndTime(pPeriodTimestamp, _
+                        TimePeriod, _
+                        mSessionStartTime)
+getInterpolatedX = pPeriodX + (pTimestamp - pPeriodTimestamp) / (periodEndtime - pPeriodTimestamp)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getPeriodLabels( _

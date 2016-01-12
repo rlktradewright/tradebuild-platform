@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#258.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#259.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -1140,7 +1140,9 @@ mSecType = pSecType
 mExchange = pExchange
 mTickSize = pTickSize
 mSessionEndTime = pSessionEndTime
+Chart1.SessionEndTime = mSessionEndTime
 mSessionStartTime = pSessionStartTime
+Chart1.SessionStartTime = mSessionStartTime
 mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
 mTitle = pTitle
@@ -1384,7 +1386,9 @@ mSecType = pContract.Specifier.secType
 mExchange = pContract.Specifier.Exchange
 mTickSize = pContract.TickSize
 mSessionEndTime = pContract.SessionEndTime
+Chart1.SessionEndTime = mSessionEndTime
 mSessionStartTime = pContract.SessionStartTime
+Chart1.SessionStartTime = mSessionStartTime
 End Sub
 
 Private Sub setLoadingText()
