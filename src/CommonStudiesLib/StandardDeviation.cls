@@ -55,6 +55,8 @@ Private mStudyFoundation As StudyFoundation
 
 
 Private mPeriods As Long
+Private mPeriodsDouble As Double
+Private mPeriodsDoubleSquared As Double
 
 Private mSD As Variant
 
@@ -119,7 +121,7 @@ If mStudyFoundation.IsNewBar Then
             mSumSquares = mSumSquares + newValue * newValue
         End If
         If mInputValueCache.Count = mPeriods Then
-            mSD = Sqr((mPeriods * mSumSquares - mSum * mSum) / (mPeriods * mPeriods))
+            mSD = Sqr((mPeriodsDouble * mSumSquares - mSum * mSum) / mPeriodsDoubleSquared)
         End If
     Else
         If Not IsEmpty(ev.sVal.Value) Then
@@ -127,7 +129,8 @@ If mStudyFoundation.IsNewBar Then
             mInputValueCache.AddValue newValue, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
             mSum = mSum - valueToRemove + newValue
             mSumSquares = mSumSquares - valueToRemove * valueToRemove + newValue * newValue
-            mSD = Sqr((mPeriods * mSumSquares - mSum * mSum) / (mPeriods * mPeriods))
+            Assert mSumSquares >= 0#, "Sum of squares is negative"
+            mSD = Sqr((mPeriodsDouble * mSumSquares - mSum * mSum) / mPeriodsDoubleSquared)
         End If
     End If
     sPrevVal = ev.sVal.Value
@@ -148,7 +151,7 @@ Else
         sPrevVal = ev.sVal.Value
     End If
     If mInputValueCache.Count >= mPeriods Then
-        mSD = Sqr((mPeriods * mSumSquares - mSum * mSum) / (mPeriods * mPeriods))
+        mSD = Sqr((mPeriodsDouble * mSumSquares - mSum * mSum) / mPeriodsDoubleSquared)
     End If
 End If
 
@@ -188,6 +191,8 @@ For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(SDParamPeriods)
         mPeriods = param.Value
+        mPeriodsDouble = CDbl(mPeriods)
+        mPeriodsDoubleSquared = mPeriodsDouble * mPeriodsDouble
         Set mInputValueCache = CreateValueCache(mPeriods, "")
     End Select
 Next
