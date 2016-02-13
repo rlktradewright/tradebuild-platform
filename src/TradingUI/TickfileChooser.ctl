@@ -103,6 +103,10 @@ Public Property Get Cancelled() As Boolean
 Cancelled = mCancelled
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

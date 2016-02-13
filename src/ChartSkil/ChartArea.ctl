@@ -1412,6 +1412,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 Public Property Get Periods() As Periods
 Attribute Periods.VB_MemberFlags = "400"
 Set Periods = mPeriods

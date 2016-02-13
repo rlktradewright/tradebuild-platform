@@ -374,6 +374,10 @@ Public Property Get MinimumHeight() As Long
 MinimumHeight = mMinHeight
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 Public Property Get SupportsTickFiles() As Boolean
 SupportsTickFiles = mSupportsTickFiles
 End Property

@@ -206,23 +206,23 @@ Public Function gChooseAColor( _
                 ByVal pInitialColor As Long, _
                 ByVal pAllowNull As Boolean, _
                 ByVal pParent As Form) As Long
-Static lSimpleColorPicker As fSimpleColorPicker
-Dim cursorpos As GDI_POINT
-
 Const ProcName As String = "gChooseAColor"
 On Error GoTo Err
 
+Static sSimpleColorPicker As fSimpleColorPicker
+Dim cursorpos As GDI_POINT
+
 GetCursorPos cursorpos
 
-If lSimpleColorPicker Is Nothing Then Set lSimpleColorPicker = New fSimpleColorPicker
+If sSimpleColorPicker Is Nothing Then Set sSimpleColorPicker = New fSimpleColorPicker
 
-lSimpleColorPicker.Top = cursorpos.Y * Screen.TwipsPerPixelY
-lSimpleColorPicker.Left = cursorpos.X * Screen.TwipsPerPixelX
-lSimpleColorPicker.initialColor = pInitialColor
-If pAllowNull Then lSimpleColorPicker.NoColorButton.Enabled = True
-lSimpleColorPicker.ZOrder 0
-lSimpleColorPicker.Show vbModal, pParent
-gChooseAColor = lSimpleColorPicker.selectedColor
+sSimpleColorPicker.Top = cursorpos.Y * Screen.TwipsPerPixelY
+sSimpleColorPicker.Left = cursorpos.X * Screen.TwipsPerPixelX
+sSimpleColorPicker.initialColor = pInitialColor
+If pAllowNull Then sSimpleColorPicker.NoColorButton.Enabled = True
+sSimpleColorPicker.ZOrder 0
+sSimpleColorPicker.Show vbModal, pParent
+gChooseAColor = sSimpleColorPicker.selectedColor
 
 Exit Function
 
@@ -235,6 +235,25 @@ If (KeyAscii < 48 Or KeyAscii > 57) Then
     KeyAscii = 0
 End If
 End Sub
+
+Public Function gGetParentForm(ByVal pObject As Object) As Form
+Const ProcName As String = "gGetParentForm"
+On Error GoTo Err
+
+Dim lParent As Object
+Set lParent = pObject.Parent
+
+Do While Not TypeOf lParent Is Form
+    Set lParent = lParent.Parent
+Loop
+
+Set gGetParentForm = lParent
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
@@ -318,9 +337,9 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub SetWindowThemeOff(ByVal phWnd As Long)
+Private Sub SetWindowThemeOff(ByVal pHWND As Long)
 Dim result As Long
-result = SetWindowTheme(phWnd, vbNullString, "")
+result = SetWindowTheme(pHWND, vbNullString, "")
 End Sub
 
 

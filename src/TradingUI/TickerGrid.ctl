@@ -1276,6 +1276,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 Public Property Let NegativeChangeBackColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "NegativeChangeBackColor"
 On Error GoTo Err

@@ -37,6 +37,7 @@ Begin VB.Form fTimeframeSpecifier
       ForeColor       =   -2147483640
    End
    Begin TWControls40.TWButton CancelButton 
+      Cancel          =   -1  'True
       Height          =   375
       Left            =   2700
       TabIndex        =   1

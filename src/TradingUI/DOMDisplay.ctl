@@ -428,6 +428,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 Public Property Let RowBackColorEven(ByVal value As OLE_COLOR)
 DOMGrid.RowBackColorEven = value
 PropertyChanged PropNameRowBackColorEven

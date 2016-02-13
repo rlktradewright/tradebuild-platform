@@ -288,7 +288,7 @@ On Error GoTo Err
 
 ColorLabel.BackColor = gChooseAColor(ColorLabel.BackColor, _
                                     IIf(mStudyValueDef.ValueMode = ValueModeBar, True, False), _
-                                    getParentForm)
+                                    gGetParentForm(Me))
 
 Exit Sub
 
@@ -352,7 +352,7 @@ On Error GoTo Err
 
 DownColorLabel.BackColor = gChooseAColor(DownColorLabel.BackColor, _
                                         IIf(mStudyValueDef.ValueMode = ValueModeBar, True, False), _
-                                        getParentForm)
+                                        gGetParentForm(Me))
 
 Exit Sub
 
@@ -422,7 +422,7 @@ On Error GoTo Err
 
 UpColorLabel.BackColor = gChooseAColor(UpColorLabel.BackColor, _
                                         IIf(mStudyValueDef.ValueMode = ValueModeBar, True, False), _
-                                        getParentForm)
+                                        gGetParentForm(Me))
 
 Exit Sub
 
@@ -437,6 +437,10 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
 
 Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
@@ -903,37 +907,6 @@ Case StudyValueDefaultRegionCustom
 Case StudyValueDefaultRegionUnderlying
     getDefaultRegionName = ChartRegionNameUnderlying
 End Select
-End Function
-
-Private Function getParentForm() As Form
-Const ProcName As String = "getParentForm"
-On Error GoTo Err
-
-Dim lParent As Object
-Set lParent = UserControl.Parent
-
-Do While Not TypeOf lParent Is Form
-    If TypeOf lParent Is StudyConfigurer Then
-        Dim sc As StudyConfigurer
-        Set sc = lParent
-        Set lParent = sc.Parent
-    ElseIf TypeOf lParent Is PictureBox Then
-        Dim pb As PictureBox
-        Set pb = lParent
-        Set lParent = pb.Parent
-    ElseIf TypeOf lParent Is Frame Then
-        Dim fr As Frame
-        Set fr = lParent
-        Set lParent = fr.Parent
-    Else
-        Assert False, "No parent form found"
-    End If
-Loop
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getRegionName() As String

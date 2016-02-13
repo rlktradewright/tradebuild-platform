@@ -804,6 +804,10 @@ Public Property Get ModeAdvanced() As Boolean
 ModeAdvanced = mModeAdvanced
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 Public Property Let TextBackColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "TextBackColor"
 On Error GoTo Err

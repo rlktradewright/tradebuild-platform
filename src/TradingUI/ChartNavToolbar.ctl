@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#258.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#260.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -200,6 +200,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
 End Property
 
 Public Property Let Theme(ByVal value As ITheme)

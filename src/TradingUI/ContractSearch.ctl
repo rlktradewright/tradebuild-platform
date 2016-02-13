@@ -588,6 +588,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 Public Property Get RowBackColorEven() As OLE_COLOR
 Const ProcName As String = "RowBackColorEven"
 On Error GoTo Err

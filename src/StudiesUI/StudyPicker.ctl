@@ -314,7 +314,7 @@ Else
         AddButton.Enabled = False
         ConfigureButton.Enabled = False
         
-        DescriptionText.text = studyDef.Description
+        DescriptionText.Text = studyDef.Description
         RemoveButton.Enabled = Not (studyConfig.Study Is mChartManager.BaseStudy)
         ChangeButton.Enabled = True
     End If
@@ -373,7 +373,7 @@ If StudyList.ListIndex <> -1 Then
     AddButton.Enabled = True
     ConfigureButton.Enabled = True
     
-    DescriptionText.text = mChartManager.StudyLibraryManager.GetStudyDefinition( _
+    DescriptionText.Text = mChartManager.StudyLibraryManager.GetStudyDefinition( _
                                     mAvailableStudies(StudyList.ListIndex).name, _
                                     mAvailableStudies(StudyList.ListIndex).StudyLibrary).Description
 Else
@@ -439,6 +439,10 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
 
 Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"

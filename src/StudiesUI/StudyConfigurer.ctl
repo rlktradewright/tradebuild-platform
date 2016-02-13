@@ -591,7 +591,7 @@ Private Sub LineColorLabel_Click(Index As Integer)
 Const ProcName As String = "LineColorLabel_Click"
 On Error GoTo Err
 
-LineColorLabel(Index).BackColor = chooseAColor(LineColorLabel(Index).BackColor, False)
+LineColorLabel(Index).BackColor = gChooseAColor(LineColorLabel(Index).BackColor, True, gGetParentForm(Me))
 
 Exit Sub
 
@@ -607,7 +607,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get Parent() As Object
+Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
@@ -847,30 +847,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function chooseAColor( _
-                ByVal initialColor As Long, _
-                ByVal allowNull As Boolean) As Long
-Const ProcName As String = "chooseAColor"
-On Error GoTo Err
-
-Dim cursorpos As GDI_POINT
-GetCursorPos cursorpos
-
-Dim simpleColorPicker As New fSimpleColorPicker
-simpleColorPicker.Top = cursorpos.Y * Screen.TwipsPerPixelY
-simpleColorPicker.Left = cursorpos.X * Screen.TwipsPerPixelX
-simpleColorPicker.initialColor = initialColor
-If allowNull Then simpleColorPicker.NoColorButton.Enabled = True
-simpleColorPicker.Show vbModal, UserControl
-chooseAColor = simpleColorPicker.selectedColor
-Unload simpleColorPicker
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Sub initialiseControls()
 Const ProcName As String = "initialiseControls"

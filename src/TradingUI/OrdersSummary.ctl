@@ -818,6 +818,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 Public Property Get SelectedItem() As IBracketOrder
 Set SelectedItem = mSelectedBracketOrder
 End Property

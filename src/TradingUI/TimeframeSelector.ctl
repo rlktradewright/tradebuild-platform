@@ -188,11 +188,16 @@ If TimeframeCombo.Text = TimeframeCustom Then
     myPosition.X = 0
     myPosition.Y = UserControl.Height / Screen.TwipsPerPixelY
     MapWindowPoints UserControl.hWnd, 0, VarPtr(myPosition), 1
-    mSpecifier.Move myPosition.X * Screen.TwipsPerPixelX, _
-                    myPosition.Y * Screen.TwipsPerPixelY
     
+    Dim X As Long: X = myPosition.X * Screen.TwipsPerPixelX
+    If X + mSpecifier.Width > Screen.Width Then X = Screen.Width - mSpecifier.Width
+    
+    Dim Y As Long: Y = myPosition.Y * Screen.TwipsPerPixelY
+    If Y + mSpecifier.Height > Screen.Height Then Y = Y - UserControl.Height - mSpecifier.Height
+    
+    mSpecifier.Move X, Y
     mSpecifier.ZOrder 0
-    mSpecifier.Show vbModal, gGetParentForm(UserControl.Parent)
+    mSpecifier.Show vbModal, gGetParentForm(Me)
     
     
     If Not mSpecifier.Cancelled Then
@@ -300,6 +305,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
 End Property
 
 Public Property Get Text() As String

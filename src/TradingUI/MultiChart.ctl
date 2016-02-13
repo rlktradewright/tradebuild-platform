@@ -496,6 +496,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Parent() As Object
+Set Parent = UserControl.Parent
+End Property
+
 Public Property Get PriceRegion( _
                 Optional ByVal index As Long = -1) As ChartRegion
 Const ProcName As String = "PriceRegion"

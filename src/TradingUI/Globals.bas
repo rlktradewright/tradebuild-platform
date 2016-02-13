@@ -226,7 +226,7 @@ Const ProcName As String = "gGetParentForm"
 On Error GoTo Err
 
 Dim lParent As Object
-Set lParent = pObject
+Set lParent = pObject.Parent
 
 Do While Not TypeOf lParent Is Form
     Set lParent = lParent.Parent
