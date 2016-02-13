@@ -835,6 +835,7 @@ On Error GoTo Err
 If pContracts.Count = 1 Then
     Set mSingleContracts = pContracts
     RaiseEvent Action
+    Clear
     mCookie = Empty
 Else
     Set handleContractsLoaded = setupContractSelector(pContracts, mAllowMultipleSelection, pContractsSuppliedByCaller)
