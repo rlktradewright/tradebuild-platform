@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#309.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
@@ -866,7 +866,8 @@ Case ApiNotifyCodes.ApiNotifyServiceProviderError
                         spError.ServiceProviderName & _
                         ": code " & spError.ErrorCode & _
                         ": " & spError.Message
-
+Case ApiNotifyCodes.ApiNotifyCantConnect
+    ModelessMsgBox ev.EventMessage, MsgBoxCritical, "Can't connect", Me, mTheme
 Case Else
     LogMessage "Notification: code=" & ev.EventCode & "; source=" & TypeName(ev.Source) & ": " & _
                 ev.EventMessage & vbCrLf
