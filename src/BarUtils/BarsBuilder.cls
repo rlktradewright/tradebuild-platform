@@ -88,10 +88,10 @@ On Error GoTo Err
 If Not ev.changeType = CollItemAdded Then Exit Sub
 
 Set mCurrentBar = ev.AffectedItem
-If mBarTimePeriod.Length <> 0 Then mBarEndTime = gBarEndTime(mCurrentBar.Timestamp, _
+If mBarTimePeriod.Length <> 0 Then mBarEndTime = gStoD(gBarEndTime(mCurrentBar.Timestamp, _
                                                             mBarTimePeriod, _
                                                             mMainSession.SessionStartTime, _
-                                                            mMainSession.SessionEndTime)
+                                                            mMainSession.SessionEndTime))
 
 
 Exit Sub
@@ -337,10 +337,10 @@ If mBars.Count > 0 Then
     Set mCurrentBar = mBars.Bar(0)
     
     If Not mInitialBarsSession Is Nothing Then
-        mBarEndTime = gBarEndTime(mCurrentBar.Timestamp, _
+        mBarEndTime = gStoD(gBarEndTime(mCurrentBar.Timestamp, _
                                     mBarTimePeriod, _
                                     mInitialBarsSession.SessionStartTime, _
-                                    mInitialBarsSession.SessionEndTime)
+                                    mInitialBarsSession.SessionEndTime))
     End If
     mCurrentBarNumber = mCurrentBar.BarNumber
 End If
@@ -546,9 +546,9 @@ If mBarTimePeriod.Units = TimePeriodNone Or mBarTimePeriod.Length = 0 Then
 Else
     mCurrentBarNumber = mCurrentBarNumber + 1
     lBar.BarNumber = mCurrentBarNumber
-    lBar.Timestamp = gBarStartTime(Timestamp, _
+    lBar.Timestamp = gStoD(gBarStartTime(Timestamp, _
                                     mBarTimePeriod, _
-                                    mMainSession.SessionStartTime)
+                                    mMainSession.SessionStartTime))
 End If
 
 If Not mBars Is Nothing Then mBars.Add lBar, mCurrentBarNumber, Timestamp

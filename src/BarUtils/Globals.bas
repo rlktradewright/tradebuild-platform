@@ -20,12 +20,10 @@ Option Explicit
 '@================================================================================
 
 Public Const ProjectName                        As String = "BarUtils27"
-Private Const ModuleName                As String = "Globals"
+Private Const ModuleName                        As String = "Globals"
 
-Public Const OneMicroSecond As Double = 1.15740740740741E-11
-Public Const OneSecond As Double = 1 / 86400
-Public Const OneMinute As Double = 1 / 1440
-Public Const OneHour As Double = 1 / 24
+Public Const OneDay As Currency = 86400
+Public Const MidDay As Currency = 43200
 
 '@================================================================================
 ' Enums
@@ -73,36 +71,30 @@ Public Function gBarEndTime( _
                 ByVal Timestamp As Date, _
                 ByVal BarTimePeriod As TimePeriod, _
                 ByVal SessionStartTime As Date, _
-                ByVal SessionEndTime As Date) As Date
+                ByVal SessionEndTime As Date) As Currency
 Const ProcName As String = "gBarEndTime"
 On Error GoTo Err
 
-Dim startTime As Date
-startTime = gBarStartTime( _
-                Timestamp, _
-                BarTimePeriod, _
-                SessionStartTime)
+Dim startTimeSecs As Currency
+startTimeSecs = gBarStartTime(Timestamp, BarTimePeriod, SessionStartTime)
 
 Select Case BarTimePeriod.Units
-Case TimePeriodSecond
-    gBarEndTime = startTime + (BarTimePeriod.Length / 86400) - OneMicroSecond
-Case TimePeriodMinute
-    gBarEndTime = startTime + (BarTimePeriod.Length / 1440) - OneMicroSecond
-Case TimePeriodHour
-    gBarEndTime = startTime + (BarTimePeriod.Length / 24) - OneMicroSecond
+Case TimePeriodSecond, TimePeriodMinute, TimePeriodHour
+    gBarEndTime = startTimeSecs + gCalcBarLengthSeconds(BarTimePeriod)
 Case TimePeriodDay
-    gBarEndTime = GetOffsetSessionTimes(Timestamp, BarTimePeriod.Length, SessionStartTime, SessionEndTime).startTime
+    'gBarEndTime = gDtoS(GetOffsetSessionTimesIgnoringWeekend(gStoD(startTimeSecs), BarTimePeriod.Length, SessionStartTime, SessionEndTime).StartTime)
+    gBarEndTime = gDtoS(GetOffsetSessionTimes(gStoD(startTimeSecs), BarTimePeriod.Length, SessionStartTime, SessionEndTime).StartTime)
 Case TimePeriodWeek
-    gBarEndTime = startTime + 7 * BarTimePeriod.Length
+    gBarEndTime = gDtoS(gStoD(startTimeSecs) + 7 * BarTimePeriod.Length)
 Case TimePeriodMonth
-    gBarEndTime = DateAdd("m", BarTimePeriod.Length, startTime)
+    gBarEndTime = gDtoS(DateAdd("m", BarTimePeriod.Length, gStoD(startTimeSecs)))
 Case TimePeriodYear
-    gBarEndTime = DateAdd("yyyy", BarTimePeriod.Length, startTime)
+    gBarEndTime = gDtoS(DateAdd("yyyy", BarTimePeriod.Length, gStoD(startTimeSecs)))
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
         TimePeriodTickMovement, _
         TimePeriodNone
-    gBarEndTime = Timestamp
+    gBarEndTime = gDtoS(Timestamp)
 End Select
 
 Select Case BarTimePeriod.Units
@@ -112,9 +104,9 @@ Select Case BarTimePeriod.Units
         
         ' adjust if bar is at end of session but does not fit exactly into session
         
-        Dim lNextSessionTimes  As SessionTimes
-        lNextSessionTimes = GetOffsetSessionTimes(startTime, 1, SessionStartTime, SessionEndTime)
-        If gBarEndTime > lNextSessionTimes.startTime Then gBarEndTime = lNextSessionTimes.startTime
+        Dim lNextSessionStartTimeSecs  As Currency
+        lNextSessionStartTimeSecs = gDtoS(GetSessionTimesIgnoringWeekend(gStoD(startTimeSecs + OneDay), SessionStartTime, SessionEndTime).StartTime)
+        If gBarEndTime > lNextSessionStartTimeSecs Then gBarEndTime = lNextSessionStartTimeSecs
 End Select
 
 Exit Function
@@ -126,115 +118,105 @@ End Function
 Public Function gBarStartTime( _
                 ByVal Timestamp As Date, _
                 ByVal BarTimePeriod As TimePeriod, _
-                ByVal SessionStartTime As Date) As Date
+                ByVal SessionStartTime As Date) As Currency
 Const ProcName As String = "gBarStartTime"
 On Error GoTo Err
 
-' minutes from midnight to start of sesssion
-Dim sessionOffset As Long
-sessionOffset = Int(1440 * (SessionStartTime + OneMicroSecond - Int(SessionStartTime)))
+AssertArgument SessionStartTime < 1#, "Session start time must be a time value only"
 
-Dim theDate As Long
-theDate = Int(CDbl(Timestamp))
+' seconds from midnight to start of sesssion
+Dim sessionStartSecs As Currency
+sessionStartSecs = gDtoS(SessionStartTime)
+
+Dim dayNum As Long: dayNum = Int(CDbl(Timestamp))
+
+Dim dayNumSecs As Currency
+dayNumSecs = gDtoS(dayNum)
 
 ' NB: don't use TimeValue to get the time, as VB rounds it to
 ' the nearest second
-Dim theTime As Double
-theTime = CDbl(Timestamp + OneMicroSecond) - theDate
+Dim timeSecs As Currency
+timeSecs = gDtoS(Timestamp) - dayNumSecs  ' seconds since midnight
 
-Dim theTimeMins As Long
-Dim theTimeSecs As Long
 Select Case BarTimePeriod.Units
-Case TimePeriodSecond
-    theTimeSecs = Fix(theTime * 86400) ' seconds since midnight
-    If theTimeSecs < sessionOffset * 60 Then
-        theDate = theDate - 1
-        theTimeSecs = theTimeSecs + 86400
-    End If
-    gBarStartTime = theDate + _
-                (BarTimePeriod.Length * Int((theTimeSecs - sessionOffset * 60) / BarTimePeriod.Length) + _
-                    sessionOffset * 60) / 86400
-Case TimePeriodMinute
-    theTimeMins = Fix(theTime * 1440) ' minutes since midnight
-    If theTimeMins < sessionOffset Then
-        theDate = theDate - 1
-        theTimeMins = theTimeMins + 1440
-    End If
-    gBarStartTime = theDate + _
-                (BarTimePeriod.Length * Int((theTimeMins - sessionOffset) / BarTimePeriod.Length) + _
-                    sessionOffset) / 1440
-Case TimePeriodHour
-    theTimeMins = Fix(theTime * 1440) ' minutes since midnight
-    If theTimeMins < sessionOffset Then
-        theDate = theDate - 1
-        theTimeMins = theTimeMins + 1440
-    End If
-    gBarStartTime = theDate + _
-                (60 * BarTimePeriod.Length * Int((theTimeMins - sessionOffset) / (60 * BarTimePeriod.Length)) + _
-                    sessionOffset) / 1440
-Case TimePeriodDay
-    If theTime < SessionStartTime And SessionStartTime < 0.5 Then
-        theDate = theDate - 1
-    ElseIf theTime >= SessionStartTime And SessionStartTime >= 0.5 Then
-        theDate = theDate + 1
-    End If
+Case TimePeriodSecond, TimePeriodMinute, TimePeriodHour
+    Dim barLengthSecs As Currency: barLengthSecs = gCalcBarLengthSeconds(BarTimePeriod)
     
+    If timeSecs < sessionStartSecs Then
+        dayNumSecs = dayNumSecs - OneDay
+        timeSecs = timeSecs + OneDay
+    End If
+    gBarStartTime = dayNumSecs + _
+                    sessionStartSecs + _
+                    barLengthSecs * Int((timeSecs - sessionStartSecs) / barLengthSecs)
+Case TimePeriodDay
     If BarTimePeriod.Length = 1 Then
-        gBarStartTime = theDate
+        Dim lSessionEndTime As Date
+        If sessionStartSecs >= MidDay Then
+            lSessionEndTime = CDbl(0#)
+        Else
+            lSessionEndTime = CDbl(1#)
+        End If
+        
+        Dim lSessionTimes As SessionTimes
+        gBarStartTime = gDtoS(GetSessionTimes(Timestamp, SessionStartTime, lSessionEndTime).StartTime)
+        
     Else
         Dim workingDayNum As Long
-        workingDayNum = WorkingDayNumber(theDate)
-        
-        gBarStartTime = WorkingDayDate(1 + BarTimePeriod.Length * Int((workingDayNum - 1) / BarTimePeriod.Length), _
-                                        theDate)
+        workingDayNum = WorkingDayNumber(dayNum)
+
+        gBarStartTime = gDtoS(WorkingDayDate(1 + BarTimePeriod.Length * Int((workingDayNum - 1) / BarTimePeriod.Length), _
+                                            dayNum)) + sessionStartSecs
+        If timeSecs < sessionStartSecs Then gBarStartTime = gBarStartTime - OneDay
     End If
 Case TimePeriodWeek
     Dim weekNum As Long
+    weekNum = DatePart("ww", dayNum, vbMonday, vbFirstFullWeek)
     
-    weekNum = DatePart("ww", theDate, vbMonday, vbFirstFullWeek)
-    If weekNum >= 52 And Month(theDate) = 1 Then
+    If weekNum >= 52 And Month(dayNum) = 1 Then
         ' this must be part of the final week of the previous year
-        theDate = DateAdd("yyyy", -1, theDate)
+        dayNum = DateAdd("yyyy", -1, dayNum)
     End If
-    gBarStartTime = WeekStartDateFromWeekNumber(1 + BarTimePeriod.Length * Int((weekNum - 1) / BarTimePeriod.Length), _
-                                    theDate) + SessionStartTime
+    gBarStartTime = gDtoS(WeekStartDateFromWeekNumber(1 + BarTimePeriod.Length * Int((weekNum - 1) / BarTimePeriod.Length), _
+                                        dayNum) + SessionStartTime)
 
 Case TimePeriodMonth
     Dim monthNum As Long
     
-    monthNum = Month(theDate)
-    gBarStartTime = MonthStartDateFromMonthNumber(1 + BarTimePeriod.Length * Int((monthNum - 1) / BarTimePeriod.Length), _
-                                    theDate) + SessionStartTime
+    monthNum = Month(dayNum)
+    gBarStartTime = gDtoS(MonthStartDateFromMonthNumber(1 + BarTimePeriod.Length * Int((monthNum - 1) / BarTimePeriod.Length), _
+                                        dayNum) + SessionStartTime)
 Case TimePeriodYear
-    gBarStartTime = DateSerial(1900 + BarTimePeriod.Length * Int((Year(theDate) - 1900) / BarTimePeriod.Length), 1, 1)
+    gBarStartTime = gDtoS(DateSerial(1900 + BarTimePeriod.Length * Int((Year(dayNumSecs) - 1900) / BarTimePeriod.Length), 1, 1))
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
         TimePeriodTickMovement, _
         TimePeriodNone
-    gBarStartTime = Timestamp
+    gBarStartTime = gDtoS(Timestamp)
 End Select
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
-Public Function gCalcBarLength( _
-                ByVal BarTimePeriod As TimePeriod) As Date
-Const ProcName As String = "gCalcBarLength"
+Public Function gCalcBarLengthSeconds( _
+                ByVal BarTimePeriod As TimePeriod) As Currency
+Const ProcName As String = "gCalcBarLengthSeconds"
 On Error GoTo Err
 
 Select Case BarTimePeriod.Units
 Case TimePeriodSecond
-    gCalcBarLength = BarTimePeriod.Length * OneSecond
+    gCalcBarLengthSeconds = BarTimePeriod.Length
 Case TimePeriodMinute
-    gCalcBarLength = BarTimePeriod.Length * OneMinute
+    gCalcBarLengthSeconds = BarTimePeriod.Length * 60
 Case TimePeriodHour
-    gCalcBarLength = BarTimePeriod.Length * OneHour
+    gCalcBarLengthSeconds = BarTimePeriod.Length * 3600
 Case TimePeriodDay
-    gCalcBarLength = BarTimePeriod.Length
+    gCalcBarLengthSeconds = BarTimePeriod.Length * 1440
+Case Else
+    AssertArgument False, "Invalid BarTimePeriod"
 End Select
 
 Exit Function
@@ -251,9 +233,9 @@ Const ProcName As String = "gCalcNumberOfBarsInSession"
 On Error GoTo Err
 
 If SessionEndTime > SessionStartTime Then
-    gCalcNumberOfBarsInSession = -Int(-(SessionEndTime - SessionStartTime) / gCalcBarLength(BarTimePeriod))
+    gCalcNumberOfBarsInSession = Int((gDtoS(SessionEndTime) - gDtoS(SessionStartTime)) / gCalcBarLengthSeconds(BarTimePeriod))
 Else
-    gCalcNumberOfBarsInSession = -Int(-(1 + SessionEndTime - SessionStartTime) / gCalcBarLength(BarTimePeriod))
+    gCalcNumberOfBarsInSession = Int((OneDay + gDtoS(SessionEndTime) - gDtoS(SessionStartTime)) / gCalcBarLengthSeconds(BarTimePeriod))
 End If
 
 Exit Function
@@ -305,46 +287,46 @@ Case TimePeriodYear
     Exit Function
 End Select
 
-Dim BarLengthDays As Date
-BarLengthDays = gCalcBarLength(BarTimePeriod) + OneMicroSecond
+Dim barLengthSecs As Currency
+barLengthSecs = gCalcBarLengthSeconds(BarTimePeriod)
 
 Dim numBarsInSession As Long
 numBarsInSession = gCalcNumberOfBarsInSession(BarTimePeriod, SessionStartTime, SessionEndTime)
 
-Dim datumBarStart As Date
-datumBarStart = gBarStartTime(Timestamp, BarTimePeriod, SessionStartTime)
+Dim datumBarStartSecs As Currency
+datumBarStartSecs = gBarStartTime(Timestamp, BarTimePeriod, SessionStartTime)
 
 Dim lSessTimes As SessionTimes
 lSessTimes = GetSessionTimes(Timestamp, _
                     SessionStartTime, _
                     SessionEndTime)
 
-Dim proposedStart As Date
+Dim proposedStartSecs As Currency
 Dim remainingOffset As Long
 If offset > 0 Then
-    If datumBarStart > lSessTimes.EndTime Then
+    If datumBarStartSecs > gDtoS(lSessTimes.EndTime) Then
         ' specified Timestamp was between sessions
-        lSessTimes = GetOffsetSessionTimes(datumBarStart, 1, SessionStartTime, SessionEndTime)
-        datumBarStart = lSessTimes.startTime
+        lSessTimes = GetOffsetSessionTimes(gStoD(datumBarStartSecs), 1, SessionStartTime, SessionEndTime)
+        datumBarStartSecs = gDtoS(lSessTimes.StartTime)
         offset = offset - 1
     End If
     
     Dim BarsToSessEnd As Long
-    BarsToSessEnd = -Int(-(lSessTimes.EndTime - datumBarStart) / BarLengthDays)
+    BarsToSessEnd = Int((gDtoS(lSessTimes.EndTime) - datumBarStartSecs) / barLengthSecs)
     If BarsToSessEnd > offset Then
         ' all required Bars are in this session
-        proposedStart = datumBarStart + offset * BarLengthDays
+        proposedStartSecs = datumBarStartSecs + offset * barLengthSecs
     Else
         remainingOffset = offset - BarsToSessEnd
-        proposedStart = lSessTimes.EndTime
+        proposedStartSecs = gDtoS(lSessTimes.EndTime)
         Do While remainingOffset >= 0
-            lSessTimes = GetOffsetSessionTimes(proposedStart, 1, SessionStartTime, SessionEndTime)
+            lSessTimes = GetOffsetSessionTimes(gStoD(proposedStartSecs), 1, SessionStartTime, SessionEndTime)
             
             If numBarsInSession > remainingOffset Then
-                proposedStart = lSessTimes.startTime + remainingOffset * BarLengthDays
+                proposedStartSecs = gDtoS(lSessTimes.StartTime) + remainingOffset * barLengthSecs
                 remainingOffset = -1
             Else
-                proposedStart = lSessTimes.EndTime
+                proposedStartSecs = gDtoS(lSessTimes.EndTime)
                 remainingOffset = remainingOffset - numBarsInSession
             End If
         Loop
@@ -352,40 +334,51 @@ If offset > 0 Then
 Else
     offset = -offset
 
-    If datumBarStart >= lSessTimes.EndTime Then
+    If datumBarStartSecs >= gDtoS(lSessTimes.EndTime) Then
         ' specified Timestamp was between sessions
-        datumBarStart = lSessTimes.EndTime
+        datumBarStartSecs = gBarEndTime(lSessTimes.EndTime, BarTimePeriod, SessionStartTime, SessionEndTime)
     End If
     
-    proposedStart = lSessTimes.startTime
+    proposedStartSecs = gDtoS(lSessTimes.StartTime)
     
     Dim BarsFromSessStart As Long
-    BarsFromSessStart = -Int(-(datumBarStart - lSessTimes.startTime) / BarLengthDays)
+    BarsFromSessStart = Int((datumBarStartSecs - gDtoS(lSessTimes.StartTime)) / barLengthSecs)
     If BarsFromSessStart >= offset Then
         ' all required Bars are in this session
-        proposedStart = lSessTimes.startTime + (BarsFromSessStart - offset) * BarLengthDays
+        proposedStartSecs = gDtoS(lSessTimes.StartTime) + (BarsFromSessStart - offset) * barLengthSecs
     Else
         remainingOffset = offset - BarsFromSessStart
         Do While remainingOffset > 0
-            lSessTimes = GetSessionTimes(proposedStart - 1, SessionStartTime, SessionEndTime)
+            lSessTimes = GetSessionTimes(gStoD(proposedStartSecs) - OneDay, SessionStartTime, SessionEndTime)
             
             If numBarsInSession >= remainingOffset Then
-                proposedStart = lSessTimes.EndTime - remainingOffset * BarLengthDays
+                proposedStartSecs = gDtoS(lSessTimes.EndTime) - remainingOffset * barLengthSecs
                 remainingOffset = 0
             Else
-                proposedStart = lSessTimes.startTime
+                proposedStartSecs = gDtoS(lSessTimes.StartTime)
                 remainingOffset = remainingOffset - numBarsInSession
             End If
         Loop
     End If
 End If
 
-gCalcOffsetBarStartTime = proposedStart
+gCalcOffsetBarStartTime = gStoD(proposedStartSecs)
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gDtoS(ByVal pDate As Date) As Currency
+' dates in the current decades have 10 places of precision after the decimal point
+Const Adjuster As Double = 0.0000000001
+
+gDtoS = CCur(Fix((CDbl(pDate) + Adjuster) * 86400))
+End Function
+
+Public Function gStoD(ByVal pSeconds As Currency) As Date
+gStoD = CDate(CDbl(pSeconds) / 86400)
 End Function
 
 Public Sub gHandleUnexpectedError( _
@@ -420,7 +413,11 @@ End Sub
 
 Public Function gNormaliseTime( _
             ByVal Timestamp As Date) As Date
-gNormaliseTime = Timestamp - Int(Timestamp)
+If CDbl(Timestamp) = 1# Then
+    gNormaliseTime = 1#
+Else
+    gNormaliseTime = Timestamp - Int(Timestamp)
+End If
 End Function
 
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
@@ -437,17 +434,17 @@ End Sub
 
 Private Function calcOffsetDailyBarStartTime( _
                 ByVal Timestamp As Date, _
-                ByVal BarLength As Long, _
+                ByVal barLength As Long, _
                 ByVal offset As Long, _
                 ByVal SessionStartTime As Date) As Date
 Const ProcName As String = "calcOffsetDailyBarStartTime"
 On Error GoTo Err
 
 Dim datumBarStart As Date
-datumBarStart = gBarStartTime(Timestamp, GetTimePeriod(BarLength, TimePeriodDay), SessionStartTime)
+datumBarStart = gStoD(gBarStartTime(Timestamp, GetTimePeriod(barLength, TimePeriodDay), SessionStartTime))
 
 Dim targetWorkingDayNum As Long
-targetWorkingDayNum = WorkingDayNumber(datumBarStart) + offset * BarLength
+targetWorkingDayNum = WorkingDayNumber(datumBarStart) + offset * barLength
 
 calcOffsetDailyBarStartTime = WorkingDayDate(targetWorkingDayNum, datumBarStart)
 
@@ -459,16 +456,16 @@ End Function
 
 Private Function calcOffsetMonthlyBarStartTime( _
                 ByVal Timestamp As Date, _
-                ByVal BarLength As Long, _
+                ByVal barLength As Long, _
                 ByVal offset As Long, _
                 ByVal SessionStartTime As Date) As Date
 Const ProcName As String = "calcOffsetMonthlyBarStartTime"
 On Error GoTo Err
 
 Dim datumBarStart As Date
-datumBarStart = gBarStartTime(Timestamp, GetTimePeriod(BarLength, TimePeriodMonth), SessionStartTime)
+datumBarStart = gStoD(gBarStartTime(Timestamp, GetTimePeriod(barLength, TimePeriodMonth), SessionStartTime))
 
-calcOffsetMonthlyBarStartTime = DateAdd("m", offset * BarLength, datumBarStart)
+calcOffsetMonthlyBarStartTime = DateAdd("m", offset * barLength, datumBarStart)
 
 Exit Function
 
@@ -478,14 +475,14 @@ End Function
 
 Private Function calcOffsetWeeklyBarStartTime( _
                 ByVal Timestamp As Date, _
-                ByVal BarLength As Long, _
+                ByVal barLength As Long, _
                 ByVal offset As Long, _
                 ByVal SessionStartTime As Date) As Date
 Const ProcName As String = "calcOffsetWeeklyBarStartTime"
 On Error GoTo Err
 
 Dim datumBarStart As Date
-datumBarStart = gBarStartTime(Timestamp, GetTimePeriod(BarLength, TimePeriodWeek), SessionStartTime)
+datumBarStart = gStoD(gBarStartTime(Timestamp, GetTimePeriod(barLength, TimePeriodWeek), SessionStartTime))
 
 Dim datumWeekNumber As Long
 datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
@@ -500,21 +497,21 @@ Dim yearEndWeekNumber As Long
 yearEndWeekNumber = DatePart("ww", yearEnd, vbMonday, vbFirstFullWeek)
 
 Dim proposedWeekNumber As Long
-proposedWeekNumber = datumWeekNumber + offset * BarLength
+proposedWeekNumber = datumWeekNumber + offset * barLength
 
 Do While proposedWeekNumber < 1 Or proposedWeekNumber > yearEndWeekNumber
     If proposedWeekNumber < 1 Then
-        offset = offset + Int(datumWeekNumber / BarLength) + 1
+        offset = offset + Int(datumWeekNumber / barLength) + 1
         yearEnd = yearStart - 1
         yearStart = DateAdd("yyyy", -1, yearStart)
         yearEndWeekNumber = DatePart("ww", yearEnd, vbMonday, vbFirstFullWeek)
-        datumBarStart = gBarStartTime(yearEnd, GetTimePeriod(BarLength, TimePeriodWeek), SessionStartTime)
+        datumBarStart = gStoD(gBarStartTime(yearEnd, GetTimePeriod(barLength, TimePeriodWeek), SessionStartTime))
         datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
         
-        proposedWeekNumber = datumWeekNumber + offset * BarLength
+        proposedWeekNumber = datumWeekNumber + offset * barLength
         
     ElseIf proposedWeekNumber > yearEndWeekNumber Then
-        offset = offset - Int(yearEndWeekNumber - datumWeekNumber) / BarLength - 1
+        offset = offset - Int(yearEndWeekNumber - datumWeekNumber) / barLength - 1
         yearStart = yearEnd + 1
         yearEnd = DateAdd("yyyy", 1, yearEnd)
         yearEndWeekNumber = DatePart("ww", yearEnd, vbMonday, vbFirstFullWeek)
@@ -522,7 +519,7 @@ Do While proposedWeekNumber < 1 Or proposedWeekNumber > yearEndWeekNumber
         'datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
         datumWeekNumber = 1
         
-        proposedWeekNumber = datumWeekNumber + offset * BarLength
+        proposedWeekNumber = datumWeekNumber + offset * barLength
         
     End If
     
@@ -539,22 +536,20 @@ End Function
 
 Private Function calcOffsetYearlyBarStartTime( _
                 ByVal Timestamp As Date, _
-                ByVal BarLength As Long, _
+                ByVal barLength As Long, _
                 ByVal offset As Long, _
                 ByVal SessionStartTime As Date) As Date
 Const ProcName As String = "calcOffsetYearlyBarStartTime"
 On Error GoTo Err
 
 Dim datumBarStart As Date
-datumBarStart = gBarStartTime(Timestamp, GetTimePeriod(BarLength, TimePeriodYear), SessionStartTime)
+datumBarStart = gStoD(gBarStartTime(Timestamp, GetTimePeriod(barLength, TimePeriodYear), SessionStartTime))
 
-calcOffsetYearlyBarStartTime = DateAdd("yyyy", offset * BarLength, datumBarStart)
+calcOffsetYearlyBarStartTime = DateAdd("yyyy", offset * barLength, datumBarStart)
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-
 

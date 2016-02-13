@@ -86,35 +86,12 @@ Public Function BarEndTime( _
                 Optional ByVal SessionStartTime As Date, _
                 Optional ByVal SessionEndTime As Date) As Date
 Const ProcName As String = "BarEndTime"
-
 On Error GoTo Err
 
-BarEndTime = gBarEndTime(Timestamp, _
-                            BarTimePeriod, _
-                            gNormaliseTime(SessionStartTime), _
-                            gNormaliseTime(SessionEndTime))
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BarLength( _
-                ByVal BarTimePeriod As TimePeriod) As Date
-Const ProcName As String = "BarLength"
-
-On Error GoTo Err
-
-Select Case BarTimePeriod.Units
-Case TimePeriodSecond
-Case TimePeriodMinute
-Case TimePeriodHour
-Case TimePeriodDay
-Case Else
-    AssertArgument False, "Can't calculate Bar length for this time unit"
-End Select
-BarLength = gCalcBarLength(BarTimePeriod)
+BarEndTime = gStoD(gBarEndTime(Timestamp, _
+                                BarTimePeriod, _
+                                gNormaliseTime(SessionStartTime), _
+                                gNormaliseTime(SessionEndTime)))
 
 Exit Function
 
@@ -127,12 +104,11 @@ Public Function BarStartTime( _
                 ByVal BarTimePeriod As TimePeriod, _
                 Optional ByVal SessionStartTime As Date) As Date
 Const ProcName As String = "BarStartTime"
-
 On Error GoTo Err
 
-BarStartTime = gBarStartTime(Timestamp, _
-                            BarTimePeriod, _
-                            gNormaliseTime(SessionStartTime))
+BarStartTime = gStoD(gBarStartTime(Timestamp, _
+                                BarTimePeriod, _
+                                gNormaliseTime(SessionStartTime)))
 
 Exit Function
 
