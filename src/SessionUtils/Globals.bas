@@ -61,19 +61,27 @@ Public Function gCalcOffsetSessionTimes( _
                 ByVal pTimestamp As Date, _
                 ByVal pOffset As Long, _
                 ByVal pStartTime As Date, _
-                ByVal pEndTime As Date) As SessionTimes
+                ByVal pEndTime As Date, _
+                ByVal pIgnoreWeekends As Boolean) As SessionTimes
 Const ProcName As String = "gCalcOffsetSessionTimes"
 On Error GoTo Err
 
 Dim lDatumSessionTimes As SessionTimes
-lDatumSessionTimes = gCalcSessionTimes(pTimestamp, pStartTime, pEndTime)
-
-Dim lTargetWorkingDayNum As Long
-lTargetWorkingDayNum = WorkingDayNumber(lDatumSessionTimes.StartTime) + pOffset
-If sessionSpansMidnight(pStartTime, pEndTime) Then lTargetWorkingDayNum = lTargetWorkingDayNum + 1
 
 Dim lTargetDate As Date
-lTargetDate = WorkingDayDate(lTargetWorkingDayNum, Int(lDatumSessionTimes.StartTime))
+
+If pIgnoreWeekends Then
+    lDatumSessionTimes = gGetSessionTimesIgnoringWeekend(pTimestamp, pStartTime, pEndTime)
+    lTargetDate = DateValue(lDatumSessionTimes.StartTime) + pOffset
+Else
+    lDatumSessionTimes = gCalcSessionTimes(pTimestamp, pStartTime, pEndTime)
+    
+    Dim lTargetWorkingDayNum As Long
+    lTargetWorkingDayNum = WorkingDayNumber(lDatumSessionTimes.StartTime) + pOffset
+    If sessionSpansMidnight(pStartTime, pEndTime) Then lTargetWorkingDayNum = lTargetWorkingDayNum + 1
+    
+    lTargetDate = WorkingDayDate(lTargetWorkingDayNum, Int(lDatumSessionTimes.StartTime))
+End If
 
 With gCalcOffsetSessionTimes
     .StartTime = lTargetDate + pStartTime
@@ -179,7 +187,11 @@ End Sub
 
 Public Function gNormaliseTime( _
             ByVal Timestamp As Date) As Date
-gNormaliseTime = Timestamp - Int(Timestamp)
+If CDbl(Timestamp) = 1# Then
+    gNormaliseTime = 1#
+Else
+    gNormaliseTime = Timestamp - Int(Timestamp)
+End If
 End Function
 
 Public Sub gNotifyUnhandledError( _

@@ -151,6 +151,7 @@ Const ProcName As String = "SessionEndTime"
 On Error GoTo Err
 
 mSessionEndTime = gNormaliseTime(Value)
+If CDbl(mSessionEndTime) = 0# Then mSessionEndTime = 1#
 
 Exit Property
 
@@ -225,7 +226,7 @@ Public Function GetOffsetSessionTimes( _
 Const ProcName As String = "GetOffsetSessionTimes"
 On Error GoTo Err
 
-GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, offset, mSessionStartTime, mSessionEndTime)
+GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, offset, mSessionStartTime, mSessionEndTime, True)
 
 Exit Function
 
@@ -320,7 +321,7 @@ End If
 If Not sInitialised Then
     sInitialised = True
     mCurrentSessionTimes = gCalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
-    sNextSessionTimes = gCalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime)
+    sNextSessionTimes = gCalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime, True)
     ev.changeType = SessionChangeStart
     ev.Timestamp = mCurrentSessionTimes.StartTime
     RaiseEvent SessionStarted(ev)
@@ -336,7 +337,7 @@ End If
 
 If pTimestamp >= sNextSessionTimes.StartTime Then
     mCurrentSessionTimes = gCalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
-    sNextSessionTimes = gCalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime)
+    sNextSessionTimes = gCalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime, True)
     sSessionEndNotified = False
     ev.changeType = SessionChangeStart
     ev.Timestamp = mCurrentSessionTimes.StartTime

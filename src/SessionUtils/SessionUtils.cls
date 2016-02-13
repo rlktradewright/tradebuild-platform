@@ -139,7 +139,28 @@ On Error GoTo Err
 GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, _
                             offset, _
                             gNormaliseTime(StartTime), _
-                            gNormaliseTime(EndTime))
+                            gNormaliseTime(EndTime), _
+                            False)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetOffsetSessionTimesIgnoringWeekend( _
+                ByVal Timestamp As Date, _
+                ByVal offset As Long, _
+                Optional ByVal StartTime As Date, _
+                Optional ByVal EndTime As Date) As SessionTimes
+Const ProcName As String = "GetOffsetSessionTimesIgnoringWeekend"
+On Error GoTo Err
+
+GetOffsetSessionTimesIgnoringWeekend = gCalcOffsetSessionTimes(Timestamp, _
+                            offset, _
+                            gNormaliseTime(StartTime), _
+                            gNormaliseTime(EndTime), _
+                            True)
 
 Exit Function
 
