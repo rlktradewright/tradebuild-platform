@@ -69,8 +69,6 @@ Private mStrategyRunner                             As StrategyRunner
 Private mBarsOutstanding                            As Long
 Private mStudiesOutstanding                         As Long
 
-Private mStudiesMap                                 As New EnumerableCollection
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -249,8 +247,7 @@ Public Function AddStudy(ByVal pName As String, _
                 ByVal pIncludeDataOutsideSession As Boolean, _
                 Optional ByVal pParams As Parameters, _
                 Optional ByVal pNumberOfValuesToCache As Long, _
-                Optional ByVal pLibraryName As String, _
-                Optional ByVal pShowInChart As Boolean) As IStudy
+                Optional ByVal pLibraryName As String) As IStudy
 Const ProcName As String = "AddStudy"
 On Error GoTo Err
 
@@ -261,15 +258,6 @@ Set lTC = mStudyManager.StartStudy(AddStudy, 0)
 If Not lTC Is Nothing Then
     lTC.AddTaskCompletionListener Me
     mStudiesOutstanding = mStudiesOutstanding + 1
-End If
-
-If Not pShowInChart Then
-ElseIf Not studyAlreadyMapped(AddStudy) Then
-    If mStudiesMap.Contains(pUnderlyingStudy.InstancePath) Then
-        Dim lChartStudy As IStudy
-        Set lChartStudy = getStrategyHost.AddStudy(pName, mStudiesMap.Item(pUnderlyingStudy.InstancePath), pInputValueNames, pParams, pNumberOfValuesToCache, pLibraryName)
-        If Not lChartStudy Is Nothing Then addStudyToMap lChartStudy
-    End If
 End If
 
 Exit Function
@@ -326,13 +314,8 @@ If Not sTimeframes.Contains(lTimeframe) Then
     sTimeframes.Add lTimeframe
     lTimeframe.AddStateChangeListener Me
     mBarsOutstanding = mBarsOutstanding + 1
-End If
-
-If Not pShowInChart Then
-ElseIf Not studyAlreadyMapped(lTimeframe.BarStudy) Then
-    Dim lChartTimeframe As Timeframe
-    Set lChartTimeframe = getStrategyHost.AddTimeframe(pTimePeriod, pNumberOfBarsToFetch, pIncludeBarsOutsideSession)
-    If Not lChartTimeframe Is Nothing Then addStudyToMap lChartTimeframe.BarStudy
+    
+    If pShowInChart Then getStrategyHost.AddTimeframe lTimeframe
 End If
 
 Set AddTimeframe = lTimeframe
@@ -342,6 +325,39 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+''
+' Displays an output value from a study on the chart.
+'
+' @remarks
+'   This method can only be called during the <code>Strategy</code> object's
+'   <code>Initialise</code> method. Calling it elsewhere results in an
+'   <code>ErrIllegalStateException</code> error being raised.
+'
+' @param pStudy
+'   The existing study whose value is to be displayed.
+' @param pValueName
+'   The names of the study value to be displayed on the chart.
+' @param pTimeframe
+'   Identifies the chart on which the study value is to be displayed.
+'   If this is not supplied or is <code>Nothing</code>, the value is displayed
+'   on the chart containing the first created timeframe.
+'@/
+Public Sub ChartStudyValue( _
+                ByVal pStudy As IStudy, _
+                ByVal pValueName As String, _
+                Optional ByVal pTimeframe As Timeframe)
+Const ProcName As String = "ChartStudyValue"
+On Error GoTo Err
+
+getStrategyHost.ChartStudyValue pStudy, pValueName, pTimeframe
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub Initialise( _
                 ByVal pStrategyHost As IStrategyHost, _
@@ -373,21 +389,6 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub addStudyToMap(ByVal pStudy As IStudy)
-Const ProcName As String = "addStudyToMap"
-On Error GoTo Err
-
-mStudiesMap.Add pStudy, pStudy.InstancePath
-
-Exit Sub
-
-Err:
-' allow for the fact that both the strategy and the stop/scaling factories
-' may add the same timeframes or studies
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Resume Next
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Sub checkReady()
 Const ProcName As String = "checkReady"
 On Error GoTo Err
@@ -402,18 +403,6 @@ End Sub
 
 Private Function getStrategyHost() As IStrategyHost
 Set getStrategyHost = mStrategyHostRef.Target
-End Function
-
-Private Function studyAlreadyMapped(ByVal pStudy As IStudy) As Boolean
-Const ProcName As String = "studyAlreadyMapped"
-On Error GoTo Err
-
-studyAlreadyMapped = mStudiesMap.Contains(pStudy.InstancePath)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

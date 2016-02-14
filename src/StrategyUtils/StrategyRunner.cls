@@ -209,6 +209,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+Private Sub mReplayController_ReplayStarted()
+Const ProcName As String = "mReplayController_ReplayStarted"
+On Error GoTo Err
+
+getStrategyHost.NotifyReplayStarted
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 '================================================================================
 ' mTickfileReplayTC Event Handlers
 '================================================================================

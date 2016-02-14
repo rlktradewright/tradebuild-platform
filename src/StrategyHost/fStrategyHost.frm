@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#300.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#309.0#0"; "TradingUI27.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
    ClientHeight    =   9225
@@ -42,7 +42,6 @@ Begin VB.Form fStrategyHost
       TabPicture(2)   =   "fStrategyHost.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "TradeChart"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Bracket order details"
       TabPicture(3)   =   "fStrategyHost.frx":0054
@@ -132,33 +131,35 @@ Begin VB.Form fStrategyHost
       TabPicture(3)   =   "fStrategyHost.frx":00C4
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "MoreButton"
-      Tab(3).Control(1)=   "BidSizeLabel"
-      Tab(3).Control(2)=   "BidLabel"
-      Tab(3).Control(3)=   "TradeSizeLabel"
-      Tab(3).Control(4)=   "TradeLabel"
-      Tab(3).Control(5)=   "AskSizeLabel"
-      Tab(3).Control(6)=   "AskLabel"
-      Tab(3).Control(7)=   "Label7"
-      Tab(3).Control(8)=   "MicrosecsPerEventLabel"
-      Tab(3).Control(9)=   "EventsPerSecondLabel"
-      Tab(3).Control(10)=   "Label3"
-      Tab(3).Control(11)=   "PercentCompleteLabel"
-      Tab(3).Control(12)=   "Label2"
-      Tab(3).Control(13)=   "EventsPlayedLabel"
-      Tab(3).Control(14)=   "Label1"
-      Tab(3).Control(15)=   "Label8"
-      Tab(3).Control(16)=   "Label10"
-      Tab(3).Control(17)=   "Label9"
-      Tab(3).Control(18)=   "Label4"
-      Tab(3).Control(19)=   "Profit"
-      Tab(3).Control(20)=   "Drawdown"
-      Tab(3).Control(21)=   "Label12"
-      Tab(3).Control(22)=   "Label5"
-      Tab(3).Control(23)=   "MaxProfit"
-      Tab(3).Control(24)=   "Position"
-      Tab(3).Control(25)=   "Label14"
-      Tab(3).Control(26)=   "TheTime"
-      Tab(3).ControlCount=   27
+      Tab(3).Control(1)=   "Label11"
+      Tab(3).Control(2)=   "VolumeLabel"
+      Tab(3).Control(3)=   "BidSizeLabel"
+      Tab(3).Control(4)=   "BidLabel"
+      Tab(3).Control(5)=   "TradeSizeLabel"
+      Tab(3).Control(6)=   "TradeLabel"
+      Tab(3).Control(7)=   "AskSizeLabel"
+      Tab(3).Control(8)=   "AskLabel"
+      Tab(3).Control(9)=   "Label7"
+      Tab(3).Control(10)=   "MicrosecsPerEventLabel"
+      Tab(3).Control(11)=   "EventsPerSecondLabel"
+      Tab(3).Control(12)=   "Label3"
+      Tab(3).Control(13)=   "PercentCompleteLabel"
+      Tab(3).Control(14)=   "Label2"
+      Tab(3).Control(15)=   "EventsPlayedLabel"
+      Tab(3).Control(16)=   "Label1"
+      Tab(3).Control(17)=   "Label8"
+      Tab(3).Control(18)=   "Label10"
+      Tab(3).Control(19)=   "Label9"
+      Tab(3).Control(20)=   "Label4"
+      Tab(3).Control(21)=   "Profit"
+      Tab(3).Control(22)=   "Drawdown"
+      Tab(3).Control(23)=   "Label12"
+      Tab(3).Control(24)=   "Label5"
+      Tab(3).Control(25)=   "MaxProfit"
+      Tab(3).Control(26)=   "Position"
+      Tab(3).Control(27)=   "Label14"
+      Tab(3).Control(28)=   "TheTime"
+      Tab(3).ControlCount=   29
       Begin VB.PictureBox LogPicture 
          BorderStyle     =   0  'None
          Height          =   3075
@@ -441,6 +442,26 @@ Begin VB.Form fStrategyHost
          Top             =   360
          Width           =   7455
       End
+      Begin VB.Label Label11 
+         Alignment       =   1  'Right Justify
+         Caption         =   "Volume"
+         Height          =   195
+         Left            =   -74880
+         TabIndex        =   56
+         Top             =   1200
+         Width           =   735
+      End
+      Begin VB.Label VolumeLabel 
+         Alignment       =   1  'Right Justify
+         Appearance      =   0  'Flat
+         BackColor       =   &H80000005&
+         ForeColor       =   &H80000008&
+         Height          =   255
+         Left            =   -72960
+         TabIndex        =   55
+         Top             =   1200
+         Width           =   735
+      End
       Begin VB.Label BidSizeLabel 
          Alignment       =   1  'Right Justify
          Appearance      =   0  'Flat
@@ -702,7 +723,7 @@ Begin VB.Form fStrategyHost
          Height          =   255
          Left            =   -73815
          TabIndex        =   21
-         Top             =   1320
+         Top             =   1560
          Width           =   1815
       End
    End
@@ -738,7 +759,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements ICollectionChangeListener
 Implements IGenericTickListener
 Implements ILogListener
 Implements IStateChangeListener
@@ -809,6 +829,11 @@ End Enum
 ' Types
 '================================================================================
 
+Private Type StudyConfigToShow
+    Timeframe           As Timeframe
+    StudyConfig         As StudyConfiguration
+End Type
+
 '================================================================================
 ' Member variables
 '================================================================================
@@ -829,15 +854,14 @@ Private mParams                                         As Parameters
 Private mStrategyRunner                                 As StrategyRunner
 Attribute mStrategyRunner.VB_VarHelpID = -1
 
-Private mPriceStudyBase                                 As StudyBaseForTickDataInput
-
 Private mTimeframes                                     As EnumerableCollection
+
 Private mPriceChartTimePeriod                           As TimePeriod
 Private mPriceChartIndex                                As Long
 
 Private mProfitStudyBase                                As StudyBaseForDoubleInput
 
-Private mTradeStudyBase                                 As StudyBaseForUserBarsInput
+Private mTradeStudyBase                                 As StudyBaseForIntegerInput
 Private mTradeBarNumber                                 As Long
 
 Private mPosition                                       As Long
@@ -867,6 +891,9 @@ Private mShowChart                                      As Boolean
 Private mNumberOfTimeframesLoading                      As Long
 
 Private mIsTickReplay                                   As Boolean
+
+Private mStudiesToShow()                                As StudyConfigToShow
+Private mStudiesToShowIndex                             As Long
 
 '================================================================================
 ' Form Event Handlers
@@ -945,24 +972,6 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
-' ICollectionChangeListener Interface Members
-'================================================================================
-
-Private Sub ICollectionChangeListener_Change(ev As TWUtilities40.CollectionChangeEventData)
-Const ProcName As String = "ICollectionChangeListener_Change"
-On Error GoTo Err
-
-If ev.ChangeType <> CollItemAdded Then Exit Sub
-
-monitorTimeframe ev.AffectedItem
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'================================================================================
 ' IGenericTickListener Interface Members
 '================================================================================
 
@@ -990,9 +999,8 @@ Case TickTypes.TickTypeTrade
         TradeLabel.Caption = FormatPrice(ev.Tick.Price, mSecType, mTickSize)
         TradeSizeLabel.Caption = ev.Tick.Size
     End If
-    If mShowChart Then mPriceStudyBase.NotifyTick ev.Tick
 Case TickTypes.TickTypeVolume
-    If mShowChart Then mPriceStudyBase.NotifyTick ev.Tick
+    If Not mIsTickReplay Then VolumeLabel.Caption = ev.Tick.Size
 End Select
 
 Exit Sub
@@ -1011,14 +1019,22 @@ On Error GoTo Err
 
 If ev.State <> TimeframeStates.TimeframeStateLoaded Then Exit Sub
 
+Dim lTimeframe As Timeframe: Set lTimeframe = ev.Source
 mNumberOfTimeframesLoading = mNumberOfTimeframesLoading - 1
+
+Dim lChartManager As ChartManager
+Set lChartManager = PriceChart.ChartManager(mTimeframes(lTimeframe.TimePeriod.ToString))
+
+lChartManager.SetBaseStudyConfiguration CreateBarsStudyConfig(lTimeframe, mContract.Specifier.SecType, mTicker.StudyBase.StudyManager.StudyLibraryManager), 0
+
+addStudiesForChart lTimeframe, lChartManager
 
 If mNumberOfTimeframesLoading = 0 Then
     mTicker.AddGenericTickListener Me
+    
     If mTicker.IsTickReplay Then
         mStrategyRunner.StartReplay
         mReplayStartTime = GetTimestamp
-        If mShowChart Then PriceChart.BaseChartController.DisableDrawing
     End If
 End If
 
@@ -1032,83 +1048,97 @@ End Sub
 ' IStrategyHost Interface Members
 '================================================================================
 
-Private Function IStrategyHost_AddStudy( _
-                ByVal pName As String, _
-                ByVal pUnderlyingStudy As IStudy, _
-                ByRef pInputValueNames() As String, _
-                Optional ByVal pParams As Parameters, _
-                Optional ByVal pNumberOfValuesToCache As Long, _
-                Optional ByVal pLibraryName As String) As IStudy
-Const ProcName As String = "IStrategyHost_AddStudy"
-On Error GoTo Err
-
-If Not mShowChart Then Exit Function
-
-Dim lChartManager As ChartManager
-Set lChartManager = PriceChart.ChartManager
-
-Dim lStudyConfig As StudyConfiguration
-Set lStudyConfig = lChartManager.GetDefaultStudyConfiguration(pName, pLibraryName)
-
-lStudyConfig.UnderlyingStudy = pUnderlyingStudy
-
-Dim lInputValueNames() As String
-lInputValueNames = pInputValueNames
-lStudyConfig.InputValueNames = lInputValueNames
-lStudyConfig.Parameters = pParams
-lStudyConfig.StudyLibraryName = pLibraryName
-
-Dim lStudy As IStudy
-Set lStudy = lChartManager.AddStudyConfiguration(lStudyConfig)
-lChartManager.StartStudy lStudy
-
-Set IStrategyHost_AddStudy = lStudy
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function IStrategyHost_AddTimeframe( _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pNumberOfBarsToFetch As Long, _
-                Optional ByVal pIncludeBarsOutsideSession As Boolean) As Timeframe
+Private Sub IStrategyHost_AddTimeframe( _
+                ByVal pTimeframe As Timeframe)
 Const ProcName As String = "IStrategyHost_AddTimeframe"
 On Error GoTo Err
 
-If Not mShowChart Then Exit Function
-If mTimeframes.Contains(pTimePeriod.ToString) Then
-    Set IStrategyHost_AddTimeframe = mTimeframes.Item(pTimePeriod.ToString)
-    Exit Function
-End If
-    
-Dim lIndex As Long
+monitorTimeframe pTimeframe
+
+If Not mShowChart Then Exit Sub
+If mTimeframes.Contains(pTimeframe.TimePeriod.ToString) Then Exit Sub
+
+Dim lTitle As String
+Dim lUpdatePerTick As Boolean
+
 If mIsTickReplay Then
-    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.Symbol, True)  ' False)
+    lTitle = ""
+    lUpdatePerTick = False
 Else
-    lIndex = PriceChart.Add(pTimePeriod, mContract.Specifier.LocalSymbol, True)
+    lTitle = mContract.Specifier.LocalSymbol
+    lUpdatePerTick = True
 End If
 
-mTimeframes.Add PriceChart.Timeframe, pTimePeriod.ToString
+Dim lIndex As Long
+lIndex = PriceChart.AddRaw(pTimeframe, _
+                        mTicker.StudyBase.StudyManager, _
+                        mContract.Specifier.LocalSymbol, _
+                        mContract.Specifier.SecType, _
+                        mContract.Specifier.Exchange, _
+                        mContract.TickSize, _
+                        mContract.SessionStartTime, _
+                        mContract.SessionEndTime, _
+                        lTitle, _
+                        lUpdatePerTick)
 
-monitorTimeframe PriceChart.Timeframe(lIndex)
+mTimeframes.Add lIndex, pTimeframe.TimePeriod.ToString
 
 If mPriceChartIndex = 0 Then
     mPriceChartIndex = lIndex
-    Set mPriceChartTimePeriod = pTimePeriod
+    Set mPriceChartTimePeriod = pTimeframe.TimePeriod
 End If
 
 If mPricePeriods Is Nothing Then Set mPricePeriods = PriceChart.BaseChartController.Periods
 If mBracketOrderLineSeries Is Nothing Then Set mBracketOrderLineSeries = PriceChart.BaseChartController.Regions.Item(ChartRegionNamePrice).AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerHighestUser)
+mBracketOrderLineSeries.Thickness = 2
+mBracketOrderLineSeries.ArrowEndStyle = ArrowClosed
+mBracketOrderLineSeries.ArrowEndWidth = 8
+mBracketOrderLineSeries.ArrowEndLength = 12
 
-Set IStrategyHost_AddTimeframe = PriceChart.Timeframe
-
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
+
+Private Sub IStrategyHost_ChartStudyValue( _
+                ByVal pStudy As IStudy, _
+                ByVal pValueName As String, _
+                ByVal pTimeframe As Timeframe)
+Const ProcName As String = "IStrategyHost_ChartStudyValue"
+On Error GoTo Err
+
+Dim lStudyConfig As StudyConfiguration
+Dim lSvc As StudyValueConfiguration
+
+If Not findStudyConfig(pStudy, pTimeframe, lStudyConfig) Then
+    Dim lChartManager As ChartManager
+    Set lChartManager = PriceChart.ChartManager(PriceChart.GetIndexFromTimeframe(pTimeframe))
+    Set lStudyConfig = lChartManager.GetDefaultStudyConfiguration(pStudy.Name, pStudy.LibraryName)
+    lStudyConfig.Study = pStudy
+    lStudyConfig.UnderlyingStudy = pStudy.UnderlyingStudy
+
+    Assert Not lStudyConfig Is Nothing, "Can't get default study configuration"
+
+    For Each lSvc In lStudyConfig.StudyValueConfigurations
+        lSvc.IncludeInChart = False
+    Next
+    
+    mStudiesToShowIndex = mStudiesToShowIndex + 1
+    If mStudiesToShowIndex > UBound(mStudiesToShow) Then ReDim Preserve mStudiesToShow(2 * (UBound(mStudiesToShow) + 1) - 1) As StudyConfigToShow
+    Set mStudiesToShow(mStudiesToShowIndex).StudyConfig = lStudyConfig
+    Set mStudiesToShow(mStudiesToShowIndex).Timeframe = pTimeframe
+End If
+
+For Each lSvc In lStudyConfig.StudyValueConfigurations
+    If lSvc.ValueName = pValueName Then lSvc.IncludeInChart = True
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub IStrategyHost_ContractInvalid(ByVal pMessage As String)
 MsgBox pMessage, vbCritical, "Invalid contract"
@@ -1165,8 +1195,8 @@ If mShowChart Then
     TradeChart.EnableDrawing
 End If
 
-If mTickfileIndex = TickfileOrganiser1.TickfileSpecifiers.Count - 1 Then
-    Set mPriceStudyBase = Nothing
+If mTickfileIndex = TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
+    Set mTimeframes = New EnumerableCollection
     Set mProfitStudyBase = Nothing
     Set mTradeStudyBase = Nothing
     mTradeBarNumber = 0
@@ -1186,7 +1216,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IStrategyHost_NotifyReplayEvent(ev As NotificationEventData)
@@ -1227,7 +1257,7 @@ mStrategyRunner.StopTesting
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IStrategyHost_NotifyReplayProgress( _
@@ -1264,7 +1294,24 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategyHost_NotifyReplayStarted()
+Const ProcName As String = "IStrategyHost_NotifyReplayStarted"
+On Error GoTo Err
+
+If mShowChart Then
+    Dim i As Long
+    For i = 1 To PriceChart.Count
+        PriceChart.BaseChartController(i).DisableDrawing
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IStrategyHost_OrderSubmitterFactoryLive() As IOrderSubmitterFactory
@@ -1293,13 +1340,23 @@ On Error GoTo Err
 
 Set mTicker = pTicker
 mIsTickReplay = mTicker.IsTickReplay
-mTicker.Timeframes.AddCollectionChangeListener Me
 Set mContract = mTicker.ContractFuture.Value
 mSecType = mContract.Specifier.SecType
 mTickSize = mContract.TickSize
 Set mSession = mTicker.SessionFuture.Value
 
-If mPriceStudyBase Is Nothing Then initialisePriceChart
+ReDim mStudiesToShow(3) As StudyConfigToShow
+mStudiesToShowIndex = -1
+
+If PriceChart.Count = 0 Then
+    Set mTimeframes = New EnumerableCollection
+    initialisePriceChart
+Else
+    Dim i As Long
+    For i = 1 To PriceChart.Count
+        PriceChart.SetStudyManager mTicker.StudyBase.StudyManager, i
+    Next
+End If
 If mProfitStudyBase Is Nothing Then initialiseProfitChart
 If mTradeStudyBase Is Nothing Then initialiseTradeChart
 
@@ -1314,7 +1371,7 @@ SSTab2.Tab = 3
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IStrategyHost_TickfileStoreInput() As ITickfileStore
@@ -1639,6 +1696,25 @@ End Sub
 ' Helper Functions
 '================================================================================
 
+Private Sub addStudiesForChart( _
+                ByVal pTimeframe As Timeframe, _
+                ByVal pChartManager As ChartManager)
+Const ProcName As String = "addStudiesForChart"
+On Error GoTo Err
+
+Dim i As Long
+For i = 0 To mStudiesToShowIndex
+    If mStudiesToShow(i).Timeframe Is pTimeframe Then
+        pChartManager.ApplyStudyConfiguration mStudiesToShow(i).StudyConfig, 0
+    End If
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub clearPerformanceFields()
 EventsPlayedLabel = ""
 PercentCompleteLabel = ""
@@ -1662,6 +1738,23 @@ Drawdown.Caption = ""
 MaxProfit.Caption = ""
 Position.Caption = ""
 End Sub
+
+Private Function findStudyConfig( _
+                ByVal pStudy As IStudy, _
+                ByVal pTimeframe As Timeframe, _
+                ByRef pStudyConfig As StudyConfiguration) As Boolean
+Dim i As Long
+For i = 0 To mStudiesToShowIndex
+    If mStudiesToShow(i).StudyConfig.Study Is pStudy And _
+        mStudiesToShow(i).Timeframe Is pTimeframe _
+    Then
+        Set pStudyConfig = mStudiesToShow(i).StudyConfig
+        findStudyConfig = True
+        Exit Function
+    End If
+Next
+findStudyConfig = False
+End Function
 
 Private Function formatLogRecord(ByVal pLogrec As LogRecord, ByVal pIncludeTimestamp As Boolean) As String
 Const ProcName As String = "formatLogRecord"
@@ -1714,22 +1807,7 @@ On Error GoTo Err
 
 If Not mShowChart Then Exit Sub
 
-Set mPriceStudyBase = New StudyBaseForTickDataInput
-mPriceStudyBase.Initialise gTB.StudyLibraryManager.CreateStudyManager( _
-                                                    mContract.SessionStartTime, _
-                                                    mContract.SessionEndTime, _
-                                                    GetTimeZone(mContract.TimeZoneName)), _
-                            mTicker.ContractFuture
-    
-PriceChart.Initialise CreateTimeframes(mPriceStudyBase, _
-                                    mTicker.ContractFuture, _
-                                    gTB.HistoricalDataStoreInput, _
-                                    mTicker.ClockFuture), _
-                    gTB.HistoricalDataStoreInput.TimePeriodValidator, _
-                    CreateChartSpecifier(0), _
-                    ChartStylesManager.DefaultStyle
-
-Set mTimeframes = New EnumerableCollection
+PriceChart.InitialiseRaw ChartStylesManager.DefaultStyle
 
 Exit Sub
 
@@ -1749,10 +1827,9 @@ Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-If mIsTickReplay Then ProfitChart.UpdatePerTick = False
+If mIsTickReplay Then ProfitChart.Initialise CreateTimeframes(mProfitStudyBase), False
 ProfitChart.DisableDrawing
-ProfitChart.ShowChart CreateTimeframes(mProfitStudyBase), _
-                        GetTimePeriod(1, TimePeriodDay), _
+ProfitChart.ShowChart GetTimePeriod(1, TimePeriodDay), _
                         CreateChartSpecifier(0), _
                         ChartStylesManager.DefaultStyle, _
                         pTitle:="Profit by Session"
@@ -1770,16 +1847,15 @@ On Error GoTo Err
 
 If Not mShowChart Then Exit Sub
 
-Set mTradeStudyBase = CreateStudyBaseForUserBarsInput( _
+Set mTradeStudyBase = CreateStudyBaseForIntegerInput( _
                                     gTB.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-If mIsTickReplay Then TradeChart.UpdatePerTick = False
+If mIsTickReplay Then TradeChart.Initialise CreateTimeframes(mTradeStudyBase), False
 TradeChart.DisableDrawing
-TradeChart.ShowChart CreateTimeframes(mTradeStudyBase), _
-                    GetTimePeriod(0, TimePeriodNone), _
+TradeChart.ShowChart GetTimePeriod(0, TimePeriodNone), _
                     CreateChartSpecifier(0), _
                     ChartStylesManager.DefaultStyle, _
                     pTitle:="Profit by Trade"
@@ -2022,16 +2098,19 @@ If lPeriod Is Nothing Then
 End If
 lBracketOrderLine.Point2 = NewPoint(mPricePeriods(lLineEndBarStartTime).PeriodNumber, pBracketOrderProfile.ExitPrice)
 
-If pBracketOrderProfile.Action = OrderActionBuy Then
+If pBracketOrderProfile.Profit > 0 Then
     lBracketOrderLine.Color = vbBlue
+    lBracketOrderLine.ArrowEndColor = vbBlue
+    lBracketOrderLine.ArrowEndFillColor = vbBlue
+ElseIf pBracketOrderProfile.Profit = 0 Then
+    lBracketOrderLine.Color = vbBlack
+    lBracketOrderLine.ArrowEndColor = vbBlack
+    lBracketOrderLine.ArrowEndFillColor = vbBlack
 Else
     lBracketOrderLine.Color = vbRed
+    lBracketOrderLine.ArrowEndColor = vbRed
+    lBracketOrderLine.ArrowEndFillColor = vbRed
 End If
-'If pBracketOrderProfile.QuantityOutstanding <> 0 Then
-    lBracketOrderLine.ArrowEndStyle = ArrowClosed
-    lBracketOrderLine.ArrowEndWidth = 8
-    lBracketOrderLine.ArrowEndLength = 12
-'End If
 
 Exit Sub
 
@@ -2045,7 +2124,7 @@ On Error GoTo Err
 
 mTickfileIndex = mTickfileIndex + 1
 TickfileOrganiser1.ListIndex = mTickfileIndex
-mStrategyRunner.PrepareTickFile TickfileOrganiser1.TickfileSpecifiers(mTickfileIndex + 1)
+mStrategyRunner.PrepareTickFile TickfileOrganiser1.TickFileSpecifiers(mTickfileIndex + 1)
 
 Exit Sub
 

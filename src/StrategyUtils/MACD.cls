@@ -40,6 +40,14 @@ Option Explicit
 
 Private Const ModuleName                            As String = "MACD"
 
+Private Const ValueMACD                             As String = "MACD"
+Private Const ValueMACDHist                         As String = "MACD hist"
+Private Const ValueMACDLowerBalance                 As String = "MACD lower balance"
+Private Const ValueMACDSignal                       As String = "MACD signal"
+Private Const ValueStrength                         As String = "Strength"
+Private Const ValueStrengthCount                    As String = "Strength count"
+Private Const ValueMACDUpperBalance                 As String = "MACD upper balance"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -59,6 +67,34 @@ Private Const ModuleName                            As String = "MACD"
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get MACDValueMACD() As String
+MACDValueMACD = ValueMACD
+End Property
+
+Public Property Get MACDValueMACDHist() As String
+MACDValueMACDHist = ValueMACDHist
+End Property
+
+Public Property Get MACDValueMACDLowerBalance() As String
+MACDValueMACDLowerBalance = ValueMACDLowerBalance
+End Property
+
+Public Property Get MACDValueMACDSignal() As String
+MACDValueMACDSignal = ValueMACDSignal
+End Property
+
+Public Property Get MACDValueStrength() As String
+MACDValueStrength = ValueStrength
+End Property
+
+Public Property Get MACDValueStrengthCount() As String
+MACDValueStrengthCount = ValueStrengthCount
+End Property
+
+Public Property Get MACDValueMACDUpperBalance() As String
+MACDValueMACDUpperBalance = ValueMACDUpperBalance
+End Property
 
 '@================================================================================
 ' Methods

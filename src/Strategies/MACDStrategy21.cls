@@ -180,8 +180,8 @@ Set lSwing = DeclareStudy( _
                         "Minimum swing (ticks)=" & GetParameterValue(ParamMinimumSwingTicks) & _
                             ";Include implicit swing points=Y", _
                         GetParameterValue(ParamIncludeBarsOutsideSession), _
-                        3, _
-                        True)
+                        3)
+ChartStudyValue lSwing, SwingValueSwingLine
 
 Dim lBoll As ResourceIdentifier
 Set lBoll = DeclareStudy( _
@@ -193,8 +193,10 @@ Set lBoll = DeclareStudy( _
                             ";Centre band width=" & GetParameterValue(ParamBollingerCentreBandWidthTicks) * TickSize & _
                             ";Edge band width=" & GetParameterValue(ParamBollingerEdgeBandWidthTicks) * TickSize, _
                         GetParameterValue(ParamIncludeBarsOutsideSession), _
-                        3, _
-                        True)
+                        3)
+ChartStudyValue lBoll, BollingerBandsValueBottom
+ChartStudyValue lBoll, BollingerBandsValueCentre
+ChartStudyValue lBoll, BollingerBandsValueTop
 
 Dim lMACD  As ResourceIdentifier
 Set lMACD = DeclareStudy( _
@@ -205,8 +207,10 @@ Set lMACD = DeclareStudy( _
                             ";Long Periods=34" & _
                             ";Smoothing Periods=5", _
                         GetParameterValue(ParamIncludeBarsOutsideSession), _
-                        10, _
-                        True)
+                        10)
+ChartStudyValue lMACD, MACDValueMACD
+ChartStudyValue lMACD, MACDValueMACDHist
+ChartStudyValue lMACD, MACDValueMACDSignal
 
 Exit Sub
 

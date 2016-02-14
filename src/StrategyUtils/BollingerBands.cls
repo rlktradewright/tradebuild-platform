@@ -40,6 +40,11 @@ Option Explicit
 
 Private Const ModuleName                            As String = "BollingerBands"
 
+Private Const ValueBottom                           As String = "Bottom"
+Private Const ValueCentre                           As String = "Centre"
+Private Const ValueSpread                           As String = "Spread"
+Private Const ValueTop                              As String = "Top"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -59,6 +64,22 @@ Private Const ModuleName                            As String = "BollingerBands"
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get BollingerBandsValueBottom() As String
+BollingerBandsValueBottom = ValueBottom
+End Property
+
+Public Property Get BollingerBandsValueCentre() As String
+BollingerBandsValueCentre = ValueCentre
+End Property
+
+Public Property Get BollingerBandsValueSpread() As String
+BollingerBandsValueSpread = ValueSpread
+End Property
+
+Public Property Get BollingerBandsValueTop() As String
+BollingerBandsValueTop = ValueTop
+End Property
 
 '@================================================================================
 ' Methods

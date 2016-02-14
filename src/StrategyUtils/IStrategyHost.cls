@@ -103,19 +103,14 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function AddStudy(ByVal pName As String, _
-                ByVal pUnderlyingStudy As IStudy, _
-                ByRef pInputValueNames() As String, _
-                Optional ByVal pParams As Parameters, _
-                Optional ByVal pNumberOfValuesToCache As Long, _
-                Optional ByVal pLibraryName As String) As IStudy
-End Function
+Public Sub AddTimeframe( _
+                ByVal pTimeframe As Timeframe)
+End Sub
 
-Public Function AddTimeframe( _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pNumberOfBarsToFetch As Long, _
-                Optional ByVal pIncludeBarsOutsideSession As Boolean) As Timeframe
-End Function
+Public Sub ChartStudyValue(ByVal pStudy As IStudy, _
+                ByVal pValueName As String, _
+                ByVal pTimeframe As Timeframe)
+End Sub
 
 Public Sub ContractInvalid(ByVal pMessage As String)
 End Sub
@@ -130,6 +125,9 @@ Public Sub NotifyReplayProgress( _
                 ByVal tickfileTimestamp As Date, _
                 ByVal eventsPlayed As Long, _
                 ByVal percentComplete As Single)
+End Sub
+
+Public Sub NotifyReplayStarted()
 End Sub
 
 Public Sub TickerCreated(ByVal pTicker As Ticker)

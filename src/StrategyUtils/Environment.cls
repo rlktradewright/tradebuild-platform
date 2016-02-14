@@ -92,6 +92,28 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub ChartStudyValue( _
+                ByVal Study As ResourceIdentifier, _
+                ByVal ValueName As String, _
+                Optional ByVal Timeframe As ResourceIdentifier)
+Const ProcName As String = "ChartStudyValue"
+On Error GoTo Err
+
+Assert Not gInitialisationContext Is Nothing, "Method can only be called during strategy initialisation"
+Assert TypeOf Study.Resource Is IStudy
+
+If Timeframe Is Nothing Then Set Timeframe = gResourceContext.PrimaryTimeframe
+
+Assert TypeOf Timeframe.Resource Is Timeframe
+
+gInitialisationContext.ChartStudyValue Study.Resource, ValueName, Timeframe.Resource
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub DefineParameter( _
                 ByVal Name As String, _
                 Optional ByVal DefaultValue As String)
@@ -143,7 +165,7 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function getContract() As icontract
+Private Function getContract() As IContract
 If Not gInitialisationContext Is Nothing Then
     Set getContract = gInitialisationContext.Contract
 ElseIf Not gTradingContext Is Nothing Then

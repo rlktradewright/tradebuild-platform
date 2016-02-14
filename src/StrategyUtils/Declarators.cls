@@ -285,8 +285,7 @@ Public Function DeclareStudy(ByVal Name As String, _
                 Optional ByVal BasedOn As ResourceIdentifier, _
                 Optional ByVal Parameters As String, _
                 Optional ByVal IncludeBarsOutsideSession As Boolean = False, _
-                Optional ByVal NumberOfValuesToCache As Boolean = 3, _
-                Optional ByVal ShowInChart As Boolean = True, _
+                Optional ByVal NumberOfValuesToCache As Long = 3, _
                 Optional ByVal InputNames As String) As ResourceIdentifier
 Const ProcName As String = "DeclareStudy"
 On Error GoTo Err
@@ -333,8 +332,7 @@ Set lStudy = gInitialisationContext.AddStudy( _
                     IncludeBarsOutsideSession, _
                     CreateParametersFromString(Parameters), _
                     NumberOfValuesToCache, _
-                    lLibraryName, _
-                    ShowInChart)
+                    lLibraryName)
 
 Set DeclareStudy = gCreateResourceIdentifier(lStudy)
 gResourceContext.SetPrimaryStudyOfType DeclareStudy

@@ -40,6 +40,14 @@ Option Explicit
 
 Private Const ModuleName                            As String = "Swing"
 
+Private Const ValueSwingHighLine                    As String = "Swing high line"
+Private Const ValueSwingLowLine                     As String = "Swing low line"
+Private Const ValueSwingLine                        As String = "Swing line"
+Private Const ValueSwingPoint                       As String = "Swing point"
+Private Const ValueSwingHighPoint                   As String = "Swing high point"
+Private Const ValueSwingLowPoint                    As String = "Swing low point"
+
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -59,6 +67,30 @@ Private Const ModuleName                            As String = "Swing"
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get SwingValueSwingHighLine() As String
+SwingValueSwingHighLine = ValueSwingHighLine
+End Property
+
+Public Property Get SwingValueSwingLine() As String
+SwingValueSwingLine = ValueSwingLine
+End Property
+
+Public Property Get SwingValueSwingLowLine() As String
+SwingValueSwingLowLine = ValueSwingLowLine
+End Property
+
+Public Property Get SwingValueSwingPoint() As String
+SwingValueSwingPoint = ValueSwingPoint
+End Property
+
+Public Property Get SwingValueSwingHighPoint() As String
+SwingValueSwingHighPoint = ValueSwingHighPoint
+End Property
+
+Public Property Get SwingValueSwingLowPoint() As String
+SwingValueSwingLowPoint = ValueSwingLowPoint
+End Property
 
 '@================================================================================
 ' Methods
