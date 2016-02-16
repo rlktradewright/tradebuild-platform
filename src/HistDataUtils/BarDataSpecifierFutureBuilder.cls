@@ -223,18 +223,16 @@ If mBarSpecifier.ToDate = 0 Then
     Dim lSessionEndTime As Date
     lSessionEndTime = IIf(mBarSpecifier.CustomSessionEndTime <> 0, mBarSpecifier.CustomSessionEndTime, mBarSpecifier.Contract.SessionEndTime)
     
-    Dim lSessionTimes As SessionTimes
-    lSessionTimes = GetSessionTimes(lTimestamp, lSessionStartTime, lSessionEndTime)
     If mExcludeCurrentBar And Not IsContractExpired(lContract) Then
         mBarSpecifier.ToDate = BarStartTime(lTimestamp, _
                                     mBarSpecifier.BarTimePeriod, _
-                                    lSessionTimes.StartTime)
+                                    lSessionStartTime)
     Else
         ' ensure we get the latest bar
         mBarSpecifier.ToDate = BarEndTime(lTimestamp, _
                                     mBarSpecifier.BarTimePeriod, _
-                                    lSessionTimes.StartTime, _
-                                    lSessionTimes.EndTime)
+                                    lSessionStartTime, _
+                                    lSessionEndTime)
     End If
 End If
 

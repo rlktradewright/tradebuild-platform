@@ -90,8 +90,8 @@ On Error GoTo Err
 
 BarEndTime = gStoD(gBarEndTime(Timestamp, _
                                 BarTimePeriod, _
-                                gNormaliseTime(SessionStartTime), _
-                                gNormaliseTime(SessionEndTime)))
+                                gNormaliseSessionTime(SessionStartTime), _
+                                gNormaliseSessionTime(SessionEndTime)))
 
 Exit Function
 
@@ -108,7 +108,7 @@ On Error GoTo Err
 
 BarStartTime = gStoD(gBarStartTime(Timestamp, _
                                 BarTimePeriod, _
-                                gNormaliseTime(SessionStartTime)))
+                                gNormaliseSessionTime(SessionStartTime)))
 
 Exit Function
 
@@ -321,8 +321,8 @@ End Select
 
 NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
                                                 BarTimePeriod, _
-                                                gNormaliseTime(SessionStartTime), _
-                                                gNormaliseTime(SessionEndTime))
+                                                gNormaliseSessionTime(SessionStartTime), _
+                                                gNormaliseSessionTime(SessionEndTime))
 
 Exit Function
 
@@ -345,8 +345,8 @@ OffsetBarStartTime = gCalcOffsetBarStartTime( _
                                                 Timestamp, _
                                                 BarTimePeriod, _
                                                 offset, _
-                                                gNormaliseTime(SessionStartTime), _
-                                                gNormaliseTime(SessionEndTime))
+                                                gNormaliseSessionTime(SessionStartTime), _
+                                                gNormaliseSessionTime(SessionEndTime))
 
 Exit Function
 

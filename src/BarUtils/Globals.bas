@@ -82,7 +82,6 @@ Select Case BarTimePeriod.Units
 Case TimePeriodSecond, TimePeriodMinute, TimePeriodHour
     gBarEndTime = startTimeSecs + gCalcBarLengthSeconds(BarTimePeriod)
 Case TimePeriodDay
-    'gBarEndTime = gDtoS(GetOffsetSessionTimesIgnoringWeekend(gStoD(startTimeSecs), BarTimePeriod.Length, SessionStartTime, SessionEndTime).StartTime)
     gBarEndTime = gDtoS(GetOffsetSessionTimes(gStoD(startTimeSecs), BarTimePeriod.Length, SessionStartTime, SessionEndTime).StartTime)
 Case TimePeriodWeek
     gBarEndTime = gDtoS(gStoD(startTimeSecs) + 7 * BarTimePeriod.Length)
@@ -349,7 +348,7 @@ Else
     Else
         remainingOffset = offset - BarsFromSessStart
         Do While remainingOffset > 0
-            lSessTimes = GetSessionTimes(gStoD(proposedStartSecs) - OneDay, SessionStartTime, SessionEndTime)
+            lSessTimes = GetSessionTimes(gStoD(proposedStartSecs - OneDay), SessionStartTime, SessionEndTime)
             
             If numBarsInSession >= remainingOffset Then
                 proposedStartSecs = gDtoS(lSessTimes.EndTime) - remainingOffset * barLengthSecs
@@ -411,12 +410,12 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
-Public Function gNormaliseTime( _
+Public Function gNormaliseSessionTime( _
             ByVal Timestamp As Date) As Date
 If CDbl(Timestamp) = 1# Then
-    gNormaliseTime = 1#
+    gNormaliseSessionTime = 1#
 Else
-    gNormaliseTime = Timestamp - Int(Timestamp)
+    gNormaliseSessionTime = CDate(Round(86400# * (CDbl(Timestamp) - CDbl(Int(Timestamp)))) / 86400#)
 End If
 End Function
 

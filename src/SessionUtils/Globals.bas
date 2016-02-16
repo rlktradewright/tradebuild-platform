@@ -185,12 +185,12 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
-Public Function gNormaliseTime( _
+Public Function gNormaliseSessionTime( _
             ByVal Timestamp As Date) As Date
 If CDbl(Timestamp) = 1# Then
-    gNormaliseTime = 1#
+    gNormaliseSessionTime = 1#
 Else
-    gNormaliseTime = Timestamp - Int(Timestamp)
+    gNormaliseSessionTime = CDate(Round(86400# * (CDbl(Timestamp) - CDbl(Int(Timestamp)))) / 86400#)
 End If
 End Function
 
