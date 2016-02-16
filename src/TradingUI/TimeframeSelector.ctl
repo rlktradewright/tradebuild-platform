@@ -153,11 +153,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -227,11 +227,11 @@ End Sub
 '@================================================================================
 
 Public Property Let BackColor( _
-                ByVal value As OLE_COLOR)
+                ByVal Value As OLE_COLOR)
 Const ProcName As String = "backColor"
 On Error GoTo Err
 
-TimeframeCombo.BackColor = value
+TimeframeCombo.BackColor = Value
 PropertyChanged PropNameBackcolor
 
 Exit Property
@@ -267,11 +267,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = value
+UserControl.Enabled = Value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -281,11 +281,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ForeColor( _
-                ByVal value As OLE_COLOR)
+                ByVal Value As OLE_COLOR)
 Const ProcName As String = "foreColor"
 On Error GoTo Err
 
-TimeframeCombo.ForeColor = value
+TimeframeCombo.ForeColor = Value
 PropertyChanged PropNameForecolor
 
 Exit Property
@@ -324,11 +324,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 BackColor = mTheme.TextBackColor
@@ -346,11 +346,11 @@ Set Theme = mTheme
 End Property
 
 Public Property Let TimePeriod( _
-                ByRef value As TimePeriod)
+                ByRef Value As TimePeriod)
 Const ProcName As String = "TimePeriod"
 On Error GoTo Err
 
-selectComboEntry value
+selectComboEntry Value
 
 Exit Property
 

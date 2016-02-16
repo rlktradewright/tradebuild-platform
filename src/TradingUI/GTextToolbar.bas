@@ -81,7 +81,7 @@ If pButtonInfo.Style <> tbrSeparator Then
     With pToolbar.Buttons.Item(pButtonInfo.Key)
         .Enabled = pButtonInfo.Enabled
         .ToolTipText = pButtonInfo.ToolTipText
-        .value = pButtonInfo.value
+        .Value = pButtonInfo.Value
         .Tag = pButtonInfo
     End With
 Else
@@ -133,7 +133,7 @@ pInfo.Enabled = pEnabled
 pInfo.Key = GenerateGUIDString
 pInfo.Style = pStyle
 pInfo.ToolTipText = pTooltipText
-pInfo.value = pValue
+pInfo.Value = pValue
 pInfo.ChartIndex = pChartIndex
 
 Exit Sub

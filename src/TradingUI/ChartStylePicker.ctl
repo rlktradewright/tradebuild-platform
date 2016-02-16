@@ -142,11 +142,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -174,22 +174,6 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mChartManager Event Handlers
-'@================================================================================
-
-Private Sub mChartManager_BaseStudyConfigurationChanged(ByVal studyConfig As StudyConfiguration)
-Const ProcName As String = "mChartManager_BaseStudyConfigurationChanged"
-On Error GoTo Err
-
-SelectItem
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' mMultiChart Event Handlers
 '@================================================================================
 
@@ -198,8 +182,8 @@ Const ProcName As String = "mMultiChart_Change"
 On Error GoTo Err
 
 Dim changeType As MultiChartChangeTypes
-
 changeType = ev.changeType
+
 Select Case changeType
 Case MultiChartSelectionChanged
     attachToCurrentChart
@@ -224,8 +208,8 @@ Const ProcName As String = "mMarketChart_StateChange"
 On Error GoTo Err
 
 Dim State As ChartStates
-
 State = ev.State
+
 Select Case State
 Case ChartStateBlank
 
@@ -316,12 +300,12 @@ Enabled = UserControl.Enabled
 End Property
 
 Public Property Let Enabled( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = value
-Combo1.Enabled = value
+UserControl.Enabled = Value
+Combo1.Enabled = Value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -407,11 +391,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ListWidth(ByVal value As Long)
+Public Property Let ListWidth(ByVal Value As Long)
 Const ProcName As String = "ListWidth"
 On Error GoTo Err
 
-Combo1.ListWidth = value
+Combo1.ListWidth = Value
 PropertyChanged "ListWidth"
 
 Exit Property
@@ -428,11 +412,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 Combo1.Theme = mTheme
@@ -551,13 +535,11 @@ Private Sub loadCombo()
 Const ProcName As String = "loadCombo"
 On Error GoTo Err
 
-Dim lStyle As ChartStyle
-
 Combo1.ComboItems.Clear
 
 Combo1.ComboItems.Add , NoChartStyle, NoChartStyle
 
-
+Dim lStyle As ChartStyle
 For Each lStyle In ChartStylesManager
     Combo1.ComboItems.Add , lStyle.Name, lStyle.Name
 Next

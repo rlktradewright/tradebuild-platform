@@ -210,11 +210,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -324,11 +324,11 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let ListIndex(ByVal value As Long)
+Public Property Let ListIndex(ByVal Value As Long)
 Const ProcName As String = "ListIndex"
 On Error GoTo Err
 
-TickFileList.ListIndex = value
+TickFileList.ListIndex = Value
 
 Exit Property
 
@@ -348,13 +348,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Enabled(ByVal value As Boolean)
-Attribute Enabled.VB_ProcData.VB_Invoke_PropertyPut = ";Behavior"
-Attribute Enabled.VB_UserMemId = -514
+Public Property Let Enabled(ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-mEnabled = value
+mEnabled = Value
 TickFileList.Enabled = mEnabled
 setUpButton
 setDownButton
@@ -367,6 +365,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Enabled() As Boolean
+Attribute Enabled.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Attribute Enabled.VB_UserMemId = -514
 Enabled = mEnabled
 End Property
 
@@ -386,11 +386,11 @@ Public Property Get SupportsTickStreams() As Boolean
 SupportsTickStreams = mSupportsTickStreams
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 gApplyTheme mTheme, UserControl.Controls

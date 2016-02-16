@@ -213,7 +213,7 @@ Const ProcName As String = "gGetContractFromContractFuture"
 On Error GoTo Err
 
 Assert pFuture.IsAvailable, "Contract is not available"
-Set gGetContractFromContractFuture = pFuture.value
+Set gGetContractFromContractFuture = pFuture.Value
 
 Exit Function
 

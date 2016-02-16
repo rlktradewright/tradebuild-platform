@@ -279,11 +279,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -518,11 +518,11 @@ Attribute Count.VB_MemberFlags = "400"
 Count = mCount
 End Property
 
-Public Property Let ForeColor(ByVal value As OLE_COLOR)
+Public Property Let ForeColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "ForeColor"
 On Error GoTo Err
 
-TWGrid1.ForeColor = value
+TWGrid1.ForeColor = Value
 PropertyChanged PropNameForecolor
 
 Exit Property
@@ -536,8 +536,8 @@ ForeColor = TWGrid1.ForeColor
 End Property
 
 Public Property Let IncludeHistoricalContracts( _
-                ByVal value As Boolean)
-mIncludeHistoricalContracts = value
+                ByVal Value As Boolean)
+mIncludeHistoricalContracts = Value
 PropertyChanged PropNameIncludeHistoricalContracts
 End Property
 
@@ -648,14 +648,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
-TWGrid1.Theme = value
+TWGrid1.Theme = Value
 
 Exit Property
 

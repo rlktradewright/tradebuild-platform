@@ -99,7 +99,7 @@ ElseIf mContractsFuture.IsFaulted Then
     lEv.ErrorSource = mContractsFuture.ErrorSource
     RaiseEvent Error(lEv)
 Else
-    Set mContracts = mContractsFuture.value
+    Set mContracts = mContractsFuture.Value
     mReady = True
     If mContracts.Count > 1 Then
         DeferAction Me, pMayYield:=True

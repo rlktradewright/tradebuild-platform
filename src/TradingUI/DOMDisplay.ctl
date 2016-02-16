@@ -220,11 +220,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -312,8 +312,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let BackColorAsk(ByVal value As OLE_COLOR)
-mBackColorAsk = value
+Public Property Let BackColorAsk(ByVal Value As OLE_COLOR)
+mBackColorAsk = Value
 PropertyChanged PropNameBackColorAsk
 End Property
 
@@ -321,8 +321,8 @@ Public Property Get BackColorAsk() As OLE_COLOR
 BackColorAsk = mBackColorAsk
 End Property
 
-Public Property Let BackColorBid(ByVal value As OLE_COLOR)
-mBackColorBid = value
+Public Property Let BackColorBid(ByVal Value As OLE_COLOR)
+mBackColorBid = Value
 PropertyChanged PropNameBackColorBid
 End Property
 
@@ -330,8 +330,8 @@ Public Property Get BackColorBid() As OLE_COLOR
 BackColorBid = mBackColorBid
 End Property
 
-Public Property Let BackColorFixed(ByVal value As OLE_COLOR)
-DOMGrid.BackColorFixed = value
+Public Property Let BackColorFixed(ByVal Value As OLE_COLOR)
+DOMGrid.BackColorFixed = Value
 PropertyChanged PropNameBackColorFixed
 End Property
 
@@ -339,8 +339,8 @@ Public Property Get BackColorFixed() As OLE_COLOR
 BackColorFixed = DOMGrid.BackColorFixed
 End Property
 
-Public Property Let BackColorTrade(ByVal value As OLE_COLOR)
-mBackColorTrade = value
+Public Property Let BackColorTrade(ByVal Value As OLE_COLOR)
+mBackColorTrade = Value
 PropertyChanged PropNameBackColorTrade
 End Property
 
@@ -348,13 +348,13 @@ Public Property Get BackColorTrade() As OLE_COLOR
 BackColorTrade = mBackColorTrade
 End Property
 
-Public Property Let DataSource(ByVal value As IMarketDataSource)
+Public Property Let DataSource(ByVal Value As IMarketDataSource)
 Const ProcName As String = "DataSource"
 On Error GoTo Err
 
 If Not mDataSource Is Nothing Then Finish
 
-Set mDataSource = value
+Set mDataSource = Value
 
 If mDataSource.ContractFuture.IsAvailable Then
     setup
@@ -369,8 +369,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ForeColor(ByVal value As OLE_COLOR)
-DOMGrid.ForeColor = value
+Public Property Let ForeColor(ByVal Value As OLE_COLOR)
+DOMGrid.ForeColor = Value
 PropertyChanged PropNameForecolor
 End Property
 
@@ -378,8 +378,8 @@ Public Property Get ForeColor() As OLE_COLOR
 ForeColor = DOMGrid.ForeColor
 End Property
 
-Public Property Let ForeColorAsk(ByVal value As OLE_COLOR)
-mForeColorAsk = value
+Public Property Let ForeColorAsk(ByVal Value As OLE_COLOR)
+mForeColorAsk = Value
 PropertyChanged PropNameForeColorAsk
 End Property
 
@@ -387,8 +387,8 @@ Public Property Get ForeColorAsk() As OLE_COLOR
 ForeColorAsk = mForeColorAsk
 End Property
 
-Public Property Let ForeColorBid(ByVal value As OLE_COLOR)
-mForeColorBid = value
+Public Property Let ForeColorBid(ByVal Value As OLE_COLOR)
+mForeColorBid = Value
 PropertyChanged PropNameForeColorBid
 End Property
 
@@ -396,8 +396,8 @@ Public Property Get ForeColorBid() As OLE_COLOR
 ForeColorBid = mForeColorBid
 End Property
 
-Public Property Let ForeColorFixed(ByVal value As OLE_COLOR)
-DOMGrid.ForeColorFixed = value
+Public Property Let ForeColorFixed(ByVal Value As OLE_COLOR)
+DOMGrid.ForeColorFixed = Value
 PropertyChanged PropNameForeColorFixed
 End Property
 
@@ -405,8 +405,8 @@ Public Property Get ForeColorFixed() As OLE_COLOR
 ForeColorFixed = DOMGrid.ForeColorFixed
 End Property
 
-Public Property Let ForeColorTrade(ByVal value As OLE_COLOR)
-mForeColorTrade = value
+Public Property Let ForeColorTrade(ByVal Value As OLE_COLOR)
+mForeColorTrade = Value
 PropertyChanged PropNameForeColorTrade
 End Property
 
@@ -414,13 +414,13 @@ Public Property Get ForeColorTrade() As OLE_COLOR
 ForeColorTrade = mForeColorTrade
 End Property
 
-Public Property Let NumberOfRows(ByVal value As Long)
+Public Property Let NumberOfRows(ByVal Value As Long)
 Const ProcName As String = "NumberOfRows"
 On Error GoTo Err
 
-AssertArgument value >= 5, "Value must be >= 5"
+AssertArgument Value >= 5, "Value must be >= 5"
 
-DOMGrid.Rows = value
+DOMGrid.Rows = Value
 
 Exit Property
 
@@ -432,8 +432,8 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let RowBackColorEven(ByVal value As OLE_COLOR)
-DOMGrid.RowBackColorEven = value
+Public Property Let RowBackColorEven(ByVal Value As OLE_COLOR)
+DOMGrid.RowBackColorEven = Value
 PropertyChanged PropNameRowBackColorEven
 End Property
 
@@ -441,8 +441,8 @@ Public Property Get RowBackColorEven() As OLE_COLOR
 RowBackColorEven = DOMGrid.RowBackColorEven
 End Property
 
-Public Property Let RowBackColorOdd(ByVal value As OLE_COLOR)
-DOMGrid.RowBackColorOdd = value
+Public Property Let RowBackColorOdd(ByVal Value As OLE_COLOR)
+DOMGrid.RowBackColorOdd = Value
 PropertyChanged PropNameRowBackColorOdd
 End Property
 
@@ -450,11 +450,11 @@ Public Property Get RowBackColorOdd() As OLE_COLOR
 RowBackColorOdd = DOMGrid.RowBackColorOdd
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 BackColorAsk = mTheme.BackColorAsk
@@ -565,29 +565,6 @@ If (mCeilingPrice - Price) / mTickSize <= 5 Then
     centreRow mCurrentLast
     DOMGrid.Redraw = True
 End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub clearRows()
-Const ProcName As String = "clearRows"
-On Error GoTo Err
-
-DOMGrid.Redraw = False
-
-Dim i As Long
-For i = DOMGrid.Rows - 1 To 1 Step -1
-    setCellContents i, DOMColumns.PriceLeft, ""
-    setCellContents i, DOMColumns.BidSize, ""
-    setCellContents i, DOMColumns.LastSize, ""
-    setCellContents i, DOMColumns.AskSize, ""
-    setCellContents i, DOMColumns.PriceRight, ""
-Next
-
-DOMGrid.Redraw = True
 
 Exit Sub
 
@@ -711,7 +688,7 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Private Sub setCellContents(ByVal Row As Long, ByVal col As Long, ByVal value As String)
+Private Sub setCellContents(ByVal Row As Long, ByVal col As Long, ByVal Value As String)
 Const ProcName As String = "setCellContents"
 On Error GoTo Err
 
@@ -722,11 +699,11 @@ DOMGrid.col = col
 
 currVal = DOMGrid.Text
 
-If (currVal <> "" And value = "") Or _
-    (currVal = "" And value <> "") _
+If (currVal <> "" And Value = "") Or _
+    (currVal = "" And Value <> "") _
 Then
     If Row <> 0 Then
-        If value = "" Then
+        If Value = "" Then
             DOMGrid.CellBackColor = 0
         Else
             Select Case col
@@ -746,7 +723,7 @@ Then
         End If
     End If
 End If
-DOMGrid.Text = value
+DOMGrid.Text = Value
 
 Exit Sub
 
@@ -789,9 +766,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
                 
-Private Sub setInitialPrice(ByVal value As Double)
+Private Sub setInitialPrice(ByVal Value As Double)
 If mInitialPrice <> 0 Then Exit Sub
-mInitialPrice = value
+mInitialPrice = Value
 End Sub
 
 Private Sub setMarketDepthCell( _
@@ -819,7 +796,7 @@ Private Sub setup()
 Const ProcName As String = "setup"
 On Error GoTo Err
 
-Set mContract = mDataSource.ContractFuture.value
+Set mContract = mDataSource.ContractFuture.Value
 mTickSize = mContract.TickSize
 mSecType = mContract.Specifier.secType
 

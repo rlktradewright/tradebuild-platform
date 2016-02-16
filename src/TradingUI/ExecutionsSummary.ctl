@@ -212,11 +212,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -253,8 +253,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let BackColor(ByVal value As OLE_COLOR)
-ExecutionsList.BackColor = value
+Public Property Let BackColor(ByVal Value As OLE_COLOR)
+ExecutionsList.BackColor = Value
 PropertyChanged PropNameBackcolor
 End Property
 
@@ -263,8 +263,8 @@ Attribute BackColor.VB_UserMemId = -501
 BackColor = ExecutionsList.BackColor
 End Property
 
-Public Property Let ForeColor(ByVal value As OLE_COLOR)
-ExecutionsList.ForeColor = value
+Public Property Let ForeColor(ByVal Value As OLE_COLOR)
+ExecutionsList.ForeColor = Value
 PropertyChanged PropNameForecolor
 End Property
 
@@ -277,11 +277,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 BackColor = mTheme.TextBackColor

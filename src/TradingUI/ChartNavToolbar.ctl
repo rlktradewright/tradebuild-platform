@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#260.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#260.1#0"; "ChartSkil27.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -117,11 +117,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -188,12 +188,12 @@ Enabled = UserControl.Enabled
 End Property
 
 Public Property Let Enabled( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = value
-ChartToolbar1.Enabled = value
+UserControl.Enabled = Value
+ChartToolbar1.Enabled = Value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -206,11 +206,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.ToolbarBackColor

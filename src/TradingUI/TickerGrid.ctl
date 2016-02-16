@@ -87,12 +87,10 @@ Event TickerSymbolEntered(ByVal pSymbol As String, ByVal pPreferredRow As Long)
 
 Private Const ModuleName                                As String = "TickerGrid"
 
-Private Const ConfigSectionContractspecifier            As String = "ContractSpecifier"
 Private Const ConfigSectionGrid                         As String = "Grid"
 Private Const ConfigSectionTicker                       As String = "Ticker"
 Private Const ConfigSectionTickers                      As String = "Tickers"
 
-Private Const ConfigSettingHistorical                   As String = "&Historical"
 Private Const ConfigSettingRowIndex                     As String = "&RowIndex"
 
 Private Const ConfigSettingPositiveChangeBackColor      As String = "&PositiveChangeBackColor"
@@ -496,11 +494,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -940,11 +938,11 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 TickerGrid.Theme = mTheme
@@ -1204,11 +1202,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Redraw(ByVal value As Boolean)
+Public Property Let Redraw(ByVal Value As Boolean)
 Const ProcName As String = "Redraw"
 On Error GoTo Err
 
-TickerGrid.Redraw = value
+TickerGrid.Redraw = Value
 
 Exit Property
 
@@ -1216,11 +1214,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PositiveChangeBackColor(ByVal value As OLE_COLOR)
+Public Property Let PositiveChangeBackColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "PositiveChangeBackColor"
 On Error GoTo Err
 
-mPositiveChangeBackColor = value
+mPositiveChangeBackColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingPositiveChangeBackColor, mPositiveChangeBackColor
 RefreshPriceChange
 PropertyChanged "PositiveChangeBackColor"
@@ -1246,11 +1244,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PositiveChangeForeColor(ByVal value As OLE_COLOR)
+Public Property Let PositiveChangeForeColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "PositiveChangeForeColor"
 On Error GoTo Err
 
-mPositiveChangeForeColor = value
+mPositiveChangeForeColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingPositiveChangeForeColor, mPositiveChangeForeColor
 RefreshPriceChange
 PropertyChanged "PositiveChangeForeColor"
@@ -1280,11 +1278,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let NegativeChangeBackColor(ByVal value As OLE_COLOR)
+Public Property Let NegativeChangeBackColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "NegativeChangeBackColor"
 On Error GoTo Err
 
-mNegativeChangeBackColor = value
+mNegativeChangeBackColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingNegativeChangeBackColor, mNegativeChangeBackColor
 RefreshPriceChange
 PropertyChanged "NegativeChangeBackColor"
@@ -1309,11 +1307,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let NegativeChangeForeColor(ByVal value As OLE_COLOR)
+Public Property Let NegativeChangeForeColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "NegativeChangeForeColor"
 On Error GoTo Err
 
-mNegativeChangeForeColor = value
+mNegativeChangeForeColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingNegativeChangeForeColor, mNegativeChangeForeColor
 RefreshPriceChange
 PropertyChanged "NegativeChangeForeColor"
@@ -1338,11 +1336,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let IncreasedValueColor(ByVal value As OLE_COLOR)
+Public Property Let IncreasedValueColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "IncreasedValueColor"
 On Error GoTo Err
 
-mIncreasedValueColor = value
+mIncreasedValueColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncreasedValueColor, mIncreasedValueColor
 RefreshQuotes
 PropertyChanged "IncreasedValueColor"
@@ -1367,11 +1365,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let HighlightPriceChanges(ByVal value As Boolean)
+Public Property Let HighlightPriceChanges(ByVal Value As Boolean)
 Const ProcName As String = "HighlightPriceChanges"
 On Error GoTo Err
 
-mHighlightPriceChanges = value
+mHighlightPriceChanges = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHighlightPriceChanges, mHighlightPriceChanges
 RefreshPriceChange
 PropertyChanged "HighlightPriceChanges"
@@ -1550,11 +1548,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let FontFixed(ByVal value As StdFont)
+Public Property Let FontFixed(ByVal Value As StdFont)
 Const ProcName As String = "FontFixed"
 On Error GoTo Err
 
-Set TickerGrid.FontFixed = value
+Set TickerGrid.FontFixed = Value
 PropertyChanged "FontFixed"
 
 Exit Property
@@ -1563,11 +1561,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Set FontFixed(ByVal value As StdFont)
+Public Property Set FontFixed(ByVal Value As StdFont)
 Const ProcName As String = "FontFixed"
 On Error GoTo Err
 
-TickerGrid.FontFixed = value
+TickerGrid.FontFixed = Value
 PropertyChanged "FontFixed"
 
 Exit Property
@@ -1591,12 +1589,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Set Font(ByVal value As StdFont)
+Public Property Set Font(ByVal Value As StdFont)
 Const ProcName As String = "Font"
 On Error GoTo Err
 
-Set TickerGrid.Font = value
-calcAverageCharacterWidths value
+Set TickerGrid.Font = Value
+calcAverageCharacterWidths Value
 setColumnWidths
 PropertyChanged "FontFixed"
 
@@ -1606,12 +1604,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Font(ByVal value As StdFont)
+Public Property Let Font(ByVal Value As StdFont)
 Const ProcName As String = "Font"
 On Error GoTo Err
 
-Set TickerGrid.Font = value
-calcAverageCharacterWidths value
+Set TickerGrid.Font = Value
+calcAverageCharacterWidths Value
 setColumnWidths
 PropertyChanged "FontFixed"
 
@@ -1621,11 +1619,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let DecreasedValueColor(ByVal value As OLE_COLOR)
+Public Property Let DecreasedValueColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "DecreasedValueColor"
 On Error GoTo Err
 
-mDecreasedValueColor = value
+mDecreasedValueColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingDecreasedValueColor, mDecreasedValueColor
 RefreshQuotes
 PropertyChanged "DecreasedValueColor"
@@ -1651,15 +1649,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If mConfig Is value Then Exit Property
+If mConfig Is Value Then Exit Property
 If Not mConfig Is Nothing Then mConfig.Remove
-If value Is Nothing Then Exit Property
+If Value Is Nothing Then Exit Property
 
-Set mConfig = value
+Set mConfig = Value
 Set mTickersConfigSection = mConfig.AddPrivateConfigurationSection(ConfigSectionTickers)
 
 mConfig.SetSetting ConfigSettingPositiveChangeBackColor, mPositiveChangeBackColor
@@ -1696,11 +1694,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let BorderStyle(ByVal value As TWUtilities40.BorderStyleSettings)
+Public Property Let BorderStyle(ByVal Value As TWUtilities40.BorderStyleSettings)
 Const ProcName As String = "BorderStyle"
 On Error GoTo Err
 
-TickerGrid.BorderStyle = value
+TickerGrid.BorderStyle = Value
 PropertyChanged "BorderStyle"
 
 Exit Property
@@ -2634,10 +2632,10 @@ Private Function isRowOccupiedNonError( _
 Const ProcName As String = "isRowOccupiedNonError"
 On Error GoTo Err
 
-If Not isRowOccupied(TickerGrid.Row) Then
+If Not isRowOccupied(pRow) Then
 Else
     Dim lTicker As IMarketDataSource
-    Set lTicker = getTickerFromGridRow(TickerGrid.Row)
+    Set lTicker = getTickerFromGridRow(pRow)
     isRowOccupiedNonError = lTicker.State <> MarketDataSourceStateError
 End If
 

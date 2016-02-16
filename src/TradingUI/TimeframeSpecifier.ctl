@@ -191,11 +191,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -246,11 +246,11 @@ End Sub
 '@================================================================================
 
 Public Property Let BackColor( _
-                ByVal value As OLE_COLOR)
+                ByVal Value As OLE_COLOR)
 Const ProcName As String = "backColor"
 On Error GoTo Err
 
-UserControl.BackColor = value
+UserControl.BackColor = Value
 
 PropertyChanged PropNameBackcolor
 
@@ -285,13 +285,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let DefaultTimePeriod( _
-                ByVal value As TimePeriod)
+                ByVal Value As TimePeriod)
 Const ProcName As String = "defaultTimePeriod"
 On Error GoTo Err
 
-AssertArgument Not value Is Nothing, "Value cannot be Nothing"
+AssertArgument Not Value Is Nothing, "Value cannot be Nothing"
 
-setTimeframeSelection value.Length, value.Units
+setTimeframeSelection Value.Length, Value.Units
 
 Exit Property
 
@@ -315,13 +315,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Enabled(ByVal value As Boolean)
+Public Property Let Enabled(ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = value
-TimeframeLengthText.Enabled = value
-TimeframeUnitsCombo.Enabled = value
+UserControl.Enabled = Value
+TimeframeLengthText.Enabled = Value
+TimeframeUnitsCombo.Enabled = Value
 PropertyChanged PropNameEnabled
 
 Exit Property
@@ -331,11 +331,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ForeColor( _
-                ByVal value As OLE_COLOR)
+                ByVal Value As OLE_COLOR)
 Const ProcName As String = "ForeColor"
 On Error GoTo Err
 
-UserControl.ForeColor = value
+UserControl.ForeColor = Value
 
 PropertyChanged PropNameForecolor
 
@@ -376,12 +376,12 @@ Set Parent = UserControl.Parent
 End Property
 
 Public Property Let TextBackColor( _
-                ByVal value As OLE_COLOR)
+                ByVal Value As OLE_COLOR)
 Const ProcName As String = "TextBackColor"
 On Error GoTo Err
 
-TimeframeLengthText.BackColor = value
-TimeframeUnitsCombo.BackColor = value
+TimeframeLengthText.BackColor = Value
+TimeframeUnitsCombo.BackColor = Value
 
 PropertyChanged PropNameTextBackColor
 
@@ -396,12 +396,12 @@ TextBackColor = TimeframeLengthText.BackColor
 End Property
 
 Public Property Let TextForeColor( _
-                ByVal value As OLE_COLOR)
+                ByVal Value As OLE_COLOR)
 Const ProcName As String = "TextForeColor"
 On Error GoTo Err
 
-TimeframeLengthText.ForeColor = value
-TimeframeUnitsCombo.ForeColor = value
+TimeframeLengthText.ForeColor = Value
+TimeframeUnitsCombo.ForeColor = Value
 
 PropertyChanged PropNameTextForeColor
 
@@ -415,11 +415,11 @@ Public Property Get TextForeColor() As OLE_COLOR
 TextForeColor = TimeframeLengthText.ForeColor
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 BackColor = mTheme.BackColor
@@ -477,14 +477,14 @@ End Sub
 '@================================================================================
 
 Private Sub AddItem( _
-                ByVal value As TimePeriodUnits)
+                ByVal Value As TimePeriodUnits)
 Const ProcName As String = "AddItem"
 On Error GoTo Err
 
 Dim s As String
 
-s = TimePeriodUnitsToString(value)
-If Not mValidator.IsSupportedTimePeriodUnit(value) Then Exit Sub
+s = TimePeriodUnitsToString(Value)
+If Not mValidator.IsSupportedTimePeriodUnit(Value) Then Exit Sub
 TimeframeUnitsCombo.ComboItems.Add , s, s
 
 Exit Sub

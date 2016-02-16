@@ -224,7 +224,6 @@ Private Const ChartToolsCommandSelection            As String = "selection"
 Private Const ChartToolsCommandLines                As String = "lines"
 Private Const ChartToolsCommandFib                  As String = "fib"
 
-Private Const ConfigSectionChart                    As String = "Chart"
 Private Const ConfigSectionMultiChart               As String = "MultiChart"
 
 Private Const ConfigSettingHeight                   As String = "&Height"
@@ -274,8 +273,6 @@ Private mBarFormatterLibManager                 As BarFormatterLibManager
 
 Private WithEvents mFutureWaiter                As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
-
-Private mTimePeriodValidator                    As ITimePeriodValidator
 
 Private mOwner                                  As Variant
 
@@ -439,11 +436,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -641,7 +638,7 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 Dim lContract As IContract
-Set lContract = ev.Future.value
+Set lContract = ev.Future.Value
 mSecType = lContract.Specifier.secType
 mSymbol = lContract.Specifier.LocalSymbol
 mTickSize = lContract.TickSize
@@ -664,15 +661,15 @@ Public Property Get IsHistorical() As Boolean
 IsHistorical = mIsHistorical
 End Property
 
-Public Property Let Owner(ByVal value As Variant)
-gSetVariant mOwner, value
+Public Property Let Owner(ByVal Value As Variant)
+gSetVariant mOwner, Value
 End Property
 
-Public Property Let Style(ByVal value As ChartStyle)
+Public Property Let Style(ByVal Value As ChartStyle)
 Const ProcName As String = "Style"
 On Error GoTo Err
 
-MultiChart1.Style = value
+MultiChart1.Style = Value
 
 Exit Property
 
@@ -680,15 +677,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
 If mTheme Is Nothing Then
-    If value Is Nothing Then Exit Property
-    DeferAction Me, value, 1, ExpiryTimeUnitSeconds
+    If Value Is Nothing Then Exit Property
+    DeferAction Me, Value, 1, ExpiryTimeUnitSeconds
 Else
-    Set mTheme = value
+    Set mTheme = Value
     If mTheme Is Nothing Then Exit Property
         
     Me.BackColor = mTheme.BackColor
@@ -1074,10 +1071,10 @@ On Error GoTo Err
 
 If mChartController.PointerMode <> PointerModeSelection Then
     mChartController.SetPointerModeSelection
-    ChartToolsToolbar.Buttons("selection").value = tbrPressed
+    ChartToolsToolbar.Buttons("selection").Value = tbrPressed
 Else
     mChartController.SetPointerModeDefault
-    ChartToolsToolbar.Buttons("selection").value = tbrUnpressed
+    ChartToolsToolbar.Buttons("selection").Value = tbrUnpressed
 End If
 
 Exit Sub
@@ -1091,9 +1088,9 @@ Const ProcName As String = "setSelectionButton"
 On Error GoTo Err
 
 If mChartController.PointerMode = PointerModeSelection Then
-    ChartToolsToolbar.Buttons("selection").value = tbrPressed
+    ChartToolsToolbar.Buttons("selection").Value = tbrPressed
 Else
-    ChartToolsToolbar.Buttons("selection").value = tbrUnpressed
+    ChartToolsToolbar.Buttons("selection").Value = tbrUnpressed
 End If
 
 Exit Sub

@@ -399,11 +399,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -689,24 +689,24 @@ End Sub
 '@================================================================================
 
 Public Property Let BackColor( _
-                ByVal value As OLE_COLOR)
-UserControl.BackColor = value
+                ByVal Value As OLE_COLOR)
+UserControl.BackColor = Value
 
-LocalSymbolLabel.BackColor = value
+LocalSymbolLabel.BackColor = Value
 
-SymbolLabel.BackColor = value
+SymbolLabel.BackColor = Value
 
-TypeLabel.BackColor = value
+TypeLabel.BackColor = Value
 
-ExpiryLabel.BackColor = value
+ExpiryLabel.BackColor = Value
 
-ExchangeLabel.BackColor = value
+ExchangeLabel.BackColor = Value
 
-CurrencyLabel.BackColor = value
+CurrencyLabel.BackColor = Value
 
-StrikePriceLabel.BackColor = value
+StrikePriceLabel.BackColor = Value
 
-RightLabel.BackColor = value
+RightLabel.BackColor = Value
 End Property
 
 Public Property Get BackColor() As OLE_COLOR
@@ -715,22 +715,22 @@ BackColor = UserControl.BackColor
 End Property
 
 Public Property Let ContractSpecifier( _
-                ByVal value As IContractSpecifier)
+                ByVal Value As IContractSpecifier)
 Const ProcName As String = "ContractSpecifier"
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     Clear
     Exit Property
 End If
-LocalSymbolText = value.LocalSymbol
-SymbolText = value.Symbol
-ExchangeCombo = value.Exchange
-TypeCombo = SecTypeToString(value.secType)
-CurrencyCombo = value.CurrencyCode
-ExpiryText = value.Expiry
-StrikePriceText = value.Strike
-RightCombo = OptionRightToString(value.Right)
+LocalSymbolText = Value.LocalSymbol
+SymbolText = Value.Symbol
+ExchangeCombo = Value.Exchange
+TypeCombo = SecTypeToString(Value.secType)
+CurrencyCombo = Value.CurrencyCode
+ExpiryText = Value.Expiry
+StrikePriceText = Value.Strike
+RightCombo = OptionRightToString(Value.Right)
 
 Exit Property
 
@@ -759,25 +759,25 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ForeColor( _
-                ByVal value As OLE_COLOR)
+                ByVal Value As OLE_COLOR)
 Const ProcName As String = "foreColor"
 On Error GoTo Err
 
-LocalSymbolLabel.ForeColor = value
+LocalSymbolLabel.ForeColor = Value
 
-SymbolLabel.ForeColor = value
+SymbolLabel.ForeColor = Value
 
-TypeLabel.ForeColor = value
+TypeLabel.ForeColor = Value
 
-ExpiryLabel.ForeColor = value
+ExpiryLabel.ForeColor = Value
 
-ExchangeLabel.ForeColor = value
+ExchangeLabel.ForeColor = Value
 
-CurrencyLabel.ForeColor = value
+CurrencyLabel.ForeColor = Value
 
-StrikePriceLabel.ForeColor = value
+StrikePriceLabel.ForeColor = Value
 
-RightLabel.ForeColor = value
+RightLabel.ForeColor = Value
 
 Exit Property
 
@@ -795,8 +795,8 @@ IsReady = mReady
 End Property
 
 Public Property Let ModeAdvanced( _
-                ByVal value As Boolean)
-mModeAdvanced = value
+                ByVal Value As Boolean)
+mModeAdvanced = Value
 resize
 End Property
                 
@@ -808,7 +808,7 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let TextBackColor(ByVal value As OLE_COLOR)
+Public Property Let TextBackColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "TextBackColor"
 On Error GoTo Err
 
@@ -816,7 +816,7 @@ Dim lControl As Control
 For Each lControl In UserControl.Controls
     If TypeOf lControl Is TextBox Or _
         TypeOf lControl Is TWImageCombo _
-    Then lControl.BackColor = value
+    Then lControl.BackColor = Value
 Next
 
 Exit Property
@@ -829,7 +829,7 @@ Public Property Get TextBackColor() As OLE_COLOR
 TextBackColor = LocalSymbolText.BackColor
 End Property
 
-Public Property Let TextForeColor(ByVal value As OLE_COLOR)
+Public Property Let TextForeColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "TextForeColor"
 On Error GoTo Err
 
@@ -837,7 +837,7 @@ Dim lControl As Control
 For Each lControl In UserControl.Controls
     If TypeOf lControl Is TextBox Or _
         TypeOf lControl Is TWImageCombo _
-    Then lControl.ForeColor = value
+    Then lControl.ForeColor = Value
 Next
 
 Exit Property
@@ -850,11 +850,11 @@ Public Property Get TextForeColor() As OLE_COLOR
 TextForeColor = LocalSymbolText.ForeColor
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 gApplyTheme mTheme, UserControl.Controls
