@@ -54,12 +54,14 @@ Private Const ModuleName                            As String = "GTextToolbar"
 
 Public Sub gAddButtonImageToImageList( _
                 ByVal pImageList As ImageList, _
-                ByRef pButton As TWChartButtonInfo, _
+                ByRef pButtonInfo As TWChartButtonInfo, _
                 ByVal pPicture As PictureBox)
 Const ProcName As String = "gAddButtonImageToImageList"
 On Error GoTo Err
 
-pImageList.ListImages.Add , IIf(pButton.Style <> tbrSeparator, pButton.Key, ""), getButtonImage(pButton.Caption, pPicture)
+If pButtonInfo.Style = tbrSeparator Then Exit Sub
+
+pImageList.ListImages.Add , pButtonInfo.Key, getButtonImage(pButtonInfo.Caption, pPicture)
 
 Exit Sub
 
@@ -70,20 +72,20 @@ End Sub
 
 Public Function gAddButtonToToolbar( _
                 ByVal pToolbar As Toolbar, _
-                ByRef pButton As TWChartButtonInfo) As Button
+                ByRef pButtonInfo As TWChartButtonInfo) As Button
 Const ProcName As String = "gAddButtonToToolbar"
 On Error GoTo Err
 
-If pButton.Style <> tbrSeparator Then
-    Set gAddButtonToToolbar = pToolbar.Buttons.Add(, pButton.Key, , pButton.Style, IIf(pButton.Style <> tbrSeparator, pButton.Key, Empty))
-    With pToolbar.Buttons.Item(pButton.Key)
-        .Enabled = pButton.Enabled
-        .ToolTipText = pButton.ToolTipText
-        .Value = pButton.Value
-        .Tag = pButton
+If pButtonInfo.Style <> tbrSeparator Then
+    Set gAddButtonToToolbar = pToolbar.Buttons.Add(, pButtonInfo.Key, , pButtonInfo.Style, pButtonInfo.Key)
+    With pToolbar.Buttons.Item(pButtonInfo.Key)
+        .Enabled = pButtonInfo.Enabled
+        .ToolTipText = pButtonInfo.ToolTipText
+        .value = pButtonInfo.value
+        .Tag = pButtonInfo
     End With
 Else
-    Set gAddButtonToToolbar = pToolbar.Buttons.Add(, , , pButton.Style)
+    Set gAddButtonToToolbar = pToolbar.Buttons.Add(, , , pButtonInfo.Style)
 End If
 
 Exit Function
@@ -131,7 +133,7 @@ pInfo.Enabled = pEnabled
 pInfo.Key = GenerateGUIDString
 pInfo.Style = pStyle
 pInfo.ToolTipText = pTooltipText
-pInfo.Value = pValue
+pInfo.value = pValue
 pInfo.ChartIndex = pChartIndex
 
 Exit Sub
@@ -140,48 +142,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gSetButtonImageInImageList(ByVal pImageList As ImageList, ByRef pButton As TWChartButtonInfo, ByVal pPicture As PictureBox)
-Const ProcName As String = "gSetButtonImageInImageList"
+Public Sub gUpdateButtonImageInImageList( _
+                ByVal pImageList As ImageList, _
+                ByRef pButtonInfo As TWChartButtonInfo, _
+                ByVal pPicture As PictureBox)
+Const ProcName As String = "gUpdateButtonImageInImageList"
 On Error GoTo Err
 
-pImageList.ListImages.Remove pButton.Key
-gAddButtonImageToImageList pImageList, pButton, pPicture
+pImageList.ListImages.Remove pButtonInfo.Key
+gAddButtonImageToImageList pImageList, pButtonInfo, pPicture
 
 Exit Sub
 
 Err:
 If Err.Number = 35601 Then Resume Next  'Element not found
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub gSetupToolbar(ByVal pToolbar As Toolbar, ByVal pBackColor As Long, ByVal pForeColor As Long, ByVal pImageList As ImageList, ByRef pButtons() As TWChartButtonInfo, ByVal pPicture As PictureBox)
-Const ProcName As String = "gSetupToolbar"
-On Error GoTo Err
-
-pPicture.BackColor = pBackColor
-pPicture.ForeColor = pForeColor
-pPicture.Width = 0
-pPicture.Height = 0
-
-Set pToolbar.ImageList = Nothing
-pToolbar.Buttons.Clear
-
-pImageList.ListImages.Clear
-
-Dim i As Long
-For i = 0 To UBound(pButtons)
-    gAdjustToolbarPictureSize pButtons(i).Caption, pPicture
-Next
-
-For i = 0 To UBound(pButtons)
-    gAddButtonImageToImageList pImageList, pButtons(i), pPicture
-    If i = 0 Then Set pToolbar.ImageList = pImageList   ' can't link image list to toolbar unless image list is non-empty
-    gAddButtonToToolbar pToolbar, pButtons(i)
-Next
-
-Exit Sub
-
-Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

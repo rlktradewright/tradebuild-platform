@@ -334,10 +334,12 @@ Dim lButtonInfo As TWChartButtonInfo
 With ChartSelectorToolbar.Buttons(getIndexFromChartControlIndex(index))
     lButtonInfo = .Tag
     lButtonInfo.Caption = TBChart(index).TimePeriod.ToShortString
-    gSetButtonImageInImageList ChartSelectorImageList, lButtonInfo, ChartSelectorPicture
-    .Key = lButtonInfo.Key
-    .Image = lButtonInfo.Key
+    lButtonInfo.ToolTipText = generateTooltipText(TBChart(index).TimePeriod)
+    .Tag = lButtonInfo
+    .ToolTipText = lButtonInfo.ToolTipText
 End With
+
+updateButtonImages
 
 fireChange MultiChartPeriodLengthChanged
 
@@ -389,7 +391,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-' do not make this Public because the Value returned cannot be handled by non-friend
+' do not make this Public because the value returned cannot be handled by non-friend
 ' components
 Friend Property Get Chart( _
                 Optional ByVal index As Long = -1) As MarketChart
@@ -569,37 +571,12 @@ gApplyTheme mTheme, UserControl.Controls
 ChartSelectorPicture.BackColor = mTheme.ToolbarBackColor
 ChartSelectorPicture.ForeColor = mTheme.TabstripForeColor
 
-Dim failpoint As String
-failpoint = "100"
-Set ChartSelectorToolbar.ImageList = Nothing
-
-Dim i As Long
-For i = 1 To ChartSelectorToolbar.Buttons.Count
-    Dim lButtonInfo As TWChartButtonInfo
-    failpoint = "200"
-    With ChartSelectorToolbar.Buttons(i)
-        failpoint = "300"
-        lButtonInfo = .Tag
-        failpoint = "400"
-        gSetButtonImageInImageList ChartSelectorImageList, lButtonInfo, ChartSelectorPicture
-    End With
-Next
-
-failpoint = "500"
-Set ChartSelectorToolbar.ImageList = ChartSelectorImageList
-        
-For i = 1 To ChartSelectorToolbar.Buttons.Count
-    failpoint = "600"
-    With ChartSelectorToolbar.Buttons(i)
-        .Image = Empty
-        .Image = .Key
-    End With
-Next
+updateButtonImages
         
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName, failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Theme() As ITheme
@@ -1110,9 +1087,7 @@ If pPeriodLength Is Nothing Then
     Set addChartSelectorButton = ChartSelectorToolbar.Buttons.Add(, , "")
 Else
     Dim lButtonInfo As TWChartButtonInfo
-    Dim lCaption As String
-    lCaption = pPeriodLength.ToShortString
-    gCreateButtonInfo lButtonInfo, lCaption, tbrButtonGroup, tbrUnpressed, generateTooltipText(pPeriodLength), True, TBChart.UBound
+    gCreateButtonInfo lButtonInfo, pPeriodLength.ToShortString, tbrButtonGroup, tbrUnpressed, generateTooltipText(pPeriodLength), True, TBChart.UBound
     gAddButtonImageToImageList ChartSelectorImageList, lButtonInfo, ChartSelectorPicture
     If ChartSelectorImageList.ListImages.Count = 1 Then Set ChartSelectorToolbar.ImageList = ChartSelectorImageList
     Set addChartSelectorButton = gAddButtonToToolbar(ChartSelectorToolbar, lButtonInfo)
@@ -1472,4 +1447,40 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub updateButtonImages()
+Const ProcName As String = "updateButtonImages"
+On Error GoTo Err
+
+Dim failpoint As String
+failpoint = "100"
+Set ChartSelectorToolbar.ImageList = Nothing
+
+Dim i As Long
+For i = 1 To ChartSelectorToolbar.Buttons.Count
+    Dim lButtonInfo As TWChartButtonInfo
+    failpoint = "200"
+    With ChartSelectorToolbar.Buttons(i)
+        failpoint = "300"
+        lButtonInfo = .Tag
+        failpoint = "400"
+        gUpdateButtonImageInImageList ChartSelectorImageList, lButtonInfo, ChartSelectorPicture
+    End With
+Next
+
+failpoint = "500"
+Set ChartSelectorToolbar.ImageList = ChartSelectorImageList
+
+For i = 1 To ChartSelectorToolbar.Buttons.Count
+    With ChartSelectorToolbar.Buttons(i)
+        .Image = Empty
+        .Image = .Key
+    End With
+Next
+        
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName, failpoint
 End Sub
