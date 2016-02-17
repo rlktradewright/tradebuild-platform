@@ -3100,15 +3100,15 @@ End If
 
 Select Case mPeriods.TimePeriod.Units
 Case TimePeriodNone, TimePeriodMinute, TimePeriodHour
-    formatXCursorText = FormatDateTime(lThisPeriod.Timestamp, vbShortDate) & _
+    formatXCursorText = FormatDateTime(lThisPeriod.LabelTimestamp, vbShortDate) & _
                         " " & _
-                        FormatDateTime(lThisPeriod.Timestamp, vbShortTime)
+                        FormatDateTime(lThisPeriod.LabelTimestamp, vbShortTime)
 Case TimePeriodSecond, TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
-    formatXCursorText = FormatDateTime(lThisPeriod.Timestamp, vbShortDate) & _
+    formatXCursorText = FormatDateTime(lThisPeriod.LabelTimestamp, vbShortDate) & _
                         " " & _
-                        FormatDateTime(lThisPeriod.Timestamp, vbLongTime)
+                        FormatDateTime(lThisPeriod.LabelTimestamp, vbLongTime)
 Case Else
-    formatXCursorText = FormatDateTime(lThisPeriod.Timestamp, vbShortDate)
+    formatXCursorText = FormatDateTime(lThisPeriod.LabelTimestamp, vbShortDate)
 End Select
 
 Exit Function

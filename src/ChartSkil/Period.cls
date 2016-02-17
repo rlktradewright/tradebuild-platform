@@ -27,6 +27,7 @@ Option Explicit
 
 Private mPeriodNumber                               As Long
 Private mTimestamp                                  As Date
+Private mLabelTimestamp                             As Date
 Private mVerticalGridLineType                       As VerticalGridlineTypes
 Private mLabels                                     As PeriodLabels
 
@@ -52,6 +53,14 @@ End Property
 
 Friend Property Let Labels(ByRef Value As PeriodLabels)
 mLabels = Value
+End Property
+
+Friend Property Get LabelTimestamp() As Date
+LabelTimestamp = mLabelTimestamp
+End Property
+
+Friend Property Let LabelTimestamp(ByVal Value As Date)
+mLabelTimestamp = Value
 End Property
 
 Public Property Get PeriodNumber() As Long

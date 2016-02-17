@@ -228,10 +228,7 @@ If mSessionBuilder Is Nothing Then
 End If
 
 Dim lPeriod As Period
-Set lPeriod = createNewPeriod(BarStartTime(pTimestamp, _
-                                            mTimePeriod, _
-                                            mSessionStartTime), _
-                            pAllowDuplicates)
+Set lPeriod = createNewPeriod(pTimestamp, pAllowDuplicates)
 
 lPeriod.Labels = getPeriodLabels(lPeriod)
 If lPeriod.Labels.Label <> "" Then lPeriod.VerticalGridLineType = VerticalGridlineTypePeriodBoundary
@@ -246,10 +243,10 @@ If sessionBoundariesAreRelevant(mTimePeriod) Then
         lPeriod.VerticalGridLineType = VerticalGridlineTypeSessionStart
     ElseIf ev.changeType = SessionChangeDateChange Then
         lPeriod.VerticalGridLineType = VerticalGridlineTypeDateChange
-        If needLabel(lPeriod.Timestamp, lPeriod.PeriodNumber, getTimePeriodUnits) Then
+        If needLabel(lPeriod.LabelTimestamp, lPeriod.PeriodNumber, getTimePeriodUnits) Then
             Dim lLabels As PeriodLabels
             lLabels = lPeriod.Labels
-            lLabels.Label = formatLabel(lPeriod.Timestamp, lPeriod.PeriodNumber, getTimePeriodUnits)
+            lLabels.Label = formatLabel(lPeriod.LabelTimestamp, lPeriod.PeriodNumber, getTimePeriodUnits)
             lPeriod.Labels = lLabels
         End If
     End If
@@ -370,10 +367,7 @@ On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
 If VarType(index) = vbDate Then
-    Set Item = mPeriods.Item(generateKey(BarStartTime(index, _
-                                                    mTimePeriod, _
-                                                    mSessionStartTime), _
-                                        0))
+    Set Item = mPeriods.Item(generateKey(CDate(index), 0))
 Else
     Set Item = mPeriods.Item(index)
 End If
@@ -391,10 +385,7 @@ Const ProcName As String = "ItemDup"
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
-Set ItemDup = mPeriods.Item(generateKey(BarStartTime(index, _
-                                                mTimePeriod, _
-                                                mSessionStartTime), _
-                                    duplicateNumber))
+Set ItemDup = mPeriods.Item(generateKey(index, duplicateNumber))
 
 Exit Function
 
@@ -423,10 +414,7 @@ On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
 If VarType(index) = vbDate Then
-    mPeriods.Remove generateKey(BarStartTime(index, _
-                                            mTimePeriod, _
-                                            mSessionStartTime), _
-                                0)
+    mPeriods.Remove generateKey(CDate(index), 0)
 Else
     mPeriods.Remove index
 End If
@@ -444,10 +432,7 @@ Const ProcName As String = "RemoveDup"
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
-mPeriods.Remove generateKey(BarStartTime(index, _
-                                        mTimePeriod, _
-                                        mSessionStartTime), _
-                            duplicateNumber)
+mPeriods.Remove generateKey(index, duplicateNumber)
 
 Exit Sub
 
@@ -551,7 +536,7 @@ Set chartObj = mChartRef.Target
 End Function
 
 Private Function createNewPeriod( _
-                ByVal pPeriodStart As Date, _
+                ByVal pTimestamp As Date, _
                 ByVal allowDuplicates As Boolean) As Period
 Const ProcName As String = "createNewPeriod"
 On Error GoTo Err
@@ -559,10 +544,13 @@ On Error GoTo Err
 Dim lPeriod As New Period
 mCurrentPeriodNumber = mCurrentPeriodNumber + 1
 lPeriod.PeriodNumber = mCurrentPeriodNumber
-lPeriod.Timestamp = pPeriodStart
+
+lPeriod.Timestamp = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime)
 
 Dim duplicateNumber As Long
-mPeriods.Add lPeriod, generateKey(pPeriodStart, duplicateNumber)
+Dim lLabelTimestamp As Date
+mPeriods.Add lPeriod, generateKeyAndLabelTimestamp(lPeriod.Timestamp, duplicateNumber, lLabelTimestamp)
+lPeriod.LabelTimestamp = lLabelTimestamp
 
 Set createNewPeriod = lPeriod
 
@@ -626,12 +614,41 @@ End Select
 End Function
 
 Private Function generateKey( _
-                ByVal Timestamp As Date, _
-                ByVal duplicateNumber As Long) As String
+                ByVal pTimestamp As Date, _
+                ByVal pDuplicateNumber As Long) As String
 Const ProcName As String = "generateKey"
 On Error GoTo Err
 
-generateKey = FormatTimestamp(Timestamp, TimestampDateAndTimeISO8601) & "." & duplicateNumber
+Dim lLabelTimestamp As Date
+generateKey = generateKeyAndLabelTimestamp(BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime), pDuplicateNumber, lLabelTimestamp)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function generateKeyAndLabelTimestamp( _
+                ByVal pPeriodStart As Date, _
+                ByVal pDuplicateNumber As Long, _
+                ByRef pLabelTimestamp As Date) As String
+Const ProcName As String = "generateKeyAndLabelTimestamp"
+On Error GoTo Err
+
+pLabelTimestamp = pPeriodStart
+
+Select Case mTimePeriod.Units
+Case TimePeriodDay, TimePeriodWeek, TimePeriodMonth, TimePeriodYear
+    If mSessionStartTime > mSessionEndTime Then
+        ' session spans midnight
+        pLabelTimestamp = Int(pLabelTimestamp) + 1
+    Else
+        pLabelTimestamp = Int(pLabelTimestamp)
+    End If
+End Select
+
+
+generateKeyAndLabelTimestamp = FormatTimestamp(pLabelTimestamp, TimestampDateAndTimeISO8601) & "." & pDuplicateNumber
 
 Exit Function
 
@@ -671,9 +688,9 @@ lUnits = getTimePeriodUnits
 Select Case lUnits
 Case TimePeriodNone, TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
     If pPeriod.PeriodNumber Mod 10 <> 1 Then Exit Function
-    lGridLineTime = pPeriod.Timestamp
+    lGridLineTime = pPeriod.LabelTimestamp
 Case Else
-    lGridLineTime = BarStartTime(pPeriod.Timestamp, mVerticalGridTimePeriod, mSession.SessionStartTime)
+    lGridLineTime = BarStartTime(pPeriod.LabelTimestamp, mVerticalGridTimePeriod, mSession.SessionStartTime)
 End Select
 
 With getPeriodLabels
@@ -682,8 +699,8 @@ With getPeriodLabels
         .Label = formatLabel(lGridLineTime, pPeriod.PeriodNumber, lUnits)
     End If
     
-    If needCoarseLabel(pPeriod.Timestamp, pPeriod.PeriodNumber, lUnits) Then
-        .CoarseLabel = formatCoarseLabel(pPeriod.Timestamp, pPeriod.PeriodNumber, lUnits)
+    If needCoarseLabel(pPeriod.LabelTimestamp, pPeriod.PeriodNumber, lUnits) Then
+        .CoarseLabel = formatCoarseLabel(pPeriod.LabelTimestamp, pPeriod.PeriodNumber, lUnits)
     End If
 End With
 
