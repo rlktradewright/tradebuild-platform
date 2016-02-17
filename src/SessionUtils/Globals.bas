@@ -77,16 +77,16 @@ Else
     lDatumSessionTimes = gCalcSessionTimes(pTimestamp, pStartTime, pEndTime)
     
     Dim lTargetWorkingDayNum As Long
-    lTargetWorkingDayNum = WorkingDayNumber(lDatumSessionTimes.StartTime) + pOffset
-    If sessionSpansMidnight(pStartTime, pEndTime) Then lTargetWorkingDayNum = lTargetWorkingDayNum + 1
+    lTargetWorkingDayNum = WorkingDayNumber(lDatumSessionTimes.EndTime) + pOffset
     
     lTargetDate = WorkingDayDate(lTargetWorkingDayNum, Int(lDatumSessionTimes.StartTime))
+    If sessionSpansMidnight(pStartTime, pEndTime) Then lTargetDate = lTargetDate - 1
 End If
 
 With gCalcOffsetSessionTimes
     .StartTime = lTargetDate + pStartTime
-    If sessionSpansMidnight(pStartTime, pEndTime) Then .StartTime = .StartTime - 1
     .EndTime = lTargetDate + pEndTime
+    If sessionSpansMidnight(pStartTime, pEndTime) Then .EndTime = .EndTime + 1
 End With
 
 Exit Function
