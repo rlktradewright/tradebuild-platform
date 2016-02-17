@@ -1217,7 +1217,6 @@ Private Sub returnAsyncResults()
 Const ProcName As String = "returnAsyncResults"
 On Error GoTo Err
 
-fireNotifyBar mCurrentBar
 setBarsFutureValue
 
 Debug.Print "BarFetcher: close connection"
