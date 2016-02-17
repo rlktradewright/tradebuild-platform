@@ -605,6 +605,7 @@ mBarsCache.AddValue pBar, _
                     pBar.Timestamp
 Set mCurrentBar = pBar
 mCurrentBarNumber = BarNumber
+mCurrentBar.BarNumber = mCurrentBarNumber
 fireChange CollItemAdded, pBar
 
 Exit Sub
