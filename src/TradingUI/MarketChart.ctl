@@ -175,6 +175,7 @@ mPrevWidth = UserControl.Width
 mPrevHeight = UserControl.Height
 
 mUpdatePerTick = True
+mMinimumTicksHeight = 10
 
 End Sub
 
@@ -513,6 +514,9 @@ Const ProcName As String = "MinimumTicksHeight"
 On Error GoTo Err
 
 mMinimumTicksHeight = Value
+If mMinimumTicksHeight * mTickSize <> 0 Then
+    mPriceRegion.MinimumHeight = mMinimumTicksHeight * mTickSize
+End If
 
 Exit Property
 
