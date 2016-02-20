@@ -138,8 +138,8 @@ On Error GoTo Err
 
 GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, _
                             offset, _
-                            gNormaliseSessionTime(StartTime), _
-                            gNormaliseSessionTime(EndTime), _
+                            gNormaliseSessionStartTime(StartTime), _
+                            gNormaliseSessionEndTime(EndTime), _
                             False)
 
 Exit Function
@@ -158,8 +158,8 @@ On Error GoTo Err
 
 GetOffsetSessionTimesIgnoringWeekend = gCalcOffsetSessionTimes(Timestamp, _
                             offset, _
-                            gNormaliseSessionTime(StartTime), _
-                            gNormaliseSessionTime(EndTime), _
+                            gNormaliseSessionStartTime(StartTime), _
+                            gNormaliseSessionEndTime(EndTime), _
                             True)
 
 Exit Function
@@ -177,8 +177,8 @@ Const ProcName As String = "GetSessionTimes"
 On Error GoTo Err
 
 GetSessionTimes = gCalcSessionTimes(Timestamp, _
-                            gNormaliseSessionTime(StartTime), _
-                            gNormaliseSessionTime(EndTime))
+                            gNormaliseSessionStartTime(StartTime), _
+                            gNormaliseSessionEndTime(EndTime))
 
 Exit Function
 

@@ -76,10 +76,13 @@ If pIgnoreWeekends Then
 Else
     lDatumSessionTimes = gCalcSessionTimes(pTimestamp, pStartTime, pEndTime)
     
-    Dim lTargetWorkingDayNum As Long
-    lTargetWorkingDayNum = WorkingDayNumber(lDatumSessionTimes.EndTime) + pOffset
+    Dim lBasedate As Date
+    lBasedate = lDatumSessionTimes.EndTime - IIf(pEndTime = 1#, 1, 0)
     
-    lTargetDate = WorkingDayDate(lTargetWorkingDayNum, Int(lDatumSessionTimes.StartTime))
+    Dim lTargetWorkingDayNum As Long
+    lTargetWorkingDayNum = WorkingDayNumber(lBasedate) + pOffset
+
+    lTargetDate = WorkingDayDate(lTargetWorkingDayNum, Int(lBasedate))
     If sessionSpansMidnight(pStartTime, pEndTime) Then lTargetDate = lTargetDate - 1
 End If
 
@@ -185,13 +188,15 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
-Public Function gNormaliseSessionTime( _
+Public Function gNormaliseSessionEndTime( _
             ByVal Timestamp As Date) As Date
-If CDbl(Timestamp) = 1# Then
-    gNormaliseSessionTime = 1#
-Else
-    gNormaliseSessionTime = CDate(Round(86400# * (CDbl(Timestamp) - CDbl(Int(Timestamp)))) / 86400#)
-End If
+gNormaliseSessionEndTime = CDate(Round(86400# * (CDbl(Timestamp) - CDbl(Int(Timestamp)))) / 86400#)
+If gNormaliseSessionEndTime = 0# Then gNormaliseSessionEndTime = 1#
+End Function
+
+Public Function gNormaliseSessionStartTime( _
+            ByVal Timestamp As Date) As Date
+gNormaliseSessionStartTime = CDate(Round(86400# * (CDbl(Timestamp) - CDbl(Int(Timestamp)))) / 86400#)
 End Function
 
 Public Sub gNotifyUnhandledError( _

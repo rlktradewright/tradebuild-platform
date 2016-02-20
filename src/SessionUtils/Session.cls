@@ -150,8 +150,7 @@ Friend Property Let SessionEndTime( _
 Const ProcName As String = "SessionEndTime"
 On Error GoTo Err
 
-mSessionEndTime = gNormaliseSessionTime(Value)
-If CDbl(mSessionEndTime) = 0# Then mSessionEndTime = 1#
+mSessionEndTime = gNormaliseSessionEndTime(Value)
 
 Exit Property
 
@@ -168,7 +167,7 @@ Friend Property Let SessionStartTime( _
 Const ProcName As String = "SessionStartTime"
 On Error GoTo Err
 
-mSessionStartTime = gNormaliseSessionTime(Value)
+mSessionStartTime = gNormaliseSessionStartTime(Value)
 
 Exit Property
 
