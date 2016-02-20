@@ -1,0 +1,3 @@
+tickfile,5,LIFFE,Z,20130315,41341.7636466782,08/03/2013 18:19:39
+contractdetails=<contract xmlns="urn:tradewright.com:tradebuild" minimumtick="0.5" multiplier="10" sessionstarttime="00:00:00" sessionendtime="00:00:00" Description="FTSE 100 Index" numberofdecimals="1" timezonename="GMT Standard Time"><specifier symbol="Z" sectype="2" expiry="20130315" exchange="LIFFE" currencycode="GBP" localsymbol="ZH3" right="0" strike="0"><combolegs/></specifier></contract>
+
