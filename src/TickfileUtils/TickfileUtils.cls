@@ -165,6 +165,7 @@ Public Function CreateTickfileReplayController( _
 Const ProcName As String = "CreateTickfileReplayController"
 On Error GoTo Err
 
+AssertArgument Not pTickfileStore Is Nothing, "pTickfileStore is Nothing"
 AssertArgument pReplayProgressEventInterval >= 50, "pReplayProgressEventInterval cannot be less than 50"
 
 Dim clr As New ReplayController

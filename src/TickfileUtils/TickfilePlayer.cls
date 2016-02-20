@@ -48,14 +48,6 @@ Private Const ModuleName                As String = "TickfilePlayer"
 ' Enums
 '@================================================================================
 
-Private Enum States
-    NeedingTick
-    FetchingTick
-    HandlingTick
-    PendingFireTick
-    Finished
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -68,7 +60,7 @@ Private mTickfileReplayController       As ReplayController
 Private mTickfileSpec                   As ITickfileSpecifier
 Private mTickScheduler                  As TickScheduler
 
-Private mState                          As States
+Private mState                          As PlayerStates
 
 Private mPrimaryContractStore           As IContractStore
 Private mSecondaryContractStore         As IContractStore
@@ -112,6 +104,7 @@ Private mFinalReplayProgressTicks       As Long
 Private Sub Class_Initialize()
 mTickfileState = TickfileStates.TickfileStateNotPlaying
 Set mFutureWaiter = New FutureWaiter
+mState = PlayerStateCreated
 End Sub
 
 '@================================================================================
@@ -131,7 +124,7 @@ mEventsPlayed = mEventsPlayed + 1
 mCurrentTick = ev.Tick
 mCurrentTick.Timestamp = adjustTimestamp(mCurrentTick.Timestamp)
 
-mState = HandlingTick
+mState = PlayerStateHandlingTick
 
 If mTickfileState = TickfileStates.TickfileStatePaused Then Exit Sub
 
@@ -156,13 +149,14 @@ mTickfileReplayController.NotifyEvent ev
 
 Select Case ev.EventCode
 Case TickfileEventCodes.TickfileEventFileDoesNotExist, _
-        TickfileEventCodes.TickfileEventFileIsEmpty, _
         TickfileEventCodes.TickfileEventFileIsInvalid, _
         TickfileEventCodes.TickfileEventFileFormatNotSupported, _
         TickfileEventCodes.TickfileEventAmbiguousContractDetails, _
         TickfileEventCodes.TickfileEventNoContractDetails, _
         TickfileEventCodes.TickfileEventDataSourceNotAvailable
     mTickfileReplayController.NotifyCantPlay Me
+Case TickfileEventCodes.TickfileEventFileIsEmpty
+    mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), 0
 End Select
 
 Exit Sub
@@ -204,7 +198,7 @@ Const ProcName As String = "ITickfileReplayMonitor_NotifyReplayComplete"
 On Error GoTo Err
 
 mTickfileState = TickfileStateNotPlaying
-mState = Finished
+mState = PlayerStateFinished
 mTaskContext.Continue
 mReader.CloseInputFile
 
@@ -215,6 +209,20 @@ Set mTickStreamBuilder = Nothing
 
 lTickStreamBuilder.Finish
 mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileReplayMonitor_NotifyTickfilePrepared( _
+                ByVal pSource As Object, _
+                ByVal pTickfileSpec As ITickfileSpecifier)
+Const ProcName As String = "ITickfileReplayMonitor_NotifyTickfilePrepared"
+On Error GoTo Err
+
+mTickfileReplayController.NotifyTickfilePrepared Me, mTickfileSpec
 
 Exit Sub
 
@@ -247,20 +255,20 @@ Then
     Exit Sub
 End If
 
-If mState = States.HandlingTick Then
-    mState = States.PendingFireTick
+If mState = PlayerStates.PlayerStateHandlingTick Then
+    mState = PlayerStates.PlayerStatePendingFireTick
     mTickScheduler.NotifyTick mCurrentTick, Me
-    If mState <> States.NeedingTick Then mTaskContext.Suspend -1
-ElseIf mState = States.NeedingTick Then
+    If mState <> PlayerStates.PlayerStateNeedingTick Then mTaskContext.Suspend -1
+ElseIf mState = PlayerStates.PlayerStateNeedingTick Then
     If Not mReader.FireNextTick Then
         mTaskContext.Suspend -1
-        mState = States.FetchingTick
+        mState = PlayerStates.PlayerStateFetchingTick
     End If
-ElseIf mState = FetchingTick Then
+ElseIf mState = PlayerStates.PlayerStateFetchingTick Then
     mTaskContext.Suspend -1
-ElseIf mState = PendingFireTick Then
+ElseIf mState = PlayerStates.PlayerStatePendingFireTick Then
     mTaskContext.Suspend -1
-ElseIf mState = Finished Then
+ElseIf mState = PlayerStateFinished Then
     mTickfileState = TickfileStates.TickfileStateNotPlaying
     'mTickScheduler.NotifyNoMoreTicks Me
     mTaskContext.Finish Empty, False
@@ -316,7 +324,7 @@ On Error GoTo Err
 
 If ev.State <> TickStreamStates.TickStreamStateFinished Then Exit Sub
 
-mState = Finished
+mState = PlayerStateFinished
 mTaskContext.Continue
 mReader.CloseInputFile
 mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
@@ -344,6 +352,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get PlayerState() As PlayerStates
+PlayerState = mState
 End Property
 
 Friend Property Get ReplayProgressPercent() As Long
@@ -392,27 +404,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get ReplaySpeed() As Long
-Const ProcName As String = "ReplaySpeed"
-On Error GoTo Err
-
 ReplaySpeed = mReplaySpeed
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get State() As TickfileStates
-Const ProcName As String = "State"
-On Error GoTo Err
-
-State = mTickfileState
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Property Get TickfileState() As TickfileStates
+TickfileState = mTickfileState
 End Property
 
 Friend Property Get TickStream() As TickStream
@@ -510,7 +506,7 @@ On Error GoTo Err
 mClock.SetTime pTick.Timestamp
 
 mTickStreamBuilder.NotifyTick pTick
-mState = States.NeedingTick
+mState = PlayerStates.PlayerStateNeedingTick
 If mTaskContext.State = TaskStateSuspended Then
     'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Task.Continue"
     mTaskContext.Continue
@@ -542,7 +538,7 @@ Friend Sub StopReplay()
 Const ProcName As String = "StopReplay"
 On Error GoTo Err
 
-mState = Finished
+mState = PlayerStateFinished
 If Not mTaskContext Is Nothing Then mTaskContext.Continue
 
 If Not mReader Is Nothing Then
@@ -629,7 +625,7 @@ On Error GoTo Err
 If mTickfileState = TickfileStates.TickfileStatePlaying Then Exit Sub
 
 mTickfileState = TickfileStates.TickfileStatePlaying
-mState = States.NeedingTick
+mState = PlayerStates.PlayerStateNeedingTick
 StartTask Me, PriorityLow
 
 Exit Sub

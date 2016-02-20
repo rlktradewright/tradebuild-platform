@@ -265,6 +265,8 @@ If mPlayers(lIndex).UTCTimestamp = MaxDate Then
     mNumberOfTicksAwaited = mNumberOfTicksAwaited - 1
 End If
 
+schedule
+
 Exit Sub
 
 Err:

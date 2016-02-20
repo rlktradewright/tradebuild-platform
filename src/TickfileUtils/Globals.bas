@@ -18,6 +18,15 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum PlayerStates
+    PlayerStateCreated
+    PlayerStateNeedingTick
+    PlayerStateFetchingTick
+    PlayerStateHandlingTick
+    PlayerStatePendingFireTick
+    PlayerStateFinished
+End Enum
+
 Public Enum TickfileFieldsV1
     TimestampString
     Exchange
@@ -318,7 +327,7 @@ On Error GoTo Err
 Dim lBufferedWriter As New BufferedTickfileWriter
 Dim lWriter As ITickfileWriter
 Set lWriter = pTickfileStore.CreateTickfileWriter(lBufferedWriter, pContractFuture, pFormatIdentifier, pLocation)
-lBufferedWriter.Initialise pOutputMonitor, lWriter, pContractFuture
+lBufferedWriter.Initialise pOutputMonitor, lWriter
 Set gCreateBufferedTickfileWriter = lBufferedWriter
 
 Exit Function
@@ -386,12 +395,6 @@ Case Else
     Version = TickFileVersions.UnknownVersion
 End Select
 End Sub
-
-'Public Function gGetNextStreamId() As Long
-'Static sNextStreamId As Long
-'gGetNextStreamId = sNextStreamId
-'sNextStreamId = sNextStreamId + 1
-'End Function
 
 Public Function gGetTickfileEventData( _
                 ByVal pSource As Object, _

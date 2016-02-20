@@ -119,7 +119,15 @@ Static sStarted As Boolean
 If Not sStarted Then
     sStarted = True
     RaiseEvent ReplayStarted
-    If mNumberOfPlayersAwaitingReady = 0 Then mTickScheduler.StartScheduling
+    If mNumberOfPlayersNotCompleted = 0 Then
+        If Not mTickScheduler Is Nothing Then mTickScheduler.StopScheduling
+        mTaskContext.Finish Empty, False
+        Exit Sub
+    End If
+    
+    If mNumberOfPlayersAwaitingReady = 0 Then
+        mTickScheduler.StartScheduling
+    End If
 End If
 
 If mUnableToReplay Then
@@ -204,10 +212,6 @@ mTickScheduler.Initialise Me, mReplaySpeed, mReplayProgressEventInterval, IIf(mT
 Dim i As Long
 For i = 0 To UBound(mPlayers)
     Set mPlayers(i) = SetupTickfilePlayer(mTickfileSpecifiers(i + 1), mTickScheduler)
-    If Not mPlayers(i) Is Nothing Then
-        mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
-        mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted + 1
-    End If
 Next
 
 Exit Property
@@ -374,20 +378,27 @@ Friend Sub NotifyTickfileCompleted(ByVal pPlayer As TickfilePlayer, ByRef ev As 
 Const ProcName As String = "NotifyTickfileCompleted"
 On Error GoTo Err
 
-mTickScheduler.RemovePlayer pPlayer
-
+If pPlayer.PlayerState <> PlayerStateCreated Then mTickScheduler.RemovePlayer pPlayer
 mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted - 1
+
+fireTickfileCompleted ev, pEventsPlayed
+
 If mNumberOfPlayersNotCompleted = 0 Then
     If Not mTickScheduler Is Nothing Then mTickScheduler.StopScheduling
     If Not mTaskContext Is Nothing Then mTaskContext.Finish Empty, False
+    mReplayInProgress = False
 End If
-
-fireTickfileCompleted ev, pEventsPlayed
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyTickfilePrepared( _
+                ByVal pSource As Object, _
+                ByVal pTickfileSpec As ITickfileSpecifier)
+mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
 End Sub
 
 Public Sub PauseReplay()
@@ -402,7 +413,7 @@ mTickScheduler.PauseReplay
 
 Dim i As Long
 For i = 0 To UBound(mPlayers)
-    If mPlayers(i).State = TickfileStatePlaying Then mPlayers(i).PauseReplay
+    If mPlayers(i).TickfileState = TickfileStatePlaying Then mPlayers(i).PauseReplay
 Next
 
 RaiseEvent ReplayPaused
@@ -436,7 +447,7 @@ mPaused = False
 
 Dim i As Long
 For i = 0 To UBound(mPlayers)
-    If mPlayers(i).State = TickfileStatePaused Then mPlayers(i).ResumeReplay
+    If mPlayers(i).TickfileState = TickfileStatePaused Then mPlayers(i).ResumeReplay
 Next
 
 mTickScheduler.ResumeReplay
@@ -582,9 +593,12 @@ Set lTickfileReader = mTickfileStore.CreateTickfileReader(lTickfilePlayer, lTick
 
 Assert Not lTickfileReader Is Nothing, "Failed to create TickfileReader"
 
+mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted + 1
 If lTickfilePlayer.PrepareTickfile(lTickfileReader, pTickfileSpecifier) Then
-    Set SetupTickfilePlayer = lTickfilePlayer
+    mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
 End If
+
+Set SetupTickfilePlayer = lTickfilePlayer
 
 Exit Function
 

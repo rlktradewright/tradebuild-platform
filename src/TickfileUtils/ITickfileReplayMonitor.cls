@@ -79,6 +79,11 @@ Public Sub NotifyReplayComplete( _
                 ByVal pEventsPlayed As Long)
 End Sub
 
+Public Sub NotifyTickfilePrepared( _
+                ByVal pSource As Object, _
+                ByVal pTickfileSpec As ITickfileSpecifier)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

@@ -49,7 +49,6 @@ Private Const ModuleName                As String = "BufferedTickfileWriter"
 '@================================================================================
 
 Private mWriter                         As ITickfileWriter
-Private mWriterReady                    As Boolean
 
 Private mReady                          As Boolean
 
@@ -61,11 +60,6 @@ Private mSessionBuilder                 As SessionBuilder
 Private WithEvents mSession             As Session
 Attribute mSession.VB_VarHelpID = -1
 
-Private mContract                       As IContract
-
-Private WithEvents mFutureWaiter        As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
 Private mOutputMonitor                  As ITickfileOutputMonitor
 
 '@================================================================================
@@ -73,7 +67,6 @@ Private mOutputMonitor                  As ITickfileOutputMonitor
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
 Set mPendingWrites = New Collection
 End Sub
 
@@ -100,7 +93,6 @@ Private Sub ITickfileOutputMonitor_NotifyNotReady(ByVal pSource As Object)
 Const ProcName As String = "ITickfileOutputMonitor_NotifyNotReady"
 On Error GoTo Err
 
-mWriterReady = False
 mReady = False
 
 If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyNotReady Me
@@ -139,9 +131,14 @@ Private Sub ITickfileOutputMonitor_NotifyReady(ByVal pSource As Object)
 Const ProcName As String = "ITickfileOutputMonitor_NotifyReady"
 On Error GoTo Err
 
-mWriterReady = True
+mReady = True
 
-checkReady
+setupSession
+
+writePendingitems
+If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyReady Me
+
+If mPendingClose Then Finish
 
 Exit Sub
 
@@ -195,28 +192,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'================================================================================
-' mFutureWaiter Event Handlers
-'================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If Not ev.Future.IsAvailable Then Exit Sub
-
-If TypeOf ev.Future.Value Is IContract Then
-    Set mContract = ev.Future.Value
-    setupSession
-    checkReady
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -297,14 +272,12 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pOutputMonitor As ITickfileOutputMonitor, _
-                ByVal pWriter As ITickfileWriter, _
-                ByVal pContractFuture As IFuture)
+                ByVal pWriter As ITickfileWriter)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mOutputMonitor = pOutputMonitor
 Set mWriter = pWriter
-mFutureWaiter.Add pContractFuture
 
 Exit Sub
 
@@ -359,28 +332,13 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub checkReady()
-Const ProcName As String = "checkReady"
-On Error GoTo Err
-
-If Not mWriterReady Or mContract Is Nothing Then Exit Sub
-
-mReady = True
-writePendingitems
-If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyReady Me
-If mPendingClose Then Finish
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Sub setupSession()
 Const ProcName As String = "setupSession"
 On Error GoTo Err
 
-Set mSessionBuilder = CreateSessionBuilder(mContract.sessionStartTime, mContract.sessionEndTime, Nothing)
+Dim lCOntract As IContract
+Set lCOntract = mWriter.ContractFuture.Value
+Set mSessionBuilder = CreateSessionBuilder(lCOntract.sessionStartTime, lCOntract.sessionEndTime, Nothing)
 Set mSession = mSessionBuilder.Session
 
 Exit Sub
