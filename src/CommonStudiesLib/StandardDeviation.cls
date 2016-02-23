@@ -100,44 +100,46 @@ End Sub
 
 Private Sub customNotify( _
                 ByRef ev As StudyValueEventData)
-Static sPrevVal As Variant
-Dim newValue As Double
-Dim valueToRemove As Double
-
 Const ProcName As String = "customNotify"
 On Error GoTo Err
 
+Static sPrevVal As Variant
 If Not mStudyFoundation.IsNewBar Then
     If ev.sVal.Value = sPrevVal Then Exit Sub
 End If
 
+Static K As Double
+Dim valueToRemove As Double
+
+Dim newValue As Double
 newValue = CDbl(ev.sVal.Value)
+
+If IsEmpty(sPrevVal) And Not IsEmpty(newValue) Then K = newValue
 
 If mStudyFoundation.IsNewBar Then
     If mInputValueCache.Count < mPeriods Then
-        If Not IsEmpty(ev.sVal.Value) Then
+        If Not IsEmpty(newValue) Then
             mInputValueCache.AddValue newValue, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
-            mSum = mSum + newValue
-            mSumSquares = mSumSquares + newValue * newValue
+            mSum = mSum + newValue - K
+            mSumSquares = mSumSquares + (newValue - K) * (newValue - K)
         End If
         If mInputValueCache.Count = mPeriods Then
             mSD = Sqr((mPeriodsDouble * mSumSquares - mSum * mSum) / mPeriodsDoubleSquared)
         End If
     Else
-        If Not IsEmpty(ev.sVal.Value) Then
-            valueToRemove = mInputValueCache.GetValue(1)
+        If Not IsEmpty(newValue) Then
+            valueToRemove = mInputValueCache.GetValue(1) - K
             mInputValueCache.AddValue newValue, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
-            mSum = mSum - valueToRemove + newValue
-            mSumSquares = mSumSquares - valueToRemove * valueToRemove + newValue * newValue
-            Assert mSumSquares >= 0#, "Sum of squares is negative"
+            mSum = mSum - valueToRemove + newValue - K
+            mSumSquares = mSumSquares - valueToRemove * valueToRemove + (newValue - K) * (newValue - K)
             mSD = Sqr((mPeriodsDouble * mSumSquares - mSum * mSum) / mPeriodsDoubleSquared)
         End If
     End If
-    sPrevVal = ev.sVal.Value
+    sPrevVal = newValue
 Else
-    If Not IsEmpty(ev.sVal.Value) Then
+    If Not IsEmpty(newValue) Then
         If Not IsEmpty(sPrevVal) Then
-            valueToRemove = sPrevVal
+            valueToRemove = sPrevVal - K
             mInputValueCache.UpdateValue newValue, ev.sVal.BarNumber, ev.sVal.Timestamp
             mSum = mSum - valueToRemove
             mSumSquares = mSumSquares - valueToRemove * valueToRemove
@@ -146,9 +148,9 @@ Else
             ' input Value in this bar
             mInputValueCache.AddValue newValue, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
         End If
-        mSum = mSum + newValue
-        mSumSquares = mSumSquares + newValue * newValue
-        sPrevVal = ev.sVal.Value
+        mSum = mSum + newValue - K
+        mSumSquares = mSumSquares + (newValue - K) * (newValue - K)
+        sPrevVal = newValue
     End If
     If mInputValueCache.Count >= mPeriods Then
         mSD = Sqr((mPeriodsDouble * mSumSquares - mSum * mSum) / mPeriodsDoubleSquared)
