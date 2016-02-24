@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TestTickfileReaderDB"
+Attribute VB_Name = "TestTickfileRdrDbAsync"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -37,7 +37,7 @@ mTestCompleted = False
 ReDim ReceivedTicks(15) As TickInfo
 NumberOfReceivedTicks = 0
 
-Set mTickfileStore = CreateTradingDBClient(DbSQLServer2005, "Essy\Live", "TradingDB", pUseSynchronousReads:=True, pUseSynchronousWrites:=True).TickfileStore
+Set mTickfileStore = CreateTradingDBClient(DbSQLServer2005, "Essy\Live", "TradingDB").TickfileStore
 Set mTickfileSpecs = New TickFileSpecifiers
 
 End Sub
@@ -58,7 +58,7 @@ End Sub
 ' Test Methods
 '@================================================================================
 
-Public Sub ReplayWithEmptyDatabaseTickfile()
+Public Sub ReplayWithEmptyDatabaseTickfileAsync()
 Dim lTickfileSpec As New TickfileSpecifier
 lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZM03")
 lTickfileSpec.FromDate = CDate("2014/09/09")
@@ -81,7 +81,7 @@ Assert.IsTrue tfmev.ReplayProgressCount = 0, "ReplayProgress should not be invok
 Assert.IsTrue tfmev.TickfileCompletedCount = 1, "TickfileCompleted should be invoked once"
 End Sub
 
-Public Sub ReplayWithOldDatabaseTickfile()
+Public Sub ReplayWithOldDatabaseTickfileAsync()
 Dim lTickfileSpec As New TickfileSpecifier
 lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZM03")
 lTickfileSpec.FromDate = CDate("2003/06/19")
@@ -114,7 +114,7 @@ Assert.AreEqual 44382, tfmev.NumberOfReceivedTicks, "Incorrect number of ticks r
 
 End Sub
 
-Public Sub ReplayWithDatabaseTickfile()
+Public Sub ReplayWithDatabaseTickfileAsync()
 Dim lTickfileSpec As New TickfileSpecifier
 lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZH3")
 lTickfileSpec.FromDate = CDate("2013/03/08 18:19:39")
@@ -139,7 +139,7 @@ Assert.AreSame GetTimeZone(""), tfmev.TickStreamStartedClock.TimeZone, "Timezone
 Assert.AreEqual 19, tfmev.NumberOfReceivedTicks, "Incorrect number of ticks received"
 End Sub
 
-Public Sub ReplayWithVeryLargeValidDatabaseTickfile()
+Public Sub ReplayWithVeryLargeValidDatabaseTickfileAsync()
 Dim lTickfileSpec As New TickfileSpecifier
 lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZM3")
 lTickfileSpec.FromDate = CDate("2013/04/08")
@@ -171,7 +171,7 @@ Assert.AreSame GetTimeZone(""), tfmev.TickStreamStartedClock.TimeZone, "Timezone
 Assert.AreEqual 505173, tfmev.NumberOfReceivedTicks, "Incorrect number of ticks received"
 End Sub
 
-Public Sub ReplayWithVeryLargeValidDatabaseTickfileSessionOnly()
+Public Sub ReplayWithVeryLargeValidDatabaseTickfileSessionOnlyAsync()
 Dim lTickfileSpec As New TickfileSpecifier
 lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZU4")
 lTickfileSpec.FromDate = CDate("2014/09/01")
@@ -246,6 +246,7 @@ Dim tickfileSpec As New TickfileSpecifier
 tickfileSpec.FileName = TickfilePath & "\ZM3-Week-20130408.tck"
 Set CreateTickfileSpecWithVeryLargeValidTradeBuildv5File = tickfileSpec
 End Function
+
 
 
 

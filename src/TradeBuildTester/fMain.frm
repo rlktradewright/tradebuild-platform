@@ -75,7 +75,7 @@ Private Sub Form_Load()
     
     GetLogger("").AddLogListener Me
     Set mLogFormatter = CreateBasicLogFormatter()
-    
+        
     AddListener New SimpleListener
 
     ' Add tests here
@@ -83,6 +83,7 @@ Private Sub Form_Load()
     AddTest New TestTickfileManager
     AddTest New TestTickfileReader
     AddTest New TestTickfileReaderDB
+    AddTest New TestTickfileRdrDBAsync
     AddTest New TestTickfileWriter
     
     AddTest New TestBarUtils

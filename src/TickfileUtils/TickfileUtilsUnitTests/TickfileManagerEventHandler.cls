@@ -89,7 +89,7 @@ End Sub
 Private Sub IGenericTickListener_NotifyTick(ByRef ev As GenericTickEventData)
 NumberOfReceivedTicks = NumberOfReceivedTicks + 1
 gAddReceivedTick ev.Tick
-'LogMessage FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Tick " & NumberOfReceivedTicks & ": " & GenericTickToString(ev.Tick)
+'LogMessage "  Tick " & NumberOfReceivedTicks & ": " & GenericTickToString(ev.Tick)
 End Sub
 
 '@================================================================================
