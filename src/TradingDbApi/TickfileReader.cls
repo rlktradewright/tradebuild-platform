@@ -125,8 +125,10 @@ Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
-processContracts
-
+If processContracts Then
+    logMessage "Fetching ticks asynchronously", ProcName, , LogLevelHighDetail
+    Set mFetchTicksTC = mTradingDB.FetchTicksAsync(mContract.Specifier, mInputTickfileSpecifier.FromDate, mInputTickfileSpecifier.ToDate)
+End If
 Exit Sub
 
 Err:
@@ -222,7 +224,7 @@ End With
 
 checkFetchContract
 
-ITickfileReader_PrepareTickfile = True
+ITickfileReader_PrepareTickfile = False
 
 Exit Function
 
@@ -384,8 +386,9 @@ If mTradingDB Is Nothing Then Exit Sub
 If mUseSynchronousReads Then
     logMessage "Fetching contract synchronously", ProcName, mTargetContractSpec.ToString
     Set mContracts = mTradingDB.FetchContracts(mTargetContractSpec)
-    processContracts
-    If Not mTickStream Is Nothing Then
+    If processContracts Then
+        logMessage "Fetching ticks synchronously", ProcName, , LogLevelHighDetail
+        Set mTickStream = mTradingDB.FetchTicks(mContract.Specifier, mInputTickfileSpecifier.FromDate, mInputTickfileSpecifier.ToDate)
         mTickStream.StartStream False
         getTick
     End If
@@ -503,7 +506,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processContracts()
+Private Function processContracts() As Boolean
 Const ProcName As String = "processContracts"
 On Error GoTo Err
 
@@ -512,46 +515,46 @@ Set ev.Source = mParent
 
 If mContracts.Count = 0 Then
     NotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "Contract not known"
-ElseIf mContracts.Count > 1 Then
-    NotifyEvent TickfileEventCodes.TickfileEventAmbiguousContractDetails, "Contract not unique"
-Else
-    logMessage "contract fetched", ProcName, , LogLevelHighDetail
-    Set mContract = mContracts.ItemAtIndex(1)
-    
-    With mInputTickfileSpecifier
-        .Contract = mContract
-        If .EntireSession Then
-            Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimeZoneName))
-            Set mSession = mSessionBuilder.Session
-            
-            If .ToDate = 0# Then .ToDate = .FromDate
-            
-            Dim st As SessionTimes
-            st = GetSessionTimes(CDbl(Int(.FromDate)) + mContract.SessionStartTime + 1# / 86400#, _
-                                mContract.SessionStartTime, _
-                                mContract.SessionEndTime)
-            .FromDate = st.StartTime
-            st = GetSessionTimes(CDbl(Int(.ToDate)) + mContract.SessionStartTime + 1# / 86400#, _
-                                mContract.SessionStartTime, _
-                                mContract.SessionEndTime)
-            .ToDate = st.EndTime
-        End If
-    
-        If mUseSynchronousReads Then
-            logMessage "Fetching ticks synchronously", ProcName, , LogLevelHighDetail
-            Set mTickStream = mTradingDB.FetchTicks(mContract.Specifier, .FromDate, .ToDate)
-        Else
-            logMessage "Fetching ticks asynchronously", ProcName, , LogLevelHighDetail
-            Set mFetchTicksTC = mTradingDB.FetchTicksAsync(mContract.Specifier, .FromDate, .ToDate)
-        End If
-    End With
+    processContracts = False
+    Exit Function
 End If
 
-Exit Sub
+If mContracts.Count > 1 Then
+    NotifyEvent TickfileEventCodes.TickfileEventAmbiguousContractDetails, "Contract not unique"
+    processContracts = False
+    Exit Function
+End If
+
+logMessage "contract fetched", ProcName, , LogLevelHighDetail
+Set mContract = mContracts.ItemAtIndex(1)
+
+With mInputTickfileSpecifier
+    .Contract = mContract
+    If .EntireSession Then
+        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimezoneName))
+        Set mSession = mSessionBuilder.Session
+        
+        If .ToDate = 0# Then .ToDate = .FromDate
+        
+        Dim st As SessionTimes
+        st = GetSessionTimes(CDbl(Int(.FromDate)) + mContract.SessionStartTime + 1# / 86400#, _
+                            mContract.SessionStartTime, _
+                            mContract.SessionEndTime)
+        .FromDate = st.StartTime
+        st = GetSessionTimes(CDbl(Int(.ToDate)) + mContract.SessionStartTime + 1# / 86400#, _
+                            mContract.SessionStartTime, _
+                            mContract.SessionEndTime)
+        .ToDate = st.EndTime
+    End If
+End With
+
+processContracts = True
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub processTick(ByRef pTick As GenericTick)
 Const ProcName As String = "processTick"
@@ -559,6 +562,7 @@ On Error GoTo Err
 
 mTickCounter = mTickCounter + 1
 If Not mGotFirstTick Then
+    mReplayMonitor.NotifyTickfilePrepared Me, mInputTickfileSpecifier
     mGotFirstTick = True
     mFirstTick = pTick
     logMessage "Notify ready", ProcName, , LogLevelHighDetail

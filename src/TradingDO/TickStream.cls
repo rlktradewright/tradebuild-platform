@@ -107,7 +107,7 @@ Else
         Set mRs.ActiveConnection = Nothing
         If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
     Else
-        'RaiseEvent DataAvailable
+        mFetchComplete = True
     End If
 End If
 
@@ -161,7 +161,6 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
 End If
 
 mFetchComplete = True
-Debug.Print "Fetch complete"
 
 RaiseEvent DataAvailable
 
@@ -181,8 +180,6 @@ On Error GoTo Err
 
 Debug.Print "Fetch progress=" & Progress & "; max=" & MaxProgress
 If Not mAsynchronous Then Exit Sub
-
-RaiseEvent DataAvailable
 
 Exit Sub
 
@@ -287,7 +284,6 @@ If mAsynchronous Then
 Else
     mConnector.Connect
     doFetchTicks
-    'If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 End If
 
 Exit Sub

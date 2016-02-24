@@ -346,7 +346,7 @@ On Error GoTo Err
 mClock.SetTimeUTC pTimestamp
 mClockFutureBuilder.Value = mClock
 mClockFutureBuilder.Complete
-mTickfileReplayController.NotifyReady Me
+mTickfileReplayController.NotifyReady Me, mTickfileSpec
 
 Exit Property
 
