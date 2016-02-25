@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#309.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.0#0"; "TradingUI27.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
    ClientHeight    =   9225
@@ -1022,12 +1022,14 @@ If ev.State <> TimeframeStates.TimeframeStateLoaded Then Exit Sub
 Dim lTimeframe As Timeframe: Set lTimeframe = ev.Source
 mNumberOfTimeframesLoading = mNumberOfTimeframesLoading - 1
 
-Dim lChartManager As ChartManager
-Set lChartManager = PriceChart.ChartManager(mTimeframes(lTimeframe.TimePeriod.ToString))
-
-lChartManager.SetBaseStudyConfiguration CreateBarsStudyConfig(lTimeframe, mContract.Specifier.SecType, mTicker.StudyBase.StudyManager.StudyLibraryManager), 0
-
-addStudiesForChart lTimeframe, lChartManager
+If mShowChart Then
+    Dim lChartManager As ChartManager
+    Set lChartManager = PriceChart.ChartManager(mTimeframes(lTimeframe.TimePeriod.ToString))
+    
+    lChartManager.SetBaseStudyConfiguration CreateBarsStudyConfig(lTimeframe, mContract.Specifier.SecType, mTicker.StudyBase.StudyManager.StudyLibraryManager), 0
+    
+    addStudiesForChart lTimeframe, lChartManager
+End If
 
 If mNumberOfTimeframesLoading = 0 Then
     mTicker.AddGenericTickListener Me
@@ -1107,6 +1109,8 @@ Private Sub IStrategyHost_ChartStudyValue( _
                 ByVal pTimeframe As Timeframe)
 Const ProcName As String = "IStrategyHost_ChartStudyValue"
 On Error GoTo Err
+
+If Not mShowChart Then Exit Sub
 
 Dim lStudyConfig As StudyConfiguration
 Dim lSvc As StudyValueConfiguration
