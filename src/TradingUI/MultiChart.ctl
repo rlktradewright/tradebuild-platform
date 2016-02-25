@@ -1174,13 +1174,22 @@ Dim ev As ChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 
-mChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mChangeListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IChangeListener
-    Set lListener = mChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.Change ev
+    Next
+End If
 
 RaiseEvent Change(ev)
 

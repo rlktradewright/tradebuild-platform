@@ -212,13 +212,22 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = mState
 
-mStateChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mStateChangeListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mStateChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mStateChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IStateChangeListener
-    Set lListener = mStateChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.Change ev
+    Next
+End If
 
 RaiseEvent StateChange(ev)
 
@@ -316,13 +325,22 @@ ev.Tick.Timestamp = MaxDate
 ev.Tick.TickType = -1
 Set ev.Source = Me
 
-mGenericTickListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mGenericTickListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mGenericTickListeners.Valid Then
+    sInit = True
+    sSomeListeners = mGenericTickListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IGenericTickListener
-    Set lListener = mGenericTickListeners.GetListener(i)
-    lListener.NoMoreTicks ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NoMoreTicks ev
+    Next
+End If
 
 State = TickStreamStateFinished
 
@@ -343,13 +361,22 @@ ev.StreamId = StreamId
 ev.Tick = pTick
 Set ev.Source = Me
 
-mGenericTickListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mGenericTickListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mGenericTickListeners.Valid Then
+    sInit = True
+    sSomeListeners = mGenericTickListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IGenericTickListener
-    Set lListener = mGenericTickListeners.GetListener(i)
-    lListener.NotifyTick ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyTick ev
+    Next
+End If
 
 Exit Sub
 

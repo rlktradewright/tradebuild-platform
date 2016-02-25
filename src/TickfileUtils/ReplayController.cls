@@ -533,13 +533,22 @@ Private Sub fireNotifyEvent(ev As NotificationEventData)
 Const ProcName As String = "fireNotifyEvent"
 On Error GoTo Err
 
-mListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mListeners.Valid Then
+    sInit = True
+    sSomeListeners = mListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As ITickfileReplayListener
-    Set lListener = mListeners.GetListener(i)
-    lListener.NotifyEvent ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyEvent ev
+    Next
+End If
 
 RaiseEvent NotifyEvent(ev)
 
@@ -553,13 +562,22 @@ Private Sub fireProgress(ByVal pTimestamp As Date, ByVal pEventsPlayed As Long, 
 Const ProcName As String = "fireProgress"
 On Error GoTo Err
 
-mListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mListeners.Valid Then
+    sInit = True
+    sSomeListeners = mListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As ITickfileReplayListener
-    Set lListener = mListeners.GetListener(i)
-    lListener.ReplayProgress pTimestamp, pEventsPlayed, pPercentComplete
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.ReplayProgress pTimestamp, pEventsPlayed, pPercentComplete
+    Next
+End If
 
 RaiseEvent ReplayProgress(pTimestamp, pEventsPlayed, pPercentComplete)
 
@@ -573,13 +591,22 @@ Private Sub fireTickfileCompleted(ByRef ev As TickfileEventData, ByVal pEventsPl
 Const ProcName As String = "fireTickfileCompleted"
 On Error GoTo Err
 
-mListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mListeners.Valid Then
+    sInit = True
+    sSomeListeners = mListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As ITickfileReplayListener
-    Set lListener = mListeners.GetListener(i)
-    lListener.TickfileCompleted ev, pEventsPlayed
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.TickfileCompleted ev, pEventsPlayed
+    Next
+End If
 
 RaiseEvent TickfileCompleted(ev, pEventsPlayed)
 

@@ -44,9 +44,12 @@ Private Const ModuleName                            As String = "DataSources"
 ' Member variables
 '@================================================================================
 
-Private mDataSourceBaseRef                              As WeakReference
+Private mDataSourceBaseRef                          As WeakReference
 
 Private mDataSources                                As New Listeners
+
+Private mCurrentDataSources()                       As Object
+Private mSomeCurrentDataSources                     As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -89,13 +92,16 @@ Friend Sub DOMReset()
 Const ProcName As String = "DOMReset"
 On Error GoTo Err
 
-mDataSources.SetCurrentListeners
-Dim i As Long
-For i = 1 To mDataSources.Count
+updateCurrentDataSources
+
+If mSomeCurrentDataSources Then
     Dim lDataSource As MarketDataSource
-    Set lDataSource = mDataSources.GetListener(i)
-    lDataSource.FireResetMarketDepth
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        lDataSource.FireResetMarketDepth
+    Next
+End If
 
 Exit Sub
 
@@ -110,13 +116,16 @@ Friend Sub DOMSetCell( _
 Const ProcName As String = "DOMSetCell"
 On Error GoTo Err
 
-mDataSources.SetCurrentListeners
-Dim i As Long
-For i = 1 To mDataSources.Count
+updateCurrentDataSources
+
+If mSomeCurrentDataSources Then
     Dim lDataSource As MarketDataSource
-    Set lDataSource = mDataSources.GetListener(i)
-    lDataSource.FireSetMarketDepthCell pSide, pPrice, pSize
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        lDataSource.FireSetMarketDepthCell pSide, pPrice, pSize
+    Next
+End If
 
 Exit Sub
 
@@ -134,13 +143,16 @@ Friend Sub NotifyError( _
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
 
-mDataSources.SetCurrentListeners
-Dim i As Long
-For i = 1 To mDataSources.Count
+updateCurrentDataSources
+
+If mSomeCurrentDataSources Then
     Dim lDataSource As MarketDataSource
-    Set lDataSource = mDataSources.GetListener(i)
-    lDataSource.SetError pErrorCode, pErrorMsg
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        lDataSource.SetError pErrorCode, pErrorMsg
+    Next
+End If
 
 Exit Sub
 
@@ -154,13 +166,16 @@ Friend Sub NotifyMarketDataError( _
 Const ProcName As String = "NotifyMarketDataError"
 On Error GoTo Err
 
-mDataSources.SetCurrentListeners
-Dim i As Long
-For i = 1 To mDataSources.Count
+updateCurrentDataSources
+
+If mSomeCurrentDataSources Then
     Dim lDataSource As MarketDataSource
-    Set lDataSource = mDataSources.GetListener(i)
-    If lDataSource.SubscribedToMarketData Then lDataSource.FireError pErrorCode, pErrorMsg
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        If lDataSource.SubscribedToMarketData Then lDataSource.FireError pErrorCode, pErrorMsg
+    Next
+End If
 
 Exit Sub
 
@@ -174,13 +189,16 @@ Friend Sub NotifyMarketDepthError( _
 Const ProcName As String = "NotifyMarketDepthError"
 On Error GoTo Err
 
-mDataSources.SetCurrentListeners
-Dim i As Long
-For i = 1 To mDataSources.Count
+updateCurrentDataSources
+
+If mSomeCurrentDataSources Then
     Dim lDataSource As MarketDataSource
-    Set lDataSource = mDataSources.GetListener(i)
-    If lDataSource.SubscribedToMarketDepth Then lDataSource.FireError pErrorCode, pErrorMsg
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        If lDataSource.SubscribedToMarketDepth Then lDataSource.FireError pErrorCode, pErrorMsg
+    Next
+End If
 
 Exit Sub
 
@@ -192,16 +210,19 @@ Friend Sub NotifyMarketDataStreamFinished()
 Const ProcName As String = "NotifyMarketDataStreamFinished"
 On Error GoTo Err
 
-mDataSources.SetCurrentListeners
-Dim i As Long
-For i = 1 To mDataSources.Count
+updateCurrentDataSources
+
+If mSomeCurrentDataSources Then
     Dim lDataSource As MarketDataSource
-    Set lDataSource = mDataSources.GetListener(i)
-    If Not lDataSource.SubscribedToMarketDepth Then
-        lDataSource.FireNoMoreTicks
-        lDataSource.Finish
-    End If
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        If Not lDataSource.SubscribedToMarketDepth Then
+            lDataSource.FireNoMoreTicks
+            lDataSource.Finish
+        End If
+    Next
+End If
 
 Exit Sub
 
@@ -213,16 +234,19 @@ Friend Sub NotifyMarketDepthStreamFinished()
 Const ProcName As String = "NotifyMarketDepthStreamFinished"
 On Error GoTo Err
 
-mDataSources.SetCurrentListeners
-Dim i As Long
-For i = 1 To mDataSources.Count
+updateCurrentDataSources
+
+If mSomeCurrentDataSources Then
     Dim lDataSource As MarketDataSource
-    Set lDataSource = mDataSources.GetListener(i)
-    If Not lDataSource.SubscribedToMarketData Then
-        lDataSource.FireNoMoreTicks
-        lDataSource.Finish
-    End If
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        If Not lDataSource.SubscribedToMarketData Then
+            lDataSource.FireNoMoreTicks
+            lDataSource.Finish
+        End If
+    Next
+End If
 
 Exit Sub
 
@@ -234,32 +258,35 @@ Friend Sub NotifyTick(ByRef pTick As GenericTick)
 Const ProcName As String = "NotifyTick"
 On Error GoTo Err
 
+updateCurrentDataSources
+
 Dim lGotQuote As Boolean
 Dim lGotPriceChange As Boolean
 
-mDataSources.SetCurrentListeners
-Dim i As Long
-For i = 1 To mDataSources.Count
+If mSomeCurrentDataSources Then
     Dim lDataSource As MarketDataSource
-    Set lDataSource = mDataSources.GetListener(i)
-    lDataSource.FireTick pTick
-    If pTick.TickType = TickTypeMarketDepth Or pTick.TickType = TickTypeMarketDepthReset Then
-        lDataSource.FireRawMarketDepth pTick
-    Else
-        If lDataSource.HasQuoteListeners Then
-            Dim lQuote As Quote
-            If Not lGotQuote Then lQuote = DataSourceBase.GetCurrentQuote(pTick.TickType): lGotQuote = True
-            lDataSource.FireQuote lQuote, pTick.TickType
-        End If
-        If pTick.TickType = TickTypeTrade Or pTick.TickType = TickTypeClosePrice Then
-            If lDataSource.HasPriceChangeListeners Then
-                Dim lPriceChange As PriceChange
-                If Not lGotPriceChange Then lPriceChange = DataSourceBase.GetPriceChange: lGotPriceChange = True
-                lDataSource.FirePriceChange lPriceChange
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        lDataSource.FireTick pTick
+        If pTick.TickType = TickTypeMarketDepth Or pTick.TickType = TickTypeMarketDepthReset Then
+            lDataSource.FireRawMarketDepth pTick
+        Else
+            If lDataSource.HasQuoteListeners Then
+                Dim lQuote As Quote
+                If Not lGotQuote Then lQuote = DataSourceBase.GetCurrentQuote(pTick.TickType): lGotQuote = True
+                lDataSource.FireQuote lQuote, pTick.TickType
+            End If
+            If pTick.TickType = TickTypeTrade Or pTick.TickType = TickTypeClosePrice Then
+                If lDataSource.HasPriceChangeListeners Then
+                    Dim lPriceChange As PriceChange
+                    If Not lGotPriceChange Then lPriceChange = DataSourceBase.GetPriceChange: lGotPriceChange = True
+                    lDataSource.FirePriceChange lPriceChange
+                End If
             End If
         End If
-    End If
-Next
+    Next
+End If
 
 Exit Sub
 
@@ -288,6 +315,13 @@ Private Function DataSourceBase() As DataSourceBase
 Set DataSourceBase = mDataSourceBaseRef.Target
 End Function
 
+Private Sub updateCurrentDataSources()
+Static sCurrentDataSourcesInitialised As Boolean
+If Not sCurrentDataSourcesInitialised Or Not mDataSources.Valid Then
+    sCurrentDataSourcesInitialised = True
+    mSomeCurrentDataSources = mDataSources.GetCurrentListeners(mCurrentDataSources)
+End If
+End Sub
 
 
 

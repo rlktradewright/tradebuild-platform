@@ -3222,13 +3222,22 @@ Set ev.AffectedOrder = pOrder
 ev.ErrorCode = pErrorCode
 ev.ErrorMsg = pErrorMsg
 
-mBracketOrderErrorListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mBracketOrderErrorListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mBracketOrderErrorListeners.Valid Then
+    sInit = True
+    sSomeListeners = mBracketOrderErrorListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IBracketOrderErrorListener
-    Set lListener = mBracketOrderErrorListeners.GetListener(i)
-    lListener.NotifyBracketOrderError ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyBracketOrderError ev
+    Next
+End If
 
 RaiseEvent OrderError(ev)
 
@@ -3247,14 +3256,22 @@ Dim ev As ChangeEventData
 Set ev.Source = Me
 ev.changeType = pChangeType
 
-mChangeListeners.SetCurrentListeners
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
 
-Dim i As Long
-For i = 1 To mChangeListeners.Count
+If Not sInit Or Not mChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IChangeListener
-    Set lListener = mChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.Change ev
+    Next
+End If
 
 RaiseEvent Change(ev)
 
@@ -3273,13 +3290,22 @@ Dim ev As ExecutionEventData
 Set ev.Source = Me
 Set ev.ExecutionReport = pExec
 
-mExecutionListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mExecutionListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mExecutionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mExecutionListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IExecutionListener
-    Set lListener = mExecutionListeners.GetListener(i)
-    lListener.NotifyExecution ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyExecution ev
+    Next
+End If
 
 RaiseEvent Execution(ev)
 
@@ -3298,13 +3324,22 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = pState
 
-mStateChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mStateChangeListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mStateChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mStateChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IStateChangeListener
-    Set lListener = mStateChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.Change ev
+    Next
+End If
 
 RaiseEvent StateChange(ev)
 
@@ -3321,13 +3356,22 @@ On Error GoTo Err
 Dim ev As RecoveryDataChangedEventData
 Set ev.Source = Me
 
-mRecoverableObjectListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mRecoverableObjectListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mRecoverableObjectListeners.Valid Then
+    sInit = True
+    sSomeListeners = mRecoverableObjectListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IRecoverableObjectListener
-    Set lListener = mRecoverableObjectListeners.GetListener(i)
-    lListener.NotifyRecoveryDataChanged ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyRecoveryDataChanged ev
+    Next
+End If
 
 Exit Sub
 

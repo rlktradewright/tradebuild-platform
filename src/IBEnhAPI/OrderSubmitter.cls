@@ -678,13 +678,22 @@ Friend Sub NotifyError( _
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
 
-mOrderSubmissionListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mOrderSubmissionListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mOrderSubmissionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IOrderSubmissionListener
-    Set lListener = mOrderSubmissionListeners.GetListener(i)
-    lListener.NotifyError pOrderId, pErrorCode, pErrorMsg
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyError pOrderId, pErrorCode, pErrorMsg
+    Next
+End If
 
 Exit Sub
 
@@ -696,13 +705,22 @@ Friend Sub NotifyExecutionReport(ByVal pExecutionReport As IExecutionReport)
 Const ProcName As String = "NotifyExecutionReport"
 On Error GoTo Err
 
-mOrderSubmissionListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mOrderSubmissionListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mOrderSubmissionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IOrderSubmissionListener
-    Set lListener = mOrderSubmissionListeners.GetListener(i)
-    lListener.NotifyExecutionReport pExecutionReport
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyExecutionReport pExecutionReport
+    Next
+End If
 
 Exit Sub
 
@@ -714,14 +732,22 @@ Friend Sub NotifyOrderReport(ByVal pOrderReport As IOrderReport)
 Const ProcName As String = "NotifyOrderReport"
 On Error GoTo Err
 
-mOrderSubmissionListeners.SetCurrentListeners
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
 
-Dim i As Long
-For i = 1 To mOrderSubmissionListeners.Count
+If Not sInit Or Not mOrderSubmissionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IOrderSubmissionListener
-    Set lListener = mOrderSubmissionListeners.GetListener(i)
-    lListener.NotifyOrderReport pOrderReport
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyOrderReport pOrderReport
+    Next
+End If
 
 Exit Sub
 
@@ -733,14 +759,22 @@ Friend Sub NotifyOrderStatusReport(ByVal pOrderStatusReport As IOrderStatusRepor
 Const ProcName As String = "NotifyOrderStatusReport"
 On Error GoTo Err
 
-mOrderSubmissionListeners.SetCurrentListeners
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
 
-Dim i As Long
-For i = 1 To mOrderSubmissionListeners.Count
+If Not sInit Or Not mOrderSubmissionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IOrderSubmissionListener
-    Set lListener = mOrderSubmissionListeners.GetListener(i)
-    lListener.NotifyOrderStatusReport pOrderStatusReport
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyOrderStatusReport pOrderStatusReport
+    Next
+End If
 
 Exit Sub
 
@@ -941,13 +975,22 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = mState
 
-mStateChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mStateChangeListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mStateChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mStateChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IStateChangeListener
-    Set lListener = mStateChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.Change ev
+    Next
+End If
 
 Exit Sub
 

@@ -1724,12 +1724,19 @@ Dim lEv As StateChangeEventData
 lEv = ev
 Set lEv.Source = Me
 
-If mStateChangeListeners.Count <> 0 Then
-    mStateChangeListeners.SetCurrentListeners
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mStateChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mStateChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As IStateChangeListener
     Dim i As Long
-    For i = 1 To mStateChangeListeners.Count
-        Dim lListener As IStateChangeListener
-        Set lListener = mStateChangeListeners.GetListener(i)
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
         lListener.Change lEv
     Next
 End If

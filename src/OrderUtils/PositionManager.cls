@@ -1436,13 +1436,22 @@ Dim ev As ChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 
-mChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mChangeListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IChangeListener
-    Set lListener = mChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.Change ev
+    Next
+End If
 
 RaiseEvent Change(ev)
 
@@ -1462,13 +1471,22 @@ Set ev.Source = Me
 ev.ProfitTypes = pProfitTypes
 ev.CurrencyCode = mCurrencyCode
 
-mProfitListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mProfitListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mProfitListeners.Valid Then
+    sInit = True
+    sSomeListeners = mProfitListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IProfitListener
-    Set lListener = mProfitListeners.GetListener(i)
-    lListener.NotifyProfit ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyProfit ev
+    Next
+End If
 
 Exit Sub
 
@@ -1483,13 +1501,22 @@ On Error GoTo Err
 Dim ev As RecoveryDataChangedEventData
 Set ev.Source = Me
 
-mRecoverableObjectListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mRecoverableObjectListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mRecoverableObjectListeners.Valid Then
+    sInit = True
+    sSomeListeners = mRecoverableObjectListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IRecoverableObjectListener
-    Set lListener = mRecoverableObjectListeners.GetListener(i)
-    lListener.NotifyRecoveryDataChanged ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyRecoveryDataChanged ev
+    Next
+End If
 
 Exit Sub
 

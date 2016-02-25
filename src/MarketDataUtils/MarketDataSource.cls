@@ -58,12 +58,33 @@ Private mContractFuture                             As IFuture
 Private mStudyBase                                  As StudyBaseForTickDataInput
 
 Private mGenericTickListeners                       As Listeners
+Private mCurrentGenericTickListeners()              As Object
+Private mSomeCurrentGenericTickListeners            As Boolean
+
 Private mMarketDepthListeners                       As Listeners
+Private mCurrentMarketDepthListeners()              As Object
+Private mSomeCurrentMarketDepthListeners            As Boolean
+
 Private mPriceChangeListeners                       As Listeners
+Private mCurrentPriceChangeListeners()              As Object
+Private mSomeCurrentPriceChangeListeners            As Boolean
+
 Private mQuoteListeners                             As Listeners
+Private mCurrentQuoteListeners()                    As Object
+Private mSomeCurrentQuoteListeners                  As Boolean
+
 Private mRawMarketDepthListeners                    As Listeners
+Private mCurrentRawMarketDepthListeners()           As Object
+Private mSomeCurrentRawMarketDepthListeners         As Boolean
+
 Private mStateChangeListeners                       As Listeners
+Private mCurrentStateChangeListeners()              As Object
+Private mSomeCurrentStateChangeListeners            As Boolean
+
 Private mErrorListeners                             As Listeners
+Private mCurrentErrorListeners()                    As Object
+Private mSomeCurrentErrorListeners                  As Boolean
+
 
 Private mTag                                        As Variant
 
@@ -956,13 +977,16 @@ Set ev.Source = Me
 ev.ErrorCode = pErrorCode
 ev.ErrorMessage = pErrorMessage
 
-mErrorListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mErrorListeners.Count
+updateCurrentErrorListeners
+
+If mSomeCurrentErrorListeners Then
     Dim lListener As IErrorListener
-    Set lListener = mErrorListeners.GetListener(i)
-    lListener.Notify ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentErrorListeners)
+        Set lListener = mCurrentErrorListeners(i)
+        lListener.Notify ev
+    Next
+End If
 
 Exit Sub
 
@@ -980,13 +1004,16 @@ Dim ev As GenericTickEventData
 Set ev.Source = Me
 ev.StreamId = mStreamId
 
-mGenericTickListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mGenericTickListeners.Count
+UpdateCurrentGenericTickListeners
+
+If mSomeCurrentGenericTickListeners Then
     Dim lListener As IGenericTickListener
-    Set lListener = mGenericTickListeners.GetListener(i)
-    lListener.NoMoreTicks ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentGenericTickListeners)
+        Set lListener = mCurrentGenericTickListeners(i)
+        lListener.NoMoreTicks ev
+    Next
+End If
 
 Exit Sub
 
@@ -1004,13 +1031,16 @@ Dim ev As PriceChangeEventData
 Set ev.Source = Me
 ev.PriceChange = pPriceChange
 
-mPriceChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mPriceChangeListeners.Count
+updateCurrentPriceChangeListeners
+
+If mSomeCurrentPriceChangeListeners Then
     Dim lListener As IPriceChangeListener
-    Set lListener = mPriceChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentPriceChangeListeners)
+        Set lListener = mCurrentPriceChangeListeners(i)
+        lListener.Change ev
+    Next
+End If
 
 Exit Sub
 
@@ -1028,34 +1058,37 @@ Dim ev As QuoteEventData
 Set ev.Source = Me
 ev.Quote = pQuote
 
-mQuoteListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mQuoteListeners.Count
+updateCurrentQuoteListeners
+
+If mSomeCurrentQuoteListeners Then
     Dim lListener As IQuoteListener
-    Set lListener = mQuoteListeners.GetListener(i)
-    Select Case pTickType
-    Case TickTypeBid
-        lListener.Bid ev
-    Case TickTypeAsk
-        lListener.Ask ev
-    Case TickTypeClosePrice
-        lListener.PreviousClose ev
-    Case TickTypeHighPrice
-        lListener.High ev
-    Case TickTypeLowPrice
-        lListener.Low ev
-    Case TickTypeMarketDepth
-    Case TickTypeMarketDepthReset
-    Case TickTypeTrade
-        lListener.Trade ev
-    Case TickTypeVolume
-        lListener.Volume ev
-    Case TickTypeOpenInterest
-        lListener.OpenInterest ev
-    Case TickTypeOpenPrice
-        lListener.SessionOpen ev
-    End Select
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentQuoteListeners)
+        Set lListener = mCurrentQuoteListeners(i)
+                Select Case pTickType
+                Case TickTypeBid
+                        lListener.Bid ev
+                Case TickTypeAsk
+                        lListener.Ask ev
+                Case TickTypeClosePrice
+                        lListener.PreviousClose ev
+                Case TickTypeHighPrice
+                        lListener.High ev
+                Case TickTypeLowPrice
+                        lListener.Low ev
+                Case TickTypeMarketDepth
+                Case TickTypeMarketDepthReset
+                Case TickTypeTrade
+                        lListener.Trade ev
+                Case TickTypeVolume
+                        lListener.Volume ev
+                Case TickTypeOpenInterest
+                        lListener.OpenInterest ev
+                Case TickTypeOpenPrice
+                        lListener.SessionOpen ev
+                End Select
+    Next
+End If
 
 Exit Sub
 
@@ -1082,17 +1115,20 @@ If pTick.TickType = TickTypeMarketDepth Then
     ev.Size = pTick.Size
 End If
 
-mRawMarketDepthListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mRawMarketDepthListeners.Count
+updateRawMarketDepthListeners
+
+If mSomeCurrentRawMarketDepthListeners Then
     Dim lListener As IRawMarketDepthListener
-    Set lListener = mRawMarketDepthListeners.GetListener(i)
-    If pTick.TickType = TickTypeMarketDepth Then
-        lListener.UpdateMarketDepth ev
-    Else
-        lListener.ResetMarketDepth ev
-    End If
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentRawMarketDepthListeners)
+        Set lListener = mCurrentRawMarketDepthListeners(i)
+        If pTick.TickType = TickTypeMarketDepth Then
+                lListener.UpdateMarketDepth ev
+        Else
+                lListener.ResetMarketDepth ev
+        End If
+    Next
+End If
 
 Exit Sub
 
@@ -1109,23 +1145,30 @@ If Not mSubscribedToMarketDepth Then Exit Sub
 Dim evRaw As RawMarketDepthEventData
 Set evRaw.Source = Me
 
-mRawMarketDepthListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mRawMarketDepthListeners.Count
+updateRawMarketDepthListeners
+
+If mSomeCurrentRawMarketDepthListeners Then
     Dim lRawListener As IRawMarketDepthListener
-    Set lRawListener = mRawMarketDepthListeners.GetListener(i)
-    lRawListener.ResetMarketDepth evRaw
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentRawMarketDepthListeners)
+        Set lRawListener = mCurrentRawMarketDepthListeners(i)
+        lRawListener.ResetMarketDepth evRaw
+    Next
+End If
 
 Dim ev As MarketDepthEventData
 Set ev.Source = Me
 
-mMarketDepthListeners.SetCurrentListeners
-For i = 1 To mMarketDepthListeners.Count
+updateCurrentMarketDepthListeners
+
+If mSomeCurrentMarketDepthListeners Then
     Dim lListener As IMarketDepthListener
-    Set lListener = mMarketDepthListeners.GetListener(i)
-    lListener.ResetMarketDepth ev
-Next
+    Dim j As Long
+    For j = 0 To UBound(mCurrentMarketDepthListeners)
+        Set lListener = mCurrentMarketDepthListeners(j)
+        lListener.ResetMarketDepth ev
+    Next
+End If
 
 Exit Sub
 
@@ -1148,13 +1191,15 @@ ev.Price = pPrice
 ev.Type = pSide
 ev.Size = pSize
 
-mMarketDepthListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mMarketDepthListeners.Count
+updateCurrentMarketDepthListeners
+If mSomeCurrentMarketDepthListeners Then
     Dim lListener As IMarketDepthListener
-    Set lListener = mMarketDepthListeners.GetListener(i)
-    lListener.SetMarketDepthCell ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentMarketDepthListeners)
+        Set lListener = mCurrentMarketDepthListeners(i)
+        lListener.SetMarketDepthCell ev
+    Next
+End If
 
 Exit Sub
 
@@ -1180,13 +1225,15 @@ Set ev.Source = Me
 ev.StreamId = mStreamId
 ev.Tick = pTick
 
-mGenericTickListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mGenericTickListeners.Count
+UpdateCurrentGenericTickListeners
+If mSomeCurrentGenericTickListeners Then
     Dim lListener As IGenericTickListener
-    Set lListener = mGenericTickListeners.GetListener(i)
-    lListener.NotifyTick ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentGenericTickListeners)
+        Set lListener = mCurrentGenericTickListeners(i)
+        lListener.NotifyTick ev
+    Next
+End If
 
 Exit Sub
 
@@ -1292,31 +1339,42 @@ checkNotFinished
 
 If Not (State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunning) Then Exit Sub
 
-mGenericTickListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mGenericTickListeners.Count
-    Dim lTickListener As IGenericTickListener
-    Set lTickListener = mGenericTickListeners.GetListener(i)
-    DataSourceBase.NotifyCurrentMarketDataTickValues lTickListener, Me
-Next
+UpdateCurrentGenericTickListeners
 
-mQuoteListeners.SetCurrentListeners
-For i = 1 To mQuoteListeners.Count
+If mSomeCurrentGenericTickListeners Then
+    Dim lTickListener As IGenericTickListener
+    Dim i As Long
+    For i = 0 To UBound(mCurrentGenericTickListeners)
+        Set lTickListener = mCurrentGenericTickListeners(i)
+        DataSourceBase.NotifyCurrentMarketDataTickValues lTickListener, Me
+    Next
+End If
+
+updateCurrentQuoteListeners
+
+If mSomeCurrentQuoteListeners Then
     Dim lQuoteListener As IQuoteListener
-    Set lQuoteListener = mQuoteListeners.GetListener(i)
-    DataSourceBase.NotifyCurrentMarketDataQuoteValues lQuoteListener, Me
-Next
+    Dim j As Long
+    For j = 0 To UBound(mCurrentQuoteListeners)
+        Set lQuoteListener = mCurrentQuoteListeners(j)
+        DataSourceBase.NotifyCurrentMarketDataQuoteValues lQuoteListener, Me
+    Next
+End If
 
 Dim ev As PriceChangeEventData
 Set ev.Source = Me
 ev.PriceChange = DataSourceBase.GetPriceChange
 
-mPriceChangeListeners.SetCurrentListeners
-For i = 1 To mPriceChangeListeners.Count
+updateCurrentPriceChangeListeners
+
+If mSomeCurrentPriceChangeListeners Then
     Dim lPricechangeListener As IPriceChangeListener
-    Set lPricechangeListener = mPriceChangeListeners.GetListener(i)
-    lPricechangeListener.Change ev
-Next
+    Dim k As Long
+    For k = 0 To UBound(mCurrentPriceChangeListeners)
+        Set lPricechangeListener = mCurrentPriceChangeListeners(k)
+        lPricechangeListener.Change ev
+    Next
+End If
 
 Exit Sub
 
@@ -1501,13 +1559,15 @@ Set ev.Source = Me
 ev.ErrorCode = pErrorCode
 ev.ErrorMessage = pErrorMessage
 
-mErrorListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mErrorListeners.Count
+updateCurrentErrorListeners
+If mSomeCurrentErrorListeners Then
     Dim lListener As IErrorListener
-    Set lListener = mErrorListeners.GetListener(i)
-    lListener.Notify ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentErrorListeners)
+        Set lListener = mCurrentErrorListeners(i)
+        lListener.Notify ev
+    Next
+End If
 
 mErrorMessage = ev.ErrorMessage
 setState MarketDataSourceStateError
@@ -1616,13 +1676,16 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = pState
 
-mStateChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mStateChangeListeners.Count
+updateCurrentStateChangeListeners
+
+If mSomeCurrentStateChangeListeners Then
     Dim lListener As IStateChangeListener
-    Set lListener = mStateChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(mCurrentStateChangeListeners)
+        Set lListener = mCurrentStateChangeListeners(i)
+        lListener.Change ev
+    Next
+End If
 
 Exit Sub
 
@@ -1790,4 +1853,59 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub updateCurrentErrorListeners()
+Static sInit As Boolean
+If Not sInit Or Not mErrorListeners.Valid Then
+    sInit = True
+    mSomeCurrentErrorListeners = mErrorListeners.GetCurrentListeners(mCurrentErrorListeners)
+End If
+End Sub
+
+Private Sub UpdateCurrentGenericTickListeners()
+Static sInit As Boolean
+If Not sInit Or Not mGenericTickListeners.Valid Then
+    sInit = True
+    mSomeCurrentGenericTickListeners = mGenericTickListeners.GetCurrentListeners(mCurrentGenericTickListeners)
+End If
+End Sub
+
+Private Sub updateCurrentMarketDepthListeners()
+Static sInit As Boolean
+If Not sInit Or Not mMarketDepthListeners.Valid Then
+    sInit = True
+    mSomeCurrentMarketDepthListeners = mMarketDepthListeners.GetCurrentListeners(mCurrentMarketDepthListeners)
+End If
+End Sub
+
+Private Sub updateCurrentPriceChangeListeners()
+Static sInit As Boolean
+If Not sInit Or Not mPriceChangeListeners.Valid Then
+    sInit = True
+    mSomeCurrentPriceChangeListeners = mPriceChangeListeners.GetCurrentListeners(mCurrentPriceChangeListeners)
+End If
+End Sub
+
+Private Sub updateCurrentQuoteListeners()
+Static sInit As Boolean
+If Not sInit Or Not mQuoteListeners.Valid Then
+    sInit = True
+    mSomeCurrentQuoteListeners = mQuoteListeners.GetCurrentListeners(mCurrentQuoteListeners)
+End If
+End Sub
+
+Private Sub updateRawMarketDepthListeners()
+Static sInit As Boolean
+If Not sInit Or Not mRawMarketDepthListeners.Valid Then
+    sInit = True
+    mSomeCurrentRawMarketDepthListeners = mRawMarketDepthListeners.GetCurrentListeners(mCurrentRawMarketDepthListeners)
+End If
+End Sub
+
+Private Sub updateCurrentStateChangeListeners()
+Static sInit As Boolean
+If Not sInit Or Not mStateChangeListeners.Valid Then
+    sInit = True
+    mSomeCurrentStateChangeListeners = mStateChangeListeners.GetCurrentListeners(mCurrentStateChangeListeners)
+End If
+End Sub
 

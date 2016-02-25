@@ -123,6 +123,8 @@ Private mDataTickStream                             As ITickStream
 Private mDepthTickStream                            As ITickStream
 
 Private mPriorityTickListeners                      As Listeners
+Private mCurrentPriorityTickListeners()             As Object
+Private mSomeCurrentPriorityTickListeners           As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -786,12 +788,15 @@ Private Sub fireNoMorePriorityTicks(ByRef ev As GenericTickEventData)
 Const ProcName As String = "fireNoMorePriorityTicks"
 On Error GoTo Err
 
-If mPriorityTickListeners.Count <> 0 Then
-    mPriorityTickListeners.SetCurrentListeners
+If mPriorityTickListeners.Count = 0 Then Exit Sub
+    
+updatePriorityTickListeners
+
+If mSomeCurrentPriorityTickListeners Then
+    Dim lListener As IGenericTickListener
     Dim i As Long
-    For i = 1 To mPriorityTickListeners.Count
-        Dim lListener As IGenericTickListener
-        Set lListener = mPriorityTickListeners.GetListener(i)
+    For i = 0 To UBound(mCurrentPriorityTickListeners)
+        Set lListener = mCurrentPriorityTickListeners(i)
         lListener.NoMoreTicks ev
     Next
 End If
@@ -806,12 +811,15 @@ Private Sub firePriorityTick(ByRef ev As GenericTickEventData)
 Const ProcName As String = "firePriorityTick"
 On Error GoTo Err
 
-If mPriorityTickListeners.Count <> 0 Then
-    mPriorityTickListeners.SetCurrentListeners
+If mPriorityTickListeners.Count = 0 Then Exit Sub
+
+updatePriorityTickListeners
+
+If mSomeCurrentPriorityTickListeners Then
+    Dim lListener As IGenericTickListener
     Dim i As Long
-    For i = 1 To mPriorityTickListeners.Count
-        Dim lListener As IGenericTickListener
-        Set lListener = mPriorityTickListeners.GetListener(i)
+    For i = 0 To UBound(mCurrentPriorityTickListeners)
+        Set lListener = mCurrentPriorityTickListeners(i)
         lListener.NotifyTick ev
     Next
 End If
@@ -1029,6 +1037,14 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub updatePriorityTickListeners()
+Static sInit As Boolean
+If Not sInit Or Not mPriorityTickListeners.Valid Then
+    sInit = True
+    mSomeCurrentPriorityTickListeners = mPriorityTickListeners.GetCurrentListeners(mCurrentPriorityTickListeners)
+End If
 End Sub
 
 Private Function validPrice(ByRef pTick As GenericTick) As Boolean

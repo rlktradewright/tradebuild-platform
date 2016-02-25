@@ -302,13 +302,22 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = newState
 
-mStateChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mStateChangeListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mStateChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mStateChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IStateChangeListener
-    Set lListener = mStateChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.Change ev
+    Next
+End If
 RaiseEvent StateChange(ev)
 
 Exit Sub

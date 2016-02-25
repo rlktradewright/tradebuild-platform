@@ -536,12 +536,19 @@ Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
 
-If mCollectionChangeListeners.Count <> 0 Then
-    mCollectionChangeListeners.SetCurrentListeners
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mCollectionChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mCollectionChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As ICollectionChangeListener
     Dim i As Long
-    For i = 1 To mCollectionChangeListeners.Count
-        Dim lListener As ICollectionChangeListener
-        Set lListener = mCollectionChangeListeners.GetListener(i)
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
         lListener.Change ev
     Next
 End If

@@ -88,13 +88,22 @@ Private Sub IConnectionStatusConsumer_NotifyAPIConnectionStateChange(ByVal pStat
 Const ProcName As String = "IConnectionStatusConsumer_NotifyAPIConnectionStateChange"
 On Error GoTo Err
 
-mTwsConnectionStateListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mTwsConnectionStateListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mTwsConnectionStateListeners.Valid Then
+    sInit = True
+    sSomeListeners = mTwsConnectionStateListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As ITwsConnectionStateListener
-    Set lListener = mTwsConnectionStateListeners.GetListener(i)
-    lListener.NotifyAPIConnectionStateChange Me, pState, pMessage
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyAPIConnectionStateChange Me, pState, pMessage
+    Next
+End If
 
 Exit Sub
 
@@ -106,13 +115,22 @@ Private Sub IConnectionStatusConsumer_NotifyIBServerConnectionClosed()
 Const ProcName As String = "IConnectionStatusConsumer_NotifyIBServerConnectionClosed"
 On Error GoTo Err
 
-mTwsConnectionStateListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mTwsConnectionStateListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mTwsConnectionStateListeners.Valid Then
+    sInit = True
+    sSomeListeners = mTwsConnectionStateListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As ITwsConnectionStateListener
-    Set lListener = mTwsConnectionStateListeners.GetListener(i)
-    lListener.NotifyIBServerConnectionClosed Me
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyIBServerConnectionClosed Me
+    Next
+End If
 
 Exit Sub
 
@@ -141,13 +159,22 @@ Set lExecFilter = New TwsExecutionFilter
 lExecFilter.ClientId = mClientId
 mTwsAPI.RequestExecutions 1, lExecFilter
 
-mTwsConnectionStateListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mTwsConnectionStateListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mTwsConnectionStateListeners.Valid Then
+    sInit = True
+    sSomeListeners = mTwsConnectionStateListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As ITwsConnectionStateListener
-    Set lListener = mTwsConnectionStateListeners.GetListener(i)
-    lListener.NotifyIBServerConnectionRecovered Me, pDataLost
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyIBServerConnectionRecovered Me, pDataLost
+    Next
+End If
 
 Exit Sub
 

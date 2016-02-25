@@ -487,13 +487,22 @@ On Error GoTo Err
 Dim ev As RecoveryDataChangedEventData
 Set ev.Source = Me
 
-mRecoverableObjectListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mRecoverableObjectListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mRecoverableObjectListeners.Valid Then
+    sInit = True
+    sSomeListeners = mRecoverableObjectListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As IRecoverableObjectListener
-    Set lListener = mRecoverableObjectListeners.GetListener(i)
-    lListener.NotifyRecoveryDataChanged ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyRecoveryDataChanged ev
+    Next
+End If
 
 Exit Sub
 

@@ -376,13 +376,22 @@ Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
 
-mChangeListeners.SetCurrentListeners
-Dim i As Long
-For i = 1 To mChangeListeners.Count
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
     Dim lListener As ICollectionChangeListener
-    Set lListener = mChangeListeners.GetListener(i)
-    lListener.Change ev
-Next
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.Change ev
+    Next
+End If
 RaiseEvent CollectionChanged(ev)
 
 Exit Sub
