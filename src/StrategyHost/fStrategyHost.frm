@@ -1831,7 +1831,7 @@ Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-If mIsTickReplay Then ProfitChart.Initialise CreateTimeframes(mProfitStudyBase), False
+ProfitChart.Initialise CreateTimeframes(mProfitStudyBase), False
 ProfitChart.DisableDrawing
 ProfitChart.ShowChart GetTimePeriod(1, TimePeriodDay), _
                         CreateChartSpecifier(0), _
@@ -1857,7 +1857,7 @@ Set mTradeStudyBase = CreateStudyBaseForIntegerInput( _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-If mIsTickReplay Then TradeChart.Initialise CreateTimeframes(mTradeStudyBase), False
+TradeChart.Initialise CreateTimeframes(mTradeStudyBase), False
 TradeChart.DisableDrawing
 TradeChart.ShowChart GetTimePeriod(0, TimePeriodNone), _
                     CreateChartSpecifier(0), _

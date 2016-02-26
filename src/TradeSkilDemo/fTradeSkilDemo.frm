@@ -1,12 +1,13 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#309.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
    ClientLeft      =   225
    ClientTop       =   345
    ClientWidth     =   16665
+   Icon            =   "fTradeSkilDemo.frx":0000
    LinkTopic       =   "Form1"
    ScaleHeight     =   9960
    ScaleWidth      =   16665
@@ -25,9 +26,9 @@ Begin VB.Form fTradeSkilDemo
       BorderStyle     =   0  'None
       Height          =   240
       Left            =   16320
-      MouseIcon       =   "fTradeSkilDemo.frx":0000
+      MouseIcon       =   "fTradeSkilDemo.frx":1042
       MousePointer    =   99  'Custom
-      Picture         =   "fTradeSkilDemo.frx":0152
+      Picture         =   "fTradeSkilDemo.frx":1194
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   0
@@ -40,9 +41,9 @@ Begin VB.Form fTradeSkilDemo
       BorderStyle     =   0  'None
       Height          =   240
       Left            =   0
-      MouseIcon       =   "fTradeSkilDemo.frx":06DC
+      MouseIcon       =   "fTradeSkilDemo.frx":171E
       MousePointer    =   99  'Custom
-      Picture         =   "fTradeSkilDemo.frx":082E
+      Picture         =   "fTradeSkilDemo.frx":1870
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   3
