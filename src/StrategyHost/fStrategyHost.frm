@@ -854,7 +854,7 @@ Private mParams                                         As Parameters
 Private mStrategyRunner                                 As StrategyRunner
 Attribute mStrategyRunner.VB_VarHelpID = -1
 
-Private mTimeframes                                     As EnumerableCollection
+Private mTimeframeIndexes                               As EnumerableCollection
 
 Private mPriceChartTimePeriod                           As TimePeriod
 Private mPriceChartIndex                                As Long
@@ -1023,12 +1023,19 @@ Dim lTimeframe As Timeframe: Set lTimeframe = ev.Source
 mNumberOfTimeframesLoading = mNumberOfTimeframesLoading - 1
 
 If mShowChart Then
-    Dim lChartManager As ChartManager
-    Set lChartManager = PriceChart.ChartManager(mTimeframes(lTimeframe.TimePeriod.ToString))
+    Dim lChartIndex As Long
+    lChartIndex = mTimeframeIndexes(lTimeframe.TimePeriod.ToString)
     
-    lChartManager.SetBaseStudyConfiguration CreateBarsStudyConfig(lTimeframe, mContract.Specifier.SecType, mTicker.StudyBase.StudyManager.StudyLibraryManager), 0
+    PriceChart.BaseChartController(lChartIndex).EnableDrawing
     
-    addStudiesForChart lTimeframe, lChartManager
+    If mIsTickReplay Then
+        Dim lChartManager As ChartManager
+        Set lChartManager = PriceChart.ChartManager(lChartIndex)
+        
+        lChartManager.SetBaseStudyConfiguration CreateBarsStudyConfig(lTimeframe, mContract.Specifier.SecType, mTicker.StudyBase.StudyManager.StudyLibraryManager), 0
+        
+        addStudiesForChart lTimeframe, lChartManager
+    End If
 End If
 
 If mNumberOfTimeframesLoading = 0 Then
@@ -1058,7 +1065,7 @@ On Error GoTo Err
 monitorTimeframe pTimeframe
 
 If Not mShowChart Then Exit Sub
-If mTimeframes.Contains(pTimeframe.TimePeriod.ToString) Then Exit Sub
+If mTimeframeIndexes.Contains(pTimeframe.TimePeriod.ToString) Then Exit Sub
 
 Dim lTitle As String
 Dim lUpdatePerTick As Boolean
@@ -1083,7 +1090,15 @@ lIndex = PriceChart.AddRaw(pTimeframe, _
                         lTitle, _
                         lUpdatePerTick)
 
-mTimeframes.Add lIndex, pTimeframe.TimePeriod.ToString
+mTimeframeIndexes.Add lIndex, pTimeframe.TimePeriod.ToString
+
+Dim lChartManager As ChartManager
+PriceChart.BaseChartController(lIndex).DisableDrawing
+
+If Not mIsTickReplay Then
+    Set lChartManager = PriceChart.ChartManager(lIndex)
+    lChartManager.SetBaseStudyConfiguration CreateBarsStudyConfig(pTimeframe, mContract.Specifier.SecType, mTicker.StudyBase.StudyManager.StudyLibraryManager), 0
+End If
 
 If mPriceChartIndex = 0 Then
     mPriceChartIndex = lIndex
@@ -1112,12 +1127,15 @@ On Error GoTo Err
 
 If Not mShowChart Then Exit Sub
 
+Dim lChartManager As ChartManager
+Set lChartManager = PriceChart.ChartManager(PriceChart.GetIndexFromTimeframe(pTimeframe))
+
 Dim lStudyConfig As StudyConfiguration
 Dim lSvc As StudyValueConfiguration
 
-If Not findStudyConfig(pStudy, pTimeframe, lStudyConfig) Then
-    Dim lChartManager As ChartManager
-    Set lChartManager = PriceChart.ChartManager(PriceChart.GetIndexFromTimeframe(pTimeframe))
+If findStudyConfig(pStudy, pTimeframe, lStudyConfig) Then
+    If Not mIsTickReplay Then lChartManager.RemoveStudyConfiguration lStudyConfig
+Else
     Set lStudyConfig = lChartManager.GetDefaultStudyConfiguration(pStudy.Name, pStudy.LibraryName)
     lStudyConfig.Study = pStudy
     lStudyConfig.UnderlyingStudy = pStudy.UnderlyingStudy
@@ -1137,6 +1155,10 @@ End If
 For Each lSvc In lStudyConfig.StudyValueConfigurations
     If lSvc.ValueName = pValueName Then lSvc.IncludeInChart = True
 Next
+
+If Not mIsTickReplay Then
+    lChartManager.ApplyStudyConfiguration lStudyConfig, ReplayNumbers.ReplayAll
+End If
 
 Exit Sub
 
@@ -1200,7 +1222,7 @@ If mShowChart Then
 End If
 
 If mTickfileIndex = TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
-    Set mTimeframes = New EnumerableCollection
+    Set mTimeframeIndexes = New EnumerableCollection
     Set mProfitStudyBase = Nothing
     Set mTradeStudyBase = Nothing
     mTradeBarNumber = 0
@@ -1353,7 +1375,7 @@ ReDim mStudiesToShow(3) As StudyConfigToShow
 mStudiesToShowIndex = -1
 
 If PriceChart.Count = 0 Then
-    Set mTimeframes = New EnumerableCollection
+    Set mTimeframeIndexes = New EnumerableCollection
     initialisePriceChart
 Else
     Dim i As Long
