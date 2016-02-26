@@ -118,7 +118,7 @@ If lClp.Switch("tws") Then lPermittedSPRoles = lPermittedSPRoles + SPRoleRealtim
 Set gTB = CreateTradeBuildAPI(, lPermittedSPRoles)
 
 If lClp.Switch("tws") Then
-    If Not setupTwsServiceProvider(lClp.switchValue("tws"), lLiveTrades) Then
+    If Not setupTwsServiceProviders(lClp.switchValue("tws"), lLiveTrades) Then
         MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Sub
     End If
@@ -335,7 +335,7 @@ LogMessage Err.Description, LogLevelSevere
 setupSimulateOrderServiceProviders = False
 End Function
 
-Private Function setupTwsServiceProvider( _
+Private Function setupTwsServiceProviders( _
                 ByVal switchValue As String, _
                 ByVal pAllowLiveTrades As Boolean) As Boolean
 On Error GoTo Err
@@ -343,7 +343,7 @@ On Error GoTo Err
 Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(switchValue, ",")
 
-setupTwsServiceProvider = True
+setupTwsServiceProviders = True
 
 On Error Resume Next
 Dim Server As String
@@ -360,17 +360,17 @@ If Port = "" Then
     Port = "7496"
 ElseIf Not IsInteger(Port, 1) Then
         LogMessage "Error: Port must be a positive integer > 0"
-        setupTwsServiceProvider = False
+        setupTwsServiceProviders = False
 End If
     
 If ClientId = "" Then
     ClientId = "1215339864"
 ElseIf Not IsInteger(ClientId, 0) Then
         LogMessage "Error: ClientId must be an integer >= 0"
-        setupTwsServiceProvider = False
+        setupTwsServiceProviders = False
 End If
     
-If setupTwsServiceProvider Then
+If setupTwsServiceProviders Then
     gTB.ServiceProviders.Add _
                         ProgId:="IBTWSSP27.RealtimeDataServiceProvider", _
                         Enabled:=True, _
@@ -385,7 +385,7 @@ If setupTwsServiceProvider Then
         gTB.ServiceProviders.Add _
                             ProgId:="IBTWSSP27.OrderSubmissionSrvcProvider", _
                             Enabled:=True, _
-                            ParamString:=";Server=" & Server & _
+                            ParamString:="Server=" & Server & _
                                         ";Port=" & Port & _
                                         ";Client Id=" & ClientId & _
                                         ";Provider Key=IB;Keep Connection=True", _
@@ -397,7 +397,7 @@ Exit Function
 
 Err:
 LogMessage Err.Description, LogLevelSevere
-setupTwsServiceProvider = False
+setupTwsServiceProviders = False
 End Function
 
 
