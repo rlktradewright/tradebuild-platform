@@ -30,7 +30,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IBTwsSP"
+Private Const ModuleName                            As String = "IBAPI"
 
 Private Const TICK_BID_SIZE                      As Long = 0
 Private Const TICK_BID                           As Long = 1

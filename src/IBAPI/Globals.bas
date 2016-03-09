@@ -863,6 +863,8 @@ Case "STP"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStop
 Case "STPLMT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopLimit
+Case "STP LMT"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopLimit
 Case "TRAIL"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeTrail
 Case "REL"
