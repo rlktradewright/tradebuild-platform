@@ -1613,33 +1613,7 @@ Private Sub StartButton_Click()
 Const ProcName As String = "StartButton_Click"
 On Error GoTo Err
 
-StartButton.Enabled = False
-StopButton.Enabled = True
-
-mShowChart = (ShowChartCheck = vbChecked)
-
-PriceChart.Clear
-ProfitChart.BaseChartController.ClearChart
-TradeChart.BaseChartController.ClearChart
-BracketOrderList.ListItems.Clear
-
-clearPriceAndProfitFields
-clearPerformanceFields
-
-mOverallProfit = 0#
-mSessionProfit = 0#
-
-Set mBracketOrderLineSeries = Nothing
-Set mPricePeriods = Nothing
-mPriceChartIndex = 0
-
-mTickfileIndex = -1
-
-If TickfileOrganiser1.TickfileCount <> 0 Then
-    startNextTickfile
-Else
-    mStrategyRunner.PrepareSymbol SymbolText.Text
-End If
+startprocessing
 
 Exit Sub
 
@@ -1717,6 +1691,19 @@ End Sub
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub Start()
+Const ProcName As String = "Start"
+On Error GoTo Err
+
+getDefaultParams
+startprocessing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '================================================================================
 ' Helper Functions
@@ -2151,6 +2138,44 @@ On Error GoTo Err
 mTickfileIndex = mTickfileIndex + 1
 TickfileOrganiser1.ListIndex = mTickfileIndex
 mStrategyRunner.PrepareTickFile TickfileOrganiser1.TickFileSpecifiers(mTickfileIndex + 1)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub startprocessing()
+Const ProcName As String = "startprocessing"
+On Error GoTo Err
+
+StartButton.Enabled = False
+StopButton.Enabled = True
+
+mShowChart = (ShowChartCheck = vbChecked)
+
+PriceChart.Clear
+ProfitChart.BaseChartController.ClearChart
+TradeChart.BaseChartController.ClearChart
+BracketOrderList.ListItems.Clear
+
+clearPriceAndProfitFields
+clearPerformanceFields
+
+mOverallProfit = 0#
+mSessionProfit = 0#
+
+Set mBracketOrderLineSeries = Nothing
+Set mPricePeriods = Nothing
+mPriceChartIndex = 0
+
+mTickfileIndex = -1
+
+If TickfileOrganiser1.TickfileCount <> 0 Then
+    startNextTickfile
+Else
+    mStrategyRunner.PrepareSymbol SymbolText.Text
+End If
 
 Exit Sub
 

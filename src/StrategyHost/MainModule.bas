@@ -98,10 +98,18 @@ If lSymbol = "" And lNoUI Then
 End If
 
 Dim lStrategyClassName As String
-lStrategyClassName = lClp.Arg(2)
+lStrategyClassName = lClp.Arg(1)
 If lStrategyClassName = "" And lNoUI Then
     LogMessage "No strategy supplied"
     If Not lNoUI And lRun Then MsgBox "Error - no strategy class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+    Exit Sub
+End If
+
+Dim lStopStrategyFactoryClassName As String
+lStopStrategyFactoryClassName = lClp.Arg(2)
+If lStopStrategyFactoryClassName = "" And lNoUI Then
+    LogMessage "No stop strategy factory supplied"
+    If Not lNoUI And lRun Then MsgBox "Error - no stop strategy factory class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
     Exit Sub
 End If
 
@@ -175,11 +183,12 @@ Else
     mForm.ResultsPathText = lResultsPath
     mForm.NoMoneyManagement = IIf(lUseMoneyManagement, 0, 1)
     mForm.StrategyCombo.Text = lStrategyClassName
+    mForm.StopStrategyFactoryCombo.Text = lStopStrategyFactoryClassName
     
     mForm.Show vbModeless
     
     If lRun Then
-        mForm.StartButton.Value = True
+        mForm.Start
     End If
 
     Do While Forms.Count > 0
@@ -214,6 +223,7 @@ Private Function getUsageString() As String
 getUsageString = _
             "strategyhost  [symbol]" & vbCrLf & _
             "              [strategy class name]" & vbCrLf & _
+            "              [stop strategy factory class name]" & vbCrLf & _
             "              [/tws:[Server],[Port],[ClientId]" & vbCrLf & _
             "              [/db:[server],[servertype],[database]" & vbCrLf & _
             "              [/livetrades]" & vbCrLf & _
