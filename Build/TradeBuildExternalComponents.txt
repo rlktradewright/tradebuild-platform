@@ -8,4 +8,6 @@
 ..\Bin\TradeWright.TradeBuild.ExternalComponents\TABCTL32.OCX
 
 // needed by TradeBuild.Common
+..\Bin\TradeWright.TradeBuild.ExternalComponents\DBADAPT.DLL
+..\Bin\TradeWright.TradeBuild.ExternalComponents\MSSTDFMT.DLL
 ..\Bin\TradeWright.TradeBuild.ExternalComponents\TLBINF32.DLL
