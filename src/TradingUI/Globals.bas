@@ -114,94 +114,107 @@ If pTheme Is Nothing Then Exit Sub
 
 Dim lControl As Control
 For Each lControl In pControls
-    If TypeOf lControl Is Label Then
-        lControl.Appearance = pTheme.Appearance
-        lControl.BackColor = pTheme.BackColor
-        lControl.ForeColor = pTheme.ForeColor
-    ElseIf TypeOf lControl Is CheckBox Or _
-        TypeOf lControl Is Frame Or _
-        TypeOf lControl Is OptionButton _
-    Then
-        SetWindowThemeOff lControl.hWnd
-        lControl.Appearance = pTheme.Appearance
-        lControl.BackColor = pTheme.BackColor
-        lControl.ForeColor = pTheme.ForeColor
-    ElseIf TypeOf lControl Is PictureBox Then
-        lControl.Appearance = pTheme.Appearance
-        lControl.BorderStyle = pTheme.BorderStyle
-        lControl.BackColor = pTheme.BackColor
-        lControl.ForeColor = pTheme.ForeColor
-    ElseIf TypeOf lControl Is TextBox Then
-        lControl.Appearance = pTheme.Appearance
-        lControl.BorderStyle = pTheme.BorderStyle
-        lControl.BackColor = pTheme.TextBackColor
-        lControl.ForeColor = pTheme.TextForeColor
-        If Not pTheme.TextFont Is Nothing Then
-            Set lControl.Font = pTheme.TextFont
-        ElseIf Not pTheme.BaseFont Is Nothing Then
-            Set lControl.Font = pTheme.BaseFont
-        End If
-    ElseIf TypeOf lControl Is ComboBox Or _
-        TypeOf lControl Is ListBox _
-    Then
-        lControl.Appearance = pTheme.Appearance
-        lControl.BackColor = pTheme.TextBackColor
-        lControl.ForeColor = pTheme.TextForeColor
-        If Not pTheme.ComboFont Is Nothing Then
-            Set lControl.Font = pTheme.ComboFont
-        ElseIf Not pTheme.BaseFont Is Nothing Then
-            Set lControl.Font = pTheme.BaseFont
-        End If
-    ElseIf TypeOf lControl Is CommandButton Or _
-        TypeOf lControl Is Shape _
-    Then
-        ' nothing for these
-    ElseIf TypeOf lControl Is CoolBar Then
-        Dim lhWnd As Long
-        lhWnd = FindWindowEx(lControl.hWnd, 0, "ReBarWindow32", vbNullString)
-        If lhWnd = 0 Then lhWnd = lControl.hWnd
-        SetWindowThemeOff lhWnd
-        lControl.BackColor = pTheme.CoolbarBackColor
-        Dim lBand As Band
-        For Each lBand In lControl.Bands
-            lBand.UseCoolbarColors = False
-            lBand.BackColor = pTheme.CoolbarBackColor
-        Next
-    ElseIf TypeOf lControl Is Toolbar Then
-        lControl.Appearance = pTheme.Appearance
-        lControl.BorderStyle = pTheme.BorderStyle
+    gApplyThemeToControl pTheme, lControl
+Next
         
-        If lControl.Style = tbrStandard Then
-            Dim lDoneFirstStandardToolbar As Boolean
-            If Not lDoneFirstStandardToolbar Then
-                lDoneFirstStandardToolbar = True
-                SetToolbarColor lControl, pTheme.ToolbarBackColor
-            End If
-        Else
-            Dim lDoneFirstFlatToolbar As Boolean
-            If Not lDoneFirstFlatToolbar Then
-                lDoneFirstFlatToolbar = True
-                SetToolbarColor lControl, pTheme.ToolbarBackColor
-            End If
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gApplyThemeToControl(ByVal pTheme As ITheme, ByVal pControl As Control)
+Const ProcName As String = "gApplyThemeToControl"
+On Error GoTo Err
+
+If TypeOf pControl Is Label Then
+    pControl.Appearance = pTheme.Appearance
+    pControl.BackColor = pTheme.BackColor
+    pControl.ForeColor = pTheme.ForeColor
+ElseIf TypeOf pControl Is CheckBox Or _
+    TypeOf pControl Is Frame Or _
+    TypeOf pControl Is OptionButton _
+Then
+    SetWindowThemeOff pControl.hWnd
+    pControl.Appearance = pTheme.Appearance
+    pControl.BackColor = pTheme.BackColor
+    pControl.ForeColor = pTheme.ForeColor
+ElseIf TypeOf pControl Is PictureBox Then
+    pControl.Appearance = pTheme.Appearance
+    pControl.BorderStyle = pTheme.BorderStyle
+    pControl.BackColor = pTheme.BackColor
+    pControl.ForeColor = pTheme.ForeColor
+ElseIf TypeOf pControl Is TextBox Then
+    pControl.Appearance = pTheme.Appearance
+    pControl.BorderStyle = pTheme.BorderStyle
+    pControl.BackColor = pTheme.TextBackColor
+    pControl.ForeColor = pTheme.TextForeColor
+    If Not pTheme.TextFont Is Nothing Then
+        Set pControl.Font = pTheme.TextFont
+    ElseIf Not pTheme.BaseFont Is Nothing Then
+        Set pControl.Font = pTheme.BaseFont
+    End If
+ElseIf TypeOf pControl Is ComboBox Or _
+    TypeOf pControl Is ListBox _
+Then
+    pControl.Appearance = pTheme.Appearance
+    pControl.BackColor = pTheme.TextBackColor
+    pControl.ForeColor = pTheme.TextForeColor
+    If Not pTheme.ComboFont Is Nothing Then
+        Set pControl.Font = pTheme.ComboFont
+    ElseIf Not pTheme.BaseFont Is Nothing Then
+        Set pControl.Font = pTheme.BaseFont
+    End If
+ElseIf TypeOf pControl Is CommandButton Or _
+    TypeOf pControl Is Shape _
+Then
+    ' nothing for these
+ElseIf TypeOf pControl Is CoolBar Then
+    Dim lhWnd As Long
+    lhWnd = FindWindowEx(pControl.hWnd, 0, "ReBarWindow32", vbNullString)
+    If lhWnd = 0 Then lhWnd = pControl.hWnd
+    SetWindowThemeOff lhWnd
+    pControl.BackColor = pTheme.CoolbarBackColor
+    Dim lBand As Band
+    For Each lBand In pControl.Bands
+        lBand.UseCoolbarColors = False
+        lBand.BackColor = pTheme.CoolbarBackColor
+    Next
+ElseIf TypeOf pControl Is Toolbar Then
+    pControl.Appearance = pTheme.Appearance
+    pControl.BorderStyle = pTheme.BorderStyle
+    
+    If pControl.Style = tbrStandard Then
+        Dim lDoneFirstStandardToolbar As Boolean
+        If Not lDoneFirstStandardToolbar Then
+            lDoneFirstStandardToolbar = True
+            SetToolbarColor pControl, pTheme.ToolbarBackColor
         End If
-        lControl.Refresh
-    ElseIf TypeOf lControl Is Object  Then
-        On Error Resume Next
-        If TypeOf lControl.object Is IThemeable Then
-            If Err.Number = 0 Then
-                On Error GoTo Err
-                Dim lThemeable As IThemeable
-                Set lThemeable = lControl.object
-                lThemeable.Theme = pTheme
-            Else
-                On Error GoTo Err
-            End If
+    Else
+        Dim lDoneFirstFlatToolbar As Boolean
+        If Not lDoneFirstFlatToolbar Then
+            lDoneFirstFlatToolbar = True
+            SetToolbarColor pControl, pTheme.ToolbarBackColor
+        End If
+    End If
+    pControl.Refresh
+ElseIf TypeOf pControl Is Object  Then
+    On Error Resume Next
+    If TypeOf pControl.object Is IThemeable Then
+        If Err.Number = 0 Then
+            On Error GoTo Err
+            Dim lThemeable As IThemeable
+            Set lThemeable = pControl.object
+            lThemeable.Theme = pTheme
         Else
             On Error GoTo Err
         End If
+    Else
+        On Error GoTo Err
     End If
-Next
-        
+End If
+
+
 Exit Sub
 
 Err:

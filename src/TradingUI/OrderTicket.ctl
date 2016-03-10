@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl OrderTicket 
    ClientHeight    =   6195
    ClientLeft      =   0
@@ -925,11 +925,19 @@ Attribute mBracketOrder.VB_VarHelpID = -1
 
 Private mCurrentBracketOrderIndex                       As BracketIndexes
 
-Private mInvalidControls(2)                             As Control
+Private mInvalidTexts(2)                                As TextBox
 
 Private mMode                                           As OrderTicketModes
 
 Private mTheme                                          As ITheme
+
+Private mPriceToleranceTicks                            As Long
+
+Private mAskPrice                                       As Double
+Private mBidPrice                                       As Double
+Private mTradePrice                                     As Double
+
+Private mMaxDiscretionaryAmountTicks                    As Long
 
 '@================================================================================
 ' Form Event Handlers
@@ -938,6 +946,9 @@ Private mTheme                                          As ITheme
 Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
+
+mPriceToleranceTicks = 100
+mMaxDiscretionaryAmountTicks = 10
 
 BracketOrderOption.Value = True
 setOrderScheme BracketOrder
@@ -1029,10 +1040,12 @@ lPriceText = priceToString(ev.Tick.Price)
 
 Select Case ev.Tick.TickType
 Case TickTypeBid
+    mBidPrice = ev.Tick.Price
     BidText = lPriceText
     BidSizeText = ev.Tick.Size
     setPriceFields
 Case TickTypeAsk
+    mAskPrice = ev.Tick.Price
     AskText = lPriceText
     AskSizeText = ev.Tick.Size
     setPriceFields
@@ -1041,6 +1054,7 @@ Case TickTypeHighPrice
 Case TickTypeLowPrice
     LowText = lPriceText
 Case TickTypeTrade
+    mTradePrice = ev.Tick.Price
     LastText = lPriceText
     LastSizeText = ev.Tick.Size
     setPriceFields
@@ -1323,7 +1337,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
-
 End Sub
 
 Private Sub PriceText_Validate( _
@@ -1602,8 +1615,42 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let MaxDiscretionaryAmountTicks(ByVal Value As Long)
+Const ProcName As String = "MaxDiscretionaryAmountTicks"
+On Error GoTo Err
+
+AssertArgument Value >= 0, "MaxDiscretionaryAmountTicks"
+mMaxDiscretionaryAmountTicks = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get MaxDiscretionaryAmountTicks() As Long
+MaxDiscretionaryAmountTicks = mMaxDiscretionaryAmountTicks
+End Property
+
 Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
+End Property
+
+Public Property Let PriceToleranceTicks(ByVal Value As Long)
+Const ProcName As String = "PriceToleranceTicks"
+On Error GoTo Err
+
+AssertArgument Value >= 0, "PriceToleranceTicks"
+mPriceToleranceTicks = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get PriceToleranceTicks() As Long
+PriceToleranceTicks = mPriceToleranceTicks
 End Property
 
 Public Property Let Theme(ByVal Value As ITheme)
@@ -2288,12 +2335,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isValidPrice( _
-                ByVal priceString As String) As Boolean
+                ByVal priceString As String, ByVal pBasePrice As Double) As Boolean
 Const ProcName As String = "isValidPrice"
 On Error GoTo Err
 
-Dim Price As Double
-isValidPrice = priceFromString(priceString, Price)
+Dim lPrice As Double
+If Not priceFromString(priceString, lPrice) Then Exit Function
+
+If pBasePrice = 0# Then
+    isValidPrice = True
+Else
+    isValidPrice = Int(Abs(lPrice - pBasePrice) / mContract.TickSize) <= mPriceToleranceTicks
+End If
 
 Exit Function
 
@@ -2306,11 +2359,11 @@ Private Function isValidOrder( _
 Const ProcName As String = "isValidOrder"
 On Error GoTo Err
 
-If Not mInvalidControls(index) Is Nothing Then
+If Not mInvalidTexts(index) Is Nothing Then
     If mTheme Is Nothing Then
-        mInvalidControls(index).BackColor = vbButtonFace
+        mInvalidTexts(index).BackColor = vbButtonFace
     Else
-        mInvalidControls(index).BackColor = mTheme.DisabledBackColor
+        gApplyThemeToControl mTheme, mInvalidTexts(index)
     End If
 End If
 
@@ -2321,23 +2374,23 @@ End If
 
 Select Case index
 Case BracketEntryOrder
-    If Not IsInteger(QuantityText(index), 0) Then setInvalidControl QuantityText(index), index: Exit Function
-    If QuantityText(index) = 0 And mBracketOrder Is Nothing Then setInvalidControl QuantityText(index), index: Exit Function
+    If Not IsInteger(QuantityText(index), 0) Then setInvalidText QuantityText(index), index: Exit Function
+    If QuantityText(index) = 0 And mBracketOrder Is Nothing Then setInvalidText QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
     Case BracketEntryTypeMarket, BracketEntryTypeMarketOnOpen, BracketEntryTypeMarketOnClose
         ' other field values don't matter
     Case BracketEntryTypeMarketIfTouched, BracketEntryTypeStop
-        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index), mTradePrice) Then setInvalidText StopPriceText(index), index: Exit Function
     Case BracketEntryTypeMarketToLimit, BracketEntryTypeLimit, BracketEntryTypeLimitOnOpen, BracketEntryTypeLimitOnClose
-        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index), mTradePrice) Then setInvalidText PriceText(index), index: Exit Function
     Case BracketEntryTypeBid, BracketEntryTypeAsk, BracketEntryTypeLast
         If OffsetText(index) <> "" Then
-            If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
+            If Not IsInteger(OffsetText(index), -mPriceToleranceTicks, mPriceToleranceTicks) Then setInvalidText OffsetText(index), index: Exit Function
         End If
     Case BracketEntryTypeLimitIfTouched, BracketEntryTypeStopLimit
-        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index), mTradePrice) Then setInvalidText StopPriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index), mTradePrice) Then setInvalidText PriceText(index), index: Exit Function
     End Select
 Case BracketStopOrder
     If comboItemData(TypeCombo(index)) = BracketStopLossTypeNone Then
@@ -2345,17 +2398,17 @@ Case BracketStopOrder
         Exit Function
     End If
     
-    If Not IsInteger(QuantityText(index), 1) Then setInvalidControl QuantityText(index), index: Exit Function
+    If Not IsInteger(QuantityText(index), 1) Then setInvalidText QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
     Case BracketStopLossTypeStop
-        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index), mTradePrice) Then setInvalidText StopPriceText(index), index: Exit Function
     Case BracketStopLossTypeStopLimit
-        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index), mTradePrice) Then setInvalidText StopPriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index), mTradePrice) Then setInvalidText PriceText(index), index: Exit Function
     Case BracketStopLossTypeBid, BracketStopLossTypeAsk, BracketStopLossTypeLast, BracketStopLossTypeAuto
         If OffsetText(index) <> "" Then
-            If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
+            If Not IsInteger(OffsetText(index), -mPriceToleranceTicks, mPriceToleranceTicks) Then setInvalidText OffsetText(index), index: Exit Function
         End If
     End Select
 Case BracketTargetOrder
@@ -2364,33 +2417,36 @@ Case BracketTargetOrder
         Exit Function
     End If
     
-    If Not IsInteger(QuantityText(index), 1) Then setInvalidControl QuantityText(index), index: Exit Function
+    If Not IsInteger(QuantityText(index), 1) Then setInvalidText QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
     Case BracketTargetTypeLimit
-        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index), mTradePrice) Then setInvalidText PriceText(index), index: Exit Function
     Case BracketTargetTypeLimitIfTouched
-        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index), mTradePrice) Then setInvalidText StopPriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index), mTradePrice) Then setInvalidText PriceText(index), index: Exit Function
     Case BracketTargetTypeMarketIfTouched
-        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index), mTradePrice) Then setInvalidText StopPriceText(index), index: Exit Function
     Case BracketTargetTypeBid, BracketTargetTypeAsk, BracketTargetTypeLast, BracketTargetTypeAuto
         If OffsetText(index) <> "" Then
-            If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
+            If Not IsInteger(OffsetText(index), -mPriceToleranceTicks, mPriceToleranceTicks) Then setInvalidText OffsetText(index), index: Exit Function
         End If
     End Select
 End Select
 
 If DisplaySizeText(index) <> "" Then
-    If Not IsInteger(DisplaySizeText(index), 1) Then setInvalidControl DisplaySizeText(index), index: Exit Function
+    If Not IsInteger(DisplaySizeText(index), 1) Then setInvalidText DisplaySizeText(index), index: Exit Function
 End If
 
 If MinQuantityText(index) <> "" Then
-    If Not IsInteger(MinQuantityText(index), 1) Then setInvalidControl MinQuantityText(index), index: Exit Function
+    If Not IsInteger(MinQuantityText(index), 1) Then setInvalidText MinQuantityText(index), index: Exit Function
 End If
 
 If DiscrAmountText(index) <> "" Then
-    If Not isValidPrice(DiscrAmountText(index)) Then setInvalidControl DiscrAmountText(index), index: Exit Function
+    If Not isValidPrice(DiscrAmountText(index), 0#) Then setInvalidText DiscrAmountText(index), index: Exit Function
+    Dim lPrice As Double
+    priceFromString DiscrAmountText(index), lPrice
+    If Int(Abs(lPrice) / mContract.TickSize) > mMaxDiscretionaryAmountTicks Then setInvalidText DiscrAmountText(index), index: Exit Function
 End If
 
 isValidOrder = True
@@ -2562,6 +2618,9 @@ Set mContract = gGetContractFromContractFuture(mActiveOrderContext.ContractFutur
 
 Set mDataSource = mActiveOrderContext.DataSource
 If Not mDataSource Is Nothing Then
+    mAskPrice = mDataSource.CurrentTick(TickTypeAsk).Price
+    mBidPrice = mDataSource.CurrentTick(TickTypeBid).Price
+    mTradePrice = mDataSource.CurrentTick(TickTypeTrade).Price
     mDataSource.AddGenericTickListener Me
     mDataSource.AddStateChangeListener Me
 End If
@@ -2590,15 +2649,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setInvalidControl( _
-                ByVal pControl As Control, _
+Private Sub setInvalidText( _
+                ByVal pText As TextBox, _
                 ByVal index As Long)
-Const ProcName As String = "setInvalidControl"
+Const ProcName As String = "setInvalidText"
 On Error GoTo Err
 
-Set mInvalidControls(index) = pControl
+Set mInvalidTexts(index) = pText
 If BracketTabStrip.Visible Then Set BracketTabStrip.SelectedItem = BracketTabStrip.Tabs(index + 1)
-pControl.BackColor = ErroredFieldColor
+If Not mTheme Is Nothing Then
+    If Not mTheme.AlertFont Is Nothing Then Set pText.Font = mTheme.AlertFont
+    pText.ForeColor = mTheme.AlertForeColor
+Else
+    pText.BackColor = ErroredFieldColor
+End If
 
 Exit Sub
 
@@ -2869,22 +2933,22 @@ Select Case index
 Case BracketIndexes.BracketEntryOrder
     Select Case comboItemData(TypeCombo(index))
     Case BracketEntryTypeBid
-        lBasePrice = mDataSource.CurrentTick(TickTypeBid).Price
+        lBasePrice = mBidPrice
     Case BracketEntryTypeAsk
-        lBasePrice = mDataSource.CurrentTick(TickTypeAsk).Price
+        lBasePrice = mAskPrice
     Case BracketEntryTypeLast
-        lBasePrice = mDataSource.CurrentTick(TickTypeTrade).Price
+        lBasePrice = mTradePrice
     Case Else
         Exit Sub
     End Select
 Case BracketIndexes.BracketStopOrder
     Select Case comboItemData(TypeCombo(index))
     Case BracketStopLossTypeBid
-        lBasePrice = mDataSource.CurrentTick(TickTypeBid).Price
+        lBasePrice = mBidPrice
     Case BracketStopLossTypeAsk
-        lBasePrice = mDataSource.CurrentTick(TickTypeAsk).Price
+        lBasePrice = mAskPrice
     Case BracketStopLossTypeLast
-        lBasePrice = mDataSource.CurrentTick(TickTypeTrade).Price
+        lBasePrice = mTradePrice
     Case BracketStopLossTypeAuto
         lBasePrice = 0
     Case Else
@@ -2893,11 +2957,11 @@ Case BracketIndexes.BracketStopOrder
 Case BracketIndexes.BracketTargetOrder
     Select Case comboItemData(TypeCombo(index))
     Case BracketTargetTypeBid
-        lBasePrice = mDataSource.CurrentTick(TickTypeBid).Price
+        lBasePrice = mBidPrice
     Case BracketTargetTypeAsk
-        lBasePrice = mDataSource.CurrentTick(TickTypeAsk).Price
+        lBasePrice = mAskPrice
     Case BracketTargetTypeLast
-        lBasePrice = mDataSource.CurrentTick(TickTypeTrade).Price
+        lBasePrice = mTradePrice
     Case BracketTargetTypeAuto
         lBasePrice = 0
     Case Else
