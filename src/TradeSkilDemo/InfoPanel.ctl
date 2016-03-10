@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#307.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.1#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl InfoPanel 
    Appearance      =   0  'Flat
    BackColor       =   &H00CDF3FF&
@@ -1269,6 +1269,7 @@ End If
 Exit Sub
 
 Err:
+If Err.Number = 401 Then Exit Sub ' Can't show non-modal form when modal form is displayed
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

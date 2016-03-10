@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#307.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.1#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fMarketDepth 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "Market Depth"
@@ -146,12 +146,13 @@ Private Sub IErrorListener_Notify(ev As ErrorEventData)
 Const ProcName As String = "IErrorListener_Notify"
 On Error GoTo Err
 
-gModelessMsgBox "Market depth is not available: " & ev.ErrorMessage, MsgBoxExclamation, mTheme, "Attention"
 Unload Me
+gModelessMsgBox "Market depth is not available: " & ev.ErrorMessage, MsgBoxExclamation, mTheme, "Attention"
 
 Exit Sub
 
 Err:
+If Err.Number = 401 Then Exit Sub ' Can't show non-modal form when modal form is displayed
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

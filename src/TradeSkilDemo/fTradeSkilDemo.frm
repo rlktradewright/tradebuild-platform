@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.1#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
@@ -632,6 +632,7 @@ End If
 Exit Sub
 
 Err:
+If Err.Number = 401 Then Exit Sub ' Can't show non-modal form when modal form is displayed
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
@@ -859,6 +860,8 @@ Private Sub mTradeBuildAPI_Notification( _
 Const ProcName As String = "mTradeBuildAPI_Notification"
 On Error GoTo Err
 
+Static sCantConnectNotified As Boolean
+
 Select Case ev.EventCode
 Case ApiNotifyCodes.ApiNotifyServiceProviderError
     Dim spError As ServiceProviderError
@@ -868,7 +871,12 @@ Case ApiNotifyCodes.ApiNotifyServiceProviderError
                         ": code " & spError.ErrorCode & _
                         ": " & spError.Message
 Case ApiNotifyCodes.ApiNotifyCantConnect
-    ModelessMsgBox ev.EventMessage, MsgBoxCritical, "Can't connect", Me, mTheme
+    If Not sCantConnectNotified Then
+        gModelessMsgBox ev.EventMessage, MsgBoxCritical, mTheme, "Can't connect"
+        sCantConnectNotified = True
+    End If
+Case ApiNotifyCodes.ApiNotifyConnected
+    sCantConnectNotified = False
 Case Else
     LogMessage "Notification: code=" & ev.EventCode & "; source=" & TypeName(ev.Source) & ": " & _
                 ev.EventMessage & vbCrLf
@@ -877,6 +885,7 @@ End Select
 Exit Sub
 
 Err:
+If Err.Number = 401 Then Exit Sub ' Can't show non-modal form when modal form is displayed
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
