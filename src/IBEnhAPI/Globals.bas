@@ -416,6 +416,34 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Sub gRequestExecutions(ByVal pTwsAPI As TwsAPI, ByVal pClientId As Long)
+Const ProcName As String = "gRequestExecutions"
+On Error GoTo Err
+
+Dim lExecFilter As TwsExecutionFilter
+Set lExecFilter = New TwsExecutionFilter
+lExecFilter.ClientId = pClientId
+pTwsAPI.RequestExecutions 1, lExecFilter
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gRequestOpenOrders(ByVal pTwsAPI As TwsAPI)
+Const ProcName As String = "gRequestOpenOrders"
+On Error GoTo Err
+
+pTwsAPI.RequestOpenOrders
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
 If IsObject(pSource) Then
     Set pTarget = pSource

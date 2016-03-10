@@ -312,7 +312,11 @@ Case ApiConnNotConnected
 Case ApiConnConnecting
 
 Case ApiConnConnected
-    If Not mOrderRecoveryListener Is Nothing Then doStartOrderRecovery
+    If Not mOrderRecoveryListener Is Nothing Then
+        doStartOrderRecovery
+    Else
+        gRequestExecutions mTwsAPI, mClientId
+    End If
 Case ApiConnFailed
 
 End Select
@@ -450,12 +454,9 @@ Private Sub doStartOrderRecovery()
 Const ProcName As String = "doStartOrderRecovery"
 On Error GoTo Err
 
-mTwsAPI.RequestOpenOrders
+gRequestOpenOrders mTwsAPI
 
-Dim lExecFilter As New TwsExecutionFilter
-lExecFilter.Time = mStartOrderRecoveryFrom
-lExecFilter.ClientId = mClientId
-mTwsAPI.RequestExecutions OrderRecoveryExecutionsRequestId, lExecFilter
+gRequestExecutions mTwsAPI, mClientId
 
 Exit Sub
 

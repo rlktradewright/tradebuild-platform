@@ -150,14 +150,11 @@ If pDataLost Then
     End If
 End If
 
-mTwsAPI.RequestOpenOrders
+gRequestOpenOrders mTwsAPI
 
 ' Now make sure we're aware of any executions that occurred during
 ' the disconnection
-Dim lExecFilter As TwsExecutionFilter
-Set lExecFilter = New TwsExecutionFilter
-lExecFilter.ClientId = mClientId
-mTwsAPI.RequestExecutions 1, lExecFilter
+gRequestExecutions mTwsAPI, mClientId
 
 Static sInit As Boolean
 Static sCurrentListeners() As Object
