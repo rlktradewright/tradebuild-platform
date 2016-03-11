@@ -2,6 +2,7 @@ VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.1#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
+   BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
    ClientHeight    =   9960
    ClientLeft      =   225
@@ -9,6 +10,8 @@ Begin VB.Form fTradeSkilDemo
    ClientWidth     =   16665
    Icon            =   "fTradeSkilDemo.frx":0000
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
    ScaleHeight     =   9960
    ScaleWidth      =   16665
    Begin TradeSkilDemo27.InfoPanel InfoPanel 
@@ -207,6 +210,8 @@ Attribute mInfoPanelForm.VB_VarHelpID = -1
 
 Private mTheme                                      As ITheme
 
+Private mFinishing                                  As Boolean
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -238,44 +243,7 @@ Private Sub Form_QueryUnload( _
 Const ProcName As String = "Form_QueryUnload"
 On Error GoTo Err
 
-updateInstanceSettings
-
-LogMessage "Hiding forms"
-Dim f As Form
-For Each f In Forms
-    If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then f.Hide
-Next
-Me.Hide
-
-LogMessage "Shutting down clock"
-mClockDisplay.Finish
-
-LogMessage "Finishing Features Panel"
-FeaturesPanel.Finish
-If Not mFeaturesPanelForm Is Nothing Then mFeaturesPanelForm.Finish
-
-LogMessage "Finishing Info Panel"
-InfoPanel.Finish
-If Not mInfoPanelForm Is Nothing Then mInfoPanelForm.Finish
-
-Shutdown
-
-LogMessage "Closing charts and market depth forms"
-closeChartsAndMarketDepthForms
-
-LogMessage "Closing config editor form"
-gUnloadConfigEditor
-
-LogMessage "Closing other forms"
-For Each f In Forms
-    If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then
-        LogMessage "Closing form: caption=" & f.caption & "; type=" & TypeName(f)
-        Unload f
-    End If
-Next
-
-LogMessage "Stopping tickers"
-If Not mTickers Is Nothing Then mTickers.Finish
+If UnloadMode <> vbFormCode Then mFinishing = True
 
 Exit Sub
 
@@ -315,13 +283,62 @@ Private Sub Form_Unload(Cancel As Integer)
 Const ProcName As String = "Form_Unload"
 On Error GoTo Err
 
+updateInstanceSettings
+
+LogMessage "Hiding forms"
+
+mChartForms.HideCharts
+mChartForms.HideHistoricalCharts
+
+Dim f As Form
+For Each f In Forms
+    If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then f.Hide
+Next
+Me.Hide
+
+LogMessage "Shutting down clock"
+mClockDisplay.Finish
+
+LogMessage "Finishing Features Panel"
+FeaturesPanel.Finish
+If Not mFeaturesPanelForm Is Nothing Then mFeaturesPanelForm.Finish
+
+LogMessage "Finishing Info Panel"
+InfoPanel.Finish
+If Not mInfoPanelForm Is Nothing Then mInfoPanelForm.Finish
+
+Shutdown
+
+LogMessage "Closing charts and market depth forms"
+closeChartsAndMarketDepthForms
+
+LogMessage "Closing config editor form"
+gUnloadConfigEditor
+
+LogMessage "Closing other forms"
+For Each f In Forms
+    If Not TypeOf f Is fTradeSkilDemo And Not TypeOf f Is fSplash Then
+        LogMessage "Closing form: caption=" & f.caption & "; type=" & TypeName(f)
+        Unload f
+    End If
+Next
+
+LogMessage "Stopping tickers"
+If Not mTickers Is Nothing Then mTickers.Finish
+
 LogMessage "Unloading main form"
+
+If mFinishing Then gSetFinished
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
+
+'================================================================================
+' IStateChangeListener Interface Members
+'================================================================================
 
 Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "IStateChangeListener_Change"
@@ -1174,7 +1191,7 @@ ApplyTheme lTheme
 Me.caption = gAppTitle & _
             " - " & mAppInstanceConfig.InstanceQualifier
 
-Me.Show vbModeless
+Me.Show vbModeless, gSplashScreen
 
 LogMessage "Loading configuration: showing charts"
 mChartForms.ShowCharts gMainForm
@@ -1191,7 +1208,8 @@ If Not mInfoPanelHidden Then showInfoPanel
 
 LogMessage "Loaded configuration: " & mAppInstanceConfig.InstanceQualifier
 
-gUnloadSplashScreen
+Me.SetFocus
+gSplashScreen.Hide
 
 Exit Sub
 

@@ -121,6 +121,8 @@ Private mConfigEditor                               As fConfigEditor
 
 Private mSplash                                     As fSplash
 
+Private mFinished                                   As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -160,6 +162,10 @@ End Property
 
 Public Property Get gMainForm() As fTradeSkilDemo
 Set gMainForm = mMainForm
+End Property
+
+Public Property Get gSplashScreen() As fSplash
+Set gSplashScreen = mSplash
 End Property
 
 '@================================================================================
@@ -264,13 +270,12 @@ Public Function gGetSplashScreen() As Form
 Const ProcName As String = "gGetSplashScreen"
 On Error GoTo Err
 
-If mSplash Is Nothing Then
-    Set mSplash = New fSplash
-    mSplash.Show vbModeless
-    mSplash.Refresh
-    SetWindowLong mSplash.hWnd, GWL_EXSTYLE, GetWindowLong(mSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
-    SetWindowPos mSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
-End If
+If mSplash Is Nothing Then Set mSplash = New fSplash
+mSplash.Show vbModeless
+mSplash.Initialise
+mSplash.Refresh
+SetWindowLong mSplash.hWnd, GWL_EXSTYLE, GetWindowLong(mSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
+SetWindowPos mSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
 
 Set gGetSplashScreen = mSplash
 
@@ -409,6 +414,10 @@ gPermittedServiceProviderRoles = ServiceProviderRoles.SPRoleRealtimeData Or _
                                 ServiceProviderRoles.SPRoleTickfileInput
 End Property
 
+Public Sub gSetFinished()
+mFinished = True
+End Sub
+
 Public Function gShowConfigEditor( _
                 ByVal pConfigStore As ConfigurationStore, _
                 ByVal pCurrAppInstanceConfig As ConfigurationSection, _
@@ -461,6 +470,7 @@ Const ProcName As String = "gUnloadSplashScreen"
 On Error GoTo Err
 
 If mSplash Is Nothing Then Exit Sub
+LogMessage "Unloading Splash Scren"
 Unload mSplash
 Set mSplash = Nothing
 
@@ -521,10 +531,11 @@ If Not gLoadMainForm(lAppInstanceConfig) Then
     Exit Sub
 End If
 
-Do While Forms.Count > 0
+Do While Forms.Count > 0 And Not mFinished
     Wait 50
 Loop
 
+gUnloadSplashScreen
 gFinishConfigChangeMonitoring
 
 LogMessage "Application exiting"
