@@ -26,9 +26,9 @@ Begin VB.Form fTradeSkilDemo
       BorderStyle     =   0  'None
       Height          =   240
       Left            =   16320
-      MouseIcon       =   "fTradeSkilDemo.frx":1042
+      MouseIcon       =   "fTradeSkilDemo.frx":3307A
       MousePointer    =   99  'Custom
-      Picture         =   "fTradeSkilDemo.frx":1194
+      Picture         =   "fTradeSkilDemo.frx":331CC
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   0
@@ -41,9 +41,9 @@ Begin VB.Form fTradeSkilDemo
       BorderStyle     =   0  'None
       Height          =   240
       Left            =   0
-      MouseIcon       =   "fTradeSkilDemo.frx":171E
+      MouseIcon       =   "fTradeSkilDemo.frx":33756
       MousePointer    =   99  'Custom
-      Picture         =   "fTradeSkilDemo.frx":1870
+      Picture         =   "fTradeSkilDemo.frx":338A8
       ScaleHeight     =   240
       ScaleWidth      =   240
       TabIndex        =   3
