@@ -15,6 +15,12 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_05968B4C76B54E149340814CE49BF0F7"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_0FDDD5D214234363812845A19FD40D6E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -159,6 +165,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_DCA6F3B53A494A7C8532FE3CBFBAE258"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_E19F4235C2FC4E75ADD8B4FC642D50DF"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -284,6 +296,26 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_05968B4C76B54E149340814CE49BF0F7"
+            {
+            "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.ExternalComponents\\msstdfmt.dll"
+            "TargetName" = "8:msstdfmt.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_549B8B0751884DF09AEBCE62F76ADB5D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:4"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0FDDD5D214234363812845A19FD40D6E"
             {
             "SourcePath" = "8:..\\..\\..\\Bin\\uccd27.exe"
@@ -724,6 +756,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DCA6F3B53A494A7C8532FE3CBFBAE258"
+            {
+            "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.ExternalComponents\\dbadapt.dll"
+            "TargetName" = "8:dbadapt.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_549B8B0751884DF09AEBCE62F76ADB5D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E19F4235C2FC4E75ADD8B4FC642D50DF"
             {
             "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.ExternalComponents\\TabCtl32.Ocx"
@@ -946,8 +998,8 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{BD2414F8-88C3-4C6E-8D81-2F2A5D94C2F4}"
-        "PackageCode" = "8:{1D03D4A2-B9D1-4CCD-A716-5F6110E17810}"
+        "ProductCode" = "8:{F97B1B2E-D08A-4ADD-B3CE-A07B96525E1A}"
+        "PackageCode" = "8:{7974EEED-6A0F-44B3-A409-8B854AB3323E}"
         "UpgradeCode" = "8:{FC02A17D-3EC9-48CE-8C96-AA7172A9ABFE}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
