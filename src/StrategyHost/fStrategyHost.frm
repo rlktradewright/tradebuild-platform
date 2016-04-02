@@ -130,35 +130,35 @@ Begin VB.Form fStrategyHost
       TabCaption(3)   =   "Results"
       TabPicture(3)   =   "fStrategyHost.frx":00C4
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "TheTime"
-      Tab(3).Control(1)=   "Label14"
-      Tab(3).Control(2)=   "Position"
-      Tab(3).Control(3)=   "MaxProfit"
-      Tab(3).Control(4)=   "Label5"
-      Tab(3).Control(5)=   "Label12"
-      Tab(3).Control(6)=   "Drawdown"
-      Tab(3).Control(7)=   "Profit"
-      Tab(3).Control(8)=   "Label4"
-      Tab(3).Control(9)=   "Label9"
-      Tab(3).Control(10)=   "Label10"
-      Tab(3).Control(11)=   "Label8"
-      Tab(3).Control(12)=   "Label1"
-      Tab(3).Control(13)=   "EventsPlayedLabel"
+      Tab(3).Control(0)=   "MoreButton"
+      Tab(3).Control(1)=   "Label11"
+      Tab(3).Control(2)=   "VolumeLabel"
+      Tab(3).Control(3)=   "BidSizeLabel"
+      Tab(3).Control(4)=   "BidLabel"
+      Tab(3).Control(5)=   "TradeSizeLabel"
+      Tab(3).Control(6)=   "TradeLabel"
+      Tab(3).Control(7)=   "AskSizeLabel"
+      Tab(3).Control(8)=   "AskLabel"
+      Tab(3).Control(9)=   "Label7"
+      Tab(3).Control(10)=   "MicrosecsPerEventLabel"
+      Tab(3).Control(11)=   "EventsPerSecondLabel"
+      Tab(3).Control(12)=   "Label3"
+      Tab(3).Control(13)=   "PercentCompleteLabel"
       Tab(3).Control(14)=   "Label2"
-      Tab(3).Control(15)=   "PercentCompleteLabel"
-      Tab(3).Control(16)=   "Label3"
-      Tab(3).Control(17)=   "EventsPerSecondLabel"
-      Tab(3).Control(18)=   "MicrosecsPerEventLabel"
-      Tab(3).Control(19)=   "Label7"
-      Tab(3).Control(20)=   "AskLabel"
-      Tab(3).Control(21)=   "AskSizeLabel"
-      Tab(3).Control(22)=   "TradeLabel"
-      Tab(3).Control(23)=   "TradeSizeLabel"
-      Tab(3).Control(24)=   "BidLabel"
-      Tab(3).Control(25)=   "BidSizeLabel"
-      Tab(3).Control(26)=   "VolumeLabel"
-      Tab(3).Control(27)=   "Label11"
-      Tab(3).Control(28)=   "MoreButton"
+      Tab(3).Control(15)=   "EventsPlayedLabel"
+      Tab(3).Control(16)=   "Label1"
+      Tab(3).Control(17)=   "Label8"
+      Tab(3).Control(18)=   "Label10"
+      Tab(3).Control(19)=   "Label9"
+      Tab(3).Control(20)=   "Label4"
+      Tab(3).Control(21)=   "Profit"
+      Tab(3).Control(22)=   "Drawdown"
+      Tab(3).Control(23)=   "Label12"
+      Tab(3).Control(24)=   "Label5"
+      Tab(3).Control(25)=   "MaxProfit"
+      Tab(3).Control(26)=   "Position"
+      Tab(3).Control(27)=   "Label14"
+      Tab(3).Control(28)=   "TheTime"
       Tab(3).ControlCount=   29
       Begin VB.PictureBox LogPicture 
          BorderStyle     =   0  'None
@@ -1952,7 +1952,7 @@ Set mPricePeriods = Nothing
 If TickfileOrganiser1.TickfileCount <> 0 Then
     mController.StartTickfileReplay TickfileOrganiser1.TickFileSpecifiers
 Else
-    mController.StartLiveProcessing SymbolText.Text
+    mController.StartLiveProcessing mModel.Symbol
 End If
 
 Exit Sub
