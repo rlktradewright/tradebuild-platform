@@ -370,12 +370,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub PrepareSymbol( _
-                ByVal pSymbol As String)
+                ByVal pSymbol As IContractSpecifier)
 Const ProcName As String = "PrepareSymbol"
 On Error GoTo Err
 
 Set mTickers = getStrategyHost.RealtimeTickers
-mFutureWaiter.Add FetchContract(CreateContractSpecifier(pSymbol), mContractStorePrimary, mContractStoreSecondary)
+mFutureWaiter.Add FetchContract(pSymbol, mContractStorePrimary, mContractStoreSecondary)
 
 Exit Sub
 

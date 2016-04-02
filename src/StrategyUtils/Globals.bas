@@ -104,6 +104,22 @@ Set gCreateResourceIdentifier = New ResourceIdentifier
 gCreateResourceIdentifier.Initialise pResource
 End Function
 
+Public Function gCreateStrategyRunner( _
+                ByVal pStrategyHost As IStrategyHost) As StrategyRunner
+Const ProcName As String = "gCreateStrategyRunner"
+On Error GoTo Err
+
+AssertArgument Not pStrategyHost Is Nothing, "pStrategyHost is Nothing"
+
+Set gCreateStrategyRunner = New StrategyRunner
+gCreateStrategyRunner.Initialise pStrategyHost
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _

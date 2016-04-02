@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StrategyUtils"
-Attribute VB_GlobalNameSpace = True
-Attribute VB_Creatable = True
+Attribute VB_Name = "IStrategyHostController"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -30,52 +30,6 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum EntryOrderTypes
-    EntryOrderTypeNone = 0
-    EntryOrderTypeMarket = 1
-    EntryOrderTypeMarketOnOpen = &H100000
-    EntryOrderTypeMarketOnClose = 2
-    EntryOrderTypeMarketIfTouched = &H20000
-    EntryOrderTypeMarketToLimit = &H400&
-    EntryOrderTypeBid = &H1000000
-    EntryOrderTypeAsk = &H2000000
-    EntryOrderTypeLast = &H4000000
-    EntryOrderTypeLimit = 4
-    EntryOrderTypeLimitOnOpen = &H200000
-    EntryOrderTypeLimitOnClose = 8
-    EntryOrderTypeLimitIfTouched = &H10000
-    EntryOrderTypeStop = &H20&
-    EntryOrderTypeStopLimit = &H40&
-End Enum
-
-Public Enum OrderTIFs
-    OrderTIFNone = 0
-    OrderTIFDay = 1
-    OrderTIFGoodTillCancelled = 2
-    OrderTIFImmediateOrCancel = 4
-End Enum
-
-Public Enum StopLossOrderTypes
-    StopLossOrderTypeNone = 0
-    StopLossOrderTypeStop = &H20&
-    StopLossOrderTypeStopLimit = &H40&
-    StopLossOrderTypeBid = &H1000000
-    StopLossOrderTypeAsk = &H2000000
-    StopLossOrderTypeLast = &H4000000
-    StopLossOrderTypeAuto = &H8000000
-End Enum
-
-Public Enum TargetOrderTypes
-    TargetOrderTypeNone = 0
-    TargetOrderTypeLimit = 4
-    TargetOrderTypeLimitIfTouched = &H10000
-    TargetOrderTypeMarketIfTouched = &H20000
-    TargetOrderTypeBid = &H1000000
-    TargetOrderTypeAsk = &H2000000
-    TargetOrderTypeLast = &H4000000
-    TargetOrderTypeAuto = &H8000000
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -84,7 +38,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "StrategyUtils"
+Private Const ModuleName                            As String = "IStrategyHostController"
 
 '@================================================================================
 ' Member variables
@@ -110,21 +64,63 @@ Private Const ModuleName                            As String = "StrategyUtils"
 ' Methods
 '@================================================================================
 
-Public Function CreateStrategyRunner( _
-                ByVal pStrategyHost As IStrategyHost) As StrategyRunner
-Const ProcName As String = "CreateStrategyRunner"
-On Error GoTo Err
+Public Sub AddTimeframe( _
+                ByVal pTimeframe As Timeframe)
+End Sub
 
-Set CreateStrategyRunner = gCreateStrategyRunner(pStrategyHost)
+Public Sub ChartStudyValue(ByVal pStudy As IStudy, _
+                ByVal pValueName As String, _
+                ByVal pTimeframe As Timeframe)
+End Sub
 
-Exit Function
+Public Sub ContractInvalid(ByVal pMessage As String)
+End Sub
 
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Public Sub Finish()
+End Sub
+
+Public Sub Initialise( _
+                ByVal pStrategyRunner As StrategyRunner, _
+                ByVal pModel As IStrategyHostModel, _
+                ByVal pView As IStrategyHostView)
+End Sub
+
+Public Function GetDefaultParameters( _
+                ByVal pStrategy As IStrategy, _
+                ByVal pPositionManagementStrategyFactories As Collection) As Parameters
 End Function
+
+Public Sub NotifyBracketOrderProfile(ByRef Value As BracketOrderProfile)
+End Sub
+
+Public Sub NotifyPosition(ByVal pPosition As Long)
+End Sub
+
+Public Sub NotifyReplayEvent(ev As NotificationEventData)
+End Sub
+
+Public Sub NotifyReplayCompleted()
+End Sub
+
+Public Sub NotifyReplayProgress( _
+                ByVal pTickfileTimestamp As Date, _
+                ByVal pEventsPlayed As Long, _
+                ByVal pPercentComplete As Single)
+End Sub
+
+Public Sub NotifyReplayStarted()
+End Sub
+
+Public Sub StartLiveProcessing(ByVal pSymbol As IContractSpecifier)
+End Sub
+
+Public Sub StartTickfileReplay(ByVal pTickFileSpecifiers As TickFileSpecifiers)
+End Sub
+
+Public Sub TickerCreated(ByVal pTicker As Ticker)
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
 

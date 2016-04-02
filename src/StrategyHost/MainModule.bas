@@ -34,11 +34,13 @@ Private Const ModuleName                            As String = "MainModule"
 
 Private mForm                                       As fStrategyHost
 
-Private mStrategyRunner                             As StrategyRunner
-
 Private mFatalErrorHandler                          As FatalErrorHandler
 
-Public gTB                                          As TradeBuildAPI
+Private mTB                                         As TradeBuildAPI
+
+Private mModel                                      As IStrategyHostModel
+
+Private mStrategyHost                               As DefaultStrategyHost
 
 '@================================================================================
 ' Class Event Handlers
@@ -64,10 +66,6 @@ Public Sub Main()
 Const ProcName As String = "Main"
 On Error GoTo Err
 
-InitialiseTWUtilities
-
-Set mFatalErrorHandler = New FatalErrorHandler
-
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(Command)
 
@@ -76,9 +74,8 @@ If lClp.Switch("?") Then
     Exit Sub
 End If
 
-ApplicationGroupName = "TradeWright"
-ApplicationName = "StrategyHost"
-SetupDefaultLogging Command
+init
+
 
 Dim lNoUI As Boolean
 If lClp.Switch("noui") Then lNoUI = True
@@ -95,6 +92,15 @@ If lSymbol = "" And lNoUI Then
     LogMessage "No symbol supplied"
     If Not lNoUI And lRun Then MsgBox "Error - no symbol argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
     Exit Sub
+ElseIf lSymbol <> "" Then
+    Dim lContractSpec As IContractSpecifier
+    Set lContractSpec = parseSymbol(lSymbol)
+    If lContractSpec Is Nothing Then
+        LogMessage "Invalid symbol"
+        If Not lNoUI And lRun Then MsgBox "Error - invalid sumbol string supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+        Exit Sub
+    End If
+    mModel.Symbol = lContractSpec
 End If
 
 Dim lStrategyClassName As String
@@ -104,6 +110,7 @@ If lStrategyClassName = "" And lNoUI Then
     If Not lNoUI And lRun Then MsgBox "Error - no strategy class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
     Exit Sub
 End If
+mModel.StrategyClassName = lStrategyClassName
 
 Dim lStopStrategyFactoryClassName As String
 lStopStrategyFactoryClassName = lClp.Arg(2)
@@ -112,58 +119,18 @@ If lStopStrategyFactoryClassName = "" And lNoUI Then
     If Not lNoUI And lRun Then MsgBox "Error - no stop strategy factory class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
     Exit Sub
 End If
+mModel.StopStrategyFactoryClassName = lStopStrategyFactoryClassName
 
-Dim lPermittedSPRoles As ServiceProviderRoles
-lPermittedSPRoles = SPRoleContractDataPrimary + _
-                    SPRoleHistoricalDataInput + _
-                    SPRoleOrderSubmissionLive + _
-                    SPRoleOrderSubmissionSimulated
+If Not setupServiceProviders(lClp, lLiveTrades, lNoUI) Then Exit Sub
 
-If Not lLiveTrades And Not lNoUI Then lPermittedSPRoles = lPermittedSPRoles + SPRoleTickfileInput
-
-If lClp.Switch("tws") Then lPermittedSPRoles = lPermittedSPRoles + SPRoleRealtimeData
-
-Set gTB = CreateTradeBuildAPI(, lPermittedSPRoles)
-
-If lClp.Switch("tws") Then
-    If Not setupTwsServiceProviders(lClp.switchValue("tws"), lLiveTrades) Then
-        MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
-        Exit Sub
-    End If
-End If
-
-If lClp.Switch("db") Then
-    If Not setupDbServiceProviders(lClp.switchValue("db"), Not (lLiveTrades Or lNoUI)) Then
-        MsgBox "Error setting up database service providers - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
-        Exit Sub
-    End If
-Else
-    MsgBox "/db not supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
-    Exit Sub
-End If
-
-If Not setupSimulateOrderServiceProviders(lLiveTrades) Then
-    MsgBox "Error setting up simulated orders service provider(s) - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
-    Exit Sub
-End If
-
-If Not gTB.StartServiceProviders Then
-    MsgBox "One or more service providers failed to start: see logfile"
-    Exit Sub
-End If
-
-gTB.StudyLibraryManager.AddBuiltInStudyLibrary
-
-Dim lUseMoneyManagement As Boolean
 If lClp.Switch("umm") Or _
     lClp.Switch("UseMoneyManagement") _
 Then
-    lUseMoneyManagement = True
+    mModel.UseMoneyManagement = True
 End If
 
-Dim lResultsPath As String
 If lClp.Switch("ResultsPath") Then
-    lResultsPath = lClp.switchValue("ResultsPath")
+    mModel.ResultsPath = lClp.switchValue("ResultsPath")
 End If
 
 If lNoUI Then
@@ -176,14 +143,11 @@ If lNoUI Then
 Else
     Set mForm = New fStrategyHost
     
-    If lClp.Switch("tws") Then
-        mForm.SymbolText.Enabled = True
-        mForm.SymbolText.Text = lSymbol
-    End If
-    mForm.ResultsPathText = lResultsPath
-    mForm.NoMoneyManagement = IIf(lUseMoneyManagement, 0, 1)
-    mForm.StrategyCombo.Text = lStrategyClassName
-    mForm.StopStrategyFactoryCombo.Text = lStopStrategyFactoryClassName
+    Dim lController As New DefaultStrategyHostCtlr
+    Set mStrategyHost = New DefaultStrategyHost
+    mStrategyHost.Initialise mModel, mForm, lController
+    
+    mForm.Initialise mModel, lController
     
     mForm.Show vbModeless
     
@@ -221,7 +185,7 @@ End Sub
 
 Private Function getUsageString() As String
 getUsageString = _
-            "strategyhost  [symbol]" & vbCrLf & _
+            "strategyhost  [(specifier[;specifier]...)]" & vbCrLf & _
             "              [strategy class name]" & vbCrLf & _
             "              [stop strategy factory class name]" & vbCrLf & _
             "              [/tws:[Server],[Port],[ClientId]" & vbCrLf & _
@@ -231,7 +195,164 @@ getUsageString = _
             "              [/noUI]" & vbCrLf & _
             "              [/resultsPath:path]" & vbCrLf & _
             "              [/run]" & vbCrLf & _
-            "              [/useMoneyManagement  |  /umm]"
+            "              [/useMoneyManagement  |  /umm]" & vbCrLf & _
+            vbCrLf & _
+            " where" & vbCrLf & _
+            vbCrLf
+getUsageString = getUsageString & _
+            "   specifier := [ local[symbol]=<symbol>" & vbCrLf & _
+            "                | symb[ol]=<symbol>" & vbCrLf & _
+            "                | sec[type]=[ STK | FUT | FOP | CASH ]" & vbCrLf & _
+            "                | exch[ange]=<exchangename>" & vbCrLf & _
+            "                | curr[ency]=<currencycode>" & vbCrLf & _
+            "                | exp[iry]=[yyyymm | yyyymmdd]" & vbCrLf & _
+            "                | str[ike]=<price>" & vbCrLf & _
+            "                | right=[ CALL | PUT ]" & vbCrLf & _
+            "                ]"
+End Function
+
+Private Sub init()
+Const ProcName As String = "init"
+On Error GoTo Err
+
+InitialiseTWUtilities
+
+Set mFatalErrorHandler = New FatalErrorHandler
+
+ApplicationGroupName = "TradeWright"
+ApplicationName = "StrategyHost"
+SetupDefaultLogging Command
+
+Set mModel = New DefaultStrategyHostModl
+mModel.LogParameters = True
+mModel.ShowChart = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function parseSymbol(ByVal pSymbol As String) As IContractSpecifier
+Const ProcName As String = "parseSymbol"
+On Error GoTo Err
+
+If Not Left$(pSymbol, 1) = "(" Or Not Right$(pSymbol, 1) = ")" Then Exit Function
+
+pSymbol = Mid$(pSymbol, 2, Len(pSymbol) - 2)
+
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pSymbol, ";")
+
+Dim lLocalSymbol As String
+lLocalSymbol = lClp.switchValue("localsymbol")
+If lLocalSymbol = "" Then lLocalSymbol = lClp.switchValue("local")
+
+Dim lSymbol As String
+lSymbol = lClp.switchValue("symbol")
+If lSymbol = "" Then lSymbol = lClp.switchValue("symb")
+
+Dim lSectype As String
+lSectype = lClp.switchValue("sectype")
+If lSectype = "" Then lSectype = lClp.switchValue("sec")
+
+Dim lExchange As String
+lExchange = lClp.switchValue("exchange")
+If lExchange = "" Then lExchange = lClp.switchValue("exch")
+
+Dim lCurrency As String
+lCurrency = lClp.switchValue("currency")
+If lCurrency = "" Then lCurrency = lClp.switchValue("curr")
+
+Dim lExpiry As String
+lExpiry = lClp.switchValue("expiry")
+If lExpiry = "" Then lExpiry = lClp.switchValue("exp")
+
+Dim lstrike As String
+lstrike = lClp.switchValue("strike")
+If lstrike = "" Then lstrike = lClp.switchValue("str")
+If lstrike = "" Then lstrike = "0.0"
+
+Dim lRight As String
+lRight = lClp.switchValue("right")
+
+Set parseSymbol = CreateContractSpecifier(lLocalSymbol, _
+                                        lSymbol, _
+                                        lExchange, _
+                                        SecTypeFromString(lSectype), _
+                                        lCurrency, _
+                                        lExpiry, _
+                                        CDbl(lstrike), _
+                                        OptionRightFromString(lRight))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function setupServiceProviders( _
+                ByVal pClp As CommandLineParser, _
+                ByVal pLiveTrades As Boolean, _
+                ByVal pNoUI As Boolean) As Boolean
+Const ProcName As String = "setupServiceProviders"
+On Error GoTo Err
+
+Dim lPermittedSPRoles As ServiceProviderRoles
+lPermittedSPRoles = SPRoleContractDataPrimary + _
+                    SPRoleHistoricalDataInput + _
+                    SPRoleOrderSubmissionLive + _
+                    SPRoleOrderSubmissionSimulated
+
+If Not pLiveTrades And Not pNoUI Then lPermittedSPRoles = lPermittedSPRoles + SPRoleTickfileInput
+
+If pClp.Switch("tws") Then lPermittedSPRoles = lPermittedSPRoles + SPRoleRealtimeData
+
+Set mTB = CreateTradeBuildAPI(, lPermittedSPRoles)
+
+If pClp.Switch("tws") Then
+    If Not setupTwsServiceProviders(pClp.switchValue("tws"), pLiveTrades) Then
+        MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
+        Exit Function
+    End If
+End If
+
+If pClp.Switch("db") Then
+    If Not setupDbServiceProviders(pClp.switchValue("db"), Not (pLiveTrades Or pNoUI)) Then
+        MsgBox "Error setting up database service providers - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
+        Exit Function
+    End If
+Else
+    MsgBox "/db not supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+    Exit Function
+End If
+
+If Not setupSimulateOrderServiceProviders(pLiveTrades) Then
+    MsgBox "Error setting up simulated orders service provider(s) - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
+    Exit Function
+End If
+
+If Not mTB.StartServiceProviders Then
+    MsgBox "One or more service providers failed to start: see logfile"
+    Exit Function
+End If
+
+mTB.StudyLibraryManager.AddBuiltInStudyLibrary
+
+mModel.ContractStorePrimary = mTB.ContractStorePrimary
+mModel.ContractStoreSecondary = mTB.ContractStoreSecondary
+mModel.HistoricalDataStoreInput = mTB.HistoricalDataStoreInput
+mModel.OrderSubmitterFactoryLive = mTB.OrderSubmitterFactoryLive
+mModel.OrderSubmitterFactorySimulated = mTB.OrderSubmitterFactorySimulated
+mModel.RealtimeTickers = mTB.Tickers
+mModel.StudyLibraryManager = mTB.StudyLibraryManager
+mModel.TickfileStoreInput = mTB.TickfileStoreInput
+
+setupServiceProviders = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function setupDbServiceProviders( _
@@ -272,7 +393,7 @@ If username <> "" And password = "" Then
 End If
     
 If setupDbServiceProviders Then
-    gTB.ServiceProviders.Add _
+    mTB.ServiceProviders.Add _
                         ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
                         Enabled:=True, _
                         ParamString:="Role=PRIMARY" & _
@@ -284,7 +405,7 @@ If setupDbServiceProviders Then
                                     ";Use Synchronous Reads=True", _
                         Description:="Primary contract data"
 
-    gTB.ServiceProviders.Add _
+    mTB.ServiceProviders.Add _
                         ProgId:="TBInfoBase27.HistDataServiceProvider", _
                         Enabled:=True, _
                         ParamString:="Role=INPUT" & _
@@ -297,7 +418,7 @@ If setupDbServiceProviders Then
                         Description:="Historical data input"
 
     If pAllowTickfiles Then
-        gTB.ServiceProviders.Add _
+        mTB.ServiceProviders.Add _
                             ProgId:="TBInfoBase27.TickfileServiceProvider", _
                             Enabled:=True, _
                             ParamString:="Role=INPUT" & _
@@ -322,7 +443,7 @@ Private Function setupSimulateOrderServiceProviders(ByVal pLiveTrades As Boolean
 On Error GoTo Err
 
 If Not pLiveTrades Then
-    gTB.ServiceProviders.Add _
+    mTB.ServiceProviders.Add _
                         ProgId:="TradeBuild27.OrderSimulatorSP", _
                         Enabled:=True, _
                         Name:="TradeBuild Exchange Simulator for Main Orders", _
@@ -330,7 +451,7 @@ If Not pLiveTrades Then
                         Description:="Simulated order submission for main orders"
 End If
 
-gTB.ServiceProviders.Add _
+mTB.ServiceProviders.Add _
                     ProgId:="TradeBuild27.OrderSimulatorSP", _
                     Enabled:=True, _
                     Name:="TradeBuild Exchange Simulator for Dummy Orders", _
@@ -381,7 +502,7 @@ ElseIf Not IsInteger(ClientId, 0) Then
 End If
     
 If setupTwsServiceProviders Then
-    gTB.ServiceProviders.Add _
+    mTB.ServiceProviders.Add _
                         ProgId:="IBTWSSP27.RealtimeDataServiceProvider", _
                         Enabled:=True, _
                         ParamString:="Role=PRIMARY" & _
@@ -392,7 +513,7 @@ If setupTwsServiceProviders Then
                         Description:="Realtime data"
     
     If pAllowLiveTrades Then
-        gTB.ServiceProviders.Add _
+        mTB.ServiceProviders.Add _
                             ProgId:="IBTWSSP27.OrderSubmissionSrvcProvider", _
                             Enabled:=True, _
                             ParamString:="Server=" & Server & _
