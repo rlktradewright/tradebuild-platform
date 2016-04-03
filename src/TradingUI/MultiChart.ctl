@@ -1463,6 +1463,9 @@ On Error GoTo Err
 
 Dim failpoint As String
 failpoint = "100"
+
+If ChartSelectorToolbar.Buttons.Count = 0 Then Exit Sub
+
 Set ChartSelectorToolbar.ImageList = Nothing
 
 Dim i As Long
