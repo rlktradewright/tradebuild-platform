@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickfileListManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   2805
@@ -53,7 +53,7 @@ Begin VB.UserControl TickfileListManager
          Name            =   "MS Sans Serif"
          Size            =   12
          Charset         =   0
-         Weight          =   400
+         Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
          Strikethrough   =   0   'False
@@ -393,7 +393,17 @@ On Error GoTo Err
 Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
+Dim lFont1 As StdFont
+Set lFont1 = DownButton.Font
+
+Dim lFont2 As StdFont
+Set lFont2 = RemoveButton.Font
+
 gApplyTheme mTheme, UserControl.Controls
+
+Set DownButton.Font = lFont1
+Set RemoveButton.Font = lFont2
+Set UpButton.Font = lFont1
 
 Exit Property
 
