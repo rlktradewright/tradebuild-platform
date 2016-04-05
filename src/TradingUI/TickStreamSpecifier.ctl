@@ -1,15 +1,15 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickStreamSpecifier 
-   ClientHeight    =   4200
+   ClientHeight    =   4365
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6720
-   ScaleHeight     =   4200
+   ScaleHeight     =   4365
    ScaleWidth      =   6720
    Begin VB.Frame Frame2 
       Caption         =   "Contract specification"
-      Height          =   3615
+      Height          =   3735
       Left            =   0
       TabIndex        =   20
       Top             =   0
@@ -18,21 +18,21 @@ Begin VB.UserControl TickStreamSpecifier
          Appearance      =   0  'Flat
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
-         Height          =   3255
+         Height          =   3375
          Left            =   120
-         ScaleHeight     =   3255
+         ScaleHeight     =   3375
          ScaleWidth      =   2535
          TabIndex        =   21
          Top             =   240
          Width           =   2535
          Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
-            Height          =   3690
+            Height          =   3390
             Left            =   0
             TabIndex        =   0
             Top             =   0
             Width           =   2535
             _ExtentX        =   4471
-            _ExtentY        =   5556
+            _ExtentY        =   5980
             ForeColor       =   -2147483640
          End
       End
@@ -42,7 +42,7 @@ Begin VB.UserControl TickStreamSpecifier
       Height          =   735
       Left            =   2880
       TabIndex        =   17
-      Top             =   2880
+      Top             =   3000
       Width           =   3735
       Begin VB.PictureBox DataSourcePicture 
          BorderStyle     =   0  'None
@@ -54,14 +54,13 @@ Begin VB.UserControl TickStreamSpecifier
          Top             =   240
          Width           =   3495
          Begin TWControls40.TWImageCombo FormatCombo 
-            Height          =   270
+            Height          =   330
             Left            =   720
             TabIndex        =   23
             Top             =   0
             Width           =   2775
             _ExtentX        =   4895
-            _ExtentY        =   476
-            Appearance      =   0
+            _ExtentY        =   582
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
                Size            =   8.25
@@ -86,7 +85,7 @@ Begin VB.UserControl TickStreamSpecifier
    End
    Begin VB.Frame Frame3 
       Caption         =   "Dates/Times"
-      Height          =   2775
+      Height          =   2895
       Left            =   2880
       TabIndex        =   9
       Top             =   0
@@ -247,7 +246,7 @@ Begin VB.UserControl TickStreamSpecifier
       Height          =   375
       Left            =   0
       TabIndex        =   22
-      Top             =   3720
+      Top             =   3840
       Width           =   6615
    End
 End
@@ -335,7 +334,7 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_Resize()
-UserControl.Height = 4200
+UserControl.Height = 4365
 UserControl.Width = 6720
 End Sub
 
@@ -347,11 +346,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -612,7 +611,7 @@ If ev.Future.IsFaulted <> 0 Then
 ElseIf ev.Future.IsCancelled <> 0 Then
     ErrorLabel.Caption = "Contracts fetch Cancelled"
 Else
-    Set mContracts = ev.Future.value
+    Set mContracts = ev.Future.Value
     processContracts
 End If
 
@@ -630,11 +629,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor

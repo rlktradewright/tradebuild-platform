@@ -1,11 +1,12 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickfileOrganiser 
    BackStyle       =   0  'Transparent
    ClientHeight    =   2295
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   8400
+   DefaultCancel   =   -1  'True
    ScaleHeight     =   2295
    ScaleWidth      =   8400
    Begin TWControls40.TWButton AddTickstreamsButton 
@@ -130,8 +131,6 @@ Private mTickfileStore                              As ITickfileStore
 Private mPrimaryContractStore                       As IContractStore
 Private mSecondaryContractStore                     As IContractStore
 
-Private mEnabled                                    As Boolean
-
 Private mMinimumHeight                              As Long
 Private mMinimumWidth                               As Long
 
@@ -143,12 +142,52 @@ Private mTickstreamSpecifier                        As fTickStreamSpecifier
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub UserControl_InitProperties()
+Const ProcName As String = "UserControl_InitProperties"
+On Error GoTo Err
+
+Enabled = True
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub UserControl_EnterFocus()
+Const ProcName As String = "UserControl_EnterFocus"
+On Error GoTo Err
+
+If TickfileListManager1.TickfileCount <> 0 Then
+    TickfileListManager1.SetFocus
+Else
+    setFocusOnAddButton
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
 mMinimumHeight = TickfileListManager1.MinimumHeight + 30 + ClearButton.Height
 mMinimumWidth = ClearButton.Width + 105 + AddTickfilesButton.Width + 105 + AddTickstreamsButton.Width + 315
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+Const ProcName As String = "UserControl_ReadProperties"
+On Error GoTo Err
+
+Enabled = PropBag.ReadProperty("Enabled", True)
 
 Exit Sub
 
@@ -179,6 +218,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+Const ProcName As String = "UserControl_WriteProperties"
+On Error GoTo Err
+
+Call PropBag.WriteProperty("Enabled", UserControl.Enabled, True)
+    
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' IThemeable Interface Members
 '@================================================================================
@@ -187,11 +238,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -284,12 +335,12 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Enabled(ByVal value As Boolean)
+Public Property Let Enabled(ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-mEnabled = value
-If mEnabled Then
+UserControl.Enabled = Value
+If Enabled Then
     enableAddButtons
     ClearButton.Enabled = (TickfileListManager1.TickfileCount > 0)
 Else
@@ -297,7 +348,9 @@ Else
     AddTickstreamsButton.Enabled = False
     ClearButton.Enabled = False
 End If
-TickfileListManager1.Enabled = mEnabled
+TickfileListManager1.Enabled = Enabled
+
+PropertyChanged "Enabled"
 
 Exit Property
 
@@ -308,14 +361,14 @@ End Property
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Attribute Enabled.VB_UserMemId = -514
-Enabled = mEnabled
+Enabled = UserControl.Enabled
 End Property
 
-Public Property Let ListIndex(ByVal value As Long)
+Public Property Let ListIndex(ByVal Value As Long)
 Const ProcName As String = "ListIndex"
 On Error GoTo Err
 
-TickfileListManager1.ListIndex = value
+TickfileListManager1.ListIndex = Value
 
 Exit Property
 
@@ -347,11 +400,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor
@@ -438,13 +491,30 @@ Private Sub enableAddButtons()
 Const ProcName As String = "enableAddButtons"
 On Error GoTo Err
 
-If TickfileListManager1.SupportsTickFiles Then AddTickfilesButton.Enabled = True
 If TickfileListManager1.SupportsTickStreams Then AddTickstreamsButton.Enabled = True
+If TickfileListManager1.SupportsTickFiles Then AddTickfilesButton.Enabled = True
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Sub setFocusOnAddButton()
+Const ProcName As String = "setFocusOnAddButton"
+On Error GoTo Err
+
+If TickfileListManager1.SupportsTickStreams Then
+    AddTickstreamsButton.SetFocus
+ElseIf TickfileListManager1.SupportsTickFiles Then
+    AddTickfilesButton.SetFocus
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 
 

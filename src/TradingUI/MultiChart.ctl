@@ -221,6 +221,7 @@ Private mIsRaw                              As Boolean
 Private Sub UserControl_Initialize()
 Set mChangeListeners = New Listeners
 ChartSelectorToolbar.Buttons.Clear
+TBChart(0).HorizontalScrollBarVisible = False
 TBChart(0).Visible = True
 gAdjustToolbarPictureSize "WWWW", ChartSelectorPicture
 End Sub

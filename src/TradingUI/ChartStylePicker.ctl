@@ -9,14 +9,13 @@ Begin VB.UserControl ChartStylePicker
    ScaleHeight     =   345
    ScaleWidth      =   1935
    Begin TWControls40.TWImageCombo Combo1 
-      Height          =   270
+      Height          =   330
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   1935
       _ExtentX        =   3413
-      _ExtentY        =   476
-      Appearance      =   0
+      _ExtentY        =   582
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -83,13 +82,25 @@ Private mTheme                                      As ITheme
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub UserControl_InitProperties()
+Const ProcName As String = "UserControl_InitProperties"
+On Error GoTo Err
+
+Enabled = True
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 Const ProcName As String = "UserControl_ReadProperties"
 On Error GoTo Err
 
 Combo1.BackColor = PropBag.ReadProperty("BackColor", &H80000005)
 Combo1.CausesValidation = PropBag.ReadProperty("CausesValidation", True)
-Combo1.Enabled = PropBag.ReadProperty("Enabled", True)
+Enabled = PropBag.ReadProperty("Enabled", True)
 Set Combo1.Font = PropBag.ReadProperty("Font", Ambient.Font)
 Combo1.ForeColor = PropBag.ReadProperty("ForeColor", &H80000008)
 Combo1.ListWidth = PropBag.ReadProperty("ListWidth", 0)
@@ -121,7 +132,7 @@ On Error GoTo Err
 
 Call PropBag.WriteProperty("BackColor", Combo1.BackColor, &H80000005)
 Call PropBag.WriteProperty("CausesValidation", Combo1.CausesValidation, True)
-Call PropBag.WriteProperty("Enabled", Combo1.Enabled, True)
+Call PropBag.WriteProperty("Enabled", UserControl.Enabled, True)
 Call PropBag.WriteProperty("Font", Combo1.Font, Ambient.Font)
 Call PropBag.WriteProperty("ForeColor", Combo1.ForeColor, &H80000008)
 Call PropBag.WriteProperty("ListWidth", Combo1.ListWidth, 0)

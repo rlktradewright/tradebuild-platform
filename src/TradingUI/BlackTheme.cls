@@ -279,7 +279,7 @@ ITheme_TabstripBackColor = &H303030
 End Property
 
 Private Property Get ITheme_TabstripForeColor() As stdole.OLE_COLOR
-ITheme_TabstripForeColor = &HFFFF&
+ITheme_TabstripForeColor = &HE8A460
 End Property
 
 Private Property Get ITheme_TextBackColor() As stdole.OLE_COLOR

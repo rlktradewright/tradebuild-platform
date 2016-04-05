@@ -148,8 +148,6 @@ Private mSupportsTickStreams                                As Boolean
 
 Private mMinHeight                                          As Long
 
-Private mEnabled                                            As Boolean
-
 Private mTheme                                              As ITheme
 
 Private mScrollSizeNeedsSetting                             As Boolean
@@ -179,6 +177,30 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub UserControl_InitProperties()
+Const ProcName As String = "UserControl_InitProperties"
+On Error GoTo Err
+
+Enabled = True
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+Const ProcName As String = "UserControl_ReadProperties"
+On Error GoTo Err
+
+Enabled = PropBag.ReadProperty("Enabled", True)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
 On Error GoTo Err
@@ -196,6 +218,18 @@ RemoveButton.Top = TickFileList.Height / 2 - RemoveButton.Height / 2
 UpButton.Top = RemoveButton.Top - UpButton.Height - 8 * Screen.TwipsPerPixelY
 DownButton.Top = RemoveButton.Top + RemoveButton.Height + 8 * Screen.TwipsPerPixelY
 
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+Const ProcName As String = "UserControl_WriteProperties"
+On Error GoTo Err
+
+Call PropBag.WriteProperty("Enabled", UserControl.Enabled, True)
+    
 Exit Sub
 
 Err:
@@ -352,11 +386,13 @@ Public Property Let Enabled(ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-mEnabled = Value
-TickFileList.Enabled = mEnabled
+UserControl.Enabled = Value
+TickFileList.Enabled = Enabled
 setUpButton
 setDownButton
 setRemoveButton
+
+PropertyChanged "Enabled"
 
 Exit Property
 
@@ -367,7 +403,7 @@ End Property
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Attribute Enabled.VB_UserMemId = -514
-Enabled = mEnabled
+Enabled = UserControl.Enabled
 End Property
 
 Public Property Get MinimumHeight() As Long
@@ -639,7 +675,7 @@ Dim i As Long
 
 For i = 0 To TickFileList.ListCount - 2
     If TickFileList.Selected(i) And Not TickFileList.Selected(i + 1) Then
-        DownButton.Enabled = mEnabled
+        DownButton.Enabled = Enabled
         Exit Sub
     End If
 Next
@@ -679,7 +715,7 @@ Const ProcName As String = "setRemoveButton"
 On Error GoTo Err
 
 If TickFileList.SelCount <> 0 Then
-    RemoveButton.Enabled = mEnabled
+    RemoveButton.Enabled = Enabled
 Else
     RemoveButton.Enabled = False
 End If
@@ -712,7 +748,7 @@ Dim i As Long
 
 For i = 1 To TickFileList.ListCount - 1
     If TickFileList.Selected(i) And Not TickFileList.Selected(i - 1) Then
-        UpButton.Enabled = mEnabled
+        UpButton.Enabled = Enabled
         Exit Sub
     End If
 Next
