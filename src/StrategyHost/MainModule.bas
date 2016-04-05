@@ -142,14 +142,21 @@ If lNoUI Then
 '    Set mStrategyRunner = Nothing
 Else
     Set mForm = New fStrategyHost
+    mForm.Show vbModeless
     
+    Dim failpoint As String
+    
+    failpoint = "Dim lController As New DefaultStrategyHostCtlr"
     Dim lController As New DefaultStrategyHostCtlr
+    
+    failpoint = "Set mStrategyHost = New DefaultStrategyHost"
     Set mStrategyHost = New DefaultStrategyHost
+    
+    failpoint = "mStrategyHost.Initialise mModel, mForm, lController"
     mStrategyHost.Initialise mModel, mForm, lController
     
+    failpoint = "mForm.Initialise mModel, lController"
     mForm.Initialise mModel, lController
-    
-    mForm.Show vbModeless
     
     If lRun Then
         mForm.Start
@@ -176,7 +183,7 @@ If Err.Number = ErrorCodes.ErrSecurityException Then
     TerminateTWUtilities
     Exit Sub
 End If
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, failpoint
 End Sub
 
 '@================================================================================

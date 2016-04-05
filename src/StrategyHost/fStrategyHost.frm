@@ -4,6 +4,7 @@ Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.1#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
    ClientHeight    =   9225
@@ -14,161 +15,379 @@ Begin VB.Form fStrategyHost
    ScaleHeight     =   9225
    ScaleWidth      =   11040
    StartUpPosition =   3  'Windows Default
-   Begin TabDlg.SSTab SSTab1 
-      Height          =   5655
+   Begin TabDlg.SSTab SSTab2 
+      Height          =   3675
       Left            =   0
-      TabIndex        =   31
-      Top             =   3600
-      Width           =   11055
-      _ExtentX        =   19500
-      _ExtentY        =   9975
+      TabIndex        =   14
+      Top             =   -30
+      Width           =   11070
+      _ExtentX        =   19526
+      _ExtentY        =   6482
       _Version        =   393216
       Style           =   1
       Tabs            =   4
       TabsPerRow      =   4
       TabHeight       =   520
-      TabCaption(0)   =   "Price chart"
+      ShowFocusRect   =   0   'False
+      ForeColor       =   15246432
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Segoe UI Semibold"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   600
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      TabCaption(0)   =   "Controls"
       TabPicture(0)   =   "fStrategyHost.frx":0000
       Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "PriceChart"
+      Tab(0).Control(0)=   "Picture1"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).ControlCount=   1
-      TabCaption(1)   =   "Daily profit chart"
-      TabPicture(1)   =   "fStrategyHost.frx":001C
-      Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ProfitChart"
-      Tab(1).ControlCount=   1
-      TabCaption(2)   =   "Trade chart"
-      TabPicture(2)   =   "fStrategyHost.frx":0038
-      Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "TradeChart"
-      Tab(2).ControlCount=   1
-      TabCaption(3)   =   "Bracket order details"
-      TabPicture(3)   =   "fStrategyHost.frx":0054
-      Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "BracketOrderList"
-      Tab(3).ControlCount=   1
-      Begin TradingUI27.MarketChart ProfitChart 
-         Height          =   5295
-         Left            =   -75000
-         TabIndex        =   52
-         Top             =   330
-         Width           =   11055
-         _ExtentX        =   19500
-         _ExtentY        =   9340
-      End
-      Begin TradingUI27.MultiChart PriceChart 
-         Height          =   5295
-         Left            =   0
-         TabIndex        =   51
-         Top             =   330
-         Width           =   11055
-         _ExtentX        =   19500
-         _ExtentY        =   9340
-      End
-      Begin MSComctlLib.ListView BracketOrderList 
-         Height          =   5295
-         Left            =   -75000
-         TabIndex        =   32
-         Top             =   300
-         Width           =   10995
-         _ExtentX        =   19394
-         _ExtentY        =   9340
-         View            =   3
-         Sorted          =   -1  'True
-         LabelWrap       =   -1  'True
-         HideSelection   =   0   'False
-         AllowReorder    =   -1  'True
-         FullRowSelect   =   -1  'True
-         _Version        =   393217
-         ForeColor       =   -2147483640
-         BackColor       =   -2147483643
-         Appearance      =   0
-         NumItems        =   0
-      End
-      Begin TradingUI27.MarketChart TradeChart 
-         Height          =   5295
-         Left            =   -75000
-         TabIndex        =   53
-         Top             =   330
-         Width           =   11055
-         _ExtentX        =   19500
-         _ExtentY        =   9340
-      End
-   End
-   Begin TabDlg.SSTab SSTab2 
-      Height          =   3495
-      Left            =   0
-      TabIndex        =   17
-      Top             =   120
-      Width           =   10935
-      _ExtentX        =   19288
-      _ExtentY        =   6165
-      _Version        =   393216
-      Style           =   1
-      Tabs            =   4
-      TabsPerRow      =   4
-      TabHeight       =   520
-      TabCaption(0)   =   "Controls"
-      TabPicture(0)   =   "fStrategyHost.frx":0070
-      Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "Picture2(0)"
-      Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "Picture1"
-      Tab(0).Control(1).Enabled=   0   'False
-      Tab(0).ControlCount=   2
       TabCaption(1)   =   "Parameters"
-      TabPicture(1)   =   "fStrategyHost.frx":008C
+      TabPicture(1)   =   "fStrategyHost.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Picture4"
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Log"
-      TabPicture(2)   =   "fStrategyHost.frx":00A8
+      TabPicture(2)   =   "fStrategyHost.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "LogPicture"
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Results"
-      TabPicture(3)   =   "fStrategyHost.frx":00C4
+      TabPicture(3)   =   "fStrategyHost.frx":0054
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "MoreButton"
-      Tab(3).Control(1)=   "Label11"
-      Tab(3).Control(2)=   "VolumeLabel"
-      Tab(3).Control(3)=   "BidSizeLabel"
-      Tab(3).Control(4)=   "BidLabel"
-      Tab(3).Control(5)=   "TradeSizeLabel"
-      Tab(3).Control(6)=   "TradeLabel"
-      Tab(3).Control(7)=   "AskSizeLabel"
-      Tab(3).Control(8)=   "AskLabel"
-      Tab(3).Control(9)=   "Label7"
-      Tab(3).Control(10)=   "MicrosecsPerEventLabel"
-      Tab(3).Control(11)=   "EventsPerSecondLabel"
-      Tab(3).Control(12)=   "Label3"
-      Tab(3).Control(13)=   "PercentCompleteLabel"
-      Tab(3).Control(14)=   "Label2"
-      Tab(3).Control(15)=   "EventsPlayedLabel"
-      Tab(3).Control(16)=   "Label1"
-      Tab(3).Control(17)=   "Label8"
-      Tab(3).Control(18)=   "Label10"
-      Tab(3).Control(19)=   "Label9"
-      Tab(3).Control(20)=   "Label4"
-      Tab(3).Control(21)=   "Profit"
-      Tab(3).Control(22)=   "Drawdown"
-      Tab(3).Control(23)=   "Label12"
-      Tab(3).Control(24)=   "Label5"
-      Tab(3).Control(25)=   "MaxProfit"
-      Tab(3).Control(26)=   "Position"
-      Tab(3).Control(27)=   "Label14"
-      Tab(3).Control(28)=   "TheTime"
-      Tab(3).ControlCount=   29
+      Tab(3).Control(0)=   "ResultsPicture"
+      Tab(3).ControlCount=   1
+      Begin VB.PictureBox ResultsPicture 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
+         ForeColor       =   &H80000008&
+         Height          =   3375
+         Left            =   -75000
+         ScaleHeight     =   3375
+         ScaleWidth      =   11070
+         TabIndex        =   26
+         Top             =   300
+         Width           =   11070
+         Begin TWControls40.TWButton MoreButton 
+            Height          =   375
+            Left            =   6480
+            TabIndex        =   27
+            Top             =   0
+            Width           =   975
+            _ExtentX        =   1720
+            _ExtentY        =   661
+            Caption         =   "Less <<<"
+            DefaultBorderColor=   15793920
+            DisabledBackColor=   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseOverBackColor=   0
+            PushedBackColor =   0
+         End
+         Begin VB.Label TheTime 
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   255
+            Left            =   1065
+            TabIndex        =   55
+            Top             =   1080
+            Width           =   1815
+         End
+         Begin VB.Label Label14 
+            Caption         =   "Position"
+            Height          =   195
+            Left            =   3600
+            TabIndex        =   54
+            Top             =   720
+            Width           =   855
+         End
+         Begin VB.Label Position 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   195
+            Left            =   5280
+            TabIndex        =   53
+            Top             =   720
+            Width           =   855
+         End
+         Begin VB.Label MaxProfit 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   195
+            Left            =   5280
+            TabIndex        =   52
+            Top             =   480
+            Width           =   855
+         End
+         Begin VB.Label Label5 
+            Caption         =   "Max profit"
+            Height          =   195
+            Left            =   3600
+            TabIndex        =   51
+            Top             =   480
+            Width           =   855
+         End
+         Begin VB.Label Label12 
+            Caption         =   "Drawdown"
+            Height          =   195
+            Left            =   3600
+            TabIndex        =   50
+            Top             =   240
+            Width           =   855
+         End
+         Begin VB.Label Drawdown 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   195
+            Left            =   5280
+            TabIndex        =   49
+            Top             =   240
+            Width           =   855
+         End
+         Begin VB.Label Profit 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   195
+            Left            =   5280
+            TabIndex        =   48
+            Top             =   0
+            Width           =   855
+         End
+         Begin VB.Label Label4 
+            Caption         =   "Profit/Loss"
+            Height          =   195
+            Left            =   3600
+            TabIndex        =   47
+            Top             =   0
+            Width           =   855
+         End
+         Begin VB.Label Label9 
+            Alignment       =   1  'Right Justify
+            Caption         =   "Ask"
+            Height          =   195
+            Left            =   0
+            TabIndex        =   46
+            Top             =   0
+            Width           =   735
+         End
+         Begin VB.Label Label10 
+            Alignment       =   1  'Right Justify
+            Caption         =   "Last"
+            Height          =   195
+            Left            =   0
+            TabIndex        =   45
+            Top             =   240
+            Width           =   735
+         End
+         Begin VB.Label Label8 
+            Alignment       =   1  'Right Justify
+            Caption         =   "Bid"
+            Height          =   195
+            Left            =   0
+            TabIndex        =   44
+            Top             =   480
+            Width           =   735
+         End
+         Begin VB.Label Label1 
+            Caption         =   "Events played"
+            Height          =   195
+            Left            =   3600
+            TabIndex        =   43
+            Top             =   1080
+            Width           =   1335
+         End
+         Begin VB.Label EventsPlayedLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   195
+            Left            =   5280
+            TabIndex        =   42
+            Top             =   1080
+            Width           =   855
+         End
+         Begin VB.Label Label2 
+            Caption         =   "Percent complete"
+            Height          =   195
+            Left            =   3600
+            TabIndex        =   41
+            Top             =   1320
+            Width           =   1335
+         End
+         Begin VB.Label PercentCompleteLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   195
+            Left            =   5280
+            TabIndex        =   40
+            Top             =   1320
+            Width           =   855
+         End
+         Begin VB.Label Label3 
+            Caption         =   "Events per second"
+            Height          =   195
+            Left            =   3600
+            TabIndex        =   39
+            Top             =   1560
+            Width           =   1335
+         End
+         Begin VB.Label EventsPerSecondLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   195
+            Left            =   5280
+            TabIndex        =   38
+            Top             =   1560
+            Width           =   855
+         End
+         Begin VB.Label MicrosecsPerEventLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            Caption         =   " "
+            ForeColor       =   &H80000008&
+            Height          =   195
+            Left            =   5280
+            TabIndex        =   37
+            Top             =   1800
+            Width           =   855
+         End
+         Begin VB.Label Label7 
+            Caption         =   "Microsecs per event"
+            Height          =   195
+            Left            =   3600
+            TabIndex        =   36
+            Top             =   1800
+            Width           =   1575
+         End
+         Begin VB.Label AskLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            ForeColor       =   &H80000008&
+            Height          =   255
+            Left            =   1080
+            TabIndex        =   35
+            Top             =   0
+            Width           =   735
+         End
+         Begin VB.Label AskSizeLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            ForeColor       =   &H80000008&
+            Height          =   255
+            Left            =   1920
+            TabIndex        =   34
+            Top             =   0
+            Width           =   735
+         End
+         Begin VB.Label TradeLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            ForeColor       =   &H80000008&
+            Height          =   255
+            Left            =   1080
+            TabIndex        =   33
+            Top             =   240
+            Width           =   735
+         End
+         Begin VB.Label TradeSizeLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            ForeColor       =   &H80000008&
+            Height          =   255
+            Left            =   1920
+            TabIndex        =   32
+            Top             =   240
+            Width           =   735
+         End
+         Begin VB.Label BidLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            ForeColor       =   &H80000008&
+            Height          =   255
+            Left            =   1080
+            TabIndex        =   31
+            Top             =   480
+            Width           =   735
+         End
+         Begin VB.Label BidSizeLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            ForeColor       =   &H80000008&
+            Height          =   255
+            Left            =   1920
+            TabIndex        =   30
+            Top             =   480
+            Width           =   735
+         End
+         Begin VB.Label VolumeLabel 
+            Alignment       =   1  'Right Justify
+            Appearance      =   0  'Flat
+            BackColor       =   &H80000005&
+            ForeColor       =   &H80000008&
+            Height          =   255
+            Left            =   1920
+            TabIndex        =   29
+            Top             =   720
+            Width           =   735
+         End
+         Begin VB.Label Label11 
+            Alignment       =   1  'Right Justify
+            Caption         =   "Volume"
+            Height          =   195
+            Left            =   0
+            TabIndex        =   28
+            Top             =   720
+            Width           =   735
+         End
+      End
       Begin VB.PictureBox LogPicture 
          BorderStyle     =   0  'None
-         Height          =   3075
-         Left            =   -74880
-         ScaleHeight     =   3075
-         ScaleWidth      =   10680
-         TabIndex        =   37
-         Top             =   360
-         Width           =   10675
+         Height          =   3375
+         Left            =   -75000
+         ScaleHeight     =   3375
+         ScaleWidth      =   11070
+         TabIndex        =   21
+         Top             =   300
+         Width           =   11070
          Begin VB.TextBox LogText 
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
@@ -181,181 +400,238 @@ Begin VB.Form fStrategyHost
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Height          =   3000
+            Height          =   3360
             Left            =   0
             Locked          =   -1  'True
             MultiLine       =   -1  'True
             ScrollBars      =   3  'Both
-            TabIndex        =   38
+            TabIndex        =   22
             Top             =   0
-            Width           =   10695
+            Width           =   10935
          End
       End
       Begin VB.PictureBox Picture1 
+         Appearance      =   0  'Flat
          BorderStyle     =   0  'None
-         Height          =   2895
-         Left            =   120
-         ScaleHeight     =   2895
-         ScaleWidth      =   10695
-         TabIndex        =   34
-         Top             =   480
-         Width           =   10695
+         ForeColor       =   &H80000008&
+         Height          =   3375
+         Left            =   0
+         ScaleHeight     =   3375
+         ScaleWidth      =   11070
+         TabIndex        =   18
+         Top             =   300
+         Width           =   11070
+         Begin TWControls40.TWImageCombo StopStrategyFactoryCombo 
+            Height          =   330
+            Left            =   6240
+            TabIndex        =   3
+            Top             =   600
+            Width           =   3495
+            _ExtentX        =   6165
+            _ExtentY        =   582
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseIcon       =   "fStrategyHost.frx":0070
+            Text            =   ""
+         End
+         Begin TWControls40.TWImageCombo StrategyCombo 
+            Height          =   330
+            Left            =   6240
+            TabIndex        =   2
+            Top             =   120
+            Width           =   3495
+            _ExtentX        =   6165
+            _ExtentY        =   582
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseIcon       =   "fStrategyHost.frx":008C
+            Text            =   ""
+         End
+         Begin TWControls40.TWButton ResultsPathButton 
+            Height          =   285
+            Left            =   10080
+            TabIndex        =   10
+            ToolTipText     =   "Click to select results path"
+            Top             =   2040
+            Width           =   375
+            _ExtentX        =   661
+            _ExtentY        =   503
+            Caption         =   "..."
+            DefaultBorderColor=   15793920
+            DisabledBackColor=   0
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseOverBackColor=   0
+            PushedBackColor =   0
+         End
+         Begin TWControls40.TWButton StopButton 
+            Height          =   375
+            Left            =   9360
+            TabIndex        =   12
+            Top             =   2880
+            Width           =   1095
+            _ExtentX        =   1931
+            _ExtentY        =   661
+            Caption         =   "Stop"
+            DefaultBorderColor=   15793920
+            DisabledBackColor=   0
+            Enabled         =   0   'False
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseOverBackColor=   0
+            PushedBackColor =   0
+         End
+         Begin TWControls40.TWButton StartButton 
+            Default         =   -1  'True
+            Height          =   375
+            Left            =   9360
+            TabIndex        =   11
+            Top             =   2430
+            Width           =   1095
+            _ExtentX        =   1931
+            _ExtentY        =   661
+            Caption         =   "Start"
+            DefaultBorderColor=   15793920
+            DisabledBackColor=   0
+            Enabled         =   0   'False
+            BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            MouseOverBackColor=   0
+            PushedBackColor =   0
+         End
          Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
             Height          =   2535
-            Left            =   0
+            Left            =   120
             TabIndex        =   1
-            Top             =   360
+            Top             =   480
             Width           =   5655
             _ExtentX        =   9975
             _ExtentY        =   4471
+            Enabled         =   0   'False
          End
          Begin VB.CheckBox ShowChartCheck 
             Caption         =   "Show chart"
             Height          =   195
-            Left            =   6000
-            TabIndex        =   5
-            Top             =   840
+            Left            =   6240
+            TabIndex        =   4
+            Top             =   1080
             Value           =   1  'Checked
             Width           =   1815
-         End
-         Begin VB.ComboBox StopStrategyFactoryCombo 
-            Appearance      =   0  'Flat
-            Height          =   315
-            ItemData        =   "fStrategyHost.frx":00E0
-            Left            =   6000
-            List            =   "fStrategyHost.frx":00E7
-            Sorted          =   -1  'True
-            TabIndex        =   4
-            Top             =   360
-            Width           =   3495
          End
          Begin VB.TextBox SymbolText 
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
-            Enabled         =   0   'False
             Height          =   285
-            Left            =   720
+            Left            =   840
             TabIndex        =   0
-            Top             =   0
+            Top             =   120
             Width           =   1815
-         End
-         Begin VB.ComboBox StrategyCombo 
-            Appearance      =   0  'Flat
-            Height          =   315
-            ItemData        =   "fStrategyHost.frx":010E
-            Left            =   6000
-            List            =   "fStrategyHost.frx":0115
-            Sorted          =   -1  'True
-            TabIndex        =   3
-            Top             =   0
-            Width           =   3495
          End
          Begin VB.CheckBox DummyProfitProfileCheck 
             Caption         =   "Dummy profit profile"
             Height          =   195
-            Left            =   6000
-            TabIndex        =   7
-            Top             =   1320
+            Left            =   6240
+            TabIndex        =   6
+            Top             =   1560
             Width           =   1935
          End
          Begin VB.CheckBox ProfitProfileCheck 
             Caption         =   "Profit profile"
             Height          =   195
-            Left            =   6000
-            TabIndex        =   6
-            Top             =   1080
+            Left            =   6240
+            TabIndex        =   5
+            Top             =   1320
             Width           =   1455
          End
          Begin VB.CheckBox NoMoneyManagementCheck 
             Caption         =   "No money management"
             Height          =   195
-            Left            =   8040
+            Left            =   8280
             TabIndex        =   8
-            Top             =   1320
+            Top             =   1560
             Width           =   2055
          End
          Begin VB.CheckBox SeparateSessionsCheck 
             Caption         =   "Separate session per tick file"
             Height          =   195
-            Left            =   8040
-            TabIndex        =   9
-            Top             =   1080
+            Left            =   8280
+            TabIndex        =   7
+            Top             =   1320
             Value           =   1  'Checked
             Width           =   2415
          End
-         Begin VB.CommandButton StopButton 
-            Caption         =   "Stop"
-            Enabled         =   0   'False
-            Height          =   375
-            Left            =   9600
-            TabIndex        =   13
-            Top             =   360
-            Width           =   1095
-         End
-         Begin VB.CommandButton StartButton 
-            Caption         =   "Start"
-            Default         =   -1  'True
-            Enabled         =   0   'False
-            Height          =   375
-            Left            =   9600
-            TabIndex        =   12
-            Top             =   0
-            Width           =   1095
-         End
          Begin VB.TextBox ResultsPathText 
-            Height          =   255
-            Left            =   6960
-            TabIndex        =   10
-            Top             =   1800
-            Width           =   1995
-         End
-         Begin VB.CommandButton ResultsPathButton 
-            Caption         =   "..."
-            Height          =   255
-            Left            =   9000
-            TabIndex        =   11
-            ToolTipText     =   "Select results path"
-            Top             =   1800
-            Width           =   375
+            Height          =   285
+            Left            =   7200
+            TabIndex        =   9
+            Top             =   2040
+            Width           =   2835
          End
          Begin VB.Label Label 
             Caption         =   "Symbol"
             Height          =   375
-            Left            =   0
-            TabIndex        =   36
-            Top             =   0
+            Left            =   120
+            TabIndex        =   20
+            Top             =   120
             Width           =   735
          End
          Begin VB.Label Label13 
             Caption         =   "Results path"
             Height          =   255
-            Left            =   6000
-            TabIndex        =   35
-            Top             =   1800
+            Left            =   6240
+            TabIndex        =   19
+            Top             =   2040
             Width           =   975
          End
       End
-      Begin VB.CommandButton MoreButton 
-         Caption         =   "Less <<<"
-         Height          =   375
-         Left            =   -68400
-         TabIndex        =   15
-         Top             =   480
-         Width           =   975
-      End
       Begin VB.PictureBox Picture4 
          BorderStyle     =   0  'None
-         Height          =   3090
-         Left            =   -74880
-         ScaleHeight     =   3090
-         ScaleWidth      =   10695
-         TabIndex        =   19
-         Top             =   360
-         Width           =   10695
+         Height          =   3375
+         Left            =   -75000
+         ScaleHeight     =   3375
+         ScaleWidth      =   11070
+         TabIndex        =   15
+         Top             =   300
+         Width           =   11070
          Begin MSDataGridLib.DataGrid ParamGrid 
             Height          =   2985
             Left            =   0
-            TabIndex        =   14
+            TabIndex        =   13
             Top             =   0
             Width           =   10695
             _ExtentX        =   18865
@@ -423,300 +699,98 @@ Begin VB.Form fStrategyHost
             EndProperty
          End
       End
-      Begin VB.PictureBox Picture2 
-         BorderStyle     =   0  'None
-         Height          =   1365
-         Index           =   0
-         Left            =   120
-         ScaleHeight     =   1365
-         ScaleWidth      =   7455
-         TabIndex        =   18
-         Top             =   360
-         Width           =   7455
-      End
-      Begin VB.Label Label11 
-         Alignment       =   1  'Right Justify
-         Caption         =   "Volume"
-         Height          =   195
-         Left            =   -74880
-         TabIndex        =   55
-         Top             =   1200
-         Width           =   735
-      End
-      Begin VB.Label VolumeLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         ForeColor       =   &H80000008&
-         Height          =   255
-         Left            =   -72960
-         TabIndex        =   54
-         Top             =   1200
-         Width           =   735
-      End
-      Begin VB.Label BidSizeLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         ForeColor       =   &H80000008&
-         Height          =   255
-         Left            =   -72960
-         TabIndex        =   2
-         Top             =   960
-         Width           =   735
-      End
-      Begin VB.Label BidLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         ForeColor       =   &H80000008&
-         Height          =   255
-         Left            =   -73800
-         TabIndex        =   33
-         Top             =   960
-         Width           =   735
-      End
-      Begin VB.Label TradeSizeLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         ForeColor       =   &H80000008&
-         Height          =   255
-         Left            =   -72960
-         TabIndex        =   39
-         Top             =   720
-         Width           =   735
-      End
-      Begin VB.Label TradeLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         ForeColor       =   &H80000008&
-         Height          =   255
-         Left            =   -73800
-         TabIndex        =   40
-         Top             =   720
-         Width           =   735
-      End
-      Begin VB.Label AskSizeLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         ForeColor       =   &H80000008&
-         Height          =   255
-         Left            =   -72960
-         TabIndex        =   50
-         Top             =   480
-         Width           =   735
-      End
-      Begin VB.Label AskLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         ForeColor       =   &H80000008&
-         Height          =   255
-         Left            =   -73800
-         TabIndex        =   49
-         Top             =   480
-         Width           =   735
-      End
-      Begin VB.Label Label7 
-         Caption         =   "Microsecs per event"
-         Height          =   195
-         Left            =   -71280
-         TabIndex        =   48
-         Top             =   2280
-         Width           =   1575
-      End
-      Begin VB.Label MicrosecsPerEventLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   195
-         Left            =   -69600
-         TabIndex        =   47
-         Top             =   2280
-         Width           =   855
-      End
-      Begin VB.Label EventsPerSecondLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   195
-         Left            =   -69600
-         TabIndex        =   46
-         Top             =   2040
-         Width           =   855
-      End
-      Begin VB.Label Label3 
-         Caption         =   "Events per second"
-         Height          =   195
-         Left            =   -71280
-         TabIndex        =   45
-         Top             =   2040
-         Width           =   1335
-      End
-      Begin VB.Label PercentCompleteLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   195
-         Left            =   -69600
-         TabIndex        =   44
-         Top             =   1800
-         Width           =   855
-      End
-      Begin VB.Label Label2 
-         Caption         =   "Percent complete"
-         Height          =   195
-         Left            =   -71280
-         TabIndex        =   43
-         Top             =   1800
-         Width           =   1335
-      End
-      Begin VB.Label EventsPlayedLabel 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   195
-         Left            =   -69600
-         TabIndex        =   42
-         Top             =   1560
-         Width           =   855
-      End
-      Begin VB.Label Label1 
-         Caption         =   "Events played"
-         Height          =   195
-         Left            =   -71280
-         TabIndex        =   41
-         Top             =   1560
-         Width           =   1335
-      End
-      Begin VB.Label Label8 
-         Alignment       =   1  'Right Justify
-         Caption         =   "Bid"
-         Height          =   195
-         Left            =   -74880
-         TabIndex        =   30
-         Top             =   960
-         Width           =   735
-      End
-      Begin VB.Label Label10 
-         Alignment       =   1  'Right Justify
-         Caption         =   "Last"
-         Height          =   195
-         Left            =   -74880
-         TabIndex        =   29
-         Top             =   720
-         Width           =   735
-      End
-      Begin VB.Label Label9 
-         Alignment       =   1  'Right Justify
-         Caption         =   "Ask"
-         Height          =   195
-         Left            =   -74880
-         TabIndex        =   16
-         Top             =   480
-         Width           =   735
-      End
-      Begin VB.Label Label4 
-         Caption         =   "Profit/Loss"
-         Height          =   195
-         Left            =   -71280
-         TabIndex        =   28
-         Top             =   480
-         Width           =   855
-      End
-      Begin VB.Label Profit 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   195
-         Left            =   -69600
-         TabIndex        =   27
-         Top             =   480
-         Width           =   855
-      End
-      Begin VB.Label Drawdown 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   195
-         Left            =   -69600
-         TabIndex        =   26
-         Top             =   720
-         Width           =   855
-      End
-      Begin VB.Label Label12 
-         Caption         =   "Drawdown"
-         Height          =   195
-         Left            =   -71280
-         TabIndex        =   25
-         Top             =   720
-         Width           =   855
-      End
-      Begin VB.Label Label5 
-         Caption         =   "Max profit"
-         Height          =   195
-         Left            =   -71280
+   End
+   Begin TabDlg.SSTab SSTab1 
+      Height          =   5655
+      Left            =   0
+      TabIndex        =   16
+      Top             =   3600
+      Width           =   11070
+      _ExtentX        =   19526
+      _ExtentY        =   9975
+      _Version        =   393216
+      Style           =   1
+      Tabs            =   4
+      TabsPerRow      =   4
+      TabHeight       =   520
+      ShowFocusRect   =   0   'False
+      ForeColor       =   15246432
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Segoe UI Semibold"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   600
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      TabCaption(0)   =   "Price chart"
+      TabPicture(0)   =   "fStrategyHost.frx":00A8
+      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).Control(0)=   "PriceChart"
+      Tab(0).Control(0).Enabled=   0   'False
+      Tab(0).ControlCount=   1
+      TabCaption(1)   =   "Daily profit chart"
+      TabPicture(1)   =   "fStrategyHost.frx":00C4
+      Tab(1).ControlEnabled=   0   'False
+      Tab(1).Control(0)=   "ProfitChart"
+      Tab(1).ControlCount=   1
+      TabCaption(2)   =   "Trade chart"
+      TabPicture(2)   =   "fStrategyHost.frx":00E0
+      Tab(2).ControlEnabled=   0   'False
+      Tab(2).Control(0)=   "TradeChart"
+      Tab(2).ControlCount=   1
+      TabCaption(3)   =   "Bracket order details"
+      TabPicture(3)   =   "fStrategyHost.frx":00FC
+      Tab(3).ControlEnabled=   0   'False
+      Tab(3).Control(0)=   "BracketOrderList"
+      Tab(3).ControlCount=   1
+      Begin TradingUI27.MarketChart ProfitChart 
+         Height          =   5325
+         Left            =   -75000
          TabIndex        =   24
-         Top             =   960
-         Width           =   855
+         Top             =   300
+         Width           =   11055
+         _ExtentX        =   19500
+         _ExtentY        =   9393
       End
-      Begin VB.Label MaxProfit 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   195
-         Left            =   -69600
+      Begin TradingUI27.MultiChart PriceChart 
+         Height          =   5325
+         Left            =   0
          TabIndex        =   23
-         Top             =   960
-         Width           =   855
+         Top             =   300
+         Width           =   11055
+         _ExtentX        =   19500
+         _ExtentY        =   9393
       End
-      Begin VB.Label Position 
-         Alignment       =   1  'Right Justify
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   195
-         Left            =   -69600
-         TabIndex        =   22
-         Top             =   1200
-         Width           =   855
+      Begin MSComctlLib.ListView BracketOrderList 
+         Height          =   5325
+         Left            =   -75000
+         TabIndex        =   17
+         Top             =   300
+         Width           =   10995
+         _ExtentX        =   19394
+         _ExtentY        =   9393
+         View            =   3
+         Sorted          =   -1  'True
+         LabelWrap       =   -1  'True
+         HideSelection   =   0   'False
+         AllowReorder    =   -1  'True
+         FullRowSelect   =   -1  'True
+         _Version        =   393217
+         ForeColor       =   -2147483640
+         BackColor       =   -2147483643
+         Appearance      =   0
+         NumItems        =   0
       End
-      Begin VB.Label Label14 
-         Caption         =   "Position"
-         Height          =   195
-         Left            =   -71280
-         TabIndex        =   21
-         Top             =   1200
-         Width           =   855
-      End
-      Begin VB.Label TheTime 
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
-         Caption         =   " "
-         ForeColor       =   &H80000008&
-         Height          =   255
-         Left            =   -73815
-         TabIndex        =   20
-         Top             =   1560
-         Width           =   1815
+      Begin TradingUI27.MarketChart TradeChart 
+         Height          =   5325
+         Left            =   -75000
+         TabIndex        =   25
+         Top             =   300
+         Width           =   11055
+         _ExtentX        =   19500
+         _ExtentY        =   9393
       End
    End
    Begin MSComDlg.CommonDialog CommonDialogs 
@@ -844,6 +918,10 @@ Private mBracketOrderLineSeries                         As LineSeries
 
 Private mPricePeriods                                   As Periods
 
+Private mTheme                                          As ITheme
+
+Private mChartStyle                                     As ChartStyle
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -853,11 +931,28 @@ InitialiseCommonControls
 End Sub
 
 Private Sub Form_Load()
+Const ProcName As String = "Form_Load"
+On Error GoTo Err
+
 Me.ScaleMode = vbTwips
 setupBracketOrderList
+Set mChartStyle = gCreateChartStyle
+LogMessage "Setting StrategyCombo"
+StrategyCombo.ComboItems.Add , , "Strategies27.MACDStrategy21"
+LogMessage "Setting StopStrategyFactoryCombo"
+StopStrategyFactoryCombo.ComboItems.Add , , "Strategies27.StopStrategyFactory5"
+LogMessage "Form loaded"
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Form_Resize()
+Const ProcName As String = "Form_Resize"
+On Error GoTo Err
+
 SSTab1.Width = ScaleWidth
 SSTab2.Width = ScaleWidth
 
@@ -865,6 +960,11 @@ If ScaleHeight < minimumHeight Or mDetailsHidden Then
     Me.Height = minimumHeight + (Me.Height - Me.ScaleHeight)
     Exit Sub
 End If
+
+Picture1.Width = SSTab2.Width
+Picture4.Width = SSTab2.Width
+LogPicture.Width = SSTab2.Width
+ResultsPicture.Width = SSTab2.Width
 
 If Not mDetailsHidden Then
     If ScaleHeight - SSTab1.Top > 0 Then SSTab1.Height = ScaleHeight - SSTab1.Top
@@ -877,6 +977,11 @@ If Not mDetailsHidden Then
     BracketOrderList.Width = SSTab1.Width
     If SSTab1.Height - BracketOrderList.Top > 0 Then BracketOrderList.Height = SSTab1.Height - BracketOrderList.Top
 End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -1269,14 +1374,11 @@ mSecType = mContract.Specifier.SecType
 mTickSize = mContract.TickSize
 Set mSession = mModel.Ticker.SessionFuture.Value
 
-If PriceChart.Count = 0 Then
-    initialisePriceChart
-Else
-    Dim i As Long
-    For i = 1 To PriceChart.Count
-        PriceChart.SetStudyManager mModel.Ticker.StudyBase.StudyManager, i
-    Next
-End If
+Dim i As Long
+For i = 1 To PriceChart.Count
+    PriceChart.SetStudyManager mModel.Ticker.StudyBase.StudyManager, i
+Next
+
 If mProfitStudyBase Is Nothing Then initialiseProfitChart
 If mTradeStudyBase Is Nothing Then initialiseTradeChart
 
@@ -1612,25 +1714,48 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pModel As IStrategyHostModel, _
                 ByVal pController As IStrategyHostController)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mModel = pModel
 Set mController = pController
 
-If Not mModel.TickfileStoreInput Is Nothing Then
-    TickfileOrganiser1.Initialise mModel.TickfileStoreInput, mModel.ContractStorePrimary
-    TickfileOrganiser1.Enabled = True
-End If
+LogMessage "Initialising charts"
+initialisePriceChart
+ProfitChart.BaseChartController.Style = mChartStyle
+TradeChart.BaseChartController.Style = mChartStyle
+
+LogMessage "Applying theme"
+applyTheme New BlackTheme
+
+LogMessage "Setting controls from model"
+ResultsPathText.Text = mModel.ResultsPath
+NoMoneyManagementCheck.Value = IIf(mModel.UseMoneyManagement, vbUnchecked, vbChecked)
+If mModel.StrategyClassName <> "" Then StrategyCombo.Text = mModel.StrategyClassName
+If mModel.StopStrategyFactoryClassName <> "" Then StopStrategyFactoryCombo.Text = mModel.StopStrategyFactoryClassName
+ShowChartCheck.Value = IIf(mModel.ShowChart, vbChecked, vbUnchecked)
 
 If mModel.UseLiveBroker Then
     SymbolText.Enabled = True
-    SymbolText.Text = mModel.Symbol
+    SymbolText.Text = mModel.Symbol.LocalSymbol
+    SymbolText.SetFocus
+Else
+    LogMessage "Enabling TickfileOrganiser"
+    TickfileOrganiser1.Enabled = True
+    
+    If Not mModel.TickfileStoreInput Is Nothing Then
+        TickfileOrganiser1.Initialise mModel.TickfileStoreInput, mModel.ContractStorePrimary
+    End If
+    
+    ' the following line moves focus to TickfileOrganiser1. Trying to do this
+    ' with TickfileOrganiser1.SetFocus causes VB to go into a loop!
+    SymbolText.Enabled = False
 End If
 
-ResultsPathText.Text = mModel.ResultsPath
-NoMoneyManagementCheck.Value = IIf(mModel.UseMoneyManagement, vbUnchecked, vbChecked)
-StrategyCombo.Text = mModel.StrategyClassName
-StopStrategyFactoryCombo.Text = mModel.StopStrategyFactoryClassName
-ShowChartCheck.Value = IIf(mModel.ShowChart, vbChecked, vbUnchecked)
+Exit Sub
 
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Start()
@@ -1649,6 +1774,20 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub applyTheme(ByVal pTheme As ITheme)
+Const ProcName As String = "applyTheme"
+On Error GoTo Err
+
+Set mTheme = pTheme
+Me.BackColor = mTheme.BaseColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub clearPerformanceFields()
 EventsPlayedLabel = ""
@@ -1699,7 +1838,7 @@ On Error GoTo Err
 
 If Not mModel.ShowChart Then Exit Sub
 
-PriceChart.InitialiseRaw ChartStylesManager.DefaultStyle
+PriceChart.InitialiseRaw mChartStyle
 
 Exit Sub
 
