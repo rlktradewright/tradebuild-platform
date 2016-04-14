@@ -1076,7 +1076,7 @@ Set mBarFormatterLibManager = pBarFormatterLibManager
 
 Set mTimePeriod = pTimePeriod
 Set mChartSpec = pChartSpec
-Set mChartStyle = pChartStyle
+If Not pChartStyle Is Nothing Then Set mChartStyle = pChartStyle
 mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
 mExcludeCurrentBar = pExcludeCurrentBar
@@ -1118,7 +1118,7 @@ Set mBarFormatterLibManager = pBarFormatterLibManager
 
 Set mTimeframe = pTimeframe
 Set mTimePeriod = mTimeframe.TimePeriod
-Set mChartStyle = pChartStyle
+If Not pChartStyle Is Nothing Then Set mChartStyle = pChartStyle
 mLocalSymbol = pLocalSymbol
 mSecType = pSecType
 mExchange = pExchange

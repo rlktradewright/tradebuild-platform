@@ -468,6 +468,8 @@ Public Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+AssertArgument Not (pPrimaryContractStore Is Nothing And pSecondaryContractStore Is Nothing), "pPrimaryContractStore and pSecondaryContractStore cannot both be null"
+
 Set mTickfileStore = pTickfileStore
 Set mPrimaryContractStore = pPrimaryContractStore
 Set mSecondaryContractStore = pSecondaryContractStore
