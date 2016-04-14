@@ -174,6 +174,8 @@ Public Sub Initialise(ByVal pTickfileStore As ITickfileStore)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+If pTickfileStore Is Nothing Then Exit Sub
+
 Set mTickfileStore = pTickfileStore
 getSupportedTickfileFormats
 
