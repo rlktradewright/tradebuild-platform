@@ -76,6 +76,8 @@ Private mIsInitialised              As Boolean
 
 Private mRecoverableObjectListeners As New Listeners
 
+Private mDontCheckAttributeModificationPermitted    As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -1542,7 +1544,9 @@ On Error GoTo Err
 checkInitialised
 
 Dim lOrder As New Order
+mDontCheckAttributeModificationPermitted = True
 gSyncToOrder lOrder, Me
+mDontCheckAttributeModificationPermitted = False
 
 Set Clone = lOrder
 
@@ -1647,6 +1651,11 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     ' we are currently recovering persisted order information so don't make this check
+    IsAttributeModifiable = True
+    Exit Function
+End If
+
+If mDontCheckAttributeModificationPermitted Then
     IsAttributeModifiable = True
     Exit Function
 End If
