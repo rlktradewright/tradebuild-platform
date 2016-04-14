@@ -42,6 +42,8 @@ Private mModel                                      As IStrategyHostModel
 
 Private mStrategyHost                               As DefaultStrategyHost
 
+Public gFinished                                    As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -162,7 +164,7 @@ Else
         mForm.Start
     End If
 
-    Do While Forms.Count > 0
+    Do While Forms.Count > 0 Or Not gFinished
         Wait 50
     Loop
     
@@ -192,7 +194,7 @@ End Sub
 
 Private Function getUsageString() As String
 getUsageString = _
-            "strategyhost  [(specifier[;specifier]...)]" & vbCrLf & _
+            "strategyhost  [(/specifier[;/specifier]...)]" & vbCrLf & _
             "              [strategy class name]" & vbCrLf & _
             "              [stop strategy factory class name]" & vbCrLf & _
             "              [/tws:[Server],[Port],[ClientId]" & vbCrLf & _
@@ -207,14 +209,14 @@ getUsageString = _
             " where" & vbCrLf & _
             vbCrLf
 getUsageString = getUsageString & _
-            "   specifier := [ local[symbol]=<symbol>" & vbCrLf & _
-            "                | symb[ol]=<symbol>" & vbCrLf & _
-            "                | sec[type]=[ STK | FUT | FOP | CASH ]" & vbCrLf & _
-            "                | exch[ange]=<exchangename>" & vbCrLf & _
-            "                | curr[ency]=<currencycode>" & vbCrLf & _
-            "                | exp[iry]=[yyyymm | yyyymmdd]" & vbCrLf & _
-            "                | str[ike]=<price>" & vbCrLf & _
-            "                | right=[ CALL | PUT ]" & vbCrLf & _
+            "   specifier := [ local[symbol]:<localsymbol>" & vbCrLf & _
+            "                | symb[ol]:<symbol>" & vbCrLf & _
+            "                | sec[type]:[ STK | FUT | FOP | CASH ]" & vbCrLf & _
+            "                | exch[ange]:<exchangename>" & vbCrLf & _
+            "                | curr[ency]:<currencycode>" & vbCrLf & _
+            "                | exp[iry]:[yyyymm | yyyymmdd]" & vbCrLf & _
+            "                | str[ike]:<price>" & vbCrLf & _
+            "                | right:[ CALL | PUT ]" & vbCrLf & _
             "                ]"
 End Function
 

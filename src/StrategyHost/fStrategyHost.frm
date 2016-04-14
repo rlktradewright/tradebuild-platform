@@ -897,6 +897,7 @@ Private mTickSize                                       As Double
 
 Private WithEvents mSession                             As Session
 Attribute mSession.VB_VarHelpID = -1
+Private mTradingSessionInProgress                       As Boolean
 
 Private mParams                                         As Parameters
 
@@ -1005,6 +1006,8 @@ For Each f In Forms
         Unload f
     End If
 Next
+
+gFinished = True
 
 Exit Sub
 
@@ -1374,6 +1377,8 @@ mSecType = mContract.Specifier.SecType
 mTickSize = mContract.TickSize
 Set mSession = mModel.Ticker.SessionFuture.Value
 
+If mSession.CurrentSessionEndTime > mModel.Ticker.TimeStamp Then mTradingSessionInProgress = True
+
 Dim i As Long
 For i = 1 To PriceChart.Count
     PriceChart.SetStudyManager mModel.Ticker.StudyBase.StudyManager, i
@@ -1517,10 +1522,15 @@ End Sub
 ' mSession Event Handlers
 '================================================================================
 
+Private Sub mSession_SessionEnded(ev As SessionEventData)
+If Not mModel.IsTickReplay And mTradingSessionInProgress Then Unload Me
+End Sub
+
 Private Sub mSession_SessionStarted(ev As SessionEventData)
 Const ProcName As String = "mSession_SessionStarted"
 On Error GoTo Err
 
+mTradingSessionInProgress = True
 If mModel.ShowChart Then mProfitStudyBase.NotifyValue mOverallProfit, mSession.SessionCurrentTime
 
 Exit Sub
@@ -1862,7 +1872,7 @@ ProfitChart.Initialise CreateTimeframes(mProfitStudyBase), False
 ProfitChart.DisableDrawing
 ProfitChart.ShowChart GetTimePeriod(1, TimePeriodDay), _
                         CreateChartSpecifier(0), _
-                        ChartStylesManager.DefaultStyle, _
+                        mChartStyle, _
                         pTitle:="Profit by Session"
 ProfitChart.PriceRegion.YScaleQuantum = 0.01
 
@@ -1888,7 +1898,7 @@ TradeChart.Initialise CreateTimeframes(mTradeStudyBase), False
 TradeChart.DisableDrawing
 TradeChart.ShowChart GetTimePeriod(0, TimePeriodNone), _
                     CreateChartSpecifier(0), _
-                    ChartStylesManager.DefaultStyle, _
+                    mChartStyle, _
                     pTitle:="Profit by Trade"
 TradeChart.PriceRegion.YScaleQuantum = 0.01
 
