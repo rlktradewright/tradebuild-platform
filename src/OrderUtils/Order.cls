@@ -974,6 +974,10 @@ Public Property Get DisplaySize() As Long
 DisplaySize = mSummary.DisplaySize
 End Property
 
+Friend Property Let DontCheckAttributeModificationPermitted(ByVal Value As Boolean)
+mDontCheckAttributeModificationPermitted = Value
+End Property
+
 Public Property Let ErrorCode(ByVal Value As Long)
 mSummary.ErrorCode = Value
 End Property
@@ -1544,9 +1548,9 @@ On Error GoTo Err
 checkInitialised
 
 Dim lOrder As New Order
-mDontCheckAttributeModificationPermitted = True
+lOrder.DontCheckAttributeModificationPermitted = True
 gSyncToOrder lOrder, Me
-mDontCheckAttributeModificationPermitted = False
+lOrder.DontCheckAttributeModificationPermitted = False
 
 Set Clone = lOrder
 
