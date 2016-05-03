@@ -810,7 +810,7 @@ If toDate <> 0 Then
     If fromDate = 0 Then
         ' calculate the earliest possible date for the supplied number of bars (assuming
         ' there are no gaps in the data)
-        mFromDate = OffsetBarStartTime(IIf(mToDate = MaxDateValue, Now, mToDate), _
+        fromDate = OffsetBarStartTime(IIf(mToDate = MaxDateValue, Now, mToDate), _
                                     mSpecifier.BarTimePeriod, _
                                     -1 * mSpecifier.maxNumberOfBars, _
                                     mInstrument.SessionStartTime, _
@@ -828,7 +828,7 @@ Else
 End If
 
 Dim lNumberOfTargetBars As Long
-lNumberOfTargetBars = MaxNumberOfBarsInTimespan(mSpecifier.BarTimePeriod, mFromDate, mToDate, mInstrument.SessionStartTime, mInstrument.SessionEndTime)
+lNumberOfTargetBars = MaxNumberOfBarsInTimespan(mSpecifier.BarTimePeriod, fromDate, mToDate, mInstrument.SessionStartTime, mInstrument.SessionEndTime)
 
 Select Case mSpecifier.BarTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
