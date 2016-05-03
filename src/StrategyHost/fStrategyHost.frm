@@ -897,6 +897,7 @@ Private mTickSize                                       As Double
 
 Private WithEvents mSession                             As Session
 Attribute mSession.VB_VarHelpID = -1
+Private mStarted                                        As Boolean
 Private mTradingSessionInProgress                       As Boolean
 
 Private mParams                                         As Parameters
@@ -1377,8 +1378,6 @@ mSecType = mContract.Specifier.SecType
 mTickSize = mContract.TickSize
 Set mSession = mModel.Ticker.SessionFuture.Value
 
-If mSession.CurrentSessionEndTime > mModel.Ticker.TimeStamp Then mTradingSessionInProgress = True
-
 Dim i As Long
 For i = 1 To PriceChart.Count
     PriceChart.SetStudyManager mModel.Ticker.StudyBase.StudyManager, i
@@ -1414,6 +1413,10 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategyHostView_NotifyTradingStart()
+mStarted = True
 End Sub
 
 Private Property Get IStrategyHostView_Parameters() As Parameters
@@ -1523,14 +1526,31 @@ End Sub
 '================================================================================
 
 Private Sub mSession_SessionEnded(ev As SessionEventData)
-If Not mModel.IsTickReplay And mTradingSessionInProgress Then Unload Me
+Const ProcName As String = "mSession_SessionEnded"
+On Error GoTo Err
+
+LogMessage "Session ended at: " & FormatTimestamp(ev.TimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+
+If Not mModel.IsTickReplay And mTradingSessionInProgress Then
+    LogMessage "Strategy Host closing"
+    mController.Finish
+    Unload Me
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEventData)
 Const ProcName As String = "mSession_SessionStarted"
 On Error GoTo Err
 
-mTradingSessionInProgress = True
+LogMessage "Session started at: " & FormatTimestamp(ev.TimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+
+If mStarted Then mTradingSessionInProgress = True
+
 If mModel.ShowChart Then mProfitStudyBase.NotifyValue mOverallProfit, mSession.SessionCurrentTime
 
 Exit Sub

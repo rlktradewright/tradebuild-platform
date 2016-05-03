@@ -133,6 +133,8 @@ Private Sub IBracketOrderEventSink_NotifyBracketOrderStopLossAdjusted(ByVal Brac
 Const ProcName As String = "IBracketOrderEventSink_NotifyBracketOrderStopLossAdjusted"
 On Error GoTo Err
 
+If Not CanTrade Then Exit Sub
+
 If Not BracketOrder Is PrimaryBracketOrder Then Exit Sub
 
 Dim bo As ResourceIdentifier
@@ -159,6 +161,7 @@ Const ProcName As String = "IPositionMgmtStrategy_NotifyTick"
 On Error GoTo Err
 
 If pType <> TickTypes.TickTypeTrade Then Exit Sub
+If Not CanTrade Then Exit Sub
 
 Dim newValue As Double
 newValue = mContext.TradeQuote.price
@@ -198,7 +201,7 @@ If mLongPosition Then
                     NotifyCompletion:=True)
     If Not mAdditionalBracketOrder Is Nothing Then
         mAdditionalBracketOrders.Add mAdditionalBracketOrder
-        setEntryReason "A" & mNumberOfIncrements, mAdditionalBracketOrder
+        SetEntryReason "A" & mNumberOfIncrements, mAdditionalBracketOrder
     End If
 Else
     Set mAdditionalBracketOrder = Sell( _
@@ -208,7 +211,7 @@ Else
                     NotifyCompletion:=True)
     If Not mAdditionalBracketOrder Is Nothing Then
         mAdditionalBracketOrders.Add mAdditionalBracketOrder
-        setEntryReason "A" & mNumberOfIncrements, mAdditionalBracketOrder
+        SetEntryReason "A" & mNumberOfIncrements, mAdditionalBracketOrder
     End If
 End If
 

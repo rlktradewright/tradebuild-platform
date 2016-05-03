@@ -99,7 +99,7 @@ ElseIf lSymbol <> "" Then
     Set lContractSpec = parseSymbol(lSymbol)
     If lContractSpec Is Nothing Then
         LogMessage "Invalid symbol"
-        If Not lNoUI And lRun Then MsgBox "Error - invalid sumbol string supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+        If Not lNoUI And lRun Then MsgBox "Error - invalid symbol string supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Sub
     End If
     mModel.Symbol = lContractSpec
@@ -164,9 +164,11 @@ Else
         mForm.Start
     End If
 
-    Do While Forms.Count > 0 Or Not gFinished
+    Do While Not gFinished
         Wait 50
     Loop
+    
+    Set mForm = Nothing
     
     LogMessage "Application exiting"
     

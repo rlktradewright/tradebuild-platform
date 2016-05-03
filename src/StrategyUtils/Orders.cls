@@ -498,6 +498,42 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function CanTrade( _
+                Optional ByVal OrderContext As ResourceIdentifier) As Boolean
+Const ProcName As String = "CanTrade"
+On Error GoTo Err
+
+If OrderContext Is Nothing Then
+    CanTrade = canTradeContext(Nothing, True, False) And canTradeContext(Nothing, False, False)
+Else
+    ' note the value of pIsBuy in this call is irrelevant
+    CanTrade = canTradeContext(OrderContext, False, False)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CanTradeSimulated( _
+                Optional ByVal OrderContext As ResourceIdentifier) As Boolean
+Const ProcName As String = "CanTradeSimulated"
+On Error GoTo Err
+
+If OrderContext Is Nothing Then
+    CanTradeSimulated = canTradeContext(Nothing, True, True) And canTradeContext(Nothing, False, True)
+Else
+    ' note the value of pIsBuy in this call is irrelevant
+    CanTradeSimulated = canTradeContext(OrderContext, False, True)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub ClearPrimaryBracketOrder()
 gResourceContext.ClearPrimaryBracketOrder
 End Sub
@@ -519,6 +555,25 @@ Const ProcName As String = "CloseAllSimulatedPositions"
 On Error GoTo Err
 
 gTradingContext.PositionManagerSimulated.ClosePositions
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub AllowUnprotectedPositions()
+Const ProcName As String = "AllowUnprotectedPositions"
+On Error GoTo Err
+
+Assert Not gInitialisationContext Is Nothing, "Method can only be called during strategy initialisation"
+
+gInitialisationContext.AllowUnprotectedPositions = True
+
+Dim oc As OrderContext
+For Each oc In gInitialisationContext.PositionManager.OrderContexts
+    oc.PreventUnprotectedPositions = False
+Next
 
 Exit Sub
 
@@ -789,6 +844,7 @@ If pOrderContext Is Nothing Then
     Set lOrderContext = getDefaultOrderContext(pIsBuy, pIsSimulated)
 Else
     Set lOrderContext = getOrderContext(pOrderContext)
+    Assert lOrderContext.IsSimulated = pIsSimulated, "Order context has incorrect simulated property"
 End If
 
 Dim lEntryOrderSpec As OrderSpecifier
@@ -826,6 +882,29 @@ gStrategyRunner.MapBracketOrderToResourceId lBracketOrder, buyOrSell
 
 requestNotification lBracketOrder, pNotifyCompletion
 createAttachedStrategies lBracketOrder
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function canTradeContext( _
+                ByVal pOrderContext As ResourceIdentifier, _
+                ByVal pIsBuy As Boolean, _
+                ByVal pIsSimulated As Boolean) As Boolean
+Const ProcName As String = "canTradeContext"
+On Error GoTo Err
+
+Dim lOrderContext As OrderContext
+If pOrderContext Is Nothing Then
+    Set lOrderContext = getDefaultOrderContext(pIsBuy, pIsSimulated)
+Else
+    Set lOrderContext = getOrderContext(pOrderContext)
+    Assert lOrderContext.IsSimulated = pIsSimulated, "Order context has incorrect simulated property"
+End If
+
+canTradeContext = lOrderContext.IsReady
 
 Exit Function
 

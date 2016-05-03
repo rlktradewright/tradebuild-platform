@@ -127,6 +127,7 @@ End If
 
 If mNumberOfTimeframesLoading = 0 Then
     mModel.Ticker.AddGenericTickListener Me
+    mView.NotifyTradingStart
     
     If mModel.IsTickReplay Then
         mStrategyRunner.StartReplay

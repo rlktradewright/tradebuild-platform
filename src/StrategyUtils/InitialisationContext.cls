@@ -69,6 +69,8 @@ Private mStrategyRunner                             As StrategyRunner
 Private mBarsOutstanding                            As Long
 Private mStudiesOutstanding                         As Long
 
+Private mAllowUnprotectedPositions                  As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -156,6 +158,14 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Let AllowUnprotectedPositions(ByVal Value As Boolean)
+mAllowUnprotectedPositions = Value
+End Property
+
+Public Property Get AllowUnprotectedPositions() As Boolean
+AllowUnprotectedPositions = mAllowUnprotectedPositions
+End Property
 
 Public Property Get Contract() As IContract
 Const ProcName As String = "Contract"

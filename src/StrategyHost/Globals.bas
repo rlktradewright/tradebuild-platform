@@ -164,7 +164,7 @@ Public Function gCreateChartStyle() As ChartStyle
 Const ProcName As String = "gCreateChartStyle"
 On Error GoTo Err
 
-LogMessage "Creating chart style""Black"""
+LogMessage "Creating chart style ""Black"""
 
 Dim lCrosshairsLineStyle As LineStyle
 Set lCrosshairsLineStyle = New LineStyle

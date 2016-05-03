@@ -438,7 +438,8 @@ End Function
 Friend Sub Initialise( _
                 ByVal pStrategyRunner As StrategyRunner, _
                 ByVal pStrategy As IStrategy, _
-                ByVal pTicker As Ticker)
+                ByVal pTicker As Ticker, _
+                ByVal pAllowUnprotectedPositions As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -456,7 +457,10 @@ Set mBracketOrders = mPositionManager.BracketOrders
 Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
 
 Set mOrderContextBuy = mPositionManager.OrderContexts.Add("BUY")
+If Not pAllowUnprotectedPositions Then mOrderContextBuy.PreventUnprotectedPositions = True
+
 Set mOrderContextSell = mPositionManager.OrderContexts.Add("SELL")
+If Not pAllowUnprotectedPositions Then mOrderContextSell.PreventUnprotectedPositions = True
 
 Set mOrderContextBuySimulated = mPositionManagerSimulated.OrderContexts.Add("BUY")
 Set mOrderContextSellSimulated = mPositionManagerSimulated.OrderContexts.Add("SELL")

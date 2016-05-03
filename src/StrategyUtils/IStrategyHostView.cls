@@ -160,6 +160,9 @@ End Sub
 Public Sub NotifyTickfileCompleted(ByVal pIndex As Long)
 End Sub
 
+Public Sub NotifyTradingStart()
+End Sub
+
 Public Sub ResetProfitChart()
 End Sub
 

@@ -90,6 +90,9 @@ End Sub
 Public Sub NotifyNoSimulatedPositions()
 End Sub
 
+Public Sub NotifySimulatedTradingReadinessChange()
+End Sub
+
 ''
 ' Called for each tick in the underlying <code>Ticker</code> object.
 '
@@ -101,6 +104,9 @@ End Sub
 '   The type of tick that has occurred.
 '@/
 Public Sub NotifyTick(ByVal pType As TickTypes)
+End Sub
+
+Public Sub NotifyTradingReadinessChange()
 End Sub
 
 ''

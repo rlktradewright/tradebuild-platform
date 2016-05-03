@@ -442,7 +442,7 @@ End If
 ' of each bar so exit if not a new bar
 If Not isNewBar Then
     If newStop <> currentStop Then
-        AdjustStop newStop, QuantityFilled
+        If CanTrade Then AdjustStop newStop, QuantityFilled
         mStopChanged = True
     End If
     Exit Sub
@@ -745,7 +745,7 @@ ElseIf mLongTrailStop Then
 End If
 
 If newStop <> currentStop Then
-    AdjustStop newStop, QuantityFilled
+    If CanTrade Then AdjustStop newStop, QuantityFilled
     mStopChanged = True
 End If
 
@@ -899,7 +899,7 @@ If mLongPosition Then
     newStop = LowValue(i)
     currentStop = StopLossTriggerPrice
     If newStop > currentStop Then
-        AdjustStop newStop, QuantityFilled
+        If CanTrade Then AdjustStop newStop, QuantityFilled
         SetStopReason reason
         mStopChanged = True
     End If
@@ -917,7 +917,7 @@ Else
     newStop = HighValue(i)
     currentStop = StopLossTriggerPrice
     If newStop < currentStop Then
-        AdjustStop newStop, QuantityFilled
+        If CanTrade Then AdjustStop newStop, QuantityFilled
         SetStopReason reason
         mStopChanged = True
     End If

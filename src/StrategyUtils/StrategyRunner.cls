@@ -23,6 +23,7 @@ Option Explicit
 '================================================================================
 
 Implements IChangeListener
+Implements ICollectionChangeListener
 
 '================================================================================
 ' Events
@@ -141,7 +142,37 @@ ElseIf TypeOf ev.Source Is PositionManager Then
             gClearStrategyRunner
         End If
     End If
+ElseIf TypeOf ev.Source Is OrderContext Then
+    Dim lOrderContext As OrderContext
+    Set lOrderContext = ev.Source
+    If lOrderContext.IsSimulated Then
+        mStrategy.NotifyTradingReadinessChange
+    Else
+        mStrategy.NotifySimulatedTradingReadinessChange
+    End If
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' ICollectionChangeListener Interface Members
+'@================================================================================
+
+Private Sub ICollectionChangeListener_Change(ev As CollectionChangeEventData)
+Const ProcName As String = "ICollectionChangeListener_Change"
+On Error GoTo Err
+
+If Not TypeOf ev.Source Is OrderContexts Then Exit Sub
+
+If Not ev.ChangeType = CollItemAdded Then Exit Sub
+
+Dim lOrderContext As OrderContext
+Set lOrderContext = ev.AffectedItem
+lOrderContext.AddChangeListener Me
 
 Exit Sub
 
@@ -314,13 +345,18 @@ Const ProcName As String = "InitialisationCompleted"
 On Error GoTo Err
 
 mInitialisationCompleted = True
+Dim lAllowUnprotectedPositions As Boolean
+lAllowUnprotectedPositions = mInitialisationContext.AllowUnprotectedPositions
 Set mInitialisationContext = Nothing
 
 mTicker.PositionManager.AddChangeListener Me
+mTicker.PositionManager.OrderContexts.AddCollectionChangeListener Me
+
 mTicker.PositionManagerSimulated.AddChangeListener Me
+mTicker.PositionManagerSimulated.OrderContexts.AddCollectionChangeListener Me
 
 Set mTradingContext = New TradingContext
-mTradingContext.Initialise Me, mStrategy, mTicker
+mTradingContext.Initialise Me, mStrategy, mTicker, lAllowUnprotectedPositions
 
 setStrategyRunner mStrategy, mStrategyResourceContext
 mStrategy.Start mTradingContext

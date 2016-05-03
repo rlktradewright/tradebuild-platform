@@ -63,8 +63,6 @@ Private Const MessagePrefix                         As String = ">>> "
 ' Member variables
 '@================================================================================
 
-'Private mBracketOrderBuy As ResourceIdentifier
-'Private mBracketOrderSell As ResourceIdentifier
 Private mBracketOrderBuyDummy As ResourceIdentifier
 Private mBracketOrderSellDummy As ResourceIdentifier
 
@@ -75,8 +73,6 @@ Private mEntryLimitOffsetTicks As Integer
 
 Private mPrevColour As Colours
 Private mCurrColour As Colours
-
-Private mNoTradeThisBar  As Boolean
 
 Private mRiskUnitPercent As Double
 Private mMaxTradeSize As Long
@@ -238,15 +234,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IStrategy_NotifySimulatedTradingReadinessChange()
+
+End Sub
+
 Private Sub IStrategy_NotifyTick(ByVal pType As TickTypes)
 Const ProcName As String = "IStrategy_NotifyTick"
 On Error GoTo Err
 
 If Not IsCurrentTickTrade Then Exit Sub
-If mNoTradeThisBar Then Exit Sub
 If Not isNewBar Then Exit Sub
-
-mNoTradeThisBar = False
 
 checkTradingOpportunity
 
@@ -254,6 +251,10 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategy_NotifyTradingReadinessChange()
+
 End Sub
 
 ' occurs after historic price data has been loaded,
@@ -539,6 +540,8 @@ Private Sub ModifyPendingBuyOrders()
 Const ProcName As String = "ModifyPendingBuyOrders"
 On Error GoTo Err
 
+If Not CanTrade Then Exit Sub
+
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceLong
 If lTriggerPrice >= EntryTriggerPrice(mBracketOrderBuyDummy) Then Exit Sub
@@ -556,7 +559,7 @@ Update mBracketOrderBuyDummy
     
 If PendingBuySize = 0 Then Exit Sub
 
-SetNewQuantity UnitSize(lRisk)
+SetNewQuantity calcTradeSize(lRisk)
 SetNewEntryTriggerPrice lTriggerPrice
 SetNewEntryPrice lTriggerPrice - mEntryLimitOffsetTicks * TickSize
 SetNewStopLossTriggerPrice lStopPrice
@@ -571,6 +574,8 @@ End Sub
 Private Sub ModifyPendingSellOrders()
 Const ProcName As String = "ModifyPendingSellOrders"
 On Error GoTo Err
+
+If Not CanTrade Then Exit Sub
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceShort
@@ -589,7 +594,7 @@ Update mBracketOrderSellDummy
     
 If PendingSellSize = 0 Then Exit Sub
 
-SetNewQuantity UnitSize(lRisk)
+SetNewQuantity calcTradeSize(lRisk)
 SetNewEntryTriggerPrice lTriggerPrice
 SetNewEntryPrice lTriggerPrice + mEntryLimitOffsetTicks * TickSize
 SetNewStopLossTriggerPrice lStopPrice
@@ -605,6 +610,8 @@ End Sub
 Private Sub PlaceBuyOrders()
 Const ProcName As String = "PlaceBuyOrders"
 On Error GoTo Err
+
+If Not CanTrade Then Exit Sub
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceLong
@@ -625,19 +632,14 @@ Set mBracketOrderBuyDummy = BuySimulated( _
                                 CancelPrice:=lCancelPrice, _
                                 NotifyCompletion:=True)
 
-If mBracketOrderBuyDummy Is Nothing Then
-    mNoTradeThisBar = True
-        ' prevents each subsequent tick being processed if money management has prevented
-        ' further trades
-    Exit Sub
-End If
-
+If mBracketOrderBuyDummy Is Nothing Then Exit Sub
 If ActiveBuySize <> 0 Or PendingBuySize <> 0 Then Exit Sub
 
-If UnitSize(lRisk) = 0 Then Exit Sub
+Dim lSize As Long: lSize = calcTradeSize(lRisk)
+If lSize = 0 Then Exit Sub
 
 SetPrimaryBracketOrder Buy( _
-                            Number:=UnitSize(lRisk), _
+                            Number:=lSize, _
                             EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
                                                         price:=lTriggerPrice, _
                                                         Offset:=mEntryLimitOffsetTicks, _
@@ -655,6 +657,8 @@ End Sub
 Private Sub PlaceSellOrders()
 Const ProcName As String = "PlaceSellOrders"
 On Error GoTo Err
+
+If Not CanTrade Then Exit Sub
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceShort
@@ -675,19 +679,14 @@ Set mBracketOrderSellDummy = SellSimulated( _
                                 CancelPrice:=lCancelPrice, _
                                 NotifyCompletion:=True)
 
-If mBracketOrderSellDummy Is Nothing Then
-    mNoTradeThisBar = True
-        ' prevents each subsequent tick being processed if money management has prevented
-        ' further trades
-    Exit Sub
-End If
-
+If mBracketOrderSellDummy Is Nothing Then Exit Sub
 If ActiveSellSize <> 0 Or PendingSellSize <> 0 Then Exit Sub
 
-If UnitSize(lRisk) = 0 Then Exit Sub
+Dim lSize As Long: lSize = calcTradeSize(lRisk)
+If lSize = 0 Then Exit Sub
 
 SetPrimaryBracketOrder Sell( _
-                            Number:=UnitSize(lRisk), _
+                            Number:=lSize, _
                             EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
                                                         price:=lTriggerPrice, _
                                                         Offset:=-mEntryLimitOffsetTicks, _
@@ -786,7 +785,20 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
 
+Private Function calcTradeSize(ByVal risk As Double) As Long
+Const ProcName As String = "calcTradeSize"
+On Error GoTo Err
+
+calcTradeSize = Int((mRiskUnitPercent * AccountBalance / 100) / risk)
+If calcTradeSize > mMaxTradeSize Then calcTradeSize = mMaxTradeSize
+If calcTradeSize = 0 Then LogTradeMessage "    reject: allowable initial risk exceeded"
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub checkTradingOpportunity()
@@ -794,7 +806,6 @@ Const ProcName As String = "checkTradingOpportunity"
 On Error GoTo Err
 
 If IsEndOfSession Then Exit Sub
-
 If IsInEstablishedPosition Then Exit Sub
 
 InitialiseTickProcessing
@@ -894,21 +905,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function UnitSize(ByVal risk As Double) As Long
-Const ProcName As String = "UnitSize"
-On Error GoTo Err
-
-UnitSize = Int((mRiskUnitPercent * AccountBalance / 100) / risk)
-If UnitSize > mMaxTradeSize Then UnitSize = mMaxTradeSize
-'If UnitSize = 0 Then UnitSize = 1
-If UnitSize = 0 Then LogTradeMessage "    reject: allowable initial risk exceeded"
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 
 

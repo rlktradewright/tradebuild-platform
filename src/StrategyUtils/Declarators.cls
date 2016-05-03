@@ -237,26 +237,9 @@ Assert Not gInitialisationContext Is Nothing, "Method can only be called during 
 
 Dim oc As OrderContext
 Set oc = gInitialisationContext.PositionManager.OrderContexts.Add(Name)
+If Not gInitialisationContext.AllowUnprotectedPositions Then oc.PreventUnprotectedPositions = True
 
 Set DeclareOrderContext = gCreateResourceIdentifier(oc)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function DeclareProtectedOrderContext(ByVal Name As String) As ResourceIdentifier
-Const ProcName As String = "DeclareProtectedOrderContext"
-On Error GoTo Err
-
-Assert Not gInitialisationContext Is Nothing, "Method can only be called during strategy initialisation"
-
-Dim oc As OrderContext
-Set oc = gInitialisationContext.PositionManager.OrderContexts.Add(Name)
-oc.PreventUnprotectedPositions = True
-
-Set DeclareProtectedOrderContext = gCreateResourceIdentifier(oc)
 
 Exit Function
 

@@ -228,19 +228,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get IsCurrentTickAsk()
+Public Property Get IsCurrentTickAsk() As Boolean
 IsCurrentTickAsk = (gTradingContext.CurrentTick.TickType = TickTypeAsk)
 End Property
 
-Public Property Get IsCurrentTickBid()
+Public Property Get IsCurrentTickBid() As Boolean
 IsCurrentTickBid = (gTradingContext.CurrentTick.TickType = TickTypeBid)
 End Property
 
-Public Property Get IsCurrentTickTrade()
+Public Property Get IsCurrentTickTrade() As Boolean
 IsCurrentTickTrade = (gTradingContext.CurrentTick.TickType = TickTypeTrade)
 End Property
 
-Public Property Get IsCurrentTickVolume()
+Public Property Get IsCurrentTickVolume() As Boolean
 IsCurrentTickVolume = (gTradingContext.CurrentTick.TickType = TickTypeVolume)
 End Property
 
