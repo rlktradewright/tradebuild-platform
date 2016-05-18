@@ -755,7 +755,7 @@ Case BarTypes.BarTypeAsk
 Case BarTypes.BarTypeBid
     pTwsRequest.WhatToShow = TwsWhatToShowBid
 Case BarTypes.BarTypeTrade
-    If pWorkingBarSpecifier.Contract.Specifier.SecType = SecTypeCash Then
+    If pWorkingBarSpecifier.Contract.Specifier.Sectype = SecTypeCash Then
         pTwsRequest.WhatToShow = TwsWhatToShowMidpoint
     Else
         pTwsRequest.WhatToShow = TwsWhatToShowTrades
