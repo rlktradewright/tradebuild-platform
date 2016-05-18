@@ -414,6 +414,79 @@ End Sub
 
 
 
+Public Sub BarEndTime_OneWeek_0100()
+Assert.AreEqual "2016-01-17 16:30:00.000", _
+                FormatTimestamp( _
+                    BarEndTime(CDate("15/1/16 11:57:00"), _
+                                GetTimePeriod(1, TimePeriodWeek), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarEndTime_OneWeek_0200()
+Assert.AreEqual "2016-01-03 16:30:00.000", _
+                FormatTimestamp( _
+                    BarEndTime(CDate("30/12/15 11:57:00"), _
+                                GetTimePeriod(1, TimePeriodWeek), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarEndTime_OneWeek_0300()
+Assert.AreEqual "2016-01-10 16:30:00.000", _
+                FormatTimestamp( _
+                    BarEndTime(CDate("03/01/16 17:45:00"), _
+                                GetTimePeriod(1, TimePeriodWeek), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+
+
+
+
+
+
+
+Public Sub BarEndTime_TwoWeek_0100()
+Assert.AreEqual "2016-01-17 16:30:00.000", _
+                FormatTimestamp( _
+                    BarEndTime(CDate("15/1/16 11:57:00"), _
+                                GetTimePeriod(2, TimePeriodWeek), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarEndTime_TwoWeek_0200()
+Assert.AreEqual "2016-01-03 16:30:00.000", _
+                FormatTimestamp( _
+                    BarEndTime(CDate("30/12/15 11:57:00"), _
+                                GetTimePeriod(2, TimePeriodWeek), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarEndTime_TwoWeek_0300()
+Assert.AreEqual "2016-01-17 16:30:00.000", _
+                FormatTimestamp( _
+                    BarEndTime(CDate("03/01/16 17:45:00"), _
+                                GetTimePeriod(2, TimePeriodWeek), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+
+
+
+
+
+
 
 Public Sub BarStartTime_SevenSeconds_0100()
 Assert.AreEqual "2016-01-15 08:00:00.000", _
@@ -733,6 +806,76 @@ Assert.AreEqual "2016-01-18 08:00:00.000", _
                                 CDate("08:00")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
+
+
+
+
+Public Sub BarStartTime_OneWeek_0100()
+Assert.AreEqual "2016-01-10 16:30:00.000", _
+                FormatTimestamp( _
+                    BarStartTime(CDate("15/1/16 11:57:00"), _
+                                GetTimePeriod(1, TimePeriodWeek), _
+                                CDate("16:30")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarStartTime_OneWeek_0200()
+Assert.AreEqual "2015-12-27 16:30:00.000", _
+                FormatTimestamp( _
+                    BarStartTime(CDate("30/12/15 11:57:00"), _
+                                GetTimePeriod(1, TimePeriodWeek), _
+                                CDate("16:30")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarStartTime_OneWeek_0300()
+Assert.AreEqual "2016-01-03 16:30:00.000", _
+                FormatTimestamp( _
+                    BarStartTime(CDate("03/01/16 17:45:00"), _
+                                GetTimePeriod(1, TimePeriodWeek), _
+                                CDate("16:30")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+
+
+
+
+
+
+
+Public Sub BarStartTime_TwoWeek_0100()
+Assert.AreEqual "2016-01-03 16:30:00.000", _
+                FormatTimestamp( _
+                    BarStartTime(CDate("15/1/16 11:57:00"), _
+                                GetTimePeriod(2, TimePeriodWeek), _
+                                CDate("16:30")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarStartTime_TwoWeek_0200()
+Assert.AreEqual "2015-12-20 16:30:00.000", _
+                FormatTimestamp( _
+                    BarStartTime(CDate("30/12/15 11:57:00"), _
+                                GetTimePeriod(2, TimePeriodWeek), _
+                                CDate("16:30")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarStartTime_TwoWeek_0300()
+Assert.AreEqual "2016-01-03 16:30:00.000", _
+                FormatTimestamp( _
+                    BarStartTime(CDate("03/01/16 17:45:00"), _
+                                GetTimePeriod(2, TimePeriodWeek), _
+                                CDate("16:30")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+
+
+
+
+
 
 
 '@================================================================================
