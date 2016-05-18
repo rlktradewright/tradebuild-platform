@@ -170,7 +170,11 @@ Case TimePeriodDay
     End If
 Case TimePeriodWeek
     Dim weekNum As Long
-    weekNum = DatePart("ww", dayNum, vbMonday, vbFirstFullWeek)
+    If sessionStartSecs >= MidDay Then
+        weekNum = DatePart("ww", dayNum + 1, vbMonday, vbFirstFullWeek)
+    Else
+        weekNum = DatePart("ww", dayNum, vbMonday, vbFirstFullWeek)
+    End If
     
     If weekNum >= 52 And Month(dayNum) = 1 Then
         ' this must be part of the final week of the previous year
@@ -178,7 +182,7 @@ Case TimePeriodWeek
     End If
     gBarStartTime = gDtoS(WeekStartDateFromWeekNumber(1 + BarTimePeriod.Length * Int((weekNum - 1) / BarTimePeriod.Length), _
                                         dayNum) + SessionStartTime)
-
+    If sessionStartSecs >= MidDay Then gBarStartTime = gBarStartTime - OneDay
 Case TimePeriodMonth
     Dim monthNum As Long
     
@@ -186,7 +190,7 @@ Case TimePeriodMonth
     gBarStartTime = gDtoS(MonthStartDateFromMonthNumber(1 + BarTimePeriod.Length * Int((monthNum - 1) / BarTimePeriod.Length), _
                                         dayNum) + SessionStartTime)
 Case TimePeriodYear
-    gBarStartTime = gDtoS(DateSerial(1900 + BarTimePeriod.Length * Int((Year(dayNumSecs) - 1900) / BarTimePeriod.Length), 1, 1))
+    gBarStartTime = gDtoS(CDate(DateSerial(1900 + BarTimePeriod.Length * Int((Year(Timestamp) - 1900) / BarTimePeriod.Length), 1, 1)))
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
         TimePeriodTickMovement, _
