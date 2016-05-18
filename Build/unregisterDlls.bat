@@ -43,9 +43,6 @@ if errorlevel 1 goto :err
 call unregisterComponent.bat TickerUtils dll 
 if errorlevel 1 goto :err
 
-call unregisterComponent.bat StrategyUtils dll 
-if errorlevel 1 goto :err
-
 call unregisterComponent.bat WorkspaceUtils dll 
 if errorlevel 1 goto :err
 
@@ -70,10 +67,13 @@ if errorlevel 1 goto :err
 call unregisterComponent.bat CommonStudiesLib dll 
 if errorlevel 1 goto :err
 
-call unregisterComponent.bat TradeBuild dll 
+call unregisterComponent.bat StrategyUtils dll 
 if errorlevel 1 goto :err
 
 call unregisterComponent.bat Strategies dll 
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat TradeBuild dll 
 if errorlevel 1 goto :err
 
 call unregisterComponent.bat ConfigUtils dll 
