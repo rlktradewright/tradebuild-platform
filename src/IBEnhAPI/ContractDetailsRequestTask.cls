@@ -184,7 +184,8 @@ If mContractSpecifier.Sectype = SecTypeNone Then
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuture, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry))
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier))
     
     If mContractSpecifier.LocalSymbol = "" Then
         mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.Symbol, _
@@ -192,7 +193,8 @@ If mContractSpecifier.Sectype = SecTypeNone Then
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
-                                                        mContractSpecifier.Expiry))
+                                                        mContractSpecifier.Expiry, _
+                                                        mContractSpecifier.Multiplier))
     End If
     
     mRequestId3 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
@@ -200,21 +202,24 @@ If mContractSpecifier.Sectype = SecTypeNone Then
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeIndex, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry))
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier))
 
     mRequestId4 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry))
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier))
 
     mRequestId5 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeCash, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry))
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier))
 
 Else
     Dim lTwsContract As TwsContractDetails

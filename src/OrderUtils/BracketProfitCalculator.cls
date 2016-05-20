@@ -345,7 +345,7 @@ If sValueFactor = 0 Then
     
     Dim lContract As IContract
     Set lContract = mContractFuture.Value
-    sValueFactor = lContract.Multiplier
+    sValueFactor = lContract.Specifier.Multiplier
 End If
 
 If Value = 0 Then Exit Sub

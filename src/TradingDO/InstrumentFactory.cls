@@ -828,6 +828,7 @@ With contractSpec
     addTerm cond, InstrumentColumnExchangeName, CondOpEqual, .Exchange
     addTerm cond, InstrumentColumnSecType, CondOpEqual, gCategoryToString(gCategoryFromSecType(.SecType))
     addTerm cond, InstrumentColumnCurrencyE, CondOpEqual, .CurrencyCode
+    If .Multiplier <> 1# Then addTerm cond, InstrumentColumnTickValueE & "/" & InstrumentColumnTickSizeE, CondOpEqual, .Multiplier
     
     Select Case .SecType
     Case SecTypeFuture

@@ -174,20 +174,7 @@ End Sub
 
 Private Sub processContractCommand( _
                 ByVal params As String)
-'params: shortname,sectype,exchange,symbol,currency,expiry,strike,right
-Dim validParams As Boolean
-Dim clp As CommandLineParser
-Dim shortname As String
-Dim sectypeStr As String
-Dim sectype As SecurityTypes
-Dim exchange As String
-Dim symbol As String
-Dim currencyCode As String
-Dim expiry As String
-Dim strikeStr As String
-Dim strike As Double
-Dim optRightStr As String
-Dim optRight As OptionRights
+'params: shortname,sectype,exchange,symbol,currency,expiry.multiplier,strike,right
 
 If gProcessor Is Nothing Then
 ElseIf gProcessor.IsRunning Then
@@ -195,20 +182,21 @@ ElseIf gProcessor.IsRunning Then
     Exit Sub
 End If
 
-Set clp = CreateCommandLineParser(params, InputSep)
+Dim clp As CommandLineParser: Set clp = CreateCommandLineParser(params, InputSep)
 
-validParams = True
+Dim validParams As Boolean: validParams = True
 
-sectypeStr = Trim$(clp.Arg(1))
-exchange = Trim$(clp.Arg(2))
-shortname = Trim$(clp.Arg(0))
-symbol = Trim$(clp.Arg(3))
-currencyCode = Trim$(clp.Arg(4))
-expiry = Trim$(clp.Arg(5))
-strikeStr = Trim$(clp.Arg(6))
-optRightStr = Trim$(clp.Arg(7))
+Dim sectypeStr As String: sectypeStr = Trim$(clp.Arg(1))
+Dim exchange As String: exchange = Trim$(clp.Arg(2))
+Dim shortname As String: shortname = Trim$(clp.Arg(0))
+Dim symbol As String: symbol = Trim$(clp.Arg(3))
+Dim currencyCode As String: currencyCode = Trim$(clp.Arg(4))
+Dim expiry As String: expiry = Trim$(clp.Arg(5))
+Dim multiplierStr: multiplierStr = Trim$(clp.Arg(6))
+Dim strikeStr As String: strikeStr = Trim$(clp.Arg(7))
+Dim optRightStr As String: optRightStr = Trim$(clp.Arg(8))
 
-sectype = SecTypeFromString(sectypeStr)
+Dim sectype As SecurityTypes: sectype = SecTypeFromString(sectypeStr)
 If sectypeStr <> "" And sectype = SecTypeNone Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid sectype '" & sectypeStr & "'"
     validParams = False
@@ -232,7 +220,18 @@ If expiry <> "" Then
         validParams = False
     End If
 End If
+
+Dim multiplier As Double
+If multiplierStr = "" Then
+    multiplier = 1#
+ElseIf IsNumeric(multiplierStr) Then
+    multiplier = CDbl(multiplierStr)
+Else
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid multiplier '" & multiplierStr & "'"
+    validParams = False
+End If
             
+Dim strike As Double
 If strikeStr <> "" Then
     If IsNumeric(strikeStr) Then
         strike = CDbl(strikeStr)
@@ -242,6 +241,7 @@ If strikeStr <> "" Then
     End If
 End If
 
+Dim optRight As OptionRights
 optRight = OptionRightFromString(optRightStr)
 If optRightStr <> "" And optRight = OptNone Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid right '" & optRightStr & "'"
@@ -256,6 +256,7 @@ If validParams Then
                                             sectype, _
                                             currencyCode, _
                                             expiry, _
+                                            multiplier, _
                                             strike, _
                                             optRight)
     gProcessor.SetContract mContractSpec
@@ -405,7 +406,7 @@ gCon.WriteErrorLine "    -Speed:n"
 gCon.WriteErrorLine ""
 gCon.WriteErrorLine "StdIn Format:"
 gCon.WriteErrorLine "#comment"
-gCon.WriteErrorLine "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
+gCon.WriteErrorLine "contract shortname,sectype,exchange,symbol,currency,expiry,multiplier,strike,right"
 gCon.WriteErrorLine "from starttime"
 gCon.WriteErrorLine "to endtime"
 gCon.WriteErrorLine "speed n"

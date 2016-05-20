@@ -39,7 +39,8 @@ Public Const ConfigSectionTickdata                      As String = "TickData"
 Public Const ConfigSettingContractSpecCurrency          As String = ConfigSectionContractspecifier & "&Currency"
 Public Const ConfigSettingContractSpecExpiry            As String = ConfigSectionContractspecifier & "&Expiry"
 Public Const ConfigSettingContractSpecExchange          As String = ConfigSectionContractspecifier & "&Exchange"
-Public Const ConfigSettingContractSpecLocalSYmbol       As String = ConfigSectionContractspecifier & "&LocalSymbol"
+Public Const ConfigSettingContractSpecLocalSymbol       As String = ConfigSectionContractspecifier & "&LocalSymbol"
+Public Const ConfigSettingContractSpecMultiplier        As String = ConfigSectionContractspecifier & "&Multiplier"
 Public Const ConfigSettingContractSpecRight             As String = ConfigSectionContractspecifier & "&Right"
 Public Const ConfigSettingContractSpecSecType           As String = ConfigSectionContractspecifier & "&SecType"
 Public Const ConfigSettingContractSpecStrikePrice       As String = ConfigSectionContractspecifier & "&StrikePrice"
@@ -486,9 +487,8 @@ Private Function getConfigFile() As IConfigStoreProvider
 Const ProcName As String = "getConfigFile"
 On Error GoTo Err
 
-On Error Resume Next
-Set getConfigFile = LoadConfigProviderFromXMLFile(configFilename)
-On Error GoTo Err
+Dim lFso As New FileSystemObject
+If lFso.FileExists(configFilename) Then Set getConfigFile = LoadConfigProviderFromXMLFile(configFilename)
 
 Exit Function
 

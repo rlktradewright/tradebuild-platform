@@ -69,8 +69,7 @@ InitialiseTWUtilities
 
 Set gCon = GetConsole
 
-Dim clp As CommandLineParser
-Set clp = CreateCommandLineParser(Command)
+Dim clp As CommandLineParser: Set clp = CreateCommandLineParser(Command)
 
 If clp.Switch("?") Or _
     clp.NumberOfArgs > 0 Or _
@@ -134,51 +133,38 @@ Do While inString <> gCon.EofString
             gCon.WriteErrorLine "Invalid command '" & Split(inString, " ")(0)
         End If
     Else
-        processInput inString, lineNumber
+        processContractRequest inString, lineNumber
     End If
     inString = Trim$(gCon.ReadLine(":"))
 Loop
 End Sub
 
-Private Sub processInput( _
+Private Sub processContractRequest( _
                 ByVal inString As String, _
                 ByVal lineNumber As Long)
 ' StdIn format:
-' sectype,exchange,shortname,symbol,currency,expiry,strike,right,nametemplate
+' sectype,exchange,shortname,symbol,currency,expiry,multiplier,strike,right,nametemplate
 
-Dim validInput As Boolean
-Dim sectype As SecurityTypes
-Dim sectypeStr As String
-Dim exchange As String
-Dim shortname As String
-Dim symbol As String
-Dim currencyCode As String
-Dim expiry As String
-Dim strike As Double
-Dim strikeStr As String
-Dim optRight As OptionRights
-Dim optRightStr As String
-Dim nametemplate As String
-
-Dim parser As CommandLineParser
-
-Dim failpoint As Long
 On Error GoTo Err
 
+Dim validInput As Boolean
 validInput = True
 
+Dim parser As CommandLineParser
 Set parser = CreateCommandLineParser(inString, ",")
 
-sectypeStr = parser.Arg(0)
-exchange = parser.Arg(1)
-shortname = parser.Arg(2)
-symbol = parser.Arg(3)
-currencyCode = parser.Arg(4)
-expiry = parser.Arg(5)
-strikeStr = parser.Arg(6)
-optRightStr = parser.Arg(7)
-nametemplate = parser.Arg(8)
+Dim sectypeStr As String: sectypeStr = parser.Arg(0)
+Dim exchange As String: exchange = parser.Arg(1)
+Dim shortname As String: shortname = parser.Arg(2)
+Dim symbol As String: symbol = parser.Arg(3)
+Dim currencyCode As String: currencyCode = parser.Arg(4)
+Dim expiry As String: expiry = parser.Arg(5)
+Dim multiplierStr As String: multiplierStr = parser.Arg(6)
+Dim strikeStr As String: strikeStr = parser.Arg(7)
+Dim optRightStr As String: optRightStr = parser.Arg(8)
+Dim nametemplate As String: nametemplate = parser.Arg(9)
 
+Dim sectype As SecurityTypes
 sectype = SecTypeFromString(sectypeStr)
 If sectypeStr <> "" And sectype = SecTypeNone Then
     gCon.WriteErrorLine "Line " & lineNumber & ": Invalid sectype '" & sectypeStr & "'"
@@ -203,7 +189,18 @@ If expiry <> "" Then
         validInput = False
     End If
 End If
+
+Dim multiplier As Double
+If multiplierStr = "" Then
+    multiplier = 1#
+ElseIf IsNumeric(multiplierStr) Then
+    multiplier = CDbl(multiplierStr)
+Else
+    gCon.WriteErrorLine "Line " & lineNumber & ": Invalid multiplier '" & multiplierStr & "'"
+    validInput = False
+End If
             
+Dim strike As Double
 If strikeStr <> "" Then
     If IsNumeric(strikeStr) Then
         strike = CDbl(strikeStr)
@@ -213,6 +210,7 @@ If strikeStr <> "" Then
     End If
 End If
 
+Dim optRight As OptionRights
 optRight = OptionRightFromString(optRightStr)
 If optRightStr <> "" And optRight = OptNone Then
     gCon.WriteErrorLine "Line " & lineNumber & ": Invalid right '" & optRightStr & "'"
@@ -227,6 +225,7 @@ If validInput Then
                                         sectype, _
                                         currencyCode, _
                                         expiry, _
+                                        multiplier, _
                                         strike, _
                                         optRight), _
                 lineNumber, _
@@ -249,7 +248,6 @@ Dim database As String
 Dim username As String
 Dim password As String
 
-Dim failpoint As Long
 On Error GoTo Err
 
 Set clp = CreateCommandLineParser(switchValue, ",")
@@ -360,5 +358,6 @@ gCon.WriteErrorLine ""
 gCon.WriteErrorLine "StdIn Format:"
 gCon.WriteErrorLine "#comment"
 gCon.WriteErrorLine "$echo text"
-gCon.WriteErrorLine "sectype,exchange,shortname,symbol,currency,expiry,strike,right"
+gCon.WriteErrorLine "sectype,exchange,shortname,symbol,currency,expiry,multiplier,strike,right"
+gCon.WriteErrorLine ",nametemplate"
 End Sub

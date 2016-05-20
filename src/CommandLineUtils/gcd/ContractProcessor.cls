@@ -152,6 +152,7 @@ If mContracts.Count <> 0 Then
                         lContract.Specifier.LocalSymbol & OutputSep & _
                         lContract.Specifier.symbol & OutputSep & _
                         lContract.Specifier.expiry & OutputSep & _
+                        lContract.Specifier.multiplier & OutputSep & _
                         lContract.Specifier.strike & OutputSep & _
                         OptionRightToString(lContract.Specifier.Right) & OutputSep & _
                         SecTypeToString(lContract.Specifier.sectype) & OutputSep & _
@@ -163,8 +164,7 @@ If mContracts.Count <> 0 Then
                         Format(lContract.SessionEndTime, "hh:mm") & OutputSep & _
                         lContract.TimezoneName & OutputSep & _
                         lContract.DaysBeforeExpiryToSwitch & OutputSep & _
-                        lContract.NumberOfDecimals & OutputSep & _
-                        lContract.Multiplier
+                        lContract.NumberOfDecimals & OutputSep
     Next
 End If
 

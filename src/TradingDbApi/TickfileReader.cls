@@ -219,7 +219,7 @@ Set mInputTickfileSpecifier = pTickfileSpec
 ' this database may use a different convention for short name (eg "FTSE 100 Future Sep 09"
 ' instead of "ZU9")
 With mInputTickfileSpecifier.Contract.Specifier
-    Set mTargetContractSpec = CreateContractSpecifier("", .Symbol, .Exchange, .SecType, .CurrencyCode, .Expiry, .Strike, .Right)
+    Set mTargetContractSpec = CreateContractSpecifier("", .Symbol, .Exchange, .SecType, .CurrencyCode, .Expiry, .Multiplier, .Strike, .Right)
 End With
 
 checkFetchContract
@@ -531,7 +531,7 @@ Set mContract = mContracts.ItemAtIndex(1)
 With mInputTickfileSpecifier
     .Contract = mContract
     If .EntireSession Then
-        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimezoneName))
+        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimeZoneName))
         Set mSession = mSessionBuilder.Session
         
         If .ToDate = 0# Then .ToDate = .FromDate

@@ -295,6 +295,7 @@ Set contractSpec = CreateContractSpecifier(instrument.ShortName, _
                                         instrument.SecType, _
                                         instrument.CurrencyCode, _
                                         IIf(instrument.ExpiryDate = 0, "", format(instrument.ExpiryDate, "yyyymmdd")), _
+                                        instrument.TickValue / instrument.TickSize, _
                                         instrument.StrikePrice, _
                                         instrument.OptionRight)
 
@@ -305,7 +306,6 @@ With lContractBuilder
     .Description = instrument.Name
     .ExpiryDate = instrument.ExpiryDate
     .TickSize = instrument.TickSize
-    .Multiplier = instrument.TickValue / instrument.TickSize
     .TimeZoneName = instrument.TimeZoneName
     
     .SessionEndTime = instrument.SessionEndTime

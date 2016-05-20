@@ -71,14 +71,15 @@ Private mSortKeys()                     As ContractSortKeyIds
 Private Sub Class_Initialize()
 Set mContracts = CreateSortedDictionary(KeyTypeComparable, True)
 
-ReDim mSortKeys(6) As ContractSortKeyIds
+ReDim mSortKeys(7) As ContractSortKeyIds
 mSortKeys(0) = ContractSortKeySecType
 mSortKeys(1) = ContractSortKeySymbol
-mSortKeys(2) = ContractSortKeyExchange
-mSortKeys(3) = ContractSortKeyCurrency
-mSortKeys(4) = ContractSortKeyExpiry
-mSortKeys(5) = ContractSortKeyStrike
-mSortKeys(6) = ContractSortKeyRight
+mSortKeys(2) = ContractSortKeyMultiplier
+mSortKeys(3) = ContractSortKeyExchange
+mSortKeys(4) = ContractSortKeyCurrency
+mSortKeys(5) = ContractSortKeyExpiry
+mSortKeys(6) = ContractSortKeyStrike
+mSortKeys(7) = ContractSortKeyRight
 
 End Sub
 

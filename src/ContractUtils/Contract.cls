@@ -58,7 +58,6 @@ Private Const ModuleName                As String = "Contract"
 
 Private mSpecifier As IContractSpecifier
 Private mTickSize As Double
-Private mMultiplier As Double
 Private mNumberOfDecimals As Long
 Private mDescription As String
 Private mSessionStartTime As Date
@@ -74,7 +73,6 @@ Private mTimezoneName As String
 
 Private Sub Class_Initialize()
 mDaysBeforeExpiryToSwitch = DefaultDaysBeforeExpiryToSwitch
-mMultiplier = DefaultMultiplier
 mTickSize = DefaultTickSize
 mTimezoneName = DefaultTimezoneName
 End Sub
@@ -93,10 +91,6 @@ End Property
 
 Private Property Get IContract_ExpiryDate() As Date
 IContract_ExpiryDate = ExpiryDate
-End Property
-
-Private Property Get IContract_Multiplier() As Double
-IContract_Multiplier = Multiplier
 End Property
 
 Private Property Get IContract_NumberOfDecimals() As Long
@@ -187,14 +181,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Multiplier() As Double
-Multiplier = mMultiplier
-End Property
-
-Public Property Let Multiplier(ByVal Value As Double)
-mMultiplier = Value
-End Property
-
 Public Property Get NumberOfDecimals() As Long
 NumberOfDecimals = mNumberOfDecimals
 End Property
@@ -266,7 +252,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickValue() As Double
-TickValue = mTickSize * mMultiplier
+TickValue = mTickSize * mSpecifier.Multiplier
 End Property
 
 Public Property Get TimezoneName() As String
@@ -320,7 +306,6 @@ Assert XMLdoc.parseError.errorCode = 0, "Contract XML cannot be parsed"
 
 Set contractEl = XMLdoc.selectSingleNode("contract")
 TickSize = contractEl.getAttribute("minimumtick")
-mMultiplier = contractEl.getAttribute("multiplier")
 If IsNull(contractEl.getAttribute("sessionstarttime")) Then
     mSessionStartTime = "00:00:00"
 Else
@@ -351,12 +336,20 @@ Set specifierEl = contractEl.selectSingleNode("specifier")
 Set specifierObj = New ContractSpecifier
 Me.Specifier = specifierObj
 With specifierObj
+    Dim lMultiplier As Double
+    If Not IsNull(contractEl.getAttribute("multiplier")) Then
+        lMultiplier = contractEl.getAttribute("multiplier")
+    Else
+        lMultiplier = specifierEl.getAttribute("multiplier")
+    End If
+     
     .Initialise specifierEl.getAttribute("localsymbol"), _
                 specifierEl.getAttribute("symbol"), _
                 specifierEl.getAttribute("exchange"), _
                 specifierEl.getAttribute("sectype"), _
                 specifierEl.getAttribute("currencycode"), _
                 specifierEl.getAttribute("expiry"), _
+                lMultiplier, _
                 specifierEl.getAttribute("strike"), _
                 specifierEl.getAttribute("right")
     
@@ -436,8 +429,6 @@ jb.EncodeNameAndValue "DaysBeforeExpiryToSwitch", mDaysBeforeExpiryToSwitch, Def
 jb.EncodeNameAndValue "Description", mDescription, ""
 
 jb.EncodeNameAndValue "ExpiryDate", mExpiryDate, CDate(0#)
-
-jb.EncodeNameAndValue "Multiplier", mMultiplier, DefaultMultiplier
 
 jb.EncodeNameAndValue "ProviderIDs", mProviderIDs, Nothing
 

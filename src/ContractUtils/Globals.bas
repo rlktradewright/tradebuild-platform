@@ -37,7 +37,8 @@ Public Const ConfigSectionContractSpecifier             As String = "Specifier"
 Public Const ConfigSettingContractSpecCurrency          As String = "&Currency"
 Public Const ConfigSettingContractSpecExpiry            As String = "&Expiry"
 Public Const ConfigSettingContractSpecExchange          As String = "&Exchange"
-Public Const ConfigSettingContractSpecLocalSYmbol       As String = "&LocalSymbol"
+Public Const ConfigSettingContractSpecLocalSymbol       As String = "&LocalSymbol"
+Public Const ConfigSettingContractSpecMultiplier        As String = "&Multiplier"
 Public Const ConfigSettingContractSpecRight             As String = "&Right"
 Public Const ConfigSettingContractSpecSecType           As String = "&SecType"
 Public Const ConfigSettingContractSpecStrikePrice       As String = "&StrikePrice"
@@ -62,11 +63,11 @@ Public Const DefaultTimezoneName                        As String = "Eastern Sta
 ' Member variables
 '@================================================================================
 
-Private mExchangeCodes() As String
-Private mMaxExchangeCodesIndex As Long
+Private mExchangeCodes()                                As String
+Private mMaxExchangeCodesIndex                          As Long
 
-Private mCurrencyDescs() As CurrencyDescriptor
-Private mMaxCurrencyDescsIndex As Long
+Private mMaxCurrencyDescsIndex                          As Long
+Private mCurrencyDescs()                                As CurrencyDescriptor
 
 '@================================================================================
 ' Class Event Handlers
@@ -134,6 +135,8 @@ For i = 0 To UBound(pSortkeys)
         gContractSpecsCompare = StrComp(pContractSpec1.Exchange, pContractSpec2.Exchange, vbTextCompare)
     Case ContractSortKeyExpiry
         gContractSpecsCompare = StrComp(pContractSpec1.Expiry, pContractSpec2.Expiry, vbTextCompare)
+    Case ContractSortKeyMultiplier
+        gContractSpecsCompare = StrComp(pContractSpec1.Multiplier, pContractSpec2.Multiplier, vbBinaryCompare)
     Case ContractSortKeyCurrency
         gContractSpecsCompare = StrComp(pContractSpec1.CurrencyCode, pContractSpec2.CurrencyCode, vbTextCompare)
     Case ContractSortKeyRight
@@ -178,7 +181,6 @@ gContractToString = "Specifier=(" & pContract.Specifier.ToString & "); " & _
             "Description=" & pContract.Description & "; " & _
             "Expiry date=" & pContract.ExpiryDate & "; " & _
             "Tick size=" & pContract.TickSize & "; " & _
-            "Multiplier=" & pContract.Multiplier & "; " & _
             "Session start=" & FormatDateTime(pContract.SessionStartTime, vbShortTime) & "; " & _
             "Session end=" & FormatDateTime(pContract.SessionEndTime, vbShortTime) & "; " & _
             "TimezoneName=" & pContract.TimezoneName
@@ -206,7 +208,6 @@ Set lContractElement = XMLdoc.createElement("contract")
 Set XMLdoc.documentElement = lContractElement
 lContractElement.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
 lContractElement.setAttribute "minimumtick", pContract.TickSize
-lContractElement.setAttribute "multiplier", pContract.Multiplier
 lContractElement.setAttribute "sessionstarttime", Format(pContract.SessionStartTime, "hh:mm:ss")
 lContractElement.setAttribute "sessionendtime", Format(pContract.SessionEndTime, "hh:mm:ss")
 lContractElement.setAttribute "Description", pContract.Description
@@ -221,6 +222,7 @@ Specifier.setAttribute "expiry", pContract.Specifier.Expiry
 Specifier.setAttribute "exchange", pContract.Specifier.Exchange
 Specifier.setAttribute "currencycode", pContract.Specifier.CurrencyCode
 Specifier.setAttribute "localsymbol", pContract.Specifier.LocalSymbol
+Specifier.setAttribute "multiplier", pContract.Specifier.Multiplier
 Specifier.setAttribute "right", pContract.Specifier.Right
 Specifier.setAttribute "strike", pContract.Specifier.Strike
 
@@ -254,19 +256,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gCreateContractSpecifier( _
-                Optional ByVal LocalSymbol As String, _
-                Optional ByVal Symbol As String, _
-                Optional ByVal Exchange As String, _
-                Optional ByVal SecType As SecurityTypes = SecTypeNone, _
-                Optional ByVal CurrencyCode As String, _
-                Optional ByVal Expiry As String, _
-                Optional ByVal Strike As Double, _
-                Optional ByVal Right As OptionRights = OptNone) As ContractSpecifier
+                ByVal LocalSymbol As String, _
+                ByVal Symbol As String, _
+                ByVal Exchange As String, _
+                ByVal SecType As SecurityTypes, _
+                ByVal CurrencyCode As String, _
+                ByVal Expiry As String, _
+                ByVal Multiplier As Double, _
+                ByVal Strike As Double, _
+                ByVal Right As OptionRights) As ContractSpecifier
 Const ProcName As String = "gCreateContractSpecifier"
 On Error GoTo Err
 
 Set gCreateContractSpecifier = New ContractSpecifier
-gCreateContractSpecifier.Initialise LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Strike, Right
+gCreateContractSpecifier.Initialise LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Multiplier, Strike, Right
 
 Exit Function
 
@@ -295,15 +298,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gGetCurrencyDescriptor( _
-                ByVal code As String) As CurrencyDescriptor
-Dim index As Long
+                ByVal Code As String) As CurrencyDescriptor
 Const ProcName As String = "gGetCurrencyDescriptor"
-
 On Error GoTo Err
 
 If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
-index = getCurrencyIndex(code)
-AssertArgument index >= 0, "Invalid currency code"
+Dim index As Long
+index = getCurrencyIndex(Code)
+AssertArgument index >= 0, "Invalid currency Code"
 
 gGetCurrencyDescriptor = mCurrencyDescs(index)
 
@@ -315,7 +317,6 @@ End Function
 
 Public Function gGetCurrencyDescriptors() As CurrencyDescriptor()
 Const ProcName As String = "gGetCurrencyDescriptors"
-
 On Error GoTo Err
 
 If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
@@ -362,17 +363,21 @@ Const ProcName As String = "gLoadContractFromConfig"
 On Error GoTo Err
 
 Dim lContract As New Contract
-lContract.Specifier = gLoadContractSpecFromConfig(pConfig.AddConfigurationSection(ConfigSectionContractSpecifier))
+Dim lSpec As ContractSpecifier
+Set lSpec = gLoadContractSpecFromConfig(pConfig.AddConfigurationSection(ConfigSectionContractSpecifier))
+lContract.Specifier = lSpec
 
 With pConfig
     lContract.DaysBeforeExpiryToSwitch = .GetSetting(ConfigSettingDaysBeforeExpiryToSwitch, DefaultDaysBeforeExpiryToSwitch)
     lContract.Description = .GetSetting(ConfigSettingDescription, "")
     lContract.ExpiryDate = CDate(.GetSetting(ConfigSettingExpiryDate, DefaultExpiry))
-    lContract.Multiplier = .GetSetting(ConfigSettingMultiplier, DefaultMultiplier)
     lContract.SessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
     lContract.SessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
     lContract.TickSize = .GetSetting(ConfigSettingTickSize, DefaultTickSize)
     lContract.TimezoneName = .GetSetting(ConfigSettingTimezoneName, DefaultTimezoneName)
+    If .GetSetting(ConfigSettingMultiplier, DefaultMultiplier) <> DefaultMultiplier Then
+        lSpec.Multiplier = .GetSetting(ConfigSettingMultiplier, DefaultMultiplier)
+    End If
 End With
 
 Set gLoadContractFromConfig = lContract
@@ -383,18 +388,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gLoadContractSpecFromConfig(ByVal pConfig As ConfigurationSection) As IContractSpecifier
+Public Function gLoadContractSpecFromConfig(ByVal pConfig As ConfigurationSection) As ContractSpecifier
 Const ProcName As String = "gLoadContractSpecFromConfig"
 On Error GoTo Err
 
 Dim lContractSpec As ContractSpecifier
 With pConfig
-    Set lContractSpec = gCreateContractSpecifier(.GetSetting(ConfigSettingContractSpecLocalSYmbol, ""), _
+    Set lContractSpec = gCreateContractSpecifier(.GetSetting(ConfigSettingContractSpecLocalSymbol, ""), _
                                             .GetSetting(ConfigSettingContractSpecSymbol, ""), _
                                             .GetSetting(ConfigSettingContractSpecExchange, ""), _
                                             gSecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, "")), _
                                             .GetSetting(ConfigSettingContractSpecCurrency, ""), _
                                             .GetSetting(ConfigSettingContractSpecExpiry, ""), _
+                                            .GetSetting(ConfigSettingContractSpecMultiplier, DefaultMultiplier), _
                                             CDbl(.GetSetting(ConfigSettingContractSpecStrikePrice, "0.0")), _
                                             gOptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, "")))
 
@@ -437,11 +443,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gIsValidCurrencyCode(ByVal code As String) As Boolean
+Public Function gIsValidCurrencyCode(ByVal Code As String) As Boolean
 Const ProcName As String = "gIsValidCurrencyCode"
 On Error GoTo Err
 
-gIsValidCurrencyCode = (getCurrencyIndex(code) >= 0)
+gIsValidCurrencyCode = (getCurrencyIndex(Code) >= 0)
 
 Exit Function
 
@@ -449,7 +455,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gIsValidExchangeCode(ByVal code As String) As Boolean
+Public Function gIsValidExchangeCode(ByVal Code As String) As Boolean
 Dim bottom As Long
 Dim top As Long
 Dim middle As Long
@@ -460,15 +466,15 @@ On Error GoTo Err
 
 If mMaxExchangeCodesIndex = 0 Then setupExchangeCodes
 
-code = UCase$(code)
+Code = UCase$(Code)
 bottom = 0
 top = mMaxExchangeCodesIndex
 middle = Fix((bottom + top) / 2)
 
 Do
-    If code < mExchangeCodes(middle) Then
+    If Code < mExchangeCodes(middle) Then
         top = middle
-    ElseIf code > mExchangeCodes(middle) Then
+    ElseIf Code > mExchangeCodes(middle) Then
         bottom = middle
     Else
         gIsValidExchangeCode = True
@@ -477,7 +483,7 @@ Do
     middle = Fix((bottom + top) / 2)
 Loop Until bottom = middle
 
-If code = mExchangeCodes(middle) Then gIsValidExchangeCode = True
+If Code = mExchangeCodes(middle) Then gIsValidExchangeCode = True
 
 Exit Function
 
@@ -635,12 +641,13 @@ Const ProcName As String = "gSaveContractSpecToConfig"
 On Error GoTo Err
 
 With pConfig
-    .SetSetting ConfigSettingContractSpecLocalSYmbol, pContractSpec.LocalSymbol
+    .SetSetting ConfigSettingContractSpecLocalSymbol, pContractSpec.LocalSymbol
     .SetSetting ConfigSettingContractSpecSymbol, pContractSpec.Symbol
     .SetSetting ConfigSettingContractSpecExchange, pContractSpec.Exchange
     .SetSetting ConfigSettingContractSpecSecType, gSecTypeToString(pContractSpec.SecType)
     .SetSetting ConfigSettingContractSpecCurrency, pContractSpec.CurrencyCode
     .SetSetting ConfigSettingContractSpecExpiry, pContractSpec.Expiry
+    .SetSetting ConfigSettingContractSpecMultiplier, pContractSpec.Multiplier
     .SetSetting ConfigSettingContractSpecStrikePrice, pContractSpec.Strike
     .SetSetting ConfigSettingContractSpecRight, gOptionRightToString(pContractSpec.Right)
 End With
@@ -661,7 +668,6 @@ With pConfig
     .SetSetting ConfigSettingDaysBeforeExpiryToSwitch, pContract.DaysBeforeExpiryToSwitch
     .SetSetting ConfigSettingDescription, pContract.Description
     .SetSetting ConfigSettingExpiryDate, FormatTimestamp(pContract.ExpiryDate, TimestampDateOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingMultiplier, pContract.Multiplier
     .SetSetting ConfigSettingSessionEndTime, FormatTimestamp(pContract.SessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingSessionStartTime, FormatTimestamp(pContract.SessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingTickSize, pContract.TickSize
@@ -772,7 +778,7 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub addExchangeCode(ByVal code As String)
+Private Sub addExchangeCode(ByVal Code As String)
 Const ProcName As String = "addExchangeCode"
 
 On Error GoTo Err
@@ -781,7 +787,7 @@ mMaxExchangeCodesIndex = mMaxExchangeCodesIndex + 1
 If mMaxExchangeCodesIndex > UBound(mExchangeCodes) Then
     ReDim Preserve mExchangeCodes(2 * (UBound(mExchangeCodes) + 1) - 1) As String
 End If
-mExchangeCodes(mMaxExchangeCodesIndex) = UCase$(code)
+mExchangeCodes(mMaxExchangeCodesIndex) = UCase$(Code)
 
 Exit Sub
 
@@ -790,7 +796,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub addCurrencyDesc( _
-                ByVal code As String, _
+                ByVal Code As String, _
                 ByVal Description As String)
 Const ProcName As String = "addCurrencyDesc"
 
@@ -800,7 +806,7 @@ mMaxCurrencyDescsIndex = mMaxCurrencyDescsIndex + 1
 If mMaxCurrencyDescsIndex > UBound(mCurrencyDescs) Then
     ReDim Preserve mCurrencyDescs(2 * (UBound(mCurrencyDescs) + 1) - 1) As CurrencyDescriptor
 End If
-mCurrencyDescs(mMaxCurrencyDescsIndex).code = UCase$(code)
+mCurrencyDescs(mMaxCurrencyDescsIndex).Code = UCase$(Code)
 mCurrencyDescs(mMaxCurrencyDescsIndex).Description = UCase$(Description)
 
 Exit Sub
@@ -809,7 +815,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getCurrencyIndex(ByVal code As String) As Long
+Private Function getCurrencyIndex(ByVal Code As String) As Long
 Dim bottom As Long
 Dim top As Long
 Dim middle As Long
@@ -822,15 +828,15 @@ If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
 
 getCurrencyIndex = -1
 
-code = UCase$(code)
+Code = UCase$(Code)
 bottom = 0
 top = mMaxCurrencyDescsIndex
 middle = Fix((bottom + top) / 2)
 
 Do
-    If code < mCurrencyDescs(middle).code Then
+    If Code < mCurrencyDescs(middle).Code Then
         top = middle
-    ElseIf code > mCurrencyDescs(middle).code Then
+    ElseIf Code > mCurrencyDescs(middle).Code Then
         bottom = middle
     Else
         getCurrencyIndex = middle
@@ -839,7 +845,7 @@ Do
     middle = Fix((bottom + top) / 2)
 Loop Until bottom = middle
 
-If code = mCurrencyDescs(middle).code Then getCurrencyIndex = middle
+If Code = mCurrencyDescs(middle).Code Then getCurrencyIndex = middle
 
 Exit Function
 

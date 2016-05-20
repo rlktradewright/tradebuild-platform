@@ -56,19 +56,24 @@ Private Const ModuleName                    As String = "ContractSpecifier"
 ' Member variables
 '@================================================================================
 
-Private mSymbol       As String
-Private mSecType      As SecurityTypes
-Private mExpiry       As String
-Private mStrike       As Double
-Private mRight        As OptionRights
-Private mExchange     As String
-Private mCurrency     As String
-Private mLocalSymbol  As String
-Private mComboLegs    As IComboLegs
+Private mSymbol         As String
+Private mSecType        As SecurityTypes
+Private mExpiry         As String
+Private mStrike         As Double
+Private mRight          As OptionRights
+Private mExchange       As String
+Private mCurrency       As String
+Private mLocalSymbol    As String
+Private mMultiplier     As Double
+Private mComboLegs      As IComboLegs
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+mMultiplier = DefaultMultiplier
+End Sub
 
 '@================================================================================
 ' IContractSpecifier Interface Members
@@ -100,6 +105,10 @@ End Property
 
 Private Property Get IContractSpecifier_LocalSymbol() As String
 IContractSpecifier_LocalSymbol = LocalSymbol
+End Property
+
+Private Property Get IContractSpecifier_Multiplier() As Double
+IContractSpecifier_Multiplier = Multiplier
 End Property
 
 Private Property Get IContractSpecifier_Right() As OptionRights
@@ -210,6 +219,18 @@ Public Property Get LocalSymbol() As String
 LocalSymbol = mLocalSymbol
 End Property
 
+Public Property Let zMultiplier(ByVal Value As Double)
+mMultiplier = Value
+End Property
+
+Friend Property Let Multiplier(ByVal Value As Double)
+mMultiplier = Value
+End Property
+
+Public Property Get Multiplier() As Double
+Multiplier = mMultiplier
+End Property
+
 Public Property Let zRight(ByVal Value As OptionRights)
 Attribute zRight.VB_MemberFlags = "40"
 mRight = Value
@@ -285,13 +306,14 @@ Public Sub Initialise( _
                 Optional ByVal SecType As SecurityTypes = SecTypeNone, _
                 Optional ByVal CurrencyCode As String, _
                 Optional ByVal Expiry As String, _
+                Optional ByVal Multiplier As Double = DefaultMultiplier, _
                 Optional ByVal Strike As Double, _
                 Optional ByVal Right As OptionRights = OptionRights.OptNone)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 AssertArgument LocalSymbol <> "" Or Symbol <> "", "Symbol must be supplied if LocalSymbol is not supplied"
-AssertArgument Exchange = "" Or gIsValidExchangeCode(Exchange), "'" & Exchange & "' is not a valid Exchange code"
+AssertArgument Exchange = "" Or gIsValidExchangeCode(Exchange), "'" & Exchange & "' is not a valid Exchange Code"
 If Expiry <> "" Then AssertArgument gIsValidExpiry(Expiry), "'" & Expiry & "' is not a valid Expiry format"
 
 Select Case SecType
@@ -321,6 +343,7 @@ mExchange = Exchange
 mSecType = SecType
 mCurrency = CurrencyCode
 mExpiry = Expiry
+mMultiplier = Multiplier
 mStrike = Strike
 mRight = Right
 
@@ -356,6 +379,9 @@ jb.EncodeNameAndValue "zExpiry", mExpiry, DefaultExpiry
 jb.EncodeName "zLocalSymbol"
 jb.EncodeValue mLocalSymbol
 
+jb.EncodeName "zMultiplier"
+jb.EncodeValue mMultiplier
+
 jb.EncodeNameAndValue "zRight", mRight, OptNone
 
 jb.EncodeName "zSecType"
@@ -389,6 +415,7 @@ ToString = ToString & IIf(mSecType <> 0, "sectype=" & gSecTypeToString(mSecType)
 ToString = ToString & IIf(mExpiry <> "", "expiry=" & mExpiry & "; ", "")
 ToString = ToString & IIf(mExchange <> "", "exchange=" & mExchange & "; ", "")
 ToString = ToString & IIf(mCurrency <> "", "currencycode=" & mCurrency & "; ", "")
+ToString = ToString & IIf(mMultiplier <> 0, "multiplier=" & mMultiplier & "; ", "")
 Select Case mRight
 Case OptCall, OptPut
     ToString = ToString & "right=" & gOptionRightToString(mRight) & "; "

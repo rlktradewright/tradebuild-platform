@@ -81,10 +81,6 @@ Public Property Let ExpiryDate(ByVal Value As Date)
 mContract.ExpiryDate = Value
 End Property
 
-Public Property Let Multiplier(ByVal Value As Double)
-mContract.Multiplier = Value
-End Property
-
 Public Property Let ProviderIDs(ByVal Value As Parameters)
 mContract.ProviderIDs = Value
 End Property
@@ -113,14 +109,12 @@ End Property
 Friend Sub BuildFrom( _
                 ByVal pContract As IContract)
 Const ProcName As String = "BuildFrom"
-
 On Error GoTo Err
 
 With mContract
     .DaysBeforeExpiryToSwitch = pContract.DaysBeforeExpiryToSwitch
     .Description = pContract.Description
     .ExpiryDate = pContract.ExpiryDate
-    .Multiplier = pContract.Multiplier
     '.ProviderIDs = pContract.ProviderIDs
     .SessionEndTime = pContract.SessionEndTime
     .SessionStartTime = pContract.SessionStartTime
@@ -133,13 +127,11 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Friend Sub Initialise( _
                 ByVal Specifier As IContractSpecifier)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
 Set mContract = New Contract
@@ -152,7 +144,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
-                
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 

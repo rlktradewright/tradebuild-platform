@@ -217,6 +217,7 @@ getUsageString = getUsageString & _
             "                | exch[ange]:<exchangename>" & vbCrLf & _
             "                | curr[ency]:<currencycode>" & vbCrLf & _
             "                | exp[iry]:[yyyymm | yyyymmdd]" & vbCrLf & _
+            "                | mult[iplier]:<multiplier>" & vbCrLf & _
             "                | str[ike]:<price>" & vbCrLf & _
             "                | right:[ CALL | PUT ]" & vbCrLf & _
             "                ]"
@@ -254,29 +255,27 @@ pSymbol = Mid$(pSymbol, 2, Len(pSymbol) - 2)
 
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pSymbol, ";")
 
-Dim lLocalSymbol As String
-lLocalSymbol = lClp.switchValue("localsymbol")
+Dim lLocalSymbol As String: lLocalSymbol = lClp.switchValue("localsymbol")
 If lLocalSymbol = "" Then lLocalSymbol = lClp.switchValue("local")
 
-Dim lSymbol As String
-lSymbol = lClp.switchValue("symbol")
+Dim lSymbol As String: lSymbol = lClp.switchValue("symbol")
 If lSymbol = "" Then lSymbol = lClp.switchValue("symb")
 
-Dim lSectype As String
-lSectype = lClp.switchValue("sectype")
+Dim lSectype As String: lSectype = lClp.switchValue("sectype")
 If lSectype = "" Then lSectype = lClp.switchValue("sec")
 
-Dim lExchange As String
-lExchange = lClp.switchValue("exchange")
+Dim lExchange As String: lExchange = lClp.switchValue("exchange")
 If lExchange = "" Then lExchange = lClp.switchValue("exch")
 
-Dim lCurrency As String
-lCurrency = lClp.switchValue("currency")
+Dim lCurrency As String: lCurrency = lClp.switchValue("currency")
 If lCurrency = "" Then lCurrency = lClp.switchValue("curr")
 
-Dim lExpiry As String
-lExpiry = lClp.switchValue("expiry")
+Dim lExpiry As String: lExpiry = lClp.switchValue("expiry")
 If lExpiry = "" Then lExpiry = lClp.switchValue("exp")
+
+Dim lMultiplier As String: lMultiplier = lClp.switchValue("multiplier")
+If lMultiplier = "" Then lExpiry = lClp.switchValue("mult")
+If lMultiplier = "" Then lMultiplier = "1.0"
 
 Dim lstrike As String
 lstrike = lClp.switchValue("strike")
@@ -292,6 +291,7 @@ Set parseSymbol = CreateContractSpecifier(lLocalSymbol, _
                                         SecTypeFromString(lSectype), _
                                         lCurrency, _
                                         lExpiry, _
+                                        CDbl(lMultiplier), _
                                         CDbl(lstrike), _
                                         OptionRightFromString(lRight))
 

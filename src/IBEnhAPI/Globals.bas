@@ -67,6 +67,8 @@ With gContractSpecToTwsContract
     .Expiry = pContractSpecifier.Expiry
     .IncludeExpired = True
     .LocalSymbol = pContractSpecifier.LocalSymbol
+    .Multiplier = pContractSpecifier.Multiplier
+    If .CurrencyCode = "GBP" And .Multiplier <> 1 Then .Multiplier = .Multiplier * 100
     .OptRight = gOptionRightToTwsOptRight(pContractSpecifier.Right)
     .Sectype = gSecTypeToTwsSecType(pContractSpecifier.Sectype)
     .Strike = pContractSpecifier.Strike
@@ -262,7 +264,7 @@ Case "SUBMITTED"
     gOrderStatusFromString = OrderStatusSubmitted
 Case "PENDINGCANCEL"
     gOrderStatusFromString = OrderStatusCancelling
-Case "CANCELLED"
+Case "CANCELLED", "APICANCELLED"
     gOrderStatusFromString = OrderStatusCancelled
 Case "FILLED"
     gOrderStatusFromString = OrderStatusFilled
@@ -535,14 +537,13 @@ Dim lBuilder As ContractBuilder
 
 With pTwsContractDetails
     With .Summary
-        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
+        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
         If .Expiry <> "" Then
             lBuilder.ExpiryDate = CDate(Left$(.Expiry, 4) & "/" & _
                                                 Mid$(.Expiry, 5, 2) & "/" & _
                                                 Right$(.Expiry, 2))
         End If
     End With
-    lBuilder.Multiplier = .Summary.Multiplier / .PriceMagnifier
     lBuilder.Description = .LongName
     lBuilder.TickSize = .MinTick
     lBuilder.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(.TimeZoneId)

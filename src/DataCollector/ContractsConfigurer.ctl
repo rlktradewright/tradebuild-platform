@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractsConfigurer 
    ClientHeight    =   4305
    ClientLeft      =   0
@@ -212,11 +212,10 @@ UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractsTV_NodeCheck(ByVal Node As MSComctlLib.Node)
-Dim cs As ConfigurationSection
 Const ProcName As String = "ContractsTV_NodeCheck"
 On Error GoTo Err
 
-Set cs = Node.Tag
+Dim cs As ConfigurationSection: Set cs = Node.Tag
 cs.SetAttribute AttributeNameEnabled, IIf(Node.Checked, "True", "False")
 
 Exit Sub
@@ -272,11 +271,10 @@ Private Sub mContractSpecForm_ContractSpecReady( _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)
-Dim cs As ConfigurationSection
-
 Const ProcName As String = "mContractSpecForm_ContractSpecReady"
 On Error GoTo Err
 
+Dim cs As ConfigurationSection
 If mActionAdd Then
     Set cs = addConfigurationSection
     updateConfigurationSection cs, contractSpec, enabled, writeBidAskBars, includeMktDepth
@@ -326,8 +324,6 @@ End Property
 Public Sub Initialise( _
                 ByVal contractsConfig As ConfigurationSection, _
                 ByVal readonly As Boolean)
-Dim contractConfig As ConfigurationSection
-
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -338,6 +334,7 @@ Set mContractsConfig = contractsConfig
 
 ContractsTV.Nodes.Clear
 
+Dim contractConfig As ConfigurationSection
 For Each contractConfig In mContractsConfig
     updateListItem addListItem(contractConfig)
 Next
@@ -367,11 +364,10 @@ End Function
 
 Private Function addListItem( _
                 ByVal contractCS As ConfigurationSection) As Node
-Dim n As Node
 Const ProcName As String = "addListItem"
 On Error GoTo Err
 
-Set n = ContractsTV.Nodes.Add
+Dim n As Node: Set n = ContractsTV.Nodes.Add
 Set n.Tag = contractCS
 Set addListItem = n
 
@@ -383,27 +379,19 @@ End Function
 
 Private Function ConfigurationSectionToContractSpec( _
                 ByVal contractCS As ConfigurationSection) As ContractSpecifier
-Dim localSymbol As String
-Dim symbol As String
-Dim exchange As String
-Dim sectype As SecurityTypes
-Dim currencyCode As String
-Dim expiry As String
-Dim strikePrice As Double
-Dim optRight As OptionRights
-
 Const ProcName As String = "ConfigurationSectionToContractSpec"
 On Error GoTo Err
 
 With contractCS
-    localSymbol = .GetSetting(ConfigSettingContractSpecLocalSYmbol, "")
-    symbol = .GetSetting(ConfigSettingContractSpecSymbol, "")
-    exchange = .GetSetting(ConfigSettingContractSpecExchange, "")
-    sectype = SecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, ""))
-    currencyCode = .GetSetting(ConfigSettingContractSpecCurrency, "")
-    expiry = .GetSetting(ConfigSettingContractSpecExpiry, "")
-    strikePrice = CDbl("0" & .GetSetting(ConfigSettingContractSpecStrikePrice, "0.0"))
-    optRight = OptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, ""))
+    Dim localSymbol As String: localSymbol = .GetSetting(ConfigSettingContractSpecLocalSymbol, "")
+    Dim symbol As String: symbol = .GetSetting(ConfigSettingContractSpecSymbol, "")
+    Dim exchange As String: exchange = .GetSetting(ConfigSettingContractSpecExchange, "")
+    Dim sectype As SecurityTypes: sectype = SecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, ""))
+    Dim currencyCode As String: currencyCode = .GetSetting(ConfigSettingContractSpecCurrency, "")
+    Dim expiry As String: expiry = .GetSetting(ConfigSettingContractSpecExpiry, "")
+    Dim multiplier As Double: multiplier = CDbl(.GetSetting(ConfigSettingContractSpecMultiplier, "1.0"))
+    Dim strikePrice As Double: strikePrice = CDbl("0" & .GetSetting(ConfigSettingContractSpecStrikePrice, "0.0"))
+    Dim optRight As OptionRights: optRight = OptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, ""))
     
     Set ConfigurationSectionToContractSpec = CreateContractSpecifier(localSymbol, _
                                                             symbol, _
@@ -411,6 +399,7 @@ With contractCS
                                                             sectype, _
                                                             currencyCode, _
                                                             expiry, _
+                                                            multiplier, _
                                                             strikePrice, _
                                                             optRight)
 End With
@@ -419,16 +408,14 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-                
 End Function
 
 Private Sub editItem()
-Dim cs As ConfigurationSection
 Const ProcName As String = "editItem"
 On Error GoTo Err
 
 mActionAdd = False
-Set cs = ContractsTV.SelectedItem.Tag
+Dim cs As ConfigurationSection: Set cs = ContractsTV.SelectedItem.Tag
 showContractSpecForm ConfigurationSectionToContractSpec(cs), _
                        CBool(cs.GetAttribute(AttributeNameEnabled, "False")), _
                        CBool(cs.GetAttribute(AttributeNameBidAskBars, "False")), _
@@ -472,12 +459,13 @@ contractCS.SetAttribute AttributeNameEnabled, IIf(enabled, "True", "False")
 contractCS.SetAttribute AttributeNameBidAskBars, IIf(writeBidAskBars, "True", "False")
 contractCS.SetAttribute AttributeNameIncludeMktDepth, IIf(includeMktDepth, "True", "False")
 With contractCS
-    .SetSetting ConfigSettingContractSpecLocalSYmbol, contractSpec.localSymbol
+    .SetSetting ConfigSettingContractSpecLocalSymbol, contractSpec.localSymbol
     .SetSetting ConfigSettingContractSpecSymbol, contractSpec.symbol
     .SetSetting ConfigSettingContractSpecExchange, contractSpec.exchange
     .SetSetting ConfigSettingContractSpecSecType, SecTypeToString(contractSpec.sectype)
     .SetSetting ConfigSettingContractSpecCurrency, contractSpec.currencyCode
     .SetSetting ConfigSettingContractSpecExpiry, contractSpec.expiry
+    .SetSetting ConfigSettingContractSpecMultiplier, contractSpec.multiplier
     .SetSetting ConfigSettingContractSpecStrikePrice, contractSpec.Strike
     .SetSetting ConfigSettingContractSpecRight, OptionRightToString(contractSpec.Right)
 End With
@@ -486,16 +474,14 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-                
 End Sub
 
 Private Sub updateListItem( _
                 ByVal pNode As Node)
-Dim contractCS As ConfigurationSection
 Const ProcName As String = "updateListItem"
 On Error GoTo Err
 
-Set contractCS = pNode.Tag
+Dim contractCS As ConfigurationSection: Set contractCS = pNode.Tag
 pNode.Text = ConfigurationSectionToContractSpec(contractCS).ToString & _
                                     IIf(CBool(contractCS.GetAttribute(AttributeNameBidAskBars, "False")), _
                                         "Bid/Ask bars;", _

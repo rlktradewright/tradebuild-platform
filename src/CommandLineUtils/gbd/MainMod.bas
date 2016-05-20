@@ -386,11 +386,14 @@ currencyCode = Trim$(clp.Arg(4))
 Dim expiry As String
 expiry = Trim$(clp.Arg(5))
 
+Dim multiplierStr As String
+multiplierStr = Trim$(clp.Arg(6))
+
 Dim strikeStr As String
-strikeStr = Trim$(clp.Arg(6))
+strikeStr = Trim$(clp.Arg(7))
 
 Dim optRightStr As String
-optRightStr = Trim$(clp.Arg(7))
+optRightStr = Trim$(clp.Arg(8))
 
 Dim sectype As SecurityTypes
 sectype = SecTypeFromString(sectypeStr)
@@ -418,6 +421,16 @@ If expiry <> "" Then
     End If
 End If
             
+Dim multiplier As Double
+If multiplierStr = "" Then
+    multiplier = 1#
+ElseIf IsNumeric(multiplierStr) Then
+    multiplier = CDbl(multiplierStr)
+Else
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid multiplier '" & multiplierStr & "'"
+    validParams = False
+End If
+            
 Dim strike As Double
 If strikeStr <> "" Then
     If IsNumeric(strikeStr) Then
@@ -443,15 +456,10 @@ If validParams Then
                                             sectype, _
                                             currencyCode, _
                                             expiry, _
+                                            multiplier, _
                                             strike, _
                                             optRight)
 End If
-
-'Exit Sub
-'
-'Err:
-'Set mContractSpec = Nothing
-'gCon.WriteErrorLine "Error: " & Err.Description
 
 Exit Sub
 
@@ -744,7 +752,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub showContractHelp()
-gCon.WriteLineToConsole "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
+gCon.WriteLineToConsole "contract shortname,sectype,exchange,symbol,currency,expiry,multiplier,strike,right"
 End Sub
 
 Private Sub showStdInHelp()

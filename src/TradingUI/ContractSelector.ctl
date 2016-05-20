@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -162,14 +162,16 @@ mLetterWidth = UserControl.TextWidth(widthString) / Len(widthString)
 widthString = ".0123456789"
 mDigitWidth = UserControl.TextWidth(widthString) / Len(widthString)
 
-ReDim mSortKeys(6) As ContractSortKeyIds
+ReDim mSortKeys(8) As ContractSortKeyIds
 mSortKeys(0) = ContractSortKeySecType
 mSortKeys(1) = ContractSortKeySymbol
-mSortKeys(2) = ContractSortKeyExchange
-mSortKeys(3) = ContractSortKeyCurrency
-mSortKeys(4) = ContractSortKeyExpiry
-mSortKeys(5) = ContractSortKeyStrike
-mSortKeys(6) = ContractSortKeyRight
+mSortKeys(2) = ContractSortKeyCurrency
+mSortKeys(3) = ContractSortKeyExchange
+mSortKeys(4) = ContractSortKeyMultiplier
+mSortKeys(5) = ContractSortKeyLocalSymbol
+mSortKeys(6) = ContractSortKeyExpiry
+mSortKeys(7) = ContractSortKeyStrike
+mSortKeys(8) = ContractSortKeyRight
 
 Exit Sub
 

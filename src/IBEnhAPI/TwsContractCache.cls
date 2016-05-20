@@ -75,7 +75,7 @@ If Not IsValidExchangeCode(pContractDetails.Summary.Exchange) Then Exit Sub
 
 Dim lSpec As IContractSpecifier
 With pContractDetails.Summary
-    Set lSpec = CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Strike, gTwsOptionRightToOptionRight(.OptRight))
+    Set lSpec = CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Multiplier, .Strike, gTwsOptionRightToOptionRight(.OptRight))
 End With
 
 Dim lKey As String

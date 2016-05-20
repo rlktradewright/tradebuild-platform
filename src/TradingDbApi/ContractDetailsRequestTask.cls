@@ -182,7 +182,8 @@ If mContractSpecifier.SecType = SecTypeNone Then
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuture, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry)
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier)
     
     If mContractSpecifier.LocalSymbol = "" Then
         requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
@@ -190,7 +191,8 @@ If mContractSpecifier.SecType = SecTypeNone Then
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
-                                                        mContractSpecifier.Expiry)
+                                                        mContractSpecifier.Expiry, _
+                                                        mContractSpecifier.Multiplier)
     End If
     
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
@@ -198,21 +200,24 @@ If mContractSpecifier.SecType = SecTypeNone Then
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeIndex, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry)
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier)
 
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry)
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier)
 
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeCash, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry)
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier)
 
 Else
     requestContracts mContractSpecifier

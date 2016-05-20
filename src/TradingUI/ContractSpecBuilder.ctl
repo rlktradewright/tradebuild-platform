@@ -1,18 +1,27 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
-   ClientHeight    =   3330
+   ClientHeight    =   3585
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   2190
-   ScaleHeight     =   3330
+   ScaleHeight     =   3585
    ScaleWidth      =   2190
+   Begin VB.TextBox MultiplierText 
+      Appearance      =   0  'Flat
+      BorderStyle     =   0  'None
+      Height          =   285
+      Left            =   840
+      TabIndex        =   6
+      Top             =   2160
+      Width           =   1335
+   End
    Begin TWControls40.TWButton AdvancedButton 
       Height          =   330
       Left            =   840
-      TabIndex        =   16
-      Top             =   3000
+      TabIndex        =   17
+      Top             =   3240
       Width           =   1335
       _ExtentX        =   0
       _ExtentY        =   0
@@ -52,8 +61,8 @@ Begin VB.UserControl ContractSpecBuilder
    Begin TWControls40.TWImageCombo RightCombo 
       Height          =   270
       Left            =   840
-      TabIndex        =   7
-      Top             =   2520
+      TabIndex        =   8
+      Top             =   2880
       Width           =   1335
       _ExtentX        =   2355
       _ExtentY        =   476
@@ -135,8 +144,8 @@ Begin VB.UserControl ContractSpecBuilder
       BorderStyle     =   0  'None
       Height          =   285
       Left            =   840
-      TabIndex        =   6
-      Top             =   2160
+      TabIndex        =   7
+      Top             =   2520
       Width           =   1335
    End
    Begin VB.TextBox LocalSymbolText 
@@ -148,27 +157,35 @@ Begin VB.UserControl ContractSpecBuilder
       Top             =   0
       Width           =   1335
    End
+   Begin VB.Label MultiplierLabel 
+      Caption         =   "Multiplier"
+      Height          =   255
+      Left            =   0
+      TabIndex        =   18
+      Top             =   2160
+      Width           =   855
+   End
    Begin VB.Label RightLabel 
       Caption         =   "Right"
       Height          =   255
       Left            =   0
-      TabIndex        =   15
-      Top             =   2520
+      TabIndex        =   16
+      Top             =   2880
       Width           =   855
    End
    Begin VB.Label StrikePriceLabel 
       Caption         =   "Strike price"
       Height          =   255
       Left            =   0
-      TabIndex        =   14
-      Top             =   2160
+      TabIndex        =   15
+      Top             =   2520
       Width           =   855
    End
    Begin VB.Label SymbolLabel 
       Caption         =   "Symbol"
       Height          =   255
       Left            =   0
-      TabIndex        =   13
+      TabIndex        =   14
       Top             =   360
       Width           =   855
    End
@@ -176,7 +193,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Type"
       Height          =   255
       Left            =   0
-      TabIndex        =   12
+      TabIndex        =   13
       Top             =   720
       Width           =   855
    End
@@ -184,7 +201,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Expiry"
       Height          =   255
       Left            =   0
-      TabIndex        =   11
+      TabIndex        =   12
       Top             =   1080
       Width           =   855
    End
@@ -192,7 +209,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Exchange"
       Height          =   255
       Left            =   0
-      TabIndex        =   10
+      TabIndex        =   11
       Top             =   1440
       Width           =   855
    End
@@ -200,7 +217,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Currency"
       Height          =   255
       Left            =   0
-      TabIndex        =   9
+      TabIndex        =   10
       Top             =   1800
       Width           =   855
    End
@@ -208,7 +225,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Short name"
       Height          =   255
       Left            =   0
-      TabIndex        =   8
+      TabIndex        =   9
       Top             =   0
       Width           =   855
    End
@@ -337,7 +354,7 @@ currDescs = GetCurrencyDescriptors
 
 CurrencyCombo.ComboItems.Add , , ""
 For i = 0 To UBound(currDescs)
-    CurrencyCombo.ComboItems.Add , , currDescs(i).code
+    CurrencyCombo.ComboItems.Add , , currDescs(i).Code
 Next
 
 Exit Sub
@@ -423,6 +440,7 @@ If Not ModeAdvanced Then
     ExpiryText.Text = ""
     ExchangeCombo.Text = ""
     CurrencyCombo.Text = ""
+    MultiplierText.Text = ""
     StrikePriceText.Text = ""
     RightCombo.Text = ""
 End If
@@ -550,6 +568,31 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub MultiplierText_Change()
+Const ProcName As String = "MultiplierText_Change"
+On Error GoTo Err
+
+checkIfValid
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub MultiplierText_GotFocus()
+Const ProcName As String = "MultiplierText_GotFocus"
+On Error GoTo Err
+
+MultiplierText.SelStart = 0
+MultiplierText.SelLength = Len(MultiplierText.Text)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub RightCombo_Change()
@@ -691,21 +734,14 @@ End Sub
 Public Property Let BackColor( _
                 ByVal Value As OLE_COLOR)
 UserControl.BackColor = Value
-
 LocalSymbolLabel.BackColor = Value
-
 SymbolLabel.BackColor = Value
-
 TypeLabel.BackColor = Value
-
 ExpiryLabel.BackColor = Value
-
 ExchangeLabel.BackColor = Value
-
 CurrencyLabel.BackColor = Value
-
+MultiplierLabel.BackColor = Value
 StrikePriceLabel.BackColor = Value
-
 RightLabel.BackColor = Value
 End Property
 
@@ -729,6 +765,7 @@ ExchangeCombo = Value.Exchange
 TypeCombo = SecTypeToString(Value.secType)
 CurrencyCombo = Value.CurrencyCode
 ExpiryText = Value.Expiry
+MultiplierText = IIf(Value.Multiplier = 1, "", CStr(Value.Multiplier))
 StrikePriceText = Value.Strike
 RightCombo = OptionRightToString(Value.Right)
 
@@ -742,6 +779,13 @@ Public Property Get ContractSpecifier() As IContractSpecifier
 Const ProcName As String = "contractSpecifier"
 On Error GoTo Err
 
+Dim lMultiplier As Double
+If MultiplierText.Text = "" Then
+    lMultiplier = 1#
+Else
+    lMultiplier = CStr(MultiplierText.Text)
+End If
+    
 Set ContractSpecifier = CreateContractSpecifier( _
                                 LocalSymbolText, _
                                 SymbolText, _
@@ -749,6 +793,7 @@ Set ContractSpecifier = CreateContractSpecifier( _
                                 SecTypeFromString(TypeCombo), _
                                 CurrencyCombo, _
                                 ExpiryText, _
+                                lMultiplier, _
                                 IIf(StrikePriceText = "", 0, StrikePriceText), _
                                 OptionRightFromString(RightCombo))
 
@@ -764,21 +809,14 @@ Const ProcName As String = "foreColor"
 On Error GoTo Err
 
 LocalSymbolLabel.ForeColor = Value
-
 SymbolLabel.ForeColor = Value
-
 TypeLabel.ForeColor = Value
-
 ExpiryLabel.ForeColor = Value
-
 ExchangeLabel.ForeColor = Value
-
 CurrencyLabel.ForeColor = Value
-
+MultiplierLabel.ForeColor = Value
 StrikePriceLabel.ForeColor = Value
-
 RightLabel.ForeColor = Value
-
 Exit Property
 
 Err:
@@ -882,6 +920,7 @@ ExchangeCombo.Text = ""
 TypeCombo.Text = ""
 CurrencyCombo.Text = ""
 ExpiryText.Text = ""
+MultiplierText.Text = ""
 StrikePriceText.Text = ""
 RightCombo.Text = ""
 End Sub
@@ -921,6 +960,15 @@ If CurrencyCombo.Text <> "" Then
     End If
 End If
 
+If MultiplierText.Text <> "" Then
+    Dim lMultiplier As Double
+    lMultiplier = CStr(MultiplierText.Text)
+    If lMultiplier <= 0# Then
+        RaiseEvent NotReady
+        Exit Sub
+    End If
+End If
+
 If StrikePriceText <> "" Then
     If Not IsNumeric(StrikePriceText) Then
         RaiseEvent NotReady
@@ -938,8 +986,11 @@ RaiseEvent Ready
 Exit Sub
 
 Err:
+If Err.Number = VBErrorCodes.VbErrTypeMismatch Then
+    RaiseEvent NotReady
+    Exit Sub
+End If
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub handleCurrencyComboChange()
@@ -1055,8 +1106,15 @@ CurrencyCombo.Top = CurrencyLabel.Top
 CurrencyCombo.Left = LocalSymbolLabel.Width
 CurrencyCombo.Width = controlWidth
 
+MultiplierLabel.Visible = mModeAdvanced
+MultiplierLabel.Top = CurrencyCombo.Top + CurrencyCombo.Height + lRowSpacing
+MultiplierText.Visible = mModeAdvanced
+MultiplierText.Top = MultiplierLabel.Top
+MultiplierText.Left = LocalSymbolLabel.Width
+MultiplierText.Width = controlWidth
+
 StrikePriceLabel.Visible = mModeAdvanced
-StrikePriceLabel.Top = CurrencyCombo.Top + CurrencyCombo.Height + lRowSpacing
+StrikePriceLabel.Top = MultiplierText.Top + MultiplierText.Height + lRowSpacing
 StrikePriceText.Visible = mModeAdvanced
 StrikePriceText.Top = StrikePriceLabel.Top
 StrikePriceText.Left = LocalSymbolLabel.Width

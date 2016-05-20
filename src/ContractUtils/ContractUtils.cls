@@ -40,6 +40,7 @@ Public Enum ContractSortKeyIds
     ContractSortKeySecType
     ContractSortKeyExchange
     ContractSortKeyExpiry
+    ContractSortKeyMultiplier
     ContractSortKeyCurrency
     ContractSortKeyRight
     ContractSortKeyStrike
@@ -72,7 +73,7 @@ End Enum
 '@================================================================================
 
 Public Type CurrencyDescriptor
-    code                As String
+    Code        As String
     Description         As String
 End Type
 
@@ -390,12 +391,13 @@ Public Function CreateContractSpecifier( _
                 Optional ByVal SecType As SecurityTypes = SecTypeNone, _
                 Optional ByVal CurrencyCode As String, _
                 Optional ByVal Expiry As String, _
+                Optional ByVal Multiplier As Double = 1#, _
                 Optional ByVal Strike As Double, _
                 Optional ByVal Right As OptionRights = OptNone) As IContractSpecifier
 Const ProcName As String = "CreateContractSpecifier"
 On Error GoTo Err
 
-Set CreateContractSpecifier = gCreateContractSpecifier(LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Strike, Right)
+Set CreateContractSpecifier = gCreateContractSpecifier(LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Multiplier, Strike, Right)
 
 Exit Function
 

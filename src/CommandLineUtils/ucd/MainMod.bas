@@ -68,39 +68,37 @@ Public gAllowOverrides  As Boolean
 '@================================================================================
 
 Public Sub Main()
-Dim clp As CommandLineParser
-
 On Error GoTo Err
 
 InitialiseTWUtilities
 
 Set gCon = GetConsole
 
-Set clp = CreateCommandLineParser(Command)
-
+Dim clp As CommandLineParser: Set clp = CreateCommandLineParser(Command)
 If clp.Switch("?") Or _
     clp.NumberOfSwitches = 0 _
 Then
     showUsage
-Else
-    If clp.Switch("todb") Then
-        If setupDb(clp.switchValue("todb")) Then
-            If clp.Switch("U") Then gUpdate = True
-            If clp.Switch("O") Then gAllowOverrides = True
-            If clp.Arg(0) = "" Then
-                process
+    Exit Sub
+End If
+
+If clp.Switch("todb") Then
+    If setupDb(clp.switchValue("todb")) Then
+        If clp.Switch("U") Then gUpdate = True
+        If clp.Switch("O") Then gAllowOverrides = True
+        If clp.Arg(0) = "" Then
+            Process
+        Else
+            Set gInstrumentClass = gDb.InstrumentClassFactory.LoadByName(clp.Arg(0))
+            If gInstrumentClass Is Nothing Then
+                gCon.WriteErrorLine clp.Arg(0) & " is not a valid contract class"
             Else
-                Set gInstrumentClass = gDb.InstrumentClassFactory.LoadByName(clp.Arg(0))
-                If gInstrumentClass Is Nothing Then
-                    gCon.WriteErrorLine clp.Arg(0) & " is not a valid contract class"
-                Else
-                    process
-                End If
+                Process
             End If
         End If
-    Else
-        showUsage
     End If
+Else
+    showUsage
 End If
 
 TerminateTWUtilities
@@ -110,15 +108,13 @@ Exit Sub
 Err:
 If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
 TerminateTWUtilities
-
-    
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub process()
+Private Sub Process()
 Dim inString As String
 Dim lineNumber As Long
 
@@ -134,13 +130,13 @@ Do While inString <> gCon.EofString
         If Len(inString) >= Len(ClassCommand) And _
             UCase$(Left$(inString, Len(ClassCommand))) = ClassCommand _
         Then
-            Dim class As String
+            Dim Class As String
             
-            class = Trim$(Right$(inString, Len(inString) - Len(ClassCommand)))
-            gCon.WriteLineToConsole "Using contract class " & class
-            Set gInstrumentClass = gDb.InstrumentClassFactory.LoadByName(class)
+            Class = Trim$(Right$(inString, Len(inString) - Len(ClassCommand)))
+            gCon.WriteLineToConsole "Using contract class " & Class
+            Set gInstrumentClass = gDb.InstrumentClassFactory.LoadByName(Class)
             If gInstrumentClass Is Nothing Then
-                gCon.WriteErrorLine class & " is not a valid contract class"
+                gCon.WriteErrorLine Class & " is not a valid contract class"
             End If
         End If
     Else
@@ -158,48 +154,25 @@ Private Sub processInput( _
                 ByVal inString As String, _
                 ByVal lineNumber As Long)
 ' StdIn format:
-' name,shortname,symbol,expiry,strike,right[,[sectype][,[exchange][,[currency][,[ticksize][,[tickvalue]]]]]]
-Dim validInput As Boolean
-
-Dim sectype As SecurityTypes
-Dim sectypeStr As String
-Dim exchange As String
-Dim name As String
-Dim shortname As String
-Dim symbol As String
-Dim currencyCode As String
-Dim expiry As String
-Dim expiryDate As Date
-Dim strike As Double
-Dim strikeStr As String
-Dim optRight As OptionRights
-Dim optRightStr As String
-Dim tickSizeStr As String
-Dim tickSize As Double
-Dim tickValueStr As String
-Dim tickValue As Double
-Dim update As Boolean
-
-Dim parser As CommandLineParser
-
-Dim failpoint As Long
+' name,shortname,symbol,expiry,multiplier,strike,right[,[sectype][,[exchange][,[currency][,[ticksize][,[tickvalue]]]]]]
 On Error GoTo Err
 
-validInput = True
+Dim validInput As Boolean: validInput = True
 
-Set parser = CreateCommandLineParser(inString, ",")
+Dim parser As CommandLineParser: Set parser = CreateCommandLineParser(inString, ",")
 
-name = parser.Arg(0)
-shortname = parser.Arg(1)
-symbol = parser.Arg(2)
-expiry = parser.Arg(3)
-strikeStr = parser.Arg(4)
-optRightStr = parser.Arg(5)
-sectypeStr = parser.Arg(6)
-exchange = parser.Arg(7)
-currencyCode = parser.Arg(8)
-tickSizeStr = parser.Arg(9)
-tickValueStr = parser.Arg(10)
+Dim name As String: name = parser.Arg(0)
+Dim shortname As String: shortname = parser.Arg(1)
+Dim symbol As String: symbol = parser.Arg(2)
+Dim expiry As String: expiry = parser.Arg(3)
+Dim multiplier As Double: multiplier = CDbl(parser.Arg(4))
+Dim strikeStr As String: strikeStr = parser.Arg(5)
+Dim optRightStr As String: optRightStr = parser.Arg(6)
+Dim sectypeStr As String: sectypeStr = parser.Arg(7)
+Dim exchange As String: exchange = parser.Arg(8)
+Dim currencyCode As String: currencyCode = parser.Arg(9)
+Dim tickSizeStr As String: tickSizeStr = parser.Arg(10)
+Dim tickValueStr As String: tickValueStr = parser.Arg(11)
 
 If name = "" Then
     gCon.WriteErrorLine "Line " & lineNumber & ": name must be supplied"
@@ -213,6 +186,65 @@ End If
 
 If symbol = "" Then
     gCon.WriteErrorLine "Line " & lineNumber & ": symbol must be supplied"
+    validInput = False
+End If
+
+Dim sectype As SecurityTypes: sectype = SecTypeFromString(sectypeStr)
+If sectypeStr <> "" And sectype = SecTypeNone Then
+    gCon.WriteErrorLine "Line " & lineNumber & ": Invalid sectype '" & sectypeStr & "'"
+    validInput = False
+End If
+
+Dim expiryDate As Date
+If expiry <> "" Then
+    If IsDate(expiry) Then
+        expiryDate = CDate(expiry)
+    ElseIf Len(expiry) = 8 Then
+        If IsDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & Right$(expiry, 2)) Then
+            expiryDate = CDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & Right$(expiry, 2))
+        Else
+            gCon.WriteErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
+            validInput = False
+        End If
+    Else
+        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
+        validInput = False
+    End If
+End If
+
+Dim strike As Double
+If strikeStr <> "" Then
+    If IsNumeric(strikeStr) Then
+        strike = CDbl(strikeStr)
+    Else
+        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid strike '" & strikeStr & "'"
+        validInput = False
+    End If
+End If
+
+Dim tickSize As Double
+If tickSizeStr <> "" Then
+    If IsNumeric(tickSizeStr) Then
+        tickSize = CDbl(tickSizeStr)
+    Else
+        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid ticksize '" & tickSizeStr & "'"
+        validInput = False
+    End If
+End If
+
+Dim tickValue As Double
+If tickValueStr <> "" Then
+    If IsNumeric(tickValueStr) Then
+        tickValue = CDbl(tickValueStr)
+    Else
+        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid tickvalue '" & tickValueStr & "'"
+        validInput = False
+    End If
+End If
+
+Dim optRight As OptionRights: optRight = OptionRightFromString(optRightStr)
+If optRightStr <> "" And optRight = OptNone Then
+    gCon.WriteErrorLine "Line " & lineNumber & ": Invalid right '" & optRightStr & "'"
     validInput = False
 End If
 
@@ -239,61 +271,6 @@ Then
     End If
 End If
 
-sectype = SecTypeFromString(sectypeStr)
-If sectypeStr <> "" And sectype = SecTypeNone Then
-    gCon.WriteErrorLine "Line " & lineNumber & ": Invalid sectype '" & sectypeStr & "'"
-    validInput = False
-End If
-
-If expiry <> "" Then
-    If IsDate(expiry) Then
-        expiryDate = CDate(expiry)
-    ElseIf Len(expiry) = 8 Then
-        If IsDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & Right$(expiry, 2)) Then
-            expiryDate = CDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & Right$(expiry, 2))
-        Else
-            gCon.WriteErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
-            validInput = False
-        End If
-    Else
-        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
-        validInput = False
-    End If
-End If
-            
-If strikeStr <> "" Then
-    If IsNumeric(strikeStr) Then
-        strike = CDbl(strikeStr)
-    Else
-        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid strike '" & strikeStr & "'"
-        validInput = False
-    End If
-End If
-
-If tickSizeStr <> "" Then
-    If IsNumeric(tickSizeStr) Then
-        tickSize = CDbl(tickSizeStr)
-    Else
-        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid ticksize '" & tickSizeStr & "'"
-        validInput = False
-    End If
-End If
-
-If tickValueStr <> "" Then
-    If IsNumeric(tickValueStr) Then
-        tickValue = CDbl(tickValueStr)
-    Else
-        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid tickvalue '" & tickValueStr & "'"
-        validInput = False
-    End If
-End If
-
-optRight = OptionRightFromString(optRightStr)
-If optRightStr <> "" And optRight = OptNone Then
-    gCon.WriteErrorLine "Line " & lineNumber & ": Invalid right '" & optRightStr & "'"
-    validInput = False
-End If
-
 If Not validInput Then Exit Sub
 
 If (exchange <> "" And exchange <> gInstrumentClass.ExchangeName) Or _
@@ -312,6 +289,7 @@ Then
                                                 sectype, _
                                                 currencyCode, _
                                                 expiry, _
+                                                multiplier, _
                                                 strike, _
                                                 optRight).ToString & _
                         "; tickSize=" & tickSize & _
@@ -321,85 +299,81 @@ End If
 
 If Not validInput Then
     gCon.WriteErrorLine inString
+    Exit Sub
+End If
+    
+Dim update As Boolean
+
+Dim lInstr As Instrument: Set lInstr = gDb.InstrumentFactory.LoadByName(gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name)
+If lInstr Is Nothing Then
+    Set lInstr = gDb.InstrumentFactory.MakeNew
+ElseIf Not gUpdate Then
+    gCon.WriteErrorLine "Line " & lineNumber & ": Already exists: " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
+    Exit Sub
 Else
-    'Dim lInstr As Instrument
-    'Dim scb As New SimpleConditionBuilder
-    '
-    'scb.addTerm "shortname", CondOpEqual, shortname
-    'Set lInstr = gDb.InstrumentFactory.LoadByQuery(scb.conditionString)
-    
-    Dim lInstr As Instrument
-    Set lInstr = gDb.InstrumentFactory.LoadByName(gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name)
-    If lInstr Is Nothing Then
-        Set lInstr = gDb.InstrumentFactory.MakeNew
-    ElseIf Not gUpdate Then
-        gCon.WriteErrorLine "Line " & lineNumber & ": Already exists: " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
-        Exit Sub
+    update = True
+End If
+
+lInstr.InstrumentClass = gInstrumentClass
+lInstr.name = name
+lInstr.shortname = shortname
+lInstr.symbol = symbol
+If gInstrumentClass.sectype = SecTypeFuture Then
+    lInstr.expiryDate = expiryDate
+ElseIf gInstrumentClass.sectype = SecTypeOption Or _
+    gInstrumentClass.sectype = SecTypeFuturesOption _
+Then
+    lInstr.expiryDate = expiryDate
+    lInstr.StrikePrice = strike
+    lInstr.OptionRight = optRight
+End If
+
+If tickSize <> 0 And tickSize <> gInstrumentClass.tickSize Then
+    lInstr.tickSize = tickSize
+Else
+    lInstr.TickSizeString = ""
+End If
+
+If tickValue <> 0 And tickValue <> gInstrumentClass.tickValue Then
+    lInstr.tickValue = tickValue
+Else
+    lInstr.TickValueString = ""
+End If
+
+If currencyCode <> "" And currencyCode <> gInstrumentClass.currencyCode Then
+    lInstr.currencyCode = currencyCode
+Else
+    lInstr.currencyCode = ""
+End If
+
+If lInstr.IsValid Then
+    lInstr.ApplyEdit
+    If update Then
+        gCon.WriteLineToConsole "Updated: " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
     Else
-        update = True
+        gCon.WriteLineToConsole "Added:   " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
     End If
-    
-    lInstr.InstrumentClass = gInstrumentClass
-    lInstr.name = name
-    lInstr.shortname = shortname
-    lInstr.symbol = symbol
-    If gInstrumentClass.sectype = SecTypeFuture Then
-        lInstr.expiryDate = expiryDate
-    ElseIf gInstrumentClass.sectype = SecTypeOption Or _
-        gInstrumentClass.sectype = SecTypeFuturesOption _
-    Then
-        lInstr.expiryDate = expiryDate
-        lInstr.StrikePrice = strike
-        lInstr.OptionRight = optRight
-    End If
-    
-    If tickSize <> 0 And tickSize <> gInstrumentClass.tickSize Then
-        lInstr.tickSize = tickSize
-    Else
-        lInstr.TickSizeString = ""
-    End If
-    
-    If tickValue <> 0 And tickValue <> gInstrumentClass.tickValue Then
-        lInstr.tickValue = tickValue
-    Else
-        lInstr.TickValueString = ""
-    End If
-    
-    If currencyCode <> "" And currencyCode <> gInstrumentClass.currencyCode Then
-        lInstr.currencyCode = currencyCode
-    Else
-        lInstr.currencyCode = ""
-    End If
-    
-    If lInstr.IsValid Then
-        lInstr.ApplyEdit
-        If update Then
-            gCon.WriteLineToConsole "Updated: " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
-        Else
-            gCon.WriteLineToConsole "Added:   " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
-        End If
-    Else
-        Dim lErr As ErrorItem
-        For Each lErr In lInstr.ErrorList
-            Select Case lErr.RuleId
-            Case BusinessRuleIds.BusRuleInstrumentNameValid
-                gCon.WriteErrorLine "Line " & lineNumber & ": name invalid: " & "" & name & ""
-            Case BusinessRuleIds.BusRuleInstrumentOptionRightvalid
-                gCon.WriteErrorLine "Line " & lineNumber & ": right invalid"
-            Case BusinessRuleIds.BusRuleInstrumentShortNameValid
-                gCon.WriteErrorLine "Line " & lineNumber & ": shortname invalid"
-            Case BusinessRuleIds.BusRuleInstrumentStrikePriceValid
-                gCon.WriteErrorLine "Line " & lineNumber & ": strike invalid"
-            Case BusinessRuleIds.BusRuleInstrumentSymbolValid
-                gCon.WriteErrorLine "Line " & lineNumber & ": symbol invalid"
-            Case BusinessRuleIds.BusRuleInstrumentTickSizeValid
-                gCon.WriteErrorLine "Line " & lineNumber & ": ticksize invalid"
-            Case BusinessRuleIds.BusRuleInstrumentTickValueValid
-                gCon.WriteErrorLine "Line; " & lineNumber & ": tickvalue invalid"
-            End Select
-        Next
-        gCon.WriteErrorLine inString
-    End If
+Else
+    Dim lErr As ErrorItem
+    For Each lErr In lInstr.ErrorList
+        Select Case lErr.RuleId
+        Case BusinessRuleIds.BusRuleInstrumentNameValid
+            gCon.WriteErrorLine "Line " & lineNumber & ": name invalid: " & "" & name & ""
+        Case BusinessRuleIds.BusRuleInstrumentOptionRightvalid
+            gCon.WriteErrorLine "Line " & lineNumber & ": right invalid"
+        Case BusinessRuleIds.BusRuleInstrumentShortNameValid
+            gCon.WriteErrorLine "Line " & lineNumber & ": shortname invalid"
+        Case BusinessRuleIds.BusRuleInstrumentStrikePriceValid
+            gCon.WriteErrorLine "Line " & lineNumber & ": strike invalid"
+        Case BusinessRuleIds.BusRuleInstrumentSymbolValid
+            gCon.WriteErrorLine "Line " & lineNumber & ": symbol invalid"
+        Case BusinessRuleIds.BusRuleInstrumentTickSizeValid
+            gCon.WriteErrorLine "Line " & lineNumber & ": ticksize invalid"
+        Case BusinessRuleIds.BusRuleInstrumentTickValueValid
+            gCon.WriteErrorLine "Line; " & lineNumber & ": tickvalue invalid"
+        End Select
+    Next
+    gCon.WriteErrorLine inString
 End If
         
 Exit Sub
@@ -419,7 +393,6 @@ Dim database As String
 Dim username As String
 Dim password As String
 
-Dim failpoint As Long
 On Error GoTo Err
 
 Set clp = CreateCommandLineParser(switchValue, ",")
@@ -469,7 +442,7 @@ gCon.WriteErrorLine "    -O     # allow overrides to Contract Class ticksize, ti
 gCon.WriteErrorLine "StdIn Formats:"
 gCon.WriteErrorLine "#comment"
 gCon.WriteErrorLine "$class exchange/contractclass"
-gCon.WriteErrorLine "name,shortname,symbol,expiry,strike,right[,[sectype][,[exchange][,[currency][,[ticksize][,[tickvalue]]]]]]"
+gCon.WriteErrorLine "name,shortname,symbol,expiry,multiplier,strike,right[,[sectype][,[exchange][,[currency][,[ticksize][,[tickvalue]]]]]]"
 End Sub
 
 

@@ -69,9 +69,6 @@ End Property
 Public Property Get ExpiryDate() As Date
 End Property
 
-Public Property Get Multiplier() As Double
-End Property
-
 Public Property Get NumberOfDecimals() As Long
 End Property
 
