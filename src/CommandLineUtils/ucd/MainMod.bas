@@ -304,7 +304,8 @@ End If
     
 Dim update As Boolean
 
-Dim lInstr As Instrument: Set lInstr = gDb.InstrumentFactory.LoadByName(gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name)
+'Dim lInstr As Instrument: Set lInstr = gDb.InstrumentFactory.LoadByName(gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name)
+Dim lInstr As Instrument: Set lInstr = gDb.InstrumentFactory.LoadByQuery("INSTRUMENTCLASSID=" & gInstrumentClass.Id & "AND SHORTNAME='" & shortname & "'")
 If lInstr Is Nothing Then
     Set lInstr = gDb.InstrumentFactory.MakeNew
 ElseIf Not gUpdate Then
