@@ -222,21 +222,7 @@ Set Parameters = mParameters
 End Property
 
 Public Property Let Study(ByVal Value As IStudy)
-Const ProcName As String = "Study"
-On Error GoTo Err
-
 Set mStudy = Value
-If mStudy Is Nothing Then Exit Property
-
-If TypeOf mStudy Is IBarStudy Then
-    Dim lBarStudy As IBarStudy
-    Set lBarStudy = mStudy
-End If
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Study() As IStudy
