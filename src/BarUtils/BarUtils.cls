@@ -266,37 +266,7 @@ Public Function MaxNumberOfBarsInTimespan( _
 Const ProcName As String = "MaxNumberOfBarsInTimespan"
 On Error GoTo Err
 
-AssertArgument pStartTime <> 0, "pStartTime must be supplied"
-AssertArgument pBarTimePeriod.Length <> 0, "pBarTimePeriod.Length is 0"
-Select Case pBarTimePeriod.Units
-    Case TimePeriodNone, TimePeriodTickMovement, TimePeriodTickVolume, TimePeriodVolume
-        AssertArgument False, "Must be a fixed time period"
-End Select
-        
-If pEndTime = 0 Then pEndTime = Now
-
-Dim lStartTime As Date
-lStartTime = BarStartTime(pStartTime, pBarTimePeriod, pSessionStartTime)
-
-Dim lEndTime As Date
-lEndTime = OffsetBarStartTime(pEndTime, pBarTimePeriod, 1, pSessionStartTime, pSessionEndTime)
-
-Select Case pBarTimePeriod.Units
-    Case TimePeriodSecond
-        MaxNumberOfBarsInTimespan = Int((86400# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
-    Case TimePeriodMinute
-        MaxNumberOfBarsInTimespan = Int((1440# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
-    Case TimePeriodHour
-        MaxNumberOfBarsInTimespan = Int((24# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
-    Case TimePeriodDay
-        MaxNumberOfBarsInTimespan = Int(((lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
-    Case TimePeriodWeek
-        MaxNumberOfBarsInTimespan = Int(((lEndTime - lStartTime) / 7 + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
-    Case TimePeriodMonth
-        MaxNumberOfBarsInTimespan = Int(((Year(lEndTime) - Year(lStartTime)) * 12 + Month(lEndTime) - Month(lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
-    Case TimePeriodYear
-        MaxNumberOfBarsInTimespan = Int((Year(lEndTime) - Year(lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
-End Select
+MaxNumberOfBarsInTimespan = gMaxNumberOfBarsInTimespan(pBarTimePeriod, pStartTime, pEndTime, pSessionStartTime, pSessionEndTime)
 
 Exit Function
 

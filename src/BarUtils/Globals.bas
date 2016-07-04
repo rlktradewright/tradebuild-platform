@@ -414,6 +414,53 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Function gMaxNumberOfBarsInTimespan( _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pStartTime As Date, _
+                ByVal pEndTime As Date, _
+                ByVal pSessionStartTime As Date, _
+                ByVal pSessionEndTime As Date) As Long
+Const ProcName As String = "gMaxNumberOfBarsInTimespan"
+On Error GoTo Err
+
+AssertArgument pStartTime <> 0, "pStartTime must be supplied"
+AssertArgument pBarTimePeriod.Length <> 0, "pBarTimePeriod.Length is 0"
+Select Case pBarTimePeriod.Units
+    Case TimePeriodNone, TimePeriodTickMovement, TimePeriodTickVolume, TimePeriodVolume
+        AssertArgument False, "Must be a fixed time period"
+End Select
+        
+If pEndTime = 0 Then pEndTime = Now
+
+Dim lStartTime As Date
+lStartTime = gStoD(gBarStartTime(pStartTime, pBarTimePeriod, pSessionStartTime))
+
+Dim lEndTime As Date
+lEndTime = gCalcOffsetBarStartTime(pEndTime, pBarTimePeriod, 1, pSessionStartTime, pSessionEndTime)
+
+Select Case pBarTimePeriod.Units
+    Case TimePeriodSecond
+        gMaxNumberOfBarsInTimespan = Int((86400# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodMinute
+        gMaxNumberOfBarsInTimespan = Int((1440# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodHour
+        gMaxNumberOfBarsInTimespan = Int((24# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodDay
+        gMaxNumberOfBarsInTimespan = Int(((lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodWeek
+        gMaxNumberOfBarsInTimespan = Int(((lEndTime - lStartTime) / 7 + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodMonth
+        gMaxNumberOfBarsInTimespan = Int(((Year(lEndTime) - Year(lStartTime)) * 12 + Month(lEndTime) - Month(lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodYear
+        gMaxNumberOfBarsInTimespan = Int((Year(lEndTime) - Year(lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gNormaliseSessionTime( _
             ByVal Timestamp As Date) As Date
 If CDbl(Timestamp) = 1# Then
