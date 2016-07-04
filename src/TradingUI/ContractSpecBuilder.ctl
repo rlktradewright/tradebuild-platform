@@ -783,7 +783,7 @@ Dim lMultiplier As Double
 If MultiplierText.Text = "" Then
     lMultiplier = 1#
 Else
-    lMultiplier = CStr(MultiplierText.Text)
+    lMultiplier = CDbl(MultiplierText.Text)
 End If
     
 Set ContractSpecifier = CreateContractSpecifier( _
@@ -962,7 +962,7 @@ End If
 
 If MultiplierText.Text <> "" Then
     Dim lMultiplier As Double
-    lMultiplier = CStr(MultiplierText.Text)
+    lMultiplier = CDbl(MultiplierText.Text)
     If lMultiplier <= 0# Then
         RaiseEvent NotReady
         Exit Sub

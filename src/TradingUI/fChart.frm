@@ -13,7 +13,6 @@ Begin VB.Form fChart
    ScaleHeight     =   6780
    ScaleWidth      =   11280
    ShowInTaskbar   =   0   'False
-   StartUpPosition =   3  'Windows Default
    Begin TradingUI27.MultiChart MultiChart1 
       Align           =   1  'Align Top
       Height          =   5415
@@ -85,7 +84,7 @@ Begin VB.Form fChart
       BandBackColor3  =   -2147483638
       Child3          =   "ChartStylePicker"
       MinWidth3       =   1185
-      MinHeight3      =   270
+      MinHeight3      =   330
       Width3          =   1185
       UseCoolbarColors3=   0   'False
       NewRow3         =   0   'False
@@ -97,14 +96,14 @@ Begin VB.Form fChart
       UseCoolbarColors4=   0   'False
       NewRow4         =   0   'False
       Begin TradingUI27.ChartStylePicker ChartStylePicker 
-         Height          =   270
+         Height          =   330
          Left            =   8400
          TabIndex        =   5
          ToolTipText     =   "Change the chart style"
-         Top             =   30
+         Top             =   0
          Width           =   1185
          _ExtentX        =   2090
-         _ExtentY        =   476
+         _ExtentY        =   582
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
             Size            =   8.25

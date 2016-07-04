@@ -1060,9 +1060,9 @@ Public Sub ShowChart( _
 Const ProcName As String = "ShowChart"
 On Error GoTo Err
 
-AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManagermust be supplied"
-AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
-AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManager must be supplied"
+AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManager must be supplied"
+AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "pBarFormatterLibraryName and pBarFormatterFactoryName must both be blank or non-blank"
 
 setState ChartStateBlank
 
@@ -1108,9 +1108,9 @@ Public Sub ShowChartRaw( _
 Const ProcName As String = "ShowChartRaw"
 On Error GoTo Err
 
-AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManagermust be supplied"
-AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
-AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManager must be supplied"
+AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManager must be supplied"
+AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "pBarFormatterLibraryName and pBarFormatterFactoryName must both be blank or non-blank"
 
 setState ChartStateBlank
 
@@ -1235,9 +1235,9 @@ If Not mInitialised Then
         gLogger.Log "No chart style is defined", ProcName, ModuleName
     Else
         gLogger.Log "Setting chart style to", ProcName, ModuleName, , mChartStyle.Name
+		Chart1.Style = mChartStyle
     End If
 
-    If Not mChartStyle Is Nothing Then Chart1.Style = mChartStyle
     mInitialised = True
 End If
 
