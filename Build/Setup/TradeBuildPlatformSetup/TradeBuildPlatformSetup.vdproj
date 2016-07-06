@@ -105,12 +105,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_5E3BA0EEDF4C4A2BA67E8E53500F855A"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_60BEDE76551B43AA98D006909555103D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -118,6 +112,12 @@
         "Entry"
         {
         "MsmKey" = "8:_60FB75083F2A4B759F0AA7A0D3E03FA1"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_685DD1E2704B4E10834B6C501E3A5694"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -255,7 +255,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.221.msi"
+        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.222.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -1217,14 +1217,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{63F8906C-AA87-4C16-BA28-5163638D69D9}"
-        "PackageCode" = "8:{57F0D50B-F313-4825-8C45-0939E7749F81}"
+        "ProductCode" = "8:{26253D1A-226A-434D-B414-47AA349DE11E}"
+        "PackageCode" = "8:{65BCF1F9-8F5E-487C-9DEE-2212E67FD7FE}"
         "UpgradeCode" = "8:{FC02A17D-3EC9-48CE-8C96-AA7172A9ABFE}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.7.221"
+        "ProductVersion" = "8:2.7.222"
         "Manufacturer" = "8:TradeWright Software Systems"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1908,11 +1908,11 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_5E3BA0EEDF4C4A2BA67E8E53500F855A"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_685DD1E2704B4E10834B6C501E3A5694"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.221.msm"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.222.msm"
                 "Properties"
                 {
                     "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
