@@ -441,7 +441,7 @@ Public Function Buy(ByVal Number As Long, _
                     ByVal StopLossOffset As Long, _
                     ByVal StopLossLimitPrice As Double, _
                     ByVal BracketTargetType As BracketTargetTypes, _
-                    ByVal targetPrice As Double, _
+                    ByVal TargetPrice As Double, _
                     ByVal TargetOffset As Long, _
                     ByVal TargetTriggerPrice As Double, _
                     Optional ByVal EntryTIF As OrderTIFs = OrderTIFDay, _
@@ -463,7 +463,7 @@ gLog "Buy" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.Loc
                 "; StopLossOffset=" & StopLossOffset & _
                 "; StopLossLimitPrice=" & StopLossLimitPrice & _
                 "; BracketTargetType=" & gBracketTargetTypeToShortString(BracketTargetType) & _
-                "; TargetPrice=" & targetPrice & _
+                "; TargetPrice=" & TargetPrice & _
                 "; TargetOffset=" & TargetOffset & _
                 "; TargetTriggerPrice=" & TargetTriggerPrice & _
                 "; EntryTIF=" & gOrderTIFToString(EntryTIF) & _
@@ -482,7 +482,7 @@ Set Buy = CreateBracketOrder(OrderActions.OrderActionBuy, _
                                 StopLossOffset, _
                                 StopLossLimitPrice, _
                                 BracketTargetType, _
-                                targetPrice, _
+                                TargetPrice, _
                                 TargetOffset, _
                                 TargetTriggerPrice)
                                 
@@ -542,7 +542,7 @@ Public Function CreateBuyBracketOrder( _
                 ByVal StopLossOffset As Long, _
                 ByVal StopLossLimitPrice As Double, _
                 ByVal BracketTargetType As BracketTargetTypes, _
-                ByVal targetPrice As Double, _
+                ByVal TargetPrice As Double, _
                 ByVal TargetOffset As Long, _
                 ByVal TargetTriggerPrice As Double) As IBracketOrder
 Const ProcName As String = "CreateBuyBracketOrder"
@@ -560,7 +560,7 @@ Set CreateBuyBracketOrder = CreateBracketOrder(OrderActions.OrderActionBuy, _
                                         StopLossOffset, _
                                         StopLossLimitPrice, _
                                         BracketTargetType, _
-                                        targetPrice, _
+                                        TargetPrice, _
                                         TargetOffset, _
                                         TargetTriggerPrice)
 
@@ -646,7 +646,7 @@ Public Function CreateSellBracketOrder( _
                 ByVal StopLossOffset As Long, _
                 ByVal StopLossLimitPrice As Double, _
                 ByVal BracketTargetType As BracketTargetTypes, _
-                ByVal targetPrice As Double, _
+                ByVal TargetPrice As Double, _
                 ByVal TargetOffset As Long, _
                 ByVal TargetTriggerPrice As Double) As IBracketOrder
 Const ProcName As String = "CreateSellBracketOrder"
@@ -664,7 +664,7 @@ Set CreateSellBracketOrder = CreateBracketOrder(OrderActions.OrderActionSell, _
                                     StopLossOffset, _
                                     StopLossLimitPrice, _
                                     BracketTargetType, _
-                                    targetPrice, _
+                                    TargetPrice, _
                                     TargetOffset, _
                                     TargetTriggerPrice)
 
@@ -1003,7 +1003,7 @@ Public Function Sell(ByVal Number As Long, _
                     ByVal StopLossOffset As Long, _
                     ByVal StopLossLimitPrice As Double, _
                     ByVal BracketTargetType As BracketTargetTypes, _
-                    ByVal targetPrice As Double, _
+                    ByVal TargetPrice As Double, _
                     ByVal TargetOffset As Long, _
                     ByVal TargetTriggerPrice As Double, _
                     Optional ByVal EntryTIF As OrderTIFs = OrderTIFDay, _
@@ -1025,7 +1025,7 @@ gLog "Sell" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.Lo
                 "; StopLossOffset=" & StopLossOffset & _
                 "; StopLossLimitPrice=" & StopLossLimitPrice & _
                 "; BracketTargetType=" & gBracketTargetTypeToShortString(BracketTargetType) & _
-                "; TargetPrice=" & targetPrice & _
+                "; TargetPrice=" & TargetPrice & _
                 "; TargetOffset=" & TargetOffset & _
                 "; TargetTriggerPrice=" & TargetTriggerPrice & _
                 "; EntryTIF=" & gOrderTIFToString(EntryTIF) & _
@@ -1044,7 +1044,7 @@ Set Sell = CreateBracketOrder(OrderActions.OrderActionSell, _
                                 StopLossOffset, _
                                 StopLossLimitPrice, _
                                 BracketTargetType, _
-                                targetPrice, _
+                                TargetPrice, _
                                 TargetOffset, _
                                 TargetTriggerPrice)
 
