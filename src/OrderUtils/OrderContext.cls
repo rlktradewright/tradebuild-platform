@@ -431,7 +431,7 @@ End Sub
 ' @see
 '
 '@/
-Public Function Buy(ByRef Number As Long, _
+Public Function Buy(ByVal Number As Long, _
                     ByVal BracketEntryType As BracketEntryTypes, _
                     ByVal EntryPrice As Double, _
                     ByVal EntryOffset As Long, _
@@ -439,7 +439,7 @@ Public Function Buy(ByRef Number As Long, _
                     ByVal BracketStopLossType As BracketStopLossTypes, _
                     ByVal StopLossPrice As Double, _
                     ByVal StopLossOffset As Long, _
-                    ByVal StopLossLimitPrice As Long, _
+                    ByVal StopLossLimitPrice As Double, _
                     ByVal BracketTargetType As BracketTargetTypes, _
                     ByVal targetPrice As Double, _
                     ByVal TargetOffset As Long, _
@@ -449,7 +449,6 @@ Public Function Buy(ByRef Number As Long, _
                     Optional ByVal TargetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
                     Optional ByVal CancelPrice As Double, _
                     Optional ByVal CancelAfter As Long) As IBracketOrder
-
 Const ProcName As String = "Buy"
 On Error GoTo Err
 
@@ -533,7 +532,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function CreateBuyBracketOrder( _
-                ByRef Number As Long, _
+                ByVal Number As Long, _
                 ByVal BracketEntryType As BracketEntryTypes, _
                 ByVal EntryPrice As Double, _
                 ByVal EntryOffset As Long, _
@@ -541,7 +540,7 @@ Public Function CreateBuyBracketOrder( _
                 ByVal BracketStopLossType As BracketStopLossTypes, _
                 ByVal StopLossPrice As Double, _
                 ByVal StopLossOffset As Long, _
-                ByVal StopLossLimitPrice As Long, _
+                ByVal StopLossLimitPrice As Double, _
                 ByVal BracketTargetType As BracketTargetTypes, _
                 ByVal targetPrice As Double, _
                 ByVal TargetOffset As Long, _
@@ -637,7 +636,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSellBracketOrder( _
-                ByRef Number As Long, _
+                ByVal Number As Long, _
                 ByVal BracketEntryType As BracketEntryTypes, _
                 ByVal EntryPrice As Double, _
                 ByVal EntryOffset As Long, _
@@ -645,7 +644,7 @@ Public Function CreateSellBracketOrder( _
                 ByVal BracketStopLossType As BracketStopLossTypes, _
                 ByVal StopLossPrice As Double, _
                 ByVal StopLossOffset As Long, _
-                ByVal StopLossLimitPrice As Long, _
+                ByVal StopLossLimitPrice As Double, _
                 ByVal BracketTargetType As BracketTargetTypes, _
                 ByVal targetPrice As Double, _
                 ByVal TargetOffset As Long, _
@@ -994,7 +993,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function Sell(ByRef Number As Long, _
+Public Function Sell(ByVal Number As Long, _
                     ByVal BracketEntryType As BracketEntryTypes, _
                     ByVal EntryPrice As Double, _
                     ByVal EntryOffset As Long, _
@@ -1002,7 +1001,7 @@ Public Function Sell(ByRef Number As Long, _
                     ByVal BracketStopLossType As BracketStopLossTypes, _
                     ByVal StopLossPrice As Double, _
                     ByVal StopLossOffset As Long, _
-                    ByVal StopLossLimitPrice As Long, _
+                    ByVal StopLossLimitPrice As Double, _
                     ByVal BracketTargetType As BracketTargetTypes, _
                     ByVal targetPrice As Double, _
                     ByVal TargetOffset As Long, _
@@ -1012,9 +1011,7 @@ Public Function Sell(ByRef Number As Long, _
                     Optional ByVal TargetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
                     Optional ByVal CancelPrice As Double, _
                     Optional ByVal CancelAfter As Long) As IBracketOrder
-
 Const ProcName As String = "Sell"
-
 On Error GoTo Err
 
 gLog "Sell" & IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.LocalSymbol & _
