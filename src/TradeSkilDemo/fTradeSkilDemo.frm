@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#314.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -227,6 +227,9 @@ Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
 On Error GoTo Err
 
+LogMessage "Executing Form_Load"
+
+LogMessage "Setting up clock"
 Set mClockDisplay = New ClockDisplay
 mClockDisplay.Initialise StatusBar1.Panels("datetime"), StatusBar1.Panels("timezone")
 mClockDisplay.SetClock getDefaultClock
@@ -1137,6 +1140,10 @@ Private Sub loadAppInstanceConfig()
 Const ProcName As String = "loadAppInstanceConfig"
 On Error GoTo Err
 
+LogMessage "Setting application title"
+Me.caption = gAppTitle & _
+            " - " & mAppInstanceConfig.InstanceQualifier
+
 LogMessage "Loading configuration: " & mAppInstanceConfig.InstanceQualifier
 
 LogMessage "Loading configuration: Setting up ticker grid"
@@ -1188,9 +1195,7 @@ ElseIf UCase$(lThemeName) = "NATIVE" Then
 End If
 ApplyTheme lTheme
 
-Me.caption = gAppTitle & _
-            " - " & mAppInstanceConfig.InstanceQualifier
-
+LogMessage "Loading configuration: showing main form"
 Me.Show vbModeless, gSplashScreen
 
 LogMessage "Loading configuration: showing charts"
