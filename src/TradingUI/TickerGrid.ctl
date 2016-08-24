@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -266,6 +266,11 @@ Private mTickerSymbolRow                                As Long
 Private mIteratingTickersConfig                         As Boolean
 
 Private mTheme                                          As ITheme
+
+Private WithEvents mRefreshQuotesTC                     As TaskController
+Attribute mRefreshQuotesTC.VB_VarHelpID = -1
+Private WithEvents mRefreshPriceChangeTC                As TaskController
+Attribute mRefreshPriceChangeTC.VB_VarHelpID = -1
 
 '@================================================================================
 ' Form Event Handlers
@@ -916,6 +921,40 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mRefreshPriceChangeTC Event Handlers
+'@================================================================================
+
+Private Sub mRefreshPriceChangeTC_Completed(ev As TWUtilities40.TaskCompletionEventData)
+Const ProcName As String = "mRefreshPriceChangeTC_Completed"
+On Error GoTo Err
+
+Set mRefreshPriceChangeTC = Nothing
+If mRefreshQuotesTC Is Nothing Then Redraw = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mRefreshQuotesTC Event Handlers
+'@================================================================================
+
+Private Sub mRefreshQuotesTC_Completed(ev As TWUtilities40.TaskCompletionEventData)
+Const ProcName As String = "mRefreshQuotesTC_Completed"
+On Error GoTo Err
+
+Set mRefreshQuotesTC = Nothing
+If mRefreshPriceChangeTC Is Nothing Then Redraw = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -2794,9 +2833,13 @@ Private Sub RefreshPriceChange()
 Const ProcName As String = "refreshPriceChange"
 On Error GoTo Err
 
+If Not mRefreshPriceChangeTC Is Nothing Then Exit Sub
+
+Redraw = False
+
 Dim lTask As New PriceChangeRefreshTask
 lTask.Initialise cloneTickers, Me
-StartTask lTask, PriorityLow
+Set mRefreshPriceChangeTC = StartTask(lTask, PriorityLow)
 
 Exit Sub
 
@@ -2808,9 +2851,13 @@ Private Sub RefreshQuotes()
 Const ProcName As String = "refreshQuotes"
 On Error GoTo Err
 
+If Not mRefreshQuotesTC Is Nothing Then Exit Sub
+
+Redraw = False
+
 Dim lTask As New QuotesRefreshTask
 lTask.Initialise cloneTickers, Me
-StartTask lTask, PriorityLow
+Set mRefreshQuotesTC = StartTask(lTask, PriorityLow)
 
 Exit Sub
 
