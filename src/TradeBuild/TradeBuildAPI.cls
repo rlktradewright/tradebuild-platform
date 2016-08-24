@@ -605,10 +605,7 @@ On Error GoTo Err
 
 Dim ws As WorkSpace
 For Each ws In mWorkspaces
-    Dim t As Ticker
-    For Each t In ws.Tickers
-        t.Finish
-    Next
+    ws.Tickers.Finish
 Next
 
 Exit Sub
