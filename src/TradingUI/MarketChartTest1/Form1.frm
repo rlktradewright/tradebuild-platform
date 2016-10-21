@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#314.0#0"; "TradingUI27.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Market Chart Test1"
    ClientHeight    =   10065
@@ -69,13 +69,13 @@ Begin VB.Form Form1
       _ExtentY        =   582
    End
    Begin TradingUI27.ChartStylePicker ChartStylePicker1 
-      Height          =   270
+      Height          =   330
       Left            =   7680
       TabIndex        =   5
       Top             =   120
       Width           =   1455
       _ExtentX        =   2566
-      _ExtentY        =   476
+      _ExtentY        =   582
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -949,11 +949,9 @@ Private Sub showChart( _
 Const ProcName As String = "showChart"
 On Error GoTo Err
 
-Dim lTimeframes As Timeframes
-Set lTimeframes = CreateTimeframes(mTicker.StudyBase, mTicker.ContractFuture, mHistDataStore, mTicker.ClockFuture)
-
 Set mTimePeriod = TimeframeSelector1.TimePeriod
-MarketChart1.showChart lTimeframes, mTimePeriod, pSpec, pStyle, mBarFormatterLibManager
+MarketChart1.Initialise CreateTimeframes(mTicker.StudyBase, mTicker.ContractFuture, mHistDataStore, mTicker.ClockFuture), True
+MarketChart1.showChart mTimePeriod, pSpec, pStyle, mBarFormatterLibManager
 
 ChartNavToolbar1.Initialise MarketChart1
 BarFormatterPicker1.Initialise mBarFormatterLibManager, MarketChart1
