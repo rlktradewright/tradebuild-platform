@@ -58,7 +58,7 @@ Public Const LongBarLengthFactor As Long = 0
 Public Const LongBollPeriods As Long = 0
 Public Const LongMAPeriods As Long = 0
 
-Public Const MaxContraSwingPercent As Double = 0#
+Public Const MaxContraSwingPercent As Double = 50#
 Public Const MaxIncrements As Long = 3
 
 ' max number of ticks from entry price for initial stop loss
@@ -85,7 +85,7 @@ Public Const SwingToMoveStopTicks As Long = 0
 
 Public Const TicksSwingToTrail As Long = 0
 
-Public Const UseIntermediateStops As Boolean = False
+Public Const UseIntermediateStops As Boolean = True
 
 Public Const ParamATRPeriods                       As String = "ATR Periods"
 

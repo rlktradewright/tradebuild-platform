@@ -155,8 +155,8 @@ If mLongPosition Then
         mNextSwingStopCandidate = swingLow1
         If Not S.UseIntermediateStops Then
             mReferencePrice = swingLow1
-'        ElseIf swingLow2 < swingLow1 Then
-'            mReferencePrice = swingLow2
+        ElseIf swingLow2 < swingLow1 Then
+            mReferencePrice = swingLow2
         Else
             mReferencePrice = swingLow1
         End If
@@ -164,15 +164,16 @@ If mLongPosition Then
         mInitialSwingStartPrice = PotentialSwingLow()
         If Not S.UseIntermediateStops Then
             mReferencePrice = PotentialSwingLow()
-'        ElseIf swingLow1 < PotentialSwingLow() Then
-''            mReferencePrice = swingLow2
-''                        ' this should really be swingLow1 but testing seems to give
-''                        ' better results with swingLow2
-'            If swingLow2 < swingLow1 Then
-'                mReferencePrice = swingLow2
-'            Else
-'                mReferencePrice = swingLow1
-'        Else
+        ElseIf swingLow1 < PotentialSwingLow() Then
+'            mReferencePrice = swingLow2
+'                        ' this should really be swingLow1 but testing seems to give
+'                        ' better results with swingLow2
+            If swingLow2 < swingLow1 Then
+                mReferencePrice = swingLow2
+            Else
+                mReferencePrice = swingLow1
+            End If
+        Else
             mReferencePrice = PotentialSwingLow()
         End If
     End If
@@ -183,8 +184,8 @@ Else
         mInitialSwingStartPrice = swingHigh1
         If Not S.UseIntermediateStops Then
             mReferencePrice = swingHigh1
-'        ElseIf swingHigh2 > swingHigh1 Then
-'            mReferencePrice = swingHigh2
+        ElseIf swingHigh2 > swingHigh1 Then
+            mReferencePrice = swingHigh2
         Else
             mReferencePrice = swingHigh1
         End If
@@ -192,15 +193,15 @@ Else
         mInitialSwingStartPrice = PotentialSwingHigh()
         If Not S.UseIntermediateStops Then
             mReferencePrice = PotentialSwingHigh()
-'        ElseIf swingHigh1 > PotentialSwingHigh() Then
-''            mReferencePrice = swingHigh2
-''                        ' this should really be swingHigh1 but testing seems to give
-''                        ' better results with swingHigh2
-'            If swingHigh2 > swingHigh1 Then
-'                mReferencePrice = swingHigh2
-'            Else
-'                mReferencePrice = swingHigh1
-'            End If
+        ElseIf swingHigh1 > PotentialSwingHigh() Then
+'            mReferencePrice = swingHigh2
+'                        ' this should really be swingHigh1 but testing seems to give
+'                        ' better results with swingHigh2
+            If swingHigh2 > swingHigh1 Then
+                mReferencePrice = swingHigh2
+            Else
+                mReferencePrice = swingHigh1
+            End If
         Else
             mReferencePrice = PotentialSwingHigh()
         End If
@@ -561,12 +562,12 @@ If Not mTrailStop Then
             End If
         End If
         
-        If SwingLowBarNumber(-1) > mReferenceBar And _
-            SwingLow(-1) - mReferencePrice > S.MaxContraSwingFactor * _
+        If SwingLowBarNumber > mReferenceBar And _
+            SwingLow - mReferencePrice > S.MaxContraSwingFactor * _
                                                     (IIf(S.RetraceFromExtremes, mHighest, HighValue(-1)) - mReferencePrice) _
         Then
-            mReferencePrice = SwingLow(-1)
-            mReferenceBar = SwingLowBarNumber(-1)
+            mReferencePrice = SwingLow
+            mReferenceBar = SwingLowBarNumber
             mSwingCount = mSwingCount + 1
             If mSwingCount >= 2 Then
 '                If mTrailStopSMABarLength = 0 Or _
@@ -671,12 +672,12 @@ If Not mTrailStop Then
             End If
         End If
         
-        If SwingHighBarNumber(-1) > mReferenceBar And _
-            mReferencePrice - SwingHigh(-1) > S.MaxContraSwingFactor * _
+        If SwingHighBarNumber > mReferenceBar And _
+            mReferencePrice - SwingHigh > S.MaxContraSwingFactor * _
                                                     (mReferencePrice - IIf(S.RetraceFromExtremes, mLowest, LowValue(-1))) _
         Then
-            mReferencePrice = SwingHigh(-1)
-            mReferenceBar = SwingHighBarNumber(-1)
+            mReferencePrice = SwingHigh
+            mReferenceBar = SwingHighBarNumber
             mSwingCount = mSwingCount + 1
             If mSwingCount = 2 Then
 '                If mTrailStopSMABarLength = 0 Or _
