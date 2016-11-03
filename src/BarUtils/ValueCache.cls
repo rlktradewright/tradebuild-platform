@@ -149,12 +149,7 @@ Public Function GetSValue(Optional ByVal ref As Long) As SValue
 Const ProcName As String = "GetSValue"
 On Error GoTo Err
 
-Dim valueEntry As SValue
-valueEntry = mValues(refToIndex(ref))
-GetSValue.BarNumber = valueEntry.BarNumber
-GetSValue.Timestamp = valueEntry.Timestamp
-GetSValue.BarStartTime = valueEntry.BarStartTime
-gSetVariant GetSValue.Value, valueEntry.Value
+GetSValue = mValues(refToIndex(ref))
 
 Exit Function
 
@@ -166,9 +161,7 @@ Public Function GetValue(Optional ByVal ref As Long) As Variant
 Const ProcName As String = "GetValue"
 On Error GoTo Err
 
-Dim index As Long
-index = refToIndex(ref)
-gSetVariant GetValue, mValues(index).Value
+gSetVariant GetValue, mValues(refToIndex(ref)).Value
 
 Exit Function
 
