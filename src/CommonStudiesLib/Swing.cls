@@ -168,10 +168,8 @@ If mStudyFoundation.IsNewBar Then
         mCurrentBarLow = currValue
         
         initialiseSwingHighPoint mPotentialSwingHighPoint, ev.sVal
-        'mPotentialSwingHighPoint.Value = Empty
         
         initialiseSwingLowPoint mPotentialSwingLowPoint, ev.sVal
-        'mPotentialSwingLowPoint.Value = Empty
         
         mSwingHighCache.AddValue mPotentialSwingHighPoint, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
         mSwingHighLineCache.AddValue Nothing, 1, ev.sVal.Timestamp, ev.sVal.BarStartTime
@@ -534,7 +532,7 @@ Public Property Get SwingHigh(Optional ByVal ref As Long) As SValue
 Const ProcName As String = "SwingHigh"
 On Error GoTo Err
 
-SwingHigh = mSwingHighCache.GetSValue(ref)
+SwingHigh = swingPointValueToSValue(mSwingHighCache.GetSValue(ref))
 
 Exit Property
 
@@ -558,7 +556,7 @@ Public Property Get SwingLow(Optional ByVal ref As Long) As SValue
 Const ProcName As String = "SwingLow"
 On Error GoTo Err
 
-SwingLow = mSwingLowCache.GetSValue(ref)
+SwingLow = swingPointValueToSValue(mSwingLowCache.GetSValue(ref))
 
 Exit Property
 
@@ -582,7 +580,7 @@ Public Property Get Swing(Optional ByVal ref As Long) As SValue
 Const ProcName As String = "Swing"
 On Error GoTo Err
 
-Swing = mSwingCache.GetSValue(ref)
+Swing = swingPointValueToSValue(mSwingCache.GetSValue(ref))
 
 Exit Property
 
@@ -632,19 +630,19 @@ If mSwingHighCache.Count < 2 Then Exit Sub
 If mSwingLowCache.Count < 2 Then Exit Sub
 
 Dim latestSwingLow As SwingPoint
-latestSwingLow = SwingLow(0).Value
+latestSwingLow = SwingLowPoint(0)
 If IsEmpty(latestSwingLow.Value) Then Exit Sub
 
 Dim prevSwingLow As SwingPoint
-prevSwingLow = SwingLow(-1).Value
+prevSwingLow = SwingLowPoint(-1)
 If IsEmpty(prevSwingLow.Value) Then Exit Sub
 
 Dim latestSwingHigh As SwingPoint
-latestSwingHigh = SwingHigh(0).Value
+latestSwingHigh = SwingHighPoint(0)
 If IsEmpty(latestSwingHigh.Value) Then Exit Sub
 
 Dim prevSwingHigh As SwingPoint
-prevSwingHigh = SwingHigh(-1).Value
+prevSwingHigh = SwingHighPoint(-1)
 If IsEmpty(prevSwingHigh.Value) Then Exit Sub
 
 If (mPotentialSwingHighPoint.Value > latestSwingHigh.Value Or latestSwingHigh.Value > prevSwingHigh.Value) And _
@@ -678,7 +676,6 @@ impliedSwingHigh.SequenceNumber = mSwingSequenceNumber
 mSwingSequenceNumber = mSwingSequenceNumber + 1
 Set impliedSwingHighStudyPoint = CreateStudyPoint(impliedSwingHigh.Timestamp, impliedSwingHigh.Value)
 
-'mHighBeforeLowPoint = mHighAfterLowPoint
 mLowBeforeHighPoint = mLowAfterHighPoint
 
 updateSwingHighType prevSwingHigh, impliedSwingHigh
@@ -729,7 +726,6 @@ impliedSwingLow.SequenceNumber = mSwingSequenceNumber
 mSwingSequenceNumber = mSwingSequenceNumber + 1
 Set impliedSwingLowStudyPoint = CreateStudyPoint(impliedSwingLow.Timestamp, impliedSwingLow.Value)
 
-'mLowBeforeHighPoint = mLowAfterHighPoint
 mHighBeforeLowPoint = mHighAfterLowPoint
 
 updateSwingLowType prevSwingLow, impliedSwingLow
@@ -1031,6 +1027,19 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function swingPointValueToSValue(sv As SValue)
+swingPointValueToSValue = sv
+
+Dim sp As SwingPoint
+sp = sv.Value
+
+If sp.Value = MaxDouble Or sp.Value = MinDouble Then
+    swingPointValueToSValue.Value = Empty
+Else
+    swingPointValueToSValue.Value = sp.Value
+End If
+End Function
 
 Private Sub updateCurrentLineEnds(ByRef ev As StudyValueEventData)
 Const ProcName As String = "updateCurrentLineEnds"
