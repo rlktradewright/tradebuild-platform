@@ -60,7 +60,6 @@ Private mTaskContext As TaskContext
 Private mTarget As Object
 Private mTargetIsStudy As Boolean
 
-Private mTargetStudy As IStudy
 Private mStudyToNotify As IStudy
 Private mTargetListener As IStudyValueListener
 Private mSourceStudy As IStudy
@@ -76,6 +75,8 @@ Private mNotifyNames() As String
 
 Private mReplayValueNames() As String
 Private mReplayNotifyNames() As String
+
+Private mNumberOfCachedValues() As Long
 
 Private mSessionBuilder As SessionBuilder
 
@@ -157,40 +158,15 @@ If mTargetIsStudy And mSessionBuilder Is Nothing Then
     Exit Sub
 End If
 
-Dim i As Long
-For i = 0 To UBound(mReplayValueNames)
+If processValue(mNextValueNumber) Then
+    mNextValueNumber = mNextValueNumber + 1
+    mValuesNotified = mValuesNotified + 1
     
-    Dim valueEntry As SValue
-    valueEntry = mSourceStudy.GetStudyValue(mReplayValueNames(i), mNextValueNumber)
-     
-    If Not IsEmpty(valueEntry.Value) Then
-        Dim ev As StudyValueEventData
-        Set ev.Source = mSourceStudy
-        ev.sVal = valueEntry
-        
-        If mTargetIsStudy Then
-            
-            mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
-            
-            ev.ValueName = mReplayNotifyNames(i)
-            mStudyToNotify.Notify ev
-        Else
-        
-            ev.ValueName = mReplayValueNames(i)
-            mTargetListener.Notify ev
-        End If
+    If mValuesNotified Mod 20 = 0 Then
+        ' Notify progress each 20 values
+        mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
     End If
-Next
-
-mNextValueNumber = mNextValueNumber + 1
-mValuesNotified = mValuesNotified + 1
-
-If mValuesNotified Mod 20 = 0 Then
-    ' Notify progress each 20 values
-    mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
-End If
-
-If mNextValueNumber > mSourceStudy.NumberOfCachedValues Then
+Else
     gLogger.Log "Study (" & mSourceStudy.Id & ") " & mSourceStudy.InstanceName & _
                 " replayed " & mValuesNotified & _
                 " values for " & Join(mReplayValueNames(), ","), _
@@ -237,8 +213,8 @@ Public Property Get Discriminator() As Long
 Discriminator = 0
 End Property
 
-Public Property Get NotifyName() As String
-NotifyName = mNotifyName
+Public Property Get notifyName() As String
+notifyName = mNotifyName
 End Property
 
 Public Property Get NotifyNames() As String()
@@ -277,6 +253,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+AssertArgument Not (UBound(ValueNames) > 0 And numberOfValuesToReplay <> ReplayNumbers.ReplayAll), "Must replay all values if more than one value name is being replayed"
+
 Set mTarget = Target
 Set mSourceStudy = SourceStudy
 mReplayValueNames = replayValueNames
@@ -286,17 +264,24 @@ mValueName = mValueNames(0)
 mNotifyNames = NotifyNames
 mNotifyName = mNotifyNames(0)
 
+ReDim mNumberOfCachedValues(UBound(mReplayValueNames)) As Long
+Dim i As Long
+For i = 0 To UBound(mNumberOfCachedValues)
+    mNumberOfCachedValues(i) = mSourceStudy.NumberOfCachedValues(mReplayValueNames(i))
+Next
+
 Set mResult = New ValueReplayResult
 mResult.Initialise Target, SourceStudy, ValueNames, NotifyNames
 
 Dim numValuesToNotify As Long
 If TypeOf Target Is IStudy Then
     mTargetIsStudy = True
-    Set mTargetStudy = Target
-    Set mStudyToNotify = mTargetStudy.BaseStudy
+    Dim lTargetStudy As IStudy
+    Set lTargetStudy = Target
+    Set mStudyToNotify = lTargetStudy.BaseStudy
     
     Dim lSessionBuilderFuture As IFuture
-    Set lSessionBuilderFuture = pStudyManager.GetStudyEntry(mTargetStudy).SessionBuilderFuture
+    Set lSessionBuilderFuture = pStudyManager.GetStudyEntry(lTargetStudy).SessionBuilderFuture
     
     If lSessionBuilderFuture.IsAvailable Then
         Set mSessionBuilder = lSessionBuilderFuture.Value
@@ -307,13 +292,14 @@ If TypeOf Target Is IStudy Then
     
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then
         ' just replay the number of values needed by the study
-        numValuesToNotify = mTargetStudy.NumberOfBarsRequired
+        numValuesToNotify = lTargetStudy.NumberOfBarsRequired
     Else
         numValuesToNotify = numberOfValuesToReplay
     End If
 Else
     Set mTargetListener = Target
     numValuesToNotify = numberOfValuesToReplay
+    mReplayNotifyNames = mReplayValueNames
 End If
 
 If numValuesToNotify > mSourceStudy.NumberOfCachedValues Or _
@@ -356,8 +342,49 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub notifyValue(ByRef pValue As SValue, ByVal pNotifyName As String)
+Const ProcName As String = "notifyValue"
+On Error GoTo Err
 
+If IsEmpty(pValue.Value) Then Exit Sub
 
+Dim ev As StudyValueEventData
+Set ev.Source = mSourceStudy
+ev.sVal = pValue
+ev.ValueName = pNotifyName
+If mTargetIsStudy Then
+    mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
+    mStudyToNotify.Notify ev
+Else
+    mTargetListener.Notify ev
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function processValue(ByVal pValueNumber As Long) As Boolean
+Const ProcName As String = "processValue"
+On Error GoTo Err
+
+processValue = False
+Dim i As Long
+For i = 0 To UBound(mReplayValueNames)
+    If mNextValueNumber <= mNumberOfCachedValues(i) Then
+        processValue = True
+        Dim valueEntry As SValue
+        valueEntry = mSourceStudy.GetStudyValue(mReplayValueNames(i), pValueNumber)
+        notifyValue valueEntry, mReplayNotifyNames(i)
+    End If
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 
 

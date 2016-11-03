@@ -45,7 +45,7 @@ Private Const ModuleName                    As String = "StudyFoundation"
 '@================================================================================
 
 Private Type ValueCacheTableEntry
-    valueCache          As valueCache
+    ValueCache          As ValueCache
     IsDefault           As Boolean
 End Type
 
@@ -278,7 +278,7 @@ If TypeOf Study Is IBarStudy Then
     Set lBarStudy = Study
     
     ' if the study being added needs close values, we must make sure that
-    ' open, high and low are also replayed
+    ' open, high and low are also replayed to the same input
     
     Dim replayValueNames() As String
     ReDim replayValueNames(UBound(ValueNames)) As String
@@ -401,7 +401,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FindValueCache( _
-                ByVal ValueName As String) As valueCache
+                ByVal ValueName As String) As ValueCache
 Const ProcName As String = "FindValueCache"
 On Error GoTo Err
 
@@ -409,11 +409,11 @@ ValueName = UCase$(ValueName)
 
 Dim i As Long
 For i = 0 To UBound(mValueCaches)
-    If UCase$(mValueCaches(i).valueCache.ValueName) = ValueName Or _
+    If UCase$(mValueCaches(i).ValueCache.ValueName) = ValueName Or _
         (ValueName = DefaultStudyValueNameStr And _
         mValueCaches(i).IsDefault) _
     Then
-        Set FindValueCache = mValueCaches(i).valueCache
+        Set FindValueCache = mValueCaches(i).ValueCache
         Exit For
     End If
 Next
@@ -429,10 +429,8 @@ Public Function GetStudyValue( _
                 ByVal ref As Long) As SValue
 Const ProcName As String = "GetStudyValue"
 On Error GoTo Err
-Dim UnderlyingStudy
-Dim valueCache As valueCache
-Set valueCache = FindValueCache(ValueName)
-GetStudyValue = valueCache.GetSValue(ref)
+
+GetStudyValue = FindValueCache(ValueName).GetSValue(ref)
 
 Exit Function
 
@@ -543,7 +541,12 @@ Const ProcName As String = "NumberOfCachedValues"
 On Error GoTo Err
 
 If ValueName = "" Then
-    NumberOfCachedValues = mValueCaches(0).valueCache.Count
+    Dim i As Long
+    For i = 0 To UBound(mValueCaches)
+        Dim lCount As Long
+        lCount = mValueCaches(0).ValueCache.Count
+        If lCount > NumberOfCachedValues Then NumberOfCachedValues = lCount
+    Next
 Else
     NumberOfCachedValues = FindValueCache(ValueName).Count
 End If
@@ -608,7 +611,7 @@ If UBound(ValueNames) = 0 And (Not mReplayUsingStudyValues) Then
             (ValueName = DefaultStudyValueNameStr And _
             valueDef.IsDefault) _
         Then
-            Set addStudyHelper = replayCacheValues(mValueCaches(i).valueCache, _
+            Set addStudyHelper = replayCacheValues(mValueCaches(i).ValueCache, _
                                         studyToAdd, _
                                         Study, _
                                         numberOfValuesToReplay, _
@@ -654,7 +657,7 @@ ReDim mValueCaches(valueDefs.Count - 1) As ValueCacheTableEntry
 Dim i As Long
 Dim valueDef As StudyValueDefinition
 For Each valueDef In valueDefs
-    Set mValueCaches(i).valueCache = CreateValueCache(numberOfValuesToCache, valueDef.Name)
+    Set mValueCaches(i).ValueCache = CreateValueCache(numberOfValuesToCache, valueDef.Name)
     mValueCaches(i).IsDefault = valueDef.IsDefault
     i = i + 1
 Next
@@ -692,7 +695,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function replayCacheValues( _
-                ByVal cache As valueCache, _
+                ByVal cache As ValueCache, _
                 ByVal Target As Object, _
                 ByVal SourceStudy As IStudy, _
                 ByVal numberOfValuesToReplay As Long, _

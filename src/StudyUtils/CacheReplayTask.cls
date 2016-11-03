@@ -65,7 +65,7 @@ Private mStudyToNotify As IStudy
 Private mTargetListener As IStudyValueListener
 Private mSourceStudy As IStudy
 
-Private mValueCache As valueCache
+Private mValueCache As ValueCache
 
 Private mFirstValueNumber As Long
 Private mNextValueNumber As Long
@@ -258,7 +258,7 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pStudyManager As StudyManager, _
-                ByVal valueCache As valueCache, _
+                ByVal ValueCache As ValueCache, _
                 ByVal Target As Object, _
                 ByVal SourceStudy As IStudy, _
                 ByVal numberOfValuesToReplay As Long, _
@@ -266,10 +266,10 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mValueCache = valueCache
+Set mValueCache = ValueCache
 Set mTarget = Target
 Set mSourceStudy = SourceStudy
-mValueName = valueCache.ValueName
+mValueName = ValueCache.ValueName
 mValueNames(0) = mValueName
 
 Set mResult = New ValueReplayResult

@@ -325,7 +325,7 @@ End Function
 
 Public Function CreateCacheReplayTask( _
                 ByVal pStudyManager As StudyManager, _
-                ByVal pValueCache As valueCache, _
+                ByVal pValueCache As ValueCache, _
                 ByVal pTarget As Object, _
                 ByVal pSourceStudy As IStudy, _
                 ByVal pNumberOfValuesToReplay As Long, _
