@@ -549,6 +549,7 @@ Private Sub LocalSymbolText_Change()
 Const ProcName As String = "LocalSymbolText_Change"
 On Error GoTo Err
 
+LocalSymbolText.Text = UCase$(LocalSymbolText.Text)
 checkIfValid
 
 Exit Sub
@@ -568,6 +569,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub LocalSymbolText_KeyPress(KeyAscii As Integer)
+KeyAscii = Asc(UCase$(Chr$(KeyAscii)))
 End Sub
 
 Private Sub MultiplierText_Change()
@@ -661,6 +666,7 @@ Private Sub SymbolText_Change()
 Const ProcName As String = "SymbolText_Change"
 On Error GoTo Err
 
+SymbolText.Text = UCase$(SymbolText.Text)
 checkIfValid
 
 Exit Sub
@@ -680,6 +686,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub SymbolText_KeyPress(KeyAscii As Integer)
+KeyAscii = Asc(UCase$(Chr$(KeyAscii)))
 End Sub
 
 Private Sub TypeCombo_Change()
