@@ -135,7 +135,7 @@ Public Function DeclareStopLossOrder( _
                     ByVal OrderType As StopLossOrderTypes, _
                     Optional ByVal Price As Double, _
                     Optional ByVal Offset As Long, _
-                    Optional ByVal TriggerPrice As Long, _
+                    Optional ByVal TriggerPrice As Double, _
                     Optional ByVal TimeInForce As OrderTIFs = OrderTIFGoodTillCancelled) As ResourceIdentifier
 Const ProcName As String = "DeclareStopLossOrder"
 On Error GoTo Err
@@ -183,7 +183,7 @@ Public Function DeclareTargetOrder( _
                     ByVal OrderType As TargetOrderTypes, _
                     Optional ByVal Price As Double, _
                     Optional ByVal Offset As Long, _
-                    Optional ByVal TriggerPrice As Long, _
+                    Optional ByVal TriggerPrice As Double, _
                     Optional ByVal TimeInForce As OrderTIFs = OrderTIFGoodTillCancelled) As ResourceIdentifier
 Const ProcName As String = "DeclareTargetOrder"
 On Error GoTo Err
