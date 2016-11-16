@@ -300,6 +300,8 @@ Else
     processExecution lExec
     
     mOrders.Item(lExec.OrderId).NotifyFill lExec
+
+    fireChange PositionManagerChangeTypes.PositionSizeChanged
 End If
 
 Exit Sub
@@ -1705,8 +1707,6 @@ Else
 End If
 
 If Not mRecovering Then SaveRecoveryInfo
-
-fireChange PositionManagerChangeTypes.PositionSizeChanged
 
 Exit Sub
 
