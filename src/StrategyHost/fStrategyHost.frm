@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#314.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#315.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
@@ -859,24 +859,24 @@ Private Enum BOListColumns
     ColumnDescription
 End Enum
 
-' Percentage widths of the bracket order list columns
+' Character widths of the bracket order list columns
 Private Enum BOListColumnWidths
-    WidthKey = 9
+    WidthKey = 10
     WidthStartTime = 20
     WidthEndTime = 20
     WidthDescription = 50
-    WidthAction = 8
+    WidthAction = 5
     WidthQuantity = 5
     WidthQuantityOutstanding = 5
-    WidthEntryPrice = 10
-    WidthExitPrice = 10
-    WidthProfit = 8
-    WidthMaxProfit = 8
-    WidthMaxLoss = 8
-    WidthRisk = 8
-    WidthEntryReason = 10
-    WidthTargetReason = 10
-    WidthStopReason = 10
+    WidthEntryPrice = 8
+    WidthExitPrice = 8
+    WidthProfit = 7
+    WidthMaxProfit = 7
+    WidthMaxLoss = 7
+    WidthRisk = 7
+    WidthEntryReason = 7
+    WidthTargetReason = 7
+    WidthStopReason = 7
     WidthClosedOut = 4
 End Enum
 
@@ -924,6 +924,9 @@ Private mTheme                                          As ITheme
 
 Private mChartStyle                                     As ChartStyle
 
+Private mLetterWidth                                    As Single
+Private mDigitWidth                                     As Single
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -940,8 +943,10 @@ Me.ScaleMode = vbTwips
 setupBracketOrderList
 Set mChartStyle = gCreateChartStyle
 LogMessage "Setting StrategyCombo"
+StrategyCombo.ComboItems.Add , , "RlkStrategies27.MACDStrategy1"
 StrategyCombo.ComboItems.Add , , "Strategies27.MACDStrategy21"
 LogMessage "Setting StopStrategyFactoryCombo"
+StopStrategyFactoryCombo.ComboItems.Add , , "RlkStrategies27.StopStrategyFactory1"
 StopStrategyFactoryCombo.ComboItems.Add , , "Strategies27.StopStrategyFactory5"
 LogMessage "Form loaded"
 
@@ -1821,6 +1826,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub calcAverageCharacterWidths( _
+                ByVal afont As StdFont)
+Const ProcName As String = "calcAverageCharacterWidths"
+On Error GoTo Err
+
+mLetterWidth = getAverageCharacterWidth("ABCDEFGH IJKLMNOP QRST UVWX YZ", afont)
+mDigitWidth = getAverageCharacterWidth(".0123456789", afont)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub clearPerformanceFields()
 EventsPlayedLabel = ""
 PercentCompleteLabel = ""
@@ -1841,6 +1860,20 @@ MaxProfit.Caption = ""
 Position.Caption = ""
 End Sub
 
+Private Function getAverageCharacterWidth( _
+                ByVal widthString As String, _
+                ByVal pFont As StdFont) As Long
+Const ProcName As String = "getAverageCharacterWidth"
+On Error GoTo Err
+
+getAverageCharacterWidth = Me.TextWidth(widthString) / Len(widthString)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub getDefaultParams()
 Const ProcName As String = "getDefaultParams"
 On Error GoTo Err
@@ -1853,8 +1886,8 @@ lPMFactories.Add CreateObject(StopStrategyFactoryCombo.Text)
 Set mParams = mController.GetDefaultParameters(CreateObject(StrategyCombo.Text), lPMFactories)
 
 Set ParamGrid.DataSource = mParams
-ParamGrid.Columns(0).Width = ParamGrid.Width / 2
-ParamGrid.Columns(1).Width = ParamGrid.Width / 2
+ParamGrid.Columns(0).Width = ParamGrid.Width * 0.6
+ParamGrid.Columns(1).Width = ParamGrid.Width * 0.3
 
 StartButton.Enabled = True
 
@@ -1979,109 +2012,26 @@ Private Sub setupBracketOrderList()
 Const ProcName As String = "setupBracketOrderList"
 On Error GoTo Err
 
+calcAverageCharacterWidths BracketOrderList.Font
+
 Dim pBOListWidth As Long
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnKey, , "Key"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnKey).Width = _
-    BOListColumnWidths.WidthKey * BracketOrderList.Width / 100
-pBOListWidth = BracketOrderList.ColumnHeaders(BOListColumns.ColumnKey).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnKey).Alignment = lvwColumnLeft
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnStartTime, , "Start time"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnStartTime).Width = _
-    BOListColumnWidths.WidthStartTime * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnStartTime).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnStartTime).Alignment = lvwColumnLeft
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnEndTime, , "End time"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnEndTime).Width = _
-    BOListColumnWidths.WidthEndTime * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnEndTime).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnEndTime).Alignment = lvwColumnLeft
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnAction, , "Action"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnAction).Width = _
-    BOListColumnWidths.WidthAction * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnAction).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnAction).Alignment = lvwColumnLeft
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnQuantity, , "Qty"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnQuantity).Width = _
-    BOListColumnWidths.WidthQuantity * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnQuantity).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnQuantity).Alignment = lvwColumnRight
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnEntryPrice, , "Entry"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnEntryPrice).Width = _
-    BOListColumnWidths.WidthExitPrice * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnEntryPrice).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnEntryPrice).Alignment = lvwColumnRight
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnExitPrice, , "Exit"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnExitPrice).Width = _
-    BOListColumnWidths.WidthExitPrice * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnExitPrice).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnExitPrice).Alignment = lvwColumnRight
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnProfit, , "Profit"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnProfit).Width = _
-    BOListColumnWidths.WidthProfit * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnProfit).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnProfit).Alignment = lvwColumnRight
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnMaxProfit, , "Max profit"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnMaxProfit).Width = _
-    BOListColumnWidths.WidthMaxProfit * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnMaxProfit).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnMaxProfit).Alignment = lvwColumnRight
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnMaxLoss, , "Max loss"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnMaxLoss).Width = _
-    BOListColumnWidths.WidthMaxLoss * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnMaxLoss).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnMaxLoss).Alignment = lvwColumnRight
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnRisk, , "Risk"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnRisk).Width = _
-    BOListColumnWidths.WidthRisk * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnRisk).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnRisk).Alignment = lvwColumnRight
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnQuantityOutstanding, , "OQty"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnQuantityOutstanding).Width = _
-    BOListColumnWidths.WidthQuantityOutstanding * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnQuantityOutstanding).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnQuantityOutstanding).Alignment = lvwColumnRight
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnEntryReason, , "Entry reason"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnEntryReason).Width = _
-    BOListColumnWidths.WidthEntryReason * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnEntryReason).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnEntryReason).Alignment = lvwColumnLeft
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnTargetReason, , "Target reason"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnTargetReason).Width = _
-    BOListColumnWidths.WidthTargetReason * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnTargetReason).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnTargetReason).Alignment = lvwColumnLeft
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnStopReason, , "Stop reason"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnStopReason).Width = _
-    BOListColumnWidths.WidthStopReason * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnStopReason).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnStopReason).Alignment = lvwColumnLeft
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnClosedOut, , "Closed out"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnClosedOut).Width = _
-    BOListColumnWidths.WidthClosedOut * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnClosedOut).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnClosedOut).Alignment = lvwColumnCenter
-
-BracketOrderList.ColumnHeaders.Add BOListColumns.ColumnDescription, , "Description"
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnDescription).Width = _
-    BOListColumnWidths.WidthDescription * BracketOrderList.Width / 100
-pBOListWidth = pBOListWidth + BracketOrderList.ColumnHeaders(BOListColumns.ColumnDescription).Width
-BracketOrderList.ColumnHeaders(BOListColumns.ColumnDescription).Alignment = lvwColumnLeft
+pBOListWidth = setupBracketOrderListColumn(BOListColumns.ColumnKey, "Key", BOListColumnWidths.WidthKey, False)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnStartTime, "Start time", BOListColumnWidths.WidthStartTime, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnEndTime, "End time", BOListColumnWidths.WidthEndTime, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnAction, "Action", BOListColumnWidths.WidthAction, False)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnQuantity, "Qty", BOListColumnWidths.WidthQuantity, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnEntryPrice, "Entry", BOListColumnWidths.WidthExitPrice, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnExitPrice, "Exit", BOListColumnWidths.WidthExitPrice, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnProfit, "Profit", BOListColumnWidths.WidthProfit, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnMaxProfit, "Max profit", BOListColumnWidths.WidthMaxProfit, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnMaxLoss, "Max loss", BOListColumnWidths.WidthMaxLoss, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnRisk, "Risk", BOListColumnWidths.WidthRisk, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnQuantityOutstanding, "OQty", BOListColumnWidths.WidthQuantityOutstanding, True)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnEntryReason, "Entry reason", BOListColumnWidths.WidthEntryReason, False)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnTargetReason, "Target reason", BOListColumnWidths.WidthTargetReason, False)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnStopReason, "Stop reason", BOListColumnWidths.WidthStopReason, False)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnClosedOut, "Closed out", BOListColumnWidths.WidthClosedOut, False)
+pBOListWidth = pBOListWidth + setupBracketOrderListColumn(BOListColumns.ColumnDescription, "Description", BOListColumnWidths.WidthDescription, False)
 
 If Me.ScaleMode = vbTwips Then
     ' If using Twips then change to pixels
@@ -2098,6 +2048,29 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function setupBracketOrderListColumn( _
+                ByVal pIndex As Long, _
+                ByVal pHeading As String, _
+                ByVal pColumnWidthChars As Long, _
+                ByVal pIsNumeric As Boolean) As Long
+Const ProcName As String = "setupBracketOrderListColumn"
+On Error GoTo Err
+
+BracketOrderList.ColumnHeaders.Add pIndex, , pHeading
+
+Dim lWidth As Long
+lWidth = IIf(pIsNumeric, mDigitWidth, mLetterWidth) * pColumnWidthChars
+BracketOrderList.ColumnHeaders(pIndex).Width = lWidth
+BracketOrderList.ColumnHeaders(pIndex).Alignment = IIf(pIsNumeric, lvwColumnRight, lvwColumnLeft)
+
+setupBracketOrderListColumn = lWidth
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub startprocessing()
 Const ProcName As String = "startprocessing"
