@@ -727,9 +727,11 @@ Begin VB.Form fStrategyHost
       TabCaption(0)   =   "Price chart"
       TabPicture(0)   =   "fStrategyHost.frx":00A8
       Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "PriceChart"
+      Tab(0).Control(0)=   "Picture2"
       Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).ControlCount=   1
+      Tab(0).Control(1)=   "PriceChart"
+      Tab(0).Control(1).Enabled=   0   'False
+      Tab(0).ControlCount=   2
       TabCaption(1)   =   "Daily profit chart"
       TabPicture(1)   =   "fStrategyHost.frx":00C4
       Tab(1).ControlEnabled=   0   'False
@@ -745,19 +747,19 @@ Begin VB.Form fStrategyHost
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "BracketOrderList"
       Tab(3).ControlCount=   1
+      Begin TradingUI27.MultiChart PriceChart 
+         Height          =   4845
+         Left            =   0
+         TabIndex        =   23
+         Top             =   780
+         Width           =   11055
+         _ExtentX        =   19500
+         _ExtentY        =   8546
+      End
       Begin TradingUI27.MarketChart ProfitChart 
          Height          =   5325
          Left            =   -75000
          TabIndex        =   24
-         Top             =   300
-         Width           =   11055
-         _ExtentX        =   19500
-         _ExtentY        =   9393
-      End
-      Begin TradingUI27.MultiChart PriceChart 
-         Height          =   5325
-         Left            =   0
-         TabIndex        =   23
          Top             =   300
          Width           =   11055
          _ExtentX        =   19500
@@ -791,6 +793,28 @@ Begin VB.Form fStrategyHost
          Width           =   11055
          _ExtentX        =   19500
          _ExtentY        =   9393
+      End
+      Begin VB.PictureBox Picture2 
+         Appearance      =   0  'Flat
+         BackColor       =   &H80000005&
+         BorderStyle     =   0  'None
+         ForeColor       =   &H80000008&
+         Height          =   735
+         Left            =   0
+         ScaleHeight     =   735
+         ScaleWidth      =   11055
+         TabIndex        =   56
+         Top             =   360
+         Width           =   11055
+         Begin TradingUI27.ChartNavToolbar ChartNavToolbar 
+            Height          =   330
+            Left            =   240
+            TabIndex        =   57
+            Top             =   0
+            Width           =   5865
+            _ExtentX        =   10345
+            _ExtentY        =   582
+         End
       End
    End
    Begin MSComDlg.CommonDialog CommonDialogs 
@@ -950,6 +974,8 @@ StopStrategyFactoryCombo.ComboItems.Add , , "RlkStrategies27.StopStrategyFactory
 StopStrategyFactoryCombo.ComboItems.Add , , "Strategies27.StopStrategyFactory5"
 LogMessage "Form loaded"
 
+ChartNavToolbar.Initialise , PriceChart
+
 Exit Sub
 
 Err:
@@ -978,6 +1004,7 @@ ResultsPicture.Width = SSTab2.Width
 If Not mDetailsHidden Then
     If ScaleHeight - SSTab1.Top > 0 Then SSTab1.Height = ScaleHeight - SSTab1.Top
     PriceChart.Width = SSTab1.Width
+    Picture2.Width = SSTab1.Width
     If SSTab1.Height - PriceChart.Top > 0 Then PriceChart.Height = SSTab1.Height - PriceChart.Top
     ProfitChart.Width = SSTab1.Width
     If SSTab1.Height - ProfitChart.Top > 0 Then ProfitChart.Height = SSTab1.Height - ProfitChart.Top
@@ -1088,10 +1115,6 @@ lIndex = PriceChart.AddRaw(pTimeframe, _
                         mModel.Contract.SessionEndTime, _
                         lTitle, _
                         lUpdatePerTick)
-
-Dim lChartManager As ChartManager
-Set lChartManager = PriceChart.ChartManager(lIndex)
-lChartManager.SetBaseStudyConfiguration CreateBarsStudyConfig(pTimeframe, mModel.Contract.Specifier.SecType, mModel.Ticker.StudyBase.StudyManager.StudyLibraryManager), 0
 
 If mPriceChartTimePeriod Is Nothing Then
     Set mPriceChartTimePeriod = pTimeframe.TimePeriod

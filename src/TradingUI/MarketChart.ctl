@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#262.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#264.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -199,11 +199,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = Value
+Theme = value
 
 Exit Property
 
@@ -243,7 +243,7 @@ If ev.Future.IsAvailable Then
     ' this means that the contract info is available, so we can
     ' now start the chart
 
-    setContractProperties mTimeframes.ContractFuture.Value
+    setContractProperties mTimeframes.ContractFuture.value
 
     If mDeferStart Then Exit Sub
 
@@ -292,7 +292,7 @@ If Not LoadingProgressBar.Visible Then
     Chart1.EnableDrawing
     Chart1.DisableDrawing
 End If
-LoadingProgressBar.Value = percentComplete
+LoadingProgressBar.value = percentComplete
 
 Exit Sub
 
@@ -305,11 +305,11 @@ End Sub
 '@================================================================================
 
 Public Property Let Autoscrolling( _
-                ByVal Value As Boolean)
+                ByVal value As Boolean)
 Const ProcName As String = "Autoscrolling"
 On Error GoTo Err
 
-Chart1.Autoscrolling = Value
+Chart1.Autoscrolling = value
 
 Exit Property
 
@@ -382,16 +382,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal Value As ConfigurationSection)
+                ByVal value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If mConfig Is Value Then Exit Property
+If mConfig Is value Then Exit Property
 If Not mConfig Is Nothing Then mConfig.Remove
 Set mConfig = Nothing
-If Value Is Nothing Then Exit Property
+If value Is Nothing Then Exit Property
 
-Set mConfig = Value
+Set mConfig = value
 
 gLogger.Log "Chart added to config at: " & mConfig.Path, ProcName, ModuleName
 
@@ -420,11 +420,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
-                ByVal Value As Boolean)
+                ByVal value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = Value
+UserControl.Enabled = value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -434,11 +434,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let HorizontalMouseScrollingAllowed( _
-                ByVal Value As Boolean)
+                ByVal value As Boolean)
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
 On Error GoTo Err
 
-Chart1.HorizontalMouseScrollingAllowed = Value
+Chart1.HorizontalMouseScrollingAllowed = value
 
 Exit Property
 
@@ -509,11 +509,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let MinimumTicksHeight(ByVal Value As Double)
+Public Property Let MinimumTicksHeight(ByVal value As Double)
 Const ProcName As String = "MinimumTicksHeight"
 On Error GoTo Err
 
-mMinimumTicksHeight = Value
+mMinimumTicksHeight = value
 If mMinimumTicksHeight * mTickSize <> 0 Then
     mPriceRegion.MinimumHeight = mMinimumTicksHeight * mTickSize
 End If
@@ -552,11 +552,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PeriodWidth(ByVal Value As Long)
+Public Property Let PeriodWidth(ByVal value As Long)
 Const ProcName As String = "PeriodWidth"
 On Error GoTo Err
 
-Chart1.PeriodWidth = Value
+Chart1.PeriodWidth = value
 
 Exit Property
 
@@ -577,11 +577,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PointerCrosshairsColor(ByVal Value As OLE_COLOR)
+Public Property Let PointerCrosshairsColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "PointerCrosshairsColor"
 On Error GoTo Err
 
-Chart1.PointerCrosshairsColor = Value
+Chart1.PointerCrosshairsColor = value
 
 Exit Property
 
@@ -602,11 +602,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PointerDiscColor(ByVal Value As OLE_COLOR)
+Public Property Let PointerDiscColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "PointerDiscColor"
 On Error GoTo Err
 
-Chart1.PointerDiscColor = Value
+Chart1.PointerDiscColor = value
 
 Exit Property
 
@@ -627,11 +627,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PointerStyle(ByVal Value As PointerStyles)
+Public Property Let PointerStyle(ByVal value As PointerStyles)
 Const ProcName As String = "PointerStyle"
 On Error GoTo Err
 
-Chart1.PointerStyle = Value
+Chart1.PointerStyle = value
 
 Exit Property
 
@@ -678,11 +678,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let StudyManager(ByVal Value As StudyManager)
+Public Property Let StudyManager(ByVal value As StudyManager)
 Const ProcName As String = "StudyManager"
 On Error GoTo Err
 
-Set mStudyManager = Value
+Set mStudyManager = value
 mManager.Finish
 Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, False)
 mManager.UpdatePerTick = mUpdatePerTick
@@ -693,11 +693,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal Value As ITheme)
+Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = Value
+Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor
@@ -778,11 +778,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let VerticalMouseScrollingAllowed( _
-                ByVal Value As Boolean)
+                ByVal value As Boolean)
 Const ProcName As String = "VerticalMouseScrollingAllowed"
 On Error GoTo Err
 
-Chart1.VerticalMouseScrollingAllowed = Value
+Chart1.VerticalMouseScrollingAllowed = value
 
 Exit Property
 
@@ -829,11 +829,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let YAxisWidthCm(ByVal Value As Single)
+Public Property Let YAxisWidthCm(ByVal value As Single)
 Const ProcName As String = "YAxisWidthCm"
 On Error GoTo Err
 
-Chart1.YAxisWidthCm = Value
+Chart1.YAxisWidthCm = value
 
 Exit Property
 
@@ -1235,7 +1235,7 @@ If Not mInitialised Then
         gLogger.Log "No chart style is defined", ProcName, ModuleName
     Else
         gLogger.Log "Setting chart style to", ProcName, ModuleName, , mChartStyle.Name
-		Chart1.Style = mChartStyle
+                Chart1.Style = mChartStyle
     End If
 
     mInitialised = True
@@ -1344,13 +1344,14 @@ On Error GoTo Err
 initialiseChart pIncludeBarsOutsideSession
 
 If mTimeframes Is Nothing Then
+    Assert Not mTimeframe Is Nothing, "mTimeframe Is Nothing"
+    setupStudies
     loadchart
 ElseIf mTimeframes.ContractFuture Is Nothing Then
     setupStudies
     loadchart
 ElseIf mTimeframes.ContractFuture.IsAvailable Then
-    setContractProperties mTimeframes.ContractFuture.Value
-
+    setContractProperties mTimeframes.ContractFuture.value
     setupStudies
     loadchart
 Else
@@ -1398,13 +1399,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setState(ByVal Value As ChartStates)
+Private Sub setState(ByVal value As ChartStates)
 Const ProcName As String = "setState"
 On Error GoTo Err
 
 Dim stateEv As StateChangeEventData
 
-mState = Value
+mState = value
 stateEv.State = mState
 Set stateEv.Source = Me
 RaiseEvent StateChange(stateEv)
