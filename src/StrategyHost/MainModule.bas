@@ -146,6 +146,21 @@ Else
     Set mForm = New fStrategyHost
     mForm.Show vbModeless
     
+    Dim lFrameWidth As Long
+    lFrameWidth = GetSystemMetrics(SM_CXSIZEFRAME) * Screen.TwipsPerPixelX
+    
+    Dim lFrameHeight As Long
+    lFrameHeight = GetSystemMetrics(SM_CYSIZEFRAME) * Screen.TwipsPerPixelY
+    
+    mForm.Left = -lFrameWidth
+    mForm.Top = -lFrameHeight
+    mForm.Width = Screen.Width / 2 + 2 * lFrameWidth
+    
+    Dim workarea As GDI_RECT
+    SystemParametersInfo SPI_GETWORKAREA, 0, VarPtr(workarea), 0
+    
+    mForm.Height = workarea.Bottom * Screen.TwipsPerPixelY + 2 * lFrameHeight
+    
     Dim failpoint As String
     
     failpoint = "Dim lController As New DefaultStrategyHostCtlr"
