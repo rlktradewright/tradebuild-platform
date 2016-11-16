@@ -821,7 +821,7 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Public Function buyOrSell( _
+Private Function buyOrSell( _
                 ByVal pIsBuy As Boolean, _
                 ByVal pOrderContext As ResourceIdentifier, _
                 ByVal pIsSimulated As Boolean, _
