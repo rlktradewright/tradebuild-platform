@@ -421,6 +421,16 @@ Begin VB.Form fStrategyHost
          TabIndex        =   18
          Top             =   300
          Width           =   11070
+         Begin VB.PictureBox FontPicture 
+            Height          =   615
+            Left            =   7080
+            ScaleHeight     =   555
+            ScaleWidth      =   1155
+            TabIndex        =   58
+            Top             =   2760
+            Visible         =   0   'False
+            Width           =   1215
+         End
          Begin TWControls40.TWImageCombo StopStrategyFactoryCombo 
             Height          =   330
             Left            =   6240
@@ -991,28 +1001,27 @@ If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
 SSTab1.Width = ScaleWidth
 SSTab2.Width = ScaleWidth
 
-If ScaleHeight < minimumHeight Or mDetailsHidden Then
-    Me.Height = minimumHeight + (Me.Height - Me.ScaleHeight)
-    Exit Sub
-End If
-
 Picture1.Width = SSTab2.Width
 Picture4.Width = SSTab2.Width
 LogPicture.Width = SSTab2.Width
 ResultsPicture.Width = SSTab2.Width
 
-If Not mDetailsHidden Then
-    If ScaleHeight - SSTab1.Top > 0 Then SSTab1.Height = ScaleHeight - SSTab1.Top
-    PriceChart.Width = SSTab1.Width
-    Picture2.Width = SSTab1.Width
-    If SSTab1.Height - PriceChart.Top > 0 Then PriceChart.Height = SSTab1.Height - PriceChart.Top
-    ProfitChart.Width = SSTab1.Width
-    If SSTab1.Height - ProfitChart.Top > 0 Then ProfitChart.Height = SSTab1.Height - ProfitChart.Top
-    TradeChart.Width = SSTab1.Width
-    If SSTab1.Height - TradeChart.Top > 0 Then TradeChart.Height = SSTab1.Height - TradeChart.Top
-    BracketOrderList.Width = SSTab1.Width
-    If SSTab1.Height - BracketOrderList.Top > 0 Then BracketOrderList.Height = SSTab1.Height - BracketOrderList.Top
+If ScaleHeight < minimumHeight Or mDetailsHidden Then
+    Me.WindowState = FormWindowStateConstants.vbNormal
+    Me.Height = minimumHeight + (Me.Height - Me.ScaleHeight)
+    Exit Sub
 End If
+
+If ScaleHeight - SSTab1.Top > 0 Then SSTab1.Height = ScaleHeight - SSTab1.Top
+PriceChart.Width = SSTab1.Width
+Picture2.Width = SSTab1.Width
+If SSTab1.Height - PriceChart.Top > 0 Then PriceChart.Height = SSTab1.Height - PriceChart.Top
+ProfitChart.Width = SSTab1.Width
+If SSTab1.Height - ProfitChart.Top > 0 Then ProfitChart.Height = SSTab1.Height - ProfitChart.Top
+TradeChart.Width = SSTab1.Width
+If SSTab1.Height - TradeChart.Top > 0 Then TradeChart.Height = SSTab1.Height - TradeChart.Top
+BracketOrderList.Width = SSTab1.Width
+If SSTab1.Height - BracketOrderList.Top > 0 Then BracketOrderList.Height = SSTab1.Height - BracketOrderList.Top
 
 Exit Sub
 
@@ -1641,13 +1650,16 @@ Private Sub MoreButton_Click()
 Const ProcName As String = "MoreButton_Click"
 On Error GoTo Err
 
+Static sPrevHeight As Long
+
 If mDetailsHidden Then
     mDetailsHidden = False
     MoreButton.Caption = "Less <<<"
-    Me.Height = 8985 + Me.Height - Me.ScaleHeight
+    Me.Height = sPrevHeight
 Else
     mDetailsHidden = True
     MoreButton.Caption = "More >>>"
+    sPrevHeight = Me.Height
     Me.Height = minimumHeight + Me.Height - Me.ScaleHeight
 End If
 
@@ -1889,7 +1901,8 @@ Private Function getAverageCharacterWidth( _
 Const ProcName As String = "getAverageCharacterWidth"
 On Error GoTo Err
 
-getAverageCharacterWidth = Me.TextWidth(widthString) / Len(widthString)
+Set FontPicture.Font = pFont
+getAverageCharacterWidth = FontPicture.TextWidth(widthString) / Len(widthString)
 
 Exit Function
 
