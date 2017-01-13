@@ -1917,7 +1917,7 @@ On Error GoTo Err
 If StrategyCombo.Text = "" Then Exit Sub
 If StopStrategyFactoryCombo.Text = "" Then Exit Sub
 
-Dim lPMFactories As New Collection
+Dim lPMFactories As New EnumerableCollection
 lPMFactories.Add CreateObject(StopStrategyFactoryCombo.Text)
 Set mParams = mController.GetDefaultParameters(CreateObject(StrategyCombo.Text), lPMFactories)
 
