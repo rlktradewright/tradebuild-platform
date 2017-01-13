@@ -26,6 +26,7 @@ Name="BarUtils27"
 HelpContextID="0"
 Description="TradeWright Bar Utilities v2.7"
 CompatibleMode="2"
+VersionCompatible32="1"
 CompatibleEXE32="..\..\Bin\TradeWright.TradeBuild.Platform\BarUtils27.dll"
 MajorVer=2
 MinorVer=7
