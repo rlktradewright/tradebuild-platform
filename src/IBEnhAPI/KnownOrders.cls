@@ -69,7 +69,8 @@ Private mOrders                                     As New EnumerableCollection
 Friend Sub Add( _
                 ByVal pOrder As IOrder, _
                 ByVal pOrderSubmitter As OrderSubmitter, _
-                ByVal pClientId As Long)
+                ByVal pClientId As Long, _
+                ByVal pParentId As Long)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -77,6 +78,7 @@ Dim lMapEntry As OrderIdMapEntry
 
 Set lMapEntry.Order = pOrder
 Set lMapEntry.OrderSubmitter = pOrderSubmitter
+lMapEntry.ParentId = pParentId
 mOrders.Add lMapEntry, generateTwsOrderKey(pOrder.BrokerId, pClientId)
 
 Exit Sub
@@ -164,7 +166,20 @@ On Error GoTo Err
 Dim lMapEntry As OrderIdMapEntry
 
 lMapEntry = mOrders(generateTwsOrderKey(pBrokerId, pClientId))
-IsCancelled = lMapEntry.Cancelled
+If lMapEntry.Cancelled Then
+    IsCancelled = True
+Else
+    ' we need to check if there is a cancelled parent order, in case we're
+    ' being called when the parent has been cancelled but the child
+    ' cancellation notification hasn't been received yet (for example TWS will
+    ' (sometimes?) send an 'Error 135: can't find order with id= <parent id>
+    ' for a child order when the parent order has been cancelled before any
+    ' fills)
+    If lMapEntry.ParentId <> 0 Then
+        lMapEntry = mOrders(generateTwsOrderKey(lMapEntry.ParentId, pClientId))
+        IsCancelled = lMapEntry.Cancelled
+    End If
+End If
 
 Exit Function
 

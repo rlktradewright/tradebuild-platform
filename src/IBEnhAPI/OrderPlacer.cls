@@ -363,7 +363,7 @@ mTwsAPI.CancelOrder pOrder.BrokerId
 If Not mKnownOrders.Contains(pOrder.BrokerId, mTwsAPI.ClientId) Then
     ' this can happen during order recovery if the order has been cancelled
     ' between sessions
-    mKnownOrders.Add pOrder, Nothing, mTwsAPI.ClientId
+    mKnownOrders.Add pOrder, Nothing, mTwsAPI.ClientId, 0
 End If
 
 mKnownOrders.Cancel pOrder.BrokerId, mTwsAPI.ClientId
@@ -389,7 +389,7 @@ Friend Sub NotifyRecoveredOrder( _
 Const ProcName As String = "NotifyRecoveredOrder"
 On Error GoTo Err
 
-mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId
+mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId, 0
 
 Exit Sub
 
@@ -410,7 +410,7 @@ On Error GoTo Err
 Dim mapEntry As OrderIdMapEntry
 Dim lOrder As TwsOrder
 
-mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId
+mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId, pParentId
 
 Set lOrder = gOrderToTwsOrder(pOrder)
 lOrder.Transmit = pTransmit

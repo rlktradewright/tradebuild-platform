@@ -66,6 +66,7 @@ Public Type OrderIdMapEntry
     Order                   As IOrder
     OrderSubmitter          As OrderSubmitter
     Cancelled               As Boolean
+    ParentId                As Long
 End Type
 
 '@================================================================================
