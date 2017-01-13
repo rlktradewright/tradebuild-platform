@@ -87,7 +87,7 @@ End Sub
 
 Public Function GetDefaultParameters( _
                 ByVal pStrategy As IStrategy, _
-                ByVal pPositionManagementStrategyFactories As Collection) As Parameters
+                ByVal pPositionManagementStrategyFactories As EnumerableCollection) As Parameters
 End Function
 
 Public Sub NotifyBracketOrderProfile(ByRef Value As BracketOrderProfile)

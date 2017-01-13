@@ -69,7 +69,7 @@ Private mTicker                                     As Ticker
 Private mStrategy                                   As IStrategy
 Private mStrategyResourceContext                    As ResourceContext
 
-Private mPositionManagementStrategyFactories        As Collection
+Private mPositionManagementStrategyFactories        As EnumerableCollection
 Private mPosnMgmtStrategyResourceContexts           As Collection
 
 Private mDefaultParameters                          As Parameters
@@ -281,7 +281,7 @@ Public Property Get Parameters() As Parameters
 Set Parameters = mParams
 End Property
 
-Friend Property Get PositionManagementStrategyFactories() As Collection
+Friend Property Get PositionManagementStrategyFactories() As EnumerableCollection
 Set PositionManagementStrategyFactories = mPositionManagementStrategyFactories
 End Property
 
@@ -487,7 +487,7 @@ End Sub
 
 Public Function GetDefaultParameters( _
                 ByVal pStrategy As IStrategy, _
-                ByVal pPositionManagementStrategyFactories As Collection) As Parameters
+                ByVal pPositionManagementStrategyFactories As EnumerableCollection) As Parameters
 Const ProcName As String = "GetDefaultParameters"
 On Error GoTo Err
 

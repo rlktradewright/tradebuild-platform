@@ -218,7 +218,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function IStrategyHostController_GetDefaultParameters(ByVal pStrategy As IStrategy, ByVal pPositionManagementStrategyFactories As Collection) As Parameters
+Private Function IStrategyHostController_GetDefaultParameters(ByVal pStrategy As IStrategy, ByVal pPositionManagementStrategyFactories As EnumerableCollection) As Parameters
 Const ProcName As String = "IStrategyHostController_GetDefaultParameters"
 On Error GoTo Err
 
