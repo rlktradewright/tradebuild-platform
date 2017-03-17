@@ -2834,6 +2834,7 @@ Const ProcName As String = "refreshPriceChange"
 On Error GoTo Err
 
 If Not mRefreshPriceChangeTC Is Nothing Then Exit Sub
+If mTickers.Count = 0 Then Exit Sub
 
 Redraw = False
 
@@ -2852,6 +2853,7 @@ Const ProcName As String = "refreshQuotes"
 On Error GoTo Err
 
 If Not mRefreshQuotesTC Is Nothing Then Exit Sub
+If mTickers.Count = 0 Then Exit Sub
 
 Redraw = False
 

@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#313.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#315.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
@@ -426,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   95551491
+            Format          =   107413507
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -480,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   95551491
+            Format          =   107413507
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -1126,7 +1126,7 @@ Private Sub BlackThemeOption_Click()
 Const ProcName As String = "BlackThemeOption_Click"
 On Error GoTo Err
 
-gMainForm.ApplyTheme New BlackTheme
+gMainForm.ApplyTheme "BLACK"
 
 Exit Sub
 
@@ -1138,7 +1138,7 @@ Private Sub BlueThemeOption_Click()
 Const ProcName As String = "BlueThemeOption_Click"
 On Error GoTo Err
 
-gMainForm.ApplyTheme New BlueTheme
+gMainForm.ApplyTheme "BLUE"
 
 Exit Sub
 
@@ -1424,7 +1424,7 @@ Private Sub NativeThemeOption_Click()
 Const ProcName As String = "NativeThemeOption_Click"
 On Error GoTo Err
 
-gMainForm.ApplyTheme New NativeTheme
+gMainForm.ApplyTheme "NATIVE"
 
 Exit Sub
 
@@ -1845,25 +1845,27 @@ Set mInfoPanelFloating = pInfoPanelFloating
 Set mChartForms = pChartForms
 Set mOrderTicket = pOrderTicket
 
-LogMessage "Initialising Features Panel: Setting up contract search"
+LogMessage "Initialising Features Panel: setting up contract search"
 setupContractSearch
 
 setupReplaySpeedCombo
 
-LogMessage "Initialising Features Panel: Setting up tickfile organiser"
+LogMessage "Initialising Features Panel: setting up tickfile organiser"
 setupTickfileOrganiser
 
-LogMessage "Initialising Features Panel: Setting up timeframeselectors"
+LogMessage "Initialising Features Panel: setting up timeframeselectors"
 setupTimeframeSelectors
 
 LogMessage "Initialising Features Panel: setting current chart styles"
 loadStyleComboItems ChartStylesCombo.ComboItems
 setCurrentChartStyles
 
+LogMessage "Initialising Features Panel: setting up date pickers"
 FromDatePicker.Value = DateAdd("m", -1, Now)
 FromDatePicker.Value = Empty    ' clear the checkbox
 ToDatePicker.Value = Now
 
+LogMessage "Initialising Features Panel: setting up current config combo"
 SetupCurrentConfigCombo
 
 Exit Sub

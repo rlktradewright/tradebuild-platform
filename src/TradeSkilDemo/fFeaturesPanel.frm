@@ -22,6 +22,7 @@ Begin VB.Form fFeaturesPanel
       Left            =   0
       TabIndex        =   0
       Top             =   0
+      Visible         =   0   'False
       Width           =   4905
       _ExtentX        =   8652
       _ExtentY        =   17066
@@ -295,13 +296,8 @@ On Error GoTo Err
 
 Set mAppInstanceConfig = pAppInstanceConfig
 
-Me.Move CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLeft, 0)) * Screen.TwipsPerPixelX, _
-        CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY, _
-        CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelWidth, 280)) * Screen.TwipsPerPixelX, _
-        CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelHeight, 650)) * Screen.TwipsPerPixelY
-
 FeaturesPanel.Initialise False, pTradeBuildAPI, pConfigStore, pAppInstanceConfig, pTickerGrid, pInfoPanel, pInfoPanelFloating, pChartForms, pOrderTicket
-
+FeaturesPanel.Visible = True
 Exit Sub
 
 Err:

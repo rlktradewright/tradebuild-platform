@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#314.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#315.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -158,8 +158,6 @@ Implements IStateChangeListener
 '================================================================================
     
 Private Const ModuleName                            As String = "fTradeSkilDemo"
-
-Private Const DeferredActionApplyThemeToCharts      As String = "ApplyTheme"
 
 '================================================================================
 ' Enums
@@ -917,21 +915,28 @@ End Sub
 ' Methods
 '================================================================================
 
-Friend Sub ApplyTheme(ByVal pTheme As ITheme)
+Friend Sub ApplyTheme(ByVal pThemeName As String)
 Const ProcName As String = "ApplyTheme"
 On Error GoTo Err
 
-If pTheme Is mTheme Then Exit Sub
+Static sThemeName As String
 
-Set mTheme = pTheme
+If UCase$(pThemeName) = UCase$(sThemeName) Then Exit Sub
+sThemeName = UCase$(pThemeName)
 
-If TypeOf mTheme Is BlackTheme Then
-    mAppInstanceConfig.SetSetting ConfigSettingCurrentTheme, "Black"
-ElseIf TypeOf mTheme Is BlueTheme Then
-    mAppInstanceConfig.SetSetting ConfigSettingCurrentTheme, "Blue"
-ElseIf TypeOf mTheme Is NativeTheme Then
-    mAppInstanceConfig.SetSetting ConfigSettingCurrentTheme, "Native"
+If sThemeName = "BLACK" Then
+    Set mTheme = New BlackTheme
+ElseIf sThemeName = "BLUE" Then
+    Set mTheme = New BlueTheme
+ElseIf sThemeName = "NATIVE" Then
+    Set mTheme = New NativeTheme
+Else
+    Set mTheme = New BlackTheme
 End If
+
+LogMessage "Applying theme to main form", LogLevelHighDetail
+
+mAppInstanceConfig.SetSetting ConfigSettingCurrentTheme, sThemeName
 
 Me.BackColor = mTheme.BaseColor
 gApplyTheme mTheme, Me.Controls
@@ -941,10 +946,11 @@ ShowInfoPanelPicture.BackColor = mTheme.BaseColor
 
 Dim lForm As Object
 For Each lForm In Forms
-    If TypeOf lForm Is IThemeable Then lForm.Theme = mTheme
+    If TypeOf lForm Is IThemeable Then
+        LogMessage "Applying theme to form: " & lForm.caption, LogLevelHighDetail
+        lForm.Theme = mTheme
+    End If
 Next
-
-mChartForms.Theme = mTheme
 
 SendMessage StatusBar1.hWnd, SB_SETBKCOLOR, 0, NormalizeColor(mTheme.StatusBarBackColor)
 
@@ -1183,17 +1189,7 @@ Const ProcName As String = "loadAppInstanceCompletion"
 On Error GoTo Err
 
 LogMessage "Loading configuration: applying theme"
-Dim lThemeName As String
-lThemeName = mAppInstanceConfig.GetSetting(ConfigSettingCurrentTheme, "Black")
-Dim lTheme As ITheme
-If UCase$(lThemeName) = "BLACK" Then
-    Set lTheme = New BlackTheme
-ElseIf UCase$(lThemeName) = "BLUE" Then
-    Set lTheme = New BlueTheme
-ElseIf UCase$(lThemeName) = "NATIVE" Then
-    Set lTheme = New NativeTheme
-End If
-ApplyTheme lTheme
+ApplyTheme mAppInstanceConfig.GetSetting(ConfigSettingCurrentTheme, "Black")
 
 LogMessage "Loading configuration: showing main form"
 Me.Show vbModeless, gSplashScreen
@@ -1259,11 +1255,14 @@ Private Sub setupFeaturesPanels()
 Const ProcName As String = "setupFeaturesPanels"
 On Error GoTo Err
 
+LogMessage "Initialising fixed Features Panel"
 FeaturesPanel.Initialise True, mTradeBuildAPI, mConfigStore, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
 mFeaturesPanelPinned = CBool(mAppInstanceConfig.GetSetting(ConfigSettingFeaturesPanelPinned, "True"))
 mFeaturesPanelHidden = CBool(mAppInstanceConfig.GetSetting(ConfigSettingFeaturesPanelHidden, "False"))
     
+LogMessage "Creating floating Features Panel"
 Set mFeaturesPanelForm = New fFeaturesPanel
+LogMessage "Initialising floating Features Panel"
 mFeaturesPanelForm.Initialise mTradeBuildAPI, mConfigStore, mAppInstanceConfig, TickerGrid1, InfoPanel, mInfoPanelForm.InfoPanel, mChartForms, mOrderTicket
 
 Exit Sub
@@ -1325,6 +1324,14 @@ If mFeaturesPanelPinned Then
     Resize
     Me.Refresh
 Else
+    Static sDoneFirstShow As Boolean
+    If Not sDoneFirstShow Then
+        sDoneFirstShow = True
+        mFeaturesPanelForm.Move CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelLeft, 0)) * Screen.TwipsPerPixelX, _
+                CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY, _
+                CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelWidth, 280)) * Screen.TwipsPerPixelX, _
+                CLng(mAppInstanceConfig.GetSetting(ConfigSettingFloatingFeaturesPanelHeight, 650)) * Screen.TwipsPerPixelY
+    End If
     ShowFeaturesPanelPicture.Visible = True
     mFeaturesPanelForm.Show vbModeless, Me
     If Not mTheme Is Nothing Then mFeaturesPanelForm.Theme = mTheme

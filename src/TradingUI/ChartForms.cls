@@ -82,6 +82,7 @@ Dim l As fChart
 For Each l In mChartForms
     If (l.IsHistorical And mHistoricalChartsVisible) Or _
         (Not l.IsHistorical And mChartsVisible) Then
+        LogMessage "Applying theme to form " & l.Caption, LogLevelHighDetail
         l.Theme = mTheme
     End If
 Next
