@@ -151,6 +151,22 @@ if errorlevel 1 goto :err
 
 popd
 
+pushd Bin\TradeWright.TradeBuild.ExternalComponents
+
+call registerComponent.bat ComCt332 ocx EXT
+call registerComponent.bat ComDlg32 OCX EXT
+call registerComponent.bat dbadapt dll EXT
+call registerComponent.bat mscomct2 ocx EXT
+call registerComponent.bat mscomctl OCX EXT
+call registerComponent.bat MSDatGrd ocx EXT
+call registerComponent.bat MSFlxGrd ocx EXT
+call registerComponent.bat msstdfmt dll EXT
+call registerComponent.bat MSWINSCK ocx EXT
+call registerComponent.bat TabCtl32 Ocx EXT
+call registerComponent.bat TLBINF32 DLL EXT
+
+popd
+
 exit /B
 
 :err
