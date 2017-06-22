@@ -559,9 +559,7 @@ gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CancelAccountSummary( _
-                ByVal pReqId As Long, _
-                ByVal pGroup As String, _
-                ByVal pTags As String)
+                ByVal pReqId As Long)
 Const ProcName As String = "CancelAccountSummary"
 On Error GoTo Err
 
@@ -1458,6 +1456,7 @@ mWriter.AddString pContract.Exchange, "Exchange"
 mWriter.AddString pContract.PrimaryExch, "PrimaryExch"
 mWriter.AddString pContract.CurrencyCode, "Currency"
 mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
+mWriter.AddString UCase$(pReportType), "ReportType"
 mWriter.Send
 
 Exit Sub
