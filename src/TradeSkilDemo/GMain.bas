@@ -494,7 +494,6 @@ ApplicationGroupName = "TradeWright"
 ApplicationName = gAppTitle
 SetupDefaultLogging Command
 
-TaskConcurrency = 20
 TaskQuantumMillisecs = 32
 
 Set mConfigStore = getConfigStore
