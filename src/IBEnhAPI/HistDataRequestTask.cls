@@ -367,7 +367,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub notifyBar(ByRef pBar As TwsBar)
+Friend Sub NotifyBar(ByRef pBar As TwsBar)
 Const ProcName As String = "NotifyBar"
 On Error GoTo Err
 
@@ -500,7 +500,7 @@ On Error GoTo Err
 
 If mListener Is Nothing Then Exit Sub
 
-If Not pBar Is Nothing Then mListener.notifyBar mCookie, pBar
+If Not pBar Is Nothing Then mListener.NotifyBar mCookie, pBar
 
 Exit Sub
 
