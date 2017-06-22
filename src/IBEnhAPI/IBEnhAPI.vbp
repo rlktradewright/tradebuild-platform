@@ -44,6 +44,7 @@ HelpContextID="0"
 Description="TradeWright Enhanced Interactive Brokers API v 2.7"
 CompatibleMode="2"
 CompatibleEXE32="..\..\Bin\TradeWright.TradeBuild.ServiceProviders\IBEnhAPI27.dll"
+VersionCompatible32="1"
 MajorVer=2
 MinorVer=7
 RevisionVer=223
