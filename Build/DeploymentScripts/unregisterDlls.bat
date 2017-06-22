@@ -151,6 +151,43 @@ if errorlevel 1 goto :err
 
 popd
 
+pushd Bin\TradeWright.TradeBuild.ExternalComponents
+
+call unregisterComponent.bat ComCt332 ocx EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat ComDlg32 OCX EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat dbadapt dll EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat mscomct2 ocx EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat mscomctl OCX EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat MSDatGrd ocx EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat MSFlxGrd ocx EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat msstdfmt dll EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat MSWINSCK ocx EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat TabCtl32 Ocx EXT
+if errorlevel 1 goto :err
+
+call unregisterComponent.bat TLBINF32 DLL EXT
+if errorlevel 1 goto :err
+
+popd
+
 exit /B
 
 :err

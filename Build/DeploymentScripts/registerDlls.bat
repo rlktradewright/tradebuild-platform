@@ -154,16 +154,37 @@ popd
 pushd Bin\TradeWright.TradeBuild.ExternalComponents
 
 call registerComponent.bat ComCt332 ocx EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat ComDlg32 OCX EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat dbadapt dll EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat mscomct2 ocx EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat mscomctl OCX EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat MSDatGrd ocx EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat MSFlxGrd ocx EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat msstdfmt dll EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat MSWINSCK ocx EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat TabCtl32 Ocx EXT
+if errorlevel 1 goto :err
+
 call registerComponent.bat TLBINF32 DLL EXT
+if errorlevel 1 goto :err
 
 popd
 
