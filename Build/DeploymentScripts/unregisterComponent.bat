@@ -15,8 +15,13 @@ if /I "%~2"=="DLL" (
 
 SET VERSION=%VB6-BUILD-MAJOR%%VB6-BUILD-MINOR%
 
-echo Unregistering %~1%VERSION%.%~2
-regsvr32 -s -u %~1%VERSION%.%~2
+if /I "%~3"=="EXT" (
+	echo Unregistering %~1.%~2
+	regsvr32 -s -u %~1.%~2
+) else (
+	echo Unregistering %~1%VERSION%.%~2
+	regsvr32 -s -u %~1%VERSION%.%~2
+)
 if errorlevel 1 goto :err
 
 exit /B
