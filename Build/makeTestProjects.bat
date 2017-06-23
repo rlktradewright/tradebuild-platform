@@ -13,6 +13,13 @@ set DEP=/DEP:%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\Exter
 echo =================================
 echo Making test projects
 
+pushd %TB-PLATFORM-PROJECTS-PATH%\src\IBAPI
+
+call makeExe.bat IBAPILoadTester IBAPILoadTester /M:E %DEP%
+if errorlevel 1 pause
+
+popd
+
 pushd %TB-PLATFORM-PROJECTS-PATH%\src\IBEnhAPI
 
 call makeExe.bat ContractDataTest1 ContractDataTest1 /M:E %DEP%
