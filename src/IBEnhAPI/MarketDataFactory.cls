@@ -964,7 +964,7 @@ With pTable(pIndex)
     .InUse = False
     .Incarnation = updateIncarnation(pIndex, .Incarnation)
     Set .ContractDetails = Nothing
-    Set .ContractDetails = Nothing
+    Set .ConsumerContract = Nothing
     Set .ConsumerTimeZone = Nothing
     .DataHasBeenReceived = False
     Set .TickStreamBuilder = Nothing
