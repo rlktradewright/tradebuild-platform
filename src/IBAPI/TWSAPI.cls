@@ -202,6 +202,10 @@ Err:
 gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
+Private Sub mInMessageHandler_PaperTradingDisclaimerNotAcknowledged()
+mSocketHandler.TempConnectionRetryIntervalSecs = 5
+End Sub
+
 '================================================================================
 ' mPerformanceTimerSecond Event Handlers
 '================================================================================

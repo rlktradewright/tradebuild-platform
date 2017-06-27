@@ -27,6 +27,7 @@ Option Explicit
 '@================================================================================
 
 Event ApiConnectionEstablished(ByVal pServerVersion)
+Event PaperTradingDisclaimerNotAcknowledged()
 
 '@================================================================================
 ' Enums
@@ -107,7 +108,10 @@ Static sRetryCount As Long
 
 mReader.BeginCheckpointScope
     
-If Not mApiConnectionEstablished Then negotiateConnection
+If Not mApiConnectionEstablished Then
+    negotiateConnection
+    mApiConnectionEstablished = True
+End If
 
 Static sMessageID As TwsSocketInMsgTypes
 Static sVersion As Long
@@ -768,6 +772,8 @@ Case 1102
 Case 2103, 2104, 2105, 2106, 2107, 2108
     gLog lErrorMsg, ModuleName, ProcName
     If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiEvent lErrorCode, lErrorMsg
+Case 10141  ' Paper trading disclaimer must first be accepted for API connection
+    RaiseEvent PaperTradingDisclaimerNotAcknowledged
 Case Else
     gLog "Error (" & lErrorCode & "; id=" & id & ") from Tws: " & lErrorMsg, ModuleName, ProcName
     If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiError lErrorCode, lErrorMsg
@@ -1182,6 +1188,13 @@ mNextOrderID = mReader.GetLong("Next id")
 logSocketInputMessage
 
 If mNextOrderID < BaseOrderId Then mNextOrderID = BaseOrderId
+
+' Note that we do this here rather than in negotiateConnection() so
+' that if the initial API connection is established before the Paper
+' Trading disclaimer dialog has been acknowledged (by the user or
+' IBController), no API requests will be made by the API program before
+' the connection has been re-established.
+RaiseEvent ApiConnectionEstablished(mServerVersion)
 
 Exit Sub
 
@@ -1988,9 +2001,6 @@ End If
 
 Assert mServerVersion >= ReqdServerVersion, "TWS is out of date and needs to be upgraded"
 
-mApiConnectionEstablished = True
-RaiseEvent ApiConnectionEstablished(mServerVersion)
-    
 Exit Sub
 
 Err:

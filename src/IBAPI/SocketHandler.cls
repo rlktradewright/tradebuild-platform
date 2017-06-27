@@ -79,6 +79,7 @@ Private mIsConnecting                               As Boolean
 Private mIsConnected                                As Boolean
 
 Private mConnectionRetryIntervalSecs                As Long
+Private mTempConnectionRetryIntervalSecs            As Long
 
 Private mProgramErrorHandler                        As IProgramErrorListener
 
@@ -301,6 +302,10 @@ Friend Property Get ConnectionRetryIntervalSecs() As Long
 ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 End Property
 
+Friend Property Let TempConnectionRetryIntervalSecs(ByVal Value As Long)
+mTempConnectionRetryIntervalSecs = Value
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -441,11 +446,16 @@ Private Sub retryConnection()
 Const ProcName As String = "retryConnection"
 On Error GoTo Err
 
-If mConnectionRetryIntervalSecs <> 0 Then
-    gLog "Reconnecting in " & mConnectionRetryIntervalSecs & " seconds", ModuleName, ProcName
-    Set mConnectionTimer = CreateIntervalTimer(mConnectionRetryIntervalSecs, ExpiryTimeUnitSeconds)
+Dim lRetryInterval As Long
+If mConnectionRetryIntervalSecs <> 0 Then lRetryInterval = mConnectionRetryIntervalSecs
+If mTempConnectionRetryIntervalSecs <> 0 And mTempConnectionRetryIntervalSecs < lRetryInterval Then lRetryInterval = mTempConnectionRetryIntervalSecs
+
+If lRetryInterval <> 0 Then
+    gLog "Reconnecting in " & lRetryInterval & " seconds", ModuleName, ProcName
+    Set mConnectionTimer = CreateIntervalTimer(lRetryInterval, ExpiryTimeUnitSeconds)
     mConnectionTimer.StartTimer
     mRetryingConnection = True
+    mTempConnectionRetryIntervalSecs = 0
 End If
 
 Exit Sub
