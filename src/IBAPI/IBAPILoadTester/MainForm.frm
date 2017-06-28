@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin VB.Form MainForm 
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "ActiveX Load Tester"
+   Caption         =   "API  Load Tester"
    ClientHeight    =   8055
    ClientLeft      =   360
    ClientTop       =   435
@@ -359,14 +359,14 @@ Option Explicit
 ' Description
 '================================================================================
 
-' A simple program that uses the IB TWS ActiveX control to a set of tickers,
+' A simple program that uses the TradeWright TWS API to control a set of tickers,
 ' and keep track of the number of ticks received via the API, and the
 ' CPU utilisation.
 '
 ' The symbols to use are specified in the symbols.txt file which must be in the
-' same folder that the program is running in. The symbols.txt file supplied
-' in the download contains all the NASDAQ 100 stocks, but you can easily
-' edit it to include whatever you like.
+' DATA subfolder below the folder that the program is running in. The symbols.txt
+' file supplied in the download contains a number of busy tickers, but you can
+' easily edit it to include whatever you like.
 
 '================================================================================
 ' Interfaces
@@ -456,7 +456,7 @@ Private mIBAPI                  As TwsAPI
 Private Sub Form_Load()
 InitialiseCommonControls
 ApplicationGroupName = "TradeWright"
-ApplicationName = "ActiveXLoadTester"
+ApplicationName = "ApiLoadTester"
 
 SetupDefaultLogging Command
 
