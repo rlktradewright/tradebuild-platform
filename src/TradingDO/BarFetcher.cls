@@ -360,7 +360,9 @@ End If
 
 If mAsynchronous Then
     If Not useTickData Then
+        gLogger.Log "BarFetcher retrieved bars from database for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
         If Not mRs.BOF Then mRs.MoveLast    ' because the stored procedure returns them in reverse order
+        gLogger.Log "BarFetcher repositioned recordset for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
     End If
     mTaskContext.Continue   ' start calling ITask_run again
 End If
