@@ -17,6 +17,7 @@ set BIN_PATH_ROOT=%BIN-PATH%
 
 echo =================================
 echo Making components for TradeWright.TradeBuild.Platform
+echo.
 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
 call makedll.bat SessionUtils SessionUtils /T:DLL /B:%BINARY_COMPAT%
@@ -93,6 +94,7 @@ if errorlevel 1 pause
 
 echo =================================
 echo Making components for TradeWright.TradeBuild.ServiceProviders
+echo.
 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 call makedll.bat IBAPI IBAPI /T:DLL /B:%BINARY_COMPAT%

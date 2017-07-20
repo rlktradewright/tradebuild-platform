@@ -12,6 +12,7 @@ set DEP=/DEP:%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\Exter
 
 echo =================================
 echo Making deliverable projects
+echo.
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\src
 
