@@ -573,7 +573,7 @@ Public Sub SetBaseStudyConfiguration( _
 Const ProcName As String = "SetBaseStudyConfiguration"
 On Error GoTo Err
 
-AssertArgument TypeOf studyConfig.Study Is IBarStudy, "Base Study must implement the BarStudy interface"
+AssertArgument TypeOf studyConfig.Study Is IBarStudy, "Base Study must implement the IBarStudy interface"
 
 Dim sc As StudyConfiguration
 Set sc = studyConfig.Clone ' take a defensive copy
@@ -627,13 +627,13 @@ Public Function StartStudy( _
 Const ProcName As String = "StartStudy"
 On Error GoTo Err
 
-Dim lTaskCompletion As TaskController
-Set lTaskCompletion = mStudyManager.StartStudy(pStudy, ReplayNumbers.ReplayAll)
+Dim lTaskController As TaskController
+Set lTaskController = mStudyManager.StartStudy(pStudy, ReplayNumbers.ReplayAll)
 
-If lTaskCompletion Is Nothing Then Exit Function
+If lTaskController Is Nothing Then Exit Function
 
-Set StartStudy = lTaskCompletion
-lTaskCompletion.AddTaskCompletionListener Me
+Set StartStudy = lTaskController
+lTaskController.AddTaskCompletionListener Me
 mChartController.DisableDrawing
 
 Exit Function
@@ -1095,6 +1095,11 @@ Private Sub setBaseStudyConfig( _
                 ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "setBaseStudyConfig"
 On Error GoTo Err
+
+If Not mBaseStudyConfig Is Nothing Then
+    mBaseStudyConfig.Finish
+    mBaseStudyConfig.RemoveFromConfig
+End If
 
 Set mBaseStudyConfig = studyConfig
 Set mBaseStudy = studyConfig.Study
