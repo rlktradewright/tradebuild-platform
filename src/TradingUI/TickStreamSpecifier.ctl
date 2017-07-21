@@ -9,7 +9,7 @@ Begin VB.UserControl TickStreamSpecifier
    ScaleWidth      =   6720
    Begin VB.Frame Frame2 
       Caption         =   "Contract specification"
-      Height          =   3735
+      Height          =   3855
       Left            =   0
       TabIndex        =   20
       Top             =   0
@@ -18,28 +18,28 @@ Begin VB.UserControl TickStreamSpecifier
          Appearance      =   0  'Flat
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
-         Height          =   3375
+         Height          =   3495
          Left            =   120
-         ScaleHeight     =   3375
+         ScaleHeight     =   3495
          ScaleWidth      =   2535
          TabIndex        =   21
          Top             =   240
          Width           =   2535
          Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
-            Height          =   3390
+            Height          =   3510
             Left            =   0
             TabIndex        =   0
             Top             =   0
             Width           =   2535
             _ExtentX        =   4471
-            _ExtentY        =   5980
+            _ExtentY        =   6191
             ForeColor       =   -2147483640
          End
       End
    End
    Begin VB.Frame Frame1 
       Caption         =   "Data source"
-      Height          =   735
+      Height          =   855
       Left            =   2880
       TabIndex        =   17
       Top             =   3000
@@ -55,9 +55,9 @@ Begin VB.UserControl TickStreamSpecifier
          Width           =   3495
          Begin TWControls40.TWImageCombo FormatCombo 
             Height          =   330
-            Left            =   720
+            Left            =   600
             TabIndex        =   23
-            Top             =   0
+            Top             =   120
             Width           =   2775
             _ExtentX        =   4895
             _ExtentY        =   582
@@ -78,7 +78,7 @@ Begin VB.UserControl TickStreamSpecifier
             Height          =   255
             Left            =   0
             TabIndex        =   19
-            Top             =   0
+            Top             =   120
             Width           =   855
          End
       End
@@ -246,7 +246,7 @@ Begin VB.UserControl TickStreamSpecifier
       Height          =   375
       Left            =   0
       TabIndex        =   22
-      Top             =   3840
+      Top             =   3960
       Width           =   6615
    End
 End
