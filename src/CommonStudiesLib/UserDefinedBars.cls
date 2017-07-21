@@ -68,7 +68,7 @@ Attribute mBarStudySupport.VB_VarHelpID = -1
 
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
-Private WithEvents mBar As Barutils27.Bar
+Private WithEvents mBar As BarUtils27.Bar
 Attribute mBar.VB_VarHelpID = -1
 
 Private mValueTickSize As Double
@@ -260,7 +260,7 @@ Private Function customGetStudyValue( _
 Const ProcName As String = "customGetStudyValue"
 On Error GoTo Err
 
-Dim Bar As Barutils27.Bar
+Dim Bar As BarUtils27.Bar
 Set Bar = mBars.Bar(ref)
 
 Dim sv As SValue
@@ -620,14 +620,10 @@ Private Function IStudy_NumberOfCachedValues( _
 Const ProcName As String = "IStudy_NumberOfCachedValues"
 On Error GoTo Err
 
-If valueName = "" Or valueName = BarStudyValueBar Then
-    If mBars Is Nothing Then
-        IStudy_NumberOfCachedValues = 0
-    Else
-        IStudy_NumberOfCachedValues = mBars.Count
-    End If
+If mBars Is Nothing Then
+    IStudy_NumberOfCachedValues = 0
 Else
-    IStudy_NumberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+    IStudy_NumberOfCachedValues = mBars.Count
 End If
 
 Exit Function

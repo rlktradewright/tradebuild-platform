@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl BarFormatterPicker 
    BackStyle       =   0  'Transparent
    ClientHeight    =   345
@@ -147,11 +147,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = Value
+Theme = value
 
 Exit Property
 
@@ -183,7 +183,7 @@ Else
     lBarsValueConfig.BarFormatterLibraryName = lEntry.LibraryName
 End If
 
-mChartManager.BaseStudyConfiguration = lBaseStudyConfig
+mChartManager.SetBaseStudyConfiguration lBaseStudyConfig
 
 Exit Sub
 
@@ -323,12 +323,12 @@ Enabled = UserControl.Enabled
 End Property
 
 Public Property Let Enabled( _
-                ByVal Value As Boolean)
+                ByVal value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = Value
-Combo1.Enabled = Value
+UserControl.Enabled = value
+Combo1.Enabled = value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -414,11 +414,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ListWidth(ByVal Value As Long)
+Public Property Let ListWidth(ByVal value As Long)
 Const ProcName As String = "ListWidth"
 On Error GoTo Err
 
-Combo1.ListWidth = Value
+Combo1.ListWidth = value
 PropertyChanged "ListWidth"
 
 Exit Property
@@ -435,11 +435,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal Value As ITheme)
+Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = Value
+Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
 Combo1.Theme = mTheme

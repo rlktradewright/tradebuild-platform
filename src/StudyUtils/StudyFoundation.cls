@@ -544,7 +544,7 @@ If ValueName = "" Then
     Dim i As Long
     For i = 0 To UBound(mValueCaches)
         Dim lCount As Long
-        lCount = mValueCaches(0).ValueCache.Count
+        lCount = mValueCaches(i).ValueCache.Count
         If lCount > NumberOfCachedValues Then NumberOfCachedValues = lCount
     Next
 Else
