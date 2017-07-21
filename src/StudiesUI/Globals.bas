@@ -231,9 +231,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gFilterNonNumericKeyPress(ByRef KeyAscii As Integer)
-If (KeyAscii < 48 Or KeyAscii > 57) Then
-    KeyAscii = 0
-End If
+If KeyAscii = vbKeyBack Then Exit Sub
+If KeyAscii = vbKeyDelete Then Exit Sub
+If KeyAscii < vbKey0 Or KeyAscii > vbKey9 Then KeyAscii = 0
 End Sub
 
 Public Function gGetParentForm(ByVal pObject As Object) As Form
