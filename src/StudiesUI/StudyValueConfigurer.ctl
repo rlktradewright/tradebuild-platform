@@ -416,6 +416,12 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+Private Sub ThicknessText_Validate(Cancel As Boolean)
+If ThicknessText.Text = "" Or ThicknessText.Text = "0" Then
+    ThicknessText.Text = "1"
+End If
+End Sub
+
 Private Sub UpColorLabel_Click()
 Const ProcName As String = "ColorLabel_Click"
 On Error GoTo Err
