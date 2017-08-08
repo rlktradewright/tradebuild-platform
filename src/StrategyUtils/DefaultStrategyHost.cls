@@ -79,7 +79,7 @@ Case "position.maxprofit"
     mView.NotifySessionMaxProfit CDbl(pLogrec.Data)
 Case "position.bracketorderprofilestruct"
     Dim lBracketOrderProfile As BracketOrderProfile
-    lBracketOrderProfile = pLogrec.Data
+    Set lBracketOrderProfile = pLogrec.Data
     mController.NotifyBracketOrderProfile lBracketOrderProfile
 Case "position.position"
     mController.NotifyPosition CLng(pLogrec.Data)
