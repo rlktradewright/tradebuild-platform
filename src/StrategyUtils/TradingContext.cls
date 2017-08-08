@@ -70,7 +70,6 @@ Private mTickNumber                                 As Long
 
 Private mStrategy                                   As IStrategy
 
-Private mPositionMgmgtStrategies                    As Collection
 Private mActivePositionMgmgtStrategies              As Collection
 Private mPositionMgmgtResourceContexts              As Collection
 
@@ -89,7 +88,6 @@ On Error GoTo Err
 Set mTradeReasonLogger = GetLogger("strategy.tradereason")
 mTradeReasonLogger.LogToParent = True
 
-Set mPositionMgmgtStrategies = New Collection
 Set mActivePositionMgmgtStrategies = New Collection
 Set mPositionMgmgtResourceContexts = New Collection
 
@@ -388,7 +386,6 @@ Public Sub ApplyPositionManagementStrategy( _
 Const ProcName As String = "ApplyPositionManagementStrategy"
 On Error GoTo Err
 
-mPositionMgmgtStrategies.Add pStrategy
 mPositionMgmgtResourceContexts.Add pResourceContext, GetObjectKey(pStrategy)
 
 mStrategyRunner.SetCurrent pStrategy, pResourceContext
@@ -418,7 +415,7 @@ End Function
 Public Function GetStudyValue( _
                 ByVal Study As ResourceIdentifier, _
                 Optional ByVal ValueName As String, _
-                Optional ByVal Ref) As Variant
+                Optional ByVal Ref As Long) As Variant
 Const ProcName As String = "GetStudyValue"
 On Error GoTo Err
 
