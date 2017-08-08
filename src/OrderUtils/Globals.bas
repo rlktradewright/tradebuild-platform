@@ -553,12 +553,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gLogBracketOrderProfileStruct( _
-                ByVal pData As Variant, _
+Public Sub gLogBracketOrderProfileObject( _
+                ByVal pData As BracketOrderProfile, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-Const ProcName As String = "gLogBracketOrderProfileStruct"
+Const ProcName As String = "gLogBracketOrderProfileObject"
 On Error GoTo Err
 
 Static lLogger As Logger
@@ -573,7 +573,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogBracketOrderProfileString( _
-                ByVal pData As Variant, _
+                ByVal pData As String, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -592,7 +592,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogDrawDown( _
-                ByVal pData As Variant, _
+                ByVal pData As Currency, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -611,7 +611,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogMaxLoss( _
-                ByVal pData As Variant, _
+                ByVal pData As Currency, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -630,7 +630,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogMaxProfit( _
-                ByVal pData As Variant, _
+                ByVal pData As Currency, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -649,7 +649,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogMoneyManagement( _
-                ByVal pData As Variant, _
+                ByVal pMessage As String, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -659,7 +659,7 @@ On Error GoTo Err
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
 
-logInfotypeData "moneymanagement", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+logInfotypeData "moneymanagement", pMessage, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
 
 Exit Sub
 
@@ -668,7 +668,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogOrder( _
-                ByVal pData As Variant, _
+                ByVal pMessage As String, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -678,7 +678,7 @@ On Error GoTo Err
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
 
-logInfotypeData "order", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+logInfotypeData "order", pMessage, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
 
 Exit Sub
 
@@ -687,7 +687,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogOrderDetail( _
-                ByVal pData As Variant, _
+                ByVal pMessage As String, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -697,7 +697,7 @@ On Error GoTo Err
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
 
-logInfotypeData "orderdetail", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+logInfotypeData "orderdetail", pMessage, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
 
 Exit Sub
 
@@ -743,7 +743,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogPosition( _
-                ByVal pData As Variant, _
+                ByVal pPosition As Long, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -753,7 +753,7 @@ On Error GoTo Err
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
 
-logInfotypeData "position", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+logInfotypeData "position", pPosition, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
 
 Exit Sub
 
@@ -762,7 +762,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogProfit( _
-                ByVal pData As Variant, _
+                ByVal pData As Currency, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -781,7 +781,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogTradeProfile( _
-                ByVal pData As Variant, _
+                ByVal pData As String, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)

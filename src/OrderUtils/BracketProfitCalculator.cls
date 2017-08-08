@@ -528,7 +528,7 @@ Private Sub logBracketProfile()
 Const ProcName As String = "logBracketProfile"
 On Error GoTo Err
 
-Dim profile As BracketOrderProfile
+Dim profile As New BracketOrderProfile
 With profile
     .Action = mBracketOrder.EntryOrder.Action
     .Description = mBracketOrder.Description
@@ -546,7 +546,7 @@ With profile
     .StopReason = mBracketOrder.StopReason
     .TargetReason = mBracketOrder.TargetReason
 End With
-gLogBracketOrderProfileStruct profile, mBracketOrder.IsSimulated, Me
+gLogBracketOrderProfileObject profile, mBracketOrder.IsSimulated, Me
 
 gLogBracketOrderProfileString FormatTimestamp(mBracketOrder.StartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             FormatTimestamp(mBracketOrder.EndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _

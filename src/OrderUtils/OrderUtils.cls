@@ -286,24 +286,6 @@ End Enum
 ' Types
 '@================================================================================
 
-Public Type BracketOrderProfile
-    Key                 As String
-    Action              As OrderActions
-    Quantity            As Long
-    EntryPrice          As Double
-    ExitPrice           As Double
-    Profit              As Currency
-    MaxProfit           As Currency
-    MaxLoss             As Currency
-    Risk                As Currency
-    StartTime           As Date
-    EndTime             As Date
-    Description         As String
-    EntryReason         As String
-    StopReason          As String
-    TargetReason        As String
-End Type
-
 Public Type BracketOrderErrorEventData
     Source              As Object
     AffectedOrder       As IOrder
