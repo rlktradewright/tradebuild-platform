@@ -194,7 +194,7 @@ Friend Property Get BarsCache() As ValueCache
 Set BarsCache = mBarsCache
 End Property
 
-Public Property Get CloseValue(Optional ByVal ref As Long) As Variant
+Public Property Get CloseValue(Optional ByVal ref As Long) As Double
 Const ProcName As String = "CloseValue"
 On Error GoTo Err
 
@@ -251,12 +251,12 @@ Public Property Get HigherHighValue( _
 Const ProcName As String = "HigherHighValue"
 On Error GoTo Err
 
-Dim currentHigh As Double
-
 Dim valueToCompare As Double
 valueToCompare = HighValue(ref)
 
+Dim currentHigh As Double
 Dim numHighsFound As Long
+
 Dim i As Long
 i = 1
 Do
@@ -282,7 +282,7 @@ On Error GoTo Err
 
 Static sLastPeriods      As Long
 Static sLastBarNumber    As Long
-Static sLastValue        As Variant
+Static sLastValue        As Double
 Static sLastRef          As Long
 
 If mCurrentBarNumber = sLastBarNumber And _
@@ -320,26 +320,25 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HighestHighValue(ByVal periods As Long, _
-                                    Optional ByVal ref As Long) As Variant
+                                    Optional ByVal ref As Long) As Double
 Const ProcName As String = "HighestHighValue"
 On Error GoTo Err
 
-Dim High                As Double
-Static lastPeriods      As Long
-Static lastBarNumber    As Long
-Static lastValue        As Variant
-Static lastRef          As Long
+Static sLastPeriods      As Long
+Static sLastBarNumber    As Long
+Static sLastValue        As Double
+Static sLastRef          As Long
 
-If mCurrentBarNumber = lastBarNumber And _
-    periods = lastPeriods And _
-    ref = lastRef _
+If mCurrentBarNumber = sLastBarNumber And _
+    periods = sLastPeriods And _
+    ref = sLastRef _
 Then
-    If HighValue <= lastValue Then
-        HighestHighValue = lastValue
+    If HighValue <= sLastValue Then
+        HighestHighValue = sLastValue
         Exit Property
     Else
         HighestHighValue = HighValue
-        lastValue = HighestHighValue
+        sLastValue = HighestHighValue
         Exit Property
     End If
 End If
@@ -347,16 +346,17 @@ End If
 HighestHighValue = MinDouble
 Dim i As Long
 For i = 0 To periods - 1
-    High = HighValue(ref - i)
-    If High > HighestHighValue Then
-        HighestHighValue = High
+    Dim lHigh As Double
+    lHigh = HighValue(ref - i)
+    If lHigh > HighestHighValue Then
+        HighestHighValue = lHigh
     End If
 Next
 
-lastBarNumber = mCurrentBarNumber
-lastPeriods = periods
-lastRef = ref
-lastValue = HighestHighValue
+sLastBarNumber = mCurrentBarNumber
+sLastPeriods = periods
+sLastRef = ref
+sLastValue = HighestHighValue
 
 Exit Property
 
@@ -376,7 +376,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Inside(Optional ByVal ref As Long) As Variant
+Public Property Get Inside(Optional ByVal ref As Long) As Boolean
 Const ProcName As String = "Inside"
 On Error GoTo Err
 
@@ -407,11 +407,12 @@ Const ProcName As String = "LowerLowValue"
 On Error GoTo Err
 
 Dim valueToCompare As Double
+valueToCompare = LowValue(ref)
+
 Dim currentLow As Double
-Dim i As Long
 Dim numLowsFound As Long
 
-valueToCompare = LowValue(ref)
+Dim i As Long
 i = 1
 Do
     currentLow = LowValue(ref - i)
@@ -434,11 +435,9 @@ Public Property Get LowestCloseValue(ByVal periods As Long, _
 Const ProcName As String = "LowestCloseValue"
 On Error GoTo Err
 
-Dim i As Long
-Dim Low As Double
 Static lastPeriods      As Long
 Static lastBarNumber    As Long
-Static lastValue        As Variant
+Static lastValue        As Double
 Static lastRef          As Long
 
 If mCurrentBarNumber = lastBarNumber And _
@@ -455,10 +454,12 @@ Then
     End If
 End If
 
+Dim i As Long
 For i = 0 To periods - 1
-    Low = CloseValue(ref - i)
-    If Low < LowestCloseValue Then
-        LowestCloseValue = Low
+    Dim lLow As Double
+    lLow = CloseValue(ref - i)
+    If lLow < LowestCloseValue Then
+        LowestCloseValue = lLow
     End If
 Next
 
@@ -474,15 +475,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowestLowValue(ByVal periods As Long, _
-                                    Optional ByVal ref As Long) As Variant
+                                    Optional ByVal ref As Long) As Double
 Const ProcName As String = "LowestLowValue"
 On Error GoTo Err
 
-Dim i As Long
-Dim Low As Double
 Static lastPeriods      As Long
 Static lastBarNumber    As Long
-Static lastValue        As Variant
+Static lastValue        As Double
 Static lastRef          As Long
 
 If mCurrentBarNumber = lastBarNumber And _
@@ -500,12 +499,13 @@ Then
 End If
 
 LowestLowValue = MaxDouble
+Dim i As Long
 For i = 0 To periods - 1
-    Low = LowValue(ref - i)
-    If Low < LowestLowValue Then
-        LowestLowValue = Low
+    Dim lLow As Double
+    lLow = LowValue(ref - i)
+    If lLow < LowestLowValue Then
+        LowestLowValue = lLow
     End If
-
 Next
 
 lastBarNumber = mCurrentBarNumber
@@ -531,7 +531,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get OpenValue(Optional ByVal ref As Long) As Variant
+Public Property Get OpenValue(Optional ByVal ref As Long) As Double
 Const ProcName As String = "OpenValue"
 On Error GoTo Err
 
