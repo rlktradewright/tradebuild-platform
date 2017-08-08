@@ -242,6 +242,7 @@ Private Sub IStrategy_NotifyTick(ByVal pType As TickTypes)
 Const ProcName As String = "IStrategy_NotifyTick"
 On Error GoTo Err
 
+If IsEndOfSession Then Exit Sub
 If Not IsCurrentTickTrade Then Exit Sub
 If Not isNewBar Then Exit Sub
 
@@ -444,11 +445,18 @@ Private Function IsEndOfSession() As Boolean
 Const ProcName As String = "IsEndOfSession"
 On Error GoTo Err
 
-If MinutesToEndOfTradingSession < 1# Then
-    LogTradeMessage "Approaching end of session: closing any outstanding position"
-    CloseAllPositions
+If MinutesToEndOfTradingSession >= 1# Then Exit Function
+
+Static sSessionEnding As Boolean
+If sSessionEnding Then
     IsEndOfSession = True
+    Exit Function
 End If
+
+sSessionEnding = True
+LogTradeMessage "Approaching end of session: closing any outstanding position"
+CloseAllPositions
+IsEndOfSession = True
 
 Exit Function
 
