@@ -21,6 +21,7 @@ Class=MarketDataManager; MarketDataManager.cls
 Class=RealTimeDataManager; RealTimeDataManager.cls
 Class=TickfileDataManager; TickfileDataManager.cls
 Class=MarketDataSource; MarketDataSource.cls
+Class=Tick; Tick.cls
 Startup="(None)"
 HelpFile=""
 Title="MktDataUtils27"

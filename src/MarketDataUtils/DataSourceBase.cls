@@ -64,34 +64,24 @@ Private mNumberOfMarketDepthRows                    As Long
 
 Private mDataSources                                As DataSources
 
-Private mBidTick                                    As GenericTick
+Private mBidTick                                    As New Tick
 Private mRecentBidPriceChange                       As ValueChanges
 Private mRecentBidSizeChange                        As ValueChanges
 
-Private mAskTick                                    As GenericTick
+Private mAskTick                                    As New Tick
 Private mRecentAskPriceChange                       As ValueChanges
 Private mRecentAskSizeChange                        As ValueChanges
 
-Private mTradeTick                                  As GenericTick
+Private mTradeTick                                  As New Tick
 Private mRecentTradePriceChange                     As ValueChanges
 Private mRecentTradeSizeChange                      As ValueChanges
 
-Private mOpenTick                                   As GenericTick
-Private mHighTick                                   As GenericTick
-Private mLowTick                                    As GenericTick
-Private mCloseTick                                  As GenericTick
-Private mVolumeTick                                 As GenericTick
-Private mOpenInterestTick                           As GenericTick
-
-Private mPrevBidTick                                As GenericTick
-Private mPrevAskTick                                As GenericTick
-Private mPrevTradeTick                              As GenericTick
-Private mPrevOpenTick                               As GenericTick
-Private mPrevHighTick                               As GenericTick
-Private mPrevLowTick                                As GenericTick
-Private mPrevCloseTick                              As GenericTick
-Private mPrevVolumeTick                             As GenericTick
-Private mPrevOpenInterestTick                       As GenericTick
+Private mOpenTick                                   As New Tick
+Private mHighTick                                   As New Tick
+Private mLowTick                                    As New Tick
+Private mCloseTick                                  As New Tick
+Private mVolumeTick                                 As New Tick
+Private mOpenInterestTick                           As New Tick
 
 Private mTimestamp                                  As Date
 
@@ -143,6 +133,19 @@ Set mSessionFutureBuilder = New FutureBuilder
 Set mSessionFuture = mSessionFutureBuilder.Future
 
 Set mPriorityTickListeners = New Listeners
+
+mAskTick.Initialise TickTypeAsk
+mBidTick.Initialise TickTypeBid
+mTradeTick.Initialise TickTypeTrade
+
+mOpenTick.Initialise TickTypeOpenPrice
+mHighTick.Initialise TickTypeHighPrice
+mLowTick.Initialise TickTypeLowPrice
+mCloseTick.Initialise TickTypeClosePrice
+
+mVolumeTick.Initialise TickTypeVolume
+mOpenInterestTick.Initialise TickTypeOpenInterest
+
 Exit Sub
 
 Err:
@@ -249,9 +252,9 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
-If TypeOf ev.Future.Value Is Clock Then
+If TypeOf ev.Future.value Is Clock Then
     Dim lClock As Clock
-    Set lClock = ev.Future.Value
+    Set lClock = ev.Future.value
     
     processClockAvailable lClock
 End If
@@ -348,88 +351,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub AddPriorityTickListener(ByVal Value As IGenericTickListener)
+Friend Sub AddPriorityTickListener(ByVal value As IGenericTickListener)
 Const ProcName As String = "AddPriorityTickListener"
 On Error GoTo Err
 
-mPriorityTickListeners.Add Value
+mPriorityTickListeners.Add value
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Friend Function ConvertTickToQuote(ByRef pTick As GenericTick) As Quote
-Const ProcName As String = "ConvertTickToQuote"
-On Error GoTo Err
-
-Dim lQuote As Quote
-
-Select Case pTick.TickType
-Case TickTypeBid
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = pTick.Price
-    lQuote.Size = pTick.Size
-    lQuote.PriceChange = gCalcValueChange(pTick.Price, mPrevBidTick.Price)
-    lQuote.SizeChange = gCalcValueChange(pTick.Size, mPrevBidTick.Size)
-    lQuote.RecentPriceChange = mRecentBidPriceChange
-    lQuote.RecentSizeChange = mRecentBidSizeChange
-Case TickTypeAsk
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = pTick.Price
-    lQuote.Size = pTick.Size
-    lQuote.PriceChange = gCalcValueChange(pTick.Price, mPrevAskTick.Price)
-    lQuote.SizeChange = gCalcValueChange(pTick.Size, mPrevAskTick.Size)
-    lQuote.RecentPriceChange = mRecentAskPriceChange
-    lQuote.RecentSizeChange = mRecentAskSizeChange
-Case TickTypeClosePrice
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = pTick.Price
-    lQuote.Size = 0
-Case TickTypeHighPrice
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = pTick.Price
-    lQuote.Size = 0
-Case TickTypeLowPrice
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = pTick.Price
-    lQuote.Size = 0
-Case TickTypeMarketDepth
-    AssertArgument False, "Invalid tick type in this context"
-Case TickTypeMarketDepthReset
-    AssertArgument False, "Invalid tick type in this context"
-Case TickTypeTrade
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = pTick.Price
-    lQuote.Size = pTick.Size
-    lQuote.PriceChange = gCalcValueChange(pTick.Price, mPrevTradeTick.Price)
-    lQuote.SizeChange = gCalcValueChange(pTick.Size, mPrevTradeTick.Size)
-    lQuote.RecentPriceChange = mRecentTradePriceChange
-    lQuote.RecentSizeChange = mRecentTradeSizeChange
-Case TickTypeVolume
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = 0
-    lQuote.Size = pTick.Size
-Case TickTypeOpenInterest
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = 0
-    lQuote.Size = pTick.Size
-Case TickTypeOpenPrice
-    lQuote.Timestamp = pTick.Timestamp
-    lQuote.Price = pTick.Price
-    lQuote.Size = 0
-Case Else
-    AssertArgument False, "Invalid tick type"
-End Select
-
-ConvertTickToQuote = lQuote
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
@@ -457,27 +389,27 @@ On Error GoTo Err
 
 Select Case pTickType
 Case TickTypeBid
-    GetCurrentTick = mBidTick
+    GetCurrentTick = mBidTick.Tick
 Case TickTypeAsk
-    GetCurrentTick = mAskTick
+    GetCurrentTick = mAskTick.Tick
 Case TickTypeClosePrice
-    GetCurrentTick = mCloseTick
+    GetCurrentTick = mCloseTick.Tick
 Case TickTypeHighPrice
-    GetCurrentTick = mHighTick
+    GetCurrentTick = mHighTick.Tick
 Case TickTypeLowPrice
-    GetCurrentTick = mLowTick
+    GetCurrentTick = mLowTick.Tick
 Case TickTypeMarketDepth
     AssertArgument False, "Invalid tick type in this context"
 Case TickTypeMarketDepthReset
     AssertArgument False, "Invalid tick type in this context"
 Case TickTypeTrade
-    GetCurrentTick = mTradeTick
+    GetCurrentTick = mTradeTick.Tick
 Case TickTypeVolume
-    GetCurrentTick = mVolumeTick
+    GetCurrentTick = mVolumeTick.Tick
 Case TickTypeOpenInterest
     GetCurrentTick = mOpenInterestTick
 Case TickTypeOpenPrice
-    GetCurrentTick = mOpenTick
+    GetCurrentTick = mOpenTick.Tick
 Case Else
     AssertArgument False, "Invalid tick type"
 End Select
@@ -494,27 +426,27 @@ On Error GoTo Err
 
 Select Case pTickType
 Case TickTypeBid
-    GetCurrentQuote = ConvertTickToQuote(mBidTick)
+    GetCurrentQuote = mBidTick.Quote
 Case TickTypeAsk
-    GetCurrentQuote = ConvertTickToQuote(mAskTick)
+    GetCurrentQuote = mAskTick.Quote
 Case TickTypeClosePrice
-    GetCurrentQuote = ConvertTickToQuote(mCloseTick)
+    GetCurrentQuote = mCloseTick.Quote
 Case TickTypeHighPrice
-    GetCurrentQuote = ConvertTickToQuote(mHighTick)
+    GetCurrentQuote = mHighTick.Quote
 Case TickTypeLowPrice
-    GetCurrentQuote = ConvertTickToQuote(mLowTick)
+    GetCurrentQuote = mLowTick.Quote
 Case TickTypeMarketDepth
     AssertArgument False, "Invalid tick type in this context"
 Case TickTypeMarketDepthReset
     AssertArgument False, "Invalid tick type in this context"
 Case TickTypeTrade
-    GetCurrentQuote = ConvertTickToQuote(mTradeTick)
+    GetCurrentQuote = mTradeTick.Quote
 Case TickTypeVolume
-    GetCurrentQuote = ConvertTickToQuote(mVolumeTick)
+    GetCurrentQuote = mVolumeTick.Quote
 Case TickTypeOpenInterest
-    GetCurrentQuote = ConvertTickToQuote(mOpenInterestTick)
+    GetCurrentQuote = mOpenInterestTick.Quote
 Case TickTypeOpenPrice
-    GetCurrentQuote = ConvertTickToQuote(mOpenTick)
+    GetCurrentQuote = mOpenTick.Quote
 Case Else
     AssertArgument False, "Invalid tick type"
 End Select
@@ -530,10 +462,10 @@ Const ProcName As String = "GetPriceChange"
 On Error GoTo Err
 
 Dim lPriceChange As PriceChange
-If mCloseTick.Price <> 0 Then
-    lPriceChange.Change = mTradeTick.Price - mCloseTick.Price
+If mCloseTick.IsLive Then
+    lPriceChange.Change = mTradeTick.Tick.Price - mCloseTick.Tick.Price
     lPriceChange.ChangeString = FormatPrice(lPriceChange.Change, mContract.Specifier.SecType, mContract.TickSize)
-    lPriceChange.ChangePercent = 100 * lPriceChange.Change / mCloseTick.Price
+    lPriceChange.ChangePercent = 100 * lPriceChange.Change / mCloseTick.Tick.Price
 End If
 GetPriceChange = lPriceChange
 
@@ -563,7 +495,7 @@ mNoVolumeAdjustments = mOptions And MarketDataSourceOptions.MarketDataSourceOptN
 mUseExchangeTimeZone = mOptions And MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone
 
 Set mContractFuture = pContractFuture
-Set mContract = mContractFuture.Value
+Set mContract = mContractFuture.value
 
 If IsContractExpired(mContract) And Not pIsTickReplay Then
     mFutureWaiter.Add CreateClockFuture(mContractFuture)
@@ -571,7 +503,7 @@ If IsContractExpired(mContract) And Not pIsTickReplay Then
 End If
 
 Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
-mSessionFutureBuilder.Value = mSessionBuilder.Session
+mSessionFutureBuilder.value = mSessionBuilder.Session
 mSessionFutureBuilder.Complete
 
 Set mVolumeAdjuster = New VolumeAdjuster
@@ -723,7 +655,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub doNotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener, ByVal pDataSource As MarketDataSource)
+Private Sub doNotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener, ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "doNotifyCurrentMarketDataQuoteValues"
 On Error GoTo Err
 
@@ -764,7 +696,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub doNotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener, ByVal pDataSource As MarketDataSource)
+Private Sub doNotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener, ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "doNotifyCurrentMarketDataTickValues"
 On Error GoTo Err
 
@@ -830,14 +762,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub FireTick(ByVal pListener As IGenericTickListener, ByRef pTick As GenericTick, ByVal pSource As Object)
+Private Sub FireTick(ByVal pListener As IGenericTickListener, ByVal pTick As Tick, ByVal pSource As Object)
 Const ProcName As String = "fireTick"
 On Error GoTo Err
 
+If Not pTick.IsLive Then Exit Sub
+
 Dim ev As GenericTickEventData
-If pTick.Timestamp = 0 Then Exit Sub
 Set ev.Source = pSource
-ev.Tick = pTick
+ev.Tick = pTick.Tick
 pListener.NotifyTick ev
 
 Exit Sub
@@ -886,32 +819,23 @@ If Not validPrice(ev.Tick) Then Exit Sub
 
 Select Case ev.Tick.TickType
 Case TickTypeBid
-    mPrevBidTick = mBidTick
-    mBidTick = ev.Tick
-    If mBidTick.Price <> mPrevBidTick.Price Then mRecentBidPriceChange = gCalcValueChange(mBidTick.Price, mPrevBidTick.Price)
-    If mBidTick.Size <> mPrevBidTick.Size Then mRecentBidSizeChange = gCalcValueChange(mBidTick.Size, mPrevBidTick.Size)
+    mBidTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeAsk
-    mPrevAskTick = mAskTick
-    mAskTick = ev.Tick
-    If mAskTick.Price <> mPrevAskTick.Price Then mRecentAskPriceChange = gCalcValueChange(mAskTick.Price, mPrevAskTick.Price)
-    If mAskTick.Size <> mPrevAskTick.Size Then mRecentAskSizeChange = gCalcValueChange(mAskTick.Size, mPrevAskTick.Size)
+    mAskTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeClosePrice
-    mPrevCloseTick = mCloseTick
-    mCloseTick = ev.Tick
+    mCloseTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeHighPrice
-    mPrevHighTick = mHighTick
-    mHighTick = ev.Tick
+    mHighTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeLowPrice
-    mPrevLowTick = mLowTick
-    mLowTick = ev.Tick
+    mLowTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeMarketDepth
@@ -923,10 +847,7 @@ Case TickTypeMarketDepthReset
     mDataSources.NotifyTick ev.Tick
     mDOMManager.ProcessMarketDepthReset
 Case TickTypeTrade
-    mPrevTradeTick = mTradeTick
-    mTradeTick = ev.Tick
-    If mTradeTick.Price <> mPrevTradeTick.Price Then mRecentTradePriceChange = gCalcValueChange(mTradeTick.Price, mPrevTradeTick.Price)
-    If mTradeTick.Size <> mPrevTradeTick.Size Then mRecentTradeSizeChange = gCalcValueChange(mTradeTick.Size, mPrevTradeTick.Size)
+    mTradeTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
     mDOMManager.ProcessTrade ev.Tick
@@ -938,8 +859,7 @@ Case TickTypeTrade
         mDataSources.NotifyTick lVolumeTick
     End If
 Case TickTypeVolume
-    mPrevVolumeTick = mVolumeTick
-    mVolumeTick = ev.Tick
+    mVolumeTick.Tick = ev.Tick
     Dim lAdjustedTick As GenericTick
     Dim lImpliedTick As GenericTick
     If mNoVolumeAdjustments Then
@@ -962,13 +882,11 @@ Case TickTypeVolume
         End If
     End If
 Case TickTypeOpenInterest
-    mPrevOpenInterestTick = mOpenInterestTick
-    mOpenInterestTick = ev.Tick
+    mOpenInterestTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
 Case TickTypeOpenPrice
-    mPrevOpenTick = mOpenTick
-    mOpenTick = ev.Tick
+    mOpenTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
 Case Else
@@ -985,7 +903,7 @@ Private Sub processClockAvailable(ByVal pClock As Clock)
 Const ProcName As String = "processClockAvailable"
 On Error GoTo Err
 
-mClockFutureBuilder.Value = pClock
+mClockFutureBuilder.value = pClock
 mClockFutureBuilder.Complete
 
 mSessionBuilder.SetSessionCurrentTime pClock.Timestamp

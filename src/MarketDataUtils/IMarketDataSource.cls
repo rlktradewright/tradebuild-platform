@@ -96,7 +96,7 @@ End Property
 Public Property Get Options() As MarketDataSourceOptions
 End Property
 
-Public Property Let PriorityTickListener(ByVal Value As IGenericTickListener)
+Public Property Let PriorityTickListener(ByVal value As IGenericTickListener)
 End Property
 
 Public Property Get Key() As String
@@ -141,9 +141,6 @@ End Sub
 
 Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
-
-Public Function ConvertTickToQuote(ByRef pTick As GenericTick) As Quote
-End Function
 
 Public Sub Finish()
 End Sub

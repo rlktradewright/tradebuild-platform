@@ -275,18 +275,6 @@ Private Property Get IMarketDataSource_ContractFuture() As IFuture
 Set IMarketDataSource_ContractFuture = ContractFuture
 End Property
 
-Private Function IMarketDataSource_ConvertTickToQuote(pTick As GenericTick) As Quote
-Const ProcName As String = "IMarketDataSource_ConvertTickToQuote"
-On Error GoTo Err
-
-IMarketDataSource_ConvertTickToQuote = ConvertTickToQuote(pTick)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Property Get IMarketDataSource_CurrentQuote(ByVal pTickType As TickTypes) As Quote
 Const ProcName As String = "IMarketDataSource_CurrentQuote"
 On Error GoTo Err
@@ -623,13 +611,13 @@ If ev.Future.IsFaulted Then
 ElseIf ev.Future.IsCancelled Then
     SetError ErrorCodes.ErrIllegalStateException, ev.ContinuationData & " creation cancelled"
     mFutureWaiter.Cancel
-ElseIf TypeOf ev.Future.Value Is IContract Then
+ElseIf TypeOf ev.Future.value Is IContract Then
     If processContractAvailable Then setReady
-ElseIf TypeOf ev.Future.Value Is Clock Then
-    mClockFutureBuilder.Value = ev.Future.Value
+ElseIf TypeOf ev.Future.value Is Clock Then
+    mClockFutureBuilder.value = ev.Future.value
     mClockFutureBuilder.Complete
-ElseIf TypeOf ev.Future.Value Is Session Then
-    mSessionFutureBuilder.Value = ev.Future.Value
+ElseIf TypeOf ev.Future.value Is Session Then
+    mSessionFutureBuilder.value = ev.Future.value
     mSessionFutureBuilder.Complete
 End If
 
@@ -739,11 +727,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PriorityTickListener(ByVal Value As IGenericTickListener)
+Public Property Let PriorityTickListener(ByVal value As IGenericTickListener)
 Const ProcName As String = "PriorityTickListener"
 On Error GoTo Err
 
-Set mPriorityTickListener = Value
+Set mPriorityTickListener = value
 If Not mDataSourceBaseRef Is Nothing Then DataSourceBase.AddPriorityTickListener mPriorityTickListener
 
 Exit Property
@@ -784,12 +772,12 @@ Friend Property Get SubscribedToMarketDepth() As Boolean
 SubscribedToMarketDepth = mSubscribedToMarketDepth
 End Property
 
-Public Property Let Tag(ByVal Value As Variant)
+Public Property Let Tag(ByVal value As Variant)
 Const ProcName As String = "Tag"
 On Error GoTo Err
 
 checkNotFinished
-gSetVariant mTag, Value
+gSetVariant mTag, value
 
 Exit Property
 
@@ -918,19 +906,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function ConvertTickToQuote(ByRef pTick As GenericTick) As Quote
-Const ProcName As String = "ConvertTickToQuote"
-On Error GoTo Err
-
-checkNotFinished
-ConvertTickToQuote = DataSourceBase.ConvertTickToQuote(pTick)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
@@ -955,7 +930,7 @@ Set mStudyBase = Nothing
 Dim s As String
 If mContractFuture.IsAvailable Then
     Dim lContract As IContract
-    Set lContract = mContractFuture.Value
+    Set lContract = mContractFuture.value
     s = lContract.Specifier.ToString
 End If
 
@@ -1702,7 +1677,7 @@ Const ProcName As String = "processContractAvailable"
 On Error GoTo Err
 
 Dim lContract As IContract
-Set lContract = mContractFuture.Value
+Set lContract = mContractFuture.value
 
 Set mDataSourceBaseRef = CreateWeakReference(getMarketDataManager.GetDataSourceBase(mContractFuture, mTickfileStreamId))
 If Not mPriorityTickListener Is Nothing Then DataSourceBase.AddPriorityTickListener mPriorityTickListener
@@ -1711,14 +1686,14 @@ DataSourceBase.AddMarketDataSource Me
 mStreamId = DataSourceBase.StreamId
 
 If DataSourceBase.ClockFuture.IsAvailable Then
-    mClockFutureBuilder.Value = DataSourceBase.ClockFuture.Value
+    mClockFutureBuilder.value = DataSourceBase.ClockFuture.value
     mClockFutureBuilder.Complete
 Else
     mFutureWaiter.Add DataSourceBase.ClockFuture
 End If
 
 If DataSourceBase.SessionFuture.IsAvailable Then
-    mSessionFutureBuilder.Value = DataSourceBase.SessionFuture.Value
+    mSessionFutureBuilder.value = DataSourceBase.SessionFuture.value
     mSessionFutureBuilder.Complete
 Else
     mFutureWaiter.Add DataSourceBase.SessionFuture
@@ -1783,7 +1758,7 @@ If mConfig Is Nothing Then Exit Sub
 ' data could cause problems on recovery
 If State = MarketDataSourceStateCreated Then Exit Sub
 
-SaveContractToConfig mContractFuture.Value, mConfig.AddConfigurationSection(ConfigSectionContract)
+SaveContractToConfig mContractFuture.value, mConfig.AddConfigurationSection(ConfigSectionContract)
 mConfig.SetSetting ConfigSettingIsMarketDataRequested, mIsMarketDataRequested
 mConfig.SetSetting ConfigSettingIsMarketDepthRequested, mIsMarketDepthRequested
 
