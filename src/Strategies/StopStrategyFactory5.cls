@@ -205,8 +205,8 @@ Then
 
     Set S.StopMA = DeclareStudy("Exponential Moving Average", _
                             S.StopTimeframe, _
-                            GetParameterValue(ParamIncludeBarsOutsideSession), _
                             "Periods=" & lBackstopMAPeriods, _
+                            GetParameterValue(ParamIncludeBarsOutsideSession), _
                             2, _
                             InputNames:="HL/2")
 
