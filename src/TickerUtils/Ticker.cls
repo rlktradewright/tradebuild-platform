@@ -222,10 +222,6 @@ Private Property Get IMarketDataSource_ContractFuture() As IFuture
 Set IMarketDataSource_ContractFuture = ContractFuture
 End Property
 
-Private Function IMarketDataSource_ConvertTickToQuote(pTick As GenericTick) As Quote
-IMarketDataSource_ConvertTickToQuote = ConvertTickToQuote(pTick)
-End Function
-
 Private Property Get IMarketDataSource_CurrentQuote(ByVal pTickType As TickTypes) As Quote
 IMarketDataSource_CurrentQuote = CurrentQuote(pTickType)
 End Property
@@ -1039,18 +1035,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Public Function ConvertTickToQuote(pTick As GenericTick) As Quote
-Const ProcName As String = "ConvertTickToQuote"
-On Error GoTo Err
-
-ConvertTickToQuote = mDataSource.ConvertTickToQuote(pTick)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Public Sub Finish()
 Const ProcName As String = "Finish"
