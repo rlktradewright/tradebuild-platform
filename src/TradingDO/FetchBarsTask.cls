@@ -180,9 +180,9 @@ ElseIf ev.Future.IsFaulted Then
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 Else
+    gLogger.Log "FetchBarsTask retrieved bars for " & mSpecifier.ToString, ProcName, ModuleName
     mFutureBuilder.value = ev.Future.value
     mFutureBuilder.Complete
-    gLogger.Log "FetchBarsTask retrieved bars for " & mSpecifier.ToString, ProcName, ModuleName
     mTaskContext.Finish Empty, False
 End If
 

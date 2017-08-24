@@ -1219,12 +1219,12 @@ Private Sub returnAsyncResults()
 Const ProcName As String = "returnAsyncResults"
 On Error GoTo Err
 
-setBarsFutureValue
-
 Debug.Print "BarFetcher: close connection"
 If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
 gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
+setBarsFutureValue
+
 mTaskContext.Finish mTargetBarsBuilder.Bars, False
 
 fireFetchCompleted
