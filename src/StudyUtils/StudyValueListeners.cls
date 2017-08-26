@@ -27,7 +27,7 @@ Option Explicit
 
 Private Type ListenerTableEntry
     theListener         As IStudyValueListener
-    valueName           As String
+    ValueName           As String
 End Type
 
 '@================================================================================
@@ -71,7 +71,7 @@ End Property
 
 Public Sub Add( _
                 ByVal listener As IStudyValueListener, _
-                ByVal valueName As String)
+                ByVal ValueName As String)
 Dim tableEntry As ListenerTableEntry
 
 Const ProcName As String = "Add"
@@ -81,7 +81,7 @@ If mNextListenerTableIndex > UBound(mListenerTable) Then
     ReDim Preserve mListenerTable(2 * (UBound(mListenerTable) + 1) - 1) As ListenerTableEntry
 End If
 Set tableEntry.theListener = listener
-tableEntry.valueName = UCase$(valueName)
+tableEntry.ValueName = UCase$(ValueName)
 mListenerTable(mNextListenerTableIndex) = tableEntry
 mNextListenerTableIndex = mNextListenerTableIndex + 1
 
@@ -99,17 +99,17 @@ Dim listener As IStudyValueListener
 Const ProcName As String = "Notify"
 On Error GoTo Err
 
-ev.valueName = UCase$(ev.valueName)
+ev.ValueName = UCase$(ev.ValueName)
 For i = 0 To mNextListenerTableIndex - 1
-    Set listener = mListenerTable(i).theListener
-    If Not listener Is Nothing Then
-        If ev.valueName = mDefaultValuename Then
-            If mListenerTable(i).valueName = DefaultStudyValueNameStr Then
-                listener.Notify ev
+    If mListenerTable(i).theListener Is Nothing Then
+    Else
+        If ev.ValueName = mDefaultValuename Then
+            If mListenerTable(i).ValueName = DefaultStudyValueNameStr Then
+                mListenerTable(i).theListener.Notify ev
             End If
         End If
-        If ev.valueName = mListenerTable(i).valueName Then
-            listener.Notify ev
+        If ev.ValueName = mListenerTable(i).ValueName Then
+            mListenerTable(i).theListener.Notify ev
         End If
     End If
 Next
@@ -132,7 +132,7 @@ For i = 0 To mNextListenerTableIndex - 1
     Set lListener = mListenerTable(i).theListener
     If lListener Is listener Then
         Set mListenerTable(i).theListener = Nothing
-        mListenerTable(i).valueName = ""
+        mListenerTable(i).ValueName = ""
     End If
 Next
 
