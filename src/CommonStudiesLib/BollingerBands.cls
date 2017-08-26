@@ -140,10 +140,10 @@ Dim ma As Variant
 ma = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).Value
 If IsEmpty(ma) Or IsEmpty(mSD.SD.Value) Then Exit Sub
 
-notifyValue ma, BBValueCentre, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
-notifyValue ma + mDevs * mSD.SD.Value, BBValueTop, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
-notifyValue ma - mDevs * mSD.SD.Value, BBValueBottom, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
-notifyValue 2 * mDevs * mSD.SD.Value, BBValueSpread, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
+notifyValue ma, BBValueCentre, ev.sVal.BarNumber, ev.sVal.BarStartTime, ev.sVal.Timestamp
+notifyValue ma + mDevs * mSD.SD.Value, BBValueTop, ev.sVal.BarNumber, ev.sVal.BarStartTime, ev.sVal.Timestamp
+notifyValue ma - mDevs * mSD.SD.Value, BBValueBottom, ev.sVal.BarNumber, ev.sVal.BarStartTime, ev.sVal.Timestamp
+notifyValue 2 * mDevs * mSD.SD.Value, BBValueSpread, ev.sVal.BarNumber, ev.sVal.BarStartTime, ev.sVal.Timestamp
 
 Exit Sub
 
