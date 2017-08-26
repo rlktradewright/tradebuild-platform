@@ -696,6 +696,8 @@ Private Function filterByTime( _
 Const ProcName As String = "filterByTime"
 On Error GoTo Err
 
+If timestamp < mFromDate Or timestamp >= mToDate Then Exit Function
+
 Dim lSessEv As SessionEventData
 lSessEv = mSessionBuilder.SetSessionCurrentTime(timestamp)
 If lSessEv.ChangeType = SessionChangeStart Then
