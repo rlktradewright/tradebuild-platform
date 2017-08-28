@@ -462,7 +462,7 @@ Const ProcName As String = "GetPriceChange"
 On Error GoTo Err
 
 Dim lPriceChange As PriceChange
-If mCloseTick.IsLive Then
+If mCloseTick.IsLive And mTradeTick.IsLive Then
     lPriceChange.Change = mTradeTick.Tick.Price - mCloseTick.Tick.Price
     lPriceChange.ChangeString = FormatPrice(lPriceChange.Change, mContract.Specifier.SecType, mContract.TickSize)
     lPriceChange.ChangePercent = 100 * lPriceChange.Change / mCloseTick.Tick.Price
