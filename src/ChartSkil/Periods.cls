@@ -45,8 +45,10 @@ Private Const ModuleName                As String = "Periods"
 ' Member variables
 '================================================================================
 
-Private mPeriods                            As Collection
+Private mPeriods                            As SortedDictionary
 Attribute mPeriods.VB_VarHelpID = -1
+Private mPeriodsByIndex                     As New Collection
+
 Private mCurrentPeriodNumber                As Long
 
 Private mFinished                           As Boolean
@@ -59,9 +61,6 @@ Private mTimePeriodSet                      As Boolean
 Private mVerticalGridTimePeriod             As TimePeriod
 Private mVerticalGridTimePeriodSet          As Boolean
 
-Private mSessionBuilder                     As SessionBuilder
-Private mSession                            As Session
-
 Private mSessionStartTime                   As Date
 Private mSessionEndTime                     As Date
 
@@ -70,7 +69,7 @@ Private mSessionEndTime                     As Date
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mPeriods = New Collection
+Set mPeriods = CreateSortedDictionary(KeyTypeDate, True)
 End Sub
 
 '================================================================================
@@ -95,15 +94,15 @@ CurrentPeriodNumber = mCurrentPeriodNumber
 End Property
 
 Friend Property Get CurrentSessionEndTime() As Date
-CurrentSessionEndTime = mSession.CurrentSessionEndTime
+CurrentSessionEndTime = getSessionBuilder().Session.CurrentSessionEndTime
 End Property
 
 Friend Property Get CurrentSessionStartTime() As Date
-CurrentSessionStartTime = mSession.CurrentSessionStartTime
+CurrentSessionStartTime = getSessionBuilder().Session.CurrentSessionStartTime
 End Property
 
 Friend Property Get SessionEndTime() As Date
-SessionEndTime = mSession.SessionEndTime
+SessionEndTime = mSessionEndTime
 End Property
 
 Friend Property Let SessionEndTime(ByVal Value As Date)
@@ -111,7 +110,7 @@ Const ProcName As String = "SessionEndTime"
 On Error GoTo Err
 
 AssertArgument CDbl(Value) < 1, "Value must be a time only"
-Assert mSessionBuilder Is Nothing, "Value cannot be changed after a period has been added"
+Assert mPeriods.Count = 0, "Value cannot be changed after a period has been added"
 mSessionEndTime = Value
 
 Exit Property
@@ -121,7 +120,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get SessionStartTime() As Date
-SessionStartTime = mSession.SessionStartTime
+SessionStartTime = mSessionStartTime
 End Property
 
 Friend Property Let SessionStartTime(ByVal Value As Date)
@@ -129,7 +128,7 @@ Const ProcName As String = "SessionStartTime"
 On Error GoTo Err
 
 AssertArgument CDbl(Value) < 1, "Value must be a time only"
-Assert mSessionBuilder Is Nothing, "Value cannot be changed after a period has been added"
+Assert mPeriods.Count = 0, "Value cannot be changed after a period has been added"
 
 mSessionStartTime = Value
 
@@ -222,20 +221,15 @@ Friend Function AddPeriod( _
 Const ProcName As String = "AddPeriod"
 On Error GoTo Err
 
-If mSessionBuilder Is Nothing Then
-    Set mSessionBuilder = CreateSessionBuilder(mSessionStartTime, mSessionEndTime, GetTimeZone(""))
-    Set mSession = mSessionBuilder.Session
-End If
-
 Dim lPeriod As Period
-Set lPeriod = createNewPeriod(pTimestamp, pAllowDuplicates)
+Set lPeriod = createNextPeriod(pTimestamp, pAllowDuplicates)
 
 lPeriod.Labels = getPeriodLabels(lPeriod)
 If lPeriod.Labels.Label <> "" Then lPeriod.VerticalGridLineType = VerticalGridlineTypePeriodBoundary
 
 If sessionBoundariesAreRelevant(mTimePeriod) Then
     Dim ev As SessionEventData
-    ev = mSessionBuilder.SetSessionCurrentTime(lPeriod.Timestamp)
+    ev = getSessionBuilder().SetSessionCurrentTime(lPeriod.Timestamp)
 
     If ev.changeType = SessionChangeEnd Then
         lPeriod.VerticalGridLineType = VerticalGridlineTypeSessionEnd
@@ -243,10 +237,10 @@ If sessionBoundariesAreRelevant(mTimePeriod) Then
         lPeriod.VerticalGridLineType = VerticalGridlineTypeSessionStart
     ElseIf ev.changeType = SessionChangeDateChange Then
         lPeriod.VerticalGridLineType = VerticalGridlineTypeDateChange
-        If needLabel(lPeriod.LabelTimestamp, lPeriod.PeriodNumber, getTimePeriodUnits) Then
+        If needLabel(lPeriod.LabelTimestamp, getTimePeriodUnits) Then
             Dim lLabels As PeriodLabels
             lLabels = lPeriod.Labels
-            lLabels.Label = formatLabel(lPeriod.LabelTimestamp, lPeriod.PeriodNumber, getTimePeriodUnits)
+            lLabels.Label = formatLabel(lPeriod.LabelTimestamp, getTimePeriodUnits)
             lPeriod.Labels = lLabels
         End If
     End If
@@ -282,59 +276,11 @@ Friend Function GetXFromTimestamp( _
 Const ProcName As String = "GetXFromTimestamp"
 On Error GoTo Err
 
-Dim lPeriod As Period
-
-Select Case TimePeriod.Units
-Case TimePeriodSecond, _
-        TimePeriodMinute, _
-        TimePeriodHour, _
-        TimePeriodDay, _
-        TimePeriodWeek, _
-        TimePeriodMonth, _
-        TimePeriodYear
-    
-    On Error Resume Next
-    Set lPeriod = Item(Timestamp)
-    On Error GoTo Err
-    
-    If Not lPeriod Is Nothing Then
-        GetXFromTimestamp = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
-    ElseIf Count = 0 Then
-        Set lPeriod = AddPeriod(Timestamp)
-        GetXFromTimestamp = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
-    ElseIf Timestamp >= Item(1).Timestamp Then
-        Set lPeriod = AddPeriod(Timestamp)
-        GetXFromTimestamp = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
-    Else
-        Dim lFirstPeriodStart As Date: lFirstPeriodStart = Item(1).Timestamp
-        Dim lBarStartTime As Date
-        Dim lOffset As Long: lOffset = 0
-        Do
-            lOffset = lOffset - 1
-            lBarStartTime = OffsetBarStartTime(lFirstPeriodStart, TimePeriod, lOffset, mSessionStartTime, mSessionEndTime)
-        Loop While lBarStartTime > Timestamp
-
-        GetXFromTimestamp = getInterpolatedX(Timestamp, lOffset, lBarStartTime)
-    End If
-    
-Case TimePeriodNone, _
-        TimePeriodVolume, _
-        TimePeriodTickVolume, _
-        TimePeriodTickMovement
-    If Not forceNewPeriod Then
-        On Error Resume Next
-        Set lPeriod = ItemDup(Timestamp, duplicateNumber)
-        On Error GoTo Err
-        
-        If lPeriod Is Nothing Then
-            Set lPeriod = AddPeriod(Timestamp, True)
-        End If
-        GetXFromTimestamp = lPeriod.PeriodNumber
-    Else
-        Set lPeriod = AddPeriod(Timestamp, True)
-        GetXFromTimestamp = lPeriod.PeriodNumber
-    End If
-End Select
+If canGenerateBarTimes(mTimePeriod.Units) Then
+    GetXFromTimestamp = getXWithRegularPeriods(Timestamp)
+Else
+    GetXFromTimestamp = getXWithIrregularPeriods(Timestamp, forceNewPeriod, duplicateNumber)
+End If
 
 Exit Function
 
@@ -344,6 +290,8 @@ End Function
 
 Friend Sub Finish()
 mFinished = True
+Set mPeriods = Nothing
+Set mPeriodsByIndex = Nothing
 Set mChartRef = Nothing
 End Sub
 
@@ -351,7 +299,7 @@ Friend Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
 Const ProcName As String = "IsTimeInSession"
 On Error GoTo Err
 
-IsTimeInSession = mSession.IsTimeInSession(Timestamp)
+IsTimeInSession = getSessionBuilder().Session.IsTimeInSession(Timestamp)
 
 Exit Function
 
@@ -365,11 +313,12 @@ Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
 If VarType(index) = vbDate Then
-    Set Item = mPeriods.Item(generateKey(CDate(index), 0))
+    Assert TryItem(CDate(index), Item), "Key not found", VBErrorCodes.VbErrInvalidProcedureCall
+ElseIf VarType(index) = vbLong Then
+    Set Item = mPeriodsByIndex(CStr(index))
 Else
-    Set Item = mPeriods.Item(index)
+    AssertArgument False, "Argument must be a date or a long"
 End If
 
 Exit Function
@@ -385,7 +334,7 @@ Const ProcName As String = "ItemDup"
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
-Set ItemDup = mPeriods.Item(generateKey(index, duplicateNumber))
+mPeriods.TryItem generateKey(index, duplicateNumber), ItemDup
 
 Exit Function
 
@@ -413,11 +362,8 @@ Const ProcName As String = "Remove"
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
-If VarType(index) = vbDate Then
-    mPeriods.Remove generateKey(CDate(index), 0)
-Else
-    mPeriods.Remove index
-End If
+AssertArgument VarType(index) = vbDate, "Argument must be a date"
+mPeriods.Remove generateKey(CDate(index), 0)
 
 Exit Sub
 
@@ -439,6 +385,26 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function TryItem( _
+                ByVal index As Date, _
+                ByRef Item As Period) As Boolean
+Const ProcName As String = "TryItem"
+On Error GoTo Err
+
+If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
+AssertArgument VarType(index) = vbDate, "Argument must be a date"
+
+Dim lRequestedItem As Variant
+TryItem = mPeriods.TryItem(generateKey(CDate(index), 0), lRequestedItem)
+
+If TryItem Then Set Item = lRequestedItem
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '================================================================================
 ' Helper Functions
@@ -531,43 +497,80 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function canGenerateBarTimes(ByVal unit As TimePeriodUnits) As Boolean
+Select Case unit
+Case TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear
+    canGenerateBarTimes = True
+Case Else
+    canGenerateBarTimes = False
+End Select
+End Function
+
 Private Function chartObj() As Chart
 Set chartObj = mChartRef.Target
 End Function
 
-Private Function createNewPeriod( _
+Private Function createPeriod( _
                 ByVal pTimestamp As Date, _
+                ByVal pPeriodNumber As Long, _
                 ByVal allowDuplicates As Boolean) As Period
-Const ProcName As String = "createNewPeriod"
+Const ProcName As String = "createPeriod"
 On Error GoTo Err
 
 Dim lPeriod As New Period
-mCurrentPeriodNumber = mCurrentPeriodNumber + 1
-lPeriod.PeriodNumber = mCurrentPeriodNumber
+lPeriod.PeriodNumber = pPeriodNumber
 
 lPeriod.Timestamp = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime)
 
-Dim duplicateNumber As Long
 Dim lLabelTimestamp As Date
-mPeriods.Add lPeriod, generateKeyAndLabelTimestamp(lPeriod.Timestamp, duplicateNumber, lLabelTimestamp)
+Dim lKey As Date
+lKey = generateKeyAndLabelTimestamp(lPeriod.Timestamp, 0, lLabelTimestamp)
+
+If Not allowDuplicates Then
+    mPeriods.Add lPeriod, lKey
+Else
+    Dim lDuplicateNumber As Long
+    Do While mPeriods.Contains(lKey)
+        lDuplicateNumber = lDuplicateNumber + 1
+        lKey = generateKeyAndLabelTimestamp(lPeriod.Timestamp, lDuplicateNumber, lLabelTimestamp)
+    Loop
+    mPeriods.Add lPeriod, lKey
+End If
+mPeriodsByIndex.Add lPeriod, CStr(lPeriod.PeriodNumber)
+
 lPeriod.LabelTimestamp = lLabelTimestamp
 
-Set createNewPeriod = lPeriod
+Set createPeriod = lPeriod
 
 Exit Function
 
 Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists And allowDuplicates Then
-    duplicateNumber = duplicateNumber + 1
-    Resume
-End If
+Private Function createNextPeriod( _
+                ByVal pTimestamp As Date, _
+                ByVal allowDuplicates As Boolean) As Period
+Const ProcName As String = "createNextPeriod"
+On Error GoTo Err
+
+mCurrentPeriodNumber = mCurrentPeriodNumber + 1
+Set createNextPeriod = createPeriod(pTimestamp, mCurrentPeriodNumber, allowDuplicates)
+
+Exit Function
+
+Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function formatCoarseLabel( _
                 ByVal pTimestamp As Date, _
-                ByVal pPeriodNumber As Long, _
                 ByVal pUnits As TimePeriodUnits) As String
 Select Case pUnits
 Case TimePeriodSecond
@@ -591,7 +594,6 @@ End Function
 
 Private Function formatLabel( _
                 ByVal pTimestamp As Date, _
-                ByVal pPeriodNumber As Long, _
                 ByVal pUnits As TimePeriodUnits) As String
 Select Case pUnits
 Case TimePeriodSecond
@@ -615,7 +617,7 @@ End Function
 
 Private Function generateKey( _
                 ByVal pTimestamp As Date, _
-                ByVal pDuplicateNumber As Long) As String
+                ByVal pDuplicateNumber As Long) As Date
 Const ProcName As String = "generateKey"
 On Error GoTo Err
 
@@ -631,7 +633,7 @@ End Function
 Private Function generateKeyAndLabelTimestamp( _
                 ByVal pPeriodStart As Date, _
                 ByVal pDuplicateNumber As Long, _
-                ByRef pLabelTimestamp As Date) As String
+                ByRef pLabelTimestamp As Date) As Date
 Const ProcName As String = "generateKeyAndLabelTimestamp"
 On Error GoTo Err
 
@@ -648,7 +650,7 @@ Case TimePeriodDay, TimePeriodWeek, TimePeriodMonth, TimePeriodYear
 End Select
 
 
-generateKeyAndLabelTimestamp = FormatTimestamp(pLabelTimestamp, TimestampDateAndTimeISO8601) & "." & pDuplicateNumber
+generateKeyAndLabelTimestamp = pLabelTimestamp + pDuplicateNumber * OneMicroSecond
 
 Exit Function
 
@@ -659,15 +661,30 @@ End Function
 Private Function getInterpolatedX( _
                 ByVal pTimestamp As Date, _
                 ByVal pPeriodX As Long, _
-                ByVal pPeriodTimestamp As Date)
+                ByVal pPeriodTimestamp As Date, _
+                Optional ByVal pNextPeriodTimestamp As Date = CDate(0#))
 Const ProcName As String = "getInterpolatedX"
 On Error GoTo Err
 
-Dim periodEndtime As Date
-periodEndtime = BarEndTime(pPeriodTimestamp, _
-                        TimePeriod, _
-                        mSessionStartTime)
-getInterpolatedX = pPeriodX + (pTimestamp - pPeriodTimestamp) / (periodEndtime - pPeriodTimestamp)
+If pNextPeriodTimestamp = 0# Then
+    Select Case TimePeriod.Units
+    Case TimePeriodVolume, _
+            TimePeriodTickVolume, _
+            TimePeriodTickMovement, _
+            TimePeriodNone
+        pNextPeriodTimestamp = pPeriodTimestamp
+    Case Else
+        pNextPeriodTimestamp = BarEndTime(pPeriodTimestamp, _
+                                    TimePeriod, _
+                                    mSessionStartTime)
+    End Select
+End If
+
+If pNextPeriodTimestamp = pPeriodTimestamp Then
+    getInterpolatedX = pPeriodX
+Else
+    getInterpolatedX = pPeriodX + (pTimestamp - pPeriodTimestamp) / (pNextPeriodTimestamp - pPeriodTimestamp)
+End If
 
 Exit Function
 
@@ -690,19 +707,36 @@ Case TimePeriodNone, TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovem
     If pPeriod.PeriodNumber Mod 10 <> 1 Then Exit Function
     lGridLineTime = pPeriod.LabelTimestamp
 Case Else
-    lGridLineTime = BarStartTime(pPeriod.LabelTimestamp, mVerticalGridTimePeriod, mSession.SessionStartTime)
+    lGridLineTime = BarStartTime(pPeriod.LabelTimestamp, mVerticalGridTimePeriod, mSessionStartTime)
 End Select
 
 With getPeriodLabels
     
-    If needLabel(lGridLineTime, pPeriod.PeriodNumber, lUnits) Then
-        .Label = formatLabel(lGridLineTime, pPeriod.PeriodNumber, lUnits)
+    If needLabel(lGridLineTime, lUnits) Then
+        .Label = formatLabel(lGridLineTime, lUnits)
     End If
     
-    If needCoarseLabel(pPeriod.LabelTimestamp, pPeriod.PeriodNumber, lUnits) Then
-        .CoarseLabel = formatCoarseLabel(pPeriod.LabelTimestamp, pPeriod.PeriodNumber, lUnits)
+    If needCoarseLabel(pPeriod.LabelTimestamp, lUnits) Then
+        .CoarseLabel = formatCoarseLabel(pPeriod.LabelTimestamp, lUnits)
     End If
 End With
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getSessionBuilder() As SessionBuilder
+Const ProcName As String = "getSessionBuilder"
+On Error GoTo Err
+
+Static sSessionBuilder As SessionBuilder
+If sSessionBuilder Is Nothing Then
+    Set sSessionBuilder = CreateSessionBuilder(mSessionStartTime, mSessionEndTime, GetTimeZone(""))
+End If
+    
+Set getSessionBuilder = sSessionBuilder
 
 Exit Function
 
@@ -718,9 +752,133 @@ Else
 End If
 End Function
 
+Private Function getXWithIrregularPeriods( _
+                ByVal Timestamp As Date, _
+                ByVal forceNewPeriod As Boolean, _
+                ByVal duplicateNumber As Long) As Double
+Const ProcName As String = "getXWithIrregularPeriods"
+On Error GoTo Err
+
+Dim lPeriod As Period
+If forceNewPeriod Then
+    Set lPeriod = AddPeriod(Timestamp, True)
+    getXWithIrregularPeriods = lPeriod.PeriodNumber
+Else
+    Set lPeriod = ItemDup(Timestamp, duplicateNumber)
+    
+    If Not lPeriod Is Nothing Then
+        getXWithIrregularPeriods = lPeriod.PeriodNumber
+    Else
+        Dim lPrevKey As Variant
+        lPrevKey = mPeriods.PreviousKey(Timestamp)
+        
+        Dim lNextKey As Variant
+        lNextKey = mPeriods.NextKey(Timestamp)
+        
+        If Not (IsEmpty(lPrevKey) Or IsEmpty(lNextKey)) Then
+            ' two consecutive periods exist and this timestamp falls
+            ' before the second of them. We interpolate between them
+            getXWithIrregularPeriods = getInterpolatedX(Timestamp, mPeriods.Item(lPrevKey).PeriodNumber, lPrevKey, lNextKey)
+        ElseIf Not IsEmpty(lPrevKey) Then
+            ' the timestamp is later than the end of the last period.
+            ' We add another period based on the timestamp.
+            Set lPeriod = AddPeriod(Timestamp)
+            getXWithIrregularPeriods = lPeriod.PeriodNumber
+        ElseIf Not IsEmpty(lNextKey) Then
+            ' timestamp is before the first period, so we create
+            ' a new period with a period number one less than
+            ' the current first period, but we don't add it to
+            ' the chart because we can't currently have negative
+            ' x values on the chart
+            Set lPeriod = createPeriod(Timestamp, mPeriods.FirstItem.PeriodNumber, False)
+            getXWithIrregularPeriods = lPeriod.PeriodNumber
+        Else
+            ' no periods exist
+            Set lPeriod = AddPeriod(Timestamp)
+            getXWithIrregularPeriods = lPeriod.PeriodNumber
+        End If
+    End If
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getXWithRegularPeriods(ByVal Timestamp As Date) As Double
+Const ProcName As String = "getXWithRegularPeriods"
+On Error GoTo Err
+
+Dim lPeriod As Period
+
+If TryItem(Timestamp, lPeriod) Then
+    ' period already exists
+    getXWithRegularPeriods = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
+Else
+    getXWithRegularPeriods = getXWithRegularPeriodsWherePeriodDoesNotExist(Timestamp)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getXWithRegularPeriodsWherePeriodDoesNotExist(ByVal Timestamp As Date) As Double
+Const ProcName As String = "getXWithRegularPeriodsWherePeriodDoesNotExist"
+On Error GoTo Err
+
+Dim X As Double
+Dim lPeriod As Period
+
+Dim lPrevKey As Variant
+lPrevKey = mPeriods.PreviousKey(Timestamp)
+
+Dim lNextKey As Variant
+lNextKey = mPeriods.NextKey(Timestamp)
+
+If Not (IsEmpty(lPrevKey) Or IsEmpty(lNextKey)) Then
+    ' two consecutive periods exist and this timestamp falls
+    ' before the second of them. Note that there may actually
+    ' be one or more missing periods, but we can't currently
+    ' add periods missing from the middle, so we just treat it
+    ' as though the first of these period is the one to
+    ' interpolate into
+    X = getInterpolatedX(Timestamp, mPeriods.Item(lPrevKey).PeriodNumber, lPrevKey, lNextKey)
+ElseIf Not IsEmpty(lPrevKey) Then
+    ' the timestamp is later than the end of the last period.
+    ' We add another period based on the timestamp.
+    Set lPeriod = AddPeriod(Timestamp)
+    X = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
+ElseIf Not IsEmpty(lNextKey) Then
+    ' timestamp is before the first period, so we step backwards
+    ' until we find a period that would contain the timestamp
+    ' if it did exist (but don't actually create it)
+    Dim lBarStartTime As Date
+    Dim lOffset As Long: lOffset = 0
+    Do
+        lOffset = lOffset - 1
+        lBarStartTime = OffsetBarStartTime(mPeriods.FirstItem().Timestamp, TimePeriod, lOffset, mSessionStartTime, mSessionEndTime)
+    Loop While lBarStartTime > Timestamp
+
+    X = getInterpolatedX(Timestamp, lOffset, lBarStartTime)
+Else
+    ' no periods exist
+    Set lPeriod = AddPeriod(Timestamp)
+    X = getInterpolatedX(Timestamp, lPeriod.PeriodNumber, lPeriod.Timestamp)
+End If
+
+getXWithRegularPeriodsWherePeriodDoesNotExist = X
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function needCoarseLabel( _
                 ByVal pTimestamp As Date, _
-                ByVal pPeriodNumber As Long, _
                 ByVal pUnits As TimePeriodUnits) As Boolean
 Static sCoarseKeys As New EnumerableCollection
 Dim lKey As String
@@ -754,7 +912,6 @@ End Function
 
 Private Function needLabel( _
                 ByVal pTimestamp As Date, _
-                ByVal pPeriodNumber As Long, _
                 ByVal pUnits As TimePeriodUnits) As Boolean
 Static sKeys As New EnumerableCollection
 Dim lKey As String
