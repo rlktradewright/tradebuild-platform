@@ -1461,31 +1461,11 @@ On Error GoTo Err
 
 If Not mModel.ShowChart Then Exit Sub
 
-On Error Resume Next
-Dim lStartPeriod As Period
-Set lStartPeriod = mPricePeriods(pStartTime)
-On Error GoTo 0
-If lStartPeriod Is Nothing Then
-    ' occurs if market data was not being received at the time of the entry execution
-    Exit Sub
-End If
-
 Dim lBracketOrderLine As ChartSkil27.Line
 Set lBracketOrderLine = mBracketOrderLineSeries.Add
-lBracketOrderLine.Point1 = NewPoint(lStartPeriod.PeriodNumber, pEntryPrice)
 
-On Error Resume Next
-Dim lEndPeriod As Period
-Set lEndPeriod = mPricePeriods(pEndTime)
-On Error GoTo 0
-If lEndPeriod Is Nothing Then
-    ' this occurs when the execution that finished the order plex occurred
-    ' at the start of a new bar but before the first price for the bar
-    ' was reported. So add the bar now
-    mPricePeriods.Add pEndTime
-    Set lEndPeriod = mPricePeriods(pEndTime)
-End If
-lBracketOrderLine.Point2 = NewPoint(lEndPeriod.PeriodNumber, pExitPrice)
+lBracketOrderLine.Point1 = NewPoint(PriceChart.BaseChartController.GetXFromTimestamp(pStartTime), pEntryPrice)
+lBracketOrderLine.Point2 = NewPoint(PriceChart.BaseChartController.GetXFromTimestamp(pEndTime), pExitPrice)
 
 If pProfit > 0 Then
     lBracketOrderLine.Color = vbBlue
@@ -1942,7 +1922,7 @@ Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
-                                                    GetTimeZone(mContract.TimezoneName)))
+                                                    GetTimeZone(mContract.TimeZoneName)))
 
 ProfitChart.Initialise CreateTimeframes(mProfitStudyBase), False
 ProfitChart.DisableDrawing
@@ -1968,7 +1948,7 @@ Set mTradeStudyBase = CreateStudyBaseForIntegerInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
-                                                    GetTimeZone(mContract.TimezoneName)))
+                                                    GetTimeZone(mContract.TimeZoneName)))
 
 TradeChart.Initialise CreateTimeframes(mTradeStudyBase), False
 TradeChart.DisableDrawing
