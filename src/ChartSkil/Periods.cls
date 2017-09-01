@@ -256,6 +256,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function Contains(ByVal Timestamp As Date) As Boolean
+Const ProcName As String = "Contains"
+On Error GoTo Err
+
+Contains = mPeriods.Contains(generateKey(Timestamp, 0))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function Count() As Long
 Const ProcName As String = "Count"
 On Error GoTo Err
@@ -386,7 +398,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function TryItem( _
+Public Function TryItem( _
                 ByVal index As Date, _
                 ByRef Item As Period) As Boolean
 Const ProcName As String = "TryItem"
