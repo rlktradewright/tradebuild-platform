@@ -440,7 +440,7 @@ Set lTickfileDataManager = CreateTickDataManager(lTickfiles, _
 Set mReplayController = lTickfileDataManager.ReplayController
 
 Dim lOrderManager As New OrderManager
-Set mTickers = CreateTickers(lTickfileDataManager, mStudyLibraryManager, mHistoricalDataStoreInput, lOrderManager, mOrderSubmitterFactoryLive, mOrderSubmitterFactorySimulated)
+Set mTickers = CreateTickers(lTickfileDataManager, mHistoricalDataStoreInput, lOrderManager, mOrderSubmitterFactoryLive, mOrderSubmitterFactorySimulated)
 
 mFutureWaiter.Add mReplayController.TickStream(0).ContractFuture
 

@@ -109,7 +109,6 @@ Set Add = New WorkSpace
 Add.Initialise Name, _
                 mScopeName, _
                 mMarketDataManager, _
-                mStudyLibraryManager, _
                 mHistoricalDataStore, _
                 mOrderManager, _
                 mOrderSubmitterFactoryLive, _

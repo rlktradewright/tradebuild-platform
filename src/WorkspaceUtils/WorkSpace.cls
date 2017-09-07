@@ -95,7 +95,6 @@ Friend Sub Initialise( _
                 ByVal pName As String, _
                 ByVal pScopeName As String, _
                 ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pStudyLibraryManager As StudyLibraryManager, _
                 ByVal pHistoricalDataStore As IHistoricalDataStore, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
@@ -106,7 +105,6 @@ On Error GoTo Err
 
 mName = pName
 Set mTickers = CreateTickers(pMarketDataManager, _
-                            pStudyLibraryManager, _
                             pHistoricalDataStore, _
                             pOrderManager, _
                             pOrderSubmitterFactoryLive, _

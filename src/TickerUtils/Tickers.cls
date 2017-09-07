@@ -54,8 +54,6 @@ Private mOrderManager                       As OrderManager
 Private mMarketDataManager                  As IMarketDataManager
 Private mHistDataStore                      As IHistoricalDataStore
 
-Private mStudyLibraryManager                As StudyLibraryManager
-
 Private mOrderSubmitterFactoryLive          As IOrderSubmitterFactory
 Private mOrderSubmitterFactorySimulated     As IOrderSubmitterFactory
 Private mName                               As String
@@ -305,7 +303,6 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pStudyLibraryManager As StudyLibraryManager, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
@@ -317,7 +314,6 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mMarketDataManager = pMarketDataManager
-Set mStudyLibraryManager = pStudyLibraryManager
 Set mHistDataStore = pHistDataStore
 
 Set mOrderManager = pOrderManager

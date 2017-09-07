@@ -66,7 +66,6 @@ Private Const ModuleName                            As String = "TickerUtils"
 
 Public Function CreateTickers( _
                 ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pStudyLibraryManager As StudyLibraryManager, _
                 Optional ByVal pHistDataStore As IHistoricalDataStore, _
                 Optional ByVal pOrderManager As OrderManager, _
                 Optional ByVal pOrderSubmitterFactoryLive As IOrderSubmitterFactory, _
@@ -78,11 +77,10 @@ Const ProcName As String = "CreateTickers"
 On Error GoTo Err
 
 AssertArgument Not pMarketDataManager Is Nothing, "pMarketDataManager is Nothing"
-AssertArgument Not pStudyLibraryManager Is Nothing, "pStudyLibraryManager is Nothing"
 
 If pName = "" Then pName = GenerateGUIDString
 Set CreateTickers = New Tickers
-CreateTickers.Initialise pMarketDataManager, pStudyLibraryManager, pHistDataStore, pOrderManager, pOrderSubmitterFactoryLive, pOrderSubmitterFactorySimulated, pName, pScopeName, pMoneyManager
+CreateTickers.Initialise pMarketDataManager, pHistDataStore, pOrderManager, pOrderSubmitterFactoryLive, pOrderSubmitterFactorySimulated, pName, pScopeName, pMoneyManager
 
 Exit Function
 
