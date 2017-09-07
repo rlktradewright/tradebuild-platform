@@ -401,12 +401,12 @@ On Error GoTo Err
 If ev.sVal.Value Is Nothing Then Exit Sub
 
 Static sCurrentBarNumber As Long
-Static sCurrentChartBar As ChartSkil27.Bar
 
 Dim lBar As BarUtils27.Bar
 Set lBar = ev.sVal.Value
 
 If mUpdatePerTick Then
+    Static sCurrentChartBar As ChartSkil27.Bar
     If sCurrentChartBar Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then
         Set sCurrentChartBar = AddBarToChart(lBar.timestamp)
         If Not lBar.Blank Then
@@ -429,8 +429,10 @@ If mUpdatePerTick Then
         If Not mBarFormatter Is Nothing Then mBarFormatter.FormatBar lBar, sCurrentChartBar
     End If
 Else
-    If Not mPeriods.Contains(lBar.timestamp) Then mPeriods.Add lBar.timestamp
-    If ev.sVal.BarNumber <> sCurrentBarNumber Then updateCurrentBar mCurrentBar
+    If ev.sVal.BarNumber <> sCurrentBarNumber Then
+        updateCurrentBar mCurrentBar
+        If Not mPeriods.Contains(lBar.timestamp) Then mPeriods.Add lBar.timestamp
+    End If
     Set mCurrentBar = lBar
 End If
 
