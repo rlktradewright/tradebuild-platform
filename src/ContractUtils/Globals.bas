@@ -165,6 +165,16 @@ If pContractSpec1 Is pContractSpec2 Then
     gContractSpecsEqual = True
 Else
     gContractSpecsEqual = (gGetContractSpecKey(pContractSpec1) = gGetContractSpecKey(pContractSpec2))
+    If pContractSpec1.CurrencyCode <> pContractSpec2.CurrencyCode Then Exit Function
+    If pContractSpec1.Exchange <> pContractSpec2.Exchange Then Exit Function
+    If pContractSpec1.Expiry <> pContractSpec2.Expiry Then Exit Function
+    If pContractSpec1.LocalSymbol <> pContractSpec2.LocalSymbol Then Exit Function
+    If pContractSpec1.Multiplier <> pContractSpec2.Multiplier Then Exit Function
+    If pContractSpec1.Right <> pContractSpec2.Right Then Exit Function
+    If pContractSpec1.SecType <> pContractSpec2.SecType Then Exit Function
+    If pContractSpec1.Strike <> pContractSpec2.Strike Then Exit Function
+    If pContractSpec1.Symbol <> pContractSpec2.Symbol Then Exit Function
+    gContractSpecsEqual = True
 End If
 
 Exit Function
@@ -289,7 +299,8 @@ gGetContractSpecKey = pSpec.LocalSymbol & "|" & _
     pSpec.Strike & "|" & _
     CStr(pSpec.Right) & "|" & _
     pSpec.Exchange & "|" & _
-    pSpec.CurrencyCode
+    pSpec.CurrencyCode & "|" & _
+    pSpec.Multiplier
 
 Exit Function
 
