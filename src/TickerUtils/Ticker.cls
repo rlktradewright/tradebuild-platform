@@ -872,6 +872,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let StudyBase(pStudyBase As IStudyBase)
+Const ProcName As String = "StudyBase"
+On Error GoTo Err
+
+mDataSource.StudyBase = pStudyBase
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get StudyBase() As IStudyBase
 Const ProcName As String = "StudyBase"
 On Error GoTo Err

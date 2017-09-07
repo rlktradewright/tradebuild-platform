@@ -146,67 +146,28 @@ Public Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Assert Not mIsInitialised, "Already initialised"
-mIsInitialised = True
-
-Dim lTickSize As Double
-Dim lName As String
-
-Set mStudyManager = pStudyManager
-
 If pContractFuture.IsAvailable Then
     Dim lContract As IContract
     Set lContract = pContractFuture.Value
-    lTickSize = lContract.TickSize
-    lName = lContract.Specifier.ToString
+    init pStudyManager, lContract.Specifier.ToString, lContract.TickSize
 Else
-    lName = CStr(GetObjectKey(pContractFuture))
     waitForFuture pContractFuture
+    init pStudyManager, CStr(GetObjectKey(pContractFuture)), 0#
 End If
 
-Set mStudyInputHandler = mStudyManager.CreateStudyInputHandler(lName)
-mInputHandleBid = mStudyManager.AddInput(mStudyInputHandler, _
-                        BidInputName, _
-                        "Bid prices", _
-                        StudyInputTypes.InputTypeReal, _
-                        False, _
-                        lTickSize)
-mInputHandleAsk = mStudyManager.AddInput(mStudyInputHandler, _
-                        AskInputName, _
-                        "Ask prices", _
-                        StudyInputTypes.InputTypeReal, _
-                        False, _
-                        lTickSize)
-mInputHandleOpenInterest = mStudyManager.AddInput(mStudyInputHandler, _
-                        OpenInterestInputName, _
-                        "OpenInterest", _
-                        StudyInputTypes.InputTypeInteger, _
-                        False, _
-                        1)
-mInputHandleTickVolume = mStudyManager.AddInput(mStudyInputHandler, _
-                        TickVolumeInputName, _
-                        "Tick Volume", _
-                        StudyInputTypes.InputTypeInteger, _
-                        False, _
-                        1)
-mInputHandleTrade = mStudyManager.AddInput(mStudyInputHandler, _
-                        TradeInputName, _
-                        "Trade prices", _
-                        StudyInputTypes.InputTypeReal, _
-                        True, _
-                        lTickSize)
-mInputHandleVolume = mStudyManager.AddInput(mStudyInputHandler, _
-                        VolumeInputName, _
-                        "Volume", _
-                        StudyInputTypes.InputTypeInteger, _
-                        False, _
-                        1)
-mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
-                        BarNumberInputName, _
-                        "Bar number", _
-                        StudyInputTypes.InputTypeInteger, _
-                        False, _
-                        1)
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub InitialiseWithContract( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pContract As IContract)
+Const ProcName As String = "InitialiseWithContract"
+On Error GoTo Err
+
+init pStudyManager, pContract.Specifier.ToString, pContract.TickSize
 
 Exit Sub
 
@@ -254,6 +215,70 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub init( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pName As String, _
+                ByVal pTickSize As Double)
+Const ProcName As String = "init"
+On Error GoTo Err
+
+Assert Not mIsInitialised, "Already initialised"
+mIsInitialised = True
+
+Set mStudyManager = pStudyManager
+
+Set mStudyInputHandler = mStudyManager.CreateStudyInputHandler(pName)
+mInputHandleBid = mStudyManager.AddInput(mStudyInputHandler, _
+                        BidInputName, _
+                        "Bid prices", _
+                        StudyInputTypes.InputTypeReal, _
+                        False, _
+                        pTickSize)
+mInputHandleAsk = mStudyManager.AddInput(mStudyInputHandler, _
+                        AskInputName, _
+                        "Ask prices", _
+                        StudyInputTypes.InputTypeReal, _
+                        False, _
+                        pTickSize)
+mInputHandleOpenInterest = mStudyManager.AddInput(mStudyInputHandler, _
+                        OpenInterestInputName, _
+                        "OpenInterest", _
+                        StudyInputTypes.InputTypeInteger, _
+                        False, _
+                        1)
+mInputHandleTickVolume = mStudyManager.AddInput(mStudyInputHandler, _
+                        TickVolumeInputName, _
+                        "Tick Volume", _
+                        StudyInputTypes.InputTypeInteger, _
+                        False, _
+                        1)
+mInputHandleTrade = mStudyManager.AddInput(mStudyInputHandler, _
+                        TradeInputName, _
+                        "Trade prices", _
+                        StudyInputTypes.InputTypeReal, _
+                        True, _
+                        pTickSize)
+mInputHandleVolume = mStudyManager.AddInput(mStudyInputHandler, _
+                        VolumeInputName, _
+                        "Volume", _
+                        StudyInputTypes.InputTypeInteger, _
+                        False, _
+                        1)
+mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
+                        BarNumberInputName, _
+                        "Bar number", _
+                        StudyInputTypes.InputTypeInteger, _
+                        False, _
+                        1)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+
 
 Private Sub waitForFuture(ByVal pFuture As IFuture)
 Const ProcName As String = "waitForFuture"

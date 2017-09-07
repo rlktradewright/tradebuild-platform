@@ -760,6 +760,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let StudyBase(ByVal pStudyBase As IStudyBase)
+Const ProcName As String = "StudyBase"
+On Error GoTo Err
+
+AssertArgument mStudyBase Is Nothing, "StudyBase is already set"
+Set mStudyBase = pStudyBase
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get StudyBase() As IStudyBase
 Set StudyBase = mStudyBase
 End Property

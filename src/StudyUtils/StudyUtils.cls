@@ -429,6 +429,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function CreateStudyBaseForTickDataInputWithContract( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pTickSource As IGenericTickSource, _
+                ByVal pContract As IContract) As IStudyBase
+Const ProcName As String = "CreateStudyBaseForTickDataInputWithContract"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+AssertArgument Not pContract Is Nothing, "pContract Is Nothing"
+
+Dim lStudyBase As New StudyBaseForTickDataInput
+lStudyBase.InitialiseWithContract pStudyManager, pContract
+
+If Not pTickSource Is Nothing Then pTickSource.AddGenericTickListener lStudyBase
+
+Set CreateStudyBaseForTickDataInputWithContract = lStudyBase
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function CreateStudyPoint( _
                 ByVal X As Date, _
                 ByVal Y As Double) As StudyPoint
