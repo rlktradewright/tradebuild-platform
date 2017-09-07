@@ -130,7 +130,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub NotifyValue(pValue As Double, ByVal pTimestamp As Date)
+Public Sub NotifyValue(pValue As Integer, ByVal pTimestamp As Date)
 Const ProcName As String = "NotifyValue"
 On Error GoTo Err
 
