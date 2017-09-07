@@ -303,6 +303,7 @@ If mModel.ShowChart Then
 End If
 
 If mTickfileIndex = mModel.TickFileSpecifiers.Count Then
+    mTickfileIndex = 0
     Set mTimeframeIndexes = New EnumerableCollection
     mTradeBarNumber = 0
     mView.ResetProfitChart
