@@ -151,8 +151,8 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub validateTickType(ByVal value As TickTypes)
-Select Case value
+Private Sub validateTickType(ByVal Value As TickTypes)
+Select Case Value
 Case TickTypeBid
 Case TickTypeAsk
 Case TickTypeClosePrice

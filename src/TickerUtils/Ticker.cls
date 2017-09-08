@@ -374,6 +374,10 @@ Private Sub IMarketDataSource_StopMarketDepth()
 StopMarketDepth
 End Sub
 
+Private Property Let IMarketDataSource_StudyBase(ByVal Value As IStudyBase)
+StudyBase = Value
+End Property
+
 Private Property Get IMarketDataSource_StudyBase() As IStudyBase
 Set IMarketDataSource_StudyBase = StudyBase
 End Property
@@ -872,11 +876,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let StudyBase(pStudyBase As IStudyBase)
+Public Property Let StudyBase(ByVal Value As IStudyBase)
 Const ProcName As String = "StudyBase"
 On Error GoTo Err
 
-mDataSource.StudyBase = pStudyBase
+mDataSource.StudyBase = Value
 
 Exit Property
 

@@ -252,9 +252,9 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
-If TypeOf ev.Future.value Is Clock Then
+If TypeOf ev.Future.Value Is Clock Then
     Dim lClock As Clock
-    Set lClock = ev.Future.value
+    Set lClock = ev.Future.Value
     
     processClockAvailable lClock
 End If
@@ -351,11 +351,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub AddPriorityTickListener(ByVal value As IGenericTickListener)
+Friend Sub AddPriorityTickListener(ByVal Value As IGenericTickListener)
 Const ProcName As String = "AddPriorityTickListener"
 On Error GoTo Err
 
-mPriorityTickListeners.Add value
+mPriorityTickListeners.Add Value
 
 Exit Sub
 
@@ -495,7 +495,7 @@ mNoVolumeAdjustments = mOptions And MarketDataSourceOptions.MarketDataSourceOptN
 mUseExchangeTimeZone = mOptions And MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone
 
 Set mContractFuture = pContractFuture
-Set mContract = mContractFuture.value
+Set mContract = mContractFuture.Value
 
 If IsContractExpired(mContract) And Not pIsTickReplay Then
     mFutureWaiter.Add CreateClockFuture(mContractFuture)
@@ -503,7 +503,7 @@ If IsContractExpired(mContract) And Not pIsTickReplay Then
 End If
 
 Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
-mSessionFutureBuilder.value = mSessionBuilder.Session
+mSessionFutureBuilder.Value = mSessionBuilder.Session
 mSessionFutureBuilder.Complete
 
 Set mVolumeAdjuster = New VolumeAdjuster
@@ -903,7 +903,7 @@ Private Sub processClockAvailable(ByVal pClock As Clock)
 Const ProcName As String = "processClockAvailable"
 On Error GoTo Err
 
-mClockFutureBuilder.value = pClock
+mClockFutureBuilder.Value = pClock
 mClockFutureBuilder.Complete
 
 mSessionBuilder.SetSessionCurrentTime pClock.Timestamp

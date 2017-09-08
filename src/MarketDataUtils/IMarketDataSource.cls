@@ -96,7 +96,7 @@ End Property
 Public Property Get Options() As MarketDataSourceOptions
 End Property
 
-Public Property Let PriorityTickListener(ByVal value As IGenericTickListener)
+Public Property Let PriorityTickListener(ByVal Value As IGenericTickListener)
 End Property
 
 Public Property Get Key() As String
@@ -109,6 +109,9 @@ Public Property Get SessionFuture() As IFuture
 End Property
 
 Public Property Get State() As MarketDataSourceStates
+End Property
+
+Public Property Let StudyBase(ByVal Value As IStudyBase)
 End Property
 
 Public Property Get StudyBase() As IStudyBase
