@@ -445,9 +445,13 @@ Private Function IsEndOfSession() As Boolean
 Const ProcName As String = "IsEndOfSession"
 On Error GoTo Err
 
-If MinutesToEndOfTradingSession >= 1# Then Exit Function
-
 Static sSessionEnding As Boolean
+
+If MinutesToEndOfTradingSession >= 1# Then
+    sSessionEnding = False
+    Exit Function
+End If
+
 If sSessionEnding Then
     IsEndOfSession = True
     Exit Function
@@ -456,6 +460,7 @@ End If
 sSessionEnding = True
 LogTradeMessage "Approaching end of session: closing any outstanding position"
 CloseAllPositions
+CloseAllSimulatedPositions
 IsEndOfSession = True
 
 Exit Function
