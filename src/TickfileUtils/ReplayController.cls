@@ -65,6 +65,7 @@ Private Const ModuleName                            As String = "ReplayControlle
 '@================================================================================
 
 Private mTickfileSpecifiers                         As TickFileSpecifiers
+Private mTickfileIndex                              As Long
 
 Private mTickfileStore                              As ITickfileStore
 Private mPrimaryContractStore                       As IContractStore
@@ -91,6 +92,8 @@ Private mTickScheduler                              As TickScheduler
 Private mTaskContext                                As TaskContext
 
 Private mUnableToReplay                             As Boolean
+
+Private mIsReplaySequential                         As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -124,31 +127,12 @@ If Not sStarted Then
 End If
 
 If mNumberOfPlayersNotCompleted = 0 Then
-    gLogger.Log "Tickfile replay scheduling stopped", ProcName, ModuleName
-    mTickScheduler.StopScheduling
-    If mUnableToReplay Then
-        gLogger.Log "Tickfile replay completed with errors: one of more files was invalid", ProcName, ModuleName
-        mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "One or more files was invalid"
-    Else
-        gLogger.Log "Tickfile replay scheduling completed successfully", ProcName, ModuleName
-        mTaskContext.Finish Empty, False
-    End If
-    Exit Sub
-End If
-    
-If mNumberOfPlayersAwaitingReady = 0 And mNumberOfPlayersAwaitingPrepare = 0 Then
-    gLogger.Log "Tickfile replay scheduling started", ProcName, ModuleName
-    mTickScheduler.StartScheduling
+    terminateReplay
+ElseIf mNumberOfPlayersAwaitingReady = 0 And mNumberOfPlayersAwaitingPrepare = 0 Then
+    startScheduler
 Else
-    gLogger.Log "Waiting for tickfile players: " & _
-                mNumberOfPlayersAwaitingPrepare & _
-                " to prepare and " & _
-                mNumberOfPlayersAwaitingReady & _
-                " to be ready", _
-                ProcName, ModuleName
+    waitForPlayers
 End If
-
-mTaskContext.Suspend -1
 
 Exit Sub
 
@@ -207,11 +191,38 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let SequentialTickFileSpecifiers(Value As TickFileSpecifiers)
+Const ProcName As String = "SequentialTickFileSpecifiers"
+On Error GoTo Err
+
+Assert mTickfileSpecifiers Is Nothing, "TickfileSpecifiers or SequentialTickFileSpecifiers has already been set"
+AssertArgument Value.Count > 0, "Value has no members"
+
+Set mTickfileSpecifiers = Value.Clone
+
+mIsReplaySequential = True
+
+ReDim mPlayers(0) As TickfilePlayer
+
+Set mTickScheduler = New TickScheduler
+mTickScheduler.Initialise Me, mReplaySpeed, mReplayProgressEventInterval, True
+
+Set mPlayers(0) = setupTickfilePlayer(0, mTickScheduler)
+mTickfileIndex = 1
+prepareTickfilePlayer mPlayers(0), mTickfileSpecifiers(mTickfileIndex), 0
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+
 Public Property Let TickFileSpecifiers(Value As TickFileSpecifiers)
 Const ProcName As String = "TickfileSpecifiers"
 On Error GoTo Err
 
-Assert mTickfileSpecifiers Is Nothing, "TickfileSpecifiers has already been set"
+Assert mTickfileSpecifiers Is Nothing, "TickfileSpecifiers or SequentialTickFileSpecifiers has already been set"
 AssertArgument Value.Count > 0, "Value has no members"
 
 Set mTickfileSpecifiers = Value.Clone
@@ -223,20 +234,8 @@ mTickScheduler.Initialise Me, mReplaySpeed, mReplayProgressEventInterval, IIf(mT
 
 Dim i As Long
 For i = 0 To UBound(mPlayers)
-    Set mPlayers(i) = SetupTickfilePlayer(mTickfileSpecifiers(i + 1), i, mTickScheduler)
-    
-    Dim lTickfileReader As ITickfileReader
-    Set lTickfileReader = mTickfileStore.CreateTickfileReader(mPlayers(i), mPlayers(i), i)
-    
-    Assert Not lTickfileReader Is Nothing, "Failed to create TickfileReader"
-    
-    If mPlayers(i).PrepareTickfile(lTickfileReader, mTickfileSpecifiers(i + 1)) Then
-        gLogger.Log "Tickfile player awaiting ready", ProcName, ModuleName, , mTickfileSpecifiers(i + 1).ToString
-        mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
-    Else
-        gLogger.Log "Tickfile player awaiting prepare", ProcName, ModuleName, , mTickfileSpecifiers(i + 1).ToString
-        mNumberOfPlayersAwaitingPrepare = mNumberOfPlayersAwaitingPrepare + 1
-    End If
+    Set mPlayers(i) = setupTickfilePlayer(i, mTickScheduler)
+    prepareTickfilePlayer mPlayers(i), mTickfileSpecifiers(i + 1), i
 Next
 
 Exit Property
@@ -399,10 +398,21 @@ On Error GoTo Err
 
 gLogger.Log "Tickfile player completed", ProcName, ModuleName, , ev.Specifier.ToString
 
-If pPlayer.PlayerState <> PlayerStateCreated Then mTickScheduler.RemovePlayer pPlayer
-mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted - 1
-
 fireTickfileCompleted ev, pEventsPlayed
+
+If mIsReplaySequential Then
+    mTickfileIndex = mTickfileIndex + 1
+    If mTickfileIndex <= mTickfileSpecifiers.Count Then
+        prepareTickfilePlayer mPlayers(0), mTickfileSpecifiers(mTickfileIndex), 0
+    Else
+        If pPlayer.PlayerState <> PlayerStateCreated Then mTickScheduler.RemovePlayer pPlayer
+        mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted - 1
+    End If
+Else
+    If pPlayer.PlayerState <> PlayerStateCreated Then mTickScheduler.RemovePlayer pPlayer
+    pPlayer.Finish
+    mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted - 1
+End If
 
 If mReplayInProgress Then mTaskContext.Continue
 
@@ -511,7 +521,7 @@ mReplayInProgress = False
 
 Dim i As Long
 For i = 0 To UBound(mPlayers)
-    mPlayers(i).StopReplay
+    mPlayers(i).Finish
 Next
 
 mTickScheduler.StopScheduling
@@ -616,11 +626,33 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function SetupTickfilePlayer( _
-                ByRef pTickfileSpecifier As TickfileSpecifier, _
+Private Sub prepareTickfilePlayer(ByVal pPlayer As TickfilePlayer, ByVal tickfileSpec As TickfileSpecifier, ByVal pStreamId As Long)
+Const ProcName As String = "prepareTickfilePlayer"
+On Error GoTo Err
+
+Dim lTickfileReader As ITickfileReader
+Set lTickfileReader = mTickfileStore.CreateTickfileReader(pPlayer, pPlayer, pStreamId)
+
+Assert Not lTickfileReader Is Nothing, "Failed to create TickfileReader"
+
+If pPlayer.PrepareTickfile(lTickfileReader, tickfileSpec) Then
+    gLogger.Log "Tickfile player awaiting ready", ProcName, ModuleName, , tickfileSpec.ToString
+    mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
+Else
+    gLogger.Log "Tickfile player awaiting prepare", ProcName, ModuleName, , tickfileSpec.ToString
+    mNumberOfPlayersAwaitingPrepare = mNumberOfPlayersAwaitingPrepare + 1
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function setupTickfilePlayer( _
                 ByVal pStreamId As Long, _
                 ByVal pTickScheduler As TickScheduler) As TickfilePlayer
-Const ProcName As String = "SetupTickfilePlayer"
+Const ProcName As String = "setupTickfilePlayer"
 On Error GoTo Err
 
 Dim lTickfilePlayer As TickfilePlayer
@@ -636,7 +668,7 @@ lTickfilePlayer.Initialise Me, _
 
 mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted + 1
 
-Set SetupTickfilePlayer = lTickfilePlayer
+Set setupTickfilePlayer = lTickfilePlayer
 
 Exit Function
 
@@ -644,5 +676,55 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub startScheduler()
+Const ProcName As String = "startScheduler"
+On Error GoTo Err
 
+gLogger.Log "Tickfile replay scheduling started", ProcName, ModuleName
+mTickScheduler.StartScheduling
+mTaskContext.Suspend -1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub terminateReplay()
+Const ProcName As String = "terminateReplay"
+On Error GoTo Err
+
+gLogger.Log "Tickfile replay scheduling stopped", ProcName, ModuleName
+mTickScheduler.StopScheduling
+If mUnableToReplay Then
+    gLogger.Log "Tickfile replay completed with errors: one of more files was invalid", ProcName, ModuleName
+    mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "One or more files was invalid"
+Else
+    gLogger.Log "Tickfile replay scheduling completed successfully", ProcName, ModuleName
+    mTaskContext.Finish Empty, False
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub waitForPlayers()
+Const ProcName As String = "waitForPlayers"
+On Error GoTo Err
+
+gLogger.Log "Waiting for tickfile players: " & _
+            mNumberOfPlayersAwaitingPrepare & _
+            " to prepare and " & _
+            mNumberOfPlayersAwaitingReady & _
+            " to be ready", _
+            ProcName, ModuleName
+mTaskContext.Suspend -1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 

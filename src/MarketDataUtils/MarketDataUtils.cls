@@ -99,6 +99,33 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function CreateSequentialTickDataManager( _
+                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
+                ByVal pTickfileStore As ITickfileStore, _
+                Optional ByVal pStudyLibManager As StudyLibraryManager, _
+                Optional ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
+                Optional ByVal pDefaultStateChangeListener As IStateChangeListener, _
+                Optional ByVal pNumberOfMarketDepthRows As Long = 20, _
+                Optional ByVal pReplaySpeed As Long = 1, _
+                Optional ByVal pReplayProgressEventInterval As Long = 1000, _
+                Optional ByVal pTimestampAdjustmentStart As Double, _
+                Optional ByVal pTimestampAdjustmentEnd As Double) As IMarketDataManager
+Const ProcName As String = "CreateSequentialTickDataManager"
+On Error GoTo Err
+
+Dim lTickDataManager As New TickfileDataManager
+lTickDataManager.Initialise pTickfileSpecifiers, pTickfileStore, True, pStudyLibManager, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
+
+Set CreateSequentialTickDataManager = lTickDataManager
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function CreateTickDataManager( _
                 ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
@@ -116,7 +143,7 @@ Const ProcName As String = "CreateTickDataManager"
 On Error GoTo Err
 
 Dim lTickDataManager As New TickfileDataManager
-lTickDataManager.Initialise pTickfileSpecifiers, pTickfileStore, pStudyLibManager, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
+lTickDataManager.Initialise pTickfileSpecifiers, pTickfileStore, False, pStudyLibManager, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
 
 Set CreateTickDataManager = lTickDataManager
 

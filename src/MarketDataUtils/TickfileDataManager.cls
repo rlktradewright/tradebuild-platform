@@ -24,6 +24,7 @@ Option Explicit
 
 Implements IMarketDataFactory
 Implements IMarketDataManager
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -47,7 +48,7 @@ Private Const ModuleName                            As String = "TickfileDataMan
 ' Member variables
 '@================================================================================
 
-Private WithEvents mReplayController                As ReplayController
+Private mReplayController                As ReplayController
 Attribute mReplayController.VB_VarHelpID = -1
 
 Private mDataManager                                As MarketDataManager
@@ -183,19 +184,24 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mReplayController Event Handlers
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub mReplayController_TickfileCompleted(ev As TickfileEventData, ByVal pEventsPlayed As Long)
-Const ProcName As String = "mReplayController_TickfileCompleted"
+Private Sub IStateChangeListener_Change(ev As TWUtilities40.StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
-mTickStreams.Remove GetObjectKey(ev.TickStream.ContractFuture)
+If ev.State <> TickStreamStateFinished Then Exit Sub
+
+Dim lStream As TickStream
+Set lStream = ev.Source
+
+mTickStreams.Remove GetObjectKey(lStream.ContractFuture)
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -271,6 +277,7 @@ End Function
 Friend Sub Initialise( _
                 ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
+                ByVal pPlaySequentially As Boolean, _
                 ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pPrimaryContractStore As IContractStore, _
                 ByVal pSecondaryContractStore As IContractStore, _
@@ -295,16 +302,21 @@ Set mDataManager = New MarketDataManager
 mDataManager.Initialise Me, pStudyLibManager, pOptions, pNumberOfMarketDepthRows
 
 Set mReplayController = CreateTickfileReplayController(pTickfileStore, mPrimaryContractStore, mSecondaryContractStore, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
-mReplayController.TickFileSpecifiers = pTickfileSpecifiers
 
-Dim i As Long
-For i = 1 To pTickfileSpecifiers.Count
-    Dim lTickStream As ITickStream
-    Set lTickStream = mReplayController.TickStream(i - 1)
-    
+Dim lTickStream As ITickStream
+If pPlaySequentially Then
+    mReplayController.SequentialTickFileSpecifiers = pTickfileSpecifiers
+    Set lTickStream = mReplayController.TickStream(0)
+    lTickStream.AddStateChangeListener Me
     mTickStreams.Add lTickStream, GetObjectKey(lTickStream.ContractFuture)
-    
-Next
+Else
+    mReplayController.TickFileSpecifiers = pTickfileSpecifiers
+    Dim i As Long
+    For i = 1 To pTickfileSpecifiers.Count
+        Set lTickStream = mReplayController.TickStream(i - 1)
+        mTickStreams.Add lTickStream, GetObjectKey(lTickStream.ContractFuture)
+    Next
+End If
 
 Exit Sub
 

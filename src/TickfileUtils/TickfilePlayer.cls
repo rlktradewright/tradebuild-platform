@@ -69,7 +69,7 @@ Private mCurrentTick                    As GenericTick
 
 Private mReader                         As ITickfileReader
 
-Private WithEvents mTickStreamBuilder   As TickStreamBuilder
+Private mTickStreamBuilder              As TickStreamBuilder
 Attribute mTickStreamBuilder.VB_VarHelpID = -1
 Private mTickStream                     As TickStream
 
@@ -178,7 +178,7 @@ If Not mTickfileSpec.Contract Is Nothing Then
     StartReplay
 ElseIf Not pContractSpec Is Nothing Then
     
-    'now query the Contract Store(s) to see if we can
+    ' now query the Contract Store(s) to see if we can
     ' determine the canonical contract for this contract spec
     getContractFuture pContractSpec
 Else
@@ -198,16 +198,9 @@ Const ProcName As String = "ITickfileReplayMonitor_NotifyReplayComplete"
 On Error GoTo Err
 
 mTickfileState = TickfileStateNotPlaying
-mState = PlayerStateFinished
 mTaskContext.Continue
 mReader.CloseInputFile
 
-Dim lTickStreamBuilder As TickStreamBuilder
-Set lTickStreamBuilder = mTickStreamBuilder
-' ignore state change event
-Set mTickStreamBuilder = Nothing
-
-lTickStreamBuilder.Finish
 mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
 
 Exit Sub
@@ -244,7 +237,7 @@ On Error GoTo Err
 'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  ITask_Run"
 
 If mTaskContext.CancelPending Then
-    StopReplay
+    Finish
     Exit Sub
 End If
 
@@ -307,27 +300,6 @@ Else
     setContract ev.Future.Value
     StartReplay
 End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mTickStreamBuilder Event Handlers
-'@================================================================================
-
-Private Sub mTickStreamBuilder_StateChange(ev As StateChangeEventData)
-Const ProcName As String = "mTickStreamBuilder_StateChange"
-On Error GoTo Err
-
-If ev.State <> TickStreamStates.TickStreamStateFinished Then Exit Sub
-
-mState = PlayerStateFinished
-mTaskContext.Continue
-mReader.CloseInputFile
-mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
 
 Exit Sub
 
@@ -447,6 +419,31 @@ End Property
 ' Methods
 '@================================================================================
 
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+mState = PlayerStateFinished
+If Not mTaskContext Is Nothing Then mTaskContext.Continue
+
+If Not mReader Is Nothing Then
+    mFinalReplayProgressPercent = mReader.ReplayProgressPercent
+    mFinalReplayProgressTicks = mReader.ReplayProgressTicks
+    mReader.CloseInputFile
+    Set mReader = Nothing
+End If
+
+If Not mTickStreamBuilder Is Nothing Then
+    mTickStreamBuilder.Finish
+    Set mTickStreamBuilder = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub Initialise( _
                 ByVal pTickfileReplayController As ReplayController, _
                 ByVal pTickScheduler As TickScheduler, _
@@ -456,6 +453,9 @@ Friend Sub Initialise( _
                 ByVal pReplaySpeed As Long, _
                 ByVal pTimestampAdjustmentStart As Double, _
                 ByVal pTimestampAdjustmentEnd As Double)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mTickfileReplayController = pTickfileReplayController
 Set mTickScheduler = pTickScheduler
 Set mPrimaryContractStore = pPrimaryContractStore
@@ -465,6 +465,11 @@ Set mTickStream = mTickStreamBuilder.TickStream
 ReplaySpeed = pReplaySpeed
 mTimestampAdjustmentStart = pTimestampAdjustmentStart / 86400
 mTimestampAdjustmentEnd = pTimestampAdjustmentEnd / 86400
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PauseReplay()
@@ -534,35 +539,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub StopReplay()
-Const ProcName As String = "StopReplay"
-On Error GoTo Err
-
-mState = PlayerStateFinished
-If Not mTaskContext Is Nothing Then mTaskContext.Continue
-
-If Not mReader Is Nothing Then
-    mFinalReplayProgressPercent = mReader.ReplayProgressPercent
-    mFinalReplayProgressTicks = mReader.ReplayProgressTicks
-    mReader.CloseInputFile
-    Set mReader = Nothing
-End If
-
-If Not mTickStreamBuilder Is Nothing Then
-    Dim lTickStreamBuilder As TickStreamBuilder
-    Set lTickStreamBuilder = mTickStreamBuilder
-    ' ignore state change event
-    Set mTickStreamBuilder = Nothing
-    
-    lTickStreamBuilder.Finish
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -611,11 +587,24 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setContract(ByVal pContract As IContract)
-Set mContract = pContract
-mContractFutureBuilder.Value = mContract
-mContractFutureBuilder.Complete
-Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
-mTickScheduler.AddPlayer Me
+Const ProcName As String = "setContract"
+On Error GoTo Err
+
+If mContract Is Nothing Then
+    Set mContract = pContract
+    mContractFutureBuilder.Value = mContract
+    mContractFutureBuilder.Complete
+    Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
+    mTickScheduler.AddPlayer Me
+Else
+    ' this is not the first tickfile - just make sure we haven't changed contracts
+    Assert pContract.Specifier.Equals(mContract.Specifier), "Tickfile has different contract from previous tickfile"
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub StartReplay()
