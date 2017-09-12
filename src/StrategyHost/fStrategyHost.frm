@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#318.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#320.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
@@ -940,7 +940,7 @@ Private mProfitStudyBase                                As StudyBaseForDoubleInp
 
 Private mPriceChartTimePeriod                           As TimePeriod
 
-Private mTradeStudyBase                                 As StudyBaseForIntegerInput
+Private mTradeStudyBase                                 As StudyBaseForDoubleInput
 
 Private mPosition                                       As Long
 Private mOverallProfit                                  As Double
@@ -1034,6 +1034,8 @@ Const ProcName As String = "Form_Unload"
 On Error GoTo Err
 
 LogMessage "Unloading main form"
+
+If Not mController Is Nothing Then mController.Finish
 
 If mModel.ShowChart Then
     LogMessage "Finishing charts"
@@ -1321,13 +1323,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IStrategyHostView_NotifyReplayStarted()
+mOverallProfit = 0#
+mSessionProfit = 0#
+mMaxProfit = 0#
+mDrawdown = 0#
+End Sub
+
 Private Sub IStrategyHostView_NotifySessionDrawdown(ByVal Value As Double)
 Const ProcName As String = "IStrategyHostView_NotifySessionDrawdown"
 On Error GoTo Err
 
 mDrawdown = Value
-'If Not mIsTickReplay Then processDrawdown
-processDrawdown
+If Not mModel.IsTickReplay Then processDrawdown
 
 Exit Sub
 
@@ -1340,8 +1348,7 @@ Const ProcName As String = "IStrategyHostView_NotifySessionMaxProfit"
 On Error GoTo Err
 
 mMaxProfit = Value
-'If Not mIsTickReplay Then processMaxProfit
-processMaxProfit
+If Not mModel.IsTickReplay Then processMaxProfit
 
 Exit Sub
 
@@ -1354,7 +1361,6 @@ Const ProcName As String = "IStrategyHostView_NotifySessionProfit"
 On Error GoTo Err
 
 mSessionProfit = Value
-'If Not mIsTickReplay Then processProfit pTimestamp
 processProfit pTimestamp
 
 Exit Sub
@@ -1367,24 +1373,20 @@ Private Sub IStrategyHostView_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IStrategyHostView_NotifyTick"
 On Error GoTo Err
 
+If mModel.IsTickReplay Then Exit Sub
+
 Select Case ev.Tick.TickType
 Case TickTypes.TickTypeAsk
-    If Not mModel.IsTickReplay Then
-        AskLabel.Caption = FormatPrice(ev.Tick.Price, mSecType, mTickSize)
-        AskSizeLabel.Caption = ev.Tick.Size
-    End If
+    AskLabel.Caption = FormatPrice(ev.Tick.Price, mSecType, mTickSize)
+    AskSizeLabel.Caption = ev.Tick.Size
 Case TickTypes.TickTypeBid
-    If Not mModel.IsTickReplay Then
-        BidLabel.Caption = FormatPrice(ev.Tick.Price, mSecType, mTickSize)
-        BidSizeLabel.Caption = ev.Tick.Size
-    End If
+    BidLabel.Caption = FormatPrice(ev.Tick.Price, mSecType, mTickSize)
+    BidSizeLabel.Caption = ev.Tick.Size
 Case TickTypes.TickTypeTrade
-    If Not mModel.IsTickReplay Then
-        TradeLabel.Caption = FormatPrice(ev.Tick.Price, mSecType, mTickSize)
-        TradeSizeLabel.Caption = ev.Tick.Size
-    End If
+    TradeLabel.Caption = FormatPrice(ev.Tick.Price, mSecType, mTickSize)
+    TradeSizeLabel.Caption = ev.Tick.Size
 Case TickTypes.TickTypeVolume
-    If Not mModel.IsTickReplay Then VolumeLabel.Caption = ev.Tick.Size
+    VolumeLabel.Caption = ev.Tick.Size
 End Select
 
 Exit Sub
@@ -1423,15 +1425,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStrategyHostView_NotifyTickfileCompleted(ByVal pIndex As Long)
+Private Sub IStrategyHostView_NotifyTickfileCompleted( _
+                ByVal pTickfile As TickfileSpecifier, _
+                ByVal pEventsPlayed As Long)
 Const ProcName As String = "IStrategyHostView_NotifyTickfileCompleted"
 On Error GoTo Err
 
-If pIndex < TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
-    TickfileOrganiser1.ListIndex = pIndex
-End If
+Dim s As String
+s = pTickfile.ToString
+
+Dim i As Long
+For i = 1 To TickfileOrganiser1.TickFileSpecifiers.Count
+    If s = TickfileOrganiser1.TickFileSpecifiers(i).ToString Then
+        If i < TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
+            TickfileOrganiser1.ListIndex = i
+        End If
+        Exit For
+    End If
+Next
+
 mOverallProfit = mOverallProfit + mSessionProfit
-mSessionProfit = 0
 
 Exit Sub
 
@@ -1446,6 +1459,31 @@ End Sub
 Private Property Get IStrategyHostView_Parameters() As Parameters
 Set IStrategyHostView_Parameters = mParams
 End Property
+
+Private Sub IStrategyHostView_ResetBracketOrderList()
+Const ProcName As String = "IStrategyHostView_ResetBracketOrderList"
+On Error GoTo Err
+
+BracketOrderList.ListItems.Clear
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategyHostView_ResetPriceChart()
+Const ProcName As String = "IStrategyHostView_ResetPriceChart"
+On Error GoTo Err
+
+PriceChart.Clear
+Set mPriceChartTimePeriod = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub IStrategyHostView_ResetProfitChart()
 Set mProfitStudyBase = Nothing
@@ -1539,6 +1577,12 @@ If Not mModel.IsTickReplay And mTradingSessionInProgress Then
     LogMessage "Strategy Host closing"
     mController.Finish
     Unload Me
+ElseIf mModel.ShowChart Then
+    Static sBarNumber As Long
+    
+    sBarNumber = sBarNumber + 1
+    mProfitStudyBase.NotifyBarNumber sBarNumber, mSession.CurrentSessionStartTime
+    mProfitStudyBase.NotifyValue mOverallProfit, mSession.SessionCurrentTime
 End If
 
 Exit Sub
@@ -1554,8 +1598,6 @@ On Error GoTo Err
 LogMessage "Session started at: " & FormatTimestamp(ev.TimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
 
 If mStarted Then mTradingSessionInProgress = True
-
-If mModel.ShowChart Then mProfitStudyBase.NotifyValue mOverallProfit, mSession.SessionCurrentTime
 
 Exit Sub
 
@@ -1682,7 +1724,7 @@ Private Sub StopButton_Click()
 Const ProcName As String = "StopButton_Click"
 On Error GoTo Err
 
-mController.Finish
+mController.StopTickfileReplay
 StartButton.Enabled = True
 StopButton.Enabled = False
 
@@ -1904,7 +1946,7 @@ On Error GoTo Err
 
 If Not mModel.ShowChart Then Exit Sub
 
-PriceChart.InitialiseRaw mChartStyle
+PriceChart.InitialiseRaw mChartStyle, , , , mChartStyle.ChartBackColor
 
 Exit Sub
 
@@ -1944,7 +1986,7 @@ On Error GoTo Err
 
 If Not mModel.ShowChart Then Exit Sub
 
-Set mTradeStudyBase = CreateStudyBaseForIntegerInput( _
+Set mTradeStudyBase = CreateStudyBaseForDoubleInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
@@ -2080,21 +2122,16 @@ On Error GoTo Err
 StartButton.Enabled = False
 StopButton.Enabled = True
 
-PriceChart.Clear
 ProfitChart.BaseChartController.ClearChart
 TradeChart.BaseChartController.ClearChart
-BracketOrderList.ListItems.Clear
 
-ClearPriceAndProfitFields
 clearPerformanceFields
-
-mOverallProfit = 0#
-mSessionProfit = 0#
 
 Set mBracketOrderLineSeries = Nothing
 Set mPricePeriods = Nothing
 
 If TickfileOrganiser1.TickfileCount <> 0 Then
+    TickfileOrganiser1.ListIndex = 0
     mController.StartTickfileReplay TickfileOrganiser1.TickFileSpecifiers
 Else
     mController.StartLiveProcessing mModel.Symbol

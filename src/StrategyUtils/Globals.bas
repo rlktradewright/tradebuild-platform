@@ -73,6 +73,12 @@ Public Property Get gInitialisationContext() As InitialisationContext
 Set gInitialisationContext = mContextsStack(mContextsIndex).InitialisationContext
 End Property
 
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("strategyutils", ProjectName)
+Set gLogger = sLogger
+End Property
+
 Public Property Get gResourceContext() As ResourceContext
 Set gResourceContext = mContextsStack(mContextsIndex).ResourceContext
 End Property

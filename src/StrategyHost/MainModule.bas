@@ -185,6 +185,9 @@ Else
     
     Set mForm = Nothing
     
+    LogMessage "Removing all service providers"
+    mTB.ServiceProviders.RemoveAll
+    
     LogMessage "Application exiting"
     
     TerminateTWUtilities

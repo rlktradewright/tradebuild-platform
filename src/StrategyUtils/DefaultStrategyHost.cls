@@ -219,6 +219,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IStrategyHost_NotifyTickfileCompleted(ByVal pTickfile As TickfileSpecifier, ByVal pEventsPlayed As Long)
+Const ProcName As String = "IStrategyHost_NotifyTickfileCompleted"
+On Error GoTo Err
+
+mController.NotifyTickfileCompleted pTickfile, pEventsPlayed
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Property Get IStrategyHost_OrderSubmitterFactoryLive() As IOrderSubmitterFactory
 Set IStrategyHost_OrderSubmitterFactoryLive = mModel.OrderSubmitterFactoryLive
 End Property

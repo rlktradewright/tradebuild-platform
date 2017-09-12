@@ -130,6 +130,9 @@ End Sub
 Public Sub NotifyReplayStarted()
 End Sub
 
+Public Sub NotifyTickfileCompleted(ByVal pTickfile As TickfileSpecifier, ByVal pEventsPlayed As Long)
+End Sub
+
 Public Sub TickerCreated(ByVal pTicker As Ticker)
 End Sub
 

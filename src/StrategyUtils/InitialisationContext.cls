@@ -61,9 +61,6 @@ Private mPositionManagerSimulated                   As PositionManager
 Private mStudyManager                               As StudyManager
 Private mTimeframes                                 As Timeframes
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
 Private mStrategyRunner                             As StrategyRunner
 
 Private mBarsOutstanding                            As Long
@@ -74,10 +71,6 @@ Private mAllowUnprotectedPositions                  As Boolean
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
-End Sub
 
 '@================================================================================
 ' IStateChangeListener Interface Members
@@ -125,34 +118,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If Not ev.Future.IsAvailable Then Exit Sub
-
-If TypeOf ev.Future.Value Is IContract Then
-    Set mContract = ev.Future.Value
-    checkReady
-ElseIf TypeOf ev.Future.Value Is Session Then
-    Set mSession = ev.Future.Value
-    checkReady
-ElseIf TypeOf ev.Future.Value Is Clock Then
-    Set mClock = ev.Future.Value
-    If mTicker.IsTickReplay Then mInitialTimestamp = mClock.Timestamp
-    checkReady
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -379,15 +344,18 @@ On Error GoTo Err
 Set mStrategyHostRef = CreateWeakReference(pStrategyHost)
 
 Set mStrategyRunner = pStrategyRunner
+
 Set mTicker = pTicker
 Set mTimeframes = mTicker.Timeframes
 Set mStudyManager = mTicker.StudyBase.StudyManager
 Set mPositionManager = mTicker.PositionManager
 Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
 
-mFutureWaiter.Add mTicker.ContractFuture
-mFutureWaiter.Add mTicker.SessionFuture
-mFutureWaiter.Add mTicker.ClockFuture
+Set mContract = mTicker.ContractFuture.Value
+Set mSession = mTicker.SessionFuture.Value
+Set mClock = mTicker.ClockFuture.Value
+
+If mTicker.IsTickReplay Then mInitialTimestamp = mClock.Timestamp
 
 Exit Sub
 
@@ -398,18 +366,6 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Sub checkReady()
-Const ProcName As String = "checkReady"
-On Error GoTo Err
-
-If Not mSession Is Nothing And Not mContract Is Nothing And Not mClock Is Nothing Then mStrategyRunner.InitialisationContextIsReady Me
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 Private Function getStrategyHost() As IStrategyHost
 Set getStrategyHost = mStrategyHostRef.Target

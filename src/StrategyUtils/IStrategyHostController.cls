@@ -111,10 +111,16 @@ End Sub
 Public Sub NotifyReplayStarted()
 End Sub
 
+Public Sub NotifyTickfileCompleted(ByVal pTickfile As TickfileSpecifier, ByVal pEventsPlayed As Long)
+End Sub
+
 Public Sub StartLiveProcessing(ByVal pSymbol As IContractSpecifier)
 End Sub
 
 Public Sub StartTickfileReplay(ByVal pTickFileSpecifiers As TickFileSpecifiers)
+End Sub
+
+Public Sub StopTickfileReplay()
 End Sub
 
 Public Sub TickerCreated(ByVal pTicker As Ticker)

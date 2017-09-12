@@ -184,22 +184,38 @@ End Sub
 ' mFutureWaiter Event Handlers
 '================================================================================
 
+Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
+On Error GoTo Err
+
+getStrategyHost.TickerCreated mTicker
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsFaulted Then
     getStrategyHost.ContractInvalid ev.Future.ErrorMessage
-ElseIf ev.Future.IsAvailable Then
+ElseIf Not ev.Future.IsAvailable Then
+ElseIf TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
     
     Set mTicker = mTickers.CreateTicker(ev.Future, False, lContract.Specifier.Key)
-    Assert mTicker.State = MarketDataSourceStateReady
+    Assert mTicker.State = MarketDataSourceStateReady, "MarketDataSource not ready"
+    
+    mFutureWaiter.Add mTicker.SessionFuture
+    mFutureWaiter.Add mTicker.ClockFuture
+
     mTicker.StartMarketData
 
     setupLogging lContract.Specifier.LocalSymbol
-    getStrategyHost.TickerCreated mTicker
 End If
 
 Exit Sub
@@ -245,6 +261,18 @@ Const ProcName As String = "mReplayController_ReplayStarted"
 On Error GoTo Err
 
 getStrategyHost.NotifyReplayStarted
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mReplayController_TickfileCompleted(ev As TickfileEventData, ByVal pEventsPlayed As Long)
+Const ProcName As String = "mReplayController_TickfileCompleted"
+On Error GoTo Err
+
+getStrategyHost.NotifyTickfileCompleted ev.Specifier, pEventsPlayed
 
 Exit Sub
 
@@ -313,32 +341,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Friend Sub InitialisationContextIsReady(ByVal pContext As InitialisationContext)
-Const ProcName As String = "InitialisationContextIsReady"
-On Error GoTo Err
-
-Set mStrategyResourceContext = New ResourceContext
-setStrategyRunner mStrategy, mStrategyResourceContext
-mStrategy.Initialise pContext
-gClearStrategyRunner
-
-Set mPosnMgmtStrategyResourceContexts = New Collection
-
-Dim lPMFactory As IPosnMgmtStrtgyFactory
-For Each lPMFactory In mPositionManagementStrategyFactories
-    Dim lResourceContext As New ResourceContext
-    mPosnMgmtStrategyResourceContexts.Add lResourceContext, GetObjectKey(lPMFactory)
-    setStrategyRunner mPositionManagementStrategyFactories, lResourceContext
-    lPMFactory.Initialise pContext
-    gClearStrategyRunner
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 Friend Sub InitialisationCompleted()
 Const ProcName As String = "InitialisationCompleted"
@@ -419,17 +421,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub PrepareTickFile(ByVal pTickfile As TickfileSpecifier)
+Public Sub PrepareTickFile(ByVal pTickfiles As TickFileSpecifiers)
 Const ProcName As String = "PrepareTickFile"
 On Error GoTo Err
 
 Assert mReplayController Is Nothing, "mReplayController is not Nothing "
     
-Dim lTickfiles As New TickFileSpecifiers
-lTickfiles.Add pTickfile
-
 Dim lTickfileDataManager As TickfileDataManager
-Set lTickfileDataManager = CreateTickDataManager(lTickfiles, _
+Set lTickfileDataManager = CreateSequentialTickDataManager(pTickfiles, _
                                             mTickfileStoreInput, _
                                             mStudyLibraryManager, _
                                             mContractStorePrimary, _
@@ -560,6 +559,7 @@ mInitialisationCompleted = False
 Set mInitialisationContext = New InitialisationContext
 mInitialisationContext.Initialise getStrategyHost, Me, mTicker
 
+initialisationContextIsReady mInitialisationContext
 
 Exit Sub
 
@@ -594,6 +594,32 @@ End Sub
 Private Function getStrategyHost() As IStrategyHost
 Set getStrategyHost = mStrategyHostRef.Target
 End Function
+
+Private Sub initialisationContextIsReady(ByVal pContext As InitialisationContext)
+Const ProcName As String = "InitialisationContextIsReady"
+On Error GoTo Err
+
+Set mStrategyResourceContext = New ResourceContext
+setStrategyRunner mStrategy, mStrategyResourceContext
+mStrategy.Initialise pContext
+gClearStrategyRunner
+
+Set mPosnMgmtStrategyResourceContexts = New Collection
+
+Dim lPMFactory As IPosnMgmtStrtgyFactory
+For Each lPMFactory In mPositionManagementStrategyFactories
+    Dim lResourceContext As New ResourceContext
+    mPosnMgmtStrategyResourceContexts.Add lResourceContext, GetObjectKey(lPMFactory)
+    setStrategyRunner mPositionManagementStrategyFactories, lResourceContext
+    lPMFactory.Initialise pContext
+    gClearStrategyRunner
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function mergeParameters(ByVal pParams1 As Parameters, ByVal pParams2 As Parameters) As Parameters
 Const ProcName As String = "mergeParameters"
@@ -637,6 +663,11 @@ End Sub
 Private Sub setupLogging(ByVal pSymbol As String)
 Const ProcName As String = "setupLogging"
 On Error GoTo Err
+
+Static sLoggingSetup As Boolean
+
+If sLoggingSetup Then Exit Sub
+sLoggingSetup = True
 
 Dim lResultsPath As String
 lResultsPath = getStrategyHost.ResultsPath

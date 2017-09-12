@@ -75,8 +75,6 @@ Private mElapsedSecsCurrTickfile                    As Double
 Private mTotalEvents                                As Long
 Private mEventsCurrTickfile                         As Long
 
-Private mTickfileIndex                              As Long
-
 Private mTradeBarNumber                             As Long
 
 '@================================================================================
@@ -120,12 +118,13 @@ If mModel.ShowChart Then
     
     Dim lChartIndex As Long
     lChartIndex = mTimeframeIndexes(lTimeframe.TimePeriod.ToString)
-    mView.DisablePriceDrawing lChartIndex
     addStudiesForChart lTimeframe
-    mView.EnablePriceDrawing lChartIndex
 End If
 
 If mNumberOfTimeframesLoading = 0 Then
+    mView.EnablePriceDrawing
+    If mModel.IsTickReplay Then mView.DisablePriceDrawing
+    
     mModel.Ticker.AddGenericTickListener Me
     mView.NotifyTradingStart
     
@@ -204,10 +203,7 @@ Private Sub IStrategyHostController_Finish()
 Const ProcName As String = "IStrategyHostController_Finish"
 On Error GoTo Err
 
-If Not mStrategyRunner Is Nothing Then
-    LogMessage "Stopping strategy host"
-    mStrategyRunner.StopTesting
-End If
+StopReplay
 
 Set mModel = Nothing
 Set mView = Nothing
@@ -302,23 +298,7 @@ If mModel.ShowChart Then
     mView.EnableTradeDrawing
 End If
 
-If mTickfileIndex = mModel.TickFileSpecifiers.Count Then
-    mTickfileIndex = 0
-    Set mTimeframeIndexes = New EnumerableCollection
-    mTradeBarNumber = 0
-    mView.ResetProfitChart
-    mView.ResetTradeChart
-    mView.EnableStart
-Else
-    If mModel.SeparateSessions Then
-        mView.ClearPriceAndProfitFields
-    Else
-    End If
-    mView.NotifyTickfileCompleted mTickfileIndex
-    
-    startNextTickfile
-End If
-
+mView.EnableStart
 
 Exit Sub
 
@@ -401,7 +381,20 @@ Private Sub IStrategyHostController_NotifyReplayStarted()
 Const ProcName As String = "IStrategyHostController_NotifyReplayStarted"
 On Error GoTo Err
 
-If mModel.ShowChart Then mView.DisablePriceDrawing
+If mModel.IsTickReplay Then mView.DisablePriceDrawing
+mView.NotifyReplayStarted
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategyHostController_NotifyTickfileCompleted(ByVal pTickfile As TickfileSpecifier, ByVal pEventsPlayed As Long)
+Const ProcName As String = "IStrategyHostController_NotifyTickfileCompleted"
+On Error GoTo Err
+
+mView.NotifyTickfileCompleted pTickfile, pEventsPlayed
 
 Exit Sub
 
@@ -425,8 +418,29 @@ Private Sub IStrategyHostController_StartTickfileReplay(ByVal pTickFileSpecifier
 Const ProcName As String = "IStrategyHostController_StartTickfileReplay"
 On Error GoTo Err
 
+resetView
+
+mTradeBarNumber = 0
+
+ReDim mStudiesToShow(3) As StudyConfigToShow
+mStudiesToShowIndex = -1
+
+Set mTimeframeIndexes = New EnumerableCollection
+
 mModel.TickFileSpecifiers = pTickFileSpecifiers
-startNextTickfile
+mStrategyRunner.PrepareTickFile mModel.TickFileSpecifiers
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IStrategyHostController_StopTickfileReplay()
+Const ProcName As String = "IStrategyHostController_StopTickfileReplay"
+On Error GoTo Err
+
+StopReplay
 
 Exit Sub
 
@@ -438,15 +452,12 @@ Private Sub IStrategyHostController_TickerCreated(ByVal pTicker As Ticker)
 Const ProcName As String = "IStrategyHostController_TickerCreated"
 On Error GoTo Err
 
+resetView
+
 mModel.Ticker = pTicker
 mModel.IsTickReplay = pTicker.IsTickReplay
 mModel.Contract = pTicker.ContractFuture.Value
 mView.NotifyTickerCreated
-
-ReDim mStudiesToShow(3) As StudyConfigToShow
-mStudiesToShowIndex = -1
-
-If mTimeframeIndexes Is Nothing Then Set mTimeframeIndexes = New EnumerableCollection
 
 mStrategyRunner.StartStrategy mView.Strategy, mView.Parameters
 
@@ -530,6 +541,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub resetView()
+Const ProcName As String = "resetView"
+On Error GoTo Err
+
+mView.ClearPriceAndProfitFields
+mView.ResetBracketOrderList
+
+If mModel.ShowChart Then
+    mView.ResetPriceChart
+    mView.ResetProfitChart
+    mView.ResetTradeChart
+    mView.DisablePriceDrawing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+
 Private Sub showBracketOrderLine(ByRef pBracketOrderProfile As BracketOrderProfile)
 Const ProcName As String = "showBracketOrderLine"
 On Error GoTo Err
@@ -554,19 +586,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub startNextTickfile()
-Const ProcName As String = "startNextTickfile"
+Private Sub StopReplay()
+Const ProcName As String = "StopReplay"
 On Error GoTo Err
 
-mTickfileIndex = mTickfileIndex + 1
-mStrategyRunner.PrepareTickFile mModel.TickFileSpecifiers(mTickfileIndex)
+If Not mStrategyRunner Is Nothing Then
+    LogMessage "Stopping strategy host"
+    mStrategyRunner.StopTesting
+End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-
 
 

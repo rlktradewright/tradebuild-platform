@@ -136,6 +136,9 @@ End Sub
 Public Sub NotifyPosition(ByVal Value As Long)
 End Sub
 
+Public Sub NotifyReplayStarted()
+End Sub
+
 Public Sub NotifyReplayProgress( _
                 ByVal pTickfileTimestamp As Date, _
                 ByVal pEventsPlayed As Long, _
@@ -157,10 +160,16 @@ End Sub
 Public Sub NotifyTickerCreated()
 End Sub
 
-Public Sub NotifyTickfileCompleted(ByVal pIndex As Long)
+Public Sub NotifyTickfileCompleted(ByVal pTickfile As TickfileSpecifier, ByVal pEventsPlayed As Long)
 End Sub
 
 Public Sub NotifyTradingStart()
+End Sub
+
+Public Sub ResetBracketOrderList()
+End Sub
+
+Public Sub ResetPriceChart()
 End Sub
 
 Public Sub ResetProfitChart()
