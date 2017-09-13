@@ -65,7 +65,7 @@ call :AxImp TABCTL32
 
 set SOURCE=%TWUTILITIES%
 
-call %BUILD%\DeploymentScripts\setTradeWrightCommonVersion.bat
+call %BUILD%\Setup\DeploymentScripts\setTradeWrightCommonVersion.bat
 ::set ASM_VERSION=/asmversion:%VB6-BUILD-MAJOR%.%VB6-BUILD-MINOR%.0.%VB6-BUILD-REVISION%
 
 call :TlbImp TWUtilities40
@@ -83,7 +83,7 @@ call :TlbImp SpriteControlLib40
 
 set SOURCE=%TRADEBUILD%\TradeWright.TradeBuild.Platform
 
-call %BUILD%\DeploymentScripts\setTradeBuildVersion.bat
+call %BUILD%\Setup\DeploymentScripts\setTradeBuildVersion.bat
 ::set ASM_VERSION=/asmversion:%VB6-BUILD-MAJOR%.%VB6-BUILD-MINOR%.0.%VB6-BUILD-REVISION%
 
 call :TlbImp SessionUtils27
