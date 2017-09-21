@@ -64,10 +64,6 @@ Private mSessionEndTime                             As Date
 
 Private mCurrentSessionTimes                        As SessionTimes
 
-'Private mIsLinkable                                 As Boolean
-
-'Private mClock                                      As Clock
-
 Private mBuilderRef                                 As WeakReference
 
 Private mTimestamp                                  As Date
@@ -78,7 +74,6 @@ Private mTimestamp                                  As Date
 
 Private Sub Class_Initialize()
 Set mTimezone = GetTimeZone("")
-'Set mClock = CreateSimulatedClock(1, "")
 mCurrentSessionTimes.EndTime = MinDate
 mCurrentSessionTimes.StartTime = MinDate
 End Sub
@@ -119,15 +114,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-'Friend Property Let IsLinkable( _
-'                ByVal Value As Boolean)
-'mIsLinkable = Value
-'End Property
-                
-'Public Property Get IsLinkable() As Boolean
-'IsLinkable = mIsLinkable
-'End Property
-
 Friend Property Get SessionBuilder() As SessionBuilder
 Set SessionBuilder = mBuilderRef.Target
 End Property
@@ -136,7 +122,6 @@ Public Property Get SessionCurrentTime() As Date
 Const ProcName As String = "SessionCurrentTime"
 On Error GoTo Err
 
-'SessionCurrentTime = mClock.Timestamp
 SessionCurrentTime = mTimestamp
 
 Exit Property
@@ -189,8 +174,6 @@ If Value Is Nothing Then
 Else
     Set mTimezone = Value
 End If
-
-'Set mClock = CreateSimulatedClock(1, mTimezone.StandardName)
 
 Exit Property
 
@@ -257,34 +240,19 @@ End Function
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
 IsTimeInSession = Timestamp >= mCurrentSessionTimes.StartTime And Timestamp < mCurrentSessionTimes.EndTime
-
-'If Timestamp < mCurrentSessionTimes.StartTime Then
-'ElseIf Timestamp >= mCurrentSessionTimes.EndTime Then
-'Else
-'    IsTimeInSession = True
-'End If
 End Function
 
 ''
 ' Links this <code>Session</code> object to another <code>Session</code>
 ' object so that both will have identical properties.
 '
-' This method succeeds only if this <code>Session</code> object has
-' its <code>IsLinkable</code> property set to <code>True</code>, which can
-' only be done using its <code>SessionBuilder</code> object's <code>SetLinkable</code>
-' method.
-'
 ' @param pSessionToLinkTo the <code>Session</code> object which this
 '               <code>Session</code> object is to be linked to.
-' @see SetLinkable, UnLinkSession
-'
 '@/
 Public Sub LinkToSession( _
                 ByVal pSessionToLinkTo As Session)
 Const ProcName As String = "LinkSession"
 On Error GoTo Err
-
-'Assert IsLinkable, "Session is not linkable"
 
 pSessionToLinkTo.SessionBuilder.LinkSession Me
 
@@ -308,7 +276,6 @@ Dim ev As SessionEventData
 Set ev.Source = Me
 ev.changeType = SessionChangeNone
 
-'mClock.SetTime pTimestamp
 mTimestamp = pTimestamp
 
 If Int(pTimestamp) > Int(sPrevTimeNotified) Then
