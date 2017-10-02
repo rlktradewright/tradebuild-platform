@@ -39,7 +39,7 @@ Implements ITaskCompletionListener
 Event BaseStudyConfigurationChanged(ByVal studyConfig As StudyConfiguration)
 Event StudyAdded(ByVal pStudy As IStudy)
 Event StudyRemoved(ByVal pStudy As IStudy)
-
+    
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -113,7 +113,7 @@ If ev.ErrorNumber <> 0 Then
     Debug.Print "Task: " & ev.TaskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.ErrorMessage
 End If
 
-mChartController.EnableDrawing
+If Not mChartController Is Nothing Then mChartController.EnableDrawing
 
 Exit Sub
 
