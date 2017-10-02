@@ -131,22 +131,22 @@ exit /B 1
 
 :TlbImp
 echo =================================
-tlbimp "%SOURCE%\%1.dll" /out:%1.dll /tlbreference:"%TWWIN32API%" /namespace:%1 /silence:3011 /silence:3008 %ASM_VERSION% %REFERENCE%
+tlbimp "%SOURCE%\%1.dll" /out:Interop.%1.dll /tlbreference:"%TWWIN32API%" /namespace:%1 /silence:3011 /silence:3008 %ASM_VERSION% %REFERENCE%
 if errorlevel 1 goto :Err
-set REFERENCE=%REFERENCE% /reference:%1.dll
+set REFERENCE=%REFERENCE% /reference:Interop.%1.dll
 echo.
 goto :EOF
 
 :TlbImpAx
-tlbimp "%SOURCE%\%1.ocx" /out:%1.dll /tlbreference:"%TWWIN32API%" /namespace:%1 /silence:3011 /silence:3008 %ASM_VERSION% %REFERENCE%
+tlbimp "%SOURCE%\%1.ocx" /out:Interop.%1.dll /tlbreference:"%TWWIN32API%" /namespace:%1 /silence:3011 /silence:3008 %ASM_VERSION% %REFERENCE%
 if errorlevel 1 goto :Err
-set REFERENCE=%REFERENCE% /reference:%1.dll
+set REFERENCE=%REFERENCE% /reference:Interop.%1.dll
 goto :EOF
 
 :AxImp
 echo =================================
 call :TlbImpAx %1
-aximp "%SOURCE%\%1.ocx" /out:Ax%1.dll /rcw:%1.dll
+aximp "%SOURCE%\%1.ocx" /out:Interop.Ax%1.dll /rcw:Interop.%1.dll
 if errorlevel 1 goto :Err
 echo.
 goto :EOF
