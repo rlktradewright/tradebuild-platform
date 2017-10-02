@@ -931,8 +931,8 @@ Private mTickSize                                       As Double
 
 Private WithEvents mSession                             As Session
 Attribute mSession.VB_VarHelpID = -1
-Private mStarted                                        As Boolean
-Private mTradingSessionInProgress                       As Boolean
+Private mSessionInProgress                              As Boolean
+Private mTradingPlatformStarted                         As Boolean
 
 Private mParams                                         As Parameters
 
@@ -1315,7 +1315,7 @@ TheTime.Caption = FormatTimestamp(pTickfileTimestamp, TimestampDateAndTimeISO860
 
 processDrawdown
 processMaxProfit
-processProfit pTickfileTimestamp
+processSessionProfit
 
 Exit Sub
 
@@ -1361,7 +1361,8 @@ Const ProcName As String = "IStrategyHostView_NotifySessionProfit"
 On Error GoTo Err
 
 mSessionProfit = Value
-processProfit pTimestamp
+If Not mModel.IsTickReplay Then processSessionProfit
+updateProfitCharts pTimestamp
 
 Exit Sub
 
@@ -1431,12 +1432,9 @@ Private Sub IStrategyHostView_NotifyTickfileCompleted( _
 Const ProcName As String = "IStrategyHostView_NotifyTickfileCompleted"
 On Error GoTo Err
 
-Dim s As String
-s = pTickfile.ToString
-
 Dim i As Long
 For i = 1 To TickfileOrganiser1.TickFileSpecifiers.Count
-    If s = TickfileOrganiser1.TickFileSpecifiers(i).ToString Then
+    If pTickfile Is TickfileOrganiser1.TickFileSpecifiers(i) Then
         If i < TickfileOrganiser1.TickFileSpecifiers.Count - 1 Then
             TickfileOrganiser1.ListIndex = i
         End If
@@ -1453,7 +1451,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IStrategyHostView_NotifyTradingStart()
-mStarted = True
+mTradingPlatformStarted = True
 End Sub
 
 Private Property Get IStrategyHostView_Parameters() As Parameters
@@ -1573,7 +1571,7 @@ On Error GoTo Err
 
 LogMessage "Session ended at: " & FormatTimestamp(ev.TimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
 
-If Not mModel.IsTickReplay And mTradingSessionInProgress Then
+If Not mModel.IsTickReplay And mSessionInProgress And mTradingPlatformStarted Then
     LogMessage "Strategy Host closing"
     mController.Finish
     Unload Me
@@ -1581,9 +1579,11 @@ ElseIf mModel.ShowChart Then
     Static sBarNumber As Long
     
     sBarNumber = sBarNumber + 1
-    mProfitStudyBase.NotifyBarNumber sBarNumber, mSession.CurrentSessionStartTime
-    mProfitStudyBase.NotifyValue mOverallProfit, mSession.SessionCurrentTime
+    mProfitStudyBase.NotifyBarNumber sBarNumber, Int(mSession.CurrentSessionStartTime)
+    mProfitStudyBase.NotifyValue mOverallProfit, Int(mSession.CurrentSessionStartTime)
 End If
+
+mSessionInProgress = False
 
 Exit Sub
 
@@ -1596,8 +1596,7 @@ Const ProcName As String = "mSession_SessionStarted"
 On Error GoTo Err
 
 LogMessage "Session started at: " & FormatTimestamp(ev.TimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
-
-If mStarted Then mTradingSessionInProgress = True
+mSessionInProgress = True
 
 Exit Sub
 
@@ -1966,7 +1965,7 @@ Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-ProfitChart.Initialise CreateTimeframes(mProfitStudyBase), False
+ProfitChart.Initialise CreateTimeframes(mProfitStudyBase), Not mModel.IsTickReplay
 ProfitChart.DisableDrawing
 ProfitChart.ShowChart GetTimePeriod(1, TimePeriodDay), _
                         CreateChartSpecifier(0), _
@@ -1992,7 +1991,7 @@ Set mTradeStudyBase = CreateStudyBaseForDoubleInput( _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-TradeChart.Initialise CreateTimeframes(mTradeStudyBase), False
+TradeChart.Initialise CreateTimeframes(mTradeStudyBase), Not mModel.IsTickReplay
 TradeChart.DisableDrawing
 TradeChart.ShowChart GetTimePeriod(0, TimePeriodNone), _
                     CreateChartSpecifier(0), _
@@ -2034,11 +2033,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processProfit(ByVal pTimestamp As Date)
-Const ProcName As String = "processProfit"
+Private Sub processSessionProfit()
+Const ProcName As String = "processSessionProfit"
 On Error GoTo Err
 
 Profit.Caption = Format(mSessionProfit, "0.00")
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub updateProfitCharts(ByVal pTimestamp As Date)
+Const ProcName As String = "updateProfitCharts"
+On Error GoTo Err
 
 If mModel.ShowChart And mPosition <> 0 Then
     mProfitStudyBase.NotifyValue mOverallProfit + mSessionProfit, pTimestamp

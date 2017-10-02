@@ -24,6 +24,7 @@ Option Explicit
 
 Implements IChangeListener
 Implements ICollectionChangeListener
+Implements IDeferredAction
 
 '================================================================================
 ' Events
@@ -180,6 +181,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+'@================================================================================
+' IDeferredAction Interface Members
+'@================================================================================
+
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
+On Error GoTo Err
+
+Assert mTicker.State = MarketDataSourceStateReady, "MarketDataSource not ready"
+getStrategyHost.TickerCreated mTicker
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '================================================================================
 ' mFutureWaiter Event Handlers
 '================================================================================
@@ -188,12 +206,12 @@ Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
 On Error GoTo Err
 
-getStrategyHost.TickerCreated mTicker
+DeferAction Me
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
@@ -208,12 +226,9 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     Set lContract = ev.Future.Value
     
     Set mTicker = mTickers.CreateTicker(ev.Future, False, lContract.Specifier.Key)
-    Assert mTicker.State = MarketDataSourceStateReady, "MarketDataSource not ready"
     
     mFutureWaiter.Add mTicker.SessionFuture
     mFutureWaiter.Add mTicker.ClockFuture
-
-    mTicker.StartMarketData
 
     setupLogging lContract.Specifier.LocalSymbol
 End If
@@ -521,6 +536,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Sub StartLiveData()
+Const ProcName As String = "StartLiveData"
+On Error GoTo Err
+
+mTicker.StartMarketData
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub StartReplay()
 Const ProcName As String = "StartReplay"
 On Error GoTo Err
@@ -543,23 +570,11 @@ On Error GoTo Err
 Set mStrategy = pStrategy
 Set mParams = pParams
 
-If getStrategyHost.LogParameters Then
-    Dim s As String
-    s = "Strategy Parameters:" & vbCrLf
-    If Not pParams Is Nothing Then
-        Dim lParam As Parameter
-        For Each lParam In pParams
-            s = s & vbTab & lParam.Name & "=" & lParam.Value & vbCrLf
-        Next
-    End If
-    gStrategyLogger.Log LogLevelNormal, s
-End If
+LogParameters mParams
 
-mInitialisationCompleted = False
-Set mInitialisationContext = New InitialisationContext
-mInitialisationContext.Initialise getStrategyHost, Me, mTicker
+initialiseStrategy
 
-initialisationContextIsReady mInitialisationContext
+initialisePositionManagementStrategyFactories
 
 Exit Sub
 
@@ -595,14 +610,9 @@ Private Function getStrategyHost() As IStrategyHost
 Set getStrategyHost = mStrategyHostRef.Target
 End Function
 
-Private Sub initialisationContextIsReady(ByVal pContext As InitialisationContext)
-Const ProcName As String = "InitialisationContextIsReady"
+Private Sub initialisePositionManagementStrategyFactories()
+Const ProcName As String = "initialisePositionManagementStrategyFactories"
 On Error GoTo Err
-
-Set mStrategyResourceContext = New ResourceContext
-setStrategyRunner mStrategy, mStrategyResourceContext
-mStrategy.Initialise pContext
-gClearStrategyRunner
 
 Set mPosnMgmtStrategyResourceContexts = New Collection
 
@@ -611,9 +621,50 @@ For Each lPMFactory In mPositionManagementStrategyFactories
     Dim lResourceContext As New ResourceContext
     mPosnMgmtStrategyResourceContexts.Add lResourceContext, GetObjectKey(lPMFactory)
     setStrategyRunner mPositionManagementStrategyFactories, lResourceContext
-    lPMFactory.Initialise pContext
+    lPMFactory.Initialise mInitialisationContext
     gClearStrategyRunner
 Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub initialiseStrategy()
+Const ProcName As String = "initialiseStrategy"
+On Error GoTo Err
+
+mInitialisationCompleted = False
+Set mInitialisationContext = New InitialisationContext
+mInitialisationContext.Initialise getStrategyHost, Me, mTicker
+
+Set mStrategyResourceContext = New ResourceContext
+setStrategyRunner mStrategy, mStrategyResourceContext
+mStrategy.Initialise mInitialisationContext
+gClearStrategyRunner
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub LogParameters(ByVal pParams As Parameters)
+Const ProcName As String = "logParameters"
+On Error GoTo Err
+
+If getStrategyHost.LogParameters Then
+    Dim s As String
+    s = "Strategy Parameters:" & vbCrLf
+    If Not pParams Is Nothing Then
+        Dim lParam As Parameter
+        For Each lParam In pParams
+            s = s & vbTab & lParam.Name & "=" & lParam.Value & vbCrLf
+        Next
+    End If
+    gStrategyLogger.Log LogLevelNormal, s
+End If
 
 Exit Sub
 
@@ -749,6 +800,7 @@ If Not mStartReplayWhenReady Then Exit Sub
 mStartReplayWhenReady = False
 
 LogMessage "Tickfile replay started"
+mTicker.StartMarketData
 Set mTickfileReplayTC = mReplayController.StartReplay
 
 Exit Sub

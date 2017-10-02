@@ -131,6 +131,8 @@ If mNumberOfTimeframesLoading = 0 Then
     If mModel.IsTickReplay Then
         mStrategyRunner.StartReplay
         mReplayStartTime = GetTimestamp
+    Else
+        mStrategyRunner.StartLiveData
     End If
 End If
 
@@ -406,6 +408,7 @@ Private Sub IStrategyHostController_StartLiveProcessing(ByVal pSymbol As IContra
 Const ProcName As String = "IStrategyHostController_StartLiveProcessing"
 On Error GoTo Err
 
+prepare
 mStrategyRunner.PrepareSymbol pSymbol
 
 Exit Sub
@@ -418,15 +421,7 @@ Private Sub IStrategyHostController_StartTickfileReplay(ByVal pTickFileSpecifier
 Const ProcName As String = "IStrategyHostController_StartTickfileReplay"
 On Error GoTo Err
 
-resetView
-
-mTradeBarNumber = 0
-
-ReDim mStudiesToShow(3) As StudyConfigToShow
-mStudiesToShowIndex = -1
-
-Set mTimeframeIndexes = New EnumerableCollection
-
+prepare
 mModel.TickFileSpecifiers = pTickFileSpecifiers
 mStrategyRunner.PrepareTickFile mModel.TickFileSpecifiers
 
@@ -534,6 +529,25 @@ If pTimeframe.State = TimeframeStateLoading Then
     mNumberOfTimeframesLoading = mNumberOfTimeframesLoading + 1
     pTimeframe.AddStateChangeListener Me
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub prepare()
+Const ProcName As String = "prepare"
+On Error GoTo Err
+
+resetView
+
+mTradeBarNumber = 0
+
+ReDim mStudiesToShow(3) As StudyConfigToShow
+mStudiesToShowIndex = -1
+
+Set mTimeframeIndexes = New EnumerableCollection
 
 Exit Sub
 
