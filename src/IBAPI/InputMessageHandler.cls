@@ -2031,10 +2031,13 @@ If mLogTwsMessages Then
     mStatsRecorder.UpdateMessageTypeStats pMessageId, pMessageElapsedTime
     sEventCount = sEventCount + 1
     
-    
-    If getElapsedTimer.ElapsedTimeMicroseconds >= 10000000 Then
-        gLog "Event rate per second", ModuleName, ProcName, pMsgQualifier:=Format(sEventCount / 10, "0.0"), pLogLevel:=LogLevelDetail
-        Debug.Print "Event rate per second = " & Format(sEventCount / 10, "0.0")
+    Dim elapsedSeconds As Single
+    elapsedSeconds = getElapsedTimer.ElapsedTimeMicroseconds / 1000000!
+    If elapsedSeconds >= 10! Then
+        Dim eventRate As String
+        eventRate = "Event rate per second: " & Format(sEventCount / elapsedSeconds, "0.0")
+        gLog eventRate, ModuleName, ProcName, pLogLevel:=LogLevelMediumDetail
+        Debug.Print eventRate
         sEventCount = 0
         getElapsedTimer.StartTiming
     End If
