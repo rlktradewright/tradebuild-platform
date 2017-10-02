@@ -244,7 +244,7 @@ For Each lCs In mConfig
         lRemovableCSs.Add lCs
     Else
         Dim lContractFuture As IFuture
-        lContractFuture = CreateFuture(LoadContractFromConfig(lContractConfig))
+        Set lContractFuture = CreateFuture(LoadContractFromConfig(lContractConfig))
         CreateMarketDataSource lContractFuture, _
                                 CreateClockFuture(lContractFuture), _
                                 lCs.InstanceQualifier, _
