@@ -214,7 +214,9 @@ Private Sub mPerformanceTimerPeriod_TimerExpired(ev As TimerExpiredEventData)
 Const ProcName As String = "mPerformanceTimerPeriod_TimerExpired"
 On Error GoTo Err
 
-mPerformanceLogger.Log LogLevelDetail, "Socket message statistics:" & vbCrLf & mStatsRecorder.GenerateStats
+If mPerformanceLogger.IsLoggable(LogLevelMediumDetail) Then
+    mPerformanceLogger.Log LogLevelMediumDetail, "Socket message statistics:" & vbCrLf & mStatsRecorder.GenerateStats
+End If
 
 Exit Sub
 
