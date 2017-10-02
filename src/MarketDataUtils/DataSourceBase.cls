@@ -102,13 +102,6 @@ Private mSessionFuture                              As IFuture
 Private mNumberOfMarketDataSubscriptions            As Long
 Private mNumberOfMarketDepthSubscriptions           As Long
 
-Private mClockFutureBuilder                         As New FutureBuilder
-
-Private mGotClockFuture                             As Boolean
-
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
 Private mDataTickStream                             As ITickStream
 Private mDepthTickStream                            As ITickStream
 
@@ -123,8 +116,6 @@ Private mSomeCurrentPriorityTickListeners           As Boolean
 Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
-
-Set mFutureWaiter = New FutureWaiter
 
 Set mDataSources = New DataSources
 mDataSources.Initialise Me
@@ -243,43 +234,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If Not ev.Future.IsAvailable Then Exit Sub
-
-If TypeOf ev.Future.Value Is Clock Then
-    Dim lClock As Clock
-    Set lClock = ev.Future.Value
-    
-    processClockAvailable lClock
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' Properties
 '@================================================================================
-
-Friend Property Get ClockFuture() As IFuture
-Const ProcName As String = "ClockFuture"
-On Error GoTo Err
-
-Set ClockFuture = mClockFutureBuilder.Future
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
 
 Friend Property Get ContractFuture() As IFuture
 Set ContractFuture = mContractFuture
@@ -478,6 +434,7 @@ End Function
 Friend Sub Initialise( _
                 ByVal pMarketDataManager As MarketDataManager, _
                 ByVal pContractFuture As IFuture, _
+                ByVal pClockFuture As IFuture, _
                 ByVal pIsTickReplay As Boolean, _
                 ByVal pStreamId As Long, _
                 ByVal pOptions As MarketDataSourceOptions, _
@@ -497,14 +454,13 @@ mUseExchangeTimeZone = mOptions And MarketDataSourceOptions.MarketDataSourceOptU
 Set mContractFuture = pContractFuture
 Set mContract = mContractFuture.Value
 
-If IsContractExpired(mContract) And Not pIsTickReplay Then
-    mFutureWaiter.Add CreateClockFuture(mContractFuture)
-    mGotClockFuture = True
-End If
-
 Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
 mSessionFutureBuilder.Value = mSessionBuilder.Session
 mSessionFutureBuilder.Complete
+
+Dim lClock As Clock
+Set lClock = pClockFuture.Value
+mSessionBuilder.SetSessionCurrentTime lClock.Timestamp
 
 Set mVolumeAdjuster = New VolumeAdjuster
 mVolumeAdjuster.Initialise mSessionBuilder.Session, mNoVolumeAdjustments, mNoImpliedTrades
@@ -899,21 +855,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processClockAvailable(ByVal pClock As Clock)
-Const ProcName As String = "processClockAvailable"
-On Error GoTo Err
-
-mClockFutureBuilder.Value = pClock
-mClockFutureBuilder.Complete
-
-mSessionBuilder.SetSessionCurrentTime pClock.Timestamp
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Sub RequestMarketData()
 Const ProcName As String = "RequestMarketData"
 On Error GoTo Err
@@ -924,11 +865,6 @@ Set mDataTickStream = getDataManager.RequestMarketData(Me)
 mDataTickStream.AddGenericTickListener Me
 
 mDataTickStream.Start
-
-If Not mGotClockFuture And mNumberOfMarketDepthSubscriptions = 0 Then
-    mFutureWaiter.Add mDataTickStream.ClockFuture
-    mGotClockFuture = True
-End If
 
 Exit Sub
 
@@ -945,11 +881,6 @@ If mNumberOfMarketDepthSubscriptions <> 1 Then Exit Sub
 Set mDepthTickStream = getDataManager.RequestMarketDepth(Me, mNumberOfMarketDepthRows)
 mDepthTickStream.AddGenericTickListener Me
 mDepthTickStream.Start
-
-If Not mGotClockFuture And mNumberOfMarketDataSubscriptions = 0 Then
-    mFutureWaiter.Add mDepthTickStream.ClockFuture
-    mGotClockFuture = True
-End If
 
 Exit Sub
 

@@ -158,7 +158,7 @@ On Error GoTo Err
 
 If pStateChangeListener Is Nothing Then Set pStateChangeListener = mDefaultStateChangeListener
 
-Set CreateMarketDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, pIsRecoverable, pUseLocalTimeForStudies, NullIndex)
+Set CreateMarketDataSource = mDataManager.CreateMarketDataSource(pContractFuture, CreateClockFuture(pContractFuture), pKey, pStateChangeListener, pIsRecoverable, pUseLocalTimeForStudies, NullIndex)
 
 Exit Function
 

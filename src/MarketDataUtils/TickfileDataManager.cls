@@ -240,7 +240,7 @@ Dim lTickStream As ITickStream
 Set lTickStream = mTickStreams(GetObjectKey(pContractFuture))
 
 Dim lDataSource As New MarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, False, pUseLocalTimeForStudies, lTickStream.StreamId)
+Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, lTickStream.ClockFuture, pKey, pStateChangeListener, False, pUseLocalTimeForStudies, lTickStream.StreamId)
 
 Set CreateMarketDataSource = lDataSource
 

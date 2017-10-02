@@ -609,6 +609,9 @@ On Error GoTo Err
 
 If ev.Future.IsPending Then Exit Sub
 
+Static sGotContract As Boolean
+Static sGotClock As Boolean
+
 If ev.Future.IsFaulted Then
     SetError ev.Future.ErrorNumber, ev.ContinuationData & " creation failed: " & ev.Future.ErrorMessage
     mFutureWaiter.Cancel
@@ -616,10 +619,17 @@ ElseIf ev.Future.IsCancelled Then
     SetError ErrorCodes.ErrIllegalStateException, ev.ContinuationData & " creation cancelled"
     mFutureWaiter.Cancel
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    If processContractAvailable Then setReady
+    sGotContract = True
+    If sGotClock Then
+        If processContractAvailable Then setReady
+    End If
 ElseIf TypeOf ev.Future.Value Is Clock Then
+    sGotClock = True
     mClockFutureBuilder.Value = ev.Future.Value
     mClockFutureBuilder.Complete
+    If sGotContract Then
+        If processContractAvailable Then setReady
+    End If
 ElseIf TypeOf ev.Future.Value Is Session Then
     mSessionFutureBuilder.Value = ev.Future.Value
     mSessionFutureBuilder.Complete
@@ -1239,6 +1249,7 @@ Friend Sub Initialise( _
                 ByVal pMarketDataManager As MarketDataManager, _
                 ByVal pKey As String, _
                 ByVal pContractFuture As IFuture, _
+                ByVal pClockFuture As IFuture, _
                 ByVal pStudyManager As StudyManager, _
                 ByVal pConfig As ConfigurationSection, _
                 ByVal pTickfileStreamId As Long)
@@ -1254,11 +1265,8 @@ mTickfileStreamId = pTickfileStreamId
 
 setState MarketDataSourceStateCreated
 
-If pContractFuture.IsAvailable Then
-    If processContractAvailable Then setReady
-Else
-    mFutureWaiter.Add mContractFuture
-End If
+mFutureWaiter.Add pClockFuture
+mFutureWaiter.Add mContractFuture
 
 If Not pStudyManager Is Nothing Then
     Set mStudyBase = New StudyBaseForTickDataInput
@@ -1698,18 +1706,11 @@ On Error GoTo Err
 Dim lContract As IContract
 Set lContract = mContractFuture.Value
 
-Set mDataSourceBaseRef = CreateWeakReference(getMarketDataManager.GetDataSourceBase(mContractFuture, mTickfileStreamId))
+Set mDataSourceBaseRef = CreateWeakReference(getMarketDataManager.GetDataSourceBase(mContractFuture, mClockFutureBuilder.Future, mTickfileStreamId))
 If Not mPriorityTickListener Is Nothing Then DataSourceBase.AddPriorityTickListener mPriorityTickListener
 DataSourceBase.AddMarketDataSource Me
 
 mStreamId = DataSourceBase.StreamId
-
-If DataSourceBase.ClockFuture.IsAvailable Then
-    mClockFutureBuilder.Value = DataSourceBase.ClockFuture.Value
-    mClockFutureBuilder.Complete
-Else
-    mFutureWaiter.Add DataSourceBase.ClockFuture
-End If
 
 If DataSourceBase.SessionFuture.IsAvailable Then
     mSessionFutureBuilder.Value = DataSourceBase.SessionFuture.Value

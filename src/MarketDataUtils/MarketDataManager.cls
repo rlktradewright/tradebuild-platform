@@ -101,6 +101,7 @@ End Property
 
 Friend Function CreateMarketDataSource( _
                 ByVal pContractFuture As IFuture, _
+                ByVal pClockFuture As IFuture, _
                 ByVal pKey As String, _
                 ByVal pStateChangeListener As IStateChangeListener, _
                 ByVal pIsRecoverable As Boolean, _
@@ -121,7 +122,7 @@ If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStud
 Dim lStudyManager As StudyManager
 If Not mStudyLibManager Is Nothing Then Set lStudyManager = mStudyLibManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies)
 
-lDataSource.Initialise Me, pKey, pContractFuture, lStudyManager, lConfig, pTickfileStreamId
+lDataSource.Initialise Me, pKey, pContractFuture, pClockFuture, lStudyManager, lConfig, pTickfileStreamId
 
 mDataSources.Add lDataSource, pKey
 
@@ -166,6 +167,7 @@ End Function
 
 Friend Function GetDataSourceBase( _
                 ByVal pContractFuture As IFuture, _
+                ByVal pClockFuture As IFuture, _
                 Optional ByVal pTickfileStreamId As Long = NullIndex) As DataSourceBase
 Const ProcName As String = "GetDataSourceBase"
 On Error GoTo Err
@@ -191,7 +193,7 @@ If lDataSourceBase Is Nothing Then
     Set lDataSourceBase = New DataSourceBase
     Set mDataSourceBaseTable(lIndex).DataSourceBase = lDataSourceBase
     
-    lDataSourceBase.Initialise Me, pContractFuture, pTickfileStreamId <> NullIndex, lIndex, mOptions, mNumberOfMarketDepthRows
+    lDataSourceBase.Initialise Me, pContractFuture, pClockFuture, pTickfileStreamId <> NullIndex, lIndex, mOptions, mNumberOfMarketDepthRows
 End If
 
 Set GetDataSourceBase = lDataSourceBase
@@ -241,7 +243,10 @@ For Each lCs In mConfig
     If lContractConfig Is Nothing Then
         lRemovableCSs.Add lCs
     Else
-        CreateMarketDataSource CreateFuture(LoadContractFromConfig(lContractConfig)), _
+        Dim lContractFuture As IFuture
+        lContractFuture = CreateFuture(LoadContractFromConfig(lContractConfig))
+        CreateMarketDataSource lContractFuture, _
+                                CreateClockFuture(lContractFuture), _
                                 lCs.InstanceQualifier, _
                                 Nothing, _
                                 True, _
