@@ -210,7 +210,7 @@ Then
                             2, _
                             InputNames:="HL/2")
 
-    Set S.StopMA = DeclareStudy("Bollinger Bands", _
+    Set S.Boll = DeclareStudy("Bollinger Bands", _
                             S.StopTimeframe, _
                             "Periods=34" & _
                                 ";Standard deviations=2", _

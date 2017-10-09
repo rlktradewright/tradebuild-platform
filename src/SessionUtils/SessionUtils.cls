@@ -43,7 +43,7 @@ End Enum
 
 Public Type SessionEventData
     Source              As Object
-    Timestamp           As Date
+    Timestamp           As Double
     changeType          As SessionChangeTypes
 End Type
 

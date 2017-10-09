@@ -77,6 +77,8 @@ Private mDrawdownNotificationThreshold              As Currency
 
 Private mAnExecutionHasOccurred                     As Boolean
 
+Private mCurrentTick                                As GenericTick
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -153,6 +155,8 @@ End Sub
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
+
+mCurrentTick = ev.Tick
 
 Select Case ev.Tick.TickType
 Case TickTypeBid
@@ -363,6 +367,7 @@ Dim lNotifyMaxProfit As Boolean
 If lProfit > mMaxProfit Then
     mMaxProfit = lProfit
     lNotifyMaxProfit = True
+    gLog "Max profit increased: " & mMaxProfit & "; Tick=" & GenericTickToString(mCurrentTick), ProcName, ModuleName, , LogLevels.LogLevelDetail
 End If
 
 Dim lNotifyMaxLoss As Boolean
