@@ -319,6 +319,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickUtils27.TickTypes) As Boolean
+IMarketDataSource_HasCurrentTick = HasCurrentTick(pTickType)
+End Property
+
 Private Property Get IMarketDataSource_IsFinished() As Boolean
 IMarketDataSource_IsFinished = IsFinished
 End Property
@@ -690,6 +694,21 @@ Public Property Get Handle() As Long
 ' we don't call checkNotFinished because the application may handle
 ' the StateChange event when Finish is called and need the handle then
 Handle = mHandle
+End Property
+
+Public Property Get HasCurrentTick(ByVal pTickType As TickTypes) As Boolean
+Const ProcName As String = "HasCurrentTick"
+On Error GoTo Err
+
+checkNotFinished
+
+Assert mState = MarketDataSourceStateRunning, "Not in Running state"
+HasCurrentTick = DataSourceBase.HasCurrentTick(pTickType)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get HasQuoteListeners()

@@ -242,6 +242,10 @@ Private Property Get IMarketDataSource_Handle() As Long
 IMarketDataSource_Handle = Handle
 End Property
 
+Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickUtils27.TickTypes) As Boolean
+IMarketDataSource_HasCurrentTick = HasCurrentTick(pTickType)
+End Property
+
 Private Property Get IMarketDataSource_IsFinished() As Boolean
 IMarketDataSource_IsFinished = IsFinished
 End Property
@@ -652,6 +656,18 @@ Const ProcName As String = "Handle"
 On Error GoTo Err
 
 Handle = mDataSource.Handle
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get HasCurrentTick(ByVal pTickType As TickTypes) As Boolean
+Const ProcName As String = "HasCurrentTick"
+On Error GoTo Err
+
+HasCurrentTick = mDataSource.HasCurrentTick(pTickType)
 
 Exit Property
 

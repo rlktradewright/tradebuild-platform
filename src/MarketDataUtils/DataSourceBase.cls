@@ -363,7 +363,7 @@ Case TickTypeTrade
 Case TickTypeVolume
     GetCurrentTick = mVolumeTick.Tick
 Case TickTypeOpenInterest
-    GetCurrentTick = mOpenInterestTick
+    GetCurrentTick = mOpenInterestTick.Tick
 Case TickTypeOpenPrice
     GetCurrentTick = mOpenTick.Tick
 Case Else
@@ -424,6 +424,43 @@ If mCloseTick.IsLive And mTradeTick.IsLive Then
     lPriceChange.ChangePercent = 100 * lPriceChange.Change / mCloseTick.Tick.Price
 End If
 GetPriceChange = lPriceChange
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function HasCurrentTick(ByVal pTickType As TickTypes) As Boolean
+Const ProcName As String = "HasCurrentTick"
+On Error GoTo Err
+
+Select Case pTickType
+Case TickTypeBid
+    HasCurrentTick = mBidTick.IsLive
+Case TickTypeAsk
+    HasCurrentTick = mAskTick.IsLive
+Case TickTypeClosePrice
+    HasCurrentTick = mCloseTick.IsLive
+Case TickTypeHighPrice
+    HasCurrentTick = mHighTick.IsLive
+Case TickTypeLowPrice
+    HasCurrentTick = mLowTick.IsLive
+Case TickTypeMarketDepth
+    AssertArgument False, "Invalid tick type in this context"
+Case TickTypeMarketDepthReset
+    AssertArgument False, "Invalid tick type in this context"
+Case TickTypeTrade
+    HasCurrentTick = mTradeTick.IsLive
+Case TickTypeVolume
+    HasCurrentTick = mVolumeTick.IsLive
+Case TickTypeOpenInterest
+    HasCurrentTick = mOpenInterestTick.IsLive
+Case TickTypeOpenPrice
+    HasCurrentTick = mOpenTick.IsLive
+Case Else
+    AssertArgument False, "Invalid tick type"
+End Select
 
 Exit Function
 

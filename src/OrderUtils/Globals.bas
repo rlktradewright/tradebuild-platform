@@ -722,7 +722,8 @@ If pDataSource Is Nothing Then
 ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
 Else
     If pDataSource.IsTickReplay Then lTimePart = FormatTimestamp(pDataSource.Timestamp, TimestampDateAndTimeISO8601) & "  "
-    If pDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
+    If Not pDataSource.HasCurrentTick(TickTypeTrade) Then
+    ElseIf pDataSource.CurrentTick(TickTypeTrade).Timestamp <> 0# Then
         lTickPart = "Curr price=" & gPriceToString(pDataSource.CurrentTick(TickTypeTrade).Price, pContract) & "; "
     End If
 End If
