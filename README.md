@@ -18,7 +18,7 @@ simulated (for historical data they are always simulated of course)
 
 A number of User Interface components are provided:
 
-*	a realtime charting component, including technical studies (drawing tools to be added later) 
+*	a realtime charting component, including technical studies
 *	a ticker display grid 
 *	a trade summary showing overall positions with realtime profit/loss display, and with drill-down to individual trades which can 
 be modified directly by typing in the fields 
@@ -33,9 +33,9 @@ Finally a number of programs built using TradeBuild are provided:
 or MySQL) or text files 
 *	a data manager program that can convert between various data formats 
 *	a strategy hosting program that can run automated trading strategies against either live or historical market data and chart 
-the results 
+the results(ie back testing)
 
-TradeBuild uses a 'service provider' architecture, where most functionality is provided by service provider modules that 'plug in' 
+TradeBuild uses a 'service provider' architecture, where much functionality is provided by service provider modules that 'plug in' 
 to a coordinating framework. Service providers can be developed by anyone with the relevant skills, and do not need to be 'built-in' 
 to TradeBuild. This makes it comparatively simple to extend TradeBuild's functionality in interesting ways. For example:
 
@@ -49,6 +49,8 @@ Access and Excel, and of course from Visual Basic 6 itself, not to mention any .
 
 TradeBuild is therefore currently limited to running under Windows (7, 8, 8.1 and 10).
 
-TradeBuild makes very heavy use of the [TradeWright Common Components](https://github.com/rlktradewright/tradewright-common).
+TradeBuild makes very heavy use of the [TradeWright Common Components](https://github.com/rlktradewright/tradewright-common), which
+provides many important facilities that are not available in the Visual Basic 6 platform: these include logging, configuration files, 
+support for asynchronous processing, cooperative multitasking etc.
 
 
