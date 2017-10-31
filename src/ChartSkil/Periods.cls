@@ -47,7 +47,7 @@ Private Const ModuleName                As String = "Periods"
 
 Private mPeriods                            As SortedDictionary
 Attribute mPeriods.VB_VarHelpID = -1
-Private mPeriodsByIndex                     As New Collection
+Private mPeriodsByIndex                     As SortedDictionary
 
 Private mCurrentPeriodNumber                As Long
 
@@ -69,7 +69,8 @@ Private mSessionEndTime                     As Date
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mPeriods = CreateSortedDictionary(KeyTypeDate, True)
+Set mPeriods = CreateSortedDictionary(KeyTypeDate)
+Set mPeriodsByIndex = CreateSortedDictionary(KeyTypeInteger)
 End Sub
 
 '================================================================================
@@ -328,7 +329,7 @@ On Error GoTo Err
 If VarType(index) = vbDate Then
     Assert TryItem(CDate(index), Item), "Key not found", VBErrorCodes.VbErrInvalidProcedureCall
 ElseIf VarType(index) = vbLong Then
-    Set Item = mPeriodsByIndex(CStr(index))
+    Set Item = mPeriodsByIndex.Item(index)
 Else
     AssertArgument False, "Argument must be a date or a long"
 End If
@@ -554,7 +555,7 @@ Else
     Loop
     mPeriods.Add lPeriod, lKey
 End If
-mPeriodsByIndex.Add lPeriod, CStr(lPeriod.PeriodNumber)
+mPeriodsByIndex.Add lPeriod, lPeriod.PeriodNumber
 
 lPeriod.LabelTimestamp = lLabelTimestamp
 
@@ -674,7 +675,7 @@ Private Function getInterpolatedX( _
                 ByVal pTimestamp As Date, _
                 ByVal pPeriodX As Long, _
                 ByVal pPeriodTimestamp As Date, _
-                Optional ByVal pNextPeriodTimestamp As Date = CDate(0#))
+                Optional ByVal pNextPeriodTimestamp As Date = CDate(0#)) As Double
 Const ProcName As String = "getInterpolatedX"
 On Error GoTo Err
 
