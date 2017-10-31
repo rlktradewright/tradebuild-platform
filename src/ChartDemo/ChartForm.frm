@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#228.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#270.0#0"; "ChartSkil27.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.7"
    ClientHeight    =   8355
@@ -15,8 +15,8 @@ Begin VB.Form ChartForm
       Left            =   0
       TabIndex        =   24
       Top             =   0
-      Width           =   6465
-      _ExtentX        =   11404
+      Width           =   5520
+      _ExtentX        =   9737
       _ExtentY        =   582
    End
    Begin ChartSkil27.Chart Chart1 
@@ -322,7 +322,7 @@ Private mMACDRegion As ChartRegion          ' the region of the chart that displ
 
 Private mBarSeries As BarSeries             ' used to create all the bars
 Private mBar As ChartSkil27.Bar             ' an individual bar
-Private mBarTime                            ' the bar start time for mBar
+Private mBarTime As Date                    ' the bar start time for mBar
 
 Private mBarLabelSeries As TextSeries       ' used to create the text
                                             ' labels displaying the bar numbers
@@ -782,7 +782,7 @@ Set mPriceLine = mPriceRegion.YAxisRegion.AddLine(LayerNumbers.LayerHighestUser 
 mPriceLine.Color = vbBlack
 
 ' Set up a text that will indicate the current price in the Y Axis
-Set mPriceText = mPriceRegion.YAxisRegion.AddText(LayerNumbers.LayerHighestUser - 1)
+Set mPriceText = mPriceRegion.YAxisRegion.AddText("", LayerNumbers.LayerHighestUser - 1)
 mPriceText.Box = True
 mPriceText.BoxColor = vbBlack
 mPriceText.BoxFillColor = vbBlack
@@ -1103,7 +1103,7 @@ mPriceText.Position = NewPoint(20, closePrice)
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     ' color the bar blue
     mBar.Color = vbBlue
-    
+
     ' add a label to the bar
     Set mLatestBarLabel = mBarLabelSeries.Add()
     mLatestBarLabel.Text = mPeriod.periodNumber
