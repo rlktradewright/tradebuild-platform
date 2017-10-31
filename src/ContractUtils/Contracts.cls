@@ -69,7 +69,7 @@ Private mSortKeys()                     As ContractSortKeyIds
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mContracts = CreateSortedDictionary(KeyTypeComparable, True)
+Set mContracts = CreateSortedDictionary(KeyTypeComparable)
 
 ReDim mSortKeys(7) As ContractSortKeyIds
 mSortKeys(0) = ContractSortKeySecType
@@ -416,7 +416,7 @@ Else
 End If
 
 Dim lNewContracts As SortedDictionary
-Set lNewContracts = CreateSortedDictionary(KeyTypeComparable, True)
+Set lNewContracts = CreateSortedDictionary(KeyTypeComparable)
 
 Dim en As Enumerator
 Set en = Enumerator
