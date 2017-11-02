@@ -39,6 +39,15 @@ Begin VB.Form ChartForm
       TabIndex        =   7
       Top             =   6840
       Width           =   12015
+      Begin VB.CheckBox ShowHScrollCheck 
+         Caption         =   "Show horiz. scroll"
+         Height          =   255
+         Left            =   2640
+         TabIndex        =   27
+         Top             =   600
+         Value           =   1  'Checked
+         Width           =   1575
+      End
       Begin VB.CheckBox ShowYAxisCheck 
          Caption         =   "Show Y Axis"
          Height          =   255
@@ -126,6 +135,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.CommandButton ClearButton 
          Caption         =   "Clear"
+         Enabled         =   0   'False
          Height          =   495
          Left            =   10800
          TabIndex        =   6
@@ -174,6 +184,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.CommandButton LoadButton 
          Caption         =   "Load"
+         Default         =   -1  'True
          Height          =   495
          Left            =   10800
          TabIndex        =   5
@@ -490,6 +501,8 @@ Private Sub ClearButton_Click()
 Const ProcName As String = "ClearButton_Click"
 On Error GoTo Err
 
+ClearButton.Enabled = False
+
 If Not mClockTimer Is Nothing Then mClockTimer.StopTimer
 If Not mTickSimulator Is Nothing Then mTickSimulator.StopSimulation
 
@@ -502,6 +515,7 @@ clearFields
 initialise          ' reset the basic properties of the chart
 
 LoadButton.Enabled = True
+LoadButton.Default = True
 
 Exit Sub
 
@@ -604,6 +618,10 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+Private Sub ShowHScrollCheck_Click()
+Chart1.HorizontalScrollBarVisible = (ShowHScrollCheck.value = vbChecked)
+End Sub
+
 Private Sub ShowXAxisCheck_Click()
 Chart1.XAxisVisible = (ShowXAxisCheck.value = vbChecked)
 End Sub
@@ -703,9 +721,9 @@ End With
 Set mBarSeries = mPriceRegion.AddGraphicObjectSeries(New BarSeries)
 mBarSeries.Style = lBarStyle
 
-' Create a text object that will display the clock time. Place it in the grid text
+' Create a text object that will display the clock time. Place it just above the grid text
 ' layer, which is behind all other objects except the grid lines and the grid text.
-Set mClockText = mPriceRegion.AddText(, LayerNumbers.LayerGridText)
+Set mClockText = mPriceRegion.AddText(, LayerNumbers.LayerGridText + 1)
 mClockText.Align = AlignTopRight        ' use the top right corner of the text for
                                         ' positioning
 mClockText.Color = &HA0A0A0             ' draw it grey...
@@ -1020,6 +1038,9 @@ Set mClockTimer = CreateIntervalTimer(250, ExpiryTimeUnitMilliseconds, 250)
 mClockTimer.StartTimer
 
 DrawingToolsFrame.Enabled = True
+
+ClearButton.Enabled = True
+ClearButton.Default = True
 
 Exit Sub
 
@@ -1389,7 +1410,7 @@ Chart1.PeriodWidth = 9                  ' specifies the space between bars in pi
 Chart1.HorizontalScrollBarVisible = True
                                         ' show a horizontal scrollbar for navigating back
                                         ' and forth in the chart
-Chart1.HorizontalMouseScrollingAllowed = True
+Chart1.HorizontalMouseScrollingAllowed = (ShowHScrollCheck.value = vbChecked)
                                     ' alternatively the user can scroll by dragging the
                                     ' mouse both horizontally...
 Chart1.VerticalMouseScrollingAllowed = True
