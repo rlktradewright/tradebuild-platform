@@ -11,21 +11,13 @@ Begin VB.UserControl Chart
    KeyPreview      =   -1  'True
    ScaleHeight     =   7575
    ScaleWidth      =   10665
-   Begin VB.PictureBox YRegionDividerPicture 
-      Appearance      =   0  'Flat
-      AutoRedraw      =   -1  'True
-      BackColor       =   &H00C0C0C0&
-      BorderStyle     =   0  'None
-      ForeColor       =   &H80000008&
-      Height          =   45
-      Index           =   0
-      Left            =   4680
-      ScaleHeight     =   45
-      ScaleWidth      =   3855
-      TabIndex        =   7
-      Top             =   5040
+   Begin VB.HScrollBar HScroll 
+      Height          =   255
+      Left            =   0
+      TabIndex        =   4
+      Top             =   4320
       Visible         =   0   'False
-      Width           =   3855
+      Width           =   7455
    End
    Begin VB.PictureBox SelectorPicture 
       AutoSize        =   -1  'True
@@ -50,13 +42,6 @@ Begin VB.UserControl Chart
       Top             =   840
       Visible         =   0   'False
       Width           =   540
-   End
-   Begin VB.HScrollBar HScroll 
-      Height          =   255
-      Left            =   0
-      TabIndex        =   4
-      Top             =   4320
-      Width           =   7455
    End
    Begin VB.PictureBox RegionDividerPicture 
       Appearance      =   0  'Flat
@@ -120,8 +105,23 @@ Begin VB.UserControl Chart
       ScaleWidth      =   8415
       TabIndex        =   0
       Top             =   6360
-      Visible         =   0   'False
       Width           =   8415
+   End
+   Begin VB.PictureBox YRegionDividerPicture 
+      Appearance      =   0  'Flat
+      AutoRedraw      =   -1  'True
+      BackColor       =   &H00C0C0C0&
+      BorderStyle     =   0  'None
+      ForeColor       =   &H80000008&
+      Height          =   45
+      Index           =   0
+      Left            =   3840
+      ScaleHeight     =   45
+      ScaleWidth      =   3855
+      TabIndex        =   7
+      Top             =   1200
+      Visible         =   0   'False
+      Width           =   3855
    End
 End
 Attribute VB_Name = "Chart"
@@ -316,8 +316,8 @@ Set mController = New ChartController
 mController.Chart = Me
 
 Set mEPhost = New ExtendedPropertyHost
-
 Style = gChartStylesManager.DefaultStyle
+
 Initialise
 
 PointerStyle = PointerCrosshairs
@@ -962,11 +962,18 @@ Private Sub mEPhost_Change(pEv As ChangeEventData)
 Const ProcName As String = "mEPhost_Change"
 On Error GoTo Err
 
-If Not mBackGroundViewport Is Nothing Then mBackGroundViewport.GradientFillColors = gCreateColorArray(ChartBackColor, ChartBackColor)
+If Not mBackGroundViewport Is Nothing Then
+    mBackGroundViewport.GradientFillColors = gCreateColorArray(ChartBackColor, ChartBackColor)
+    mBackGroundViewport.PaintBackground
+End If
 
-HScroll.Visible = HorizontalScrollBarVisible
-
-XAxisPicture.Visible = XAxisVisible
+If IsDrawingEnabled Then
+    If mRegions Is Nothing Then
+    ElseIf mRegions.Count > 0 Then
+        HScroll.Visible = HorizontalScrollBarVisible
+        XAxisPicture.Visible = XAxisVisible
+    End If
+End If
 
 Dim lregion As ChartRegion
 If Not mRegions Is Nothing Then
@@ -997,18 +1004,26 @@ Dim lregion As ChartRegion
 If pEv.ExtendedProperty Is gChartBackColorProperty Then
     mBackGroundViewport.GradientFillColors = gCreateColorArray(ChartBackColor, ChartBackColor)
     mBackGroundViewport.PaintBackground
-ElseIf pEv.ExtendedProperty Is gHorizontalScrollBarVisibleProperty Then
+ElseIf pEv.ExtendedProperty Is gHorizontalScrollBarVisibleProperty _
+        And IsDrawingEnabled _
+        And mRegions.Count > 0 Then
     HScroll.Visible = HorizontalScrollBarVisible
     Resize False, True
-ElseIf pEv.ExtendedProperty Is gPeriodWidthProperty Then
+ElseIf pEv.ExtendedProperty Is gPeriodWidthProperty _
+        And IsDrawingEnabled Then
     resizeX
-ElseIf pEv.ExtendedProperty Is gXAxisVisibleProperty Then
+ElseIf pEv.ExtendedProperty Is gXAxisVisibleProperty _
+        And IsDrawingEnabled _
+        And mRegions.Count > 0 Then
     mRegions.ResizeY mUserResizingRegions
     XAxisPicture.Visible = XAxisVisible
     setRegionViewSizes
-ElseIf pEv.ExtendedProperty Is gYAxisVisibleProperty Then
+ElseIf pEv.ExtendedProperty Is gYAxisVisibleProperty _
+        And IsDrawingEnabled _
+        And mRegions.Count > 0 Then
     resizeX
-ElseIf pEv.ExtendedProperty Is gYAxisWidthCmProperty Then
+ElseIf pEv.ExtendedProperty Is gYAxisWidthCmProperty _
+        And IsDrawingEnabled Then
     resizeX
 ElseIf pEv.ExtendedProperty Is gCrosshairLineStyleProperty Then
     For Each lregion In mRegions
@@ -1538,14 +1553,16 @@ mPointerStyle = Value
 
 If mPointerStyle = PointerCustom And mPointerIcon Is Nothing Then
     ' we'll notify the region when an icon is supplied
-    Exit Property
+ElseIf mRegions Is Nothing Then
+    ' we haven't initialised the chart yet
+Else
+    Dim Region As ChartRegion
+    For Each Region In mRegions
+        If mPointerStyle = PointerCustom Then Region.PointerIcon = mPointerIcon
+        Region.PointerStyle = mPointerStyle
+    Next
 End If
 
-Dim Region As ChartRegion
-For Each Region In mRegions
-    If mPointerStyle = PointerCustom Then Region.PointerIcon = mPointerIcon
-    Region.PointerStyle = mPointerStyle
-Next
 PropertyChanged PropNamePointerStyle
 
 Exit Property
@@ -1839,13 +1856,12 @@ On Error GoTo Err
 
 gLogger.Log "Clearing chart", ProcName, ModuleName
 DisableDrawing
+ChartRegionPicture(0).Visible = True
 
 Clear
 
 Initialise
 mYAxisPosition = 1
-
-EnableDrawing
 
 RaiseEvent ChartCleared
 mController.fireChartCleared
@@ -2226,6 +2242,8 @@ Set mXAxisRegion = Nothing
 If Not mPeriods Is Nothing Then mPeriods.Finish
 Set mPeriods = Nothing
 
+HScroll.Visible = False
+
 finishBackgroundCanvas
 
 mRegions.Finish
@@ -2394,6 +2412,7 @@ Private Function createBackgroundRegionCanvas() As Canvas
 Const ProcName As String = "createBackgroundRegionCanvas"
 On Error GoTo Err
 
+ChartRegionPicture(0).Visible = True
 Set createBackgroundRegionCanvas = createCanvas(ChartRegionPicture(0), RegionTypeBackground)
 
 Exit Function
@@ -2423,6 +2442,7 @@ Const ProcName As String = "createDataRegionCanvas"
 On Error GoTo Err
 
 Load ChartRegionPicture(pIndex)
+ChartRegionPicture(pIndex).Visible = False
 Set createDataRegionCanvas = createCanvas(ChartRegionPicture(pIndex), RegionTypeData)
 
 Exit Function
@@ -2436,6 +2456,7 @@ Const ProcName As String = "createXAxisRegionCanvas"
 On Error GoTo Err
 
 Set createXAxisRegionCanvas = createCanvas(XAxisPicture, RegionTypeXAxis)
+XAxisPicture.Visible = False
 
 Exit Function
 
@@ -2448,6 +2469,7 @@ Const ProcName As String = "createYAxisRegionCanvas"
 On Error GoTo Err
 
 Load YAxisPicture(pIndex)
+YAxisPicture(pIndex).Visible = False
 Set createYAxisRegionCanvas = createCanvas(YAxisPicture(pIndex), RegionTypeYAxis)
 
 Exit Function
@@ -2463,14 +2485,13 @@ On Error GoTo Err
 Dim afont As StdFont
 
 Set mXAxisRegion = New ChartRegion
+mXAxisRegion.IsDrawingEnabled = False
 
 mXAxisRegion.Initialise "", mPeriods, CreateViewport(mXAxisRegion, RegionTypeXAxis), RegionTypeXAxis
 mXAxisRegion.BaseStyle = XAxisRegionStyle
 
 mXAxisRegion.Bottom = 0
 mXAxisRegion.Top = 1
-
-mXAxisRegion.IsDrawingEnabled = IsDrawingEnabled
 
 Exit Sub
 
@@ -2538,6 +2559,7 @@ createXAxisRegion
 mPrevHeight = UserControl.Height
 
 Set mBackGroundViewport = CreateViewport(Nothing, RegionTypeBackground)
+mBackGroundViewport.PaintBackground
 
 mPointerMode = PointerModes.PointerModeDefault
 
@@ -2586,7 +2608,6 @@ Dim mapHandle As Long
 mapHandle = mRegionMap.Append(pRegion)
 
 ChartRegionPicture(index).Tag = mapHandle
-ChartRegionPicture(index).Visible = True
 ChartRegionPicture(index).Align = vbAlignNone
 ChartRegionPicture(index).Width = _
     IIf(YAxisVisible, UserControl.ScaleWidth - YAxisWidthCm * TwipsPerCm, UserControl.ScaleWidth)
@@ -2613,27 +2634,25 @@ pRegion.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
 If mHideGrid Then pRegion.HideGrid
 
 Load RegionDividerPicture(index)
+RegionDividerPicture(index).Visible = False
 RegionDividerPicture(index).Tag = mapHandle
 RegionDividerPicture(index).ZOrder 0
-RegionDividerPicture(index).Visible = (Not mRegionMap.IsFirst(mapHandle))
+RegionDividerPicture(index).Width = ChartRegionPicture(index).Width
 pRegion.Divider = RegionDividerPicture(index)
 
 Dim yIndex As Long
 yIndex = pRegion.YAxisRegion.handle
 
 Load YRegionDividerPicture(yIndex)
+YRegionDividerPicture(yIndex).Visible = False
 YRegionDividerPicture(yIndex).Tag = mapHandle
 YRegionDividerPicture(yIndex).ZOrder 0
-YRegionDividerPicture(yIndex).Visible = (Not mRegionMap.IsFirst(mapHandle))
 pRegion.YAxisRegion.Divider = YRegionDividerPicture(yIndex)
 
 YAxisPicture(yIndex).Tag = yIndex
-YAxisPicture(yIndex).Visible = True
 YAxisPicture(yIndex).Align = vbAlignNone
 YAxisPicture(yIndex).Left = ChartRegionPicture(index).Width
 YAxisPicture(yIndex).Width = YAxisWidthCm * TwipsPerCm
-
-XAxisPicture.Visible = XAxisVisible
 
 Exit Sub
 
@@ -2749,18 +2768,20 @@ Private Sub resizeBackground()
 Const ProcName As String = "resizeBackground"
 On Error GoTo Err
 
-If mRegions Is Nothing Then Exit Sub
-If mRegions.Count > 0 Then Exit Sub
+Dim xAxisWasVisible As Boolean: xAxisWasVisible = XAxisPicture.Visible
 XAxisPicture.Visible = False
+
 ChartRegionPicture(0).Visible = False
+
 ChartRegionPicture(0).Move 0, 0, UserControl.Width, UserControl.Height
 mBackGroundViewport.GradientFillColors = gCreateColorArray(ChartBackColor, ChartBackColor)
 mBackGroundViewport.Left = 0
 mBackGroundViewport.Right = 1
 mBackGroundViewport.SetVerticalBounds 0#, 1#
 mBackGroundViewport.PaintBackground
-mBackGroundViewport.Canvas.ZOrder 1
+
 ChartRegionPicture(0).Visible = True
+XAxisPicture.Visible = xAxisWasVisible
 
 Exit Sub
 
@@ -2873,12 +2894,8 @@ On Error GoTo Err
 RegionDividerPicture(pRegion.handle).Top = currTop
 YRegionDividerPicture(pRegion.YAxisRegion.handle).Top = currTop
 If mRegionMap.IsFirst(CLng(RegionDividerPicture(pRegion.handle).Tag)) Then
-    RegionDividerPicture(pRegion.handle).Visible = False
-    YRegionDividerPicture(pRegion.YAxisRegion.handle).Visible = False
     setRegionDividerLocation = 0
 Else
-    RegionDividerPicture(pRegion.handle).Visible = True
-    YRegionDividerPicture(pRegion.YAxisRegion.handle).Visible = True
     setRegionDividerLocation = RegionDividerPicture(pRegion.handle).Height
 End If
 
@@ -2958,6 +2975,19 @@ If lChange Then
     Next
     If Not mXAxisRegion Is Nothing Then mXAxisRegion.IsDrawingEnabled = IsDrawingEnabled
 End If
+
+If Not IsDrawingEnabled Then Exit Sub
+If mRegions.Count = 0 Then Exit Sub
+
+HScroll.Visible = HorizontalScrollBarVisible
+
+For Each Region In mRegions
+    ChartRegionPicture(Region.handle).Visible = True
+    YAxisPicture(Region.YAxisRegion.handle).Visible = True
+    RegionDividerPicture(Region.handle).Visible = True
+    YRegionDividerPicture(Region.YAxisRegion.handle).Visible = True
+Next
+XAxisPicture.Visible = XAxisVisible
 
 Exit Sub
 

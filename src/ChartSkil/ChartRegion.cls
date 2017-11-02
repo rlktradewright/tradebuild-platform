@@ -3302,8 +3302,12 @@ End Sub
 
 Private Sub processStyle()
 Const ProcName As String = "processStyle"
-
 On Error GoTo Err
+
+Dim wasDrawingEnabled As Boolean
+wasDrawingEnabled = IsDrawingEnabled
+
+IsDrawingEnabled = False
 
 setBackGradientFillColors
 setHasXGrid
@@ -3331,6 +3335,8 @@ If Not IsXAxisRegion And Not IsYAxisRegion Then
     setCursorSnapsToTickBoundaries
     setYScaleQuantum
 End If
+
+IsDrawingEnabled = wasDrawingEnabled
 
 Exit Sub
 
