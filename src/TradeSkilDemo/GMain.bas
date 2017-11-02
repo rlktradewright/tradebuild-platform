@@ -855,14 +855,15 @@ lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
 Dim lCrosshairLineStyle As New LineStyle
 lCrosshairLineStyle.Color = &H7F
 
-ChartStylesManager.Add ChartStyleNameAppDefault, _
+Dim lChartStyle As ChartStyle
+Set lChartStyle = ChartStylesManager.Add(ChartStyleNameAppDefault, _
                         ChartStylesManager.DefaultStyle, _
                         lDefaultRegionStyle, _
                         lxAxisRegionStyle, _
                         lDefaultYAxisRegionStyle, _
-                        lCrosshairLineStyle
+                        lCrosshairLineStyle)
 
-
+lChartStyle.ChartBackColor = RGB(192, 192, 192)
 Exit Sub
 
 Err:
@@ -932,13 +933,15 @@ lDefaultYAxisRegionStyle.YGridTextStyle = lGridTextStyle
 Dim lCrosshairLineStyle As New LineStyle
 lCrosshairLineStyle.Color = &H80&
 
-ChartStylesManager.Add ChartStyleNameBlack, _
+Dim lChartStyle As ChartStyle
+Set lChartStyle = ChartStylesManager.Add(ChartStyleNameBlack, _
                         ChartStylesManager.Item(ChartStyleNameAppDefault), _
                         lDefaultRegionStyle, _
                         lxAxisRegionStyle, _
                         lDefaultYAxisRegionStyle, _
-                        lCrosshairLineStyle
+                        lCrosshairLineStyle)
 
+lChartStyle.ChartBackColor = &H202020
 
 Exit Sub
 
@@ -972,13 +975,14 @@ lDefaultRegionStyle.SessionStartGridLineStyle.Color = &H505050
 Dim lCrosshairLineStyle As New LineStyle
 lCrosshairLineStyle.Color = vbRed
 
-ChartStylesManager.Add ChartStyleNameDarkBlueFade, _
+Dim lChartStyle As ChartStyle
+Set lChartStyle = ChartStylesManager.Add(ChartStyleNameDarkBlueFade, _
                         ChartStylesManager.Item(ChartStyleNameAppDefault), _
                         lDefaultRegionStyle, _
                         , _
                         , _
-                        lCrosshairLineStyle
-
+                        lCrosshairLineStyle)
+lChartStyle.ChartBackColor = &H643232
 
 Exit Sub
 
@@ -1028,13 +1032,14 @@ lDefaultRegionStyle.SessionStartGridLineStyle.Color = &HE0E0E0
 Dim lCrosshairLineStyle As New LineStyle
 lCrosshairLineStyle.Color = 127
 
-ChartStylesManager.Add ChartStyleNameGoldFade, _
+Dim lChartStyle As ChartStyle
+Set lChartStyle = ChartStylesManager.Add(ChartStyleNameGoldFade, _
                         ChartStylesManager.Item(ChartStyleNameAppDefault), _
                         lDefaultRegionStyle, _
                         , _
                         , _
-                        lCrosshairLineStyle
-
+                        lCrosshairLineStyle)
+lChartStyle.ChartBackColor = &H82DFE6
 
 Exit Sub
 
