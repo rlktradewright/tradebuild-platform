@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ClosePositionsTask"
+Attribute VB_Name = "PositionCloser"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -42,9 +42,8 @@ Event PositionClosed()
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "ClosePositionsTask"
+Private Const ModuleName                            As String = "PositionCloser"
 
-Private Const BalancingOrderContextName             As String = "$balancing"
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -216,6 +215,7 @@ End Function
 
 Private Sub doFinalActions()
 mOrderContexts.Enabled = mOrderContextsWasEnabled
+mOrderContexts.NotifyPositionsClosed
 If mPositionManager.EndingSession Then
     gLogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
 End If
@@ -259,20 +259,12 @@ If mPositionManager.PositionSize = 0 Then
     Exit Sub
 End If
 
-If mBalancingOrderContext Is Nothing Then
-    ' use a local variable here to avoid catching the ReadyStateChanged event
-    Dim lBalancingOrderContext As OrderContext
-    Set lBalancingOrderContext = mOrderContexts.Add(BalancingOrderContextName)
-    lBalancingOrderContext.Enabled = True
-    
-    Set mBalancingOrderContext = lBalancingOrderContext
-End If
+Set mBalancingOrderContext = mOrderContexts.BalancingOrderContext
 If Not mBalancingOrderContext.IsReady Then Exit Sub
 
 Dim lContract As IContract
 Set lContract = mPositionManager.DataSource.ContractFuture.Value
 
-If mBalancingOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFDay) Then mBalancingOrderContext.TemplateOrder.TimeInForce = OrderTIFs.OrderTIFDay
 Set mBalancingBracketOrder = _
                 mBalancingOrderContext.CreateBracketOrder( _
                             IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _

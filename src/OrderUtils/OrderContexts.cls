@@ -207,6 +207,28 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Get BalancingOrderContext() As OrderContext
+Const ProcName As String = "BalancingOrderContext"
+On Error GoTo Err
+
+Dim lBalancingOrderContext As OrderContext
+If Not mOrderContexts.Contains(BalancingOrderContextName) Then
+    ' use a local variable here to avoid catching the ReadyStateChanged event
+    Set lBalancingOrderContext = Add(BalancingOrderContextName)
+    lBalancingOrderContext.Enabled = True
+    If lBalancingOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFDay) Then lBalancingOrderContext.TemplateOrder.TimeInForce = OrderTIFs.OrderTIFDay
+End If
+
+Set lBalancingOrderContext = mOrderContexts.Item(BalancingOrderContextName)
+lBalancingOrderContext.Enabled = True
+Set BalancingOrderContext = lBalancingOrderContext
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get ContractFuture() As IFuture
 Set ContractFuture = mContractFuture
 End Property
@@ -428,6 +450,18 @@ Const ProcName As String = "NotifyChange"
 On Error GoTo Err
 
 mOrderContexts.NotifyChange pOrderContext.Name
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyPositionsClosed()
+Const ProcName As String = "NotifyPositionsClosed"
+On Error GoTo Err
+
+RaiseEvent PositionsClosed
 
 Exit Sub
 

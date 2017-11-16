@@ -118,13 +118,12 @@ Private mChangeListeners                        As Listeners
 
 Private mRecovering                             As Boolean
 
-Private WithEvents mClosePositionsTask          As ClosePositionsTask
-Attribute mClosePositionsTask.VB_VarHelpID = -1
-
 ' Indicates that all OrderContexts are being closed, either as a result of
 ' a call to the closePosition functions, or because money management
 ' has told us to do so
 Private mClosingPosition                        As Boolean
+
+Private mCloser                                 As PositionCloser
 
 Private mRecoverableObjectListeners             As New Listeners
 
@@ -480,28 +479,13 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mClosePositionsTask Event Handlers
-'@================================================================================
-
-Private Sub mClosePositionsITask_PositionClosed()
-Const ProcName As String = "mClosePositionsITask_PositionClosed"
-On Error GoTo Err
-
-fireChange PositionClosed
-Set mClosePositionsTask = Nothing
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' mOrderContexts Event Handlers
 '@================================================================================
 
 Private Sub mOrderContexts_PositionsClosed()
 mClosingPosition = False
+Set mCloser = Nothing
+fireChange PositionClosed
 End Sub
 
 '@================================================================================
@@ -1023,8 +1007,8 @@ End If
 
 mClosingPosition = True
 
-Set mClosePositionsTask = New ClosePositionsTask
-mClosePositionsTask.ClosePositions Me, pFlags
+Set mCloser = New PositionCloser
+mCloser.ClosePositions Me, pFlags
 
 Exit Sub
 
