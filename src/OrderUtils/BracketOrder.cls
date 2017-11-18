@@ -2774,6 +2774,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub SetSize(ByVal Value As Long)
+Const ProcName As String = "SetSize"
+On Error GoTo Err
+
+mSummary.Size = Value
+
+If mSummary.Size <> 0 Then
+    mStateEngine.SetConditions OpConditions.CondSizeNonZero
+Else
+    mStateEngine.ClearConditions OpConditions.CondSizeNonZero
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Function ToString() As String
 Const ProcName As String = "ToString"
 On Error GoTo Err
@@ -3511,10 +3529,10 @@ End If
 
 If pExec.Action = OrderActionBuy Then
     CumBuyPrice = mSummary.CumBuyPrice + pExec.Quantity * pExec.Price
-    setSize Size + pExec.Quantity
+    SetSize Size + pExec.Quantity
 Else
     CumSellPrice = mSummary.CumSellPrice + pExec.Quantity * pExec.Price
-    setSize Size - pExec.Quantity
+    SetSize Size - pExec.Quantity
 End If
     
 If Size = 0 Then mEndTime = pExec.FillTime
@@ -3614,24 +3632,6 @@ If mIsDirty Then Exit Sub
 mIsDirty = True
 fireChange BracketOrderChangeTypes.BracketOrderChangesPending
 RaiseEvent ChangesPending
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setSize(ByVal Value As Long)
-Const ProcName As String = "setSize"
-On Error GoTo Err
-
-mSummary.Size = Value
-
-If mSummary.Size <> 0 Then
-    mStateEngine.SetConditions OpConditions.CondSizeNonZero
-Else
-    mStateEngine.ClearConditions OpConditions.CondSizeNonZero
-End If
 
 Exit Sub
 

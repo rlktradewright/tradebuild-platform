@@ -99,11 +99,13 @@ Private Sub mBalancingBracketOrder_Completed()
 Const ProcName As String = "mBalancingBracketOrder_Completed"
 On Error GoTo Err
 
+mBalancingBracketOrder.SetSize 0
+
 ' adjust the other BracketOrders to take account of the settling Order
 
 Dim oc As OrderContext
 For Each oc In mOrderContexts
-    If oc.Name <> BalancingOrderContextName Then oc.NotifyPositionCloseout mLastExecutionReport
+    If Not oc Is mBalancingOrderContext Then oc.NotifyPositionCloseout mLastExecutionReport
 Next
 
 Assert mPositionManager.PositionSize = 0, "Position size is not zero"
@@ -292,7 +294,7 @@ gLogOrderMessage "Close positions at market: (Curr price=" & _
                 mPositionManager.IsSimulated, _
                 Me
 
-mBalancingOrderContext.ExecuteBracketOrder mBalancingBracketOrder
+mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
 
 Set mBalancingOrderContext = Nothing
 

@@ -674,9 +674,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder, _
-                    Optional pCheckMoneyManagement As Boolean)
-Const ProcName As String = "ExecuteBracketOrder"
+Friend Sub ExecuteBracketOrderEx(ByVal pBracketOrder As IBracketOrder, _
+                    ByVal pCheckMoneyManagement As Boolean, _
+                    ByVal pAddToActiveBracketOrders As Boolean)
+Const ProcName As String = "ExecuteBracketOrderEx"
 On Error GoTo Err
 
 AssertArgument Not pBracketOrder Is Nothing, "No bracket order supplied"
@@ -708,10 +709,25 @@ End If
 
 gLogOrderMessage "Execute bracket order: " & pBracketOrder.ToString, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
 
-mActiveBracketOrders.Add pBracketOrder
-If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
+If pAddToActiveBracketOrders Then
+    mActiveBracketOrders.Add pBracketOrder
+    If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
+End If
 fireChange OrderContextActiveStateChanged
 pBracketOrder.Execute
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder, _
+                    Optional pCheckMoneyManagement As Boolean)
+Const ProcName As String = "ExecuteBracketOrder"
+On Error GoTo Err
+
+ExecuteBracketOrderEx pBracketOrder, pCheckMoneyManagement, True
 
 Exit Sub
 

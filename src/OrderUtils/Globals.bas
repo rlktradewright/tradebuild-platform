@@ -56,7 +56,6 @@ Private Const StrOrderTypeMarketOnOpen       As String = "Market on Open"
 Private Const StrOrderTypeLimitOnOpen        As String = "Limit on Open"
 Private Const StrOrderTypePeggedToPrimary    As String = "Pegged to Primary"
 
-Public Const BalancingOrderContextName      As String = "$balancing"
 Public Const RecoveryOrderContextName       As String = "$recovery"
 
 '@================================================================================

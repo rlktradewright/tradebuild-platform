@@ -422,27 +422,27 @@ End Sub
 
 Private Sub IOrderSubmitter_ModifyBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
-                ByVal entryOrderChanged As Boolean, _
-                ByVal stopOrderChanged As Boolean, _
-                ByVal targetOrderChanged As Boolean, _
-                ByVal closeoutOrderChanged As Boolean)
+                ByVal pEntryOrderChanged As Boolean, _
+                ByVal pStopOrderChanged As Boolean, _
+                ByVal pTargetOrderChanged As Boolean, _
+                ByVal pCloseoutOrderChanged As Boolean)
 Const ProcName As String = "IOrderSubmitter_ModifyBracketOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
 
-If entryOrderChanged Then
+If pEntryOrderChanged Then
     PlaceOrder pBracketOrder.EntryOrder, "", "", True
 End If
-If stopOrderChanged Then
+If pStopOrderChanged Then
     Set lOrder = pBracketOrder.StopLossOrder
     PlaceOrder lOrder, "", "", True
 End If
-If targetOrderChanged Then
+If pTargetOrderChanged Then
     Set lOrder = pBracketOrder.TargetOrder
     PlaceOrder lOrder, "", "", True
 End If
-If closeoutOrderChanged Then
+If pCloseoutOrderChanged Then
     PlaceOrder pBracketOrder.CloseoutOrder, "", "", True
 End If
 

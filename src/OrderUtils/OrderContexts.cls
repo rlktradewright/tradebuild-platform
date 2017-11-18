@@ -49,6 +49,7 @@ Event PositionsClosed()
 Private Const ModuleName                        As String = "OrderContexts"
 
 Private Const DefaultOrderContextName           As String = "$default"
+Private Const BalancingOrderContextName         As String = "$balancing"
 
 '@================================================================================
 ' Enums
