@@ -335,7 +335,7 @@ Case Else
     lMessage = "An unspecified error has occurred"
 End Select
 
-If ev.EventMessage <> "" Then lMessage = lMessage & ev.EventMessage
+If ev.EventMessage <> "" Then lMessage = lMessage & ": " & ev.EventMessage
 
 mView.NotifyError "Tickfile problem", lMessage, ErrorSeverityCritical
 mView.EnableStart
