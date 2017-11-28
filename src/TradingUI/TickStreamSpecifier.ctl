@@ -92,9 +92,9 @@ Begin VB.UserControl TickStreamSpecifier
       Width           =   3735
       Begin VB.PictureBox DatesTimesPicture 
          BorderStyle     =   0  'None
-         Height          =   2415
+         Height          =   2535
          Left            =   120
-         ScaleHeight     =   2415
+         ScaleHeight     =   2535
          ScaleWidth      =   3495
          TabIndex        =   10
          Top             =   240
@@ -142,16 +142,16 @@ Begin VB.UserControl TickStreamSpecifier
          End
          Begin VB.Frame SessionTimesFrame 
             Caption         =   "Session times"
-            Height          =   1215
+            Height          =   1335
             Left            =   0
             TabIndex        =   11
             Top             =   1200
             Width           =   3495
             Begin VB.PictureBox SessionTimesPicture 
                BorderStyle     =   0  'None
-               Height          =   930
+               Height          =   1050
                Left            =   120
-               ScaleHeight     =   930
+               ScaleHeight     =   1050
                ScaleWidth      =   3285
                TabIndex        =   12
                Top             =   240
@@ -159,7 +159,6 @@ Begin VB.UserControl TickStreamSpecifier
                Begin VB.OptionButton UseContractTimesOption 
                   Appearance      =   0  'Flat
                   Caption         =   "Use contract times"
-                  Enabled         =   0   'False
                   ForeColor       =   &H80000008&
                   Height          =   255
                   Left            =   0
@@ -176,7 +175,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Height          =   285
                   Left            =   2520
                   TabIndex        =   8
-                  Top             =   600
+                  Top             =   720
                   Width           =   660
                End
                Begin VB.TextBox CustomFromTimeText 
@@ -187,18 +186,17 @@ Begin VB.UserControl TickStreamSpecifier
                   Height          =   285
                   Left            =   2520
                   TabIndex        =   7
-                  Top             =   360
+                  Top             =   480
                   Width           =   660
                End
                Begin VB.OptionButton UseCustomTimesOption 
                   Appearance      =   0  'Flat
                   Caption         =   "Use custom times (must be in exchange timezone)"
-                  Enabled         =   0   'False
                   ForeColor       =   &H80000008&
                   Height          =   615
                   Left            =   0
                   TabIndex        =   6
-                  Top             =   240
+                  Top             =   360
                   Width           =   1815
                End
                Begin VB.Label Label11 
@@ -207,7 +205,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Height          =   255
                   Left            =   1920
                   TabIndex        =   14
-                  Top             =   600
+                  Top             =   720
                   Width           =   495
                End
                Begin VB.Label Label10 
@@ -216,7 +214,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Height          =   255
                   Left            =   1920
                   TabIndex        =   13
-                  Top             =   360
+                  Top             =   480
                   Width           =   495
                End
             End
@@ -346,11 +344,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal Value As ITheme)
+Private Property Let IThemeable_Theme(ByVal value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = Value
+Theme = value
 
 Exit Property
 
@@ -611,7 +609,7 @@ If ev.Future.IsFaulted <> 0 Then
 ElseIf ev.Future.IsCancelled <> 0 Then
     ErrorLabel.Caption = "Contracts fetch Cancelled"
 Else
-    Set mContracts = ev.Future.Value
+    Set mContracts = ev.Future.value
     processContracts
 End If
 
@@ -629,11 +627,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal Value As ITheme)
+Public Property Let Theme(ByVal value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = Value
+Set mTheme = value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor
