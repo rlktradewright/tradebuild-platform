@@ -537,11 +537,11 @@ With mInputTickfileSpecifier
         If .ToDate = 0# Then .ToDate = .FromDate
         
         Dim st As SessionTimes
-        st = GetSessionTimes(CDbl(Int(.FromDate)) + mContract.SessionStartTime + 1# / 86400#, _
+        st = GetSessionTimesIgnoringWeekend(CDbl(Int(.FromDate)) + mContract.SessionStartTime + 1# / 86400#, _
                             mContract.SessionStartTime, _
                             mContract.SessionEndTime)
         .FromDate = st.StartTime
-        st = GetSessionTimes(CDbl(Int(.ToDate)) + mContract.SessionStartTime + 1# / 86400#, _
+        st = GetSessionTimesIgnoringWeekend(CDbl(Int(.ToDate)) + mContract.SessionStartTime + 1# / 86400#, _
                             mContract.SessionStartTime, _
                             mContract.SessionEndTime)
         .ToDate = st.EndTime
