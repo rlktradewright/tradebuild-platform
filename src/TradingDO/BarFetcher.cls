@@ -381,8 +381,8 @@ Private Sub mTargetBarsBuilder_BarAdded(ByVal pBar As Bar)
 Const ProcName As String = "mTargetBarsBuilder_BarAdded"
 On Error GoTo Err
 
-Set mCurrentBar = pBar
 fireNotifyBar mCurrentBar
+Set mCurrentBar = pBar
 
 Exit Sub
 
@@ -457,6 +457,7 @@ Else
         
         mTargetBarsBuilder.AppendBars lBars
     Loop
+    fireNotifyBar mCurrentBar
     
 End If
 
@@ -1136,6 +1137,8 @@ Do While Not mRs.BOF
     mRs.MovePrevious
 Loop
 
+fireNotifyBar mCurrentBar
+
 Exit Sub
 
 Err:
@@ -1223,6 +1226,8 @@ On Error GoTo Err
 
 Debug.Print "BarFetcher: close connection"
 If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+
+fireNotifyBar mCurrentBar
 
 gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
 setBarsFutureValue
