@@ -17,22 +17,30 @@ Implements IContractStore
 Implements ITask
 
 Private mTaskContext As TaskContext
-Private mContractsBuilder As ContractsBuilder
 Private mFutureBuilder As FutureBuilder
 Private mListener As IContractFetchListener
 
-'Private Function IContractStore_FetchContract(ByVal pContractSpecifier As IContractSpecifier, Optional ByVal pCookie As Variant) As IFuture
-'mSingleContractRequested = True
-'Set mContractsBuilder = New ContractsBuilder
-'mContractsBuilder.Add gCreateContract(pContractSpecifier)
-'Set mFutureBuilder = New FutureBuilder
-'Set IContractStore_FetchContract = mFutureBuilder.Future
-'StartTask Me, PriorityNormal, , , pCookie
-'End Function
+Private mContracts As IContracts
+
+Private mContractSpecifier As IContractSpecifier
+
+Private Sub Class_Initialize()
+Dim lContractsBuilder As New ContractsBuilder
+
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ESM3")
+
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM03")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU4")
+
+Set mContracts = lContractsBuilder.Contracts
+End Sub
 
 Private Function IContractStore_FetchContracts(ByVal pContractSpecifier As IContractSpecifier, Optional ByVal pListener As IContractFetchListener, Optional ByVal pCookie As Variant) As IFuture
-Set mContractsBuilder = New ContractsBuilder
-mContractsBuilder.Add gCreateContract(pContractSpecifier)
+Set mContractSpecifier = pContractSpecifier
 Set mListener = pListener
 Set mFutureBuilder = New FutureBuilder
 Set IContractStore_FetchContracts = mFutureBuilder.Future
@@ -56,11 +64,31 @@ Private Sub ITask_Cancel()
 End Sub
 
 Private Sub ITask_Run()
-mFutureBuilder.Value = mContractsBuilder.Contracts
-mFutureBuilder.Cookie = mTaskContext.Data
-mFutureBuilder.Complete
-If Not mListener Is Nothing Then mListener.FetchCompleted mTaskContext.Data
-mTaskContext.Finish Empty, False
+Static sContractsBuilder As ContractsBuilder
+Static en As Enumerator
+
+If sContractsBuilder Is Nothing Then
+    Set sContractsBuilder = New ContractsBuilder
+    Set en = mContracts.Enumerator
+End If
+
+If en.MoveNext Then
+    Dim lContract As IContract
+    Set lContract = en.Current
+    If ContractSpecsCompatible(mContractSpecifier, lContract.Specifier) Then
+        sContractsBuilder.Add lContract
+        If Not mListener Is Nothing Then mListener.NotifyContract mTaskContext.Data, lContract
+    End If
+Else
+    mFutureBuilder.Value = sContractsBuilder.Contracts
+    mFutureBuilder.Cookie = mTaskContext.Data
+    mFutureBuilder.Complete
+    Set en = Nothing
+    Set sContractsBuilder = Nothing
+    If Not mListener Is Nothing Then mListener.FetchCompleted mTaskContext.Data
+    mTaskContext.Finish Empty, False
+End If
+
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
@@ -70,3 +98,4 @@ End Property
 Private Property Get ITask_TaskName() As String
 
 End Property
+
