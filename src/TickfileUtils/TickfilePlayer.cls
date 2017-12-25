@@ -156,7 +156,7 @@ Case TickfileEventCodes.TickfileEventFileDoesNotExist, _
         TickfileEventCodes.TickfileEventDataSourceNotAvailable
     mTickfileReplayController.NotifyCantPlay Me
 Case TickfileEventCodes.TickfileEventFileIsEmpty
-    mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), 0
+    mTickfileReplayController.NotifyReady Me, mTickfileSpec
 End Select
 
 Exit Sub
@@ -598,7 +598,7 @@ If mContract Is Nothing Then
     mTickScheduler.AddPlayer Me
 Else
     ' this is not the first tickfile - just make sure we haven't changed contracts
-    Assert pContract.Specifier.Equals(mContract.Specifier), "Tickfile has different contract from previous tickfile"
+    Assert gVerifyContractSpec(pContract.Specifier, mContract.Specifier), "Tickfile's contract is incompatible with previous tickfile's contract"
 End If
 
 Exit Sub

@@ -27,6 +27,7 @@ Class=TickfilePlayer; TickfilePlayer.cls
 Class=TextTickfileReader; TextTickfileReader.cls
 Class=ReplayController; ReplayController.cls
 Module=gTickfileSpecsParser; gTickfileSpecsParser.bas
+Class=TickfileSpecGenerator; TickfileSpecGenerator.cls
 Startup="(None)"
 HelpFile=""
 Title="TickfileUtils27"

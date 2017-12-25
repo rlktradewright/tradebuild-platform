@@ -459,6 +459,12 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Function gSecTypeHasExpiry(ByVal pSecType As SecurityTypes) As Boolean
+gSecTypeHasExpiry = (pSecType = SecurityTypes.SecTypeFuture Or _
+            pSecType = SecurityTypes.SecTypeOption Or _
+            pSecType = SecurityTypes.SecTypeFuturesOption)
+End Function
+
 Public Function gSupports( _
                             ByVal Capabilities As Long, _
                             ByVal mode As TickfileAccessModes, _
@@ -510,10 +516,60 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gVerifyContracts(ByVal pContracts As IContracts) As Boolean
+Const ProcName As String = "gVerifyContracts"
+On Error GoTo Err
+
+Dim en As Enumerator: Set en = pContracts.Enumerator
+en.MoveNext
+
+Dim lFirstContract As IContract
+Set lFirstContract = en.Current
+
+Dim lPrevExpiry As Date
+If gSecTypeHasExpiry(lFirstContract.Specifier.SecType) Then lPrevExpiry = lFirstContract.ExpiryDate
+
+Do While en.MoveNext
+    Dim lCurrContract As IContract
+    Set lCurrContract = en.Current
+    If Not gVerifyContractSpec(lFirstContract.Specifier, lCurrContract.Specifier) Then
+        gVerifyContracts = False
+        Exit Function
+    End If
+    If gSecTypeHasExpiry(lFirstContract.Specifier.SecType) Then
+        If Not lPrevExpiry < lCurrContract.ExpiryDate Then
+            gVerifyContracts = False
+            Exit Function
+        End If
+        lPrevExpiry = lCurrContract.ExpiryDate
+    End If
+Loop
+
+gVerifyContracts = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gVerifyContractSpec( _
+                ByVal pContractSpec1 As IContractSpecifier, _
+                ByVal pContractSpec2 As IContractSpecifier) As Boolean
+If pContractSpec1.Symbol <> "" And pContractSpec1.Symbol <> pContractSpec2.Symbol Then Exit Function
+If pContractSpec1.SecType <> SecTypeNone And pContractSpec1.SecType <> pContractSpec2.SecType Then Exit Function
+If pContractSpec1.Exchange <> "" And pContractSpec1.Exchange <> pContractSpec2.Exchange Then Exit Function
+If pContractSpec1.Exchange <> "" And pContractSpec1.Exchange <> pContractSpec2.Exchange Then Exit Function
+If pContractSpec1.CurrencyCode <> "" And pContractSpec1.CurrencyCode <> pContractSpec2.CurrencyCode Then Exit Function
+If pContractSpec1.Multiplier <> pContractSpec2.Multiplier Then Exit Function
+If pContractSpec1.Right <> OptNone And pContractSpec1.Right <> pContractSpec2.Right Then Exit Function
+If pContractSpec1.Strike <> 0# And pContractSpec1.Strike <> pContractSpec2.Strike Then Exit Function
+gVerifyContractSpec = True
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
 
 
 
