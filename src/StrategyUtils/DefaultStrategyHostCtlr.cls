@@ -313,34 +313,45 @@ Const ProcName As String = "IStrategyHostController_NotifyReplayEvent"
 On Error GoTo Err
 
 Dim lMessage As String
+Dim lSeverity As ErrorSeverities
 
 Dim lEventCode As TickfileEventCodes
 lEventCode = ev.EventCode
 Select Case lEventCode
 Case TickfileEventFileDoesNotExist
     lMessage = "Tickfile does not exist"
+    lSeverity = ErrorSeverityCritical
 Case TickfileEventFileIsEmpty
     lMessage = "Tickfile is empty"
+    lSeverity = ErrorSeverityInformation
 Case TickfileEventFileIsInvalid
     lMessage = "Tickfile is invalid"
+    lSeverity = ErrorSeverityCritical
 Case TickfileEventFileFormatNotSupported
     lMessage = "Tickfile format is not supported"
+    lSeverity = ErrorSeverityCritical
 Case TickfileEventNoContractDetails
     lMessage = "No contract details are available for this tickfile"
+    lSeverity = ErrorSeverityCritical
 Case TickfileEventDataSourceNotAvailable
     lMessage = "Tickfile data source is not available"
+    lSeverity = ErrorSeverityCritical
 Case TickfileEventAmbiguousContractDetails
     lMessage = "A unique contract for this tickfile cannot be determined"
+    lSeverity = ErrorSeverityCritical
 Case Else
     lMessage = "An unspecified error has occurred"
+    lSeverity = ErrorSeverityCritical
 End Select
 
 If ev.EventMessage <> "" Then lMessage = lMessage & ": " & ev.EventMessage
 
-mView.NotifyError "Tickfile problem", lMessage, ErrorSeverityCritical
-mView.EnableStart
+mView.NotifyError "Tickfile problem", lMessage, lSeverity
 
-mStrategyRunner.StopTesting
+If lSeverity = ErrorSeverityCritical Then
+    mView.EnableStart
+    mStrategyRunner.StopTesting
+End If
 
 Exit Sub
 
