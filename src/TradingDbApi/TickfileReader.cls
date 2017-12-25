@@ -307,6 +307,11 @@ Const ProcName As String = "mTickStream_DataAvailable"
 On Error GoTo Err
 
 logMessage "Ticks available", ProcName, , LogLevelDetail
+mReplayMonitor.NotifyTickfilePrepared Me, mInputTickfileSpecifier
+
+logMessage "Notify ready", ProcName, , LogLevelHighDetail
+mReplayMonitor.NotifyReady Me, mInputTickfileSpecifier
+
 If mTickRequested Or Not mGotFirstTick Then
     mTickRequested = False
     getTick
@@ -460,11 +465,11 @@ Private Sub noMoreTicks()
 Const ProcName As String = "noMoreTicks"
 On Error GoTo Err
 
-If mGotFirstTick Then
-    mReplayMonitor.NotifyReplayComplete Me, mTickCounter
-Else
+If Not mGotFirstTick Then
     NotifyEvent TickfileEventCodes.TickfileEventFileIsEmpty, "No data for this specifier"
 End If
+
+mReplayMonitor.NotifyReplayComplete Me, mTickCounter
 
 Exit Sub
 
@@ -531,7 +536,7 @@ Set mContract = mContracts.ItemAtIndex(1)
 With mInputTickfileSpecifier
     .Contract = mContract
     If .EntireSession Then
-        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimeZoneName))
+        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimezoneName))
         Set mSession = mSessionBuilder.Session
         
         If .ToDate = 0# Then .ToDate = .FromDate
@@ -562,11 +567,8 @@ On Error GoTo Err
 
 mTickCounter = mTickCounter + 1
 If Not mGotFirstTick Then
-    mReplayMonitor.NotifyTickfilePrepared Me, mInputTickfileSpecifier
     mGotFirstTick = True
     mFirstTick = pTick
-    logMessage "Notify ready", ProcName, , LogLevelHighDetail
-    mReplayMonitor.NotifyReady Me, mInputTickfileSpecifier
 Else
     notifyTick pTick
 End If
