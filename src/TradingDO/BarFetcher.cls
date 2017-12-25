@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IDeferredAction
 Implements ITask
 
 '@================================================================================
@@ -36,8 +37,11 @@ Private Enum AsyncStates
     None
     Started
     Fetching
+    CheckingBarsRecordset
     ProcessingBars
+    NotifyingBars
     ProcessingTicks
+    ConcatenatingPartialResults
     AppendingBars
 End Enum
 
@@ -96,9 +100,6 @@ Private WithEvents mTargetBarsBuilder       As BarsBuilder
 Attribute mTargetBarsBuilder.VB_VarHelpID = -1
 Private mCurrentBar                         As Bar
 
-Private WithEvents mAppendBarsTaskController    As TaskController
-Attribute mAppendBarsTaskController.VB_VarHelpID = -1
-
 Private mCookie                             As Variant
 Private mBarListener                        As IBarFetchListener
 
@@ -112,6 +113,22 @@ Private mBarsFutureBuilder                  As New FutureBuilder
 
 Private Sub Class_Terminate()
 Debug.Print "BarFetcher terminated"
+End Sub
+
+'@================================================================================
+' IDeferredAction Interface Members
+'@================================================================================
+
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
+On Error GoTo Err
+
+fireFetchCompleted
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -139,55 +156,95 @@ If mTaskContext.CancelPending Then
     Exit Sub
 End If
 
+Static sTotalInterimBars As Long
+Static en As Enumerator
+Dim lBar As Bar
+
 Select Case mAsyncState
 Case Started
     gLogger.Log "BarFetcher started for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
     
     connectToDBAsync
     
+    Set mInterimBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
+                                                mSession, _
+                                                mInstrument.TickSize)
+    
+    If useTickData Then
+        generateTickRequestDetails mSpecifier.fromDate, mSpecifier.toDate
+    Else
+        generateBarRequestDetails mSpecifier.fromDate, mSpecifier.toDate
+    End If
+    
     mAsyncState = Fetching
     mTaskContext.Suspend -1
     
 Case Fetching
     If useTickData Then
-        Set mInterimBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
-                                                    mSession, _
-                                                    mInstrument.TickSize, _
-                                                    mSpecifier.maxNumberOfBars)
-        generateTickRequestDetails mSpecifier.fromDate, mSpecifier.toDate
         Set mRs = doFetchTicks(mFromDate, mToDate, True)
         mAsyncState = ProcessingTicks
     Else
-        generateBarRequestDetails mSpecifier.fromDate, mSpecifier.toDate
-        Set mRs = doFetchBars(mSpecifier.barType, mBarLengthMinutes, mNumberOfBars, mFromDate, mToDate, True)
-        mAsyncState = ProcessingBars
+        Static sRecordSets As New Collection
+        Static i As Long
+        Set mRs = doFetchBars(mSpecifier.barType, mBarLengthMinutes, 0, mFromDate - i, mToDate - i, True)
+        i = i + 1
+        mAsyncState = CheckingBarsRecordset
     End If
 
     mTaskContext.Suspend -1
+Case CheckingBarsRecordset
+    sRecordSets.Add mRs
+    If needMoreBars(mRs, mFromDate) Then
+        mAsyncState = Fetching
+    Else
+        Static j As Long
+        j = sRecordSets.Count
+        Set mRs = sRecordSets.Item(j)
+        If Not mRs.BOF Then mRs.MoveLast
+        j = j - 1
+        mAsyncState = ProcessingBars
+    End If
 Case ProcessingBars
     If Not mRs.BOF Then
-        If filterByTime(barTimestamp) Then processBar barTimestamp, openValue, highValue, lowValue, closeValue, volume, tickVolume
+        processBar barTimestamp, openValue, highValue, lowValue, closeValue, volume, tickVolume
         mRs.MovePrevious
+    ElseIf j > 0 Then
+        Set mRs = sRecordSets.Item(j)
+        If Not mRs.BOF Then mRs.MoveLast
+        j = j - 1
+    Else
+        sTotalInterimBars = mInterimBarsBuilder.Bars.Count
+        Set en = mInterimBarsBuilder.Bars.Enumerator
+        mAsyncState = NotifyingBars
+    End If
+Case NotifyingBars
+    If en.MoveNext Then
+        Set lBar = en.Current
+        If sTotalInterimBars <= mTargetBarsBuilder.CacheSize Then
+            mTargetBarsBuilder.AddThisBar lBar
+        End If
+        sTotalInterimBars = sTotalInterimBars - 1
     Else
         returnAsyncResults
     End If
-
 Case ProcessingTicks
     If Not mRs.EOF Then
         processTickData
         mRs.MoveNext
     Else
         mInterimBarsCollection.Add mInterimBarsBuilder.Bars
+        
+        sTotalInterimBars = sTotalInterimBars + mInterimBarsBuilder.Bars.Count
             
         If needMoreTicks Then
             generateNextTickDataRequest
             Set mRs = doFetchTicks(mFromDate, mToDate, True)
             mTaskContext.Suspend -1    ' wait for more ticks to be fetched
         Else
-            mAsyncState = AppendingBars
+            mAsyncState = ConcatenatingPartialResults
         End If
     End If
-Case AppendingBars
+Case ConcatenatingPartialResults
     If mInterimBarsCollection.Count = 0 Then
         returnAsyncResults
     Else
@@ -199,8 +256,18 @@ Case AppendingBars
         End If
         mInterimBarsCollection.Remove lBars
         
-        Set mAppendBarsTaskController = mTargetBarsBuilder.AppendBarsAsync(lBars)
-        mTaskContext.Suspend -1    ' wait for the append to Finish
+        Set en = lBars.Enumerator
+        mAsyncState = AppendingBars
+    End If
+Case AppendingBars
+    If en.MoveNext Then
+        Set lBar = en.Current
+        If sTotalInterimBars <= mTargetBarsBuilder.CacheSize _
+            And filterByTime(lBar.timestamp) _
+        Then mTargetBarsBuilder.AddThisBar lBar
+        sTotalInterimBars = sTotalInterimBars - 1
+    Else
+        mAsyncState = ConcatenatingPartialResults
     End If
 End Select
 
@@ -217,30 +284,6 @@ End Property
 Private Property Get ITask_taskName() As String
 ITask_taskName = mTaskContext.Name
 End Property
-
-'@===============================================================================
-' mAppendBarsTaskController Event Handlers
-'@===============================================================================
-
-Private Sub mAppendBarsTaskController_Completed(ev As TaskCompletionEventData)
-Const ProcName As String = "mAppendBarsTaskController_Completed"
-On Error GoTo Err
-
-If ev.Cancelled Then
-    mTaskContext.Finish Empty, True
-    fireFetchCancelled
-ElseIf ev.ErrorNumber <> 0 Then
-    mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
-    fireFetchFailed ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
-Else
-    mTaskContext.Continue
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
 
 '@===============================================================================
 ' mConnection Event Handlers
@@ -382,6 +425,7 @@ Const ProcName As String = "mTargetBarsBuilder_BarAdded"
 On Error GoTo Err
 
 fireNotifyBar mCurrentBar
+
 Set mCurrentBar = pBar
 
 Exit Sub
@@ -423,21 +467,45 @@ initialiseFetch Specifier
 
 connectToDB
 
+Dim lBar As Bar
+
 If Not useTickData Then
     generateBarRequestDetails mSpecifier.fromDate, mSpecifier.toDate
-    Set mRs = doFetchBars(mSpecifier.barType, mBarLengthMinutes, mNumberOfBars, mFromDate, mToDate, False)
-    processBars
+    
+    Dim lRecordSets As New Collection
+    
+    Dim i As Long
+    For i = 0 To 4
+        Dim lRS As Recordset
+        Set lRS = doFetchBars(mSpecifier.barType, mBarLengthMinutes, 0, mFromDate - i, mToDate - i, False)
+        lRecordSets.Add lRS
+        If Not needMoreBars(lRS, mFromDate) Then Exit For
+    Next
+    
+    Dim sTotalInterimBars As Long
+    For i = lRecordSets.Count To 1 Step -1
+        Set mRs = lRecordSets.Item(i)
+        processBars
+        sTotalInterimBars = mInterimBarsBuilder.Bars.Count
+    Next
+
+    For Each lBar In mInterimBarsBuilder.Bars
+        If sTotalInterimBars <= mTargetBarsBuilder.CacheSize Then
+            mTargetBarsBuilder.AddThisBar lBar
+        End If
+        sTotalInterimBars = sTotalInterimBars - 1
+    Next
 Else
     Set mInterimBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                                 mSession, _
-                                                mInstrument.TickSize, _
-                                                mSpecifier.maxNumberOfBars)
+                                                mInstrument.TickSize)
     generateTickRequestDetails mSpecifier.fromDate, mSpecifier.toDate
     
     Set mRs = doFetchTicks(mFromDate, mToDate, False)
     
     Do While Not mRs.EOF
         processTicks
+        
         mInterimBarsCollection.Add mInterimBarsBuilder.Bars
         
         If Not needMoreTicks Then Exit Do
@@ -455,16 +523,20 @@ Else
         End If
         mInterimBarsCollection.Remove lBars
         
-        mTargetBarsBuilder.AppendBars lBars
+        For Each lBar In lBars
+            If filterByTime(lBar.timestamp) Then mTargetBarsBuilder.AddThisBar lBar
+        Next
     Loop
-    fireNotifyBar mCurrentBar
     
 End If
+
+fireNotifyBar mCurrentBar
 
 Debug.Print "BarFetcher: close connection"
 If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
 Set FetchBars = mTargetBarsBuilder.Bars
+DeferAction Me
 
 Exit Function
 
@@ -663,13 +735,13 @@ On Error GoTo Err
 
 pCmd.ActiveConnection = mConnection
 
-Dim lRs As New ADODB.Recordset
-lRs.LockType = adLockReadOnly
-lRs.cursorlocation = adUseClient
+Dim lRS As New ADODB.Recordset
+lRS.LockType = adLockReadOnly
+lRS.cursorlocation = adUseClient
 
 If pAsync Then
-    lRs.Properties("Initial Fetch Size") = 0
-    lRs.Open pCmd, _
+    lRS.Properties("Initial Fetch Size") = 0
+    lRS.Open pCmd, _
                 , _
                 CursorTypeEnum.adOpenStatic, _
                 , _
@@ -677,14 +749,14 @@ If pAsync Then
                 ExecuteOptionEnum.adAsyncFetchNonBlocking + _
                 ExecuteOptionEnum.adAsyncExecute
 Else
-    lRs.Open pCmd, _
+    lRS.Open pCmd, _
                 , _
                 CursorTypeEnum.adOpenForwardOnly, _
                 , _
                 CommandTypeEnum.adCmdStoredProc
 End If
 
-Set Execute = lRs
+Set Execute = lRS
 
 Exit Function
 
@@ -692,12 +764,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function filterByTime( _
+Private Function filterBySession( _
                 ByVal timestamp As Date) As Boolean
-Const ProcName As String = "filterByTime"
+Const ProcName As String = "filterBySession"
 On Error GoTo Err
-
-If timestamp < mFromDate Or timestamp >= mToDate Then Exit Function
 
 Dim lSessEv As SessionEventData
 lSessEv = mSessionBuilder.SetSessionCurrentTime(timestamp)
@@ -713,8 +783,22 @@ End If
 If mSpecifier.includeBarsOutsideSession Or _
     mSession.IsTimeInSession(timestamp) _
 Then
-    filterByTime = True
+    filterBySession = True
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function filterByTime( _
+                ByVal timestamp As Date) As Boolean
+Const ProcName As String = "filterByTime"
+On Error GoTo Err
+
+If timestamp < mSpecifier.fromDate Or timestamp >= mSpecifier.toDate Then Exit Function
+filterByTime = True
 
 Exit Function
 
@@ -778,6 +862,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function needMoreBars(ByVal pRS As Recordset, pDate As Date) As Boolean
+Const ProcName As String = "needMoreBars"
+On Error GoTo Err
+
+Static sBars As Long
+sBars = sBars + pRS.RecordCount
+
+If sBars < mNumberOfBars Then
+    needMoreBars = True
+    Exit Function
+End If
+
+If Not pRS.BOF Then
+    pRS.MoveLast    ' because the stored procedure returns them in reverse order
+    needMoreBars = pRS("datetime") > pDate
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub generateNextTickDataRequest()
 Const ProcName As String = "generateNextTickDataRequest"
 On Error GoTo Err
@@ -794,8 +901,7 @@ createNewCustomSession
 
 Set mInterimBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             mSession, _
-                                            mInstrument.TickSize, _
-                                            mSpecifier.maxNumberOfBars)
+                                            mInstrument.TickSize)
 
 Exit Sub
 
@@ -809,13 +915,15 @@ Private Sub generateBarRequestDetails( _
 Const ProcName As String = "generateBarRequestDetails"
 On Error GoTo Err
 
+If toDate = MaxDate Then toDate = Now + 10 * OneSecond
+
 If toDate <> 0 Then
     mToDate = toDate
     
     If fromDate = 0 Then
         ' calculate the earliest possible date for the supplied number of bars (assuming
         ' there are no gaps in the data)
-        mFromDate = OffsetBarStartTime(IIf(mToDate = MaxDateValue, Now, mToDate), _
+        mFromDate = OffsetBarStartTime(mToDate, _
                                     mSpecifier.BarTimePeriod, _
                                     -1 * mSpecifier.maxNumberOfBars, _
                                     mInstrument.SessionStartTime, _
@@ -879,6 +987,8 @@ Private Sub generateTickRequestDetails( _
 Const ProcName As String = "generateTickRequestDetails"
 On Error GoTo Err
 
+If toDate = MaxDate Then toDate = Now + 10 * OneSecond
+
 If fromDate <> 0 And toDate <> 0 Then
     mFromDate = GetSessionTimes(fromDate, _
                                 mInstrument.SessionStartTime, _
@@ -898,7 +1008,7 @@ End If
 
 If fromDate = 0 And toDate <> 0 Then
     mToDate = toDate
-    mFromDate = GetOffsetSessionTimes(IIf(mToDate = MaxDateValue, Now, mToDate), _
+    mFromDate = GetOffsetSessionTimes(mToDate, _
                                 -1, _
                                 mInstrument.SessionStartTime, _
                                 mInstrument.SessionEndTime).StartTime
@@ -964,6 +1074,9 @@ End If
 createNewSession
 createNewCustomSession
 
+Set mInterimBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
+                                            mSession, _
+                                            mInstrument.TickSize)
 Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             mSession, _
                                             mInstrument.TickSize, _
@@ -1031,12 +1144,12 @@ Dim lValue As SValue
 lValue.timestamp = pTimestamp
 
 lValue.value = pValue
-mTargetBarsBuilder.NotifyValue lValue
+mInterimBarsBuilder.NotifyValue lValue
 pNumberOfPricesNotified = pNumberOfPricesNotified + 1
 
-mTargetBarsBuilder.IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, pTickVolumePerNotify, pTickVolume)
+mInterimBarsBuilder.IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, pTickVolumePerNotify, pTickVolume)
 lValue.value = mAccumulatedVolume + IIf(pNumberOfPricesNotified < pNumberOfPrices, pNumberOfPricesNotified * pVolumePerNotify, pVolume)
-mTargetBarsBuilder.NotifyVolume lValue
+mInterimBarsBuilder.NotifyVolume lValue
 
 Exit Sub
 
@@ -1078,6 +1191,9 @@ Private Sub processBar( _
     ByVal pTickVolume As Long)
 Const ProcName As String = "processBar"
 On Error GoTo Err
+
+If Not filterByTime(pTimestamp) Then Exit Sub
+If Not filterBySession(pTimestamp) Then Exit Sub
 
 Dim lNumberOfPrices As Long
 lNumberOfPrices = getNumberOfPrices(pOpenValue, pHighValue, pLowValue, pCloseValue)
@@ -1133,11 +1249,9 @@ If Not mRs.BOF Then
 End If
 
 Do While Not mRs.BOF
-    If filterByTime(barTimestamp) Then processBar barTimestamp, openValue, highValue, lowValue, closeValue, volume, tickVolume
+    processBar barTimestamp, openValue, highValue, lowValue, closeValue, volume, tickVolume
     mRs.MovePrevious
 Loop
-
-fireNotifyBar mCurrentBar
 
 Exit Sub
 
@@ -1149,7 +1263,7 @@ Private Sub processTickData()
 Const ProcName As String = "processTickData"
 On Error GoTo Err
 
-If Not filterByTime(mRs("datetime")) Then Exit Sub
+'If Not filterByTime(mRs("datetime")) Then Exit Sub
 
 Dim Data() As Byte
 Data = mRs("data")

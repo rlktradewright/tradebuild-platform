@@ -140,9 +140,10 @@ Public Const InstrumentClassColumnTickSize      As String = "TICKSIZE"
 Public Const InstrumentClassColumnTickValue     As String = "TICKVALUE"
 Public Const InstrumentClassColumnTimeZone      As String = "TIMEZONENAME"
 
-Public Const MaxDateValue                       As Date = 2958465 ' 31 Dec 9999
+Public Const MaxDateValue                       As Date = #12/31/9999#
 Public Const MaxLong                            As Long = &H7FFFFFFF
 
+Public Const OneSecond                          As Double = 1# / 86400#
 Public Const OneMicrosecond                     As Double = 1# / 86400000000#
 Public Const OneMinute                          As Double = 1# / 1440#
 
