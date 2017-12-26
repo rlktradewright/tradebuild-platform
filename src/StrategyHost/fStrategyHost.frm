@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#320.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#321.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
@@ -961,6 +961,9 @@ Private mChartStyle                                     As ChartStyle
 Private mLetterWidth                                    As Single
 Private mDigitWidth                                     As Single
 
+Private mMsgBox                                         As fModelessMessageBox
+
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -1266,7 +1269,7 @@ End Sub
 Private Sub IStrategyHostView_NotifyError(ByVal pTitle As String, ByVal pMessage As String, ByVal pSeverity As ErrorSeverities)
 Select Case pSeverity
 Case ErrorSeverityInformation
-    ModelessMsgBox pMessage, MsgBoxInformation, pTitle, Me
+    showModelessMessage pMessage, pTitle
 Case ErrorSeverityWarning
     MsgBox pMessage, MsgBoxExclamation, pTitle
 Case ErrorSeverityCritical
@@ -1711,6 +1714,11 @@ Private Sub StartButton_Click()
 Const ProcName As String = "StartButton_Click"
 On Error GoTo Err
 
+If Not mMsgBox Is Nothing Then
+    Unload mMsgBox
+    Set mMsgBox = Nothing
+End If
+
 startprocessing
 
 Exit Sub
@@ -2123,6 +2131,21 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub showModelessMessage(ByVal pMessage As String, ByVal pTitle As String)
+Const ProcName As String = "showModelessMessage"
+On Error GoTo Err
+
+If mMsgBox Is Nothing Then Set mMsgBox = New fModelessMessageBox
+mMsgBox.ShowMessage pMessage, pTitle
+mMsgBox.Show vbModeless, Me
+mMsgBox.applyTheme mTheme
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub startprocessing()
 Const ProcName As String = "startprocessing"

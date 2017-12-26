@@ -29,6 +29,7 @@ Module=MainModule; MainModule.bas
 Form=fStrategyHost.frm
 Module=Globals; Globals.bas
 Class=FatalErrorHandler; FatalErrorHandler.cls
+Form=fModelessMessageBox.frm
 Startup="Sub Main"
 HelpFile=""
 Title="StrategyHost"
