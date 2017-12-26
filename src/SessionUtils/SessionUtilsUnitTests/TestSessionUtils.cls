@@ -288,6 +288,46 @@ End Sub
 
 
 
+Public Sub GetOffsetSessionTimes_1500()
+Assert.AreEqual "2016-01-15 08:00:00.000", _
+                FormatTimestamp( _
+                    GetOffsetSessionTimes(CDate("18/1/16 08:00:00"), _
+                                -1, _
+                                CDate("08:00"), _
+                                CDate("17:30")).StartTime, _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub GetOffsetSessionTimes_1510()
+Assert.AreEqual "2016-01-15 17:30:00.000", _
+                FormatTimestamp( _
+                    GetOffsetSessionTimes(CDate("18/1/16 08:00:00"), _
+                                -1, _
+                                CDate("08:00"), _
+                                CDate("17:30")).EndTime, _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub GetOffsetSessionTimes_1600()
+Assert.AreEqual "2016-12-30 08:00:00.000", _
+                FormatTimestamp( _
+                    GetOffsetSessionTimes(CDate("02/1/17 08:00:00"), _
+                                -1, _
+                                CDate("08:00"), _
+                                CDate("17:30")).StartTime, _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub GetOffsetSessionTimes_1610()
+Assert.AreEqual "2016-12-30 17:30:00.000", _
+                FormatTimestamp( _
+                    GetOffsetSessionTimes(CDate("02/1/17 08:00:00"), _
+                                -1, _
+                                CDate("08:00"), _
+                                CDate("17:30")).EndTime, _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
