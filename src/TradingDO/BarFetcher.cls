@@ -356,8 +356,6 @@ Set mBarListener = pListener
 
 initialiseFetch Specifier
 
-'connectToDB
-
 Dim lBar As Bar
 
 If Not useTickData Then
@@ -369,13 +367,15 @@ If Not useTickData Then
     Set lRS = doFetchBars(mSpecifier.barType, mBarTimePeriod.Length, 0, mFromDate, mToDate)
     lRecordSets.Add lRS
     
-    Dim lNumExtraBars As Long
-    lNumExtraBars = numberOfAdditionalBarsNeeded(lRS, mBarTimePeriod, mFromDate)
-    If lNumExtraBars <> 0 Then
+    Do
+        Dim lNumExtraBars As Long
+        lNumExtraBars = numberOfAdditionalBarsNeeded(lRS, mBarTimePeriod, mFromDate)
+        If lNumExtraBars = 0 Then Exit Do
+        
         Set lRS = doFetchBars(mSpecifier.barType, mBarTimePeriod.Length, lNumExtraBars, 0, mFromDate)
         lRecordSets.Add lRS
-    End If
-
+    Loop
+    
     Dim sTotalInterimBars As Long
     Dim i As Long
     For i = lRecordSets.Count To 1 Step -1
