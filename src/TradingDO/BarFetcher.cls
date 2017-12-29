@@ -403,6 +403,8 @@ Else
         
         mInterimBarsCollection.Add mInterimBarsBuilder.Bars
         
+        sTotalInterimBars = sTotalInterimBars + mInterimBarsBuilder.Bars.Count
+            
         If Not needMoreTicks Then Exit Do
         
         generateNextTickDataRequest
@@ -419,7 +421,10 @@ Else
         mInterimBarsCollection.Remove lBars
         
         For Each lBar In lBars
-            If filterByTime(lBar.timestamp) Then mTargetBarsBuilder.AddThisBar lBar
+            If sTotalInterimBars <= mTargetBarsBuilder.CacheSize _
+                And filterByTime(lBar.timestamp) _
+            Then mTargetBarsBuilder.AddThisBar lBar
+            sTotalInterimBars = sTotalInterimBars - 1
         Next
     Loop
     
@@ -1142,7 +1147,7 @@ Private Sub processTickData()
 Const ProcName As String = "processTickData"
 On Error GoTo Err
 
-'If Not filterByTime(mRs("datetime")) Then Exit Sub
+If Not filterBySession(mRs("datetime")) Then Exit Sub
 
 Dim Data() As Byte
 Data = mRs("data")
