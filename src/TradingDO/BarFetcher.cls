@@ -64,16 +64,16 @@ Private mSpecifier                          As BarDataSpecifier
 
 Private mInstrument                         As instrument
 
-Private mBarLengthMinutes                   As Long
+Private mBarTimePeriod                      As TimePeriod
 Private mNumberOfBars                       As Long
 Private mFromDate                           As Date
 Private mToDate                             As Date
 
-Private WithEvents mConnector               As Connector
-Attribute mConnector.VB_VarHelpID = -1
-Private WithEvents mConnection              As ADODB.connection
-Attribute mConnection.VB_VarHelpID = -1
-Private WithEvents mRs                      As ADODB.Recordset
+Private mRSFetcher                          As RecordsetFetcher
+Private WithEvents mFutureWaiter            As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mRs                                 As ADODB.Recordset
 Attribute mRs.VB_VarHelpID = -1
 
 Private mDB                                 As TradingDB
@@ -164,7 +164,8 @@ Select Case mAsyncState
 Case Started
     gLogger.Log "BarFetcher started for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
     
-    connectToDBAsync
+    Set mFutureWaiter = New FutureWaiter
+    'connectToDBAsync
     
     Set mInterimBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                                 mSession, _
@@ -177,25 +178,25 @@ Case Started
     End If
     
     mAsyncState = Fetching
-    mTaskContext.Suspend -1
-    
+   
 Case Fetching
     If useTickData Then
-        Set mRs = doFetchTicks(mFromDate, mToDate, True)
+        mFutureWaiter.Add doFetchTicksAsync(mFromDate, mToDate)
         mAsyncState = ProcessingTicks
     Else
-        Static sRecordSets As New Collection
-        Static i As Long
-        Set mRs = doFetchBars(mSpecifier.barType, mBarLengthMinutes, 0, mFromDate - i, mToDate - i, True)
-        i = i + 1
+        mFutureWaiter.Add doFetchBarsAsync(mSpecifier.barType, mBarTimePeriod.Length, 0, mFromDate, mToDate)
         mAsyncState = CheckingBarsRecordset
     End If
 
     mTaskContext.Suspend -1
 Case CheckingBarsRecordset
+    Static sRecordSets As New Collection
     sRecordSets.Add mRs
-    If needMoreBars(mRs, mFromDate) Then
-        mAsyncState = Fetching
+    Dim lNumExtraBars As Long
+    lNumExtraBars = numberOfAdditionalBarsNeeded(mRs, mBarTimePeriod, mFromDate)
+    If lNumExtraBars <> 0 Then
+        mFutureWaiter.Add doFetchBarsAsync(mSpecifier.barType, mBarTimePeriod.Length, lNumExtraBars, 0, mFromDate)
+        mTaskContext.Suspend -1
     Else
         Static j As Long
         j = sRecordSets.Count
@@ -238,7 +239,7 @@ Case ProcessingTicks
             
         If needMoreTicks Then
             generateNextTickDataRequest
-            Set mRs = doFetchTicks(mFromDate, mToDate, True)
+            mFutureWaiter.Add doFetchTicksAsync(mFromDate, mToDate)
             mTaskContext.Suspend -1    ' wait for more ticks to be fetched
         Else
             mAsyncState = ConcatenatingPartialResults
@@ -286,134 +287,24 @@ ITask_taskName = mTaskContext.Name
 End Property
 
 '@===============================================================================
-' mConnection Event Handlers
+' mFutureWaiter Event Handlers
 '@===============================================================================
 
-Private Sub mConnection_ExecuteComplete( _
-                ByVal RecordsAffected As Long, _
-                ByVal pError As ADODB.Error, _
-                adStatus As ADODB.EventStatusEnum, _
-                ByVal pCommand As ADODB.Command, _
-                ByVal pRecordset As ADODB.Recordset, _
-                ByVal pConnection As ADODB.connection)
-Const ProcName As String = "mConnection_ExecuteComplete"
+Private Sub mFutureWaiter_WaitCompleted(ev As TWUtilities40.FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    
-    If pError.Number = 3712 Then
-        ' this error is "Operation has been cancelled by the user"
-        ' This should no longer happen, but we'll make the check just in case
-        connectToDB
-        Exit Sub
-    End If
-    
-    Dim s As String
-    s = "Fetch error " & vbCrLf & _
-        gGenerateErrorMessage(pError) & _
-        gGenerateConnectionErrorMessages(pConnection)
-        
-    If mAsynchronous Then
-        If gIsStateSet(mConnection.State, adStateOpen) Then
-            Debug.Print "BarFetcher: close connection(error)"
-            mConnection.Close
-        End If
-        mTaskContext.Error pError.Number, _
-                            ProjectName & "." & ModuleName & ":" & "mConnection_ExecuteComplete" & vbCrLf & s
-        fireFetchFailed pError.Number, s, ""
-    Else
-        Err.Raise pError.Number, , s
-    End If
-    Exit Sub
+If ev.Future.IsFaulted Then
+    fireFetchFailed ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+ElseIf ev.Future.IsAvailable Then
+    Set mRs = ev.Future.value
+    mTaskContext.Continue
 End If
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-'@===============================================================================
-' mConnector Event Handlers
-'@===============================================================================
-
-Private Sub mConnector_Connected( _
-                ByVal pConnection As ADODB.connection)
-Const ProcName As String = "mConnector_Connected"
-On Error GoTo Err
-
-Set mConnection = pConnection
-If mAsynchronous Then mTaskContext.Continue
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub mConnector_ConnectFailed( _
-                ByVal errorCode As Long, _
-                ByVal errorDesc As String)
-Const ProcName As String = "mConnector_ConnectFailed"
-On Error GoTo Err
-
-If mAsynchronous Then
-    gLogger.Log "BarFetcher connection error for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelSevere
-    mTaskContext.Error errorCode, _
-                        ProjectName & "." & ModuleName & ":" & "mConnector_ConnectFailed" & vbCrLf & errorDesc
-    fireFetchFailed errorCode, errorDesc, ""
-Else
-    Err.Raise errorCode, , errorDesc
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-'@===============================================================================
-' mRs Event Handlers
-'@===============================================================================
-
-Private Sub mRs_FetchComplete( _
-                ByVal pError As ADODB.Error, _
-                adStatus As ADODB.EventStatusEnum, _
-                ByVal pRecordset As ADODB.Recordset)
-Const ProcName As String = "mRs_FetchComplete"
-On Error GoTo Err
-
-If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    Dim s As String
-    s = "Fetch error " & vbCrLf & _
-        gGenerateErrorMessage(pError) & _
-        gGenerateConnectionErrorMessages(mConnection)
-    
-    Debug.Print "BarFetcher: close connection(error)"
-    If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
-    If mAsynchronous Then
-        mTaskContext.Error pError.Number, _
-                            ProjectName & "." & ModuleName & ":" & "mRs_FetchComplete" & vbCrLf & s
-        fireFetchFailed pError.Number, s, ""
-    Else
-        Err.Raise pError.Number, , s
-    End If
-    Exit Sub
-End If
-
-If mAsynchronous Then
-    If Not useTickData Then
-        gLogger.Log "BarFetcher retrieved bars from database for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
-        If Not mRs.BOF Then mRs.MoveLast    ' because the stored procedure returns them in reverse order
-        gLogger.Log "BarFetcher repositioned recordset for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
-    End If
-    mTaskContext.Continue   ' start calling ITask_run again
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -465,7 +356,7 @@ Set mBarListener = pListener
 
 initialiseFetch Specifier
 
-connectToDB
+'connectToDB
 
 Dim lBar As Bar
 
@@ -474,15 +365,19 @@ If Not useTickData Then
     
     Dim lRecordSets As New Collection
     
-    Dim i As Long
-    For i = 0 To 4
-        Dim lRS As Recordset
-        Set lRS = doFetchBars(mSpecifier.barType, mBarLengthMinutes, 0, mFromDate - i, mToDate - i, False)
-        lRecordSets.Add lRS
-        If Not needMoreBars(lRS, mFromDate) Then Exit For
-    Next
+    Dim lRS As Recordset
+    Set lRS = doFetchBars(mSpecifier.barType, mBarTimePeriod.Length, 0, mFromDate, mToDate)
+    lRecordSets.Add lRS
     
+    Dim lNumExtraBars As Long
+    lNumExtraBars = numberOfAdditionalBarsNeeded(lRS, mBarTimePeriod, mFromDate)
+    If lNumExtraBars <> 0 Then
+        Set lRS = doFetchBars(mSpecifier.barType, mBarTimePeriod.Length, lNumExtraBars, 0, mFromDate)
+        lRecordSets.Add lRS
+    End If
+
     Dim sTotalInterimBars As Long
+    Dim i As Long
     For i = lRecordSets.Count To 1 Step -1
         Set mRs = lRecordSets.Item(i)
         processBars
@@ -501,7 +396,7 @@ Else
                                                 mInstrument.TickSize)
     generateTickRequestDetails mSpecifier.fromDate, mSpecifier.toDate
     
-    Set mRs = doFetchTicks(mFromDate, mToDate, False)
+    Set mRs = doFetchTicks(mFromDate, mToDate)
     
     Do While Not mRs.EOF
         processTicks
@@ -511,7 +406,7 @@ Else
         If Not needMoreTicks Then Exit Do
         
         generateNextTickDataRequest
-        Set mRs = doFetchTicks(mFromDate, mToDate, False)
+        Set mRs = doFetchTicks(mFromDate, mToDate)
     Loop
         
     Do While mInterimBarsCollection.Count <> 0
@@ -532,8 +427,9 @@ End If
 
 fireNotifyBar mCurrentBar
 
-Debug.Print "BarFetcher: close connection"
-If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+Set mRSFetcher = Nothing
+
+gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
 
 Set FetchBars = mTargetBarsBuilder.Bars
 DeferAction Me
@@ -576,6 +472,9 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mDB = db
+Set mRSFetcher = New RecordsetFetcher
+mRSFetcher.Initialise mDB
+
 Set mInstrument = pInstrument
 
 Exit Sub
@@ -613,34 +512,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub connectToDB()
-Const ProcName As String = "connectToDB"
-On Error GoTo Err
-
-Debug.Print "BarFetcher: Connect to DB"
-If mConnector Is Nothing Then Set mConnector = mDB.GetConnector
-mConnector.Connect
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub connectToDBAsync()
-Const ProcName As String = "connectToDBAsync"
-On Error GoTo Err
-
-Debug.Print "BarFetcher: Connect to DB async"
-If mConnector Is Nothing Then Set mConnector = mDB.GetConnector
-mConnector.ConnectAsync
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Sub createNewCustomSession()
 Const ProcName As String = "createNewCustomSession"
 On Error GoTo Err
@@ -677,13 +548,7 @@ If Not mRs Is Nothing Then
     If Not gIsStateSet(mRs.State, adStateOpen) Then mRs.Cancel
 End If
 
-If Not mConnection Is Nothing Then
-    If gIsStateSet(mConnection.State, adStateOpen) Then
-        mConnection.Close
-    Else
-        mConnection.Cancel
-    End If
-End If
+If Not mFutureWaiter Is Nothing Then mFutureWaiter.Cancel
 
 mTaskContext.Finish Empty, True
 fireFetchCancelled
@@ -699,12 +564,34 @@ Private Function doFetchBars( _
                 ByVal barLength As Long, _
                 ByVal NumberOfBars As Long, _
                 ByVal fromTime As Date, _
-                ByVal toTime As Date, _
-                ByVal pAsync As Boolean) As Recordset
+                ByVal toTime As Date) As Recordset
 Const ProcName As String = "doFetchBars"
 On Error GoTo Err
 
-Set doFetchBars = Execute(setupFetchBarsCommand(barType, barLength, NumberOfBars, fromTime, toTime), pAsync)
+Set doFetchBars = mRSFetcher.FetchRecordset(setupFetchBarsCommand(barType, barLength, NumberOfBars, fromTime, toTime), _
+                                        adCmdStoredProc, _
+                                        adOpenStatic)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function doFetchBarsAsync( _
+                ByVal barType As Long, _
+                ByVal barLength As Long, _
+                ByVal NumberOfBars As Long, _
+                ByVal fromTime As Date, _
+                ByVal toTime As Date) As IFuture
+Const ProcName As String = "doFetchBarsAsync"
+On Error GoTo Err
+
+Dim lRSFetcher As New RecordsetFetcher
+
+Set doFetchBarsAsync = mRSFetcher.FetchRecordsetAsync(setupFetchBarsCommand(barType, barLength, NumberOfBars, fromTime, toTime), _
+                                        adCmdStoredProc, _
+                                        adOpenStatic)
 
 Exit Function
 
@@ -714,12 +601,13 @@ End Function
 
 Private Function doFetchTicks( _
                 ByVal fromTime As Date, _
-                ByVal toTime As Date, _
-                ByVal pAsync As Boolean) As Recordset
+                ByVal toTime As Date) As Recordset
 Const ProcName As String = "doFetchTicks"
 On Error GoTo Err
 
-Set doFetchTicks = Execute(setupFetchTicksCommand(fromTime, toTime), pAsync)
+Set doFetchTicks = mRSFetcher.FetchRecordset(setupFetchTicksCommand(fromTime, toTime), _
+                                        adCmdStoredProc, _
+                                        adOpenStatic)
 
 Exit Function
 
@@ -727,36 +615,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function Execute(ByVal pCmd As Command, ByVal pAsync As Boolean) As Recordset
-Const ProcName As String = "Execute"
+Private Function doFetchTicksAsync( _
+                ByVal fromTime As Date, _
+                ByVal toTime As Date) As IFuture
+Const ProcName As String = "doFetchTicksAsync"
 On Error GoTo Err
 
-'gLogger.Log "BarFetcher initiating fetch for " & mInstrument.ShortName, ProcName, ModuleName
-
-pCmd.ActiveConnection = mConnection
-
-Dim lRS As New ADODB.Recordset
-lRS.LockType = adLockReadOnly
-lRS.cursorlocation = adUseClient
-
-If pAsync Then
-    lRS.Properties("Initial Fetch Size") = 0
-    lRS.Open pCmd, _
-                , _
-                CursorTypeEnum.adOpenStatic, _
-                , _
-                CommandTypeEnum.adCmdStoredProc + _
-                ExecuteOptionEnum.adAsyncFetchNonBlocking + _
-                ExecuteOptionEnum.adAsyncExecute
-Else
-    lRS.Open pCmd, _
-                , _
-                CursorTypeEnum.adOpenForwardOnly, _
-                , _
-                CommandTypeEnum.adCmdStoredProc
-End If
-
-Set Execute = lRS
+Set doFetchTicksAsync = mRSFetcher.FetchRecordsetAsync(setupFetchTicksCommand(fromTime, toTime), _
+                                        adCmdStoredProc, _
+                                        adOpenStatic)
 
 Exit Function
 
@@ -862,21 +729,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function needMoreBars(ByVal pRS As Recordset, pDate As Date) As Boolean
-Const ProcName As String = "needMoreBars"
+Private Function numberOfAdditionalBarsNeeded( _
+                ByVal pRS As Recordset, _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pStartDate As Date) As Long
+Const ProcName As String = "numberOfAdditionalBarsNeeded"
 On Error GoTo Err
 
 Static sBars As Long
 sBars = sBars + pRS.RecordCount
 
 If sBars < mNumberOfBars Then
-    needMoreBars = True
+    numberOfAdditionalBarsNeeded = mNumberOfBars - sBars
     Exit Function
 End If
 
-If Not pRS.BOF Then
+If pRS.BOF Then
+    numberOfAdditionalBarsNeeded = 0
+Else
     pRS.MoveLast    ' because the stored procedure returns them in reverse order
-    needMoreBars = pRS("datetime") > pDate
+    If pRS("datetime") > pStartDate Then
+        numberOfAdditionalBarsNeeded = MaxNumberOfBarsInTimespan(pBarTimePeriod, pStartDate, pRS("datetime"), mInstrument.SessionStartTime, mInstrument.SessionEndTime)
+    Else
+        numberOfAdditionalBarsNeeded = 0
+    End If
 End If
 
 Exit Function
@@ -943,37 +819,40 @@ End If
 Dim lNumberOfTargetBars As Long
 lNumberOfTargetBars = MaxNumberOfBarsInTimespan(mSpecifier.BarTimePeriod, mFromDate, mToDate, mInstrument.SessionStartTime, mInstrument.SessionEndTime)
 
+Dim lBarLengthMinutes As Long
 Select Case mSpecifier.BarTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
-    mBarLengthMinutes = 60
+    lBarLengthMinutes = 60
     mNumberOfBars = lNumberOfTargetBars * 24 * mSpecifier.BarTimePeriod.Length
 Case TimePeriodUnits.TimePeriodHour
-    mBarLengthMinutes = 60
+    lBarLengthMinutes = 60
     mNumberOfBars = lNumberOfTargetBars * mSpecifier.BarTimePeriod.Length
 Case TimePeriodUnits.TimePeriodMinute
     If (mSpecifier.BarTimePeriod.Length Mod 60) = 0 Then
-        mBarLengthMinutes = 60
+        lBarLengthMinutes = 60
         mNumberOfBars = lNumberOfTargetBars * (mSpecifier.BarTimePeriod.Length / 60)
     ElseIf (mSpecifier.BarTimePeriod.Length Mod 15) = 0 Then
-        mBarLengthMinutes = 15
+        lBarLengthMinutes = 15
         mNumberOfBars = lNumberOfTargetBars * (mSpecifier.BarTimePeriod.Length / 15)
     ElseIf (mSpecifier.BarTimePeriod.Length Mod 5) = 0 Then
-        mBarLengthMinutes = 5
+        lBarLengthMinutes = 5
         mNumberOfBars = lNumberOfTargetBars * (mSpecifier.BarTimePeriod.Length / 5)
     Else
-        mBarLengthMinutes = 1
+        lBarLengthMinutes = 1
         mNumberOfBars = lNumberOfTargetBars * mSpecifier.BarTimePeriod.Length
     End If
 Case TimePeriodUnits.TimePeriodMonth
-    mBarLengthMinutes = 60
+    lBarLengthMinutes = 60
     mNumberOfBars = lNumberOfTargetBars * 24 * 22 * mSpecifier.BarTimePeriod.Length
 Case TimePeriodUnits.TimePeriodWeek
-    mBarLengthMinutes = 60
+    lBarLengthMinutes = 60
     mNumberOfBars = lNumberOfTargetBars * 24 * 5 * mSpecifier.BarTimePeriod.Length
 Case TimePeriodUnits.TimePeriodYear
-    mBarLengthMinutes = 60
+    lBarLengthMinutes = 60
     mNumberOfBars = lNumberOfTargetBars * 24 * 260 * mSpecifier.BarTimePeriod.Length
 End Select
+
+Set mBarTimePeriod = GetTimePeriod(lBarLengthMinutes, TimePeriodMinute)
 
 Exit Sub
 
@@ -1337,9 +1216,6 @@ End Sub
 Private Sub returnAsyncResults()
 Const ProcName As String = "returnAsyncResults"
 On Error GoTo Err
-
-Debug.Print "BarFetcher: close connection"
-If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
 fireNotifyBar mCurrentBar
 

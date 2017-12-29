@@ -27,7 +27,7 @@ Option Explicit
 '@================================================================================
 
 Event Connected( _
-                ByVal pConnection As connection)
+                ByVal pConnection As Connection)
 
 Event ConnectFailed( _
                 ByVal errorCode As Long, _
@@ -54,7 +54,7 @@ Private Const ModuleName                    As String = "Connector"
 
 Private mDB                                 As TradingDB
 
-Private WithEvents mConnection              As ADODB.connection
+Private WithEvents mConnection              As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
 Private mConnected                          As Boolean
 
@@ -67,6 +67,8 @@ Attribute mConnectionTLI.VB_VarHelpID = -1
 Private mCursorlocation                     As CursorLocationEnum
 
 Private mCancelled                          As Boolean
+
+Private mFutureBuilder                      As FutureBuilder
 
 '@================================================================================
 ' Class Event Handlers
@@ -91,7 +93,7 @@ End Sub
 ' mConnection Event Handlers
 '@===============================================================================
 
-Private Sub mConnection_ConnectComplete(ByVal pError As ADODB.Error, adStatus As ADODB.EventStatusEnum, ByVal pConnection As ADODB.connection)
+Private Sub mConnection_ConnectComplete(ByVal pError As ADODB.Error, adStatus As ADODB.EventStatusEnum, ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnection_ConnectComplete"
 On Error GoTo Err
 
@@ -103,13 +105,21 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                                 gGenerateErrorMessage(pError) & _
                                 gGenerateConnectionErrorMessages(pConnection), _
                 ProcName, ModuleName, LogLevelSevere
-    RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error " & vbCrLf & _
-                            gGenerateErrorMessage(pError) & _
-                            gGenerateConnectionErrorMessages(pConnection))
+    Dim s As String
+    s = ModuleName & ": connection error " & vbCrLf & _
+        gGenerateErrorMessage(pError) & _
+        gGenerateConnectionErrorMessages(pConnection)
+    RaiseEvent ConnectFailed(pError.Number, s)
+    If Not mFutureBuilder Is Nothing Then
+        mFutureBuilder.Fail pError.Number, s, ProjectName & "." & ModuleName & ":" & ProcName
+    End If
 Else
     mConnected = True
     RaiseEvent Connected(mConnection)
+    If Not mFutureBuilder Is Nothing Then
+        mFutureBuilder.value = mConnection
+        mFutureBuilder.Complete
+    End If
 End If
 
 Exit Sub
@@ -118,7 +128,7 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mConnection_InfoMessage(ByVal pError As ADODB.Error, adStatus As ADODB.EventStatusEnum, ByVal pConnection As ADODB.connection)
+Private Sub mConnection_InfoMessage(ByVal pError As ADODB.Error, adStatus As ADODB.EventStatusEnum, ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnection_InfoMessage"
 On Error GoTo Err
 
@@ -167,14 +177,14 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get connection() As ADODB.connection
+Public Property Get Connection() As ADODB.Connection
 Const ProcName As String = "connection"
 
 On Error GoTo Err
 
 Assert mConnected, "Connection not yet established or connection failed"
 
-Set connection = mConnection
+Set Connection = mConnection
 
 Exit Property
 
@@ -186,17 +196,18 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub Connect()
+Public Function Connect() As Connection
 Const ProcName As String = "Connect"
 On Error GoTo Err
 
 connectToDB False, False
+Set Connect = mConnection
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Public Sub ConnectAsync(Optional ByVal pUseTimeout As Boolean = True)
 Const ProcName As String = "ConnectAsync"
@@ -209,6 +220,20 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function ConnectFuture(Optional ByVal pUseTimeout As Boolean = True) As IFuture
+Const ProcName As String = "ConnectFuture"
+On Error GoTo Err
+
+connectToDB True, pUseTimeout
+Set mFutureBuilder = New FutureBuilder
+Set ConnectFuture = mFutureBuilder.Future
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Friend Sub Initialise( _
                 ByVal db As TradingDB, _
@@ -239,7 +264,7 @@ If Not mConnection Is Nothing Then
 End If
 
 failpoint = "400"
-Set mConnection = New ADODB.connection
+Set mConnection = New ADODB.Connection
 
 failpoint = "500"
 mConnection.cursorlocation = mCursorlocation
