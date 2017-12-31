@@ -99,7 +99,7 @@ End Function
 '@===============================================================================
 
 Private Sub mConnector_Connected( _
-                ByVal pConnection As ADODB.connection)
+                ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnector_Connected"
 On Error GoTo Err
 
@@ -172,6 +172,16 @@ Public Function FetchBars( _
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
+AssertArgument Not Specifier Is Nothing, "Specifier Is Nothing"
+AssertArgument Not BarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
+
+If fromDate <> 0 And maxNumberOfBars > 0 Then
+ElseIf toDate <> 0 And maxNumberOfBars > 0 Then
+ElseIf fromDate <> 0 And toDate <> 0 And maxNumberOfBars >= 0 Then
+Else
+    AssertArgument False, "At least two of fromDate, toDate and maxNumberOfBars must be supplied"
+End If
+
 Dim lInstrument As instrument
 Set lInstrument = InstrumentFactory.LoadBySpecifier(Specifier)
 AssertArgument Not lInstrument Is Nothing, "The specified contract is not known"
@@ -207,6 +217,16 @@ Public Function FetchBarsAsync( _
                 Optional ByVal taskName As String) As IFuture
 Const ProcName As String = "FetchbarsAsync"
 On Error GoTo Err
+
+AssertArgument Not Specifier Is Nothing, "Specifier Is Nothing"
+AssertArgument Not BarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
+
+If fromDate <> 0 And maxNumberOfBars > 0 Then
+ElseIf toDate <> 0 And maxNumberOfBars > 0 Then
+ElseIf fromDate <> 0 And toDate <> 0 And maxNumberOfBars >= 0 Then
+Else
+    AssertArgument False, "At least two of fromDate, toDate and maxNumberOfBars must be supplied"
+End If
 
 Dim fbt As New FetchBarsTask
 fbt.Initialise Me, _
