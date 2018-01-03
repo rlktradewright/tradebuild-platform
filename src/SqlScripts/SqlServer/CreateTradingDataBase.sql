@@ -324,7 +324,7 @@ As
 
 	return
 GO
-/****** Object:  StoredProcedure [dbo].[FetchBarData]    Script Date: 06/19/2014 22:53:47 ******/
+/****** Object:  StoredProcedure [dbo].[FetchBarData]    Script Date: 02/01/2018 15:51:21 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -334,16 +334,27 @@ CREATE Procedure [dbo].[FetchBarData]
 		@InstrumentID int,
 		@BarType int,
 		@BarLength smallint,
-		@NumberRequired int = 1440,
-		@From datetime,
-		@To datetime
+		@NumberRequired int = 500,
+		@From datetime = '1900/01/01',
+		@To datetime = '1900/01/01',
+		@SessionStart time = '00:00:00',
+		@SessionEnd time = '00:00:00',
+		@Ascending int = 0
 	)
 As
-	/* SET ROWCOUNT @NumberRequired */
 
 	SET NOCOUNT ON
+	SET DATEFIRST 1
 
-	select	top (@NumberRequired) PeriodData.[DateTime], 
+	DECLARE @NoTo int = 0
+	IF ISNULL(@To, '1900/01/01') = '1900/01/01'
+	BEGIN
+		SET @NoTo = 1
+		SET @To = GETDATE()
+	END
+
+	select * from
+		(select	top (@NumberRequired) PeriodData.[DateTime], 
 			BarData.BarType,
 			PeriodData.BarLengthMinutes,  
 			BarData.OpenPrice as OpenPrice,
@@ -358,13 +369,35 @@ As
 		where PeriodData.InstrumentID=@InstrumentID and
 			PeriodData.BarLengthMinutes=@BarLength and
 			BarData.BarType=@BarType  and
-			PeriodData.[DateTime] >= @From and 
-			PeriodData.[DateTime] < @To
-		order by PeriodData.[dateTime] DESC
+			PeriodData.[DateTime] >= ISNULL(@From, '1900/01/01') and 
+			PeriodData.[DateTime] < @To and
+			CASE WHEN @SessionStart < @SessionEnd THEN
+				CASE WHEN DATEPART(dw, PeriodData.[DateTime]) BETWEEN 1 AND 5 and 
+						  CAST(PeriodData.[DateTime] AS TIME) >= @SessionStart and 
+						  CAST(PeriodData.[DateTime] AS TIME) < @SessionEnd THEN
+					1
+				ELSE
+					0
+				END 
+			WHEN @SessionStart > @SessionEnd THEN
+				CASE WHEN (DATEPART(dw, PeriodData.[DateTime]) NOT BETWEEN 5 AND 6 and 
+							 CAST(PeriodData.[DateTime] AS TIME) >= @SessionStart) OR 
+						  (DATEPART(dw, PeriodData.[DateTime]) BETWEEN 1 AND 5 and
+							 CAST(PeriodData.[DateTime] AS TIME) < @SessionEnd) THEN
+					1
+				ELSE
+					0
+				END
+			ELSE
+				1
+			END = 1
+		order by CASE WHEN @NoTo = 1 THEN PeriodData.[dateTime] END ASC,
+				 CASE WHEN @NoTo = 0 THEN PeriodData.[dateTime] END DESC) as Bars
+	order by CASE WHEN @Ascending = 1 THEN Bars.[dateTime] END ASC,
+			 CASE WHEN @Ascending = 0 THEN Bars.[dateTime] END DESC
 
 
-	/* SET ROWCOUNT 0 */
-	return
+	return 
 GO
 /****** Object:  View [dbo].[vinstrumentclasses]    Script Date: 06/19/2014 22:53:48 ******/
 SET ANSI_NULLS ON
