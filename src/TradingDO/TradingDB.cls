@@ -175,12 +175,10 @@ On Error GoTo Err
 AssertArgument Not Specifier Is Nothing, "Specifier Is Nothing"
 AssertArgument Not BarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
 
-If fromDate <> 0 And maxNumberOfBars > 0 Then
-ElseIf toDate <> 0 And maxNumberOfBars > 0 Then
-ElseIf fromDate <> 0 And toDate <> 0 And maxNumberOfBars >= 0 Then
-Else
-    AssertArgument False, "At least two of fromDate, toDate and maxNumberOfBars must be supplied"
-End If
+AssertArgument fromDate >= 0, "Invalid from date"
+AssertArgument toDate >= 0, "Invalid to date"
+AssertArgument maxNumberOfBars >= 0, "Invalid max number of bars"
+AssertArgument fromDate > 0 Or toDate > 0 Or maxNumberOfBars > 0, "At least one of fromDate, toDate and maxNumberOfBars must be supplied"
 
 Dim lInstrument As instrument
 Set lInstrument = InstrumentFactory.LoadBySpecifier(Specifier)
@@ -221,12 +219,10 @@ On Error GoTo Err
 AssertArgument Not Specifier Is Nothing, "Specifier Is Nothing"
 AssertArgument Not BarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
 
-If fromDate <> 0 And maxNumberOfBars > 0 Then
-ElseIf toDate <> 0 And maxNumberOfBars > 0 Then
-ElseIf fromDate <> 0 And toDate <> 0 And maxNumberOfBars >= 0 Then
-Else
-    AssertArgument False, "At least two of fromDate, toDate and maxNumberOfBars must be supplied"
-End If
+AssertArgument fromDate >= 0, "Invalid from date"
+AssertArgument toDate >= 0, "Invalid to date"
+AssertArgument maxNumberOfBars >= 0, "Invalid max number of bars"
+AssertArgument fromDate > 0 Or toDate > 0 Or maxNumberOfBars > 0, "At least one of fromDate, toDate and maxNumberOfBars must be supplied"
 
 Dim fbt As New FetchBarsTask
 fbt.Initialise Me, _

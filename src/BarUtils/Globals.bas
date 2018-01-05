@@ -436,7 +436,7 @@ Dim lStartTime As Date
 lStartTime = gStoD(gBarStartTime(pStartTime, pBarTimePeriod, pSessionStartTime))
 
 Dim lEndTime As Date
-lEndTime = gCalcOffsetBarStartTime(pEndTime, pBarTimePeriod, 1, pSessionStartTime, pSessionEndTime)
+lEndTime = gStoD(gBarEndTime(pEndTime, pBarTimePeriod, pSessionStartTime, pSessionEndTime))
 
 Select Case pBarTimePeriod.Units
     Case TimePeriodSecond

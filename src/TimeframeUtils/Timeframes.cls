@@ -152,7 +152,7 @@ Set Add = addTimeframe(BarTimePeriod, _
                     Key, _
                     NumberOfBarsToFetch, _
                     pFromTime, _
-                    0, _
+                    MaxDate, _
                     pStateChangeListener, _
                     IncludeBarsOutsideSession, _
                     ExcludeCurrentbar)

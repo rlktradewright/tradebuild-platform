@@ -200,7 +200,7 @@ On Error GoTo Err
 Dim lContract As IContract
 Set lContract = mBarSpecifier.Contract
 
-If mBarSpecifier.ToDate = 0 Then
+If mBarSpecifier.ToDate = MaxDate Then
     Dim lClock As Clock
     If Not mClockFuture Is Nothing Then
         Set lClock = mClockFuture.Value

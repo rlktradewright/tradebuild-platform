@@ -32,6 +32,7 @@ Class=ConnectionParams; ConnectionParams.cls
 Class=PeriodTickDataWriter; PeriodTickDataWriter.cls
 Class=FetchBarsTask; FetchBarsTask.cls
 Class=BarFetcher; BarFetcher.cls
+Class=RecordsetFetcher; RecordsetFetcher.cls
 Startup="(None)"
 HelpFile=""
 Title="TradingDO"

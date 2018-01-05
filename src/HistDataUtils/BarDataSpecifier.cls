@@ -115,7 +115,7 @@ Public Property Let FromDate(ByVal Value As Date)
 Const ProcName As String = "FromDate"
 On Error GoTo Err
 
-If mToDate <> 0 And Value > mToDate Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value must be before ToDaye"
+AssertArgument mToDate = 0 Or Value < mToDate, "Value must be before ToDate"
 mFromDate = Value
 
 Exit Property
@@ -140,7 +140,7 @@ Public Property Let MaxNumberOfBars(ByVal Value As Long)
 Const ProcName As String = "MaxNumberOfBars"
 On Error GoTo Err
 
-Assert Value > 0 Or mFromDate <> 0, "MaxNumberOfBars must be > 0 if no FromDate supplied"
+AssertArgument Value > 0 Or mFromDate <> 0, "MaxNumberOfBars must be > 0 if no FromDate supplied"
 mMaxNumberOfBars = Value
 
 Exit Property
@@ -157,7 +157,7 @@ Public Property Let ToDate(ByVal Value As Date)
 Const ProcName As String = "ToDate"
 On Error GoTo Err
 
-If Value <> 0 And Value < mFromDate Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value cannot be before FromDate"
+Assert Value = 0 Or Value > mFromDate, "Value cannot be before FromDate"
 mToDate = Value
 
 Exit Property

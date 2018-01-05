@@ -231,8 +231,7 @@ SetupDefaultLogging command
 'EnableTracing "tradebuild"
 'EnableTracing "tickfilesp"
 
-mTo = MaxDate
-mNumber = -1
+mNumber = &H7FFFFFFF
 
 Set gCon = GetConsole
 
@@ -472,7 +471,9 @@ Private Sub processFromCommand( _
 Const ProcName As String = "processFromCommand"
 On Error GoTo Err
 
-If IsDate(params) Then
+If params = "" Then
+    mFrom = 0
+ElseIf IsDate(params) Then
     mFrom = CDate(params)
 Else
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid from date '" & params & "'"
@@ -493,12 +494,15 @@ Private Sub processNumberCommand( _
 Const ProcName As String = "processNumberCommand"
 On Error GoTo Err
 
-If Not IsInteger(params, 1) And params <> "-1" Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid number '" & params & "'" & ": must be an integer > 0"
-Else
+If IsInteger(params, 1) Then
     mNumber = CLng(params)
-    If mSwitch = FromFile Then gCon.WriteLineToConsole "number command is ignored for tickfile input"
+ElseIf params = "-1" Or UCase$(params) = "ALL" Then
+    mNumber = &H7FFFFFFF
+Else
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid number '" & params & "'" & ": must be an integer > 0 or -1"
 End If
+
+If mSwitch = FromFile Then gCon.WriteLineToConsole "number command is ignored for tickfile input"
 
 Exit Sub
 
@@ -518,7 +522,7 @@ If mSwitch <> FromFile And mContractSpec Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
 ElseIf mSwitch <> FromFile And mFrom = 0 And mNumber = 0 Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - either 'from' time or number of bars must be specified"
-ElseIf mFrom > mTo Then
+ElseIf mFrom > mTo And mTo <> 0 Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - 'from' time must not be after 'to' time"
 ElseIf mTimePeriod Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - timeframe not specified"
@@ -576,9 +580,6 @@ End If
 Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(params, " ")
 
-Dim lBarLength As Long
-Dim lBarUnits As TimePeriodUnits
-
 If clp.NumberOfArgs < 1 Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid timeframe - the bar length must be supplied"
     Exit Sub
@@ -588,8 +589,10 @@ If Not IsInteger(clp.Arg(0), 1) Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar length '" & Trim$(clp.Arg(0)) & "': must be an integer > 0"
     Exit Sub
 End If
+Dim lBarLength As Long
 lBarLength = CLng(clp.Arg(0))
 
+Dim lBarUnits As TimePeriodUnits
 lBarUnits = TimePeriodMinute
 If Trim$(clp.Arg(1)) <> "" Then
     lBarUnits = TimePeriodUnitsFromString(clp.Arg(1))
@@ -620,7 +623,11 @@ Private Sub processToCommand( _
 Const ProcName As String = "processToCommand"
 On Error GoTo Err
 
-If IsDate(params) Then
+If params = "" Then
+    mTo = 0
+ElseIf UCase$(params) = "LATEST" Then
+    mTo = MaxDate
+ElseIf IsDate(params) Then
     mTo = CDate(params)
 Else
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid to date '" & params & "'"
@@ -763,8 +770,9 @@ gCon.WriteLineToConsole "#comment"
 showContractHelp
 
 gCon.WriteLineToConsole "from starttime"
-gCon.WriteLineToConsole "to endtime"
-gCon.WriteLineToConsole "number n               # -1 => return all available bars"
+gCon.WriteLineToConsole "to [endtime]"
+gCon.WriteLineToConsole "to LATEST"
+gCon.WriteLineToConsole "number n               # -1 or ALL => return all available bars"
 
 showTimeframeHelp
 

@@ -220,17 +220,10 @@ Set mStudyBase = pStudyBase
 Set mContractFuture = pContractFuture
 Set mTimePeriod = pBarTimePeriod
 
+If pToTime <> MaxDate Then mIsHistorical = True
+
 Dim lFetchBarsNeeded As Boolean
-If pMaxNumberOfBars = 0 And pToTime = 0 Then
-ElseIf pMaxNumberOfBars = 0 And pToTime <> 0 Then
-    lFetchBarsNeeded = True
-    mIsHistorical = True
-ElseIf pToTime <> 0 Then
-    lFetchBarsNeeded = True
-    mIsHistorical = True
-Else
-    lFetchBarsNeeded = True
-End If
+If pMaxNumberOfBars <> 0 Then lFetchBarsNeeded = True
 
 Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, pIncludeBarsOutsideSession)
 logAMessage "starting BarStudy", ProcName
