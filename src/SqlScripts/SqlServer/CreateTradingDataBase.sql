@@ -339,6 +339,7 @@ CREATE Procedure [dbo].[FetchBarData]
 		@To datetime = '1900/01/01',
 		@SessionStart time = '00:00:00',
 		@SessionEnd time = '00:00:00',
+		@StartAtFromDate int = 0,
 		@Ascending int = 0
 	)
 As
@@ -346,10 +347,8 @@ As
 	SET NOCOUNT ON
 	SET DATEFIRST 1
 
-	DECLARE @NoTo int = 0
 	IF ISNULL(@To, '1900/01/01') = '1900/01/01'
 	BEGIN
-		SET @NoTo = 1
 		SET @To = GETDATE()
 	END
 
@@ -391,8 +390,8 @@ As
 			ELSE
 				1
 			END = 1
-		order by CASE WHEN @NoTo = 1 THEN PeriodData.[dateTime] END ASC,
-				 CASE WHEN @NoTo = 0 THEN PeriodData.[dateTime] END DESC) as Bars
+		order by CASE WHEN @StartAtFromDate = 1 THEN PeriodData.[dateTime] END ASC,
+				 CASE WHEN @StartAtFromDate = 0 THEN PeriodData.[dateTime] END DESC) as Bars
 	order by CASE WHEN @Ascending = 1 THEN Bars.[dateTime] END ASC,
 			 CASE WHEN @Ascending = 0 THEN Bars.[dateTime] END DESC
 
