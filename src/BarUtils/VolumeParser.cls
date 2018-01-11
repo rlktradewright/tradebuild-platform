@@ -158,6 +158,7 @@ On Error GoTo Err
 If Not mGotFirstVolume Then
     mCurrSessionVolume = pTotalVolume
     mGotFirstVolume = True
+    Notify = mCurrSessionVolume
     Debug.Print "VolumeParser(" & mObjId & "): current session Volume set to " & pTotalVolume
     Exit Function
 End If
