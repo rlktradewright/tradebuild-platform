@@ -297,7 +297,7 @@ BEGIN
 
 END
 GO
-/****** Object:  StoredProcedure [dbo].[FetchTickData]    Script Date: 06/19/2014 22:53:47 ******/
+/****** Object:  StoredProcedure [dbo].[FetchTickData]    Script Date: 11/01/2018 12:38:02 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -306,10 +306,13 @@ CREATE Procedure [dbo].[FetchTickData]
 	(
 		@InstrumentID int,
 		@From datetime,
-		@To datetime
+		@To datetime,
+		@SessionStart time = '00:00:00',
+		@SessionEnd time = '00:00:00'
 	)
 As
 	set nocount on 
+	SET DATEFIRST 1
 
 	select [DateTime], 
 			TickDataFormat.Name as Version,
@@ -320,9 +323,30 @@ As
 		on TickDataFormat.id = TickData.TickDataFormatId 
 	where InstrumentID = @InstrumentID and
 			[DateTime] >= @From and 
-			[DateTime] < @To
+			[DateTime] < @To and
+			CASE WHEN @SessionStart < @SessionEnd THEN
+				CASE WHEN DATEPART(dw, [DateTime]) BETWEEN 1 AND 5 and 
+						  CAST([DateTime] AS TIME) >= @SessionStart and 
+						  CAST([DateTime] AS TIME) < @SessionEnd THEN
+					1
+				ELSE
+					0
+				END 
+			WHEN @SessionStart > @SessionEnd THEN
+				CASE WHEN (DATEPART(dw, [DateTime]) NOT BETWEEN 5 AND 6 and 
+							 CAST([DateTime] AS TIME) >= @SessionStart) OR 
+						  (DATEPART(dw, [DateTime]) BETWEEN 1 AND 5 and
+							 CAST([DateTime] AS TIME) < @SessionEnd) THEN
+					1
+				ELSE
+					0
+				END
+			ELSE
+				1
+			END = 1
 
-	return
+
+	return 
 GO
 /****** Object:  StoredProcedure [dbo].[FetchBarData]    Script Date: 02/01/2018 15:51:21 ******/
 SET ANSI_NULLS ON
