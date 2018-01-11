@@ -712,13 +712,13 @@ End Property
 '@================================================================================
 
 Public Function CreateTickStream( _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date) As TickStream
+                ByVal FromDate As Date, _
+                ByVal ToDate As Date) As TickStream
 Const ProcName As String = "CreateTickStream"
 On Error GoTo Err
 
 Set CreateTickStream = New TickStream
-CreateTickStream.Initialise mDB, Id, fromDate, toDate
+CreateTickStream.Initialise mDB, Id, FromDate, ToDate
 
 Exit Function
 
@@ -741,69 +741,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBars( _
-                ByVal BarTimePeriod As TimePeriod, _
-                ByVal maxNumberOfBars As Long, _
-                Optional ByVal fromDate As Date, _
-                Optional ByVal toDate As Date = MaxDateValue, _
-                Optional ByVal customSessionStartTime As Date, _
-                Optional ByVal customSessionEndTime As Date, _
-                Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade, _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pMaxNumberOfBars As Long, _
+                Optional ByVal pFromDate As Date, _
+                Optional ByVal pToDate As Date = MaxDateValue, _
+                Optional ByVal pCustomSessionStartTime As Date, _
+                Optional ByVal pCustomSessionEndTime As Date, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean, _
+                Optional ByVal pBarType As BarTypes = BarTypeTrade, _
                 Optional ByVal pListener As IBarFetchListener) As Bars
 Const ProcName As String = "FetchBars"
-On Error GoTo Err
-
-Select Case BarTimePeriod.Units
-Case TimePeriodSecond, _
-    TimePeriodMinute, _
-    TimePeriodHour, _
-    TimePeriodDay, _
-    TimePeriodWeek, _
-    TimePeriodMonth, _
-    TimePeriodYear, _
-    TimePeriodVolume, _
-    TimePeriodTickMovement, _
-    TimePeriodTickVolume
-Case Else
-    AssertArgument False, "Bar time unit not supported"
-End Select
-
-Dim Specifier As BarDataSpecifier
-Set Specifier = New BarDataSpecifier
-Specifier.BarTimePeriod = BarTimePeriod
-Specifier.barType = barType
-Specifier.fromDate = fromDate
-Specifier.includeBarsOutsideSession = includeBarsOutsideSession
-Specifier.maxNumberOfBars = maxNumberOfBars
-Specifier.toDate = toDate
-Specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
-
-Dim bf As BarFetcher
-Set bf = New BarFetcher
-bf.Initialise mDB, Me
-
-Set FetchBars = bf.FetchBars(Specifier, pListener)
-Set bf = Nothing
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function FetchBarsAsync( _
-                ByVal pBarTimePeriod As TimePeriod, _
-                ByVal maxNumberOfBars As Long, _
-                Optional ByVal fromDate As Date, _
-                Optional ByVal toDate As Date = MaxDateValue, _
-                Optional ByVal customSessionStartTime As Date, _
-                Optional ByVal customSessionEndTime As Date, _
-                Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade, _
-                Optional ByVal pListener As IBarFetchListener, _
-                Optional ByVal cookie As Variant, _
-                Optional ByVal taskName As String) As IFuture
-Const ProcName As String = "FetchbarsAsync"
 On Error GoTo Err
 
 Select Case pBarTimePeriod.Units
@@ -824,18 +771,69 @@ End Select
 Dim Specifier As BarDataSpecifier
 Set Specifier = New BarDataSpecifier
 Specifier.BarTimePeriod = pBarTimePeriod
-Specifier.barType = barType
-Specifier.fromDate = fromDate
-Specifier.includeBarsOutsideSession = includeBarsOutsideSession
-Specifier.maxNumberOfBars = maxNumberOfBars
-Specifier.toDate = toDate
-Specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
+Specifier.BarType = pBarType
+Specifier.FromDate = pFromDate
+Specifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
+Specifier.MaxNumberOfBars = pMaxNumberOfBars
+Specifier.ToDate = pToDate
+Specifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
 
 Dim bf As BarFetcher
 Set bf = New BarFetcher
 bf.Initialise mDB, Me
 
-bf.FetchBarsAsync Specifier, pListener, cookie, taskName
+Set FetchBars = bf.FetchBars(Specifier, pListener)
+Set bf = Nothing
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function FetchBarsAsync( _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pMaxNumberOfBars As Long, _
+                Optional ByVal pFromDate As Date, _
+                Optional ByVal pToDate As Date = MaxDateValue, _
+                Optional ByVal pCustomSessionStartTime As Date, _
+                Optional ByVal pCustomSessionEndTime As Date, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean, _
+                Optional ByVal pBarType As BarTypes = BarTypeTrade, _
+                Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pCookie As Variant, _
+                Optional ByVal pTaskName As String) As IFuture
+Const ProcName As String = "FetchbarsAsync"
+On Error GoTo Err
+
+Select Case pBarTimePeriod.Units
+Case TimePeriodSecond, _
+    TimePeriodMinute, _
+    TimePeriodHour, _
+    TimePeriodDay, _
+    TimePeriodWeek, _
+    TimePeriodMonth, _
+    TimePeriodYear, _
+    TimePeriodVolume, _
+    TimePeriodTickMovement, _
+    TimePeriodTickVolume
+Case Else
+    AssertArgument False, "Bar time unit not supported"
+End Select
+
+Dim Specifier As New BarDataSpecifier
+Specifier.BarTimePeriod = pBarTimePeriod
+Specifier.BarType = pBarType
+Specifier.FromDate = pFromDate
+Specifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
+Specifier.MaxNumberOfBars = pMaxNumberOfBars
+Specifier.ToDate = pToDate
+Specifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
+
+Dim bf As New AsyncBarFetcher
+bf.Initialise mDB, Me
+
+bf.FetchBarsAsync Specifier, pListener, pCookie, pTaskName
 
 Set FetchBarsAsync = bf.BarsFuture
 
@@ -867,7 +865,7 @@ End Sub
 
 Public Sub WriteBar( _
                 ByVal timestamp As Date, _
-                ByVal barType As Long, _
+                ByVal BarType As Long, _
                 ByVal barLength As Long, _
                 ByVal openPrice As Double, _
                 ByVal highPrice As Double, _
@@ -883,7 +881,7 @@ Dim lBarWriter As New BarWriter
 lBarWriter.Initialise mDB, Id, ShortName
 
 lBarWriter.WriteBar timestamp, _
-                    barType, _
+                    BarType, _
                     barLength, _
                     openPrice, _
                     highPrice, _
@@ -901,7 +899,7 @@ End Sub
 
 Public Function WriteBarAsync( _
                 ByVal timestamp As Date, _
-                ByVal barType As Long, _
+                ByVal BarType As Long, _
                 ByVal barLength As Long, _
                 ByVal openPrice As Double, _
                 ByVal highPrice As Double, _
@@ -919,7 +917,7 @@ Dim lBarWriter As New BarWriter
 lBarWriter.Initialise mDB, Id, ShortName
 
 Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
-                                            barType, _
+                                            BarType, _
                                             barLength, _
                                             openPrice, _
                                             highPrice, _

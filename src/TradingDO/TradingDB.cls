@@ -159,39 +159,39 @@ End Property
 '@================================================================================
 
 Public Function FetchBars( _
-                ByVal Specifier As IContractSpecifier, _
-                ByVal BarTimePeriod As TimePeriod, _
-                ByVal maxNumberOfBars As Long, _
-                Optional ByVal fromDate As Date, _
-                Optional ByVal toDate As Date = MaxDateValue, _
-                Optional ByVal customSessionStartTime As Date, _
-                Optional ByVal customSessionEndTime As Date, _
-                Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade, _
+                ByVal pSpecifier As IContractSpecifier, _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pMaxNumberOfBars As Long, _
+                Optional ByVal pFromDate As Date, _
+                Optional ByVal pToDate As Date = MaxDateValue, _
+                Optional ByVal pCustomSessionStartTime As Date, _
+                Optional ByVal pCustomSessionEndTime As Date, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean, _
+                Optional ByVal pBarType As BarTypes = BarTypeTrade, _
                 Optional ByVal pListener As IBarFetchListener) As Bars
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
-AssertArgument Not Specifier Is Nothing, "Specifier Is Nothing"
-AssertArgument Not BarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
+AssertArgument Not pSpecifier Is Nothing, "Specifier Is Nothing"
+AssertArgument Not pBarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
 
-AssertArgument fromDate >= 0, "Invalid from date"
-AssertArgument toDate >= 0, "Invalid to date"
-AssertArgument maxNumberOfBars >= 0, "Invalid max number of bars"
-AssertArgument fromDate > 0 Or toDate > 0 Or maxNumberOfBars > 0, "At least one of fromDate, toDate and maxNumberOfBars must be supplied"
+AssertArgument pFromDate >= 0, "Invalid from date"
+AssertArgument pToDate >= 0, "Invalid to date"
+AssertArgument pMaxNumberOfBars >= 0, "Invalid max number of bars"
+AssertArgument pFromDate > 0 Or pToDate > 0 Or pMaxNumberOfBars > 0, "At least one of fromDate, toDate and maxNumberOfBars must be supplied"
 
 Dim lInstrument As instrument
-Set lInstrument = InstrumentFactory.LoadBySpecifier(Specifier)
+Set lInstrument = InstrumentFactory.LoadBySpecifier(pSpecifier)
 AssertArgument Not lInstrument Is Nothing, "The specified contract is not known"
 
-Set FetchBars = lInstrument.FetchBars(BarTimePeriod, _
-                                        maxNumberOfBars, _
-                                        fromDate, _
-                                        toDate, _
-                                        customSessionStartTime, _
-                                        customSessionEndTime, _
-                                        includeBarsOutsideSession, _
-                                        barType, _
+Set FetchBars = lInstrument.FetchBars(pBarTimePeriod, _
+                                        pMaxNumberOfBars, _
+                                        pFromDate, _
+                                        pToDate, _
+                                        pCustomSessionStartTime, _
+                                        pCustomSessionEndTime, _
+                                        pIncludeBarsOutsideSession, _
+                                        pBarType, _
                                         pListener)
 
 Exit Function
@@ -201,45 +201,45 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBarsAsync( _
-                ByVal Specifier As IContractSpecifier, _
-                ByVal BarTimePeriod As TimePeriod, _
-                ByVal maxNumberOfBars As Long, _
-                Optional ByVal fromDate As Date, _
-                Optional ByVal toDate As Date = MaxDateValue, _
-                Optional ByVal customSessionStartTime As Date, _
-                Optional ByVal customSessionEndTime As Date, _
-                Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade, _
-                Optional ByVal cookie As Variant, _
+                ByVal pSpecifier As IContractSpecifier, _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pMaxNumberOfBars As Long, _
+                Optional ByVal pFromDate As Date, _
+                Optional ByVal pToDate As Date = MaxDateValue, _
+                Optional ByVal pCustomSessionStartTime As Date, _
+                Optional ByVal pCustomSessionEndTime As Date, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean, _
+                Optional ByVal pBarType As BarTypes = BarTypeTrade, _
+                Optional ByVal pCookie As Variant, _
                 Optional ByVal pListener As IBarFetchListener, _
-                Optional ByVal taskName As String) As IFuture
+                Optional ByVal pTaskName As String) As IFuture
 Const ProcName As String = "FetchbarsAsync"
 On Error GoTo Err
 
-AssertArgument Not Specifier Is Nothing, "Specifier Is Nothing"
-AssertArgument Not BarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
+AssertArgument Not pSpecifier Is Nothing, "Specifier Is Nothing"
+AssertArgument Not pBarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
 
-AssertArgument fromDate >= 0, "Invalid from date"
-AssertArgument toDate >= 0, "Invalid to date"
-AssertArgument maxNumberOfBars >= 0, "Invalid max number of bars"
-AssertArgument fromDate > 0 Or toDate > 0 Or maxNumberOfBars > 0, "At least one of fromDate, toDate and maxNumberOfBars must be supplied"
+AssertArgument pFromDate >= 0, "Invalid from date"
+AssertArgument pToDate >= 0, "Invalid to date"
+AssertArgument pMaxNumberOfBars >= 0, "Invalid max number of bars"
+AssertArgument pFromDate > 0 Or pToDate > 0 Or pMaxNumberOfBars > 0, "At least one of fromDate, toDate and maxNumberOfBars must be supplied"
 
 Dim fbt As New FetchBarsTask
 fbt.Initialise Me, _
-                Specifier, _
-                BarTimePeriod, _
-                maxNumberOfBars, _
-                fromDate, _
-                toDate, _
-                customSessionStartTime, _
-                customSessionEndTime, _
-                includeBarsOutsideSession, _
-                barType, _
+                pSpecifier, _
+                pBarTimePeriod, _
+                pMaxNumberOfBars, _
+                pFromDate, _
+                pToDate, _
+                pCustomSessionStartTime, _
+                pCustomSessionEndTime, _
+                pIncludeBarsOutsideSession, _
+                pBarType, _
                 pListener, _
-                cookie
+                pCookie
                 
-If taskName = "" Then taskName = "FetchBarsAsync/" & Specifier.LocalSymbol & "(" & BarTimePeriod.ToString & ")" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
-StartTask fbt, PriorityNormal, taskName, cookie
+If pTaskName = "" Then pTaskName = "FetchBarsAsync/" & pSpecifier.LocalSymbol & "(" & pBarTimePeriod.ToString & ")" & FormatTimestamp(pFromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(pToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+StartTask fbt, PriorityNormal, pTaskName, pCookie
 
 Set FetchBarsAsync = fbt.BarsFuture
 
@@ -296,8 +296,8 @@ End Function
 
 Public Function FetchTicks( _
                 ByVal Specifier As IContractSpecifier, _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date) As TickStream
+                ByVal FromDate As Date, _
+                ByVal ToDate As Date) As TickStream
 Const ProcName As String = "FetchTicks"
 On Error GoTo Err
 
@@ -305,7 +305,7 @@ Dim lInstrument As instrument
 Set lInstrument = InstrumentFactory.LoadBySpecifier(Specifier)
 AssertArgument Not lInstrument Is Nothing, "The specified contract is not known"
 
-Set FetchTicks = lInstrument.CreateTickStream(fromDate, toDate)
+Set FetchTicks = lInstrument.CreateTickStream(FromDate, ToDate)
 
 Exit Function
 
@@ -315,16 +315,16 @@ End Function
 
 Public Function FetchTicksAsync( _
                 ByVal Specifier As IContractSpecifier, _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date, _
+                ByVal FromDate As Date, _
+                ByVal ToDate As Date, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
 Const ProcName As String = "FetchTicksAsync"
 On Error GoTo Err
 
 Dim ftt As New FetchTicksTask
-ftt.Initialise Me, Specifier, fromDate, toDate
-If taskName = "" Then taskName = "FetchTicksAsync/" & Specifier.LocalSymbol & "/" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+ftt.Initialise Me, Specifier, FromDate, ToDate
+If taskName = "" Then taskName = "FetchTicksAsync/" & Specifier.LocalSymbol & "/" & FormatTimestamp(FromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(ToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
 Set FetchTicksAsync = StartTask(ftt, PriorityNormal, taskName, cookie)
 
 Exit Function
