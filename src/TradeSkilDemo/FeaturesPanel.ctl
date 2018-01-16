@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#315.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#321.2#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
@@ -426,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   107544579
+            Format          =   121831427
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -480,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   107544579
+            Format          =   121831427
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -1322,10 +1322,7 @@ Private Sub LiveChartButton1_Click()
 Const ProcName As String = "LiveChartButton1_Click"
 On Error GoTo Err
 
-Dim lTicker As Ticker
-For Each lTicker In mTickerGrid.SelectedTickers
-    createChart lTicker
-Next
+createCharts mTickerGrid.SelectedTickers
 
 clearSelectedTickers
 
@@ -1971,27 +1968,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub createChart(ByVal pTicker As Ticker)
-Const ProcName As String = "createChart"
+Private Sub createCharts(ByVal pTickers As Tickers)
+Const ProcName As String = "createCharts"
 On Error GoTo Err
 
-If Not pTicker.State = MarketDataSourceStateRunning Then Exit Sub
-
-Dim tp As TimePeriod
-Set tp = LiveChartTimeframeSelector.TimePeriod
-
-Dim lConfig As ConfigurationSection
-
-If Not pTicker.IsTickReplay Then
-    Set lConfig = mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts)
-End If
-
-mChartForms.Add pTicker, _
-                tp, _
-                pTicker.Timeframes, _
+mChartForms.AddAsync pTickers, _
+                LiveChartTimeframeSelector.TimePeriod, _
                 mTradeBuildAPI.BarFormatterLibManager, _
                 mTradeBuildAPI.HistoricalDataStoreInput.TimePeriodValidator, _
-                lConfig, _
+                mAppInstanceConfig.AddConfigurationSection(ConfigSectionCharts), _
                 CreateChartSpecifier(CLng(NumLiveHistoryBarsText.Text), Not (LiveSessionOnlyCheck = vbChecked)), _
                 ChartStylesManager.Item(LiveChartStylesCombo.SelectedItem.Text), _
                 gMainForm, _
@@ -2011,36 +1996,32 @@ On Error GoTo Err
 Dim lConfig As ConfigurationSection
 Set lConfig = mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts)
 
-Dim lContract As IContract
-For Each lContract In pContracts
-    Dim fromDate As Date
-    If IsNull(FromDatePicker.Value) Then
-        fromDate = CDate(0)
-    Else
-        fromDate = DateSerial(FromDatePicker.Year, FromDatePicker.Month, FromDatePicker.Day) + _
-                    TimeSerial(FromDatePicker.Hour, FromDatePicker.Minute, 0)
-    End If
-    
-    Dim toDate As Date
-    If IsNull(ToDatePicker.Value) Then
-        toDate = Now
-    Else
-        toDate = DateSerial(ToDatePicker.Year, ToDatePicker.Month, ToDatePicker.Day) + _
-                    TimeSerial(ToDatePicker.Hour, ToDatePicker.Minute, 0)
-    End If
-    
-    mChartForms.AddHistoric HistChartTimeframeSelector.TimePeriod, _
-                        CreateFuture(lContract), _
-                        mTradeBuildAPI.StudyLibraryManager.CreateStudyManager, _
-                        mTradeBuildAPI.HistoricalDataStoreInput, _
-                        mTradeBuildAPI.BarFormatterLibManager, _
-                        lConfig, _
-                        CreateChartSpecifier(CLng(NumHistHistoryBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), fromDate, toDate), _
-                        ChartStylesManager.Item(HistChartStylesCombo.SelectedItem.Text), _
-                        gMainForm, _
-                        mTheme
+Dim fromDate As Date
+If IsNull(FromDatePicker.Value) Then
+    fromDate = CDate(0)
+Else
+    fromDate = DateSerial(FromDatePicker.Year, FromDatePicker.Month, FromDatePicker.Day) + _
+                TimeSerial(FromDatePicker.Hour, FromDatePicker.Minute, 0)
+End If
 
-Next
+Dim toDate As Date
+If IsNull(ToDatePicker.Value) Then
+    toDate = Now
+Else
+    toDate = DateSerial(ToDatePicker.Year, ToDatePicker.Month, ToDatePicker.Day) + _
+                TimeSerial(ToDatePicker.Hour, ToDatePicker.Minute, 0)
+End If
+
+mChartForms.AddHistoricAsync HistChartTimeframeSelector.TimePeriod, _
+                    pContracts, _
+                    mTradeBuildAPI.StudyLibraryManager, _
+                    mTradeBuildAPI.HistoricalDataStoreInput, _
+                    mTradeBuildAPI.BarFormatterLibManager, _
+                    lConfig, _
+                    CreateChartSpecifier(CLng(NumHistHistoryBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), fromDate, toDate), _
+                    ChartStylesManager.Item(HistChartStylesCombo.SelectedItem.Text), _
+                    gMainForm, _
+                    mTheme
 
 Exit Sub
 

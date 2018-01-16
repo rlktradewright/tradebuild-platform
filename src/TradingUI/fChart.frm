@@ -742,9 +742,9 @@ lExcludeLastBar = mDataSource.IsTickReplay
 MultiChart1.Initialise pTimeframes, pTimePeriodValidator, pSpec, pStyle, pBarFormatterLibManager, , , lExcludeLastBar
 If Not pConfig Is Nothing Then setConfig pConfig
 
-'' we have to do something to cause Form_Load to run, otherwise MultiChart1 is
-'' not created for use below
-'
+' we have to do something to cause Form_Load to run, otherwise MultiChart1 is
+' not created for use below
+
 MultiChart1.Enabled = True
 
 ChartNavToolbar1.Initialise , MultiChart1.object
@@ -785,6 +785,11 @@ mIsHistorical = True
 
 MultiChart1.Initialise createNewTimeframes(pStudyManager, pContractFuture, pHistDataStore), pHistDataStore.TimePeriodValidator, pSpec, pStyle, pBarFormatterLibManager
 setConfig pConfig
+
+' we have to do something to cause Form_Load to run, otherwise MultiChart1 is
+' not created for use below
+
+MultiChart1.Enabled = True
 
 ChartNavToolbar1.Initialise , MultiChart1.object
 BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1.object

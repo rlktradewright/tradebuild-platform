@@ -117,16 +117,8 @@ Public Sub Add( _
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-Dim lConfig As ConfigurationSection
-
-If Not pConfig Is Nothing Then
-    Set lConfig = pConfig.AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
-    lConfig.SetSetting ConfigSettingDataSourceKey, pDataSource.Key
-End If
-
-Dim lChartForm As New fChart
-lChartForm.Initialise pDataSource, pPeriodLength, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, lConfig, pSpec, pStyle, pOwner
-mChartForms.Add lChartForm
+Dim lChartForm As fChart
+Set lChartForm = CreateChart(pDataSource, pPeriodLength, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, pConfig, pSpec, pStyle, pOwner)
 
 If Not IsMissing(pOwner) Then lChartForm.Show vbModeless, pOwner
 If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
@@ -136,6 +128,32 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function AddAsync( _
+                ByVal pTickers As Tickers, _
+                ByVal pPeriodLength As TimePeriod, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pTimePeriodValidator As ITimePeriodValidator, _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pSpec As ChartSpecifier, _
+                ByVal pStyle As ChartStyle, _
+                Optional ByVal pOwner As Variant, _
+                Optional ByVal pTheme As ITheme, _
+                Optional ByVal pPriority As TaskPriorities, _
+                Optional ByVal pName As String, _
+                Optional ByVal pCookie As Variant) As TaskController
+Const ProcName As String = "AddAsync"
+On Error GoTo Err
+
+Dim t As New ChartFormsAddTask
+t.Initialise Me, pTickers, pPeriodLength, pBarFormatterLibManager, pTimePeriodValidator, pConfig, pSpec, pStyle, pOwner, pTheme
+Set AddAsync = StartTask(t, pPriority, pName, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Function AddFromConfig( _
                 ByVal pDataSource As IMarketDataSource, _
@@ -178,15 +196,8 @@ Public Sub AddHistoric( _
 Const ProcName As String = "AddHistoric"
 On Error GoTo Err
 
-Dim lConfig As ConfigurationSection
-If Not pConfig Is Nothing Then
-    Set lConfig = pConfig.AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
-End If
-
-    
 Dim lChartForm As New fChart
-lChartForm.InitialiseHistoric pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, lConfig, pSpec, pStyle, pOwner
-mChartForms.Add lChartForm
+Set lChartForm = CreateHistoricalChart(pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, pConfig, pSpec, pStyle, pOwner)
 
 If Not IsMissing(pOwner) Then lChartForm.Show vbModeless, pOwner
 If Not pTheme Is Nothing Then lChartForm.Theme = pTheme
@@ -196,6 +207,33 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function AddHistoricAsync( _
+                ByVal pPeriodLength As TimePeriod, _
+                ByVal pContracts As IContracts, _
+                ByVal pStudyLibManager As StudyLibraryManager, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pSpec As ChartSpecifier, _
+                ByVal pStyle As ChartStyle, _
+                Optional ByVal pOwner As Variant, _
+                Optional ByVal pTheme As ITheme, _
+                Optional ByVal pPriority As TaskPriorities, _
+                Optional ByVal pName As String, _
+                Optional ByVal pCookie As Variant) As TaskController
+Const ProcName As String = "AddHistoricAsync"
+On Error GoTo Err
+
+Dim t As New ChartFormsAddTask
+t.InitialiseHistorical Me, pPeriodLength, pContracts, pStudyLibManager, pHistDataStore, pBarFormatterLibManager, pConfig, pSpec, pStyle, pOwner, pTheme
+Set AddHistoricAsync = StartTask(t, pPriority, pName, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Function AddHistoricFromConfig( _
                 ByVal pContractFuture As IFuture, _
@@ -217,6 +255,38 @@ If AddHistoricFromConfig Then
 Else
     Unload lChartForm
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function CreateChart( _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pPeriodLength As TimePeriod, _
+                ByVal pTimeframes As Timeframes, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pTimePeriodValidator As ITimePeriodValidator, _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pSpec As ChartSpecifier, _
+                ByVal pStyle As ChartStyle, _
+                ByVal pOwner As Variant) As fChart
+Const ProcName As String = "Add"
+On Error GoTo Err
+
+Dim lConfig As ConfigurationSection
+
+If Not pConfig Is Nothing Then
+    Set lConfig = pConfig.AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
+    lConfig.SetSetting ConfigSettingDataSourceKey, pDataSource.Key
+End If
+
+Dim lChartForm As New fChart
+lChartForm.Initialise pDataSource, pPeriodLength, pTimeframes, pBarFormatterLibManager, pTimePeriodValidator, lConfig, pSpec, pStyle, pOwner
+mChartForms.Add lChartForm
+
+Set CreateChart = lChartForm
 
 Exit Function
 
@@ -253,6 +323,36 @@ Else
                     , _
                     Nothing)
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function CreateHistoricalChart( _
+                ByVal pPeriodLength As TimePeriod, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pSpec As ChartSpecifier, _
+                ByVal pStyle As ChartStyle, _
+                Optional ByVal pOwner As Variant) As fChart
+Const ProcName As String = "CreateHistoricalChart"
+On Error GoTo Err
+
+Dim lConfig As ConfigurationSection
+If Not pConfig Is Nothing Then
+    Set lConfig = pConfig.AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
+End If
+    
+Dim lChartForm As New fChart
+lChartForm.InitialiseHistoric pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, lConfig, pSpec, pStyle, pOwner
+mChartForms.Add lChartForm
+
+Set CreateHistoricalChart = lChartForm
 
 Exit Function
 
