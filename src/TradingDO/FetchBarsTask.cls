@@ -253,7 +253,7 @@ Friend Sub Initialise( _
                 ByVal customSessionStartTime As Date, _
                 ByVal customSessionEndTime As Date, _
                 ByVal includeBarsOutsideSession As Boolean, _
-                ByVal barType As BarTypes, _
+                ByVal BarType As BarTypes, _
                 ByVal pListener As IBarFetchListener, _
                 ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
@@ -268,7 +268,7 @@ mToDate = toDate
 mCustomSessionStartTime = customSessionStartTime
 mCustomSessionEndTime = customSessionEndTime
 mIncludeBarsOutsideSession = includeBarsOutsideSession
-mBarType = barType
+mBarType = BarType
 Set mListener = pListener
 gSetVariant mCookie, pCookie
 

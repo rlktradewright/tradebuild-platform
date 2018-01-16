@@ -113,9 +113,6 @@ ElseIf ev.Future.IsFaulted Then
 ElseIf TypeOf ev.Future.Value Is TradingDB Then
     Set mTradingDB = ev.Future.Value
     fetchIfReady
-ElseIf TypeOf ev.Future.Value Is IContract Then
-    mBarSpec.Contract = ev.Future.Value
-    fetchIfReady
 ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     Set mBarSpec = ev.Future.Value
     fetchIfReady
@@ -234,7 +231,7 @@ Private Sub fetchIfReady()
 Const ProcName As String = "fetchIfReady"
 On Error GoTo Err
 
-If mTradingDB Is Nothing Or mBarSpec Is Nothing Then Exit Sub
+If mTradingDB Is Nothing Or mBarSpec Is Nothing Or mBarSpec.Contract Is Nothing Then Exit Sub
 
 fetch
 

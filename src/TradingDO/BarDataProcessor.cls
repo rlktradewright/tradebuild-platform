@@ -149,7 +149,6 @@ Static sCurrentBarEndTime As Date
 Static sCurrentBarNumber As Long
 
 setSessionTime pTimestamp
-Debug.Print "TV: " & pTickVolume
 
 Dim lBarEndTime As Date
 lBarEndTime = BarEndTime(pTimestamp, mTargetBarsBuilder.BarTimePeriod, mSessionTimes.StartTime, mSessionTimes.EndTime)
