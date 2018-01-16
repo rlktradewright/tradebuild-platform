@@ -339,7 +339,7 @@ Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error GoTo Err
 
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartToolbar created"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:=ProcName, pModName:=ModuleName, pMsg:="ChartToolbar created"
 Toolbar1.ImageList = EnabledImageList
 Toolbar1.DisabledImageList = DisabledImageList
 
@@ -377,7 +377,7 @@ UserControl.Width = Toolbar1.Width
 End Sub
 
 Private Sub UserControl_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartToolbar terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="ChartToolbar terminated"
 Debug.Print "ChartToolbar terminated"
 End Sub
 

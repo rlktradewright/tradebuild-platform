@@ -80,7 +80,7 @@ If mGraphObjSeries.Count <> 0 Then
     ' objects, so that removing the earliest first would mean they can't actually be
     ' terminated
     failpoint = 100
-    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(mGraphObjSeries.Count), False, False
+    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(mGraphObjSeries.Count), False, True
     
     failpoint = 200
     mGraphObjSeries.Remove mGraphObjSeries.Count

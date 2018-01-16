@@ -98,7 +98,7 @@ Set mStyle = New DataPointStyle
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="DataPointSeries terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="DataPointSeries terminated"
 Debug.Print "DataPointSeries terminated"
 End Sub
 

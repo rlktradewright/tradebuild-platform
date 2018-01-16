@@ -117,7 +117,7 @@ Set mStyle = New TextStyle
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="TextSeries terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="TextSeries terminated"
 Debug.Print "TextSeries terminated"
 End Sub
 
@@ -157,7 +157,7 @@ Private Sub IGraphicObjectSeries_Initialise( _
 mName = pName
 mSeriesID = pSeriesID
 Set mGOSP = pGOSP
-layer = pLayer
+Layer = pLayer
 Set mViewport = pViewport
 End Sub
 
@@ -918,7 +918,7 @@ If Not mStyle Is Nothing Then If mStyle.IsPropertySet(TextPropertyJustification)
 If IsPropertySet(TextPropertyJustification) Then Justification = mJustification
 End Property
 
-Public Property Let layer(ByVal Value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
@@ -932,13 +932,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get layer() As LayerNumbers
+Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
-layer = mBaseStyle.layer
-If Not mStyle Is Nothing Then If mStyle.IsPropertySet(TextPropertyLayer) Then layer = mStyle.layer
-If IsPropertySet(TextPropertyLayer) Then layer = mLayer
+Layer = mBaseStyle.Layer
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(TextPropertyLayer) Then Layer = mStyle.Layer
+If IsPropertySet(TextPropertyLayer) Then Layer = mLayer
 
 Exit Property
 

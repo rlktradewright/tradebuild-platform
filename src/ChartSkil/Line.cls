@@ -176,7 +176,7 @@ mArrowEndFillStyle = FillStyles.FillSolid
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="Line terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Line terminated"
 Debug.Print "Line terminated"
 End Sub
 
@@ -473,8 +473,8 @@ Private Property Get IGraphicObject_IsSelectable() As Boolean
 IGraphicObject_IsSelectable = mIsSelectable
 End Property
 
-Private Property Get IGraphicObject_layer() As Long
-IGraphicObject_layer = layer
+Private Property Get IGraphicObject_Layer() As Long
+IGraphicObject_Layer = Layer
 End Property
 
 Private Property Get IGraphicObject_noDraw() As Boolean
@@ -1241,7 +1241,7 @@ Public Property Get Key() As String
 Key = mKey
 End Property
 
-Public Property Let layer(ByVal Value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
@@ -1257,14 +1257,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get layer() As LayerNumbers
+Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
 
-layer = mSeries.layer
-If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(LinePropertyLayer) Then layer = mLocalStyle.layer
-If IsPropertySet(LinePropertyLayer) Then layer = mLayer
+Layer = mSeries.Layer
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(LinePropertyLayer) Then Layer = mLocalStyle.Layer
+If IsPropertySet(LinePropertyLayer) Then Layer = mLayer
 
 Exit Property
 

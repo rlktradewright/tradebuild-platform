@@ -298,7 +298,7 @@ Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error Resume Next
 
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart created"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:=ProcName, pModName:=ModuleName, pMsg:="ChartSkil chart created"
 
 On Error GoTo Err
 
@@ -439,7 +439,7 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="ChartSkil chart terminated"
 Debug.Print "ChartSkil chart terminated"
 End Sub
 

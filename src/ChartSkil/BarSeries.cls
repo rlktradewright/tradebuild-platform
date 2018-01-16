@@ -100,7 +100,7 @@ Set mStyle = New BarStyle
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="BarSeries terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="BarSeries terminated"
 Debug.Print "BarSeries terminated"
 End Sub
 

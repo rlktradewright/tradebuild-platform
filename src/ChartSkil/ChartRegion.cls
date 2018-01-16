@@ -247,7 +247,7 @@ Private Sub Class_Terminate()
 If Not mViewport Is Nothing Then mViewport.Finish
 Set mViewport = Nothing
 
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
 Debug.Print "ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
 End Sub
 

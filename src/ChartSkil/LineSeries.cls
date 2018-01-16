@@ -108,7 +108,7 @@ Set mStyle = New LineStyle
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="LineSeries terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="LineSeries terminated"
 Debug.Print "LineSeries terminated"
 End Sub
 
@@ -161,7 +161,7 @@ Private Sub IGraphicObjectSeries_Initialise( _
 mName = pName
 mSeriesID = pSeriesID
 Set mGOSP = pGOSP
-layer = pLayer
+Layer = pLayer
 Set mViewport = pViewport
 End Sub
 
@@ -896,7 +896,7 @@ Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-Public Property Let layer(ByVal Value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
@@ -910,13 +910,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get layer() As LayerNumbers
+Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
-layer = mBaseStyle.layer
-If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyLayer) Then layer = mStyle.layer
-If IsPropertySet(LinePropertyLayer) Then layer = mLayer
+Layer = mBaseStyle.Layer
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyLayer) Then Layer = mStyle.Layer
+If IsPropertySet(LinePropertyLayer) Then Layer = mLayer
 
 Exit Property
 

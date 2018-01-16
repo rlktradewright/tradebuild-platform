@@ -80,7 +80,7 @@ Set mGradientFill = New GradientFill
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
 Debug.Print "Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
 End Sub
 
