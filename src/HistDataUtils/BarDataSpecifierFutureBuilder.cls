@@ -115,7 +115,11 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If Not checkFuture(ev.Future) Then mFutureWaiter.Clear
+If ev.Future.IsCancelled Then
+    mFutureBuilder.Cancel
+ElseIf ev.Future.IsFaulted Then
+    mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+End If
 
 Exit Sub
 
@@ -182,16 +186,6 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function checkFuture(ByVal pFuture As IFuture) As Boolean
-If pFuture.IsCancelled Then
-    mFutureBuilder.Cancel
-ElseIf pFuture.IsFaulted Then
-    mFutureBuilder.Fail pFuture.ErrorNumber, pFuture.ErrorMessage, pFuture.ErrorSource
-Else
-    checkFuture = True
-End If
-End Function
 
 Private Sub setupSpecifier()
 Const ProcName As String = "setupSpecifier"
