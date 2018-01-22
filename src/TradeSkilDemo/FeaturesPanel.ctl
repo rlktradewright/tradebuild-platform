@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#321.2#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#322.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
@@ -426,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   121831427
+            Format          =   122028035
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -480,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   121831427
+            Format          =   122028035
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -1095,7 +1095,7 @@ If ApplyStyleLiveCheck.Value = vbChecked Then setAllChartStyles ChartStylesCombo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ApplyStyleHistCheck_Click()
@@ -1188,7 +1188,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub CurrentConfigCombo_Click()
@@ -1237,7 +1237,7 @@ End Select
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub FeaturesTabStrip_Click()
@@ -1250,7 +1250,7 @@ FeaturesSSTab.Tab = FeaturesTabStrip.SelectedItem.Index - 1
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub HidePicture_Click()
@@ -1278,7 +1278,7 @@ createHistoricCharts HistContractSearch.SelectedContracts
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub HistContractSearch_Cancelled()
@@ -1303,7 +1303,7 @@ Exit Sub
 
 Err:
 If Err.Number = 401 Then Exit Sub ' Can't show non-modal form when modal form is displayed
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub LiveChartButton_Click()
@@ -1315,7 +1315,7 @@ LiveChartButton1_Click
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub LiveChartButton1_Click()
@@ -1329,7 +1329,7 @@ clearSelectedTickers
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub LiveChartStylesCombo_Click()
@@ -1341,7 +1341,7 @@ mAppInstanceConfig.SetSetting ConfigSettingAppCurrentChartStyle, LiveChartStyles
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub LiveChartTimeframeSelector_Click()
@@ -1353,7 +1353,7 @@ setChartButtonTooltip
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub LiveContractSearch_Action()
@@ -1372,7 +1372,7 @@ Next
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub LiveContractSearch_Cancelled()
@@ -1397,7 +1397,7 @@ Exit Sub
 
 Err:
 If Err.Number = 401 Then Exit Sub ' Can't show non-modal form when modal form is displayed
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub MarketDepthButton_Click()
@@ -1414,7 +1414,7 @@ clearSelectedTickers
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub NativeThemeOption_Click()
@@ -1438,7 +1438,7 @@ If Not IsInteger(NumHistHistoryBarsText.Text, 0, 2000) Then Cancel = True
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub NumLiveHistoryBarsText_Validate(Cancel As Boolean)
@@ -1450,7 +1450,7 @@ If Not IsInteger(NumLiveHistoryBarsText.Text, 0, 2000) Then Cancel = True
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub OrderTicketButton_Click()
@@ -1462,7 +1462,7 @@ showOrderTicket
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub PauseReplayButton_Click()
@@ -1477,7 +1477,7 @@ mReplayController.PauseReplay
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub PinPicture_Click()
@@ -1533,7 +1533,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ReplaySpeedCombo_Click()
@@ -1547,7 +1547,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 
 End Sub
 
@@ -1560,7 +1560,7 @@ stopTickfileReplay
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub StopTickerButton_Click()
@@ -1572,7 +1572,7 @@ StopSelectedTickers
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub TickfileOrganiser1_TickfileCountChanged()
@@ -1588,7 +1588,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UnpinPicture_Click()
@@ -1615,7 +1615,7 @@ ReplayProgressLabel.caption = pTickfileTimestamp & _
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -1660,7 +1660,7 @@ handleSelectedTickers
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -2305,7 +2305,7 @@ Next
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub stopTickfileReplay()
@@ -2325,7 +2325,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 

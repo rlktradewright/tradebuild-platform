@@ -553,7 +553,7 @@ If Err.Number = ErrorCodes.ErrSecurityException Then
     TerminateTWUtilities
     Exit Sub
 End If
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
