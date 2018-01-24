@@ -81,9 +81,17 @@ Private mTickfileOutputMonitor                          As ITickfileOutputMonito
 
 Private mStudyLibraryManager                            As StudyLibraryManager
 
+Private WithEvents mFutureWaiter                        As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+Private mBarWritersAwaited                              As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
+End Sub
 
 '@================================================================================
 ' ITask Interface Members
@@ -129,8 +137,8 @@ If CBool(lContractConfig.GetAttribute(AttributeNameEnabled)) Then
     
     Dim lContractsFuture As IFuture
     Set lContractsFuture = FetchContracts(lContractSpec, mPrimaryContractStore, mSecondaryContractStore)
-    
-    Set mTickersTC = mTickers.startTickers(lContractsFuture, _
+
+    Set mTickersTC = mTickers.StartTickers(lContractsFuture, _
                     True, _
                     IIf(mIncludeMarketDepth, True, False))
     
@@ -153,6 +161,36 @@ ITask_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsCancelled Then
+    If Not mTaskContext Is Nothing Then mTaskContext.Finish Nothing, True
+    Set mTaskContext = Nothing
+    mFutureWaiter.Clear
+ElseIf ev.Future.IsFaulted Then
+    If Not mTaskContext Is Nothing Then mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+    Set mTaskContext = Nothing
+    mFutureWaiter.Clear
+ElseIf ev.Future.IsAvailable Then
+    Dim lBarWriter As HistDataWriter
+    Set lBarWriter = ev.Future.value
+    mTaskContext.Progress 0!, lBarWriter
+    mBarWritersAwaited = mBarWritersAwaited - 1
+    If mBarWritersAwaited = 0 Then mTaskContext.Continue
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mTickers Event Handlers
 '@================================================================================
 
@@ -166,8 +204,7 @@ Dim lTicker As ticker
 Set lTicker = ev.AffectedItem
 
 If mWriteBars Then
-    Dim lBarWriter As HistDataWriter
-    Set lBarWriter = RecordHistoricalBars( _
+    mFutureWaiter.Add RecordHistoricalBars( _
                                     lTicker.ContractFuture, _
                                     lTicker.ClockFuture, _
                                     lTicker.StudyBase, _
@@ -177,7 +214,8 @@ If mWriteBars Then
                                         IIf(mWriteBidAskBars, HistDataWriteOptionWriteBidAndAskBars, 0), _
                                     mSaveIntervalSeconds, _
                                     mBarOutputMonitor)
-    mTaskContext.Progress 0!, lBarWriter
+    mBarWritersAwaited = mBarWritersAwaited + 1
+    mTaskContext.Suspend -1
 End If
 
 If mWriteTicks Then
@@ -201,8 +239,7 @@ Const ProcName As String = "mTickersTC_Completed"
 On Error GoTo Err
 
 If ev.ErrorNumber <> 0 Then gLogger.Log LogLevelSevere, "Error " & ev.ErrorNumber & " starting tickers: " & ev.ErrorMessage
-
-mTaskContext.Continue
+If mBarWritersAwaited = 0 Then mTaskContext.Continue
 
 Exit Sub
 

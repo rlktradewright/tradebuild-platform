@@ -95,7 +95,7 @@ Private mStartTime                                      As Date
 Private mEndTime                                        As Date
 Private mExitProgramTime                                As Date
 
-Private WithEvents mStartTickersTC                        As TaskController
+Private WithEvents mStartTickersTC                      As TaskController
 Attribute mStartTickersTC.VB_VarHelpID = -1
 
 Private mBarWriters                                     As New EnumerableCollection
@@ -187,11 +187,9 @@ Const ProcName As String = "mStartTickersTC_Completed"
 On Error GoTo Err
 
 If ev.Cancelled Then
+    gLogger.Log LogLevelNormal, "Starting tickers has been cancelled"
 ElseIf ev.ErrorNumber <> 0 Then
-    gLogger.Log LogLevelSevere, _
-                "Error " & ev.ErrorNumber & " starting tickers: " & _
-                ev.ErrorMessage & vbCrLf & _
-                ev.ErrorSource
+    Err.Raise ev.ErrorNumber, ev.ErrorSource, ev.ErrorMessage
 Else
     gLogger.Log LogLevelNormal, "Tickers started: " & CStr(ev.Result)
 End If
@@ -367,7 +365,7 @@ If mEndTime <> 0 Then
     mEndCollectionTimer.StartTimer
 End If
 
-startTickers
+startTheTickers
 
 gLogger.Log LogLevelNormal, "Data collection started"
 RaiseEvent CollectionStarted
@@ -572,8 +570,8 @@ gNotifyUnhandledError ProcName, ModuleName
 
 End Sub
 
-Private Sub startTickers()
-Const ProcName As String = "startTickers"
+Private Sub startTheTickers()
+Const ProcName As String = "startTheTickers"
 On Error GoTo Err
 
 Dim stTask As New StartTickersTask
@@ -591,7 +589,7 @@ stTask.Initialise mTradeBuildAPI.StudyLibraryManager, _
                 mOutputPath, _
                 mBarOutputMonitor, _
                 mTickfileOutputMonitor
-Set mStartTickersTC = StartTask(stTask, PriorityNormal, "StartTickers")
+Set mStartTickersTC = StartTask(stTask, PriorityNormal, "startTheTickers")
 
 Exit Sub
 
