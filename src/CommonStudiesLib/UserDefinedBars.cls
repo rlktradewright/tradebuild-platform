@@ -59,7 +59,6 @@ Private Const ModuleName                As String = "UserDefinedBars"
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private mBarsBuilder As BarsBuilder
 Private mBarNumber As Long
 Private mBarStartTime As Date
 
@@ -74,14 +73,6 @@ Attribute mBar.VB_VarHelpID = -1
 Private mValueTickSize As Double
 
 Private mTimestamp As Date
-
-Private WithEvents mFutureWaiter As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-Private mBarsFutureBuilder As FutureBuilder
-
-Private WithEvents mBarFetchListener As BarFetchListener
-Attribute mBarFetchListener.VB_VarHelpID = -1
-Private mInitialBarsFutureSupplied As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -377,7 +368,7 @@ Public Property Get BarsFuture() As IFuture
 Const ProcName As String = "BarsFuture"
 On Error GoTo Err
 
-Set BarsFuture = mBarsFutureBuilder.Future
+Set BarsFuture = mBarStudySupport.BarsFuture
 
 Exit Property
 
@@ -398,22 +389,6 @@ Const ProcName As String = "notifyBarValues"
 On Error GoTo Err
 
 gNotifyBarValues Me, mStudyFoundation, mBar, mTimestamp
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setupBars(ByVal pBarsBuilder As BarsBuilder)
-Const ProcName As String = "setupBars"
-On Error GoTo Err
-
-Set mBarsBuilder = pBarsBuilder
-Set mBars = mBarsBuilder.Bars
-
-mBarsFutureBuilder.Value = mBars
-mBarsFutureBuilder.Complete
 
 Exit Sub
 
