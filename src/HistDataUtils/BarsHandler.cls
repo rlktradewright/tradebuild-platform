@@ -66,6 +66,8 @@ Private mSaveIntervalSeconds                        As Long
 Private mStudyBase                                  As IStudyBase
 Private mBarStudy                                   As IBarStudy
 
+Private mFutureBuilder                              As New FutureBuilder
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -110,17 +112,24 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If TypeOf ev.Future.Value Is IContract Then
+If ev.Future.IsCancelled Then
+    mFutureBuilder.Cancel
+ElseIf ev.Future.IsFaulted Then
+    mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+ElseIf TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
     mLocalSymbol = lContract.Specifier.LocalSymbol
 ElseIf TypeOf ev.Future.Value Is Bars Then
     mStudyBase.StudyManager.StartStudy mBarStudy, 0
     Set mBars = ev.Future.Value
+    gLogger.Log "BarsHandler retrieved " & mBars.Count & " bars for " & mLocalSymbol, ProcName, ModuleName, LogLevelHighDetail
     If mBars.Count <> 0 Then
         Set mBarWriteController = CreateBarWriteController(mBars.Bar(0), mBarType)
         mBarsWritten = mBarsWritten + 1
     End If
+    mFutureBuilder.Value = Me
+    mFutureBuilder.Complete
 End If
 
 Exit Sub
@@ -132,6 +141,10 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Get BarsHandlerFuture() As IFuture
+Set BarsHandlerFuture = mFutureBuilder.Future
+End Property
 
 Friend Property Get BarsWritten() As Long
 BarsWritten = mBarsWritten

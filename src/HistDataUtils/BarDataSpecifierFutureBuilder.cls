@@ -117,8 +117,10 @@ On Error GoTo Err
 
 If ev.Future.IsCancelled Then
     mFutureBuilder.Cancel
+    mFutureWaiter.Clear
 ElseIf ev.Future.IsFaulted Then
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+    mFutureWaiter.Clear
 End If
 
 Exit Sub

@@ -56,6 +56,8 @@ Private mTimeframeHandlers                          As EnumerableCollection
 
 Private mBarWriter                                  As IBarWriter
 
+Private mFutureBuilder                              As New FutureBuilder
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -73,9 +75,13 @@ Const ProcName As String = "mTimeframeSetupTC_Completed"
 On Error GoTo Err
 
 If ev.Cancelled Then
+    mFutureBuilder.Cancel
 ElseIf ev.ErrorNumber <> 0 Then
+    mFutureBuilder.Fail ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 Else
     Set mTimeframeHandlers = ev.Result
+    mFutureBuilder.Value = Me
+    mFutureBuilder.Complete
 End If
 
 Exit Sub
@@ -87,6 +93,10 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Get HistDataWriterFuture() As IFuture
+Set HistDataWriterFuture = mFutureBuilder.Future
+End Property
 
 '@================================================================================
 ' Methods
