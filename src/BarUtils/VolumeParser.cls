@@ -158,7 +158,10 @@ On Error GoTo Err
 If Not mGotFirstVolume Then
     mCurrSessionVolume = pTotalVolume
     mGotFirstVolume = True
-    Notify = mCurrSessionVolume
+    ' Note that we don't notify the first volume figure received because if this was after
+    ' the start of the session it would give the first bar generated an incorrectly
+    ' large volume
+    'Notify = mCurrSessionVolume
     Debug.Print "VolumeParser(" & mObjId & "): current session Volume set to " & pTotalVolume
     Exit Function
 End If
