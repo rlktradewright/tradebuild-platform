@@ -62,6 +62,16 @@ Private mTimestamp As Date
 Private WithEvents mLocalStyle As DataPointStyle
 Attribute mLocalStyle.VB_VarHelpID = -1
 
+Private mLineThickness As Long
+Private mColor As Long
+Private mUpColor As Long
+Private mDownColor As Long
+Private mLineStyle As LineStyles
+Private mPointStyle As PointStyles
+Private mDisplayMode As DataPointDisplayModes
+Private mHistogramBarWidth As Single
+Private mIncludeInAutoscale As Boolean
+
 Private mInScope As Boolean
 Private mVisible As Boolean
 
@@ -363,10 +373,10 @@ On Error GoTo Err
 If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 If IsPropertySet(DataPointPropertyColor) Then
-    If getProperties.Color = Value Then Exit Property
+    If mColor = Value Then Exit Property
 End If
 setPropertyFlag DataPointPropertyColor
-getProperties.Color = Value
+mColor = Value
 initiateRedraw False, False
 
 Exit Property
@@ -381,7 +391,7 @@ On Error GoTo Err
 
 Color = mSeries.Color
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyColor) Then Color = mLocalStyle.Color
-If IsPropertySet(DataPointPropertyColor) Then Color = getProperties.Color
+If IsPropertySet(DataPointPropertyColor) Then Color = mColor
 
 Exit Property
 
@@ -413,10 +423,10 @@ Const ProcName As String = "DisplayMode"
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyDisplayMode) Then
-    If getProperties.DisplayMode = Value Then Exit Property
+    If mDisplayMode = Value Then Exit Property
 End If
 setPropertyFlag DataPointPropertyDisplayMode
-getProperties.DisplayMode = Value
+mDisplayMode = Value
 initiateRedraw True, True
 
 Exit Property
@@ -431,7 +441,7 @@ On Error GoTo Err
 
 DisplayMode = mSeries.DisplayMode
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyDisplayMode) Then DisplayMode = mLocalStyle.DisplayMode
-If IsPropertySet(DataPointPropertyDisplayMode) Then DisplayMode = getProperties.DisplayMode
+If IsPropertySet(DataPointPropertyDisplayMode) Then DisplayMode = mDisplayMode
 
 Exit Property
 
@@ -446,10 +456,10 @@ On Error GoTo Err
 If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If IsPropertySet(DataPointPropertyDownColor) Then
-    If getProperties.DownColor = Value Then Exit Property
+    If mDownColor = Value Then Exit Property
 End If
 setPropertyFlag DataPointPropertyDownColor
-getProperties.DownColor = Value
+mDownColor = Value
 initiateRedraw False, False
 
 Exit Property
@@ -464,7 +474,7 @@ On Error GoTo Err
 
 DownColor = mSeries.DownColor
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyDownColor) Then DownColor = mLocalStyle.DownColor
-If IsPropertySet(DataPointPropertyDownColor) Then DownColor = getProperties.DownColor
+If IsPropertySet(DataPointPropertyDownColor) Then DownColor = mDownColor
 If DownColor = -1 Then DownColor = Color
 
 Exit Property
@@ -487,10 +497,10 @@ On Error GoTo Err
 
 If Value <= 0 Or Value > 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "HistogramBarWidth must be greater than zero but not greater than 1"
 If IsPropertySet(DataPointPropertyHistWidth) Then
-    If getProperties.HistogramBarWidth = Value Then Exit Property
+    If mHistogramBarWidth = Value Then Exit Property
 End If
 setPropertyFlag DataPointPropertyHistWidth
-getProperties.HistogramBarWidth = Value
+mHistogramBarWidth = Value
 initiateRedraw True, True
 
 Exit Property
@@ -505,7 +515,7 @@ On Error GoTo Err
 
 HistogramBarWidth = mSeries.HistogramBarWidth
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyHistWidth) Then HistogramBarWidth = mLocalStyle.HistogramBarWidth
-If IsPropertySet(DataPointPropertyHistWidth) Then HistogramBarWidth = getProperties.HistogramBarWidth
+If IsPropertySet(DataPointPropertyHistWidth) Then HistogramBarWidth = mHistogramBarWidth
 
 Exit Property
 
@@ -519,7 +529,7 @@ On Error GoTo Err
 
 IncludeInAutoscale = mSeries.IncludeInAutoscale
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyIncludeInAutoscale) Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
-If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then IncludeInAutoscale = getProperties.IncludeInAutoscale
+If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 
 Exit Property
 
@@ -532,9 +542,9 @@ Const ProcName As String = "IncludeInAutoscale"
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then
-    If getProperties.IncludeInAutoscale = Value Then Exit Property
+    If mIncludeInAutoscale = Value Then Exit Property
 End If
-getProperties.IncludeInAutoscale = Value
+mIncludeInAutoscale = Value
 setPropertyFlag DataPointPropertyIncludeInAutoscale
 initiateRedraw False, False
 
@@ -600,9 +610,9 @@ Const ProcName As String = "LineStyle"
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyLineStyle) Then
-    If getProperties.LineStyle = Value Then Exit Property
+    If mLineStyle = Value Then Exit Property
 End If
-getProperties.LineStyle = Value
+mLineStyle = Value
 setPropertyFlag DataPointPropertyLineStyle
 initiateRedraw False, False
 
@@ -618,7 +628,7 @@ On Error GoTo Err
 
 LineStyle = mSeries.LineStyle
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyLineStyle) Then LineStyle = mLocalStyle.LineStyle
-If IsPropertySet(DataPointPropertyLineStyle) Then LineStyle = getProperties.LineStyle
+If IsPropertySet(DataPointPropertyLineStyle) Then LineStyle = mLineStyle
 
 Exit Property
 
@@ -631,9 +641,9 @@ Const ProcName As String = "LineThickness"
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyLineThickness) Then
-    If getProperties.LineThickness = Value Then Exit Property
+    If mLineThickness = Value Then Exit Property
 End If
-getProperties.LineThickness = Value
+mLineThickness = Value
 setPropertyFlag DataPointPropertyLineThickness
 initiateRedraw True, True
 
@@ -649,7 +659,7 @@ On Error GoTo Err
 
 LineThickness = mSeries.LineThickness
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyLineThickness) Then LineThickness = mLocalStyle.LineThickness
-If IsPropertySet(DataPointPropertyLineThickness) Then LineThickness = getProperties.LineThickness
+If IsPropertySet(DataPointPropertyLineThickness) Then LineThickness = mLineThickness
 
 Exit Property
 
@@ -680,9 +690,9 @@ Const ProcName As String = "PointStyle"
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyPointStyle) Then
-    If getProperties.PointStyle = Value Then Exit Property
+    If mPointStyle = Value Then Exit Property
 End If
-getProperties.PointStyle = Value
+mPointStyle = Value
 setPropertyFlag DataPointPropertyPointStyle
 initiateRedraw False, False
 
@@ -698,7 +708,7 @@ On Error GoTo Err
 
 PointStyle = mSeries.PointStyle
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyPointStyle) Then PointStyle = mLocalStyle.PointStyle
-If IsPropertySet(DataPointPropertyPointStyle) Then PointStyle = getProperties.PointStyle
+If IsPropertySet(DataPointPropertyPointStyle) Then PointStyle = mPointStyle
 
 Exit Property
 
@@ -737,9 +747,9 @@ On Error GoTo Err
 
 If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 If IsPropertySet(DataPointPropertyUpColor) Then
-    If getProperties.UpColor = Value Then Exit Property
+    If mUpColor = Value Then Exit Property
 End If
-getProperties.UpColor = Value
+mUpColor = Value
 setPropertyFlag DataPointPropertyUpColor
 initiateRedraw False, False
 
@@ -755,7 +765,7 @@ On Error GoTo Err
 
 UpColor = mSeries.UpColor
 If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyUpColor) Then UpColor = mLocalStyle.UpColor
-If IsPropertySet(DataPointPropertyUpColor) Then UpColor = getProperties.UpColor
+If IsPropertySet(DataPointPropertyUpColor) Then UpColor = mUpColor
 If UpColor = -1 Then UpColor = Color
 
 Exit Property
@@ -1084,21 +1094,6 @@ With pixelRect
 End With
 
 getPaintingRect = pixelRect
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function getProperties() As DataPointProperties
-Const ProcName As String = "getProperties"
-On Error GoTo Err
-
-Static props As DataPointProperties
-
-If props Is Nothing Then Set props = New DataPointProperties
-Set getProperties = props
 
 Exit Function
 
