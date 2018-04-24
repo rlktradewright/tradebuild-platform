@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#270.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#277.0#0"; "ChartSkil27.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.7"
    ClientHeight    =   8520
@@ -433,6 +433,8 @@ Private mCurrentTool As Object
 
 Private mBarCounter As Long
 
+Private mInitialNumBars As Long
+
 
 
 '================================================================================
@@ -678,7 +680,8 @@ mBarCounter = 0
 BarsLoadedLabel.Visible = True
 HScroll.Visible = True
 HScroll.Min = 0
-HScroll.Max = InitialNumBarsText.Text
+mInitialNumBars = InitialNumBarsText.Text
+HScroll.Max = IIf(mInitialNumBars <= 32767, mInitialNumBars, 32767)
 HScroll.value = 0
 
 Chart1.DisableDrawing               ' tells the chart not to draw anything. This is
@@ -1197,7 +1200,7 @@ displayStudyValues
 
 mBarCounter = mBarCounter + 1
 If mBarCounter Mod 50 = 0 Then
-    HScroll.value = mBarCounter
+    HScroll.value = (mBarCounter / mInitialNumBars) * HScroll.Max
     BarsLoadedLabel.Caption = "Bars loaded: " & mBarCounter
     If UpdateWhileLoadingCheck.value = vbChecked Then
         Chart1.EnableDrawing
