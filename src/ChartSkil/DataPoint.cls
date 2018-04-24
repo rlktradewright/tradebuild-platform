@@ -103,16 +103,17 @@ End Sub
 '================================================================================
 ' IGraphicObject Members
 '================================================================================
+
 Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 Const ProcName As String = "IGraphicObject_boundingRectangle"
 On Error GoTo Err
 
-Static prevGaugeX As Double
-Static prevGaugeY As Double
-Static prevRect As TRectangle
+Static sPrevGaugeX As Double
+Static sPrevGaugeY As Double
+Static sPrevRect As TRectangle
 
 Dim viewportChanges As Long
-viewportChanges = mViewport.CompareTo(prevGaugeX, prevGaugeY, prevRect)
+viewportChanges = mViewport.CompareTo(sPrevGaugeX, sPrevGaugeY, sPrevRect)
 
 If (viewportChanges And ViewportComparisonCodes.GaugeChangedX) Or _
     (viewportChanges And ViewportComparisonCodes.GaugeChangedY) Or _
@@ -122,9 +123,9 @@ Then
     calcBoundingRect
 End If
 
-prevGaugeX = mViewport.GaugeX
-prevGaugeY = mViewport.GaugeY
-prevRect = mViewport.Boundary
+sPrevGaugeX = mViewport.GaugeX
+sPrevGaugeY = mViewport.GaugeY
+sPrevRect = mViewport.Boundary
 
 IGraphicObject_boundingRectangle = mBoundingRect
 
