@@ -615,12 +615,17 @@ End Property
 
 Public Property Let ArrowEndColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndColor"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mArrowEndColor = Value And IsPropertySet(LinePropertyArrowEndColor) Then Exit Property
 mArrowEndColor = Value
-setPropertyFlag LinePropertyArrowEndColor
+If mArrowEndColor <> -1 Then
+    setPropertyFlag LinePropertyArrowEndColor
+Else
+    ClearProperty LinePropertyArrowEndColor
+End If
 initiateRedraw False, False
 
 Exit Property
@@ -646,12 +651,17 @@ End Property
 
 Public Property Let ArrowEndFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndFillColor"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mArrowEndFillColor = Value And IsPropertySet(LinePropertyArrowEndFillColor) Then Exit Property
 mArrowEndFillColor = Value
-setPropertyFlag LinePropertyArrowEndFillColor
+If mArrowEndFillColor <> -1 Then
+    setPropertyFlag LinePropertyArrowEndFillColor
+Else
+    ClearProperty LinePropertyArrowEndFillColor
+End If
 initiateRedraw False, False
 
 Exit Property
@@ -801,12 +811,17 @@ End Property
 
 Public Property Let ArrowStartColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartColor"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mArrowStartColor = Value And IsPropertySet(LinePropertyArrowStartColor) Then Exit Property
 mArrowStartColor = Value
-setPropertyFlag LinePropertyArrowStartColor
+If mArrowStartColor <> -1 Then
+    setPropertyFlag LinePropertyArrowStartColor
+Else
+    ClearProperty LinePropertyArrowStartColor
+End If
 initiateRedraw False, False
 
 Exit Property
@@ -832,12 +847,17 @@ End Property
 
 Public Property Let ArrowStartFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartFillColor"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mArrowStartFillColor = Value And IsPropertySet(LinePropertyArrowStartFillColor) Then Exit Property
 mArrowStartFillColor = Value
-setPropertyFlag LinePropertyArrowStartFillColor
+If mArrowStartFillColor <> -1 Then
+    setPropertyFlag LinePropertyArrowStartFillColor
+Else
+    ClearProperty LinePropertyArrowStartFillColor
+End If
 initiateRedraw False, False
 
 Exit Property
@@ -987,12 +1007,17 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mColor = Value And IsPropertySet(LinePropertyColor) Then Exit Property
 mColor = Value
-setPropertyFlag LinePropertyColor
+If mColor <> -1 Then
+    setPropertyFlag LinePropertyColor
+Else
+    ClearProperty LinePropertyColor
+End If
 initiateRedraw False, False
 
 Exit Property

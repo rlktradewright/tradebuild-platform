@@ -370,13 +370,15 @@ Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
-If IsPropertySet(DataPointPropertyColor) Then
-    If mColor = Value Then Exit Property
-End If
-setPropertyFlag DataPointPropertyColor
+If mColor = Value And IsPropertySet(DataPointPropertyColor) Then Exit Property
 mColor = Value
+If mColor <> -1 Then
+    setPropertyFlag DataPointPropertyColor
+Else
+    ClearProperty DataPointPropertyColor
+End If
 initiateRedraw False, False
 
 Exit Property
@@ -455,11 +457,13 @@ On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
-If IsPropertySet(DataPointPropertyDownColor) Then
-    If mDownColor = Value Then Exit Property
-End If
-setPropertyFlag DataPointPropertyDownColor
+If mDownColor = Value And IsPropertySet(DataPointPropertyDownColor) Then Exit Property
 mDownColor = Value
+If mDownColor <> -1 Then
+    setPropertyFlag DataPointPropertyDownColor
+Else
+    ClearProperty DataPointPropertyDownColor
+End If
 initiateRedraw False, False
 
 Exit Property
@@ -745,12 +749,15 @@ Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
-If IsPropertySet(DataPointPropertyUpColor) Then
-    If mUpColor = Value Then Exit Property
-End If
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
+
+If mUpColor = Value And IsPropertySet(DataPointPropertyUpColor) Then Exit Property
 mUpColor = Value
-setPropertyFlag DataPointPropertyUpColor
+If mUpColor <> -1 Then
+    setPropertyFlag DataPointPropertyUpColor
+Else
+    ClearProperty DataPointPropertyUpColor
+End If
 initiateRedraw False, False
 
 Exit Property

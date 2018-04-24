@@ -510,12 +510,17 @@ End Property
 
 Public Property Let BoxColor(ByVal Value As Long)
 Const ProcName As String = "BoxColor"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mBoxColor = Value And IsPropertySet(TextPropertyBoxColor) Then Exit Property
 mBoxColor = Value
-setPropertyFlag TextPropertyBoxColor
+If mBoxColor <> -1 Then
+    setPropertyFlag TextPropertyBoxColor
+Else
+    ClearProperty TextPropertyBoxColor
+End If
 initiateRedraw False, False
 
 Exit Property
@@ -541,12 +546,17 @@ End Property
 
 Public Property Let BoxFillColor(ByVal Value As Long)
 Const ProcName As String = "BoxFillColor"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mBoxFillColor = Value And IsPropertySet(TextPropertyBoxFillColor) Then Exit Property
 mBoxFillColor = Value
-setPropertyFlag TextPropertyBoxFillColor
+If mBoxFillColor <> -1 Then
+    setPropertyFlag TextPropertyBoxFillColor
+Else
+    ClearProperty TextPropertyBoxFillColor
+End If
 initiateRedraw False, False
 
 Exit Property
@@ -603,12 +613,17 @@ End Property
 
 Public Property Let BoxFillWithBackgroundColor(ByVal Value As Boolean)
 Const ProcName As String = "BoxFillWithBackgroundColor"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mBoxFillWithBackgroundColor = Value And IsPropertySet(TextPropertyBoxFillWithBackgroundColor) Then Exit Property
 mBoxFillWithBackgroundColor = Value
-setPropertyFlag TextPropertyBoxFillWithBackgroundColor
+If mBoxFillWithBackgroundColor <> -1 Then
+    setPropertyFlag TextPropertyBoxFillWithBackgroundColor
+Else
+    ClearProperty TextPropertyBoxFillWithBackgroundColor
+End If
 initiateRedraw True, True
 
 Exit Property
@@ -696,12 +711,17 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-
 On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 If mColor = Value And IsPropertySet(TextPropertyColor) Then Exit Property
 mColor = Value
-setPropertyFlag TextPropertyColor
+If mColor <> -1 Then
+    setPropertyFlag TextPropertyColor
+Else
+    ClearProperty TextPropertyColor
+End If
 initiateRedraw False, False
 
 Exit Property
