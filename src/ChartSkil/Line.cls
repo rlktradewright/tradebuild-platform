@@ -73,9 +73,6 @@ Private mEndArrowRect As TRectangle
 
 Private mBoundingRectInViewport As TRectangle
 
-Private mViewportBoundary As TRectangle
-Private mTruncatedViewportBoundary As TRectangle
-
 Private mEndArrowX1Offset As Double   ' horiz Offset from apex of upper Arrow endpoint
 Private mEndArrowY1Offset As Double   ' vert Offset from apex of upper Arrow endpoint
 Private mEndArrowX2Offset As Double   ' horiz Offset from apex of lower Arrow endpoint
@@ -85,9 +82,6 @@ Private mStartArrowX1Offset As Double   ' horiz Offset from apex of upper Arrow 
 Private mStartArrowY1Offset As Double   ' vert Offset from apex of upper Arrow endpoint
 Private mStartArrowX2Offset As Double   ' horiz Offset from apex of lower Arrow endpoint
 Private mStartArrowY2Offset As Double   ' vert Offset from apex of lower Arrow endpoint
-
-Private mGaugeX As Double
-Private mGaugeY As Double
 
 Private mThicknessOffsetX As Double
 Private mThicknessOffsetY As Double
@@ -154,7 +148,6 @@ mBlank = True
 mBoundingRect.isValid = False
 mStartArrowRect.isValid = False
 mEndArrowRect.isValid = False
-mTruncatedViewportBoundary.isValid = False
 
 mColor = vbBlack
 mThickness = 1
@@ -185,19 +178,15 @@ End Sub
 '================================================================================
 
 Private Property Get IGraphicObject_boundingRectangle() As TRectangle
-
-Dim viewportChanges As ViewportComparisonCodes
-
 Const ProcName As String = "IGraphicObject_boundingRectangle"
-
 On Error GoTo Err
 
-viewportChanges = mViewport.CompareTo(mGaugeX, mGaugeY, mViewportBoundary)
+Static sPrevGaugeX As Double
+Static sPrevGaugeY As Double
+Static sPrevRect As TRectangle
 
-mViewportBoundary = mViewport.Boundary
-mTruncatedViewportBoundary = getTruncatedViewportBoundary
-mGaugeX = mViewport.GaugeX
-mGaugeY = mViewport.GaugeY
+Dim viewportChanges As ViewportComparisonCodes
+viewportChanges = mViewport.CompareTo(sPrevGaugeX, sPrevGaugeY, sPrevRect)
 
 If (viewportChanges And ViewportComparisonCodes.GaugeChangedX) Or _
     (viewportChanges And ViewportComparisonCodes.GaugeChangedY) Or _
@@ -208,12 +197,16 @@ Then
     mSeriesUpdateNumber = mSeries.SeriesUpdateNumber
     getCoordinatesLogical1
     getCoordinatesLogical2
-    calcConstants
-    calcEndArrowConstants
-    calcStartArrowConstants
+    calcConstants mViewport.GaugeX, mViewport.GaugeY
+    calcEndArrowConstants mViewport.GaugeX, mViewport.GaugeY
+    calcStartArrowConstants mViewport.GaugeX, mViewport.GaugeY
     calcCurrentBoundingRect
     calcBoundingRectInViewport
 End If
+
+sPrevGaugeX = mViewport.GaugeX
+sPrevGaugeY = mViewport.GaugeY
+sPrevRect = mViewport.Boundary
 
 IGraphicObject_boundingRectangle = mBoundingRect
 
@@ -249,8 +242,8 @@ If mBlank Then Exit Property
 With periodrect
     .Left = PeriodNumber
     .Right = PeriodNumber + 1
-    .Bottom = mTruncatedViewportBoundary.Bottom
-    .Top = mTruncatedViewportBoundary.Top
+    .Bottom = mViewport.Bottom
+    .Top = mViewport.Top
     .isValid = True
 End With
 
@@ -265,7 +258,7 @@ If mVertical <> VerticalNot Then
         rects(0) = vertRect
     End If
 Else
-    If PeriodNumber = Int(mTruncatedViewportBoundary.Right) Or _
+    If PeriodNumber = Int(mViewport.Right) Or _
         (Not mLeftToRight And PeriodNumber = mPoint2.X And Not ExtendAfter) Or _
         (Not mLeftToRight And PeriodNumber = mPoint1.X And Not ExtendBefore) _
     Then
@@ -291,7 +284,7 @@ Else
         End If
         If mLeftToRight Then
             If (Not ExtendAfter And PeriodNumber = mPoint2.X) Or _
-                PeriodNumber = Int(mTruncatedViewportBoundary.Right) _
+                PeriodNumber = Int(mViewport.Right) _
             Then
                 .Right = .Left
             Else
@@ -299,7 +292,7 @@ Else
             End If
         Else
             If (Not ExtendBefore And PeriodNumber = mPoint1.X) Or _
-                PeriodNumber = Int(mTruncatedViewportBoundary.Right) _
+                PeriodNumber = Int(mViewport.Right) _
             Then
                 .Right = .Left
             Else
@@ -317,14 +310,14 @@ Else
         If mLeftToRight Then
             If (Not ExtendBefore And PeriodNumber = mPoint1.X) Then .Left = .Left - mThicknessOffsetX
             If (Not ExtendAfter And PeriodNumber = mPoint2.X) Or _
-                PeriodNumber = Int(mTruncatedViewportBoundary.Right) _
+                PeriodNumber = Int(mViewport.Right) _
             Then
                 .Right = .Right + mThicknessOffsetX
             End If
         Else
             If (Not ExtendAfter And PeriodNumber = mPoint2.X) Then .Left = .Left - mThicknessOffsetX
             If (Not ExtendBefore And PeriodNumber = mPoint1.X) Or _
-                PeriodNumber = Int(mTruncatedViewportBoundary.Right) _
+                PeriodNumber = Int(mViewport.Right) _
             Then
                 .Right = .Right + mThicknessOffsetX
             End If
@@ -1679,19 +1672,14 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
-Private Sub calcConstants()
-
+Private Sub calcConstants(ByVal pGaugeX As Double, ByVal pGaugeY As Double)
 Const ProcName As String = "calcConstants"
-
 On Error GoTo Err
 
 If mBlank Then Exit Sub
 
-mGaugeX = mViewport.GaugeX
-mGaugeY = mViewport.GaugeY
-
-mThicknessOffsetX = mGaugeX * Thickness / 2
-mThicknessOffsetY = mGaugeY * Thickness / 2
+mThicknessOffsetX = pGaugeX * Thickness / 2
+mThicknessOffsetY = pGaugeY * Thickness / 2
 
 If mVertical = VerticalUp Then
     mLineAngle = Pi / 2
@@ -1706,13 +1694,13 @@ mB = (mX2 * mY1 - mX1 * mY2) / (mX2 - mX1)
 
 Select Case mDirection
 Case NE
-    mLineAngle = Atn(mA * mGaugeX / mGaugeY)
+    mLineAngle = Atn(mA * pGaugeX / pGaugeY)
 Case NW
-    mLineAngle = Pi + Atn(mA * mGaugeX / mGaugeY)
+    mLineAngle = Pi + Atn(mA * pGaugeX / pGaugeY)
 Case SW
-    mLineAngle = Pi + Atn(mA * mGaugeX / mGaugeY)
+    mLineAngle = Pi + Atn(mA * pGaugeX / pGaugeY)
 Case SE
-    mLineAngle = 2 * Pi + Atn(mA * mGaugeX / mGaugeY)
+    mLineAngle = 2 * Pi + Atn(mA * pGaugeX / pGaugeY)
 End Select
 
 mLineAngleSin = Sin(mLineAngle)
@@ -1744,7 +1732,7 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Private Sub calcEndArrowConstants()
+Private Sub calcEndArrowConstants(ByVal pGaugeX As Double, ByVal pGaugeY As Double)
 Dim hyp As Double
 Dim halfAngle As Double
 
@@ -1757,10 +1745,10 @@ If mBlank Then Exit Sub
 
 hyp = Sqr(ArrowEndLength * ArrowEndLength + (ArrowEndWidth * ArrowEndWidth) / 4#)
 halfAngle = Atn(ArrowEndWidth / (2 * ArrowEndLength))
-mEndArrowX1Offset = -hyp * Cos(mLineAngle - halfAngle) * mGaugeX
-mEndArrowY1Offset = -hyp * Sin(mLineAngle - halfAngle) * mGaugeY
-mEndArrowX2Offset = -hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
-mEndArrowY2Offset = -hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * mGaugeY
+mEndArrowX1Offset = -hyp * Cos(mLineAngle - halfAngle) * pGaugeX
+mEndArrowY1Offset = -hyp * Sin(mLineAngle - halfAngle) * pGaugeY
+mEndArrowX2Offset = -hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * pGaugeX
+mEndArrowY2Offset = -hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * pGaugeY
 
 With mEndArrowRect
     Select Case mDirection
@@ -1798,7 +1786,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub calcStartArrowConstants()
+Private Sub calcStartArrowConstants(ByVal pGaugeX As Double, ByVal pGaugeY As Double)
 Dim hyp As Double
 Dim halfAngle As Double
 
@@ -1811,10 +1799,10 @@ If mBlank Then Exit Sub
 
 hyp = Sqr(ArrowStartLength * ArrowStartLength + ArrowStartWidth * ArrowStartWidth / 4)
 halfAngle = Atn(ArrowStartWidth / (2 * ArrowStartLength))
-mStartArrowX1Offset = hyp * Cos(mLineAngle - halfAngle) * mGaugeX
-mStartArrowY1Offset = hyp * Sin(mLineAngle - halfAngle) * mGaugeY
-mStartArrowX2Offset = hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
-mStartArrowY2Offset = hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * mGaugeY
+mStartArrowX1Offset = hyp * Cos(mLineAngle - halfAngle) * pGaugeX
+mStartArrowY1Offset = hyp * Sin(mLineAngle - halfAngle) * pGaugeY
+mStartArrowX2Offset = hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * pGaugeX
+mStartArrowY2Offset = hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * pGaugeY
 
 With mStartArrowRect
     Select Case mDirection
@@ -1882,8 +1870,8 @@ If Not mVisible Then
     Exit Sub
 End If
 
-includeStartArrow = RectContainsPoint(mTruncatedViewportBoundary, mX1, mY1)
-includeEndArrow = RectContainsPoint(mTruncatedViewportBoundary, mX2, mY2)
+includeStartArrow = RectContainsPoint(truncateTRectRight(mViewport.Boundary), mX1, mY1)
+includeEndArrow = RectContainsPoint(truncateTRectRight(mViewport.Boundary), mX2, mY2)
 
 If isVertical Then
     drawVerticalLine
@@ -2116,16 +2104,16 @@ Private Sub drawVerticalLine()
 Const ProcName As String = "drawVerticalLine"
 On Error GoTo Err
 
-If Not IntContains(RectGetXInterval(mTruncatedViewportBoundary), mX1) Then Exit Sub
+If Not IntContains(RectGetXInterval(truncateTRectRight(mViewport.Boundary)), mX1) Then Exit Sub
 
 setDrawingAttributes
 
 Dim y1 As Double
 If ExtendBefore Then
     If mVertical = VerticalUp Then
-        y1 = mTruncatedViewportBoundary.Bottom
+        y1 = mViewport.Bottom
     Else
-        y1 = mTruncatedViewportBoundary.Top
+        y1 = mViewport.Top
     End If
 Else
     y1 = Point1.yLogical(mViewport.Region)
@@ -2134,9 +2122,9 @@ End If
 Dim y2 As Double
 If ExtendAfter Then
     If mVertical = VerticalUp Then
-        y2 = mTruncatedViewportBoundary.Top
+        y2 = mViewport.Top
     Else
-        y2 = mTruncatedViewportBoundary.Bottom
+        y2 = mViewport.Bottom
     End If
 Else
     y2 = Point2.yLogical(mViewport.Region)
@@ -2199,13 +2187,13 @@ On Error GoTo Err
 
 getDomainInViewport.isValid = False
 If Vertical Then
-    If IntContains(RectXIntersection(Area, mTruncatedViewportBoundary), mX1) Then
+    If IntContains(RectXIntersection(Area, truncateTRectRight(mViewport.Boundary)), mX1) Then
         getDomainInViewport.startValue = mX1
         getDomainInViewport.endValue = mX1
         getDomainInViewport.isValid = True
     End If
 Else
-    yRange = mapDomainInterval(RectXIntersection(Area, mTruncatedViewportBoundary))
+    yRange = mapDomainInterval(RectXIntersection(Area, truncateTRectRight(mViewport.Boundary)))
     getDomainInViewport = inverseMapRangeInterval(IntIntersection(yRange, RectGetYInterval(Area)))
 End If
 
@@ -2222,13 +2210,13 @@ On Error GoTo Err
 
 If ExtendAfter Then
     If mLeftToRight Then
-        getEndX = mTruncatedViewportBoundary.Right
+        getEndX = Int(mViewport.Right)
     Else
-        getEndX = mTruncatedViewportBoundary.Left
+        getEndX = mViewport.Left
     End If
 Else
-    If mLeftToRight And mX2 > mTruncatedViewportBoundary.Right Then
-        getEndX = mTruncatedViewportBoundary.Right
+    If mLeftToRight And mX2 > Int(mViewport.Right) Then
+        getEndX = Int(mViewport.Right)
     Else
         getEndX = mX2
     End If
@@ -2286,31 +2274,17 @@ On Error GoTo Err
 
 If ExtendBefore Then
     If mLeftToRight Then
-        getStartX = mTruncatedViewportBoundary.Left
+        getStartX = mViewport.Left
     Else
-        getStartX = mTruncatedViewportBoundary.Right
+        getStartX = Int(mViewport.Right)
     End If
 Else
-    If Not mLeftToRight And mX1 > mTruncatedViewportBoundary.Right Then
-        getStartX = mTruncatedViewportBoundary.Right
+    If Not mLeftToRight And mX1 > Int(mViewport.Right) Then
+        getStartX = Int(mViewport.Right)
     Else
         getStartX = mX1
     End If
 End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function getTruncatedViewportBoundary() As TRectangle
-Const ProcName As String = "getTruncatedViewportBoundary"
-
-On Error GoTo Err
-
-getTruncatedViewportBoundary = mViewport.Boundary
-getTruncatedViewportBoundary.Right = Int(getTruncatedViewportBoundary.Right)
 
 Exit Function
 
@@ -2361,7 +2335,7 @@ Const ProcName As String = "getXIntervalInViewport"
 
 On Error GoTo Err
 
-getXIntervalInViewport = IntIntersection(RectGetXInterval(mTruncatedViewportBoundary), _
+getXIntervalInViewport = IntIntersection(RectGetXInterval(truncateTRectRight(mViewport.Boundary)), _
                                         getHorizontalTInterval)
 
 Exit Function
@@ -2375,7 +2349,7 @@ Const ProcName As String = "getYIntervalInViewport"
 
 On Error GoTo Err
 
-getYIntervalInViewport = IntIntersection(RectGetYInterval(mTruncatedViewportBoundary), _
+getYIntervalInViewport = IntIntersection(RectGetYInterval(truncateTRectRight(mViewport.Boundary)), _
                                         getVerticalTInterval)
 
 Exit Function
@@ -2414,9 +2388,9 @@ If recalcBoundaries Then
     getCoordinatesLogical2
     
     setDirection
-    calcConstants
-    calcEndArrowConstants
-    calcStartArrowConstants
+    calcConstants mViewport.GaugeX, mViewport.GaugeY
+    calcEndArrowConstants mViewport.GaugeX, mViewport.GaugeY
+    calcStartArrowConstants mViewport.GaugeX, mViewport.GaugeY
     calcCurrentBoundingRect
     calcBoundingRectInViewport
 End If
@@ -2609,6 +2583,19 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function truncateTRectRight(pRect As TRectangle) As TRectangle
+Const ProcName As String = "truncateTRectRight"
+On Error GoTo Err
+
+truncateTRectRight = pRect
+truncateTRectRight.Right = Int(truncateTRectRight.Right)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub undraw()
 
