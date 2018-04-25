@@ -59,7 +59,7 @@ Private mIsSelected As Boolean
 
 Private mFinished As Boolean
 
-Private mLines As Collection
+Private mLines As SortedDictionary
 
 Private mViewport As ViewPort
 Private mLayer As Long
@@ -102,7 +102,7 @@ Private mPropertyOverrideFlags As LinePropertyFlags
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mLines = New Collection
+Set mLines = CreateSortedDictionary
 Set mBaseStyle = gDefaultLineStyle
 Set mStyle = New LineStyle
 End Sub
@@ -145,6 +145,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Private Property Get IGraphicObjectSeries_Enumerator() As Enumerator
+Const ProcName As String = "IGraphicObjectSeries_Enumerator"
+On Error GoTo Err
+
+Set IGraphicObjectSeries_Enumerator = getEnumerator
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
 Set mGOSP = Nothing
@@ -171,10 +183,9 @@ End Property
 
 Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
-
 On Error GoTo Err
 
-Set IGraphicObjectSeries_item = mLines.Item(index)
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 
 Exit Function
 
@@ -187,17 +198,24 @@ IGraphicObjectSeries_Name = mName
 End Property
 
 Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
-mLines.Remove index
+Const ProcName As String = "IGraphicObjectSeries_Remove"
+On Error GoTo Err
+
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim lLine As ChartSkil27.Line
-
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
-
 On Error GoTo Err
 
 On Error Resume Next
+
+Dim lLine As ChartSkil27.Line
 Set lLine = Value
 
 mLines.Remove lLine.Key
@@ -696,6 +714,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Enumerator() As Enumerator
+Const ProcName As String = "Enumerator"
+On Error GoTo Err
+
+Set Enumerator = getEnumerator
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get ExtendAfter() As Boolean
 Const ProcName As String = "ExtendAfter"
 
@@ -1070,18 +1100,12 @@ Public Function Add( _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As LineStyle) As ChartSkil27.Line
 Const ProcName As String = "Add"
-
-Dim lLine As ChartSkil27.Line
-
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Line series is finished"
 
-If Key = "" Then
-    Key = GenerateGUIDString
-End If
-Set lLine = New ChartSkil27.Line
+Dim lLine As New ChartSkil27.Line
+If Key = "" Then Key = GetObjectKey(lLine)
 lLine.Initialise Me, Key, mGOSP, mViewport, LocalStyle
 
 mGOSP.AddGraphicObject lLine
@@ -1133,7 +1157,7 @@ Const ProcName As String = "NewEnum"
 
 On Error GoTo Err
 
-   Set NewEnum = mLines.[_NewEnum]
+   Set NewEnum = mLines.Enumerator
 
 Exit Function
 
@@ -1186,6 +1210,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getEnumerator() As Enumerator
+Const ProcName As String = "getEnumerator"
+On Error GoTo Err
+
+Set getEnumerator = mLines.Enumerator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function IsPropertySet( _
                 ByVal flag As LinePropertyFlags) As Boolean

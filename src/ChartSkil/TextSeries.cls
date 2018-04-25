@@ -58,7 +58,7 @@ Private mIsSelected As Boolean
 
 Private mFinished As Boolean
 
-Private mTexts As Collection
+Private mTexts As SortedDictionary
 
 Private mViewport As ViewPort
 Private mLayer As Long
@@ -111,7 +111,7 @@ Private mPropertyOverrideFlags As TextPropertyFlags
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mTexts = New Collection
+Set mTexts = CreateSortedDictionary
 Set mBaseStyle = gDefaultTextStyle
 Set mStyle = New TextStyle
 End Sub
@@ -141,6 +141,18 @@ Private Property Get IGraphicObjectSeries_count() As Long
 IGraphicObjectSeries_count = mTexts.Count
 End Property
 
+Private Property Get IGraphicObjectSeries_Enumerator() As Enumerator
+Const ProcName As String = "IGraphicObjectSeries_Enumerator"
+On Error GoTo Err
+
+Set IGraphicObjectSeries_Enumerator = getEnumerator
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
 Set mGOSP = Nothing
@@ -167,10 +179,9 @@ End Property
 
 Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
-
 On Error GoTo Err
 
-Set IGraphicObjectSeries_item = mTexts.Item(index)
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 
 Exit Function
 
@@ -184,10 +195,9 @@ End Property
 
 Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
 Const ProcName As String = "IGraphicObjectSeries_Remove"
-
 On Error GoTo Err
 
-mTexts.Remove index
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 
 Exit Sub
 
@@ -196,13 +206,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim lText As ChartSkil27.Text
-
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
-
 On Error GoTo Err
 
 On Error Resume Next
+
+Dim lText As ChartSkil27.Text
 Set lText = Value
 
 mTexts.Remove lText.Key
@@ -655,6 +664,18 @@ On Error GoTo Err
 Ellipsis = mBaseStyle.Ellipsis
 If Not mStyle Is Nothing Then If mStyle.IsPropertySet(TextPropertyEllipsis) Then Ellipsis = mStyle.Ellipsis
 If IsPropertySet(TextPropertyEllipsis) Then Ellipsis = mEllipsis
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Enumerator() As Enumerator
+Const ProcName As String = "Enumerator"
+On Error GoTo Err
+
+Set Enumerator = getEnumerator
 
 Exit Property
 
@@ -1238,16 +1259,12 @@ Public Function Add( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pLocalStyle As TextStyle) As Text
 Const ProcName As String = "Add"
-Dim lText As Text
-
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Text series is finished"
 
-If pKey = "" Then pKey = GenerateGUIDString
-
-Set lText = New Text
+Dim lText As New Text
+If pKey = "" Then pKey = GetObjectKey(lText)
 lText.Initialise Me, pKey, mGOSP, mViewport, pLocalStyle
 
 mTexts.Add lText, pKey
@@ -1297,7 +1314,7 @@ End Function
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-   Set NewEnum = mTexts.[_NewEnum]
+   Set NewEnum = mTexts.Enumerator
 End Function
 
 Public Sub RemoveObject(ByVal Value As ChartSkil27.Text)
@@ -1345,6 +1362,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getEnumerator() As Enumerator
+Const ProcName As String = "getEnumerator"
+On Error GoTo Err
+
+Set getEnumerator = mTexts.Enumerator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function IsPropertySet( _
                 ByVal flag As TextPropertyFlags) As Boolean

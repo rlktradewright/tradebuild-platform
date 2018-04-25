@@ -73,30 +73,31 @@ Private Sub ITask_run()
 Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
-Dim failpoint As String
+Static sEN As Enumerator
+If sEN Is Nothing Then Set sEN = mGraphObjSeries.Enumerator
 
-If mGraphObjSeries.Count <> 0 Then
-    ' we remove the latest object first, since later objects may have references to earlier
-    ' objects, so that removing the earliest first would mean they can't actually be
-    ' terminated
-    failpoint = 100
-    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(mGraphObjSeries.Count), False, True
-    
-    failpoint = 200
-    mGraphObjSeries.Remove mGraphObjSeries.Count
-Else
-    failpoint = 300
-    mGraphObjSeries.Finish
-    Set mGraphObjSeries = Nothing
-    Set mRegion = Nothing
-    
-    mTaskContext.Finish Empty, False
-End If
+Static sETimer As New ElapsedTimer
+
+sETimer.StartTiming
+
+Do While sEN.MoveNext
+    Dim lGraphObj As IGraphicObject
+    Set lGraphObj = sEN.Current
+    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx lGraphObj, False, False
+    sEN.Remove
+    If sETimer.ElapsedTimeMicroseconds > 20000 Then Exit Sub
+Loop
+
+mGraphObjSeries.Finish
+Set mGraphObjSeries = Nothing
+Set mRegion = Nothing
+
+mTaskContext.Finish Empty, False
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)

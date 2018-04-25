@@ -108,7 +108,7 @@ Const ProcName As String = "HasGrid"
 On Error GoTo Err
 
 mHasGrid = Value
-If Not mHasGrid Then clearLinesFrom 1
+If Not mHasGrid Then clearRemainingLines mYGridLines.Enumerator
 
 Exit Property
 
@@ -121,7 +121,7 @@ Const ProcName As String = "HasGridText"
 On Error GoTo Err
 
 mHasGridText = Value
-If Not mHasGridText Then clearTextsFrom 1
+If Not mHasGridText Then clearRemainingTexts mYGridTexts.Enumerator
 
 Exit Property
 
@@ -137,8 +137,8 @@ On Error GoTo Err
 mHidden = Value
 
 If mHidden Then
-    clearLinesFrom 1
-    clearTextsFrom 1
+    clearRemainingLines mYGridLines.Enumerator
+    clearRemainingTexts mYGridTexts.Enumerator
 End If
 
 Exit Property
@@ -216,11 +216,11 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mYGridLines = pLines
-mYGridLines.layer = LayerNumbers.LayerGrid
+mYGridLines.Layer = LayerNumbers.LayerGrid
 'mYGridLines.Extended = True
 
 Set mYGridTexts = pTexts
-mYGridTexts.layer = LayerNumbers.LayerGridText
+mYGridTexts.Layer = LayerNumbers.LayerGridText
 mYGridTexts.Align = AlignBoxCentreLeft
 mYGridTexts.HideIfBlank = True
 
@@ -236,18 +236,16 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub clearLinesFrom(ByVal pIndex As Long)
-Const ProcName As String = "clearLinesFrom"
+Private Sub clearRemainingLines(ByVal pEn As Enumerator)
+Const ProcName As String = "clearRemainingLines"
 On Error GoTo Err
 
-Dim i As Long
-Dim aLine As ChartSkil27.Line
-
-For i = pIndex To mYGridLines.Count
-    Set aLine = mYGridLines.Item(i)
+Do While pEn.MoveNext
+    Dim aLine As ChartSkil27.Line
+    Set aLine = pEn.Current
     aLine.SetPosition gNewPoint(-1000, 0, CoordsLogical, CoordsLogical), _
                         gNewPoint(-1000, 0, CoordsLogical, CoordsLogical)
-Next
+Loop
 
 Exit Sub
 
@@ -255,17 +253,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub clearTextsFrom(ByVal pIndex As Long)
-Const ProcName As String = "clearTextsFrom"
+Private Sub clearRemainingTexts(ByVal pEn As Enumerator)
+Const ProcName As String = "clearRemainingTexts"
 On Error GoTo Err
 
-Dim i As Long
-Dim aText As Text
-
-For i = pIndex To mYGridTexts.Count
-    Set aText = mYGridTexts.Item(i)
+Do While pEn.MoveNext
+    Dim aText As Text
+    Set aText = pEn.Current
     aText.Text = ""
-Next
+Loop
 
 Exit Sub
 
@@ -324,27 +320,27 @@ Private Sub setHorizontalGridLines( _
 Const ProcName As String = "setHorizontalGridLines"
 On Error GoTo Err
 
-Dim Y As Double
-Dim i As Long
-Dim aLine As ChartSkil27.Line
-
 If Not mHasGrid Then Exit Sub
 If mHidden Then Exit Sub
 
+Dim Y As Double
 Y = Int(pBottom / pGridlineSpacing) * pGridlineSpacing
+
+Dim en As Enumerator
+Set en = mYGridLines.Enumerator
+
 Do While Y < pTop
-    i = i + 1
-    If i > mYGridLines.Count Then
-        Set aLine = mYGridLines.Add
-    Else
-        Set aLine = mYGridLines.Item(i)
-    End If
-    aLine.SetPosition gNewPoint(0, Y, CoordsRelative, CoordsLogical), _
-                        gNewPoint(100, Y, CoordsRelative, CoordsLogical)
+    If Not en.MoveNext Then Exit Do
+    setLine en.Current, Y
     Y = Y + pGridlineSpacing
 Loop
 
-clearLinesFrom i + 1
+clearRemainingLines en
+
+Do While Y < pTop
+    setLine mYGridLines.Add, Y
+    Y = Y + pGridlineSpacing
+Loop
 
 Exit Sub
 
@@ -363,40 +359,49 @@ Private Sub setHorizontalGridTexts( _
 Const ProcName As String = "setHorizontalGridTexts"
 On Error GoTo Err
 
-Dim Y As Double
-Dim i As Long
-Dim aText As Text
-
 If Not mHasGridText Then Exit Sub
 
+Dim Y As Double
 Y = Int(pBottom / pGridlineSpacing) * pGridlineSpacing
+
+Dim en As Enumerator
+Set en = mYGridTexts.Enumerator
+
 Do While Y < pTop
-    i = i + 1
-    If i > mYGridTexts.Count Then
-        Set aText = mYGridTexts.Add
-    Else
-        Set aText = mYGridTexts.Item(i)
-    End If
-    aText.Text = FormatYValue(Y)
-    
-    Select Case mGridTextPosition
-    Case YGridTextPositionCentre
-        aText.Position = gNewPoint(50, Y, CoordsRelative, CoordsLogical)
-    Case YGridTextPositionLeft
-        aText.Position = gNewPoint(0.2, Y, CoordsDistance, CoordsLogical)
-    Case YGridTextPositionRight
-        aText.Position = gNewPoint(0.2, Y, CoordsCounterDistance, CoordsLogical)
-    End Select
-    
+    If Not en.MoveNext Then Exit Do
+    setText en.Current, Y
     Y = Y + pGridlineSpacing
 Loop
 
-clearTextsFrom i + 1
+clearRemainingTexts en
+
+Do While Y < pTop
+    setText mYGridTexts.Add, Y
+    Y = Y + pGridlineSpacing
+Loop
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setLine(ByVal pLine As Line, ByVal Y As Double)
+pLine.SetPosition gNewPoint(0, Y, CoordsRelative, CoordsLogical), _
+                    gNewPoint(100, Y, CoordsRelative, CoordsLogical)
+End Sub
+
+Private Sub setText(ByVal pText As Text, Y As Double)
+    pText.Text = FormatYValue(Y)
+    
+    Select Case mGridTextPosition
+    Case YGridTextPositionCentre
+        pText.Position = gNewPoint(50, Y, CoordsRelative, CoordsLogical)
+    Case YGridTextPositionLeft
+        pText.Position = gNewPoint(0.2, Y, CoordsDistance, CoordsLogical)
+    Case YGridTextPositionRight
+        pText.Position = gNewPoint(0.2, Y, CoordsCounterDistance, CoordsLogical)
+    End Select
 End Sub
 
 

@@ -65,6 +65,10 @@ Public Property Get Count() As Long
 
 End Property
 
+Public Property Get Enumerator() As Enumerator
+
+End Property
+
 Public Property Get IsSelectable() As Boolean
 
 End Property

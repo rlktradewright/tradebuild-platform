@@ -59,7 +59,7 @@ Private mIsSelected As Boolean
 
 Private mFinished           As Boolean
 
-Private mDataPoints         As Collection
+Private mDataPoints         As SortedDictionary
 
 Private mViewport As ViewPort
 Private mLayer              As Long
@@ -92,7 +92,7 @@ Private mPropertyOverrideFlags As DataPointPropertyFlags
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mDataPoints = New Collection
+Set mDataPoints = CreateSortedDictionary
 Set mBaseStyle = gDefaultDataPointStyle
 Set mStyle = New DataPointStyle
 End Sub
@@ -124,10 +124,21 @@ End Sub
 
 Private Property Get IGraphicObjectSeries_count() As Long
 Const ProcName As String = "IGraphicObjectSeries_count"
-
 On Error GoTo Err
 
 IGraphicObjectSeries_count = mDataPoints.Count
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Property Get IGraphicObjectSeries_Enumerator() As Enumerator
+Const ProcName As String = "IGraphicObjectSeries_Enumerator"
+On Error GoTo Err
+
+Set IGraphicObjectSeries_Enumerator = getEnumerator
 
 Exit Property
 
@@ -173,10 +184,9 @@ End Property
 
 Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
-
 On Error GoTo Err
 
-Set IGraphicObjectSeries_item = mDataPoints.Item(index)
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 
 Exit Function
 
@@ -189,14 +199,10 @@ IGraphicObjectSeries_Name = mName
 End Property
 
 Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
-Dim dp As DataPoint
 Const ProcName As String = "IGraphicObjectSeries_Remove"
-
 On Error GoTo Err
 
-Set dp = mDataPoints.Item(index)
-dp.Finish
-mDataPoints.Remove index
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 
 Exit Sub
 
@@ -205,13 +211,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim dp As ChartSkil27.DataPoint
-
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
-
 On Error GoTo Err
 
 On Error Resume Next
+
+Dim dp As ChartSkil27.DataPoint
 Set dp = Value
 
 mDataPoints.Remove dp.Key
@@ -390,6 +395,18 @@ If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegal
 
 setLongProperty mDownColor, DataPointPropertyDownColor, Value
 RepaintRegion False
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Enumerator() As Enumerator
+Const ProcName As String = "Enumerator"
+On Error GoTo Err
+
+Set Enumerator = getEnumerator
 
 Exit Property
 
@@ -680,37 +697,33 @@ Public Function Add( _
                 Optional ByVal Timestamp As Date, _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As DataPointStyle) As DataPoint
-Static duplicateCount As Long       ' counts the number of successive adds with
-                                    ' the same Timestamp
-Static prevTimestamp As Date
-Dim dp As DataPoint
-
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "DataPoint series is finished"
 
+Static sDuplicateCount As Long      ' counts the number of successive adds with
+                                    ' the same Timestamp
+Static sPrevTimestamp As Date
+
 If Not mPrevDataPointRef Is Nothing Then
-    If Timestamp = prevTimestamp Then
-        duplicateCount = duplicateCount + 1
+    If Timestamp = sPrevTimestamp Then
+        sDuplicateCount = sDuplicateCount + 1
     Else
-        duplicateCount = 0
+        sDuplicateCount = 0
     End If
 End If
 
-Set dp = New DataPoint
-If CDbl(Timestamp) <> 0# Then dp.X = mPeriods.GetXFromTimestamp(Timestamp, False, duplicateCount)
-If Key = "" Then
-    Key = GenerateGUIDString
-End If
+Dim dp As New DataPoint
+If CDbl(Timestamp) <> 0# Then dp.X = mPeriods.GetXFromTimestamp(Timestamp, False, sDuplicateCount)
+If Key = "" Then Key = GetObjectKey(dp)
 dp.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 
 If Not mPrevDataPointRef Is Nothing Then dp.PreviousDataPoint = prevDataPointObj
 
 mDataPoints.Add dp, Key
 Set mPrevDataPointRef = CreateWeakReference(dp)
-prevTimestamp = Timestamp
+sPrevTimestamp = Timestamp
 mGOSP.AddGraphicObject dp
 
 Set Add = dp
@@ -767,7 +780,7 @@ End Sub
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-   Set NewEnum = mDataPoints.[_NewEnum]
+   Set NewEnum = mDataPoints.Enumerator
 End Function
 
 '================================================================================
@@ -805,6 +818,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getEnumerator() As Enumerator
+Const ProcName As String = "getEnumerator"
+On Error GoTo Err
+
+Set getEnumerator = mDataPoints.Enumerator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function IsPropertySet( _
                 ByVal flag As DataPointPropertyFlags) As Boolean

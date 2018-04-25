@@ -59,7 +59,7 @@ Private mIsSelected As Boolean
 
 Private mFinished As Boolean
 
-Private mBars As Collection
+Private mBars As SortedDictionary
 
 Private mViewport As ViewPort
 Private mLayer As Long
@@ -94,7 +94,7 @@ Private mPropertyOverrideFlags As BarPropertyFlags
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mBars = New Collection
+Set mBars = CreateSortedDictionary()
 Set mBaseStyle = gDefaultBarStyle
 Set mStyle = New BarStyle
 End Sub
@@ -122,6 +122,18 @@ End Sub
 
 Private Property Get IGraphicObjectSeries_count() As Long
 IGraphicObjectSeries_count = mBars.Count
+End Property
+
+Private Property Get IGraphicObjectSeries_Enumerator() As Enumerator
+Const ProcName As String = "IGraphicObjectSeries_Enumerator"
+On Error GoTo Err
+
+Set IGraphicObjectSeries_Enumerator = getEnumerator
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IGraphicObjectSeries_finish()
@@ -162,10 +174,9 @@ End Property
 
 Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
-
 On Error GoTo Err
 
-Set IGraphicObjectSeries_item = mBars.Item(index)
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 
 Exit Function
 
@@ -179,10 +190,9 @@ End Property
 
 Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
 Const ProcName As String = "IGraphicObjectSeries_Remove"
-
 On Error GoTo Err
 
-mBars.Remove index
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 
 Exit Sub
 
@@ -191,13 +201,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim lBar As ChartSkil27.Bar
-
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
-
 On Error GoTo Err
 
 On Error Resume Next
+
+Dim lBar As ChartSkil27.Bar
 Set lBar = Value
 
 mBars.Remove lBar.Key
@@ -377,6 +386,18 @@ On Error GoTo Err
 
 setLongProperty mDownColor, BarPropertyDownColor, Value
 RepaintRegion False
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Enumerator() As Enumerator
+Const ProcName As String = "Enumerator"
+On Error GoTo Err
+
+Set Enumerator = getEnumerator
 
 Exit Property
 
@@ -694,18 +715,14 @@ Public Function Add( _
                 Optional ByVal LocalStyle As BarStyle) As Bar
 
 Const ProcName As String = "Add"
-Dim lBar As Bar
-
-
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Bar series is finished"
 
-Set lBar = New Bar
+Dim lBar As New Bar
 
-If Key = "" Then
-    Key = GenerateGUIDString
-End If
+If Key = "" Then Key = GetObjectKey(lBar)
+
 lBar.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 
 If CDbl(Timestamp) <> 0# Then lBar.X = mPeriods.GetXFromTimestamp(Timestamp, False)
@@ -744,7 +761,6 @@ End Sub
 
 Public Function Item(ByVal index As Variant) As Bar
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
 Set Item = mBars(index)
@@ -768,7 +784,7 @@ End Sub
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mBars.[_NewEnum]
+Set NewEnum = mBars.Enumerator
 End Function
 
 '================================================================================
@@ -806,6 +822,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getEnumerator() As Enumerator
+Const ProcName As String = "getEnumerator"
+On Error GoTo Err
+
+Set getEnumerator = mBars.Enumerator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function IsPropertySet( _
                 ByVal flag As BarPropertyFlags) As Boolean

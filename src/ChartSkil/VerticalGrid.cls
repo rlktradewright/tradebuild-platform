@@ -46,8 +46,8 @@ Private Const ModuleName                            As String = "VerticalGrid"
 
 Private mRegionRef                                  As WeakReference
 
-Private mXGridTextsCoarse                           As TextSeries
-Private mXGridTexts                                 As TextSeries
+Private mXGridLabelsCoarse                          As TextSeries
+Private mXGridLabels                                As TextSeries
 Private mXGridLines                                 As LineSeries
 
 Private mSessionEndGridLineStyle                    As LineStyle
@@ -85,14 +85,14 @@ Friend Property Let GridTextPosition(ByVal Value As XGridTextPositions)
 mGridTextPosition = Value
 Select Case mGridTextPosition
 Case XGridTextPositionCentre
-    mXGridTexts.Align = AlignBoxBottomCentre
-    mXGridTextsCoarse.Align = AlignBoxBottomCentre
+    mXGridLabels.Align = AlignBoxBottomCentre
+    mXGridLabelsCoarse.Align = AlignBoxBottomCentre
 Case XGridTextPositionBottom
-    mXGridTexts.Align = AlignBoxBottomCentre
-    mXGridTextsCoarse.Align = AlignBoxBottomCentre
+    mXGridLabels.Align = AlignBoxBottomCentre
+    mXGridLabelsCoarse.Align = AlignBoxBottomCentre
 Case XGridTextPositionTop
-    mXGridTexts.Align = AlignBoxTopCentre
-    mXGridTextsCoarse.Align = AlignBoxTopCentre
+    mXGridLabels.Align = AlignBoxTopCentre
+    mXGridLabelsCoarse.Align = AlignBoxTopCentre
 End Select
 End Property
 
@@ -101,8 +101,8 @@ Friend Property Let GridTextStyle( _
 Const ProcName As String = "GridTextStyle"
 On Error GoTo Err
 
-If Not mXGridTexts Is Nothing Then mXGridTexts.Style = Value
-If Not mXGridTextsCoarse Is Nothing Then mXGridTextsCoarse.Style = Value
+If Not mXGridLabels Is Nothing Then mXGridLabels.Style = Value
+If Not mXGridLabelsCoarse Is Nothing Then mXGridLabelsCoarse.Style = Value
 
 Exit Property
 
@@ -115,7 +115,7 @@ Const ProcName As String = "HasGrid"
 On Error GoTo Err
 
 mHasGrid = Value
-If Not mHasGrid Then clearGridLinesFrom 1
+If Not mHasGrid Then clearRemainingGridLines mXGridLines.Enumerator
 
 Exit Property
 
@@ -129,8 +129,8 @@ On Error GoTo Err
 
 mHasGridText = Value
 If Not mHasGridText Then
-    clearGridLabelsFrom 1
-    clearCoarseGridLabelsFrom 1
+    clearRemainingGridLabels mXGridLabels.Enumerator
+    clearRemainingCoarseGridLabels mXGridLabelsCoarse.Enumerator
 End If
 
 Exit Property
@@ -155,60 +155,41 @@ Friend Sub Generate()
 Const ProcName As String = "Generate"
 On Error GoTo Err
 
-Static sPrevLabel As Text
-Dim lPeriod As Period
-Dim i As Long
-Dim j As Long
-Dim k As Long
-Dim l As Long
-Dim lLabel As Text
-
 If Not mHasGrid And Not mHasGridText Then Exit Sub
 
-Set sPrevLabel = Nothing
+Dim lPeriodsNeedingGridlines As New EnumerableCollection
+Dim lPeriodsNeedingGridTexts As New EnumerableCollection
+Dim lPeriodsNeedingCoarseGridTexts As New EnumerableCollection
 
-For i = Int(IIf(mViewport.Boundary.Left < 1, _
-                1, _
-                Int(mViewport.Boundary.Left))) _
-    To Int(IIf(mViewport.Boundary.Right > mPeriods.Count, _
+Dim startPeriod As Long
+startPeriod = Int(IIf(mViewport.Boundary.Left < 1, _
+                    1, _
+                    Int(mViewport.Boundary.Left)))
+
+Dim endPeriod As Long
+endPeriod = Int(IIf(mViewport.Boundary.Right > mPeriods.Count, _
                 mPeriods.Count, _
                 Int(mViewport.Boundary.Right)))
-
+                
+Dim i As Long
+For i = startPeriod To endPeriod
+    Dim lPeriod As Period
     Set lPeriod = mPeriods(i)
     
     If lPeriod.VerticalGridLineType = VerticalGridlineTypeNone Then
-        If mHasGridText And lPeriod.Labels.CoarseLabel <> "" Then
-            l = l + 1
-            setupGridLabelCoarse lPeriod, l
-        End If
-    Else
-        If mHasGrid Then
-            j = j + 1
-            setupGridLine lPeriod, j
-        End If
-        
-        If mHasGridText Then
-            If lPeriod.Labels.CoarseLabel <> "" Then
-                l = l + 1
-                setupGridLabelCoarse lPeriod, l
-            End If
-            
-            If lPeriod.Labels.Label <> "" Then
-                k = k + 1
-                Set lLabel = setupGridLabel(lPeriod, k)
-                If gGraphicObjectsOverlap(lLabel, sPrevLabel) Then
-                    lLabel.Text = ""
-                Else
-                    Set sPrevLabel = lLabel
-                End If
-            End If
-        End If
+    ElseIf mHasGrid Then
+        lPeriodsNeedingGridlines.Add lPeriod
+    End If
+    
+    If mHasGridText Then
+        If lPeriod.Labels.CoarseLabel <> "" Then lPeriodsNeedingCoarseGridTexts.Add lPeriod
+        If lPeriod.Labels.Label <> "" Then lPeriodsNeedingGridTexts.Add lPeriod
     End If
 Next
 
-clearGridLinesFrom j + 1
-clearGridLabelsFrom k + 1
-clearCoarseGridLabelsFrom l + 1
+generateGridLines lPeriodsNeedingGridlines.Enumerator
+generateGridLabels lPeriodsNeedingGridTexts.Enumerator
+generateCoarseGridLabels lPeriodsNeedingCoarseGridTexts.Enumerator
 
 Exit Sub
 
@@ -223,32 +204,31 @@ Friend Sub Initialise( _
                 ByVal pPeriods As Periods, _
                 ByVal pViewport As ViewPort)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
 Set mPeriods = pPeriods
 Set mViewport = pViewport
 
 Set mXGridLines = pLines
-mXGridLines.layer = LayerNumbers.LayerGrid
+mXGridLines.Layer = LayerNumbers.LayerGrid
 
-Set mXGridTexts = pTexts
-mXGridTexts.layer = LayerNumbers.LayerGridText + 1
-mXGridTexts.Align = AlignBoxBottomCentre
-mXGridTexts.FixedX = False
-mXGridTexts.FixedY = True
-mXGridTexts.HideIfBlank = True
-mXGridTexts.MultiLine = True
-mXGridTexts.Justification = JustifyCentre
+Set mXGridLabels = pTexts
+mXGridLabels.Layer = LayerNumbers.LayerGridText + 1
+mXGridLabels.Align = AlignBoxBottomCentre
+mXGridLabels.FixedX = False
+mXGridLabels.FixedY = True
+mXGridLabels.HideIfBlank = True
+mXGridLabels.MultiLine = True
+mXGridLabels.Justification = JustifyCentre
 
-Set mXGridTextsCoarse = pCoarseTexts
-mXGridTextsCoarse.layer = LayerNumbers.LayerGridText
-mXGridTextsCoarse.Align = AlignBoxTopCentre
-mXGridTextsCoarse.FixedX = False
-mXGridTextsCoarse.FixedY = True
-mXGridTextsCoarse.HideIfBlank = True
-mXGridTextsCoarse.MultiLine = True
-mXGridTextsCoarse.Justification = JustifyCentre
+Set mXGridLabelsCoarse = pCoarseTexts
+mXGridLabelsCoarse.Layer = LayerNumbers.LayerGridText
+mXGridLabelsCoarse.Align = AlignBoxTopCentre
+mXGridLabelsCoarse.FixedX = False
+mXGridLabelsCoarse.FixedY = True
+mXGridLabelsCoarse.HideIfBlank = True
+mXGridLabelsCoarse.MultiLine = True
+mXGridLabelsCoarse.Justification = JustifyCentre
 
 Exit Sub
 
@@ -260,18 +240,16 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub clearGridLinesFrom(ByVal pIndex As Long)
-Const ProcName As String = "clearGridLinesFrom"
+Private Sub clearRemainingGridLines(ByVal pEn As Enumerator)
+Const ProcName As String = "clearRemainingGridLines"
 On Error GoTo Err
 
-Dim i As Long
-Dim aLine As ChartSkil27.Line
-
-For i = pIndex To mXGridLines.Count
-    Set aLine = mXGridLines.Item(i)
+Do While pEn.MoveNext
+    Dim aLine As ChartSkil27.Line
+    Set aLine = pEn.Current
     aLine.SetPosition gNewPoint(-1000, 0, CoordsLogical, CoordsLogical), _
                         gNewPoint(-1000, 0, CoordsLogical, CoordsLogical)
-Next
+Loop
 
 Exit Sub
 
@@ -279,17 +257,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub clearCoarseGridLabelsFrom(ByVal pIndex As Long)
-Const ProcName As String = "clearCoarseGridLabelsFrom"
+Private Sub clearRemainingCoarseGridLabels(ByVal pEn As Enumerator)
+Const ProcName As String = "clearRemainingCoarseGridLabels"
 On Error GoTo Err
 
-Dim i As Long
-Dim aText As Text
-
-For i = pIndex To mXGridTextsCoarse.Count
-    Set aText = mXGridTextsCoarse.Item(i)
+Do While pEn.MoveNext
+    Dim aText As Text
+    Set aText = pEn.Current
     aText.Text = ""
-Next
+Loop
 
 Exit Sub
 
@@ -297,17 +273,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub clearGridLabelsFrom(ByVal pIndex As Long)
-Const ProcName As String = "clearGridLabelsFrom"
+Private Sub clearRemainingGridLabels(ByVal pEn As Enumerator)
+Const ProcName As String = "clearRemainingGridLabels"
 On Error GoTo Err
 
-Dim i As Long
-Dim aText As Text
-
-For i = pIndex To mXGridTexts.Count
-    Set aText = mXGridTexts.Item(i)
+Do While pEn.MoveNext
+    Dim aText As Text
+    Set aText = pEn.Current
     aText.Text = ""
-Next
+Loop
 
 Exit Sub
 
@@ -315,21 +289,88 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function GetGraphicObject(ByVal pSeries As IGraphicObjectSeries, ByVal pIndex As Long) As IGraphicObject
-Const ProcName As String = "getGraphicObject"
+Private Sub generateGridLabels(ByVal pPeriodsEn As Enumerator)
+Const ProcName As String = "generateGridLabels"
 On Error GoTo Err
 
-If pIndex <= pSeries.Count Then
-    Set GetGraphicObject = pSeries.Item(pIndex)
-Else
-    Set GetGraphicObject = pSeries.Add
-End If
+Dim lPrevLabel As Text
 
-Exit Function
+Dim lTextsEn As Enumerator
+Set lTextsEn = mXGridLabels.Enumerator
+
+Dim lPeriod As Period
+Do While pPeriodsEn.MoveNext
+    Set lPeriod = pPeriodsEn.Current
+    If Not lTextsEn.MoveNext Then Exit Do
+    setupGridLabel lPeriod, lTextsEn.Current, lPrevLabel
+Loop
+
+clearRemainingGridLabels lTextsEn
+
+Do While pPeriodsEn.MoveNext
+    Set lPeriod = pPeriodsEn.Current
+    setupGridLabel lPeriod, mXGridLabels.Add, lPrevLabel
+Loop
+
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
+
+Private Sub generateCoarseGridLabels(ByVal pPeriodsEn As Enumerator)
+Const ProcName As String = "generateCoarseGridLabels"
+On Error GoTo Err
+
+Dim lTextsEn As Enumerator
+Set lTextsEn = mXGridLabelsCoarse.Enumerator
+
+Dim lPeriod As Period
+Do While pPeriodsEn.MoveNext
+    Set lPeriod = pPeriodsEn.Current
+    If Not lTextsEn.MoveNext Then Exit Do
+    setupGridLabelCoarse lPeriod, lTextsEn.Current
+Loop
+
+clearRemainingCoarseGridLabels lTextsEn
+
+Do While pPeriodsEn.MoveNext
+    Set lPeriod = pPeriodsEn.Current
+    setupGridLabelCoarse lPeriod, mXGridLabels.Add
+Loop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub generateGridLines(ByVal pPeriodsEn As Enumerator)
+Const ProcName As String = "generateGridLines"
+On Error GoTo Err
+
+Dim lLinesEn As Enumerator
+Set lLinesEn = mXGridLines.Enumerator
+
+Dim lPeriod As Period
+Do While pPeriodsEn.MoveNext
+    Set lPeriod = pPeriodsEn.Current
+    If Not lLinesEn.MoveNext Then Exit Do
+    setupGridLine lPeriod, lLinesEn.Current
+Loop
+
+clearRemainingGridLines lLinesEn
+
+Do While pPeriodsEn.MoveNext
+    Set lPeriod = pPeriodsEn.Current
+    setupGridLine lPeriod, mXGridLines.Add
+Loop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function getLineStyle(ByVal pGridLineType As VerticalGridlineTypes) As LineStyle
 Select Case pGridLineType
@@ -344,75 +385,81 @@ Case VerticalGridlineTypeDateChange
 End Select
 End Function
 
-Private Sub removeUnusedGraphicObjects(ByVal pSeries As IGraphicObjectSeries, ByVal pIndex As Long)
-Do While pSeries.Count >= pIndex
-    pSeries.Remove pSeries.Count
-Loop
-End Sub
-
-Private Function setupGridLabel(ByVal pPeriod As Period, ByVal pIndex As Long) As Text
-Dim lText As Text
-
-Set lText = GetGraphicObject(mXGridTexts, pIndex)
-lText.Text = pPeriod.Labels.Label
+Private Sub setupGridLabel(ByVal pPeriod As Period, ByVal pText As Text, ByRef pPrevLabel As Text)
+Const ProcName As String = "setupGridLabel"
+On Error GoTo Err
 
 Select Case mGridTextPosition
 Case XGridTextPositionCentre
-    lText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
+    pText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
                                 50, _
                                 CoordsLogical, _
                                 CoordsRelative)
 Case XGridTextPositionBottom
-    lText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
+    pText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
                                 0#, _
                                 CoordsLogical, _
                                 CoordsDistance)
 Case XGridTextPositionTop
-    lText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
+    pText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
                                 0#, _
                                 CoordsLogical, _
                                 CoordsCounterDistance)
 End Select
 
-Set setupGridLabel = lText
+pText.Text = pPeriod.Labels.Label
 
-End Function
+If gGraphicObjectsOverlap(pText, pPrevLabel) Then
+    pText.Text = ""
+Else
+    Set pPrevLabel = pText
+End If
 
-Private Sub setupGridLabelCoarse(ByVal pPeriod As Period, ByVal pIndex As Long)
-Dim lText As Text
+Exit Sub
 
-Set lText = GetGraphicObject(mXGridTextsCoarse, pIndex)
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setupGridLabelCoarse(ByVal pPeriod As Period, ByVal pText As Text)
+Const ProcName As String = "setupGridLabelCoarse"
+On Error GoTo Err
 
 Select Case mGridTextPosition
 Case XGridTextPositionCentre
-    lText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
+    pText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
                                 50, _
                                 CoordsLogical, _
                                 CoordsRelative)
-    lText.Text = pPeriod.Labels.CoarseLabel & vbCrLf
+    pText.Text = pPeriod.Labels.CoarseLabel & vbCrLf
 Case XGridTextPositionBottom
-    lText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
+    pText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
                                 0#, _
                                 CoordsLogical, _
                                 CoordsDistance)
-    lText.Text = pPeriod.Labels.CoarseLabel & vbCrLf
+    pText.Text = pPeriod.Labels.CoarseLabel & vbCrLf
 Case XGridTextPositionTop
-    lText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
+    pText.Position = gNewPoint(pPeriod.PeriodNumber - 0.5, _
                                 0#, _
                                 CoordsLogical, _
                                 CoordsCounterDistance)
-    lText.Text = vbCrLf & pPeriod.Labels.CoarseLabel
+    pText.Text = vbCrLf & pPeriod.Labels.CoarseLabel
 End Select
+pText.Text = pPeriod.Labels.CoarseLabel
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setupGridLine(ByVal pPeriod As Period, ByVal pIndex As Long)
-Dim lLine As ChartSkil27.Line
+Private Sub setupGridLine(ByVal pPeriod As Period, ByVal pLine As ChartSkil27.Line)
+Const ProcName As String = "setupGridLine"
+On Error GoTo Err
 
-Set lLine = GetGraphicObject(mXGridLines, pIndex)
+pLine.LocalStyle = getLineStyle(pPeriod.VerticalGridLineType)
 
-lLine.LocalStyle = getLineStyle(pPeriod.VerticalGridLineType)
-
-lLine.SetPosition gNewPoint(pPeriod.PeriodNumber - 0.5, _
+pLine.SetPosition gNewPoint(pPeriod.PeriodNumber - 0.5, _
                             0.1, _
                             CoordsLogical, _
                             CoordsDistance), _
@@ -420,5 +467,10 @@ lLine.SetPosition gNewPoint(pPeriod.PeriodNumber - 0.5, _
                             0.1, _
                             CoordsLogical, _
                             CoordsCounterDistance)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
