@@ -3087,11 +3087,11 @@ Dim lPeriodNumber As Long
 If mPeriods.Count = 0 Then Exit Function
 
 lPeriodNumber = Round(X)
-If lPeriodNumber >= mYAxisPosition Then Exit Function
+If lPeriodNumber >= mYAxisPosition Then lPeriodNumber = mYAxisPosition - 1
+If lPeriodNumber >= mPeriods.Count Then lPeriodNumber = mPeriods.Count
+If lPeriodNumber < 1 Then lPeriodNumber = 1
 
-On Error Resume Next
 Set lThisPeriod = mPeriods(lPeriodNumber)
-On Error GoTo Err
 
 If lThisPeriod Is Nothing Then
     formatXCursorText = ""
