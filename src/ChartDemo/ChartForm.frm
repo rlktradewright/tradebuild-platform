@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#277.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#277.1#0"; "ChartSkil27.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.7"
    ClientHeight    =   8520
@@ -435,6 +435,11 @@ Private mBarCounter As Long
 
 Private mInitialNumBars As Long
 
+Private mLineBarNumber1 As Long
+Private mLinePrice1 As Double
+Private mLineBarNumber2 As Long
+Private mLinePrice2 As Double
+
 
 
 '================================================================================
@@ -460,16 +465,15 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Resize()
-Dim newChartHeight As Single
-
 Const ProcName As String = "Form_Resize"
-
 On Error GoTo Err
 
 BasePicture.Top = Me.ScaleHeight - BasePicture.Height
 BasePicture.Width = Me.ScaleWidth
 
 Chart1.Width = Me.ScaleWidth
+
+Dim newChartHeight As Single
 newChartHeight = BasePicture.Top - Chart1.Top
 If Chart1.Height <> newChartHeight And newChartHeight >= 0 Then
     Chart1.Height = newChartHeight
@@ -554,16 +558,14 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FibRetracementButton_Click()
-Dim ls As LineStyle
-Dim tool As FibRetracementTool
-Dim lineSpecs(4) As FibLineSpecifier
-
 Const ProcName As String = "FibRetracementButton_Click"
 On Error GoTo Err
 
+Dim ls As LineStyle
 Set ls = New LineStyle
 
 ls.Color = vbBlack
+Dim lineSpecs(4) As FibLineSpecifier
 Set lineSpecs(0).Style = ls.Clone
 lineSpecs(0).Percentage = 0
 
@@ -583,6 +585,7 @@ ls.Color = vbMagenta
 Set lineSpecs(4).Style = ls.Clone
 lineSpecs(4).Percentage = 61.8
 
+Dim tool As FibRetracementTool
 Set tool = CreateFibRetracementTool(Chart1.Controller, lineSpecs, LayerNumbers.LayerHighestUser)
 Set mCurrentTool = tool
 Chart1.SetFocus
@@ -610,15 +613,14 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LineButton_Click()
-Dim tool As LineTool
-Dim ls As LineStyle
-
 Const ProcName As String = "LineButton_Click"
 On Error GoTo Err
 
+Dim ls As LineStyle
 Set ls = New LineStyle
 ls.ExtendAfter = True
 
+Dim tool As LineTool
 Set tool = CreateLineTool(Chart1.Controller, ls, LayerHighestUser)
 Set mCurrentTool = tool
 Chart1.SetFocus
@@ -661,14 +663,6 @@ Chart1.YAxisVisible = (ShowYAxisCheck.value = vbChecked)
 End Sub
 
 Private Sub LoadButton_Click()
-Dim aFont As StdFont
-Dim btn As Button
-Dim startText As Text
-Dim extendedLine As ChartSkil27.Line
-Dim lBarStyle As BarStyle
-Dim lDataPointStyle As DataPointStyle
-Dim lLineStyle As LineStyle
-Dim lTextStyle As TextStyle
 Const ProcName As String = "LoadButton_Click"
 On Error GoTo Err
 
@@ -676,11 +670,12 @@ ReDim GradientFillColors(1) As Long
 
 LoadButton.Enabled = False  ' prevent the user pressing load again until the chart is cleared
 
+mInitialNumBars = InitialNumBarsText.Text
+
 mBarCounter = 0
 BarsLoadedLabel.Visible = True
 HScroll.Visible = True
 HScroll.Min = 0
-mInitialNumBars = InitialNumBarsText.Text
 HScroll.Max = IIf(mInitialNumBars <= 32767, mInitialNumBars, 32767)
 HScroll.value = 0
 
@@ -739,7 +734,7 @@ mPriceRegion.PerformanceTextVisible = True ' displays some information about the
 ' and you can of course have multiple regions each with its own set of bar series.
 
 ' first we set up the bar style, based on the default style
-Set lBarStyle = New BarStyle
+Dim lBarStyle As New BarStyle
 With lBarStyle
     .Width = 0.6                        ' specifies how wide each bar is. If this value
                                         ' were set to 1, the sides of the bars would touch
@@ -779,18 +774,18 @@ mClockText.FixedX = True                ' the text's X position is to be fixed (
                                         ' won't drift left as time passes)
 mClockText.FixedY = True                ' the text's Y position is to be fixed (ie it
                                         ' will stay put vertically as well)
-Set aFont = New StdFont                 ' set the font for the text
-aFont.Italic = False
-aFont.Size = 16
-aFont.Bold = True
-aFont.Name = "MS Sans Serif"
-aFont.Underline = False
-mClockText.Font = aFont
+Dim lFont As New StdFont                 ' set the font for the text
+lFont.Italic = False
+lFont.Size = 16
+lFont.Bold = True
+lFont.Name = "MS Sans Serif"
+lFont.Underline = False
+mClockText.Font = lFont
 
 ' Define a series of text objects that will be used to label bars periodically
 
 ' first we set up the text style, based on the default style
-Set lTextStyle = New TextStyle
+Dim lTextStyle As New TextStyle
 With lTextStyle
     .Align = AlignBoxTopCentre              ' Use the top centre of the text's box for
                                             ' aligning it
@@ -804,13 +799,13 @@ With lTextStyle
                                             ' between the text and the surrounding box
     .Color = vbRed                          ' the text is to be red
     
-    Set aFont = New StdFont                 ' set the font for the text
-    aFont.Italic = True
-    aFont.Size = 8
-    aFont.Bold = True
-    aFont.Name = "Courier New"
-    aFont.Underline = False
-    .Font = aFont
+    Set lFont = New StdFont                 ' set the font for the text
+    lFont.Italic = True
+    lFont.Size = 8
+    lFont.Bold = True
+    lFont.Name = "Courier New"
+    lFont.Underline = False
+    .Font = lFont
 End With
 Set mBarLabelSeries = mPriceRegion.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerHighestUser)
                                             ' Display them on a high layer but below the
@@ -847,7 +842,7 @@ mPriceText.Color = vbWhite
 mPriceText.Font = createFont("Times New Roman", pBold:=True, pSize:=8)
 
 ' Set up a datapoint series for the first moving average
-Set lDataPointStyle = New DataPointStyle
+Dim lDataPointStyle As New DataPointStyle
 With lDataPointStyle
     .DisplayMode = DataPointDisplayModes.DataPointDisplayModePoint
                                             ' display this series as discrete points...
@@ -888,7 +883,7 @@ mMovAvg3Series.Style = lDataPointStyle
 ' Set up a line series for the swing lines (which connect each high or low
 ' to the following low or high)
 ' First create a LineStyle specifying the lines' display format
-Set lLineStyle = New LineStyle
+Dim lLineStyle As New LineStyle
 With lLineStyle
     .Color = vbRed                          ' show the lines red...
     .Thickness = 2                          ' ...with a thickness of 1 pixel...
@@ -991,6 +986,10 @@ mPrevBarVolume = 0
 ' Link up the toolbar
 ChartToolbar1.initialise Chart1.Controller, mPriceRegion, mBarSeries
 
+' set the start and end bar numbers for the extended magenta line
+mLineBarNumber1 = IIf(mInitialNumBars > 40, mInitialNumBars - 40, 1)
+mLineBarNumber2 = IIf(mInitialNumBars > 5, mInitialNumBars - 5, mInitialNumBars)
+
 ' Create a simulator object to generate simulated price and volume ticks
 Set mTickSimulator = New TickSimulator
 mTickSimulator.StartPrice = StartPriceText.Text
@@ -999,8 +998,9 @@ mTickSimulator.BarLength = mBarLength
 
 ' Start the simulator and tell it how many historical bars to generate
 ' The historical bars are notified using the HistoricalBar event
-mTickSimulator.StartSimulation InitialNumBarsText.Text
+mTickSimulator.StartSimulation mInitialNumBars
 
+Dim startText As Text
 Set startText = mPriceRegion.AddText(, LayerHighestUser)
                                         ' create a text object that will indicate on the
                                         ' chart where the realtime simulation (as
@@ -1030,26 +1030,16 @@ startText.FixedY = False                ' ...region, ie it will move as the char
 startText.IncludeInAutoscale = True     ' vertical autoscaling will keep the text visible
 startText.Text = "Started here"
 
+Dim extendedLine As ChartSkil27.Line
 Set extendedLine = mPriceRegion.AddLine ' create a line object
 extendedLine.Color = vbMagenta          ' color it magenta (yuk)
 extendedLine.ExtendAfter = True         ' make it extend forever beyond its second point
 extendedLine.ExtendBefore = True        ' make it extend forever before its first point
 extendedLine.Extended = True            ' make sure it's visible even if its first point isn't
                                         ' in view
-Dim X As Long
-If InitialNumBarsText > 40 Then
-    X = mPeriod.periodNumber - 40
-Else
-    X = 1
-End If
-extendedLine.Point1 = NewPoint(X, mBarSeries.Item(X).highPrice + 20 * mTickSize)
+extendedLine.Point1 = NewPoint(mLineBarNumber1, mLinePrice1 + 20 * mTickSize)
                                         ' let its 1st point be 20 ticks above the high 40 bars ago
-If InitialNumBarsText > 5 Then
-    X = mPeriod.periodNumber - 5
-Else
-    X = 1
-End If
-extendedLine.Point2 = NewPoint(X, mBarSeries.Item(X).highPrice)
+extendedLine.Point2 = NewPoint(mLineBarNumber2, mLinePrice2)
                                         ' let its 2nd point be the high 5 bars ago
 
 ' Now tell the chart to draw itself. Note that this makes it draw every visible object.
@@ -1136,16 +1126,21 @@ Private Sub mTickSimulator_HistoricalBar( _
                 ByVal lowPrice As Double, _
                 ByVal closePrice As Double, _
                 ByVal volume As Long)
-Dim bartime As Date
-
 Const ProcName As String = "mTickSimulator_HistoricalBar"
 On Error GoTo Err
 
+Static sBarNumber As Long
+
+Dim bartime As Date
 bartime = BarStartTime(timestamp, GetTimePeriod(mBarLength, TimePeriodMinute), mSessionStartTime)
 
 mElapsedTimer.StartTiming
 
 If bartime <> mBarTime Then
+    If sBarNumber = mLineBarNumber1 Then mLinePrice1 = mBar.highPrice
+    If sBarNumber = mLineBarNumber2 Then mLinePrice2 = mBar.highPrice
+    sBarNumber = sBarNumber + 1
+    
     mBarTime = bartime
     Set mBar = mBarSeries.Add(bartime)
     
@@ -1338,7 +1333,7 @@ mMACD.datavalue value
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub clearFields()
@@ -1399,7 +1394,7 @@ mBarTime = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function createFont( _
@@ -1434,7 +1429,7 @@ If Not IsEmpty(mMACD.MACDHistValue) Then mMACDHistPoint.datavalue = mMACD.MACDHi
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getSessionTime(ByVal value As String) As Date
@@ -1604,7 +1599,7 @@ mMACD.SignalPeriods = 5
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setNewStudyPeriod(ByVal timestamp As Date)
@@ -1647,7 +1642,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1718,7 +1713,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

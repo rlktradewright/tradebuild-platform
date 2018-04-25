@@ -121,15 +121,17 @@ End Sub
 '================================================================================
 
 Private Sub mTimer_TimerExpired(ev As TimerExpiredEventData)
-Dim timestamp As Date
-Dim volume As Long
-
 Const ProcName As String = "mTimer_TimerExpired"
 On Error GoTo Err
 
 mTickCount = mTickCount + 1
+
+Dim timestamp As Date
 timestamp = Now
+
 RaiseEvent TickPrice(timestamp, generateSimulatedPrice)
+
+Dim volume As Long
 volume = generateSimulatedTickVolume
 mCumVolume = mCumVolume + volume
 RaiseEvent TickVolume(timestamp, mCumVolume)
@@ -153,7 +155,7 @@ mBarLength = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let StartPrice(ByVal value As Double)
@@ -165,7 +167,7 @@ mStartPrice = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickCount() As Long
@@ -177,7 +179,7 @@ TickCount = mTickCount
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickSize(ByVal value As Double)
@@ -189,7 +191,7 @@ mTickSize = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
@@ -197,27 +199,30 @@ End Property
 '================================================================================
 
 Public Sub StartSimulation(ByVal numberOfBars As Long)
-Dim barcount As Long
-Dim timestamp As Date
-Dim bartime As Double
-Dim openPrice As Double
-Dim highPrice As Double
-Dim lowPrice As Double
-Dim closePrice As Double
-Dim volume As Long
-
 Const ProcName As String = "StartSimulation"
 On Error GoTo Err
 
 Randomize
 
+Dim timestamp As Date
 timestamp = Now - (numberOfBars - 1) * mBarLength / 1440
+
+Dim bartime As Double
 bartime = calcBarTime(timestamp)
+
+Dim lowPrice As Double
 lowPrice = 999999
 
+Dim barcount As Long
+Dim volume As Long
 Do While barcount < numberOfBars
+    Dim closePrice As Double
     closePrice = generateSimulatedPrice
+    
+    Dim openPrice As Double
     If openPrice = 0 Then openPrice = closePrice
+    
+    Dim highPrice As Double
     If closePrice > highPrice Then highPrice = closePrice
     If closePrice < lowPrice Then lowPrice = closePrice
     
@@ -252,8 +257,7 @@ mTimer.StartTimer
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StopSimulation()
@@ -265,7 +269,7 @@ If Not mTimer Is Nothing Then mTimer.StopTimer
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -282,23 +286,23 @@ calcBarTime = Int(CDbl(timestamp) * 1440 / mBarLength) * mBarLength / 1440
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateSimulatedPrice() As Double
-Static prevprice As Double
 Const ProcName As String = "generateSimulatedPrice"
 On Error GoTo Err
 
-If prevprice = 0 Then prevprice = mStartPrice
+Static sPrevprice As Double
+If sPrevprice = 0 Then sPrevprice = mStartPrice
 Randomize
-generateSimulatedPrice = prevprice + mTickSize * mPriceChange(Fix(Rnd() * NumPriceChangeElements))
-prevprice = generateSimulatedPrice
+generateSimulatedPrice = sPrevprice + mTickSize * mPriceChange(Fix(Rnd() * NumPriceChangeElements))
+sPrevprice = generateSimulatedPrice
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateSimulatedTickVolume() As Long
@@ -311,7 +315,7 @@ generateSimulatedTickVolume = mTickVolume(Fix(Rnd() * NumTickVolumeElements))
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 
