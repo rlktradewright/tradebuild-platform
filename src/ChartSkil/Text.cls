@@ -121,7 +121,7 @@ mTextTRect.isValid = False
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Text terminated"
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Text terminated"
 Debug.Print "Text terminated"
 End Sub
 
@@ -919,8 +919,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
 Public Property Get HideIfBlank() As Boolean

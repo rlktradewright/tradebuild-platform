@@ -169,7 +169,7 @@ mArrowEndFillStyle = FillStyles.FillSolid
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Line terminated"
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Line terminated"
 Debug.Print "Line terminated"
 End Sub
 
@@ -1185,8 +1185,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
 Public Property Get Hidden() As Boolean
@@ -1518,7 +1518,6 @@ End Property
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0

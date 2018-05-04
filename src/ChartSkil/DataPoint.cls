@@ -106,7 +106,7 @@ mBoundingRect.isValid = False
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="DataPoint terminated"
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="DataPoint terminated"
 Debug.Print "DataPoint terminated"
 End Sub
 
@@ -491,8 +491,8 @@ Friend Sub Finish()
 Set mPrevDataPointRef = Nothing
 End Sub
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
 Public Property Let HistogramBarWidth(ByVal Value As Single)

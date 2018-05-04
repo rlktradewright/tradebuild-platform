@@ -114,7 +114,7 @@ mBoundingRect.isValid = False
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Bar terminated"
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Bar terminated"
 Debug.Print "Bar terminated"
 End Sub
 
@@ -455,8 +455,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
 Public Property Get HighPrice() As Double
@@ -845,23 +845,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-' reset the Style to the initial Style (ie the Style for the bar series) with no
+' reset the Style to the initial Style (ie the Style for the series) with no
 ' local modifications
 Public Sub ResetStyle()
 Const ProcName As String = "ResetStyle"
 On Error GoTo Err
 
 Set mLocalStyle = Nothing
-
-setPropertyFlag BarPropertyTailThickness = False
-setPropertyFlag BarPropertyOutlineThickness = False
-setPropertyFlag BarPropertyColor = False
-setPropertyFlag BarPropertyUpColor = False
-setPropertyFlag BarPropertyDownColor = False
-setPropertyFlag BarPropertyDisplayMode = False
-setPropertyFlag BarPropertySolidUpBody = False
-setPropertyFlag BarPropertyThickness = False
-setPropertyFlag BarPropertyWidth = False
+mPropertyOverrideFlags = 0
 
 initiateRedraw True, True
 
