@@ -304,8 +304,12 @@ End If
     
 Dim update As Boolean
 
-'Dim lInstr As Instrument: Set lInstr = gDb.InstrumentFactory.LoadByName(gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name)
-Dim lInstr As Instrument: Set lInstr = gDb.InstrumentFactory.LoadByQuery("INSTRUMENTCLASSID=" & gInstrumentClass.Id & "AND SHORTNAME='" & shortname & "'")
+Dim lInstr As Instrument
+Set lInstr = gDb.InstrumentFactory.LoadByQuery("INSTRUMENTCLASSID=" & gInstrumentClass.Id & " AND " & _
+                                            "SYMBOL='" & symbol & "' AND " & _
+                                            "(EXPIRYDATE IS NULL OR EXPIRYDATE='" & Format(expiryDate, "mm/dd/yyyy") & "') AND " & _
+                                            "(STRIKEPRICE IS NULL OR STRIKEPRICE=" & strike & ") AND " & _
+                                            "(OPTRIGHT IS NULL OR OPTRIGHT=" & optRight & ")")
 If lInstr Is Nothing Then
     Set lInstr = gDb.InstrumentFactory.MakeNew
 ElseIf Not gUpdate Then

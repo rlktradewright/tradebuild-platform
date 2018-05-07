@@ -67,6 +67,10 @@ On Error GoTo Err
 
 InitialiseTWUtilities
 
+ApplicationGroupName = "TradeWright"
+ApplicationName = "gcd"
+SetupDefaultLogging Command
+
 Set gCon = GetConsole
 
 Dim clp As CommandLineParser: Set clp = CreateCommandLineParser(Command)
