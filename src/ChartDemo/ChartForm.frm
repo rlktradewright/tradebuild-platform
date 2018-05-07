@@ -2,12 +2,12 @@ VERSION 5.00
 Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#277.1#0"; "ChartSkil27.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.7"
-   ClientHeight    =   8520
+   ClientHeight    =   8865
    ClientLeft      =   1935
    ClientTop       =   3930
    ClientWidth     =   12120
    LinkTopic       =   "Form1"
-   ScaleHeight     =   8520
+   ScaleHeight     =   8865
    ScaleWidth      =   12120
    Begin ChartSkil27.ChartToolbar ChartToolbar1 
       Align           =   1  'Align Top
@@ -32,18 +32,26 @@ Begin VB.Form ChartForm
       Appearance      =   0  'Flat
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   1695
+      Height          =   1935
       Left            =   0
-      ScaleHeight     =   1695
+      ScaleHeight     =   1935
       ScaleWidth      =   12015
       TabIndex        =   7
       Top             =   6840
       Width           =   12015
+      Begin VB.CommandButton ToggleBarColoursButton 
+         Caption         =   "Toggle bar colours"
+         Height          =   495
+         Left            =   360
+         TabIndex        =   31
+         Top             =   1320
+         Width           =   1095
+      End
       Begin VB.HScrollBar HScroll 
          Height          =   255
          Left            =   2640
          TabIndex        =   29
-         Top             =   1320
+         Top             =   1440
          Visible         =   0   'False
          Width           =   3975
       End
@@ -85,10 +93,10 @@ Begin VB.Form ChartForm
       Begin VB.CommandButton FinishButton 
          Caption         =   "Finish"
          Height          =   495
-         Left            =   8760
+         Left            =   10800
          TabIndex        =   23
-         Top             =   720
-         Width           =   975
+         Top             =   1320
+         Width           =   1095
       End
       Begin VB.Frame DrawingToolsFrame 
          Caption         =   "Drawing Tools"
@@ -210,9 +218,9 @@ Begin VB.Form ChartForm
       Begin VB.Label BarsLoadedLabel 
          Caption         =   "Bars loaded"
          Height          =   255
-         Left            =   240
+         Left            =   2640
          TabIndex        =   30
-         Top             =   1320
+         Top             =   1200
          Visible         =   0   'False
          Width           =   1815
       End
@@ -1099,6 +1107,55 @@ MsgBox Err.Description, vbExclamation, "Error"
 Cancel = True
 End Sub
 
+Private Sub ToggleBarColoursButton_Click()
+Const ProcName As String = "ToggleBarColoursButton_Click"
+On Error GoTo Err
+
+Static sBars As Collection
+If sBars Is Nothing Then
+    Set sBars = New Collection
+    Dim i As Long
+    For i = 1 To 5
+        sBars.Add mBarSeries.Item(mBarSeries.Count - i + 1)
+    Next
+End If
+
+Static sState As Long
+
+Dim lUpColor As Long
+Dim lDownColor As Long
+Dim lBarColor As Long
+
+If sState = 0 Then
+   lUpColor = vbGreen
+   lDownColor = vbRed
+   lBarColor = -1
+ElseIf sState = 1 Then
+   lUpColor = -1
+   lDownColor = -1
+   lBarColor = vbBlue
+ElseIf sState = 2 Then
+   lUpColor = -1
+   lDownColor = -1
+   lBarColor = -1
+End If
+
+sState = (sState + 1) Mod 3
+
+For i = 1 To 5
+    Dim lBar As ChartSkil27.Bar
+    Set lBar = sBars.Item(i)
+    lBar.UpColor = lUpColor
+    lBar.DownColor = lDownColor
+    lBar.Color = lBarColor
+Next
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 '================================================================================
 ' mClockTimer Event Handlers
 '================================================================================
@@ -1186,7 +1243,7 @@ mCumVolume = mCumVolume + volume
 mVolume.datavalue = volume
 mPrevBarVolume = volume
 
-Debug.Print "Time to add hist bar: " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
+'Debug.Print "Time to add hist bar: " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
 
 setNewStudyPeriod bartime
 
