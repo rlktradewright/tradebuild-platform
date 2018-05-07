@@ -51,15 +51,13 @@ Private mTaskContext                        As TaskContext
 Private mGraphObjSeries                     As IGraphicObjectSeries
 Private mRegion                             As ChartRegion
 
-Private mRemoveObjectsFromRegion             As Boolean
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Class_Terminate()
-Debug.Print "GraphObjSeriesRemovalTask terminated"
-End Sub
+'Private Sub Class_Terminate()
+'Debug.Print "GraphObjSeriesRemovalTask terminated"
+'End Sub
 
 '@================================================================================
 ' ITask Interface Members
@@ -73,26 +71,45 @@ Private Sub ITask_run()
 Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
+Static sTotalNumberReleased As Long
+Static sYieldCount As Long
+Static sClearStartTime As Date
 Static sEN As Enumerator
 If sEN Is Nothing Then Set sEN = mGraphObjSeries.Enumerator
 
-Static sETimer As New ElapsedTimer
+Dim results As Parameters
 
-sETimer.StartTiming
+If sClearStartTime = 0 Then sClearStartTime = GetTimestamp
 
-Do While sEN.MoveNext
-    Dim lGraphObj As IGraphicObject
-    Set lGraphObj = sEN.Current
-    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx lGraphObj, False, False
-    sEN.Remove
-    If sETimer.ElapsedTimeMicroseconds > 20000 Then Exit Sub
-Loop
+If mTaskContext.CancelPending Then
+    mGraphObjSeries.Finish
+    gLogger.Log "Released (cancelled) " & sTotalNumberReleased & " entries in " & sYieldCount & " yields", ProcName, ModuleName, LogLevelHighDetail
+    Set results = generateResults(False, sTotalNumberReleased, sYieldCount, sClearStartTime)
+    mTaskContext.Finish results, True
+    Exit Sub
+End If
 
-mGraphObjSeries.Finish
-Set mGraphObjSeries = Nothing
-Set mRegion = Nothing
+Static sNumberToRelease As Long
 
-mTaskContext.Finish Empty, False
+Static sLoopCount As Long
+
+Const HeuristicNumber As Long = 50
+Const HeuristicTime As Long = 5
+
+If sLoopCount Mod 50 = 0 Then
+    sNumberToRelease = calibrate(sEN, HeuristicNumber, HeuristicTime, sTotalNumberReleased, sYieldCount)
+ElseIf Not releaseEntries(sEN, sNumberToRelease, sTotalNumberReleased, sYieldCount) Then
+    sNumberToRelease = 0
+End If
+
+If sNumberToRelease = 0 Then
+    mGraphObjSeries.Finish
+    gLogger.Log "Released " & sTotalNumberReleased & " entries in " & sYieldCount & " yields", ProcName, ModuleName, LogLevelHighDetail
+    Set results = generateResults(False, sTotalNumberReleased, sYieldCount, sClearStartTime)
+    mTaskContext.Finish results, False
+End If
+
+sLoopCount = sLoopCount + 1
 
 Exit Sub
 
@@ -122,18 +139,115 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal graphObjSeries As IGraphicObjectSeries, _
-                ByVal Region As ChartRegion, _
-                ByVal removeObjectsFromRegion As Boolean)
+                ByVal Region As ChartRegion)
 Set mGraphObjSeries = graphObjSeries
-If removeObjectsFromRegion Then
-    AssertArgument Not Region Is Nothing, "Region is Nothing"
-    Set mRegion = Region
-    mRemoveObjectsFromRegion = True
-End If
+AssertArgument Not Region Is Nothing, "Region is Nothing"
+Set mRegion = Region
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function calibrate( _
+                ByVal pEn As Enumerator, _
+                ByVal pNumberToRelease As Long, _
+                ByVal pHeuristicTime As Long, _
+                ByRef pTotalNumberReleased As Long, _
+                ByRef pYieldCount As Long) As Long
+Const ProcName As String = "calibrate"
+On Error GoTo Err
+
+Dim lPrevCpuTime As Double: lPrevCpuTime = GetCurrentProcessCpuTime
+Dim lAligned As Boolean
+
+Dim lNumberReleased As Long
+Do While releaseEntries(pEn, pNumberToRelease, pTotalNumberReleased, pYieldCount)
+    lNumberReleased = lNumberReleased + pNumberToRelease
+    Dim lCurrCpuTime As Double: lCurrCpuTime = GetCurrentProcessCpuTime
+    Dim lCpuTimeMillisecs As Double: lCpuTimeMillisecs = 1000 * (lCurrCpuTime - lPrevCpuTime)
+    If lCpuTimeMillisecs > 0 Then
+        If Not lAligned Then
+            lNumberReleased = 0
+            lPrevCpuTime = lCurrCpuTime
+            lAligned = True
+        Else
+            gLogger.Log "Time to release " & lNumberReleased & " entries: " & lCpuTimeMillisecs, ProcName, ModuleName, LogLevelHighDetail
+            calibrate = CLng(pHeuristicTime / lCpuTimeMillisecs * lNumberReleased)
+            gLogger.Log "Number of entries to release per yield: " & calibrate, ProcName, ModuleName, LogLevelHighDetail
+            Exit Function
+        End If
+    End If
+Loop
+
+calibrate = 0
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function generateResults( _
+                ByVal pCancelled As Boolean, _
+                ByVal pNumberReleased As Long, _
+                ByVal pNumberOfYields As Long, _
+                ByVal pClearStartTime As Date) As Parameters
+Const ProcName As String = "generateResults"
+On Error GoTo Err
+
+Dim results As New Parameters
+results.SetParameterValue "Cancelled", pCancelled
+results.SetParameterValue "Number of entries released", pNumberReleased
+results.SetParameterValue "Number of timeslots", pNumberOfYields
+
+Dim lDuration As Double: lDuration = 86400# * (GetTimestamp - pClearStartTime)
+If lDuration < 0.001 Then
+    results.SetParameterValue "Duration (microsecs)", Format(lDuration * 1000000#, "0")
+ElseIf lDuration < 1# Then
+    results.SetParameterValue "Duration (millisecs)", Format(lDuration * 1000#, "0.000")
+Else
+    results.SetParameterValue "Duration (secs)", Format(lDuration, "0.000")
+End If
+
+Set generateResults = results
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function releaseEntries( _
+                ByVal pEn As Enumerator, _
+                ByVal pNumberToRelease As Long, _
+                ByRef pTotalNumberReleased As Long, _
+                ByRef pYieldCount As Long) As Boolean
+Const ProcName As String = "releaseEntries"
+On Error GoTo Err
+
+Dim lNumberReleased As Long
+
+Do While pEn.MoveNext
+    Dim lGraphObj As IGraphicObject
+    Set lGraphObj = pEn.Current
+    mRegion.RemoveGraphicObjectEx lGraphObj, False, False
+    lNumberReleased = lNumberReleased + 1
+    If lNumberReleased >= pNumberToRelease Then
+        releaseEntries = True
+        pTotalNumberReleased = pTotalNumberReleased + lNumberReleased
+        pYieldCount = pYieldCount + 1
+        Exit Function
+    End If
+Loop
+
+pTotalNumberReleased = pTotalNumberReleased + lNumberReleased
+pYieldCount = pYieldCount + 1
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 

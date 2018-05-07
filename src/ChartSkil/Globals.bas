@@ -421,12 +421,6 @@ End If
 Set gDefaultTextStyle = lStyle
 End Property
 
-Public Property Get gErrorLogger() As Logger
-Static lLogger As Logger
-If lLogger Is Nothing Then Set lLogger = GetLogger("error")
-Set gErrorLogger = lLogger
-End Property
-
 Public Property Get gGraphicObjectStyleManager() As GraphicObjectStyleManager
 Static gosm As GraphicObjectStyleManager
 If gosm Is Nothing Then Set gosm = New GraphicObjectStyleManager
@@ -524,6 +518,21 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gClearSeries( _
+                ByVal pItems As SortedDictionary, _
+                ByVal pItemsIndex As EnumerableCollection)
+If pItems.Count > 1000 Then
+    pItems.ClearAsync
+Else
+    pItems.Clear
+End If
+If pItemsIndex.Count > 1000 Then
+    pItemsIndex.ClearAsync
+Else
+    pItemsIndex.Clear
+End If
 End Sub
 
 Public Function gCloneFont( _

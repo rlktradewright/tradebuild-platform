@@ -80,7 +80,6 @@ Friend Function Add( _
                 ByVal pPeriods As Periods, _
                 ByVal pGOSP As GraphObjServiceProvider) As IGraphicObjectSeries
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
 Set Add = pGraphObjSeries
@@ -108,24 +107,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub Finish()
-Dim i As Long
-Dim t As GraphObjSeriesRemovalTask
-
 ' remove all graphic object references from the various collections
-Dim graphObjSeries As IGraphicObjectSeries
+Friend Sub Finish()
 Const ProcName As String = "Finish"
-
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To mGraphObjSeriesIndex - 1
     If Not mGraphObjSeriesTable(i) Is Nothing Then
         mGraphObjSeriesTable(i).Finish
-        
-        Set t = New GraphObjSeriesRemovalTask
-        t.Initialise mGraphObjSeriesTable(i), regionObj, False
-        StartTask t, PriorityLow
-
         Set mGraphObjSeriesTable(i) = Nothing
     End If
 Next
@@ -135,12 +125,10 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Friend Sub Initialise(ByVal pRegion As ChartRegion)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
 Set mRegionRef = CreateWeakReference(pRegion)
@@ -154,7 +142,6 @@ End Sub
 Friend Function Item( _
                 ByVal index As Long) As IGraphicObjectSeries
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
 Set Item = mGraphObjSeriesTable(index)
@@ -165,22 +152,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub Remove( _
-                ByVal pSeries As IGraphicObjectSeries)
-Dim t As New GraphObjSeriesRemovalTask
+Friend Function Remove( _
+                ByVal pSeries As IGraphicObjectSeries) As TaskController
 Const ProcName As String = "Remove"
-
 On Error GoTo Err
 
-t.Initialise pSeries, regionObj, True
-StartTask t, PriorityLow
+Dim t As New GraphObjSeriesRemovalTask
+t.Initialise pSeries, regionObj
+Set Remove = StartTask(t, PriorityLow)
 Set mGraphObjSeriesTable(pSeries.SeriesID) = Nothing
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 '@================================================================================
 ' Helper Functions
@@ -188,7 +174,6 @@ End Sub
 
 Private Function regionObj() As ChartRegion
 Const ProcName As String = "regionObj"
-
 On Error GoTo Err
 
 Set regionObj = mRegionRef.Target

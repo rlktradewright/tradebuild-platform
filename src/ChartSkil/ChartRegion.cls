@@ -247,8 +247,8 @@ Private Sub Class_Terminate()
 If Not mViewport Is Nothing Then mViewport.Finish
 Set mViewport = Nothing
 
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
-Debug.Print "ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
+'Debug.Print "ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
 End Sub
 
 '================================================================================
@@ -785,12 +785,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let handle(ByVal Value As Long)
+Friend Property Let Handle(ByVal Value As Long)
 mHandle = Value
 End Property
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
 Public Property Get HasXGrid() As Boolean
@@ -2414,7 +2414,6 @@ End Sub
 Public Sub RemoveGraphicObjectSeries( _
                 ByVal pSeries As IGraphicObjectSeries)
 Const ProcName As String = "RemoveGraphicObjectSeries"
-
 On Error GoTo Err
 
 If pSeries Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "The supplied argument is Nothing"

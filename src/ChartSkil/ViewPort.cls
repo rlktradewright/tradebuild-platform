@@ -79,10 +79,10 @@ Private Sub Class_Initialize()
 Set mGradientFill = New GradientFill
 End Sub
 
-Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
-Debug.Print "Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
-End Sub
+'Private Sub Class_Terminate()
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
+'Debug.Print "Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
+'End Sub
 
 '================================================================================
 ' XXXX Interface Members
@@ -123,7 +123,6 @@ End Property
 
 Public Property Get GradientFillColors() As Long()
 Const ProcName As String = "GradientFillColors"
-
 On Error GoTo Err
 
 GradientFillColors = mGradientFill.Colors

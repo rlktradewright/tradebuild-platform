@@ -60,7 +60,7 @@ Private Type RegionTableEntry
     Region              As ChartRegion
     PercentHeight       As Double
 '    ActualHeight        As Long
-    useAvailableSpace   As Boolean
+    UseAvailableSpace   As Boolean
 End Type
 
 '@================================================================================
@@ -125,7 +125,15 @@ IEnumerable_NextItem = True
 End Function
 
 Private Sub IEnumerable_Remove(cookie As Variant)
+Const ProcName As String = "IEnumerable_Remove"
+On Error GoTo Err
+
 Remove mRegions(cookie).Region
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IEnumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
@@ -160,15 +168,15 @@ End Property
 
 Friend Property Let DefaultDataRegionStyle( _
                 ByVal Value As ChartRegionStyle)
-Dim lregion As ChartRegion
 Const ProcName As String = "DefaultDataRegionStyle"
 On Error GoTo Err
 
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 Set mDefaultDataRegionStyle = Value
-For Each lregion In Me
-    lregion.BaseStyle = mDefaultDataRegionStyle
+Dim lRegion As ChartRegion
+For Each lRegion In Me
+    lRegion.BaseStyle = mDefaultDataRegionStyle
 Next
 
 Exit Property
@@ -179,15 +187,15 @@ End Property
 
 Friend Property Let DefaultYAxisRegionStyle( _
                 ByVal Value As ChartRegionStyle)
-Dim lregion As ChartRegion
 Const ProcName As String = "DefaultYAxisRegionStyle"
 On Error GoTo Err
 
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 Set mDefaultYAxisRegionStyle = Value
-For Each lregion In Me
-    lregion.YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
+Dim lRegion As ChartRegion
+For Each lRegion In Me
+    lRegion.YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
 Next
 
 Exit Property
@@ -245,23 +253,17 @@ Public Function Add( _
                 Optional ByVal Style As ChartRegionStyle, _
                 Optional ByVal YAxisStyle As ChartRegionStyle, _
                 Optional ByVal Name As String) As ChartRegion
-
-Dim YAxisRegion As ChartRegion
-Dim Availableheight As Long
-Dim lregion As ChartRegion
-
+Const ProcName As String = "Add"
+On Error GoTo Err
 
 '
 ' NB: PercentHeight=100 means the region will use whatever space
 ' is available
 '
 
-Const ProcName As String = "Add"
-
-On Error GoTo Err
-
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
+Dim Availableheight As Long
 Availableheight = chartObj.Availableheight
 
 If Name <> "" Then
@@ -272,29 +274,30 @@ End If
 
 mRegionsIndex = mRegionsIndex + 1
 
-Set lregion = New ChartRegion
-lregion.handle = mRegionsIndex
+Dim lRegion As ChartRegion
+Set lRegion = New ChartRegion
+lRegion.Handle = mRegionsIndex
 
-lregion.Initialise Name, mPeriods, chartObj.CreateViewport(lregion, RegionTypeData), RegionTypeData
+lRegion.Initialise Name, mPeriods, chartObj.CreateViewport(lRegion, RegionTypeData), RegionTypeData
 
-lregion.MinimumPercentHeight = MinimumPercentHeight
-lregion.PercentHeight = PercentHeight
+lRegion.MinimumPercentHeight = MinimumPercentHeight
+lRegion.PercentHeight = PercentHeight
 
 If Style Is Nothing Then
     gLogger.Log "Style applied", ProcName, ModuleName, , "none"
 Else
     gLogger.Log "Style applied", ProcName, ModuleName, , Style.Name
 End If
-lregion.Style = Style
+lRegion.Style = Style
 
 gLogger.Log "Base style applied", ProcName, ModuleName, , mDefaultDataRegionStyle.Name
-lregion.BaseStyle = mDefaultDataRegionStyle
+lRegion.BaseStyle = mDefaultDataRegionStyle
 
-Set mRegions(mRegionsIndex).Region = lregion
+Set mRegions(mRegionsIndex).Region = lRegion
 If PercentHeight <> 100 Then
     mRegions(mRegionsIndex).PercentHeight = mRegionHeightReductionFactor * PercentHeight
 Else
-    mRegions(mRegionsIndex).useAvailableSpace = True
+    mRegions(mRegionsIndex).UseAvailableSpace = True
 End If
 
 mRegionsIndex = mRegionsIndex + 1
@@ -302,8 +305,9 @@ If mRegionsIndex > UBound(mRegions) Then
     ReDim Preserve mRegions(2 * (UBound(mRegions) + 1) - 1) As RegionTableEntry
 End If
 
+Dim YAxisRegion As ChartRegion
 Set YAxisRegion = New ChartRegion
-YAxisRegion.handle = mRegionsIndex
+YAxisRegion.Handle = mRegionsIndex
 
 YAxisRegion.Initialise "", mPeriods, chartObj.CreateViewport(YAxisRegion, RegionTypeYAxis), RegionTypeYAxis
 YAxisRegion.Bottom = 0
@@ -312,7 +316,7 @@ YAxisRegion.SetPeriodsInView 0, 99
 
 YAxisRegion.Style = YAxisStyle
 YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
-lregion.YAxisRegion = YAxisRegion
+lRegion.YAxisRegion = YAxisRegion
 
 Set mRegions(mRegionsIndex).Region = YAxisRegion
 
@@ -320,19 +324,19 @@ mNumRegionsInUse = mNumRegionsInUse + 1
 
 If ResizeY(False) Then
     changed
-    fireChange CollItemAdded, lregion
+    fireChange CollItemAdded, lRegion
 Else
     ' can't fit this all in! So remove the added region,
-    Set lregion = Nothing
+    Set lRegion = Nothing
     Set mRegions(mRegionsIndex).Region = Nothing
     mRegions(mRegionsIndex).PercentHeight = 0
-    mRegions(mRegionsIndex).useAvailableSpace = False
+    mRegions(mRegionsIndex).UseAvailableSpace = False
     mRegionsIndex = mRegionsIndex - 2
     mNumRegionsInUse = mNumRegionsInUse - 1
     Exit Function
 End If
 
-Set Add = lregion
+Set Add = lRegion
 
 Exit Function
 
@@ -341,16 +345,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Contains(ByVal Name As String) As Boolean
-Dim lregion As ChartRegion
-
 Const ProcName As String = "Contains"
-
 On Error GoTo Err
 
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
-Set lregion = findRegion(Name)
-If Not lregion Is Nothing Then Contains = True
+Dim lRegion As ChartRegion
+Set lRegion = findRegion(Name)
+If Not lRegion Is Nothing Then Contains = True
 
 Exit Function
 
@@ -396,7 +398,6 @@ Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
 Const ProcName As String = "NewEnum"
-
 On Error GoTo Err
 
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
@@ -412,17 +413,16 @@ End Function
 Public Sub Remove( _
                 ByVal pRegion As ChartRegion)
 Const ProcName As String = "Remove"
-
 On Error GoTo Err
 
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 If pRegion.IsXAxisRegion Or pRegion.IsYAxisRegion Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Cannot remove an axis region"
 
-If mRegions(pRegion.handle).Region Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Region has already been removed"
+If mRegions(pRegion.Handle).Region Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Region has already been removed"
 
-Set mRegions(pRegion.handle).Region = Nothing
-Set mRegions(pRegion.handle + 1).Region = Nothing
+Set mRegions(pRegion.Handle).Region = Nothing
+Set mRegions(pRegion.Handle + 1).Region = Nothing
 
 mNumRegionsInUse = mNumRegionsInUse - 1
 
@@ -442,20 +442,18 @@ End Sub
 Friend Function ResizeRegion( _
                 ByVal pRegion As ChartRegion, _
                 ByVal vertChange As Long) As Boolean
-Dim handle As Long
-Dim newHeight As Long
-Dim prevPercentHeight As Double
-Dim Availableheight As Long
-
 Const ProcName As String = "ResizeRegion"
-
 On Error GoTo Err
 
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
-handle = pRegion.handle
+Dim Handle As Long
+Handle = pRegion.Handle
+
+Dim Availableheight As Long
 Availableheight = chartObj.Availableheight
 
+Dim newHeight As Long
 newHeight = pRegion.ActualHeight + vertChange
 If newHeight < 0 Then newHeight = 0
 
@@ -463,20 +461,21 @@ If newHeight < 0 Then newHeight = 0
 ' and the actual Height allocation. We need to work out the new percentage
 ' for the region to be resized.
 
-prevPercentHeight = mRegions(handle).PercentHeight
-mRegions(handle).PercentHeight = 100 * newHeight / Availableheight
-If mRegions(handle).useAvailableSpace Then
+Dim prevPercentHeight As Double
+prevPercentHeight = mRegions(Handle).PercentHeight
+mRegions(Handle).PercentHeight = 100 * newHeight / Availableheight
+If mRegions(Handle).UseAvailableSpace Then
     ' this is a 'use available space' region that's being resized. Now change
     ' it to use a specific percentage
-    mRegions(handle).useAvailableSpace = False
-    mRegions(handle).Region.PercentHeight = mRegions(handle).PercentHeight
+    mRegions(Handle).UseAvailableSpace = False
+    mRegions(Handle).Region.PercentHeight = mRegions(Handle).PercentHeight
 End If
 
 If ResizeY(True) Then
     ResizeRegion = True
 Else
     ' the regions couldn't be resized so reset the region's percent Height
-    mRegions(handle).PercentHeight = prevPercentHeight
+    mRegions(Handle).PercentHeight = prevPercentHeight
 End If
 
 Exit Function
@@ -488,32 +487,33 @@ End Function
 
 Friend Function ResizeY( _
                 ByVal userResizing As Boolean) As Boolean
+Const ProcName As String = "ResizeY"
+On Error GoTo Err
+
 '
 ' NB: PercentHeight=100 means the region will use whatever space
 ' is available
 '
-Dim i As Long
-Dim aRegion As ChartRegion
-Dim numAvailableSpaceRegions As Long
-Dim totalMinimumPercents As Double
-Dim nonFixedAvailableSpacePercent As Double
-Dim availableSpacePercent As Double
-Dim Availableheight As Long
-
-Const ProcName As String = "ResizeY"
-
-On Error GoTo Err
 
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
+Dim availableSpacePercent As Double
 availableSpacePercent = 100
+
+Dim nonFixedAvailableSpacePercent As Double
 nonFixedAvailableSpacePercent = 100
+
+Dim Availableheight As Long
 Availableheight = chartObj.Availableheight
 
+Dim aRegion As ChartRegion
+Dim numAvailableSpaceRegions As Long
+
+Dim i As Long
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         Set aRegion = mRegions(i).Region
-        If Not mRegions(i).useAvailableSpace Then
+        If Not mRegions(i).UseAvailableSpace Then
             availableSpacePercent = availableSpacePercent - mRegions(i).PercentHeight
             nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).PercentHeight
         Else
@@ -534,12 +534,14 @@ mRegionHeightReductionFactor = 1
 Do While availableSpacePercent < 0 And mRegionHeightReductionFactor >= 0.0625
     availableSpacePercent = 100
     nonFixedAvailableSpacePercent = 100
+
+    Dim totalMinimumPercents As Double
     totalMinimumPercents = 0
     mRegionHeightReductionFactor = mRegionHeightReductionFactor - 0.0625
     For i = 1 To mRegionsIndex Step 2
         If Not mRegions(i).Region Is Nothing Then
             Set aRegion = mRegions(i).Region
-            If Not mRegions(i).useAvailableSpace Then
+            If Not mRegions(i).UseAvailableSpace Then
                 If aRegion.MinimumPercentHeight <> 0 Then
                     If mRegions(i).PercentHeight * mRegionHeightReductionFactor >= _
                         aRegion.MinimumPercentHeight _
@@ -582,7 +584,7 @@ End If
 ' first set Heights for fixed Height regions
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
-        If Not mRegions(i).useAvailableSpace Then
+        If Not mRegions(i).UseAvailableSpace Then
             mRegions(i).Region.ActualHeight = mRegions(i).PercentHeight * Availableheight / 100
             Debug.Assert mRegions(i).Region.ActualHeight >= 0
         End If
@@ -594,7 +596,7 @@ Next
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         Set aRegion = mRegions(i).Region
-        If mRegions(i).useAvailableSpace Then
+        If mRegions(i).UseAvailableSpace Then
             mRegions(i).Region.ActualHeight = 0
             If aRegion.MinimumPercentHeight <> 0 Then
                 If (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) < aRegion.MinimumPercentHeight Then
@@ -611,7 +613,7 @@ Next
 ' finally set Heights for all other 'available space' regions
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
-        If mRegions(i).useAvailableSpace And _
+        If mRegions(i).UseAvailableSpace And _
             mRegions(i).Region.ActualHeight = 0 _
         Then
             mRegions(i).Region.ActualHeight = (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) * Availableheight / 100
@@ -638,7 +640,6 @@ End Sub
 
 Private Function chartObj() As Chart
 Const ProcName As String = "chartObj"
-
 On Error GoTo Err
 
 Set chartObj = mChartRef.Target
@@ -652,11 +653,10 @@ End Function
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedItem As Variant)
-Dim ev As CollectionChangeEventData
 Const ProcName As String = "fireChange"
-
 On Error GoTo Err
 
+Dim ev As CollectionChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 gSetVariant ev.affectedItem, affectedItem
@@ -670,7 +670,6 @@ End Sub
 
 Private Function getEnumerator() As Enumerator
 Const ProcName As String = "getEnumerator"
-
 On Error GoTo Err
 
 Set getEnumerator = CreateEnumerator(Me)
@@ -683,21 +682,19 @@ End Function
 
 Private Function findRegion( _
                 ByVal Name As String) As ChartRegion
-Dim en As Enumerator
-Dim lregion As ChartRegion
-
 Const ProcName As String = "findRegion"
-
 On Error GoTo Err
 
 Name = UCase$(Name)
 
+Dim en As Enumerator
 Set en = getEnumerator
 
 Do While en.MoveNext
-    Set lregion = en.Current
-    If UCase$(lregion.Name) = Name Then
-        Set findRegion = lregion
+    Dim lRegion As ChartRegion
+    Set lRegion = en.Current
+    If UCase$(lRegion.Name) = Name Then
+        Set findRegion = lRegion
         Exit Do
     End If
 Loop

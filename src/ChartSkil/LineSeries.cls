@@ -60,6 +60,7 @@ Private mIsSelected As Boolean
 Private mFinished As Boolean
 
 Private mLines As SortedDictionary
+Private mLinesIndex As EnumerableCollection
 
 Private mViewport As ViewPort
 Private mLayer As Long
@@ -103,14 +104,15 @@ Private mPropertyOverrideFlags As LinePropertyFlags
 
 Private Sub Class_Initialize()
 Set mLines = CreateSortedDictionary
+Set mLinesIndex = New EnumerableCollection
 Set mBaseStyle = gDefaultLineStyle
 Set mStyle = New LineStyle
 End Sub
 
-Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="LineSeries terminated"
-Debug.Print "LineSeries terminated"
-End Sub
+'Private Sub Class_Terminate()
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="LineSeries terminated"
+'Debug.Print "LineSeries terminated"
+'End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
@@ -132,12 +134,11 @@ Private Sub IGraphicObjectSeries_DblCLick()
 RaiseEvent DblCLick
 End Sub
 
-Private Property Get IGraphicObjectSeries_count() As Long
-Const ProcName As String = "IGraphicObjectSeries_count"
-
+Private Property Get IGraphicObjectSeries_Count() As Long
+Const ProcName As String = "IGraphicObjectSeries_Count"
 On Error GoTo Err
 
-IGraphicObjectSeries_count = mLines.Count
+IGraphicObjectSeries_Count = mLines.Count
 
 Exit Property
 
@@ -157,10 +158,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub IGraphicObjectSeries_finish()
-mFinished = True
-Set mGOSP = Nothing
-Set mViewport = Nothing
+Private Sub IGraphicObjectSeries_Finish()
+Finish
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
@@ -181,11 +180,11 @@ Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
 IGraphicObjectSeries_IsSelectable = mIsSelectable
 End Property
 
-Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
+Private Function IGraphicObjectSeries_Item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
 On Error GoTo Err
 
-Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+Set IGraphicObjectSeries_Item = mLinesIndex.Item(index)
 
 Exit Function
 
@@ -201,7 +200,10 @@ Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
 Const ProcName As String = "IGraphicObjectSeries_Remove"
 On Error GoTo Err
 
-Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+Dim lLine As Line
+Set lLine = mLines.Item(index)
+mLines.Remove lLine.Key
+mLinesIndex.Remove lLine.Key
 
 Exit Sub
 
@@ -219,6 +221,7 @@ Dim lLine As ChartSkil27.Line
 Set lLine = Value
 
 mLines.Remove lLine.Key
+mLinesIndex.Remove lLine.Key
 
 Exit Sub
 
@@ -248,7 +251,6 @@ End Property
 
 Private Sub mStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mStyle_PropertyChanged"
-
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -318,7 +320,6 @@ End Sub
 
 Public Property Get ArrowEndColor() As Long
 Const ProcName As String = "ArrowEndColor"
-
 On Error GoTo Err
 
 ArrowEndColor = mBaseStyle.ArrowEndColor
@@ -333,7 +334,6 @@ End Property
 
 Public Property Let ArrowEndColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndColor"
-
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
@@ -349,7 +349,6 @@ End Property
 
 Public Property Get ArrowEndFillColor() As Long
 Const ProcName As String = "ArrowEndFillColor"
-
 On Error GoTo Err
 
 ArrowEndFillColor = mBaseStyle.ArrowEndFillColor
@@ -364,7 +363,6 @@ End Property
 
 Public Property Let ArrowEndFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndFillColor"
-
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
@@ -380,7 +378,6 @@ End Property
 
 Public Property Get ArrowEndFillStyle() As FillStyles
 Const ProcName As String = "ArrowEndFillStyle"
-
 On Error GoTo Err
 
 ArrowEndFillStyle = mBaseStyle.ArrowEndFillStyle
@@ -395,7 +392,6 @@ End Property
 
 Public Property Let ArrowEndFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowEndFillStyle"
-
 On Error GoTo Err
 
 setLongProperty mArrowEndFillStyle, LinePropertyArrowEndFillStyle, Value
@@ -409,7 +405,6 @@ End Property
 
 Public Property Get ArrowEndLength() As Long
 Const ProcName As String = "ArrowEndLength"
-
 On Error GoTo Err
 
 ArrowEndLength = mBaseStyle.ArrowEndLength
@@ -424,7 +419,6 @@ End Property
 
 Public Property Let ArrowEndLength(ByVal Value As Long)
 Const ProcName As String = "ArrowEndLength"
-
 On Error GoTo Err
 
 setLongProperty mArrowEndLength, LinePropertyArrowEndLength, Value
@@ -438,7 +432,6 @@ End Property
 
 Public Property Get ArrowEndStyle() As ArrowStyles
 Const ProcName As String = "ArrowEndStyle"
-
 On Error GoTo Err
 
 ArrowEndStyle = mBaseStyle.ArrowEndStyle
@@ -453,7 +446,6 @@ End Property
 
 Public Property Let ArrowEndStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowEndStyle"
-
 On Error GoTo Err
 
 setLongProperty mArrowEndStyle, LinePropertyArrowEndStyle, Value
@@ -467,7 +459,6 @@ End Property
 
 Public Property Get ArrowEndWidth() As Long
 Const ProcName As String = "ArrowEndWidth"
-
 On Error GoTo Err
 
 ArrowEndWidth = mBaseStyle.ArrowEndWidth
@@ -482,7 +473,6 @@ End Property
 
 Public Property Let ArrowEndWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowEndWidth"
-
 On Error GoTo Err
 
 setLongProperty mArrowEndWidth, LinePropertyArrowEndWidth, Value
@@ -496,7 +486,6 @@ End Property
 
 Public Property Get ArrowStartColor() As Long
 Const ProcName As String = "ArrowStartColor"
-
 On Error GoTo Err
 
 ArrowStartColor = mBaseStyle.ArrowStartColor
@@ -511,7 +500,6 @@ End Property
 
 Public Property Let ArrowStartColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartColor"
-
 On Error GoTo Err
 
 setLongProperty mArrowStartColor, LinePropertyArrowStartColor, Value
@@ -525,7 +513,6 @@ End Property
 
 Public Property Get ArrowStartFillColor() As Long
 Const ProcName As String = "ArrowStartFillColor"
-
 On Error GoTo Err
 
 ArrowStartFillColor = mBaseStyle.ArrowStartFillColor
@@ -540,7 +527,6 @@ End Property
 
 Public Property Let ArrowStartFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartFillColor"
-
 On Error GoTo Err
 
 setLongProperty mArrowStartFillColor, LinePropertyArrowStartFillColor, Value
@@ -554,7 +540,6 @@ End Property
 
 Public Property Get ArrowStartFillStyle() As FillStyles
 Const ProcName As String = "ArrowStartFillStyle"
-
 On Error GoTo Err
 
 ArrowStartFillStyle = mBaseStyle.ArrowStartFillStyle
@@ -569,7 +554,6 @@ End Property
 
 Public Property Let ArrowStartFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowStartFillStyle"
-
 On Error GoTo Err
 
 setLongProperty mArrowStartfillStyle, LinePropertyArrowStartFillStyle, Value
@@ -583,7 +567,6 @@ End Property
 
 Public Property Get ArrowStartLength() As Long
 Const ProcName As String = "ArrowStartLength"
-
 On Error GoTo Err
 
 ArrowStartLength = mBaseStyle.ArrowStartLength
@@ -598,7 +581,6 @@ End Property
 
 Public Property Let ArrowStartLength(ByVal Value As Long)
 Const ProcName As String = "ArrowStartLength"
-
 On Error GoTo Err
 
 setLongProperty mArrowStartLength, LinePropertyArrowStartLength, Value
@@ -612,7 +594,6 @@ End Property
 
 Public Property Get ArrowStartStyle() As ArrowStyles
 Const ProcName As String = "ArrowStartStyle"
-
 On Error GoTo Err
 
 ArrowStartStyle = mBaseStyle.ArrowStartStyle
@@ -627,7 +608,6 @@ End Property
 
 Public Property Let ArrowStartStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowStartStyle"
-
 On Error GoTo Err
 
 setLongProperty mArrowStartStyle, LinePropertyArrowStartStyle, Value
@@ -641,7 +621,6 @@ End Property
 
 Public Property Get ArrowStartWidth() As Long
 Const ProcName As String = "ArrowStartWidth"
-
 On Error GoTo Err
 
 ArrowStartWidth = mBaseStyle.ArrowStartWidth
@@ -656,7 +635,6 @@ End Property
 
 Public Property Let ArrowStartWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowStartWidth"
-
 On Error GoTo Err
 
 setLongProperty mArrowStartWidth, LinePropertyArrowStartWidth, Value
@@ -674,7 +652,6 @@ End Property
 
 Public Property Get Color() As Long
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 Color = mBaseStyle.Color
@@ -689,7 +666,6 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 setLongProperty mColor, LinePropertyColor, Value
@@ -703,7 +679,6 @@ End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 Count = mLines.Count
@@ -728,7 +703,6 @@ End Property
 
 Public Property Get ExtendAfter() As Boolean
 Const ProcName As String = "ExtendAfter"
-
 On Error GoTo Err
 
 ExtendAfter = mBaseStyle.ExtendAfter
@@ -743,7 +717,6 @@ End Property
 
 Public Property Let ExtendAfter(ByVal Value As Boolean)
 Const ProcName As String = "ExtendAfter"
-
 On Error GoTo Err
 
 setBooleanProperty mExtendAfter, LinePropertyExtendAfter, Value
@@ -757,7 +730,6 @@ End Property
 
 Public Property Get ExtendBefore() As Boolean
 Const ProcName As String = "ExtendBefore"
-
 On Error GoTo Err
 
 ExtendBefore = mBaseStyle.ExtendBefore
@@ -772,7 +744,6 @@ End Property
 
 Public Property Let ExtendBefore(ByVal Value As Boolean)
 Const ProcName As String = "ExtendBefore"
-
 On Error GoTo Err
 
 setBooleanProperty mExtendBefore, LinePropertyExtendBefore, Value
@@ -786,7 +757,6 @@ End Property
 
 Public Property Get Extended() As Boolean
 Const ProcName As String = "Extended"
-
 On Error GoTo Err
 
 Extended = mBaseStyle.Extended
@@ -801,7 +771,6 @@ End Property
 
 Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
-
 On Error GoTo Err
 
 setBooleanProperty mExtended, LinePropertyExtended, Value
@@ -815,7 +784,6 @@ End Property
 
 Public Property Get FixedX() As Boolean
 Const ProcName As String = "FixedX"
-
 On Error GoTo Err
 
 FixedX = mBaseStyle.FixedX
@@ -830,7 +798,6 @@ End Property
 
 Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
-
 On Error GoTo Err
 
 setBooleanProperty mFixedX, LinePropertyFixedX, Value
@@ -844,7 +811,6 @@ End Property
 
 Public Property Get FixedY() As Boolean
 Const ProcName As String = "FixedY"
-
 On Error GoTo Err
 
 FixedY = mBaseStyle.FixedY
@@ -859,7 +825,6 @@ End Property
 
 Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
-
 On Error GoTo Err
 
 setBooleanProperty mFixedY, LinePropertyFixedY, Value
@@ -877,7 +842,6 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
@@ -892,7 +856,6 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, LinePropertyIncludeInAutoscale, Value
@@ -906,7 +869,6 @@ End Property
 
 Public Property Let IsSelectable(ByVal Value As Boolean)
 Const ProcName As String = "IsSelectable"
-
 On Error GoTo Err
 
 mIsSelectable = Value
@@ -928,7 +890,6 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-
 On Error GoTo Err
 
 setLongProperty mLayer, LinePropertyLayer, Value
@@ -956,7 +917,6 @@ End Property
 
 Public Property Get LineStyle() As LineStyles
 Const ProcName As String = "LineStyle"
-
 On Error GoTo Err
 
 LineStyle = mBaseStyle.LineStyle
@@ -971,7 +931,6 @@ End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
-
 On Error GoTo Err
 
 setLongProperty mLineStyle, LinePropertyLineStyle, Value
@@ -1049,7 +1008,6 @@ End Property
 
 Public Property Let Style(ByVal Value As LineStyle)
 Const ProcName As String = "Style"
-
 On Error GoTo Err
 
 Set mStyle = Value
@@ -1065,7 +1023,6 @@ End Property
 
 Public Property Get Thickness() As Long
 Const ProcName As String = "Thickness"
-
 On Error GoTo Err
 
 Thickness = mBaseStyle.Thickness
@@ -1080,7 +1037,6 @@ End Property
 
 Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
-
 On Error GoTo Err
 
 setLongProperty mThickness, LinePropertyThickness, Value
@@ -1110,6 +1066,7 @@ lLine.Initialise Me, Key, mGOSP, mViewport, LocalStyle
 
 mGOSP.AddGraphicObject lLine
 mLines.Add lLine, Key
+mLinesIndex.Add lLine, Key
 
 Set Add = lLine
 Exit Function
@@ -1120,7 +1077,6 @@ End Function
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -1134,16 +1090,23 @@ End Sub
 
 Friend Sub Finish()
 mFinished = True
+Set mGOSP = Nothing
 Set mViewport = Nothing
+gClearSeries mLines, mLinesIndex
 End Sub
 
 Public Function Item(ByVal index As Variant) As ChartSkil27.Line
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
-Set Item = mLines(index)
+If VarType(index) = vbLong Then
+    Set Item = mLinesIndex.Item(index)
+Else
+    Set Item = mLines.Item(index)
+End If
+
+Exit Function
 
 Exit Function
 
@@ -1154,10 +1117,9 @@ End Function
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Const ProcName As String = "NewEnum"
-
 On Error GoTo Err
 
-   Set NewEnum = mLines.Enumerator
+Set NewEnum = mLines.Enumerator
 
 Exit Function
 
@@ -1167,8 +1129,10 @@ End Function
 
 Public Sub RemoveObject(ByVal Value As ChartSkil27.Line)
 On Error GoTo Err
+
 mLines.Remove Value.Key
-mGOSP.RemoveObject Value.handle
+mLinesIndex.Remove Value.Key
+mGOSP.RemoveObject Value.Handle
 
 Exit Sub
 
@@ -1182,7 +1146,6 @@ End Sub
 Private Sub ClearProperty( _
                 ByVal flag As LinePropertyFlags)
 Const ProcName As String = "ClearProperty"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -1198,7 +1161,6 @@ Private Sub firePropertyChanged( _
 Dim ev As PropertyChangedEventData
 
 Const ProcName As String = "firePropertyChanged"
-
 On Error GoTo Err
 
 Set ev.Source = Me
@@ -1226,7 +1188,6 @@ End Function
 Private Function IsPropertySet( _
                 ByVal flag As LinePropertyFlags) As Boolean
 Const ProcName As String = "isPropertySet"
-
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -1240,7 +1201,6 @@ End Function
 Private Sub RepaintRegion( _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "RepaintRegion"
-
 On Error GoTo Err
 
 If mLines.Count <> 0 Then
@@ -1298,7 +1258,6 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As LinePropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)

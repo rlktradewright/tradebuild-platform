@@ -303,8 +303,8 @@ End Function
 
 Friend Sub Finish()
 mFinished = True
-Set mPeriods = Nothing
-Set mPeriodsByIndex = Nothing
+mPeriods.ClearAsync
+mPeriodsByIndex.ClearAsync
 Set mChartRef = Nothing
 End Sub
 

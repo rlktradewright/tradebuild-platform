@@ -59,6 +59,7 @@ Private mIsSelected As Boolean
 Private mFinished As Boolean
 
 Private mTexts As SortedDictionary
+Private mTextsIndex As EnumerableCollection
 
 Private mViewport As ViewPort
 Private mLayer As Long
@@ -112,14 +113,15 @@ Private mPropertyOverrideFlags As TextPropertyFlags
 
 Private Sub Class_Initialize()
 Set mTexts = CreateSortedDictionary
+Set mTextsIndex = New EnumerableCollection
 Set mBaseStyle = gDefaultTextStyle
 Set mStyle = New TextStyle
 End Sub
 
-Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="TextSeries terminated"
-Debug.Print "TextSeries terminated"
-End Sub
+'Private Sub Class_Terminate()
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="TextSeries terminated"
+'Debug.Print "TextSeries terminated"
+'End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
@@ -137,8 +139,8 @@ Private Sub IGraphicObjectSeries_DblCLick()
 RaiseEvent DblCLick
 End Sub
 
-Private Property Get IGraphicObjectSeries_count() As Long
-IGraphicObjectSeries_count = mTexts.Count
+Private Property Get IGraphicObjectSeries_Count() As Long
+IGraphicObjectSeries_Count = mTexts.Count
 End Property
 
 Private Property Get IGraphicObjectSeries_Enumerator() As Enumerator
@@ -153,10 +155,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub IGraphicObjectSeries_finish()
-mFinished = True
-Set mGOSP = Nothing
-Set mViewport = Nothing
+Private Sub IGraphicObjectSeries_Finish()
+Finish
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
@@ -177,11 +177,11 @@ Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
 IGraphicObjectSeries_IsSelectable = mIsSelectable
 End Property
 
-Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
+Private Function IGraphicObjectSeries_Item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
 On Error GoTo Err
 
-Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+Set IGraphicObjectSeries_Item = mTextsIndex.Item(index)
 
 Exit Function
 
@@ -197,7 +197,10 @@ Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
 Const ProcName As String = "IGraphicObjectSeries_Remove"
 On Error GoTo Err
 
-Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+Dim lText As Text
+Set lText = mTexts.Item(index)
+mTexts.Remove lText.Key
+mTextsIndex.Remove lText.Key
 
 Exit Sub
 
@@ -215,6 +218,7 @@ Dim lText As ChartSkil27.Text
 Set lText = Value
 
 mTexts.Remove lText.Key
+mTextsIndex.Remove lText.Key
 
 Exit Sub
 
@@ -224,7 +228,6 @@ End Sub
 
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
 Const ProcName As String = "IGraphicObjectSeries_Selected"
-
 On Error GoTo Err
 
 If RHS <> mIsSelected Then
@@ -261,7 +264,6 @@ End Sub
 
 Private Sub mStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mStyle_PropertyChanged"
-
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -341,7 +343,6 @@ End Sub
 
 Public Property Get Align() As TextAlignModes
 Const ProcName As String = "Align"
-
 On Error GoTo Err
 
 Align = mBaseStyle.Align
@@ -356,7 +357,6 @@ End Property
 
 Public Property Let Align(ByVal Value As TextAlignModes)
 Const ProcName As String = "Align"
-
 On Error GoTo Err
 
 setLongProperty mAlign, TextPropertyAlign, Value
@@ -370,7 +370,6 @@ End Property
 
 Public Property Get Angle() As Double
 Const ProcName As String = "Angle"
-
 On Error GoTo Err
 
 Angle = mBaseStyle.Angle
@@ -385,7 +384,6 @@ End Property
 
 Public Property Let Angle(ByVal Value As Double)
 Const ProcName As String = "Angle"
-
 On Error GoTo Err
 
 setDoubleProperty mAngle, TextPropertyAngle, Value
@@ -399,7 +397,6 @@ End Property
 
 Public Property Get Box() As Boolean
 Const ProcName As String = "Box"
-
 On Error GoTo Err
 
 Box = mBaseStyle.Box
@@ -414,7 +411,6 @@ End Property
 
 Public Property Let Box(ByVal Value As Boolean)
 Const ProcName As String = "Box"
-
 On Error GoTo Err
 
 setBooleanProperty mBox, TextPropertyBox, Value
@@ -428,7 +424,6 @@ End Property
 
 Public Property Get BoxColor() As Long
 Const ProcName As String = "BoxColor"
-
 On Error GoTo Err
 
 BoxColor = mBaseStyle.BoxColor
@@ -443,7 +438,6 @@ End Property
 
 Public Property Let BoxColor(ByVal Value As Long)
 Const ProcName As String = "BoxColor"
-
 On Error GoTo Err
 
 setLongProperty mBoxColor, TextPropertyBoxColor, Value
@@ -457,7 +451,6 @@ End Property
 
 Public Property Get BoxFillColor() As Long
 Const ProcName As String = "BoxFillColor"
-
 On Error GoTo Err
 
 BoxFillColor = mBaseStyle.BoxFillColor
@@ -472,7 +465,6 @@ End Property
 
 Public Property Let BoxFillColor(ByVal Value As Long)
 Const ProcName As String = "BoxFillColor"
-
 On Error GoTo Err
 
 setLongProperty mBoxFillColor, TextPropertyBoxFillColor, Value
@@ -486,7 +478,6 @@ End Property
 
 Public Property Get BoxFillStyle() As FillStyles
 Const ProcName As String = "BoxFillStyle"
-
 On Error GoTo Err
 
 BoxFillStyle = mBaseStyle.BoxFillStyle
@@ -501,7 +492,6 @@ End Property
 
 Public Property Let BoxFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "BoxFillStyle"
-
 On Error GoTo Err
 
 setLongProperty mBoxFillStyle, TextPropertyBoxFillStyle, Value
@@ -515,7 +505,6 @@ End Property
 
 Public Property Get BoxFillWithBackgroundColor() As Boolean
 Const ProcName As String = "BoxFillWithBackgroundColor"
-
 On Error GoTo Err
 
 BoxFillWithBackgroundColor = mBaseStyle.BoxFillWithBackgroundColor
@@ -530,7 +519,6 @@ End Property
 
 Public Property Let BoxFillWithBackgroundColor(ByVal Value As Boolean)
 Const ProcName As String = "BoxFillWithBackgroundColor"
-
 On Error GoTo Err
 
 setBooleanProperty mBoxFillWithBackgroundColor, TextPropertyBoxFillWithBackgroundColor, Value
@@ -544,7 +532,6 @@ End Property
 
 Public Property Get BoxStyle() As LineStyles
 Const ProcName As String = "BoxStyle"
-
 On Error GoTo Err
 
 BoxStyle = mBaseStyle.BoxStyle
@@ -559,7 +546,6 @@ End Property
 
 Public Property Let BoxStyle(ByVal Value As LineStyles)
 Const ProcName As String = "BoxStyle"
-
 On Error GoTo Err
 
 setLongProperty mBoxStyle, TextPropertyBoxStyle, Value
@@ -573,7 +559,6 @@ End Property
 
 Public Property Get BoxThickness() As Long
 Const ProcName As String = "BoxThickness"
-
 On Error GoTo Err
 
 BoxThickness = mBaseStyle.BoxThickness
@@ -588,7 +573,6 @@ End Property
 
 Public Property Let BoxThickness(ByVal Value As Long)
 Const ProcName As String = "BoxThickness"
-
 On Error GoTo Err
 
 setLongProperty mBoxThickness, TextPropertyBoxThickness, Value
@@ -602,7 +586,6 @@ End Property
 
 Public Property Get Color() As Long
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 Color = mBaseStyle.Color
@@ -617,7 +600,6 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 setLongProperty mColor, TextPropertyColor, Value
@@ -631,7 +613,6 @@ End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 Count = mTexts.Count
@@ -644,7 +625,6 @@ End Property
 
 Public Property Let Ellipsis(ByVal Value As EllipsisModes)
 Const ProcName As String = "Ellipsis"
-
 On Error GoTo Err
 
 setLongProperty mEllipsis, TextPropertyEllipsis, Value
@@ -658,7 +638,6 @@ End Property
 
 Public Property Get Ellipsis() As EllipsisModes
 Const ProcName As String = "Ellipsis"
-
 On Error GoTo Err
 
 Ellipsis = mBaseStyle.Ellipsis
@@ -685,7 +664,6 @@ End Property
 
 Public Property Let ExpandTabs(ByVal Value As Boolean)
 Const ProcName As String = "ExpandTabs"
-
 On Error GoTo Err
 
 setBooleanProperty mExpandTabs, TextPropertyExpandTabs, Value
@@ -699,7 +677,6 @@ End Property
 
 Public Property Get ExpandTabs() As Boolean
 Const ProcName As String = "ExpandTabs"
-
 On Error GoTo Err
 
 ExpandTabs = mBaseStyle.ExpandTabs
@@ -714,7 +691,6 @@ End Property
 
 Public Property Get Extended() As Boolean
 Const ProcName As String = "Extended"
-
 On Error GoTo Err
 
 Extended = mBaseStyle.Extended
@@ -729,7 +705,6 @@ End Property
 
 Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
-
 On Error GoTo Err
 
 setBooleanProperty mExtended, TextPropertyExtended, Value
@@ -743,7 +718,6 @@ End Property
 
 Public Property Get FixedX() As Boolean
 Const ProcName As String = "FixedX"
-
 On Error GoTo Err
 
 FixedX = mBaseStyle.FixedX
@@ -758,7 +732,6 @@ End Property
 
 Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
-
 On Error GoTo Err
 
 setBooleanProperty mFixedX, TextPropertyFixedX, Value
@@ -772,7 +745,6 @@ End Property
 
 Public Property Get FixedY() As Boolean
 Const ProcName As String = "FixedY"
-
 On Error GoTo Err
 
 FixedY = mBaseStyle.FixedY
@@ -787,7 +759,6 @@ End Property
 
 Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
-
 On Error GoTo Err
 
 setBooleanProperty mFixedY, TextPropertyFixedY, Value
@@ -801,7 +772,6 @@ End Property
 
 Public Property Get Font() As StdFont
 Const ProcName As String = "Font"
-
 On Error GoTo Err
 
 Set Font = mBaseStyle.Font
@@ -816,7 +786,6 @@ End Property
 
 Public Property Let Font(ByVal Value As StdFont)
 Const ProcName As String = "Font"
-
 On Error GoTo Err
 
 If mFont Is Value And IsPropertySet(TextPropertyFont) Then Exit Property
@@ -841,7 +810,6 @@ End Property
 
 Public Property Get HideIfBlank() As Boolean
 Const ProcName As String = "HideIfBlank"
-
 On Error GoTo Err
 
 HideIfBlank = mBaseStyle.HideIfBlank
@@ -856,7 +824,6 @@ End Property
 
 Public Property Let HideIfBlank(ByVal Value As Boolean)
 Const ProcName As String = "HideIfBlank"
-
 On Error GoTo Err
 
 setBooleanProperty mHideIfBlank, TextPropertyHideIfBlank, Value
@@ -870,7 +837,6 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
@@ -885,7 +851,6 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, TextPropertyIncludeInAutoscale, Value
@@ -899,7 +864,6 @@ End Property
 
 Public Property Let IsSelectable(ByVal Value As Boolean)
 Const ProcName As String = "IsSelectable"
-
 On Error GoTo Err
 
 mIsSelectable = Value
@@ -921,7 +885,6 @@ End Property
 
 Public Property Let Justification(ByVal Value As TextJustifyModes)
 Const ProcName As String = "Justification"
-
 On Error GoTo Err
 
 setLongProperty mJustification, TextPropertyJustification, Value
@@ -941,7 +904,6 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-
 On Error GoTo Err
 
 setLongProperty mLayer, TextPropertyLayer, Value
@@ -969,7 +931,6 @@ End Property
 
 Public Property Let LeftMargin(ByVal Value As Dimension)
 Const ProcName As String = "LeftMargin"
-
 On Error GoTo Err
 
 setDimensionProperty mLeftMargin, TextPropertyLeftMargin, Value
@@ -997,7 +958,6 @@ End Property
 
 Public Property Let MultiLine(ByVal Value As Boolean)
 Const ProcName As String = "MultiLine"
-
 On Error GoTo Err
 
 setBooleanProperty mMultiLine, TextPropertyMultiLine, Value
@@ -1027,7 +987,6 @@ End Property
 
 Public Property Let Offset(ByVal Value As Size)
 Const ProcName As String = "Offset"
-
 On Error GoTo Err
 
 setSizeProperty mOffset, TextPropertyOffset, Value
@@ -1041,7 +1000,6 @@ End Property
 
 Public Property Get Offset() As Size
 Const ProcName As String = "Offset"
-
 On Error GoTo Err
 
 Set Offset = mBaseStyle.Offset
@@ -1056,7 +1014,6 @@ End Property
 
 Public Property Get PaddingX() As Double
 Const ProcName As String = "PaddingX"
-
 On Error GoTo Err
 
 PaddingX = mBaseStyle.PaddingX
@@ -1071,7 +1028,6 @@ End Property
 
 Public Property Let PaddingX(ByVal Value As Double)
 Const ProcName As String = "PaddingX"
-
 On Error GoTo Err
 
 setDoubleProperty mPaddingX, TextPropertyPaddingX, Value
@@ -1085,7 +1041,6 @@ End Property
 
 Public Property Get PaddingY() As Double
 Const ProcName As String = "PaddingY"
-
 On Error GoTo Err
 
 PaddingY = mBaseStyle.PaddingY
@@ -1100,7 +1055,6 @@ End Property
 
 Public Property Let PaddingY(ByVal Value As Double)
 Const ProcName As String = "PaddingY"
-
 On Error GoTo Err
 
 setDoubleProperty mPaddingY, TextPropertyPaddingY, Value
@@ -1114,7 +1068,6 @@ End Property
 
 Public Property Let RightMargin(ByVal Value As Dimension)
 Const ProcName As String = "RightMargin"
-
 On Error GoTo Err
 
 setDimensionProperty mRightMargin, TextPropertyRightMargin, Value
@@ -1142,7 +1095,6 @@ End Property
 
 Public Property Get Size() As Size
 Const ProcName As String = "Size"
-
 On Error GoTo Err
 
 Set Size = mBaseStyle.Size
@@ -1157,7 +1109,6 @@ End Property
 
 Public Property Let Size(ByVal Value As Size)
 Const ProcName As String = "Size"
-
 On Error GoTo Err
 
 setSizeProperty mSize, TextPropertySize, Value
@@ -1179,7 +1130,6 @@ End Property
 
 Public Property Let Style(ByVal Value As TextStyle)
 Const ProcName As String = "Style"
-
 On Error GoTo Err
 
 Set mStyle = Value
@@ -1195,7 +1145,6 @@ End Property
 
 Public Property Let TabWidth(ByVal Value As Long)
 Const ProcName As String = "TabWidth"
-
 On Error GoTo Err
 
 setLongProperty mTabWidth, TextPropertyTabWidth, Value
@@ -1209,7 +1158,6 @@ End Property
 
 Public Property Get TabWidth() As Long
 Const ProcName As String = "TabWidth"
-
 On Error GoTo Err
 
 TabWidth = mBaseStyle.TabWidth
@@ -1224,7 +1172,6 @@ End Property
 
 Public Property Let WordWrap(ByVal Value As Boolean)
 Const ProcName As String = "WordWrap"
-
 On Error GoTo Err
 
 setBooleanProperty mWordWrap, TextPropertyWordWrap, Value
@@ -1238,7 +1185,6 @@ End Property
 
 Public Property Get WordWrap() As Boolean
 Const ProcName As String = "WordWrap"
-
 On Error GoTo Err
 
 WordWrap = mBaseStyle.WordWrap
@@ -1268,6 +1214,7 @@ If pKey = "" Then pKey = GetObjectKey(lText)
 lText.Initialise Me, pKey, mGOSP, mViewport, pLocalStyle
 
 mTexts.Add lText, pKey
+mTextsIndex.Add lText, pKey
 mGOSP.AddGraphicObject lText
 
 Set Add = lText
@@ -1280,7 +1227,6 @@ End Function
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -1294,16 +1240,23 @@ End Sub
 
 Friend Sub Finish()
 mFinished = True
+Set mGOSP = Nothing
 Set mViewport = Nothing
+gClearSeries mTexts, mTextsIndex
 End Sub
 
 Public Function Item(ByVal index As Variant) As Text
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
-Set Item = mTexts(index)
+If VarType(index) = vbLong Then
+    Set Item = mTextsIndex.Item(index)
+Else
+    Set Item = mTexts.Item(index)
+End If
+
+Exit Function
 
 Exit Function
 
@@ -1314,13 +1267,15 @@ End Function
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-   Set NewEnum = mTexts.Enumerator
+Set NewEnum = mTexts.Enumerator
 End Function
 
 Public Sub RemoveObject(ByVal Value As ChartSkil27.Text)
 On Error GoTo Err
+
 mTexts.Remove Value.Key
-mGOSP.RemoveObject Value.handle
+mTextsIndex.Remove Value.Key
+mGOSP.RemoveObject Value.Handle
 
 Exit Sub
 
@@ -1334,7 +1289,6 @@ End Sub
 Private Sub ClearProperty( _
                 ByVal flag As TextPropertyFlags)
 Const ProcName As String = "ClearProperty"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -1350,7 +1304,6 @@ Private Sub firePropertyChanged( _
 Dim ev As PropertyChangedEventData
 
 Const ProcName As String = "firePropertyChanged"
-
 On Error GoTo Err
 
 Set ev.Source = Me
@@ -1378,7 +1331,6 @@ End Function
 Private Function IsPropertySet( _
                 ByVal flag As TextPropertyFlags) As Boolean
 Const ProcName As String = "IsPropertySet"
-
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -1392,7 +1344,6 @@ End Function
 Private Sub RepaintRegion( _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "RepaintRegion"
-
 On Error GoTo Err
 
 If mTexts.Count <> 0 Then
@@ -1530,7 +1481,6 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As TextPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)

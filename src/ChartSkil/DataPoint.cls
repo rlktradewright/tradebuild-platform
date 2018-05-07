@@ -105,10 +105,10 @@ mBoundingRect.isValid = False
 
 End Sub
 
-Private Sub Class_Terminate()
+'Private Sub Class_Terminate()
 'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="DataPoint terminated"
-Debug.Print "DataPoint terminated"
-End Sub
+'Debug.Print "DataPoint terminated"
+'End Sub
 
 '================================================================================
 ' IGraphicObject Members

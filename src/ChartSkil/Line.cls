@@ -168,10 +168,10 @@ mArrowEndFillColor = vbBlack
 mArrowEndFillStyle = FillStyles.FillSolid
 End Sub
 
-Private Sub Class_Terminate()
+'Private Sub Class_Terminate()
 'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Line terminated"
-Debug.Print "Line terminated"
-End Sub
+'Debug.Print "Line terminated"
+'End Sub
 
 '================================================================================
 ' IGraphicObject Interface Members

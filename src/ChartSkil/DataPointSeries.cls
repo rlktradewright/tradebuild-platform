@@ -60,6 +60,7 @@ Private mIsSelected As Boolean
 Private mFinished           As Boolean
 
 Private mDataPoints         As SortedDictionary
+Private mDataPointsIndex    As EnumerableCollection
 
 Private mViewport As ViewPort
 Private mLayer              As Long
@@ -93,14 +94,15 @@ Private mPropertyOverrideFlags As DataPointPropertyFlags
 
 Private Sub Class_Initialize()
 Set mDataPoints = CreateSortedDictionary
+Set mDataPointsIndex = New EnumerableCollection
 Set mBaseStyle = gDefaultDataPointStyle
 Set mStyle = New DataPointStyle
 End Sub
 
-Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="DataPointSeries terminated"
-Debug.Print "DataPointSeries terminated"
-End Sub
+'Private Sub Class_Terminate()
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="DataPointSeries terminated"
+'Debug.Print "DataPointSeries terminated"
+'End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
@@ -122,11 +124,11 @@ Private Sub IGraphicObjectSeries_DblCLick()
 RaiseEvent DblCLick
 End Sub
 
-Private Property Get IGraphicObjectSeries_count() As Long
-Const ProcName As String = "IGraphicObjectSeries_count"
+Private Property Get IGraphicObjectSeries_Count() As Long
+Const ProcName As String = "IGraphicObjectSeries_Count"
 On Error GoTo Err
 
-IGraphicObjectSeries_count = mDataPoints.Count
+IGraphicObjectSeries_Count = mDataPoints.Count
 
 Exit Property
 
@@ -146,12 +148,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub IGraphicObjectSeries_finish()
-mFinished = True
-Set mPeriods = Nothing
-Set mPrevDataPointRef = Nothing
-Set mGOSP = Nothing
-Set mViewport = Nothing
+Private Sub IGraphicObjectSeries_Finish()
+Finish
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
@@ -162,7 +160,6 @@ Private Sub IGraphicObjectSeries_Initialise( _
                 ByVal pSeriesID As Long, _
                 ByVal pGOSP As GraphObjServiceProvider)
 Const ProcName As String = "IGraphicObjectSeries_Initialise"
-
 On Error GoTo Err
 
 mName = pName
@@ -182,11 +179,11 @@ Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
 IGraphicObjectSeries_IsSelectable = mIsSelectable
 End Property
 
-Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
+Private Function IGraphicObjectSeries_Item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
 On Error GoTo Err
 
-Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+Set IGraphicObjectSeries_Item = mDataPointsIndex.Item(index)
 
 Exit Function
 
@@ -202,7 +199,10 @@ Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
 Const ProcName As String = "IGraphicObjectSeries_Remove"
 On Error GoTo Err
 
-Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+Dim dp As DataPoint
+Set dp = mDataPointsIndex.Item(index)
+mDataPoints.Remove dp.Key
+mDataPointsIndex.Remove dp.Key
 
 Exit Sub
 
@@ -220,6 +220,7 @@ Dim dp As ChartSkil27.DataPoint
 Set dp = Value
 
 mDataPoints.Remove dp.Key
+mDataPointsIndex.Remove dp.Key
 
 Exit Sub
 
@@ -229,7 +230,6 @@ End Sub
 
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
 Const ProcName As String = "IGraphicObjectSeries_Selected"
-
 On Error GoTo Err
 
 If RHS <> mIsSelected Then
@@ -258,7 +258,6 @@ End Property
 
 Private Sub mStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mStyle_PropertyChanged"
-
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -300,7 +299,6 @@ End Sub
 
 Public Property Get Color() As Long
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 Color = mBaseStyle.Color
@@ -315,7 +313,6 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
@@ -331,7 +328,6 @@ End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 Count = mDataPoints.Count
@@ -344,7 +340,6 @@ End Property
 
 Public Property Get DisplayMode() As DataPointDisplayModes
 Const ProcName As String = "DisplayMode"
-
 On Error GoTo Err
 
 DisplayMode = mBaseStyle.DisplayMode
@@ -359,7 +354,6 @@ End Property
 
 Public Property Let DisplayMode(ByVal Value As DataPointDisplayModes)
 Const ProcName As String = "DisplayMode"
-
 On Error GoTo Err
 
 setLongProperty mDisplayMode, DataPointPropertyDisplayMode, Value
@@ -373,7 +367,6 @@ End Property
 
 Public Property Get DownColor() As Long
 Const ProcName As String = "DownColor"
-
 On Error GoTo Err
 
 DownColor = mBaseStyle.DownColor
@@ -388,7 +381,6 @@ End Property
 
 Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
-
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
@@ -416,7 +408,6 @@ End Property
 
 Public Property Get HistogramBarWidth() As Single
 Const ProcName As String = "HistogramBarWidth"
-
 On Error GoTo Err
 
 HistogramBarWidth = mBaseStyle.HistogramBarWidth
@@ -431,7 +422,6 @@ End Property
 
 Public Property Let HistogramBarWidth(ByVal Value As Single)
 Const ProcName As String = "HistogramBarWidth"
-
 On Error GoTo Err
 
 If Value <= 0 Or Value > 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "HistogramBarWidth must be greater than zero but not greater than 1"
@@ -451,7 +441,6 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
@@ -466,7 +455,6 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, DataPointPropertyIncludeInAutoscale, Value
@@ -480,7 +468,6 @@ End Property
 
 Public Property Let IsSelectable(ByVal Value As Boolean)
 Const ProcName As String = "IsSelectable"
-
 On Error GoTo Err
 
 mIsSelectable = Value
@@ -502,7 +489,6 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-
 On Error GoTo Err
 
 setLongProperty mLayer, DataPointPropertyLayer, Value
@@ -530,7 +516,6 @@ End Property
 
 Public Property Get LineStyle() As LineStyles
 Const ProcName As String = "LineStyle"
-
 On Error GoTo Err
 
 LineStyle = mBaseStyle.LineStyle
@@ -545,7 +530,6 @@ End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
-
 On Error GoTo Err
 
 setLongProperty mLineStyle, DataPointPropertyLineStyle, Value
@@ -559,7 +543,6 @@ End Property
 
 Public Property Get LineThickness() As Long
 Const ProcName As String = "LineThickness"
-
 On Error GoTo Err
 
 LineThickness = mBaseStyle.LineThickness
@@ -574,7 +557,6 @@ End Property
 
 Public Property Let LineThickness(ByVal Value As Long)
 Const ProcName As String = "LineThickness"
-
 On Error GoTo Err
 
 setLongProperty mLineThickness, DataPointPropertyLineThickness, Value
@@ -592,7 +574,6 @@ End Property
 
 Public Property Let Name(ByVal Value As String)
 Const ProcName As String = "Name"
-
 On Error GoTo Err
 
 mName = Value
@@ -606,7 +587,6 @@ End Property
 
 Public Property Get PointStyle() As PointStyles
 Const ProcName As String = "PointStyle"
-
 On Error GoTo Err
 
 PointStyle = mBaseStyle.PointStyle
@@ -621,7 +601,6 @@ End Property
 
 Public Property Let PointStyle(ByVal Value As PointStyles)
 Const ProcName As String = "PointStyle"
-
 On Error GoTo Err
 
 setLongProperty mPointStyle, DataPointPropertyPointStyle, Value
@@ -644,7 +623,6 @@ End Property
 Public Property Let Style( _
                 ByVal Value As DataPointStyle)
 Const ProcName As String = "Style"
-
 On Error GoTo Err
 
 Set mStyle = Value
@@ -660,7 +638,6 @@ End Property
 
 Public Property Get UpColor() As Long
 Const ProcName As String = "UpColor"
-
 On Error GoTo Err
 
 UpColor = mBaseStyle.UpColor
@@ -675,7 +652,6 @@ End Property
 
 Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
-
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
@@ -722,6 +698,8 @@ dp.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 If Not mPrevDataPointRef Is Nothing Then dp.PreviousDataPoint = prevDataPointObj
 
 mDataPoints.Add dp, Key
+mDataPointsIndex.Add dp, Key
+
 Set mPrevDataPointRef = CreateWeakReference(dp)
 sPrevTimestamp = Timestamp
 mGOSP.AddGraphicObject dp
@@ -736,7 +714,6 @@ End Function
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -750,16 +727,25 @@ End Sub
 
 Friend Sub Finish()
 mFinished = True
+Set mPeriods = Nothing
+Set mPrevDataPointRef = Nothing
+Set mGOSP = Nothing
 Set mViewport = Nothing
+gClearSeries mDataPoints, mDataPointsIndex
 End Sub
 
 Public Function Item(ByVal index As Variant) As DataPoint
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
-Set Item = mDataPoints(index)
+If VarType(index) = vbLong Then
+    Set Item = mDataPointsIndex.Item(index)
+Else
+    Set Item = mDataPoints.Item(index)
+End If
+
+Exit Function
 
 Exit Function
 
@@ -769,8 +755,10 @@ End Function
 
 Public Sub RemoveObject(ByVal Value As ChartSkil27.DataPoint)
 On Error GoTo Err
+
 mDataPoints.Remove Value.Key
-mGOSP.RemoveObject Value.handle
+mDataPointsIndex.Remove Value.Key
+mGOSP.RemoveObject Value.Handle
 
 Exit Sub
 
@@ -780,7 +768,7 @@ End Sub
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-   Set NewEnum = mDataPoints.Enumerator
+Set NewEnum = mDataPoints.Enumerator
 End Function
 
 '================================================================================
@@ -790,7 +778,6 @@ End Function
 Private Sub ClearProperty( _
                 ByVal flag As DataPointPropertyFlags)
 Const ProcName As String = "ClearProperty"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -803,12 +790,10 @@ End Sub
 
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
-Dim ev As PropertyChangedEventData
-
 Const ProcName As String = "firePropertyChanged"
-
 On Error GoTo Err
 
+Dim ev As PropertyChangedEventData
 Set ev.Source = Me
 ev.PropertyName = Name
 RaiseEvent PropertyChanged(ev)
@@ -834,7 +819,6 @@ End Function
 Private Function IsPropertySet( _
                 ByVal flag As DataPointPropertyFlags) As Boolean
 Const ProcName As String = "IsPropertySet"
-
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -847,7 +831,6 @@ End Function
 
 Private Function prevDataPointObj() As DataPoint
 Const ProcName As String = "prevDataPointObj"
-
 On Error GoTo Err
 
 Set prevDataPointObj = mPrevDataPointRef.Target
@@ -861,7 +844,6 @@ End Function
 Private Sub RepaintRegion( _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "RepaintRegion"
-
 On Error GoTo Err
 
 If mDataPoints.Count <> 0 Then
@@ -937,7 +919,6 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As DataPointPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)

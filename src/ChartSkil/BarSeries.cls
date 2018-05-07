@@ -60,6 +60,7 @@ Private mIsSelected As Boolean
 Private mFinished As Boolean
 
 Private mBars As SortedDictionary
+Private mBarsIndex As EnumerableCollection
 
 Private mViewport As ViewPort
 Private mLayer As Long
@@ -95,14 +96,15 @@ Private mPropertyOverrideFlags As BarPropertyFlags
 
 Private Sub Class_Initialize()
 Set mBars = CreateSortedDictionary()
+Set mBarsIndex = New EnumerableCollection
 Set mBaseStyle = gDefaultBarStyle
 Set mStyle = New BarStyle
 End Sub
 
-Private Sub Class_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="BarSeries terminated"
-Debug.Print "BarSeries terminated"
-End Sub
+'Private Sub Class_Terminate()
+'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="BarSeries terminated"
+'Debug.Print "BarSeries terminated"
+'End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
@@ -120,8 +122,8 @@ Private Sub IGraphicObjectSeries_DblCLick()
 RaiseEvent DblCLick
 End Sub
 
-Private Property Get IGraphicObjectSeries_count() As Long
-IGraphicObjectSeries_count = mBars.Count
+Private Property Get IGraphicObjectSeries_Count() As Long
+IGraphicObjectSeries_Count = mBars.Count
 End Property
 
 Private Property Get IGraphicObjectSeries_Enumerator() As Enumerator
@@ -136,12 +138,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub IGraphicObjectSeries_finish()
-mFinished = True
-Set mPeriods = Nothing
-Set mPrevBarRef = Nothing
-Set mGOSP = Nothing
-Set mViewport = Nothing
+Private Sub IGraphicObjectSeries_Finish()
+Finish
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
@@ -152,7 +150,6 @@ Private Sub IGraphicObjectSeries_Initialise( _
                 ByVal pSeriesID As Long, _
                 ByVal pGOSP As GraphObjServiceProvider)
 Const ProcName As String = "IGraphicObjectSeries_Initialise"
-
 On Error GoTo Err
 
 mName = pName
@@ -172,11 +169,11 @@ Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
 IGraphicObjectSeries_IsSelectable = mIsSelectable
 End Property
 
-Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
+Private Function IGraphicObjectSeries_Item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
 On Error GoTo Err
 
-Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+Set IGraphicObjectSeries_Item = mBarsIndex.Item(index)
 
 Exit Function
 
@@ -192,7 +189,10 @@ Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
 Const ProcName As String = "IGraphicObjectSeries_Remove"
 On Error GoTo Err
 
-Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+Dim lBar As Bar
+Set lBar = mBars.Item(index)
+mBars.Remove lBar.Key
+mBarsIndex.Remove lBar.Key
 
 Exit Sub
 
@@ -210,6 +210,7 @@ Dim lBar As ChartSkil27.Bar
 Set lBar = Value
 
 mBars.Remove lBar.Key
+mBarsIndex.Remove lBar.Key
 
 Exit Sub
 
@@ -219,7 +220,6 @@ End Sub
 
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
 Const ProcName As String = "IGraphicObjectSeries_Selected"
-
 On Error GoTo Err
 
 If RHS <> mIsSelected Then
@@ -248,7 +248,6 @@ End Property
 
 Private Sub mStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mStyle_PropertyChanged"
-
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -292,7 +291,6 @@ End Sub
 
 Public Property Get Color() As Long
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 Color = mBaseStyle.Color
@@ -307,7 +305,6 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-
 On Error GoTo Err
 
 
@@ -324,7 +321,6 @@ End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 Count = mBars.Count
@@ -337,7 +333,6 @@ End Property
 
 Public Property Get DisplayMode() As BarDisplayModes
 Const ProcName As String = "DisplayMode"
-
 On Error GoTo Err
 
 DisplayMode = mBaseStyle.DisplayMode
@@ -352,7 +347,6 @@ End Property
 
 Public Property Let DisplayMode(ByVal Value As BarDisplayModes)
 Const ProcName As String = "DisplayMode"
-
 On Error GoTo Err
 
 setLongProperty mDisplayMode, BarPropertyDisplayMode, Value
@@ -366,7 +360,6 @@ End Property
 
 Public Property Get DownColor() As Long
 Const ProcName As String = "DownColor"
-
 On Error GoTo Err
 
 DownColor = mBaseStyle.DownColor
@@ -381,7 +374,6 @@ End Property
 
 Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
-
 On Error GoTo Err
 
 setLongProperty mDownColor, BarPropertyDownColor, Value
@@ -411,7 +403,6 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
@@ -426,7 +417,6 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, BarPropertyIncludeInAutoscale, Value
@@ -440,7 +430,6 @@ End Property
 
 Public Property Let IsSelectable(ByVal Value As Boolean)
 Const ProcName As String = "IsSelectable"
-
 On Error GoTo Err
 
 mIsSelectable = Value
@@ -462,7 +451,6 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-
 On Error GoTo Err
 
 setLongProperty mLayer, BarPropertyLayer, Value
@@ -494,7 +482,6 @@ End Property
 
 Public Property Let Name(ByVal Value As String)
 Const ProcName As String = "Name"
-
 On Error GoTo Err
 
 mName = Value
@@ -508,7 +495,6 @@ End Property
 
 Public Property Get OutlineThickness() As Long
 Const ProcName As String = "OutlineThickness"
-
 On Error GoTo Err
 
 OutlineThickness = mBaseStyle.OutlineThickness
@@ -523,7 +509,6 @@ End Property
 
 Public Property Let OutlineThickness(ByVal Value As Long)
 Const ProcName As String = "OutlineThickness"
-
 On Error GoTo Err
 
 setLongProperty mOutlineThickness, BarPropertyOutlineThickness, Value
@@ -541,7 +526,6 @@ End Property
 
 Public Property Get SolidUpBody() As Boolean
 Const ProcName As String = "SolidUpBody"
-
 On Error GoTo Err
 
 SolidUpBody = mBaseStyle.SolidUpBody
@@ -556,7 +540,6 @@ End Property
 
 Public Property Let SolidUpBody(ByVal Value As Boolean)
 Const ProcName As String = "SolidUpBody"
-
 On Error GoTo Err
 
 setBooleanProperty mSolidUpBody, BarPropertySolidUpBody, Value
@@ -575,7 +558,6 @@ End Property
 Public Property Let Style( _
                 ByVal Value As BarStyle)
 Const ProcName As String = "Style"
-
 On Error GoTo Err
 
 Set mStyle = Value
@@ -591,7 +573,6 @@ End Property
 
 Public Property Get TailThickness() As Long
 Const ProcName As String = "TailThickness"
-
 On Error GoTo Err
 
 TailThickness = mBaseStyle.TailThickness
@@ -606,7 +587,6 @@ End Property
 
 Public Property Let TailThickness(ByVal Value As Long)
 Const ProcName As String = "TailThickness"
-
 On Error GoTo Err
 
 setLongProperty mTailThickness, BarPropertyTailThickness, Value
@@ -620,7 +600,6 @@ End Property
 
 Public Property Get Thickness() As Long
 Const ProcName As String = "Thickness"
-
 On Error GoTo Err
 
 Thickness = mBaseStyle.Thickness
@@ -635,7 +614,6 @@ End Property
 
 Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
-
 On Error GoTo Err
 
 setLongProperty mThickness, BarPropertyThickness, Value
@@ -649,7 +627,6 @@ End Property
 
 Public Property Get UpColor() As Long
 Const ProcName As String = "UpColor"
-
 On Error GoTo Err
 
 UpColor = mBaseStyle.UpColor
@@ -664,7 +641,6 @@ End Property
 
 Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
-
 On Error GoTo Err
 
 setLongProperty mUpColor, BarPropertyUpColor, Value
@@ -678,7 +654,6 @@ End Property
 
 Public Property Get Width() As Single
 Const ProcName As String = "Width"
-
 On Error GoTo Err
 
 Width = mBaseStyle.Width
@@ -693,7 +668,6 @@ End Property
 
 Public Property Let Width(ByVal Value As Single)
 Const ProcName As String = "Width"
-
 On Error GoTo Err
 
 setSingleProperty mWidth, BarPropertyWidth, Value
@@ -713,7 +687,6 @@ Public Function Add( _
                 Optional ByVal Timestamp As Date, _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As BarStyle) As Bar
-
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -729,6 +702,8 @@ If CDbl(Timestamp) <> 0# Then lBar.X = mPeriods.GetXFromTimestamp(Timestamp, Fal
 
 If Not mPrevBarRef Is Nothing Then lBar.PreviousBar = prevBarObj
 mBars.Add lBar, Key
+mBarsIndex.Add lBar, Key
+
 Set mPrevBarRef = CreateWeakReference(lBar)
 mGOSP.AddGraphicObject lBar
 
@@ -742,7 +717,6 @@ End Function
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -756,14 +730,22 @@ End Sub
 
 Friend Sub Finish()
 mFinished = True
+Set mPeriods = Nothing
+Set mPrevBarRef = Nothing
+Set mGOSP = Nothing
 Set mViewport = Nothing
+gClearSeries mBars, mBarsIndex
 End Sub
 
 Public Function Item(ByVal index As Variant) As Bar
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-Set Item = mBars(index)
+If VarType(index) = vbLong Then
+    Set Item = mBarsIndex.Item(index)
+Else
+    Set Item = mBars.Item(index)
+End If
 
 Exit Function
 
@@ -773,8 +755,10 @@ End Function
 
 Public Sub RemoveObject(ByVal Value As ChartSkil27.Bar)
 On Error GoTo Err
+
 mBars.Remove Value.Key
-mGOSP.RemoveObject Value.handle
+mBarsIndex.Remove Value.Key
+mGOSP.RemoveObject Value.Handle
 
 Exit Sub
 
@@ -794,7 +778,6 @@ End Function
 Private Sub ClearProperty( _
                 ByVal flag As BarPropertyFlags)
 Const ProcName As String = "ClearProperty"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -807,12 +790,10 @@ End Sub
 
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
-Dim ev As PropertyChangedEventData
-
 Const ProcName As String = "firePropertyChanged"
-
 On Error GoTo Err
 
+Dim ev As PropertyChangedEventData
 Set ev.Source = Me
 ev.PropertyName = Name
 RaiseEvent PropertyChanged(ev)
@@ -838,7 +819,6 @@ End Function
 Private Function IsPropertySet( _
                 ByVal flag As BarPropertyFlags) As Boolean
 Const ProcName As String = "IsPropertySet"
-
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -851,7 +831,6 @@ End Function
 
 Private Function prevBarObj() As Bar
 Const ProcName As String = "prevBarObj"
-
 On Error GoTo Err
 
 Set prevBarObj = mPrevBarRef.Target
@@ -865,7 +844,6 @@ End Function
 Private Sub RepaintRegion( _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "RepaintRegion"
-
 On Error GoTo Err
 
 If mBars.Count <> 0 Then
@@ -941,7 +919,6 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As BarPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)

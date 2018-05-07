@@ -42,9 +42,9 @@ Private mData                               As ChartRegionData
 ' Class Event Handlers
 '================================================================================
 
-Private Sub Class_Terminate()
-Debug.Print "GraphObjServiceProvider terminated"
-End Sub
+'Private Sub Class_Terminate()
+'Debug.Print "GraphObjServiceProvider terminated"
+'End Sub
 
 '================================================================================
 ' xxxx Event Handlers
@@ -81,7 +81,7 @@ Set mRegionRef = CreateWeakReference(pRegion)
 Set mData = pData
 End Sub
 
-Friend Sub ObjectChanged(ByVal handle As Long, _
+Friend Sub ObjectChanged(ByVal Handle As Long, _
                 ByRef areaToRedraw As TRectangle)
 Const ProcName As String = "ObjectChanged"
 On Error GoTo Err
@@ -89,7 +89,7 @@ On Error GoTo Err
 Dim graphObj As IGraphicObject
 Dim RedrawArea As TRectangle
 
-Set graphObj = mData.GetGraphicObject(handle)
+Set graphObj = mData.GetGraphicObject(Handle)
 If Not mData.UpdateGraphicObject(graphObj) Then Exit Sub
 
 If Not regionObj.IsDrawingEnabled Then Exit Sub
@@ -123,13 +123,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ObjectUndrawn(ByVal handle As Long, _
+Friend Sub ObjectUndrawn(ByVal Handle As Long, _
                 ByRef undrawnArea As TRectangle)
 Const ProcName As String = "ObjectUndrawn"
 
 On Error GoTo Err
 
-regionObj.UndrawArea undrawnArea, mData.GetGraphicObject(handle)
+regionObj.UndrawArea undrawnArea, mData.GetGraphicObject(Handle)
 
 Exit Sub
 
@@ -170,12 +170,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveObject( _
-                ByVal handle As Long)
+                ByVal Handle As Long)
 Const ProcName As String = "RemoveObject"
 
 On Error GoTo Err
 
-regionObj.RemoveGraphicObjectEx mData.GetGraphicObject(handle), True, False
+regionObj.RemoveGraphicObjectEx mData.GetGraphicObject(Handle), True, False
 
 Exit Sub
 

@@ -120,10 +120,10 @@ mBoundingRect.isValid = False
 mTextTRect.isValid = False
 End Sub
 
-Private Sub Class_Terminate()
+'Private Sub Class_Terminate()
 'gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="Text terminated"
-Debug.Print "Text terminated"
-End Sub
+'Debug.Print "Text terminated"
+'End Sub
 
 '================================================================================
 ' IGraphicObject Event Handlers

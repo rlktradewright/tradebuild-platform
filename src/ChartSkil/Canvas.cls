@@ -90,10 +90,10 @@ Private mSavedClippingRegionHandle As Long
 Private Sub Class_Initialize()
 End Sub
 
-Private Sub Class_Terminate()
+'Private Sub Class_Terminate()
 'gLogger.Log LogLevels.LogLevelHighDetail, "Canvas terminated (" & gRegionTypeToString(mRegionType) & ")"
-Debug.Print "Canvas terminated (" & gRegionTypeToString(mRegionType) & ")"
-End Sub
+'Debug.Print "Canvas terminated (" & gRegionTypeToString(mRegionType) & ")"
+'End Sub
 
 '================================================================================
 ' XXXX Interface Members
