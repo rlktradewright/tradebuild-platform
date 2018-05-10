@@ -118,6 +118,8 @@ Private mErrorMessage                               As String
 
 Private mPriorityTickListener                       As IGenericTickListener
 
+Private mDontSetReady                               As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -583,10 +585,6 @@ Private Sub IMarketDataSource_StopMarketDepth()
 StopMarketDepth
 End Sub
 
-Private Property Let IMarketDataSource_StudyBase(ByVal Value As IStudyBase)
-StudyBase = Value
-End Property
-
 Public Property Get IMarketDataSource_StudyBase() As IStudyBase
 Set IMarketDataSource_StudyBase = StudyBase
 End Property
@@ -604,8 +602,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
+On Error GoTo Err
+
+If Not mDontSetReady Then setReady
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
@@ -623,20 +633,26 @@ ElseIf ev.Future.IsCancelled Then
     SetError ErrorCodes.ErrIllegalStateException, ev.ContinuationData & " creation cancelled"
     mFutureWaiter.Cancel
 ElseIf TypeOf ev.Future.Value Is IContract Then
+    gLogger.Log "Contract available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     sGotContract = True
     If sGotClock Then
-        If processContractAvailable Then setReady
+        If Not processContractAvailable Then mDontSetReady = True
     End If
 ElseIf TypeOf ev.Future.Value Is Clock Then
+    gLogger.Log "Clock available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     sGotClock = True
     mClockFutureBuilder.Value = ev.Future.Value
     mClockFutureBuilder.Complete
     If sGotContract Then
-        If processContractAvailable Then setReady
+        If Not processContractAvailable Then mDontSetReady = True
     End If
-ElseIf TypeOf ev.Future.Value Is Session Then
-    mSessionFutureBuilder.Value = ev.Future.Value
-    mSessionFutureBuilder.Complete
+ElseIf TypeOf ev.Future.Value Is StudyManager Then
+    gLogger.Log "StudyManager available for MarketDataSource with key: " & Key, ProcName, ModuleName, LogLevelHighDetail
+    ' note that this will always be after the other futures have become
+    ' available because it depends on the session future being available,
+    ' which only occurs during processContractAvailable()
+    Set mStudyBase = New StudyBaseForTickDataInput
+    mStudyBase.Initialise ev.Future.Value, mContractFuture
 End If
 
 Exit Sub
@@ -786,19 +802,6 @@ Const ProcName As String = "StreamId"
 On Error GoTo Err
 
 StreamId = mStreamId
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Let StudyBase(ByVal Value As IStudyBase)
-Const ProcName As String = "StudyBase"
-On Error GoTo Err
-
-AssertArgument mStudyBase Is Nothing, "StudyBase is already set"
-Set mStudyBase = Value
 
 Exit Property
 
@@ -1269,11 +1272,13 @@ Friend Sub Initialise( _
                 ByVal pKey As String, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pClockFuture As IFuture, _
-                ByVal pStudyManager As StudyManager, _
+                ByVal pStudyManagerFuture As IFuture, _
                 ByVal pConfig As ConfigurationSection, _
                 ByVal pTickfileStreamId As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
+
+gLogger.Log "Initialising MarketDataSource with key: " & pKey, ProcName, ModuleName, LogLevelHighDetail
 
 Set mMarketDataManagerRef = CreateWeakReference(pMarketDataManager)
 
@@ -1286,11 +1291,7 @@ setState MarketDataSourceStateCreated
 
 mFutureWaiter.Add pClockFuture
 mFutureWaiter.Add mContractFuture
-
-If Not pStudyManager Is Nothing Then
-    Set mStudyBase = New StudyBaseForTickDataInput
-    mStudyBase.Initialise pStudyManager, mContractFuture
-End If
+If Not pStudyManagerFuture Is Nothing Then mFutureWaiter.Add pStudyManagerFuture
 
 Exit Sub
 
@@ -1731,12 +1732,8 @@ DataSourceBase.AddMarketDataSource Me
 
 mStreamId = DataSourceBase.StreamId
 
-If DataSourceBase.SessionFuture.IsAvailable Then
-    mSessionFutureBuilder.Value = DataSourceBase.SessionFuture.Value
-    mSessionFutureBuilder.Complete
-Else
-    mFutureWaiter.Add DataSourceBase.SessionFuture
-End If
+mSessionFutureBuilder.Value = DataSourceBase.Session
+mSessionFutureBuilder.Complete
 
 If IsContractExpired(lContract) And Not IsTickReplay Then
     SetError ErrorCodes.ErrIllegalStateException, "Contract has expired"
@@ -1759,6 +1756,7 @@ If Not ContractFuture.IsAvailable Then Exit Sub
 
 If State <> MarketDataSourceStateCreated Then Exit Sub
 
+gLogger.Log "MarketDataSource is ready: key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
 setState MarketDataSourceStateReady
 
 If mIsMarketDataRequested Then subscribeToMarketData

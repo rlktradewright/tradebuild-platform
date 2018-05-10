@@ -145,15 +145,13 @@ AppTitle = AppName & _
 End Property
 
 Public Property Get configFilename() As String
-Dim fn As String
 Const ProcName As String = "configFilename"
 On Error GoTo Err
 
+Dim fn As String
+fn = mCLParser.Arg(0)
 If fn = "" Then
-    fn = mCLParser.Arg(0)
-    If fn = "" Then
-        fn = ApplicationSettingsFolder & "\settings.xml"
-    End If
+    fn = ApplicationSettingsFolder & "\settings.xml"
 End If
 configFilename = fn
 
@@ -511,10 +509,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getConfigToLoad() As ConfigurationSection
-Static configToLoad As ConfigurationSection
-
 Const ProcName As String = "getConfigToLoad"
 On Error GoTo Err
+
+Static configToLoad As ConfigurationSection
 
 If configToLoad Is Nothing Then
     On Error Resume Next
@@ -735,10 +733,10 @@ result = SetWindowTheme(phWnd, vbNullString, "")
 End Sub
 
 Private Sub showConfig()
-Dim f As fConfig
 Const ProcName As String = "showConfig"
 On Error GoTo Err
 
+Dim f As fConfig
 Set f = New fConfig
 f.Initialise mConfigManager, False
 f.Show vbModeless
@@ -750,11 +748,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function showHelp() As Boolean
-Dim s As String
 Const ProcName As String = "showHelp"
 On Error GoTo Err
 
 If mCLParser.Switch("?") Then
+    Dim s As String
     s = vbCrLf & _
             "datacollector27 [configfilename]" & vbCrLf & _
             "                /setup " & vbCrLf & _
@@ -809,12 +807,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub showMainForm(ByVal pForm As fDataCollectorUI)
-Dim posnValue As String
-
 Const ProcName As String = "showMainForm"
 On Error GoTo Err
 
 If mCLParser.Switch("posn") Then
+    Dim posnValue As String
     posnValue = mCLParser.SwitchValue("posn")
     
     If InStr(1, posnValue, ",") = 0 Then

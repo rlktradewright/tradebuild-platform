@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#321.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#327.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
@@ -1103,9 +1103,12 @@ Private Function IStrategyHostView_AddTimeframe( _
 Const ProcName As String = "IStrategyHostView_AddTimeframe"
 On Error GoTo Err
 
+Dim lStudyBase As IStudyBase
+Set lStudyBase = mModel.Ticker.StudyBase
+
 Dim lIndex As Long
 lIndex = PriceChart.AddRaw(pTimeframe, _
-                        mModel.Ticker.StudyBase.StudyManager, _
+                        lStudyBase.StudyManager, _
                         mModel.Contract.Specifier.LocalSymbol, _
                         mModel.Contract.Specifier.SecType, _
                         mModel.Contract.Specifier.Exchange, _
@@ -1408,9 +1411,12 @@ mSecType = mContract.Specifier.SecType
 mTickSize = mContract.TickSize
 Set mSession = mModel.Ticker.SessionFuture.Value
 
+Dim lStudyBase As IStudyBase
+Set lStudyBase = mModel.Ticker.StudyBase
+
 Dim i As Long
 For i = 1 To PriceChart.Count
-    PriceChart.SetStudyManager mModel.Ticker.StudyBase.StudyManager, i
+    PriceChart.SetStudyManager lStudyBase.StudyManager, i
 Next
 
 If mProfitStudyBase Is Nothing Then initialiseProfitChart

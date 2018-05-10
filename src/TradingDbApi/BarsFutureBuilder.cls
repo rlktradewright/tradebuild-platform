@@ -133,8 +133,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get Future() As IFuture
-Set Future = mFutureBuilder.Future
+Friend Property Get BarsFuture() As IFuture
+Set BarsFuture = mFutureBuilder.Future
 End Property
 
 '@================================================================================

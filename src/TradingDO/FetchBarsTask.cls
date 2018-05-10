@@ -153,8 +153,8 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let ITask_TaskContext(ByVal value As TaskContext)
-Set mTaskContext = value
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get ITask_taskName() As String
@@ -179,10 +179,12 @@ ElseIf ev.Future.IsFaulted Then
                                 "Error " & ev.Future.ErrorNumber & ": " & ev.Future.ErrorMessage, ProcName, ModuleName, LogLevelSevere
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+ElseIf Not ev.Future Is mFutureBuilder.Future Then
+    mFutureWaiter.Add mFutureBuilder.Future
+    mFutureBuilder.Value = ev.Future.Value
+    mFutureBuilder.Complete
 Else
     gLogger.Log "FetchBarsTask retrieved bars for " & mSpecifier.ToString, ProcName, ModuleName
-    mFutureBuilder.value = ev.Future.value
-    mFutureBuilder.Complete
     mTaskContext.Finish Empty, False
 End If
 

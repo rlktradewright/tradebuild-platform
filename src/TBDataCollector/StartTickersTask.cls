@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IStateChangeListener
 Implements ITask
 
 '@================================================================================
@@ -81,16 +82,33 @@ Private mTickfileOutputMonitor                          As ITickfileOutputMonito
 
 Private mStudyLibraryManager                            As StudyLibraryManager
 
-Private WithEvents mFutureWaiter                        As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-Private mBarWritersAwaited                              As Boolean
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
+'@================================================================================
+' IStateChangeListener Interface Members
+'@================================================================================
+
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
+On Error GoTo Err
+
+Dim lTicker As Ticker
+Set lTicker = ev.Source
+
+If lTicker.State = MarketDataSourceStateReady Or _
+    lTicker.State = MarketDataSourceStatePaused Or _
+    lTicker.State = MarketDataSourceStateRunning _
+Then
+    lTicker.RemoveStateChangeListener Me
+    mTaskContext.Progress 0!, createHistDataWriter(lTicker)
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -143,13 +161,12 @@ If CBool(lContractConfig.GetAttribute(AttributeNameEnabled)) Then
                     IIf(mIncludeMarketDepth, True, False))
     
     mTaskContext.Suspend -1 ' wait till this set of tickers is started to avoid creating too many database connections
-    
 End If
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal value As TaskContext)
@@ -161,36 +178,6 @@ ITask_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If ev.Future.IsCancelled Then
-    If Not mTaskContext Is Nothing Then mTaskContext.Finish Nothing, True
-    Set mTaskContext = Nothing
-    mFutureWaiter.Clear
-ElseIf ev.Future.IsFaulted Then
-    If Not mTaskContext Is Nothing Then mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-    Set mTaskContext = Nothing
-    mFutureWaiter.Clear
-ElseIf ev.Future.IsAvailable Then
-    Dim lBarWriter As HistDataWriter
-    Set lBarWriter = ev.Future.value
-    mTaskContext.Progress 0!, lBarWriter
-    mBarWritersAwaited = mBarWritersAwaited - 1
-    If mBarWritersAwaited = 0 Then mTaskContext.Continue
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' mTickers Event Handlers
 '@================================================================================
 
@@ -200,22 +187,18 @@ On Error GoTo Err
 
 If ev.ChangeType <> CollItemAdded Then Exit Sub
 
-Dim lTicker As ticker
+Dim lTicker As Ticker
 Set lTicker = ev.AffectedItem
 
 If mWriteBars Then
-    mFutureWaiter.Add RecordHistoricalBars( _
-                                    lTicker.ContractFuture, _
-                                    lTicker.ClockFuture, _
-                                    lTicker.StudyBase, _
-                                    mHistDataStore, _
-                                    HistDataWriteOptionUpdateLatestBar + _
-                                        IIf(mWriteTradeBars, HistDataWriteOptionWriteTradeBars, 0) + _
-                                        IIf(mWriteBidAskBars, HistDataWriteOptionWriteBidAndAskBars, 0), _
-                                    mSaveIntervalSeconds, _
-                                    mBarOutputMonitor)
-    mBarWritersAwaited = mBarWritersAwaited + 1
-    mTaskContext.Suspend -1
+    If lTicker.State = MarketDataSourceStateReady Or _
+        lTicker.State = MarketDataSourceStatePaused Or _
+        lTicker.State = MarketDataSourceStateRunning _
+    Then
+        mTaskContext.Progress 0!, createHistDataWriter(lTicker)
+    Else
+        lTicker.AddStateChangeListener Me
+    End If
 End If
 
 If mWriteTicks Then
@@ -238,8 +221,13 @@ Private Sub mTickersTC_Completed(ev As TaskCompletionEventData)
 Const ProcName As String = "mTickersTC_Completed"
 On Error GoTo Err
 
-If ev.ErrorNumber <> 0 Then gLogger.Log LogLevelSevere, "Error " & ev.ErrorNumber & " starting tickers: " & ev.ErrorMessage
-If mBarWritersAwaited = 0 Then mTaskContext.Continue
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
+    gLogger.Log LogLevelSevere, "Error " & ev.ErrorNumber & " starting tickers: " & ev.ErrorMessage
+    If Not mTaskContext Is Nothing Then mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
+Else
+    mTaskContext.Continue
+End If
 
 Exit Sub
 
@@ -300,4 +288,24 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function createHistDataWriter(ByVal pTicker As Ticker) As HistDataWriter
+Const ProcName As String = "createHistDataWriter"
+On Error GoTo Err
+
+Set createHistDataWriter = RecordHistoricalBars( _
+                                pTicker.ContractFuture, _
+                                pTicker.ClockFuture, _
+                                pTicker.StudyBase, _
+                                mHistDataStore, _
+                                HistDataWriteOptionUpdateLatestBar + _
+                                    IIf(mWriteTradeBars, HistDataWriteOptionWriteTradeBars, 0) + _
+                                    IIf(mWriteBidAskBars, HistDataWriteOptionWriteBidAndAskBars, 0), _
+                                mSaveIntervalSeconds, _
+                                mBarOutputMonitor)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 

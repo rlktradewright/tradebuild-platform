@@ -378,10 +378,6 @@ Private Sub IMarketDataSource_StopMarketDepth()
 StopMarketDepth
 End Sub
 
-Private Property Let IMarketDataSource_StudyBase(ByVal Value As IStudyBase)
-StudyBase = Value
-End Property
-
 Private Property Get IMarketDataSource_StudyBase() As IStudyBase
 Set IMarketDataSource_StudyBase = StudyBase
 End Property
@@ -892,18 +888,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let StudyBase(ByVal Value As IStudyBase)
-Const ProcName As String = "StudyBase"
-On Error GoTo Err
-
-mDataSource.StudyBase = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Public Property Get StudyBase() As IStudyBase
 Const ProcName As String = "StudyBase"
 On Error GoTo Err
@@ -931,7 +915,12 @@ If IsTickReplay Then
 Else
     Set lClockFuture = CreateClockFuture(ContractFuture)
 End If
-If mTimeframes Is Nothing Then Set mTimeframes = CreateTimeframes(StudyBase, ContractFuture, mHistDataStore, lClockFuture)
+If mTimeframes Is Nothing Then
+    Assert Me.State = MarketDataSourceStateReady Or _
+            Me.State = MarketDataSourceStatePaused Or _
+            Me.State = MarketDataSourceStateRunning, "Ticker state must be Ready, Paused or Running"
+    Set mTimeframes = CreateTimeframes(StudyBase, ContractFuture, mHistDataStore, lClockFuture)
+End If
 Set Timeframes = mTimeframes
 
 Exit Property

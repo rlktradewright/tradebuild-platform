@@ -295,10 +295,12 @@ If ev.Future.IsFaulted Then
     Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
 ElseIf ev.Future.IsCancelled Then
     mTickfileReplayController.StopReplay
-Else
+ElseIf TypeOf ev.Future.Value Is IContract Then
     mTickfileSpec.Contract = ev.Future.Value
     setContract ev.Future.Value
     StartReplay
+ElseIf TypeOf ev.Future.Value Is Clock Then
+    mTickfileReplayController.NotifyReady Me, mTickfileSpec
 End If
 
 Exit Sub
@@ -316,9 +318,9 @@ Const ProcName As String = "FirstTickTimeUTC"
 On Error GoTo Err
 
 mClock.SetTimeUTC pTimestamp
+mFutureWaiter.Add mClockFutureBuilder.Future
 mClockFutureBuilder.Value = mClock
 mClockFutureBuilder.Complete
-mTickfileReplayController.NotifyReady Me, mTickfileSpec
 
 Exit Property
 

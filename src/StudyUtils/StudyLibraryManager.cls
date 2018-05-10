@@ -199,15 +199,14 @@ End Function
 
 Public Function CreateStudyManagerWithSessionFuture( _
                 ByVal pSessionFuture As IFuture, _
-                Optional ByVal pUseLocalTimeForStudies As Boolean = False) As StudyManager
+                Optional ByVal pUseLocalTimeForStudies As Boolean = False) As IFuture
 Const ProcName As String = "CreateStudyManagerWithSessionFuture"
 On Error GoTo Err
 
 Assert Not pSessionFuture Is Nothing, "pSessionFuture is Nothing"
 
 Dim lStudyManager As New StudyManager
-lStudyManager.InitialiseWithSessionFuture Me, pSessionFuture, pUseLocalTimeForStudies
-Set CreateStudyManagerWithSessionFuture = lStudyManager
+Set CreateStudyManagerWithSessionFuture = lStudyManager.InitialiseWithSessionFuture(Me, pSessionFuture, pUseLocalTimeForStudies)
 
 Exit Function
 

@@ -543,6 +543,7 @@ Else
     InputValueNames(3) = InputNameOpenInterest
 End If
 
+gLogger.Log "Adding study: " & pStudyName & " to " & pStudyBase.BaseStudy.Name, ProcName, ModuleName, LogLevelHighDetail
 Dim lBarStudy As IBarStudy
 Set lBarStudy = pStudyBase.StudyManager.AddStudy(pStudyName, _
                                         pStudyBase.BaseStudy, _

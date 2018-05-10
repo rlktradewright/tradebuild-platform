@@ -855,8 +855,8 @@ Option Explicit
 
 Implements IChangeListener
 Implements IGenericTickListener
-Implements IThemeable
 Implements IStateChangeListener
+Implements IThemeable
 
 '@================================================================================
 ' Events
@@ -939,6 +939,10 @@ Private mTradePrice                                     As Double
 
 Private mMaxDiscretionaryAmountTicks                    As Long
 
+Private mFutureBuilder                                  As FutureBuilder
+Private WithEvents mFutureWaiter                        As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
@@ -974,7 +978,7 @@ Clear
 End Sub
 
 '@================================================================================
-' ChangeListener Interface Members
+' IChangeListener Interface Members
 '@================================================================================
 
 Private Sub IChangeListener_Change(ev As ChangeEventData)
@@ -1043,12 +1047,22 @@ Case TickTypeBid
     mBidPrice = ev.Tick.Price
     BidText = lPriceText
     BidSizeText = ev.Tick.Size
-    setPriceFields
+    
+    If mFutureBuilder Is Nothing Then
+        setPriceFields
+    ElseIf ticksAvailable Then
+        mFutureBuilder.Complete
+    End If
 Case TickTypeAsk
     mAskPrice = ev.Tick.Price
     AskText = lPriceText
     AskSizeText = ev.Tick.Size
-    setPriceFields
+    
+    If mFutureBuilder Is Nothing Then
+        setPriceFields
+    ElseIf ticksAvailable Then
+        mFutureBuilder.Complete
+    End If
 Case TickTypeHighPrice
     HighText = lPriceText
 Case TickTypeLowPrice
@@ -1057,7 +1071,12 @@ Case TickTypeTrade
     mTradePrice = ev.Tick.Price
     LastText = lPriceText
     LastSizeText = ev.Tick.Size
-    setPriceFields
+
+    If mFutureBuilder Is Nothing Then
+        setPriceFields
+    ElseIf ticksAvailable Then
+        mFutureBuilder.Complete
+    End If
 Case TickTypeVolume
     VolumeText = ev.Tick.Size
 End Select
@@ -1585,6 +1604,25 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsFaulted Then Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
+
+If ev.Future.IsAvailable Then doSetupControls
+Set mFutureBuilder = Nothing
+    
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' Properties
 '@================================================================================
 
@@ -1682,6 +1720,11 @@ End Property
 Public Sub Clear()
 Const ProcName As String = "Clear"
 On Error GoTo Err
+
+If Not mFutureBuilder Is Nothing Then
+    mFutureBuilder.Cancel
+    Set mFutureBuilder = Nothing
+End If
 
 clearOrderContexts
 clearDataSource
@@ -2251,6 +2294,48 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub doSetupControls()
+Const ProcName As String = "doSetupControls"
+On Error GoTo Err
+
+SymbolLabel.Caption = mContract.Specifier.LocalSymbol & _
+                        " on " & _
+                        mContract.Specifier.Exchange
+                        
+setupTifCombo BracketIndexes.BracketEntryOrder
+setupTifCombo BracketIndexes.BracketStopOrder
+setupTifCombo BracketIndexes.BracketTargetOrder
+
+setupTriggerMethodCombo BracketIndexes.BracketEntryOrder
+setupTriggerMethodCombo BracketIndexes.BracketStopOrder
+setupTriggerMethodCombo BracketIndexes.BracketTargetOrder
+
+setupTypeCombo BracketIndexes.BracketEntryOrder
+setupTypeCombo BracketIndexes.BracketStopOrder
+setupTypeCombo BracketIndexes.BracketTargetOrder
+
+reset
+
+setQuantity BracketIndexes.BracketEntryOrder
+setQuantity BracketIndexes.BracketStopOrder
+setQuantity BracketIndexes.BracketTargetOrder
+
+showDataSourceValues
+
+If mActiveOrderContext.IsSimulated Then
+    OrderSimulationLabel.Caption = OrdersSimulatedMessage
+Else
+    OrderSimulationLabel.Caption = OrdersLiveMessage
+End If
+
+ActionCombo(0).SetFocus
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub enableControl(ByVal field As Control)
 Const ProcName As String = "enableControl"
 On Error GoTo Err
@@ -2606,6 +2691,11 @@ Private Sub setActiveOrderContext(ByVal Value As OrderContext)
 Const ProcName As String = "setActiveOrderContext"
 On Error GoTo Err
 
+If Not mFutureBuilder Is Nothing Then
+    mFutureBuilder.Cancel
+    Set mFutureBuilder = Nothing
+End If
+
 If Value Is mActiveOrderContext Then Exit Sub
 
 If Not mDataSource Is Nothing Then
@@ -2617,7 +2707,8 @@ Set mActiveOrderContext = Value
 Set mContract = gGetContractFromContractFuture(mActiveOrderContext.ContractFuture)
 
 Set mDataSource = mActiveOrderContext.DataSource
-If Not mDataSource Is Nothing Then
+If mDataSource Is Nothing Then
+ElseIf ticksAvailable Then
     mAskPrice = mDataSource.CurrentTick(TickTypeAsk).Price
     mBidPrice = mDataSource.CurrentTick(TickTypeBid).Price
     mTradePrice = mDataSource.CurrentTick(TickTypeTrade).Price
@@ -3041,43 +3132,33 @@ Private Sub setupControls()
 Const ProcName As String = "setupControls"
 On Error GoTo Err
 
-SymbolLabel.Caption = mContract.Specifier.LocalSymbol & _
-                        " on " & _
-                        mContract.Specifier.Exchange
-                        
-setupTifCombo BracketIndexes.BracketEntryOrder
-setupTifCombo BracketIndexes.BracketStopOrder
-setupTifCombo BracketIndexes.BracketTargetOrder
-
-setupTriggerMethodCombo BracketIndexes.BracketEntryOrder
-setupTriggerMethodCombo BracketIndexes.BracketStopOrder
-setupTriggerMethodCombo BracketIndexes.BracketTargetOrder
-
-setupTypeCombo BracketIndexes.BracketEntryOrder
-setupTypeCombo BracketIndexes.BracketStopOrder
-setupTypeCombo BracketIndexes.BracketTargetOrder
-
-reset
-
-setQuantity BracketIndexes.BracketEntryOrder
-setQuantity BracketIndexes.BracketStopOrder
-setQuantity BracketIndexes.BracketTargetOrder
-
-showDataSourceValues
-
-If mActiveOrderContext.IsSimulated Then
-    OrderSimulationLabel.Caption = OrdersSimulatedMessage
-Else
-    OrderSimulationLabel.Caption = OrdersLiveMessage
+If ticksAvailable Then
+    doSetupControls
+ElseIf mFutureBuilder Is Nothing Then
+    Set mFutureBuilder = New FutureBuilder
+    Set mFutureWaiter = New FutureWaiter
+    mFutureWaiter.Add mFutureBuilder.Future
 End If
-
-ActionCombo(0).SetFocus
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function ticksAvailable() As Boolean
+Const ProcName As String = "ticksAvailable"
+On Error GoTo Err
+
+ticksAvailable = mDataSource.HasCurrentTick(TickTypeAsk) And _
+                mDataSource.HasCurrentTick(TickTypeBid) And _
+                mDataSource.HasCurrentTick(TickTypeTrade)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub setupTifCombo(ByVal index As Long)
 Const ProcName As String = "setupTifCombo"
@@ -3381,15 +3462,33 @@ On Error GoTo Err
 
 If mDataSource Is Nothing Then Exit Sub
 
-AskText.Text = priceToString(mDataSource.CurrentTick(TickTypeAsk).Price)
-AskSizeText.Text = mDataSource.CurrentTick(TickTypeAsk).Size
-BidText.Text = priceToString(mDataSource.CurrentTick(TickTypeBid).Price)
-BidSizeText.Text = mDataSource.CurrentTick(TickTypeBid).Size
-LastText.Text = priceToString(mDataSource.CurrentTick(TickTypeTrade).Price)
-LastSizeText.Text = mDataSource.CurrentTick(TickTypeTrade).Size
-VolumeText.Text = mDataSource.CurrentTick(TickTypeVolume).Size
-HighText.Text = priceToString(mDataSource.CurrentTick(TickTypeHighPrice).Price)
-LowText.Text = priceToString(mDataSource.CurrentTick(TickTypeLowPrice).Price)
+If mDataSource.HasCurrentTick(TickTypeAsk) Then
+    AskText.Text = priceToString(mDataSource.CurrentTick(TickTypeAsk).Price)
+    AskSizeText.Text = mDataSource.CurrentTick(TickTypeAsk).Size
+End If
+
+If mDataSource.HasCurrentTick(TickTypeBid) Then
+    BidText.Text = priceToString(mDataSource.CurrentTick(TickTypeBid).Price)
+    BidSizeText.Text = mDataSource.CurrentTick(TickTypeBid).Size
+End If
+
+If mDataSource.HasCurrentTick(TickTypeTrade) Then
+    LastText.Text = priceToString(mDataSource.CurrentTick(TickTypeTrade).Price)
+    LastSizeText.Text = mDataSource.CurrentTick(TickTypeTrade).Size
+End If
+
+If mDataSource.HasCurrentTick(TickTypeVolume) Then
+    VolumeText.Text = mDataSource.CurrentTick(TickTypeVolume).Size
+End If
+
+If mDataSource.HasCurrentTick(TickTypeHighPrice) Then
+    HighText.Text = priceToString(mDataSource.CurrentTick(TickTypeHighPrice).Price)
+End If
+
+If mDataSource.HasCurrentTick(TickTypeLowPrice) Then
+    LowText.Text = priceToString(mDataSource.CurrentTick(TickTypeLowPrice).Price)
+End If
+
 setPriceFields
 
 Exit Sub

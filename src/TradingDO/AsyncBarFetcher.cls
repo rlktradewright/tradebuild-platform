@@ -173,11 +173,17 @@ Private Sub mFutureWaiter_WaitCompleted(ev As TWUtilities40.FutureWaitCompletedE
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsFaulted Then
+If ev.Future.IsCancelled Then
+ElseIf ev.Future.IsFaulted Then
     fireFetchFailed ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-ElseIf ev.Future.IsAvailable Then
+ElseIf TypeOf ev.Future.value Is Recordset Then
+    gLogger.Log "BarFetcher received recordset for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
     mTaskContext.Continue
+ElseIf TypeOf ev.Future.value Is Bars Then
+    gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
+    mTaskContext.Finish mTargetBarsBuilder.Bars, False
+    fireFetchCompleted
 End If
 
 Exit Sub
@@ -235,7 +241,7 @@ mUseTickdata = gUseTickData(mSpecifier.BarTimePeriod.Units)
 Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             createNewSessionBuilder(mInstrument).Session, _
                                             mInstrument.TickSize, _
-                                            IIf(mSpecifier.MaxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.MaxNumberOfBars))
+                                            IIf(mSpecifier.maxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.maxNumberOfBars))
 
 mSessionTimes = gCalcSessionTimes(mSpecifier, mInstrument)
 
@@ -281,6 +287,7 @@ End If
 
 If Not mFutureWaiter Is Nothing Then mFutureWaiter.Cancel
 
+gLogger.Log "BarFetcher cancelled for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
 mTaskContext.Finish Empty, True
 fireFetchCancelled
 
@@ -397,7 +404,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function needMoreTicks(ByVal pTotalBars As Long, ByVal pSpecifier As BarDataSpecifier) As Boolean
-needMoreTicks = pTotalBars < pSpecifier.MaxNumberOfBars And _
+needMoreTicks = pTotalBars < pSpecifier.maxNumberOfBars And _
             (pSpecifier.FromDate = 0 Or pSpecifier.ToDate = 0)
 End Function
 
@@ -407,26 +414,8 @@ On Error GoTo Err
 
 fireNotifyBar mCurrentBar
 
-gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
-setBarsFutureValue mTargetBarsBuilder.Bars
-
-mTaskContext.Finish mTargetBarsBuilder.Bars, False
-
-fireFetchCompleted
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setBarsFutureValue(ByVal pBars As Bars)
-Const ProcName As String = "setBarsFutureValue"
-On Error GoTo Err
-
-If Not mBarsFutureBuilder.Future.IsPending Then Exit Sub
-
-mBarsFutureBuilder.value = pBars
+mFutureWaiter.Add mBarsFutureBuilder.Future
+mBarsFutureBuilder.value = mTargetBarsBuilder.Bars
 mBarsFutureBuilder.Complete
 
 Exit Sub
@@ -442,7 +431,7 @@ On Error GoTo Err
 Select Case mAsyncState
 Case Started
     Dim lBarReqDetails As BarRequestDetails
-    lBarReqDetails = gGenerateBarRequestDetails(mSessionTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.MaxNumberOfBars)
+    lBarReqDetails = gGenerateBarRequestDetails(mSessionTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.maxNumberOfBars)
     mStartAtFromDate = lBarReqDetails.StartAtFromDate
     If Not lBarReqDetails.BarTimePeriod Is mSpecifier.BarTimePeriod Then
         ' we are building bars from smaller ones, so we can't notify them
@@ -456,7 +445,7 @@ Case Started
     mTaskContext.Suspend -1
 Case Fetching
     Set mRS = mRSFuture.value
-    mBDP.Initialise mTargetBarsBuilder, mRS, mSessionTimes, mSpecifier.MaxNumberOfBars, mStartAtFromDate
+    mBDP.Initialise mTargetBarsBuilder, mRS, mSessionTimes, mSpecifier.maxNumberOfBars, mStartAtFromDate
     mAsyncState = ProcessingBars
 Case ProcessingBars
     If mBDP.ProcessNextBar Then
@@ -465,12 +454,14 @@ Case ProcessingBars
         mAsyncState = NotifyingBars
     Else
         returnAsyncResults
+        mTaskContext.Suspend -1
     End If
 Case NotifyingBars
     If en.MoveNext Then
         fireNotifyBar en.Current
     Else
         returnAsyncResults
+        mTaskContext.Suspend -1
     End If
 End Select
 
@@ -527,6 +518,7 @@ Case ProcessingTicks
 Case ConcatenatingPartialResults
     If mInterimBarsCollection.Count = 0 Then
         returnAsyncResults
+        mTaskContext.Suspend -1
     Else
         Dim lBars As Bars
         If mAppending Then

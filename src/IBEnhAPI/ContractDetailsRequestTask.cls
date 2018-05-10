@@ -76,11 +76,15 @@ Private mTwsContracts                               As EnumerableCollection
 
 Private mContractCache                              As TwsContractCache
 
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
 Set mContractsBuilder = New ContractsBuilder
 Set mContractsFutureBuilder = New FutureBuilder
 Set mTwsContracts = New EnumerableCollection
@@ -138,6 +142,7 @@ If pErrorCode <> 200 Then
     If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorCode, pErrorMsg, ""
 
 ElseIf mNumOutstandingRequests = 0 Then
+    mFutureWaiter.Add mContractsFutureBuilder.Future
     If mReturnTwsContracts Then
         mContractsFutureBuilder.Value = mTwsContracts
         mContractsFutureBuilder.Complete
@@ -145,9 +150,6 @@ ElseIf mNumOutstandingRequests = 0 Then
         mContractsFutureBuilder.Value = mContractsBuilder.Contracts
         mContractsFutureBuilder.Complete
     End If
-    
-    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
-    mTaskContext.Finish Empty, False
 End If
 
 Exit Sub
@@ -229,6 +231,7 @@ Else
         gLogger.Log "TwsContractDetails retrieved from cache for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         processContract lTwsContract
         processEnd
+        mTaskContext.Suspend -1
         Exit Sub
     End If
     
@@ -260,6 +263,23 @@ Const ProcName As String = "mContractsFutureBuilder_Cancelled"
 On Error GoTo Err
 
 doCancel
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+mTaskContext.Finish Empty, False
 
 Exit Sub
 
@@ -371,6 +391,7 @@ Private Sub processEnd()
 Const ProcName As String = "processEnd"
 On Error GoTo Err
 
+mFutureWaiter.Add mContractsFutureBuilder.Future
 If mReturnTwsContracts Then
     mContractsFutureBuilder.Value = mTwsContracts
     mContractsFutureBuilder.Complete
@@ -378,9 +399,6 @@ Else
     mContractsFutureBuilder.Value = mContractsBuilder.Contracts
     mContractsFutureBuilder.Complete
 End If
-
-If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
-mTaskContext.Finish Empty, False
 
 Exit Sub
 
@@ -410,3 +428,4 @@ If pRequestId = mRequestId3 Then mRequestId3 = NullIndex
 If pRequestId = mRequestId4 Then mRequestId4 = NullIndex
 If pRequestId = mRequestId5 Then mRequestId5 = NullIndex
 End Sub
+

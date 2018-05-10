@@ -244,6 +244,7 @@ On Error GoTo Err
 
 If pkey = "" Then pkey = GenerateGUIDString
 
+gLogger.Log "Creating Ticker with key: " & pkey, ProcName, ModuleName, LogLevelHighDetail
 Set CreateTicker = New Ticker
 If Not pStateChangeListener Is Nothing Then CreateTicker.AddStateChangeListener pStateChangeListener
 

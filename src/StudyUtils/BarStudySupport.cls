@@ -177,8 +177,10 @@ mInitialBarsFutureSupplied = True
 
 Set mBarsFutureBuilder = New FutureBuilder
 If Value.IsAvailable And mSessionFuture.IsAvailable Then
+    gLogger.Log "Creating BarsBuilder with initial bars", ProcName, ModuleName, LogLevelHighDetail
     setupBars CreateBarsBuilderWithInitialBars(Value.Value, mSessionFuture.Value, mPriceTickSize)
 Else
+    gLogger.Log "Creating BarsBuilder future with initial bars", ProcName, ModuleName, LogLevelHighDetail
     mFutureWaiter.Clear
     mFutureWaiter.Add CreateBarsBuilderWithInitialBarsFuture(Value, mSessionFuture, mPriceTickSize)
 End If

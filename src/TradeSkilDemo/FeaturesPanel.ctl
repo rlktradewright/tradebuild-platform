@@ -1968,7 +1968,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub createCharts(ByVal pTickers As Tickers)
+Private Sub createCharts(ByVal pTickers As SelectedTickers)
 Const ProcName As String = "createCharts"
 On Error GoTo Err
 

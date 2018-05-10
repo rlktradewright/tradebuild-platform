@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fDataCollectorUI 
    Appearance      =   0  'Flat
    BackColor       =   &H80000005&
@@ -815,11 +815,10 @@ End Sub
 '================================================================================
 
 Private Sub ILogListener_finish()
-'nothing to do
 Const ProcName As String = "ILogListener_finish"
 On Error GoTo Err
 
-
+'nothing to do
 
 Exit Sub
 

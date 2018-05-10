@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#264.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#276.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -149,6 +149,8 @@ Private mConfig                                         As ConfigurationSection
 Private mLoadedFromConfig                               As Boolean
 
 Private mDeferStart                                     As Boolean
+Private mReadyForDeferredStart                          As Boolean
+Private mDeferredStartRequested                         As Boolean
 
 Private mMinimumTicksHeight                             As Long
 
@@ -170,7 +172,7 @@ Private mIsRaw                                          As Boolean
 '@================================================================================
 
 Private Sub UserControl_Initialize()
-
+Set mFutureWaiter = New FutureWaiter
 mPrevWidth = UserControl.Width
 mPrevHeight = UserControl.Height
 
@@ -199,11 +201,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -239,16 +241,16 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsAvailable Then
-    ' this means that the contract info is available, so we can
-    ' now start the chart
-
-    setContractProperties mTimeframes.ContractFuture.value
-
-    If mDeferStart Then Exit Sub
-
-    setupStudies
-    loadchart
+If Not ev.Future.IsAvailable Then Exit Sub
+If TypeOf ev.Future.Value Is IContract Then
+    setContractProperties mTimeframes.ContractFuture.Value
+    If mDeferStart Then
+        mReadyForDeferredStart = True
+        If mDeferredStartRequested Then Start
+    Else
+        initialiseChart mChartSpec.IncludeBarsOutsideSession
+        prepareChart
+    End If
 End If
 
 Exit Sub
@@ -292,7 +294,7 @@ If Not LoadingProgressBar.Visible Then
     Chart1.EnableDrawing
     Chart1.DisableDrawing
 End If
-LoadingProgressBar.value = percentComplete
+LoadingProgressBar.Value = percentComplete
 
 Exit Sub
 
@@ -305,11 +307,11 @@ End Sub
 '@================================================================================
 
 Public Property Let Autoscrolling( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "Autoscrolling"
 On Error GoTo Err
 
-Chart1.Autoscrolling = value
+Chart1.Autoscrolling = Value
 
 Exit Property
 
@@ -382,16 +384,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If mConfig Is value Then Exit Property
+If mConfig Is Value Then Exit Property
 If Not mConfig Is Nothing Then mConfig.Remove
 Set mConfig = Nothing
-If value Is Nothing Then Exit Property
+If Value Is Nothing Then Exit Property
 
-Set mConfig = value
+Set mConfig = Value
 
 gLogger.Log "Chart added to config at: " & mConfig.Path, ProcName, ModuleName
 
@@ -420,11 +422,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = value
+UserControl.Enabled = Value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -434,11 +436,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let HorizontalMouseScrollingAllowed( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
 On Error GoTo Err
 
-Chart1.HorizontalMouseScrollingAllowed = value
+Chart1.HorizontalMouseScrollingAllowed = Value
 
 Exit Property
 
@@ -509,11 +511,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let MinimumTicksHeight(ByVal value As Double)
+Public Property Let MinimumTicksHeight(ByVal Value As Double)
 Const ProcName As String = "MinimumTicksHeight"
 On Error GoTo Err
 
-mMinimumTicksHeight = value
+mMinimumTicksHeight = Value
 If mMinimumTicksHeight * mTickSize <> 0 Then
     mPriceRegion.MinimumHeight = mMinimumTicksHeight * mTickSize
 End If
@@ -552,11 +554,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PeriodWidth(ByVal value As Long)
+Public Property Let PeriodWidth(ByVal Value As Long)
 Const ProcName As String = "PeriodWidth"
 On Error GoTo Err
 
-Chart1.PeriodWidth = value
+Chart1.PeriodWidth = Value
 
 Exit Property
 
@@ -577,11 +579,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PointerCrosshairsColor(ByVal value As OLE_COLOR)
+Public Property Let PointerCrosshairsColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "PointerCrosshairsColor"
 On Error GoTo Err
 
-Chart1.PointerCrosshairsColor = value
+Chart1.PointerCrosshairsColor = Value
 
 Exit Property
 
@@ -602,11 +604,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PointerDiscColor(ByVal value As OLE_COLOR)
+Public Property Let PointerDiscColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "PointerDiscColor"
 On Error GoTo Err
 
-Chart1.PointerDiscColor = value
+Chart1.PointerDiscColor = Value
 
 Exit Property
 
@@ -627,11 +629,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PointerStyle(ByVal value As PointerStyles)
+Public Property Let PointerStyle(ByVal Value As PointerStyles)
 Const ProcName As String = "PointerStyle"
 On Error GoTo Err
 
-Chart1.PointerStyle = value
+Chart1.PointerStyle = Value
 
 Exit Property
 
@@ -678,14 +680,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let StudyManager(ByVal value As StudyManager)
+Public Property Let StudyManager(ByVal Value As StudyManager)
 Const ProcName As String = "StudyManager"
 On Error GoTo Err
 
-Set mStudyManager = value
+Set mStudyManager = Value
 mManager.Finish
 Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, False)
 mManager.UpdatePerTick = mUpdatePerTick
+initialiseChart mChartSpec.IncludeBarsOutsideSession
 
 Exit Property
 
@@ -693,11 +696,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor
@@ -778,11 +781,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let VerticalMouseScrollingAllowed( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "VerticalMouseScrollingAllowed"
 On Error GoTo Err
 
-Chart1.VerticalMouseScrollingAllowed = value
+Chart1.VerticalMouseScrollingAllowed = Value
 
 Exit Property
 
@@ -829,11 +832,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let YAxisWidthCm(ByVal value As Single)
+Public Property Let YAxisWidthCm(ByVal Value As Single)
 Const ProcName As String = "YAxisWidthCm"
 On Error GoTo Err
 
-Chart1.YAxisWidthCm = value
+Chart1.YAxisWidthCm = Value
 
 Exit Property
 
@@ -868,7 +871,7 @@ setState ChartStateBlank
 Set mTimePeriod = pNewTimePeriod
 storeSettings
 
-createTimeframe
+Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
 
 baseStudyConfig.Study = mTimeframe.BarStudy
 baseStudyConfig.StudyValueConfigurations.Item(BarStudyValueBar).BarFormatterFactoryName = mBarFormatterFactoryName
@@ -955,6 +958,7 @@ On Error GoTo Err
 Assert Not mIsRaw, "Already initialised as raw"
 Set mTimeframes = pTimeframes
 Set mStudyManager = mTimeframes.StudyBase.StudyManager
+mFutureWaiter.Add mTimeframes.ContractFuture
 mUpdatePerTick = pUpdatePerTick
 
 Exit Sub
@@ -997,6 +1001,8 @@ mDeferStart = deferStart
 
 Set mTimeframes = pTimeframes
 Set mStudyManager = mTimeframes.StudyBase.StudyManager
+mFutureWaiter.Add mTimeframes.ContractFuture
+
 Set mBarFormatterLibManager = pBarFormatterLibManager
 
 Set mTimePeriod = TimePeriodFromString(mConfig.GetSetting(ConfigSettingTimePeriod))
@@ -1008,10 +1014,7 @@ mIsHistoricChart = CBool(mConfig.GetSetting(ConfigSettingIsHistoricChart, "False
 mBarFormatterFactoryName = mConfig.GetSetting(ConfigSettingBarFormatterFactoryName, "")
 mBarFormatterLibraryName = mConfig.GetSetting(ConfigSettingBarFormatterLibraryName, "")
 
-If Not mDeferStart Then
-    createTimeframe
-    prepareChart mChartSpec.IncludeBarsOutsideSession
-End If
+If Not mDeferStart Then Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, False)
 
 Exit Sub
 
@@ -1071,7 +1074,6 @@ If Not mTimeframes Is Nothing Then
     Chart1.ClearChart
 End If
 
-Set mStudyManager = mTimeframes.StudyBase.StudyManager
 Set mBarFormatterLibManager = pBarFormatterLibManager
 
 Set mTimePeriod = pTimePeriod
@@ -1083,8 +1085,9 @@ mExcludeCurrentBar = pExcludeCurrentBar
 mTitle = pTitle
 
 storeSettings
-createTimeframe
-prepareChart mChartSpec.IncludeBarsOutsideSession
+Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
+
+setState ChartStates.ChartStateCreated
 
 Exit Sub
 
@@ -1131,7 +1134,10 @@ mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
 mTitle = pTitle
 
-prepareChart False
+initialiseChart False
+prepareChart
+
+setState ChartStates.ChartStateCreated
 
 Exit Sub
 
@@ -1145,9 +1151,18 @@ On Error GoTo Err
 
 Assert mLoadedFromConfig And mState = ChartStates.ChartStateBlank, "Start method only permitted for charts loaded from configuration and with state ChartStateBlank"
 
+If Not mReadyForDeferredStart Then
+    mDeferredStartRequested = True
+    Exit Sub
+End If
+
+setState ChartStates.ChartStateCreated
+
+mReadyForDeferredStart = False
 mDeferStart = False
-createTimeframe
-prepareChart mChartSpec.IncludeBarsOutsideSession
+Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, False)
+initialiseChart mChartSpec.IncludeBarsOutsideSession
+prepareChart
 
 Exit Sub
 
@@ -1188,35 +1203,39 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub createTimeframe()
+Private Function createTimeframe( _
+                ByVal pTimeframes As Timeframes, _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pChartSpec As ChartSpecifier, _
+                ByVal pExcludeCurrentBar As Boolean) As Timeframe
 Const ProcName As String = "createTimeframe"
 On Error GoTo Err
 
 gLogger.Log "Creating timeframe", ProcName, ModuleName
 
-If mChartSpec.toTime <> CDate(0) Then
-    Set mTimeframe = mTimeframes.AddHistorical(mTimePeriod, _
+If pChartSpec.toTime <> CDate(0) Then
+    Set createTimeframe = pTimeframes.AddHistorical(pTimePeriod, _
                                 "", _
-                                mChartSpec.InitialNumberOfBars, _
-                                mChartSpec.FromTime, _
-                                mChartSpec.toTime, _
+                                pChartSpec.InitialNumberOfBars, _
+                                pChartSpec.FromTime, _
+                                pChartSpec.toTime, _
                                 , _
-                                mChartSpec.IncludeBarsOutsideSession)
+                                pChartSpec.IncludeBarsOutsideSession)
 Else
-    Set mTimeframe = mTimeframes.Add(mTimePeriod, _
+    Set createTimeframe = pTimeframes.Add(pTimePeriod, _
                                 "", _
-                                mChartSpec.InitialNumberOfBars, _
-                                mChartSpec.FromTime, _
+                                pChartSpec.InitialNumberOfBars, _
+                                pChartSpec.FromTime, _
                                 , _
-                                mChartSpec.IncludeBarsOutsideSession, _
-                                mExcludeCurrentBar)
+                                pChartSpec.IncludeBarsOutsideSession, _
+                                pExcludeCurrentBar)
 End If
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub initialiseChart(ByVal pIncludeBarsOutsideSession As Boolean)
 Const ProcName As String = "initialiseChart"
@@ -1235,7 +1254,7 @@ If Not mInitialised Then
         gLogger.Log "No chart style is defined", ProcName, ModuleName
     Else
         gLogger.Log "Setting chart style to", ProcName, ModuleName, , mChartStyle.Name
-                Chart1.Style = mChartStyle
+        Chart1.Style = mChartStyle
     End If
 
     mInitialised = True
@@ -1244,8 +1263,6 @@ End If
 Set mPriceRegion = Chart1.Regions.Add(100, 25, , , ChartRegionNamePrice)
 setLoadingText
 Chart1.EnableDrawing
-
-setState ChartStates.ChartStateCreated
 
 Exit Sub
 
@@ -1337,27 +1354,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub prepareChart(ByVal pIncludeBarsOutsideSession As Boolean)
+Private Sub prepareChart()
 Const ProcName As String = "prepareChart"
 On Error GoTo Err
 
-initialiseChart pIncludeBarsOutsideSession
-
-If mTimeframes Is Nothing Then
-    Assert Not mTimeframe Is Nothing, "mTimeframe Is Nothing"
-    setupStudies
-    loadchart
-ElseIf mTimeframes.ContractFuture Is Nothing Then
-    setupStudies
-    loadchart
-ElseIf mTimeframes.ContractFuture.IsAvailable Then
-    setContractProperties mTimeframes.ContractFuture.value
-    setupStudies
-    loadchart
-Else
-    Set mFutureWaiter = New FutureWaiter
-    mFutureWaiter.Add mTimeframes.ContractFuture
-End If
+If mTimeframes Is Nothing Then Assert Not mTimeframe Is Nothing, "mTimeframe Is Nothing"
+    
+setupStudies
+loadchart
 
 Exit Sub
 
@@ -1399,13 +1403,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setState(ByVal value As ChartStates)
+Private Sub setState(ByVal Value As ChartStates)
 Const ProcName As String = "setState"
 On Error GoTo Err
 
 Dim stateEv As StateChangeEventData
 
-mState = value
+mState = Value
 stateEv.State = mState
 Set stateEv.Source = Me
 RaiseEvent StateChange(stateEv)

@@ -251,7 +251,7 @@ End Function
 '@/
 Public Sub LinkToSession( _
                 ByVal pSessionToLinkTo As Session)
-Const ProcName As String = "LinkSession"
+Const ProcName As String = "LinkToSession"
 On Error GoTo Err
 
 pSessionToLinkTo.SessionBuilder.LinkSession Me

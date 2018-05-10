@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#300.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#327.0#0"; "TradingUI27.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.7"
    ClientHeight    =   7875
@@ -90,7 +90,7 @@ Begin VB.Form MainForm
          Top             =   960
          Width           =   2415
          _ExtentX        =   4260
-         _ExtentY        =   5556
+         _ExtentY        =   6191
          ForeColor       =   -2147483640
       End
       Begin VB.CommandButton ConfigureButton 

@@ -115,8 +115,7 @@ gLogger.Log "Received contract details for", ProcName, ModuleName, LogLevelDetai
 mContractsFutureBuilder.Value = mContractsBuilder.Contracts
 mContractsFutureBuilder.Complete
 
-If Not mListener Is Nothing Then mListener.FetchCompleted pCookie
-mTaskContext.Finish Empty, False
+mFutureWaiter.Add mContractsFutureBuilder.Future
 
 Exit Sub
 
@@ -263,18 +262,17 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsPending Then Exit Sub
-
-If ev.Future.IsAvailable Then
-    If TypeOf ev.Future.Value Is TradingDB Then
-        Set mTradingDB = ev.Future.Value
-        
-        mTaskContext.Continue
-    End If
-ElseIf ev.Future.IsCancelled Then
+If ev.Future.IsCancelled Then
     doCancel
-ElseIf Not TypeOf ev.ContinuationData Is IContractSpecifier Then
+ElseIf ev.Future.IsFaulted Then
     doFail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+    mFutureWaiter.Clear
+ElseIf TypeOf ev.Future.Value Is TradingDB Then
+    Set mTradingDB = ev.Future.Value
+    mTaskContext.Continue
+ElseIf ev.Future Is mContractsFutureBuilder.Future Then
+    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+    mTaskContext.Finish Empty, False
 End If
     
 Exit Sub
@@ -357,9 +355,10 @@ Private Sub doFail( _
 Const ProcName As String = "doFail"
 On Error GoTo Err
 
+If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorNumber, pErrorMessage, pErrorSource
 If mContractsFutureBuilder.Future.IsPending Then mContractsFutureBuilder.Fail pErrorNumber, pErrorMessage, pErrorSource
 
-mTaskContext.Finish Empty, True
+mTaskContext.Error pErrorNumber, pErrorMessage, pErrorSource
 
 Exit Sub
 
@@ -372,7 +371,7 @@ Const ProcName As String = "requestContracts"
 On Error GoTo Err
 
 If gLogger.IsLoggable(LogLevelDetail) Then gLogger.Log "Request contract details for", ProcName, ModuleName, LogLevelDetail, pContractSpec.ToString
-mFutureWaiter.Add mTradingDB.FetchContractsAsync(pContractSpec, Me), pContractSpec
+mFutureWaiter.Add mTradingDB.FetchContractsAsync(pContractSpec, Me)
 mNumOutstandingRequests = mNumOutstandingRequests + 1
 
 Exit Sub

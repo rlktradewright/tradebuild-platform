@@ -146,13 +146,13 @@ Public Function RecordHistoricalBars( _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pOptions As HistDataWriteOptions, _
                 Optional ByVal pSaveIntervalSeconds As Long = 5, _
-                Optional ByVal pOutputMonitor As IBarOutputMonitor) As IFuture
+                Optional ByVal pOutputMonitor As IBarOutputMonitor) As HistDataWriter
 Const ProcName As String = "RecordHistoricalBars"
 On Error GoTo Err
 
 Dim lWriter As New HistDataWriter
 lWriter.Initialise pContractFuture, pClockFuture, pStudyBase, pHistDataStore, pOutputMonitor, pOptions, pSaveIntervalSeconds
-Set RecordHistoricalBars = lWriter.HistDataWriterFuture
+Set RecordHistoricalBars = lWriter
 
 Exit Function
 

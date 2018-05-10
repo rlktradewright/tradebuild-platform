@@ -29,7 +29,6 @@ Public Type BarRequestDetails
     NumberOfBars        As Long
     SessionTimes        As SessionTimes
     StartAtFromDate     As Boolean
-    NotifyAtEnd         As Boolean
 End Type
 
 '@================================================================================
@@ -69,9 +68,9 @@ Private Const TradingDaysPerWeek                    As Double = 5
 '@================================================================================
 
 Public Function gCalcSessionTimes(ByVal pSpecifier As BarDataSpecifier, ByVal pInstrument As instrument) As SessionTimes
-If Not pSpecifier.IncludeBarsOutsideSession Then
-    gCalcSessionTimes.StartTime = IIf(pSpecifier.CustomSessionStartTime <> 0, pSpecifier.CustomSessionStartTime, pInstrument.SessionStartTime)
-    gCalcSessionTimes.EndTime = IIf(pSpecifier.CustomSessionEndTime <> 0, pSpecifier.CustomSessionEndTime, pInstrument.SessionEndTime)
+If Not pSpecifier.includeBarsOutsideSession Then
+    gCalcSessionTimes.StartTime = IIf(pSpecifier.customSessionStartTime <> 0, pSpecifier.customSessionStartTime, pInstrument.SessionStartTime)
+    gCalcSessionTimes.EndTime = IIf(pSpecifier.customSessionEndTime <> 0, pSpecifier.customSessionEndTime, pInstrument.SessionEndTime)
 End If
 End Function
 

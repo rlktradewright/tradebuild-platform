@@ -62,16 +62,9 @@ Private mTimeframeHandlers                          As New EnumerableCollection
 
 Private mSaveIntervalSeconds                        As Long
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
-End Sub
 
 '@================================================================================
 ' ITask Interface Members
@@ -91,10 +84,10 @@ If mTaskContext.CancelPending Then
     Exit Sub
 End If
 
-mFutureWaiter.Add createTimeframeHandler(mWriterTimeframes(i))
+mTimeframeHandlers.Add createTimeframeHandler(mWriterTimeframes(i))
 
 If i = UBound(mWriterTimeframes) Then
-    mTaskContext.Suspend -1
+    mTaskContext.Finish mTimeframeHandlers, False
 Else
     i = i + 1
 End If
@@ -114,31 +107,8 @@ ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================
-' mFutureWaiter Event Handlers
+' XXXX Event Handlers
 '@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If ev.Future.IsCancelled Then
-    mTaskContext.Finish Nothing, True
-    mFutureWaiter.Clear
-ElseIf ev.Future.IsFaulted Then
-    mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-    mFutureWaiter.Clear
-Else
-    mTimeframeHandlers.Add ev.Future.Value
-    If mTimeframeHandlers.Count = UBound(mWriterTimeframes) + 1 Then
-        mTaskContext.Finish mTimeframeHandlers, False
-    End If
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
@@ -180,13 +150,13 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function createTimeframeHandler(ByVal pTimePeriod As TimePeriod) As IFuture
+Private Function createTimeframeHandler(ByVal pTimePeriod As TimePeriod) As TimeframeHandler
 Const ProcName As String = "createTimeframeHandler"
 On Error GoTo Err
 
 Dim lTimeframeHandler As New TimeframeHandler
 lTimeframeHandler.Initialise mContractFuture, mClockFuture, pTimePeriod, mStudyBase, mHistDataStore, mOptions, mBarWriter, mSaveIntervalSeconds
-Set createTimeframeHandler = lTimeframeHandler.TimeframeHandlerFuture
+Set createTimeframeHandler = lTimeframeHandler
 
 Exit Function
 

@@ -377,7 +377,11 @@ On Error GoTo Err
 
 Set mSummary = pData
 
-init CreateFuture(mSummary.Contract)
+Static sBuilder As New FutureBuilder
+sBuilder.Value = mSummary.Contract
+sBuilder.Complete
+
+init sBuilder.Future
 
 mIsInitialised = True
 

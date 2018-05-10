@@ -71,9 +71,16 @@ Private mFetchFuture                                As IFuture
 
 Private mContractsBuilder                           As New ContractsBuilder
 
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
+End Sub
 
 '@================================================================================
 ' IContractFetchListener Interface Members
@@ -104,13 +111,12 @@ Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
-If Not futureIsPending Then Exit Sub
-
 Dim lContracts As IContracts
-Set lContracts = mFetchFuture.Value
+Set lContracts = mContractsBuilder.Contracts
 If lContracts.Count = 0 And Not mUsedSecondaryContractStore Then If trySecondaryContractSP Then Exit Sub
 
 If mSingleContractOnly Then
+    mFutureWaiter.Add mContractFutureBuilder.Future, pCookie
     If lContracts.Count = 0 Then
         mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "No such contract", ""
     Else
@@ -118,12 +124,10 @@ If mSingleContractOnly Then
         mContractFutureBuilder.Complete
     End If
 Else
-    mContractsFutureBuilder.Value = mContractsBuilder.Contracts
+    mFutureWaiter.Add mContractsFutureBuilder.Future, pCookie
+    mContractsFutureBuilder.Value = lContracts
     mContractsFutureBuilder.Complete
 End If
-
-If Not mListener Is Nothing Then mListener.FetchCompleted pCookie
-mTaskContext.Finish Empty, False
 
 Exit Sub
 
@@ -197,6 +201,7 @@ If lContractStore Is Nothing Then
 End If
 
 Set mFetchFuture = lContractStore.FetchContracts(mContractSpec, Me, mCookie)
+
 mTaskContext.suspend -1
 
 Exit Sub
@@ -265,6 +270,22 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+'@================================================================================
+' mFutureWaiter Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not mListener Is Nothing Then mListener.FetchCompleted ev.ContinuationData
+mTaskContext.Finish Empty, False
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 '@================================================================================
 ' Properties
 '@================================================================================

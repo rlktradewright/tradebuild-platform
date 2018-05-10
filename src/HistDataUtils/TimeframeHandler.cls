@@ -40,10 +40,6 @@ Option Explicit
 
 Private Const ModuleName                            As String = "TimeframeHandler"
 
-Private Const AskBarsHandlerLabel                   As String = "Ask"
-Private Const BidBarsHandlerLabel                   As String = "Bid"
-Private Const TradeBarsHandlerLabel                 As String = "Trade"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -57,56 +53,17 @@ Private mTimePeriod                                 As TimePeriod
 
 Private mBarWriter                                  As IBarWriter
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-Private mFutureBuilder                              As New FutureBuilder
-
-Private mBarsHandlersAwaited                        As Long
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
-End Sub
 
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
 
 '@================================================================================
-' mFutureWaiter Event Handlers
+' XXXX Event Handlers
 '@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If ev.Future.IsCancelled Then
-    mFutureBuilder.Cancel
-ElseIf ev.Future.IsFaulted Then
-    mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-Else
-    If ev.ContinuationData = AskBarsHandlerLabel Then
-        Set mAskBarsHandler = ev.Future.Value
-    ElseIf ev.ContinuationData = BidBarsHandlerLabel Then
-        Set mBidBarsHandler = ev.Future.Value
-    ElseIf ev.ContinuationData = TradeBarsHandlerLabel Then
-        Set mTradeBarsHandler = ev.Future.Value
-    End If
-    mBarsHandlersAwaited = mBarsHandlersAwaited - 1
-    If mBarsHandlersAwaited = 0 Then
-        mFutureBuilder.Value = Me
-        mFutureBuilder.Complete
-    End If
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
@@ -126,10 +83,6 @@ End Property
 
 Friend Property Get BidDatabaseWrites() As Long
 BidDatabaseWrites = getDatabaseWrites(mBidBarsHandler)
-End Property
-
-Friend Property Get TimeframeHandlerFuture() As IFuture
-Set TimeframeHandlerFuture = mFutureBuilder.Future
 End Property
 
 Friend Property Get TimePeriod() As TimePeriod
@@ -182,22 +135,16 @@ Set mTimePeriod = pTimePeriod
 Set mBarWriter = pBarWriter
 
 If pOptions And HistDataWriteOptions.HistDataWriteOptionWriteTradeBars Then
-    Dim lTradeBarsHandler As New BarsHandler
-    lTradeBarsHandler.Initialise pContractFuture, pClockFuture, pTimePeriod, pStudyBase, pHistDataStore, pOptions, pBarWriter, pSaveIntervalSeconds, BarTypeTrade
-    mFutureWaiter.Add lTradeBarsHandler.BarsHandlerFuture, TradeBarsHandlerLabel
-    mBarsHandlersAwaited = mBarsHandlersAwaited + 1
+    Set mTradeBarsHandler = New BarsHandler
+    mTradeBarsHandler.Initialise pContractFuture, pClockFuture, pTimePeriod, pStudyBase, pHistDataStore, pOptions, pBarWriter, pSaveIntervalSeconds, BarTypeTrade
 End If
 
 If pOptions And HistDataWriteOptions.HistDataWriteOptionWriteBidAndAskBars Then
-    Dim lAskBarsHandler As New BarsHandler
-    lAskBarsHandler.Initialise pContractFuture, pClockFuture, pTimePeriod, pStudyBase, pHistDataStore, pOptions, pBarWriter, pSaveIntervalSeconds, BarTypeAsk
-    mFutureWaiter.Add lAskBarsHandler.BarsHandlerFuture, AskBarsHandlerLabel
-    mBarsHandlersAwaited = mBarsHandlersAwaited + 1
+    Set mAskBarsHandler = New BarsHandler
+    mAskBarsHandler.Initialise pContractFuture, pClockFuture, pTimePeriod, pStudyBase, pHistDataStore, pOptions, pBarWriter, pSaveIntervalSeconds, BarTypeAsk
     
-    Dim lBidBarsHandler As New BarsHandler
-    lBidBarsHandler.Initialise pContractFuture, pClockFuture, pTimePeriod, pStudyBase, pHistDataStore, pOptions, pBarWriter, pSaveIntervalSeconds, BarTypeBid
-    mFutureWaiter.Add lBidBarsHandler.BarsHandlerFuture, BidBarsHandlerLabel
-    mBarsHandlersAwaited = mBarsHandlersAwaited + 1
+    Set mBidBarsHandler = New BarsHandler
+    mBidBarsHandler.Initialise pContractFuture, pClockFuture, pTimePeriod, pStudyBase, pHistDataStore, pOptions, pBarWriter, pSaveIntervalSeconds, BarTypeBid
 End If
 
 Exit Sub

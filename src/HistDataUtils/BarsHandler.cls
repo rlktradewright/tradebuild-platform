@@ -57,8 +57,6 @@ Private mBarWriteController                         As BarWriteController
 Private mBarsWritten                                As Long
 Private mDatabaseWrites                             As Long
 
-Private mTimePeriod                                 As TimePeriod
-
 Private mBarWriter                                  As IBarWriter
 
 Private mSaveIntervalSeconds                        As Long
@@ -66,7 +64,8 @@ Private mSaveIntervalSeconds                        As Long
 Private mStudyBase                                  As IStudyBase
 Private mBarStudy                                   As IBarStudy
 
-Private mFutureBuilder                              As New FutureBuilder
+Private mTimePeriod                                 As TimePeriod
+
 
 '@================================================================================
 ' Class Event Handlers
@@ -88,7 +87,7 @@ Private Sub mBars_CollectionChanged(ev As CollectionChangeEventData)
 Const ProcName As String = "mBars_CollectionChanged"
 On Error GoTo Err
 
-If ev.ChangeType <> CollItemAdded Then Exit Sub
+If ev.changeType <> CollItemAdded Then Exit Sub
 
 If Not mBarWriteController Is Nothing Then
     mBarWriteController.Finish
@@ -112,24 +111,19 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsCancelled Then
-    mFutureBuilder.Cancel
-ElseIf ev.Future.IsFaulted Then
-    mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-ElseIf TypeOf ev.Future.Value Is IContract Then
+If TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
     mLocalSymbol = lContract.Specifier.LocalSymbol
+    gLogger.Log "Got contract: " & mLocalSymbol, ProcName, ModuleName, LogLevelHighDetail
 ElseIf TypeOf ev.Future.Value Is Bars Then
-    mStudyBase.StudyManager.StartStudy mBarStudy, 0
     Set mBars = ev.Future.Value
     gLogger.Log "BarsHandler retrieved " & mBars.Count & " bars for " & mLocalSymbol, ProcName, ModuleName, LogLevelHighDetail
+    mStudyBase.StudyManager.StartStudy mBarStudy, 0
     If mBars.Count <> 0 Then
         Set mBarWriteController = CreateBarWriteController(mBars.Bar(0), mBarType)
         mBarsWritten = mBarsWritten + 1
     End If
-    mFutureBuilder.Value = Me
-    mFutureBuilder.Complete
 End If
 
 Exit Sub
@@ -141,10 +135,6 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
-
-Friend Property Get BarsHandlerFuture() As IFuture
-Set BarsHandlerFuture = mFutureBuilder.Future
-End Property
 
 Friend Property Get BarsWritten() As Long
 BarsWritten = mBarsWritten
@@ -202,7 +192,7 @@ mSaveIntervalSeconds = pSaveIntervalSeconds
 Dim lUpdateLatestBar As Boolean
 lUpdateLatestBar = pOptions And HistDataWriteOptions.HistDataWriteOptionUpdateLatestBar
 
-Set mBarStudy = createABarStudy(pContractFuture, pClockFuture, pHistDataStore, mBarType, lUpdateLatestBar)
+Set mBarStudy = createABarStudy(mTimePeriod, mStudyBase, pContractFuture, pClockFuture, pHistDataStore, mBarType, lUpdateLatestBar)
 mFutureWaiter.Add mBarStudy.BarsFuture
 
 Exit Sub
@@ -216,6 +206,8 @@ End Sub
 '@================================================================================
 
 Private Function createABarStudy( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pStudyBase As IStudyBase, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pClockFuture As IFuture, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
@@ -224,12 +216,14 @@ Private Function createABarStudy( _
 Const ProcName As String = "createABarStudy"
 On Error GoTo Err
 
+gLogger.Log "Creating bar study for timeperiod: " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
+
 Dim lBarStudy As IBarStudy
 
 If pUpdateLatestBar Then
-    Set lBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, True, fetchLatestBar(pHistDataStore, pContractFuture, pClockFuture, mTimePeriod, pBarType))
+    Set lBarStudy = CreateBarStudy(pTimePeriod, pStudyBase, True, fetchLatestBar(pHistDataStore, pContractFuture, pClockFuture, pTimePeriod, pBarType))
 Else
-    Set lBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, True)
+    Set lBarStudy = CreateBarStudy(pTimePeriod, pStudyBase, True)
 End If
 Set createABarStudy = lBarStudy
 

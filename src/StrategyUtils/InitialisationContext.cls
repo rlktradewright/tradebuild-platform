@@ -347,7 +347,9 @@ Set mStrategyRunner = pStrategyRunner
 
 Set mTicker = pTicker
 Set mTimeframes = mTicker.Timeframes
-Set mStudyManager = mTicker.StudyBase.StudyManager
+Dim lStudyBase As IStudyBase
+Set lStudyBase = mTicker.StudyBase
+Set mStudyManager = lStudyBase.StudyManager
 Set mPositionManager = mTicker.PositionManager
 Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
 

@@ -68,6 +68,10 @@ Private mChanged                        As Boolean
 ' Properties
 '@================================================================================
 
+Public Property Get Enumerator() As Enumerator
+Set Enumerator = mTickers.Enumerator
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

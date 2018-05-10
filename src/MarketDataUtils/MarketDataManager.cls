@@ -113,16 +113,19 @@ On Error GoTo Err
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture cannot be Nothing"
 
 If pKey = "" Then pKey = GenerateGUIDString
+
+gLogger.Log "Creating MarketDataSource with key: " & pKey, ProcName, ModuleName, LogLevelHighDetail
+
 Dim lDataSource As New MarketDataSource
 If Not pStateChangeListener Is Nothing Then lDataSource.AddStateChangeListener pStateChangeListener
 
 Dim lConfig As ConfigurationSection
 If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStudies)
 
-Dim lStudyManager As StudyManager
-If Not mStudyLibManager Is Nothing Then Set lStudyManager = mStudyLibManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies)
+Dim lStudyManagerFuture As IFuture
+If Not mStudyLibManager Is Nothing Then Set lStudyManagerFuture = mStudyLibManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies)
 
-lDataSource.Initialise Me, pKey, pContractFuture, pClockFuture, lStudyManager, lConfig, pTickfileStreamId
+lDataSource.Initialise Me, pKey, pContractFuture, pClockFuture, lStudyManagerFuture, lConfig, pTickfileStreamId
 
 mDataSources.Add lDataSource, pKey
 

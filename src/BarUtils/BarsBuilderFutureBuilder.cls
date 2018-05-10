@@ -85,6 +85,8 @@ If mBars Is Nothing Then
 Else
     lBarsBuilder.InitialiseWithInitialBars mBars, mSession, mTickSize
 End If
+
+gLogger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
 mFutureBuilder.Value = lBarsBuilder
 mFutureBuilder.Complete
 
@@ -100,8 +102,6 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsPending Then Exit Sub
-
 If ev.Future.IsFaulted Then
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     Set mSelfRef = Nothing
@@ -110,12 +110,12 @@ ElseIf ev.Future.IsCancelled Then
     mFutureBuilder.Cancel
     Set mSelfRef = Nothing
     mFutureWaiter.Clear
-ElseIf ev.Future.IsAvailable Then
-    If TypeOf ev.Future.Value Is Session Then
-        Set mSession = ev.Future.Value
-    ElseIf TypeOf ev.Future.Value Is Bars Then
-        Set mBars = ev.Future.Value
-    End If
+ElseIf TypeOf ev.Future.Value Is Session Then
+    gLogger.Log "Got session", ProcName, ModuleName, LogLevelHighDetail
+    Set mSession = ev.Future.Value
+ElseIf TypeOf ev.Future.Value Is Bars Then
+    gLogger.Log "Got bars", ProcName, ModuleName, LogLevelHighDetail
+    Set mBars = ev.Future.Value
 End If
 
 Exit Sub

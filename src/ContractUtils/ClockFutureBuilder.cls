@@ -96,14 +96,12 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsPending Then Exit Sub
-
-If ev.Future.IsAvailable Then
-    setupClock ev.Future.Value
-ElseIf ev.Future.IsCancelled Then
+If ev.Future.IsCancelled Then
     mFutureBuilder.Cancel
 ElseIf ev.Future.IsFaulted Then
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+Else
+    setupClock ev.Future.Value
 End If
 
 Exit Sub

@@ -114,9 +114,6 @@ End Property
 Public Property Get State() As MarketDataSourceStates
 End Property
 
-Public Property Let StudyBase(ByVal Value As IStudyBase)
-End Property
-
 Public Property Get StudyBase() As IStudyBase
 End Property
 

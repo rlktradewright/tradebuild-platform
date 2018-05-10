@@ -114,6 +114,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         mFutureBuilder.Fail pError.Number, s, ProjectName & "." & ModuleName & ":" & ProcName
     End If
 Else
+    gLogger.Log "Connector: connection succeeded", ProcName, ModuleName
     mConnected = True
     RaiseEvent Connected(mConnection)
     If Not mFutureBuilder Is Nothing Then

@@ -217,7 +217,7 @@ Dim lBuilder As New BarsFutureBuilder
 lBuilder.Initialise Me, mTradingDBFuture, pBarDataSpecifierFuture, mUseSynchronousReads, pListener, pCookie
 mFetchBuilders.Add lBuilder
 
-Set FetchBars = lBuilder.Future
+Set FetchBars = lBuilder.BarsFuture
 
 Exit Function
 

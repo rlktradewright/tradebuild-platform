@@ -100,6 +100,7 @@ Private WithEvents mTargetBarsBuilder               As BarsBuilder
 Attribute mTargetBarsBuilder.VB_VarHelpID = -1
 
 Private mAccumulatedVolume                          As Long
+Private mCurrentBar                                 As Bar
 
 Private mFromSessionStart                           As Date
 
@@ -185,15 +186,14 @@ ElseIf mState = DataRetrieved Then
 ElseIf mState = ProcessingBars Then
     
     If mCurrTWSBarsCollectionIndex < 0 Then
+        fireNotifyBar mCurrentBar
         gLog "Time to process " & sTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(et.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
         mHistDataRequester.UnregisterHistoricalDataRequestTask mRequesterId
         
+        mFutureWaiter.Add mFutureBuilder.Future
         mFutureBuilder.Value = mTargetBarsBuilder.Bars
         mFutureBuilder.Complete
-    
-        If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
-        
-        mTaskContext.Finish mTargetBarsBuilder.Bars, False
+        mTaskContext.Suspend -1
     Else
         If mTWSBarsEn Is Nothing Then Set mTWSBarsEn = mTWSBarsCollections(mCurrTWSBarsCollectionIndex).Enumerator
         
@@ -273,6 +273,9 @@ ElseIf TypeOf ev.Future.Value Is TwsContractDetails Then
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
     mState = RetrievingBars
     mTaskContext.Continue
+ElseIf TypeOf ev.Future.Value Is Bars Then
+    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+    mTaskContext.Finish mTargetBarsBuilder.Bars, False
 End If
 
 Exit Sub
@@ -289,7 +292,9 @@ Private Sub mTargetBarsBuilder_BarAdded(ByVal pBar As Bar)
 Const ProcName As String = "mBarsBuilder_BarAdded"
 On Error GoTo Err
 
-fireNotifyBar pBar
+fireNotifyBar mCurrentBar
+
+Set mCurrentBar = pBar
 
 Exit Sub
 

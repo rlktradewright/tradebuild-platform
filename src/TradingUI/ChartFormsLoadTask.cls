@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IStateChangeListener
 Implements ITask
 
 '@================================================================================
@@ -34,6 +35,7 @@ Implements ITask
 
 Private Enum LoadStates
     LoadStateNone
+    LoadStateWaitingForTickersToBeReady
     LoadStateLoadingCharts
     LoadStateDeletingUnwantedCharts
     LoadStateShowingCharts
@@ -68,9 +70,33 @@ Private mHistDataStore                              As IHistoricalDataStore
 Private mIsHistorical                               As Boolean
 Private mState                                      As LoadStates
 
+Private mNumTickersAwaited                          As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+'@================================================================================
+' IStateChangeListener Interface Members
+'@================================================================================
+
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
+On Error GoTo Err
+
+If ev.State = MarketDataSourceStates.MarketDataSourceStateReady Or _
+    ev.State = MarketDataSourceStates.MarketDataSourceStateRunning Or _
+    ev.State = MarketDataSourceStates.MarketDataSourceStateError _
+Then
+    mNumTickersAwaited = mNumTickersAwaited - 1
+    If mNumTickersAwaited = 0 Then mTaskContext.Continue
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' ITask Interface Members
@@ -80,7 +106,7 @@ Private Sub ITask_Cancel()
 
 End Sub
 
-Private Sub ITask_Run()
+Private Sub ITask_run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
@@ -89,7 +115,17 @@ Static en As Enumerator
 
 Dim lChartConfig As ConfigurationSection
 
-If mState = LoadStateLoadingCharts Then
+If mState = LoadStateWaitingForTickersToBeReady Then
+    Dim lTicker As Ticker
+    For Each lTicker In mTickers
+        If lTicker.State = MarketDataSourceStates.MarketDataSourceStateCreated Then
+            mNumTickersAwaited = mNumTickersAwaited + 1
+            lTicker.AddStateChangeListener Me
+        End If
+    Next
+    If mNumTickersAwaited <> 0 Then mTaskContext.Suspend -1
+    mState = LoadStateLoadingCharts
+ElseIf mState = LoadStateLoadingCharts Then
     If en Is Nothing Then Set en = mConfig.ChildEnumerator
 
     If en.MoveNext Then
@@ -184,7 +220,7 @@ Set mTimePeriodValidator = pTimePeriodValidator
 gSetVariant mOwner, pOwner
 Set mTheme = pTheme
 
-mState = LoadStateLoadingCharts
+mState = LoadStateWaitingForTickersToBeReady
 
 Exit Sub
 

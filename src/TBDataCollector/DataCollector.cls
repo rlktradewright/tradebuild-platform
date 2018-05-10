@@ -18,7 +18,7 @@ Option Explicit
 '@================================================================================
 
 Implements ICollectionChangeListener
-
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -27,7 +27,7 @@ Implements ICollectionChangeListener
 Event CollectionStarted()
 Event CollectionStopped()
 Event Connected()
-Event ConnectFailed(ByVal description As String)
+Event ConnectFailed(ByVal pDescription As String)
 Event ConnectionClosed()
 Event Error(ev As ErrorEventData)
 Event ExitProgram()
@@ -36,11 +36,11 @@ Event Notification( _
                 ev As NotificationEventData)
 Event Reconnecting()
 Event ServiceProviderError( _
-                ByVal errorCode As Long, _
-                ByVal serviceProviderName As String, _
-                ByVal message As String)
+                ByVal pEerrorCode As Long, _
+                ByVal pServiceProviderName As String, _
+                ByVal pMessage As String)
 Event TickerAdded( _
-                ByVal ticker As ticker)
+                ByVal pTicker As Ticker)
 Event TimeframeAdded( _
                 ByVal tf As Timeframe)
                 
@@ -125,7 +125,32 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IStateChangeListener Interface Members
+'@================================================================================
+
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
+On Error GoTo Err
+
+Dim lTicker As Ticker
+Set lTicker = ev.Source
+If lTicker.State = MarketDataSourceStateReady Or _
+    lTicker.State = MarketDataSourceStatePaused Or _
+    lTicker.State = MarketDataSourceStateRunning _
+Then
+    lTicker.RemoveStateChangeListener Me
+    RaiseEvent TickerAdded(lTicker)
+    lTicker.Timeframes.AddCollectionChangeListener Me
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -221,14 +246,21 @@ End Sub
 '@================================================================================
 
 Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
-Dim lTicker As ticker
 Const ProcName As String = "mTickers_CollectionChanged"
 On Error GoTo Err
 
 If ev.ChangeType = CollItemAdded Then
+    Dim lTicker As Ticker
     Set lTicker = ev.AffectedItem
-    lTicker.Timeframes.AddCollectionChangeListener Me
-    RaiseEvent TickerAdded(lTicker)
+    If lTicker.State = MarketDataSourceStateReady Or _
+        lTicker.State = MarketDataSourceStatePaused Or _
+        lTicker.State = MarketDataSourceStateRunning _
+    Then
+        RaiseEvent TickerAdded(lTicker)
+        lTicker.Timeframes.AddCollectionChangeListener Me
+    Else
+        lTicker.AddStateChangeListener Me
+    End If
 End If
 
 Exit Sub
@@ -269,10 +301,10 @@ ElseIf ev.EventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spError = mTradeBuildAPI.GetServiceProviderError
     With spError
         gLogger.Log LogLevelSevere, _
-                    "Service provider error (" & .serviceProviderName & "): " & .errorCode & ": " & .message
-        RaiseEvent ServiceProviderError(.errorCode, _
-                                        .serviceProviderName, _
-                                        .message)
+                    "Service provider error (" & .ServiceProviderName & "): " & .ErrorCode & ": " & .Message
+        RaiseEvent ServiceProviderError(.ErrorCode, _
+                                        .ServiceProviderName, _
+                                        .Message)
     End With
 Else
     gLogger.Log LogLevelNormal, "Notification " & ev.EventCode & ": " & ev.EventMessage
@@ -519,7 +551,7 @@ If mWriteTicks Then
         Next
         If mOutputFormat = "" Then
             Dim ev As ErrorEventData
-            ev.errorCode = ErrorCodes.ErrIllegalArgumentException
+            ev.ErrorCode = ErrorCodes.ErrIllegalArgumentException
             ev.ErrorMessage = "Invalid tickfile output format specified in config file"
             RaiseEvent Error(ev)
             Exit Sub

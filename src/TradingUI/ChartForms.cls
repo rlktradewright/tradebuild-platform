@@ -130,7 +130,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function AddAsync( _
-                ByVal pTickers As Tickers, _
+                ByVal pTickers As SelectedTickers, _
                 ByVal pPeriodLength As TimePeriod, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
@@ -272,7 +272,7 @@ Friend Function CreateChart( _
                 ByVal pSpec As ChartSpecifier, _
                 ByVal pStyle As ChartStyle, _
                 ByVal pOwner As Variant) As fChart
-Const ProcName As String = "Add"
+Const ProcName As String = "CreateChart"
 On Error GoTo Err
 
 Dim lConfig As ConfigurationSection

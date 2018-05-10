@@ -120,6 +120,10 @@ Private mStudiesCollection                          As New EnumerableCollection
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mFutureBuilder                              As FutureBuilder
+
+Private mSelfRef                                    As Object
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -195,6 +199,9 @@ If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is Session Then
     Set mSession = ev.Future.Value
+    mFutureBuilder.Value = Me
+    mFutureBuilder.Complete
+    Set mSelfRef = Nothing
 End If
 
 Exit Sub
@@ -446,28 +453,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub InitialiseWithSessionFuture( _
+Friend Function InitialiseWithSessionFuture( _
                 ByVal pStudyLibraryManager As StudyLibraryManager, _
                 ByVal pSessionFuture As IFuture, _
-                ByVal pUseLocalTimeForStudies As Boolean)
+                ByVal pUseLocalTimeForStudies As Boolean) As IFuture
 Const ProcName As String = "InitialiseWithSessionFuture"
 On Error GoTo Err
+
+Set mSelfRef = Me
 
 Set mStudyLibraryManager = pStudyLibraryManager
 mUseLocalTimeForStudies = pUseLocalTimeForStudies
 
 Set mSessionFuture = pSessionFuture
-If mSessionFuture.IsAvailable Then
-    Set mSession = mSessionFuture.Value
-Else
-    mFutureWaiter.Add mSessionFuture
-End If
+mFutureWaiter.Add mSessionFuture
+
+Set mFutureBuilder = New FutureBuilder
+Set InitialiseWithSessionFuture = mFutureBuilder.Future
     
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 ' pTimestamp must be in exchange timezone
 Public Sub NotifyInput( _

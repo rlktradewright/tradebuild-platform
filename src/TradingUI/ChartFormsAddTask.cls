@@ -56,7 +56,7 @@ Private mTaskContext                                As TaskContext
 
 Private mChartForms                                 As ChartForms
 Private mConfig                                     As ConfigurationSection
-Private mTickers                                    As Tickers
+Private mTickers                                    As SelectedTickers
 Private mPeriodLength                               As TimePeriod
 Private mSpec                                       As ChartSpecifier
 Private mBarFormatterLibManager                     As BarFormatterLibManager
@@ -180,7 +180,7 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pChartForms As ChartForms, _
-                ByVal pTickers As Tickers, _
+                ByVal pTickers As SelectedTickers, _
                 ByVal pPeriodLength As TimePeriod, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
@@ -200,6 +200,7 @@ Set mBarFormatterLibManager = pBarFormatterLibManager
 Set mTimePeriodValidator = pTimePeriodValidator
 Set mConfig = pConfig
 Set mSpec = pSpec
+Set mStyle = pStyle
 gSetVariant mOwner, pOwner
 Set mTheme = pTheme
 

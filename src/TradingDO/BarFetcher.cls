@@ -147,7 +147,7 @@ Set mSpecifier = pSpecifier
 Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             createNewSessionBuilder(mInstrument).Session, _
                                             mInstrument.TickSize, _
-                                            IIf(mSpecifier.MaxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.MaxNumberOfBars))
+                                            IIf(mSpecifier.maxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.maxNumberOfBars))
 
 If gUseTickData(mSpecifier.BarTimePeriod.Units) Then
     fetchBarsUsingTickdata
@@ -155,8 +155,11 @@ Else
     fetchBarsUsingBardata
 End If
 
-fireNotifyBar mCurrentBar
-
+If mNotifyAtEnd Then
+    notifyBars mTargetBarsBuilder.Bars
+Else
+    fireNotifyBar mCurrentBar
+End If
 gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
 
 Set FetchBars = mTargetBarsBuilder.Bars
@@ -184,8 +187,8 @@ Private Sub createNewCustomSession()
 Const ProcName As String = "createNewCustomSession"
 On Error GoTo Err
 
-If mSpecifier.CustomSessionEndTime <> 0 Or mSpecifier.CustomSessionStartTime <> 0 Then
-    Set mCustomSessionBuilder = CreateSessionBuilder(mSpecifier.CustomSessionStartTime, mSpecifier.CustomSessionEndTime, GetTimeZone(mInstrument.TimeZoneName))
+If mSpecifier.customSessionEndTime <> 0 Or mSpecifier.customSessionStartTime <> 0 Then
+    Set mCustomSessionBuilder = CreateSessionBuilder(mSpecifier.customSessionStartTime, mSpecifier.customSessionEndTime, GetTimeZone(mInstrument.TimeZoneName))
     Set mCustomSession = mCustomSessionBuilder.Session
 End If
 
@@ -260,8 +263,13 @@ Dim lSessTimes As SessionTimes
 lSessTimes = gCalcSessionTimes(mSpecifier, mInstrument)
 
 Dim lReqDetails As BarRequestDetails
-lReqDetails = gGenerateBarRequestDetails(lSessTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.MaxNumberOfBars)
-If lReqDetails.NotifyAtEnd Then mNotifyAtEnd = True
+lReqDetails = gGenerateBarRequestDetails(lSessTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.maxNumberOfBars)
+If Not lReqDetails.BarTimePeriod Is mSpecifier.BarTimePeriod Then
+    ' we are building bars from smaller ones, so we can't notify them
+    ' until we have finished building them, as we don't know up front
+    ' how many target bars we'll end up with
+    mNotifyAtEnd = True
+End If
 
 Dim lRSFetcher As New RecordsetFetcher
 lRSFetcher.Initialise mDB
@@ -270,7 +278,7 @@ Dim lRS As Recordset
 Set lRS = doFetchBars(lRSFetcher, mInstrument.Id, lReqDetails, mSpecifier.BarType)
 
 Dim lBDP As New BarDataProcessor
-lBDP.Initialise mTargetBarsBuilder, lRS, lSessTimes, mSpecifier.MaxNumberOfBars, lReqDetails.StartAtFromDate
+lBDP.Initialise mTargetBarsBuilder, lRS, lSessTimes, mSpecifier.maxNumberOfBars, lReqDetails.StartAtFromDate
 lBDP.ProcessBars
 
 Exit Sub
@@ -412,7 +420,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function needMoreTicks(ByVal pTotalBars As Long, ByVal pSpecifier As BarDataSpecifier) As Boolean
-needMoreTicks = pTotalBars < pSpecifier.MaxNumberOfBars And _
+needMoreTicks = pTotalBars < pSpecifier.maxNumberOfBars And _
             (pSpecifier.FromDate = 0 Or pSpecifier.ToDate = 0)
 End Function
 

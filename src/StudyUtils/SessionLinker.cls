@@ -57,6 +57,7 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub Class_Initialize()
+Set mSelfRef = Me
 Set mFutureWaiter = New FutureWaiter
 End Sub
 

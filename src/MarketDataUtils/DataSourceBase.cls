@@ -96,9 +96,6 @@ Private mDOMManager                                 As DOMManager
 
 Private mSessionBuilder                             As SessionBuilder
 
-Private mSessionFutureBuilder                       As FutureBuilder
-Private mSessionFuture                              As IFuture
-
 Private mNumberOfMarketDataSubscriptions            As Long
 Private mNumberOfMarketDepthSubscriptions           As Long
 
@@ -109,6 +106,9 @@ Private mPriorityTickListeners                      As Listeners
 Private mCurrentPriorityTickListeners()             As Object
 Private mSomeCurrentPriorityTickListeners           As Boolean
 
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -117,11 +117,9 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
+Set mFutureWaiter = New FutureWaiter
 Set mDataSources = New DataSources
 mDataSources.Initialise Me
-
-Set mSessionFutureBuilder = New FutureBuilder
-Set mSessionFuture = mSessionFutureBuilder.Future
 
 Set mPriorityTickListeners = New Listeners
 
@@ -234,6 +232,30 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsCancelled Then
+
+ElseIf ev.Future.IsFaulted Then
+
+ElseIf TypeOf ev.Future.Value Is Clock Then
+    Dim lClock As Clock
+    Set lClock = ev.Future.Value
+    mSessionBuilder.SetSessionCurrentTime lClock.Timestamp
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' Properties
 '@================================================================================
 
@@ -253,8 +275,8 @@ Friend Property Get Options() As MarketDataSourceOptions
 Options = mOptions
 End Property
 
-Friend Property Get SessionFuture() As IFuture
-Set SessionFuture = mSessionFuture
+Friend Property Get Session() As Session
+Set Session = mSessionBuilder.Session
 End Property
 
 Friend Property Get StreamId() As Long
@@ -480,6 +502,19 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mMarketDataManagerRef = CreateWeakReference(pMarketDataManager)
+
+Set mContractFuture = pContractFuture
+
+' note that the contract future must already be in an available state - see the
+' constraints in MarketDataManager.GetDataSourceBase
+Set mContract = mContractFuture.Value
+Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
+
+Set mVolumeAdjuster = New VolumeAdjuster
+mVolumeAdjuster.Initialise mSessionBuilder.Session, mNoVolumeAdjustments, mNoImpliedTrades
+
+mFutureWaiter.Add pClockFuture
+
 mStreamId = pStreamId
 mOptions = pOptions
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
@@ -487,20 +522,6 @@ mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 mNoImpliedTrades = mOptions And MarketDataSourceOptions.MarketDataSourceOptNoImpliedTrades
 mNoVolumeAdjustments = mOptions And MarketDataSourceOptions.MarketDataSourceOptNoVolumeAdjustments
 mUseExchangeTimeZone = mOptions And MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone
-
-Set mContractFuture = pContractFuture
-Set mContract = mContractFuture.Value
-
-Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
-mSessionFutureBuilder.Value = mSessionBuilder.Session
-mSessionFutureBuilder.Complete
-
-Dim lClock As Clock
-Set lClock = pClockFuture.Value
-mSessionBuilder.SetSessionCurrentTime lClock.Timestamp
-
-Set mVolumeAdjuster = New VolumeAdjuster
-mVolumeAdjuster.Initialise mSessionBuilder.Session, mNoVolumeAdjustments, mNoImpliedTrades
 
 If mNumberOfMarketDepthRows <> 0 Then
     Set mDOMManager = New DOMManager

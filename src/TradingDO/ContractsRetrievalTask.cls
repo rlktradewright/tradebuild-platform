@@ -64,12 +64,16 @@ Private mInstrEnumerator                    As Enumerator
 Private WithEvents mFutureBuilder           As FutureBuilder
 Attribute mFutureBuilder.VB_VarHelpID = -1
 
+Private WithEvents mFutureWaiter             As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
 Set mFutureBuilder = New FutureBuilder
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 Private Sub Class_Terminate()
@@ -109,11 +113,10 @@ If mInstrEnumerator Is Nothing Then
     mTaskContext.Suspend -1
 Else
     If Not mInstrEnumerator.MoveNext Then
-        mFutureBuilder.value = mBuilder.Contracts
+        mFutureWaiter.Add mFutureBuilder.Future
+        mFutureBuilder.Value = mBuilder.Contracts
         mFutureBuilder.Complete
-        
-        If Not mListener Is Nothing Then mListener.FetchCompleted mFutureBuilder.cookie
-        mTaskContext.Finish Empty, False
+        mTaskContext.Suspend -1
     Else
         Dim lInstrument As BusinessDataObject
         Set lInstrument = mInstrEnumerator.Current
@@ -122,7 +125,7 @@ Else
         Set lContract = gContractFromInstrument(lInstrument)
         
         mBuilder.Add lContract
-        If Not mListener Is Nothing Then mListener.NotifyContract mFutureBuilder.cookie, lContract
+        If Not mListener Is Nothing Then mListener.NotifyContract mFutureBuilder.Cookie, lContract
     End If
 End If
 
@@ -149,9 +152,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext( _
-                ByVal value As TaskContext)
+                ByVal Value As TaskContext)
 Const ProcName As String = "ITask_TaskContext"
-Set mTaskContext = value
+Set mTaskContext = Value
 End Property
 
 Private Property Get ITask_taskName() As String
@@ -187,7 +190,7 @@ If ev.Cancelled Then
     doCancel
 ElseIf ev.ErrorNumber <> 0 Then
     mFutureBuilder.Fail ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
-    If Not mListener Is Nothing Then mListener.FetchFailed mFutureBuilder.cookie, ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
+    If Not mListener Is Nothing Then mListener.FetchFailed mFutureBuilder.Cookie, ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
     mTaskContext.Finish Empty, True
 Else
     Dim instruments As DataObjects
@@ -201,6 +204,23 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not mListener Is Nothing Then mListener.FetchCompleted mFutureBuilder.Cookie
+mTaskContext.Finish Empty, False
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -224,7 +244,7 @@ Const ProcName As String = "Initialise"
 Set mDB = db
 Set mListener = pListener
 Set mContractSpec = Specifier
-mFutureBuilder.cookie = pCookie
+mFutureBuilder.Cookie = pCookie
 End Sub
 
 '@================================================================================
@@ -237,7 +257,7 @@ On Error GoTo Err
 
 If Not mFetchInstrumentsTC Is Nothing Then mFetchInstrumentsTC.CancelTask
 mFutureBuilder.Cancel
-If Not mListener Is Nothing Then mListener.FetchCancelled mFutureBuilder.cookie
+If Not mListener Is Nothing Then mListener.FetchCancelled mFutureBuilder.Cookie
 
 mTaskContext.Finish Empty, True
 

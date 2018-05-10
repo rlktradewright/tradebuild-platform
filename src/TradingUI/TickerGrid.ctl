@@ -1917,7 +1917,9 @@ For Each lTicker In mTickers
     End If
 Next
 
-mSelectedTickers.Clear
+' recreate mSelectedTickers because an asynchronous operation
+' might still be using the original (eg for creating charts)
+Set mSelectedTickers = New SelectedTickers
 
 Exit Sub
 
