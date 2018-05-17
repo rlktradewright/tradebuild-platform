@@ -213,6 +213,7 @@ If mInitialReferencePrice = 0 Then Stop
 Exit Sub
 
 Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -889,13 +890,13 @@ Dim currentStop As Double
 If mLongPosition Then
     If LowValue(-1) < LowValue(0) Then
         firstLow = LowValue(-1)
-        i = 2
+        i = -2
     Else
         firstLow = LowValue(0)
-        i = 1
+        i = -1
     End If
     Do While LowValue(i) >= firstLow
-        i = i + 1
+        i = i - 1
     Loop
     newStop = LowValue(i)
     currentStop = StopLossTriggerPrice
@@ -907,13 +908,13 @@ If mLongPosition Then
 Else
     If HighValue(-1) > HighValue(0) Then
         firstHigh = HighValue(-1)
-        i = 2
+        i = -2
     Else
         firstHigh = HighValue(0)
-        i = 1
+        i = -1
     End If
     Do While HighValue(i) <= firstHigh
-        i = i + 1
+        i = i - 1
     Loop
     newStop = HighValue(i)
     currentStop = StopLossTriggerPrice

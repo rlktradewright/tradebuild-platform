@@ -174,7 +174,7 @@ Set lSwing = DeclareStudy( _
                         "Swing", _
                         lTimeframe, _
                         "Minimum swing (ticks)=" & GetParameterValue(ParamMinimumSwingTicks) & _
-                            ";Include implicit swing points=Y", _
+                            ";Include implicit swing points=N", _
                         GetParameterValue(ParamIncludeBarsOutsideSession), _
                         3)
 ChartStudyValue lSwing, SwingValueSwingLine
@@ -880,7 +880,11 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    getColour = NoColour
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Function
 
 Private Function getRejectMessage(pReason As String) As String

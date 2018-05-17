@@ -136,7 +136,7 @@ If lMinimumSwingTicks <> 0 Then
     DeclareStudy "Swing", _
                 lBaseTimeframe, _
                 "Minimum swing (ticks)=" & lMinimumSwingTicks & _
-                    ";Include implicit swing points=Y", _
+                    ";Include implicit swing points=N", _
                 GetParameterValue(ParamIncludeBarsOutsideSession), _
                 3
 End If
