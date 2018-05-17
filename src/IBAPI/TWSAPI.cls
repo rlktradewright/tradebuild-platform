@@ -1393,10 +1393,7 @@ If mServerVersion >= 9 Then
     End If
     
     With theFilter
-        ' remove this line because TWS no longer seems to supplort client id
-        ' in the execution filter (or maybe only if the requester has client id 0 ?)
-        'mWriter.AddString .ClientID, "Client id"
-        mWriter.AddString "", "Client id"
+        mWriter.AddString .ClientID, "Client id"
         mWriter.AddString .AccountCode, "Account code"
         If .Time = Int(.Time) Then
             mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd"), ""), "Fill Time"
