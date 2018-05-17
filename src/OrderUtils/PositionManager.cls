@@ -377,11 +377,18 @@ On Error GoTo Err
 
 Set mSummary = pData
 
-Static sBuilder As New FutureBuilder
-sBuilder.Value = mSummary.Contract
-sBuilder.Complete
+' we only create a contract future from the summary data the first time,
+' as it will always be the same contract and we don't want multiple
+' different futures for it
 
-init sBuilder.Future
+If mContractFuture Is Nothing Then
+    Dim lBuilder As New FutureBuilder
+    lBuilder.Value = mSummary.Contract
+    lBuilder.Complete
+    Set mContractFuture = lBuilder.Future
+End If
+
+init
 
 mIsInitialised = True
 
@@ -1116,6 +1123,8 @@ mOrderSubmitter.AddStateChangeListener Me
 Set mBracketOrderRecoveryController = pRecoveryController
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
 
+Set mContractFuture = mDataSource.ContractFuture
+
 Set mSessionFuture = mDataSource.SessionFuture
 If mSessionFuture.IsAvailable Then
     Set mSession = mSessionFuture.Value
@@ -1125,7 +1134,7 @@ End If
     
 Set mMoneyManager = pMoneyManager
 
-init mDataSource.ContractFuture
+init
 
 If Not mSession Is Nothing Then checkSetupNewSession
 
@@ -1544,12 +1553,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub init( _
-                ByVal pContractFuture As IFuture)
+Private Sub init()
 Const ProcName As String = "init"
 On Error GoTo Err
-
-Set mContractFuture = pContractFuture
 
 If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
     Set mOrderContexts = mOrderManager.GetOrderContexts(mSummary.Name, mSummary.IsSimulated)
