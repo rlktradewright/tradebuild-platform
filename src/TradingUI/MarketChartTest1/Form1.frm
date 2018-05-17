@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#314.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#326.0#0"; "TradingUI27.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
@@ -236,6 +236,7 @@ Option Explicit
 Implements IDeferredAction
 Implements ITwsConnectionStateListener
 Implements ILogListener
+Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -358,7 +359,7 @@ Else
 End If
 
 mClientId = 1413860445
-Set mDataClient = GetClient("Essy", 7496, mClientId, , , , Me)
+Set mDataClient = GetClient("Essy", 7497, mClientId, , , , Me)
 mDataClient.SetTwsLogLevel TwsLogLevelDetail
 
 Set mContractStore = mDataClient.GetContractStore
@@ -406,6 +407,27 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IStateChangeListener Interface Members
+'@================================================================================
+
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
+On Error GoTo Err
+
+If mTicker.State = MarketDataSourceStateRunning Then
+    mTicker.RemoveStateChangeListener Me
+    showChart mTicker, _
+            CreateChartSpecifier(CLng(NumHistoryBarsText.Text), Not (SessionOnlyCheck = vbChecked)), _
+            ChartStylesManager.Item(ChartStylesCombo.SelectedItem.Text)
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -537,10 +559,8 @@ If Not mTicker Is Nothing Then
 End If
 
 Set mTicker = ev.AffectedItem
+mTicker.AddStateChangeListener Me
 mTicker.StartMarketData
-showChart mTicker, _
-        CreateChartSpecifier(CLng(NumHistoryBarsText.Text), Not (SessionOnlyCheck = vbChecked)), _
-        ChartStylesManager.Item(ChartStylesCombo.SelectedItem.Text)
 
 Exit Sub
 
