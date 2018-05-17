@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl DOMDisplay 
    ClientHeight    =   1725
    ClientLeft      =   0
@@ -813,9 +813,9 @@ End If
 If mInitialPrice <> 0 Then
     setupRows
     
-    ' set off a timer before centring the display - otherwise it centres
+    ' defer centring the display - otherwise it centres
     ' before the first resize
-    DeferAction Me, DeferredCommandCentre   ', 10
+    DeferAction Me, DeferredCommandCentre
 End If
 
 mDataSource.AddMarketDepthListener Me
