@@ -24,7 +24,12 @@ Private mContracts As IContracts
 
 Private mContractSpecifier As IContractSpecifier
 
+Private WithEvents mFutureWaiter As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
+
 Dim lContractsBuilder As New ContractsBuilder
 
 lContractsBuilder.Add gCreateContractFromLocalSymbol("ESM3")
@@ -80,13 +85,13 @@ If en.MoveNext Then
         If Not mListener Is Nothing Then mListener.NotifyContract mTaskContext.Data, lContract
     End If
 Else
+    mFutureWaiter.Add mFutureBuilder.Future
     mFutureBuilder.Value = sContractsBuilder.Contracts
     mFutureBuilder.Cookie = mTaskContext.Data
     mFutureBuilder.Complete
     Set en = Nothing
     Set sContractsBuilder = Nothing
-    If Not mListener Is Nothing Then mListener.FetchCompleted mTaskContext.Data
-    mTaskContext.Finish Empty, False
+    mTaskContext.Suspend -1
 End If
 
 End Sub
@@ -98,4 +103,9 @@ End Property
 Private Property Get ITask_TaskName() As String
 
 End Property
+
+Private Sub mFutureWaiter_WaitCompleted(ev As TWUtilities40.FutureWaitCompletedEventData)
+If Not mListener Is Nothing Then mListener.FetchCompleted mTaskContext.Data
+mTaskContext.Finish Empty, False
+End Sub
 
