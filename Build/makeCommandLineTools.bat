@@ -1,4 +1,4 @@
-@echo off
+echo off
 setlocal
 
 %TB-PLATFORM-PROJECTS-DRIVE%

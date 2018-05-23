@@ -1,7 +1,11 @@
 @echo off
 setlocal
 
-call makeDlls.bat
+if /I "%1"=="P" (
+	call makeDlls.bat P
+) else (
+	call makeDlls.bat
+)
 
 call makeTestProjects.bat
 
