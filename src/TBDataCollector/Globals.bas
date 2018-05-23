@@ -60,8 +60,6 @@ Public Const ConfigSettingWriteTickDataPath             As String = ConfigSectio
 ' Member variables
 '@================================================================================
 
-Private mLogger                             As Logger
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -78,8 +76,10 @@ Private mLogger                             As Logger
 ' Properties
 '@================================================================================
 
-Public Property Get gLogger() As Logger
-Set gLogger = mLogger
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("tbdatacollector", ProjectName)
+Set gLogger = sLogger
 End Property
 
 '@================================================================================
@@ -96,7 +96,7 @@ Public Sub gHandleUnexpectedError( _
                 Optional ByRef pErrorDesc As String, _
                 Optional ByRef pErrorSource As String)
 Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.description)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
@@ -110,14 +110,10 @@ Public Sub gNotifyUnhandledError( _
                 Optional ByRef pErrorDesc As String, _
                 Optional ByRef pErrorSource As String)
 Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.description)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
-
-Sub Main()
-Set mLogger = GetLogger("")
 End Sub
 
 '@================================================================================

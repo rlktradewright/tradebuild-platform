@@ -87,7 +87,7 @@ Private Sub mBars_CollectionChanged(ev As CollectionChangeEventData)
 Const ProcName As String = "mBars_CollectionChanged"
 On Error GoTo Err
 
-If ev.changeType <> CollItemAdded Then Exit Sub
+If ev.ChangeType <> CollItemAdded Then Exit Sub
 
 If Not mBarWriteController Is Nothing Then
     mBarWriteController.Finish
@@ -179,6 +179,8 @@ Friend Sub Initialise( _
                 ByVal pBarType As BarTypes)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
+
+gLogger.Log "Initialising BarsHandler for timeframe " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
 
 Set mTimePeriod = pTimePeriod
 Set mBarWriter = pBarWriter

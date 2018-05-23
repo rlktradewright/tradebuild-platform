@@ -64,7 +64,7 @@ Private mSessionEndTime                             As Date
 
 Private mCurrentSessionTimes                        As SessionTimes
 
-Private mBuilderRef                                 As WeakReference
+Private mBuilder                                    As SessionBuilder
 
 Private mTimestamp                                  As Date
 
@@ -115,7 +115,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get SessionBuilder() As SessionBuilder
-Set SessionBuilder = mBuilderRef.Target
+Set SessionBuilder = mBuilder
 End Property
 
 Public Property Get SessionCurrentTime() As Date
@@ -217,7 +217,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Initialise(ByVal pSessionBuilder As SessionBuilder)
-Set mBuilderRef = CreateWeakReference(pSessionBuilder)
+Set mBuilder = pSessionBuilder
 End Sub
 
 Public Function IsTimeInFirstSessionForWeek(ByVal pTimestamp As Date) As Boolean

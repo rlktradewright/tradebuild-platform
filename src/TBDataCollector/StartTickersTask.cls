@@ -82,6 +82,8 @@ Private mTickfileOutputMonitor                          As ITickfileOutputMonito
 
 Private mStudyLibraryManager                            As StudyLibraryManager
 
+Private mContractSpec                                   As IContractSpecifier
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -146,21 +148,23 @@ If CBool(lContractConfig.GetAttribute(AttributeNameEnabled)) Then
     Dim lContractSpecConfig As ConfigurationSection
     Set lContractSpecConfig = lContractConfig.AddConfigurationSection(ConfigSectionContractSpecifier)
     
-    Dim lContractSpec  As IContractSpecifier
-    Set lContractSpec = LoadContractSpecFromConfig(lContractSpecConfig)
+    Set mContractSpec = LoadContractSpecFromConfig(lContractSpecConfig)
     
     failpoint = 400 '=====================================================
     
-    gLogger.Log LogLevelNormal, mTaskContext.Name & ": starting tickers for: " & lContractSpec.ToString
+    gLogger.Log "Starting tickers for: " & mContractSpec.ToString, ProcName, ModuleName
     
     Dim lContractsFuture As IFuture
-    Set lContractsFuture = FetchContracts(lContractSpec, mPrimaryContractStore, mSecondaryContractStore)
+    Set lContractsFuture = FetchContracts(mContractSpec, mPrimaryContractStore, mSecondaryContractStore)
 
+    ' Allow 1 second between each ticker start to allow time for all the database setup work
     Set mTickersTC = mTickers.StartTickers(lContractsFuture, _
                     True, _
-                    IIf(mIncludeMarketDepth, True, False))
+                    IIf(mIncludeMarketDepth, True, False), _
+                    1000)
     
-    mTaskContext.Suspend -1 ' wait till this set of tickers is started to avoid creating too many database connections
+    ' wait till this set of tickers is started to avoid creating too many database connections
+    mTaskContext.Suspend -1
 End If
 
 Exit Sub
@@ -222,10 +226,12 @@ Const ProcName As String = "mTickersTC_Completed"
 On Error GoTo Err
 
 If ev.Cancelled Then
+    gLogger.Log "Starting tickers cancelled for contract spec: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelSevere
 ElseIf ev.ErrorNumber <> 0 Then
-    gLogger.Log LogLevelSevere, "Error " & ev.ErrorNumber & " starting tickers: " & ev.ErrorMessage
+    gLogger.Log "Error " & ev.ErrorNumber & " starting tickers: " & ev.ErrorMessage, ProcName, ModuleName, LogLevelSevere
     If Not mTaskContext Is Nothing Then mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 Else
+    gLogger.Log "Tickers started for contract spec: " & mContractSpec.ToString, ProcName, ModuleName
     mTaskContext.Continue
 End If
 

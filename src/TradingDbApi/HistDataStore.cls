@@ -229,7 +229,7 @@ Friend Sub FetchBuilderFinished(ByVal pFetchBuilder As BarsFutureBuilder)
 Const ProcName As String = "FetchBuilderFinished"
 On Error GoTo Err
 
-mFetchBuilders.Remove pFetchBuilder
+If mFetchBuilders.Contains(pFetchBuilder) Then mFetchBuilders.Remove pFetchBuilder
 
 Exit Sub
 

@@ -130,6 +130,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+gLogger.Log "Initialising TimeframeSetupTask", ProcName, ModuleName, LogLevelHighDetail
+
 Set mHistDataStore = pHistDataStore
 mWriterTimeframes = mHistDataStore.WriterTimeframes
 Set mContractFuture = pContractFuture

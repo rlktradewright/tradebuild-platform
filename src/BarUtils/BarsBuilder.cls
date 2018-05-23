@@ -295,6 +295,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+gLogger.Log "Initialise for " & pBarTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
+
 Set mBarTimePeriod = pBarTimePeriod
 setTickSize pTickSize
 mCacheSize = pNumberOfBarsToCache
@@ -320,6 +322,8 @@ Friend Sub InitialiseWithInitialBars( _
                 ByVal pTickSize As Double)
 Const ProcName As String = "InitialiseWithInitialBars"
 On Error GoTo Err
+
+gLogger.Log "Initialise with " & pInitialBars.Count & " initial bars", ProcName, ModuleName, LogLevelHighDetail
 
 Set mBars = pInitialBars
 Set mBarTimePeriod = mBars.BarTimePeriod
@@ -518,7 +522,9 @@ Private Sub checkLinkSessions()
 Const ProcName As String = "checkLinkSessions"
 On Error GoTo Err
 
-If mMainSession Is Nothing Or mInitialBarsSession Is Nothing Then Exit Sub
+If mMainSession Is Nothing Then Exit Sub
+If mInitialBarsSession Is Nothing Then Exit Sub
+
 mMainSession.LinkToSession mInitialBarsSession
 
 Exit Sub

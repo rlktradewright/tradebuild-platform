@@ -198,6 +198,7 @@ On Error GoTo Err
 If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is Session Then
+    gLogger.Log "Got session", ProcName, ModuleName, LogLevelHighDetail
     Set mSession = ev.Future.Value
     mFutureBuilder.Value = Me
     mFutureBuilder.Complete

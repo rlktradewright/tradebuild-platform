@@ -53,6 +53,12 @@ Public Const OneHour                                As Double = 1 / 24
 ' Properties
 '@================================================================================
 
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("sessionutils", ProjectName)
+Set gLogger = sLogger
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

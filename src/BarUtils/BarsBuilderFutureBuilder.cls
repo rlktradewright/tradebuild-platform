@@ -56,14 +56,11 @@ Private mSave                                       As Boolean
 Private mSession                                    As Session
 Private mBars                                       As Bars
 
-Private mSelfRef                                    As Object
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mSelfRef = Me
 Set mFutureWaiter = New FutureWaiter
 End Sub
 
@@ -90,8 +87,6 @@ gLogger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLev
 mFutureBuilder.Value = lBarsBuilder
 mFutureBuilder.Complete
 
-Set mSelfRef = Nothing
-
 Exit Sub
 
 Err:
@@ -104,11 +99,9 @@ On Error GoTo Err
 
 If ev.Future.IsFaulted Then
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-    Set mSelfRef = Nothing
     mFutureWaiter.Clear
 ElseIf ev.Future.IsCancelled Then
     mFutureBuilder.Cancel
-    Set mSelfRef = Nothing
     mFutureWaiter.Clear
 ElseIf TypeOf ev.Future.Value Is Session Then
     gLogger.Log "Got session", ProcName, ModuleName, LogLevelHighDetail

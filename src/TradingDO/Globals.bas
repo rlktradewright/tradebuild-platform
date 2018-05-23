@@ -365,7 +365,7 @@ End Select
 End Function
 
 Public Function gGenerateConnectionErrorMessages( _
-                ByVal pConnection As ADODB.connection) As String
+                ByVal pConnection As ADODB.Connection) As String
 Dim lError As ADODB.Error
 Dim errMsg As String
 

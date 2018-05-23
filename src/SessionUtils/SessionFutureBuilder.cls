@@ -122,13 +122,9 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If pSessionBuilderFuture.IsAvailable Then
-    setupSession pSessionBuilderFuture.Value
-Else
-    Set mSelfRef = Me
-    Set mFutureWaiter = New FutureWaiter
-    mFutureWaiter.Add pSessionBuilderFuture
-End If
+Set mSelfRef = Me
+Set mFutureWaiter = New FutureWaiter
+mFutureWaiter.Add pSessionBuilderFuture
 
 Exit Sub
 

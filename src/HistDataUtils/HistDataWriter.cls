@@ -149,6 +149,8 @@ On Error GoTo Err
 If pOptions And HistDataWriteOptionWriteTradeBars Then AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityWriteTradeBars), "HistDataStore does not support writing trade bars"
 If pOptions And HistDataWriteOptionWriteBidAndAskBars Then AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityWriteBidAndAskBars), "HistDataStore does not support writing bid and ask bars"
 
+gLogger.Log "Initialising HistDataWriter", ProcName, ModuleName, LogLevelHighDetail
+
 Set mContractFuture = pContractFuture
 mOptions = pOptions
 

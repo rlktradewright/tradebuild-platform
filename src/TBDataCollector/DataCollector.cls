@@ -212,11 +212,11 @@ Const ProcName As String = "mStartTickersTC_Completed"
 On Error GoTo Err
 
 If ev.Cancelled Then
-    gLogger.Log LogLevelNormal, "Starting tickers has been cancelled"
+    gLogger.Log "Starting tickers has been cancelled", ProcName, ModuleName
 ElseIf ev.ErrorNumber <> 0 Then
     Err.Raise ev.ErrorNumber, ev.ErrorSource, ev.ErrorMessage
 Else
-    gLogger.Log LogLevelNormal, "Tickers started: " & CStr(ev.Result)
+    gLogger.Log "Tickers started: " & CStr(ev.Result), ProcName, ModuleName
 End If
 
 Exit Sub
@@ -285,29 +285,31 @@ On Error GoTo Err
 
 If TypeOf ev.Source Is IRealtimeDataSP Then
     If ev.EventCode = ApiNotifyCodes.ApiNotifyConnected Then
-        gLogger.Log LogLevelNormal, ev.EventMessage
+        gLogger.Log ev.EventMessage, ProcName, ModuleName
         RaiseEvent Connected
     ElseIf ev.EventCode = ApiNotifyCodes.ApiNotifyCantConnect Then
-        gLogger.Log LogLevelSevere, ev.EventMessage
+        gLogger.Log ev.EventMessage, ProcName, ModuleName, LogLevelSevere
         RaiseEvent ConnectFailed(ev.EventMessage)
     ElseIf ev.EventCode = ApiNotifyCodes.ApiNotifyLostConnection Then
-        gLogger.Log LogLevelNormal, ev.EventMessage
+        gLogger.Log ev.EventMessage, ProcName, ModuleName
         RaiseEvent ConnectionClosed
     ElseIf ev.EventCode = ApiNotifyCodes.ApiNotifyReconnecting Then
-        gLogger.Log LogLevelNormal, ev.EventMessage
+        gLogger.Log ev.EventMessage, ProcName, ModuleName
         RaiseEvent Reconnecting
     End If
 ElseIf ev.EventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spError = mTradeBuildAPI.GetServiceProviderError
     With spError
-        gLogger.Log LogLevelSevere, _
-                    "Service provider error (" & .ServiceProviderName & "): " & .ErrorCode & ": " & .Message
+        gLogger.Log "Service provider error (" & .ServiceProviderName & "): " & _
+                    .ErrorCode & ": " & _
+                    .Message, _
+                    ProcName, ModuleName, LogLevelSevere
         RaiseEvent ServiceProviderError(.ErrorCode, _
                                         .ServiceProviderName, _
                                         .Message)
     End With
 Else
-    gLogger.Log LogLevelNormal, "Notification " & ev.EventCode & ": " & ev.EventMessage
+    gLogger.Log "Notification " & ev.EventCode & ": " & ev.EventMessage, ProcName, ModuleName
     RaiseEvent Notification(ev)
 End If
 
@@ -399,7 +401,7 @@ End If
 
 startTheTickers
 
-gLogger.Log LogLevelNormal, "Data collection started"
+gLogger.Log "Data collection started", ProcName, ModuleName
 RaiseEvent CollectionStarted
 
 Exit Sub
@@ -636,7 +638,7 @@ On Error GoTo Err
 
 TaskSummaryLoggingIntervalSecs = 0
 
-gLogger.Log LogLevelNormal, "Data collection stopped"
+gLogger.Log "Data collection stopped", ProcName, ModuleName
 
 mTickers.Finish
 

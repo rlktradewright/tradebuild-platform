@@ -126,13 +126,9 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If pSessionFuture.IsAvailable Then
-    setupSessionBuilder pSessionFuture.Value
-Else
-    Set mSelfRef = Me
-    Set mFutureWaiter = New FutureWaiter
-    mFutureWaiter.Add pSessionFuture
-End If
+Set mSelfRef = Me
+Set mFutureWaiter = New FutureWaiter
+mFutureWaiter.Add pSessionFuture
 
 Exit Sub
 
@@ -145,13 +141,13 @@ End Sub
 '@================================================================================
 
 Private Sub setupSessionBuilder(ByVal pSession As Session)
-Dim lSessionBuilder As New SessionBuilder
 Const ProcName As String = "setupSessionBuilder"
 On Error GoTo Err
 
+Dim lSessionBuilder As New SessionBuilder
 lSessionBuilder.SessionEndTime = pSession.SessionEndTime
 lSessionBuilder.SessionStartTime = pSession.SessionStartTime
-'lSessionBuilder.TimeZone = pSession.TimeZone
+lSessionBuilder.TimeZone = pSession.TimeZone
    
 mFutureBuilder.Value = lSessionBuilder
 mFutureBuilder.Complete

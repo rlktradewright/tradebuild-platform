@@ -101,6 +101,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let TimeZone(ByVal Value As TimeZone)
+mSession.TimeZone = Value
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

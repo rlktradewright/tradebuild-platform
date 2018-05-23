@@ -131,6 +131,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+gLogger.Log "Initialising TimeframeHandler for timeframe " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
+
 Set mTimePeriod = pTimePeriod
 Set mBarWriter = pBarWriter
 

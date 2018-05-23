@@ -150,6 +150,8 @@ Public Function RecordHistoricalBars( _
 Const ProcName As String = "RecordHistoricalBars"
 On Error GoTo Err
 
+gLogger.Log "RecordHistoricalBars", ProcName, ModuleName, LogLevelHighDetail
+
 Dim lWriter As New HistDataWriter
 lWriter.Initialise pContractFuture, pClockFuture, pStudyBase, pHistDataStore, pOutputMonitor, pOptions, pSaveIntervalSeconds
 Set RecordHistoricalBars = lWriter
