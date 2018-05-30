@@ -155,10 +155,9 @@ Public Property Get InitialBarFetchListener() As IBarFetchListener
 Const ProcName As String = "InitialBarFetchListener"
 On Error GoTo Err
 
-Assert mBarFetchListener Is Nothing, "BarFetchListener has already been requested"
-Assert Not mInitialBarsFutureSupplied, "Initial bars future has been supplied"
+Assert Not mInitialBarsFutureSupplied, "InitialBarsFuture has been supplied"
 
-Set mBarFetchListener = New BarFetchListener
+If mBarFetchListener Is Nothing Then Set mBarFetchListener = New BarFetchListener
 Set InitialBarFetchListener = mBarFetchListener
 
 Exit Property
@@ -171,7 +170,7 @@ Public Property Let InitialBarsFuture(ByVal Value As IFuture)
 Const ProcName As String = "InitialBarsFuture"
 On Error GoTo Err
 
-Assert mBarFetchListener Is Nothing, "Bar fetch listener has been requested - initial bars future cannot be supplied"
+Assert mBarFetchListener Is Nothing, "InitialBarFetchListener has been requested - InitialBarsFuture cannot be supplied"
 
 mInitialBarsFutureSupplied = True
 

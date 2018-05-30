@@ -36,6 +36,8 @@ Option Explicit
 
 Event BarsLoaded()
 
+Event BarLoadProgress(ByVal pBarsRetrieved As Long, ByVal pPercentComplete As Single)
+
 Event StateChange(ByRef ev As StateChangeEventData)
 
 
@@ -79,6 +81,10 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mTimePeriod                         As TimePeriod
 
+Private WithEvents mBarFetchListener        As BarFetchListener
+Attribute mBarFetchListener.VB_VarHelpID = -1
+Private mMaxNumberOfBars                    As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -91,6 +97,32 @@ End Sub
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
+
+'@================================================================================
+' mBarFetchListener Event Handlers
+'@================================================================================
+
+Private Sub mBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As BarUtils27.Bar)
+Const ProcName As String = "mBarFetchListener_NotifyBar"
+On Error GoTo Err
+
+Static sNumberOfBars As Long
+sNumberOfBars = sNumberOfBars + 1
+
+Static sPercent As Single
+If mMaxNumberOfBars <> 0 Then
+    sPercent = 100! * CSng(sNumberOfBars) / CSng(mMaxNumberOfBars)
+Else
+    sPercent = sPercent + (100! - sPercent) / 100!
+End If
+
+RaiseEvent BarLoadProgress(sNumberOfBars, sPercent)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' mFutureWaiter Event Handlers
@@ -243,7 +275,6 @@ If lFetchBarsNeeded And Not mContractFuture Is Nothing And Not pHistDataStore Is
                                                                 pIncludeBarsOutsideSession), _
                                                     mBarStudy.InitialBarFetchListener)
     mFutureWaiter.Add mInitialBarsFuture
-    
     
     fireStateChange TimeframeStateLoading
 Else
