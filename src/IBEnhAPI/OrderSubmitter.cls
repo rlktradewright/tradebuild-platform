@@ -45,6 +45,7 @@ Private Const OrderModeCloseout         As String = "closeout"
 Private Const EntryOrderIdIncrement     As Long = 0
 Private Const StopOrderIdIncrement      As Long = 1
 Private Const TargetOrderIdIncrement    As Long = 2
+Private Const CloseoutOrderIdIncrement  As Long = 3
 
 '================================================================================
 ' Enums
@@ -1056,6 +1057,9 @@ If pTargetOrderChanged Then
     placeAnOrder pBracketOrder.TargetOrder, pContract, True, lParentId, lOCAGroup, OrderModeTarget
 End If
 If pCloseoutOrderChanged Then
+    If pBracketOrder.CloseoutOrder.BrokerId = "" Then
+        pBracketOrder.CloseoutOrder.BrokerId = getNextBracketId + CloseoutOrderIdIncrement
+    End If
     placeAnOrder pBracketOrder.CloseoutOrder, pContract, True, 0, "", OrderModeCloseout
 End If
 
