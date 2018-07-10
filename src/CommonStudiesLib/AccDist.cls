@@ -59,7 +59,7 @@ Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
 
-Private mSessionFuture As IFuture
+Private mSession As Session
 
 Private mAccDist As Double
 Private mAccDistAtBarStart As Double
@@ -69,9 +69,6 @@ Private mBarsBuilder As BarsBuilder
 Private mBars As Bars
 Private mCurrentBar As BarUtils27.Bar
 Private mCurrentBarVolume As Long
-
-Private WithEvents mFutureWaiter As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -91,28 +88,21 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal UnderlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pSession As Session)
 
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
 
-Set mSessionFuture = pSessionFuture
+Set mSession = pSession
 
 customProcessParameters Parameters
 Set mAccDistCache = mStudyFoundation.FindValueCache(AccDistValueAccDist)
 
-If mSessionFuture.IsAvailable Then
-    Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
-                            mSessionFuture.Value, _
-                            0, _
-                            1)
-    Set mBars = mBarsBuilder.Bars
-Else
-    mFutureWaiter.Add CreateBarsBuilderFuture(GetTimePeriod(0, TimePeriodNone), _
-                            mSessionFuture.Value, _
-                            0, _
-                            1)
-End If
+Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
+                        mSession, _
+                        0, _
+                        1)
+Set mBars = mBarsBuilder.Bars
 
 Exit Sub
 
@@ -207,25 +197,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-'@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If Not ev.Future.IsAvailable Then Exit Sub
-
-Set mBarsBuilder = ev.Future.Value
-Set mBars = mBarsBuilder.Bars
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
@@ -387,7 +358,7 @@ customInitialise mStudyFoundation.Id, _
                 mStudyFoundation.numberOfCachedValues, _
                 mStudyFoundation.inputValueNames, _
                 mStudyFoundation.UnderlyingStudy, _
-                mStudyFoundation.SessionFuture
+                mStudyFoundation.Session
 Exit Sub
 
 Err:

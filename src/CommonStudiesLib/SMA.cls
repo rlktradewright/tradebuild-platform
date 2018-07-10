@@ -88,7 +88,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal UnderlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pSession As Session)
 
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
@@ -431,7 +431,7 @@ customInitialise mStudyFoundation.Id, _
                 mStudyFoundation.numberOfCachedValues, _
                 mStudyFoundation.inputValueNames, _
                 mStudyFoundation.UnderlyingStudy, _
-                mStudyFoundation.SessionFuture
+                mStudyFoundation.Session
 
 Exit Sub
 

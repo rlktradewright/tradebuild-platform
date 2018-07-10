@@ -172,6 +172,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub gLogDataRetrieved()
+Const ProcName As String = "gLogDataRetrieved"
+On Error GoTo Err
+
+gCon.WriteLineToConsole "Data retrieved from source"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _

@@ -226,9 +226,11 @@ Case ChartStateBlank
 
 Case ChartStateCreated
 
-Case ChartStateInitialised
+Case ChartStateFetching
 
-Case ChartStateLoaded
+Case ChartStateLoading
+
+Case ChartStateRunning
     SelectItem
 End Select
 
@@ -518,7 +520,7 @@ Const ProcName As String = "attachToChart"
 On Error GoTo Err
 
 Set mMarketChart = pChart
-If mMarketChart.State = ChartStateLoaded Then SelectItem
+If mMarketChart.State = ChartStateRunning Then SelectItem
 
 Exit Sub
 

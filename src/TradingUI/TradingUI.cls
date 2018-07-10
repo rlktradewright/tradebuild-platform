@@ -32,34 +32,36 @@ Option Explicit
 
 Public Enum ChartStates
     ''
-    ' No chart has yet been started, or the chart has been cleared
+    ' No chart has yet been started, or the chart has been cleared.
     '
     '@/
     ChartStateBlank
 
     ''
-    ' The chart has been created, but the Ticker has not yet become ready
+    ' The chart has been created, historical data (if any) has not
+    ' yet been requested.
     '
     '@/
     ChartStateCreated
 
     ''
-    ' The Ticker is now ready and historical data has been requested
+    ' Historic data is being fetched.
     '
     '@/
-    ChartStateInitialised
+    ChartStateFetching
 
     ''
-    ' Historic data has been fetched and is being added to the chart
+    ' Historic data has been fetched and is being added to the chart.
     '
     '@/
     ChartStateLoading
     
     ''
-    ' All historic data has been added to the chart
+    ' All historic data (if any) has been added to the chart and the
+    ' chart is now running normally.
     '
     '@/
-    ChartStateLoaded
+    ChartStateRunning
 End Enum
 
 Public Enum MultiChartChangeTypes

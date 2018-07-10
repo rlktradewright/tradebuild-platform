@@ -61,7 +61,7 @@ Private Const NoPrice                   As Double = MaxDouble
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private mSessionFuture As IFuture
+Private mSession As Session
 
 Private WithEvents mBarStudySupport As BarStudySupport
 Attribute mBarStudySupport.VB_VarHelpID = -1
@@ -234,11 +234,11 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal UnderlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pSession As Session)
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
 
-Set mSessionFuture = pSessionFuture
+Set mSession = pSession
 
 mStudyFoundation.ReplayUsingStudyValues = True
 customProcessParameters Parameters
@@ -354,7 +354,7 @@ For Each param In params
     End Select
 Next
 
-Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(lVolumePerBar, TimePeriodVolume), mSessionFuture, mPriceTickSize)
+Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(lVolumePerBar, TimePeriodVolume), mSession, mPriceTickSize)
 If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
 
 Exit Sub
@@ -545,7 +545,7 @@ customInitialise mStudyFoundation.Id, _
                 mStudyFoundation.numberOfCachedValues, _
                 mStudyFoundation.inputValueNames, _
                 mStudyFoundation.UnderlyingStudy, _
-                mStudyFoundation.SessionFuture
+                mStudyFoundation.Session
 
 Exit Sub
 

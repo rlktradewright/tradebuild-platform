@@ -54,7 +54,7 @@ Private mStudyFoundation As StudyFoundation
 
 Private mStudyManager As StudyManager
 
-Private mSessionFuture As IFuture
+Private mSession As Session
 
 Private mKPeriods As Long
 Private mKDPeriods As Long
@@ -89,12 +89,12 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal UnderlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pSession As Session)
 
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
 
-Set mSessionFuture = pSessionFuture
+Set mSession = pSession
 
 customProcessParameters Parameters
 Set mKCache = mStudyFoundation.FindValueCache(SStochValueK)
@@ -169,7 +169,7 @@ lSf.Initialise "", _
             1, _
             valueNames, _
             Nothing, _
-            mStudyFoundation.SessionFuture
+            mStudyFoundation.Session
 mStochStudy.Initialise lSf
 
 mStochStudy.AddStudyValueListener Me, StochValueD, 1
@@ -401,7 +401,7 @@ customInitialise mStudyFoundation.Id, _
                 mStudyFoundation.numberOfCachedValues, _
                 mStudyFoundation.inputValueNames, _
                 mStudyFoundation.UnderlyingStudy, _
-                mStudyFoundation.SessionFuture
+                mStudyFoundation.Session
 
 Exit Sub
 

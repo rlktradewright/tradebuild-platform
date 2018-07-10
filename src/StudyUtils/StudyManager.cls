@@ -57,12 +57,10 @@ Public Type StudyTableEntry
     ' for this study
     StudyMgr                As StudyManager
     
-    ' the StudyInputHandler underlying this study
-'    StudyInputHandler       As StudyInputHandler
-    
     ' the SessionBuilder used when replaying historicalinput
     ' values to the study
-    SessionBuilderFuture    As IFuture
+    'SessionBuilderFuture    As IFuture
+    SessionBuilder          As SessionBuilder
     
     ' the study itself
     Study                   As IStudy
@@ -110,7 +108,7 @@ Private mStudyLibraryManager                        As StudyLibraryManager
 Private mUseLocalTimeForStudies                     As Boolean
 Private mIncludeDataOutsideSession                  As Boolean
 
-Private mSessionFuture                              As IFuture
+'Private mSessionFuture                              As IFuture
 Private mSession                                    As Session
 
 Private mSessionBuilder                             As SessionBuilder
@@ -215,9 +213,13 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get SessionFuture() As IFuture
-Set SessionFuture = mSessionFuture
+Public Property Get Session() As Session
+Set Session = mSession
 End Property
+
+'Public Property Get SessionFuture() As IFuture
+'Set SessionFuture = mSessionFuture
+'End Property
 
 Public Property Get StudyLibraryManager() As StudyLibraryManager
 Set StudyLibraryManager = mStudyLibraryManager
@@ -258,38 +260,6 @@ mNextInputIndex = mNextInputIndex + 1
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function CreateStudyInputHandler( _
-                ByVal pName As String) As StudyInputHandler
-Const ProcName As String = "CreateStudyInputHandler"
-On Error GoTo Err
-
-Dim lStudyInputHandler As StudyInputHandler
-Set lStudyInputHandler = New StudyInputHandler
-lStudyInputHandler.Initialise pName
-Set CreateStudyInputHandler = lStudyInputHandler
-
-Dim lStudy As IStudy
-Set lStudy = lStudyInputHandler
-
-Dim StudyEntry As StudyTableEntry
-StudyEntry.StudyName = pName
-Set StudyEntry.Study = lStudy
-StudyEntry.StudyID = lStudy.Id
-
-mStudiesCollection.Add StudyEntry, lStudy.Id
-mStudyInputHandlers.Add lStudyInputHandler, lStudy.Id
-
-Exit Function
-
-Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
-    mStudiesCollection.Remove lStudy.Id
-    mStudyInputHandlers.Remove lStudy.Id
-    Resume
-End If
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
@@ -366,7 +336,11 @@ UnderlyingStudyEntry = mStudiesCollection(pUnderlyingStudy.Id)
 ' we give the new study its own Session that will be used while replaying
 ' historical data. When that is complete and StartStudy is called, we'll
 ' link that Session object to the relevant StudyInputHandler object
-Set StudyEntry.SessionBuilderFuture = CreateSessionBuilderFuture(mSessionFuture)
+
+'Assert mSessionFuture.IsAvailable, "Session future is not available"
+
+'Set StudyEntry.SessionBuilderFuture = CreateSessionBuilderFuture(mSessionFuture)
+Set StudyEntry.SessionBuilder = CreateSessionBuilder(mSession.SessionStartTime, mSession.SessionEndTime, mSession.TimeZone)
 
 Dim lStudyFoundation As New StudyFoundation
 lStudyFoundation.Initialise Name, _
@@ -378,7 +352,7 @@ lStudyFoundation.Initialise Name, _
                         pNumberOfValuesToCache, _
                         InputValueNames, _
                         UnderlyingStudyEntry.Study, _
-                        CreateSessionFuture(StudyEntry.SessionBuilderFuture)
+                        StudyEntry.SessionBuilder.Session
 StudyEntry.Study.Initialise lStudyFoundation
                             
 mStudiesCollection.Add StudyEntry, StudyEntry.StudyID
@@ -387,6 +361,38 @@ Set AddStudy = lStudy
 Exit Function
 
 Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateStudyInputHandler( _
+                ByVal pName As String) As StudyInputHandler
+Const ProcName As String = "CreateStudyInputHandler"
+On Error GoTo Err
+
+Dim lStudyInputHandler As StudyInputHandler
+Set lStudyInputHandler = New StudyInputHandler
+lStudyInputHandler.Initialise pName
+Set CreateStudyInputHandler = lStudyInputHandler
+
+Dim lStudy As IStudy
+Set lStudy = lStudyInputHandler
+
+Dim StudyEntry As StudyTableEntry
+StudyEntry.StudyName = pName
+Set StudyEntry.Study = lStudy
+StudyEntry.StudyID = lStudy.Id
+
+mStudiesCollection.Add StudyEntry, lStudy.Id
+mStudyInputHandlers.Add lStudyInputHandler, lStudy.Id
+
+Exit Function
+
+Err:
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
+    mStudiesCollection.Remove lStudy.Id
+    mStudyInputHandlers.Remove lStudy.Id
+    Resume
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
@@ -446,7 +452,7 @@ mUseLocalTimeForStudies = pUseLocalTimeForStudies
 
 Set mSessionBuilder = CreateSessionBuilder(pSessionStartTime, pSessionEndTime, pTimeZone)
 Set mSession = mSessionBuilder.Session
-Set mSessionFuture = CreateFuture(mSession)
+'Set mSessionFuture = CreateFuture(mSession)
     
 Exit Sub
 
@@ -466,8 +472,8 @@ Set mSelfRef = Me
 Set mStudyLibraryManager = pStudyLibraryManager
 mUseLocalTimeForStudies = pUseLocalTimeForStudies
 
-Set mSessionFuture = pSessionFuture
-mFutureWaiter.Add mSessionFuture
+'Set mSessionFuture = pSessionFuture
+mFutureWaiter.Add pSessionFuture
 
 Set mFutureBuilder = New FutureBuilder
 Set InitialiseWithSessionFuture = mFutureBuilder.Future
@@ -619,8 +625,7 @@ Private Sub linkSession( _
 Const ProcName As String = "linkSession"
 On Error GoTo Err
 
-Dim lSessionLinker As New SessionLinker
-lSessionLinker.Link Me, pStudy
+mSession.LinkToSession GetStudyEntry(pStudy).SessionBuilder.Session
 
 Exit Sub
 

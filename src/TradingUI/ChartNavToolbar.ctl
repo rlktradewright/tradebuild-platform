@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#260.1#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#279.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -161,13 +161,16 @@ Dim State As ChartStates
 
 State = ev.State
 Select Case State
+
 Case ChartStateBlank
 
 Case ChartStateCreated
 
-Case ChartStateInitialised
+Case ChartStateFetching
 
-Case ChartStateLoaded
+Case ChartStateLoading
+
+Case ChartStateRunning
     setChartManager
     setupChartNavButtons
 End Select
@@ -265,7 +268,7 @@ Const ProcName As String = "attachToChart"
 On Error GoTo Err
 
     Set mTradeBuildChart = pChart
-    If mTradeBuildChart.State = ChartStateLoaded Then
+    If mTradeBuildChart.State = ChartStateRunning Then
         setChartManager
         setupChartNavButtons
     End If

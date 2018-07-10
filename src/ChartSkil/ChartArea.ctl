@@ -282,6 +282,8 @@ Private mReferenceTime As Date
 
 Private mBackGroundViewport As ViewPort
 
+Private mChartID As String
+
 '================================================================================
 ' User Control Event Handlers
 '================================================================================
@@ -298,7 +300,8 @@ Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
 On Error Resume Next
 
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:=ProcName, pModName:=ModuleName, pMsg:="ChartSkil chart created"
+mChartID = GenerateGUIDString
+gLogger.Log "ChartSkil chart created: " & mChartID, ProcName, ModuleName, LogLevelDetail
 
 On Error GoTo Err
 
@@ -439,8 +442,16 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="ChartSkil chart terminated"
+Const ProcName As String = "UserControl_Terminate"
+On Error GoTo Err
+
+gLogger.Log "ChartSkil chart terminated: " & mChartID, ProcName, ModuleName, LogLevelDetail
 Debug.Print "ChartSkil chart terminated"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1388,7 +1399,7 @@ Public Property Let HorizontalScrollBarVisible(ByVal Value As Boolean)
 Const ProcName As String = "HorizontalScrollBarVisible"
 On Error GoTo Err
 
-gLogger.Log "HorizontalScrollBarVisible = " & Value, ProcName, ModuleName
+gLogger.Log mChartID & " HorizontalScrollBarVisible = " & Value, ProcName, ModuleName
 setProperty GChart.gHorizontalScrollBarVisibleProperty, Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHorizontalScrollBarVisible, Value
 PropertyChanged PropNameHorizontalScrollBarVisible
@@ -1616,7 +1627,7 @@ On Error GoTo Err
 
 Set mStyle = Value
 If mStyle Is Nothing Then Set mStyle = gChartStylesManager.DefaultStyle
-gLogger.Log "Using chart style", ProcName, ModuleName, , mStyle.Name
+gLogger.Log mChartID & " Using chart style", ProcName, ModuleName, , mStyle.Name
 mEPhost.Style = mStyle.ExtendedPropertyHost
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingStyle, mStyle.Name
 
@@ -1854,7 +1865,7 @@ Public Function ClearChart()
 Const ProcName As String = "ClearChart"
 On Error GoTo Err
 
-gLogger.Log "Clearing chart", ProcName, ModuleName
+gLogger.Log mChartID & " Clearing chart", ProcName, ModuleName
 DisableDrawing
 ChartRegionPicture(0).Visible = True
 
@@ -1867,7 +1878,7 @@ RaiseEvent ChartCleared
 mController.fireChartCleared
 Debug.Print "Chart cleared"
 
-gLogger.Log "Chart cleared", ProcName, ModuleName
+gLogger.Log mChartID & " Chart cleared", ProcName, ModuleName
 Exit Function
 
 Err:
@@ -1882,11 +1893,11 @@ Dim lCanvas As Canvas
 
 Select Case pRegionType
 Case RegionTypeData
-    Set lCanvas = createDataRegionCanvas(pRegion.handle)
+    Set lCanvas = createDataRegionCanvas(pRegion.Handle)
 Case RegionTypeXAxis
     Set lCanvas = createXAxisRegionCanvas
 Case RegionTypeYAxis
-    Set lCanvas = createYAxisRegionCanvas(pRegion.handle)
+    Set lCanvas = createYAxisRegionCanvas(pRegion.Handle)
 Case RegionTypeBackground
     Set lCanvas = createBackgroundRegionCanvas
 End Select
@@ -2503,7 +2514,7 @@ Private Sub finishBackgroundCanvas()
 Const ProcName As String = "finishBackgroundCanvas"
 On Error GoTo Err
 
-gLogger.Log "Finish background canvas", ProcName, ModuleName, LogLevelHighDetail
+gLogger.Log mChartID & " Finish background canvas", ProcName, ModuleName, LogLevelHighDetail
 If Not mBackGroundViewport Is Nothing Then mBackGroundViewport.Finish
 Set mBackGroundViewport = Nothing
 
@@ -2543,7 +2554,7 @@ Private Sub Initialise()
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLogger.Log "Initialising chart", ProcName, ModuleName
+gLogger.Log mChartID & " Initialising chart", ProcName, ModuleName
 
 Set mPeriods = New Periods
 mPeriods.Chart = Me
@@ -2574,7 +2585,7 @@ HScroll.Value = 0
 Resize True, True
 
 mInitialised = True
-gLogger.Log "Chart initialised", ProcName, ModuleName
+gLogger.Log mChartID & " Chart initialised", ProcName, ModuleName
 
 Exit Sub
 
@@ -2602,7 +2613,7 @@ On Error GoTo Err
 If pRegion Is Nothing Then Exit Sub
 
 Dim index As Long
-index = pRegion.handle
+index = pRegion.Handle
 
 Dim mapHandle As Long
 mapHandle = mRegionMap.Append(pRegion)
@@ -2641,7 +2652,7 @@ RegionDividerPicture(index).Width = ChartRegionPicture(index).Width
 pRegion.Divider = RegionDividerPicture(index)
 
 Dim yIndex As Long
-yIndex = pRegion.YAxisRegion.handle
+yIndex = pRegion.YAxisRegion.Handle
 
 Load YRegionDividerPicture(yIndex)
 YRegionDividerPicture(yIndex).Visible = False
@@ -2801,7 +2812,7 @@ mScaleLeft = calcScaleLeft
 Dim lregion As ChartRegion
 For Each lregion In mRegionMap
     Dim lYAxisPicture As PictureBox
-    Set lYAxisPicture = YAxisPicture(lregion.YAxisRegion.handle)
+    Set lYAxisPicture = YAxisPicture(lregion.YAxisRegion.Handle)
     lYAxisPicture.Width = YAxisWidthCm * TwipsPerCm
     
     If YAxisVisible Then
@@ -2809,11 +2820,11 @@ For Each lregion In mRegionMap
     Else
         lYAxisPicture.Left = UserControl.Width
     End If
-    ChartRegionPicture(lregion.handle).Width = lYAxisPicture.Left
+    ChartRegionPicture(lregion.Handle).Width = lYAxisPicture.Left
     
-    RegionDividerPicture(lregion.handle).Width = lYAxisPicture.Left
-    YRegionDividerPicture(lregion.YAxisRegion.handle).Width = lYAxisPicture.Width
-    YRegionDividerPicture(lregion.YAxisRegion.handle).Left = lYAxisPicture.Left
+    RegionDividerPicture(lregion.Handle).Width = lYAxisPicture.Left
+    YRegionDividerPicture(lregion.YAxisRegion.Handle).Width = lYAxisPicture.Width
+    YRegionDividerPicture(lregion.YAxisRegion.Handle).Left = lYAxisPicture.Left
 Next
 
 For Each lregion In mRegionMap
@@ -2891,12 +2902,12 @@ Private Function setRegionDividerLocation( _
 Const ProcName As String = "setRegionDividerLocation"
 On Error GoTo Err
 
-RegionDividerPicture(pRegion.handle).Top = currTop
-YRegionDividerPicture(pRegion.YAxisRegion.handle).Top = currTop
-If mRegionMap.IsFirst(CLng(RegionDividerPicture(pRegion.handle).Tag)) Then
+RegionDividerPicture(pRegion.Handle).Top = currTop
+YRegionDividerPicture(pRegion.YAxisRegion.Handle).Top = currTop
+If mRegionMap.IsFirst(CLng(RegionDividerPicture(pRegion.Handle).Tag)) Then
     setRegionDividerLocation = 0
 Else
-    setRegionDividerLocation = RegionDividerPicture(pRegion.handle).Height
+    setRegionDividerLocation = RegionDividerPicture(pRegion.Handle).Height
 End If
 
 Exit Function
@@ -2911,10 +2922,10 @@ Private Function setRegionViewSizeAndLocation( _
 Const ProcName As String = "setRegionViewSizeAndLocation"
 On Error GoTo Err
 
-ChartRegionPicture(pRegion.handle).Height = pRegion.ActualHeight
-YAxisPicture(pRegion.YAxisRegion.handle).Height = pRegion.ActualHeight
-ChartRegionPicture(pRegion.handle).Top = currTop
-YAxisPicture(pRegion.YAxisRegion.handle).Top = currTop
+ChartRegionPicture(pRegion.Handle).Height = pRegion.ActualHeight
+YAxisPicture(pRegion.YAxisRegion.Handle).Height = pRegion.ActualHeight
+ChartRegionPicture(pRegion.Handle).Top = currTop
+YAxisPicture(pRegion.YAxisRegion.Handle).Top = currTop
 pRegion.NotifyResizedY
 setRegionViewSizeAndLocation = pRegion.ActualHeight
 
@@ -2953,11 +2964,14 @@ Dim lChange As Boolean
 
 If suppress Then
     mSuppressDrawingCount = mSuppressDrawingCount + 1
+    gLogger.Log mChartID & " Suppress drawing (true): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelHighDetail
     If mSuppressDrawingCount = 1 Then lChange = True
 ElseIf mSuppressDrawingCount = 0 Then
+    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelHighDetail
     lChange = False
 Else
     mSuppressDrawingCount = mSuppressDrawingCount - 1
+    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelHighDetail
     If mSuppressDrawingCount = 0 Then
         Resize True, True
         lChange = True
@@ -2965,8 +2979,6 @@ Else
         lChange = False
     End If
 End If
-
-gLogger.Log "Suppress drawing count = " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelHighDetail
 
 If lChange Then
     Dim Region As ChartRegion
@@ -2982,10 +2994,10 @@ If mRegions.Count = 0 Then Exit Sub
 HScroll.Visible = HorizontalScrollBarVisible
 
 For Each Region In mRegions
-    ChartRegionPicture(Region.handle).Visible = True
-    YAxisPicture(Region.YAxisRegion.handle).Visible = True
-    RegionDividerPicture(Region.handle).Visible = True
-    YRegionDividerPicture(Region.YAxisRegion.handle).Visible = True
+    ChartRegionPicture(Region.Handle).Visible = True
+    YAxisPicture(Region.YAxisRegion.Handle).Visible = True
+    RegionDividerPicture(Region.Handle).Visible = True
+    YRegionDividerPicture(Region.YAxisRegion.Handle).Visible = True
 Next
 XAxisPicture.Visible = XAxisVisible
 
@@ -3000,12 +3012,12 @@ Private Sub unmapRegion( _
 Const ProcName As String = "unmapRegion"
 On Error GoTo Err
 
-mRegionMap.Remove CLng(ChartRegionPicture(Region.handle).Tag)
-Unload ChartRegionPicture(Region.handle)
-Unload RegionDividerPicture(Region.handle)
+mRegionMap.Remove CLng(ChartRegionPicture(Region.Handle).Tag)
+Unload ChartRegionPicture(Region.Handle)
+Unload RegionDividerPicture(Region.Handle)
 If Not Region.YAxisRegion Is Nothing Then
-    Unload YRegionDividerPicture(Region.YAxisRegion.handle)
-    Unload YAxisPicture(Region.YAxisRegion.handle)
+    Unload YRegionDividerPicture(Region.YAxisRegion.Handle)
+    Unload YAxisPicture(Region.YAxisRegion.Handle)
 End If
 Exit Sub
 

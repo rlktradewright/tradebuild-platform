@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#276.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#280.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -102,6 +102,9 @@ Private Const ConfigSettingBarFormatterLibraryName      As String = "&BarFormatt
 Private Const ConfigSettingIsHistoricChart              As String = "&IsHistoricChart"
 Private Const ConfigSettingTimePeriod                   As String = "&TimePeriod"
 
+Private Const LoadingTextFetching                       As String = "Fetching historical data"
+Private Const LoadingTextLoading                        As String = "Loading historical data"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -178,7 +181,6 @@ mPrevHeight = UserControl.Height
 
 mUpdatePerTick = True
 mMinimumTicksHeight = 10
-
 End Sub
 
 Private Sub UserControl_Resize()
@@ -248,7 +250,6 @@ If TypeOf ev.Future.Value Is IContract Then
         mReadyForDeferredStart = True
         If mDeferredStartRequested Then Start
     Else
-        initialiseChart mChartSpec.IncludeBarsOutsideSession
         prepareChart
     End If
 End If
@@ -268,10 +269,11 @@ Const ProcName As String = "mTimeframe_BarsLoaded"
 On Error GoTo Err
 
 LoadingProgressBar.Visible = False
-mLoadingText.Text = ""
+If Not mLoadingText Is Nothing Then mLoadingText.Text = ""
+gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
 Chart1.EnableDrawing
 
-setState ChartStates.ChartStateLoaded
+setState ChartStates.ChartStateRunning
 
 Exit Sub
 
@@ -279,22 +281,40 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mTimeframe_BarLoadProgress(ByVal barsRetrieved As Long, ByVal percentComplete As Single)
+Private Sub mTimeframe_BarLoadProgress(ByVal pBarsRetrieved As Long, ByVal pPercentComplete As Single)
 Const ProcName As String = "mTimeframe_BarLoadProgress"
 On Error GoTo Err
+
+setState ChartStates.ChartStateLoading
 
 If Not LoadingProgressBar.Visible Then
     LoadingProgressBar.Top = UserControl.Height - LoadingProgressBar.Height
     LoadingProgressBar.Width = UserControl.Width
     LoadingProgressBar.Left = 0
     LoadingProgressBar.Visible = True
-
-    mLoadingText.Text = "Loading historical data"
-    setState ChartStateLoading
-    Chart1.EnableDrawing
-    Chart1.DisableDrawing
+    LoadingProgressBar.ZOrder 0
 End If
-LoadingProgressBar.Value = percentComplete
+
+LoadingProgressBar.Value = pPercentComplete
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mTimeframe_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mTimeframe_StateChange"
+On Error GoTo Err
+
+Dim lState As TimeframeStates
+lState = ev.State
+Select Case lState
+Case TimeframeStateFetching
+    showLoadingText LoadingTextFetching
+Case TimeframeStateLoading
+    showLoadingText LoadingTextLoading
+End Select
 
 Exit Sub
 
@@ -852,7 +872,7 @@ Public Sub ChangeTimePeriod(ByVal pNewTimePeriod As TimePeriod)
 Const ProcName As String = "ChangeTimePeriod"
 On Error GoTo Err
 
-Assert State = ChartStateLoaded, "Can't change timeframe until chart is loaded"
+Assert State = ChartStateRunning, "Can't change timeframe until chart is loaded"
 
 gLogger.Log "Changing timeframe to", ProcName, ModuleName, , pNewTimePeriod.ToString
 
@@ -949,40 +969,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub Initialise( _
-                ByVal pTimeframes As Timeframes, _
-                ByVal pUpdatePerTick As Boolean)
-Const ProcName As String = "Initialise"
-On Error GoTo Err
-
-Assert Not mIsRaw, "Already initialised as raw"
-Set mTimeframes = pTimeframes
-Set mStudyManager = mTimeframes.StudyBase.StudyManager
-mFutureWaiter.Add mTimeframes.ContractFuture
-mUpdatePerTick = pUpdatePerTick
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub InitialiseRaw( _
-                ByVal pStudyManager As StudyManager, _
-                ByVal pUpdatePerTick As Boolean)
-Const ProcName As String = "Initialise"
-On Error GoTo Err
-
-mIsRaw = True
-Set mStudyManager = pStudyManager
-mUpdatePerTick = pUpdatePerTick
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Public Sub LoadFromConfig( _
                 ByVal pTimeframes As Timeframes, _
                 ByVal config As ConfigurationSection, _
@@ -1014,6 +1000,9 @@ mIsHistoricChart = CBool(mConfig.GetSetting(ConfigSettingIsHistoricChart, "False
 mBarFormatterFactoryName = mConfig.GetSetting(ConfigSettingBarFormatterFactoryName, "")
 mBarFormatterLibraryName = mConfig.GetSetting(ConfigSettingBarFormatterLibraryName, "")
 
+setState ChartStateBlank
+
+initialiseChart mChartSpec.IncludeBarsOutsideSession
 If Not mDeferStart Then Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, False)
 
 Exit Sub
@@ -1052,9 +1041,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ShowChart( _
+                ByVal pTimeframes As Timeframes, _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pChartSpec As ChartSpecifier, _
                 ByVal pChartStyle As ChartStyle, _
+                Optional ByVal pUpdatePerTick As Boolean = True, _
                 Optional ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 Optional ByVal pBarFormatterFactoryName As String, _
                 Optional ByVal pBarFormatterLibraryName As String, _
@@ -1067,27 +1058,44 @@ AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is N
 AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManager must be supplied"
 AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "pBarFormatterLibraryName and pBarFormatterFactoryName must both be blank or non-blank"
 
-setState ChartStateBlank
+Assert Not mIsRaw, "Already initialised as raw"
 
 If Not mTimeframes Is Nothing Then
     mInitialised = False
     Chart1.ClearChart
 End If
 
-Set mBarFormatterLibManager = pBarFormatterLibManager
+setState ChartStateBlank
 
+Set mTimeframes = pTimeframes
+Set mStudyManager = mTimeframes.StudyBase.StudyManager
 Set mTimePeriod = pTimePeriod
 Set mChartSpec = pChartSpec
-If Not pChartStyle Is Nothing Then Set mChartStyle = pChartStyle
+Set mChartStyle = pChartStyle
+
+mUpdatePerTick = pUpdatePerTick
+
+Set mBarFormatterLibManager = pBarFormatterLibManager
+
 mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
 mExcludeCurrentBar = pExcludeCurrentBar
 mTitle = pTitle
 
-storeSettings
+gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
+Chart1.DisableDrawing
+
+initialiseChart mChartSpec.IncludeBarsOutsideSession
 Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
 
-setState ChartStates.ChartStateCreated
+If Not mTimeframes.ContractFuture Is Nothing Then
+    mFutureWaiter.Add mTimeframes.ContractFuture
+Else
+    setContractProperties Nothing
+    prepareChart
+End If
+
+storeSettings
 
 Exit Sub
 
@@ -1096,8 +1104,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ShowChartRaw( _
+                ByVal pStudyManager As StudyManager, _
                 ByVal pTimeframe As Timeframe, _
                 ByVal pChartStyle As ChartStyle, _
+                Optional ByVal pUpdatePerTick As Boolean = True, _
                 Optional ByVal pLocalSymbol As String, _
                 Optional ByVal pSecType As SecurityTypes, _
                 Optional ByVal pExchange As String, _
@@ -1117,10 +1127,15 @@ AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "")
 
 setState ChartStateBlank
 
+mIsRaw = True
+Set mStudyManager = pStudyManager
+mUpdatePerTick = pUpdatePerTick
+
 Set mBarFormatterLibManager = pBarFormatterLibManager
 
 Set mTimeframe = pTimeframe
 Set mTimePeriod = mTimeframe.TimePeriod
+
 If Not pChartStyle Is Nothing Then Set mChartStyle = pChartStyle
 mLocalSymbol = pLocalSymbol
 mSecType = pSecType
@@ -1134,10 +1149,20 @@ mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
 mTitle = pTitle
 
-initialiseChart False
-prepareChart
+gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
+Chart1.DisableDrawing
 
-setState ChartStates.ChartStateCreated
+initialiseChart False
+
+If mTimeframe.State = TimeframeStateFetching Then
+    showLoadingText LoadingTextFetching
+    setState ChartStateFetching
+ElseIf mTimeframe.State = TimeframeStateLoading Then
+    showLoadingText LoadingTextLoading
+    setState ChartStateLoading
+End If
+
+prepareChart
 
 Exit Sub
 
@@ -1149,19 +1174,17 @@ Public Sub Start()
 Const ProcName As String = "Start"
 On Error GoTo Err
 
-Assert mLoadedFromConfig And mState = ChartStates.ChartStateBlank, "Start method only permitted for charts loaded from configuration and with state ChartStateBlank"
+Assert mLoadedFromConfig And mState = ChartStates.ChartStateCreated, "Start method only permitted for charts loaded from configuration and with state ChartStateCreated"
 
 If Not mReadyForDeferredStart Then
     mDeferredStartRequested = True
     Exit Sub
 End If
 
-setState ChartStates.ChartStateCreated
-
 mReadyForDeferredStart = False
 mDeferStart = False
+
 Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, False)
-initialiseChart mChartSpec.IncludeBarsOutsideSession
 prepareChart
 
 Exit Sub
@@ -1213,6 +1236,11 @@ On Error GoTo Err
 
 gLogger.Log "Creating timeframe", ProcName, ModuleName
 
+If pChartSpec.InitialNumberOfBars <> 0 Then
+    setState ChartStates.ChartStateFetching
+    showLoadingText LoadingTextFetching
+End If
+
 If pChartSpec.toTime <> CDate(0) Then
     Set createTimeframe = pTimeframes.AddHistorical(pTimePeriod, _
                                 "", _
@@ -1243,8 +1271,6 @@ On Error GoTo Err
 
 gLogger.Log "Initialising chart", ProcName, ModuleName
 
-Chart1.DisableDrawing
-
 If Not mInitialised Then
     Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, pIncludeBarsOutsideSession)
     mManager.UpdatePerTick = mUpdatePerTick
@@ -1261,8 +1287,9 @@ If Not mInitialised Then
 End If
 
 Set mPriceRegion = Chart1.Regions.Add(100, 25, , , ChartRegionNamePrice)
-setLoadingText
-Chart1.EnableDrawing
+Set mLoadingText = setupLoadingText
+
+setState ChartStates.ChartStateCreated
 
 Exit Sub
 
@@ -1275,8 +1302,6 @@ Const ProcName As String = "loadchart"
 On Error GoTo Err
 
 gLogger.Log "Loading chart", ProcName, ModuleName
-
-Chart1.DisableDrawing
 
 Chart1.TimePeriod = mTimePeriod
 
@@ -1307,33 +1332,23 @@ If mSecType = SecTypeNone Then
 ElseIf mSecType <> SecurityTypes.SecTypeCash _
     And mSecType <> SecurityTypes.SecTypeIndex _
 Then
-    On Error Resume Next
-    Set mVolumeRegion = Chart1.Regions.Item(ChartRegionNameVolume)
-    On Error GoTo Err
-
-    If mVolumeRegion Is Nothing Then Set mVolumeRegion = Chart1.Regions.Add(20, , , , ChartRegionNameVolume)
-
+    If Chart1.Regions.Contains(ChartRegionNameVolume) Then
+        Set mVolumeRegion = Chart1.Regions.Item(ChartRegionNameVolume)
+    Else
+        Set mVolumeRegion = Chart1.Regions.Add(20, , , , ChartRegionNameVolume)
+    End If
+    
     mVolumeRegion.MinimumHeight = 10
     mVolumeRegion.IntegerYScale = True
     mVolumeRegion.Title.Text = "Volume"
     mVolumeRegion.Title.Color = vbBlue
 End If
 
-If mIsRaw Then
+If mTimeframe.State = TimeframeStateLoaded Then
+    If Not mLoadingText Is Nothing Then mLoadingText.Text = ""
+    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
     Chart1.EnableDrawing
-    setState ChartStates.ChartStateInitialised
-    mLoadingText.Text = ""
-    setState ChartStates.ChartStateLoaded
-ElseIf mTimeframe.State <> TimeframeStateLoaded Then
-    mLoadingText.Text = "Fetching historical data"
-    setState ChartStates.ChartStateInitialised
-    Chart1.EnableDrawing    ' causes the loading text to appear
-    Chart1.DisableDrawing
-Else
-    Chart1.EnableDrawing
-    setState ChartStates.ChartStateInitialised
-    mLoadingText.Text = ""
-    setState ChartStates.ChartStateLoaded
+    setState ChartStates.ChartStateRunning
 End If
 
 Exit Sub
@@ -1358,8 +1373,6 @@ Private Sub prepareChart()
 Const ProcName As String = "prepareChart"
 On Error GoTo Err
 
-If mTimeframes Is Nothing Then Assert Not mTimeframe Is Nothing, "mTimeframe Is Nothing"
-    
 setupStudies
 loadchart
 
@@ -1370,46 +1383,35 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setContractProperties(ByVal pContract As IContract)
-mLocalSymbol = pContract.Specifier.LocalSymbol
-mSecType = pContract.Specifier.secType
-mExchange = pContract.Specifier.Exchange
-mTickSize = pContract.TickSize
-mSessionEndTime = pContract.SessionEndTime
-Chart1.SessionEndTime = mSessionEndTime
-mSessionStartTime = pContract.SessionStartTime
-Chart1.SessionStartTime = mSessionStartTime
-End Sub
-
-Private Sub setLoadingText()
-Const ProcName As String = "setLoadingText"
-On Error GoTo Err
-
-Set mLoadingText = mPriceRegion.AddText(, ChartSkil27.LayerNumbers.LayerHighestUser)
-Dim Font As New stdole.StdFont
-Font.Size = 18
-mLoadingText.Font = Font
-mLoadingText.Color = vbBlack
-mLoadingText.Box = True
-mLoadingText.BoxFillColor = vbWhite
-mLoadingText.BoxFillStyle = FillStyles.FillSolid
-mLoadingText.Position = NewPoint(50, 50, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsRelative)
-mLoadingText.align = TextAlignModes.AlignBoxCentreCentre
-mLoadingText.FixedX = True
-mLoadingText.FixedY = True
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+If Not pContract Is Nothing Then
+    mLocalSymbol = pContract.Specifier.LocalSymbol
+    mSecType = pContract.Specifier.secType
+    mExchange = pContract.Specifier.Exchange
+    mTickSize = pContract.TickSize
+    mSessionEndTime = pContract.SessionEndTime
+    Chart1.SessionEndTime = mSessionEndTime
+    mSessionStartTime = pContract.SessionStartTime
+    Chart1.SessionStartTime = mSessionStartTime
+Else
+    mLocalSymbol = ""
+    mSecType = SecTypeNone
+    mExchange = ""
+    mTickSize = 0.001
+    mSessionEndTime = CDate("00:00")
+    Chart1.SessionEndTime = mSessionEndTime
+    mSessionStartTime = CDate("00:00")
+    Chart1.SessionStartTime = mSessionStartTime
+End If
 End Sub
 
 Private Sub setState(ByVal Value As ChartStates)
 Const ProcName As String = "setState"
 On Error GoTo Err
 
-Dim stateEv As StateChangeEventData
-
+If mState = Value Then Exit Sub
 mState = Value
+
+Dim stateEv As StateChangeEventData
 stateEv.State = mState
 Set stateEv.Source = Me
 RaiseEvent StateChange(stateEv)
@@ -1419,6 +1421,32 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function setupLoadingText() As Text
+Const ProcName As String = "setupLoadingText"
+On Error GoTo Err
+
+Dim lText As Text
+Set lText = mPriceRegion.AddText(, ChartSkil27.LayerNumbers.LayerHighestUser)
+Dim Font As New stdole.StdFont
+Font.Size = 18
+lText.Font = Font
+lText.Color = vbBlack
+lText.Box = True
+lText.BoxFillColor = vbWhite
+lText.BoxFillStyle = FillStyles.FillSolid
+lText.Position = NewPoint(50, 50, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsRelative)
+lText.align = TextAlignModes.AlignBoxCentreCentre
+lText.FixedX = True
+lText.FixedY = True
+
+Set setupLoadingText = lText
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub setupStudies()
 Const ProcName As String = "setupStudies"
@@ -1441,6 +1469,24 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub showLoadingText(ByVal pText As String)
+Const ProcName As String = "showLoadingText"
+On Error GoTo Err
+
+mLoadingText.Text = pText
+
+gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
+Chart1.EnableDrawing    ' causes the loading text to appear
+gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
+Chart1.DisableDrawing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
 End Sub
 
 Private Sub storeSettings()

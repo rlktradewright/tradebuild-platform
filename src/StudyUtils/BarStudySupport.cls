@@ -59,15 +59,15 @@ Private mTimestamp                                  As Date
 
 Private mBarsFutureBuilder                          As FutureBuilder
 
-Private mSessionFuture                              As IFuture
+Private mSession                                    As Session
 
 Private mPriceTickSize                              As Double
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
 Private WithEvents mBars                            As Bars
 Attribute mBars.VB_VarHelpID = -1
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -175,13 +175,12 @@ Assert mBarFetchListener Is Nothing, "InitialBarFetchListener has been requested
 mInitialBarsFutureSupplied = True
 
 Set mBarsFutureBuilder = New FutureBuilder
-If Value.IsAvailable And mSessionFuture.IsAvailable Then
+If Value.IsAvailable Then
     gLogger.Log "Creating BarsBuilder with initial bars", ProcName, ModuleName, LogLevelHighDetail
-    setupBars CreateBarsBuilderWithInitialBars(Value.Value, mSessionFuture.Value, mPriceTickSize)
+    setupBars CreateBarsBuilderWithInitialBars(Value.Value, mSession, mPriceTickSize)
 Else
     gLogger.Log "Creating BarsBuilder future with initial bars", ProcName, ModuleName, LogLevelHighDetail
-    mFutureWaiter.Clear
-    mFutureWaiter.Add CreateBarsBuilderWithInitialBarsFuture(Value, mSessionFuture, mPriceTickSize)
+    mFutureWaiter.Add CreateBarsBuilderWithInitialBarsFuture(Value, mSession, mPriceTickSize)
 End If
 
 Exit Property
@@ -200,12 +199,12 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pTimePeriod As TimePeriod, _
-                ByVal pSessionFuture As IFuture, _
+                ByVal pSession As Session, _
                 ByVal pPriceTickSize As Double)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mSessionFuture = pSessionFuture
+Set mSession = pSession
 mPriceTickSize = pPriceTickSize
 
 Set mBarsFutureBuilder = New FutureBuilder
@@ -213,14 +212,10 @@ If pTimePeriod.Length = 0 Then
     setupBars CreateBarsBuilder(pTimePeriod, _
                                 Nothing, _
                                 mPriceTickSize)
-ElseIf mSessionFuture.IsAvailable Then
-    setupBars CreateBarsBuilder(pTimePeriod, _
-                                mSessionFuture.Value, _
-                                mPriceTickSize)
 Else
-    mFutureWaiter.Add CreateBarsBuilderFuture(pTimePeriod, _
-                                        mSessionFuture, _
-                                        mPriceTickSize)
+    setupBars CreateBarsBuilder(pTimePeriod, _
+                                mSession, _
+                                mPriceTickSize)
 End If
 
 Exit Sub

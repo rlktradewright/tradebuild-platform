@@ -59,15 +59,15 @@ Private Const ModuleName                As String = "ConstTimeBars"
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private mSessionFuture As IFuture
-Attribute mSessionFuture.VB_VarHelpID = -1
+Private mSession As Session
+Attribute mSession.VB_VarHelpID = -1
 
 Private WithEvents mBarStudySupport As BarStudySupport
 Attribute mBarStudySupport.VB_VarHelpID = -1
 
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
-Private WithEvents mBar As BarUtils27.Bar
+Private WithEvents mBar As Barutils27.Bar
 Attribute mBar.VB_VarHelpID = -1
 
 Private mPriceTickSize As Double
@@ -233,11 +233,11 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal UnderlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pSession As Session)
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
 
-Set mSessionFuture = pSessionFuture
+Set mSession = pSession
 
 mStudyFoundation.ReplayUsingStudyValues = True
 customProcessParameters Parameters
@@ -254,7 +254,7 @@ Private Function customGetStudyValue( _
 Const ProcName As String = "customGetStudyValue"
 On Error GoTo Err
 
-Dim Bar As BarUtils27.Bar
+Dim Bar As Barutils27.Bar
 Set Bar = mBars.Bar(ref)
 
 Dim sv As SValue
@@ -352,7 +352,7 @@ For Each param In params
     End Select
 Next
 
-Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(barLength, timeUnits), mSessionFuture, mPriceTickSize)
+Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(barLength, timeUnits), mSession, mPriceTickSize)
 If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
 
 Exit Sub
@@ -537,7 +537,7 @@ customInitialise mStudyFoundation.Id, _
                 mStudyFoundation.numberOfCachedValues, _
                 mStudyFoundation.inputValueNames, _
                 mStudyFoundation.UnderlyingStudy, _
-                mStudyFoundation.SessionFuture
+                mStudyFoundation.Session
 
 Exit Sub
 

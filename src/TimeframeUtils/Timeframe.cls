@@ -30,6 +30,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IDeferredAction
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -39,7 +41,6 @@ Event BarsLoaded()
 Event BarLoadProgress(ByVal pBarsRetrieved As Long, ByVal pPercentComplete As Single)
 
 Event StateChange(ByRef ev As StateChangeEventData)
-
 
 '@================================================================================
 ' Constants
@@ -75,6 +76,13 @@ Private mStateChangeListeners               As Listeners
 Private mIsHistorical                       As Boolean
 
 Private mContractFuture                     As IFuture
+Private mHistDataStore                      As IHistoricalDataStore
+Private mFromTime                           As Date
+Private mToTime                             As Date
+Private mBarType                            As BarTypes
+Private mIncludeBarsOutsideSession          As Boolean
+Private mExcludeCurrentbar                  As Boolean
+Private mClockFuture                        As IFuture
 
 Private WithEvents mFutureWaiter            As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -85,6 +93,8 @@ Private WithEvents mBarFetchListener        As BarFetchListener
 Attribute mBarFetchListener.VB_VarHelpID = -1
 Private mMaxNumberOfBars                    As Long
 
+Private mFetchBarsNeeded                    As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -92,22 +102,100 @@ Private mMaxNumberOfBars                    As Long
 Private Sub Class_Initialize()
 Set mStateChangeListeners = New Listeners
 Set mFutureWaiter = New FutureWaiter
+
+' We set the initial state to TimeframeStateFetching because
+' that is actually true, since the fetch is initiated as part of the
+' construction of the object.
+fireStateChange TimeframeStateFetching
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
+
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
+On Error GoTo Err
+
+If mToTime <> MaxDate Then mIsHistorical = True
+
+If mMaxNumberOfBars <> 0 Then mFetchBarsNeeded = True
+
+Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, mIncludeBarsOutsideSession)
+logAMessage "starting BarStudy", ProcName
+mStudyBase.StudyManager.StartStudy mBarStudy, 0
+
+Set mBarsFuture = mBarStudy.BarsFuture
+
+If mFetchBarsNeeded And Not mContractFuture Is Nothing And Not mHistDataStore Is Nothing Then
+    
+    Set mBarFetchListener = mBarStudy.InitialBarFetchListener
+    Set mInitialBarsFuture = mHistDataStore.FetchBars(CreateBarDataSpecifierFuture(mContractFuture, _
+                                                                mTimePeriod, _
+                                                                mFromTime, _
+                                                                mToTime, _
+                                                                mMaxNumberOfBars, _
+                                                                mBarType, _
+                                                                mClockFuture, _
+                                                                mExcludeCurrentbar, _
+                                                                mIncludeBarsOutsideSession), _
+                                                    mBarFetchListener)
+    mFutureWaiter.Add mInitialBarsFuture
+Else
+    fireStateChange TimeframeStateLoaded
+End If
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' mBarFetchListener Event Handlers
 '@================================================================================
+
+Private Sub mBarFetchListener_FetchStarted(ByVal pCookie As Variant)
+Const ProcName As String = "mBarFetchListener_FetchStarted"
+On Error GoTo Err
+
+fireStateChange TimeframeStateFetching
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mBarFetchListener_FetchDataRetrieved(ByVal pCookie As Variant)
+Const ProcName As String = "mBarFetchListener_FetchDataRetrieved"
+On Error GoTo Err
+
+fireStateChange TimeframeStateLoading
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 Private Sub mBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As BarUtils27.Bar)
 Const ProcName As String = "mBarFetchListener_NotifyBar"
 On Error GoTo Err
 
 Static sNumberOfBars As Long
-sNumberOfBars = sNumberOfBars + 1
+If sNumberOfBars < mMaxNumberOfBars Then sNumberOfBars = sNumberOfBars + 1
+
+If sNumberOfBars = 1 Then fireStateChange TimeframeStateLoading
+
+Static sETimer As ElapsedTimer
+If sETimer Is Nothing Then
+    Set sETimer = New ElapsedTimer
+    sETimer.StartTiming
+End If
+
+If sETimer.ElapsedTimeMicroseconds < 100000 Then Exit Sub
 
 Static sPercent As Single
 If mMaxNumberOfBars <> 0 Then
@@ -117,6 +205,8 @@ Else
 End If
 
 RaiseEvent BarLoadProgress(sNumberOfBars, sPercent)
+
+sETimer.StartTiming
 
 Exit Sub
 
@@ -250,36 +340,17 @@ If Not pStateChangeListener Is Nothing Then AddStateChangeListener pStateChangeL
 mKey = pKey
 Set mStudyBase = pStudyBase
 Set mContractFuture = pContractFuture
+Set mHistDataStore = pHistDataStore
 Set mTimePeriod = pBarTimePeriod
+mMaxNumberOfBars = pMaxNumberOfBars
+mBarType = pBarType
+mFromTime = pFromTime
+mToTime = pToTime
+mIncludeBarsOutsideSession = pIncludeBarsOutsideSession
+mExcludeCurrentbar = pExcludeCurrentbar
+mClockFuture = pClockFuture
 
-If pToTime <> MaxDate Then mIsHistorical = True
-
-Dim lFetchBarsNeeded As Boolean
-If pMaxNumberOfBars <> 0 Then lFetchBarsNeeded = True
-
-Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, pIncludeBarsOutsideSession)
-logAMessage "starting BarStudy", ProcName
-mStudyBase.StudyManager.StartStudy mBarStudy, 0
-
-Set mBarsFuture = mBarStudy.BarsFuture
-
-If lFetchBarsNeeded And Not mContractFuture Is Nothing And Not pHistDataStore Is Nothing Then
-    Set mInitialBarsFuture = pHistDataStore.FetchBars(CreateBarDataSpecifierFuture(pContractFuture, _
-                                                                mTimePeriod, _
-                                                                pFromTime, _
-                                                                pToTime, _
-                                                                pMaxNumberOfBars, _
-                                                                pBarType, _
-                                                                pClockFuture, _
-                                                                pExcludeCurrentbar, _
-                                                                pIncludeBarsOutsideSession), _
-                                                    mBarStudy.InitialBarFetchListener)
-    mFutureWaiter.Add mInitialBarsFuture
-    
-    fireStateChange TimeframeStateLoading
-Else
-    fireStateChange TimeframeStateLoaded
-End If
+DeferAction Me
 
 Exit Sub
 
@@ -300,14 +371,13 @@ Private Sub fireStateChange(ByVal newState As TimeframeStates)
 Const ProcName As String = "fireStateChange"
 On Error GoTo Err
 
-If newState = mState Then Exit Sub
 mState = newState
 
 If gLogger.IsLoggable(LogLevelDetail) Then
     Dim s As String
     Select Case newState
-'    Case TimeframeStateCreated
-'        s = s & "created"
+    Case TimeframeStateFetching
+        s = s & "fetching"
     Case TimeframeStateLoading
         s = s & "loading"
     Case TimeframeStateLoaded

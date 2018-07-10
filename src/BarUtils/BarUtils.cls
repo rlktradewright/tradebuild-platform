@@ -210,16 +210,16 @@ End Function
 
 Public Function CreateBarsBuilderWithInitialBarsFuture( _
                 ByVal pBarsFuture As IFuture, _
-                ByVal pSessionFuture As IFuture, _
+                ByVal pSession As Session, _
                 Optional ByVal pTickSize As Double) As IFuture
 Const ProcName As String = "CreateBarsBuilderWithInitialBarsFuture"
 On Error GoTo Err
 
 AssertArgument Not pBarsFuture Is Nothing, "pBarsFuture Is Nothing"
-AssertArgument Not pSessionFuture Is Nothing, "pSessionFuture is Nothing"
+AssertArgument Not pSession Is Nothing, "pSession is Nothing"
     
 Dim lFutureBuilder As New BarsBuilderFutureBuilder
-lFutureBuilder.InitialiseWithInitialBars pBarsFuture, pSessionFuture, pTickSize
+lFutureBuilder.InitialiseWithInitialBars pBarsFuture, pSession, pTickSize
 Set CreateBarsBuilderWithInitialBarsFuture = lFutureBuilder.Future
 
 Exit Function

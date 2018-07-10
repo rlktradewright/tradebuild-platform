@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#326.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#333.0#0"; "TradingUI27.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
@@ -419,7 +419,7 @@ On Error GoTo Err
 
 If mTicker.State = MarketDataSourceStateRunning Then
     mTicker.RemoveStateChangeListener Me
-    showChart mTicker, _
+    showTheChart mTicker, _
             CreateChartSpecifier(CLng(NumHistoryBarsText.Text), Not (SessionOnlyCheck = vbChecked)), _
             ChartStylesManager.Item(ChartStylesCombo.SelectedItem.Text)
 End If
@@ -962,16 +962,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub showChart( _
+Private Sub showTheChart( _
                 ByVal pTicker As IMarketDataSource, _
                 ByVal pSpec As ChartSpecifier, _
                 ByVal pStyle As ChartStyle)
-Const ProcName As String = "showChart"
+Const ProcName As String = "showTheChart"
 On Error GoTo Err
 
 Set mTimePeriod = TimeframeSelector1.TimePeriod
-MarketChart1.Initialise CreateTimeframes(mTicker.StudyBase, mTicker.ContractFuture, mHistDataStore, mTicker.ClockFuture), True
-MarketChart1.showChart mTimePeriod, pSpec, pStyle, mBarFormatterLibManager
+MarketChart1.ShowChart CreateTimeframes(mTicker.StudyBase, mTicker.ContractFuture, mHistDataStore, mTicker.ClockFuture), mTimePeriod, pSpec, pStyle, True, mBarFormatterLibManager
 
 ChartNavToolbar1.Initialise MarketChart1
 BarFormatterPicker1.Initialise mBarFormatterLibManager, MarketChart1

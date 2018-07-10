@@ -31,6 +31,7 @@ Option Explicit
 '@================================================================================
 
 Public Enum TimeframeStates
+    TimeframeStateFetching
     TimeframeStateLoading
     TimeframeStateLoaded
     TimeframeStateFinished

@@ -971,9 +971,7 @@ Friend Function NotifyBracketOrderClosed( _
 Const ProcName As String = "NotifyBracketOrderClosed"
 On Error GoTo Err
 
-On Error Resume Next
-mActiveBracketOrders.Remove pBracketOrder
-On Error GoTo Err
+If mActiveBracketOrders.Contains(pBracketOrder) Then mActiveBracketOrders.Remove pBracketOrder
 
 If Not mClosedBracketOrders.Contains(pBracketOrder.Key) Then
     mClosedBracketOrders.Add pBracketOrder

@@ -147,11 +147,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -249,9 +249,11 @@ Case ChartStateBlank
 
 Case ChartStateCreated
 
-Case ChartStateInitialised
+Case ChartStateFetching
 
-Case ChartStateLoaded
+Case ChartStateLoading
+
+Case ChartStateRunning
     setChartManager
     SelectItem
 End Select
@@ -323,12 +325,12 @@ Enabled = UserControl.Enabled
 End Property
 
 Public Property Let Enabled( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 On Error GoTo Err
 
-UserControl.Enabled = value
-Combo1.Enabled = value
+UserControl.Enabled = Value
+Combo1.Enabled = Value
 PropertyChanged "Enabled"
 
 Exit Property
@@ -414,11 +416,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ListWidth(ByVal value As Long)
+Public Property Let ListWidth(ByVal Value As Long)
 Const ProcName As String = "ListWidth"
 On Error GoTo Err
 
-Combo1.ListWidth = value
+Combo1.ListWidth = Value
 PropertyChanged "ListWidth"
 
 Exit Property
@@ -435,11 +437,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 Combo1.Theme = mTheme
@@ -533,7 +535,7 @@ Const ProcName As String = "attachToChart"
 On Error GoTo Err
 
 Set mMarketChart = pChart
-If mMarketChart.State = ChartStateLoaded Then
+If mMarketChart.State = ChartStateRunning Then
     setChartManager
     SelectItem
 End If

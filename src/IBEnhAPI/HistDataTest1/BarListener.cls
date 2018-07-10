@@ -87,7 +87,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IBarFetchListener_FetchDataRetrieved(ByVal pCookie As Variant)
+End Sub
+
 Private Sub IBarFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
+End Sub
+
+Private Sub IBarFetchListener_FetchStarted(ByVal pCookie As Variant)
 End Sub
 
 Private Sub IBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)

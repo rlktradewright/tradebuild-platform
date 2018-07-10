@@ -309,13 +309,13 @@ End Function
 
 Public Function CreateBarStudySupport( _
                 ByVal pTimePeriod As TimePeriod, _
-                ByVal pSessionFuture As IFuture, _
+                ByVal pSession As Session, _
                 ByVal pPriceTickSize As Double) As BarStudySupport
 Const ProcName As String = "CreateBarStudySupport"
 On Error GoTo Err
 
 Set CreateBarStudySupport = New BarStudySupport
-CreateBarStudySupport.Initialise pTimePeriod, pSessionFuture, pPriceTickSize
+CreateBarStudySupport.Initialise pTimePeriod, pSession, pPriceTickSize
 
 Exit Function
 

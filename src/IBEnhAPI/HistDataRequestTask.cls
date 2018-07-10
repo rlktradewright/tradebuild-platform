@@ -148,6 +148,7 @@ If mTaskContext.CancelPending Then
 End If
 
 If mState = Starting Then
+    If Not mListener Is Nothing Then mListener.FetchStarted mCookie
     mTaskContext.Suspend -1
     Exit Sub
 End If
@@ -173,6 +174,8 @@ ElseIf mState = RetrievingBars Then
     End If
 
 ElseIf mState = DataRetrieved Then
+    If Not mListener Is Nothing Then mListener.FetchDataRetrieved mCookie
+    
     mCurrTWSBarsCollectionIndex = mTWSBarsCollectionsIndex - 1
     mAccumulatedVolume = 0
     

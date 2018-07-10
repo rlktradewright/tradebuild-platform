@@ -1289,9 +1289,22 @@ mTickfileStreamId = pTickfileStreamId
 
 setState MarketDataSourceStateCreated
 
-mFutureWaiter.Add pClockFuture
-mFutureWaiter.Add mContractFuture
-If Not pStudyManagerFuture Is Nothing Then mFutureWaiter.Add pStudyManagerFuture
+If mContractFuture.IsAvailable And pClockFuture.IsAvailable Then
+    gLogger.Log "Contract available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    gLogger.Log "Clock available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    mClockFutureBuilder.Value = pClockFuture.Value
+    mClockFutureBuilder.Complete
+    If Not processContractAvailable Then Exit Sub
+    If pStudyManagerFuture Is Nothing Then
+        setReady
+    Else
+        mFutureWaiter.Add pStudyManagerFuture
+    End If
+Else
+    mFutureWaiter.Add pClockFuture
+    mFutureWaiter.Add mContractFuture
+    If Not pStudyManagerFuture Is Nothing Then mFutureWaiter.Add pStudyManagerFuture
+End If
 
 Exit Sub
 

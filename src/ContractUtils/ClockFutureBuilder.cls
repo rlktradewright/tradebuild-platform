@@ -132,7 +132,11 @@ On Error GoTo Err
 mIsSimulated = pIsSimulated
 mClockRate = pClockRate
 
-mFutureWaiter.Add pContractFuture
+If pContractFuture.IsAvailable Then
+    setupClock pContractFuture.Value
+Else
+    mFutureWaiter.Add pContractFuture
+End If
 
 Exit Sub
 

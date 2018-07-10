@@ -160,8 +160,6 @@ lIndex = mView.AddTimeframe(pTimeframe)
 
 mTimeframeIndexes.Add lIndex, pTimeframe.TimePeriod.ToString
 
-mView.DisablePriceDrawing lIndex
-
 If mPriceChartTimePeriod Is Nothing Then Set mPriceChartTimePeriod = pTimeframe.TimePeriod
 
 Exit Sub
@@ -536,7 +534,7 @@ Private Sub monitorTimeframe(ByVal pTimeframe As Timeframe)
 Const ProcName As String = "monitorTimeframe"
 On Error GoTo Err
 
-If pTimeframe.State = TimeframeStateLoading Then
+If pTimeframe.State = TimeframeStateFetching Or pTimeframe.State = TimeframeStateLoading Then
     mNumberOfTimeframesLoading = mNumberOfTimeframesLoading + 1
     pTimeframe.AddStateChangeListener Me
 End If

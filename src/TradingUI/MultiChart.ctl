@@ -268,7 +268,7 @@ Private Sub ChartSelectorToolbar_ButtonClick(ByVal Button As Button)
 Const ProcName As String = "ChartSelectorToolbar_ButtonClick"
 On Error GoTo Err
 
-switchToChart Button.index
+mCurrentIndex = switchToChart(Button.index)
 fireChange MultiChartSelectionChanged
 
 Exit Sub
@@ -314,7 +314,7 @@ On Error GoTo Err
 
 index = getIndexFromChartControlIndex(index)
 
-If index = mCurrentIndex And ev.State = ChartStates.ChartStateLoaded Then
+If index = mCurrentIndex And ev.State = ChartStates.ChartStateRunning Then
     ControlToolbar.Buttons("change").Enabled = True
 End If
 
@@ -642,17 +642,6 @@ On Error GoTo Err
 
 Assert Not mTimeframes Is Nothing, "Can't add non-raw charts to this MultiChart"
 
-Dim lChart As MarketChart
-Set lChart = loadChartControl
-lChart.Initialise mTimeframes, pUpdatePerTick
-
-Dim lButton As MSComctlLib.Button
-Set lButton = addChartSelectorButton(pPeriodLength)
-
-' we notify the add before calling ShowChart so that it's before
-' the ChartStates.ChartStateInitialised and ChartStates.ChartStateLoaded events
-fireChange MultiChartAdd
-
 Dim lChartSpec As ChartSpecifier
 Set lChartSpec = CreateChartSpecifier( _
                         IIf(pInitialNumberOfBars = -1, mSpec.InitialNumberOfBars, pInitialNumberOfBars), _
@@ -660,7 +649,17 @@ Set lChartSpec = CreateChartSpecifier( _
                         mSpec.FromTime, _
                         mSpec.toTime)
 
-lChart.ShowChart pPeriodLength, lChartSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
+Dim lChart As MarketChart
+Set lChart = loadChartControl
+
+Dim lButton As MSComctlLib.Button
+Set lButton = addChartSelectorButton(pPeriodLength)
+
+' we notify the add before calling lChart.ShowChart so that it's before
+' the ChartStates.ChartStateRunning event
+fireChange MultiChartAdd
+
+lChart.ShowChart mTimeframes, pPeriodLength, lChartSpec, mStyle, pUpdatePerTick, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
 
 If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
@@ -668,7 +667,7 @@ End If
 
 If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
 lButton.Value = tbrPressed
-switchToChart lButton.index
+mCurrentIndex = switchToChart(lButton.index)
 Add = mCurrentIndex
 
 fireChange MultiChartSelectionChanged
@@ -699,17 +698,18 @@ Assert mTimeframes Is Nothing, "Can't add raw charts to this MultiChart"
 
 Dim lChart As MarketChart
 Set lChart = loadChartControl
-lChart.InitialiseRaw pStudyManager, pUpdatePerTick
 
 Dim lButton As MSComctlLib.Button
 Set lButton = addChartSelectorButton(pTimeframe.TimePeriod)
 
-' we notify the add before calling ShowChart so that it's before
-' the ChartStates.ChartStateInitialised and ChartStates.ChartStateLoaded events
+' we notify the add before calling lChart.ShowChart so that it's before
+' the ChartStates.ChartStateRunning event
 fireChange MultiChartAdd
 
-lChart.ShowChartRaw pTimeframe, _
+lChart.ShowChartRaw pStudyManager, _
+                    pTimeframe, _
                     mStyle, _
+                    pUpdatePerTick, _
                     pLocalSymbol, _
                     pSecType, _
                     pExchange, _
@@ -723,7 +723,7 @@ lChart.ShowChartRaw pTimeframe, _
 
 If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
 lButton.Value = tbrPressed
-switchToChart lButton.index
+mCurrentIndex = switchToChart(lButton.index)
 AddRaw = mCurrentIndex
 
 fireChange MultiChartSelectionChanged
@@ -1033,7 +1033,7 @@ On Error GoTo Err
 AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
 
 ChartSelectorToolbar.Buttons.Item(index).Value = tbrPressed
-switchToChart index
+mCurrentIndex = switchToChart(index)
 fireChange MultiChartSelectionChanged
 
 Exit Sub
@@ -1257,7 +1257,10 @@ Dim lChart As MarketChart
 
 If index = 0 Or index > Count Then Exit Sub
 Set lChart = getChartFromIndex(index)
-If lChart.State = ChartStateLoaded Then lChart.DisableDrawing
+If lChart.State = ChartStateRunning Then
+    gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
+    lChart.DisableDrawing
+End If
 TBChart(getChartControlIndexFromIndex(index)).Visible = False
 
 Exit Sub
@@ -1356,9 +1359,10 @@ If index = 0 Then Exit Function
 
 Set lChart = getChartFromIndex(index)
 
-If lChart.State = ChartStates.ChartStateBlank Then lChart.Start
+If lChart.State = ChartStates.ChartStateCreated Then lChart.Start
 
-If lChart.State = ChartStateLoaded Then
+If lChart.State = ChartStateRunning Then
+    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
     lChart.EnableDrawing
     ControlToolbar.Buttons("change").Enabled = True
 Else
@@ -1368,7 +1372,6 @@ End If
 TBChart(getChartControlIndexFromIndex(index)).Visible = True
 TBChart(getChartControlIndexFromIndex(index)).Top = 0
 TBChart(getChartControlIndexFromIndex(index)).Height = UserControl.Height - IIf(ChartSelectorToolbar.Height > ControlToolbar.Height, ChartSelectorToolbar.Height, ControlToolbar.Height)
-mCurrentIndex = index
 
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, index
 
@@ -1429,21 +1432,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub switchToChart( _
-                ByVal index As Long)
+Private Function switchToChart( _
+                ByVal index As Long) As Long
 Const ProcName As String = "switchToChart"
 On Error GoTo Err
 
-If index = mCurrentIndex Then Exit Sub
+If index = mCurrentIndex Then Exit Function
 
 hideChart mCurrentIndex
 ShowChart index
+switchToChart = index
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub unloadChartControl(ByVal index As Long)
 Const ProcName As String = "unloadChartControl"

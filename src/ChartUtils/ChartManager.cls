@@ -113,7 +113,10 @@ If ev.ErrorNumber <> 0 Then
     Debug.Print "Task: " & ev.TaskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.ErrorMessage
 End If
 
-If Not mChartController Is Nothing Then mChartController.EnableDrawing
+If Not mChartController Is Nothing Then
+    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
+    mChartController.EnableDrawing
+End If
 
 Exit Sub
 
@@ -519,6 +522,7 @@ If oldStudyConfig.Study Is BaseStudy Then
     SetBaseStudyConfiguration newStudyConfig
     Set ReplaceStudyConfiguration = newStudyConfig.Study
 Else
+    gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
     mChartController.DisableDrawing
     
     Set ReplaceStudyConfiguration = AddStudy(newStudyConfig)
@@ -544,6 +548,7 @@ Else
     oldStudyConfig.RemoveFromConfig
     oldStudyConfig.Finish
     
+    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
     mChartController.EnableDrawing
 End If
 
@@ -634,6 +639,7 @@ If lTaskController Is Nothing Then Exit Function
 
 Set StartStudy = lTaskController
 lTaskController.AddTaskCompletionListener Me
+gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
 mChartController.DisableDrawing
 
 Exit Function
@@ -800,11 +806,13 @@ Private Sub doUnApplyStudyConfiguration( _
 Const ProcName As String = "doUnApplyStudyConfiguration"
 On Error GoTo Err
 
+gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
 mChartController.DisableDrawing
 
 removeStudyValueListeners pStudyConfig
 removeHorizontalRules pStudyConfig
 
+gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
 mChartController.EnableDrawing
 
 Exit Sub
@@ -921,6 +929,7 @@ Set lTaskCompletion = Study.AddStudyValueListener( _
 
 If Not lTaskCompletion Is Nothing Then
     lTaskCompletion.AddTaskCompletionListener Me
+    gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
     mChartController.DisableDrawing
 End If
 

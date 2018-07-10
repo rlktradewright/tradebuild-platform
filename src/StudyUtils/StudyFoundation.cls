@@ -82,7 +82,7 @@ Private mReplayUsingStudyValues As Boolean
 
 Private mNumberOfValuesToCache As Long
 
-Private mSessionFuture As IFuture
+Private mSession As Session
 
 '@================================================================================
 ' Class Event Handlers
@@ -237,8 +237,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get SessionFuture() As IFuture
-Set SessionFuture = mSessionFuture
+Public Property Get Session() As Session
+Set Session = mSession
 End Property
 
 Public Property Get StudyManager() As StudyManager
@@ -448,7 +448,7 @@ Public Sub Initialise( _
                 ByVal pNumberOfValuesToCache As Long, _
                 ByRef InputValueNames() As String, _
                 ByVal pUnderlyingStudy As IStudy, _
-                ByVal pSessionFuture As IFuture)
+                ByVal pSession As Session)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -472,7 +472,7 @@ mListeners.DefaultValueName = Study.StudyDefinition.DefaultValueName
 mNumberOfValuesToCache = pNumberOfValuesToCache
 createValueCaches mNumberOfValuesToCache
 
-Set mSessionFuture = pSessionFuture
+Set mSession = pSession
 
 Exit Sub
 

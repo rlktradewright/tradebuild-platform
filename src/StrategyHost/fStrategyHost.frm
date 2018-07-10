@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#327.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#336.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
@@ -1147,9 +1147,11 @@ On Error GoTo Err
 If pTimeframeIndex = 0 Then
     Dim i As Long
     For i = 1 To PriceChart.Count
+        gLog "DisableDrawing " & i, ProcName, ModuleName, , LogLevelHighDetail
         PriceChart.BaseChartController(i).DisableDrawing
     Next
 Else
+    gLog "DisableDrawing " & pTimeframeIndex, ProcName, ModuleName, , LogLevelHighDetail
     PriceChart.BaseChartController(pTimeframeIndex).DisableDrawing
 End If
 
@@ -1163,6 +1165,7 @@ Private Sub IStrategyHostView_DisableProfitDrawing()
 Const ProcName As String = "IStrategyHostView_DisableProfitDrawing"
 On Error GoTo Err
 
+gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
 ProfitChart.DisableDrawing
 
 Exit Sub
@@ -1181,6 +1184,7 @@ Private Sub IStrategyHostView_DisableTradeDrawing()
 Const ProcName As String = "IStrategyHostView_DisableTradeDrawing"
 On Error GoTo Err
 
+gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
 TradeChart.DisableDrawing
 
 Exit Sub
@@ -1196,9 +1200,11 @@ On Error GoTo Err
 If pTimeframeIndex = 0 Then
     Dim i As Long
     For i = 1 To PriceChart.Count
+        gLog "EnableDrawing " & i, ProcName, ModuleName, , LogLevelHighDetail
         PriceChart.BaseChartController(i).EnableDrawing
     Next
 Else
+    gLog "EnableDrawing " & pTimeframeIndex, ProcName, ModuleName, , LogLevelHighDetail
     PriceChart.BaseChartController(pTimeframeIndex).EnableDrawing
 End If
 
@@ -1212,6 +1218,7 @@ Private Sub IStrategyHostView_EnableProfitDrawing()
 Const ProcName As String = "IStrategyHostView_EnableProfitDrawing"
 On Error GoTo Err
 
+gLog "EnableDrawing", ProcName, ModuleName, , LogLevelHighDetail
 ProfitChart.EnableDrawing
 
 Exit Sub
@@ -1229,6 +1236,7 @@ Private Sub IStrategyHostView_EnableTradeDrawing()
 Const ProcName As String = "IStrategyHostView_EnableTradeDrawing"
 On Error GoTo Err
 
+gLog "EnableDrawing", ProcName, ModuleName, , LogLevelHighDetail
 TradeChart.EnableDrawing
 
 Exit Sub
@@ -1979,11 +1987,13 @@ Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-ProfitChart.Initialise CreateTimeframes(mProfitStudyBase), Not mModel.IsTickReplay
+gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
 ProfitChart.DisableDrawing
-ProfitChart.ShowChart GetTimePeriod(1, TimePeriodDay), _
+ProfitChart.ShowChart CreateTimeframes(mProfitStudyBase), _
+                        GetTimePeriod(1, TimePeriodDay), _
                         CreateChartSpecifier(0), _
                         mChartStyle, _
+                        Not mModel.IsTickReplay, _
                         pTitle:="Profit by Session"
 ProfitChart.PriceRegion.YScaleQuantum = 0.01
 
@@ -2005,11 +2015,13 @@ Set mTradeStudyBase = CreateStudyBaseForDoubleInput( _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-TradeChart.Initialise CreateTimeframes(mTradeStudyBase), Not mModel.IsTickReplay
+gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
 TradeChart.DisableDrawing
-TradeChart.ShowChart GetTimePeriod(0, TimePeriodNone), _
+TradeChart.ShowChart CreateTimeframes(mTradeStudyBase), _
+                    GetTimePeriod(0, TimePeriodNone), _
                     CreateChartSpecifier(0), _
                     mChartStyle, _
+                    Not mModel.IsTickReplay, _
                     pTitle:="Profit by Trade"
 TradeChart.PriceRegion.YScaleQuantum = 0.01
 

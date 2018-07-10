@@ -346,7 +346,7 @@ lIndex = mFirstPendingRequestsEntry
 Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
     lCurrIndex = lIndex
     lIndex = mRequests(lIndex).Next
-    If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for", ModuleName, ProcName, mRequests(lCurrIndex).Contract.ToString, LogLevelDetail
+    If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for ", ModuleName, ProcName, mRequests(lCurrIndex).Contract.ToString, LogLevelDetail
     mTwsAPI.RequestContractDetails lCurrIndex, mRequests(lCurrIndex).Contract
         
     mConcurrentRequests = mConcurrentRequests + 1

@@ -80,9 +80,6 @@ Private mSessionBuilder As SessionBuilder
 
 Private mResult As ValueReplayResult
 
-Private WithEvents mFutureWaiter As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -202,25 +199,6 @@ Set mTaskContext = RHS
 End Property
 
 '@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If Not ev.Future.IsAvailable Then Exit Sub
-
-Set mSessionBuilder = ev.Future.Value
-mTaskContext.Continue
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' Properties
 '@================================================================================
 
@@ -281,15 +259,7 @@ If TypeOf Target Is IStudy Then
     Set mTargetStudy = Target
     Set mStudyToNotify = mTargetStudy.BaseStudy
     
-    Dim lSessionBuilderFuture As IFuture
-    Set lSessionBuilderFuture = pStudyManager.GetStudyEntry(mTargetStudy).SessionBuilderFuture
-    
-    If lSessionBuilderFuture.IsAvailable Then
-        Set mSessionBuilder = lSessionBuilderFuture.Value
-    Else
-        Set mFutureWaiter = New FutureWaiter
-        mFutureWaiter.Add lSessionBuilderFuture
-    End If
+    Set mSessionBuilder = pStudyManager.GetStudyEntry(mTargetStudy).SessionBuilder
     
     mNotifyName = mTargetStudy.StudyDefinition.StudyInputDefinitions.Item(1).Name
     mNotifyNames(0) = mNotifyName
@@ -330,8 +300,6 @@ End Sub
 Private Sub doCancel()
 Const ProcName As String = "doCancel"
 On Error GoTo Err
-
-If Not mFutureWaiter Is Nothing Then mFutureWaiter.Cancel
 
 mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
 mTaskContext.Finish mResult, True

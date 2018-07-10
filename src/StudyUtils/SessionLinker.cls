@@ -101,21 +101,21 @@ Friend Sub Link(ByVal pStudyManager As StudyManager, ByVal pStudy As IStudy)
 Const ProcName As String = "Link"
 On Error GoTo Err
 
-Dim lSessionFuture As IFuture
-Set lSessionFuture = CreateSessionFuture(pStudyManager.GetStudyEntry(pStudy).SessionBuilderFuture)
-If lSessionFuture.IsAvailable Then
-    Set mStudySession = lSessionFuture.Value
-Else
-    mFutureWaiter.Add lSessionFuture, "studysession"
-End If
-
-If pStudyManager.SessionFuture.IsAvailable Then
-    Set mSessionToLinkTo = pStudyManager.SessionFuture.Value
-Else
-    mFutureWaiter.Add pStudyManager.SessionFuture, "mainsession"
-End If
-
-checkLink
+'Dim lSessionFuture As IFuture
+'Set lSessionFuture = CreateSessionFuture(pStudyManager.GetStudyEntry(pStudy).SessionBuilderFuture)
+'If lSessionFuture.IsAvailable Then
+'    Set mStudySession = lSessionFuture.Value
+'Else
+'    mFutureWaiter.Add lSessionFuture, "studysession"
+'End If
+'
+'If pStudyManager.SessionFuture.IsAvailable Then
+'    Set mSessionToLinkTo = pStudyManager.SessionFuture.Value
+'Else
+'    mFutureWaiter.Add pStudyManager.SessionFuture, "mainsession"
+'End If
+'
+'checkLink
 
 Exit Sub
 

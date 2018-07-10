@@ -571,22 +571,24 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As StateChangeEventData)
 Const ProcName As String = "MultiChart1_ChartStateChanged"
 On Error GoTo Err
 
+Dim lChart As MarketChart
+Set lChart = ev.Source
+
 Dim LoadingText As Text
+
 Select Case ev.State
 Case ChartStateBlank
 
 Case ChartStateCreated
-
-Case ChartStateInitialised
-    Set LoadingText = MultiChart1.LoadingText(index)
+    Set LoadingText = lChart.LoadingText
     LoadingText.Box = True
+    LoadingText.BoxFillStyle = FillTransparent
     LoadingText.BoxFillWithBackgroundColor = True
     LoadingText.BoxThickness = 1
     LoadingText.BoxStyle = LineInvisible
@@ -596,11 +598,21 @@ Case ChartStateInitialised
     LoadingText.align = AlignBottomCentre
     LoadingText.Position = NewPoint(50, 0.2, CoordsRelative, CoordsDistance)
     LoadingText.Text = "Fetching historical data"
+    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
+    lChart.EnableDrawing    ' causes the loading text to appear
+    gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
+    lChart.DisableDrawing
+Case ChartStateFetching
+
 Case ChartStateLoading
-    Set LoadingText = MultiChart1.LoadingText(index)
+    Set LoadingText = lChart.LoadingText
     LoadingText.Color = vbGreen
     LoadingText.Text = "Loading historical data"
-Case ChartStateLoaded
+    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
+    lChart.EnableDrawing    ' causes the loading text to appear
+    gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
+    lChart.DisableDrawing
+Case ChartStateRunning
 
 End Select
 

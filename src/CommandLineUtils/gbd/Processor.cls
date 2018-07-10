@@ -97,11 +97,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IBarFetchListener_FetchDataRetrieved(ByVal pCookie As Variant)
+Const ProcName As String = "IBarFetchListener_FetchDataRetrieved"
+On Error GoTo Err
+
+gLogDataRetrieved
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub IBarFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
 Const ProcName As String = "IBarFetchListener_FetchFailed"
 On Error GoTo Err
 
 gCon.WriteLineToConsole "Fetch failed: " & pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBarFetchListener_FetchStarted(ByVal pCookie As Variant)
+Const ProcName As String = "IBarFetchListener_FetchStarted"
+On Error GoTo Err
+
+gCon.WriteLineToConsole "Fetch started"
 
 Exit Sub
 

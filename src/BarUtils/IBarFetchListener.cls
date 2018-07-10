@@ -70,10 +70,16 @@ End Sub
 Public Sub FetchCompleted(ByVal pCookie As Variant)
 End Sub
 
+Public Sub FetchDataRetrieved(ByVal pCookie As Variant)
+End Sub
+
 Public Sub FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
 End Sub
 
 Public Sub NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)
+End Sub
+
+Public Sub FetchStarted(ByVal pCookie As Variant)
 End Sub
 
 '@================================================================================

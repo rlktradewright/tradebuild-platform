@@ -32,7 +32,11 @@ Event FetchCancelled(ByVal pCookie As Variant)
 
 Event FetchCompleted(ByVal pCookie As Variant)
 
+Event FetchDataRetrieved(ByVal pCookie As Variant)
+
 Event FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
+
+Event FetchStarted(ByVal pCookie As Variant)
 
 Event NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)
 
@@ -70,8 +74,16 @@ Private Sub IBarFetchListener_FetchCompleted(ByVal pCookie As Variant)
 RaiseEvent FetchCompleted(pCookie)
 End Sub
 
+Private Sub IBarFetchListener_FetchDataRetrieved(ByVal pCookie As Variant)
+RaiseEvent FetchDataRetrieved(pCookie)
+End Sub
+
 Private Sub IBarFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
 RaiseEvent FetchFailed(pCookie, pErrorCode, pErrorMessage, pErrorSource)
+End Sub
+
+Private Sub IBarFetchListener_FetchStarted(ByVal pCookie As Variant)
+RaiseEvent FetchStarted(pCookie)
 End Sub
 
 Private Sub IBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)

@@ -82,9 +82,6 @@ Private mSessionBuilder As SessionBuilder
 
 Private mResult As ValueReplayResult
 
-Private WithEvents mFutureWaiter As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -213,8 +210,8 @@ Public Property Get Discriminator() As Long
 Discriminator = 0
 End Property
 
-Public Property Get notifyName() As String
-notifyName = mNotifyName
+Public Property Get NotifyName() As String
+NotifyName = mNotifyName
 End Property
 
 Public Property Get NotifyNames() As String()
@@ -280,15 +277,7 @@ If TypeOf Target Is IStudy Then
     Set lTargetStudy = Target
     Set mStudyToNotify = lTargetStudy.BaseStudy
     
-    Dim lSessionBuilderFuture As IFuture
-    Set lSessionBuilderFuture = pStudyManager.GetStudyEntry(lTargetStudy).SessionBuilderFuture
-    
-    If lSessionBuilderFuture.IsAvailable Then
-        Set mSessionBuilder = lSessionBuilderFuture.Value
-    Else
-        Set mFutureWaiter = New FutureWaiter
-        mFutureWaiter.Add lSessionBuilderFuture
-    End If
+    Set mSessionBuilder = pStudyManager.GetStudyEntry(lTargetStudy).SessionBuilder
     
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then
         ' just replay the number of values needed by the study
@@ -330,8 +319,6 @@ Private Sub doCancel()
 Const ProcName As String = "doCancel"
 On Error GoTo Err
 
-If Not mFutureWaiter Is Nothing Then mFutureWaiter.Cancel
-
 mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
 mTaskContext.Finish mResult, True
 Set mTaskContext = Nothing
@@ -342,7 +329,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub notifyValue(ByRef pValue As SValue, ByVal pNotifyName As String)
+Private Sub NotifyValue(ByRef pValue As SValue, ByVal pNotifyName As String)
 Const ProcName As String = "notifyValue"
 On Error GoTo Err
 
@@ -376,7 +363,7 @@ For i = 0 To UBound(mReplayValueNames)
         processValue = True
         Dim valueEntry As SValue
         valueEntry = mSourceStudy.GetStudyValue(mReplayValueNames(i), pValueNumber)
-        notifyValue valueEntry, mReplayNotifyNames(i)
+        NotifyValue valueEntry, mReplayNotifyNames(i)
     End If
 Next
 

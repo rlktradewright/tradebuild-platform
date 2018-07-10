@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#336.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Historical Data Tester"
    ClientHeight    =   10380
@@ -25,7 +25,7 @@ Begin VB.Form Form1
       Top             =   120
       Width           =   3615
       _ExtentX        =   6376
-      _ExtentY        =   5556
+      _ExtentY        =   6191
       ForeColor       =   -2147483640
       ModeAdvanced    =   -1  'True
    End
@@ -159,7 +159,7 @@ SetupDefaultLogging Command
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
 
 mClientId = 74889561
-Set mClient = GetClient("Sven", 7497, mClientId, , , , Me)
+Set mClient = GetClient("Essy", 7497, mClientId, , , , Me)
 Set mContractStore = mClient.GetContractStore
 Set mHistDataStore = mClient.GetHistoricalDataStore
 
@@ -240,12 +240,12 @@ On Error GoTo Err
 Dim lBarSpecFuture As IFuture
 Dim lContractSpec As IContractSpecifier
 
-Set lContractSpec = CreateContractSpecifier("ZZ3", "Z", "LIFFE", SecTypeFuture, "GBP", "201312")
+Set lContractSpec = CreateContractSpecifier("ZZ7", "Z", "ICEEU", SecTypeFuture, "GBP", "201712")
 
 Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
                 GetTimePeriod(1, TimePeriodMinute), _
-                CDate("2013/11/01 08:00"), _
-                CDate("2013/12/15 12:00"), _
+                CDate("2017/11/01 08:00"), _
+                CDate("2017/12/15 12:00"), _
                 10000, _
                 BarTypeTrade, _
                 , _
@@ -275,13 +275,13 @@ Const ProcName As String = "FetchConstRangeButton_Click"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = CreateContractSpecifier("ZZ3", "Z", "LIFFE", SecTypeFuture, "GBP", "201312")
+Set lContractSpec = CreateContractSpecifier("ZZ7", "Z", "ICEEU", SecTypeFuture, "GBP", "201712")
 
 Dim lBarSpecFuture As IFuture
 Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
                 GetTimePeriod(10, TimePeriodTickMovement), _
-                CDate("2013/11/01 08:00"), _
-                CDate("2013/12/15 12:00"), _
+                CDate("2017/11/01 08:00"), _
+                CDate("2017/12/15 12:00"), _
                 500, _
                 BarTypeTrade, _
                 , _

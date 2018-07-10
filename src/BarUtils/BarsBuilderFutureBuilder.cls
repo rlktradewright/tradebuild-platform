@@ -48,10 +48,7 @@ Private mFutureBuilder                              As New FutureBuilder
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mBarTimePeriod                              As TimePeriod
 Private mTickSize                                   As Double
-Private mNumberOfBarsToCache                        As Long
-Private mSave                                       As Boolean
 
 Private mSession                                    As Session
 Private mBars                                       As Bars
@@ -72,27 +69,6 @@ End Sub
 ' mFutureWaiter Event Handlers
 '@================================================================================
 
-Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
-On Error GoTo Err
-
-Dim lBarsBuilder As New BarsBuilder
-If mBars Is Nothing Then
-    lBarsBuilder.Initialise mBarTimePeriod, mSession, mTickSize, mNumberOfBarsToCache, mSave
-Else
-    lBarsBuilder.InitialiseWithInitialBars mBars, mSession, mTickSize
-End If
-
-gLogger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
-mFutureBuilder.Value = lBarsBuilder
-mFutureBuilder.Complete
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
@@ -103,12 +79,17 @@ If ev.Future.IsFaulted Then
 ElseIf ev.Future.IsCancelled Then
     mFutureBuilder.Cancel
     mFutureWaiter.Clear
-ElseIf TypeOf ev.Future.Value Is Session Then
-    gLogger.Log "Got session", ProcName, ModuleName, LogLevelHighDetail
-    Set mSession = ev.Future.Value
 ElseIf TypeOf ev.Future.Value Is Bars Then
     gLogger.Log "Got bars", ProcName, ModuleName, LogLevelHighDetail
     Set mBars = ev.Future.Value
+
+    Dim lBarsBuilder As New BarsBuilder
+    lBarsBuilder.InitialiseWithInitialBars mBars, mSession, mTickSize
+    
+    gLogger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
+    mFutureBuilder.Value = lBarsBuilder
+    mFutureBuilder.Complete
+    
 End If
 
 Exit Sub
@@ -139,19 +120,19 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pBarTimePeriod As TimePeriod, _
-                ByVal pSessionFuture As IFuture, _
+                ByVal pSession As Session, _
                 ByVal pTickSize As Double, _
                 ByVal pNumberOfBarsToCache As Long, _
                 ByVal pSave As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mBarTimePeriod = pBarTimePeriod
-mTickSize = pTickSize
-mNumberOfBarsToCache = pNumberOfBarsToCache
-mSave = pSave
+Dim lBarsBuilder As New BarsBuilder
+lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pSave
 
-mFutureWaiter.Add pSessionFuture
+gLogger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
+mFutureBuilder.Value = lBarsBuilder
+mFutureBuilder.Complete
 
 Exit Sub
 
@@ -161,7 +142,7 @@ End Sub
 
 Friend Sub InitialiseWithInitialBars( _
                 ByVal pBarsFuture As IFuture, _
-                ByVal pSessionFuture As IFuture, _
+                ByVal pSession As Session, _
                 ByVal pTickSize As Double)
 Const ProcName As String = "InitialiseWithInitialBars"
 On Error GoTo Err
@@ -169,7 +150,7 @@ On Error GoTo Err
 mTickSize = pTickSize
 
 mFutureWaiter.Add pBarsFuture
-mFutureWaiter.Add pSessionFuture
+Set mSession = pSession
 
 Exit Sub
 
