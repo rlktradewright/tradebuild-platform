@@ -201,12 +201,12 @@ Friend Sub Initialise(ByVal pSocketHandler As SocketHandler)
 Set mSocketHandler = pSocketHandler
 End Sub
 
-Friend Sub Send(Optional ByVal ignoreLogLevel As Boolean)
+Friend Sub Send(Optional ByVal forceLogMessage As Boolean)
 Const ProcName As String = "send"
 
 On Error GoTo Err
 
-logSocketOutputMessage ignoreLogLevel
+logSocketOutputMessage forceLogMessage
 
 ReDim Preserve mOutputBuffer(mOutputBufferIndex - 1) As Byte
 mSocketHandler.Send mOutputBuffer
@@ -223,12 +223,12 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub logSocketOutputMessage(Optional ByVal ignoreLogLevel As Boolean)
+Private Sub logSocketOutputMessage(Optional ByVal forceLogMessage As Boolean)
 Const ProcName As String = "logSocketOutputMessage"
 On Error GoTo Err
 
-If ignoreLogLevel Then
-    gSocketLogger.Log mOutMessageBuilder.ToString, ProcName, ModuleName
+If forceLogMessage Then
+    gSocketLogger.Log mOutMessageBuilder.ToString, ProcName, ModuleName, LogLevelSevere
 ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
     gSocketLogger.Log mOutMessageBuilder.ToString, ProcName, ModuleName, LogLevelHighDetail
 End If

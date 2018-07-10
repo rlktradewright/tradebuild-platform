@@ -50,7 +50,7 @@ End Type
 
 Private Const ModuleName                            As String = "InputMessageHandler"
 
-Private Const ReqdServerVersion                     As Long = MIN_SERVER_VER_SCALE_ORDERS3
+Private Const ReqdServerVersion                     As Long = MIN_SERVER_VER_SCALE_TABLE
 
 '@================================================================================
 ' Member variables
@@ -1940,14 +1940,14 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Private Sub logSocketInputMessage(Optional ByVal pIgnoreLogLevel As Boolean)
+Private Sub logSocketInputMessage(Optional ByVal pForceLogMessage As Boolean)
 Const ProcName As String = "logSocketInputMessage"
 On Error GoTo Err
 
 If Not mLogTwsMessages Then Exit Sub
 
-If pIgnoreLogLevel Then
-    gSocketLogger.Log mReader.Message, ProcName, ModuleName, LogLevelNormal
+If pForceLogMessage Then
+    gSocketLogger.Log mReader.Message, ProcName, ModuleName, LogLevelSevere
 ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
     gSocketLogger.Log mReader.Message, ProcName, ModuleName, LogLevelHighDetail
 End If
@@ -1962,42 +1962,44 @@ Private Sub negotiateConnection()
 Const ProcName As String = "negotiateConnection"
 On Error GoTo Err
 
-Dim lTrashLong As Long
-Dim lTrashString As String
-Dim lServerTime As String
+Dim lString1 As String
+Dim lString2 As String
+
+Dim lFieldNumber As Long
+lFieldNumber = 1
 
 mReader.BeginMessage True
-' first data received is plain Server pVersion number
-mReader.GetLongCheckpointed mServerVersion, "Server Version"
+' With a new connection, the first data received is plain server version number,
+' followed by the time at the server. However in some circumstances (eg after
+' reconnection following a read timeout on the socket) TWS may send invalid information
+' before the server version and server time. So we just read and discard until we
+' identify the server version followed by a time that's close to the current time (say
+' within 5 seconds).
 
-' in some circumstances, some versions of Tws send malformed
-' ERR_MSG messages before sending the pVersion number, so we
-' need to skip these if they occur. (They are malformed in that
-' they don't include the id or error code.)
+lString1 = mReader.GetString("Field 1")
 
-Do While mServerVersion = TwsSocketInMsgTypes.ERR_MSG
-    mReader.BeginCheckpointScope
-        mReader.GetLongCheckpointed lTrashLong, "Invalid pVersion"
-            
-        mReader.GetStringCheckpointed lTrashString, "Invalid errormsg"
-        
-        logSocketInputMessage
-        mReader.EndMessage
-        
-        mReader.BeginMessage True
-        mReader.GetLongCheckpointed mServerVersion, "Server pVersion"
-    mReader.EndCheckpointScope
+Dim lServerTime As Date
+Dim lTimezone As String
+
+Do
+    lFieldNumber = lFieldNumber + 1
+    lString2 = mReader.GetString("Field " & lFieldNumber)
+    
+    If IsInteger(lString1, MIN_SERVER_VER_SCALE_TABLE) Then
+        lServerTime = gGetDate(lString2, lTimezone)
+        If Abs(Now - lServerTime) <= 5# * OneSecond Then
+            mServerVersion = CInt(lString1)
+            Exit Do
+        End If
+    End If
+    lString1 = lString2
 Loop
 
-logSocketInputMessage
+logSocketInputMessage pForceLogMessage:=True
 mReader.EndMessage
 
-If mServerVersion >= 20 Then
-    mReader.BeginMessage True
-    If mReader.GetStringCheckpointed(lServerTime, "TWS Time") Then gLog "TWS Time at connection", ModuleName, ProcName, lServerTime
-    logSocketInputMessage
-    mReader.EndMessage
-End If
+gLog "Server version", ModuleName, ProcName, CStr(mServerVersion)
+gLog "TWS Time at connection", ModuleName, ProcName, FormatTimestamp(lServerTime, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & " " & lTimezone
 
 Assert mServerVersion >= ReqdServerVersion, "TWS is out of date and needs to be upgraded"
 

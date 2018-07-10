@@ -285,7 +285,7 @@ End Function
 
 ' format is yyyymmdd [hh:mm:ss [timezone]]
 Public Function gGetDate( _
-                ByRef pDateString As String, _
+                ByVal pDateString As String, _
                 Optional ByRef pTimezoneName As String) As Date
 Const ProcName As String = "gGetDate"
 On Error GoTo Err
@@ -316,7 +316,10 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
+If Err.Number <> VBErrorCodes.VbErrTypeMismatch And _
+    Err.Number <> ErrorCodes.ErrIllegalArgumentException Then
+    gHandleUnexpectedError Nothing, ProcName, ModuleName
+End If
 End Function
 
 Public Function gGetDateFromUnixSystemTime(ByVal pSystemTime As Double) As Date

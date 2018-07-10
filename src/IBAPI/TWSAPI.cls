@@ -246,9 +246,9 @@ On Error GoTo Err
 
 gLog "Connecting to Tws: negotiating versions and client id", ModuleName, ProcName
 mWriter.AddString ClientVersion, "Client version"
-mWriter.Send
+mWriter.Send forceLogMessage:=True
 mWriter.AddString mClientID, "Client id"
-mWriter.Send
+mWriter.Send forceLogMessage:=True
 
 mInMessageHandler.Reset
 createPerformanceLoggers
@@ -1289,7 +1289,7 @@ mWriter.AddMessageId REQ_ACCT_DATA
 mWriter.AddString VERSION, "Version"
 mWriter.AddBoolean subscribe, "Subscribe"
 
-If mServerVersion >= 9 Then mWriter.AddString acctCode, "Account code"
+mWriter.AddString acctCode, "Account code"
 
 mWriter.Send
 
@@ -1384,28 +1384,26 @@ mWriter.AddString VERSION, "Version"
 
 mWriter.AddString getTwsExecutionsRequestIdFromCallersRequestId(pRequestId), "ReqId"
 
-If mServerVersion >= 9 Then
-    Dim theFilter As TwsExecutionFilter
-    If filter Is Nothing Then
-        Set theFilter = New TwsExecutionFilter
-    Else
-        Set theFilter = filter
-    End If
-    
-    With theFilter
-        mWriter.AddString .ClientID, "Client id"
-        mWriter.AddString .AccountCode, "Account code"
-        If .Time = Int(.Time) Then
-            mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd"), ""), "Fill Time"
-        Else
-            mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
-        End If
-        mWriter.AddString .Symbol, "Symbol"
-        mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
-        mWriter.AddString .Exchange, "Exchange"
-        mWriter.AddString gTwsOrderActionToString(.Action), "Action"
-    End With
+Dim theFilter As TwsExecutionFilter
+If filter Is Nothing Then
+    Set theFilter = New TwsExecutionFilter
+Else
+    Set theFilter = filter
 End If
+
+With theFilter
+    mWriter.AddString .ClientID, "Client id"
+    mWriter.AddString .AccountCode, "Account code"
+    If .Time = Int(.Time) Then
+        mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd"), ""), "Fill Time"
+    Else
+        mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
+    End If
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Exchange, "Exchange"
+    mWriter.AddString gTwsOrderActionToString(.Action), "Action"
+End With
 
 mWriter.Send
 
@@ -1422,8 +1420,6 @@ On Error GoTo Err
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
-
-Assert mServerVersion >= 13, "Server version does not support RequestFA", ErrorCodes.ErrUnsupportedOperationException
 
 mWriter.AddMessageId REQ_FA
 mWriter.AddString VERSION, "Version"
@@ -2048,15 +2044,7 @@ With pContract
         mWriter.AddBoolean False, "Under comp"
     End If
     
-    If mServerVersion >= 31 Then
-         ' Note: Even though SHORTABLE tick type supported only
-         '       starting server version 33 it would be relatively
-         '       expensive to expose this restriction here.
-         '
-         '       Therefore we are relying on Tws doing validation.
-         '
-        mWriter.AddString pGenericTicks, "Generic tick list"
-    End If
+    mWriter.AddString pGenericTicks, "Generic tick list"
     
     mWriter.AddBoolean pSnapshot, "Snapshot"
     
@@ -2092,12 +2080,12 @@ With pContract
     mWriter.AddString .Expiry, "Expiry"
     mWriter.AddDouble .Strike, "Strike"
     mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
-    If mServerVersion >= 15 Then mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
     mWriter.AddString .Exchange, "Exchange"
     mWriter.AddString .CurrencyCode, "Currency"
     mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
     If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "Trading Class"
-    If mServerVersion >= 19 Then mWriter.AddString pNumberOfRows, "Num rows"
+    mWriter.AddString pNumberOfRows, "Num rows"
 End With
 mWriter.Send
 
