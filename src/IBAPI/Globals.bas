@@ -283,7 +283,8 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-' format is yyyymmdd [hh:mm:ss [timezone]]
+' format is yyyymmdd [hh:mm:ss [timezone]]. There can be more than one space
+' between the date, time and timezone parts
 Public Function gGetDate( _
                 ByVal pDateString As String, _
                 Optional ByRef pTimezoneName As String) As Date
@@ -292,34 +293,41 @@ On Error GoTo Err
 
 If pDateString = "" Then Exit Function
 
-If Len(pDateString) = 8 Then
-    gGetDate = CDate(Left$(pDateString, 4) & "/" & _
-                    Mid$(pDateString, 5, 2) & "/" & _
-                    Mid$(pDateString, 7, 2))
-ElseIf Len(pDateString) >= 17 Then
-    gGetDate = CDate(Left$(pDateString, 4) & "/" & _
-                        Mid$(pDateString, 5, 2) & "/" & _
-                        Mid$(pDateString, 7, 2) & " " & _
-                        Mid$(pDateString, 11, 8))
-Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid date string format"
-End If
+Dim ar() As String
+ar = Split(pDateString, " ")
 
-If IsMissing(pTimezoneName) Then Exit Function
+Dim lDatePart As String
+lDatePart = ar(0)
 
-If Len(pDateString) > 17 Then
-    pTimezoneName = Trim$(Right$(pDateString, Len(pDateString) - 17))
-Else
-    pTimezoneName = ""
-End If
+Dim lTimePart As String
+Dim lTimezoneName As String
+
+Dim i As Long
+For i = 1 To UBound(ar)
+    If ar(i) <> "" Then
+        If lTimePart = "" Then
+            lTimePart = ar(i)
+        Else
+            lTimezoneName = lTimezoneName & " " & ar(i)
+        End If
+    End If
+Next
+
+gGetDate = CDate(Left$(lDatePart, 4) & "/" & _
+                Mid$(lDatePart, 5, 2) & "/" & _
+                Mid$(lDatePart, 7, 2))
+
+If Len(lTimePart) <> 0 Then gGetDate = gGetDate + CDate(lTimePart)
+
+If Not IsMissing(pTimezoneName) Then pTimezoneName = lTimezoneName
 
 Exit Function
 
 Err:
-If Err.Number <> VBErrorCodes.VbErrTypeMismatch And _
-    Err.Number <> ErrorCodes.ErrIllegalArgumentException Then
+If Err.Number <> VBErrorCodes.VbErrTypeMismatch Then
     gHandleUnexpectedError Nothing, ProcName, ModuleName
 End If
+gGetDate = CDate(0#)
 End Function
 
 Public Function gGetDateFromUnixSystemTime(ByVal pSystemTime As Double) As Date

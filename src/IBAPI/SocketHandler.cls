@@ -250,14 +250,16 @@ Case sckAddressNotAvailable, _
     
     ReleaseSocket
     If Not mIsConnected Then
+        mIsConnecting = False
         gLog "Failed to connect to Tws" & _
-            IIf(mConnectionRetryIntervalSecs <> 0, " - retrying in " & mConnectionRetryIntervalSecs & " seconds", "") & _
+            IIf(mConnectionRetryIntervalSecs <> 0, " - retrying in " & mConnectionRetryIntervalSecs & " seconds ", " ") & _
             pDescription & ": " & getConnectionString, _
             ModuleName, ProcName
         
         RaiseEvent ConnectFailed(pDescription, mConnectionRetryIntervalSecs)
         If mConnectionRetryIntervalSecs <> 0 Then retryConnection
     Else
+        mIsConnected = False
         gLog "Socket error " & pNumber & ": " & _
                     pDescription & ": " & _
                     getConnectionString, _
@@ -433,8 +435,6 @@ If Not mSocket Is Nothing Then
     Unload mWinsockForm
     Set mWinsockForm = Nothing
 End If
-
-mIsConnected = False
 
 Exit Sub
 

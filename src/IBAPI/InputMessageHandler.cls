@@ -56,7 +56,7 @@ Private Const ReqdServerVersion                     As Long = MIN_SERVER_VER_SCA
 ' Member variables
 '@================================================================================
 
-Private WithEvents mReader                          As BufferedReader
+Private mReader                                     As BufferedReader
 Attribute mReader.VB_VarHelpID = -1
 Private mWriter                                     As BufferedWriter
 
@@ -97,66 +97,8 @@ End Sub
 '@================================================================================
 
 '================================================================================
-' mReader Event Handlers
+' XXXX Event Handlers
 '================================================================================
-
-Private Sub mReader_DataAdded()
-Const ProcName As String = "mReader_DataAdded"
-On Error GoTo Err
-
-Static sRetryCount As Long
-
-mReader.BeginCheckpointScope
-    
-If Not mApiConnectionEstablished Then
-    negotiateConnection
-    mApiConnectionEstablished = True
-End If
-
-Static sMessageID As TwsSocketInMsgTypes
-Static sVersion As Long
-
-checkmessages sMessageID, sVersion
-
-sRetryCount = 0
-
-mReader.EndCheckpointScope
-
-Exit Sub
-
-Err:
-Dim errNum As Long
-Dim errDesc As String
-Dim errSource As String
-
-errNum = Err.Number
-errDesc = Err.Description
-errSource = Err.source
-
-If errNum = DataIncomplete Then
-    sRetryCount = sRetryCount + 1
-    Debug.Print "Data incomplete count: " & sRetryCount & "; CheckPointNumber: &H" & Hex$(mReader.CheckpointNumber)
-    mReader.Rollback
-    Exit Sub
-End If
-
-Dim s As String
-s = "Error while processing input message: " & vbCrLf & _
-    "Message ID=" & sMessageID & _
-    " version=" & sVersion & _
-    " MessageStartindex=" & mReader.MessageStartIndex & vbCrLf & _
-    "InputBufferNextFreeIndex=" & mReader.BufferNextFreeIndex & _
-    " InputParseIndex=" & mReader.InputParseIndex & vbCrLf & _
-    "Buffer contents: " & vbCrLf & _
-    gFormatBuffer(mReader.Buffer, mReader.BufferNextFreeIndex)
-
-Debug.Print "Error " & errNum & ": " & errDesc & vbCrLf & s
-
-gLog s, ModuleName, ProcName, pLogLevel:=LogLevelSevere
-logSocketInputMessage True
-
-gNotifyUnhandledError mProgramErrorHandler, pErrorNumber:=errNum, pErrorDesc:=errDesc, pErrorSource:=errSource, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
@@ -239,10 +181,6 @@ Friend Property Get ScannerDataConsumer() As IScannerDataConsumer
 Set ScannerDataConsumer = mScannerDataConsumer
 End Property
 
-'Friend Property Get SerialiseContractDetailsRequests() As Boolean
-'SerialiseContractDetailsRequests = (mServerVersion < MIN_SERVER_VER_CONTRACT_DATA_CHAIN)
-'End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -278,6 +216,65 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Friend Sub ProcessData(ByVal pTimeStamp As Date)
+Const ProcName As String = "ProcessData"
+On Error GoTo Err
+
+Static sRetryCount As Long
+
+gLog "Processing socket data", ModuleName, ProcName, , LogLevelDetail
+mReader.BeginCheckpointScope
+    
+If Not mApiConnectionEstablished Then
+    completeApiConnection pTimeStamp
+    mApiConnectionEstablished = True
+End If
+
+Static sMessageID As TwsSocketInMsgTypes
+Static sVersion As Long
+
+checkmessages sMessageID, sVersion
+
+sRetryCount = 0
+
+mReader.EndCheckpointScope
+
+Exit Sub
+
+Err:
+Dim errNum As Long
+Dim errDesc As String
+Dim errSource As String
+
+errNum = Err.Number
+errDesc = Err.Description
+errSource = Err.source
+
+If errNum = DataIncomplete Then
+    sRetryCount = sRetryCount + 1
+    Debug.Print "Data incomplete count: " & sRetryCount & "; CheckPointNumber: &H" & Hex$(mReader.CheckpointNumber)
+    mReader.Rollback
+    Exit Sub
+End If
+
+Dim s As String
+s = "Error while processing input message: " & vbCrLf & _
+    "Message ID=" & sMessageID & _
+    " version=" & sVersion & _
+    " MessageStartindex=" & mReader.MessageStartIndex & vbCrLf & _
+    "InputBufferNextFreeIndex=" & mReader.BufferNextFreeIndex & _
+    " InputParseIndex=" & mReader.InputParseIndex & vbCrLf & _
+    "Buffer contents: " & vbCrLf & _
+    gFormatBuffer(mReader.Buffer, mReader.BufferNextFreeIndex)
+
+Debug.Print "Error " & errNum & ": " & errDesc & vbCrLf & s
+
+gLog s, ModuleName, ProcName, pLogLevel:=LogLevelSevere
+logSocketInputMessage True
+
+gHandleUnexpectedError mProgramErrorHandler, pErrorNumber:=errNum, pErrorDesc:=errDesc, pErrorSource:=errSource, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Reset()
@@ -324,6 +321,71 @@ Do While Not mReader.AtEnd
         mReader.EndMessage
     mReader.EndCheckpointScope
 Loop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub completeApiConnection(ByVal pTimeStamp As Date)
+Const ProcName As String = "completeApiConnection"
+On Error GoTo Err
+
+gLog "Completing API connection", ModuleName, ProcName
+
+Dim lString1 As String
+Dim lString2 As String
+
+Dim lFieldNumber As Long
+lFieldNumber = 1
+
+mReader.BeginMessage True
+' With a new connection, the first data received is plain server version number,
+' followed by the time at the server. However in some circumstances (eg after
+' reconnection following a read timeout on the socket) TWS may send invalid information
+' before the server version and server time. So we just read and discard until we
+' identify the server version followed by a time that's close to the current time (say
+' within 5 seconds).
+
+' Note that if there is incomplete data, then a call to GetString() will result in
+' processing being aborted and then retried when more data arrives.
+
+lString1 = mReader.GetString("Field 1")
+
+Dim lServerTime As Date
+Dim lTimezone As String
+
+Do
+    lFieldNumber = lFieldNumber + 1
+    lString2 = mReader.GetString("Field " & lFieldNumber)
+    
+    If IsInteger(lString1, MIN_SERVER_VER_SCALE_TABLE) Then
+        lServerTime = gGetDate(lString2, lTimezone)
+        
+        If Abs(pTimeStamp - lServerTime) <= 5# * OneSecond Then
+            mServerVersion = CInt(lString1)
+            Exit Do
+        Else
+            gLog "lString2 is not within 5 seconds of receipt time (" & FormatTimestamp(pTimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "): " & lString2, ModuleName, ProcName, , LogLevelHighDetail
+        End If
+    Else
+        gLog "lString1 is not an integer >= " & MIN_SERVER_VER_SCALE_TABLE & ": " & lString1, ModuleName, ProcName, , LogLevelHighDetail
+    End If
+    lString1 = lString2
+    
+    Assert lFieldNumber <= 50, "Unable to recognise API connection completion sequence"
+Loop
+
+logSocketInputMessage pForceLogMessage:=True
+mReader.EndMessage
+
+gLog "Server version", ModuleName, ProcName, CStr(mServerVersion), LogLevelSevere
+gLog "TWS Time at connection", ModuleName, ProcName, FormatTimestamp(lServerTime, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & " " & lTimezone, LogLevelSevere
+
+Assert mServerVersion >= ReqdServerVersion, "TWS is out of date and needs to be upgraded"
+
+gLog "API connection completed", ModuleName, ProcName
 
 Exit Sub
 
@@ -1189,7 +1251,7 @@ logSocketInputMessage
 
 If mNextOrderID < BaseOrderId Then mNextOrderID = BaseOrderId
 
-' Note that we do this here rather than in negotiateConnection() so
+' Note that we do this here rather than in completeApiConnection() so
 ' that if the initial API connection is established before the Paper
 ' Trading disclaimer dialog has been acknowledged (by the user or
 ' IBController), no API requests will be made by the API program before
@@ -1951,57 +2013,6 @@ If pForceLogMessage Then
 ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
     gSocketLogger.Log mReader.Message, ProcName, ModuleName, LogLevelHighDetail
 End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Private Sub negotiateConnection()
-Const ProcName As String = "negotiateConnection"
-On Error GoTo Err
-
-Dim lString1 As String
-Dim lString2 As String
-
-Dim lFieldNumber As Long
-lFieldNumber = 1
-
-mReader.BeginMessage True
-' With a new connection, the first data received is plain server version number,
-' followed by the time at the server. However in some circumstances (eg after
-' reconnection following a read timeout on the socket) TWS may send invalid information
-' before the server version and server time. So we just read and discard until we
-' identify the server version followed by a time that's close to the current time (say
-' within 5 seconds).
-
-lString1 = mReader.GetString("Field 1")
-
-Dim lServerTime As Date
-Dim lTimezone As String
-
-Do
-    lFieldNumber = lFieldNumber + 1
-    lString2 = mReader.GetString("Field " & lFieldNumber)
-    
-    If IsInteger(lString1, MIN_SERVER_VER_SCALE_TABLE) Then
-        lServerTime = gGetDate(lString2, lTimezone)
-        If Abs(Now - lServerTime) <= 5# * OneSecond Then
-            mServerVersion = CInt(lString1)
-            Exit Do
-        End If
-    End If
-    lString1 = lString2
-Loop
-
-logSocketInputMessage pForceLogMessage:=True
-mReader.EndMessage
-
-gLog "Server version", ModuleName, ProcName, CStr(mServerVersion)
-gLog "TWS Time at connection", ModuleName, ProcName, FormatTimestamp(lServerTime, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & " " & lTimezone
-
-Assert mServerVersion >= ReqdServerVersion, "TWS is out of date and needs to be upgraded"
 
 Exit Sub
 

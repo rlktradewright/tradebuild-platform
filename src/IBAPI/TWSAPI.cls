@@ -117,6 +117,7 @@ Private Enum TwsHistDataDateFormats
     DateFormatString = 1
     DateFormatInteger = 2
 End Enum
+
 '================================================================================
 ' Types
 '================================================================================
@@ -785,6 +786,7 @@ Const ProcName As String = "Connect"
 On Error GoTo Err
 
 Dim lReader As New BufferedReader
+lReader.Initialise mInMessageHandler
 
 Set mSocketHandler = New SocketHandler
 mSocketHandler.Initialise mServer, mPort, lReader, mProgramErrorHandler

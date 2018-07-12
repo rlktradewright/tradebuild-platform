@@ -26,8 +26,6 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event DataAdded()
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -59,6 +57,8 @@ Private mCurrCheckpointNumber()                     As Long
 Private mCheckpointScopeIndex                       As Long
 
 Private mMessageStartIndex                          As Long
+
+Private mInputMessageHandler                        As InputMessageHandler
 
 '@================================================================================
 ' Class Event Handlers
@@ -169,13 +169,13 @@ mBufferNextFreeIndex = mBufferNextFreeIndex + lBytesReceived
 
 If mBufferNextFreeIndex <> mInputParseIndex Then
     If sProcessingMessages Then
-        ' this is a re-entrant call to AddData. We don't want to raise the DataAdded event
+        ' this is a re-entrant call to AddData. We don't want to call ProcessData()
         ' here, because the current call to it will process the new data that has been
         ' added to the buffer
         gLogger.Log "Re-entrant call to " & ProcName, ProcName, ModuleName
     Else
         sProcessingMessages = True
-        RaiseEvent DataAdded
+        mInputMessageHandler.ProcessData Now
         sProcessingMessages = False
     End If
 End If
@@ -393,6 +393,10 @@ pValue = GetString(pFieldName)
 Checkpoint
 GetStringCheckpointed = True
 End Function
+
+Friend Sub Initialise(ByVal pInputMessageHandler As InputMessageHandler)
+Set mInputMessageHandler = pInputMessageHandler
+End Sub
 
 Friend Sub Rollback()
 mInputParseIndex = mInputParseIndexChk
