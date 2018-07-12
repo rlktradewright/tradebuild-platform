@@ -49,8 +49,8 @@ Private Const ModuleName                As String = "Studies"
 '@================================================================================
 
 Private Type LinkedStudyTableEntry
-    theStudy            As IStudy
-    studyToNotify       As IStudy
+    TheStudy            As IStudy
+    StudyToNotify       As IStudy
     ValueName           As String
     NotifyName          As String
 End Type
@@ -104,8 +104,8 @@ For i = 0 To UBound(ValueNames)
             ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As LinkedStudyTableEntry
         End If
         Dim tableEntry As LinkedStudyTableEntry
-        Set tableEntry.theStudy = Study
-        Set tableEntry.studyToNotify = Study.BaseStudy
+        Set tableEntry.TheStudy = Study
+        Set tableEntry.StudyToNotify = Study.BaseStudy
         tableEntry.ValueName = UCase$(ValueNames(i))
         tableEntry.NotifyName = UCase$(inputDefs.Item(i + 1).Name)
         mStudyTable(mNextStudyTableIndex) = tableEntry
@@ -133,8 +133,8 @@ For i = 0 To UBound(ValueNames)
             ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As LinkedStudyTableEntry
         End If
         Dim tableEntry As LinkedStudyTableEntry
-        Set tableEntry.theStudy = Study
-        Set tableEntry.studyToNotify = Study.BaseStudy
+        Set tableEntry.TheStudy = Study
+        Set tableEntry.StudyToNotify = Study.BaseStudy
         tableEntry.ValueName = UCase$(ValueNames(i))
         tableEntry.NotifyName = UCase$(NotifyNames(i))
         mStudyTable(mNextStudyTableIndex) = tableEntry
@@ -162,12 +162,12 @@ For i = 0 To mNextStudyTableIndex - 1
     If ev.ValueName = mDefaultValuename Then
         If mStudyTable(i).ValueName = DefaultStudyValueNameStr Then
             evOut.ValueName = mStudyTable(i).NotifyName
-            mStudyTable(i).studyToNotify.Notify evOut
+            mStudyTable(i).StudyToNotify.Notify evOut
         End If
     End If
     If mStudyTable(i).ValueName = ev.ValueName Then
         evOut.ValueName = mStudyTable(i).NotifyName
-        mStudyTable(i).studyToNotify.Notify evOut
+        mStudyTable(i).StudyToNotify.Notify evOut
     End If
 Next
 
@@ -186,7 +186,7 @@ Dim num As Long
 Dim i As Long
 For i = 0 To mNextStudyTableIndex - 1
     Dim Study As IStudy
-    Set Study = mStudyTable(i).theStudy
+    Set Study = mStudyTable(i).TheStudy
     
     Dim numStudy As Long
     numStudy = Study.NumberOfBarsRequired
@@ -211,7 +211,7 @@ ValueName = UCase$(ValueName)
 Dim i As Long
 For i = 0 To mNextStudyTableIndex - 1
     If mStudyTable(i).ValueName = ValueName Then
-        mStudyTable(i).theStudy.SetInputTicksize mStudyTable(i).NotifyName, TickSize
+        mStudyTable(i).TheStudy.SetInputTicksize mStudyTable(i).NotifyName, TickSize
     End If
 Next
 

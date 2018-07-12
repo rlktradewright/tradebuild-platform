@@ -52,49 +52,6 @@ Public Type InputDescriptor
     TickSize            As Double
 End Type
 
-Public Type StudyTableEntry
-    ' the study manager responsible
-    ' for this study
-    StudyMgr                As StudyManager
-    
-    ' the SessionBuilder used when replaying historicalinput
-    ' values to the study
-    'SessionBuilderFuture    As IFuture
-    SessionBuilder          As SessionBuilder
-    
-    ' the study itself
-    Study                   As IStudy
-    
-    ' Name of the study
-    StudyName               As String
-    
-    ' study library Name
-    LibName                 As String
-    
-    ' Id of this study
-    StudyID                 As String
-    
-    ' Id of entry for study this study is to be
-    ' added to
-    UnderlyingStudyID       As String
-    
-    ' names of values from the underlying study
-    ' used as input to this study
-    InputValueNames()       As String
-    
-    ' the number of study output values that
-    ' should be available for access by higher
-    ' level studies
-    NumberOfCachedValues    As Long
-    
-    IncludeDataOutsideSession   As Boolean
-    
-    ' set when this study has been added to the
-    ' underlying study
-    StudyStarted            As Boolean
-
-End Type
-
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -108,7 +65,6 @@ Private mStudyLibraryManager                        As StudyLibraryManager
 Private mUseLocalTimeForStudies                     As Boolean
 Private mIncludeDataOutsideSession                  As Boolean
 
-'Private mSessionFuture                              As IFuture
 Private mSession                                    As Session
 
 Private mSessionBuilder                             As SessionBuilder
@@ -306,11 +262,11 @@ Set lStudy = mStudyLibraryManager.CreateStudy(Name, LibraryName)
 
 AssertArgument Not lStudy Is Nothing, "Can't create study " & Name
                                                 
-Dim StudyEntry As StudyTableEntry
-Set StudyEntry.Study = lStudy
-Set StudyEntry.StudyMgr = Me
+Dim StudyEntry As New StudyTableEntry
+StudyEntry.Study = lStudy
+StudyEntry.StudyManager = Me
 StudyEntry.StudyName = UCase$(Name)
-StudyEntry.LibName = UCase$(LibraryName)
+StudyEntry.LibraryName = UCase$(LibraryName)
 StudyEntry.NumberOfCachedValues = pNumberOfValuesToCache
 
 Dim studyInputDefs As StudyInputDefinitions
@@ -331,16 +287,13 @@ StudyEntry.StudyID = GenerateGUIDString
 
 ' find the relevant StudyInputHandler object to get the Session object
 Dim UnderlyingStudyEntry As StudyTableEntry
-UnderlyingStudyEntry = mStudiesCollection(pUnderlyingStudy.Id)
+Set UnderlyingStudyEntry = mStudiesCollection(pUnderlyingStudy.Id)
 '
 ' we give the new study its own Session that will be used while replaying
 ' historical data. When that is complete and StartStudy is called, we'll
 ' link that Session object to the relevant StudyInputHandler object
 
-'Assert mSessionFuture.IsAvailable, "Session future is not available"
-
-'Set StudyEntry.SessionBuilderFuture = CreateSessionBuilderFuture(mSessionFuture)
-Set StudyEntry.SessionBuilder = CreateSessionBuilder(mSession.SessionStartTime, mSession.SessionEndTime, mSession.TimeZone)
+StudyEntry.SessionBuilder = CreateSessionBuilder(mSession.SessionStartTime, mSession.SessionEndTime, mSession.TimeZone)
 
 Dim lStudyFoundation As New StudyFoundation
 lStudyFoundation.Initialise Name, _
@@ -377,9 +330,9 @@ Set CreateStudyInputHandler = lStudyInputHandler
 Dim lStudy As IStudy
 Set lStudy = lStudyInputHandler
 
-Dim StudyEntry As StudyTableEntry
+Dim StudyEntry As New StudyTableEntry
 StudyEntry.StudyName = pName
-Set StudyEntry.Study = lStudy
+StudyEntry.Study = lStudy
 StudyEntry.StudyID = lStudy.Id
 
 mStudiesCollection.Add StudyEntry, lStudy.Id
@@ -413,7 +366,7 @@ Friend Function GetStudyEntry(ByVal pStudy As IStudy) As StudyTableEntry
 Const ProcName As String = "GetStudyEntry"
 On Error GoTo Err
 
-GetStudyEntry = mStudiesCollection(pStudy.Id)
+Set GetStudyEntry = mStudiesCollection(pStudy.Id)
 
 Exit Function
 
@@ -427,8 +380,8 @@ Const ProcName As String = "GetUnderlyingStudy"
 On Error GoTo Err
 
 Dim se As StudyTableEntry
-se = mStudiesCollection(pStudy.Id)
-se = mStudiesCollection(se.UnderlyingStudyID)
+Set se = mStudiesCollection(pStudy.Id)
+Set se = mStudiesCollection(se.UnderlyingStudyID)
 Set GetUnderlyingStudy = se.Study
 
 Exit Function
@@ -452,7 +405,6 @@ mUseLocalTimeForStudies = pUseLocalTimeForStudies
 
 Set mSessionBuilder = CreateSessionBuilder(pSessionStartTime, pSessionEndTime, pTimeZone)
 Set mSession = mSessionBuilder.Session
-'Set mSessionFuture = CreateFuture(mSession)
     
 Exit Sub
 
@@ -545,7 +497,7 @@ Const ProcName As String = "StartStudy"
 On Error GoTo Err
 
 Dim StudyEntry As StudyTableEntry
-StudyEntry = mStudiesCollection(pStudy.Id)
+Set StudyEntry = mStudiesCollection(pStudy.Id)
 If StudyEntry.StudyStarted Then
     ' this study has already been added to the underlying study
     Exit Function
@@ -553,11 +505,8 @@ End If
 
 StudyEntry.StudyStarted = True
 
-mStudiesCollection.Remove pStudy.Id
-mStudiesCollection.Add StudyEntry, pStudy.Id
-
 Dim UnderlyingStudyEntry As StudyTableEntry
-UnderlyingStudyEntry = mStudiesCollection(StudyEntry.UnderlyingStudyID)
+Set UnderlyingStudyEntry = mStudiesCollection(StudyEntry.UnderlyingStudyID)
 
 Set StartStudy = UnderlyingStudyEntry.Study.AddStudy(StudyEntry.Study, _
                                                     StudyEntry.InputValueNames, _
@@ -584,8 +533,8 @@ Private Function findStudy(ByVal StudyName As String, _
                 ByVal LibName As String, _
                 ByVal UnderlyingStudyID As String, _
                 ByRef InputValueNames() As String, _
-                ByVal numberOfValuesToCache As Long, _
-                ByVal pIncludeDataOutsideSession As Boolean, _
+                ByVal NumberOfValuesToCache As Long, _
+                ByVal IncludeDataOutsideSession As Boolean, _
                 ByVal Parameters As Parameters) As IStudy
 Const ProcName As String = "findStudy"
 On Error GoTo Err
@@ -595,21 +544,19 @@ Set findStudy = Nothing
 StudyName = UCase$(StudyName)
 LibName = UCase$(LibName)
 
-Dim var As Variant
-For Each var In mStudiesCollection
-    Dim StudyEntry As StudyTableEntry
-    StudyEntry = var
-    If StudyEntry.StudyMgr Is Me And _
-        StudyName = StudyEntry.StudyName And _
-        LibName = StudyEntry.LibName And _
-        UnderlyingStudyID = StudyEntry.UnderlyingStudyID And _
-        numberOfValuesToCache = StudyEntry.NumberOfCachedValues And _
-        stringArraysEqual(InputValueNames, StudyEntry.InputValueNames) And _
-        Parameters.Equals(StudyEntry.Study.Parameters) And _
-        pIncludeDataOutsideSession = StudyEntry.IncludeDataOutsideSession _
+Dim lStudyEntry As StudyTableEntry
+For Each lStudyEntry In mStudiesCollection
+    If lStudyEntry.StudyManager Is Me And _
+        StudyName = lStudyEntry.StudyName And _
+        LibName = lStudyEntry.LibraryName And _
+        UnderlyingStudyID = lStudyEntry.UnderlyingStudyID And _
+        NumberOfValuesToCache = lStudyEntry.NumberOfCachedValues And _
+        stringArraysEqual(InputValueNames, lStudyEntry.InputValueNames) And _
+        Parameters.Equals(lStudyEntry.Study.Parameters) And _
+        IncludeDataOutsideSession = lStudyEntry.IncludeDataOutsideSession _
     Then
         ' this study has already been added
-        Set findStudy = StudyEntry.Study
+        Set findStudy = lStudyEntry.Study
         Exit For
     End If
 Next
