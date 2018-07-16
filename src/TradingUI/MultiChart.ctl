@@ -391,7 +391,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-' do not make this Public because the value returned cannot be handled by non-friend
+' do not make this Public because the Value returned cannot be handled by non-friend
 ' components
 Friend Property Get Chart( _
                 Optional ByVal index As Long = -1) As MarketChart

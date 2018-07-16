@@ -254,11 +254,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -448,11 +448,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor
@@ -490,7 +490,7 @@ If Not mStudyValueConfig Is Nothing Then
     pStudyValueConfig.BarFormatterLibraryName = mStudyValueConfig.BarFormatterLibraryName
 End If
 
-pStudyValueConfig.IncludeInChart = (IncludeCheck.value = vbChecked)
+pStudyValueConfig.IncludeInChart = (IncludeCheck.Value = vbChecked)
 
 pStudyValueConfig.ChartRegionName = getRegionName
 
@@ -500,7 +500,7 @@ Case ValueModeNone
     
     Set dpStyle = GetDefaultDataPointStyle.Clone
     
-    dpStyle.IncludeInAutoscale = (AutoscaleCheck.value = vbChecked)
+    dpStyle.IncludeInAutoscale = (AutoscaleCheck.Value = vbChecked)
     dpStyle.Color = ColorLabel.BackColor
     dpStyle.DownColor = IIf(DownColorLabel.BackColor = NullColor, _
                         -1, _
@@ -568,7 +568,7 @@ Case ValueModeLine
 
     Set lnStyle = GetDefaultLineStyle.Clone
     
-    lnStyle.IncludeInAutoscale = (AutoscaleCheck.value = vbChecked)
+    lnStyle.IncludeInAutoscale = (AutoscaleCheck.Value = vbChecked)
     lnStyle.Color = ColorLabel.BackColor
     lnStyle.ArrowStartColor = ColorLabel.BackColor
     lnStyle.ArrowEndColor = ColorLabel.BackColor
@@ -618,7 +618,7 @@ Case ValueModeBar
     
     Set brStyle = GetDefaultBarStyle.Clone
     
-    brStyle.IncludeInAutoscale = (AutoscaleCheck.value = vbChecked)
+    brStyle.IncludeInAutoscale = (AutoscaleCheck.Value = vbChecked)
     brStyle.Color = IIf(ColorLabel.BackColor = NullColor, _
                         -1, _
                         ColorLabel.BackColor)
@@ -661,7 +661,7 @@ Case ValueModeText
 
     Set txStyle = GetDefaultTextStyle.Clone
     
-    txStyle.IncludeInAutoscale = (AutoscaleCheck.value = vbChecked)
+    txStyle.IncludeInAutoscale = (AutoscaleCheck.Value = vbChecked)
     txStyle.Color = ColorLabel.BackColor
     txStyle.BoxFillColor = IIf(UpColorLabel.BackColor = NullColor, _
                                     -1, _

@@ -250,7 +250,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-AssertArgument Not (UBound(ValueNames) > 0 And numberOfValuesToReplay <> ReplayNumbers.ReplayAll), "Must replay all values if more than one value name is being replayed"
+AssertArgument Not (UBound(ValueNames) > 0 And numberOfValuesToReplay <> ReplayNumbers.ReplayAll), "Must replay all values if more than one Value name is being replayed"
 
 Set mTarget = Target
 Set mSourceStudy = SourceStudy

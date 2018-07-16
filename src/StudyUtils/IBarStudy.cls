@@ -78,18 +78,18 @@ Public Property Get BarsFuture() As IFuture
 End Property
 
 ''
-' The Name of the value that represents the closing value of a bar.
+' The Name of the Value that represents the closing Value of a bar.
 '
-' @return The closing value Name.
+' @return The closing Value Name.
 '
 '@/
 Public Property Get CloseValueName() As String
 End Property
 
 ''
-' The Name of the value that represents the high value of a bar.
+' The Name of the Value that represents the high Value of a bar.
 '
-' @return The high value Name.
+' @return The high Value Name.
 '
 '@/
 Public Property Get HighValueName() As String
@@ -117,18 +117,18 @@ Public Property Let InitialBarsFuture(ByVal Value As IFuture)
 End Property
 
 ''
-' The Name of the value that represents the low value of a bar.
+' The Name of the Value that represents the low Value of a bar.
 '
-' @return The low value Name.
+' @return The low Value Name.
 '
 '@/
 Public Property Get LowValueName() As String
 End Property
 
 ''
-' The Name of the value that represents the opening value of a bar.
+' The Name of the Value that represents the opening Value of a bar.
 '
-' @return The opening value Name.
+' @return The opening Value Name.
 '
 '@/
 Public Property Get OpenValueName() As String

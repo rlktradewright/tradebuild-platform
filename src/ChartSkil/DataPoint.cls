@@ -83,7 +83,7 @@ Private mX As Double
 Private mKey As String
 
 Private mDataValue As Double
-Private mBlank As Boolean   ' indicates that no value has been assigned
+Private mBlank As Boolean   ' indicates that no Value has been assigned
 
 Private mPrevDataPointRef As WeakReference
 

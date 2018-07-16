@@ -1987,7 +1987,7 @@ setComboListIndex ActionCombo(index), 1
 QuantityText(index) = 0
 
 ' don't set TypeCombo(Index) as it will affect other fields and there
-' is no sensible value to set it to
+' is no sensible Value to set it to
 PriceText(index) = ""
 StopPriceText(index) = ""
 OffsetText(index) = ""

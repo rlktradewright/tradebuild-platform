@@ -286,8 +286,8 @@ UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoin
 End Sub
 
 Public Function gLineStyleToString( _
-                ByVal value As LineStyles) As String
-Select Case value
+                ByVal Value As LineStyles) As String
+Select Case Value
 Case LineSolid
     gLineStyleToString = LineStyleSolid
 Case LineDash
@@ -316,8 +316,8 @@ MsgBox "This facility has not yet been implemented", , "Sorry"
 End Sub
 
 Public Function gPointStyleToString( _
-                ByVal value As PointStyles) As String
-Select Case value
+                ByVal Value As PointStyles) As String
+Select Case Value
 Case PointRound
     gPointStyleToString = PointStyleRound
 Case PointSquare

@@ -70,21 +70,21 @@ Private mPriceFormatString As String
 ' Properties
 '@================================================================================
 
-Friend Property Let Cols(ByVal value As Long)
-mGrid.Cols = value
+Friend Property Let Cols(ByVal Value As Long)
+mGrid.Cols = Value
 End Property
 
-Friend Property Let PriceFormatString(ByVal value As String)
-mPriceFormatString = value
+Friend Property Let PriceFormatString(ByVal Value As String)
+mPriceFormatString = Value
 End Property
 
-Friend Property Let Redraw(ByVal value As Boolean)
-mGrid.Redraw = value
+Friend Property Let Redraw(ByVal Value As Boolean)
+mGrid.Redraw = Value
 End Property
 
-Friend Property Let Row(ByVal value As Long)
-If value > mGrid.Rows - 1 Then mGrid.Rows = mGrid.Rows + TestDataGridRowsIncrement
-mGrid.Row = value
+Friend Property Let Row(ByVal Value As Long)
+If Value > mGrid.Rows - 1 Then mGrid.Rows = mGrid.Rows + TestDataGridRowsIncrement
+mGrid.Row = Value
 End Property
 
 Friend Property Get Row() As Long
@@ -142,7 +142,7 @@ With mGrid
     .FixedCols = 0
 End With
     
-setupGridColumn TestDataGridColumns.barNumber, "#", AlignmentSettings.flexAlignLeftCenter
+setupGridColumn TestDataGridColumns.BarNumber, "#", AlignmentSettings.flexAlignLeftCenter
 setupGridColumn TestDataGridColumns.TimeStamp, "Timestamp", AlignmentSettings.flexAlignLeftCenter
 setupGridColumn TestDataGridColumns.OpenValue, "Open", AlignmentSettings.flexAlignRightCenter
 setupGridColumn TestDataGridColumns.HighValue, "High", AlignmentSettings.flexAlignRightCenter
@@ -164,7 +164,7 @@ Dim svc As StudyValueConfiguration
 Dim i As Long
 Dim j As Long
 
-' remove any existing study value columns
+' remove any existing study Value columns
 Const ProcName As String = "SetupStudyValueColumns"
 On Error GoTo Err
 

@@ -91,12 +91,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let periods(ByVal value As Long)
+Public Property Let periods(ByVal Value As Long)
 Const ProcName As String = "periods"
 On Error GoTo Err
 
-mPeriods = value
-mExpFactor = 2 / (value + 1)
+mPeriods = Value
+mExpFactor = 2 / (Value + 1)
 
 Exit Property
 
@@ -108,15 +108,15 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub datavalue(ByVal value As Double)
+Public Sub datavalue(ByVal Value As Double)
 Const ProcName As String = "datavalue"
 On Error GoTo Err
 
 If Not mFirstValueReceived Then
-    mPrevPeriodMa = value
+    mPrevPeriodMa = Value
     mFirstValueReceived = True
 End If
-mMa = (mExpFactor * value) + mPrevPeriodMa * (1 - mExpFactor)
+mMa = (mExpFactor * Value) + mPrevPeriodMa * (1 - mExpFactor)
 
 Exit Sub
 

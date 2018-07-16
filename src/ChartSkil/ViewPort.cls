@@ -897,7 +897,7 @@ ElseIf Value = MinusInfinityLong Then
     ConvertPixelsToLogicalX = MinusInfinityDouble
 Else
     ConvertPixelsToLogicalX = Canvas.Surface.ScaleX(Value, vbPixels, vbUser)
-    'ConvertPixelsToLogicalX = CDbl(value) * mGaugeX
+    'ConvertPixelsToLogicalX = CDbl(Value) * mGaugeX
 End If
 
 Exit Function
@@ -917,7 +917,7 @@ ElseIf Value = MinusInfinityLong Then
     ConvertPixelsToLogicalY = MinusInfinityDouble
 Else
     ConvertPixelsToLogicalY = -Canvas.Surface.ScaleY(Value, vbPixels, vbUser)
-    'ConvertPixelsToLogicalY = CDbl(value) * mGaugeY
+    'ConvertPixelsToLogicalY = CDbl(Value) * mGaugeY
 End If
 
 Exit Function
@@ -1076,7 +1076,7 @@ If Value = PlusInfinityDouble Then
 ElseIf Value = MinusInfinityDouble Then
     ConvertRelativeToLogicalX = MinusInfinityDouble
 Else
-    'ConvertRelativeToLogicalX = mBoundary.Left + (value * (mBoundary.Right - mBoundary.Left) / 100#)
+    'ConvertRelativeToLogicalX = mBoundary.Left + (Value * (mBoundary.Right - mBoundary.Left) / 100#)
     ConvertRelativeToLogicalX = (Value * (mBoundary.Right - mBoundary.Left) / 100#)
 End If
 
@@ -1096,7 +1096,7 @@ If Value = PlusInfinityDouble Then
 ElseIf Value = MinusInfinityDouble Then
     ConvertRelativeToLogicalY = MinusInfinityDouble
 Else
-    'ConvertRelativeToLogicalY = mBoundary.Bottom + (value * (mBoundary.Top - mBoundary.Bottom) / 100#)
+    'ConvertRelativeToLogicalY = mBoundary.Bottom + (Value * (mBoundary.Top - mBoundary.Bottom) / 100#)
     ConvertRelativeToLogicalY = (Value * (mBoundary.Top - mBoundary.Bottom) / 100#)
 End If
 

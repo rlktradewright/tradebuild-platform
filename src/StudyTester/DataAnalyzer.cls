@@ -78,7 +78,7 @@ End Sub
 '@================================================================================
 
 Public Sub AddDataValue( _
-                ByVal value As Double)
+                ByVal Value As Double)
 Const ProcName As String = "AddDataValue"
 On Error GoTo Err
 
@@ -86,7 +86,7 @@ mDataValuesMaxIndex = mDataValuesMaxIndex + 1
 If mDataValuesMaxIndex > UBound(mDataValues) Then
     ReDim Preserve mDataValues(UBound(mDataValues) + 1000) As Double
 End If
-mDataValues(mDataValuesMaxIndex) = value
+mDataValues(mDataValuesMaxIndex) = Value
 
 Exit Sub
 

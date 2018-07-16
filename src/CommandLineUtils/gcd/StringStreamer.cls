@@ -73,8 +73,8 @@ eos = mInPosn > Len(mStr)
 End Function
 
 Friend Sub initialise( _
-                value As String)
-mStr = value
+                Value As String)
+mStr = Value
 End Sub
 
 Public Function nextChar() As String

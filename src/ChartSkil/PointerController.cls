@@ -631,7 +631,7 @@ Set mCrosshairLineHoriz = mLineSeries.Add
 mCrosshairLineHoriz.LocalStyle = gDefaultLineStyle
 mCrosshairLineHoriz.Extended = True
 mCrosshairLineHoriz.IncludeInAutoscale = False
-mCrosshairLineHoriz.layer = LayerPointer
+mCrosshairLineHoriz.Layer = LayerPointer
 Set mCrosshairOffsetLeft = gNewSize(-100, 0, CoordsRelative)
 Set mCrosshairOffsetRight = gNewSize(100, 0, CoordsRelative)
 
@@ -639,7 +639,7 @@ Set mCrosshairLineVert = mLineSeries.Add
 mCrosshairLineVert.LocalStyle = gDefaultLineStyle
 mCrosshairLineVert.Extended = True
 mCrosshairLineVert.IncludeInAutoscale = False
-mCrosshairLineVert.layer = LayerPointer
+mCrosshairLineVert.Layer = LayerPointer
 Set mCrosshairOffsetBottom = gNewSize(0, -100, CoordsRelative)
 Set mCrosshairOffsetTop = gNewSize(0, 100, CoordsRelative)
 

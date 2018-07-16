@@ -2720,7 +2720,7 @@ On Error GoTo Err
 
 If HorizontalMouseScrollingAllowed Then
     ' the chart needs to be scrolled so that current mouse Position
-    ' is the value contained in mLeftDragStartPosnX
+    ' is the Value contained in mLeftDragStartPosnX
     If mLeftDragStartPosnX <> Int(X) Then
         If (LastVisiblePeriod + mLeftDragStartPosnX - Int(X)) <= _
                 (mPeriods.CurrentPeriodNumber + ChartWidth - 1) And _

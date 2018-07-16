@@ -60,15 +60,15 @@ Private Const ModuleName                            As String = "IPriceFormatter
 ' Properties
 '@================================================================================
 
-Public Property Let IntegerYScale(ByVal value As Boolean)
+Public Property Let IntegerYScale(ByVal Value As Boolean)
 
 End Property
 
-Public Property Let YScaleGridSpacing(ByVal value As Double)
+Public Property Let YScaleGridSpacing(ByVal Value As Double)
 
 End Property
 
-Public Property Let YScaleQuantum(ByVal value As Double)
+Public Property Let YScaleQuantum(ByVal Value As Double)
 
 End Property
 

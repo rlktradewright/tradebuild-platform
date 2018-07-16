@@ -127,12 +127,12 @@ End Property
 ' Properties
 '@================================================================================
 
-Friend Property Get Item(ByVal handle As Long) As ChartRegion
+Friend Property Get Item(ByVal Handle As Long) As ChartRegion
 Const ProcName As String = "Item"
 
 On Error GoTo Err
 
-Set Item = mRegions(handle).Region
+Set Item = mRegions(Handle).Region
 
 Exit Property
 
@@ -162,12 +162,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function IsFirst(ByVal handle As Long)
+Friend Function IsFirst(ByVal Handle As Long)
 Const ProcName As String = "IsFirst"
 
 On Error GoTo Err
 
-IsFirst = (nextEntryIndex(mFirstIndex) = handle)
+IsFirst = (nextEntryIndex(mFirstIndex) = Handle)
 
 Exit Function
 
@@ -175,19 +175,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub MoveDown(ByVal handle As Long)
+Friend Sub MoveDown(ByVal Handle As Long)
 Dim newLocation As Long
 
 Const ProcName As String = "MoveDown"
 
 On Error GoTo Err
 
-If nextEntryIndex(handle) = mLastIndex Then Exit Sub
-newLocation = nextEntryIndex(nextEntryIndex(handle))
+If nextEntryIndex(Handle) = mLastIndex Then Exit Sub
+newLocation = nextEntryIndex(nextEntryIndex(Handle))
 
-deleteEntry handle
+deleteEntry Handle
 
-insertEntryBefore handle, newLocation
+insertEntryBefore Handle, newLocation
 
 changed
 
@@ -197,19 +197,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub MoveUp(ByVal handle As Long)
+Friend Sub MoveUp(ByVal Handle As Long)
 Dim newLocation As Long
 
 Const ProcName As String = "MoveUp"
 
 On Error GoTo Err
 
-If previousEntryIndex(previousEntryIndex(handle)) = mFirstIndex Then Exit Sub
-newLocation = previousEntryIndex(handle)
+If previousEntryIndex(previousEntryIndex(Handle)) = mFirstIndex Then Exit Sub
+newLocation = previousEntryIndex(Handle)
 
-deleteEntry handle
+deleteEntry Handle
 
-insertEntryBefore handle, newLocation
+insertEntryBefore Handle, newLocation
 
 changed
 
@@ -225,13 +225,13 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = getEnumerator
 End Function
 
-Friend Sub Remove(ByVal handle As Long)
+Friend Sub Remove(ByVal Handle As Long)
 Const ProcName As String = "Remove"
 
 On Error GoTo Err
 
-releaseEntry handle
-deleteEntry handle
+releaseEntry Handle
+deleteEntry Handle
 changed
 
 Exit Sub
@@ -363,12 +363,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub releaseEntry(ByVal handle As Long)
+Private Sub releaseEntry(ByVal Handle As Long)
 Const ProcName As String = "releaseEntry"
 
 On Error GoTo Err
 
-Set mRegions(handle).Region = Nothing
+Set mRegions(Handle).Region = Nothing
 
 Exit Sub
 

@@ -73,12 +73,12 @@ Private mMASignal As ExponentialMovingAverage
 ' Properties
 '================================================================================
 
-Public Property Let LongPeriods(ByVal value As Long)
+Public Property Let LongPeriods(ByVal Value As Long)
 Const ProcName As String = "LongPeriods"
 On Error GoTo Err
 
 Set mMALong = New ExponentialMovingAverage
-mMALong.periods = value
+mMALong.periods = Value
 
 Exit Property
 
@@ -126,12 +126,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ShortPeriods(ByVal value As Long)
+Public Property Let ShortPeriods(ByVal Value As Long)
 Const ProcName As String = "ShortPeriods"
 On Error GoTo Err
 
 Set mMAShort = New ExponentialMovingAverage
-mMAShort.periods = value
+mMAShort.periods = Value
 
 Exit Property
 
@@ -139,12 +139,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let SignalPeriods(ByVal value As Long)
+Public Property Let SignalPeriods(ByVal Value As Long)
 Const ProcName As String = "SignalPeriods"
 On Error GoTo Err
 
 Set mMASignal = New ExponentialMovingAverage
-mMASignal.periods = value
+mMASignal.periods = Value
 
 Exit Property
 
@@ -156,12 +156,12 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub datavalue(ByVal value As Double)
+Public Sub datavalue(ByVal Value As Double)
 Const ProcName As String = "datavalue"
 On Error GoTo Err
 
-mMAShort.datavalue value
-mMALong.datavalue value
+mMAShort.datavalue Value
+mMALong.datavalue Value
 If Not IsEmpty(mMAShort.maValue) And Not IsEmpty(mMALong.maValue) Then
     mMASignal.datavalue mMAShort.maValue - mMALong.maValue
 End If

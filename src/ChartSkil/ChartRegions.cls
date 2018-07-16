@@ -174,9 +174,9 @@ On Error GoTo Err
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 Set mDefaultDataRegionStyle = Value
-Dim lRegion As ChartRegion
-For Each lRegion In Me
-    lRegion.BaseStyle = mDefaultDataRegionStyle
+Dim lregion As ChartRegion
+For Each lregion In Me
+    lregion.BaseStyle = mDefaultDataRegionStyle
 Next
 
 Exit Property
@@ -193,9 +193,9 @@ On Error GoTo Err
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 Set mDefaultYAxisRegionStyle = Value
-Dim lRegion As ChartRegion
-For Each lRegion In Me
-    lRegion.YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
+Dim lregion As ChartRegion
+For Each lregion In Me
+    lregion.YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
 Next
 
 Exit Property
@@ -274,26 +274,26 @@ End If
 
 mRegionsIndex = mRegionsIndex + 1
 
-Dim lRegion As ChartRegion
-Set lRegion = New ChartRegion
-lRegion.Handle = mRegionsIndex
+Dim lregion As ChartRegion
+Set lregion = New ChartRegion
+lregion.Handle = mRegionsIndex
 
-lRegion.Initialise Name, mPeriods, chartObj.CreateViewport(lRegion, RegionTypeData), RegionTypeData
+lregion.Initialise Name, mPeriods, chartObj.CreateViewport(lregion, RegionTypeData), RegionTypeData
 
-lRegion.MinimumPercentHeight = MinimumPercentHeight
-lRegion.PercentHeight = PercentHeight
+lregion.MinimumPercentHeight = MinimumPercentHeight
+lregion.PercentHeight = PercentHeight
 
 If Style Is Nothing Then
     gLogger.Log "Style applied", ProcName, ModuleName, , "none"
 Else
     gLogger.Log "Style applied", ProcName, ModuleName, , Style.Name
 End If
-lRegion.Style = Style
+lregion.Style = Style
 
 gLogger.Log "Base style applied", ProcName, ModuleName, , mDefaultDataRegionStyle.Name
-lRegion.BaseStyle = mDefaultDataRegionStyle
+lregion.BaseStyle = mDefaultDataRegionStyle
 
-Set mRegions(mRegionsIndex).Region = lRegion
+Set mRegions(mRegionsIndex).Region = lregion
 If PercentHeight <> 100 Then
     mRegions(mRegionsIndex).PercentHeight = mRegionHeightReductionFactor * PercentHeight
 Else
@@ -316,7 +316,7 @@ YAxisRegion.SetPeriodsInView 0, 99
 
 YAxisRegion.Style = YAxisStyle
 YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
-lRegion.YAxisRegion = YAxisRegion
+lregion.YAxisRegion = YAxisRegion
 
 Set mRegions(mRegionsIndex).Region = YAxisRegion
 
@@ -324,10 +324,10 @@ mNumRegionsInUse = mNumRegionsInUse + 1
 
 If ResizeY(False) Then
     changed
-    fireChange CollItemAdded, lRegion
+    fireChange CollItemAdded, lregion
 Else
     ' can't fit this all in! So remove the added region,
-    Set lRegion = Nothing
+    Set lregion = Nothing
     Set mRegions(mRegionsIndex).Region = Nothing
     mRegions(mRegionsIndex).PercentHeight = 0
     mRegions(mRegionsIndex).UseAvailableSpace = False
@@ -336,7 +336,7 @@ Else
     Exit Function
 End If
 
-Set Add = lRegion
+Set Add = lregion
 
 Exit Function
 
@@ -350,9 +350,9 @@ On Error GoTo Err
 
 If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
-Dim lRegion As ChartRegion
-Set lRegion = findRegion(Name)
-If Not lRegion Is Nothing Then Contains = True
+Dim lregion As ChartRegion
+Set lregion = findRegion(Name)
+If Not lregion Is Nothing Then Contains = True
 
 Exit Function
 
@@ -691,10 +691,10 @@ Dim en As Enumerator
 Set en = getEnumerator
 
 Do While en.MoveNext
-    Dim lRegion As ChartRegion
-    Set lRegion = en.Current
-    If UCase$(lRegion.Name) = Name Then
-        Set findRegion = lRegion
+    Dim lregion As ChartRegion
+    Set lregion = en.Current
+    If UCase$(lregion.Name) = Name Then
+        Set findRegion = lregion
         Exit Do
     End If
 Loop

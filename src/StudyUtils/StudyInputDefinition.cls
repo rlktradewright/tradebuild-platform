@@ -70,24 +70,24 @@ Private mInputType As StudyInputTypes
 ' Properties
 '@================================================================================
 
-Public Property Let Description(ByVal value As String)
-mDescription = value
+Public Property Let Description(ByVal Value As String)
+mDescription = Value
 End Property
 
 Public Property Get Description() As String
 Description = mDescription
 End Property
 
-Friend Property Let Name(ByVal value As String)
-mName = value
+Friend Property Let Name(ByVal Value As String)
+mName = Value
 End Property
 
 Public Property Get Name() As String
 Name = mName
 End Property
 
-Public Property Let InputType(ByVal value As StudyInputTypes)
-mInputType = value
+Public Property Let InputType(ByVal Value As StudyInputTypes)
+mInputType = Value
 End Property
 
 Public Property Get InputType() As StudyInputTypes

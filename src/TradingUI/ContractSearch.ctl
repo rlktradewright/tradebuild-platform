@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSearch 
    ClientHeight    =   3870
    ClientLeft      =   0
@@ -15,7 +15,7 @@ Begin VB.UserControl ContractSearch
       Top             =   0
       Width           =   4815
       _ExtentX        =   8493
-      _ExtentY        =   5556
+      _ExtentY        =   6191
       ForeColor       =   -2147483640
    End
    Begin TWControls40.TWButton ClearButton 
@@ -332,11 +332,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -505,8 +505,8 @@ End Sub
 '@================================================================================
 
 Public Property Let ActionButtonCaption( _
-                ByVal value As String)
-ActionButton.Caption = value
+                ByVal Value As String)
+ActionButton.Caption = Value
 PropertyChanged PropNameActionButtonCaption
 End Property
 
@@ -518,16 +518,16 @@ Public Property Get AllowMultipleSelection() As Boolean
 AllowMultipleSelection = mAllowMultipleSelection
 End Property
 
-Public Property Let AllowMultipleSelection(ByVal value As Boolean)
-mAllowMultipleSelection = value
+Public Property Let AllowMultipleSelection(ByVal Value As Boolean)
+mAllowMultipleSelection = Value
 PropertyChanged PropNameAllowMultipleSelection
 End Property
 
 Public Property Let BackColor( _
-                ByVal value As OLE_COLOR)
-UserControl.BackColor = value
-ContractSpecBuilder1.BackColor = value
-MessageLabel.BackColor = value
+                ByVal Value As OLE_COLOR)
+UserControl.BackColor = Value
+ContractSpecBuilder1.BackColor = Value
+MessageLabel.BackColor = Value
 PropertyChanged PropNameBackcolor
 End Property
 
@@ -542,12 +542,12 @@ Cookie = mCookie
 End Property
 
 Public Property Let ForeColor( _
-                ByVal value As OLE_COLOR)
+                ByVal Value As OLE_COLOR)
 Const ProcName As String = "foreColor"
 On Error GoTo Err
 
-ContractSpecBuilder1.ForeColor = value
-MessageLabel.ForeColor = value
+ContractSpecBuilder1.ForeColor = Value
+MessageLabel.ForeColor = Value
 PropertyChanged PropNameForecolor
 
 Exit Property
@@ -562,11 +562,11 @@ ForeColor = MessageLabel.ForeColor
 End Property
 
 Public Property Let IncludeHistoricalContracts( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "IncludeHistoricalContracts"
 On Error GoTo Err
 
-ContractSelector1.IncludeHistoricalContracts = value
+ContractSelector1.IncludeHistoricalContracts = Value
 
 PropertyChanged PropNameIncludeHistoricalContracts
 
@@ -604,11 +604,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let RowBackColorEven(ByVal value As OLE_COLOR)
+Public Property Let RowBackColorEven(ByVal Value As OLE_COLOR)
 Const ProcName As String = "RowBackColorEven"
 On Error GoTo Err
 
-ContractSelector1.RowBackColorEven = value
+ContractSelector1.RowBackColorEven = Value
 PropertyChanged PropNameRowBackColorEven
 
 Exit Property
@@ -629,11 +629,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let RowBackColorOdd(ByVal value As OLE_COLOR)
+Public Property Let RowBackColorOdd(ByVal Value As OLE_COLOR)
 Const ProcName As String = "RowBackColorOdd"
 On Error GoTo Err
 
-ContractSelector1.RowBackColorOdd = value
+ContractSelector1.RowBackColorOdd = Value
 PropertyChanged PropNameRowBackColorOdd
 
 Exit Property
@@ -659,11 +659,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let TextBackColor(ByVal value As OLE_COLOR)
+Public Property Let TextBackColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "TextBackColor"
 On Error GoTo Err
 
-ContractSpecBuilder1.TextBackColor = value
+ContractSpecBuilder1.TextBackColor = Value
 PropertyChanged PropNameTextBackColor
 
 Exit Property
@@ -676,12 +676,12 @@ Public Property Get TextBackColor() As OLE_COLOR
 TextBackColor = ContractSpecBuilder1.TextBackColor
 End Property
 
-Public Property Let TextForeColor(ByVal value As OLE_COLOR)
+Public Property Let TextForeColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "TextForeColor"
 On Error GoTo Err
 
-ContractSpecBuilder1.TextForeColor = value
-ContractSelector1.ForeColor = value
+ContractSpecBuilder1.TextForeColor = Value
+ContractSelector1.ForeColor = Value
 PropertyChanged PropNameTextForeColor
 
 Exit Property
@@ -694,11 +694,11 @@ Public Property Get TextForeColor() As OLE_COLOR
 TextForeColor = ContractSpecBuilder1.TextForeColor
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor

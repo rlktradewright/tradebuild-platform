@@ -91,72 +91,72 @@ Public Property Get DefaultRegion() As StudyValueDefaultRegions
 DefaultRegion = mDefaultRegion
 End Property
 
-Public Property Let Description(ByVal value As String)
-mDescription = value
+Public Property Let Description(ByVal Value As String)
+mDescription = Value
 End Property
 
 Public Property Get Description() As String
 Description = mDescription
 End Property
 
-Public Property Let IncludeInChart(ByVal value As Boolean)
-mIncludeInChart = value
+Public Property Let IncludeInChart(ByVal Value As Boolean)
+mIncludeInChart = Value
 End Property
 
 Public Property Get IncludeInChart() As Boolean
 IncludeInChart = mIncludeInChart
 End Property
 
-Public Property Let IsDefault(ByVal value As Boolean)
-mIsDefault = value
+Public Property Let IsDefault(ByVal Value As Boolean)
+mIsDefault = Value
 End Property
 
 Public Property Get IsDefault() As Boolean
 IsDefault = mIsDefault
 End Property
 
-Public Property Let MaximumValue(ByVal value As Variant)
-mMaximumValue = value
+Public Property Let MaximumValue(ByVal Value As Variant)
+mMaximumValue = Value
 End Property
 
 Public Property Get MaximumValue() As Variant
 MaximumValue = mMaximumValue
 End Property
 
-Public Property Let MinimumValue(ByVal value As Variant)
-mMinimumValue = value
+Public Property Let MinimumValue(ByVal Value As Variant)
+mMinimumValue = Value
 End Property
 
 Public Property Get MinimumValue() As Variant
 MinimumValue = mMinimumValue
 End Property
 
-Friend Property Let Name(ByVal value As String)
-mName = value
+Friend Property Let Name(ByVal Value As String)
+mName = Value
 End Property
 
 Public Property Get Name() As String
 Name = mName
 End Property
 
-Public Property Let ValueMode(ByVal value As StudyValueModes)
-mValueMode = value
+Public Property Let ValueMode(ByVal Value As StudyValueModes)
+mValueMode = Value
 End Property
 
 Public Property Get ValueMode() As StudyValueModes
 ValueMode = mValueMode
 End Property
 
-Public Property Let ValueStyle(ByVal value As Object)
-Set mValueStyle = value
+Public Property Let ValueStyle(ByVal Value As Object)
+Set mValueStyle = Value
 End Property
 
 Public Property Get ValueStyle() As Object
 Set ValueStyle = mValueStyle
 End Property
 
-Public Property Let ValueType(ByVal value As StudyValueTypes)
-mValueType = value
+Public Property Let ValueType(ByVal Value As StudyValueTypes)
+mValueType = Value
 End Property
 
 Public Property Get ValueType() As StudyValueTypes

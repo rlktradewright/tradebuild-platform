@@ -1371,7 +1371,7 @@ On Error GoTo Err
 
 If Value = mText Then Exit Property
 mText = Value
-'mBlank = (value = "" Or mPosition Is Nothing)
+'mBlank = (Value = "" Or mPosition Is Nothing)
 initiateRedraw True, True
 
 Exit Property

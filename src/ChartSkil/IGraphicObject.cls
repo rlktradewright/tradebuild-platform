@@ -86,7 +86,7 @@ Public Property Get GaugeDependent() As Boolean
 
 End Property
 
-Public Property Let Handle(ByVal value As Long)
+Public Property Let Handle(ByVal Value As Long)
 
 End Property
 
@@ -98,7 +98,7 @@ Public Property Get IncludeInAutoscale() As Boolean
 
 End Property
 
-Public Property Let InScope(ByVal value As Boolean)
+Public Property Let InScope(ByVal Value As Boolean)
 
 End Property
 
@@ -122,7 +122,7 @@ Public Property Get ScaleDependent() As Boolean
 
 End Property
 
-Public Property Let Selected(ByVal value As Boolean)
+Public Property Let Selected(ByVal Value As Boolean)
 
 End Property
 
@@ -142,7 +142,7 @@ Public Property Get VerticalRangeInXinterval(ByRef pXInterval As TInterval) As T
 
 End Property
 
-Public Property Let Visible(ByVal value As Boolean)
+Public Property Let Visible(ByVal Value As Boolean)
 
 End Property
 

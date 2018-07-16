@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#277.1#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#281.0#0"; "ChartSkil27.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.7"
    ClientHeight    =   8865
@@ -659,15 +659,15 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ShowHScrollCheck_Click()
-Chart1.HorizontalScrollBarVisible = (ShowHScrollCheck.value = vbChecked)
+Chart1.HorizontalScrollBarVisible = (ShowHScrollCheck.Value = vbChecked)
 End Sub
 
 Private Sub ShowXAxisCheck_Click()
-Chart1.XAxisVisible = (ShowXAxisCheck.value = vbChecked)
+Chart1.XAxisVisible = (ShowXAxisCheck.Value = vbChecked)
 End Sub
 
 Private Sub ShowYAxisCheck_Click()
-Chart1.YAxisVisible = (ShowYAxisCheck.value = vbChecked)
+Chart1.YAxisVisible = (ShowYAxisCheck.Value = vbChecked)
 End Sub
 
 Private Sub LoadButton_Click()
@@ -685,14 +685,14 @@ BarsLoadedLabel.Visible = True
 HScroll.Visible = True
 HScroll.Min = 0
 HScroll.Max = IIf(mInitialNumBars <= 32767, mInitialNumBars, 32767)
-HScroll.value = 0
+HScroll.Value = 0
 
 Chart1.DisableDrawing               ' tells the chart not to draw anything. This is
                                     ' useful when loading bulk data into the chart
                                     ' as it speeds the loading process considerably
                                     
-Chart1.XAxisVisible = (ShowXAxisCheck.value = vbChecked)
-Chart1.YAxisVisible = (ShowYAxisCheck.value = vbChecked)
+Chart1.XAxisVisible = (ShowXAxisCheck.Value = vbChecked)
+Chart1.YAxisVisible = (ShowYAxisCheck.Value = vbChecked)
 
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
@@ -707,7 +707,7 @@ Chart1.SessionEndTime = mSessionEndTime
 ' Set up the region of the chart that will display the price bars. You can have as
 ' many regions as you like on a chart. They are arranged vertically, and the parameter
 ' to addChartRegion specifies the percentage of the available space that the region
-' should occupy. A value of 100 means use all the available space left over after taking
+' should occupy. A Value of 100 means use all the available space left over after taking
 ' account of regions with smaller percentages. Since this is the first region
 ' created, it uses all the space. NB: you should create at least one region (preferably
 ' the first) that uses available space rather than a specific percentage - if you don't
@@ -744,7 +744,7 @@ mPriceRegion.PerformanceTextVisible = True ' displays some information about the
 ' first we set up the bar style, based on the default style
 Dim lBarStyle As New BarStyle
 With lBarStyle
-    .Width = 0.6                        ' specifies how wide each bar is. If this value
+    .Width = 0.6                        ' specifies how wide each bar is. If this Value
                                         ' were set to 1, the sides of the bars would touch
     .OutlineThickness = 1               ' the thickness in pixels of a candlestick outline
                                         ' (ignored if displaying as bars)
@@ -1252,9 +1252,9 @@ displayStudyValues
 
 mBarCounter = mBarCounter + 1
 If mBarCounter Mod 50 = 0 Then
-    HScroll.value = (mBarCounter / mInitialNumBars) * HScroll.Max
+    HScroll.Value = (mBarCounter / mInitialNumBars) * HScroll.Max
     BarsLoadedLabel.Caption = "Bars loaded: " & mBarCounter
-    If UpdateWhileLoadingCheck.value = vbChecked Then
+    If UpdateWhileLoadingCheck.Value = vbChecked Then
         Chart1.EnableDrawing
         Chart1.DisableDrawing
     End If
@@ -1378,14 +1378,14 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub calculateStudies(ByVal value As Double)
+Private Sub calculateStudies(ByVal Value As Double)
 Const ProcName As String = "calculateStudies"
 On Error GoTo Err
 
-mMA1.datavalue value
-mMA2.datavalue value
-mMa3.datavalue value
-mMACD.datavalue value
+mMA1.datavalue Value
+mMA2.datavalue Value
+mMa3.datavalue Value
+mMACD.datavalue Value
 
 Exit Sub
 
@@ -1489,9 +1489,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getSessionTime(ByVal value As String) As Date
+Private Function getSessionTime(ByVal Value As String) As Date
 On Error GoTo Err
-getSessionTime = CDate(value)
+getSessionTime = CDate(Value)
 On Error GoTo 0
 
 If Int(getSessionTime) > 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value must be a time only (no date part)"
@@ -1513,7 +1513,7 @@ Chart1.PeriodWidth = 9                  ' specifies the space between bars in pi
 Chart1.HorizontalScrollBarVisible = True
                                         ' show a horizontal scrollbar for navigating back
                                         ' and forth in the chart
-Chart1.HorizontalMouseScrollingAllowed = (ShowHScrollCheck.value = vbChecked)
+Chart1.HorizontalMouseScrollingAllowed = (ShowHScrollCheck.Value = vbChecked)
                                     ' alternatively the user can scroll by dragging the
                                     ' mouse both horizontally...
 Chart1.VerticalMouseScrollingAllowed = True

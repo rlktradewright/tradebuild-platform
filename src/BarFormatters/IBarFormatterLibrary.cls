@@ -60,7 +60,7 @@ Private Const ModuleName                            As String = "IBarFormatterLi
 ' Properties
 '@================================================================================
 
-Public Property Let Name(ByVal value As String)
+Public Property Let Name(ByVal Value As String)
 
 End Property
 

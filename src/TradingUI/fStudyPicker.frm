@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#232.1#0"; "StudiesUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#253.0#0"; "StudiesUI27.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Form1"

@@ -645,7 +645,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub createValueCaches( _
-                ByVal numberOfValuesToCache As Long)
+                ByVal NumberOfValuesToCache As Long)
 Const ProcName As String = "createValueCaches"
 On Error GoTo Err
 
@@ -657,7 +657,7 @@ ReDim mValueCaches(valueDefs.Count - 1) As ValueCacheTableEntry
 Dim i As Long
 Dim valueDef As StudyValueDefinition
 For Each valueDef In valueDefs
-    Set mValueCaches(i).ValueCache = CreateValueCache(numberOfValuesToCache, valueDef.Name)
+    Set mValueCaches(i).ValueCache = CreateValueCache(NumberOfValuesToCache, valueDef.Name)
     mValueCaches(i).IsDefault = valueDef.IsDefault
     i = i + 1
 Next

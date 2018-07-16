@@ -173,8 +173,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let ITask_TaskContext(ByVal value As TaskContext)
-Set mTaskContext = value
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get ITask_taskName() As String

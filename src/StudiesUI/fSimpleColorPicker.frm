@@ -399,12 +399,12 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let initialColor(ByVal value As Long)
+Friend Property Let initialColor(ByVal Value As Long)
 Const ProcName As String = "initialColor"
 On Error GoTo Err
 
-InitialColorLabel.BackColor = value
-mSelectedColor = value
+InitialColorLabel.BackColor = Value
+mSelectedColor = Value
 
 Exit Property
 

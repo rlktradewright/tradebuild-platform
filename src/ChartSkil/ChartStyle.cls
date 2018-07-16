@@ -742,7 +742,7 @@ End Sub
 
 Private Sub removeConfigForObject(ByVal pExtProp As ExtendedProperty, ByVal pOldvalue As IConfigurable)
 mConfig.RemoveConfigurationSection getConfigName(pExtProp)
-' Don't execute the following line because the old value may be from the parent style,
+' Don't execute the following line because the old Value may be from the parent style,
 ' and we don't want to remove that from the config
 'If Not pOldvalue Is Nothing Then getConfigurableObject(pOldvalue).RemoveFromConfig
 End Sub

@@ -1241,7 +1241,7 @@ Case TextPropertyOffset
 Case TextPropertySize
     propertyFlagToConfigSection = ConfigSectionSize
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag Value"
 End Select
 
 Exit Function
@@ -1316,7 +1316,7 @@ Case TextPropertySize
 Case TextPropertyHideIfBlank
     propertyFlagToConfigSetting = ConfigSettingHideIfBlank
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag Value"
 End Select
 
 Exit Function

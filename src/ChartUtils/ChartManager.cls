@@ -443,13 +443,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection, _
-                ByVal BaseStudy As IStudy, _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pBaseStudy As IStudy, _
                 ByVal pIncludeBarsOutsideSession As Boolean)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Set mConfig = config
+Set mConfig = pConfig
 mIncludeBarsOutsideSession = pIncludeBarsOutsideSession
 
 If Not mConfig Is Nothing Then
@@ -458,8 +458,8 @@ If Not mConfig Is Nothing Then
     
     Dim studyConfig As StudyConfiguration
     Set studyConfig = New StudyConfiguration
-    studyConfig.Study = BaseStudy
-    studyConfig.UnderlyingStudy = mStudyManager.GetUnderlyingStudy(BaseStudy)
+    studyConfig.Study = pBaseStudy
+    studyConfig.UnderlyingStudy = mStudyManager.GetUnderlyingStudy(pBaseStudy)
     
     studyConfig.LoadFromConfig baseStudySect
     

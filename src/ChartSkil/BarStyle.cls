@@ -667,7 +667,7 @@ Case BarPropertyIncludeInAutoscale
 Case BarPropertyLayer
     propertyFlagToConfigSetting = ConfigSettingLayer
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag Value"
 End Select
 
 Exit Function

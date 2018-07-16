@@ -344,11 +344,11 @@ Private Property Get IThemeable_Theme() As ITheme
 Set IThemeable_Theme = Theme
 End Property
 
-Private Property Let IThemeable_Theme(ByVal value As ITheme)
+Private Property Let IThemeable_Theme(ByVal Value As ITheme)
 Const ProcName As String = "IThemeable_Theme"
 On Error GoTo Err
 
-Theme = value
+Theme = Value
 
 Exit Property
 
@@ -609,7 +609,7 @@ If ev.Future.IsFaulted <> 0 Then
 ElseIf ev.Future.IsCancelled <> 0 Then
     ErrorLabel.Caption = "Contracts fetch Cancelled"
 Else
-    Set mContracts = ev.Future.value
+    Set mContracts = ev.Future.Value
     processContracts
 End If
 
@@ -627,11 +627,11 @@ Public Property Get Parent() As Object
 Set Parent = UserControl.Parent
 End Property
 
-Public Property Let Theme(ByVal value As ITheme)
+Public Property Let Theme(ByVal Value As ITheme)
 Const ProcName As String = "Theme"
 On Error GoTo Err
 
-Set mTheme = value
+Set mTheme = Value
 If mTheme Is Nothing Then Exit Property
 
 UserControl.BackColor = mTheme.BackColor

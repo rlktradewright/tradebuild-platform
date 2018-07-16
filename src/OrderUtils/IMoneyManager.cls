@@ -63,7 +63,7 @@ Private Const ModuleName                            As String = "IMoneyManager"
 Public Property Get DefaultParameters() As Parameters
 End Property
 
-Public Property Let Parameters(ByVal value As Parameters)
+Public Property Let Parameters(ByVal Value As Parameters)
 End Property
 
 Public Property Get Parameters() As Parameters

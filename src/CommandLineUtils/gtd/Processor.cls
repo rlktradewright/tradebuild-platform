@@ -167,7 +167,7 @@ If ev.Future.IsCancelled Then Exit Sub
 
 If ev.Future.IsAvailable Then
     Dim lContracts As IContracts
-    Set lContracts = ev.Future.value
+    Set lContracts = ev.Future.Value
     If lContracts.Count = 0 Then
         gCon.WriteErrorLine "No contract found for: " & mSpecifier.ToString
     ElseIf lContracts.Count > 1 Then
@@ -192,8 +192,8 @@ IsRunning = mRunning
 End Property
 
 Friend Property Let Speed( _
-                ByVal value As Long)
-mController.ReplaySpeed = value
+                ByVal Value As Long)
+mController.ReplaySpeed = Value
 End Property
 
 '@================================================================================

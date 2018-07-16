@@ -146,11 +146,11 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let BarLength(ByVal value As Double)
+Public Property Let BarLength(ByVal Value As Double)
 Const ProcName As String = "BarLength"
 On Error GoTo Err
 
-mBarLength = value
+mBarLength = Value
 
 Exit Property
 
@@ -158,11 +158,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let StartPrice(ByVal value As Double)
+Public Property Let StartPrice(ByVal Value As Double)
 Const ProcName As String = "StartPrice"
 On Error GoTo Err
 
-mStartPrice = value
+mStartPrice = Value
 
 Exit Property
 
@@ -182,11 +182,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let TickSize(ByVal value As Double)
+Public Property Let TickSize(ByVal Value As Double)
 Const ProcName As String = "TickSize"
 On Error GoTo Err
 
-mTickSize = value
+mTickSize = Value
 
 Exit Property
 
