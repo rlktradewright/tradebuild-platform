@@ -117,15 +117,7 @@ Private Sub IDeferredAction_Run(ByVal Data As Variant)
 Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
-If mToTime <> MaxDate Then mIsHistorical = True
-
 If mMaxNumberOfBars <> 0 Then mFetchBarsNeeded = True
-
-Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, mIncludeBarsOutsideSession)
-logAMessage "starting BarStudy", ProcName
-mStudyBase.StudyManager.StartStudy mBarStudy, 0
-
-Set mBarsFuture = mBarStudy.BarsFuture
 
 If mFetchBarsNeeded And Not mContractFuture Is Nothing And Not mHistDataStore Is Nothing Then
     
@@ -348,7 +340,15 @@ mFromTime = pFromTime
 mToTime = pToTime
 mIncludeBarsOutsideSession = pIncludeBarsOutsideSession
 mExcludeCurrentbar = pExcludeCurrentbar
-mClockFuture = pClockFuture
+Set mClockFuture = pClockFuture
+
+If mToTime <> MaxDate Then mIsHistorical = True
+
+Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, mIncludeBarsOutsideSession)
+logAMessage "starting BarStudy", ProcName
+mStudyBase.StudyManager.StartStudy mBarStudy, 0
+
+Set mBarsFuture = mBarStudy.BarsFuture
 
 DeferAction Me
 

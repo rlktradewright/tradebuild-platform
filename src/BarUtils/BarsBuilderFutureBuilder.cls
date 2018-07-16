@@ -53,6 +53,8 @@ Private mTickSize                                   As Double
 Private mSession                                    As Session
 Private mBars                                       As Bars
 
+Private mSelfRef                                    As Object
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -90,6 +92,7 @@ ElseIf TypeOf ev.Future.Value Is Bars Then
     mFutureBuilder.Value = lBarsBuilder
     mFutureBuilder.Complete
     
+    Set mSelfRef = Nothing
 End If
 
 Exit Sub
@@ -151,6 +154,7 @@ mTickSize = pTickSize
 
 mFutureWaiter.Add pBarsFuture
 Set mSession = pSession
+Set mSelfRef = Me
 
 Exit Sub
 

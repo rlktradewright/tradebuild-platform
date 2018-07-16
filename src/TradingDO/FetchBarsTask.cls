@@ -179,11 +179,9 @@ ElseIf ev.Future.IsFaulted Then
                                 "Error " & ev.Future.ErrorNumber & ": " & ev.Future.ErrorMessage, ProcName, ModuleName, LogLevelSevere
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-ElseIf Not ev.Future Is mFutureBuilder.Future Then
-    mFutureWaiter.Add mFutureBuilder.Future
+Else
     mFutureBuilder.Value = ev.Future.Value
     mFutureBuilder.Complete
-Else
     gLogger.Log "FetchBarsTask retrieved bars for " & mSpecifier.ToString, ProcName, ModuleName
     mTaskContext.Finish Empty, False
 End If
