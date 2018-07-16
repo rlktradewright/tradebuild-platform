@@ -53,7 +53,7 @@ Private Const ModuleName As String = "InstrumentLocalSymbol"
 ' Member variables
 '@===============================================================================
 
-Private mRs As ADODB.Recordset
+Private mRS As ADODB.Recordset
 Private mBookmark As Variant
 
 '@===============================================================================
@@ -81,7 +81,7 @@ Const ProcName As String = "LocalSymbol"
 
 On Error GoTo Err
 
-LocalSymbol = Trim$(mRs("LocalSymbol"))
+LocalSymbol = Trim$(mRS("LocalSymbol"))
 
 Exit Property
 
@@ -90,13 +90,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LocalSymbol( _
-                ByVal value As String)
+                ByVal Value As String)
 Const ProcName As String = "LocalSymbol"
 
 On Error GoTo Err
 
-value = Trim$(value)
-mRs("LocalSymbol") = value
+Value = Trim$(Value)
+mRS("LocalSymbol") = Value
 
 Exit Property
 
@@ -109,7 +109,7 @@ Const ProcName As String = "ProviderKey"
 
 On Error GoTo Err
 
-ProviderKey = Trim$(mRs("providerkey"))
+ProviderKey = Trim$(mRS("providerkey"))
 
 Exit Property
 
@@ -118,13 +118,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ProviderKey( _
-                ByVal value As String)
+                ByVal Value As String)
 Const ProcName As String = "ProviderKey"
 
 On Error GoTo Err
 
-value = Trim$(value)
-mRs("providerkey") = value
+Value = Trim$(Value)
+mRS("providerkey") = Value
 
 Exit Property
 
@@ -137,11 +137,11 @@ End Property
 '@===============================================================================
 
 Friend Sub Initialise( _
-                ByVal value As ADODB.Recordset, _
+                ByVal Value As ADODB.Recordset, _
                 ByVal Bookmark As Variant)
-Set mRs = value
+Set mRS = Value
 mBookmark = Bookmark
-mRs.Bookmark = mBookmark
+mRS.Bookmark = mBookmark
 End Sub
 
 '@===============================================================================

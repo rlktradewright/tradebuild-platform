@@ -183,12 +183,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function DatabaseTypeFromString( _
-                ByVal value As String) As DatabaseTypes
+                ByVal Value As String) As DatabaseTypes
 Const ProcName As String = "DatabaseTypeFromString"
 
 On Error GoTo Err
 
-DatabaseTypeFromString = gDatabaseTypeFromString(value)
+DatabaseTypeFromString = gDatabaseTypeFromString(Value)
 
 Exit Function
 
@@ -197,12 +197,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function DatabaseTypeToString( _
-                ByVal value As DatabaseTypes) As String
+                ByVal Value As DatabaseTypes) As String
 Const ProcName As String = "DatabaseTypeToString"
 
 On Error GoTo Err
 
-DatabaseTypeToString = gDatabaseTypeToString(value)
+DatabaseTypeToString = gDatabaseTypeToString(Value)
 
 Exit Function
 

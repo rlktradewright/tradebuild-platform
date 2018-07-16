@@ -84,8 +84,8 @@ Public Property Get Name() As String
 Name = GetName
 End Property
 
-Public Property Let Name(ByVal value As String)
-SetName value
+Public Property Let Name(ByVal Value As String)
+SetName Value
 End Property
 
 Public Property Get Notes() As String
@@ -113,12 +113,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TimeZone( _
-                ByVal value As TimeZone)
+                ByVal Value As TimeZone)
 Const ProcName As String = "TimeZone"
 On Error GoTo Err
 
-mDataObj.RuleBroken BusRuleExchangeTimezoneValid, value Is Nothing
-mDataObj.ColumnValue(ExchangeColumnTimeZoneID) = value.Id
+mDataObj.RuleBroken BusRuleExchangeTimezoneValid, Value Is Nothing
+mDataObj.ColumnValue(ExchangeColumnTimeZoneID) = Value.Id
 
 Exit Property
 
@@ -140,18 +140,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TimeZoneName( _
-                ByVal value As String)
+                ByVal Value As String)
 Dim tz As TimeZone
 
 Const ProcName As String = "TimeZoneName"
 On Error GoTo Err
 
-Set tz = mDB.TimeZoneFactory.LoadByName(value)
+Set tz = mDB.TimeZoneFactory.LoadByName(Value)
 If tz Is Nothing Then
     mDataObj.RuleBroken BusRuleExchangeTimezoneValid, True
     If Not mDataObj.IsNew Then
         ' this column is not available for a new object
-        mDataObj.ColumnValue(ExchangeColumnTimeZoneName) = Left$(value, mDataObj.ColumnMaxLength(ExchangeColumnTimeZoneName))
+        mDataObj.ColumnValue(ExchangeColumnTimeZoneName) = Left$(Value, mDataObj.ColumnMaxLength(ExchangeColumnTimeZoneName))
     End If
 Else
     TimeZone = tz
@@ -632,11 +632,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetName(ByVal value As String)
+Public Sub SetName(ByVal Value As String)
 Const ProcName As String = "SetName"
 On Error GoTo Err
 
-mDataObj.Name = value
+mDataObj.Name = Value
 
 Exit Sub
 

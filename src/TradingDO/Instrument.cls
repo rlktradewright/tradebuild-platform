@@ -91,19 +91,19 @@ Private mMaxCurrencyCodeLength As Long
 '@================================================================================
 
 Public Property Let CurrencyCode( _
-                ByVal value As String)
+                ByVal Value As String)
 Const ProcName As String = "CurrencyCode"
 On Error GoTo Err
 
-value = Trim$(value)
+Value = Trim$(Value)
 mDataObj.RuleBroken BusRuleInstrumentCurrencyCodeValid, _
-    Len(value) > mMaxCurrencyCodeLength
-If Len(value) = 0 Then
+    Len(Value) > mMaxCurrencyCodeLength
+If Len(Value) = 0 Then
     mDataObj.ColumnValue(InstrumentColumnCurrency) = Null
 Else
     mDataObj.RuleBroken BusRuleInstrumentCurrencyCodeValid, _
-        Not IsValidCurrencyCode(value)
-    mDataObj.ColumnValue(InstrumentColumnCurrency) = Left$(value, mMaxCurrencyCodeLength)
+        Not IsValidCurrencyCode(Value)
+    mDataObj.ColumnValue(InstrumentColumnCurrency) = Left$(Value, mMaxCurrencyCodeLength)
 End If
 
 Exit Property
@@ -183,11 +183,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ExpiryDate(ByVal value As Date)
+Public Property Let ExpiryDate(ByVal Value As Date)
 Const ProcName As String = "ExpiryDate"
 On Error GoTo Err
 
-mDataObj.ColumnValue(InstrumentColumnExpiry) = Int(value)
+mDataObj.ColumnValue(InstrumentColumnExpiry) = Int(Value)
 
 Exit Property
 
@@ -195,14 +195,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ExpiryDateString(ByVal value As String)
+Public Property Let ExpiryDateString(ByVal Value As String)
 Const ProcName As String = "ExpiryDateString"
 On Error GoTo Err
 
-If IsDate(value) Then
-    ExpiryDate = CDate(value)
+If IsDate(Value) Then
+    ExpiryDate = CDate(Value)
 Else
-    mDataObj.RuleBroken BusinessRuleIds.BusRuleInstrumentExpiryDateValid, Not IsDate(value)
+    mDataObj.RuleBroken BusinessRuleIds.BusRuleInstrumentExpiryDateValid, Not IsDate(Value)
     ExpiryDate = CDate(0)
 End If
 
@@ -245,20 +245,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let InstrumentClass( _
-                ByVal value As InstrumentClass)
+                ByVal Value As InstrumentClass)
 Const ProcName As String = "InstrumentClass"
 On Error GoTo Err
 
-If mDataObj.RuleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
+If mDataObj.RuleBroken(BusRuleInstrumentInstrumentClassValid, Value Is Nothing) Then Exit Property
 
 If Name <> "" Then
     Dim instrmnt As instrument
-    Set instrmnt = mDB.InstrumentFactory.LoadByName(value.ExchangeName & "/" & _
-                                                    value.Name & "/" & _
+    Set instrmnt = mDB.InstrumentFactory.LoadByName(Value.ExchangeName & "/" & _
+                                                    Value.Name & "/" & _
                                                     Name)
     If Not instrmnt Is Nothing Then mDataObj.RuleBroken getBusRuleNameValidId, instrmnt.Id <> Id
 End If
-mDataObj.ColumnValue(InstrumentColumnInstrumentClassID) = value.Id
+mDataObj.ColumnValue(InstrumentColumnInstrumentClassID) = Value.Id
 
 Exit Property
 
@@ -291,11 +291,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let InstrumentClassName( _
-                ByVal value As String)
+                ByVal Value As String)
 Const ProcName As String = "InstrumentClassName"
 On Error GoTo Err
 
-InstrumentClass = mDB.InstrumentClassFactory.LoadByName(value)
+InstrumentClass = mDB.InstrumentClassFactory.LoadByName(Value)
 
 Exit Property
 
@@ -347,21 +347,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Name(ByVal value As String)
+Public Property Let Name(ByVal Value As String)
 ' overrides generic property
 Const ProcName As String = "Name"
 On Error GoTo Err
 
-value = Trim$(value)
-If value = GetName Then Exit Property
+Value = Trim$(Value)
+If Value = GetName Then Exit Property
 If Not mDataObj.RuleBroken(getBusRuleNameValidId, _
-                            Len(value) = 0 Or _
-                            Len(value) > mDataObj.ColumnMaxLength(GenericColumnName)) Then
+                            Len(Value) = 0 Or _
+                            Len(Value) > mDataObj.ColumnMaxLength(GenericColumnName)) Then
     If InstrumentClassName = "" Then
-        mDataObj.ColumnValue(GenericColumnName) = Left$(value, mDataObj.ColumnMaxLength(GenericColumnName))
+        mDataObj.ColumnValue(GenericColumnName) = Left$(Value, mDataObj.ColumnMaxLength(GenericColumnName))
     ElseIf Not mDataObj.RuleBroken(getBusRuleNameValidId, _
-                                    Not mDB.InstrumentFactory.LoadByName(ExchangeName & "/" & InstrumentClassName & "/" & value) Is Nothing) Then
-        mDataObj.ColumnValue(GenericColumnName) = Left$(value, mDataObj.ColumnMaxLength(GenericColumnName))
+                                    Not mDB.InstrumentFactory.LoadByName(ExchangeName & "/" & InstrumentClassName & "/" & Value) Is Nothing) Then
+        mDataObj.ColumnValue(GenericColumnName) = Left$(Value, mDataObj.ColumnMaxLength(GenericColumnName))
     End If
 End If
 
@@ -407,12 +407,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let OptionRight(ByVal value As OptionRights)
+Public Property Let OptionRight(ByVal Value As OptionRights)
 Const ProcName As String = "OptionRight"
 On Error GoTo Err
 
-validateOptionRight value
-mDataObj.ColumnValue(InstrumentColumnOptionRight) = Left$(OptionRightToString(value), mMaxOptRightLength)
+validateOptionRight Value
+mDataObj.ColumnValue(InstrumentColumnOptionRight) = Left$(OptionRightToString(Value), mMaxOptRightLength)
 
 Exit Property
 
@@ -472,14 +472,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ShortName(ByVal value As String)
+Public Property Let ShortName(ByVal Value As String)
 Const ProcName As String = "ShortName"
 On Error GoTo Err
 
-value = Trim$(value)
+Value = Trim$(Value)
 mDataObj.RuleBroken BusRuleInstrumentShortNameValid, _
-    Len(value) = 0 Or Len(value) > mMaxShortNameLength
-mDataObj.ColumnValue(InstrumentColumnShortName) = Left$(value, mMaxShortNameLength)
+    Len(Value) = 0 Or Len(Value) > mMaxShortNameLength
+mDataObj.ColumnValue(InstrumentColumnShortName) = Left$(Value, mMaxShortNameLength)
 
 Exit Property
 
@@ -499,12 +499,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let StrikePrice(ByVal value As Double)
+Public Property Let StrikePrice(ByVal Value As Double)
 Const ProcName As String = "StrikePrice"
 On Error GoTo Err
 
-validateStrikePrice value
-mDataObj.ColumnValue(InstrumentColumnStrikePrice) = value
+validateStrikePrice Value
+mDataObj.ColumnValue(InstrumentColumnStrikePrice) = Value
 
 Exit Property
 
@@ -512,14 +512,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let StrikePriceString(ByVal value As String)
+Public Property Let StrikePriceString(ByVal Value As String)
 Const ProcName As String = "StrikePriceString"
 On Error GoTo Err
 
-If IsNumeric(value) Then
-    StrikePrice = CDbl(value)
+If IsNumeric(Value) Then
+    StrikePrice = CDbl(Value)
 Else
-    mDataObj.RuleBroken BusRuleInstrumentStrikePriceValid, Not IsNumeric(value)
+    mDataObj.RuleBroken BusRuleInstrumentStrikePriceValid, Not IsNumeric(Value)
     StrikePrice = 999.999
 End If
 
@@ -529,14 +529,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Symbol(ByVal value As String)
+Public Property Let Symbol(ByVal Value As String)
 Const ProcName As String = "Symbol"
 On Error GoTo Err
 
-value = Trim$(value)
+Value = Trim$(Value)
 mDataObj.RuleBroken BusRuleInstrumentSymbolValid, _
-                    Len(value) = 0 Or Len(value) > mMaxSymbolLength
-mDataObj.ColumnValue(InstrumentColumnSymbol) = Left$(value, mMaxSymbolLength)
+                    Len(Value) = 0 Or Len(Value) > mMaxSymbolLength
+mDataObj.ColumnValue(InstrumentColumnSymbol) = Left$(Value, mMaxSymbolLength)
 
 Exit Property
 
@@ -557,16 +557,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickSize( _
-                ByVal value As Double)
+                ByVal Value As Double)
 Const ProcName As String = "TickSize"
 On Error GoTo Err
 
 mDataObj.RuleBroken BusRuleInstrumentTickSizeValid, _
-                    value < 0
-If value = 0 Then
+                    Value < 0
+If Value = 0 Then
     mDataObj.ColumnValue(InstrumentColumnTickSize) = Null
 Else
-    mDataObj.ColumnValue(InstrumentColumnTickSize) = value
+    mDataObj.ColumnValue(InstrumentColumnTickSize) = Value
 End If
 
 Exit Property
@@ -606,16 +606,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickSizeString( _
-                ByVal value As String)
+                ByVal Value As String)
 Const ProcName As String = "TickSizeString"
 On Error GoTo Err
 
-If value = "" Then
+If Value = "" Then
     TickSize = 0#
-ElseIf Not mDataObj.RuleBroken(BusRuleInstrumentTickSizeValid, Not IsNumeric(value)) Then
+ElseIf Not mDataObj.RuleBroken(BusRuleInstrumentTickSizeValid, Not IsNumeric(Value)) Then
     TickSize = 999.999
 Else
-    TickSize = CDbl(value)
+    TickSize = CDbl(Value)
 End If
 
 Exit Property
@@ -625,15 +625,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickValue( _
-                ByVal value As Double)
+                ByVal Value As Double)
 Const ProcName As String = "TickValue"
 On Error GoTo Err
 
-mDataObj.RuleBroken BusRuleInstrumentTickValueValid, value < 0
-If value = 0 Then
+mDataObj.RuleBroken BusRuleInstrumentTickValueValid, Value < 0
+If Value = 0 Then
     mDataObj.ColumnValue(InstrumentColumnTickValue) = Null
 Else
-    mDataObj.ColumnValue(InstrumentColumnTickValue) = value
+    mDataObj.ColumnValue(InstrumentColumnTickValue) = Value
 End If
 
 Exit Property
@@ -673,16 +673,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickValueString( _
-                ByVal value As String)
+                ByVal Value As String)
 Const ProcName As String = "TickValueString"
 On Error GoTo Err
 
-If value = "" Then
+If Value = "" Then
     TickValue = 0#
-ElseIf Not mDataObj.RuleBroken(BusRuleInstrumentTickValueValid, Not IsNumeric(value)) Then
+ElseIf Not mDataObj.RuleBroken(BusRuleInstrumentTickValueValid, Not IsNumeric(Value)) Then
     TickValue = 999.999
 Else
-    TickValue = CDbl(value)
+    TickValue = CDbl(Value)
 End If
 
 Exit Property
@@ -712,13 +712,13 @@ End Property
 '@================================================================================
 
 Public Function CreateTickStream( _
-                ByVal FromDate As Date, _
-                ByVal ToDate As Date) As TickStream
+                ByVal fromDate As Date, _
+                ByVal toDate As Date) As TickStream
 Const ProcName As String = "CreateTickStream"
 On Error GoTo Err
 
 Set CreateTickStream = New TickStream
-CreateTickStream.Initialise mDB, Id, FromDate, ToDate
+CreateTickStream.Initialise mDB, Id, fromDate, toDate
 
 Exit Function
 
@@ -772,10 +772,10 @@ Dim Specifier As BarDataSpecifier
 Set Specifier = New BarDataSpecifier
 Specifier.BarTimePeriod = pBarTimePeriod
 Specifier.BarType = pBarType
-Specifier.FromDate = pFromDate
-Specifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
-Specifier.MaxNumberOfBars = pMaxNumberOfBars
-Specifier.ToDate = pToDate
+Specifier.fromDate = pFromDate
+Specifier.includeBarsOutsideSession = pIncludeBarsOutsideSession
+Specifier.maxNumberOfBars = pMaxNumberOfBars
+Specifier.toDate = pToDate
 Specifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
 
 Dim bf As BarFetcher
@@ -824,10 +824,10 @@ End Select
 Dim Specifier As New BarDataSpecifier
 Specifier.BarTimePeriod = pBarTimePeriod
 Specifier.BarType = pBarType
-Specifier.FromDate = pFromDate
-Specifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
-Specifier.MaxNumberOfBars = pMaxNumberOfBars
-Specifier.ToDate = pToDate
+Specifier.fromDate = pFromDate
+Specifier.includeBarsOutsideSession = pIncludeBarsOutsideSession
+Specifier.maxNumberOfBars = pMaxNumberOfBars
+Specifier.toDate = pToDate
 Specifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
 
 Dim bf As New AsyncBarFetcher
@@ -966,11 +966,11 @@ mDataObj.RuleBroken BusRuleInstrumentSymbolValid, True
 End Sub
 
 Private Sub validateOptionRight( _
-                ByVal value As OptionRights)
+                ByVal Value As OptionRights)
 Const ProcName As String = "validateOptionRight"
 On Error GoTo Err
 
-Select Case value
+Select Case Value
 Case OptNone
 Case OptCall
 Case OptPut
@@ -982,7 +982,7 @@ End Select
 mDataObj.RuleBroken BusRuleInstrumentOptionRightvalid, _
                     ((SecType = SecTypeOption Or _
                         SecType = SecTypeFuturesOption) And _
-                    value = OptNone)
+                    Value = OptNone)
 
 Exit Sub
 
@@ -991,14 +991,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub validateStrikePrice( _
-                ByVal value As Double)
+                ByVal Value As Double)
 Const ProcName As String = "validateStrikePrice"
 On Error GoTo Err
 
 mDataObj.RuleBroken BusRuleInstrumentStrikePriceValid, _
                     (SecType = SecTypeOption Or _
                         SecType = SecTypeFuturesOption) And _
-                    value <= 0
+                    Value <= 0
 
 Exit Sub
 
@@ -1376,11 +1376,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetName(ByVal value As String)
+Public Sub SetName(ByVal Value As String)
 Const ProcName As String = "SetName"
 On Error GoTo Err
 
-mDataObj.Name = value
+mDataObj.Name = Value
 
 Exit Sub
 

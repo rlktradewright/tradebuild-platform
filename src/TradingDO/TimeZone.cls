@@ -109,18 +109,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let canonicalName(ByVal value As String)
+Public Property Let canonicalName(ByVal Value As String)
 Dim lTimeZone As TimeZone
 
 Const ProcName As String = "canonicalName"
 
 On Error GoTo Err
 
-value = Trim$(value)
+Value = Trim$(Value)
 mDataObj.RuleBroken BusRuleTimeZoneCanonicalNameValid, _
-                    Len(value) = 0 Or Len(value) > mDataObj.ColumnMaxLength(TimeZoneColumnName)
+                    Len(Value) = 0 Or Len(Value) > mDataObj.ColumnMaxLength(TimeZoneColumnName)
 
-Set lTimeZone = mDB.TimeZoneFactory.LoadByName(value)
+Set lTimeZone = mDB.TimeZoneFactory.LoadByName(Value)
 
 mDataObj.RuleBroken BusRuleTimeZoneCanonicalNameValid, _
                     lTimeZone Is Nothing
@@ -150,12 +150,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Name(ByVal value As String)
+Public Property Let Name(ByVal Value As String)
 Const ProcName As String = "Name"
 
 On Error GoTo Err
 
-SetName value
+SetName Value
 
 Exit Property
 
@@ -587,12 +587,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetName(ByVal value As String)
+Public Sub SetName(ByVal Value As String)
 Const ProcName As String = "SetName"
 
 On Error GoTo Err
 
-mDataObj.Name = value
+mDataObj.Name = Value
 
 Exit Sub
 

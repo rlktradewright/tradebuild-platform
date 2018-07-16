@@ -53,8 +53,8 @@ Private Const ModuleName                As String = "InstrumentLocalSymbols"
 '@===============================================================================
 
 Private mConnectionString As String
-Private mConn As ADODB.connection
-Private mRs As ADODB.Recordset
+Private mConn As ADODB.Connection
+Private mRS As ADODB.Recordset
 Private mCol As Collection
 Private mInstrumentID As Long
 
@@ -79,9 +79,9 @@ End Sub
 '@===============================================================================
 
 Friend Property Let ConnectionString( _
-                ByVal value As String)
-value = Trim$(value)
-mConnectionString = value
+                ByVal Value As String)
+Value = Trim$(Value)
+mConnectionString = Value
 End Property
 
 '@===============================================================================
@@ -93,10 +93,10 @@ Const ProcName As String = "Add"
 
 On Error GoTo Err
 
-mRs.AddNew
-mRs("InstrumentID") = mInstrumentID
+mRS.AddNew
+mRS("InstrumentID") = mInstrumentID
 Set Add = New InstrumentLocalSymbol
-Add.Initialise mRs.Clone, mRs.Bookmark
+Add.Initialise mRS.Clone, mRS.Bookmark
 mCol.Add Add
 
 Exit Function
@@ -110,7 +110,7 @@ Const ProcName As String = "Cancel"
 
 On Error GoTo Err
 
-mRs.CancelBatch
+mRS.CancelBatch
 
 Exit Sub
 
@@ -154,31 +154,31 @@ On Error GoTo Err
 Dim obj As InstrumentLocalSymbol
 Dim SQL As String
 
-If Not mRs Is Nothing Then Err.Raise 445
+If Not mRS Is Nothing Then Err.Raise 445
 
 failpoint = 100
 
-Set mConn = New ADODB.connection
+Set mConn = New ADODB.Connection
 mConn.Open mConnectionString
 
 failpoint = 200
 
-Set mRs = New Recordset
-mRs.cursorlocation = adUseClient
+Set mRS = New Recordset
+mRS.cursorlocation = adUseClient
 SQL = "SELECT ID, ProviderKey, InstrumentID, LocalSymbol " & _
         "FROM InstrumentLocalSymbol " & _
         "WHERE InstrumentID=" & instrumentID & " " & _
         "ORDER BY ProviderKey"
 
-mRs.Open SQL, mConn, adOpenKeyset, adLockBatchOptimistic
+mRS.Open SQL, mConn, adOpenKeyset, adLockBatchOptimistic
 
-Set mRs.ActiveConnection = Nothing
+Set mRS.ActiveConnection = Nothing
 
-Do While Not mRs.EOF
+Do While Not mRS.EOF
     Set obj = New InstrumentLocalSymbol
-    obj.Initialise mRs.Clone, mRs.Bookmark
+    obj.Initialise mRS.Clone, mRS.Bookmark
     mCol.Add obj
-    mRs.MoveNext
+    mRS.MoveNext
 Loop
 
 mConn.Close
@@ -204,8 +204,8 @@ Const ProcName As String = "Remove"
 On Error GoTo Err
 
 Set obj = mCol(index)
-mRs.Bookmark = obj.Bookmark
-mRs.Delete adAffectCurrent
+mRS.Bookmark = obj.Bookmark
+mRS.Delete adAffectCurrent
 mCol.Remove index
 
 Exit Sub
@@ -219,10 +219,10 @@ Const ProcName As String = "RemoveAll"
 
 On Error GoTo Err
 
-mRs.MoveFirst
-Do While Not mRs.EOF
-    mRs.Delete
-    mRs.MoveNext
+mRS.MoveFirst
+Do While Not mRS.EOF
+    mRS.Delete
+    mRS.MoveNext
 Loop
 'mRs.Delete adAffectAll
 Set mCol = New Collection
@@ -238,7 +238,7 @@ Const ProcName As String = "Save"
 
 On Error GoTo Err
 
-mRs.UpdateBatch
+mRS.UpdateBatch
 
 Exit Sub
 

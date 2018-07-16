@@ -798,15 +798,15 @@ Private Sub addTerm( _
             ByVal cond As SimpleConditionBuilder, _
             ByVal columnName As String, _
             ByVal op As ConditionalOperators, _
-            ByVal value As String)
+            ByVal Value As String)
 Const ProcName As String = "addTerm"
 On Error GoTo Err
 
-If value <> "" Then
+If Value <> "" Then
     If cond.expectingLogicalOperator Then
-        cond.addTerm columnName, op, value, LogicalOpAND
+        cond.addTerm columnName, op, Value, LogicalOpAND
     Else
-        cond.addTerm columnName, op, value
+        cond.addTerm columnName, op, Value
     End If
 End If
 

@@ -58,7 +58,7 @@ Private Const ModuleName                        As String = "BarWriter"
 Private mDB                                     As TradingDB
 Private WithEvents mConnector                   As Connector
 Attribute mConnector.VB_VarHelpID = -1
-Private WithEvents mConnection                  As ADODB.connection
+Private WithEvents mConnection                  As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
 
 Private mInstrumentID                           As Long
@@ -133,8 +133,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let ITask_TaskContext(ByVal value As TaskContext)
-Set mTaskContext = value
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get ITask_taskName() As String
@@ -151,7 +151,7 @@ Private Sub mConnection_ExecuteComplete( _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pCommand As ADODB.Command, _
                 ByVal pRecordset As ADODB.Recordset, _
-                ByVal pConnection As ADODB.connection)
+                ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnection_ExecuteComplete"
 On Error GoTo Err
 
@@ -235,7 +235,7 @@ End Sub
 '@===============================================================================
 
 Private Sub mConnector_Connected( _
-                ByVal pConnection As ADODB.connection)
+                ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnector_Connected"
 On Error GoTo Err
 
@@ -287,7 +287,7 @@ End Sub
 
 Friend Sub WriteBar( _
                 ByVal timestamp As Date, _
-                ByVal barType As Long, _
+                ByVal BarType As Long, _
                 ByVal barLength As Long, _
                 ByVal openPrice As Double, _
                 ByVal highPrice As Double, _
@@ -301,7 +301,7 @@ On Error GoTo Err
 
 mAsynchronous = False
 mTimestamp = timestamp
-mBarType = barType
+mBarType = BarType
 mBarLength = barLength
 mOpenPrice = openPrice
 mHighPrice = highPrice
@@ -327,7 +327,7 @@ End Sub
 
 Friend Function WriteBarAsync( _
                 ByVal timestamp As Date, _
-                ByVal barType As Long, _
+                ByVal BarType As Long, _
                 ByVal barLength As Long, _
                 ByVal openPrice As Double, _
                 ByVal highPrice As Double, _
@@ -343,7 +343,7 @@ On Error GoTo Err
 
 mAsynchronous = True
 mTimestamp = timestamp
-mBarType = barType
+mBarType = BarType
 mBarLength = barLength
 mOpenPrice = openPrice
 mHighPrice = highPrice

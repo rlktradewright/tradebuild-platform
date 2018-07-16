@@ -66,7 +66,7 @@ Private Sub mTradingDB_Connected()
 Const ProcName As String = "mTradingDB_Connected"
 On Error GoTo Err
 
-mFutureBuilder.value = mTradingDB
+mFutureBuilder.Value = mTradingDB
 mFutureBuilder.Complete
 Set mSelfRef = Nothing
 

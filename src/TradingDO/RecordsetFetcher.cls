@@ -54,8 +54,8 @@ Private mConnector                                  As Connector
 
 Private WithEvents mConnection                      As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
-Private WithEvents mRs                              As ADODB.Recordset
-Attribute mRs.VB_VarHelpID = -1
+Private WithEvents mRS                              As ADODB.Recordset
+Attribute mRS.VB_VarHelpID = -1
 
 Private mAsynchronous                               As Boolean
 
@@ -121,8 +121,8 @@ On Error GoTo Err
 If ev.Future.IsFaulted Then
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf ev.Future.IsAvailable Then
-    Set mConnection = ev.Future.value
-    Set mRs = Execute(mConnection, mCommand, mCommandType, mCursorType, mAsynchronous)
+    Set mConnection = ev.Future.Value
+    Set mRS = Execute(mConnection, mCommand, mCommandType, mCursorType, mAsynchronous)
 End If
 
 Exit Sub
@@ -161,7 +161,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
 End If
 
 If mAsynchronous Then
-    mFutureBuilder.value = mRs
+    mFutureBuilder.Value = mRS
     mFutureBuilder.Complete
 End If
 
@@ -220,7 +220,7 @@ If mConnector Is Nothing Then
     Set mConnector = mDB.GetConnector
     mFutureWaiter.Add mConnector.ConnectFuture(True)
 Else
-    Set mRs = Execute(mConnection, mCommand, mCommandType, mCursorType, mAsynchronous)
+    Set mRS = Execute(mConnection, mCommand, mCommandType, mCursorType, mAsynchronous)
 End If
 
 Set FetchRecordsetAsync = mFutureBuilder.Future

@@ -118,7 +118,7 @@ Else
     mConnected = True
     RaiseEvent Connected(mConnection)
     If Not mFutureBuilder Is Nothing Then
-        mFutureBuilder.value = mConnection
+        mFutureBuilder.Value = mConnection
         mFutureBuilder.Complete
     End If
 End If

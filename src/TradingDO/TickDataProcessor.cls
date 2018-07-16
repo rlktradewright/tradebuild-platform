@@ -168,35 +168,35 @@ val.timestamp = pTick.timestamp
 Select Case pTick.TickType
 Case TickTypeBid
     If pBarType = BarTypeBid Then
-        val.value = pTick.price
+        val.Value = pTick.price
         pBarsBuilder.NotifyValue val
     End If
 Case TickTypeAsk
     If pBarType = BarTypeAsk Then
-        val.value = pTick.price
+        val.Value = pTick.price
         pBarsBuilder.NotifyValue val
     End If
 Case TickTypeTrade
     If pBarType = BarTypeTrade Then
-        val.value = pTick.price
+        val.Value = pTick.price
         pBarsBuilder.NotifyValue val
     End If
 Case TickTypeVolume
     If pBarType = BarTypeTrade Then
         If Not pNotifiedFirstVolume Then
-            val.value = 1
+            val.Value = 1
             pBarsBuilder.NotifyVolume val
             pNotifiedFirstVolume = True
-            val.value = pTick.size - 1
+            val.Value = pTick.size - 1
             pBarsBuilder.NotifyVolume val
         Else
-            val.value = pTick.size
+            val.Value = pTick.size
             pBarsBuilder.NotifyVolume val
         End If
     End If
 Case TickTypeOpenInterest
     If pBarType = BarTypeTrade Then
-        val.value = pTick.size
+        val.Value = pTick.size
         pBarsBuilder.NotifyOpenInterest val
     End If
 End Select

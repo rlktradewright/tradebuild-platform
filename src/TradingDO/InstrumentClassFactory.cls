@@ -712,16 +712,16 @@ End Function
 Private Sub addTerm( _
             ByVal cond As SimpleConditionBuilder, _
             ByVal columnName As String, _
-            ByVal value As String)
+            ByVal Value As String)
 Const ProcName As String = "addTerm"
 
 On Error GoTo Err
 
-If value <> "" Then
+If Value <> "" Then
     If cond.expectingLogicalOperator Then
-        cond.addTerm columnName, CondOpEqual, value, LogicalOpAND
+        cond.addTerm columnName, CondOpEqual, Value, LogicalOpAND
     Else
-        cond.addTerm columnName, CondOpEqual, value
+        cond.addTerm columnName, CondOpEqual, Value
     End If
 End If
 

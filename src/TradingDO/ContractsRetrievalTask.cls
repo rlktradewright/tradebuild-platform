@@ -125,7 +125,7 @@ Else
         Set lContract = gContractFromInstrument(lInstrument)
         
         mBuilder.Add lContract
-        If Not mListener Is Nothing Then mListener.NotifyContract mFutureBuilder.Cookie, lContract
+        If Not mListener Is Nothing Then mListener.NotifyContract mFutureBuilder.cookie, lContract
     End If
 End If
 
@@ -190,7 +190,7 @@ If ev.Cancelled Then
     doCancel
 ElseIf ev.ErrorNumber <> 0 Then
     mFutureBuilder.Fail ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
-    If Not mListener Is Nothing Then mListener.FetchFailed mFutureBuilder.Cookie, ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
+    If Not mListener Is Nothing Then mListener.FetchFailed mFutureBuilder.cookie, ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
     mTaskContext.Finish Empty, True
 Else
     Dim instruments As DataObjects
@@ -214,7 +214,7 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If Not mListener Is Nothing Then mListener.FetchCompleted mFutureBuilder.Cookie
+If Not mListener Is Nothing Then mListener.FetchCompleted mFutureBuilder.cookie
 mTaskContext.Finish Empty, False
 
 Exit Sub
@@ -244,7 +244,7 @@ Const ProcName As String = "Initialise"
 Set mDB = db
 Set mListener = pListener
 Set mContractSpec = Specifier
-mFutureBuilder.Cookie = pCookie
+mFutureBuilder.cookie = pCookie
 End Sub
 
 '@================================================================================
@@ -257,7 +257,7 @@ On Error GoTo Err
 
 If Not mFetchInstrumentsTC Is Nothing Then mFetchInstrumentsTC.CancelTask
 mFutureBuilder.Cancel
-If Not mListener Is Nothing Then mListener.FetchCancelled mFutureBuilder.Cookie
+If Not mListener Is Nothing Then mListener.FetchCancelled mFutureBuilder.cookie
 
 mTaskContext.Finish Empty, True
 

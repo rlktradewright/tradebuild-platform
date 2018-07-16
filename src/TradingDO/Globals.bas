@@ -184,8 +184,8 @@ End Property
 '@================================================================================
 
 Public Function gCategoryFromSecType( _
-                ByVal value As SecurityTypes) As InstrumentCategories
-Select Case value
+                ByVal Value As SecurityTypes) As InstrumentCategories
+Select Case Value
 Case SecurityTypes.SecTypeStock
     gCategoryFromSecType = InstrumentCategoryStock
 Case SecurityTypes.SecTypeFuture
@@ -204,8 +204,8 @@ End Select
 End Function
 
 Public Function gCategoryToSecType( _
-                ByVal value As InstrumentCategories) As SecurityTypes
-Select Case value
+                ByVal Value As InstrumentCategories) As SecurityTypes
+Select Case Value
 Case InstrumentCategoryStock
     gCategoryToSecType = SecurityTypes.SecTypeStock
 Case InstrumentCategoryFuture
@@ -223,9 +223,9 @@ Case InstrumentCategoryIndex
 End Select
 End Function
 
-Public Function gCategoryFromString(ByVal value As String) As InstrumentCategories
-value = Trim$(value)
-Select Case UCase$(value)
+Public Function gCategoryFromString(ByVal Value As String) As InstrumentCategories
+Value = Trim$(Value)
+Select Case UCase$(Value)
 Case "STOCK", "STK"
     gCategoryFromString = InstrumentCategoryStock
 Case "FUTURE", "FUT"
@@ -243,8 +243,8 @@ Case "INDEX", "IND"
 End Select
 End Function
 
-Public Function gCategoryToString(ByVal value As InstrumentCategories) As String
-Select Case value
+Public Function gCategoryToString(ByVal Value As InstrumentCategories) As String
+Select Case Value
 Case InstrumentCategoryStock
     gCategoryToString = "STK"
 Case InstrumentCategoryFuture
@@ -334,9 +334,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gDatabaseTypeFromString( _
-                ByVal value As String) As DatabaseTypes
-value = Trim$(value)
-Select Case UCase$(value)
+                ByVal Value As String) As DatabaseTypes
+Value = Trim$(Value)
+Select Case UCase$(Value)
 Case "SQLSERVER", _
         "SQL SERVER", _
         "SQLSERVER7", _
@@ -352,8 +352,8 @@ End Select
 End Function
 
 Public Function gDatabaseTypeToString( _
-                ByVal value As DatabaseTypes) As String
-Select Case value
+                ByVal Value As DatabaseTypes) As String
+Select Case Value
 Case DbSQLServer, _
         DbSQLServer7, _
         DbSQLServer2000, _
@@ -441,9 +441,9 @@ UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoin
 End Sub
 
 Public Function gIsStateSet( _
-                ByVal value As Long, _
+                ByVal Value As Long, _
                 ByVal stateToTest As ADODB.ObjectStateEnum) As Boolean
-gIsStateSet = ((value And stateToTest) = stateToTest)
+gIsStateSet = ((Value And stateToTest) = stateToTest)
 End Function
 
 Public Function gRoundTimeToSecond( _
