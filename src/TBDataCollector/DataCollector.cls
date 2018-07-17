@@ -367,8 +367,6 @@ determineProcessingTimes pStartTimeDescriptor, _
                         pEndTimeDescriptor, _
                         pExitTimeDescriptor
 
-processConfig
-
 scheduleStart
 
 Exit Sub
@@ -381,7 +379,7 @@ Public Sub StartCollection()
 Const ProcName As String = "startCollection"
 On Error GoTo Err
 
-'processConfig
+processConfig
 
 TaskSummaryLoggingIntervalSecs = 5
 
