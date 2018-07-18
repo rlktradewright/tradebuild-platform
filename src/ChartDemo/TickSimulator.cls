@@ -14,21 +14,10 @@ Attribute VB_Exposed = False
 Option Explicit
 
 '================================================================================
-' Description
-'================================================================================
-'
-'
-'================================================================================
-' Amendment history
-'================================================================================
-'
-'
-'
-'
-
-'================================================================================
 ' Interfaces
 '================================================================================
+
+Implements ITask
 
 '================================================================================
 ' Events
@@ -87,6 +76,12 @@ Private mBarLength As Long
 
 Private mCumVolume As Long
 
+Private mTaskContext As TaskContext
+
+Private mNumberOfBars As Long
+
+Private mTimestamp As Date
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -113,8 +108,76 @@ mTickSize = 0.25
 End Sub
 
 '================================================================================
-' XXXX Interface Members
+' ITask Interface Members
 '================================================================================
+
+Private Sub ITask_Cancel()
+
+End Sub
+
+Private Sub ITask_Run()
+Const ProcName As String = "ITask_Run"
+On Error GoTo Err
+
+If mTaskContext.CancelPending Then
+    mTaskContext.Finish Nothing, True
+    Exit Sub
+End If
+
+Static sBarCount As Long
+
+Dim bartime As Double
+bartime = calcBarStartTime(mTimestamp)
+
+Dim volume As Long
+Dim closePrice As Double
+Dim openPrice As Double
+Dim highPrice As Double
+Dim lowPrice As Double
+
+lowPrice = 999999
+
+Do
+    closePrice = generateSimulatedPrice
+    If openPrice = 0 Then openPrice = closePrice
+    If closePrice > highPrice Then highPrice = closePrice
+    If closePrice < lowPrice Then lowPrice = closePrice
+    
+    volume = volume + generateSimulatedTickVolume
+    
+    mTimestamp = mTimestamp + (Rnd * 5) / 86400
+    If calcBarStartTime(mTimestamp) > bartime Then
+        sBarCount = sBarCount + 1
+        RaiseEvent HistoricalBar(bartime, _
+                            openPrice, _
+                            highPrice, _
+                            lowPrice, _
+                            closePrice, _
+                            volume)
+        mCumVolume = mCumVolume + volume
+        Exit Do
+    End If
+Loop
+
+If sBarCount >= mNumberOfBars Then
+    Set mTimer = CreateIntervalTimer(2, ExpiryTimeUnitSeconds, 2000, True)
+    mTimer.StartTimer
+    mTaskContext.Finish Empty, False
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
+End Property
+
+Private Property Get ITask_TaskName() As String
+ITask_TaskName = mTaskContext.Name
+End Property
 
 '================================================================================
 ' mTimer Event Handlers
@@ -139,7 +202,7 @@ RaiseEvent TickVolume(timestamp, mCumVolume)
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -198,67 +261,21 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub StartSimulation(ByVal numberOfBars As Long)
+Public Function StartSimulation(ByVal numberOfBars As Long) As TaskController
 Const ProcName As String = "StartSimulation"
 On Error GoTo Err
 
+mNumberOfBars = numberOfBars
 Randomize
+mTimestamp = Now - (mNumberOfBars - 1) * mBarLength / 1440
 
-Dim timestamp As Date
-timestamp = Now - (numberOfBars - 1) * mBarLength / 1440
+Set StartSimulation = StartTask(Me, PriorityHigh)
 
-Dim bartime As Double
-bartime = calcBarTime(timestamp)
-
-Dim lowPrice As Double
-lowPrice = 999999
-
-Dim barcount As Long
-Dim volume As Long
-Do While barcount < numberOfBars
-    Dim closePrice As Double
-    closePrice = generateSimulatedPrice
-    
-    Dim openPrice As Double
-    If openPrice = 0 Then openPrice = closePrice
-    
-    Dim highPrice As Double
-    If closePrice > highPrice Then highPrice = closePrice
-    If closePrice < lowPrice Then lowPrice = closePrice
-    
-    volume = volume + generateSimulatedTickVolume
-    
-    timestamp = timestamp + (Rnd * 5) / 86400
-    If calcBarTime(timestamp) > bartime Then
-        barcount = barcount + 1
-        RaiseEvent HistoricalBar(bartime, _
-                            openPrice, _
-                            highPrice, _
-                            lowPrice, _
-                            closePrice, _
-                            volume)
-        bartime = calcBarTime(timestamp)
-        mCumVolume = mCumVolume + volume
-        openPrice = 0
-        highPrice = 0
-        lowPrice = 999999
-        closePrice = 0
-        volume = 0
-        
-        If barcount Mod 50 = 0 Then
-            DoEvents
-        End If
-    End If
-Loop
-
-Set mTimer = CreateIntervalTimer(2, ExpiryTimeUnitSeconds, 2000, True)
-mTimer.StartTimer
-
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Public Sub StopSimulation()
 Const ProcName As String = "StopSimulation"
@@ -277,11 +294,11 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Function calcBarTime(ByVal timestamp As Date) As Date
-Const ProcName As String = "calcBarTime"
+Private Function calcBarStartTime(ByVal timestamp As Date) As Date
+Const ProcName As String = "calcBarStartTime"
 On Error GoTo Err
 
-calcBarTime = Int(CDbl(timestamp) * 1440 / mBarLength) * mBarLength / 1440
+calcBarStartTime = Int(CDbl(timestamp) * 1440 / mBarLength) * mBarLength / 1440
 
 Exit Function
 
