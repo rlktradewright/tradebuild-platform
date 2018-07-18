@@ -217,12 +217,12 @@ On Error GoTo Err
 Dim lValue As SValue
 lValue.timestamp = pTimestamp
 
-lValue.value = pValue
+lValue.Value = pValue
 mTargetBarsBuilder.NotifyValue lValue
 pNumberOfPricesNotified = pNumberOfPricesNotified + 1
 
 mTargetBarsBuilder.IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, pTickVolumePerNotify, pTickVolume - (pNumberOfPrices - 1) * (pTickVolumePerNotify + 1) - 1)
-lValue.value = mAccumulatedVolume + IIf(pNumberOfPricesNotified < pNumberOfPrices, pNumberOfPricesNotified * pVolumePerNotify, pVolume)
+lValue.Value = mAccumulatedVolume + IIf(pNumberOfPricesNotified < pNumberOfPrices, pNumberOfPricesNotified * pVolumePerNotify, pVolume)
 mTargetBarsBuilder.NotifyVolume lValue
 
 Exit Sub

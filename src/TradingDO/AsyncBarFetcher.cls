@@ -36,6 +36,7 @@ Private Enum AsyncStates
     None
     Started
     Fetching
+    Fetched
     ProcessingBars
     NotifyingBars
     ProcessingTicks
@@ -137,6 +138,7 @@ Case Started
     gLogger.Log "BarFetcher started for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
     mRSFetcher.Initialise mDB
     Set mFutureWaiter = New FutureWaiter
+    mAsyncState = Fetching
     
     If mUseTickdata Then
         taskRunUsingTickdata
@@ -180,6 +182,7 @@ ElseIf ev.Future.IsFaulted Then
 ElseIf TypeOf ev.Future.Value Is Recordset Then
     gLogger.Log "BarFetcher received recordset for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
     mTaskContext.Continue
+    mAsyncState = Fetched
 ElseIf TypeOf ev.Future.Value Is Bars Then
     gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
     mTaskContext.Finish mTargetBarsBuilder.Bars, False
@@ -430,7 +433,7 @@ Const ProcName As String = "taskRunUsingBardata"
 On Error GoTo Err
 
 Select Case mAsyncState
-Case Started
+Case Fetching
     If Not mBarListener Is Nothing Then mBarListener.FetchStarted mCookie
     Dim lBarReqDetails As BarRequestDetails
     lBarReqDetails = gGenerateBarRequestDetails(mSessionTimes, mSpecifier.BarTimePeriod, mSpecifier.fromDate, mSpecifier.toDate, mSpecifier.maxNumberOfBars)
@@ -443,9 +446,8 @@ Case Started
     End If
     Set mRSFuture = doFetchBarsAsync(mRSFetcher, mInstrument.Id, lBarReqDetails, mSpecifier.BarType)
     mFutureWaiter.Add mRSFuture
-    mAsyncState = Fetching
     mTaskContext.Suspend -1
-Case Fetching
+Case Fetched
     If Not mBarListener Is Nothing Then mBarListener.FetchDataRetrieved mCookie
     Set mRS = mRSFuture.Value
     mBDP.Initialise mTargetBarsBuilder, mRS, mSessionTimes, mSpecifier.maxNumberOfBars, mStartAtFromDate
@@ -479,15 +481,14 @@ Const ProcName As String = "taskRunUsingTickdata"
 On Error GoTo Err
 
 Select Case mAsyncState
-Case Started
+Case Fetching
     If Not mBarListener Is Nothing Then mBarListener.FetchStarted mCookie
     mAppending = (mSpecifier.toDate = 0)
     gGenerateTickRequestDetails mSessionTimes, mSpecifier.fromDate, mSpecifier.toDate, mPrevFromDate, mPrevToDate
     Set mRSFuture = doFetchTicksAsync(mRSFetcher, mInstrument.Id, mPrevFromDate, mPrevToDate, mSessionTimes)
     mFutureWaiter.Add mRSFuture
-    mAsyncState = Fetching
     mTaskContext.Suspend -1
-Case Fetching
+Case Fetched
     If Not mBarListener Is Nothing Then mBarListener.FetchDataRetrieved mCookie
     Set mRS = mRSFuture.Value
     If mRS.EOF Then
