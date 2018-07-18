@@ -179,8 +179,6 @@ On Error GoTo Err
 Static sNumberOfBars As Long
 If sNumberOfBars < mMaxNumberOfBars Then sNumberOfBars = sNumberOfBars + 1
 
-If sNumberOfBars = 1 Then fireStateChange TimeframeStateLoading
-
 Static sETimer As ElapsedTimer
 If sETimer Is Nothing Then
     Set sETimer = New ElapsedTimer
