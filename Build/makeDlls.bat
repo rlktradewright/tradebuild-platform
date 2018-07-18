@@ -10,6 +10,8 @@ call setMyVersion.bat
 
 if /I "%1"=="P" (
 	call makeComponents.bat P
+) else if /I "%1"=="PP" (
+	call makeComponents.bat PP
 ) else (
 	call makeComponents.bat B
 )

@@ -3,11 +3,14 @@
 :: builds all the dll and ocx projects
 ::
 :: Parameters:
-::   %1 Binary compatibility setting- 'P' (project)or 'B' (binary)
+::   %1 Binary compatibility setting- 'P'  (project)
+::                                    'PP' (project and leave at project)  
+::                                    'B'  (binary)
 ::
 
 set BINARY_COMPAT=B
 if "%1" == "P" set BINARY_COMPAT=P
+if "%1" == "PP" set BINARY_COMPAT=PP
 if "%1" == "B" set BINARY_COMPAT=B
 if "%1" == "N" set BINARY_COMPAT=N
 
