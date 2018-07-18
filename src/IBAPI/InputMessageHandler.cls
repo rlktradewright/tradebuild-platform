@@ -332,7 +332,9 @@ Private Sub completeApiConnection(ByVal pTimeStamp As Date)
 Const ProcName As String = "completeApiConnection"
 On Error GoTo Err
 
-gLog "Completing API connection", ModuleName, ProcName
+gLog "Completing API connection", ModuleName, ProcName, , LogLevelSevere
+
+gLog "Buffer contents: " & vbCrLf & gFormatBuffer(mReader.Buffer, mReader.BufferNextFreeIndex), ModuleName, ProcName, , LogLevelSevere
 
 Dim lString1 As String
 Dim lString2 As String
@@ -346,7 +348,7 @@ mReader.BeginMessage True
 ' reconnection following a read timeout on the socket) TWS may send invalid information
 ' before the server version and server time. So we just read and discard until we
 ' identify the server version followed by a time that's close to the current time (say
-' within 5 seconds).
+' within 60 seconds - experiment has shown that 5 seconds is too short).
 
 ' Note that if there is incomplete data, then a call to GetString() will result in
 ' processing being aborted and then retried when more data arrives.
@@ -356,28 +358,32 @@ lString1 = mReader.GetString("Field 1")
 Dim lServerTime As Date
 Dim lTimezone As String
 
+Const MaxDifferenceFromServerTime As Long = 60
+
 Do
     lFieldNumber = lFieldNumber + 1
     lString2 = mReader.GetString("Field " & lFieldNumber)
     
     If IsInteger(lString1, MIN_SERVER_VER_SCALE_TABLE) Then
-        lServerTime = gGetDate(lString2, lTimezone)
+        gLog "lString1 is potentially the server version: " & lString1, ModuleName, ProcName, , LogLevelSevere
         
-        If Abs(pTimeStamp - lServerTime) <= 5# * OneSecond Then
+        lServerTime = gGetDate(lString2, lTimezone)
+        If lServerTime = 0# Then
+            gLog "lString2 is not a date and time: " & lString2, ModuleName, ProcName, , LogLevelSevere
+        ElseIf Abs(pTimeStamp - lServerTime) <= MaxDifferenceFromServerTime * OneSecond Then
             mServerVersion = CInt(lString1)
             Exit Do
         Else
-            gLog "lString2 is not within 5 seconds of receipt time (" & FormatTimestamp(pTimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "): " & lString2, ModuleName, ProcName, , LogLevelHighDetail
+            gLog "lString2 is not within " & MaxDifferenceFromServerTime & " seconds of receipt time (" & FormatTimestamp(pTimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "): " & lString2, ModuleName, ProcName, , LogLevelSevere
         End If
     Else
-        gLog "lString1 is not an integer >= " & MIN_SERVER_VER_SCALE_TABLE & ": " & lString1, ModuleName, ProcName, , LogLevelHighDetail
+        gLog "lString1 is not the server version which must be an integer >= " & MIN_SERVER_VER_SCALE_TABLE & ": " & lString1, ModuleName, ProcName, , LogLevelSevere
     End If
     lString1 = lString2
     
     Assert lFieldNumber <= 50, "Unable to recognise API connection completion sequence"
 Loop
 
-logSocketInputMessage pForceLogMessage:=True
 mReader.EndMessage
 
 gLog "Server version", ModuleName, ProcName, CStr(mServerVersion), LogLevelSevere

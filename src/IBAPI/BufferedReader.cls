@@ -175,7 +175,7 @@ If mBufferNextFreeIndex <> mInputParseIndex Then
         gLogger.Log "Re-entrant call to " & ProcName, ProcName, ModuleName
     Else
         sProcessingMessages = True
-        mInputMessageHandler.ProcessData Now
+        mInputMessageHandler.ProcessData GetTimestamp
         sProcessingMessages = False
     End If
 End If

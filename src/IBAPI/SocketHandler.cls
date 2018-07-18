@@ -70,8 +70,8 @@ Private mPort                                       As Long
 
 Private mRetryingConnection                         As Boolean
 
-Private WithEvents mConnectionTimer                 As IntervalTimer
-Attribute mConnectionTimer.VB_VarHelpID = -1
+Private WithEvents mConnectionTLI                   As TimerListItem
+Attribute mConnectionTLI.VB_VarHelpID = -1
 
 Private mBufferedReader                             As BufferedReader
 
@@ -92,14 +92,18 @@ Private mProgramErrorHandler                        As IProgramErrorListener
 '@================================================================================
 
 '================================================================================
-' mConnectionTimer Event Handlers
+' mConnectionTLI Event Handlers
 '================================================================================
 
-Private Sub mConnectionTimer_TimerExpired(ev As TimerExpiredEventData)
-Const ProcName As String = "mConnectionTimer_TimerExpired"
+Private Sub mConnectionTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mConnectionTLI_StateChange"
 On Error GoTo Err
-Set mConnectionTimer = Nothing
-Connect
+If ev.State = TimerListItemStates.TimerListItemStateExpired Then
+    Set mConnectionTLI = Nothing
+    Connect
+ElseIf ev.State = TimerListItemStates.TimerListItemStateCancelled Then
+    Set mConnectionTLI = Nothing
+End If
 Exit Sub
 Err:
 gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
@@ -297,7 +301,10 @@ End Sub
 
 Friend Property Let ConnectionRetryIntervalSecs(ByVal Value As Long)
 mConnectionRetryIntervalSecs = Value
-If mConnectionRetryIntervalSecs = 0 And mRetryingConnection Then Set mConnectionTimer = Nothing
+If mConnectionRetryIntervalSecs = 0 And mRetryingConnection Then
+    mConnectionTLI.Cancel
+    Set mConnectionTLI = Nothing
+End If
 End Property
 
 Friend Property Get ConnectionRetryIntervalSecs() As Long
@@ -336,7 +343,8 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub Disconnect( _
-                ByVal pReason As String)
+                ByVal pReason As String, _
+                ByVal pClosedByApplication As Boolean)
 Const ProcName As String = "Disconnect"
 On Error GoTo Err
 
@@ -344,12 +352,15 @@ If Not (mIsConnecting Or mIsConnected) Then Exit Sub
 mIsConnecting = False
 mIsConnected = False
 
-If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
+If pClosedByApplication And Not mConnectionTLI Is Nothing Then
+    mConnectionTLI.Cancel
+    Set mConnectionTLI = Nothing
+End If
 
 ReleaseSocket
 
 gLog "Disconnected from: " & getConnectionString & ": " & pReason, ModuleName, ProcName
-handleTwsDisconnection "closed by application", True
+handleTwsDisconnection pReason, pClosedByApplication
 RaiseEvent Disconnected(pReason)
 Exit Sub
 
@@ -452,8 +463,7 @@ If mTempConnectionRetryIntervalSecs <> 0 And mTempConnectionRetryIntervalSecs < 
 
 If lRetryInterval <> 0 Then
     gLog "Reconnecting in " & lRetryInterval & " seconds", ModuleName, ProcName
-    Set mConnectionTimer = CreateIntervalTimer(lRetryInterval, ExpiryTimeUnitSeconds)
-    mConnectionTimer.StartTimer
+    Set mConnectionTLI = GetGlobalTimerList.Add(Nothing, lRetryInterval, ExpiryTimeUnitSeconds)
     mRetryingConnection = True
     mTempConnectionRetryIntervalSecs = 0
 End If

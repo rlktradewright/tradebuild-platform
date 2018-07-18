@@ -137,6 +137,8 @@ Private mConnectionStatusConsumer                   As IConnectionStatusConsumer
 
 Private WithEvents mSocketHandler                   As SocketHandler
 Attribute mSocketHandler.VB_VarHelpID = -1
+Private WithEvents mConnectionEstablishedTLI        As TimerListItem
+Attribute mConnectionEstablishedTLI.VB_VarHelpID = -1
 
 Private mWriter                                     As BufferedWriter
 
@@ -185,12 +187,38 @@ Debug.Print "TwsAPI terminated"
 End Sub
 
 '================================================================================
+' mConnectionEstablishedTLI Event Handlers
+'================================================================================
+
+Private Sub mConnectionEstablishedTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mConnectionEstablishedTLI_StateChange"
+On Error GoTo Err
+
+If ev.State = TimerListItemStates.TimerListItemStateExpired Then
+    mSocketHandler.Disconnect "API connection has not been completed", False
+    Set mConnectionEstablishedTLI = Nothing
+ElseIf ev.State = TimerListItemStates.TimerListItemStateCancelled Then
+    Set mConnectionEstablishedTLI = Nothing
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+'================================================================================
 ' mInMessageHandler Event Handlers
 '================================================================================
 
 Private Sub mInMessageHandler_ApiConnectionEstablished(ByVal pServerVersion As Variant)
 Const ProcName As String = "mInMessageHandler_ApiConnectionEstablished"
 On Error GoTo Err
+
+If Not mConnectionEstablishedTLI Is Nothing Then
+    mConnectionEstablishedTLI.Cancel
+    Set mConnectionEstablishedTLI = Nothing
+End If
 
 mServerVersion = pServerVersion
 If mLogLevel <> 0 Then sendLogLevel
@@ -244,6 +272,8 @@ End Sub
 Private Sub mSocketHandler_Connected()
 Const ProcName As String = "mSocketHandler_Connected"
 On Error GoTo Err
+
+Set mConnectionEstablishedTLI = GetGlobalTimerList.Add(Nothing, 30, ExpiryTimeUnitSeconds)
 
 gLog "Connecting to Tws: negotiating versions and client id", ModuleName, ProcName
 mWriter.AddString ClientVersion, "Client version"
@@ -811,7 +841,7 @@ Public Sub Disconnect( _
 Const ProcName As String = "Disconnect"
 On Error GoTo Err
 
-mSocketHandler.Disconnect pReason
+mSocketHandler.Disconnect pReason, True
 Set mSocketHandler = Nothing
 
 destroyPerformanceLoggers
