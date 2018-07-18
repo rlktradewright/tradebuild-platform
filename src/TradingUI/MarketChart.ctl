@@ -285,8 +285,6 @@ Private Sub mTimeframe_BarLoadProgress(ByVal pBarsRetrieved As Long, ByVal pPerc
 Const ProcName As String = "mTimeframe_BarLoadProgress"
 On Error GoTo Err
 
-setState ChartStates.ChartStateLoading
-
 If Not LoadingProgressBar.Visible Then
     LoadingProgressBar.Top = UserControl.Height - LoadingProgressBar.Height
     LoadingProgressBar.Width = UserControl.Width
@@ -311,9 +309,13 @@ Dim lState As TimeframeStates
 lState = ev.State
 Select Case lState
 Case TimeframeStateFetching
-    showLoadingText LoadingTextFetching
+    mLoadingText.Text = LoadingTextFetching
+    setState ChartStateFetching
+    showLoadingText
 Case TimeframeStateLoading
-    showLoadingText LoadingTextLoading
+    mLoadingText.Text = LoadingTextLoading
+    setState ChartStates.ChartStateLoading
+    showLoadingText
 End Select
 
 Exit Sub
@@ -517,6 +519,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get LoadedFromConfig() As Boolean
+LoadedFromConfig = mLoadedFromConfig
 End Property
 
 Public Property Get LoadingText() As Text
@@ -1155,11 +1161,13 @@ Chart1.DisableDrawing
 initialiseChart False
 
 If mTimeframe.State = TimeframeStateFetching Then
-    showLoadingText LoadingTextFetching
+    mLoadingText.Text = LoadingTextFetching
     setState ChartStateFetching
+    showLoadingText
 ElseIf mTimeframe.State = TimeframeStateLoading Then
-    showLoadingText LoadingTextLoading
+    mLoadingText.Text = LoadingTextLoading
     setState ChartStateLoading
+    showLoadingText
 End If
 
 prepareChart
@@ -1235,11 +1243,6 @@ Const ProcName As String = "createTimeframe"
 On Error GoTo Err
 
 gLogger.Log "Creating timeframe", ProcName, ModuleName
-
-If pChartSpec.InitialNumberOfBars <> 0 Then
-    setState ChartStates.ChartStateFetching
-    showLoadingText LoadingTextFetching
-End If
 
 If pChartSpec.toTime <> CDate(0) Then
     Set createTimeframe = pTimeframes.AddHistorical(pTimePeriod, _
@@ -1471,11 +1474,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub showLoadingText(ByVal pText As String)
+Private Sub showLoadingText()
 Const ProcName As String = "showLoadingText"
 On Error GoTo Err
-
-mLoadingText.Text = pText
 
 gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
 Chart1.EnableDrawing    ' causes the loading text to appear

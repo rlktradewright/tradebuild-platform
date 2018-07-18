@@ -586,6 +586,8 @@ Select Case ev.State
 Case ChartStateBlank
 
 Case ChartStateCreated
+
+Case ChartStateFetching
     Set LoadingText = lChart.LoadingText
     LoadingText.Box = True
     LoadingText.BoxFillStyle = FillTransparent
@@ -598,20 +600,10 @@ Case ChartStateCreated
     LoadingText.align = AlignBottomCentre
     LoadingText.Position = NewPoint(50, 0.2, CoordsRelative, CoordsDistance)
     LoadingText.Text = "Fetching historical data"
-    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
-    lChart.EnableDrawing    ' causes the loading text to appear
-    gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
-    lChart.DisableDrawing
-Case ChartStateFetching
-
 Case ChartStateLoading
     Set LoadingText = lChart.LoadingText
     LoadingText.Color = vbGreen
     LoadingText.Text = "Loading historical data"
-    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
-    lChart.EnableDrawing    ' causes the loading text to appear
-    gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
-    lChart.DisableDrawing
 Case ChartStateRunning
 
 End Select

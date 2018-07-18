@@ -1359,7 +1359,7 @@ If index = 0 Then Exit Function
 
 Set lChart = getChartFromIndex(index)
 
-If lChart.State = ChartStates.ChartStateCreated Then lChart.Start
+If lChart.LoadedFromConfig And lChart.State = ChartStates.ChartStateCreated Then lChart.Start
 
 If lChart.State = ChartStateRunning Then
     gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
