@@ -85,23 +85,23 @@ End Property
 Friend Function Calculate( _
                 ByVal pHeight As Double, _
                 ByVal pHeightCm As Double) As Double
-Dim numGridDivisions As Long
-Dim gridSpacing As Double
-Dim logSpacing As Double
-Dim exp As Long
-Dim mantissa As Double
-
 Const ProcName As String = "Calculate"
-
 On Error GoTo Err
 
+Dim numGridDivisions As Long
 numGridDivisions = Round(pHeightCm / mYGridlineSpacing, 0)
 If numGridDivisions = 0 Then numGridDivisions = 1
+
+Dim gridSpacing As Double
 gridSpacing = pHeight / numGridDivisions
 
+Dim logSpacing As Double
 logSpacing = Log(gridSpacing) / Log10
 
+Dim exp As Long
 exp = Int(logSpacing)
+
+Dim mantissa As Double
 mantissa = gridSpacing / 10 ^ exp
 
 If (mYScaleQuantum = 0.03125 Or _
@@ -150,7 +150,6 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
 '@================================================================================

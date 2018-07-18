@@ -2624,7 +2624,6 @@ ChartRegionPicture(index).Width = _
     IIf(YAxisVisible, UserControl.ScaleWidth - YAxisWidthCm * TwipsPerCm, UserControl.ScaleWidth)
 ChartRegionPicture(index).ZOrder 1
 
-pRegion.IsDrawingEnabled = IsDrawingEnabled
 pRegion.PointerStyle = mPointerStyle
 pRegion.PointerIcon = mPointerIcon
 pRegion.CrosshairLineStyle = CrosshairLineStyle
@@ -2643,6 +2642,8 @@ pRegion.Top = 1
 pRegion.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
 
 If mHideGrid Then pRegion.HideGrid
+
+pRegion.IsDrawingEnabled = IsDrawingEnabled
 
 Load RegionDividerPicture(index)
 RegionDividerPicture(index).Visible = False
