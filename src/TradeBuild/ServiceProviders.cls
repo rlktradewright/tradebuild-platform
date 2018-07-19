@@ -325,7 +325,8 @@ Public Function Add( _
                 ByVal Enabled As Boolean, _
                 ByVal paramString As String, _
                 Optional ByVal Name As String, _
-                Optional ByVal Description As String) As IServiceProvider
+                Optional ByVal Description As String, _
+                Optional ByVal pAddToConfig As Boolean = False) As IServiceProvider
 Const ProcName As String = "Add"
 On Error GoTo Err
 

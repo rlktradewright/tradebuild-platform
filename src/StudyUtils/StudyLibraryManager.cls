@@ -106,7 +106,8 @@ End Sub
 
 Public Function AddBuiltInStudyLibrary( _
                 Optional ByVal enabled As Boolean = True, _
-                Optional ByVal Name As String _
+                Optional ByVal Name As String, _
+                Optional ByVal pAddToConfig As Boolean = False _
                 ) As IStudyLibrary
 Const ProcName As String = "AddBuiltInStudyLibrary"
 On Error GoTo Err
@@ -115,7 +116,8 @@ If Name = "" Then Name = BuiltInStudyLibName
 Set AddBuiltInStudyLibrary = AddStudyLibrary( _
                                 BuiltInStudyLibProgId, _
                                 enabled, _
-                                Name)
+                                Name, _
+                                pAddToConfig)
 
 Exit Function
 
@@ -126,7 +128,8 @@ End Function
 Public Function AddStudyLibrary( _
                 ByVal progId As String, _
                 ByVal enabled As Boolean, _
-                Optional ByVal Name As String _
+                Optional ByVal Name As String, _
+                Optional ByVal pAddToConfig As Boolean = False _
                 ) As IStudyLibrary
 Const ProcName As String = "AddStudyLibrary"
 On Error GoTo Err
@@ -136,7 +139,7 @@ If Name = "" Then Name = GenerateGUIDString
 If enabled Then
     Set AddStudyLibrary = Add(CreateObject(progId), Name)
 End If
-addConfigEntry progId, enabled, Name
+If pAddToConfig Then addConfigEntry progId, enabled, Name
 
 Exit Function
 
