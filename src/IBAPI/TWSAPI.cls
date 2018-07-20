@@ -149,10 +149,10 @@ Private mServerVersion                              As Long
 
 Private mConnectionState                            As TwsConnectionStates
 
-Private WithEvents mPerformanceTimerSecond          As IntervalTimer
-Attribute mPerformanceTimerSecond.VB_VarHelpID = -1
-Private WithEvents mPerformanceTimerPeriod          As IntervalTimer
-Attribute mPerformanceTimerPeriod.VB_VarHelpID = -1
+Private WithEvents mPerformanceTLISecond            As TimerListItem
+Attribute mPerformanceTLISecond.VB_VarHelpID = -1
+Private WithEvents mPerformanceTLIPeriod            As TimerListItem
+Attribute mPerformanceTLIPeriod.VB_VarHelpID = -1
 
 Private mPerformanceLogger                          As Logger
 
@@ -175,6 +175,9 @@ Set mInMessageHandler = New InputMessageHandler
 mConnectionState = TwsConnectionStates.TwsConnNotConnected
 
 mLogLevel = 0
+
+Set mStatsRecorder = New PerformanceStatsRecorder
+Set mPerformanceLogger = GetLogger("tradebuild.log.ibapi.performance")
 
 Exit Sub
 
@@ -199,6 +202,7 @@ If ev.State = TimerListItemStates.TimerListItemStateExpired Then
     Set mConnectionEstablishedTLI = Nothing
 ElseIf ev.State = TimerListItemStates.TimerListItemStateCancelled Then
     Set mConnectionEstablishedTLI = Nothing
+    startPerformanceLogging
 End If
 
 Exit Sub
@@ -236,16 +240,18 @@ mSocketHandler.TempConnectionRetryIntervalSecs = 5
 End Sub
 
 '================================================================================
-' mPerformanceTimerSecond Event Handlers
+' mPerformanceTLIPeriod Event Handlers
 '================================================================================
 
-Private Sub mPerformanceTimerPeriod_TimerExpired(ev As TimerExpiredEventData)
-Const ProcName As String = "mPerformanceTimerPeriod_TimerExpired"
+Private Sub mPerformanceTLIPeriod_StateChange(ev As TWUtilities40.StateChangeEventData)
+Const ProcName As String = "mPerformanceTLIPeriod_StateChange"
 On Error GoTo Err
 
-If mPerformanceLogger.IsLoggable(LogLevelMediumDetail) Then
-    mPerformanceLogger.Log LogLevelMediumDetail, "Socket message statistics:" & vbCrLf & mStatsRecorder.GenerateStats
-End If
+If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
+If Not mPerformanceLogger.IsLoggable(LogLevelMediumDetail) Then Exit Sub
+
+mPerformanceLogger.Log LogLevelMediumDetail, "Socket message statistics:" & vbCrLf & mStatsRecorder.GenerateStats
+startPerformanceTLIPeriod
 
 Exit Sub
 
@@ -253,11 +259,16 @@ Err:
 gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Private Sub mPerformanceTimerSecond_TimerExpired(ev As TimerExpiredEventData)
-Const ProcName As String = "mPerformanceTimerSecond_TimerExpired"
+'================================================================================
+' mPerformanceTLISecond Event Handlers
+'================================================================================
+
+Private Sub mPerformanceTLISecond_StateChange(ev As TWUtilities40.StateChangeEventData)
+Const ProcName As String = "mPerformanceTLISecond_StateChange"
 On Error GoTo Err
 
-mStatsRecorder.AccumulateStats
+If ev.State = TimerListItemStates.TimerListItemStateExpired Then mStatsRecorder.AccumulateStats
+startPerformanceTLISecond
 
 Exit Sub
 
@@ -282,7 +293,6 @@ mWriter.AddString mClientID, "Client id"
 mWriter.Send forceLogMessage:=True
 
 mInMessageHandler.Reset
-createPerformanceLoggers
 
 Exit Sub
 
@@ -334,7 +344,7 @@ Const ProcName As String = "mSocketHandler_Disconnected"
 On Error GoTo Err
 
 setConnectionState TwsConnectionStates.TwsConnNotConnected, pReason
-destroyPerformanceLoggers
+stopPerformanceLogging
 
 Exit Sub
 
@@ -825,7 +835,6 @@ mSocketHandler.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 Set mWriter = New BufferedWriter
 mWriter.Initialise mSocketHandler
 
-Set mStatsRecorder = New PerformanceStatsRecorder
 mInMessageHandler.Initialise lReader, mWriter, mStatsRecorder, mErrorAndNotificationConsumer, mProgramErrorHandler
 
 mSocketHandler.Connect
@@ -844,7 +853,7 @@ On Error GoTo Err
 mSocketHandler.Disconnect pReason, True
 Set mSocketHandler = Nothing
 
-destroyPerformanceLoggers
+stopPerformanceLogging
 
 Exit Sub
 
@@ -1824,46 +1833,6 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Private Sub createPerformanceLoggers()
-Const ProcName As String = "createPerformanceLoggers"
-On Error GoTo Err
-
-If Not gLogger.IsLoggable(LogLevelDetail) Then Exit Sub
-
-If mPerformanceTimerSecond Is Nothing Then
-    Set mPerformanceTimerSecond = CreateIntervalTimer(CDate(Int((Now + 2 * OneSecond) / OneSecond) * OneSecond), _
-                                            ExpiryTimeUnitDateTime, _
-                                            1000)
-    mPerformanceTimerSecond.StartTimer
-    
-    Set mPerformanceTimerPeriod = CreateIntervalTimer(CDate(Int((Now + OneMinute) / OneMinute) * OneMinute), _
-                                            ExpiryTimeUnitDateTime, _
-                                            60000)
-    mPerformanceTimerPeriod.StartTimer
-    
-    Set mPerformanceLogger = GetLogger("tradebuild.log.ibapi.performance")
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Private Sub destroyPerformanceLoggers()
-Set mStatsRecorder = Nothing
-
-If mPerformanceTimerPeriod Is Nothing Then Exit Sub
-
-mPerformanceTimerPeriod.StopTimer
-Set mPerformanceTimerPeriod = Nothing
-
-mPerformanceTimerSecond.StopTimer
-Set mPerformanceTimerSecond = Nothing
-
-Set mPerformanceLogger = Nothing
-End Sub
-
 Private Function getTwsContractRequestIdFromCallersRequestId(ByVal pId As Long) As Long
 AssertArgument pId <= MaxCallersContractRequestId, "Max request id is " & MaxCallersContractRequestId
 getTwsContractRequestIdFromCallersRequestId = pId + BaseContractRequestId
@@ -2155,6 +2124,59 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub startPerformanceTLIPeriod()
+Const ProcName As String = "startPerformanceTLIPeriod"
+On Error GoTo Err
+
+Set mPerformanceTLIPeriod = GetGlobalTimerList.Add(Nothing, _
+                                        CDate(Int((Now + OneMinute) / OneMinute) * OneMinute), _
+                                        ExpiryTimeUnitDateTime)
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub startPerformanceTLISecond()
+Const ProcName As String = "startPerformanceTLISecond"
+On Error GoTo Err
+
+Set mPerformanceTLISecond = GetGlobalTimerList.Add(Nothing, _
+                                        CDate(Int((Now + 2 * OneSecond) / OneSecond) * OneSecond), _
+                                        ExpiryTimeUnitDateTime)
+    
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub startPerformanceLogging()
+Const ProcName As String = "startPerformanceLogging"
+On Error GoTo Err
+
+If Not gLogger.IsLoggable(LogLevelDetail) Then Exit Sub
+startPerformanceTLISecond
+startPerformanceTLIPeriod
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub stopPerformanceLogging()
+Set mStatsRecorder = Nothing
+
+If mPerformanceTLIPeriod Is Nothing Then Exit Sub
+
+mPerformanceTLIPeriod.Cancel
+Set mPerformanceTLIPeriod = Nothing
+
+mPerformanceTLISecond.Cancel
+Set mPerformanceTLISecond = Nothing
 End Sub
 
 Private Function stopTriggerMethodToString(ByVal Value As TwsStopTriggerMethods) As String
