@@ -67,6 +67,8 @@ Private mNumberAdded                        As Long
 Private WithEvents mFutureWaiter            As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mAddToConfig                        As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -144,7 +146,7 @@ End If
 gLogger.Log mTaskContext.Name & " adding Ticker: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
 
 Dim lTicker As Ticker
-Set lTicker = tckrs.CreateTicker(CreateFuture(lContract))
+Set lTicker = tckrs.CreateTicker(CreateFuture(lContract), mAddToConfig)
 If mStartMarketData Then lTicker.StartMarketData
 If mStartMarketDepth Then lTicker.StartMarketDepth
 
@@ -211,11 +213,14 @@ Friend Sub Initialise( _
                 ByVal pTickers As Tickers, _
                 ByVal pStartMarketData As Boolean, _
                 ByVal pStartMarketDepth As Boolean, _
-                ByVal pInterval As Long)
+                ByVal pInterval As Long, _
+                ByVal pDontAddToConfig As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 AssertArgument pInterval >= 0, "Interval cannot be negative"
+
+mAddToConfig = Not pDontAddToConfig
 
 mFutureWaiter.Add pContractsFuture
 

@@ -159,9 +159,10 @@ If CBool(lContractConfig.GetAttribute(AttributeNameEnabled)) Then
 
     ' Allow 1 second between each ticker start to allow time for all the database setup work
     Set mTickersTC = mTickers.StartTickers(lContractsFuture, _
-                    True, _
-                    IIf(mIncludeMarketDepth, True, False), _
-                    1000)
+                                            True, _
+                                            IIf(mIncludeMarketDepth, True, False), _
+                                            1000, _
+                                            True)
     
     ' wait till this set of tickers is started to avoid creating too many database connections
     mTaskContext.Suspend -1

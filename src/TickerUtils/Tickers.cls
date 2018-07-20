@@ -483,7 +483,8 @@ Public Function StartTickers( _
                 ByVal pContractsFuture As IFuture, _
                 Optional ByVal pStartMarketData As Boolean = True, _
                 Optional ByVal pStartMarketDepth As Boolean = False, _
-                Optional ByVal pInterval As Long = 50) As TaskController
+                Optional ByVal pInterval As Long = 50, _
+                Optional ByVal pDontAddToConfig As Boolean = False) As TaskController
 Const ProcName As String = "StartTickers"
 On Error GoTo Err
 
@@ -493,7 +494,8 @@ lTickersStarter.Initialise pContractsFuture, _
                             Me, _
                             pStartMarketData, _
                             pStartMarketDepth, _
-                            pInterval
+                            pInterval, _
+                            pDontAddToConfig
 Set StartTickers = StartTask(lTickersStarter, PriorityNormal)
 
 Exit Function
