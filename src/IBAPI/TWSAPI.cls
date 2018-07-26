@@ -2131,7 +2131,7 @@ Const ProcName As String = "startPerformanceTLIPeriod"
 On Error GoTo Err
 
 Set mPerformanceTLIPeriod = GetGlobalTimerList.Add(Nothing, _
-                                        CDate(Int((Now + OneMinute) / OneMinute) * OneMinute), _
+                                        CDate(Int((GetTimestamp + OneMinute + OneSecond) / OneMinute) * OneMinute), _
                                         ExpiryTimeUnitDateTime)
 Exit Sub
 
@@ -2144,7 +2144,7 @@ Const ProcName As String = "startPerformanceTLISecond"
 On Error GoTo Err
 
 Set mPerformanceTLISecond = GetGlobalTimerList.Add(Nothing, _
-                                        CDate(Int((Now + 2 * OneSecond) / OneSecond) * OneSecond), _
+                                        CDate(Int((GetTimestamp + 2 * OneSecond) / OneSecond) * OneSecond), _
                                         ExpiryTimeUnitDateTime)
     
 Exit Sub
