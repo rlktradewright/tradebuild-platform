@@ -301,12 +301,21 @@ Set lTextsEn = mXGridLabels.Enumerator
 Dim lPeriod As Period
 Do While pPeriodsEn.MoveNext
     Set lPeriod = pPeriodsEn.Current
-    If Not lTextsEn.MoveNext Then Exit Do
+    If Not lTextsEn.MoveNext Then
+        ' we don't currently have enough grid labels
+        Exit Do
+    End If
     setupGridLabel lPeriod, lTextsEn.Current, lPrevLabel
+    Set lPeriod = Nothing
 Loop
 
-clearRemainingGridLabels lTextsEn
+If lPeriod Is Nothing Then
+    clearRemainingGridLabels lTextsEn
+    Exit Sub
+End If
 
+' there are still some periods that don't have a grid label
+setupGridLabel lPeriod, mXGridLabels.Add, lPrevLabel
 Do While pPeriodsEn.MoveNext
     Set lPeriod = pPeriodsEn.Current
     setupGridLabel lPeriod, mXGridLabels.Add, lPrevLabel
@@ -328,12 +337,21 @@ Set lTextsEn = mXGridLabelsCoarse.Enumerator
 Dim lPeriod As Period
 Do While pPeriodsEn.MoveNext
     Set lPeriod = pPeriodsEn.Current
-    If Not lTextsEn.MoveNext Then Exit Do
+    If Not lTextsEn.MoveNext Then
+        ' we don't currently have enough coarse grid labels
+        Exit Do
+    End If
     setupGridLabelCoarse lPeriod, lTextsEn.Current
+    Set lPeriod = Nothing
 Loop
 
-clearRemainingCoarseGridLabels lTextsEn
+If lPeriod Is Nothing Then
+    clearRemainingCoarseGridLabels lTextsEn
+    Exit Sub
+End If
 
+' there are still some periods that don't have a coarse grid label
+setupGridLabelCoarse lPeriod, mXGridLabels.Add
 Do While pPeriodsEn.MoveNext
     Set lPeriod = pPeriodsEn.Current
     setupGridLabelCoarse lPeriod, mXGridLabels.Add
@@ -355,12 +373,21 @@ Set lLinesEn = mXGridLines.Enumerator
 Dim lPeriod As Period
 Do While pPeriodsEn.MoveNext
     Set lPeriod = pPeriodsEn.Current
-    If Not lLinesEn.MoveNext Then Exit Do
+    If Not lLinesEn.MoveNext Then
+        ' we don't currently have enough grid lines
+        Exit Do
+    End If
     setupGridLine lPeriod, lLinesEn.Current
+    Set lPeriod = Nothing
 Loop
 
-clearRemainingGridLines lLinesEn
+If lPeriod Is Nothing Then
+    clearRemainingGridLines lLinesEn
+    Exit Sub
+End If
 
+' there are still some periods that don't have a grid line
+setupGridLine lPeriod, mXGridLines.Add
 Do While pPeriodsEn.MoveNext
     Set lPeriod = pPeriodsEn.Current
     setupGridLine lPeriod, mXGridLines.Add
