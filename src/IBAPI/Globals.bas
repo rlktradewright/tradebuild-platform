@@ -692,19 +692,19 @@ Case DELTA_NEUTRAL_VALIDATION
 Case TICK_SNAPSHOT_END
     gSocketInMsgTypeToString = "Tick snapshot end   "
 Case MARKET_DATA_TYPE
-    gSocketInMsgTypeToString = "Market data type"
+    gSocketInMsgTypeToString = "Market data type    "
 Case COMMISSION_REPORT
-    gSocketInMsgTypeToString = "Commission report"
+    gSocketInMsgTypeToString = "Commission report   "
 Case POSITION
-    gSocketInMsgTypeToString = "Position"
+    gSocketInMsgTypeToString = "Position            "
 Case POSITION_END
-    gSocketInMsgTypeToString = "Position end"
+    gSocketInMsgTypeToString = "Position end        "
 Case ACCOUNT_SUMMARY
-    gSocketInMsgTypeToString = "Account summary"
+    gSocketInMsgTypeToString = "Account summary     "
 Case ACCOUNT_SUMMARY_END
-    gSocketInMsgTypeToString = "Account summary end"
+    gSocketInMsgTypeToString = "Account summary end "
 Case Else
-    gSocketInMsgTypeToString = "Msg type " & Format(Value, "00                  ")
+    gSocketInMsgTypeToString = "Msg type " & Format(Value, "00        ")
 End Select
 
 Exit Function
