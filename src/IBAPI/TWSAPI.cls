@@ -198,7 +198,7 @@ Const ProcName As String = "mConnectionEstablishedTLI_StateChange"
 On Error GoTo Err
 
 If ev.State = TimerListItemStates.TimerListItemStateExpired Then
-    mSocketHandler.Disconnect "API connection has not been completed", False
+    If Not mSocketHandler Is Nothing Then mSocketHandler.Disconnect "API connection has not been completed", False
     Set mConnectionEstablishedTLI = Nothing
 ElseIf ev.State = TimerListItemStates.TimerListItemStateCancelled Then
     Set mConnectionEstablishedTLI = Nothing
