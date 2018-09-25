@@ -292,7 +292,7 @@ Dim lExpiry As String: lExpiry = lClp.switchValue("expiry")
 If lExpiry = "" Then lExpiry = lClp.switchValue("exp")
 
 Dim lMultiplier As String: lMultiplier = lClp.switchValue("multiplier")
-If lMultiplier = "" Then lExpiry = lClp.switchValue("mult")
+If lMultiplier = "" Then lMultiplier = lClp.switchValue("mult")
 If lMultiplier = "" Then lMultiplier = "1.0"
 
 Dim lstrike As String
