@@ -99,6 +99,7 @@ End Enum
 Public Enum BracketTargetTypes
     BracketTargetTypeNone = 0
     BracketTargetTypeLimit = 4
+    BracketTargetTypeMarketToLimit = &H400&
     BracketTargetTypeLimitIfTouched = &H10000
     BracketTargetTypeMarketIfTouched = &H20000
     BracketTargetTypeBid = &H1000000
