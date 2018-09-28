@@ -82,6 +82,51 @@ Public Const RecoveryOrderContextName       As String = "$recovery"
 ' Methods
 '@================================================================================
 
+Public Function gBracketEntryTypeFromString(ByVal Value As String) As BracketEntryTypes
+Const ProcName As String = "gBracketEntryTypeToShortString"
+On Error GoTo Err
+
+Select Case UCase$(Value)
+Case "", "NONE"
+    gBracketEntryTypeFromString = BracketEntryTypeNone
+Case "MKT", "MARKET"
+    gBracketEntryTypeFromString = BracketEntryTypeMarket
+Case "MOO", "MARKET ON OPEN"
+    gBracketEntryTypeFromString = BracketEntryTypeMarketOnOpen
+Case "MOC", "MARKET ON CLOSE"
+    gBracketEntryTypeFromString = BracketEntryTypeMarketOnClose
+Case "MIT", "MARKET IF TOUCHED"
+    gBracketEntryTypeFromString = BracketEntryTypeMarketIfTouched
+Case "MTL", "MARKET TO LIMIT"
+    gBracketEntryTypeFromString = BracketEntryTypeMarketToLimit
+Case "BID", "BID PRICE"
+    gBracketEntryTypeFromString = BracketEntryTypeBid
+Case "ASK", "ASK PRICE"
+    gBracketEntryTypeFromString = BracketEntryTypeAsk
+Case "LAST", "LAST TRADE PRICE"
+    gBracketEntryTypeFromString = BracketEntryTypeLast
+Case "LMT", "LIMIT"
+    gBracketEntryTypeFromString = BracketEntryTypeLimit
+Case "LOO", "LIMIT ON OPEN"
+    gBracketEntryTypeFromString = BracketEntryTypeLimitOnOpen
+Case "LOC", "LIMIT ON CLOSE"
+    gBracketEntryTypeFromString = BracketEntryTypeLimitOnClose
+Case "LIT", "LIMIT IF TOUCHED"
+    gBracketEntryTypeFromString = BracketEntryTypeLimitIfTouched
+Case "STP", "STOP"
+    gBracketEntryTypeFromString = BracketEntryTypeStop
+Case "STPLMT", "STOP LIMIT"
+    gBracketEntryTypeFromString = BracketEntryTypeStopLimit
+Case Else
+    AssertArgument False, "Invalid entry order type"
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gBracketEntryTypeToOrderType( _
                 ByVal pBracketEntryType As BracketEntryTypes) As OrderTypes
 Const ProcName As String = "gBracketEntryTypeToOrderType"
@@ -243,6 +288,33 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gBracketStopLossTypeFromString(ByVal Value As String) As BracketStopLossTypes
+Const ProcName As String = "gBracketStopLossTypeToString"
+On Error GoTo Err
+
+Select Case UCase$(Value)
+Case "", "NONE"
+    gBracketStopLossTypeFromString = BracketStopLossTypeNone
+Case "STP", "STOP"
+    gBracketStopLossTypeFromString = BracketStopLossTypeStop
+Case "STPLMT""STOP LIMIT"
+    gBracketStopLossTypeFromString = BracketStopLossTypeStopLimit
+Case "BID", "BID PRICE"
+    gBracketStopLossTypeFromString = BracketStopLossTypeBid
+Case "ASK", "ASK PRICE"
+    gBracketStopLossTypeFromString = BracketStopLossTypeAsk
+Case "TRADE", "LAST TRADE PRICE"
+    gBracketStopLossTypeFromString = BracketStopLossTypeLast
+Case "AUTO"
+    gBracketStopLossTypeFromString = BracketStopLossTypeAuto
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gBracketStopLossTypeToOrderType( _
                 ByVal pBracketStopLossType As BracketStopLossTypes) As OrderTypes
 Const ProcName As String = "gBracketStopLossTypeToOrderType"
@@ -316,9 +388,38 @@ Case BracketStopLossTypeBid
 Case BracketStopLossTypeAsk
     gBracketStopLossTypeToString = "Ask Price"
 Case BracketStopLossTypeLast
-    gBracketStopLossTypeToString = "Trade"
+    gBracketStopLossTypeToString = "Last Trade Price"
 Case BracketStopLossTypeAuto
     gBracketStopLossTypeToString = "Auto"
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gBracketTargetTypeFromString(ByVal Value As BracketTargetTypes)
+Const ProcName As String = "gBracketTargetTypeFromString"
+On Error GoTo Err
+
+Select Case Value
+Case "NONE"
+    gBracketTargetTypeFromString = BracketTargetTypeNone
+Case "LMT", "LIMIT"
+    gBracketTargetTypeFromString = BracketTargetTypeLimit
+Case "LIT", "LIMIT IF TOUCHED"
+    gBracketTargetTypeFromString = BracketTargetTypeLimitIfTouched
+Case "MIT", "MARKET IF TOUCHED"
+    gBracketTargetTypeFromString = BracketTargetTypeMarketIfTouched
+Case "BID", "BID PRICE"
+    gBracketTargetTypeFromString = BracketTargetTypeBid
+Case "ASK", "ASK PRICE"
+    gBracketTargetTypeFromString = BracketTargetTypeAsk
+Case "LAST", "LAST TRADE PRICE"
+    gBracketTargetTypeFromString = BracketTargetTypeLast
+Case "AUTO"
+    gBracketTargetTypeFromString = BracketTargetTypeAuto
 End Select
 
 Exit Function

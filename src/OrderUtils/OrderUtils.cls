@@ -338,6 +338,18 @@ Private Const ModuleName                            As String = "OrderUtils"
 ' Methods
 '@================================================================================
 
+Public Function BracketEntryTypeFromString(ByVal Value As String) As BracketEntryTypes
+Const ProcName As String = "BracketEntryTypeFromString"
+On Error GoTo Err
+
+BracketEntryTypeFromString = gBracketEntryTypeFromString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function BracketEntryTypeToOrderType( _
                 ByVal Value As BracketEntryTypes) As OrderTypes
 Const ProcName As String = "BracketEntryTypeToOrderType"
@@ -389,6 +401,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function BracketStopLossTypeFromString(ByVal Value As String) As BracketStopLossTypes
+Const ProcName As String = "BracketStopLossTypeFromString"
+On Error GoTo Err
+
+BracketStopLossTypeFromString = gBracketStopLossTypeFromString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 ''
 ' Converts a member of the BracketStopLossTypes enumeration to the equivalent OrderTypes Value.
 '
@@ -416,6 +440,18 @@ Const ProcName As String = "BracketStopLossTypeToString"
 On Error GoTo Err
 
 BracketStopLossTypeToString = gBracketStopLossTypeToString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function BracketTargetTypeFromString(ByVal Value As String) As BracketTargetTypes
+Const ProcName As String = "BracketTargetTypeFromString"
+On Error GoTo Err
+
+BracketTargetTypeFromString = gBracketTargetTypeFromString(Value)
 
 Exit Function
 
