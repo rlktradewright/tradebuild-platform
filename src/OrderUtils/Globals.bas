@@ -399,11 +399,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gBracketTargetTypeFromString(ByVal Value As BracketTargetTypes)
+Public Function gBracketTargetTypeFromString(ByVal Value As String) As BracketTargetTypes
 Const ProcName As String = "gBracketTargetTypeFromString"
 On Error GoTo Err
 
-Select Case Value
+Select Case UCase$(Value)
 Case "NONE"
     gBracketTargetTypeFromString = BracketTargetTypeNone
 Case "LMT", "LIMIT"

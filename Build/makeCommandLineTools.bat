@@ -33,6 +33,9 @@ if errorlevel 1 pause
 call makeExe.bat ltz ltz /CONSOLE /NOV6CC /M:E %DEP%
 if errorlevel 1 pause
 
+call makeExe.bat plord plord /CONSOLE /NOV6CC /M:E %DEP%
+if errorlevel 1 pause
+
 call makeExe.bat uccd uccd /CONSOLE /NOV6CC /M:E %DEP%
 if errorlevel 1 pause
 

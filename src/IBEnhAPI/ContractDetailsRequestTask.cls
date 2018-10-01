@@ -133,6 +133,8 @@ On Error GoTo Err
 requestCompleted pRequestId
 mNumOutstandingRequests = mNumOutstandingRequests - 1
 
+If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
+
 If pErrorCode <> 200 Then
     
     cancelOutstandingRequests
@@ -367,6 +369,8 @@ Private Sub processContract(ByVal pContractDetails As TwsContractDetails)
 Const ProcName As String = "processContract"
 On Error GoTo Err
 
+If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
+
 If IsValidExchangeCode(pContractDetails.Summary.Exchange) Then
     If mReturnTwsContracts Then
         mTwsContracts.Add pContractDetails
@@ -390,6 +394,8 @@ End Sub
 Private Sub processEnd()
 Const ProcName As String = "processEnd"
 On Error GoTo Err
+
+If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
 
 mFutureWaiter.Add mContractsFutureBuilder.Future
 If mReturnTwsContracts Then
