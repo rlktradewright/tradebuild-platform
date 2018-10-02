@@ -217,6 +217,11 @@ Public Enum OrderStopTriggerMethods
     OrderStopTriggerMidPoint = 64
 End Enum
 
+Public Enum OrderSubmitterCapabilities
+    OrderSubmitterCapabilityNone = 0
+    OrderSubmitterCapabilityCanStageOrders = 1
+End Enum
+
 Public Enum OrderSubmitterStates
     OrderSubmitterStateReady = 1
     OrderSubmitterStateNotReady

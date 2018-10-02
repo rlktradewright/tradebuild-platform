@@ -60,6 +60,15 @@ Private Const ModuleName                            As String = "IOrderSubmitter
 ' Properties
 '@================================================================================
 
+Public Property Get Capabilities() As OrderSubmitterCapabilities
+End Property
+
+Public Property Let OrdersAreStaged(ByVal Value As Boolean)
+End Property
+
+Public Property Get OrdersAreStaged() As Boolean
+End Property
+
 Public Property Get State() As OrderSubmitterStates
 End Property
 

@@ -335,6 +335,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Property Get IOrderSubmitter_Capabilities() As OrderSubmitterCapabilities
+IOrderSubmitter_Capabilities = OrderSubmitterCapabilityNone
+End Property
+
 Private Sub IOrderSubmitter_ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_ExecuteBracketOrder"
 On Error GoTo Err
@@ -475,6 +479,14 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Property Let IOrderSubmitter_OrdersAreStaged(ByVal RHS As Boolean)
+IOrderSubmitter_OrdersAreStaged = False
+End Property
+
+Private Property Get IOrderSubmitter_OrdersAreStaged() As Boolean
+Assert False, "Order Staging is not supported", ErrorCodes.ErrUnsupportedOperationException
+End Property
 
 Private Property Get IOrderSubmitter_PermittedOrderTypes() As Long
 Dim PermittedOrderTypes As Long

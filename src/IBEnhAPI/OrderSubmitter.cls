@@ -71,6 +71,8 @@ Private mStateChangeListeners                       As Listeners
 
 Private mOrderSubmissionListeners                   As Listeners
 
+Private mStageOrders                                As Boolean
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -148,6 +150,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Property Get IOrderSubmitter_Capabilities() As OrderSubmitterCapabilities
+IOrderSubmitter_Capabilities = Capabilities
+End Property
+
 Private Sub IOrderSubmitter_ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_executeBracketOrder"
 On Error GoTo Err
@@ -222,6 +228,14 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Property Let IOrderSubmitter_OrdersAreStaged(ByVal Value As Boolean)
+OrdersAreStaged = Value
+End Property
+
+Private Property Get IOrderSubmitter_OrdersAreStaged() As Boolean
+IOrderSubmitter_OrdersAreStaged = OrdersAreStaged
+End Property
 
 Private Sub IOrderSubmitter_PlaceOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "IOrderSubmitter_PlaceOrder"
@@ -386,6 +400,18 @@ End Sub
 '================================================================================
 ' Properties
 '================================================================================
+
+Public Property Get Capabilities() As OrderSubmitterCapabilities
+Capabilities = OrderSubmitterCapabilities.OrderSubmitterCapabilityCanStageOrders
+End Property
+
+Public Property Let OrdersAreStaged(ByVal Value As Boolean)
+mStageOrders = Value
+End Property
+
+Public Property Get OrdersAreStaged() As Boolean
+OrdersAreStaged = mStageOrders
+End Property
 
 Public Property Get State() As OrderSubmitterStates
 State = mState
@@ -838,7 +864,7 @@ On Error GoTo Err
 Dim lOCAGroup As String
 lOCAGroup = GenerateGUIDString
 
-placeOrderEx pBracketOrder.StopLossOrder, True, "0", lOCAGroup, OrderModeStop
+placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStop
 placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
 
 Exit Sub
@@ -1151,7 +1177,7 @@ Assert pOrder.Action <> OrderActionNone, "Order has no action"
 Assert pOrder.OrderType <> OrderTypeNone, "Order has no order type"
 Assert pOrder.Quantity <> 0, "Order has zero quantity"
 
-mOrderPlacer.PlaceOrder Me, pOrder, pContract, pTransmit, pParentId, pOcaGroup
+mOrderPlacer.PlaceOrder Me, pOrder, pContract, IIf(mStageOrders, False, pTransmit), pParentId, pOcaGroup
 
 If pOrder.Status = OrderStatusCreated Then
     notifyOpenOrder pOrder
