@@ -44,17 +44,30 @@ Private Const ModuleName                            As String = "FatalErrorHandl
 ' Member variables
 '@================================================================================
 
+Private WithEvents mUnhandledErrorHandler           As UnhandledErrorHandler
+Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mUnhandledErrorHandler = UnhandledErrorHandler
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mUnhandledErrorHandler Event Handlers
 '@================================================================================
+
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
+
+gHandleFatalError ev
+
+End Sub
 
 '@================================================================================
 ' Properties

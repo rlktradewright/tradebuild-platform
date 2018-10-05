@@ -53,7 +53,7 @@ Private mMarketDataManager                          As IMarketDataManager
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 
-Private mTransmit                                   As Boolean
+Private mStageOrders                                As Boolean
 
 Private mBracketOrders                              As New EnumerableCollection
 
@@ -88,21 +88,19 @@ If ev.Future.IsCancelled Then
     gWriteErrorLine "Error: contract fetch was cancelled"
     Set mContract = Nothing
     Set mDataSource = Nothing
-    gSetValidNextCommands ContractCommand
 ElseIf ev.Future.IsFaulted Then
     gWriteErrorLine "Error: " & ev.Future.ErrorMessage
     Set mContract = Nothing
     Set mDataSource = Nothing
-    gSetValidNextCommands ContractCommand
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
-    gCon.WriteStringToConsole mContract.Specifier.ToString
     Dim lOrderManager As New OrderManager
     Set mPositionManager = lOrderManager.CreatePositionManager(mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory)
     Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-    gSetValidNextCommands BracketCommand
+    mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
 End If
 
+gSetValidNextCommands BracketCommand, EndOrdersCommand
 gInputPaused = False
 
 Exit Sub
@@ -119,12 +117,24 @@ Friend Property Get BracketOrders() As EnumerableCollection
 Set BracketOrders = mBracketOrders
 End Property
 
-Friend Property Let Transmit(ByVal Value As Boolean)
-mTransmit = Value
+Friend Property Get IsReadyToPlaceOrders() As Boolean
+Const ProcName As String = "IsReadyToPlaceOrders"
+On Error GoTo Err
+
+IsReadyToPlaceOrders = mOrderContext.IsReady
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get Transmit() As Boolean
-Transmit = mTransmit
+Friend Property Let StageOrders(ByVal Value As Boolean)
+mStageOrders = Value
+End Property
+
+Friend Property Get StageOrders() As Boolean
+StageOrders = mStageOrders
 End Property
 
 '@================================================================================
@@ -144,9 +154,13 @@ Friend Sub PlaceOrder(ByVal pBOS As BracketOrderSpecification)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
+gWriteLineToStdOut "TIME " & FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+gWriteLineToStdOut pBOS.ToString
+    
 With pBOS
+    Dim lBO As BracketOrder
     If .Action = OrderActionBuy Then
-        mOrderContext.Buy .Quantity, _
+        Set lBO = mOrderContext.Buy(.Quantity, _
                           .EntryType, _
                           .EntryPrice, _
                           .EntryOffset, _
@@ -163,9 +177,9 @@ With pBOS
                           .StopTIF, _
                           .TargetTIF, _
                           .CancelPrice, _
-                          .CancelAfter
+                          .CancelAfter)
     Else
-        mOrderContext.Sell .Quantity, _
+        Set lBO = mOrderContext.Sell(.Quantity, _
                           .EntryType, _
                           .EntryPrice, _
                           .EntryOffset, _
@@ -182,9 +196,13 @@ With pBOS
                           .StopTIF, _
                           .TargetTIF, _
                           .CancelPrice, _
-                          .CancelAfter
+                          .CancelAfter)
     End If
 End With
+
+CreateBracketProfitCalculator lBO, mDataSource
+
+gNumberOfOrdersPlaced = gNumberOfOrdersPlaced + 1
 
 Exit Sub
 
@@ -241,14 +259,14 @@ End Sub
 
 Friend Function processContractCommand( _
                 ByVal pParams As String) As Boolean
-Const ProcName As String = "ProcessContract"
+Const ProcName As String = "ProcessContractCommand"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
 Set lContractSpec = parseContractSpec(pParams)
 
 If lContractSpec Is Nothing Then
-    gSetValidNextCommands ContractCommand
+    gSetValidNextCommands ContractCommand, EndOrdersCommand
     Exit Function
 End If
 
@@ -272,7 +290,7 @@ On Error GoTo Err
 
 mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands BracketCommand, ContractCommand
+gSetValidNextCommands BracketCommand, ContractCommand, EndOrdersCommand
 
 Exit Sub
 
@@ -289,7 +307,7 @@ Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
 mBOSpec.EntryType = getEntryOrderType(lClp.Arg(0))
-If mBOSpec.EntryType = BracketEntryTypeNone Then gWriteErrorLine "Invalid order type"
+If mBOSpec.EntryType = BracketEntryTypeNone Then gWriteErrorLine "Invalid entry order type: " & lClp.Arg(0)
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
@@ -332,7 +350,7 @@ Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
 mBOSpec.StopLossType = getStopLossOrderType(lClp.Arg(0))
-If mBOSpec.StopLossType = BracketStopLossTypeNone Then gWriteErrorLine "Invalid order type"
+If mBOSpec.StopLossType = BracketStopLossTypeNone Then gWriteErrorLine "Invalid stop-loss order type: " & lClp.Arg(0)
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
@@ -379,7 +397,7 @@ Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
 mBOSpec.TargetType = getTargetOrderType(lClp.Arg(0))
-If mBOSpec.TargetType = BracketTargetTypeNone Then gWriteErrorLine "Invalid order type"
+If mBOSpec.TargetType = BracketTargetTypeNone Then gWriteErrorLine "Invalid target order type: " & lClp.Arg(0)
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
@@ -396,7 +414,7 @@ lSwitchName = OffsetSwitch
 If lClp.Switch(OffsetSwitch) Then mBOSpec.TargetOffset = CInt(lClp.switchValue(OffsetSwitch))
 
 lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.StopTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
+If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
 
 If mBOSpec.StopLossType = BracketStopLossTypeNone Then
     gSetValidNextCommands StopLossCommand, EndBracketCommand
@@ -414,6 +432,31 @@ ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine Err.Description
     Resume Next
 End If
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub WriteContractSpecToConsole()
+Const ProcName As String = "WriteContractSpecToConsole"
+On Error GoTo Err
+
+Dim s As String
+s = ContractCommand & " "
+s = s & gGenerateSwitch(SymbolSwitch, mContract.Specifier.Symbol)
+s = s & gGenerateSwitch(LocalSymbolSwitch, mContract.Specifier.LocalSymbol)
+s = s & gGenerateSwitch(SecTypeSwitch, SecTypeToShortString(mContract.Specifier.SecType))
+s = s & gGenerateSwitch(ExchangeSwitch, mContract.Specifier.Exchange)
+s = s & gGenerateSwitch(ExpirySwitch, mContract.Specifier.Expiry)
+s = s & gGenerateSwitch(CurrencySwitch, mContract.Specifier.CurrencyCode)
+If mContract.Specifier.Multiplier <> 1 Then s = s & gGenerateSwitch(MultiplierSwitch, mContract.Specifier.Multiplier)
+If mContract.Specifier.Right <> OptNone Then
+    s = s & gGenerateSwitch(RightSwitch, OptionRightToString(mContract.Specifier.Right))
+    s = s & gGenerateSwitch(StrikeSwitch, mContract.Specifier.Strike)
+End If
+gWriteLineToStdOut s
+
+Exit Sub
+
+Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -485,35 +528,33 @@ End If
 Dim validParams As Boolean
 validParams = True
 
-Dim lSectypeStr As String: lSectypeStr = lClp.switchValue("sectype")
-If lSectypeStr = "" Then lSectypeStr = lClp.switchValue("sec")
+Dim lSectypeStr As String: lSectypeStr = lClp.switchValue(SecTypeSwitch)
+If lSectypeStr = "" Then lSectypeStr = lClp.switchValue(SecTypeSwitch1)
 
-Dim lExchange As String: lExchange = lClp.switchValue("exchange")
-If lExchange = "" Then lExchange = lClp.switchValue("exch")
+Dim lExchange As String: lExchange = lClp.switchValue(ExchangeSwitch)
+If lExchange = "" Then lExchange = lClp.switchValue(ExchangeSwitch1)
 
-Dim lLocalSymbol As String: lLocalSymbol = lClp.switchValue("localsymbol")
-If lLocalSymbol = "" Then lLocalSymbol = lClp.switchValue("local")
+Dim lLocalSymbol As String: lLocalSymbol = lClp.switchValue(LocalSymbolSwitch)
+If lLocalSymbol = "" Then lLocalSymbol = lClp.switchValue(LocalSymbolSwitch1)
 
-Dim lSymbol As String: lSymbol = lClp.switchValue("symbol")
-If lSymbol = "" Then lSymbol = lClp.switchValue("symb")
+Dim lSymbol As String: lSymbol = lClp.switchValue(SymbolSwitch)
+If lSymbol = "" Then lSymbol = lClp.switchValue(SymbolSwitch1)
 
-Dim lCurrency As String: lCurrency = lClp.switchValue("currency")
-If lCurrency = "" Then lCurrency = lClp.switchValue("curr")
+Dim lCurrency As String: lCurrency = lClp.switchValue(CurrencySwitch)
+If lCurrency = "" Then lCurrency = lClp.switchValue(CurrencySwitch1)
 
-Dim lExpiry As String: lExpiry = lClp.switchValue("expiry")
-If lExpiry = "" Then lExpiry = lClp.switchValue("exp")
+Dim lExpiry As String: lExpiry = lClp.switchValue(ExpirySwitch)
+If lExpiry = "" Then lExpiry = lClp.switchValue(ExpirySwitch1)
 
-Dim lMultiplier As String: lMultiplier = lClp.switchValue("multiplier")
-If lMultiplier = "" Then lMultiplier = lClp.switchValue("mult")
+Dim lMultiplier As String: lMultiplier = lClp.switchValue(MultiplierSwitch)
+If lMultiplier = "" Then lMultiplier = lClp.switchValue(MultiplierSwitch1)
 If lMultiplier = "" Then lMultiplier = "1.0"
 
-Dim lStrike As String
-lStrike = lClp.switchValue("strike")
-If lStrike = "" Then lStrike = lClp.switchValue("str")
+Dim lStrike As String: lStrike = lClp.switchValue(StrikeSwitch)
+If lStrike = "" Then lStrike = lClp.switchValue(StrikeSwitch1)
 If lStrike = "" Then lStrike = "0.0"
 
-Dim lRight As String
-lRight = lClp.switchValue("right")
+Dim lRight As String: lRight = lClp.switchValue(RightSwitch)
 
 Dim lSectype As SecurityTypes
 lSectype = SecTypeFromString(lSectypeStr)
@@ -541,20 +582,20 @@ If lExpiry <> "" Then
     End If
 End If
             
-Dim multiplier As Double
+Dim Multiplier As Double
 If lMultiplier = "" Then
-    multiplier = 1#
+    Multiplier = 1#
 ElseIf IsNumeric(lMultiplier) Then
-    multiplier = CDbl(lMultiplier)
+    Multiplier = CDbl(lMultiplier)
 Else
     gWriteErrorLine "Invalid multiplier '" & lMultiplier & "'"
     validParams = False
 End If
             
-Dim strike As Double
+Dim Strike As Double
 If lStrike <> "" Then
     If IsNumeric(lStrike) Then
-        strike = CDbl(lStrike)
+        Strike = CDbl(lStrike)
     Else
         gWriteErrorLine "Invalid strike '" & lStrike & "'"
         validParams = False
@@ -576,8 +617,8 @@ If validParams Then
                                             lSectype, _
                                             lCurrency, _
                                             lExpiry, _
-                                            multiplier, _
-                                            strike, _
+                                            Multiplier, _
+                                            Strike, _
                                             optRight)
 End If
 

@@ -47,7 +47,7 @@ Private Const ModuleName                            As String = "PlaceOrdersTask
 '@================================================================================
 
 Private mTaskContext                                As TaskContext
-
+Private mProcessors                                 As EnumerableCollection
 Private mProcessorsEn                               As Enumerator
 
 '@================================================================================
@@ -72,19 +72,25 @@ Static sBracketOrdersEn As Enumerator
 
 If sProcessor Is Nothing Then
     If Not mProcessorsEn.MoveNext Then
+        mProcessors.Clear
         gInputPaused = False
         mTaskContext.Finish Empty, False
         gInputPaused = False
+        gSetValidNextCommands StageOrdersCommand
+        gWriteLineToStdOut EndOrdersCommand
         Exit Sub
     Else
         Set sProcessor = mProcessorsEn.Current
         Set sBracketOrdersEn = sProcessor.BracketOrders.Enumerator
+        sProcessor.WriteContractSpecToConsole
     End If
 End If
 
-If sBracketOrdersEn.MoveNext Then
-    sProcessor.PlaceOrder (sBracketOrdersEn.Current)
-    mTaskContext.Suspend 25
+If Not sProcessor.IsReadyToPlaceOrders Then
+    mTaskContext.Suspend 10
+ElseIf sBracketOrdersEn.MoveNext Then
+        sProcessor.PlaceOrder sBracketOrdersEn.Current
+        mTaskContext.Suspend 25
 Else
     Set sProcessor = Nothing
 End If
@@ -115,11 +121,16 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise(ByVal pProcessors As EnumerableCollection)
+Friend Sub Initialise( _
+                ByVal pProcessors As EnumerableCollection, _
+                ByVal pStageOrders As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mProcessorsEn = pProcessors.Enumerator
+Set mProcessors = pProcessors
+Set mProcessorsEn = mProcessors.Enumerator
+
+gWriteLineToStdOut StageOrdersCommand & " " & IIf(pStageOrders, "YES", "NO")
 
 Exit Sub
 
