@@ -43,7 +43,7 @@ Private Const OrderModeTarget           As String = "target"
 Private Const OrderModeCloseout         As String = "closeout"
 
 Private Const EntryOrderIdIncrement     As Long = 0
-Private Const StopOrderIdIncrement      As Long = 1
+Private Const StopLossOrderIdIncrement  As Long = 1
 Private Const TargetOrderIdIncrement    As Long = 2
 Private Const CloseoutOrderIdIncrement  As Long = 3
 
@@ -956,12 +956,16 @@ If Not lEntryOrder Is Nothing Then
     Transmit = True
     
     If Not lStopOrder Is Nothing Then
-        lStopOrder.BrokerId = lPlexId + StopOrderIdIncrement
-        If lStopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then Transmit = False
+        If lStopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then
+            lStopOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
+            Transmit = False
+        End If
     End If
     If Not lTargetOrder Is Nothing Then
-        lTargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
-        If lTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then Transmit = False
+        If lTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
+            lTargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
+            Transmit = False
+        End If
     End If
         
     placeAnOrder lEntryOrder, pContract, Transmit, 0, "", OrderModeEntry
@@ -1068,6 +1072,8 @@ End Select
 
 If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0
 
+Dim lPlexId As Long
+
 Dim lOCAGroup As String
 If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue("OCA group")
 If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue("OCA group")
@@ -1077,13 +1083,22 @@ If pEntryOrderChanged Then
     placeAnOrder pBracketOrder.EntryOrder, pContract, True, 0, "", OrderModeEntry
 End If
 If pStopOrderChanged Then
+    If pBracketOrder.StopLossOrder.BrokerId = "" Then
+        If lPlexId = 0 Then lPlexId = getNextBracketId
+        pBracketOrder.StopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
+    End If
     placeAnOrder pBracketOrder.StopLossOrder, pContract, True, lParentId, lOCAGroup, OrderModeStop
 End If
 If pTargetOrderChanged Then
+    If pBracketOrder.TargetOrder.BrokerId = "" Then
+        If lPlexId = 0 Then lPlexId = getNextBracketId
+        pBracketOrder.TargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
+    End If
     placeAnOrder pBracketOrder.TargetOrder, pContract, True, lParentId, lOCAGroup, OrderModeTarget
 End If
 If pCloseoutOrderChanged Then
     If pBracketOrder.CloseoutOrder.BrokerId = "" Then
+        If lPlexId = 0 Then lPlexId = getNextBracketId
         pBracketOrder.CloseoutOrder.BrokerId = getNextBracketId + CloseoutOrderIdIncrement
     End If
     placeAnOrder pBracketOrder.CloseoutOrder, pContract, True, 0, "", OrderModeCloseout
