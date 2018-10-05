@@ -297,7 +297,7 @@ Case "", "NONE"
     gBracketStopLossTypeFromString = BracketStopLossTypeNone
 Case "STP", "STOP"
     gBracketStopLossTypeFromString = BracketStopLossTypeStop
-Case "STPLMT""STOP LIMIT"
+Case "STPLMT", "STOP LIMIT"
     gBracketStopLossTypeFromString = BracketStopLossTypeStopLimit
 Case "BID", "BID PRICE"
     gBracketStopLossTypeFromString = BracketStopLossTypeBid
@@ -345,7 +345,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gBracketStopLossTypeToShortString(ByVal Value As BracketStopLossTypes)
+Public Function gBracketStopLossTypeToShortString(ByVal Value As BracketStopLossTypes) As String
 Const ProcName As String = "gBracketStopLossTypeToShortString"
 On Error GoTo Err
 
@@ -468,7 +468,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gBracketTargetTypeToShortString(ByVal Value As BracketTargetTypes)
+Public Function gBracketTargetTypeToShortString(ByVal Value As BracketTargetTypes) As String
 Const ProcName As String = "gBracketTargetTypeToShortString"
 On Error GoTo Err
 

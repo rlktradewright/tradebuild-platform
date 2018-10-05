@@ -440,6 +440,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function BracketStopLossTypeToShortString( _
+                ByVal Value As BracketStopLossTypes) As String
+Const ProcName As String = "BracketStopLossTypeToShortString"
+On Error GoTo Err
+
+BracketStopLossTypeToShortString = gBracketStopLossTypeToShortString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function BracketStopLossTypeToString( _
                 ByVal Value As BracketStopLossTypes)
 Const ProcName As String = "BracketStopLossTypeToString"
@@ -453,7 +466,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function BracketTargetTypeFromString(ByVal Value As String) As BracketTargetTypes
+Public Function BracketTargetTypeFromString( _
+                ByVal Value As String) As BracketTargetTypes
 Const ProcName As String = "BracketTargetTypeFromString"
 On Error GoTo Err
 
@@ -492,6 +506,19 @@ Const ProcName As String = "BracketTargetTypeToString"
 On Error GoTo Err
 
 BracketTargetTypeToString = gBracketTargetTypeToString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function BracketTargetTypeToShortString( _
+                ByVal Value As BracketTargetTypes) As String
+Const ProcName As String = "gBracketTargetTypeToShortString"
+On Error GoTo Err
+
+BracketTargetTypeToShortString = gBracketTargetTypeToShortString(Value)
 
 Exit Function
 
