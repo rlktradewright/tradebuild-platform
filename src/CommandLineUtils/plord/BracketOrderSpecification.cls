@@ -61,10 +61,13 @@ Public TargetPrice                                  As Double
 Public TargetOffset                                 As Long
 Public TargetTriggerPrice                           As Double
 Public EntryTIF                                     As OrderTIFs
-Public StopTIF                                      As OrderTIFs
+Public StopLossTIF                                      As OrderTIFs
 Public TargetTIF                                    As OrderTIFs
 Public CancelPrice                                  As Double
 Public CancelAfter                                  As Long
+Public GoodAfterTime                                As Date
+Public GoodTillDate                                 As Date
+Public TimezoneName                                 As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -135,6 +138,11 @@ s = s & " "
 If CancelAfter <> 0 Then s = s & gGenerateSwitch(CancelAfterSwitch, CStr(CancelAfter))
 If CancelPrice <> 0 Then s = s & gGenerateSwitch(CancelPriceSwitch, CStr(CancelPrice))
 
+If GoodTillDate <> 0 Then s = s & gGenerateSwitch(GoodTillDateSwitch, Format(GoodTillDate, "yyyymmdd hh:mm:ss"))
+If GoodAfterTime <> 0 Then s = s & gGenerateSwitch(GoodAfterTimeSwitch, Format(GoodAfterTime, "yyyymmdd hh:mm:ss"))
+
+If TimezoneName <> "" Then s = s & gGenerateSwitch(TimezoneSwitch, TimezoneName)
+
 generateBracket = s & vbCrLf
 End Function
 
@@ -169,8 +177,10 @@ Select Case EntryType
     Case BracketEntryTypeBid, _
             BracketEntryTypeAsk, _
             BracketEntryTypeLast
-        s = s & gGenerateSwitch(OffsetSwitch, EntryOffset)
+        s = s & gGenerateSwitch(OffsetSwitch, CStr(EntryOffset) & TickDesignator)
 End Select
+
+If EntryTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(EntryTIF))
 generateEntryAttributes = s
 End Function
 
@@ -196,9 +206,10 @@ Select Case StopLossType
             BracketStopLossTypeAsk, _
             BracketStopLossTypeAsk, _
             BracketStopLossTypeAuto
-        s = s & gGenerateSwitch(OffsetSwitch, StopLossOffset)
+        s = s & gGenerateSwitch(OffsetSwitch, CStr(StopLossOffset) & TickDesignator)
 End Select
 
+If StopLossTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(StopLossTIF))
 generateStopLossAttributes = s
 End Function
 
@@ -227,9 +238,10 @@ Select Case TargetType
             BracketTargetTypeAsk, _
             BracketTargetTypeLast, _
             BracketTargetTypeAuto
-        s = s & gGenerateSwitch(OffsetSwitch, TargetOffset)
+        s = s & gGenerateSwitch(OffsetSwitch, CStr(TargetOffset) & TickDesignator)
 End Select
 
+If TargetTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(TargetTIF))
 generateTargetAttributes = s
 End Function
 

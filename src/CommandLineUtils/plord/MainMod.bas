@@ -50,6 +50,8 @@ Public Const ExchangeSwitch                         As String = "EXCHANGE"
 Public Const ExchangeSwitch1                        As String = "EXCH"
 Public Const ExpirySwitch                           As String = "EXPIRY"
 Public Const ExpirySwitch1                          As String = "EXP"
+Public Const GoodAfterTimeSwitch                    As String = "GOODAFTERTIME"
+Public Const GoodTillDateSwitch                     As String = "GOODTILLDATE"
 Public Const LocalSymbolSwitch                      As String = "LOCALSYMBOL"
 Public Const LocalSymbolSwitch1                     As String = "LOCAL"
 Public Const MultiplierSwitch                       As String = "MULTIPLIER"
@@ -61,6 +63,7 @@ Public Const SymbolSwitch                           As String = "SYMBOL"
 Public Const SymbolSwitch1                          As String = "SYMB"
 Public Const StrikeSwitch                           As String = "STRIKE"
 Public Const StrikeSwitch1                          As String = "STR"
+Public Const TimezoneSwitch                         As String = "TIMEZONE"
 
 Public Const BracketCommand                         As String = "BRACKET"
 Public Const ContractCommand                        As String = "CONTRACT"
@@ -81,6 +84,8 @@ Public Const SwitchPrefix                           As String = "/"
 
 Private Const Yes                                   As String = "YES"
 Private Const No                                    As String = "NO"
+
+Public Const TickDesignator                         As String = "T"
 
 '@================================================================================
 ' Member variables
@@ -150,7 +155,8 @@ End Property
 '@================================================================================
 
 Public Function gGenerateSwitch(ByVal pName As String, ByVal pValue As String) As String
-gGenerateSwitch = SwitchPrefix & pName & IIf(pValue = "", "", ValueSeparator & pValue & " ")
+If InStr(1, pValue, " ") <> 0 Then pValue = """" & pValue & """"
+gGenerateSwitch = SwitchPrefix & pName & IIf(pValue = "", " ", ValueSeparator & pValue & " ")
 End Function
 
 Public Sub gHandleFatalError(ev As ErrorEventData)
@@ -285,8 +291,8 @@ Private Sub process()
 Const ProcName As String = "process"
 On Error GoTo Err
 
-If mClp.Switch(MonitorSwitch) Then
-    mMonitor = True
+If Not mClp.Switch(MonitorSwitch) Then
+    mMonitor = False
 ElseIf mClp.switchValue(MonitorSwitch) = "" Then
     mMonitor = True
 ElseIf UCase$(mClp.switchValue(MonitorSwitch)) = "YES" Then
@@ -618,6 +624,9 @@ gCon.WriteLineToConsole "                   | tif:<tifvalue>"
 gCon.WriteLineToConsole "                   ]"
 gCon.WriteLineToConsole "    bracketattr  ::= [ cancelafter:<canceltime>"
 gCon.WriteLineToConsole "                     | cancelprice:<price>"
+gCon.WriteLineToConsole "                     | goodaftertime:DATETIME"
+gCon.WriteLineToConsole "                     | goodtilldate:DATETIME"
+gCon.WriteLineToConsole "                     | timezone:TIMEZONENAME"
 gCon.WriteLineToConsole "                     ]"
 gCon.WriteLineToConsole "    price  ::= DOUBLE"
 gCon.WriteLineToConsole "    numberofticks  ::= INTEGER"

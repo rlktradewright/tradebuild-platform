@@ -94,10 +94,17 @@ ElseIf ev.Future.IsFaulted Then
     Set mDataSource = Nothing
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
-    Dim lOrderManager As New OrderManager
-    Set mPositionManager = lOrderManager.CreatePositionManager(mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory)
-    Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-    mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
+    
+    If IsContractExpired(mContract) Then
+        gWriteErrorLine "Error: contract has expired"
+        Set mContract = Nothing
+        Set mDataSource = Nothing
+    Else
+        Dim lOrderManager As New OrderManager
+        Set mPositionManager = lOrderManager.CreatePositionManager(mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory)
+        Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+        mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
+    End If
 End If
 
 gSetValidNextCommands BracketCommand, EndOrdersCommand
@@ -174,7 +181,7 @@ With pBOS
                           .TargetOffset, _
                           .TargetTriggerPrice, _
                           .EntryTIF, _
-                          .StopTIF, _
+                          .StopLossTIF, _
                           .TargetTIF, _
                           .CancelPrice, _
                           .CancelAfter)
@@ -193,12 +200,17 @@ With pBOS
                           .TargetOffset, _
                           .TargetTriggerPrice, _
                           .EntryTIF, _
-                          .StopTIF, _
+                          .StopLossTIF, _
                           .TargetTIF, _
                           .CancelPrice, _
                           .CancelAfter)
     End If
 End With
+
+If pBOS.GoodAfterTime <> 0 Then lBO.EntryOrder.GoodAfterTime = pBOS.GoodAfterTime
+If pBOS.GoodTillDate <> 0 Then lBO.EntryOrder.GoodTillDate = pBOS.GoodTillDate
+lBO.EntryOrder.GoodAfterTimeTZ = pBOS.TimezoneName
+lBO.EntryOrder.GoodTillDateTZ = pBOS.TimezoneName
 
 CreateBracketProfitCalculator lBO, mDataSource
 
@@ -215,11 +227,9 @@ Friend Sub ProcessBracketCommand( _
 Const ProcName As String = "ProcessBracketCommand"
 On Error GoTo Err
 
-If mContract Is Nothing Then gWriteErrorLine ("Contract has not yet been specified")
-
 Set mBOSpec = New BracketOrderSpecification
 mBOSpec.EntryTIF = OrderTIFDay
-mBOSpec.StopTIF = OrderTIFGoodTillCancelled
+mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
 mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
 
 Dim lClp As CommandLineParser
@@ -236,11 +246,20 @@ mBOSpec.Quantity = CInt(lQuantity)
 
 Dim lSwitchName As String
 lSwitchName = CancelAfterSwitch
-If lClp.Switch(CancelAfterSwitch) Then mBOSpec.CancelAfter = CInt(lClp.switchValue(CancelAfterSwitch))
+If lClp.Switch(lSwitchName) Then mBOSpec.CancelAfter = CInt(lClp.switchValue(lSwitchName))
 If mBOSpec.CancelAfter < 0 Then gWriteErrorLine "CancelAfter must be an integer >= 0"
 
 lSwitchName = CancelPriceSwitch
-If lClp.Switch(CancelPriceSwitch) Then mBOSpec.CancelPrice = CDbl(lClp.switchValue(CancelPriceSwitch))
+If lClp.Switch(lSwitchName) Then mBOSpec.CancelPrice = CDbl(lClp.switchValue(lSwitchName))
+
+lSwitchName = GoodAfterTimeSwitch
+If lClp.Switch(lSwitchName) Then mBOSpec.GoodAfterTime = CDate(lClp.switchValue(lSwitchName))
+
+lSwitchName = GoodTillDateSwitch
+If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.switchValue(lSwitchName))
+
+lSwitchName = TimezoneSwitch
+If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.switchValue(lSwitchName)
 
 gSetValidNextCommands EntryCommand
 
@@ -307,7 +326,6 @@ Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
 mBOSpec.EntryType = getEntryOrderType(lClp.Arg(0))
-If mBOSpec.EntryType = BracketEntryTypeNone Then gWriteErrorLine "Invalid entry order type: " & lClp.Arg(0)
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
@@ -321,7 +339,7 @@ ElseIf lClp.Switch(TriggerPriceSwitch1) Then
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.EntryOffset = CInt(lClp.switchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then mBOSpec.EntryOffset = parseOffset(lClp.switchValue(OffsetSwitch))
 
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
@@ -350,7 +368,6 @@ Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
 mBOSpec.StopLossType = getStopLossOrderType(lClp.Arg(0))
-If mBOSpec.StopLossType = BracketStopLossTypeNone Then gWriteErrorLine "Invalid stop-loss order type: " & lClp.Arg(0)
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
@@ -364,10 +381,10 @@ ElseIf lClp.Switch(TriggerPriceSwitch1) Then
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.StopLossOffset = CInt(lClp.switchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then mBOSpec.StopLossOffset = parseOffset(lClp.switchValue(OffsetSwitch))
 
 lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.StopTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
+If lClp.Switch(TIFSwitch) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
 
 If mBOSpec.TargetType = BracketTargetTypeNone Then
     gSetValidNextCommands TargetCommand, EndBracketCommand
@@ -397,7 +414,6 @@ Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
 mBOSpec.TargetType = getTargetOrderType(lClp.Arg(0))
-If mBOSpec.TargetType = BracketTargetTypeNone Then gWriteErrorLine "Invalid target order type: " & lClp.Arg(0)
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
@@ -411,7 +427,7 @@ ElseIf lClp.Switch(TriggerPriceSwitch1) Then
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.TargetOffset = CInt(lClp.switchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then mBOSpec.TargetOffset = parseOffset(lClp.switchValue(OffsetSwitch))
 
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
@@ -445,7 +461,7 @@ s = s & gGenerateSwitch(SymbolSwitch, mContract.Specifier.Symbol)
 s = s & gGenerateSwitch(LocalSymbolSwitch, mContract.Specifier.LocalSymbol)
 s = s & gGenerateSwitch(SecTypeSwitch, SecTypeToShortString(mContract.Specifier.SecType))
 s = s & gGenerateSwitch(ExchangeSwitch, mContract.Specifier.Exchange)
-s = s & gGenerateSwitch(ExpirySwitch, mContract.Specifier.Expiry)
+If mContract.Specifier.Expiry <> "" Then s = s & gGenerateSwitch(ExpirySwitch, mContract.Specifier.Expiry)
 s = s & gGenerateSwitch(CurrencySwitch, mContract.Specifier.CurrencyCode)
 If mContract.Specifier.Multiplier <> 1 Then s = s & gGenerateSwitch(MultiplierSwitch, mContract.Specifier.Multiplier)
 If mContract.Specifier.Right <> OptNone Then
@@ -481,7 +497,10 @@ If pInput = "" Then
 Else
     getEntryOrderType = BracketEntryTypeFromString(pInput)
 End If
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then getEntryOrderType = BracketEntryTypeNone
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine "Invalid entry order type: " & pInput
+    getEntryOrderType = BracketEntryTypeNone
+End If
 End Function
 
 Private Function getStopLossOrderType(ByVal pInput As String) As BracketStopLossTypes
@@ -491,7 +510,10 @@ If pInput = "" Then
 Else
     getStopLossOrderType = BracketStopLossTypeFromString(pInput)
 End If
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then getStopLossOrderType = BracketStopLossTypeNone
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine "Invalid stop-loss order type: " & pInput
+    getStopLossOrderType = BracketStopLossTypeNone
+End If
 End Function
 
 Private Function getTargetOrderType(ByVal pInput As String) As BracketTargetTypes
@@ -501,7 +523,10 @@ If pInput = "" Then
 Else
     getTargetOrderType = BracketTargetTypeFromString(pInput)
 End If
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then getTargetOrderType = BracketTargetTypeNone
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine "Invalid target order type: " & pInput
+    getTargetOrderType = BracketTargetTypeNone
+End If
 End Function
 
 Private Function parseContractSpec( _
@@ -625,10 +650,23 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Function
 
-
+Private Function parseOffset(ByVal pValue As String) As Long
+If UCase$(Right$(Trim$(pValue), 1)) = TickDesignator Then
+    Dim numTicks As String
+    numTicks = Left$(pValue, Len(pValue) - 1)
+    If Not IsInteger(numTicks) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
+    parseOffset = CLng(numTicks)
+Else
+    parseOffset = CLng(CDbl(pValue) / mContract.TickSize)
+End If
+End Function
 
 
 
