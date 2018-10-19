@@ -142,13 +142,19 @@ Private Sub IConnectionStatusConsumer_NotifyIBServerConnectionRecovered(ByVal pD
 Const ProcName As String = "IConnectionStatusConsumer_NotifyIBServerConnectionRecovered"
 On Error GoTo Err
 
-If pDataLost Then
+' NB: the pDataLost parameter is supposed to be an indication from IB that
+' data has or has not been lost duing a period of disconnection between
+' TWS and the IB servers. In autumn 2018 this indication seems to be no
+' longer correct, ie it always says data has not been lost even if it
+' manifestly has. So we now ignore it, and always resubscribe all
+' market data and market depth tickers.
+'If pDataLost Then
     If TypeOf mTwsAPI.ConnectionStatusConsumer Is MarketDataFactory Then
         Dim lRequester As MarketDataFactory
         Set lRequester = mTwsAPI.ConnectionStatusConsumer
         lRequester.ReEstablishMarketData True
     End If
-End If
+'End If
 
 gRequestOpenOrders mTwsAPI
 
