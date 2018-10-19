@@ -161,13 +161,13 @@ Friend Sub PlaceOrder(ByVal pBOS As BracketOrderSpecification)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
-gWriteLineToStdOut "TIME " & FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+gWriteLineToStdOut "TIME " & FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601)
 gWriteLineToStdOut pBOS.ToString
     
+Dim lBO As IBracketOrder
 With pBOS
-    Dim lBO As BracketOrder
     If .Action = OrderActionBuy Then
-        Set lBO = mOrderContext.Buy(.Quantity, _
+        Set lBO = mOrderContext.CreateBuyBracketOrder(.Quantity, _
                           .EntryType, _
                           .EntryPrice, _
                           .EntryOffset, _
@@ -179,14 +179,9 @@ With pBOS
                           .TargetType, _
                           .TargetPrice, _
                           .TargetOffset, _
-                          .TargetTriggerPrice, _
-                          .EntryTIF, _
-                          .StopLossTIF, _
-                          .TargetTIF, _
-                          .CancelPrice, _
-                          .CancelAfter)
+                          .TargetTriggerPrice)
     Else
-        Set lBO = mOrderContext.Sell(.Quantity, _
+        Set lBO = mOrderContext.CreateSellBracketOrder(.Quantity, _
                           .EntryType, _
                           .EntryPrice, _
                           .EntryOffset, _
@@ -198,20 +193,25 @@ With pBOS
                           .TargetType, _
                           .TargetPrice, _
                           .TargetOffset, _
-                          .TargetTriggerPrice, _
-                          .EntryTIF, _
-                          .StopLossTIF, _
-                          .TargetTIF, _
-                          .CancelPrice, _
-                          .CancelAfter)
+                          .TargetTriggerPrice)
+    End If
+    
+    lBO.CancelAfter = .CancelAfter
+    lBO.CancelPrice = .CancelPrice
+    lBO.EntryOrder.TimeInForce = .EntryTIF
+    If Not lBO.StopLossOrder Is Nothing Then lBO.StopLossOrder.TimeInForce = .StopLossTIF
+    If Not lBO.TargetOrder Is Nothing Then lBO.TargetOrder.TimeInForce = .TargetTIF
+    If .GoodAfterTime <> 0 Then
+        lBO.EntryOrder.GoodAfterTime = .GoodAfterTime
+        lBO.EntryOrder.GoodAfterTimeTZ = .TimezoneName
+    End If
+    If .GoodTillDate <> 0 Then
+        lBO.EntryOrder.GoodTillDate = .GoodTillDate
+        lBO.EntryOrder.GoodTillDateTZ = .TimezoneName
     End If
 End With
 
-If pBOS.GoodAfterTime <> 0 Then lBO.EntryOrder.GoodAfterTime = pBOS.GoodAfterTime
-If pBOS.GoodTillDate <> 0 Then lBO.EntryOrder.GoodTillDate = pBOS.GoodTillDate
-lBO.EntryOrder.GoodAfterTimeTZ = pBOS.TimezoneName
-lBO.EntryOrder.GoodTillDateTZ = pBOS.TimezoneName
-
+mOrderContext.ExecuteBracketOrder lBO
 CreateBracketProfitCalculator lBO, mDataSource
 
 gNumberOfOrdersPlaced = gNumberOfOrdersPlaced + 1

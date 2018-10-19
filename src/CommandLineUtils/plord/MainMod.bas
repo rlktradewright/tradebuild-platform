@@ -309,13 +309,13 @@ Dim inString As String
 inString = Trim$(gCon.ReadLine(":"))
 
 Do While inString <> gCon.EofString
-    gLogger.Log "StdIn: " & inString, ProcName, ModuleName
     mLineNumber = mLineNumber + 1
     If inString = "" Then
         ' ignore blank lines
     ElseIf Left$(inString, 1) = "#" Then
         ' ignore comments
     Else
+        gLogger.Log "StdIn: " & inString, ProcName, ModuleName
         Dim lExit As Boolean
         processCommand inString, lExit
         If lExit Then Exit Do
@@ -427,7 +427,7 @@ End If
 gInputPaused = True
 
 Dim t As New PlaceOrdersTask
-t.Initialise mProcessors, mStageOrders
+t.Initialise mProcessors, mStageOrders, mMonitor
 StartTask t, PriorityNormal
 
 setupResultsLogging mClp

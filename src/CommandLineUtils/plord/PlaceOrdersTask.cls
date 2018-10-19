@@ -49,6 +49,7 @@ Private Const ModuleName                            As String = "PlaceOrdersTask
 Private mTaskContext                                As TaskContext
 Private mProcessors                                 As EnumerableCollection
 Private mProcessorsEn                               As Enumerator
+Private mMonitor                                    As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -72,7 +73,7 @@ Static sBracketOrdersEn As Enumerator
 
 If sProcessor Is Nothing Then
     If Not mProcessorsEn.MoveNext Then
-        mProcessors.Clear
+        If Not mMonitor Then mProcessors.Clear
         gInputPaused = False
         mTaskContext.Finish Empty, False
         gInputPaused = False
@@ -123,12 +124,14 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pProcessors As EnumerableCollection, _
-                ByVal pStageOrders As Boolean)
+                ByVal pStageOrders As Boolean, _
+                ByVal pMonitor As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mProcessors = pProcessors
 Set mProcessorsEn = mProcessors.Enumerator
+mMonitor = pMonitor
 
 gWriteLineToStdOut StageOrdersCommand & " " & IIf(pStageOrders, "YES", "NO")
 
