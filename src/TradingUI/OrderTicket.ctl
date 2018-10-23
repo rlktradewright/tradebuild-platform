@@ -2203,7 +2203,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub disableAll( _
-                ByVal message As String)
+                ByVal pMessage As String)
 Const ProcName As String = "disableAll"
 On Error GoTo Err
 
@@ -2231,7 +2231,7 @@ VolumeText = ""
 HighText = ""
 LowText = ""
 
-OrderSimulationLabel = message
+OrderSimulationLabel = pMessage
 
 Exit Sub
 
@@ -2534,6 +2534,14 @@ If DiscrAmountText(index) <> "" Then
     If Int(Abs(lPrice) / mContract.TickSize) > mMaxDiscretionaryAmountTicks Then setInvalidText DiscrAmountText(index), index: Exit Function
 End If
 
+If GoodAfterTimeText(index) <> "" Then
+    If Not IsDate(GoodAfterTimeText(index)) Then setInvalidText GoodAfterTimeText(index), index
+End If
+
+If GoodTillDateText(index) <> "" Then
+    If Not IsDate(GoodTillDateText(index)) Then setInvalidText GoodTillDateText(index), index
+End If
+
 isValidOrder = True
 
 Exit Function
@@ -2810,22 +2818,19 @@ With pOrder
     If pOrder.IsAttributeModifiable(OrderAttDisplaySize) Then .displaySize = IIf(DisplaySizeText(orderIndex) = "", 0, DisplaySizeText(orderIndex))
     If pOrder.IsAttributeModifiable(OrderAttETradeOnly) Then .ETradeOnly = (ETradeOnlyCheck(orderIndex) = vbChecked)
     If pOrder.IsAttributeModifiable(OrderAttFirmQuoteOnly) Then .FirmQuoteOnly = (FirmQuoteOnlyCheck(orderIndex) = vbChecked)
-    If pOrder.IsAttributeModifiable(OrderAttGoodAfterTime) Then .GoodAfterTime = IIf(GoodAfterTimeText(orderIndex) = "", 0, GoodAfterTimeText(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttGoodAfterTime) Then If GoodAfterTimeText(orderIndex) <> "" Then .GoodAfterTime = CDate(GoodAfterTimeText(orderIndex))
     If pOrder.IsAttributeModifiable(OrderAttGoodAfterTimeTZ) Then .GoodAfterTimeTZ = GoodAfterTimeTZText(orderIndex)
-    If pOrder.IsAttributeModifiable(OrderAttGoodTillDate) Then .GoodTillDate = IIf(GoodTillDateText(orderIndex) = "", 0, GoodTillDateText(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttGoodTillDate) Then If GoodTillDateText(orderIndex) <> "" Then .GoodTillDate = CDate(GoodTillDateText(orderIndex))
     If pOrder.IsAttributeModifiable(OrderAttGoodTillDateTZ) Then .GoodTillDateTZ = GoodTillDateTZText(orderIndex)
     If pOrder.IsAttributeModifiable(OrderAttHidden) Then .Hidden = (HiddenCheck(orderIndex) = vbChecked)
     If pOrder.IsAttributeModifiable(OrderAttIgnoreRTH) Then .IgnoreRegularTradingHours = (IgnoreRthCheck(orderIndex) = vbChecked)
-    'If pOrder.isAttributeModifiable(OrderAttLimitPrice) Then .limitPrice = IIf(PriceText(orderIndex) = "", 0, PriceText(orderIndex))
     If pOrder.IsAttributeModifiable(OrderAttMinimumQuantity) Then .MinimumQuantity = IIf(MinQuantityText(orderIndex) = "", 0, MinQuantityText(orderIndex))
-    'If pOrder.isAttributeModifiable(OrderAttOrderType) Then .orderType = comboItemData(TypeCombo(orderIndex))
     If pOrder.IsAttributeModifiable(OrderAttOriginatorRef) Then .OriginatorRef = OrderRefText(orderIndex)
     If pOrder.IsAttributeModifiable(OrderAttOverrideConstraints) Then .OverrideConstraints = (OverrideCheck(orderIndex) = vbChecked)
     If pOrder.IsAttributeModifiable(OrderAttQuantity) Then .Quantity = QuantityText(orderIndex)
     If pOrder.IsAttributeModifiable(OrderAttStopTriggerMethod) Then .StopTriggerMethod = comboItemData(TriggerMethodCombo(orderIndex))
     If pOrder.IsAttributeModifiable(OrderAttSweepToFill) Then .SweepToFill = (SweepToFillCheck(orderIndex) = vbChecked)
     If pOrder.IsAttributeModifiable(OrderAttTimeInForce) Then .TimeInForce = comboItemData(TIFCombo(orderIndex))
-    'If pOrder.isAttributeModifiable(OrderAttTriggerPrice) Then .triggerPrice = IIf(StopPriceText(orderIndex) = "", 0, StopPriceText(orderIndex))
 End With
 
 Exit Sub
