@@ -1001,6 +1001,7 @@ If Not en.MoveNext Then
     Exit Function
 End If
 
+If sRow = 0 Then sRow = 1
 sIndex = sIndex + 1
 
 Dim lContract As IContract
@@ -1060,14 +1061,17 @@ On Error GoTo Err
 
 TWGrid1.Cols = 2
 TWGrid1.GridLines = TwGridGridNone
+TWGrid1.GridLinesFixed = TwGridGridNone
 TWGrid1.FillStyle = TwGridFillRepeat
-TWGrid1.FixedRows = 0
+TWGrid1.FixedRows = 1
+TWGrid1.RowHeight(0) = 10 * Screen.TwipsPerPixelY
 TWGrid1.FixedCols = 0
 TWGrid1.HighLight = TwGridHighlightNever
 TWGrid1.Rows = 20
 TWGrid1.SelectionMode = TwGridSelectionByRow
 TWGrid1.FocusRect = TwGridFocusNone
 TWGrid1.PopupScrollbars = True
+TWGrid1.AllowUserResizing = TwGridResizeColumns
 
 setupGridColumn 0, ContractsGridColumns.secType, ContractsGridColumnWidths.SecTypeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupGridColumn 0, ContractsGridColumns.Exchange, ContractsGridColumnWidths.ExchangeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter

@@ -12,7 +12,7 @@ Begin VB.UserControl ContractSearch
       Height          =   3150
       Left            =   0
       TabIndex        =   3
-      Top             =   0
+      Top             =   120
       Width           =   4815
       _ExtentX        =   8493
       _ExtentY        =   6191
