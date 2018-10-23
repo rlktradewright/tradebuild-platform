@@ -44,6 +44,7 @@ Event EntryOrderChanged()
 Event EntryOrderFilled()
 Event Execution(ByRef ev As ExecutionEventData)
 Event OrderError(ByRef ev As BracketOrderErrorEventData)
+Event OrderMessage(ByRef ev As BracketOrderMessageEventData)
 Event PositionCloseoutNotified()
 Event SelfCancelled()
 Event SizeChanged()
@@ -156,6 +157,7 @@ Private mStateChangeListeners                       As New Listeners
 Private mRecoverableObjectListeners                 As New Listeners
 Private mExecutionListeners                         As New Listeners
 Private mBracketOrderErrorListeners                 As New Listeners
+Private mBracketOrderMessageListeners               As New Listeners
 
 Private mApplicationIndex                           As Long
 
@@ -215,6 +217,10 @@ End Sub
 
 Private Sub IBracketOrder_AddBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
 AddBracketOrderErrorListener pListener
+End Sub
+
+Private Sub IBracketOrder_AddBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
+AddBracketOrderMessageListener pListener
 End Sub
 
 Private Sub IBracketOrder_AddChangeListener(ByVal pListener As IChangeListener)
@@ -535,6 +541,10 @@ End Property
 
 Private Sub IBracketOrder_RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
 RemoveBracketOrderErrorListener pListener
+End Sub
+
+Private Sub IBracketOrder_RemoveBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
+RemoveBracketOrderMessageListener pListener
 End Sub
 
 Private Sub IBracketOrder_RemoveChangeListener(ByVal pListener As IChangeListener)
@@ -924,6 +934,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub mCloseoutOrder_Message(ByVal pMessage As String)
+Const ProcName As String = "mCloseoutOrder_Message"
+On Error GoTo Err
+
+fireBracketOrderMessage mCloseoutOrder, pMessage
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub mCloseoutOrder_PropertyChanged()
 Const ProcName As String = "mCloseoutOrder_PropertyChanged"
 On Error GoTo Err
@@ -1070,6 +1092,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub mEntryOrder_Message(ByVal pMessage As String)
+Const ProcName As String = "mEntryOrder_Message"
+On Error GoTo Err
+
+fireBracketOrderMessage mEntryOrder, pMessage
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub mEntryOrder_PropertyChanged()
 Const ProcName As String = "mEntryOrder_PropertyChanged"
 On Error GoTo Err
@@ -1207,6 +1241,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub mStopLossOrder_Message(ByVal pMessage As String)
+Const ProcName As String = "mStopLossOrder_Message"
+On Error GoTo Err
+
+fireBracketOrderMessage mStopLossOrder, pMessage
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub mStopLossOrder_PropertyChanged()
 Const ProcName As String = "mStopLossOrder_PropertyChanged"
 On Error GoTo Err
@@ -1316,6 +1362,18 @@ fireChange BracketOrderTargetOrderFilled
 RaiseEvent TargetOrderFilled
 
 SaveRecoveryInfo
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mTargetOrder_Message(ByVal pMessage As String)
+Const ProcName As String = "mTargetOrder_Message"
+On Error GoTo Err
+
+fireBracketOrderMessage mTargetOrder, pMessage
+
 Exit Sub
 
 Err:
@@ -2000,6 +2058,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub AddBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
+Const ProcName As String = "AddBracketOrderMessageListener"
+On Error GoTo Err
+
+mBracketOrderMessageListeners.Add pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub AddChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "AddChangeListener"
 On Error GoTo Err
@@ -2330,6 +2400,18 @@ Const ProcName As String = "RemoveBracketOrderErrorListener"
 On Error GoTo Err
 
 mBracketOrderErrorListeners.Remove pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub RemoveBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
+Const ProcName As String = "RemoveBracketOrderMessageListener"
+On Error GoTo Err
+
+mBracketOrderMessageListeners.Remove pListener
 
 Exit Sub
 
@@ -3258,6 +3340,42 @@ If sSomeListeners Then
 End If
 
 RaiseEvent OrderError(ev)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub fireBracketOrderMessage( _
+                ByVal pOrder As IOrder, _
+                ByVal pMessage As String)
+Const ProcName As String = "fireBracketOrderMessage"
+On Error GoTo Err
+
+Dim ev As BracketOrderMessageEventData
+Set ev.Source = Me
+Set ev.AffectedOrder = pOrder
+ev.Message = pMessage
+
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mBracketOrderMessageListeners.Valid Then
+    sInit = True
+    sSomeListeners = mBracketOrderMessageListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As IBracketOrderMsgListener
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyBracketOrderMessage ev
+    Next
+End If
+
+RaiseEvent OrderMessage(ev)
 
 Exit Sub
 

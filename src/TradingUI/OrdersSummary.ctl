@@ -10,19 +10,16 @@ Begin VB.UserControl OrdersSummary
    DefaultCancel   =   -1  'True
    ScaleHeight     =   4245
    ScaleWidth      =   12810
-   Begin VB.TextBox ErrorText 
-      Appearance      =   0  'Flat
+   Begin VB.TextBox MessageText 
       BorderStyle     =   0  'None
-      Height          =   375
+      Height          =   735
       Index           =   0
-      Left            =   4080
-      Locked          =   -1  'True
+      Left            =   1800
       TabIndex        =   2
-      TabStop         =   0   'False
-      Text            =   "Error Text"
-      Top             =   2880
+      Text            =   "Message Text"
+      Top             =   600
       Visible         =   0   'False
-      Width           =   2055
+      Width           =   2175
    End
    Begin VB.TextBox EditText 
       Appearance      =   0  'Flat
@@ -117,6 +114,7 @@ Option Explicit
 Implements IChangeListener
 Implements ICollectionChangeListener
 Implements IBracketOrderErrorListener
+Implements IBracketOrderMsgListener
 Implements IProfitListener
 Implements IThemeable
 
@@ -219,13 +217,6 @@ Private Enum BracketOrderGridColumnWidths
     OrderBrokerIdWidth = 11
 End Enum
 
-'Private Enum ErrorMessageOrderRoles
-'    ErrorMessageOrderRoleEntry = 1
-'    ErrorMessageOrderRoleStopLoss
-'    ErrorMessageOrderRoleTarget
-'    ErrorMessageOrderRoleCloseout
-'End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -237,10 +228,10 @@ Private Type BracketOrderGridMappingEntry
     ' indicates whether this entry in the grid is expanded
     IsExpanded          As Boolean
     
-    ' indicates whether this entry's error messages are visible
+    ' indicates whether this entry's messages are visible
     ' (for example it may be expanded but not visible because
     ' the PositionManager entry may not be expanded)
-    IsErrorMessagesVisible  As Boolean
+    IsMessagesVisible   As Boolean
     
     ' index of first line in OrdersGrid relating to this entry
     GridIndex           As Long
@@ -248,16 +239,16 @@ Private Type BracketOrderGridMappingEntry
     ' offset from GridIndex of line in OrdersGrid relating to
     ' the corresponding order: -1 means  it's not in the grid
     EntryGridOffset     As Long
-    EntryErrorIndex     As Long
+    EntryMessageIndex   As Long
     
     StopLossGridOffset  As Long
-    StopLossErrorIndex  As Long
+    StopLossMessageIndex   As Long
     
     TargetGridOffset    As Long
-    TargetErrorIndex    As Long
+    TargetMessageIndex  As Long
     
     CloseoutGridOffset  As Long
-    CloseoutErrorIndex  As Long
+    CloseoutMessageIndex   As Long
     
     TickSize            As Double
     secType             As SecurityTypes
@@ -274,10 +265,10 @@ Private Type PositionManagerGridMappingEntry
                                 
 End Type
 
-Private Type ErrorMappingEntry
+Private Type MessageMappingEntry
     BracketOrderIndex   As Long
     OrderRole           As BracketOrderRoles
-    ErrorTextIndex      As Long
+    MessageTextIndex    As Long
 End Type
 
 '@================================================================================
@@ -311,8 +302,8 @@ Private mEditedOrderRole                                    As BracketOrderRoles
 
 Private mTheme                                              As ITheme
 
-Private mErrorMappingTable()                                As ErrorMappingEntry
-Private mMaxErrorMappingTableIndex                          As Long
+Private mMessageMappingTable()                              As MessageMappingEntry
+Private mMaxMessageMappingTableIndex                        As Long
 
 '@================================================================================
 ' User Control Event Handlers
@@ -351,8 +342,8 @@ mMaxBracketOrderGridMappingTableIndex = -1
 ReDim mPositionManagerGridMappingTable(3) As PositionManagerGridMappingEntry
 mMaxPositionManagerGridMappingTableIndex = -1
 
-ReDim mErrorMappingTable(3) As ErrorMappingEntry
-mMaxErrorMappingTableIndex = 0
+ReDim mMessageMappingTable(3) As MessageMappingEntry
+mMaxMessageMappingTableIndex = 0
 
 Exit Sub
 
@@ -403,27 +394,33 @@ If TypeOf ev.Source Is IBracketOrder Then
         Case BracketOrderChangeTypes.BracketOrderCompleted
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             If lBracketOrder.Size = 0 Then
-                lBracketOrder.RemoveChangeListener Me
-                lBracketOrder.RemoveBracketOrderErrorListener Me
+                ' Don't stop listening - in case broker sends late messages
+'                lBracketOrder.RemoveChangeListener Me
+'                lBracketOrder.RemoveBracketOrderErrorListener Me
+'                lBracketOrder.RemoveBracketOrderMessageListener Me
             End If
         Case BracketOrderChangeTypes.BracketOrderSelfCancelled
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             If lBracketOrder.Size = 0 Then
                 lBracketOrder.RemoveChangeListener Me
                 lBracketOrder.RemoveBracketOrderErrorListener Me
+                lBracketOrder.RemoveBracketOrderMessageListener Me
             End If
         Case BracketOrderChangeTypes.BracketOrderEntryOrderChanged
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .EntryGridOffset, lBracketOrder.EntryOrder, .secType, .TickSize
-            If lBracketOrder.EntryOrder.ErrorMessage = "" Then clearErrorMessage lBracketOrder.EntryOrder, lBracketOrderIndex
+            If lBracketOrder.EntryOrder.ErrorMessage = "" And _
+                lBracketOrder.EntryOrder.Message = "" Then clearMessage lBracketOrder.EntryOrder, lBracketOrderIndex
         Case BracketOrderChangeTypes.BracketOrderStopLossOrderChanged
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .StopLossGridOffset, lBracketOrder.StopLossOrder, .secType, .TickSize
-            If lBracketOrder.StopLossOrder.ErrorMessage = "" Then clearErrorMessage lBracketOrder.StopLossOrder, lBracketOrderIndex
+            If lBracketOrder.StopLossOrder.ErrorMessage = "" And _
+                lBracketOrder.StopLossOrder.Message = "" Then clearMessage lBracketOrder.StopLossOrder, lBracketOrderIndex
         Case BracketOrderChangeTypes.BracketOrderTargetOrderChanged
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .TargetGridOffset, lBracketOrder.TargetOrder, .secType, .TickSize
-            If lBracketOrder.TargetOrder.ErrorMessage = "" Then clearErrorMessage lBracketOrder.TargetOrder, lBracketOrderIndex
+            If lBracketOrder.TargetOrder.ErrorMessage = "" And _
+                lBracketOrder.TargetOrder.Message = "" Then clearMessage lBracketOrder.TargetOrder, lBracketOrderIndex
         Case BracketOrderChangeTypes.BracketOrderCloseoutOrderCreated
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             If .TargetGridOffset >= 0 Then
@@ -446,7 +443,8 @@ If TypeOf ev.Source Is IBracketOrder Then
         Case BracketOrderChangeTypes.BracketOrderCloseoutOrderChanged
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             displayOrderValues .GridIndex + .CloseoutGridOffset, lBracketOrder.CloseoutOrder, .secType, .TickSize
-            If lBracketOrder.CloseoutOrder.ErrorMessage = "" Then clearErrorMessage lBracketOrder.CloseoutOrder, lBracketOrderIndex
+            If lBracketOrder.CloseoutOrder.ErrorMessage = "" And _
+                lBracketOrder.CloseoutOrder.Message = "" Then clearMessage lBracketOrder.CloseoutOrder, lBracketOrderIndex
         Case BracketOrderChangeTypes.BracketOrderSizeChanged
             If lBracketOrder Is mSelectedBracketOrder Then endEdit
             GridColumn(.GridIndex, BracketSize) = lBracketOrder.Size
@@ -522,6 +520,7 @@ If TypeOf ev.Source Is BracketOrders Then
         lBracketOrderIndex = findBracketOrderGridMappingIndex(lBracketOrder)
         lBracketOrder.RemoveChangeListener Me
         lBracketOrder.RemoveBracketOrderErrorListener Me
+        lBracketOrder.RemoveBracketOrderMessageListener Me
         mBracketOrderGridMappingTable(lBracketOrderIndex).ProfitCalculator.RemoveProfitListener Me
         Set mBracketOrderGridMappingTable(lBracketOrderIndex).ProfitCalculator = Nothing
     End Select
@@ -555,8 +554,28 @@ On Error GoTo Err
 Dim lBracketOrderIndex As Long
 lBracketOrderIndex = findBracketOrderGridMappingIndex(ev.Source)
 
-clearErrorMessage ev.AffectedOrder, lBracketOrderIndex
-setupErrorMessage ev.AffectedOrder, lBracketOrderIndex
+clearMessage ev.AffectedOrder, lBracketOrderIndex
+setupMessage ev.AffectedOrder, ev.AffectedOrder.ErrorMessage, lBracketOrderIndex
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IBracketOrderMessageListener Interface Members
+'@================================================================================
+
+Private Sub IBracketOrderMsgListener_NotifyBracketOrderMessage(ev As BracketOrderMessageEventData)
+Const ProcName As String = "IBracketOrderMsgListener_NotifyBracketOrderMessage"
+On Error GoTo Err
+
+Dim lBracketOrderIndex As Long
+lBracketOrderIndex = findBracketOrderGridMappingIndex(ev.Source)
+
+clearMessage ev.AffectedOrder, lBracketOrderIndex
+setupMessage ev.AffectedOrder, ev.AffectedOrder.Message, lBracketOrderIndex
 
 Exit Sub
 
@@ -763,8 +782,8 @@ On Error GoTo Err
 adjustEditBox
 
 Dim i As Long
-For i = 1 To mMaxErrorMappingTableIndex
-    displayErrorMessage i
+For i = 1 To mMaxMessageMappingTableIndex
+    displayMessage i
 Next
 
 Exit Sub
@@ -849,11 +868,11 @@ If Not mTheme.GridFont Is Nothing Then Set BracketOrderGrid.Font = mTheme.GridFo
 If Not mTheme.TextFont Is Nothing Then Set EditText.Font = mTheme.TextFont
 
 Dim i As Long
-For i = 1 To mMaxErrorMappingTableIndex
-    If mErrorMappingTable(i).ErrorTextIndex <> 0 Then
-        ErrorText(mErrorMappingTable(i).ErrorTextIndex).BackColor = mTheme.TextBackColor
-        ErrorText(mErrorMappingTable(i).ErrorTextIndex).ForeColor = mTheme.AlertForeColor
-        If Not mTheme.AlertFont Is Nothing Then Set ErrorText(mErrorMappingTable(i).ErrorTextIndex).Font = mTheme.AlertFont
+For i = 1 To mMaxMessageMappingTableIndex
+    If mMessageMappingTable(i).MessageTextIndex <> 0 Then
+        MessageText(mMessageMappingTable(i).MessageTextIndex).BackColor = mTheme.TextBackColor
+        MessageText(mMessageMappingTable(i).MessageTextIndex).ForeColor = mTheme.AlertForeColor
+        If Not mTheme.AlertFont Is Nothing Then Set MessageText(mMessageMappingTable(i).MessageTextIndex).Font = mTheme.AlertFont
     End If
 Next
 
@@ -882,6 +901,7 @@ For i = 1 To mMaxBracketOrderGridMappingTableIndex
     If Not mBracketOrderGridMappingTable(i).BracketOrder Is Nothing Then
         mBracketOrderGridMappingTable(i).BracketOrder.RemoveChangeListener Me
         mBracketOrderGridMappingTable(i).BracketOrder.RemoveBracketOrderErrorListener Me
+        mBracketOrderGridMappingTable(i).BracketOrder.RemoveBracketOrderMessageListener Me
         mBracketOrderGridMappingTable(i).ProfitCalculator.RemoveProfitListener Me
         Set mBracketOrderGridMappingTable(i).BracketOrder = Nothing
         Set mBracketOrderGridMappingTable(i).ProfitCalculator = Nothing
@@ -995,6 +1015,7 @@ On Error GoTo Err
 
 pBracketOrder.AddChangeListener Me
 pBracketOrder.AddBracketOrderErrorListener Me
+pBracketOrder.AddBracketOrderMessageListener Me
 displayBracketOrder pBracketOrder, pPositionManager
 
 Exit Sub
@@ -1187,37 +1208,50 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function allocateErrorIndex( _
+Private Function allocateMessageIndex( _
                 ByVal pBracketOrderIndex As Long, _
                 ByVal pOrderRole As BracketOrderRoles, _
-                ByVal pErrorMsg As String, _
-                ByVal pErrorRow As Long, _
+                ByVal pMessage As String, _
                 ByVal pSymbol As String, _
                 ByVal pIsExpanded As Boolean) As Long
-Const ProcName As String = "allocateErrorIndex"
+Const ProcName As String = "allocateMessageIndex"
 On Error GoTo Err
 
-mMaxErrorMappingTableIndex = mMaxErrorMappingTableIndex + 1
-If mMaxErrorMappingTableIndex > UBound(mErrorMappingTable) Then ReDim Preserve mErrorMappingTable(2 * (UBound(mErrorMappingTable) + 1) - 1) As ErrorMappingEntry
+mMaxMessageMappingTableIndex = mMaxMessageMappingTableIndex + 1
+If mMaxMessageMappingTableIndex > UBound(mMessageMappingTable) Then ReDim Preserve mMessageMappingTable(2 * (UBound(mMessageMappingTable) + 1) - 1) As MessageMappingEntry
 
-Load ErrorText(ErrorText.UBound + 1)
-With mErrorMappingTable(mMaxErrorMappingTableIndex)
-    .ErrorTextIndex = ErrorText.UBound
+Load MessageText(MessageText.UBound + 1)
+With mMessageMappingTable(mMaxMessageMappingTableIndex)
+    .MessageTextIndex = MessageText.UBound
     .BracketOrderIndex = pBracketOrderIndex
     .OrderRole = pOrderRole
 End With
 
-ErrorText(ErrorText.UBound).Text = pErrorMsg
+MessageText(MessageText.UBound).Text = pMessage
 If Not mTheme Is Nothing Then
-    ErrorText(ErrorText.UBound).BackColor = mTheme.TextBackColor
-    ErrorText(ErrorText.UBound).ForeColor = mTheme.AlertForeColor
-    If Not mTheme.AlertFont Is Nothing Then Set ErrorText(ErrorText.UBound).Font = mTheme.AlertFont
+    MessageText(MessageText.UBound).BackColor = mTheme.TextBackColor
+    MessageText(MessageText.UBound).ForeColor = mTheme.AlertForeColor
+    If Not mTheme.AlertFont Is Nothing Then Set MessageText(MessageText.UBound).Font = mTheme.AlertFont
 End If
 
-addEntryToBracketOrderGrid 0, pSymbol, False, pErrorRow
-If Not pIsExpanded Then BracketOrderGrid.RowHeight(pErrorRow) = 0
+Dim lMessageRow As Long
+With mBracketOrderGridMappingTable(pBracketOrderIndex)
+    Select Case pOrderRole
+    Case BracketOrderRoleEntry
+        lMessageRow = .GridIndex + .EntryGridOffset + 1
+    Case BracketOrderRoleStopLoss
+        lMessageRow = .GridIndex + .StopLossGridOffset + 1
+    Case BracketOrderRoleTarget
+        lMessageRow = .GridIndex + .TargetGridOffset + 1
+    Case BracketOrderRoleCloseout
+        lMessageRow = .GridIndex + .CloseoutGridOffset + 1
+    End Select
+End With
 
-allocateErrorIndex = mMaxErrorMappingTableIndex
+addEntryToBracketOrderGrid 0, pSymbol, False, lMessageRow
+If Not pIsExpanded Then BracketOrderGrid.RowHeight(lMessageRow) = 0
+
+allocateMessageIndex = mMaxMessageMappingTableIndex
 
 Exit Function
 
@@ -1225,38 +1259,41 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub clearErrorMessage(ByVal pOrder As IOrder, ByVal pBracketOrderIndex As Long)
-Const ProcName As String = "clearErrorMessage"
+Private Sub clearMessage(ByVal pOrder As IOrder, ByVal pBracketOrderIndex As Long)
+Const ProcName As String = "clearMessage"
 On Error GoTo Err
 
 With mBracketOrderGridMappingTable(pBracketOrderIndex)
-    If pOrder Is .BracketOrder.EntryOrder Then
-        If .EntryErrorIndex <> 0 Then
+    Dim lRole As BracketOrderRoles
+    lRole = getOrderRole(pBracketOrderIndex, pOrder)
+    Select Case lRole
+    Case BracketOrderRoleEntry
+        If .EntryMessageIndex <> 0 Then
             If .StopLossGridOffset <> NullIndex Then .StopLossGridOffset = .StopLossGridOffset - 1
             If .TargetGridOffset <> NullIndex Then .TargetGridOffset = .TargetGridOffset - 1
             If .CloseoutGridOffset <> NullIndex Then .CloseoutGridOffset = .CloseoutGridOffset - 1
-            deleteErrorMessage .EntryErrorIndex
-            .EntryErrorIndex = 0
+            deleteMessage .EntryMessageIndex
+            .EntryMessageIndex = 0
         End If
-    ElseIf pOrder Is .BracketOrder.StopLossOrder Then
-        If .StopLossErrorIndex <> 0 Then
+    Case BracketOrderRoleStopLoss
+        If .StopLossMessageIndex <> 0 Then
             If .TargetGridOffset <> NullIndex Then .TargetGridOffset = .TargetGridOffset - 1
             If .CloseoutGridOffset <> NullIndex Then .CloseoutGridOffset = .CloseoutGridOffset - 1
-            deleteErrorMessage .StopLossErrorIndex
-            .StopLossErrorIndex = 0
+            deleteMessage .StopLossMessageIndex
+            .StopLossMessageIndex = 0
         End If
-    ElseIf pOrder Is .BracketOrder.TargetOrder Then
-        If .TargetErrorIndex <> 0 Then
+    Case BracketOrderRoleTarget
+        If .TargetMessageIndex <> 0 Then
             If .CloseoutGridOffset <> NullIndex Then .CloseoutGridOffset = .CloseoutGridOffset - 1
-            deleteErrorMessage .TargetErrorIndex
-            .TargetErrorIndex = 0
+            deleteMessage .TargetMessageIndex
+            .TargetMessageIndex = 0
         End If
-    Else
-        If .CloseoutErrorIndex <> 0 Then
-            deleteErrorMessage .CloseoutErrorIndex
-            .CloseoutErrorIndex = 0
+    Case BracketOrderRoleCloseout
+        If .CloseoutMessageIndex <> 0 Then
+            deleteMessage .CloseoutMessageIndex
+            .CloseoutMessageIndex = 0
         End If
-    End If
+    End Select
 End With
 
 Exit Sub
@@ -1276,43 +1313,43 @@ Dim lLastIndex As Long
 
 With mBracketOrderGridMappingTable(index)
 
-    .IsErrorMessagesVisible = False
+    .IsMessagesVisible = False
     
     If mIsEditing And .BracketOrder Is mSelectedBracketOrder Then endEdit
     
     If .EntryGridOffset > 0 Then
         lIndex = .GridIndex + .EntryGridOffset
         BracketOrderGrid.RowHeight(lIndex) = 0
-        If .EntryErrorIndex <> 0 Then
+        If .EntryMessageIndex <> 0 Then
             lIndex = lIndex + 1
-            hideErrorMessage .EntryErrorIndex, lIndex
+            hideMessage .EntryMessageIndex, lIndex
         End If
         lLastIndex = lIndex
     End If
     If .StopLossGridOffset > 0 Then
         lIndex = .GridIndex + .StopLossGridOffset
         BracketOrderGrid.RowHeight(lIndex) = 0
-        If .StopLossErrorIndex <> 0 Then
+        If .StopLossMessageIndex <> 0 Then
             lIndex = lIndex + 1
-            hideErrorMessage .StopLossErrorIndex, lIndex
+            hideMessage .StopLossMessageIndex, lIndex
         End If
         If lIndex > lLastIndex Then lLastIndex = lIndex
     End If
     If .TargetGridOffset > 0 Then
         lIndex = .GridIndex + .TargetGridOffset
         BracketOrderGrid.RowHeight(lIndex) = 0
-        If .TargetErrorIndex <> 0 Then
+        If .TargetMessageIndex <> 0 Then
             lIndex = lIndex + 1
-            hideErrorMessage .TargetErrorIndex, lIndex
+            hideMessage .TargetMessageIndex, lIndex
         End If
         If lIndex > lLastIndex Then lLastIndex = lIndex
     End If
     If .CloseoutGridOffset > 0 Then
         lIndex = .GridIndex + .CloseoutGridOffset
         BracketOrderGrid.RowHeight(lIndex) = 0
-        If .CloseoutErrorIndex <> 0 Then
+        If .CloseoutMessageIndex <> 0 Then
             lIndex = lIndex + 1
-            hideErrorMessage .CloseoutErrorIndex, lIndex
+            hideMessage .CloseoutMessageIndex, lIndex
         End If
         If lIndex > lLastIndex Then lLastIndex = lIndex
     End If
@@ -1367,31 +1404,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub deleteErrorMessage(ByVal pErrorIndex As Long)
-Const ProcName As String = "deleteErrorMessage"
+Private Sub deleteMessage(ByVal pMessageIndex As Long)
+Const ProcName As String = "deleteMessage"
 On Error GoTo Err
 
-If Not mBracketOrderGridMappingTable(mErrorMappingTable(pErrorIndex).BracketOrderIndex).IsErrorMessagesVisible Then Exit Sub
+If Not mBracketOrderGridMappingTable(mMessageMappingTable(pMessageIndex).BracketOrderIndex).IsMessagesVisible Then Exit Sub
 
-Dim lErrorRow As Long
-With mBracketOrderGridMappingTable(mErrorMappingTable(pErrorIndex).BracketOrderIndex)
-    Select Case mErrorMappingTable(pErrorIndex).OrderRole
+Dim lMessageRow As Long
+With mBracketOrderGridMappingTable(mMessageMappingTable(pMessageIndex).BracketOrderIndex)
+    Select Case mMessageMappingTable(pMessageIndex).OrderRole
     Case BracketOrderRoles.BracketOrderRoleEntry
-        lErrorRow = .GridIndex + .EntryGridOffset + 1
+        lMessageRow = .GridIndex + .EntryGridOffset + 1
     Case BracketOrderRoles.BracketOrderRoleStopLoss
-        lErrorRow = .GridIndex + .StopLossGridOffset + 1
+        lMessageRow = .GridIndex + .StopLossGridOffset + 1
     Case BracketOrderRoles.BracketOrderRoleTarget
-        lErrorRow = .GridIndex + .TargetGridOffset + 1
+        lMessageRow = .GridIndex + .TargetGridOffset + 1
     Case BracketOrderRoles.BracketOrderRoleCloseout
-        lErrorRow = .GridIndex + .CloseoutGridOffset + 1
+        lMessageRow = .GridIndex + .CloseoutGridOffset + 1
     End Select
 End With
 
-BracketOrderGrid.RemoveItem lErrorRow
-ErrorText(mErrorMappingTable(pErrorIndex).ErrorTextIndex).Visible = False
-mErrorMappingTable(pErrorIndex).BracketOrderIndex = 0
-mErrorMappingTable(pErrorIndex).ErrorTextIndex = 0
-mErrorMappingTable(pErrorIndex).OrderRole = 0
+BracketOrderGrid.RemoveItem lMessageRow
+MessageText(mMessageMappingTable(pMessageIndex).MessageTextIndex).Visible = False
+mMessageMappingTable(pMessageIndex).BracketOrderIndex = 0
+mMessageMappingTable(pMessageIndex).MessageTextIndex = 0
+mMessageMappingTable(pMessageIndex).OrderRole = 0
 
 Exit Sub
 
@@ -1415,7 +1452,7 @@ If Not mBracketOrderGridMappingTable(lIndex).BracketOrder Is Nothing Then Exit S
 
 With mBracketOrderGridMappingTable(lIndex)
     .IsExpanded = True
-    .IsErrorMessagesVisible = True
+    .IsMessagesVisible = True
     .EntryGridOffset = NullIndex
     .StopLossGridOffset = NullIndex
     .TargetGridOffset = NullIndex
@@ -1483,9 +1520,18 @@ With mBracketOrderGridMappingTable(lIndex)
                                 .TickSize
     End If
 
-    If Not pBracketOrder.EntryOrder Is Nothing Then setupErrorMessage pBracketOrder.EntryOrder, lIndex
-    If Not pBracketOrder.StopLossOrder Is Nothing Then setupErrorMessage pBracketOrder.StopLossOrder, lIndex
-    If Not pBracketOrder.TargetOrder Is Nothing Then setupErrorMessage pBracketOrder.TargetOrder, lIndex
+    If Not pBracketOrder.EntryOrder Is Nothing Then _
+                    setupMessage pBracketOrder.EntryOrder, _
+                                getMessage(pBracketOrder.EntryOrder), _
+                                lIndex
+    If Not pBracketOrder.StopLossOrder Is Nothing Then _
+                    setupMessage pBracketOrder.StopLossOrder, _
+                                getMessage(pBracketOrder.StopLossOrder), _
+                                lIndex
+    If Not pBracketOrder.TargetOrder Is Nothing Then _
+                    setupMessage pBracketOrder.TargetOrder, _
+                                getMessage(pBracketOrder.TargetOrder), _
+                                lIndex
 
 End With
 
@@ -1495,46 +1541,46 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub displayErrorMessage(ByVal pErrorIndex As Long)
-Const ProcName As String = "displayErrorMessage"
+Private Sub displayMessage(ByVal pMessageIndex As Long)
+Const ProcName As String = "displayMessage"
 On Error GoTo Err
 
-If mErrorMappingTable(pErrorIndex).ErrorTextIndex = 0 Then Exit Sub
-If Not mBracketOrderGridMappingTable(mErrorMappingTable(pErrorIndex).BracketOrderIndex).IsErrorMessagesVisible Then Exit Sub
+If mMessageMappingTable(pMessageIndex).MessageTextIndex = 0 Then Exit Sub
+If Not mBracketOrderGridMappingTable(mMessageMappingTable(pMessageIndex).BracketOrderIndex).IsMessagesVisible Then Exit Sub
 
-Dim lErrorRow As Long
-With mBracketOrderGridMappingTable(mErrorMappingTable(pErrorIndex).BracketOrderIndex)
-    Select Case mErrorMappingTable(pErrorIndex).OrderRole
+Dim lMessageRow As Long
+With mBracketOrderGridMappingTable(mMessageMappingTable(pMessageIndex).BracketOrderIndex)
+    Select Case mMessageMappingTable(pMessageIndex).OrderRole
     Case BracketOrderRoles.BracketOrderRoleEntry
-        lErrorRow = .GridIndex + .EntryGridOffset + 1
+        lMessageRow = .GridIndex + .EntryGridOffset + 1
     Case BracketOrderRoles.BracketOrderRoleStopLoss
-        lErrorRow = .GridIndex + .StopLossGridOffset + 1
+        lMessageRow = .GridIndex + .StopLossGridOffset + 1
     Case BracketOrderRoles.BracketOrderRoleTarget
-        lErrorRow = .GridIndex + .TargetGridOffset + 1
+        lMessageRow = .GridIndex + .TargetGridOffset + 1
     Case BracketOrderRoles.BracketOrderRoleCloseout
-        lErrorRow = .GridIndex + .CloseoutGridOffset + 1
+        lMessageRow = .GridIndex + .CloseoutGridOffset + 1
     End Select
 End With
     
-If BracketOrderGrid.RowIsVisible(lErrorRow) Then
+If BracketOrderGrid.RowIsVisible(lMessageRow) Then
     Dim lCurrRow As Long
     lCurrRow = BracketOrderGrid.Row
     Dim lCurrCol As Long
     lCurrCol = BracketOrderGrid.col
     
     BracketOrderGrid.col = BracketOrderGridColumns.OrderAction
-    BracketOrderGrid.Row = lErrorRow
-    ErrorText(mErrorMappingTable(pErrorIndex).ErrorTextIndex).Move BracketOrderGrid.ColPos(BracketOrderGridColumns.OrderAction), _
+    BracketOrderGrid.Row = lMessageRow
+    MessageText(mMessageMappingTable(pMessageIndex).MessageTextIndex).Move BracketOrderGrid.ColPos(BracketOrderGridColumns.OrderAction), _
                                                                     BracketOrderGrid.Celltop, _
                                                                     BracketOrderGrid.Width - BracketOrderGrid.ColPos(BracketOrderGridColumns.OrderAction), _
-                                                                    BracketOrderGrid.RowHeight(lErrorRow)
-    ErrorText(mErrorMappingTable(pErrorIndex).ErrorTextIndex).Visible = True
-    ErrorText(mErrorMappingTable(pErrorIndex).ErrorTextIndex).ZOrder 0
+                                                                    BracketOrderGrid.RowHeight(lMessageRow)
+    MessageText(mMessageMappingTable(pMessageIndex).MessageTextIndex).Visible = True
+    MessageText(mMessageMappingTable(pMessageIndex).MessageTextIndex).ZOrder 0
     
     BracketOrderGrid.col = lCurrCol
     BracketOrderGrid.Row = lCurrRow
 Else
-    ErrorText(mErrorMappingTable(pErrorIndex).ErrorTextIndex).Visible = False
+    MessageText(mMessageMappingTable(pMessageIndex).MessageTextIndex).Visible = False
 End If
 
 Exit Sub
@@ -1663,18 +1709,18 @@ Dim lIndex As Long
 
 With mBracketOrderGridMappingTable(index)
     If preserveCurrentExpandedState Then
-        .IsErrorMessagesVisible = .IsExpanded
+        .IsMessagesVisible = .IsExpanded
     Else
-        .IsErrorMessagesVisible = True
+        .IsMessagesVisible = True
     End If
     
     If .EntryGridOffset > 0 Then
         lIndex = .GridIndex + .EntryGridOffset
         If Not preserveCurrentExpandedState Or .IsExpanded Then
             BracketOrderGrid.RowHeight(lIndex) = -1
-            If .EntryErrorIndex <> 0 Then
+            If .EntryMessageIndex <> 0 Then
                 lIndex = lIndex + 1
-                displayErrorMessage .EntryErrorIndex
+                displayMessage .EntryMessageIndex
             End If
         End If
         lLastIndex = lIndex
@@ -1683,9 +1729,9 @@ With mBracketOrderGridMappingTable(index)
         lIndex = .GridIndex + .StopLossGridOffset
         If Not preserveCurrentExpandedState Or .IsExpanded Then
             BracketOrderGrid.RowHeight(lIndex) = -1
-            If .StopLossErrorIndex <> 0 Then
+            If .StopLossMessageIndex <> 0 Then
                 lIndex = lIndex + 1
-                displayErrorMessage .StopLossErrorIndex
+                displayMessage .StopLossMessageIndex
             End If
         End If
         If lIndex > lLastIndex Then lLastIndex = lIndex
@@ -1694,9 +1740,9 @@ With mBracketOrderGridMappingTable(index)
         lIndex = .GridIndex + .TargetGridOffset
         If Not preserveCurrentExpandedState Or .IsExpanded Then
             BracketOrderGrid.RowHeight(lIndex) = -1
-            If .TargetErrorIndex <> 0 Then
+            If .TargetMessageIndex <> 0 Then
                 lIndex = lIndex + 1
-                displayErrorMessage .TargetErrorIndex
+                displayMessage .TargetMessageIndex
             End If
         End If
         If lIndex > lLastIndex Then lLastIndex = lIndex
@@ -1705,9 +1751,9 @@ With mBracketOrderGridMappingTable(index)
         lIndex = .GridIndex + .CloseoutGridOffset
         If Not preserveCurrentExpandedState Or .IsExpanded Then
             BracketOrderGrid.RowHeight(lIndex) = -1
-            If .CloseoutErrorIndex <> 0 Then
+            If .CloseoutMessageIndex <> 0 Then
                 lIndex = lIndex + 1
-                displayErrorMessage .CloseoutErrorIndex
+                displayMessage .EntryMessageIndex
             End If
         End If
         If lIndex > lLastIndex Then lLastIndex = lIndex
@@ -1752,7 +1798,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function findBracketOrderGridMappingIndex(ByVal pBracketOrder As IBracketOrder) As Long
- Const ProcName As String = "findBracketOrderGridMappingIndex"
+Const ProcName As String = "findBracketOrderGridMappingIndex"
 On Error GoTo Err
 
 Dim lBracketOrderIndex As Long
@@ -1817,6 +1863,28 @@ End Function
 
 Private Function getPositionManagerGridMappingIndexFromRowIndex(ByVal pRowIndex As Long) As Long
 getPositionManagerGridMappingIndexFromRowIndex = (BracketOrderGrid.RowData(pRowIndex) And RowDataPositionManagerMask) / RowDataPositionManagerBase
+End Function
+
+Private Function getMessage(ByVal pOrder As IOrder) As String
+If pOrder.ErrorMessage <> "" Then
+    getMessage = pOrder.ErrorMessage
+ElseIf pOrder.Message <> "" Then
+    getMessage = pOrder.Message
+End If
+End Function
+
+Private Function getOrderRole(ByVal pBracketOrderIndex As Long, ByVal pOrder As IOrder) As BracketOrderRoles
+Dim lBracketOrder As IBracketOrder
+Set lBracketOrder = mBracketOrderGridMappingTable(pBracketOrderIndex).BracketOrder
+If pOrder Is lBracketOrder.EntryOrder Then
+    getOrderRole = BracketOrderRoleEntry
+ElseIf pOrder Is lBracketOrder.StopLossOrder Then
+    getOrderRole = BracketOrderRoleStopLoss
+ElseIf pOrder Is lBracketOrder.TargetOrder Then
+    getOrderRole = BracketOrderRoleTarget
+ElseIf pOrder Is lBracketOrder.CloseoutOrder Then
+    getOrderRole = BracketOrderRoleCloseout
+End If
 End Function
 
 Private Function getSelectedOrder() As IOrder
@@ -1898,12 +1966,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub hideErrorMessage(ByVal pErrorIndex As Long, ByVal pErrorRow As Long)
-Const ProcName As String = "hideErrorMessage"
+Private Sub hideMessage(ByVal pMessageIndex As Long, ByVal pMessageRow As Long)
+Const ProcName As String = "hideMessage"
 On Error GoTo Err
 
-ErrorText(mErrorMappingTable(pErrorIndex).ErrorTextIndex).Visible = False
-BracketOrderGrid.RowHeight(pErrorRow) = 0
+MessageText(mMessageMappingTable(pMessageIndex).MessageTextIndex).Visible = False
+BracketOrderGrid.RowHeight(pMessageRow) = 0
 
 Exit Sub
 
@@ -2088,38 +2156,40 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setupErrorMessage(ByVal pOrder As IOrder, ByVal pBracketOrderIndex As Long)
-Const ProcName As String = "setupErrorMessage"
+Private Sub setupMessage(ByVal pOrder As IOrder, ByVal pMessage As String, ByVal pBracketOrderIndex As Long)
+Const ProcName As String = "setupMessage"
 On Error GoTo Err
 
-If pOrder.ErrorMessage = "" Then Exit Sub
+If pMessage = "" Then Exit Sub
 
 With mBracketOrderGridMappingTable(pBracketOrderIndex)
     Dim lSymbol As String
     lSymbol = .BracketOrder.Contract.Specifier.LocalSymbol
 
-    Dim lErrorIndex As Long
-    If pOrder Is .BracketOrder.EntryOrder Then
-        lErrorIndex = allocateErrorIndex(pBracketOrderIndex, BracketOrderRoles.BracketOrderRoleEntry, pOrder.ErrorMessage, .GridIndex + .EntryGridOffset + 1, lSymbol, .IsExpanded)
-        .EntryErrorIndex = lErrorIndex
+    Dim lRole As BracketOrderRoles
+    lRole = getOrderRole(pBracketOrderIndex, pOrder)
+    
+    Dim lMessageIndex As Long
+    lMessageIndex = allocateMessageIndex(pBracketOrderIndex, lRole, pMessage, lSymbol, .IsExpanded)
+    
+    Select Case lRole
+    Case BracketOrderRoles.BracketOrderRoleEntry
+        .EntryMessageIndex = lMessageIndex
         If .StopLossGridOffset <> NullIndex Then .StopLossGridOffset = .StopLossGridOffset + 1
         If .TargetGridOffset <> NullIndex Then .TargetGridOffset = .TargetGridOffset + 1
         If .CloseoutGridOffset <> NullIndex Then .CloseoutGridOffset = .CloseoutGridOffset + 1
-    ElseIf pOrder Is .BracketOrder.StopLossOrder Then
-        lErrorIndex = allocateErrorIndex(pBracketOrderIndex, BracketOrderRoles.BracketOrderRoleStopLoss, pOrder.ErrorMessage, .GridIndex + .StopLossGridOffset + 1, lSymbol, .IsExpanded)
-        .StopLossErrorIndex = lErrorIndex
+    Case BracketOrderRoles.BracketOrderRoleStopLoss
+        .StopLossMessageIndex = lMessageIndex
         If .TargetGridOffset <> NullIndex Then .TargetGridOffset = .TargetGridOffset + 1
         If .CloseoutGridOffset <> NullIndex Then .CloseoutGridOffset = .CloseoutGridOffset + 1
-    ElseIf pOrder Is .BracketOrder.TargetOrder Then
-        lErrorIndex = allocateErrorIndex(pBracketOrderIndex, BracketOrderRoles.BracketOrderRoleTarget, pOrder.ErrorMessage, .GridIndex + .TargetGridOffset + 1, lSymbol, .IsExpanded)
-        .TargetErrorIndex = lErrorIndex
+    Case BracketOrderRoles.BracketOrderRoleTarget
+        .TargetMessageIndex = lMessageIndex
         If .CloseoutGridOffset <> NullIndex Then .CloseoutGridOffset = .CloseoutGridOffset + 1
-    Else
-        lErrorIndex = allocateErrorIndex(pBracketOrderIndex, BracketOrderRoles.BracketOrderRoleCloseout, pOrder.ErrorMessage, .GridIndex + .CloseoutGridOffset + 1, lSymbol, .IsExpanded)
-        .CloseoutErrorIndex = lErrorIndex
-    End If
+    Case BracketOrderRoles.BracketOrderRoleCloseout
+        .CloseoutMessageIndex = lMessageIndex
+    End Select
         
-    displayErrorMessage lErrorIndex
+    displayMessage lMessageIndex
 End With
 
 Exit Sub

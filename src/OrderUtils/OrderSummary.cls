@@ -64,6 +64,7 @@ Private mGoodTillDateTZ                     As String
 Private mHidden                             As Boolean
 Private mIgnoreRegularTradingHours          As Boolean
 Private mLimitPrice                         As Double
+Private mMessage                            As String
 Private mMinimumQuantity                    As Long
 Private mNBBOPriceCap                       As Double
 Private mOrderType                          As OrderTypes
@@ -322,6 +323,15 @@ Public Property Get LimitPrice() As Double
 LimitPrice = mLimitPrice
 End Property
 
+Public Property Let Message(ByVal Value As String)
+mMessage = Value
+mIsDirty = True
+End Property
+
+Public Property Get Message() As String
+Message = mMessage
+End Property
+
 Public Property Let MinimumQuantity(ByVal Value As Long)
 mMinimumQuantity = Value
 mIsDirty = True
@@ -560,6 +570,8 @@ jb.EncodeNameAndValue "IgnoreRegularTradingHours", mIgnoreRegularTradingHours, F
 jb.EncodeNameAndValue "LastFillPrice", mLastFillPrice, 0#
 
 jb.EncodeNameAndValue "LimitPrice", mLimitPrice, 0#
+
+jb.EncodeNameAndValue "Message", mMessage, ""
 
 jb.EncodeNameAndValue "MinimumQuantity", mMinimumQuantity, 0
 

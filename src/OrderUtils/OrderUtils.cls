@@ -299,6 +299,12 @@ Public Type BracketOrderErrorEventData
     ErrorMsg            As String
 End Type
 
+Public Type BracketOrderMessageEventData
+    Source              As Object
+    AffectedOrder       As IOrder
+    Message             As String
+End Type
+
 Public Type ExecutionEventData
     Source              As Object
     ExecutionReport     As IExecutionReport

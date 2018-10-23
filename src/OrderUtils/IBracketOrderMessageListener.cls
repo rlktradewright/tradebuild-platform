@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IOrderSubmissionListener"
+Attribute VB_Name = "IBracketOrderMsgListener"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IOrderSubmissionListener"
+Private Const ModuleName                            As String = "IBracketOrderMsgListener"
 
 '@================================================================================
 ' Member variables
@@ -64,35 +64,13 @@ Private Const ModuleName                            As String = "IOrderSubmissio
 ' Methods
 '@================================================================================
 
-Public Sub NotifyError( _
-                ByVal pOrderId As String, _
-                ByVal pErrorCode As Long, _
-                ByVal pErrorMsg As String)
-End Sub
-
-Public Sub NotifyExecutionReport( _
-                ByVal pExecutionReport As IExecutionReport)
-
-End Sub
-
-Public Sub NotifyMessage( _
-                ByVal pOrderId As String, _
-                ByVal pMessage As String)
-End Sub
-
-Public Sub NotifyOrderReport( _
-                ByVal pOrderReport As IOrderReport)
-
-End Sub
-
-Public Sub NotifyOrderStatusReport( _
-                ByVal pOrderStatusReport As IOrderStatusReport)
-
+Public Sub NotifyBracketOrderMessage(ByRef ev As BracketOrderMessageEventData)
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
 
 
 

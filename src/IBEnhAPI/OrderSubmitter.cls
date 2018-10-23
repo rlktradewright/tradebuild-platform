@@ -755,6 +755,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub NotifyMessage( _
+                ByVal pOrderId As String, _
+                ByVal pMessage As String)
+Const ProcName As String = "NotifyMessage"
+On Error GoTo Err
+
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mOrderSubmissionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As IOrderSubmissionListener
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyMessage pOrderId, pMessage
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub NotifyOrderReport(ByVal pOrderReport As IOrderReport)
 Const ProcName As String = "NotifyOrderReport"
 On Error GoTo Err

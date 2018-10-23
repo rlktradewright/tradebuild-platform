@@ -35,6 +35,7 @@ Event Clean()
 Event Dirty()
 Event Error(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 Event Fill(ByVal pExec As IExecutionReport)
+Event Message(ByVal pMessage As String)
 Event PropertyChanged()
 Event StatusChanged()
 
@@ -476,6 +477,22 @@ Private Property Get IOrder_LimitPrice() As Double
 IOrder_LimitPrice = mSummary.LimitPrice
 End Property
 
+Private Property Let IOrder_Message(ByVal Value As String)
+Const ProcName As String = "IOrder_Message"
+On Error GoTo Err
+
+Message = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Property Get IOrder_Message() As String
+IOrder_Message = mSummary.Message
+End Property
+
 Private Property Let IOrder_MinimumQuantity(ByVal Value As Long)
 Const ProcName As String = "IOrder_MinimumQuantity"
 On Error GoTo Err
@@ -517,6 +534,18 @@ Const ProcName As String = "IOrder_NotifyFill"
 On Error GoTo Err
 
 NotifyFill pExec
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IOrder_NotifyMessage(ByVal pMessage As String)
+Const ProcName As String = "IOrder_NotifyMessage"
+On Error GoTo Err
+
+
 
 Exit Sub
 
@@ -979,6 +1008,7 @@ mDontCheckAttributeModificationPermitted = Value
 End Property
 
 Public Property Let ErrorCode(ByVal Value As Long)
+setDirty
 mSummary.ErrorCode = Value
 End Property
 
@@ -986,11 +1016,13 @@ Public Property Get ErrorCode() As Long
 ErrorCode = mSummary.ErrorCode
 End Property
 
-Private Property Let ErrorMessage(ByVal Value As String)
+Public Property Let ErrorMessage(ByVal Value As String)
+setDirty
+mSummary.Message = ""
 mSummary.ErrorMessage = Value
 End Property
 
-Private Property Get ErrorMessage() As String
+Public Property Get ErrorMessage() As String
 ErrorMessage = mSummary.ErrorMessage
 End Property
 
@@ -1210,6 +1242,17 @@ End Property
 
 Public Property Get LimitPrice() As Double
 LimitPrice = mSummary.LimitPrice
+End Property
+
+Public Property Let Message(ByVal Value As String)
+setDirty
+mSummary.ErrorMessage = ""
+mSummary.ErrorCode = 0
+mSummary.Message = Value
+End Property
+
+Public Property Get Message() As String
+Message = mSummary.Message
 End Property
 
 Public Property Let MinimumQuantity(ByVal Value As Long)
@@ -1788,6 +1831,12 @@ ErrorCode = pErrorCode
 ErrorMessage = pErrorMsg
 SaveRecoveryInfo
 RaiseEvent Error(pErrorCode, pErrorMsg)
+End Sub
+
+Public Sub NotifyMessage(ByVal pMessage As String)
+Message = pMessage
+SaveRecoveryInfo
+RaiseEvent Message(pMessage)
 End Sub
 
 ''

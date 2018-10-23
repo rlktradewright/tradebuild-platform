@@ -112,7 +112,7 @@ Case 202
 Case 451
     ' TWS sends this when it is unable to transmit the order as requested, typically because
     ' the order value exceeds some restriction
-    gLog "Ignored error 451 from TWS (" & pOrderId & "): " & pErrorMsg, ModuleName, ProcName
+    GetOrderSubmitter(pOrderId).NotifyMessage GetOrder(pOrderId).Id, pErrorMsg
 Case 382, 383
     ' indicates that the order size or price exceeds the constraints specified
     ' in TWS.
@@ -120,13 +120,11 @@ Case 382, 383
     notifyStatus pOrderId, OrderStatuses.OrderStatusRejected
 Case 399
     ' contains information about the order which doesn't invalidate it - for example
-    ' order won't be submitted to exchange until start of next trading sesssioon
-    GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
+    ' order won't be submitted to exchange until start of next trading session
+    GetOrderSubmitter(pOrderId).NotifyMessage GetOrder(pOrderId).Id, pErrorMsg
 Case Else
-    If Not mKnownOrders.IsCancelled(pOrderId, mTwsAPI.ClientId) Then
-        GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
-        notifyStatus pOrderId, OrderStatuses.OrderStatusRejected
-    End If
+    GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
+    notifyStatus pOrderId, OrderStatuses.OrderStatusRejected
 End Select
 
 Exit Sub

@@ -36,6 +36,7 @@ Implements IStateChangeListener
 '@================================================================================
 
 Event OrderError(ByVal pOrderId As String, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+Event OrderMessage(ByVal pOrderId As String, ByVal pMessage As String)
 
 Event Change(ev As ChangeEventData)
 
@@ -302,6 +303,19 @@ Else
 
     fireChange PositionManagerChangeTypes.PositionSizeChanged
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IOrderSubmissionListener_NotifyMessage(ByVal pOrderId As String, ByVal pMessage As String)
+Const ProcName As String = "IOrderSubmissionListener_NotifyMessage"
+On Error GoTo Err
+
+mOrders.Item(pOrderId).NotifyMessage pMessage
+RaiseEvent OrderMessage(pOrderId, pMessage)
 
 Exit Sub
 

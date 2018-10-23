@@ -83,7 +83,7 @@ Public Const RecoveryOrderContextName       As String = "$recovery"
 '@================================================================================
 
 Public Function gBracketEntryTypeFromString(ByVal Value As String) As BracketEntryTypes
-Const ProcName As String = "gBracketEntryTypeToShortString"
+Const ProcName As String = "gBracketEntryTypeFromString"
 On Error GoTo Err
 
 Select Case UCase$(Value)

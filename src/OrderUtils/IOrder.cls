@@ -207,6 +207,12 @@ End Property
 Public Property Get LimitPrice() As Double
 End Property
 
+Public Property Let Message(ByVal Value As String)
+End Property
+
+Public Property Get Message() As String
+End Property
+
 Public Property Let MinimumQuantity(ByVal Value As Long)
 End Property
 
@@ -337,6 +343,9 @@ Public Function IsModifiable() As Boolean
 End Function
 
 Public Sub NotifyError(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+End Sub
+
+Public Sub NotifyMessage(ByVal pMessage As String)
 End Sub
 
 Public Sub NotifyFill(ByVal pExec As IExecutionReport)

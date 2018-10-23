@@ -184,6 +184,9 @@ End Property
 Public Sub AddBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
 End Sub
 
+Public Sub AddBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
+End Sub
+
 Public Sub AddChangeListener(ByVal pListener As IChangeListener)
 End Sub
 
@@ -221,6 +224,9 @@ Public Sub NotifyCloseout(ByVal pExec As IExecutionReport)
 End Sub
 
 Public Sub RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
+End Sub
+
+Public Sub RemoveBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
 End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
