@@ -193,14 +193,16 @@ Set mFutureWaiter = New FutureWaiter
 ContractSpecBuilder1.Visible = True
 ContractSelector1.Visible = False
 
-ReDim mSortKeys(6) As ContractSortKeyIds
+ReDim mSortKeys(8) As ContractSortKeyIds
 mSortKeys(0) = ContractSortKeySecType
 mSortKeys(1) = ContractSortKeySymbol
 mSortKeys(2) = ContractSortKeyExchange
 mSortKeys(3) = ContractSortKeyCurrency
 mSortKeys(4) = ContractSortKeyExpiry
-mSortKeys(5) = ContractSortKeyStrike
-mSortKeys(6) = ContractSortKeyRight
+mSortKeys(5) = ContractSortKeyMultiplier
+mSortKeys(6) = ContractSortKeyStrike
+mSortKeys(7) = ContractSortKeyRight
+mSortKeys(8) = ContractSortKeyLocalSymbol
 End Sub
 
 Private Sub UserControl_InitProperties()

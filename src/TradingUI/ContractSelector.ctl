@@ -165,13 +165,13 @@ mDigitWidth = UserControl.TextWidth(widthString) / Len(widthString)
 ReDim mSortKeys(8) As ContractSortKeyIds
 mSortKeys(0) = ContractSortKeySecType
 mSortKeys(1) = ContractSortKeySymbol
-mSortKeys(2) = ContractSortKeyCurrency
-mSortKeys(3) = ContractSortKeyExchange
-mSortKeys(4) = ContractSortKeyMultiplier
-mSortKeys(5) = ContractSortKeyLocalSymbol
-mSortKeys(6) = ContractSortKeyExpiry
-mSortKeys(7) = ContractSortKeyStrike
-mSortKeys(8) = ContractSortKeyRight
+mSortKeys(2) = ContractSortKeyExchange
+mSortKeys(3) = ContractSortKeyCurrency
+mSortKeys(4) = ContractSortKeyExpiry
+mSortKeys(5) = ContractSortKeyMultiplier
+mSortKeys(6) = ContractSortKeyStrike
+mSortKeys(7) = ContractSortKeyRight
+mSortKeys(8) = ContractSortKeyLocalSymbol
 
 Exit Sub
 
