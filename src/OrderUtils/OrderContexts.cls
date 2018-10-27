@@ -31,6 +31,7 @@ Option Explicit
 '@================================================================================
 
 Implements IEnumerable
+Implements IGenericTickListener
 Implements IStateChangeListener
 
 '@================================================================================
@@ -66,7 +67,10 @@ Private Const BalancingOrderContextName         As String = "$balancing"
 Private mOrderManager                           As OrderManager
 
 Private mContractFuture                         As IFuture
+
 Private mDataSource                             As IMarketDataSource
+Private mDataSourceIsReady                      As Boolean
+
 Private mOrderSubmitter                         As IOrderSubmitter
 Private mOrderAuthoriser                        As IOrderAuthoriser
 Private mAccumulatedBracketOrders               As BracketOrders
@@ -134,6 +138,36 @@ End Function
 
 Private Property Get IEnumerable_UpdateSequence() As Long
 End Property
+
+'@================================================================================
+' IGenericTickListener Interface Members
+'@================================================================================
+
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+End Sub
+
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
+On Error GoTo Err
+
+If mDataSource.HasCurrentTick(TickTypeAsk) And _
+        mDataSource.HasCurrentTick(TickTypeBid) And _
+        mDataSource.HasCurrentTick(TickTypeTrade) _
+Then
+    mDataSourceIsReady = True
+    mDataSource.RemoveGenericTickListener Me
+
+    Dim lOrderContext As OrderContext
+    For Each lOrderContext In mOrderContexts
+        lOrderContext.ProviderIsReady = IsReady
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' IStateChangeListener Interface Members
@@ -295,7 +329,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsReady() As Boolean
-IsReady = mProviderIsReady And (Not mPermittedOrderProperties Is Nothing)
+IsReady = mProviderIsReady And _
+        (Not mPermittedOrderProperties Is Nothing) And _
+        mDataSourceIsReady
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -402,6 +438,18 @@ mGroupName = pGroupName
 mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
 Set mDataSource = pDataSource
+If mDataSource Is Nothing Then
+    mDataSourceIsReady = True
+ElseIf mDataSource.HasCurrentTick(TickTypeAsk) And _
+        mDataSource.HasCurrentTick(TickTypeBid) And _
+        mDataSource.HasCurrentTick(TickTypeTrade) _
+Then
+    mDataSourceIsReady = True
+Else
+    mDataSourceIsReady = False
+    mDataSource.AddGenericTickListener Me
+End If
+
 Set mOrderSubmitter = pOrderSubmitter
 Set pOrderAuthoriser = pOrderAuthoriser
 Set mAccumulatedBracketOrders = pAccumulatedBracketOrders

@@ -272,6 +272,8 @@ Friend Property Let ProviderIsReady(ByVal Value As Boolean)
 Const ProcName As String = "ProviderIsReady"
 On Error GoTo Err
 
+If mProviderIsReady = Value Then Exit Property
+
 mProviderIsReady = Value
 
 fireChange OrderContextReadyStateChanged
