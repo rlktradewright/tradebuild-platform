@@ -247,14 +247,15 @@ Const ProcName As String = "BalancingOrderContext"
 On Error GoTo Err
 
 Dim lBalancingOrderContext As OrderContext
-If Not mOrderContexts.Contains(BalancingOrderContextName) Then
+If mOrderContexts.Contains(BalancingOrderContextName) Then
+    Set lBalancingOrderContext = mOrderContexts.Item(BalancingOrderContextName)
+Else
     ' use a local variable here to avoid catching the ReadyStateChanged event
     Set lBalancingOrderContext = Add(BalancingOrderContextName)
     lBalancingOrderContext.Enabled = True
     If lBalancingOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFDay) Then lBalancingOrderContext.TemplateOrder.TimeInForce = OrderTIFs.OrderTIFDay
 End If
 
-Set lBalancingOrderContext = mOrderContexts.Item(BalancingOrderContextName)
 lBalancingOrderContext.Enabled = True
 Set BalancingOrderContext = lBalancingOrderContext
 

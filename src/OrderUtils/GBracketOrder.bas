@@ -479,7 +479,9 @@ mTableBuilder.AddStateTableEntry _
             OpActions.ActCancelOrders
 
 ' We are notified that the entry order has been cancelled (for example it
-' may have been rejected by TWS or the user may have cancelled it at TWS).
+' may have been rejected by TWS or the user may have cancelled it at TWS, or
+' the bracket order may have been cancelled due to time or price constraints
+' being violated).
 ' There has been no fill, so we cancel the stop and target orders (not
 ' really necessary, since TWS should do this, but just in case...).
 mTableBuilder.AddStateTableEntry _
@@ -491,13 +493,14 @@ mTableBuilder.AddStateTableEntry _
             OpActions.ActCancelStopOrder, OpActions.ActCancelTargetOrder
 
 ' We are notified that the entry order has been cancelled (for example the
-' user may have cancelled it at TWS). Note that it can't be the application
-' that cancelled it because it has no way of cancelling individual orders.
-' There has been a fill. The cancellation will have caused the stop and/or
-' target orders to be cancelled as well (though we haven't been notified of
-' this yet), but we cancel them anyway just in case. We'll be left with an
-' unprotected position, so as this is a protected bracket order, go into
-' closing out state to negate the unprotected position.
+' may have been rejected by TWS or the user may have cancelled it at TWS, or
+' the bracket order may have been cancelled due to time or price constraints
+' being violated).
+' The cancellation will have caused the stop and/or target orders to be
+' cancelled as well (though we haven't been notified of this yet), but we
+' cancel them anyway just in case. We'll be left with an unprotected
+' position, so as this is a protected bracket order, go into closing out
+' state to negate the unprotected position.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimEntryOrderCancelled, _
@@ -507,13 +510,14 @@ mTableBuilder.AddStateTableEntry _
             OpActions.ActCancelStopOrder, OpActions.ActCancelTargetOrder
 
 ' We are notified that the entry order has been cancelled (for example the
-' user may have cancelled it at TWS). Note that it can't be the application
-' that cancelled it because it has no way of cancelling individual orders.
-' There has been a fill. The cancellation will have caused the stop and/or
-' target orders to be cancelled as well (though we haven't been notified of
-' this yet), but we cancel them anyway just in case. We'll be left with an
-' unprotected position, but since this is NOT a protected bracket order,
-' go into Cancelling state.
+' may have been rejected by TWS or the user may have cancelled it at TWS, or
+' the bracket order may have been cancelled due to time or price constraints
+' being violated).
+' The cancellation will have caused the stop and/or target orders to be
+' cancelled as well (though we haven't been notified of this yet), but we
+' cancel them anyway just in case. We'll be left with an unprotected
+' position, but since this is NOT a protected bracket order, go into
+' Cancelling state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateSubmitted, _
             OpStimuli.StimEntryOrderCancelled, _
@@ -645,13 +649,24 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActCompletionActions
 
-' We are notified that the entry order has been cancelled. Now we just need
-' to wait for any other orders to be cancelled.
+' We are notified that the entry order has been cancelled. There has
+' been no fill, so we know that no other orders will have been
+' active, so we can just go to closed state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
             OpStimuli.StimEntryOrderCancelled, _
             SpecialConditions.NoConditions, _
+            OpConditions.CondSizeNonZero, _
+            BracketOrderStates.BracketOrderStateClosed, _
+            OpActions.ActCompletionActions
+
+' We are notified that the entry order has been cancelled. There has
+' been a fill, so we need to wait for any other orders to be cancelled.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateCancelling, _
+            OpConditions.CondSizeNonZero, _
             SpecialConditions.NoConditions, _
+            OpConditions.CondSizeNonZero, _
             BracketOrderStates.BracketOrderStateCancelling
 
 ' We are notified that the stop-loss order has been cancelled. Now we just need

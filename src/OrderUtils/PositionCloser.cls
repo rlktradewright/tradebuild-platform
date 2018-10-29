@@ -216,12 +216,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub doFinalActions()
+Const ProcName As String = "doFinalActions"
+On Error GoTo Err
+
 mOrderContexts.Enabled = mOrderContextsWasEnabled
 mOrderContexts.NotifyPositionsClosed
 If mPositionManager.EndingSession Then
     gLogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
 End If
 RaiseEvent PositionClosed
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub handleInactiveOrderContext(ByVal pOrderContext As OrderContext)
