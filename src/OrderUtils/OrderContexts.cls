@@ -440,6 +440,9 @@ Set mContractFuture = pContractFuture
 Set mDataSource = pDataSource
 If mDataSource Is Nothing Then
     mDataSourceIsReady = True
+ElseIf Not mDataSource.State = MarketDataSourceStateRunning Then
+    mDataSourceIsReady = False
+    mDataSource.AddGenericTickListener Me
 ElseIf mDataSource.HasCurrentTick(TickTypeAsk) And _
         mDataSource.HasCurrentTick(TickTypeBid) And _
         mDataSource.HasCurrentTick(TickTypeTrade) _
