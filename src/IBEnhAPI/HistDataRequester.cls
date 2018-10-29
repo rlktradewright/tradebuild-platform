@@ -92,6 +92,8 @@ Private mIsRequestPacingDisabled                    As Boolean
 
 Private mPacer                                      As HistDataRequestPacer
 
+Private mIsTwsConnectedToIBServers                  As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -170,7 +172,13 @@ Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange(ByVal pSo
 Const ProcName As String = "ITwsConnectionStateListener_NotifyAPIConnectionStateChange"
 On Error GoTo Err
 
-If pState = TwsConnConnected Then doSchedule
+If pState = TwsConnConnected Then
+    ' we'll assume that TWS has a server connection: if not,
+    ' it will soon tell us
+    mIsTwsConnectedToIBServers = True
+    
+    doSchedule
+End If
 
 Exit Sub
 
@@ -179,11 +187,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
-
+mIsTwsConnectedToIBServers = False
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionRecovered"
+On Error GoTo Err
 
+mIsTwsConnectedToIBServers = True
+doSchedule
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -455,7 +472,7 @@ Private Sub doSchedule()
 Const ProcName As String = "doSchedule"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState <> TwsConnConnected Then
+If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then
     mTaskContext.Suspend -1
     Exit Sub
 End If

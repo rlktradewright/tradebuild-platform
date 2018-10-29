@@ -102,6 +102,8 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mContractCache                              As TwsContractCache
 
+Private mIsTwsConnectedToIBServers                  As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -136,10 +138,9 @@ Private Sub IMarketDataConsumer_NotifyError(ByVal pTickerId As Long, ByVal pErro
 Const ProcName As String = "IMarketDataConsumer_NotifyError"
 On Error GoTo Err
 
-Dim lIndex As Long
-
 If tickerHasBeenStopped(pTickerId) Then Exit Sub
 
+Dim lIndex As Long
 lIndex = getIndexFromTickerId(pTickerId)
 
 Select Case pErrorCode
@@ -149,6 +150,12 @@ Case 200    ' security definition not known
     ' while the data stream is running
     
     If mMarketDataTable(lIndex).DataHasBeenReceived Then Exit Sub
+    
+    ' Check whether we've been notified that connection between TWS and IB servers
+    ' has been lost. If so, just ignore this error because we'll retry the
+    ' market data request when connection is re-established.
+    If Not mIsTwsConnectedToIBServers Then Exit Sub
+    
 End Select
 
 mMarketDataTable(lIndex).ErrorListener.NotifyMarketDataError lIndex, pErrorCode, pErrorMsg
@@ -169,13 +176,12 @@ Private Sub IMarketDataConsumer_NotifyTickPrice( _
 Const ProcName As String = "IMarketDataConsumer_NotifyTickPrice"
 On Error GoTo Err
 
-Dim lTick As GenericTick
-Dim lIndex As Long
-
 If tickerHasBeenStopped(pTickerId) Then Exit Sub
 
+Dim lIndex As Long
 lIndex = getIndexFromTickerId(pTickerId)
 
+Dim lTick As GenericTick
 lTick.Price = pPrice
 lTick.Size = pSize
 
@@ -254,12 +260,12 @@ Private Sub IMarketDataConsumer_NotifyTickSize( _
 Const ProcName As String = "IMarketDataConsumer_NotifyTickSize"
 On Error GoTo Err
 
-Dim lTick As GenericTick
-Dim lIndex As Long
-
 If tickerHasBeenStopped(pTickerId) Then Exit Sub
 
+Dim lIndex As Long
 lIndex = getIndexFromTickerId(pTickerId)
+
+Dim lTick As GenericTick
 With mMarketDataTable(lIndex)
     
     .DataHasBeenReceived = True
@@ -372,10 +378,9 @@ Private Sub IMarketDepthConsumer_NotifyError(ByVal pMarketDepthId As Long, ByVal
 Const ProcName As String = "IMarketDepthConsumer_NotifyError"
 On Error GoTo Err
 
-Dim lIndex As Long
-
 If tickerMarketDepthHasBeenStopped(pMarketDepthId) Then Exit Sub
 
+Dim lIndex As Long
 lIndex = getIndexFromMarketDepthId(pMarketDepthId)
 Select Case pErrorCode
 Case 316
@@ -406,13 +411,12 @@ Private Sub IMarketDepthConsumer_NotifyMarketDepth( _
 Const ProcName As String = "IMarketDepthConsumer_NotifyMarketDepth"
 On Error GoTo Err
 
-Dim lTick As GenericTick
-Dim lIndex As Long
-
 If tickerMarketDepthHasBeenStopped(pMarketDepthId) Then Exit Sub
 
+Dim lIndex As Long
 lIndex = getIndexFromMarketDepthId(pMarketDepthId)
 
+Dim lTick As GenericTick
 lTick.TickType = TickTypeMarketDepth
 lTick.MarketMaker = pMarketMaker
 lTick.Operation = pOperation
@@ -461,11 +465,17 @@ Case ApiConnNotConnected
 Case ApiConnConnecting
 
 Case ApiConnConnected
-    ' restart any tickers that were previously in operation
-    ReEstablishMarketData True
+    ' we'll assume that TWS has a server connection: if not,
+    ' it will soon tell us
+    mIsTwsConnectedToIBServers = True
     
-    ' and re-Request any market depth
-    ResetMarketDepth True
+    ' reset any market depth
+    ResetMarketDepth False
+    
+    ' restart any market data and market depth tickers that were
+    ' previously in operation
+    reEstablishTickers MarketDataReestablishmentModes.All
+    
 Case ApiConnFailed
 
 End Select
@@ -476,12 +486,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
-
+Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed( _
+                ByVal pSource As Object)
+mIsTwsConnectedToIBServers = False
 End Sub
 
-Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
+Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered( _
+                ByVal pSource As Object, _
+                ByVal pDataLost As Boolean)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionRecovered"
+On Error GoTo Err
 
+mIsTwsConnectedToIBServers = True
+
+If pDataLost Then
+    reEstablishTickers MarketDataReestablishmentModes.Cancel
+Else
+    reEstablishTickers MarketDataReestablishmentModes.NewTickersOnly
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -725,40 +752,6 @@ Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 End Sub
 
-Friend Sub ReEstablishMarketData(ByVal pNewConnection As Boolean)
-Const ProcName As String = "ReEstablishMarketData"
-On Error GoTo Err
-
-gLog "Re-establishing market data: newConnection = " & CStr(pNewConnection), ModuleName, ProcName
-
-Dim i As Long
-For i = 0 To UBound(mMarketDataTable)
-    With mMarketDataTable(i)
-        If .InUse Then
-            If Not pNewConnection Then cancelMarketDataEx i
-            .Incarnation = updateIncarnation(i, .Incarnation)
-            reqMarketData i
-        End If
-        clearPrevPrices i
-    End With
-Next
-
-For i = 0 To UBound(mMarketDepthTable)
-    With mMarketDepthTable(i)
-        If .InUse Then
-            If Not pNewConnection Then cancelMarketDepthEx i
-            .Incarnation = updateIncarnation(i, .Incarnation)
-            reqMarketDepth i
-        End If
-    End With
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -767,7 +760,8 @@ Private Sub cancelMarketDataEx(ByVal pIndex As Long)
 Const ProcName As String = "cancelMarketDataEx"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.CancelMarketData getTickerIdFromIndex(pIndex)
+If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
+mTwsAPI.CancelMarketData getTickerIdFromIndex(pIndex)
 
 Exit Sub
 
@@ -779,7 +773,8 @@ Private Sub cancelMarketDepthEx(ByVal pIndex As Long)
 Const ProcName As String = "cancelMarketDepthEx"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.CancelMarketDepth getMarketDepthIdFromIndex(pIndex)
+If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
+mTwsAPI.CancelMarketDepth getMarketDepthIdFromIndex(pIndex)
 
 Exit Sub
 
@@ -939,6 +934,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 
+Private Function incrementIncarnation(ByVal pIndex As Long, ByVal pIncarnation As Long) As Long
+Dim lIncarnation As Long
+lIncarnation = pIncarnation + IncarnationIncrement
+If pIndex + lIncarnation > mTwsAPI.MaxMarketDataRequestId Or _
+    pIndex + lIncarnation > mTwsAPI.MaxMarketDepthRequestId _
+Then lIncarnation = 0
+incrementIncarnation = lIncarnation
+End Function
+
 Private Function isReadyForData(ByRef pTickerTable() As TickerTableEntry, ByVal pStreamId As Long) As Boolean
 Const ProcName As String = "isReadyForData"
 On Error GoTo Err
@@ -956,13 +960,64 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub reEstablishData( _
+                ByRef pTickers() As TickerTableEntry, _
+                ByVal pIsMarketDepth As Boolean, _
+                ByVal pMode As MarketDataReestablishmentModes)
+Const ProcName As String = "reEstablishData"
+On Error GoTo Err
+
+Dim s As String: s = IIf(pMode = MarketDataReestablishmentModes.All, "All", IIf(pMode = MarketDataReestablishmentModes.Cancel, "Cancel", "New tickers only"))
+gLog "Re-establishing market " & IIf(pIsMarketDepth, "depth ", "") & "data: mode = " & s, ModuleName, ProcName
+
+Dim i As Long
+For i = 0 To UBound(pTickers)
+    With pTickers(i)
+        If .InUse Then
+            ' in the following, incrementing the ticker id will avoid potential
+            ' problems with duplicate or unknown ticker id errors
+            If pMode = MarketDataReestablishmentModes.NewTickersOnly And Not .DataHasBeenReceived Then
+                .Incarnation = incrementIncarnation(i, .Incarnation)
+                reqData i, pIsMarketDepth
+            ElseIf pMode = MarketDataReestablishmentModes.Cancel Then
+                cancelMarketDataEx i
+                .Incarnation = incrementIncarnation(i, .Incarnation)
+                reqData i, pIsMarketDepth
+            ElseIf pMode = MarketDataReestablishmentModes.All Then
+                .Incarnation = incrementIncarnation(i, .Incarnation)
+                reqData i, pIsMarketDepth
+            End If
+        End If
+        clearPrevPrices i
+    End With
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub reEstablishTickers(ByVal pMode As MarketDataReestablishmentModes)
+Const ProcName As String = "reEstablishTickers"
+On Error GoTo Err
+
+reEstablishData mMarketDataTable, False, pMode
+reEstablishData mMarketDepthTable, True, pMode
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub releaseTableEntry(ByRef pTable() As TickerTableEntry, ByRef pFirstFreeTableIndex As Long, ByVal pIndex As Long)
 Const ProcName As String = "releaseTableEntry"
 On Error GoTo Err
 
 With pTable(pIndex)
     .InUse = False
-    .Incarnation = updateIncarnation(pIndex, .Incarnation)
+    .Incarnation = incrementIncarnation(pIndex, .Incarnation)
     Set .ContractDetails = Nothing
     Set .ConsumerContract = Nothing
     Set .ConsumerTimeZone = Nothing
@@ -979,12 +1034,28 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub reqData(ByVal pIndex As Long, ByVal pIsMarketDepth As Boolean)
+Const ProcName As String = "reqData"
+On Error GoTo Err
+
+If pIsMarketDepth Then
+    reqMarketDepth pIndex
+Else
+    reqMarketData pIndex
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub reqMarketData( _
                 ByVal pIndex As Long)
 Const ProcName As String = "reqMarketData"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState <> TwsConnConnected Then Exit Sub
+If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
 If mMarketDataTable(pIndex).ContractDetails Is Nothing Then Exit Sub
 
 mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mMarketDataTable(pIndex).ContractDetails.Summary, "", False
@@ -1000,7 +1071,7 @@ Private Sub reqMarketDepth( _
 Const ProcName As String = "reqMarketDepth"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState <> TwsConnConnected Then Exit Sub
+If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
 If mMarketDepthTable(pIndex).ContractDetails Is Nothing Then Exit Sub
 
 mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).ContractDetails.Summary, mMarketDepthTable(pIndex).NumberOfRows
@@ -1087,15 +1158,6 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function updateIncarnation(ByVal pIndex As Long, ByVal pIncarnation As Long) As Long
-Dim lIncarnation As Long
-lIncarnation = pIncarnation + IncarnationIncrement
-If pIndex + lIncarnation > mTwsAPI.MaxMarketDataRequestId Or _
-    pIndex + lIncarnation > mTwsAPI.MaxMarketDepthRequestId _
-Then lIncarnation = 0
-updateIncarnation = lIncarnation
 End Function
 
 

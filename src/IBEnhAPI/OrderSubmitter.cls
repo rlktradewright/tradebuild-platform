@@ -73,6 +73,8 @@ Private mOrderSubmissionListeners                   As Listeners
 
 Private mStageOrders                                As Boolean
 
+Private mIsTwsConnectedToIBServers                  As Boolean
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -324,6 +326,9 @@ Case ApiConnNotConnected
 Case ApiConnConnecting
 
 Case ApiConnConnected
+    ' we'll assume that TWS has a server connection: if not,
+    ' it will soon tell us
+    mIsTwsConnectedToIBServers = True
     setState OrderSubmitterStateReady
 Case ApiConnFailed
     setState OrderSubmitterStateNotReady

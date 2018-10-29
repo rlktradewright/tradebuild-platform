@@ -81,6 +81,8 @@ Private mMaxConcurrentRequests                      As Long
 
 Private mContractCache                              As TwsContractCache
 
+Private mIsTwsConnectedToIBServers                  As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -149,6 +151,10 @@ Case ApiConnNotConnected
 Case ApiConnConnecting
 
 Case ApiConnConnected
+    ' we'll assume that TWS has a server connection: if not,
+    ' it will soon tell us
+    mIsTwsConnectedToIBServers = True
+    
     doSchedule
 Case ApiConnFailed
 
@@ -161,11 +167,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
-
+mIsTwsConnectedToIBServers = False
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionRecovered"
+On Error GoTo Err
 
+mIsTwsConnectedToIBServers = True
+doSchedule
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -336,7 +351,13 @@ Dim lCurrIndex As Long
 gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelDetail
 
 If mTwsAPI.ConnectionState <> TwsConnConnected Then
-    gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelDetail
+    gLog "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelDetail
+    mTaskContext.Suspend -1
+    Exit Sub
+End If
+
+If Not mIsTwsConnectedToIBServers Then
+    gLog "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelDetail
     mTaskContext.Suspend -1
     Exit Sub
 End If

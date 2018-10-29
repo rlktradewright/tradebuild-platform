@@ -25,6 +25,19 @@ Public Const NumMonthsInYear                    As Long = 12
 ' Enums
 '================================================================================
 
+Public Enum MarketDataReestablishmentModes
+    ' only request market data for tickers that have not yet
+    ' received it
+    NewTickersOnly = 1
+    
+    ' cancel the current market data before re-requesting
+    Cancel
+    
+    ' request market data for all tickers
+    All
+    
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================

@@ -1446,7 +1446,7 @@ With theFilter
     mWriter.AddString gTwsOrderActionToString(.Action), "Action"
 End With
 
-mWriter.Send
+mWriter.Send True
 
 Exit Sub
 

@@ -60,6 +60,8 @@ Private mClientId                                   As Long
 
 Private mOrderRecoveryFinished                      As Boolean
 
+Private mIsTwsConnectedToIBServers                  As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -310,6 +312,10 @@ Case ApiConnNotConnected
 Case ApiConnConnecting
 
 Case ApiConnConnected
+    ' we'll assume that TWS has a server connection: if not,
+    ' it will soon tell us
+    mIsTwsConnectedToIBServers = True
+    
     If Not mOrderRecoveryListener Is Nothing Then
         doStartOrderRecovery
     Else
@@ -326,11 +332,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
-
+mIsTwsConnectedToIBServers = False
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
-
+mIsTwsConnectedToIBServers = True
+If Not mOrderRecoveryListener Is Nothing Then
+    doStartOrderRecovery
+Else
+    gRequestExecutions mTwsAPI, mClientId
+End If
 End Sub
 '@================================================================================
 ' XXXX Event Handlers
@@ -425,16 +436,14 @@ End Sub
                     
 Friend Sub StartOrderRecovery( _
                 ByVal pOrderRecoveryListener As IOrderRecoveryListener, _
-                ByVal pStartFrom As Date, _
-                ByVal pClientId As Long)
+                ByVal pStartFrom As Date)
 Const ProcName As String = "StartOrderRecovery"
 On Error GoTo Err
 
 Set mOrderRecoveryListener = pOrderRecoveryListener
 mStartOrderRecoveryFrom = pStartFrom
-mClientId = pClientId
 
-If mTwsAPI.ConnectionState <> TwsConnConnected Then Exit Sub
+If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
 
 doStartOrderRecovery
 

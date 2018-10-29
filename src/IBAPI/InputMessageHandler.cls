@@ -391,7 +391,7 @@ gLog "TWS Time at connection", ModuleName, ProcName, FormatTimestamp(lServerTime
 
 Assert mServerVersion >= ReqdServerVersion, "TWS is out of date and needs to be upgraded"
 
-gLog "API connection completed", ModuleName, ProcName
+gLog "API connection established - awaiting nextValidId", ModuleName, ProcName
 
 Exit Sub
 
@@ -1253,15 +1253,19 @@ On Error GoTo Err
 
 mNextOrderID = mReader.GetLong("Next id")
 
-logSocketInputMessage
+' we force logging of this because its occurrence is important in the
+' connection sequence, and it's nice to be able to see explicitly
+' in the log when it occurs
+logSocketInputMessage True
 
 If mNextOrderID < BaseOrderId Then mNextOrderID = BaseOrderId
 
 ' Note that we do this here rather than in completeApiConnection() so
-' that if the initial API connection is established before the Paper
-' Trading disclaimer dialog has been acknowledged (by the user or
-' IBController), no API requests will be made by the API program before
-' the connection has been re-established.
+' that if the initial API connection sequence is successful before the
+' Paper Trading disclaimer dialog has been acknowledged (by the user or
+' IBC), no API requests will be made by the API program before the
+' connection has been re-established.
+gLog "API connection completed", ModuleName, ProcName
 RaiseEvent ApiConnectionEstablished(mServerVersion)
 
 Exit Sub
