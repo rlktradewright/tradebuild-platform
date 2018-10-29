@@ -75,6 +75,9 @@ Public Const SwitchSetup                                As String = "setup"
 Public Const SwitchConcurrency                          As String = "concurrency"
 Public Const SwitchQuantum                              As String = "quantum"
 
+Public Const SwitchLogBackup                            As String = "logbackup"
+Public Const SwitchLogOverwrite                         As String = "logoverwrite"
+
 Public Const TWSClientId                                As Long = -1
 Public Const TWSConnectRetryInterval                    As Long = 10
 Public Const TWSPort                                    As Long = 7496
@@ -316,15 +319,21 @@ Set mFatalErrorHandler = New FatalErrorHandler
 ApplicationGroupName = "TradeWright"
 ApplicationName = AppTitle
 
-LogMessage "Logfile is: " & SetupDefaultLogging(Command)
+Set mCLParser = CreateCommandLineParser(Command, " ")
+
+Dim lLogOverwrite As Boolean
+lLogOverwrite = mCLParser.Switch(SwitchLogOverwrite)
+
+Dim lLogBackup As Boolean
+lLogBackup = mCLParser.Switch(SwitchLogBackup)
+
+LogMessage "Logfile is: " & SetupDefaultLogging(Command, lLogOverwrite, lLogBackup)
 LogMessage "Loglevel is: " & LogLevelToString(DefaultLogLevel)
 
 RunTasksAtLowerThreadPriority = False
 
 mLeftOffset = -1
 mRightOffset = -1
-
-Set mCLParser = CreateCommandLineParser(Command, " ")
 
 If showHelp Then
     TerminateTWUtilities

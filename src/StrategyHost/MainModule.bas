@@ -76,7 +76,7 @@ If lClp.Switch("?") Then
     Exit Sub
 End If
 
-init
+init lClp
 
 
 Dim lNoUI As Boolean
@@ -220,7 +220,10 @@ getUsageString = _
             "              [/tws:[Server],[Port],[ClientId]" & vbCrLf & _
             "              [/db:[server],[servertype],[database]" & vbCrLf & _
             "              [/livetrades]" & vbCrLf & _
-            "              [/logpath:path]" & vbCrLf & _
+            "              [/log:path]" & vbCrLf & _
+            "              [/loglevel:levelName]" & vbCrLf & _
+            "              [/logoverwrite]" & vbCrLf & _
+            "              [/logbackup]" & vbCrLf & _
             "              [/noUI]" & vbCrLf & _
             "              [/resultsPath:path]" & vbCrLf & _
             "              [/run]" & vbCrLf & _
@@ -238,10 +241,21 @@ getUsageString = getUsageString & _
             "                | mult[iplier]:<multiplier>" & vbCrLf & _
             "                | str[ike]:<price>" & vbCrLf & _
             "                | right:[ CALL | PUT ]" & vbCrLf & _
-            "                ]"
+            "                ]" & vbCrLf
+getUsageString = getUsageString & _
+            "   levelname is one of:" & vbCrLf & _
+            "       None    or 0" & vbCrLf & _
+            "       Severe  or S" & vbCrLf & _
+            "       Warning or W" & vbCrLf & _
+            "       Info    or I" & vbCrLf & _
+            "       Normal  or N" & vbCrLf & _
+            "       Detail  or D" & vbCrLf & _
+            "       Medium  or M" & vbCrLf & _
+            "       High    or H" & vbCrLf & _
+            "       All     or A"
 End Function
 
-Private Sub init()
+Private Sub init(ByVal pClp As CommandLineParser)
 Const ProcName As String = "init"
 On Error GoTo Err
 
@@ -251,7 +265,15 @@ Set mFatalErrorHandler = New FatalErrorHandler
 
 ApplicationGroupName = "TradeWright"
 ApplicationName = "StrategyHost"
-SetupDefaultLogging Command
+
+Dim lLogOverwrite As Boolean
+lLogOverwrite = pClp.Switch("logoverwrite")
+
+Dim lLogBackup As Boolean
+lLogBackup = pClp.Switch("logbackup")
+
+LogMessage "Logfile is: " & SetupDefaultLogging(Command, lLogOverwrite, lLogBackup)
+LogMessage "Loglevel is: " & LogLevelToString(DefaultLogLevel)
 
 Set mModel = New DefaultStrategyHostModl
 mModel.LogParameters = True
