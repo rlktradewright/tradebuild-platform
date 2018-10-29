@@ -186,9 +186,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function Contains(ByVal pIndex As Variant) As Boolean
+Public Function Contains( _
+                ByVal pIndex As Variant) As Boolean
 Const ProcName As String = "Contains"
 On Error GoTo Err
+
+If IsObject(pIndex) Then
+    If TypeOf pIndex Is IOrder Then
+        Contains = findBracketOrderFromOrder(pIndex) Is Nothing
+    ElseIf TypeOf pIndex Is IBracketOrder Then
+        Dim lBo As IBracketOrder
+        Set lBo = pIndex
+        Contains = mBracketOrders.Contains(lBo.Key)
+    End If
+ElseIf VarType(pIndex) = vbString Then
+    Contains = mBracketOrders.Contains(pIndex)
+Else
+    AssertArgument False, "Parameter must be the key of an IBracketOrder, an IBracketOrder object, or an IOrder whose owning IBracketOrder's presence is sought"
+End If
 
 Contains = mBracketOrders.Contains(pIndex)
 
@@ -205,9 +220,17 @@ Const ProcName As String = "Item"
 On Error GoTo Err
 
 If IsObject(pIndex) Then
-    If TypeOf pIndex Is IOrder Then Set Item = findBracketOrderFromOrder(pIndex)
-Else
+    If TypeOf pIndex Is IOrder Then
+        Set Item = findBracketOrderFromOrder(pIndex)
+    ElseIf TypeOf pIndex Is IBracketOrder Then
+        Dim lBo As IBracketOrder
+        Set lBo = pIndex
+        Set Item = mBracketOrders(lBo.Key)
+    End If
+ElseIf VarType(pIndex) = vbString Then
     Set Item = mBracketOrders(pIndex)
+Else
+    AssertArgument False, "Parameter must be the key of an IBracketOrder, an IBracketOrder object, or an IOrder whose owning IBracketOrder is sought"
 End If
 
 Exit Function
