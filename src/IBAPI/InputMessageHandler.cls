@@ -391,7 +391,7 @@ gLog "TWS Time at connection", ModuleName, ProcName, FormatTimestamp(lServerTime
 
 Assert mServerVersion >= ReqdServerVersion, "TWS is out of date and needs to be upgraded"
 
-gLog "API connection established - awaiting nextValidId", ModuleName, ProcName
+gLog "API connection negotiated - awaiting nextValidId", ModuleName, ProcName
 
 Exit Sub
 
@@ -804,13 +804,16 @@ Case 321    ' invalid Request
     gLog "Error (" & lErrorCode & "; id=" & id & ") from Tws: " & lErrorMsg, ModuleName, ProcName
     If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiError lErrorCode, lErrorMsg
 Case 326    ' ClientID already in use
-
+    gLog "TWS/Gateway reports clientID already in use", ModuleName, ProcName
+    If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiEvent lErrorCode, lErrorMsg
 Case 1100, 2110
     ' connectivity between Tws and IB has been lost
     
     sLostConnectionToIb = True
-    If Not mConnectionStatusConsumer Is Nothing Then mConnectionStatusConsumer.NotifyIBServerConnectionClosed
+    
     gLog "Connection to IB has been lost", ModuleName, ProcName
+    
+    If Not mConnectionStatusConsumer Is Nothing Then mConnectionStatusConsumer.NotifyIBServerConnectionClosed
     If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiEvent lErrorCode, lErrorMsg
     
 Case 1101
@@ -819,11 +822,10 @@ Case 1101
 
     sLostConnectionToIb = False
     
-    If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.ResetMarketDepth True
-    
-    If Not mConnectionStatusConsumer Is Nothing Then mConnectionStatusConsumer.NotifyIBServerConnectionRecovered True
-    
     gLog "Connection to IB recovered: market data re-established", ModuleName, ProcName
+    
+    If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.ResetMarketDepth True
+    If Not mConnectionStatusConsumer Is Nothing Then mConnectionStatusConsumer.NotifyIBServerConnectionRecovered True
     If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiEvent lErrorCode, lErrorMsg
     
 Case 1102
@@ -832,9 +834,9 @@ Case 1102
 
     sLostConnectionToIb = False
     
-    If Not mConnectionStatusConsumer Is Nothing Then mConnectionStatusConsumer.NotifyIBServerConnectionRecovered False
-    
     gLog "Connection to IB recovered: no loss of data", ModuleName, ProcName
+    
+    If Not mConnectionStatusConsumer Is Nothing Then mConnectionStatusConsumer.NotifyIBServerConnectionRecovered False
     If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiEvent lErrorCode, lErrorMsg
     
 Case 2103, 2104, 2105, 2106, 2107, 2108

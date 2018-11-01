@@ -236,7 +236,7 @@ gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mInMessageHandler_PaperTradingDisclaimerNotAcknowledged()
-mSocketHandler.TempConnectionRetryIntervalSecs = 5
+mSocketHandler.TempConnectionRetryIntervalSecs = 30
 End Sub
 
 '================================================================================
@@ -1882,6 +1882,8 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 AssertArgument pContract.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
 AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
 
+gLog "Requesting contract details: request id=" & pRequestId & "; contract=" & pContract.ToString, ModuleName, ProcName
+
 mWriter.AddMessageId REQ_CONTRACT_DATA
 mWriter.AddString VERSION, "Version"
 
@@ -1999,7 +2001,7 @@ On Error GoTo Err
 
 Const VERSION = 10
 
-gLog "Requesting market data for: " & pContract.ToString, ModuleName, ProcName
+gLog "Requesting market data: ticker id=" & pTickerId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
 
@@ -2068,6 +2070,8 @@ On Error GoTo Err
 AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.TradingClass = "" And pContract.ConId = 0), "ContractId and TradingClass properties are not supported"
 
 Const VERSION = 4
+
+gLog "Requesting market depth: ticker id=" & TickerId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_MKT_DEPTH
 mWriter.AddString VERSION, "Version"
