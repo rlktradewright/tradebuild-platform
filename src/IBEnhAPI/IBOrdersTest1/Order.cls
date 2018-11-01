@@ -107,8 +107,9 @@ Private mGroupName                  As String
 Private mContextsName               As String
 Private mOrderContext               As OrderContext
 
-Private mErrorCode                   As Long
+Private mErrorCode                  As Long
 Private mErrorMessage               As String
+Private mMessage               As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -350,6 +351,14 @@ Private Property Get IOrder_LimitPrice() As Double
 IOrder_LimitPrice = mLimitPrice
 End Property
 
+Private Property Let IOrder_Message(ByVal Value As String)
+Message = Value
+End Property
+
+Private Property Get IOrder_Message() As String
+IOrder_Message = mMessage
+End Property
+
 Private Property Let IOrder_MinimumQuantity(ByVal Value As Long)
 MinimumQuantity = Value
 End Property
@@ -372,6 +381,10 @@ End Sub
 
 Private Sub IOrder_NotifyFill(ByVal pExec As IExecutionReport)
 NotifyFill pExec
+End Sub
+
+Private Sub IOrder_NotifyMessage(ByVal pMessage As String)
+
 End Sub
 
 Private Property Let IOrder_Offset(ByVal Value As Long)
@@ -853,6 +866,14 @@ End Property
 
 Public Property Get LimitPrice() As Double
 LimitPrice = mLimitPrice
+End Property
+
+Public Property Let Message(ByVal Value As String)
+mMessage = Value
+End Property
+
+Public Property Get Message() As String
+Message = mMessage
 End Property
 
 Public Property Let MinimumQuantity(ByVal Value As Long)

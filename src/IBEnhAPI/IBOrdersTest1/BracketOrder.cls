@@ -74,6 +74,10 @@ Private Sub IBracketOrder_AddBracketOrderErrorListener(ByVal pListener As IBrack
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "AddBracketOrderErrorListener not supported"
 End Sub
 
+Private Sub IBracketOrder_AddBracketOrderMessageListener(ByVal pListener As OrderUtils27.IBracketOrderMsgListener)
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "AddBracketOrderMessageListener not supported"
+End Sub
+
 Private Property Get IBracketOrder_ApplicationIndex() As Long
 IBracketOrder_ApplicationIndex = gNextAplicationIndex
 End Property
@@ -173,6 +177,9 @@ Private Property Get IBracketOrder_PreventUnprotectedPosition() As Boolean
 End Property
 
 Private Sub IBracketOrder_RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
+End Sub
+
+Private Sub IBracketOrder_RemoveBracketOrderMessageListener(ByVal pListener As OrderUtils27.IBracketOrderMsgListener)
 End Sub
 
 Private Property Get IBracketOrder_Risk() As Currency
