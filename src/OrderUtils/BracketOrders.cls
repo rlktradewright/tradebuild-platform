@@ -205,8 +205,6 @@ Else
     AssertArgument False, "Parameter must be the key of an IBracketOrder, an IBracketOrder object, or an IOrder whose owning IBracketOrder's presence is sought"
 End If
 
-Contains = mBracketOrders.Contains(pIndex)
-
 Exit Function
 
 Err:
