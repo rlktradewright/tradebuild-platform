@@ -156,6 +156,10 @@ Case 200    ' security definition not known
     ' market data request when connection is re-established.
     If Not mIsTwsConnectedToIBServers Then Exit Sub
     
+Case 10197  ' No markety data lumps during competing live session
+    gLog "Spurious message from IB: " & pErrorMsg, ModuleName, ProcName
+    ' ignore this
+    Exit Sub
 End Select
 
 mMarketDataTable(lIndex).ErrorListener.NotifyMarketDataError lIndex, pErrorCode, pErrorMsg
