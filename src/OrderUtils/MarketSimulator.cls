@@ -384,6 +384,8 @@ lOrder.Initialise New Order, pParentId, pOcaGroup, pTransmit, pListener
 gSyncToOrder lOrder.Order, pOrder
 mAllOrders.Add lOrder, pOrder.Id
 
+If pOrder.Status = OrderStatusCreated Then setOrderStatus lOrder, OrderStatusPendingSubmit
+
 Set createSimulatorOrder = lOrder
 
 Exit Function
@@ -396,16 +398,40 @@ Private Function delay() As Long
 delay = 200 + Fix(Rnd() * 300 + 1)
 End Function
 
-Private Sub handleCreatedOrders()
+Private Sub handleNewOrder(ByVal pOrder As SimulatorOrder)
+Const ProcName As String = "handleNewOrder"
+On Error GoTo Err
+
+If pOrder.ParentId <> "" Then
+    ' this is an attached order. We'll move it on at the next tick
+Else
+    ' this is a parent order, a free standing order, or part of an oca group.
+    ' We want to move it to status submitted, either at the next tick or
+    ' using exchange submission delay
+    If mSimulateExchangeDelays Then
+        setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
+        DeferAction Me, pOrder, delay, ExpiryTimeUnits.ExpiryTimeUnitMilliseconds
+    End If
+End If
+
+pOrder.Handled = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub handleNewOrders()
 ' submits any orders which are still in the created state
-Const ProcName As String = "handleCreatedOrders"
+Const ProcName As String = "handleNewOrders"
 On Error GoTo Err
 
 If mActiveOrders.Count = 0 Then Exit Sub
 Dim lOrder As SimulatorOrder
 For Each lOrder In mActiveOrders
-    If lOrder.Order.Status = OrderStatuses.OrderStatusCreated Then
-        setSubmitOrder lOrder
+    If Not lOrder.Handled Then
+        handleNewOrder lOrder
     End If
 Next
 
@@ -602,7 +628,7 @@ If mActiveOrders.Count = 0 Then Exit Sub
 
 mEnumerationInProgess = True
 
-handleCreatedOrders
+handleNewOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
 
 Dim en As Enumerator
@@ -651,7 +677,7 @@ If mActiveOrders.Count = 0 Then Exit Sub
 
 mEnumerationInProgess = True
 
-handleCreatedOrders
+handleNewOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
 
 Dim en As Enumerator
@@ -698,7 +724,7 @@ If mActiveOrders.Count = 0 Then Exit Sub
 
 mEnumerationInProgess = True
 
-handleCreatedOrders
+handleNewOrders
 If Not mSimulateExchangeDelays Then handlePendingSubmitOrders
 
 Dim en As Enumerator
@@ -950,22 +976,6 @@ On Error GoTo Err
 Select Case pOrder.Order.OrderType
 Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
     Select Case pOrder.Order.Status
-    Case OrderStatuses.OrderStatusCreated
-        If pOrder.ParentId <> "" Then
-            ' this is an attached order. Set the status to pending submit and
-            ' then move it on at the next tick
-            setOrderStatus pOrder, OrderStatuses.OrderStatusPendingSubmit
-        Else
-            ' this is a parent order, a free standing order, or part of an oca group.
-            ' We want to move it to status submitted, either at the next tick or
-            ' using exchange submission delay
-            If mSimulateExchangeDelays Then
-                setOrderStatus pOrder, OrderStatuses.OrderStatusSubmitted
-                DeferAction Me, pOrder, delay, ExpiryTimeUnits.ExpiryTimeUnitMilliseconds
-            Else
-                setOrderStatus pOrder, OrderStatuses.OrderStatusPendingSubmit
-            End If
-        End If
     Case OrderStatuses.OrderStatusPendingSubmit
         If pOrder.ParentId <> "" Then
             ' this is an attached order. Set the status to presubmitted
@@ -980,10 +990,6 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
     End Select
 Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
     Select Case pOrder.Order.Status
-    Case OrderStatuses.OrderStatusCreated
-        ' in all cases, we want the order to move to pending submit on this
-        ' tick, and to presubmitted on the next
-        setOrderStatus pOrder, OrderStatuses.OrderStatusPendingSubmit
     Case OrderStatuses.OrderStatusPendingSubmit
         setOrderStatus pOrder, OrderStatuses.OrderStatusPreSubmitted
     Case Else

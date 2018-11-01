@@ -1447,11 +1447,7 @@ On Error GoTo Err
 
 If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
 
-gLogOrderMessage "Cancel time expired", _
-                mDataSource, mContract, Key, mIsSimulated, Me
-Cancel
-fireChange BracketOrderSelfCancelled
-RaiseEvent SelfCancelled
+SelfCancel "Cancel time expired"
 
 Exit Sub
 
@@ -2456,7 +2452,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SelfCancel(ByVal pReason As String)
-gLogOrderMessage pReason, _
+gLogOrderMessage "Cancel bracket order: " & pReason, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 Cancel
 fireChange BracketOrderSelfCancelled
@@ -3584,6 +3580,8 @@ Private Function placeOrders()
 Const ProcName As String = "placeOrders"
 On Error GoTo Err
 
+gLogOrderMessage "Execute bracket order: " & ToString, _
+                mDataSource, mContract, Key, mIsSimulated, Me
 mOrderSubmitter.ExecuteBracketOrder Me
 
 Checkpoint
@@ -3669,10 +3667,10 @@ Private Function ResubmitStopOrder()
 Const ProcName As String = "resubmitStopOrder"
 On Error GoTo Err
 
-mOrderSubmitter.ResubmitStopOrder Me
 gLogOrderMessage "Resubmit stop-loss order: id=" & mStopLossOrder.Id & _
                     "; new broker id=" & mStopLossOrder.BrokerId, _
                 mDataSource, mContract, Key, mIsSimulated, Me
+mOrderSubmitter.ResubmitStopOrder Me
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
 
 Exit Function
@@ -3685,13 +3683,13 @@ Private Function ResubmitStopAndTargetOrders()
 Const ProcName As String = "resubmitStopAndTargetOrders"
 On Error GoTo Err
 
-mOrderSubmitter.ResubmitStopAndTargetOrders Me
 gLogOrderMessage "Resubmit stop-loss order: id=" & mStopLossOrder.Id & _
                     "; new broker id=" & mStopLossOrder.BrokerId, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 gLogOrderMessage "Resubmit target order: id=" & mTargetOrder.Id & _
                     "; new broker id=" & mTargetOrder.BrokerId, _
                 mDataSource, mContract, Key, mIsSimulated, Me
+mOrderSubmitter.ResubmitStopAndTargetOrders Me
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
 mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
 
@@ -3706,10 +3704,10 @@ Private Function ResubmitTargetOrder()
 Const ProcName As String = "resubmitTargetOrder"
 On Error GoTo Err
 
-mOrderSubmitter.ResubmitTargetOrder Me
 gLogOrderMessage "Resubmit target order: id=" & mTargetOrder.Id & _
                     "; new broker id=" & mTargetOrder.BrokerId, _
                 mDataSource, mContract, Key, mIsSimulated, Me
+mOrderSubmitter.ResubmitTargetOrder Me
 mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
 
 Exit Function

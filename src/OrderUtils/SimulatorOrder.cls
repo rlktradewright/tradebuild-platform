@@ -46,6 +46,11 @@ Private Const ModuleName                As String = "SimulatorOrder"
 '@================================================================================
 
 ''
+' Indicates that the order has not been dealt with yet
+'@/
+Private mHandled                                As Boolean
+
+''
 ' The underlying <code>order</code>
 '@/
 Private mOrder                                  As IOrder
@@ -106,6 +111,14 @@ End Property
 
 Friend Property Get IsFinished() As Boolean
 IsFinished = mIsFinished
+End Property
+
+Friend Property Let Handled(ByVal Value As Boolean)
+mHandled = Value
+End Property
+
+Friend Property Get Handled() As Boolean
+Handled = mHandled
 End Property
 
 Friend Function IsInSameOcaGroupAs(ByVal pOrder As SimulatorOrder) As Boolean
