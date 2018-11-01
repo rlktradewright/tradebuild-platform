@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#292.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#337.1#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   12540
@@ -43,7 +43,7 @@ Begin VB.Form Form1
       Top             =   600
       Width           =   2535
       _ExtentX        =   4471
-      _ExtentY        =   5556
+      _ExtentY        =   6191
       ForeColor       =   -2147483640
       ModeAdvanced    =   -1  'True
    End
@@ -274,6 +274,10 @@ Private Sub IOrderSubmissionListener_NotifyExecutionReport(ByVal pExecutionRepor
 LogMessage "Execution: " & pExecutionReport.BrokerId & "/" & pExecutionReport.Id & _
             "; Qty=" & pExecutionReport.Quantity & _
             "; Price=" & pExecutionReport.Price
+End Sub
+
+Private Sub IOrderSubmissionListener_NotifyMessage(ByVal pOrderId As String, ByVal pMessage As String)
+LogMessage "Message: " & pMessage
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyOrderReport(ByVal pOrderReport As IOrderReport)
