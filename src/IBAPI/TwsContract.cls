@@ -240,14 +240,15 @@ On Error GoTo Err
 ReDim mAr(3) As String
 mArIndex = 0
 
-addField "Con id", CStr(mConId)
 addField "Local symbol", mLocalSymbol
-addField "Symbol", mSymbol
+addField "Exchange", mExchange
 addField "Sec type", gTwsSecTypeToShortString(mSecType)
 addField "Expiry", mExpiry
-addField "Exchange", mExchange
+addField "Trading class", mTradingClass
+addField "Con id", CStr(mConId)
+addField "Symbol", mSymbol
 addField "Currency", mCurrencyCode
-addField "Strike", mStrike
+If mStrike <> 0# Then addField "Strike", mStrike
 addField "Right", gTwsOptionRightToString(mOptRight)
 addField "Multiplier", mMultiplier
 addField "Primary exch", mPrimaryExch

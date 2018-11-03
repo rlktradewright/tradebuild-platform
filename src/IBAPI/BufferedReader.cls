@@ -60,6 +60,8 @@ Private mMessageStartIndex                          As Long
 
 Private mInputMessageHandler                        As InputMessageHandler
 
+Private mLogTwsMessages                             As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -69,6 +71,7 @@ ReDim mBuffer((1024& * 1024&) - 1) As Byte
 ReDim mNextCheckpointToProcess(7) As Long
 ReDim mCurrCheckpointNumber(7) As Long
 mMessageStartIndex = -1
+Set mInMessageBuilder = CreateStringBuilder(initialCapacity:=1024)
 End Sub
 
 '@================================================================================
@@ -101,18 +104,6 @@ End Property
 
 Friend Property Get InputParseIndex() As Long
 InputParseIndex = mInputParseIndex
-End Property
-
-Friend Property Get Message() As String
-Const ProcName As String = "Message"
-On Error GoTo Err
-
-Message = mInMessageBuilder.ToString
-
-Exit Property
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Property
 
 Friend Property Get MessageStartIndex() As Long
@@ -190,7 +181,7 @@ Friend Sub AppendToMessage(ByVal pValue As String)
 Const ProcName As String = "AppendToMessage"
 On Error GoTo Err
 
-If Not mInMessageBuilder Is Nothing Then mInMessageBuilder.Append pValue
+If mLogTwsMessages Then mInMessageBuilder.Append pValue
 
 Exit Sub
 
@@ -208,19 +199,14 @@ mCurrCheckpointNumber(mCheckpointScopeIndex) = 0
 If mNextCheckpointToProcess(mCheckpointScopeIndex) = 0 Then mNextCheckpointToProcess(mCheckpointScopeIndex) = 1
 End Sub
 
-Friend Sub BeginMessage(ByVal pLog As Boolean)
+Friend Sub BeginMessage()
 Const ProcName As String = "BeginMessage"
 On Error GoTo Err
 
-If pLog Then
-    If mInMessageBuilder Is Nothing Then
-        Set mInMessageBuilder = CreateStringBuilder
-        mInMessageBuilder.Append "IN: "
-        
-        mMessageStartIndex = mInputParseIndex
-    End If
-Else
-    Set mInMessageBuilder = Nothing
+If mLogTwsMessages Then
+    mInMessageBuilder.Clear
+    mInMessageBuilder.Append "IN: "
+    mMessageStartIndex = mInputParseIndex
 End If
 
 Exit Sub
@@ -245,7 +231,6 @@ mInputParseIndexChk = mInputParseIndex
 End Sub
 
 Friend Sub EndMessage()
-Set mInMessageBuilder = Nothing
 mMessageStartIndex = -1
 End Sub
 
@@ -364,7 +349,7 @@ For i = mInputParseIndex To mBufferNextFreeIndex - 1
         'Debug.Print "Got string: mInputIndex=" & mInputParseIndex & " value=" & s
         mInputParseIndex = i + 1
         GetString = s
-        If Not mInMessageBuilder Is Nothing Then
+        If mLogTwsMessages Then
             mInMessageBuilder.Append pFieldName
             mInMessageBuilder.Append "="
             mInMessageBuilder.Append s
@@ -394,8 +379,29 @@ Checkpoint
 GetStringCheckpointed = True
 End Function
 
-Friend Sub Initialise(ByVal pInputMessageHandler As InputMessageHandler)
+Friend Sub Initialise( _
+                ByVal pInputMessageHandler As InputMessageHandler, _
+                ByVal pLogTwsMessages As Boolean)
 Set mInputMessageHandler = pInputMessageHandler
+mLogTwsMessages = pLogTwsMessages
+End Sub
+
+Friend Sub LogInputMessage(Optional ByVal pForceLogMessage As Boolean)
+Const ProcName As String = "LogInputMessage"
+On Error GoTo Err
+
+If Not mLogTwsMessages Then Exit Sub
+
+If pForceLogMessage Then
+    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, LogLevelSevere
+ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
+    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, LogLevelHighDetail
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub Rollback()

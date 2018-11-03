@@ -57,6 +57,7 @@ Private mOutMessageBuilder                          As StringBuilder
 
 Private Sub Class_Initialize()
 ReDim mOutputBuffer(15) As Byte
+Set mOutMessageBuilder = CreateStringBuilder
 End Sub
 
 '@================================================================================
@@ -171,21 +172,15 @@ End Sub
 Friend Sub AddString( _
                 ByVal data As String, _
                 ByRef fieldName As String)
-Dim i As Long
-
 Const ProcName As String = "AddString"
 On Error GoTo Err
 
-If mOutMessageBuilder Is Nothing Then
-    Set mOutMessageBuilder = CreateStringBuilder
-    mOutMessageBuilder.Append "OUT: "
-End If
+mOutMessageBuilder.Clear
+mOutMessageBuilder.Append "OUT: "
 
-mOutMessageBuilder.Append fieldName
-mOutMessageBuilder.Append "="
-mOutMessageBuilder.Append data
-mOutMessageBuilder.Append ";"
+mOutMessageBuilder.Append fieldName & "=" & data & ";"
 
+Dim i As Long
 For i = 1 To Len(data)
     AddByte Asc(Mid$(data, i, 1))
 Next
@@ -203,7 +198,6 @@ End Sub
 
 Friend Sub Send(Optional ByVal forceLogMessage As Boolean)
 Const ProcName As String = "send"
-
 On Error GoTo Err
 
 logSocketOutputMessage forceLogMessage

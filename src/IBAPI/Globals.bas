@@ -210,6 +210,53 @@ Private mLogger As FormattingLogger
 ' Properties
 '================================================================================
 
+Public Function gGetCallersRequestIdFromTwsContractRequestId(ByVal pId As Long) As Long
+gGetCallersRequestIdFromTwsContractRequestId = pId - BaseContractRequestId
+End Function
+
+Public Function gGetCallersRequestIdFromTwsExecutionsRequestId(ByVal pId As Long) As Long
+gGetCallersRequestIdFromTwsExecutionsRequestId = pId - BaseExecutionsRequestId
+End Function
+
+Public Function gGetCallersRequestIdFromTwsHistRequestId(ByVal pId As Long) As Long
+gGetCallersRequestIdFromTwsHistRequestId = pId - BaseHistoricalDataRequestId
+End Function
+
+Public Function gGetCallersRequestIdFromTwsMarketDataRequestId(ByVal pId As Long) As Long
+gGetCallersRequestIdFromTwsMarketDataRequestId = pId - BaseMarketDataRequestId
+End Function
+
+Public Function gGetCallersRequestIdFromTwsMarketDepthRequestId(ByVal pId As Long) As Long
+gGetCallersRequestIdFromTwsMarketDepthRequestId = pId - BaseMarketDepthRequestId
+End Function
+
+Public Function gGetIdType( _
+                ByVal id As Long) As IdTypes
+Const ProcName As String = "ggGetIdType"
+On Error GoTo Err
+
+If id >= BaseOrderId Then
+    gGetIdType = IdTypeOrder
+ElseIf id >= BaseContractRequestId Then
+    gGetIdType = IdTypeContractData
+ElseIf id >= BaseExecutionsRequestId Then
+    gGetIdType = IdTypeExecution
+ElseIf id >= BaseHistoricalDataRequestId Then
+    gGetIdType = IdTypeHistoricalData
+ElseIf id >= BaseMarketDepthRequestId Then
+    gGetIdType = IdTypeMarketDepth
+ElseIf id >= 0 Then
+    gGetIdType = IdTypeRealtimeData
+Else
+    gGetIdType = IdTypeNone
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
 Public Property Get gLogger() As FormattingLogger
 If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.ibapi", ProjectName)
 Set gLogger = mLogger
@@ -269,12 +316,13 @@ Public Function gGetApi( _
                 ByVal pServer As String, _
                 ByVal pPort As String, _
                 ByVal pClientId As Long, _
-                ByVal pConnectionRetryIntervalSecs As Long) As TwsAPI
+                ByVal pConnectionRetryIntervalSecs As Long, _
+                ByVal pLogTwsMessages As Boolean) As TwsAPI
 Const ProcName As String = "gGetApi"
 On Error GoTo Err
 
 Set gGetApi = New TwsAPI
-gGetApi.Initialise pServer, pPort, pClientId
+gGetApi.Initialise pServer, pPort, pClientId, pLogTwsMessages
 gGetApi.ConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
 
 Exit Function

@@ -331,11 +331,12 @@ Public Function GetAPI( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
-                Optional ByVal pConnectionRetryIntervalSecs As Long = 10) As TwsAPI
+                Optional ByVal pConnectionRetryIntervalSecs As Long = 10, _
+                Optional ByVal pLogTwsMessages As Boolean = False) As TwsAPI
 Const ProcName As String = "GetAPI"
 On Error GoTo Err
 
-Set GetAPI = gGetApi(pServer, pPort, pClientId, pConnectionRetryIntervalSecs)
+Set GetAPI = gGetApi(pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogTwsMessages)
 
 Exit Function
 
