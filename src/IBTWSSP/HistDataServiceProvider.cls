@@ -99,7 +99,7 @@ Const ProcName As String = "IHistDataSP_GetHistoricalDataStore"
 On Error GoTo Err
 
 If mClient Is Nothing Then
-    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, , Me)
+    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, , , Me)
     mClient.SetTwsLogLevel mTwsLogLevel
 End If
 
