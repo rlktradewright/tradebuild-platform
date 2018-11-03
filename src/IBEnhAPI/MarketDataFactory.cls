@@ -45,6 +45,7 @@ Private Type TickerTableEntry
     InUse                   As Boolean
     TickStreamBuilder       As TickStreamBuilder
     Incarnation             As Long
+    ContractFuture          As IFuture
     ContractDetails         As TwsContractDetails
     ConsumerContract        As IContract
     ConsumerTimeZone        As TimeZone
@@ -711,10 +712,7 @@ pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDa
 
 gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
 
-mFutureWaiter.Add pContractFuture, pStreamId
-mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture, mContractCache), pStreamId
-mFutureWaiter.Add mMarketDataTable(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId
-
+prepareTickStream mMarketDataTable, pContractFuture, pStreamId
 Set CreateMarketDataStream = mMarketDataTable(pStreamId).TickStreamBuilder.TickStream
 
 Exit Function
@@ -735,10 +733,7 @@ mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
 
 gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
 
-mFutureWaiter.Add pContractFuture, pStreamId + MarketDepthIdOffset
-mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture, mContractCache), pStreamId + MarketDepthIdOffset
-mFutureWaiter.Add mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId + MarketDepthIdOffset
-
+prepareTickStream mMarketDepthTable, pContractFuture, pStreamId + MarketDepthIdOffset
 Set CreateMarketDepthStream = mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream
 
 Exit Function
@@ -898,6 +893,7 @@ If lIndex > pMaxUsedIndex Then pMaxUsedIndex = lIndex
 With pTable(lIndex)
     .InUse = True
     Set .ErrorListener = pErrorListener
+    Set .ContractFuture = pContractFuture
     Set .TickStreamBuilder = CreateTickStreamBuilder(lIndex, pContractFuture, CreateClockFuture(pContractFuture))
     .TickStreamBuilder.AddStateChangeListener Me
 End With
@@ -964,6 +960,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub prepareTickStream( _
+                ByRef pTickers() As TickerTableEntry, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pStreamId As Long)
+mFutureWaiter.Add pContractFuture, pStreamId
+mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture, mContractCache), pStreamId
+mFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId
+End Sub
+
 Private Sub reEstablishData( _
                 ByRef pTickers() As TickerTableEntry, _
                 ByVal pIsMarketDepth As Boolean, _
@@ -1023,6 +1028,7 @@ With pTable(pIndex)
     .InUse = False
     .Incarnation = incrementIncarnation(pIndex, .Incarnation)
     Set .ContractDetails = Nothing
+    Set .ContractFuture = Nothing
     Set .ConsumerContract = Nothing
     Set .ConsumerTimeZone = Nothing
     .DataHasBeenReceived = False
@@ -1060,9 +1066,12 @@ Const ProcName As String = "reqMarketData"
 On Error GoTo Err
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
-If mMarketDataTable(pIndex).ContractDetails Is Nothing Then Exit Sub
-
-mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mMarketDataTable(pIndex).ContractDetails.Summary, "", False
+If mMarketDataTable(pIndex).ContractDetails Is Nothing Then
+    Assert Not mMarketDataTable(pIndex).ContractFuture Is Nothing, "Contract future is not available"
+    prepareTickStream mMarketDataTable, mMarketDataTable(pIndex).ContractFuture, pIndex
+Else
+    mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mMarketDataTable(pIndex).ContractDetails.Summary, "", False
+End If
 
 Exit Sub
 
@@ -1076,9 +1085,12 @@ Const ProcName As String = "reqMarketDepth"
 On Error GoTo Err
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
-If mMarketDepthTable(pIndex).ContractDetails Is Nothing Then Exit Sub
-
-mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).ContractDetails.Summary, mMarketDepthTable(pIndex).NumberOfRows
+If mMarketDepthTable(pIndex).ContractDetails Is Nothing Then
+    Assert Not mMarketDepthTable(pIndex).ContractFuture Is Nothing, "Contract future is not available"
+    prepareTickStream mMarketDepthTable, mMarketDepthTable(pIndex).ContractFuture, pIndex + MarketDepthIdOffset
+Else
+    mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).ContractDetails.Summary, mMarketDepthTable(pIndex).NumberOfRows
+End If
 
 Exit Sub
 
