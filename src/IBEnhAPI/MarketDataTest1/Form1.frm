@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#306.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#337.1#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   9585
@@ -71,7 +71,7 @@ Begin VB.Form Form1
       Top             =   120
       Width           =   3615
       _ExtentX        =   6376
-      _ExtentY        =   5556
+      _ExtentY        =   6191
       ForeColor       =   -2147483640
       ModeAdvanced    =   -1  'True
    End
@@ -412,7 +412,7 @@ GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will
 
 Set mFutureWaiter = New FutureWaiter
 
-Set mClient = GetClient(Server, 7497, ClientId, , , , Me, , Me, Me)
+Set mClient = GetClient(Server, 7497, ClientId, , , True, , Me, , Me, Me)
 
 Set mDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory)
 Set mContractStore = mClient.GetContractStore

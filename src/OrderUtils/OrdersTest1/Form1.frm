@@ -183,7 +183,7 @@ Set mPositionManagersLive = mOrderManager.PositionManagersLive
 Set mPositionManagersSimulated = mOrderManager.PositionManagersSimulated
 
 mClientId = 1132256741
-Set mClient = GetClient("Essy", 7497, mClientId, , , , Me)
+Set mClient = GetClient("Essy", 7497, mClientId, , , True, , Me)
 
 Set mContractStore = mClient.GetContractStore
 Set mOrderSubmitterLive = mClient.CreateOrderSubmitter

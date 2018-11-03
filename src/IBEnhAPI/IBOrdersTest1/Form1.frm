@@ -507,7 +507,7 @@ If ConnectButton.Caption = CaptionConnect Then
     ConnectButton.Enabled = False
     
     mClientId = CLng(ClientIdText.Text)
-    Set mClient = GetClient(ServerText.Text, CLng(PortText.Text), mClientId, , , , Me)
+    Set mClient = GetClient(ServerText.Text, CLng(PortText.Text), mClientId, , , True, , Me)
     
     Set mOrderSubmitter = mClient.CreateOrderSubmitter
     mOrderSubmitter.AddOrderSubmissionListener Me

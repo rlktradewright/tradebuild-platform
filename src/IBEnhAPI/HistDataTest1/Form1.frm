@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#336.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#337.1#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Historical Data Tester"
    ClientHeight    =   10380
@@ -159,7 +159,7 @@ SetupDefaultLogging Command
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
 
 mClientId = 74889561
-Set mClient = GetClient("Essy", 7497, mClientId, , , , Me)
+Set mClient = GetClient("Essy", 7497, mClientId, , , True, , Me)
 Set mContractStore = mClient.GetContractStore
 Set mHistDataStore = mClient.GetHistoricalDataStore
 
