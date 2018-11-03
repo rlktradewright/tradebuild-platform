@@ -57,6 +57,7 @@ Private mServer                                     As String
 Private mPort                                       As Long
 Private mClientId                                   As Long
 Private mConnectionRetryIntervalSecs                As Long
+Private mLogTwsMessages                             As Boolean
 
 Private mTwsConnectionStateListeners                As Listeners
 
@@ -424,6 +425,7 @@ Friend Sub Initialise( _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
                 ByVal pConnectionRetryIntervalSecs As Long, _
+                ByVal pLogTwsMessages As Boolean, _
                 ByVal pDeferConnection As Boolean, _
                 ByVal pConnectionStateListener As ITwsConnectionStateListener, _
                 ByVal pProgramErrorHandler As IProgramErrorListener, _
@@ -437,6 +439,7 @@ mServer = pServer
 mPort = pPort
 mClientId = pClientId
 mConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
+mLogTwsMessages = pLogTwsMessages
 
 Set mTwsAPI = getAPIInstance(pServer, pPort, pClientId)
 
@@ -505,7 +508,7 @@ Private Function getAPIInstance( _
 Const ProcName As String = "getAPIInstance"
 On Error GoTo Err
 
-Set getAPIInstance = GetAPI(pServer, pPort, pClientId, mConnectionRetryIntervalSecs)
+Set getAPIInstance = GetAPI(pServer, pPort, pClientId, mConnectionRetryIntervalSecs, mLogTwsMessages)
 getAPIInstance.ConnectionStatusConsumer = Me
 
 Exit Function

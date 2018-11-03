@@ -348,19 +348,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ProcessTwsMessage( _
-                ByRef pMessage() As Byte)
-Const ProcName As String = "ProcessTwsMessage"
-On Error GoTo Err
-
-mTwsAPI.ProcessRawTwsMessage pMessage, False
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Friend Function RegisterHistoricalDataRequestTask( _
                 ByVal pRequester As HistDataRequestTask) As Long
 Const ProcName As String = "RegisterHistoricalDataRequestTask"

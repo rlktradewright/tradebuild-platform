@@ -99,6 +99,7 @@ Public Function GetClient( _
                 ByVal pClientId As Long, _
                 Optional ByVal pSessionID As String, _
                 Optional ByVal pConnectionRetryIntervalSecs As Long = 60, _
+                Optional ByVal pLogTwsMessages As Boolean, _
                 Optional ByVal pDeferConnection As Boolean, _
                 Optional ByVal pConnectionStateListener As ITwsConnectionStateListener, _
                 Optional ByVal pProgramErrorHandler As IProgramErrorListener, _
@@ -109,7 +110,7 @@ On Error GoTo Err
 
 If pSessionID = "" Then pSessionID = GenerateGUIDString
 
-Set GetClient = gGetClient(pSessionID, pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pDeferConnection, pConnectionStateListener, pProgramErrorHandler, pApiErrorListener, pApiNotificationListener)
+Set GetClient = gGetClient(pSessionID, pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogTwsMessages, pDeferConnection, pConnectionStateListener, pProgramErrorHandler, pApiErrorListener, pApiNotificationListener)
 
 Exit Function
 
