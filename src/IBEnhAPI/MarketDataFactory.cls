@@ -464,9 +464,14 @@ Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange(ByVal pSo
 Const ProcName As String = "ITwsConnectionStateListener_NotifyAPIConnectionStateChange"
 On Error GoTo Err
 
+' if this is not set, it means that the API connection has never yet been
+' established, so we shouldn't try to 're-establish' market data or depth
+' that has already been requested
+Static sWasDisconnected As Boolean
+
 Select Case pState
 Case ApiConnNotConnected
-    
+    sWasDisconnected = True
 Case ApiConnConnecting
 
 Case ApiConnConnected
@@ -474,13 +479,14 @@ Case ApiConnConnected
     ' it will soon tell us
     mIsTwsConnectedToIBServers = True
     
-    ' reset any market depth
-    ResetMarketDepth False
-    
-    ' restart any market data and market depth tickers that were
-    ' previously in operation
-    reEstablishTickers MarketDataReestablishmentModes.All
-    
+    If sWasDisconnected Then
+        ' reset any market depth
+        ResetMarketDepth False
+        
+        ' restart any market data and market depth tickers that were
+        ' previously in operation
+        reEstablishTickers MarketDataReestablishmentModes.All
+    End If
 Case ApiConnFailed
 
 End Select
