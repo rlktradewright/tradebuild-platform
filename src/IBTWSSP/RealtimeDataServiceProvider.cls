@@ -108,7 +108,7 @@ Const ProcName As String = "IRealtimeDataSP_GetMarketDataFactory"
 On Error GoTo Err
 
 If mClient Is Nothing Then
-    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, , , Me)
+    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, True, , Me)
     mClient.SetTwsLogLevel mTwsLogLevel
 End If
 

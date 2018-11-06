@@ -187,7 +187,7 @@ Const ProcName As String = "IOrderSubmissionSP_GetOrderRecoveryAgent"
 On Error GoTo Err
 
 If mClient Is Nothing Then
-    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, , , Me)
+    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, True, , Me)
     mClient.SetTwsLogLevel mTwsLogLevel
 End If
 
@@ -204,7 +204,7 @@ Const ProcName As String = "IOrderSubmissionSP_GetOrderSubmitterFactory"
 On Error GoTo Err
 
 If mClient Is Nothing Then
-    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, , , Me)
+    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, True, , Me)
     mClient.SetTwsLogLevel mTwsLogLevel
 End If
 
