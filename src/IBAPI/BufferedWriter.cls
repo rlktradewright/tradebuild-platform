@@ -56,8 +56,17 @@ Private mOutMessageBuilder                          As StringBuilder
 '@================================================================================
 
 Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
 ReDim mOutputBuffer(15) As Byte
 Set mOutMessageBuilder = CreateStringBuilder
+mOutMessageBuilder.Append "OUT: "
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -175,9 +184,6 @@ Friend Sub AddString( _
 Const ProcName As String = "AddString"
 On Error GoTo Err
 
-mOutMessageBuilder.Clear
-mOutMessageBuilder.Append "OUT: "
-
 mOutMessageBuilder.Append fieldName & "=" & data & ";"
 
 Dim i As Long
@@ -207,6 +213,9 @@ mSocketHandler.Send mOutputBuffer
 ReDim mOutputBuffer(15) As Byte
 mOutputBufferIndex = 0
 
+mOutMessageBuilder.Clear
+mOutMessageBuilder.Append "OUT: "
+
 Exit Sub
 
 Err:
@@ -226,7 +235,6 @@ If forceLogMessage Then
 ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
     gSocketLogger.Log mOutMessageBuilder.ToString, ProcName, ModuleName, LogLevelHighDetail
 End If
-Set mOutMessageBuilder = Nothing
 
 Exit Sub
 
