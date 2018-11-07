@@ -86,6 +86,34 @@ Private mNextOrderID                                As Long
 ' Properties
 '@================================================================================
 
+Friend Property Let AccountDataConsumer(ByVal Value As IAccountDataConsumer)
+Set mAccountDataConsumer = Value
+End Property
+
+Friend Property Let ConnectionStatusConsumer(ByVal Value As IConnectionStatusConsumer)
+Set mConnectionStatusConsumer = Value
+End Property
+
+Friend Property Let ContractDetailsConsumer(ByVal Value As IContractDetailsConsumer)
+Set mContractDetailsConsumer = Value
+End Property
+
+Friend Property Let HistDataConsumer(ByVal Value As IHistDataConsumer)
+Set mHistDataConsumer = Value
+End Property
+
+Friend Property Let ErrorAndNotificationConsumer(ByVal Value As IErrorAndNotificationConsumer)
+Set mErrorAndNotificationConsumer = Value
+End Property
+
+Friend Property Let MarketDataConsumer(ByVal Value As IMarketDataConsumer)
+Set mMarketDataConsumer = Value
+End Property
+
+Friend Property Let MarketDepthConsumer(ByVal Value As IMarketDepthConsumer)
+Set mMarketDepthConsumer = Value
+End Property
+
 Friend Property Let NextOrderId(ByVal Value As Long)
 mNextOrderID = Value
 End Property
@@ -93,6 +121,14 @@ End Property
 Friend Property Get NextOrderId() As Long
 NextOrderId = mNextOrderID
 mNextOrderID = mNextOrderID + 1
+End Property
+
+Friend Property Let OrderInfoConsumer(ByVal Value As IOrderInfoConsumer)
+Set mOrderInfoConsumer = Value
+End Property
+
+Friend Property Let ScannerDataConsumer(ByVal Value As IScannerDataConsumer)
+Set mScannerDataConsumer = Value
 End Property
 
 '@================================================================================
@@ -210,32 +246,14 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Friend Sub Initialise( _
+Friend Sub Begin( _
                 ByVal pServerVersion As Long, _
-                ByVal pReader As BufferedReader, _
-                ByVal pConnectionStatusConsumer As IConnectionStatusConsumer, _
-                ByVal pHistDataConsumer As IHistDataConsumer, _
-                ByVal pContractDetailsConsumer As IContractDetailsConsumer, _
-                ByVal pOrderInfoConsumer As IOrderInfoConsumer, _
-                ByVal pMarketDataConsumer As IMarketDataConsumer, _
-                ByVal pMarketDepthConsumer As IMarketDepthConsumer, _
-                ByVal pAccountDataConsumer As IAccountDataConsumer, _
-                ByVal pScannerDataConsumer As IScannerDataConsumer, _
-                ByVal pErrorAndNotificationConsumer As IErrorAndNotificationConsumer)
-Const ProcName As String = "Initialise"
+                ByVal pReader As BufferedReader)
+Const ProcName As String = "Begin"
 On Error GoTo Err
 
 mServerVersion = pServerVersion
 Set mReader = pReader
-Set mConnectionStatusConsumer = pConnectionStatusConsumer
-Set mHistDataConsumer = pHistDataConsumer
-Set mContractDetailsConsumer = pContractDetailsConsumer
-Set mOrderInfoConsumer = pOrderInfoConsumer
-Set mMarketDataConsumer = pMarketDataConsumer
-Set mMarketDepthConsumer = pMarketDepthConsumer
-Set mAccountDataConsumer = pAccountDataConsumer
-Set mScannerDataConsumer = pScannerDataConsumer
-Set mErrorAndNotificationConsumer = pErrorAndNotificationConsumer
 
 Exit Sub
 

@@ -465,16 +465,19 @@ Const ProcName As String = "ITwsConnectionStateListener_NotifyAPIConnectionState
 On Error GoTo Err
 
 ' if this is not set, it means that the API connection has never yet been
-' established, so we shouldn't try to 're-establish' market data or depth
+' fully established, so we shouldn't try to 're-establish' market data or depth
 ' that has already been requested
+Static sHasBeenConnected As Boolean
 Static sWasDisconnected As Boolean
 
 Select Case pState
 Case ApiConnNotConnected
-    sWasDisconnected = True
+    If sHasBeenConnected Then sWasDisconnected = True
 Case ApiConnConnecting
 
 Case ApiConnConnected
+    sHasBeenConnected = True
+    
     ' we'll assume that TWS has a server connection: if not,
     ' it will soon tell us
     mIsTwsConnectedToIBServers = True

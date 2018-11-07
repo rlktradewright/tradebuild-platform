@@ -79,6 +79,7 @@ Private mLogTwsMessages                             As Boolean
 
 Private Sub Class_Initialize()
 getElapsedTimer
+Set mInputMessageParser = New InputMessageParser
 End Sub
 
 '@================================================================================
@@ -119,6 +120,7 @@ End Sub
 
 Friend Property Let AccountDataConsumer(ByVal Value As IAccountDataConsumer)
 Set mAccountDataConsumer = Value
+mInputMessageParser.AccountDataConsumer = Value
 End Property
 
 Friend Property Get AccountDataConsumer() As IAccountDataConsumer
@@ -131,6 +133,7 @@ End Property
 
 Friend Property Let ConnectionStatusConsumer(ByVal Value As IConnectionStatusConsumer)
 Set mConnectionStatusConsumer = Value
+mInputMessageParser.ConnectionStatusConsumer = Value
 End Property
 
 Friend Property Get ConnectionStatusConsumer() As IConnectionStatusConsumer
@@ -139,6 +142,7 @@ End Property
 
 Friend Property Let ContractDetailsConsumer(ByVal Value As IContractDetailsConsumer)
 Set mContractDetailsConsumer = Value
+mInputMessageParser.ContractDetailsConsumer = Value
 End Property
 
 Friend Property Get ContractDetailsConsumer() As IContractDetailsConsumer
@@ -147,6 +151,7 @@ End Property
 
 Friend Property Let HistDataConsumer(ByVal Value As IHistDataConsumer)
 Set mHistDataConsumer = Value
+mInputMessageParser.HistDataConsumer = Value
 End Property
 
 Friend Property Get HistDataConsumer() As IHistDataConsumer
@@ -155,6 +160,7 @@ End Property
 
 Friend Property Let MarketDataConsumer(ByVal Value As IMarketDataConsumer)
 Set mMarketDataConsumer = Value
+mInputMessageParser.MarketDataConsumer = Value
 End Property
 
 Friend Property Get MarketDataConsumer() As IMarketDataConsumer
@@ -163,6 +169,7 @@ End Property
 
 Friend Property Let MarketDepthConsumer(ByVal Value As IMarketDepthConsumer)
 Set mMarketDepthConsumer = Value
+mInputMessageParser.MarketDepthConsumer = Value
 End Property
 
 Friend Property Get MarketDepthConsumer() As IMarketDepthConsumer
@@ -179,6 +186,7 @@ End Property
 
 Friend Property Let OrderInfoConsumer(ByVal Value As IOrderInfoConsumer)
 Set mOrderInfoConsumer = Value
+mInputMessageParser.OrderInfoConsumer = Value
 End Property
 
 Friend Property Get OrderInfoConsumer() As IOrderInfoConsumer
@@ -187,6 +195,7 @@ End Property
 
 Friend Property Let ScannerDataConsumer(ByVal Value As IScannerDataConsumer)
 Set mScannerDataConsumer = Value
+mInputMessageParser.ScannerDataConsumer = Value
 End Property
 
 Friend Property Get ScannerDataConsumer() As IScannerDataConsumer
@@ -227,21 +236,7 @@ mReader.BeginCheckpointScope
 If Not mApiConnectionEstablished Then
     mConnectionNegotiator.ProcessInitialData pTimeStamp
     mApiConnectionEstablished = True
-End If
-
-If mInputMessageParser Is Nothing Then
-    Set mInputMessageParser = New InputMessageParser
-    mInputMessageParser.Initialise mConnectionNegotiator.ServerVersion, _
-                                    mReader, _
-                                    mConnectionStatusConsumer, _
-                                    mHistDataConsumer, _
-                                    mContractDetailsConsumer, _
-                                    mOrderInfoConsumer, _
-                                    mMarketDataConsumer, _
-                                    mMarketDepthConsumer, _
-                                    mAccountDataConsumer, _
-                                    mScannerDataConsumer, _
-                                    mErrorAndNotificationConsumer
+    mInputMessageParser.Begin mConnectionNegotiator.ServerVersion, mReader
 End If
 
 Static sMessageID As TwsSocketInMsgTypes
