@@ -63,6 +63,7 @@ Class=PositionManagerSummary; PositionManagerSummary.cls
 Class=Execution; Execution.cls
 Class=BracketOrderRecoverer; BracketOrderRecoverer.cls
 Class=BracketOrderProfile; BracketOrderProfile.cls
+Class=IBracketOrderMsgListener; IBracketOrderMessageListener.cls
 Startup="(None)"
 HelpFile=""
 Title="OrderUtils"
