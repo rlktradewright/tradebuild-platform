@@ -292,7 +292,7 @@ Set mBalancingBracketOrder = _
                             0, _
                             0#)
 
-gLogOrderMessage "Close positions at market: (Curr price=" & _
+gLogBracketOrderMessage "Close positions at market: (Curr price=" & _
                 FormatPrice(mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price, _
                             lContract.Specifier.SecType, _
                             lContract.TickSize) & ")", _

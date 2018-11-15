@@ -611,7 +611,7 @@ lBracketOrder.Checkpoint
 
 Set CreateBracketOrder = lBracketOrder
 
-gLogOrderMessage "Created bracket order: " & lBracketOrder.ToString, mDataSource, mContract, lBracketOrder.Key, mIsSimulated, Me
+gLogBracketOrderMessage "Created bracket order: " & lBracketOrder.ToString, mDataSource, mContract, lBracketOrder.Key, mIsSimulated, Me
 
 Exit Function
 
@@ -698,7 +698,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
                                 pBracketOrder.Risk, _
                                 msg) _
         Then
-            gLogOrderMessage "Rejected by money management: " & msg, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
+            gLogBracketOrderMessage "Rejected by money management: " & msg, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
             Set pBracketOrder = Nothing
             Exit Sub
         End If
@@ -709,7 +709,7 @@ If pCheckMoneyManagement And Not mIsSimulated Then
     End If
 End If
 
-gLogOrderMessage "Execute bracket order: " & pBracketOrder.ToString, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
+gLogBracketOrderMessage "Execute bracket order: " & pBracketOrder.ToString, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
 
 If pAddToActiveBracketOrders Then
     mActiveBracketOrders.Add pBracketOrder

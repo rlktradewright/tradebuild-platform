@@ -806,14 +806,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gLogOrderMessage( _
+Public Sub gLogBracketOrderMessage( _
                 ByVal pMessage As String, _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pContract As IContract, _
                 ByVal pKey As String, _
                 ByVal pIsSimulated As Boolean, _
                 ByVal pSource As Object)
-Const ProcName As String = "gLogOrderMessage"
+Const ProcName As String = "gLogBracketOrderMessage"
 On Error GoTo Err
 
 Dim lTickPart As String
@@ -837,6 +837,32 @@ gLogOrder lTimePart & _
             ")", _
         pIsSimulated, _
         pSource
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gLogOrderMessage( _
+                ByVal pMessage As String, _
+                ByVal pOrder As IOrder, _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pContract As IContract, _
+                ByVal pKey As String, _
+                ByVal pIsSimulated As Boolean, _
+                ByVal pSource As Object)
+Const ProcName As String = "gLogOrderMessage"
+On Error GoTo Err
+
+gLogBracketOrderMessage pMessage & _
+                        ": (brokerId=" & pOrder.BrokerId & _
+                        "; id=" & pOrder.Id & "): ", _
+                        pDataSource, _
+                        pContract, _
+                        pKey, _
+                        pIsSimulated, _
+                        pSource
 
 Exit Sub
 
