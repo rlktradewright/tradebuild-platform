@@ -492,10 +492,8 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
             OpActions.ActCancelStopOrder, OpActions.ActCancelTargetOrder
 
-' We are notified that the entry order has been cancelled (for example the
-' may have been rejected by TWS or the user may have cancelled it at TWS, or
-' the bracket order may have been cancelled due to time or price constraints
-' being violated).
+' We are notified that the entry order has been cancelled after there has
+' been a fill (for example the user may have cancelled it at TWS).
 ' The cancellation will have caused the stop and/or target orders to be
 ' cancelled as well (though we haven't been notified of this yet), but we
 ' cancel them anyway just in case. We'll be left with an unprotected
@@ -509,10 +507,8 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActCancelStopOrder, OpActions.ActCancelTargetOrder
 
-' We are notified that the entry order has been cancelled (for example the
-' may have been rejected by TWS or the user may have cancelled it at TWS, or
-' the bracket order may have been cancelled due to time or price constraints
-' being violated).
+' We are notified that the entry order has been cancelled after there has
+' been a fill (for example the user may have cancelled it at TWS).
 ' The cancellation will have caused the stop and/or target orders to be
 ' cancelled as well (though we haven't been notified of this yet), but we
 ' cancel them anyway just in case. We'll be left with an unprotected
