@@ -643,6 +643,30 @@ Case REQ_REAL_TIME_BARS
     gOutputMessageIdToString = "REQ_REAL_TIME_BARS"
 Case CANCEL_REAL_TIME_BARS
     gOutputMessageIdToString = "CANCEL_REAL_TIME_BARS"
+Case REQ_FUNDAMENTAL_DATA
+    gOutputMessageIdToString = "REQ_FUNDAMENTAL_DATA"
+Case CANCEL_FUNDAMENTAL_DATA
+    gOutputMessageIdToString = "CANCEL_FUNDAMENTAL_DATA"
+Case REQ_CALC_IMPLIED_VOLAT
+    gOutputMessageIdToString = "REQ_CALC_IMPLIED_VOLAT"
+Case REQ_CALC_OPTION_PRICE
+    gOutputMessageIdToString = "REQ_CALC_OPTION_PRICE"
+Case CANCEL_CALC_IMPLIED_VOLAT
+    gOutputMessageIdToString = "CANCEL_CALC_IMPLIED_VOLAT"
+Case CANCEL_CALC_OPTION_PRICE
+    gOutputMessageIdToString = "CANCEL_CALC_OPTION_PRICE"
+Case REQ_GLOBAL_CANCEL
+    gOutputMessageIdToString = "REQ_GLOBAL_CANCEL"
+Case REQ_MARKET_DATA_TYPE
+    gOutputMessageIdToString = "REQ_MARKET_DATA_TYPE"
+Case REQ_POSITIONS
+    gOutputMessageIdToString = "REQ_POSITIONS"
+Case REQ_ACCOUNT_SUMMARY
+    gOutputMessageIdToString = "REQ_ACCOUNT_SUMMARY"
+Case CANCEL_ACCOUNT_SUMMARY
+    gOutputMessageIdToString = "CANCEL_ACCOUNT_SUMMARY"
+Case CANCEL_POSITIONS
+    gOutputMessageIdToString = "CANCEL_POSITIONS"
 Case Else
     gOutputMessageIdToString = "?????"
 End Select
