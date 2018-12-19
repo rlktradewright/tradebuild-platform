@@ -56,11 +56,10 @@ Private mKnownOrders                                As New KnownOrders
 
 Private mOrderRecoveryListener                      As IOrderRecoveryListener
 Private mStartOrderRecoveryFrom                     As Date
-Private mClientId                                   As Long
 
 Private mOrderRecoveryFinished                      As Boolean
 
-Private mIsTwsConnectedToIBServers                  As Boolean
+Private mQueuedOrders                               As New EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
@@ -75,7 +74,10 @@ Const ProcName As String = "IOrderInfoConsumer_EndExecutions"
 On Error GoTo Err
 
 If Not mOrderRecoveryListener Is Nothing Then mOrderRecoveryListener.EndExecutionReports
-If mOrderRecoveryFinished Then Set mOrderRecoveryListener = Nothing
+If mOrderRecoveryFinished Then
+    Set mOrderRecoveryListener = Nothing
+    processQueuedOrders
+End If
 
 Exit Sub
 
@@ -88,7 +90,10 @@ Const ProcName As String = "IOrderInfoConsumer_EndOpenOrders"
 On Error GoTo Err
 
 If Not mOrderRecoveryListener Is Nothing Then mOrderRecoveryListener.EndOrderReports
-If mOrderRecoveryFinished Then Set mOrderRecoveryListener = Nothing
+If mOrderRecoveryFinished Then
+    Set mOrderRecoveryListener = Nothing
+    processQueuedOrders
+End If
 
 Exit Sub
 
@@ -312,15 +317,7 @@ Case ApiConnNotConnected
 Case ApiConnConnecting
 
 Case ApiConnConnected
-    ' we'll assume that TWS has a server connection: if not,
-    ' it will soon tell us
-    mIsTwsConnectedToIBServers = True
-    
-    If Not mOrderRecoveryListener Is Nothing Then
-        doStartOrderRecovery
-    Else
-        gRequestExecutions mTwsAPI, mClientId
-    End If
+    doStartOrderRecovery
 Case ApiConnFailed
 
 End Select
@@ -332,17 +329,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
-mIsTwsConnectedToIBServers = False
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
-mIsTwsConnectedToIBServers = True
-If Not mOrderRecoveryListener Is Nothing Then
-    doStartOrderRecovery
-Else
-    gRequestExecutions mTwsAPI, mClientId
-End If
+Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionRecovered"
+On Error GoTo Err
+
+doStartOrderRecovery
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
 '@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
@@ -426,7 +426,11 @@ lOrder.Transmit = pTransmit
 lOrder.ParentId = pParentId
 lOrder.OcaGroup = pOcaGroup
 
-mTwsAPI.PlaceOrder lOrder, pContract
+If mTwsAPI.ConnectionState = TwsConnConnected Then
+    mTwsAPI.PlaceOrder lOrder, pContract
+Else
+    queueOrder lOrder, pContract
+End If
 
 Exit Sub
 
@@ -443,7 +447,10 @@ On Error GoTo Err
 Set mOrderRecoveryListener = pOrderRecoveryListener
 mStartOrderRecoveryFrom = pStartFrom
 
-If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
+If Not (mTwsAPI.ConnectionState = TwsConnConnected And mTwsAPI.IsTwsConnectedToIBServers) Then
+    gLog "Can't start order recovery: not fully connected", ModuleName, ProcName
+    Exit Sub
+End If
 
 doStartOrderRecovery
 
@@ -461,9 +468,14 @@ Private Sub doStartOrderRecovery()
 Const ProcName As String = "doStartOrderRecovery"
 On Error GoTo Err
 
+gLog "Requesting open orders and executions", ModuleName, ProcName
+
 gRequestOpenOrders mTwsAPI
 
-gRequestExecutions mTwsAPI, mClientId
+' we request executions for all clientIDs: this is so that an application
+' that has been given a different clientID can still recover orders
+' from the previous session
+gRequestExecutions mTwsAPI, 0, mStartOrderRecoveryFrom
 
 Exit Sub
 
@@ -550,4 +562,46 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processQueuedOrders()
+Const ProcName As String = "processQueuedOrders"
+On Error GoTo Err
+
+' we could do this with a task to space the order submissions out a bit,
+' but since there are only rarely expected to be any queued orders we'll
+' just do them immediaately
+
+gLog "Processing queued orders: " & mQueuedOrders.Count & " orders to be placed", ProcName, ModuleName
+
+Dim en As Enumerator
+Set en = mQueuedOrders.Enumerator
+
+Do While en.MoveNext
+    Dim lEntry As OrderQueueEntry
+    Set lEntry = en.Current
+    mTwsAPI.PlaceOrder lEntry.Order, lEntry.Contract
+    en.Remove
+Loop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub queueOrder( _
+                ByVal pOrder As IOrder, _
+                ByVal pContract As TwsContract)
+Const ProcName As String = "queueOrder"
+On Error GoTo Err
+
+Dim e As New OrderQueueEntry
+e.Order = pOrder
+e.Contract = pContract
+mQueuedOrders.Add pOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 

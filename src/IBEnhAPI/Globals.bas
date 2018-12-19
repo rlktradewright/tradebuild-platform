@@ -431,13 +431,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub gRequestExecutions(ByVal pTwsAPI As TwsAPI, ByVal pClientId As Long)
+Public Sub gRequestExecutions(ByVal pTwsAPI As TwsAPI, ByVal pClientId As Long, ByVal pFrom As Date)
 Const ProcName As String = "gRequestExecutions"
 On Error GoTo Err
 
 Dim lExecFilter As TwsExecutionFilter
 Set lExecFilter = New TwsExecutionFilter
 lExecFilter.ClientId = pClientId
+lExecFilter.Time = pFrom
 pTwsAPI.RequestExecutions 1, lExecFilter
 
 Exit Sub
