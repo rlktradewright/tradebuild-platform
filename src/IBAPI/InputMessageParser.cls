@@ -70,6 +70,8 @@ Private mErrorAndNotificationConsumer               As IErrorAndNotificationCons
 
 Private mNextOrderID                                As Long
 
+Private mIsTwsConnectedToIBServers                  As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -112,6 +114,10 @@ End Property
 
 Friend Property Let MarketDepthConsumer(ByVal Value As IMarketDepthConsumer)
 Set mMarketDepthConsumer = Value
+End Property
+
+Friend Property Get IsTwsConnectedToIBServers() As Boolean
+IsTwsConnectedToIBServers = mIsTwsConnectedToIBServers
 End Property
 
 Friend Property Let NextOrderId(ByVal Value As Long)
@@ -659,6 +665,7 @@ Case 1100, 2110
     ' connectivity between Tws and IB has been lost
     
     sLostConnectionToIb = True
+    mIsTwsConnectedToIBServers = False
     
     gLog "Connection to IB has been lost", ModuleName, ProcName
     
@@ -670,6 +677,7 @@ Case 1101
     ' lost, so need to reestablish market data and market depth requests
 
     sLostConnectionToIb = False
+    mIsTwsConnectedToIBServers = True
     
     gLog "Connection to IB recovered: market data re-established", ModuleName, ProcName
     
@@ -682,6 +690,7 @@ Case 1102
     ' Now need to reassociate Order ids with Tws
 
     sLostConnectionToIb = False
+    mIsTwsConnectedToIBServers = True
     
     gLog "Connection to IB recovered: no loss of data", ModuleName, ProcName
     
@@ -982,6 +991,7 @@ If mNextOrderID < BaseOrderId Then mNextOrderID = BaseOrderId
 ' a disconnection. Once we get this callback, we know that TWS
 ' is happy.
 gLog "API connection completed", ModuleName, ProcName
+mIsTwsConnectedToIBServers = True
 RaiseEvent ApiConnectionEstablished(mServerVersion)
 
 Exit Sub
@@ -1396,7 +1406,7 @@ Dim lPosition As Long: lPosition = mReader.GetLong("Position")
 Dim lAverageCost As Double
 If pVersion >= 3 Then lAverageCost = mReader.GetDouble("Average Cost")
 
-mReader.LogInputMessage
+mReader.LogInputMessage True
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.NotifyPosition lAccount, lContract, lPosition, lAverageCost
 
@@ -1410,7 +1420,7 @@ Private Sub getPositionEnd(ByVal pVersion As Long)
 Const ProcName As String = "getPositionEnd"
 On Error GoTo Err
 
-mReader.LogInputMessage
+mReader.LogInputMessage True
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.EndPosition
 

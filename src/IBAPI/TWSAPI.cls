@@ -345,6 +345,10 @@ Public Property Get HistDataConsumer() As IHistDataConsumer
 Set HistDataConsumer = mInMessageHandler.HistDataConsumer
 End Property
 
+Public Property Get IsTwsConnectedToIBServers() As Boolean
+IsTwsConnectedToIBServers = mInMessageHandler.IsTwsConnectedToIBServers
+End Property
+
 Public Property Let MarketDataConsumer(ByVal Value As IMarketDataConsumer)
 mInMessageHandler.MarketDataConsumer = Value
 End Property
@@ -2024,6 +2028,7 @@ Const ProcName As String = "setConnectionState"
 On Error GoTo Err
 
 mConnectionState = pState
+
 If Not mConnectionStatusConsumer Is Nothing Then mConnectionStatusConsumer.NotifyAPIConnectionStateChange mConnectionState, pMessage
 
 Exit Sub

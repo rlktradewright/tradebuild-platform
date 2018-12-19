@@ -158,6 +158,10 @@ Friend Property Get HistDataConsumer() As IHistDataConsumer
 Set HistDataConsumer = mHistDataConsumer
 End Property
 
+Friend Property Get IsTwsConnectedToIBServers() As Boolean
+IsTwsConnectedToIBServers = mInputMessageParser.IsTwsConnectedToIBServers
+End Property
+
 Friend Property Let MarketDataConsumer(ByVal Value As IMarketDataConsumer)
 Set mMarketDataConsumer = Value
 mInputMessageParser.MarketDataConsumer = Value
