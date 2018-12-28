@@ -902,7 +902,7 @@ Private Sub mCloseoutOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As St
 Const ProcName As String = "mCloseoutOrder_Error"
 On Error GoTo Err
 
-handleStimulus OpStimuli.StimOrderError
+handleStimulus OpStimuli.StimCloseoutOrderCancelled
 fireBracketOrderError mCloseoutOrder, pErrorCode, pErrorMsg
 
 Exit Sub
@@ -982,10 +982,15 @@ End Select
 fireChange BracketOrderCloseoutOrderChanged
 RaiseEvent CloseoutOrderChanged
 
-If mCloseoutOrder.Status = OrderStatuses.OrderStatusFilled Then
+
+Select Case mCloseoutOrder.Status
+Case OrderStatuses.OrderStatusFilled
     Assert Size = 0, "Closeout incomplete: Size remaining is " & Size
     checkAllOrdersComplete
-End If
+Case OrderStatuses.OrderStatusCancelled
+    handleStimulus OpStimuli.StimCloseoutOrderCancelled
+    checkAllOrdersComplete
+End Select
 
 SaveRecoveryInfo
 Exit Sub
