@@ -159,7 +159,7 @@ Then
 
     Dim lOrderContext As OrderContext
     For Each lOrderContext In mOrderContexts
-        lOrderContext.ProviderIsReady = IsReady
+        lOrderContext.IsDataSourceReady = True
     Next
 End If
 
@@ -188,7 +188,7 @@ checkGotPermittedOrderProperties
 
 Dim lOrderContext As OrderContext
 For Each lOrderContext In mOrderContexts
-    lOrderContext.ProviderIsReady = IsReady
+    lOrderContext.IsProviderReady = IsReady
 Next
 
 Exit Sub
@@ -212,7 +212,7 @@ Set mPermittedOrderProperties = ev.Future.Value
 Dim lOrderContext As OrderContext
 For Each lOrderContext In mOrderContexts
     lOrderContext.PermittedOrderProperties = mPermittedOrderProperties
-    lOrderContext.ProviderIsReady = IsReady
+    lOrderContext.IsProviderReady = mProviderIsReady
 Next
 
 Exit Sub
@@ -326,10 +326,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get IsProviderReady() As Boolean
+IsProviderReady = mProviderIsReady And _
+        (Not mPermittedOrderProperties Is Nothing)
+End Property
+
 Public Property Get IsReady() As Boolean
-IsReady = mProviderIsReady And _
-        (Not mPermittedOrderProperties Is Nothing) And _
-        mDataSourceIsReady
+IsReady = IsProviderReady And mDataSourceIsReady
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -358,7 +361,8 @@ Add.Initialise pName, mOrderManager.SessionName, mName, mGroupName, mIsSimulated
 mOrderContexts.Add Add, pName
 Add.PermittedOrderProperties = mPermittedOrderProperties
 Add.Enabled = mEnabled
-Add.ProviderIsReady = IsReady
+Add.IsProviderReady = mProviderIsReady
+Add.IsDataSourceReady = mDataSourceIsReady
 
 Exit Function
 

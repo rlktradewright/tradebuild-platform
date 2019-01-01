@@ -120,7 +120,7 @@ Dim lOrderContext As OrderContext
 Set lOrderContext = ev.Source
 
 If ev.changeType = OrderContextChangeTypes.OrderContextReadyStateChanged And _
-    lOrderContext.IsReady _
+    lOrderContext.IsProviderReady _
 Then
     gLog "Order context ready", ProcName, ModuleName, lOrderContext.ContextsName & "/" & lOrderContext.Name
     mNumOrderContextsWaiting = mNumOrderContextsWaiting - 1

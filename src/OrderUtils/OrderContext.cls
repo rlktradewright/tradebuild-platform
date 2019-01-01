@@ -81,6 +81,7 @@ Private mPermittedOrderProperties       As IPermittedOrderProperties
 
 Private mEnabled                        As Boolean
 Private mProviderIsReady                As Boolean
+Private mDataSourceIsReady              As Boolean
 
 Private mTemplateOrder                  As Order
 
@@ -212,8 +213,47 @@ Public Property Get IsActive() As Boolean
 IsActive = (mActiveBracketOrders.Count <> 0)
 End Property
 
+Friend Property Let IsDataSourceReady(ByVal Value As Boolean)
+Const ProcName As String = "IsDataSourceReady"
+On Error GoTo Err
+
+If mDataSourceIsReady = Value Then Exit Property
+
+mDataSourceIsReady = Value
+fireChange OrderContextReadyStateChanged
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IsDataSourceReady() As Boolean
+IsDataSourceReady = mDataSourceIsReady
+End Property
+
+Friend Property Let IsProviderReady(ByVal Value As Boolean)
+Const ProcName As String = "IsProviderReady"
+On Error GoTo Err
+
+If mProviderIsReady = Value Then Exit Property
+
+mProviderIsReady = Value
+
+fireChange OrderContextReadyStateChanged
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get IsProviderReady() As Boolean
+IsProviderReady = mProviderIsReady
+End Property
+
 Public Property Get IsReady() As Boolean
-IsReady = (mProviderIsReady And mEnabled And Not mContract Is Nothing And Not mTimerList Is Nothing)
+IsReady = (mDataSourceIsReady And mProviderIsReady And mEnabled And Not mContract Is Nothing And Not mTimerList Is Nothing)
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -266,22 +306,6 @@ End Property
 
 Public Property Get PreventUnprotectedPositions() As Boolean
 PreventUnprotectedPositions = mPreventUnprotectedPositions
-End Property
-
-Friend Property Let ProviderIsReady(ByVal Value As Boolean)
-Const ProcName As String = "ProviderIsReady"
-On Error GoTo Err
-
-If mProviderIsReady = Value Then Exit Property
-
-mProviderIsReady = Value
-
-fireChange OrderContextReadyStateChanged
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Risk() As Currency
