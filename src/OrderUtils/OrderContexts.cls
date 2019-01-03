@@ -188,7 +188,7 @@ checkGotPermittedOrderProperties
 
 Dim lOrderContext As OrderContext
 For Each lOrderContext In mOrderContexts
-    lOrderContext.IsProviderReady = IsReady
+    lOrderContext.IsProviderReady = IsProviderReady
 Next
 
 Exit Sub
@@ -212,7 +212,7 @@ Set mPermittedOrderProperties = ev.Future.Value
 Dim lOrderContext As OrderContext
 For Each lOrderContext In mOrderContexts
     lOrderContext.PermittedOrderProperties = mPermittedOrderProperties
-    lOrderContext.IsProviderReady = mProviderIsReady
+    lOrderContext.IsProviderReady = IsProviderReady
 Next
 
 Exit Sub
@@ -361,7 +361,7 @@ Add.Initialise pName, mOrderManager.SessionName, mName, mGroupName, mIsSimulated
 mOrderContexts.Add Add, pName
 Add.PermittedOrderProperties = mPermittedOrderProperties
 Add.Enabled = mEnabled
-Add.IsProviderReady = mProviderIsReady
+Add.IsProviderReady = IsProviderReady
 Add.IsDataSourceReady = mDataSourceIsReady
 
 Exit Function

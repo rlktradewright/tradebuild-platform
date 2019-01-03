@@ -647,7 +647,7 @@ Friend Function CreateRawOrder(ByVal Id As String) As IOrder
 Const ProcName As String = "CreateRawOrder"
 On Error GoTo Err
 
-Assert IsReady, "The service provider is not Ready"
+Assert IsProviderReady, "The service provider is not Ready"
 
 Dim lOrder As New Order
 lOrder.Id = Id
@@ -841,7 +841,7 @@ Public Function IsBracketEntryTypeSupported( _
 Const ProcName As String = "IsBracketEntryTypeSupported"
 On Error GoTo Err
 
-Assert IsReady, "OrderContext is not ready"
+Assert IsProviderReady, "OrderContext is not ready"
 
 Dim lOrderType As OrderTypes
 lOrderType = gBracketEntryTypeToOrderType(Value)
@@ -858,7 +858,7 @@ Public Function IsBracketStopLossTypeSupported( _
 Const ProcName As String = "IsBracketStopLossTypeSupported"
 On Error GoTo Err
 
-Assert IsReady, "OrderContext is not ready"
+Assert IsProviderReady, "OrderContext is not ready"
 
 If Value = BracketStopLossTypeAuto Then
     IsBracketStopLossTypeSupported = True
@@ -887,7 +887,7 @@ Public Function IsBracketTargetTypeSupported( _
 Const ProcName As String = "IsBracketTargetTypeSupported"
 On Error GoTo Err
 
-Assert IsReady, "OrderContext is not ready"
+Assert IsProviderReady, "OrderContext is not ready"
 
 If Value = BracketTargetTypeAuto Then
     IsBracketTargetTypeSupported = True
@@ -916,7 +916,7 @@ Public Function IsOrderAttributeSupported( _
 Const ProcName As String = "IsOrderAttributeSupported"
 On Error GoTo Err
 
-Assert IsReady, "OrderContext is not ready"
+Assert IsProviderReady, "OrderContext is not ready"
 IsOrderAttributeSupported = ((mPermittedOrderProperties.PermittedOrderAttributes And Value) = Value)
 
 Exit Function
@@ -930,7 +930,7 @@ Public Function IsOrderTifSupported( _
 Const ProcName As String = "IsOrderTifSupported"
 On Error GoTo Err
 
-Assert IsReady, "OrderContext is not ready"
+Assert IsProviderReady, "OrderContext is not ready"
 IsOrderTifSupported = ((mPermittedOrderProperties.PermittedOrderTifs And Value) = Value)
 
 Exit Function
@@ -944,7 +944,7 @@ Public Function IsOrderTypeSupported( _
 Const ProcName As String = "IsOrderTypeSupported"
 On Error GoTo Err
 
-Assert IsReady, "OrderContext is not ready"
+Assert IsProviderReady, "OrderContext is not ready"
 If Value = OrderTypeAutoLimit Or _
     Value = OrderTypeAutoStop _
 Then
@@ -964,7 +964,7 @@ Public Function IsStopTriggerMethodSupported( _
 Const ProcName As String = "IsStopTriggerMethodSupported"
 On Error GoTo Err
 
-Assert IsReady, "OrderContext is not ready"
+Assert IsProviderReady, "OrderContext is not ready"
 IsStopTriggerMethodSupported = ((mPermittedOrderProperties.PermittedStopTriggerMethods And Value) = Value)
 
 Exit Function

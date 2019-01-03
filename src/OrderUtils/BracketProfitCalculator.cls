@@ -255,13 +255,13 @@ mBracketOrder.AddChangeListener Me
 Set mContractFuture = pDataSource.ContractFuture
 Set mDataSource = pDataSource
 
-If mBracketOrder.Size <> 0 Then
+'If mBracketOrder.Size <> 0 Then
     mCumBuyPrice = pBracketOrder.CumBuyPrice
     mCumSellPrice = pBracketOrder.CumSellPrice
 
     listenToData
     calcInitialProfit
-End If
+'End If
 
 Exit Sub
 
@@ -302,6 +302,9 @@ Const ProcName As String = "calcInitialProfit"
 On Error GoTo Err
 
 If mDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Sub
+If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Sub
+If Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Sub
 
 Dim lAskTick As GenericTick
 lAskTick = mDataSource.CurrentTick(TickTypeAsk)

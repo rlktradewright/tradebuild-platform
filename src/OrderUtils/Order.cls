@@ -1606,7 +1606,7 @@ End Function
 ''
 ' Notifies a fill for this <code>order</code>.
 '
-' @param pExec  an <code>Execution</code> object containing details of the fill
+' @param pExec  an <code>IExecutionReport</code> object containing details of the fill
 '
 '@/
 Public Sub NotifyFill( _
@@ -1616,34 +1616,44 @@ On Error GoTo Err
 
 checkInitialised
 
+Dim lExec As Execution
+If TypeOf pExec Is Execution Then
+    Set lExec = pExec
+Else
+    Set lExec = New Execution
+    lExec.Id = pExec.Id
+    If mIsSimulated Then lExec.IsSimulated = True
+    lExec.SyncToExecutionReport pExec
+End If
+
 If mContractSpecifier Is Nothing Then
     ' happens when an order from a previous session is being recovered before
     ' the relevant ticker is ready
 Else
     gLogOrderDetail mContractSpecifier.Exchange & "," & _
             mContractSpecifier.LocalSymbol & "," & _
-            pExec.Quantity & "," & _
-            pExec.Price & "," & _
-            gOrderActionToString(pExec.Action) & "," & _
-            FormatTimestamp(pExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
-            pExec.TimezoneName & "," & _
-            pExec.Id & "," & _
-            pExec.BrokerId, _
+            lExec.Quantity & "," & _
+            lExec.Price & "," & _
+            gOrderActionToString(lExec.Action) & "," & _
+            FormatTimestamp(lExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+            lExec.TimezoneName & "," & _
+            lExec.Id & "," & _
+            lExec.BrokerId, _
             mIsSimulated, _
             Me
 End If
 
-mSummary.AveragePrice = (mSummary.QuantityFilled * mSummary.AveragePrice + pExec.Quantity * pExec.Price) / (mSummary.QuantityFilled + pExec.Quantity)
-mSummary.QuantityFilled = mSummary.QuantityFilled + pExec.Quantity
-mSummary.QuantityRemaining = mSummary.QuantityRemaining - pExec.Quantity
-mSummary.LastFillPrice = pExec.Price
-mSummary.FillTime = pExec.FillTime
+mSummary.AveragePrice = (mSummary.QuantityFilled * mSummary.AveragePrice + lExec.Quantity * lExec.Price) / (mSummary.QuantityFilled + lExec.Quantity)
+mSummary.QuantityFilled = mSummary.QuantityFilled + lExec.Quantity
+mSummary.QuantityRemaining = mSummary.QuantityRemaining - lExec.Quantity
+mSummary.LastFillPrice = lExec.Price
+mSummary.FillTime = lExec.FillTime
 If mSummary.QuantityRemaining = 0 Then
     mSummary.Status = OrderStatusFilled
     mNeedsRecovery = False
 End If
 SaveRecoveryInfo
-RaiseEvent Fill(pExec)
+RaiseEvent Fill(lExec)
 If mSummary.Status = OrderStatusFilled Then RaiseEvent StatusChanged
 
 Exit Sub
@@ -2020,12 +2030,16 @@ Else
 End If
 End Function
 
-Private Sub SaveRecoveryInfo()
+Friend Sub SaveRecoveryInfo()
 Const ProcName As String = "SaveRecoveryInfo"
 On Error GoTo Err
 
 If mIsSimulated Then Exit Sub
-If mSummary.Status = OrderStatuses.OrderStatusCreated Then Exit Sub
+If mSummary.OrderType = OrderTypeAutoLimit Or mSummary.OrderType = OrderTypeAutoStop Then
+    ' ignore OrderStatus for these order types
+ElseIf mSummary.Status = OrderStatuses.OrderStatusCreated Then
+    Exit Sub
+End If
 If Not mSummary.IsDirty Then Exit Sub
 
 fireRecoveryDataChanged

@@ -1037,6 +1037,12 @@ gLogOrderMessage "Entry order fill: " & _
                     pExec.Price, _
                 mEntryOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
+placePeggedOrders pExec.Quantity
+SaveRecoveryInfo
+        
+' we do this after placing any pegged orders. Then, in
+' a recovery situation, the pegged orders will not be
+' resubmitted.
 processExecution pExec
 
 If Not mCancelTLI Is Nothing Then
@@ -1063,8 +1069,6 @@ mSummary.CancelPrice = 0
 '    End If
 'End If
 
-placePeggedOrders
-        
 If Not mStopLossOrder Is Nothing Then
     If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
         AdjustStopLoss mStopLossOrder.TriggerPrice, Abs(Size)
@@ -1146,9 +1150,9 @@ Case OrderStatuses.OrderStatusPendingSubmit
 Case OrderStatuses.OrderStatusCancelling
 Case OrderStatuses.OrderStatusPreSubmitted
 Case OrderStatuses.OrderStatusSubmitted
-    If mEntryOrder.QuantityFilled > 0 Then
-        placePeggedOrders
-    End If
+'    If mEntryOrder.QuantityFilled > 0 Then
+'        placePeggedOrders
+'    End If
 Case OrderStatuses.OrderStatusCancelled
     handleStimulus OpStimuli.StimEntryOrderCancelled
     checkAllOrdersComplete
@@ -2302,7 +2306,14 @@ fireChange BracketOrderChangeTypes.BracketOrderCreated
 SaveRecoveryInfo    ' ensure the BracketOrder is recorded before
                     ' doing the state change, which will cause
                     ' the orders to be recorded
-                    
+If mStopLossOrder Is Nothing Then
+ElseIf mStopLossOrder.OrderType = OrderTypeAutoStop Then mStopLossOrder.SaveRecoveryInfo
+End If
+
+If mTargetOrder Is Nothing Then
+ElseIf mTargetOrder.OrderType = OrderTypeAutoLimit Then mTargetOrder.SaveRecoveryInfo
+End If
+
 handleStimulus OpStimuli.StimExecute
 
 Exit Sub
@@ -3586,9 +3597,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub placePeggedOrders()
+Private Sub placePeggedOrders(ByVal pFillSize As Long)
 Const ProcName As String = "placePeggedOrders"
 On Error GoTo Err
+
+If mSummary.PeggedOrdersProcessed Then Exit Sub
 
 Dim updated As Boolean
 
@@ -3600,7 +3613,7 @@ If Not mStopLossOrder Is Nothing Then
             ' offset from that Price
             mStopLossOrder.OrderType = OrderTypes.OrderTypeStop
             SetNewStopLossTriggerPrice (mStopLossOrder.Offset * mContract.TickSize) + EntryOrder.LastFillPrice
-            SetNewStopLossQuantity mEntryOrder.QuantityFilled
+            SetNewStopLossQuantity pFillSize
             updated = True
         End If
     End If
@@ -3613,13 +3626,15 @@ If Not mTargetOrder Is Nothing Then
             ' offset from that Price
             mTargetOrder.OrderType = OrderTypes.OrderTypeLimit
             SetNewTargetPrice (mTargetOrder.Offset * mContract.TickSize) + EntryOrder.LastFillPrice
-            SetNewTargetQuantity mEntryOrder.QuantityFilled
+            SetNewTargetQuantity pFillSize
             updated = True
         End If
     End If
 End If
 
 If updated Then Update
+
+mSummary.PeggedOrdersProcessed = True
 
 Exit Sub
 
@@ -3628,9 +3643,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processExecution( _
-                ByVal pExec As IExecutionReport)
+                ByVal pExec As Execution)
 Const ProcName As String = "processExecution"
 On Error GoTo Err
+
+' Note that the Order object ensures that pExec will always
+' be an Execution object, not just some other object that
+' implements IExecutionReport
+pExec.SaveRecoveryInfo
 
 If mSummary.Size = 0 Then
     mStartTime = pExec.FillTime

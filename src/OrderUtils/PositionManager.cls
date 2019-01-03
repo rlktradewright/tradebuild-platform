@@ -288,19 +288,18 @@ Else
         If mSummary.IsSimulated Then lExec.IsSimulated = True
         lExec.SyncToExecutionReport pExecutionReport
     End If
-    
     lExec.GroupName = mSummary.GroupName
     lExec.PositionManagerName = mSummary.Name
-    If Not mBracketOrderRecoveryController Is Nothing Then
-        lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
-        lExec.SaveRecoveryInfo
-    End If
     
     mExecutions.Add lExec
+    
+    If Not mBracketOrderRecoveryController Is Nothing Then
+        lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
+    End If
+    
+    If Not mRecovering Then mOrders.Item(lExec.OrderId).NotifyFill lExec
     processExecution lExec
     
-    mOrders.Item(lExec.OrderId).NotifyFill lExec
-
     fireChange PositionManagerChangeTypes.PositionSizeChanged
 End If
 

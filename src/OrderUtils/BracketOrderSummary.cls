@@ -80,6 +80,8 @@ Private mPreventUnprotectedPosition As Boolean
 Private mCumBuyPrice As Double
 Private mCumSellPrice As Double
 
+Private mPeggedOrdersProcessed As Boolean
+
 Private mIsDirty As Boolean
 
 '@================================================================================
@@ -223,6 +225,15 @@ Public Property Get Key() As String
 Key = mKey
 End Property
 
+Public Property Let PeggedOrdersProcessed(ByVal Value As Boolean)
+If mPeggedOrdersProcessed <> Value Then setDirty
+mPeggedOrdersProcessed = Value
+End Property
+
+Public Property Get PeggedOrdersProcessed() As Boolean
+PeggedOrdersProcessed = mPeggedOrdersProcessed
+End Property
+
 Public Property Let PreventUnprotectedPosition(ByVal Value As Boolean)
 If mPreventUnprotectedPosition <> Value Then setDirty
 mPreventUnprotectedPosition = Value
@@ -332,6 +343,7 @@ jb.EncodeNameAndValue "EntryReason", mEntryReason, ""
 jb.EncodeName "Key"
 jb.EncodeValue mKey
 
+jb.EncodeNameAndValue "PeggedOrdersProcessed", mPeggedOrdersProcessed, False
 jb.EncodeNameAndValue "PreventUnprotectedPosition", mPreventUnprotectedPosition, False
 
 jb.EncodeName "Size"
