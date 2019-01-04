@@ -678,9 +678,9 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function gRoundTimeToSecond( _
-                ByVal timeStamp As Date) As Date
+                ByVal pTimestamp As Date) As Date
 Const ProcName As String = "gRoundTimeToSecond"
-gRoundTimeToSecond = Int((timeStamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
+gRoundTimeToSecond = Int((pTimestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
 End Function
 
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
@@ -786,11 +786,11 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 
 End Function
 
-Public Function gTruncateTimeToNextMinute(ByVal timeStamp As Date) As Date
+Public Function gTruncateTimeToNextMinute(ByVal pTimestamp As Date) As Date
 Const ProcName As String = "gTruncateTimeToNextMinute"
 On Error GoTo Err
 
-gTruncateTimeToNextMinute = Int((timeStamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
+gTruncateTimeToNextMinute = Int((pTimestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
 
 Exit Function
 
@@ -798,11 +798,11 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Public Function gTruncateTimeToMinute(ByVal timeStamp As Date) As Date
+Public Function gTruncateTimeToMinute(ByVal pTimestamp As Date) As Date
 Const ProcName As String = "gTruncateTimeToMinute"
 On Error GoTo Err
 
-gTruncateTimeToMinute = Int((timeStamp + OneMicrosecond) / OneMinute) * OneMinute
+gTruncateTimeToMinute = Int((pTimestamp + OneMicrosecond) / OneMinute) * OneMinute
 
 Exit Function
 

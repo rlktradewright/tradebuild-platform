@@ -271,7 +271,6 @@ End Enum
 '@================================================================================
 
 Public Type TwsHistoricalDataRequest
-    'Id                      As Long
     contract                As TwsContract
     EndDateTime             As String
     BarSizeSetting          As String
@@ -281,7 +280,7 @@ Public Type TwsHistoricalDataRequest
 End Type
 
 Public Type TwsBar
-    timeStamp               As String
+    Timestamp               As String
     OpenValue               As Double
     HighValue               As Double
     LowValue                As Double
@@ -290,6 +289,17 @@ Public Type TwsBar
     TickVolume              As Long
     WAP                     As Double
     HasGaps                 As Boolean
+End Type
+
+Public Type TwsRealtimeBar
+    Timestamp               As String
+    OpenValue               As Double
+    HighValue               As Double
+    LowValue                As Double
+    CloseValue              As Double
+    Volume                  As Long
+    TickVolume              As Long
+    WAP                     As Double
 End Type
 
 Public Type TwsTagValue

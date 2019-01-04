@@ -713,7 +713,7 @@ Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_REAL_TIME_BARS
 mWriter.AddString VERSION, "Version"
-mWriter.AddString pTickerId, "Ticker id"
+mWriter.AddString getTwsHistRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send True
 
 Exit Sub
@@ -1606,9 +1606,11 @@ AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.Trad
 
 Const VERSION = 2
 
+gLog "Requesting realtime bars: ticker id=" & pTickerId & "; contract=" & pContract.ToString, ModuleName, ProcName
+
 mWriter.AddMessageId REQ_REAL_TIME_BARS
 mWriter.AddString VERSION, "Version"
-mWriter.AddString pTickerId, "TickerId"
+mWriter.AddString getTwsHistRequestIdFromCallersRequestId(pTickerId), "TickerId"
 
 ' send contract fields
 If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.ConId, "ConId"
@@ -1625,7 +1627,7 @@ mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
 If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "TradingClass"
 mWriter.AddString pBarSize, "BarSize"   ' this parameter is not currently used
 mWriter.AddString pWhatToShow, "WhatToShow"
-mWriter.AddString pUseRTH, "UseRTH"
+mWriter.AddBoolean pUseRTH, "UseRTH"
 mWriter.Send
 
 Exit Sub

@@ -286,7 +286,7 @@ Public Sub DisableHistoricalDataRequestPacing()
 Const ProcName As String = "DisableHistoricalDataRequestPacing"
 On Error GoTo Err
 
-getHistDataRequester mTwsAPI, True
+getHistDataRequester.DisableHistoricalDataRequestPacing
 
 Exit Sub
 
@@ -315,8 +315,6 @@ Set mTwsAPI = Nothing
 
 Set mTwsConnectionStateListeners = Nothing
 
-'????????????????????????????????????????????
-
 gReleaseClient Me
 
 Exit Sub
@@ -329,7 +327,7 @@ Public Sub FinishOrderRecovery()
 Const ProcName As String = "FinishOrderRecovery"
 On Error GoTo Err
 
-getOrderPlacer(mTwsAPI).FinishOrderRecovery
+getOrderPlacer.FinishOrderRecovery
 
 Exit Sub
 
@@ -344,7 +342,7 @@ On Error GoTo Err
 Static sContractDetailsFetcher As ContractDetailsFetcher
 If sContractDetailsFetcher Is Nothing Then
     Set sContractDetailsFetcher = New ContractDetailsFetcher
-    sContractDetailsFetcher.Initialise getContractDetailsRequester(mTwsAPI), mContractCache
+    sContractDetailsFetcher.Initialise getContractDetailsRequester, mContractCache
 End If
 
 Set GetContractStore = sContractDetailsFetcher
@@ -363,7 +361,7 @@ Static sHistoricalDataFetcher As HistoricalDataFetcher
 
 If sHistoricalDataFetcher Is Nothing Then
     Set sHistoricalDataFetcher = New HistoricalDataFetcher
-    sHistoricalDataFetcher.Initialise getHistDataRequester(mTwsAPI, False), getContractDetailsRequester(mTwsAPI), mContractCache
+    sHistoricalDataFetcher.Initialise getHistDataRequester, getContractDetailsRequester, mContractCache
 End If
 
 Set GetHistoricalDataStore = sHistoricalDataFetcher
@@ -386,7 +384,7 @@ If Not mTwsAPI.MarketDataConsumer Is Nothing Then
     Set lMarketDataFactory = mTwsAPI.MarketDataConsumer
 Else
     Set lMarketDataFactory = New MarketDataFactory
-    lMarketDataFactory.Initialise mTwsAPI, getContractDetailsRequester(mTwsAPI), mContractCache
+    lMarketDataFactory.Initialise mTwsAPI, getContractDetailsRequester, getHistDataRequester, mContractCache
     mTwsAPI.MarketDataConsumer = lMarketDataFactory
     mTwsAPI.MarketDepthConsumer = lMarketDataFactory
     
@@ -408,7 +406,7 @@ On Error GoTo Err
 Dim lOrderSubmitter As OrderSubmitter
 
 Set lOrderSubmitter = New OrderSubmitter
-lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer(mTwsAPI), getContractDetailsRequester(mTwsAPI), mContractCache
+lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer, getContractDetailsRequester, mContractCache
 
 AddTwsConnectionStateListener lOrderSubmitter
 Set CreateOrderSubmitter = lOrderSubmitter
@@ -489,7 +487,7 @@ Public Sub StartOrderRecovery( _
 Const ProcName As String = "StartOrderRecovery"
 On Error GoTo Err
 
-getOrderPlacer(mTwsAPI).StartOrderRecovery pOrderRecoveryListener, pStartFrom
+getOrderPlacer.StartOrderRecovery pOrderRecoveryListener, pStartFrom
 
 Exit Sub
 
@@ -517,20 +515,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getContractDetailsRequester( _
-                ByVal pApi As TwsAPI) As ContractDetailsRequester
+Private Function getContractDetailsRequester() As ContractDetailsRequester
 Const ProcName As String = "getContractDetailsRequester"
 On Error GoTo Err
 
 Dim lContractDetailsRequester As ContractDetailsRequester
 
-If Not pApi.ContractDetailsConsumer Is Nothing Then
-    Assert TypeOf pApi.ContractDetailsConsumer Is ContractDetailsRequester, "Tws is already configured with an incompatible IContractDetailsConsumer"
-    Set lContractDetailsRequester = pApi.ContractDetailsConsumer
+If Not mTwsAPI.ContractDetailsConsumer Is Nothing Then
+    Assert TypeOf mTwsAPI.ContractDetailsConsumer Is ContractDetailsRequester, "Tws is already configured with an incompatible IContractDetailsConsumer"
+    Set lContractDetailsRequester = mTwsAPI.ContractDetailsConsumer
 Else
     Set lContractDetailsRequester = New ContractDetailsRequester
-    lContractDetailsRequester.Initialise pApi, mContractCache
-    pApi.ContractDetailsConsumer = lContractDetailsRequester
+    lContractDetailsRequester.Initialise mTwsAPI, mContractCache
+    mTwsAPI.ContractDetailsConsumer = lContractDetailsRequester
     AddTwsConnectionStateListener lContractDetailsRequester
 End If
 
@@ -542,22 +539,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getHistDataRequester( _
-                ByVal pApi As TwsAPI, _
-                ByVal pDisableRequestPacing As Boolean) As HistDataRequester
+Private Function getHistDataRequester() As HistDataRequester
 Const ProcName As String = "getHistDataRequester "
 On Error GoTo Err
 
 Dim lHistDataRequester As HistDataRequester
 
-If Not pApi.HistDataConsumer Is Nothing Then
-    Assert TypeOf pApi.HistDataConsumer Is HistDataRequester, "Tws is already configured with an incompatible IHistDataConsumer"
-    Set lHistDataRequester = pApi.HistDataConsumer
+If Not mTwsAPI.HistDataConsumer Is Nothing Then
+    Assert TypeOf mTwsAPI.HistDataConsumer Is HistDataRequester, "Tws is already configured with an incompatible IHistDataConsumer"
+    Set lHistDataRequester = mTwsAPI.HistDataConsumer
 Else
     Set lHistDataRequester = New HistDataRequester
-    lHistDataRequester.Initialise pApi
-    pApi.HistDataConsumer = lHistDataRequester
-    If pDisableRequestPacing Then lHistDataRequester.DisableHistoricalDataRequestPacing
+    lHistDataRequester.Initialise mTwsAPI
+    mTwsAPI.HistDataConsumer = lHistDataRequester
     AddTwsConnectionStateListener lHistDataRequester
 End If
 
@@ -569,18 +563,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getOrderPlacer( _
-                ByVal pApi As TwsAPI) As OrderPlacer
+Private Function getOrderPlacer() As OrderPlacer
 Const ProcName As String = "getOrderPlacer"
 On Error GoTo Err
 
 Static sOrderPlacer As OrderPlacer
 
 If sOrderPlacer Is Nothing Then
-    Assert pApi.OrderInfoConsumer Is Nothing, "Tws is already configured with an incompatible IOrderInfoConsumer"
+    Assert mTwsAPI.OrderInfoConsumer Is Nothing, "Tws is already configured with an incompatible IOrderInfoConsumer"
     Set sOrderPlacer = New OrderPlacer
-    sOrderPlacer.Initialise pApi
-    pApi.OrderInfoConsumer = sOrderPlacer
+    sOrderPlacer.Initialise mTwsAPI
+    mTwsAPI.OrderInfoConsumer = sOrderPlacer
     AddTwsConnectionStateListener sOrderPlacer
 End If
 

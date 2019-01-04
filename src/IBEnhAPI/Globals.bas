@@ -83,7 +83,7 @@ With gContractSpecToTwsContract
     .Multiplier = pContractSpecifier.Multiplier
     If .CurrencyCode = "GBP" And .Multiplier <> 1 Then .Multiplier = .Multiplier * 100
     .OptRight = gOptionRightToTwsOptRight(pContractSpecifier.Right)
-    .Sectype = gSecTypeToTwsSecType(pContractSpecifier.Sectype)
+    .SecType = gSecTypeToTwsSecType(pContractSpecifier.SecType)
     .Strike = pContractSpecifier.Strike
     .Symbol = pContractSpecifier.Symbol
     If Not pContractSpecifier.ComboLegs Is Nothing Then
@@ -129,7 +129,7 @@ On Error GoTo Err
 Dim lContract As TwsContract
 Dim lContractDetails As TwsContractDetails
 
-Assert pContract.Specifier.Sectype <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
+Assert pContract.Specifier.SecType <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
 
 Set lContractDetails = New TwsContractDetails
 Set lContract = gContractSpecToTwsContract(pContract.Specifier)
@@ -551,7 +551,7 @@ Dim lBuilder As ContractBuilder
 
 With pTwsContractDetails
     With .Summary
-        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
+        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.SecType), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
         If .Expiry <> "" Then
             lBuilder.ExpiryDate = CDate(Left$(.Expiry, 4) & "/" & _
                                                 Mid$(.Expiry, 5, 2) & "/" & _

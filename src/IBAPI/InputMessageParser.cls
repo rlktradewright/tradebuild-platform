@@ -627,6 +627,16 @@ Debug.Print "Error msg: " & lErrorMsg
 
 mReader.LogInputMessage True
 
+' first handle some messages that relate to specific ids, but need to be handled
+' generically and treated as program errors, since they indicate that something is
+' wrong in this code
+Select Case lErrorCode
+Case 320, 321, 322, 323 ' server error when processing request
+    gLog "Error (" & lErrorCode & "; id=" & id & ") from Tws: " & lErrorMsg, ModuleName, ProcName
+    gNotifyUnhandledError Nothing, ProcName, ModuleName, , lErrorCode, "id=" & id & "; message=" & lErrorMsg
+    Exit Sub
+End Select
+
 Select Case gGetIdType(id)
 Case IdTypeContractData
     processContractError gGetCallersRequestIdFromTwsContractRequestId(id), lErrorCode, lErrorMsg
@@ -655,9 +665,6 @@ Case 316
     If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.ResetMarketDepth pReEstablish:=True
 Case 317
     If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.ResetMarketDepth pReEstablish:=False
-Case 321    ' invalid Request
-    gLog "Error (" & lErrorCode & "; id=" & id & ") from Tws: " & lErrorMsg, ModuleName, ProcName
-    If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiError lErrorCode, lErrorMsg
 Case 326    ' ClientID already in use
     gLog "TWS/Gateway reports clientID already in use", ModuleName, ProcName
     If Not mErrorAndNotificationConsumer Is Nothing Then mErrorAndNotificationConsumer.NotifyApiEvent lErrorCode, lErrorMsg
@@ -854,7 +861,7 @@ mReader.BeginCheckpointScope
     
     For i = i To sStartInfo.BarCount - 1
         mReader.BeginCheckpointScope
-            mReader.GetStringCheckpointed sBar.timeStamp, "Bar date"
+            mReader.GetStringCheckpointed sBar.Timestamp, "Bar date"
             mReader.GetDoubleCheckpointed sBar.OpenValue, "Open"
             mReader.GetDoubleCheckpointed sBar.HighValue, "High"
             mReader.GetDoubleCheckpointed sBar.LowValue, "Low"
@@ -1435,16 +1442,23 @@ Const ProcName As String = "getRealtimeBars"
 On Error GoTo Err
 
 Dim lReqId As Long: lReqId = mReader.GetLong("ReqId")
-Dim lTime As Date: lTime = gGetDateFromUnixSystemTime(mReader.GetDouble("System Time"))
-Dim lOpen As Double: lOpen = mReader.GetDouble("Open")
-Dim lHigh As Double: lHigh = mReader.GetDouble("High")
-Dim lLow As Double: lLow = mReader.GetDouble("Low")
-Dim lClose As Double: lClose = mReader.GetDouble("Close")
-Dim lVolume As Long: lVolume = mReader.GetLong("Volume")
-Dim lWap As Double: lWap = mReader.GetDouble("Wap")
-Dim lCount As Long: lCount = mReader.GetLong("Count")
+
+Dim lBar As TwsRealtimeBar
+
+With lBar
+    .Timestamp = gGetDateFromUnixSystemTime(mReader.GetDouble("Timestamp"))
+    .OpenValue = mReader.GetDouble("Open")
+    .HighValue = mReader.GetDouble("High")
+    .LowValue = mReader.GetDouble("Low")
+    .CloseValue = mReader.GetDouble("Close")
+    .Volume = mReader.GetLong("Volume")
+    .WAP = mReader.GetDouble("Wap")
+    .TickVolume = mReader.GetLong("TickVolume")
+End With
 
 mReader.LogInputMessage
+
+If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyRealtimeBar gGetCallersRequestIdFromTwsHistRequestId(lReqId), lBar
 
 Exit Sub
 

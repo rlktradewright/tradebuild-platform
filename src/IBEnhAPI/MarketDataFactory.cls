@@ -97,6 +97,7 @@ Private mMarketDepthTableNextIndex                  As Long
 Private mMarketDepthTableMaxUsedIndex               As Long
 
 Private mContractRequester                          As ContractDetailsRequester
+Private mHistoricalDataRequester                    As HistDataRequester
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -754,9 +755,11 @@ End Function
 Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pHistoricalDataRequester As HistDataRequester, _
                 ByVal pContractCache As TwsContractCache)
 Set mTwsAPI = pTwsAPI
 Set mContractRequester = pContractRequester
+Set mHistoricalDataRequester = pHistoricalDataRequester
 Set mContractCache = pContractCache
 End Sub
 
@@ -952,6 +955,14 @@ Then lIncarnation = 0
 incrementIncarnation = lIncarnation
 End Function
 
+Private Function isFTSE100Index(ByVal pContract As TwsContract) As Boolean
+isFTSE100Index = pContract.CurrencyCode = "GBP" And _
+                pContract.Exchange = "ICEEU" And _
+                pContract.LocalSymbol = "Z" And _
+                pContract.SecType = TwsSecTypeIndex And _
+                pContract.Symbol = "Z"
+End Function
+
 Private Function isReadyForData(ByRef pTickerTable() As TickerTableEntry, ByVal pStreamId As Long) As Boolean
 Const ProcName As String = "isReadyForData"
 On Error GoTo Err
@@ -1078,6 +1089,16 @@ If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServer
 If mMarketDataTable(pIndex).ContractDetails Is Nothing Then
     Assert Not mMarketDataTable(pIndex).ContractFuture Is Nothing, "Contract future is not available"
     prepareTickStream mMarketDataTable, mMarketDataTable(pIndex).ContractFuture, pIndex
+ElseIf isFTSE100Index(mMarketDataTable(pIndex).ContractDetails.Summary) Then
+    ' because IB no longer offer realtime data for the FTSE 100 index, but do still
+    ' allow RequestRealTimeBars, we call that and use the returned bars to deduce
+    ' the relevant ticks
+    Dim lRTBRequester As New RealtimeBarRequester
+    lRTBRequester.Initialise Me
+    mHistoricalDataRequester.RequestRealtimeBars _
+                                    getTickerIdFromIndex(pIndex), _
+                                    mMarketDataTable(pIndex).ContractDetails.Summary, _
+                                    lRTBRequester
 Else
     mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mMarketDataTable(pIndex).ContractDetails.Summary, "", False
 End If
@@ -1168,7 +1189,7 @@ Const ProcName As String = "validPrice"
 On Error GoTo Err
 
 If (pPrevPrice <> MaxDouble Or (pPrice <> 0# And pPrice <> -1# And pPrice <> -100#)) And _
-    IsValidPrice(pPrice, pPrevPrice, pContract.Specifier.Sectype, pContract.TickSize) _
+    IsValidPrice(pPrice, pPrevPrice, pContract.Specifier.SecType, pContract.TickSize) _
 Then
     validPrice = True
 Else

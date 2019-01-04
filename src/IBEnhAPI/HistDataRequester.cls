@@ -73,16 +73,17 @@ Private Const MaxConcurrentHistDataRequests         As Long = 5
 Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
 
-Private mRequests()                                 As HistoricalDataRequestTableEntry
-Private mRequestsIndex                              As Long
+Private mHistDataRequests()                         As HistoricalDataRequestTableEntry
+Private mHistDataRequestsIndex                      As Long
+Private mMaxHistDataRequestsIndex                   As Long
 
-Private mFirstFreeRequestsEntry                     As Long
+Private mFirstFreeHistDataRequestsEntry             As Long
 
-Private mFirstPendingRequestsEntry                  As Long
-Private mLastPendingRequestsEntry                   As Long
+Private mFirstPendingHistDataRequestsEntry          As Long
+Private mLastPendingHistDataRequestsEntry           As Long
 
-Private mFirstPendingPriorityRequestsEntry          As Long
-Private mLastPendingPriorityRequestsEntry           As Long
+Private mFirstPendingPriorityHistDataRequestsEntry  As Long
+Private mLastPendingPriorityHistDataRequestsEntry   As Long
 
 Private mTaskContext                                As TaskContext
 
@@ -94,17 +95,24 @@ Private mPacer                                      As HistDataRequestPacer
 
 Private mIsTwsConnectedToIBServers                  As Boolean
 
+Private mRealtimeBarRequests                        As SortedDictionary
+Private mMaxRealtimeBarRequests                     As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mRequests(7) As HistoricalDataRequestTableEntry
-mFirstFreeRequestsEntry = NullIndex
-mFirstPendingRequestsEntry = NullIndex
-mFirstPendingPriorityRequestsEntry = NullIndex
-mLastPendingRequestsEntry = NullIndex
-mLastPendingPriorityRequestsEntry = NullIndex
+ReDim mHistDataRequests(7) As HistoricalDataRequestTableEntry
+mFirstFreeHistDataRequestsEntry = NullIndex
+mFirstPendingHistDataRequestsEntry = NullIndex
+mFirstPendingPriorityHistDataRequestsEntry = NullIndex
+mLastPendingHistDataRequestsEntry = NullIndex
+mLastPendingPriorityHistDataRequestsEntry = NullIndex
+
+Set mRealtimeBarRequests = CreateSortedDictionary(KeyTypeInteger, False)
+
+mMaxRealtimeBarRequests = 4096
 End Sub
 
 '@================================================================================
@@ -116,8 +124,8 @@ Const ProcName As String = "IHistDataConsumer_EndHistData"
 On Error GoTo Err
 
 CompleteRequest pRequestId
-If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
-mRequests(pRequestId).Requester.EndHistData
+If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+mHistDataRequests(pRequestId).Requester.EndHistData
 
 Exit Sub
 
@@ -129,8 +137,8 @@ Private Sub IHistDataConsumer_NotifyBar(ByVal pRequestId As Long, pBar As TwsBar
 Const ProcName As String = "IHistDataConsumer_NotifyBar"
 On Error GoTo Err
 
-If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
-mRequests(pRequestId).Requester.NotifyBar pBar
+If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+mHistDataRequests(pRequestId).Requester.NotifyBar pBar
 
 Exit Sub
 
@@ -142,9 +150,35 @@ Private Sub IHistDataConsumer_NotifyError(ByVal pRequestId As Long, ByVal pError
 Const ProcName As String = "IHistDataConsumer_NotifyError"
 On Error GoTo Err
 
-CompleteRequest pRequestId
-If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
-mRequests(pRequestId).Requester.NotifyError pErrorCode, pErrorMsg
+If pRequestId <= mMaxHistDataRequestsIndex Then
+    CompleteRequest pRequestId
+    If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+    mHistDataRequests(pRequestId).Requester.NotifyError pErrorCode, pErrorMsg
+Else
+    Dim lRequest As RealtimeBarRequest
+    Set lRequest = mRealtimeBarRequests.Item(pRequestId)
+    
+    If lRequest.Cancelled Then Exit Sub
+    
+    lRequest.Requester.NotifyError lRequest.RequesterID, pErrorCode, pErrorMsg
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IHistDataConsumer_NotifyRealtimeBar(ByVal pRequestId As Long, pBar As TwsRealtimeBar)
+Const ProcName As String = "IHistDataConsumer_NotifyRealtimeBar"
+On Error GoTo Err
+
+Dim lRequest As RealtimeBarRequest
+Set lRequest = mRealtimeBarRequests.Item(pRequestId)
+
+If lRequest.Cancelled Then Exit Sub
+
+lRequest.Requester.NotifyRealtimeBar lRequest.RequesterID, pBar
 
 Exit Sub
 
@@ -270,7 +304,7 @@ Friend Sub CancelHistoricalDataRequest( _
 Const ProcName As String = "CancelHistoricalDataRequest"
 On Error GoTo Err
 
-Select Case mRequests(pRequesterId).State
+Select Case mHistDataRequests(pRequesterId).State
 Case StateFree
 
 Case StateAllocated
@@ -279,7 +313,7 @@ Case StateRequestQueued
     unqueueEntry pRequesterId
     Schedule
 Case StateRequestInProgress
-    mRequests(pRequesterId).State = StateRequestCancelling
+    mHistDataRequests(pRequesterId).State = StateRequestCancelling
     mTwsAPI.CancelHistoricalData pRequesterId
     
     ' it's possible that Tws has already sent the data but we haven't received it yet,
@@ -295,9 +329,41 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub CancelRealtimeBars( _
+                ByVal pRequesterId As Long)
+Const ProcName As String = "CancelRealtimeBars"
+On Error GoTo Err
+
+Dim en As Enumerator
+Set en = mRealtimeBarRequests.EntryEnumerator
+
+Do While en.MoveNext
+    Dim lDictEntry As DictionaryEntry
+    Set lDictEntry = en.Current
+    
+    Dim lRequest As RealtimeBarRequest
+    Set lRequest = lDictEntry.data
+    If lRequest.RequesterID = pRequesterId Then
+        lRequest.Cancelled = True
+        mTwsAPI.CancelRealtimeBars CInt(lDictEntry.Key)
+        ' We don't bother to delete the entry because
+        ' there is never likely to be more than a handful
+        ' of them
+        Exit Do
+    End If
+Loop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub DisableHistoricalDataRequestPacing()
 Const ProcName As String = "DisableHistoricalDataRequestPacing"
 On Error GoTo Err
+
+AssertArgument Not mIsRequestPacingDisabled, "Hisotrical data request pacing is already disabled"
 
 mIsRequestPacingDisabled = True
 Set mPacer = Nothing
@@ -338,6 +404,8 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mTwsAPI = pTwsAPI
+mMaxHistDataRequestsIndex = mTwsAPI.MaxHistoricalDataRequestId - mMaxRealtimeBarRequests
+
 Set mPacer = New HistDataRequestPacer
 
 StartTask Me, PriorityNormal
@@ -356,7 +424,7 @@ On Error GoTo Err
 Dim lIndex As Long
 
 lIndex = allocateEntry
-Set mRequests(lIndex).Requester = pRequester
+Set mHistDataRequests(lIndex).Requester = pRequester
 
 RegisterHistoricalDataRequestTask = lIndex
 
@@ -373,11 +441,37 @@ Friend Sub RequestHistoricalData( _
 Const ProcName As String = "RequestHistoricalData"
 On Error GoTo Err
 
-mRequests(pRequesterId).Request = pRequest
+mHistDataRequests(pRequesterId).Request = pRequest
 
 queueEntry pRequesterId, pPriority
 
 Schedule
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub RequestRealtimeBars( _
+                ByVal pRequesterId As Long, _
+                ByVal pContract As TwsContract, _
+                ByVal pRequester As RealtimeBarRequester)
+Const ProcName As String = "RequestRealtimeBars"
+On Error GoTo Err
+
+Static sNextRealtimeBarRequestId As Long
+If sNextRealtimeBarRequestId = 0 Then sNextRealtimeBarRequestId = mMaxHistDataRequestsIndex
+sNextRealtimeBarRequestId = sNextRealtimeBarRequestId + 1
+
+Assert sNextRealtimeBarRequestId <= mTwsAPI.MaxHistoricalDataRequestId, "Max number of realtime bar requests exceeded"
+
+Dim rtbRequest As New RealtimeBarRequest
+rtbRequest.Initialise pRequesterId, pRequester
+
+mRealtimeBarRequests.Add rtbRequest, sNextRealtimeBarRequestId
+
+mTwsAPI.RequestRealtimeBars sNextRealtimeBarRequestId, pContract, 5, "TRADES", False
 
 Exit Sub
 
@@ -402,7 +496,7 @@ Friend Function UnregisterHistoricalDataRequestTask( _
 Const ProcName As String = "UnregisterHistoricalDataRequestTask"
 On Error GoTo Err
 
-If mRequests(pRequesterId).State <> StateRequestCancelling Then releaseEntry pRequesterId
+If mHistDataRequests(pRequesterId).State <> StateRequestCancelling Then releaseEntry pRequesterId
 
 Exit Function
 
@@ -418,20 +512,22 @@ Private Function allocateEntry() As Long
 Const ProcName As String = "allocateEntry"
 On Error GoTo Err
 
-If mRequestsIndex < UBound(mRequests) Then
-    mRequestsIndex = mRequestsIndex + 1
-    allocateEntry = mRequestsIndex
-ElseIf mFirstFreeRequestsEntry <> NullIndex Then
-    allocateEntry = mFirstFreeRequestsEntry
-    mFirstFreeRequestsEntry = mRequests(mFirstFreeRequestsEntry).Next
+If mFirstFreeHistDataRequestsEntry <> NullIndex Then
+    allocateEntry = mFirstFreeHistDataRequestsEntry
+    mFirstFreeHistDataRequestsEntry = mHistDataRequests(mFirstFreeHistDataRequestsEntry).Next
+ElseIf mHistDataRequestsIndex < UBound(mHistDataRequests) Then
+    mHistDataRequestsIndex = mHistDataRequestsIndex + 1
+    allocateEntry = mHistDataRequestsIndex
 Else
-    ReDim Preserve mRequests(2 * (UBound(mRequests) + 1) - 1) As HistoricalDataRequestTableEntry
-    mRequestsIndex = mRequestsIndex + 1
-    allocateEntry = mRequestsIndex
+    ReDim Preserve mHistDataRequests(2 * (UBound(mHistDataRequests) + 1) - 1) As HistoricalDataRequestTableEntry
+    mHistDataRequestsIndex = mHistDataRequestsIndex + 1
+    allocateEntry = mHistDataRequestsIndex
 End If
 
-mRequests(allocateEntry).EarliestSubmissionTime = MaxDate
-mRequests(allocateEntry).State = StateAllocated
+Assert allocateEntry <= mMaxHistDataRequestsIndex, "Maximum number of outstanding historical data requests exceeded"
+
+mHistDataRequests(allocateEntry).EarliestSubmissionTime = MaxDate
+mHistDataRequests(allocateEntry).State = StateAllocated
 
 Exit Function
 
@@ -443,9 +539,9 @@ Private Sub CompleteRequest(ByVal pRequestId As Long)
 Const ProcName As String = "CompleteRequest"
 On Error GoTo Err
 
-mRequests(pRequestId).ActualSubmissionTime = 0
-mRequests(pRequestId).EarliestSubmissionTime = MaxDate
-mRequests(pRequestId).DelayReason = ""
+mHistDataRequests(pRequestId).ActualSubmissionTime = 0
+mHistDataRequests(pRequestId).EarliestSubmissionTime = MaxDate
+mHistDataRequests(pRequestId).DelayReason = ""
 If mConcurrentHistDataRequests > 0 Then mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
 Schedule
 
@@ -488,14 +584,14 @@ lPrevIndex = NullIndex
 
 Do While lIndex <> pIndex And lIndex <> NullIndex
     lPrevIndex = lIndex
-    lIndex = mRequests(lIndex).Next
+    lIndex = mHistDataRequests(lIndex).Next
 Loop
 
 If lIndex <> NullIndex Then
-    If lIndex = pFirstQueueIndex Then pFirstQueueIndex = mRequests(lIndex).Next
+    If lIndex = pFirstQueueIndex Then pFirstQueueIndex = mHistDataRequests(lIndex).Next
     If lIndex = pLastQueueIndex Then pLastQueueIndex = lPrevIndex
     
-    If lPrevIndex <> NullIndex Then mRequests(lPrevIndex).Next = mRequests(lIndex).Next
+    If lPrevIndex <> NullIndex Then mHistDataRequests(lPrevIndex).Next = mHistDataRequests(lIndex).Next
 End If
 removeEntry = (lIndex <> NullIndex)
 End Function
@@ -504,9 +600,9 @@ Private Function getDelayTillEarliestSubmission(ByRef pReason As String) As Long
 Const ProcName As String = "getDelayTillEarliestSubmission"
 On Error GoTo Err
 
-getDelayTillEarliestSubmission = getDelayTillEarliestSubmissionInQueue(pReason, mFirstPendingPriorityRequestsEntry)
+getDelayTillEarliestSubmission = getDelayTillEarliestSubmissionInQueue(pReason, mFirstPendingPriorityHistDataRequestsEntry)
 
-If getDelayTillEarliestSubmission = 0 Then getDelayTillEarliestSubmission = getDelayTillEarliestSubmissionInQueue(pReason, mFirstPendingRequestsEntry)
+If getDelayTillEarliestSubmission = 0 Then getDelayTillEarliestSubmission = getDelayTillEarliestSubmissionInQueue(pReason, mFirstPendingHistDataRequestsEntry)
 
 Exit Function
 
@@ -531,11 +627,11 @@ Dim lEarliestReason As String
 
 Do While lCurrIndex <> NullIndex
     setEarliestSubmissionTime lCurrIndex
-    If mRequests(lCurrIndex).EarliestSubmissionTime < lEarliest Then
-        lEarliest = mRequests(lCurrIndex).EarliestSubmissionTime
-        lEarliestReason = mRequests(lCurrIndex).DelayReason
+    If mHistDataRequests(lCurrIndex).EarliestSubmissionTime < lEarliest Then
+        lEarliest = mHistDataRequests(lCurrIndex).EarliestSubmissionTime
+        lEarliestReason = mHistDataRequests(lCurrIndex).DelayReason
     End If
-    lCurrIndex = mRequests(lCurrIndex).Next
+    lCurrIndex = mHistDataRequests(lCurrIndex).Next
 Loop
 
 If lEarliest <> MaxDate And lEarliest <> 0# Then
@@ -553,8 +649,8 @@ Private Function getNextReadyRequest() As Long
 Const ProcName As String = "getNextReadyRequest"
 On Error GoTo Err
 
-getNextReadyRequest = getNextReadyRequestFromQueue(mFirstPendingPriorityRequestsEntry)
-If getNextReadyRequest = NullIndex Then getNextReadyRequest = getNextReadyRequestFromQueue(mFirstPendingRequestsEntry)
+getNextReadyRequest = getNextReadyRequestFromQueue(mFirstPendingPriorityHistDataRequestsEntry)
+If getNextReadyRequest = NullIndex Then getNextReadyRequest = getNextReadyRequestFromQueue(mFirstPendingHistDataRequestsEntry)
 
 Exit Function
 
@@ -576,11 +672,11 @@ lCurrIndex = pFirstPendingEntry
 
 Do While lCurrIndex <> NullIndex
     setEarliestSubmissionTime lCurrIndex
-    If mRequests(lCurrIndex).EarliestSubmissionTime <= lTimestamp Then
+    If mHistDataRequests(lCurrIndex).EarliestSubmissionTime <= lTimestamp Then
         getNextReadyRequestFromQueue = lCurrIndex
         Exit Do
     End If
-    lCurrIndex = mRequests(lCurrIndex).Next
+    lCurrIndex = mHistDataRequests(lCurrIndex).Next
 Loop
 
 Exit Function
@@ -594,28 +690,28 @@ Const ProcName As String = "queueEntry"
 On Error GoTo Err
 
 If pPriority Then
-    If mFirstPendingPriorityRequestsEntry = NullIndex Then mFirstPendingPriorityRequestsEntry = pIndex
-    If mLastPendingPriorityRequestsEntry <> NullIndex Then mRequests(mLastPendingPriorityRequestsEntry).Next = pIndex
-    mLastPendingPriorityRequestsEntry = pIndex
-    mRequests(mLastPendingPriorityRequestsEntry).Next = NullIndex
+    If mFirstPendingPriorityHistDataRequestsEntry = NullIndex Then mFirstPendingPriorityHistDataRequestsEntry = pIndex
+    If mLastPendingPriorityHistDataRequestsEntry <> NullIndex Then mHistDataRequests(mLastPendingPriorityHistDataRequestsEntry).Next = pIndex
+    mLastPendingPriorityHistDataRequestsEntry = pIndex
+    mHistDataRequests(mLastPendingPriorityHistDataRequestsEntry).Next = NullIndex
 Else
-    If mFirstPendingRequestsEntry = NullIndex Then mFirstPendingRequestsEntry = pIndex
-    If mLastPendingRequestsEntry <> NullIndex Then mRequests(mLastPendingRequestsEntry).Next = pIndex
-    mLastPendingRequestsEntry = pIndex
-    mRequests(mLastPendingRequestsEntry).Next = NullIndex
+    If mFirstPendingHistDataRequestsEntry = NullIndex Then mFirstPendingHistDataRequestsEntry = pIndex
+    If mLastPendingHistDataRequestsEntry <> NullIndex Then mHistDataRequests(mLastPendingHistDataRequestsEntry).Next = pIndex
+    mLastPendingHistDataRequestsEntry = pIndex
+    mHistDataRequests(mLastPendingHistDataRequestsEntry).Next = NullIndex
 End If
 
-mRequests(pIndex).State = StateRequestQueued
+mHistDataRequests(pIndex).State = StateRequestQueued
 
 If pPriority Then
     gLog "Queue priority entry " & pIndex & _
-                "; FirstPriorityEntry=" & mFirstPendingPriorityRequestsEntry & _
-                "; LastPriorityEntry=" & mLastPendingPriorityRequestsEntry, _
+                "; FirstPriorityEntry=" & mFirstPendingPriorityHistDataRequestsEntry & _
+                "; LastPriorityEntry=" & mLastPendingPriorityHistDataRequestsEntry, _
                 ModuleName, ProcName, , LogLevelDetail
 Else
     gLog "Queue entry " & pIndex & _
-                "; FirstEntry=" & mFirstPendingRequestsEntry & _
-                "; LastEntry=" & mLastPendingRequestsEntry, _
+                "; FirstEntry=" & mFirstPendingHistDataRequestsEntry & _
+                "; LastEntry=" & mLastPendingHistDataRequestsEntry, _
                 ModuleName, ProcName, , LogLevelDetail
 End If
 
@@ -631,15 +727,15 @@ On Error GoTo Err
 
 Dim lBlankRequest As TwsHistoricalDataRequest
 
-mRequests(pIndex).State = StateFree
-mRequests(pIndex).Next = mFirstFreeRequestsEntry
-mFirstFreeRequestsEntry = pIndex
-mRequests(pIndex).State = StateFree
-mRequests(pIndex).ActualSubmissionTime = 0
-mRequests(pIndex).EarliestSubmissionTime = 0
-mRequests(pIndex).Request = lBlankRequest
-mRequests(pIndex).DelayReason = ""
-Set mRequests(pIndex).Requester = Nothing
+mHistDataRequests(pIndex).State = StateFree
+mHistDataRequests(pIndex).Next = mFirstFreeHistDataRequestsEntry
+mFirstFreeHistDataRequestsEntry = pIndex
+mHistDataRequests(pIndex).State = StateFree
+mHistDataRequests(pIndex).ActualSubmissionTime = 0
+mHistDataRequests(pIndex).EarliestSubmissionTime = 0
+mHistDataRequests(pIndex).Request = lBlankRequest
+mHistDataRequests(pIndex).DelayReason = ""
+Set mHistDataRequests(pIndex).Requester = Nothing
 
 Exit Function
 
@@ -687,13 +783,13 @@ On Error GoTo Err
 Dim lIndex As Long
 Dim lCurrIndex As Long
 
-lIndex = mFirstPendingRequestsEntry
+lIndex = mFirstPendingHistDataRequestsEntry
 
 Do While lIndex <> NullIndex And mConcurrentHistDataRequests < MaxConcurrentHistDataRequests
     lCurrIndex = lIndex
-    lIndex = mRequests(lIndex).Next
-    mTwsAPI.RequestHistoricalData lCurrIndex, mRequests(lCurrIndex).Request
-    mRequests(lCurrIndex).ActualSubmissionTime = GetTimestamp
+    lIndex = mHistDataRequests(lIndex).Next
+    mTwsAPI.RequestHistoricalData lCurrIndex, mHistDataRequests(lCurrIndex).Request
+    mHistDataRequests(lCurrIndex).ActualSubmissionTime = GetTimestamp
         
     mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
         
@@ -713,9 +809,9 @@ Dim lReason As String
 Const ProcName As String = "setEarliestSubmissionTime"
 On Error GoTo Err
 
-If mRequests(pIndex).EarliestSubmissionTime = MaxDate Then
-    mRequests(pIndex).EarliestSubmissionTime = mPacer.GetEarliestSubmissionTime(mRequests(pIndex).Request, lReason)
-    mRequests(pIndex).DelayReason = lReason
+If mHistDataRequests(pIndex).EarliestSubmissionTime = MaxDate Then
+    mHistDataRequests(pIndex).EarliestSubmissionTime = mPacer.GetEarliestSubmissionTime(mHistDataRequests(pIndex).Request, lReason)
+    mHistDataRequests(pIndex).DelayReason = lReason
 End If
 
 Exit Sub
@@ -728,9 +824,9 @@ Private Sub submitEntry(ByVal pIndex As Long)
 Const ProcName As String = "submitEntry"
 On Error GoTo Err
 
-mTwsAPI.RequestHistoricalData pIndex, mRequests(pIndex).Request
-mRequests(pIndex).ActualSubmissionTime = mPacer.RecordSubmission(mRequests(pIndex).Request)
-mRequests(pIndex).State = StateRequestInProgress
+mTwsAPI.RequestHistoricalData pIndex, mHistDataRequests(pIndex).Request
+mHistDataRequests(pIndex).ActualSubmissionTime = mPacer.RecordSubmission(mHistDataRequests(pIndex).Request)
+mHistDataRequests(pIndex).State = StateRequestInProgress
 unqueueEntry pIndex
 
 mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
@@ -745,18 +841,18 @@ Private Sub unqueueEntry(ByVal pIndex As Long)
 Const ProcName As String = "unqueueEntry"
 On Error GoTo Err
 
-Assert (mFirstPendingRequestsEntry <> NullIndex And mLastPendingRequestsEntry <> NullIndex) Or _
-    (mFirstPendingPriorityRequestsEntry <> NullIndex And mLastPendingPriorityRequestsEntry <> NullIndex), "No pending entries"
+Assert (mFirstPendingHistDataRequestsEntry <> NullIndex And mLastPendingHistDataRequestsEntry <> NullIndex) Or _
+    (mFirstPendingPriorityHistDataRequestsEntry <> NullIndex And mLastPendingPriorityHistDataRequestsEntry <> NullIndex), "No pending entries"
 
-If removeEntry(pIndex, mFirstPendingPriorityRequestsEntry, mLastPendingPriorityRequestsEntry) Then
+If removeEntry(pIndex, mFirstPendingPriorityHistDataRequestsEntry, mLastPendingPriorityHistDataRequestsEntry) Then
     gLogger.Log "Unqueue priority entry " & pIndex & _
-                "; FirstPriorityEntry=" & mFirstPendingPriorityRequestsEntry & _
-                "; LastPriorityEntry=" & mLastPendingPriorityRequestsEntry, _
+                "; FirstPriorityEntry=" & mFirstPendingPriorityHistDataRequestsEntry & _
+                "; LastPriorityEntry=" & mLastPendingPriorityHistDataRequestsEntry, _
                 ProcName, ModuleName, LogLevelMediumDetail
-ElseIf removeEntry(pIndex, mFirstPendingRequestsEntry, mLastPendingRequestsEntry) Then
+ElseIf removeEntry(pIndex, mFirstPendingHistDataRequestsEntry, mLastPendingHistDataRequestsEntry) Then
     gLogger.Log "Unqueue entry " & pIndex & _
-                "; FirstEntry=" & mFirstPendingRequestsEntry & _
-                "; LastEntry=" & mLastPendingRequestsEntry, _
+                "; FirstEntry=" & mFirstPendingHistDataRequestsEntry & _
+                "; LastEntry=" & mLastPendingHistDataRequestsEntry, _
                 ProcName, ModuleName, LogLevelMediumDetail
 Else
     Assert False, "Entry not found"

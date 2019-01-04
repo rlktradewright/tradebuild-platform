@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IHistDataConsumer"
+Attribute VB_Name = "RealtimeBarRequest"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,11 +38,15 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IHistDataConsumer"
+Private Const ModuleName                            As String = "RealtimeBarRequest"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mCancelled                                  As Boolean
+Private mRequesterID                                As Long
+Private mRequester                                  As RealtimeBarRequester
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,30 +64,29 @@ Private Const ModuleName                            As String = "IHistDataConsum
 ' Properties
 '@================================================================================
 
+Friend Property Let Cancelled(ByVal Value As Boolean)
+mCancelled = Value
+End Property
+
+Friend Property Get Cancelled() As Boolean
+Cancelled = mCancelled
+End Property
+
+Friend Property Get RequesterID() As Long
+RequesterID = mRequesterID
+End Property
+
+Friend Property Get Requester() As RealtimeBarRequester
+Set Requester = mRequester
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub EndHistData(ByVal pRequestId As Long)
-End Sub
-
-Public Sub NotifyBar(ByVal pRequestId As Long, ByRef pBar As TwsBar)
-End Sub
-
-Public Sub NotifyError( _
-                ByVal pRequestId As Long, _
-                ByVal pErrorCode As Long, _
-                ByVal pErrorMsg As String)
-End Sub
-
-Public Sub NotifyRealtimeBar(ByVal pRequestId As Long, ByRef pBar As TwsRealtimeBar)
-End Sub
-
-Public Sub StartHistData( _
-                ByVal pRequestId As Long, _
-                ByVal pStartDate As String, _
-                ByVal pEndDate As String, _
-                ByVal pBarCount As Long)
+Friend Sub Initialise(ByVal pRequesterId As Long, ByVal pRequester As RealtimeBarRequester)
+mRequesterID = pRequesterId
+Set mRequester = pRequester
 End Sub
 
 '@================================================================================
