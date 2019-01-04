@@ -568,20 +568,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyError( _
-                ByVal pErrorCode As Long, _
-                ByVal pErrorMsg As String)
-Const ProcName As String = "NotifyError"
-On Error GoTo Err
-
-mDataSources.NotifyError pErrorCode, pErrorMsg
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Friend Sub RemoveMarketDataSource(ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "RemoveMarketDataSource"
 On Error GoTo Err

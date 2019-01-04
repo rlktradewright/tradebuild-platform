@@ -1589,22 +1589,9 @@ Friend Sub SetError( _
 Const ProcName As String = "SetError"
 On Error GoTo Err
 
-Dim ev As ErrorEventData
-Set ev.Source = Me
-ev.ErrorCode = pErrorCode
-ev.ErrorMessage = pErrorMessage
+FireError pErrorCode, pErrorMessage
 
-updateCurrentErrorListeners
-If mSomeCurrentErrorListeners Then
-    Dim lListener As IErrorListener
-    Dim i As Long
-    For i = 0 To UBound(mCurrentErrorListeners)
-        Set lListener = mCurrentErrorListeners(i)
-        lListener.Notify ev
-    Next
-End If
-
-mErrorMessage = ev.ErrorMessage
+mErrorMessage = pErrorMessage
 setState MarketDataSourceStateError
 
 Exit Sub

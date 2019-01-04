@@ -137,29 +137,6 @@ Friend Sub Initialise(ByVal pDataSourceBase As DataSourceBase)
 Set mDataSourceBaseRef = CreateWeakReference(pDataSourceBase)
 End Sub
 
-Friend Sub NotifyError( _
-                ByVal pErrorCode As Long, _
-                ByVal pErrorMsg As String)
-Const ProcName As String = "NotifyError"
-On Error GoTo Err
-
-updateCurrentDataSources
-
-If mSomeCurrentDataSources Then
-    Dim lDataSource As MarketDataSource
-    Dim i As Long
-    For i = 0 To UBound(mCurrentDataSources)
-        Set lDataSource = mCurrentDataSources(i)
-        lDataSource.SetError pErrorCode, pErrorMsg
-    Next
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Friend Sub NotifyMarketDataError( _
                 ByVal pErrorCode As Long, _
                 ByVal pErrorMsg As String)
@@ -173,7 +150,7 @@ If mSomeCurrentDataSources Then
     Dim i As Long
     For i = 0 To UBound(mCurrentDataSources)
         Set lDataSource = mCurrentDataSources(i)
-        If lDataSource.SubscribedToMarketData Then lDataSource.FireError pErrorCode, pErrorMsg
+        If lDataSource.SubscribedToMarketData Then lDataSource.SetError pErrorCode, pErrorMsg
     Next
 End If
 
