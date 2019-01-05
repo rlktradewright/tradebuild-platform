@@ -589,7 +589,14 @@ Public Sub CancelHistoricalData( _
 Const ProcName As String = "CancelHistoricalData"
 On Error GoTo Err
 
-cancelHistDataRequest pRequestId
+If mConnectionState = TwsConnConnected Then
+    Const VERSION As Long = 1
+
+    mWriter.AddMessageId CANCEL_HISTORICAL_DATA
+    mWriter.AddString VERSION, "Version"
+    mWriter.AddString getTwsHistRequestIdFromCallersRequestId(pRequestId), "Request id"
+    mWriter.Send
+End If
 
 Exit Sub
 
@@ -601,7 +608,14 @@ Public Sub CancelMarketData(ByVal pTickerId As Long)
 Const ProcName As String = "CancelMarketData"
 On Error GoTo Err
 
-cancelMarketDataEx pTickerId
+If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
+
+Const VERSION = 2
+
+mWriter.AddMessageId CANCEL_MKT_DATA
+mWriter.AddString VERSION, "Version"
+mWriter.AddString getTwsMarketDataRequestIdFromCallersRequestId(pTickerId), "Ticker id"
+mWriter.Send
 
 Exit Sub
 
@@ -1211,6 +1225,8 @@ AssertArgument mServerVersion >= MIN_SERVER_VER_ACCT_SUMMARY, "Account summary r
 
 Const VERSION = 1
 
+gLog "Requesting account summary: requester id=" & pReqId, ModuleName, ProcName
+
 mWriter.AddMessageId REQ_ACCOUNT_SUMMARY
 mWriter.AddString VERSION, "Version"
 mWriter.AddString pReqId, "ReqId"
@@ -1232,6 +1248,8 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 2
 
+gLog "Requesting account updates", ModuleName, ProcName
+
 mWriter.AddMessageId REQ_ACCT_DATA
 mWriter.AddString VERSION, "Version"
 mWriter.AddBoolean subscribe, "Subscribe"
@@ -1251,9 +1269,10 @@ Const ProcName As String = "RequestAllOpenOrders"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-                            
 
 Const VERSION = 1
+
+gLog "Requesting all open orders", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_ALL_OPEN_ORDERS
 mWriter.AddString VERSION, "Version"
@@ -1273,6 +1292,8 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
+gLog "Requesting auto open orders", ModuleName, ProcName
+
 mWriter.AddMessageId REQ_AUTO_OPEN_ORDERS
 mWriter.AddString VERSION, "Version"
 mWriter.AddBoolean autoBind, "Autobind"
@@ -1290,7 +1311,40 @@ Public Sub RequestContractDetails( _
 Const ProcName As String = "RequestContractDetails"
 On Error GoTo Err
 
-reqContractDetails pRequestId, pContract
+Const VERSION = 7
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+AssertArgument pContract.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
+AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
+
+Dim lApiId As Long
+lApiId = getTwsContractRequestIdFromCallersRequestId(pRequestId)
+
+gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
+
+mWriter.AddMessageId REQ_CONTRACT_DATA
+mWriter.AddString VERSION, "Version"
+
+mWriter.AddString lApiId, "Request id"
+
+With pContract
+    mWriter.AddString .ConId, "Contract id"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    mWriter.AddString IIf(.Exchange = "", "*", .Exchange), "Exchange"
+    mWriter.AddString .CurrencyCode, "Currency"
+    
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
+    mWriter.AddBoolean True, "Include expired"
+    mWriter.AddString .SecIdType, "SecIdType"
+    mWriter.AddString .SecId, "SecId"
+End With
+mWriter.Send
 
 Exit Sub
 
@@ -1326,10 +1380,15 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 3
 
+Dim lApiId As Long
+lApiId = getTwsExecutionsRequestIdFromCallersRequestId(pRequestId)
+
+gLog "Requesting executions: requester id=" & pRequestId & "; api id=" & lApiId, ModuleName, ProcName
+
 mWriter.AddMessageId REQ_EXECUTIONS
 mWriter.AddString VERSION, "Version"
 
-mWriter.AddString getTwsExecutionsRequestIdFromCallersRequestId(pRequestId), "ReqId"
+mWriter.AddString lApiId, "ReqId"
 
 Dim theFilter As TwsExecutionFilter
 If filter Is Nothing Then
@@ -1391,6 +1450,8 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 2
 
+gLog "Requesting fundamental data: requester id=" & pReqId & "; contract=" & pContract.ToString, ModuleName, ProcName
+
 mWriter.AddMessageId REQ_FUNDAMENTAL_DATA
 mWriter.AddString VERSION, "Version"
 mWriter.AddString pReqId, "ReqId"
@@ -1419,6 +1480,8 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
+gLog "Requesting global cancel", ModuleName, ProcName
+
 mWriter.AddMessageId REQ_GLOBAL_CANCEL
 mWriter.AddString VERSION, "Version"
 mWriter.Send
@@ -1435,7 +1498,71 @@ Public Sub RequestHistoricalData( _
 Const ProcName As String = "RequestHistoricalData"
 On Error GoTo Err
 
-reqHistoricalData pRequestId, pRequest
+Const VERSION = 5
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pRequest.contract.TradingClass = "" And pRequest.contract.ConId = 0), "ConId and TradingClass properties not supported"
+
+Dim lApiId As Long
+lApiId = getTwsHistRequestIdFromCallersRequestId(pRequestId)
+
+gLog "Requesting historical data for: " & UCase$(pRequest.contract.LocalSymbol) & _
+            "; requester id=" & pRequestId & _
+            "; api id=" & lApiId & _
+            "; barsize=" & pRequest.BarSizeSetting & _
+            "; endTime=" & pRequest.EndDateTime & _
+            "; duration=" & pRequest.Duration, _
+            ModuleName, ProcName
+
+mWriter.AddMessageId REQ_HISTORICAL_DATA
+mWriter.AddString VERSION, "Version"
+mWriter.AddString lApiId, "Request id"
+
+With pRequest.contract
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .ConId, "Contract id"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    mWriter.AddString .Exchange, "Exchange"
+    mWriter.AddString .PrimaryExch, "Primary Exchange"
+    mWriter.AddString .CurrencyCode, "Currency"
+    
+    Dim lExpired  As Boolean
+    lExpired = gContractHasExpired(pRequest.contract)
+    mWriter.AddString IIf(lExpired, "", UCase$(.LocalSymbol)), "Local Symbol"
+    mWriter.AddString .TradingClass, "Trading Class"
+    mWriter.AddString IIf(lExpired, 1, 0), "Include expired"   ' can't include expired for non-expiring contracts
+    
+End With
+
+mWriter.AddString pRequest.EndDateTime, "End date"
+mWriter.AddString pRequest.BarSizeSetting, "Bar Size"
+
+mWriter.AddString pRequest.Duration, "Duration"
+mWriter.AddString 0, "Use RTH"
+mWriter.AddString pRequest.WhatToShow, "What to show"
+
+mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
+
+If pRequest.contract.Sectype = TwsSecTypeCombo Then
+    mWriter.AddString pRequest.contract.ComboLegs.Count, "Combo legs count"
+    Dim lComboLeg As TwsComboLeg
+    Dim i As Long
+    For Each lComboLeg In pRequest.contract.ComboLegs
+        With lComboLeg
+            i = i + 1
+            mWriter.AddString .ConId, "ConId" & i
+            mWriter.AddString .Ratio, "Ratio" & i
+            mWriter.AddString gTwsOrderActionToString(.Action), "Action" & i
+            mWriter.AddString .Exchange, "Exchange" & i
+        End With
+    Next
+End If
+
+mWriter.Send
 
 Exit Sub
 
@@ -1490,432 +1617,18 @@ On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-reqMarketData pTickerId, pContract, pGenericTicks, pSnapshot
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestMarketDataType(ByVal pMarketDataType As Long)
-Const ProcName As String = "RequestMarketDataType"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-Const VERSION = 1
-
-mWriter.AddMessageId REQ_MARKET_DATA_TYPE
-mWriter.AddString VERSION, "Version"
-mWriter.AddString pMarketDataType, "MarketDataType"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestMarketDepth( _
-                ByVal pTickerId As Long, _
-                ByVal pContract As TwsContract, _
-                Optional ByVal pNumberOfRows As Long = 20)
-Const ProcName As String = "RequestMarketDepth"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-reqMarketDepth pTickerId, pContract, pNumberOfRows
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestNewsBulletins(allMsgs As Boolean)
-Const ProcName As String = "RequestNewsBulletins"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-Const VERSION = 1
-
-mWriter.AddMessageId REQ_NEWS_BULLETINS
-mWriter.AddString VERSION, "Version"
-mWriter.AddString allMsgs, "All messages"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestOpenOrders()
-Const ProcName As String = "RequestOpenOrders"
-On Error GoTo Err
-
-Const VERSION = 1
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-mWriter.AddMessageId REQ_OPEN_ORDERS
-mWriter.AddString VERSION, "Version"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestPositions()
-Const ProcName As String = "RequestPositions"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-AssertArgument mServerVersion >= MIN_SERVER_VER_ACCT_SUMMARY, "Position requests not supported"
-
-Const VERSION = 1
-
-mWriter.AddMessageId REQ_POSITIONS
-mWriter.AddString VERSION, "Version"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestRealTimeBars( _
-                ByVal pTickerId As Long, _
-                ByVal pContract As TwsContract, _
-                ByVal pBarSize As Long, _
-                ByVal pWhatToShow As String, _
-                ByVal pUseRTH As Boolean)
-Const ProcName As String = "RequestRealTimeBars"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.TradingClass = "" And pContract.ConId = 0), "ConId and TradingClass properties in RequestRealTimeBars not supported"
-
-Const VERSION = 2
-
-gLog "Requesting realtime bars: ticker id=" & pTickerId & "; contract=" & pContract.ToString, ModuleName, ProcName
-
-mWriter.AddMessageId REQ_REAL_TIME_BARS
-mWriter.AddString VERSION, "Version"
-mWriter.AddString getTwsHistRequestIdFromCallersRequestId(pTickerId), "TickerId"
-
-' send contract fields
-If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.ConId, "ConId"
-mWriter.AddString pContract.Symbol, "Symbol"
-mWriter.AddString gTwsSecTypeToShortString(pContract.Sectype), "Sectype"
-mWriter.AddString pContract.Expiry, "Expiry"
-mWriter.AddString pContract.Strike, "Strike"
-mWriter.AddString gTwsOptionRightToString(pContract.OptRight), "Right"
-mWriter.AddString IIf(pContract.Multiplier = 1, "", pContract.Multiplier), "Multiplier"
-mWriter.AddString pContract.Exchange, "Exchange"
-mWriter.AddString pContract.PrimaryExch, "PrimaryExch"
-mWriter.AddString pContract.CurrencyCode, "Currency"
-mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
-If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "TradingClass"
-mWriter.AddString pBarSize, "BarSize"   ' this parameter is not currently used
-mWriter.AddString pWhatToShow, "WhatToShow"
-mWriter.AddBoolean pUseRTH, "UseRTH"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestScannerParameters()
-Const ProcName As String = "RequestScannerParameters"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-Const VERSION = 1
-
-mWriter.AddMessageId REQ_SCANNER_PARAMETERS
-mWriter.AddString VERSION, "Version"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestScannerSubscription(ByVal pTickerId As Long, ByVal pSubscription As TwsScannerSubscription)
-Const ProcName As String = "RequestScannerSubscription"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-Const VERSION = 3
-
-mWriter.AddMessageId REQ_SCANNER_SUBSCRIPTION
-mWriter.AddString VERSION, "Version"
-mWriter.AddString pTickerId, "Ticker Id"
-mWriter.AddLongMax pSubscription.NumberOfRows, "NumberOfRows"
-mWriter.AddString pSubscription.Instrument, "Instrument"
-mWriter.AddString pSubscription.LocationCode, "LocationCode"
-mWriter.AddString pSubscription.ScanCode, "ScanCode"
-mWriter.AddDoubleMax pSubscription.AbovePrice, "AbovePrice"
-mWriter.AddDoubleMax pSubscription.BelowPrice, "BelowPrice"
-mWriter.AddLongMax pSubscription.AboveVolume, "AboveVolume"
-mWriter.AddDoubleMax pSubscription.MarketCapAbove, "MarketCapAbove"
-mWriter.AddDoubleMax pSubscription.MarketCapBelow, "MarketCapBelow"
-mWriter.AddString pSubscription.MoodyRatingAbove, "MoodyRatingAbove"
-mWriter.AddString pSubscription.MoodyRatingBelow, "MoodyRatingBelow"
-mWriter.AddString pSubscription.SpRatingAbove, "SpRatingAbove"
-mWriter.AddString pSubscription.SpRatingBelow, "SpRatingBelow"
-mWriter.AddString pSubscription.MaturityDateAbove, ""
-mWriter.AddString pSubscription.MaturityDateBelow, "MaturityDateBelow"
-mWriter.AddDoubleMax pSubscription.CouponRateAbove, "CouponRateAbove"
-mWriter.AddDoubleMax pSubscription.CouponRateBelow, "CouponRateBelow"
-mWriter.AddString pSubscription.ExcludeConvertible, "ExcludeConvertible"
-mWriter.AddLongMax pSubscription.AverageOptionVolumeAbove, "AverageOptionVolumeAbove"
-mWriter.AddString pSubscription.ScannerSettingPairs, "ScannerSettingPairs"
-mWriter.AddString pSubscription.StockTypeFilter, "StockTypeFilter"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub SetTwsLogLevel(ByVal pLogLevel As TwsLogLevels)
-mLogLevel = pLogLevel
-End Sub
-
-'================================================================================
-' Helper Functions
-'================================================================================
-
-Private Sub cancelHistDataRequest( _
-                ByVal pRequestId As Long)
-Const ProcName As String = "cancelHistDataRequest"
-On Error GoTo Err
-
-If mConnectionState = TwsConnConnected Then
-    Const VERSION As Long = 1
-
-    mWriter.AddMessageId CANCEL_HISTORICAL_DATA
-    mWriter.AddString VERSION, "Version"
-    mWriter.AddString getTwsHistRequestIdFromCallersRequestId(pRequestId), "Request id"
-    mWriter.Send
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Private Sub cancelMarketDataEx(ByVal pTickerId As Long)
-Const ProcName As String = "cancelMarketDataEx"
-On Error GoTo Err
-
-If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
-
-Const VERSION = 2
-
-mWriter.AddMessageId CANCEL_MKT_DATA
-mWriter.AddString VERSION, "Version"
-mWriter.AddString getTwsMarketDataRequestIdFromCallersRequestId(pTickerId), "Ticker id"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Private Function getTwsContractRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersContractRequestId, "Max request id is " & MaxCallersContractRequestId
-getTwsContractRequestIdFromCallersRequestId = pId + BaseContractRequestId
-End Function
-
-Private Function getTwsExecutionsRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersExecutionsRequestId, "Max request id is " & MaxCallersExecutionsRequestId
-getTwsExecutionsRequestIdFromCallersRequestId = pId + BaseExecutionsRequestId
-End Function
-
-Private Function getTwsHistRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersHistoricalDataRequestId, "Max request id is " & MaxCallersHistoricalDataRequestId
-getTwsHistRequestIdFromCallersRequestId = pId + BaseHistoricalDataRequestId
-End Function
-
-Private Function getTwsMarketDataRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersMarketDataRequestId, "Max request id is " & MaxCallersMarketDataRequestId
-getTwsMarketDataRequestIdFromCallersRequestId = pId + BaseMarketDataRequestId
-End Function
-
-Private Function getTwsMarketDepthRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersMarketDepthRequestId, "Max request id is " & MaxCallersMarketDepthRequestId
-getTwsMarketDepthRequestIdFromCallersRequestId = pId + BaseMarketDepthRequestId
-End Function
-
-Private Function legOpenCloseToString(ByVal Value As TwsLegOpenCloseCodes) As String
-Select Case Value
-Case TwsLegOpenCloseCodes.TwsLegOpenCloseSame, _
-        TwsLegOpenCloseCodes.TwsLegOpenCloseOpen, _
-        TwsLegOpenCloseCodes.TwsLegOpenCloseClose, _
-        TwsLegOpenCloseCodes.TwsLegOpenCloseUnknown
-    legOpenCloseToString = CStr(Value)
-Case Else
-    Assert False, "Invalid leg open/close value"
-End Select
-End Function
-
-Private Sub reqContractDetails( _
-                ByVal pRequestId As Long, _
-                ByVal pContract As TwsContract)
-Const ProcName As String = "reqContractDetails"
-On Error GoTo Err
-
-Const VERSION = 7
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument pContract.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
-AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
-
-gLog "Requesting contract details: request id=" & pRequestId & "; contract=" & pContract.ToString, ModuleName, ProcName
-
-mWriter.AddMessageId REQ_CONTRACT_DATA
-mWriter.AddString VERSION, "Version"
-
-mWriter.AddString getTwsContractRequestIdFromCallersRequestId(pRequestId), "Request id"
-
-With pContract
-    mWriter.AddString .ConId, "Contract id"
-    mWriter.AddString .Symbol, "Symbol"
-    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
-    mWriter.AddString .Expiry, "Expiry"
-    mWriter.AddDouble .Strike, "Strike"
-    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
-    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
-    mWriter.AddString IIf(.Exchange = "", "*", .Exchange), "Exchange"
-    mWriter.AddString .CurrencyCode, "Currency"
-    
-    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
-    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
-    mWriter.AddBoolean True, "Include expired"
-    mWriter.AddString .SecIdType, "SecIdType"
-    mWriter.AddString .SecId, "SecId"
-End With
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Private Sub reqHistoricalData( _
-                ByVal pRequestId As Long, _
-                ByRef pRequest As TwsHistoricalDataRequest)
-Const ProcName As String = "reqHistoricalData"
-On Error GoTo Err
-
-Const VERSION = 5
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pRequest.contract.TradingClass = "" And pRequest.contract.ConId = 0), "ConId and TradingClass properties not supported"
-
-Dim lTwsId As Long
-lTwsId = getTwsHistRequestIdFromCallersRequestId(pRequestId)
-
-gLog "Requesting historical data for: " & UCase$(pRequest.contract.LocalSymbol) & _
-            "; id=" & lTwsId & _
-            "; barsize=" & pRequest.BarSizeSetting & _
-            "; endTime=" & pRequest.EndDateTime & _
-            "; duration=" & pRequest.Duration, _
-            ModuleName, ProcName
-
-mWriter.AddMessageId REQ_HISTORICAL_DATA
-mWriter.AddString VERSION, "Version"
-mWriter.AddString lTwsId, "Request id"
-
-With pRequest.contract
-    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .ConId, "Contract id"
-    mWriter.AddString .Symbol, "Symbol"
-    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
-    mWriter.AddString .Expiry, "Expiry"
-    mWriter.AddDouble .Strike, "Strike"
-    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
-    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
-    mWriter.AddString .Exchange, "Exchange"
-    mWriter.AddString .PrimaryExch, "Primary Exchange"
-    mWriter.AddString .CurrencyCode, "Currency"
-    
-    Dim lExpired  As Boolean
-    lExpired = gContractHasExpired(pRequest.contract)
-    mWriter.AddString IIf(lExpired, "", UCase$(.LocalSymbol)), "Local Symbol"
-    mWriter.AddString .TradingClass, "Trading Class"
-    mWriter.AddString IIf(lExpired, 1, 0), "Include expired"   ' can't include expired for non-expiring contracts
-    
-End With
-
-mWriter.AddString pRequest.EndDateTime, "End date"
-mWriter.AddString pRequest.BarSizeSetting, "Bar Size"
-
-mWriter.AddString pRequest.Duration, "Duration"
-mWriter.AddString 0, "Use RTH"
-mWriter.AddString pRequest.WhatToShow, "What to show"
-
-mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
-
-If pRequest.contract.Sectype = TwsSecTypeCombo Then
-    mWriter.AddString pRequest.contract.ComboLegs.Count, "Combo legs count"
-    Dim lComboLeg As TwsComboLeg
-    Dim i As Long
-    For Each lComboLeg In pRequest.contract.ComboLegs
-        With lComboLeg
-            i = i + 1
-            mWriter.AddString .ConId, "ConId" & i
-            mWriter.AddString .Ratio, "Ratio" & i
-            mWriter.AddString gTwsOrderActionToString(.Action), "Action" & i
-            mWriter.AddString .Exchange, "Exchange" & i
-        End With
-    Next
-End If
-
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Private Sub reqMarketData( _
-                ByVal pTickerId As Long, _
-                ByVal pContract As TwsContract, _
-                ByVal pGenericTicks As String, _
-                ByVal pSnapshot As Boolean)
-Const ProcName As String = "reqMarketData"
-On Error GoTo Err
-
 Const VERSION = 10
 
-gLog "Requesting market data: ticker id=" & pTickerId & "; contract=" & pContract.ToString, ModuleName, ProcName
+Dim lApiId As Long
+lApiId = getTwsMarketDataRequestIdFromCallersRequestId(pTickerId)
+
+gLog "Requesting market data: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
 
 mWriter.AddMessageId REQ_MKT_DATA
 mWriter.AddString VERSION, "Version"
-mWriter.AddString getTwsMarketDataRequestIdFromCallersRequestId(pTickerId), "Ticker id"
+mWriter.AddString lApiId, "Ticker id"
 With pContract
     mWriter.AddString .ConId, "Con id"
     mWriter.AddString .Symbol, "Symbol"
@@ -1965,25 +1678,49 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Private Sub reqMarketDepth(ByVal TickerId As Long, _
-                        ByVal pContract As TwsContract, _
-                        Optional ByVal pNumberOfRows As Long = 20)
-Const ProcName As String = "reqMarketDepth"
+Public Sub RequestMarketDataType(ByVal pMarketDataType As Long)
+Const ProcName As String = "RequestMarketDataType"
 On Error GoTo Err
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+
+Const VERSION = 1
+
+mWriter.AddMessageId REQ_MARKET_DATA_TYPE
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pMarketDataType, "MarketDataType"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub RequestMarketDepth( _
+                ByVal pTickerId As Long, _
+                ByVal pContract As TwsContract, _
+                Optional ByVal pNumberOfRows As Long = 20)
+Const ProcName As String = "RequestMarketDepth"
+On Error GoTo Err
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.TradingClass = "" And pContract.ConId = 0), "ContractId and TradingClass properties are not supported"
 
 Const VERSION = 4
 
-gLog "Requesting market depth: ticker id=" & TickerId & "; contract=" & pContract.ToString, ModuleName, ProcName
+Dim lApiId As Long
+lApiId = getTwsMarketDepthRequestIdFromCallersRequestId(pTickerId)
+
+gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_MKT_DEPTH
 mWriter.AddString VERSION, "Version"
-mWriter.AddString getTwsMarketDepthRequestIdFromCallersRequestId(TickerId), "Request id"
+mWriter.AddString lApiId, "Request id"
 
 If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.ConId, "Contract Id"
 
@@ -2005,8 +1742,224 @@ mWriter.Send
 Exit Sub
 
 Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
+
+Public Sub RequestNewsBulletins(allMsgs As Boolean)
+Const ProcName As String = "RequestNewsBulletins"
+On Error GoTo Err
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+
+Const VERSION = 1
+
+mWriter.AddMessageId REQ_NEWS_BULLETINS
+mWriter.AddString VERSION, "Version"
+mWriter.AddString allMsgs, "All messages"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub RequestOpenOrders()
+Const ProcName As String = "RequestOpenOrders"
+On Error GoTo Err
+
+Const VERSION = 1
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+
+gLog "Requesting open orders", ModuleName, ProcName
+
+mWriter.AddMessageId REQ_OPEN_ORDERS
+mWriter.AddString VERSION, "Version"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub RequestPositions()
+Const ProcName As String = "RequestPositions"
+On Error GoTo Err
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+
+AssertArgument mServerVersion >= MIN_SERVER_VER_ACCT_SUMMARY, "Position requests not supported"
+
+Const VERSION = 1
+
+gLog "Requesting positions", ModuleName, ProcName
+
+mWriter.AddMessageId REQ_POSITIONS
+mWriter.AddString VERSION, "Version"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub RequestRealTimeBars( _
+                ByVal pTickerId As Long, _
+                ByVal pContract As TwsContract, _
+                ByVal pBarSize As Long, _
+                ByVal pWhatToShow As String, _
+                ByVal pUseRTH As Boolean)
+Const ProcName As String = "RequestRealTimeBars"
+On Error GoTo Err
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+
+AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.TradingClass = "" And pContract.ConId = 0), "ConId and TradingClass properties in RequestRealTimeBars not supported"
+
+Const VERSION = 2
+
+Dim lApiId As Long
+lApiId = getTwsHistRequestIdFromCallersRequestId(pTickerId)
+
+gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
+
+mWriter.AddMessageId REQ_REAL_TIME_BARS
+mWriter.AddString VERSION, "Version"
+mWriter.AddString lApiId, "TickerId"
+
+' send contract fields
+If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.ConId, "ConId"
+mWriter.AddString pContract.Symbol, "Symbol"
+mWriter.AddString gTwsSecTypeToShortString(pContract.Sectype), "Sectype"
+mWriter.AddString pContract.Expiry, "Expiry"
+mWriter.AddString pContract.Strike, "Strike"
+mWriter.AddString gTwsOptionRightToString(pContract.OptRight), "Right"
+mWriter.AddString IIf(pContract.Multiplier = 1, "", pContract.Multiplier), "Multiplier"
+mWriter.AddString pContract.Exchange, "Exchange"
+mWriter.AddString pContract.PrimaryExch, "PrimaryExch"
+mWriter.AddString pContract.CurrencyCode, "Currency"
+mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
+If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "TradingClass"
+mWriter.AddString pBarSize, "BarSize"   ' this parameter is not currently used
+mWriter.AddString pWhatToShow, "WhatToShow"
+mWriter.AddBoolean pUseRTH, "UseRTH"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub RequestScannerParameters()
+Const ProcName As String = "RequestScannerParameters"
+On Error GoTo Err
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+
+Const VERSION = 1
+
+gLog "Requesting scanner parameters", ModuleName, ProcName
+
+mWriter.AddMessageId REQ_SCANNER_PARAMETERS
+mWriter.AddString VERSION, "Version"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub RequestScannerSubscription(ByVal pTickerId As Long, ByVal pSubscription As TwsScannerSubscription)
+Const ProcName As String = "RequestScannerSubscription"
+On Error GoTo Err
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+
+Const VERSION = 3
+
+gLog "Requesting scanner subscription: requester id=" & pTickerId, ModuleName, ProcName
+
+mWriter.AddMessageId REQ_SCANNER_SUBSCRIPTION
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pTickerId, "Ticker Id"
+mWriter.AddLongMax pSubscription.NumberOfRows, "NumberOfRows"
+mWriter.AddString pSubscription.Instrument, "Instrument"
+mWriter.AddString pSubscription.LocationCode, "LocationCode"
+mWriter.AddString pSubscription.ScanCode, "ScanCode"
+mWriter.AddDoubleMax pSubscription.AbovePrice, "AbovePrice"
+mWriter.AddDoubleMax pSubscription.BelowPrice, "BelowPrice"
+mWriter.AddLongMax pSubscription.AboveVolume, "AboveVolume"
+mWriter.AddDoubleMax pSubscription.MarketCapAbove, "MarketCapAbove"
+mWriter.AddDoubleMax pSubscription.MarketCapBelow, "MarketCapBelow"
+mWriter.AddString pSubscription.MoodyRatingAbove, "MoodyRatingAbove"
+mWriter.AddString pSubscription.MoodyRatingBelow, "MoodyRatingBelow"
+mWriter.AddString pSubscription.SpRatingAbove, "SpRatingAbove"
+mWriter.AddString pSubscription.SpRatingBelow, "SpRatingBelow"
+mWriter.AddString pSubscription.MaturityDateAbove, ""
+mWriter.AddString pSubscription.MaturityDateBelow, "MaturityDateBelow"
+mWriter.AddDoubleMax pSubscription.CouponRateAbove, "CouponRateAbove"
+mWriter.AddDoubleMax pSubscription.CouponRateBelow, "CouponRateBelow"
+mWriter.AddString pSubscription.ExcludeConvertible, "ExcludeConvertible"
+mWriter.AddLongMax pSubscription.AverageOptionVolumeAbove, "AverageOptionVolumeAbove"
+mWriter.AddString pSubscription.ScannerSettingPairs, "ScannerSettingPairs"
+mWriter.AddString pSubscription.StockTypeFilter, "StockTypeFilter"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub SetTwsLogLevel(ByVal pLogLevel As TwsLogLevels)
+mLogLevel = pLogLevel
+End Sub
+
+'================================================================================
+' Helper Functions
+'================================================================================
+
+Private Function getTwsContractRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersContractRequestId, "Max request id is " & MaxCallersContractRequestId
+getTwsContractRequestIdFromCallersRequestId = pId + BaseContractRequestId
+End Function
+
+Private Function getTwsExecutionsRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersExecutionsRequestId, "Max request id is " & MaxCallersExecutionsRequestId
+getTwsExecutionsRequestIdFromCallersRequestId = pId + BaseExecutionsRequestId
+End Function
+
+Private Function getTwsHistRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersHistoricalDataRequestId, "Max request id is " & MaxCallersHistoricalDataRequestId
+getTwsHistRequestIdFromCallersRequestId = pId + BaseHistoricalDataRequestId
+End Function
+
+Private Function getTwsMarketDataRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersMarketDataRequestId, "Max request id is " & MaxCallersMarketDataRequestId
+getTwsMarketDataRequestIdFromCallersRequestId = pId + BaseMarketDataRequestId
+End Function
+
+Private Function getTwsMarketDepthRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersMarketDepthRequestId, "Max request id is " & MaxCallersMarketDepthRequestId
+getTwsMarketDepthRequestIdFromCallersRequestId = pId + BaseMarketDepthRequestId
+End Function
+
+Private Function legOpenCloseToString(ByVal Value As TwsLegOpenCloseCodes) As String
+Select Case Value
+Case TwsLegOpenCloseCodes.TwsLegOpenCloseSame, _
+        TwsLegOpenCloseCodes.TwsLegOpenCloseOpen, _
+        TwsLegOpenCloseCodes.TwsLegOpenCloseClose, _
+        TwsLegOpenCloseCodes.TwsLegOpenCloseUnknown
+    legOpenCloseToString = CStr(Value)
+Case Else
+    Assert False, "Invalid leg open/close value"
+End Select
+End Function
 
 Private Sub sendLogLevel()
 Const ProcName As String = "sendLogLevel"
