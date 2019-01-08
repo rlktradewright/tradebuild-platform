@@ -276,7 +276,6 @@ Public Type TwsHistoricalDataRequest
     BarSizeSetting          As String
     Duration                As String
     WhatToShow              As String
-    RequestTime             As Date
 End Type
 
 Public Type TwsBar
