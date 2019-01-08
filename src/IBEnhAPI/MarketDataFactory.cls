@@ -1193,7 +1193,7 @@ If (pPrevPrice <> MaxDouble Or (pPrice <> 0# And pPrice <> -1# And pPrice <> -10
 Then
     validPrice = True
 Else
-    gLogger.Log "Invalid pPrice rejected (" & pPriceType & "): " & _
+    gLogger.Log "Invalid price rejected (" & pPriceType & "): " & _
                     "price=" & pPrice & _
                     "; contract={" & pContract.Specifier.ToString & "}", _
                  ProcName, ModuleName

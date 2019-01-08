@@ -35,6 +35,11 @@ Implements ITask
 ' Enums
 '@================================================================================
 
+Private Enum HistoricalDataRequestTypes
+    HistoricalDataRequestTypeHistoricalBars = 1
+    HistoricalDataRequestTypeRealtimeBars
+End Enum
+
 Private Enum States
     StateFree
     StateAllocated
@@ -48,12 +53,14 @@ End Enum
 '@================================================================================
 
 Private Type HistoricalDataRequestTableEntry
+    RequestType             As HistoricalDataRequestTypes
     State                   As States
     EarliestSubmissionTime  As Date
     ActualSubmissionTime    As Date
     DelayReason             As String
     Request                 As TwsHistoricalDataRequest
-    Requester               As HistDataRequestTask
+    Requester               As Object
+    RequesterID             As Long ' only applies to RealtimeBars requests
     Next                    As Long
 End Type
 
@@ -75,7 +82,6 @@ Attribute mTwsAPI.VB_VarHelpID = -1
 
 Private mHistDataRequests()                         As HistoricalDataRequestTableEntry
 Private mHistDataRequestsIndex                      As Long
-Private mMaxHistDataRequestsIndex                   As Long
 
 Private mFirstFreeHistDataRequestsEntry             As Long
 
@@ -95,9 +101,6 @@ Private mPacer                                      As HistDataRequestPacer
 
 Private mIsTwsConnectedToIBServers                  As Boolean
 
-Private mRealtimeBarRequests                        As SortedDictionary
-Private mMaxRealtimeBarRequests                     As Long
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -109,10 +112,6 @@ mFirstPendingHistDataRequestsEntry = NullIndex
 mFirstPendingPriorityHistDataRequestsEntry = NullIndex
 mLastPendingHistDataRequestsEntry = NullIndex
 mLastPendingPriorityHistDataRequestsEntry = NullIndex
-
-Set mRealtimeBarRequests = CreateSortedDictionary(KeyTypeInteger, False)
-
-mMaxRealtimeBarRequests = 4096
 End Sub
 
 '@================================================================================
@@ -125,7 +124,10 @@ On Error GoTo Err
 
 CompleteRequest pRequestId
 If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
-mHistDataRequests(pRequestId).Requester.EndHistData
+
+Dim lHistDataRequestTask As HistDataRequestTask
+Set lHistDataRequestTask = mHistDataRequests(pRequestId).Requester
+lHistDataRequestTask.EndHistData
 
 Exit Sub
 
@@ -138,7 +140,10 @@ Const ProcName As String = "IHistDataConsumer_NotifyBar"
 On Error GoTo Err
 
 If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
-mHistDataRequests(pRequestId).Requester.NotifyBar pBar
+
+Dim lHistDataRequestTask As HistDataRequestTask
+Set lHistDataRequestTask = mHistDataRequests(pRequestId).Requester
+lHistDataRequestTask.NotifyBar pBar
 
 Exit Sub
 
@@ -150,17 +155,19 @@ Private Sub IHistDataConsumer_NotifyError(ByVal pRequestId As Long, ByVal pError
 Const ProcName As String = "IHistDataConsumer_NotifyError"
 On Error GoTo Err
 
-If pRequestId <= mMaxHistDataRequestsIndex Then
+If mHistDataRequests(pRequestId).RequestType = HistoricalDataRequestTypeHistoricalBars Then
     CompleteRequest pRequestId
-    If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
-    mHistDataRequests(pRequestId).Requester.NotifyError pErrorCode, pErrorMsg
+    
+    Dim lHistDataRequestTask As HistDataRequestTask
+    Set lHistDataRequestTask = mHistDataRequests(pRequestId).Requester
+    lHistDataRequestTask.NotifyError pErrorCode, pErrorMsg
 Else
-    Dim lRequest As RealtimeBarRequest
-    Set lRequest = mRealtimeBarRequests.Item(pRequestId)
+    Dim lRealtimeBarRequester As RealtimeBarRequester
+    Set lRealtimeBarRequester = mHistDataRequests(pRequestId).Requester
     
-    If lRequest.Cancelled Then Exit Sub
+    If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
     
-    lRequest.Requester.NotifyError lRequest.RequesterID, pErrorCode, pErrorMsg
+    lRealtimeBarRequester.NotifyError mHistDataRequests(pRequestId).RequesterID, pErrorCode, pErrorMsg
 End If
 
 Exit Sub
@@ -173,12 +180,11 @@ Private Sub IHistDataConsumer_NotifyRealtimeBar(ByVal pRequestId As Long, pBar A
 Const ProcName As String = "IHistDataConsumer_NotifyRealtimeBar"
 On Error GoTo Err
 
-Dim lRequest As RealtimeBarRequest
-Set lRequest = mRealtimeBarRequests.Item(pRequestId)
+If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
 
-If lRequest.Cancelled Then Exit Sub
-
-lRequest.Requester.NotifyRealtimeBar lRequest.RequesterID, pBar
+Dim lRealtimeBarRequester As RealtimeBarRequester
+Set lRealtimeBarRequester = mHistDataRequests(pRequestId).Requester
+lRealtimeBarRequester.NotifyRealtimeBar mHistDataRequests(pRequestId).RequesterID, pBar
 
 Exit Sub
 
@@ -334,24 +340,17 @@ Friend Sub CancelRealtimeBars( _
 Const ProcName As String = "CancelRealtimeBars"
 On Error GoTo Err
 
-Dim en As Enumerator
-Set en = mRealtimeBarRequests.EntryEnumerator
-
-Do While en.MoveNext
-    Dim lDictEntry As DictionaryEntry
-    Set lDictEntry = en.Current
-    
-    Dim lRequest As RealtimeBarRequest
-    Set lRequest = lDictEntry.data
-    If lRequest.RequesterID = pRequesterId Then
-        lRequest.Cancelled = True
-        mTwsAPI.CancelRealtimeBars CInt(lDictEntry.Key)
-        ' We don't bother to delete the entry because
-        ' there is never likely to be more than a handful
-        ' of them
-        Exit Do
-    End If
-Loop
+Dim i As Long
+For i = 0 To mHistDataRequestsIndex
+    With mHistDataRequests(i)
+        If .Requester Is Nothing Then
+        ElseIf .RequesterID = pRequesterId Then
+            .State = StateRequestCancelling
+            mTwsAPI.CancelRealtimeBars i
+            Exit For
+        End If
+    End With
+Next
 
 Exit Sub
 
@@ -404,7 +403,6 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mTwsAPI = pTwsAPI
-mMaxHistDataRequestsIndex = mTwsAPI.MaxHistoricalDataRequestId - mMaxRealtimeBarRequests
 
 Set mPacer = New HistDataRequestPacer
 
@@ -416,9 +414,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function RegisterHistoricalDataRequestTask( _
-                ByVal pRequester As HistDataRequestTask) As Long
-Const ProcName As String = "RegisterHistoricalDataRequestTask"
+Friend Function RegisterHistoricalDataRequest( _
+                ByVal pRequester As Object) As Long
+Const ProcName As String = "RegisterHistoricalDataRequest"
 On Error GoTo Err
 
 Dim lIndex As Long
@@ -426,7 +424,7 @@ Dim lIndex As Long
 lIndex = allocateEntry
 Set mHistDataRequests(lIndex).Requester = pRequester
 
-RegisterHistoricalDataRequestTask = lIndex
+RegisterHistoricalDataRequest = lIndex
 
 Exit Function
 
@@ -435,15 +433,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub RequestHistoricalData( _
-                ByVal pRequesterId As Long, _
+                ByVal pRegistrationId As Long, _
                 ByRef pRequest As TwsHistoricalDataRequest, _
                 ByVal pPriority As Boolean)
 Const ProcName As String = "RequestHistoricalData"
 On Error GoTo Err
 
-mHistDataRequests(pRequesterId).Request = pRequest
+mHistDataRequests(pRegistrationId).RequestType = HistoricalDataRequestTypeHistoricalBars
+mHistDataRequests(pRegistrationId).Request = pRequest
 
-queueEntry pRequesterId, pPriority
+queueEntry pRegistrationId, pPriority
 
 Schedule
 
@@ -460,18 +459,19 @@ Friend Sub RequestRealtimeBars( _
 Const ProcName As String = "RequestRealtimeBars"
 On Error GoTo Err
 
-Static sNextRealtimeBarRequestId As Long
-If sNextRealtimeBarRequestId = 0 Then sNextRealtimeBarRequestId = mMaxHistDataRequestsIndex
-sNextRealtimeBarRequestId = sNextRealtimeBarRequestId + 1
+Dim lRegistrationId As Long
+lRegistrationId = RegisterHistoricalDataRequest(pRequester)
 
-Assert sNextRealtimeBarRequestId <= mTwsAPI.MaxHistoricalDataRequestId, "Max number of realtime bar requests exceeded"
+mHistDataRequests(lRegistrationId).RequesterID = pRequesterId
+mHistDataRequests(lRegistrationId).RequestType = HistoricalDataRequestTypes.HistoricalDataRequestTypeRealtimeBars
+With mHistDataRequests(lRegistrationId).Request
+    Set .Contract = pContract
+    .WhatToShow = "TRADES"
+End With
 
-Dim rtbRequest As New RealtimeBarRequest
-rtbRequest.Initialise pRequesterId, pRequester
+queueEntry lRegistrationId, False
 
-mRealtimeBarRequests.Add rtbRequest, sNextRealtimeBarRequestId
-
-mTwsAPI.RequestRealtimeBars sNextRealtimeBarRequestId, pContract, 5, "TRADES", False
+Schedule
 
 Exit Sub
 
@@ -524,7 +524,7 @@ Else
     allocateEntry = mHistDataRequestsIndex
 End If
 
-Assert allocateEntry <= mMaxHistDataRequestsIndex, "Maximum number of outstanding historical data requests exceeded"
+Assert allocateEntry <= mTwsAPI.MaxHistoricalDataRequestId, "Maximum number of outstanding historical data requests exceeded"
 
 mHistDataRequests(allocateEntry).EarliestSubmissionTime = MaxDate
 mHistDataRequests(allocateEntry).State = StateAllocated
@@ -727,15 +727,20 @@ On Error GoTo Err
 
 Dim lBlankRequest As TwsHistoricalDataRequest
 
-mHistDataRequests(pIndex).State = StateFree
-mHistDataRequests(pIndex).Next = mFirstFreeHistDataRequestsEntry
+With mHistDataRequests(pIndex)
+    .State = StateFree
+    .Next = mFirstFreeHistDataRequestsEntry
+    .State = StateFree
+    .ActualSubmissionTime = 0
+    .EarliestSubmissionTime = 0
+    .Request = lBlankRequest
+    .DelayReason = ""
+    Set .Requester = Nothing
+    .RequesterID = 0
+    .RequestType = 0
+End With
+
 mFirstFreeHistDataRequestsEntry = pIndex
-mHistDataRequests(pIndex).State = StateFree
-mHistDataRequests(pIndex).ActualSubmissionTime = 0
-mHistDataRequests(pIndex).EarliestSubmissionTime = 0
-mHistDataRequests(pIndex).Request = lBlankRequest
-mHistDataRequests(pIndex).DelayReason = ""
-Set mHistDataRequests(pIndex).Requester = Nothing
 
 Exit Function
 
@@ -824,9 +829,14 @@ Private Sub submitEntry(ByVal pIndex As Long)
 Const ProcName As String = "submitEntry"
 On Error GoTo Err
 
-mTwsAPI.RequestHistoricalData pIndex, mHistDataRequests(pIndex).Request
-mHistDataRequests(pIndex).ActualSubmissionTime = mPacer.RecordSubmission(mHistDataRequests(pIndex).Request)
-mHistDataRequests(pIndex).State = StateRequestInProgress
+
+If mHistDataRequests(pIndex).RequestType = HistoricalDataRequestTypes.HistoricalDataRequestTypeHistoricalBars Then
+    mTwsAPI.RequestHistoricalData pIndex, mHistDataRequests(pIndex).Request
+    mHistDataRequests(pIndex).ActualSubmissionTime = mPacer.RecordSubmission(mHistDataRequests(pIndex).Request)
+    mHistDataRequests(pIndex).State = StateRequestInProgress
+Else
+    mTwsAPI.RequestRealtimeBars pIndex, mHistDataRequests(pIndex).Request.Contract, 5, "TRADES", False
+End If
 unqueueEntry pIndex
 
 mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1

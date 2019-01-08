@@ -92,7 +92,7 @@ Private mCurrTWSBarsCollectionIndex                 As Long
 Private mFirstBarTimeInMessage                      As Date
 Private mNumberOfBarsInMessage                      As Long
 
-Private mRequesterId                                As Long
+Private mRequesterID                                As Long
 
 Private mTotalBarsRetrieved                         As Long
 
@@ -124,7 +124,7 @@ Private mContractCache                              As TwsContractCache
 
 Private Sub Class_Initialize()
 ReDim mTWSBarsCollections(3) As EnumerableCollection
-mRequesterId = NullIndex
+mRequesterID = NullIndex
 Set mFutureWaiter = New FutureWaiter
 End Sub
 
@@ -163,7 +163,7 @@ ElseIf mState = RetrievingBars Then
         Dim lRequest As TwsHistoricalDataRequest
         prepareForRetrieval
         If generateTwsHistoricalDataRequest(lRequest, mWorkingBarSpecifier, mSessionStartTime, mSessionEndTime) Then
-            mHistDataRequester.RequestHistoricalData mRequesterId, lRequest, sFirstRequestMade
+            mHistDataRequester.RequestHistoricalData mRequesterID, lRequest, sFirstRequestMade
             sFirstRequestMade = True
             mTaskContext.Suspend -1
         Else
@@ -191,7 +191,7 @@ ElseIf mState = ProcessingBars Then
     If mCurrTWSBarsCollectionIndex < 0 Then
         fireNotifyBar mCurrentBar
         gLog "Time to process " & sTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(et.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
-        mHistDataRequester.UnregisterHistoricalDataRequestTask mRequesterId
+        mHistDataRequester.UnregisterHistoricalDataRequestTask mRequesterID
         
         mFutureWaiter.Add mFutureBuilder.Future
         mFutureBuilder.Value = mTargetBarsBuilder.Bars
@@ -367,7 +367,7 @@ mFutureBuilder.Cookie = mCookie
 
 mFutureWaiter.Add pBarSpecifierFuture
 
-mRequesterId = mHistDataRequester.RegisterHistoricalDataRequestTask(Me)
+mRequesterID = mHistDataRequester.RegisterHistoricalDataRequest(Me)
 
 Exit Sub
 
@@ -461,7 +461,7 @@ Const ProcName As String = "doCancel"
 On Error GoTo Err
 
 mState = Cancelling
-mHistDataRequester.CancelHistoricalDataRequest mRequesterId
+mHistDataRequester.CancelHistoricalDataRequest mRequesterID
 If mFutureBuilder.Future.IsPending Then mFutureBuilder.Cancel
 mTaskContext.Finish Nothing, True
 
@@ -475,7 +475,7 @@ Private Sub doFail(ByVal pErrorCode As Long, ByVal pErrorMsg As String, ByVal pE
 Const ProcName As String = "doFail"
 On Error GoTo Err
 
-mHistDataRequester.UnregisterHistoricalDataRequestTask mRequesterId
+mHistDataRequester.UnregisterHistoricalDataRequestTask mRequesterID
 If mFutureBuilder.Future.IsPending Then mFutureBuilder.Fail pErrorCode, pErrorMsg, pErrorSource
 mTaskContext.Error pErrorCode, pErrorMsg, pErrorSource
 If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorCode, pErrorMsg, pErrorSource
@@ -763,7 +763,7 @@ Case BarTypes.BarTypeAsk
 Case BarTypes.BarTypeBid
     pTwsRequest.WhatToShow = TwsWhatToShowBid
 Case BarTypes.BarTypeTrade
-    If pWorkingBarSpecifier.Contract.Specifier.Sectype = SecTypeCash Then
+    If pWorkingBarSpecifier.Contract.Specifier.SecType = SecTypeCash Then
         pTwsRequest.WhatToShow = TwsWhatToShowMidpoint
     Else
         pTwsRequest.WhatToShow = TwsWhatToShowTrades

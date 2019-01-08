@@ -211,7 +211,7 @@ Private Sub processContract(ByVal pContract As IContract)
 Const ProcName As String = "processContract"
 On Error GoTo Err
 
-If pContract.Specifier.Sectype = SecTypeCombo Then
+If pContract.Specifier.SecType = SecTypeCombo Then
     Dim lTask As New ComboContractConversionTask
     lTask.Initialise mContractRequester, pContract.Specifier
     Set mTaskController = StartTask(lTask, PriorityNormal)
