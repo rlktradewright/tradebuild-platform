@@ -203,11 +203,15 @@ Friend Sub BeginMessage()
 Const ProcName As String = "BeginMessage"
 On Error GoTo Err
 
+If alreadyProcessedItem Then Exit Sub
+
 If mLogTwsMessages Then
     mInMessageBuilder.Clear
     mInMessageBuilder.Append "IN: "
     mMessageStartIndex = mInputParseIndex
 End If
+
+Checkpoint
 
 Exit Sub
 
