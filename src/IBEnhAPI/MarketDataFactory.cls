@@ -722,7 +722,7 @@ pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDa
 
 gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
 
-prepareTickStream mMarketDataTable, pContractFuture, pStreamId
+prepareTickStream mMarketDataTable, pContractFuture, pStreamId, False
 Set CreateMarketDataStream = mMarketDataTable(pStreamId).TickStreamBuilder.TickStream
 
 Exit Function
@@ -743,7 +743,7 @@ mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
 
 gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
 
-prepareTickStream mMarketDepthTable, pContractFuture, pStreamId + MarketDepthIdOffset
+prepareTickStream mMarketDepthTable, pContractFuture, pStreamId, True
 Set CreateMarketDepthStream = mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream
 
 Exit Function
@@ -772,7 +772,12 @@ Const ProcName As String = "cancelMarketDataEx"
 On Error GoTo Err
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
-mTwsAPI.CancelMarketData getTickerIdFromIndex(pIndex)
+
+If isFTSE100Index(mMarketDataTable(pIndex).ContractDetails.Summary) Then
+    mHistoricalDataRequester.CancelRealtimeBars getTickerIdFromIndex(pIndex)
+Else
+    mTwsAPI.CancelMarketData getTickerIdFromIndex(pIndex)
+End If
 
 Exit Sub
 
@@ -983,10 +988,13 @@ End Function
 Private Sub prepareTickStream( _
                 ByRef pTickers() As TickerTableEntry, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pStreamId As Long)
-mFutureWaiter.Add pContractFuture, pStreamId
-mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture, mContractCache), pStreamId
-mFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId
+                ByVal pStreamId As Long, _
+                ByVal pIsMarketDepth As Boolean)
+Dim lContinuationData As Long
+lContinuationData = pStreamId + IIf(pIsMarketDepth, MarketDepthIdOffset, 0)
+mFutureWaiter.Add pContractFuture, lContinuationData
+mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture, mContractCache), lContinuationData
+mFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, lContinuationData
 End Sub
 
 Private Sub reEstablishData( _
@@ -1088,7 +1096,7 @@ On Error GoTo Err
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
 If mMarketDataTable(pIndex).ContractDetails Is Nothing Then
     Assert Not mMarketDataTable(pIndex).ContractFuture Is Nothing, "Contract future is not available"
-    prepareTickStream mMarketDataTable, mMarketDataTable(pIndex).ContractFuture, pIndex
+    prepareTickStream mMarketDataTable, mMarketDataTable(pIndex).ContractFuture, pIndex, False
 ElseIf isFTSE100Index(mMarketDataTable(pIndex).ContractDetails.Summary) Then
     ' because IB no longer offer realtime data for the FTSE 100 index, but do still
     ' allow RequestRealTimeBars, we call that and use the returned bars to deduce
@@ -1117,7 +1125,7 @@ On Error GoTo Err
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
 If mMarketDepthTable(pIndex).ContractDetails Is Nothing Then
     Assert Not mMarketDepthTable(pIndex).ContractFuture Is Nothing, "Contract future is not available"
-    prepareTickStream mMarketDepthTable, mMarketDepthTable(pIndex).ContractFuture, pIndex + MarketDepthIdOffset
+    prepareTickStream mMarketDepthTable, mMarketDepthTable(pIndex).ContractFuture, pIndex, True
 Else
     mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).ContractDetails.Summary, mMarketDepthTable(pIndex).NumberOfRows
 End If
