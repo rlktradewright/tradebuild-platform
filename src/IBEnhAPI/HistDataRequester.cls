@@ -160,8 +160,9 @@ On Error GoTo Err
 
 Const PacingRetryLimit As Long = 10
 
-If pErrorCode <> 162 Then
-    ' drop through if not a Historical Market Data Service error message
+If pErrorCode <> 162 And pErrorCode <> 420 Then
+    ' drop through if not a Historical Market Data Service error message or a
+    ' realtime bars error
 ElseIf InStr(1, pErrorMsg, "pacing") = 0 Then
     ' drop through if not a pacing error
 ElseIf mIsRequestPacingDisabled Then
