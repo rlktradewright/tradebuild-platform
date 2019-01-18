@@ -191,7 +191,7 @@ ElseIf mState = ProcessingBars Then
     If mCurrTWSBarsCollectionIndex < 0 Then
         fireNotifyBar mCurrentBar
         gLog "Time to process " & sTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(et.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
-        mHistDataRequester.UnregisterHistoricalDataRequestTask mRequesterID
+        mHistDataRequester.UnregisterHistoricalDataRequest mRequesterID
         
         mFutureWaiter.Add mFutureBuilder.Future
         mFutureBuilder.Value = mTargetBarsBuilder.Bars
@@ -475,7 +475,7 @@ Private Sub doFail(ByVal pErrorCode As Long, ByVal pErrorMsg As String, ByVal pE
 Const ProcName As String = "doFail"
 On Error GoTo Err
 
-mHistDataRequester.UnregisterHistoricalDataRequestTask mRequesterID
+mHistDataRequester.UnregisterHistoricalDataRequest mRequesterID
 If mFutureBuilder.Future.IsPending Then mFutureBuilder.Fail pErrorCode, pErrorMsg, pErrorSource
 mTaskContext.Error pErrorCode, pErrorMsg, pErrorSource
 If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorCode, pErrorMsg, pErrorSource

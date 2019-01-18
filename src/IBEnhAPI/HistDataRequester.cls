@@ -55,8 +55,8 @@ End Enum
 Private Type HistoricalDataRequestTableEntry
     RequestType             As HistoricalDataRequestTypes
     State                   As States
+    RetryCount              As Long
     EarliestSubmissionTime  As Date
-    ActualSubmissionTime    As Date
     DelayReason             As String
     Request                 As TwsHistoricalDataRequest
     Requester               As Object
@@ -122,8 +122,11 @@ Private Sub IHistDataConsumer_EndHistData(ByVal pRequestId As Long)
 Const ProcName As String = "IHistDataConsumer_EndHistData"
 On Error GoTo Err
 
+Dim isCancelling As Boolean
+isCancelling = (mHistDataRequests(pRequestId).State = StateRequestCancelling)
+
 CompleteRequest pRequestId
-If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+If isCancelling Then Exit Sub
 
 Dim lHistDataRequestTask As HistDataRequestTask
 Set lHistDataRequestTask = mHistDataRequests(pRequestId).Requester
@@ -155,18 +158,38 @@ Private Sub IHistDataConsumer_NotifyError(ByVal pRequestId As Long, ByVal pError
 Const ProcName As String = "IHistDataConsumer_NotifyError"
 On Error GoTo Err
 
+Const PacingRetryLimit As Long = 10
+
+If pErrorCode <> 162 Then
+    ' drop through if not a pacing error
+ElseIf mIsRequestPacingDisabled Then
+    ' if request pacing is disabled, let the application handle it
+ElseIf mHistDataRequests(pRequestId).RetryCount >= PacingRetryLimit Then
+    ' we're retried several times already, now let the application handle it
+    gLog "Pacing retry limit exceeded", ModuleName, ProcName
+Else
+    ' pacing violation: this should only happen if another API program
+    ' using the same TWS instance has done requests that, combined with ours,
+    ' infringe the pacing rules. As we are doing automatic request pacing,
+    ' just requeue it in the hope that it will all sort itself out eventually,
+    ' but don't retry more than PacingRetryLimit times
+    mHistDataRequests(pRequestId).RetryCount = mHistDataRequests(pRequestId).RetryCount + 1
+    gLog "Requeue request according to pacing rules: attempt " & mHistDataRequests(pRequestId).RetryCount, ModuleName, ProcName
+    queueEntry pRequestId, False
+    If mConcurrentHistDataRequests > 0 Then mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
+    doSchedule
+    Exit Sub
+End If
+
+CompleteRequest pRequestId
 If mHistDataRequests(pRequestId).RequestType = HistoricalDataRequestTypeHistoricalBars Then
-    CompleteRequest pRequestId
-    
     Dim lHistDataRequestTask As HistDataRequestTask
     Set lHistDataRequestTask = mHistDataRequests(pRequestId).Requester
     lHistDataRequestTask.NotifyError pErrorCode, pErrorMsg
 Else
     Dim lRealtimeBarRequester As RealtimeBarRequester
     Set lRealtimeBarRequester = mHistDataRequests(pRequestId).Requester
-    
     If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
-    
     lRealtimeBarRequester.NotifyError mHistDataRequests(pRequestId).RequesterID, pErrorCode, pErrorMsg
 End If
 
@@ -347,6 +370,13 @@ For i = 0 To mHistDataRequestsIndex
         ElseIf .RequesterID = pRequesterId Then
             .State = StateRequestCancelling
             mTwsAPI.CancelRealtimeBars i
+            
+            ' it's possible that Tws has already sent the next realtime bar
+            ' but we haven't received it yet, so we keep this entry for 'long
+            ' enough' to ensure that any pending data has been received -
+            ' ie 10 seconds
+            GetGlobalTimerList.Add(pRequesterId, 10).AddStateChangeListener Me
+            
             Exit For
         End If
     End With
@@ -439,6 +469,8 @@ Friend Sub RequestHistoricalData( _
 Const ProcName As String = "RequestHistoricalData"
 On Error GoTo Err
 
+Assert mHistDataRequests(pRegistrationId).State = StateAllocated, "A request is already outstanding "
+
 mHistDataRequests(pRegistrationId).RequestType = HistoricalDataRequestTypeHistoricalBars
 mHistDataRequests(pRegistrationId).Request = pRequest
 
@@ -491,9 +523,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function UnregisterHistoricalDataRequestTask( _
+Friend Function UnregisterHistoricalDataRequest( _
                 ByVal pRequesterId As Long) As Long
-Const ProcName As String = "UnregisterHistoricalDataRequestTask"
+Const ProcName As String = "UnregisterHistoricalDataRequest"
 On Error GoTo Err
 
 If mHistDataRequests(pRequesterId).State <> StateRequestCancelling Then releaseEntry pRequesterId
@@ -539,7 +571,7 @@ Private Sub CompleteRequest(ByVal pRequestId As Long)
 Const ProcName As String = "CompleteRequest"
 On Error GoTo Err
 
-mHistDataRequests(pRequestId).ActualSubmissionTime = 0
+mHistDataRequests(pRequestId).State = StateAllocated
 mHistDataRequests(pRequestId).EarliestSubmissionTime = MaxDate
 mHistDataRequests(pRequestId).DelayReason = ""
 If mConcurrentHistDataRequests > 0 Then mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
@@ -731,8 +763,7 @@ With mHistDataRequests(pIndex)
     .State = StateFree
     .Next = mFirstFreeHistDataRequestsEntry
     .State = StateFree
-    .ActualSubmissionTime = 0
-    .EarliestSubmissionTime = 0
+    .EarliestSubmissionTime = MaxDate
     .Request = lBlankRequest
     .DelayReason = ""
     Set .Requester = Nothing
@@ -786,19 +817,21 @@ Const ProcName As String = "scheduleUnpaced"
 On Error GoTo Err
 
 Dim lIndex As Long
-Dim lCurrIndex As Long
+
+lIndex = mFirstPendingPriorityHistDataRequestsEntry
+Do While lIndex <> NullIndex And _
+        mConcurrentHistDataRequests < MaxConcurrentHistDataRequests
+    submitEntry lIndex
+    mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
+    lIndex = mHistDataRequests(lIndex).Next
+Loop
 
 lIndex = mFirstPendingHistDataRequestsEntry
-
-Do While lIndex <> NullIndex And mConcurrentHistDataRequests < MaxConcurrentHistDataRequests
-    lCurrIndex = lIndex
-    lIndex = mHistDataRequests(lIndex).Next
-    mTwsAPI.RequestHistoricalData lCurrIndex, mHistDataRequests(lCurrIndex).Request
-    mHistDataRequests(lCurrIndex).ActualSubmissionTime = GetTimestamp
-        
+Do While lIndex <> NullIndex And _
+        mConcurrentHistDataRequests < MaxConcurrentHistDataRequests
+    submitEntry lIndex
     mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
-        
-    unqueueEntry lCurrIndex
+    lIndex = mHistDataRequests(lIndex).Next
 Loop
 
 mTaskContext.Suspend -1
@@ -829,17 +862,13 @@ Private Sub submitEntry(ByVal pIndex As Long)
 Const ProcName As String = "submitEntry"
 On Error GoTo Err
 
-
 If mHistDataRequests(pIndex).RequestType = HistoricalDataRequestTypes.HistoricalDataRequestTypeHistoricalBars Then
     mTwsAPI.RequestHistoricalData pIndex, mHistDataRequests(pIndex).Request
-    mHistDataRequests(pIndex).ActualSubmissionTime = mPacer.RecordSubmission(mHistDataRequests(pIndex).Request)
     mHistDataRequests(pIndex).State = StateRequestInProgress
 Else
     mTwsAPI.RequestRealtimeBars pIndex, mHistDataRequests(pIndex).Request.Contract, 5, "TRADES", False
 End If
 unqueueEntry pIndex
-
-mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
 
 Exit Sub
 

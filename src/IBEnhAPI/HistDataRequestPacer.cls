@@ -137,9 +137,7 @@ submittedHistDataRequests.AddValue pRequest, 0, lTimestamp, 0
 
 Dim lKey As String
 lKey = historicalDataRequestToString(pRequest)
-On Error Resume Next
-requestTimes.Remove lKey
-On Error GoTo Err
+If requestTimes.Contains(lKey) Then requestTimes.Remove lKey
 
 requestTimes.Add lTimestamp, lKey
 
@@ -181,11 +179,7 @@ Dim lKey As String
 lKey = contractAndTickTypeToString(pRequest)
 
 Dim lCache As ValueCache
-On Error Resume Next
-Set lCache = requestTimesForContractAndTickType(lKey)
-On Error GoTo Err
-
-If lCache Is Nothing Then
+If Not requestTimesForContractAndTickType.TryItem(lKey, lCache) Then
     Set lCache = CreateValueCache(TwsHistRequestContractAndTickTypeRequestLimit - 1, "Time")
     requestTimesForContractAndTickType.Add lCache, lKey
 End If
@@ -221,9 +215,12 @@ On Error GoTo Err
 
 Dim lLastTime As Date
 
-On Error Resume Next
-lLastTime = CDate(requestTimes(historicalDataRequestToString(pRequest)))
-If lLastTime <> 0 Then getEarliestTimeForIdenticalRequest = lLastTime + TwsHistRequestRepeatInterval
+Dim lKey As String
+lKey = historicalDataRequestToString(pRequest)
+If requestTimes.Contains(lKey) Then
+    lLastTime = CDate(requestTimes(lKey))
+    getEarliestTimeForIdenticalRequest = lLastTime + TwsHistRequestRepeatInterval
+End If
 
 Exit Function
 
@@ -247,13 +244,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function requestTimes() As Collection
+Private Function requestTimes() As EnumerableCollection
 Const ProcName As String = "requestTimes"
 On Error GoTo Err
 
-Static sRequestTimes As Collection
+Static sRequestTimes As EnumerableCollection
 
-If sRequestTimes Is Nothing Then Set sRequestTimes = New Collection
+If sRequestTimes Is Nothing Then Set sRequestTimes = New EnumerableCollection
 Set requestTimes = sRequestTimes
 
 Exit Function
@@ -262,13 +259,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function requestTimesForContractAndTickType() As Collection
+Private Function requestTimesForContractAndTickType() As EnumerableCollection
 Const ProcName As String = "requestTimesForContractAndTickType"
 On Error GoTo Err
 
-Static sRequestTimesForContractAndTickType As Collection
+Static sRequestTimesForContractAndTickType As EnumerableCollection
 
-If sRequestTimesForContractAndTickType Is Nothing Then Set sRequestTimesForContractAndTickType = New Collection
+If sRequestTimesForContractAndTickType Is Nothing Then Set sRequestTimesForContractAndTickType = New EnumerableCollection
 Set requestTimesForContractAndTickType = sRequestTimesForContractAndTickType
 
 Exit Function
