@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#337.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#338.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Historical Data Tester"
    ClientHeight    =   10380
@@ -10,7 +10,15 @@ Begin VB.Form Form1
    ScaleHeight     =   10380
    ScaleWidth      =   10560
    StartUpPosition =   3  'Windows Default
-   Begin VB.CheckBox ShowBarOnReceipt 
+   Begin VB.CheckBox DisableRequestPacingCheck 
+      Caption         =   "Disable request pacing"
+      Height          =   495
+      Left            =   8880
+      TabIndex        =   9
+      Top             =   3840
+      Width           =   1575
+   End
+   Begin VB.CheckBox ShowBarOnReceiptCheck 
       Caption         =   "Show each bar on receipt"
       Height          =   495
       Left            =   8880
@@ -155,6 +163,7 @@ InitialiseTWUtilities
 Set mUnhandledErrorHandler = UnhandledErrorHandler
 ApplicationGroupName = "TradeWright"
 ApplicationName = "HistDataTest1"
+DefaultLogLevel = LogLevelHighDetail
 SetupDefaultLogging Command
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
 
@@ -162,6 +171,7 @@ mClientId = 74889561
 Set mClient = GetClient("Essy", 7497, mClientId, , , True, , Me)
 Set mContractStore = mClient.GetContractStore
 Set mHistDataStore = mClient.GetHistoricalDataStore
+If DisableRequestPacingCheck.Value = vbChecked Then mClient.DisableHistoricalDataRequestPacing
 
 End Sub
 
@@ -240,7 +250,7 @@ On Error GoTo Err
 Dim lBarSpecFuture As IFuture
 Dim lContractSpec As IContractSpecifier
 
-Set lContractSpec = CreateContractSpecifier("ZZ7", "Z", "ICEEU", SecTypeFuture, "GBP", "201712")
+Set lContractSpec = CreateContractSpecifier("ZZ8", "Z", "ICEEU", SecTypeFuture, "GBP", "201812")
 
 Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
                 GetTimePeriod(1, TimePeriodMinute), _
@@ -275,13 +285,13 @@ Const ProcName As String = "FetchConstRangeButton_Click"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = CreateContractSpecifier("ZZ7", "Z", "ICEEU", SecTypeFuture, "GBP", "201712")
+Set lContractSpec = CreateContractSpecifier("ZZ8", "Z", "ICEEU", SecTypeFuture, "GBP", "201812")
 
 Dim lBarSpecFuture As IFuture
 Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
                 GetTimePeriod(10, TimePeriodTickMovement), _
-                CDate("2017/11/01 08:00"), _
-                CDate("2017/12/15 12:00"), _
+                CDate("2018/11/01 08:00"), _
+                CDate("2018/12/15 12:00"), _
                 500, _
                 BarTypeTrade, _
                 , _
@@ -329,61 +339,67 @@ Private Sub ManyFetchButton1_Click()
 Const ProcName As String = "ManyFetchButton1_Click"
 On Error GoTo Err
 
-fetchBarsForFTSEStock "AAL"
-fetchBarsForFTSEStock "ABF"
-fetchBarsForFTSEStock "ADM"
-fetchBarsForFTSEStock "AGK"
-fetchBarsForFTSEStock "AMEC"
-fetchBarsForFTSEStock "ANTO"
-fetchBarsForFTSEStock "ARM"
-fetchBarsForFTSEStock "AU."
-fetchBarsForFTSEStock "AV."
-fetchBarsForFTSEStock "AZN"
+Dim lSymbols As New EnumerableCollection
+lSymbols.Add "AAL"
+lSymbols.Add "ABF"
+lSymbols.Add "ADM"
+lSymbols.Add "AGK"
+lSymbols.Add "AMEC"
+lSymbols.Add "ANTO"
+lSymbols.Add "ARM"
+lSymbols.Add "AU."
+lSymbols.Add "AV."
+lSymbols.Add "AZN"
 ' 10
-fetchBarsForFTSEStock "BA."
-fetchBarsForFTSEStock "BARC"
-fetchBarsForFTSEStock "BATS"
-fetchBarsForFTSEStock "BG."
-fetchBarsForFTSEStock "BLND"
-fetchBarsForFTSEStock "BLT"
-fetchBarsForFTSEStock "BP."
-fetchBarsForFTSEStock "BRBY"
-fetchBarsForFTSEStock "BSY"
-fetchBarsForFTSEStock "BT.A"
+lSymbols.Add "BA."
+lSymbols.Add "BARC"
+lSymbols.Add "BATS"
+lSymbols.Add "BG."
+lSymbols.Add "BLND"
+lSymbols.Add "BLT"
+lSymbols.Add "BP."
+lSymbols.Add "BRBY"
+lSymbols.Add "BSY"
+lSymbols.Add "BT.A"
 '20
-fetchBarsForFTSEStock "CCL"
-fetchBarsForFTSEStock "CNA"
-fetchBarsForFTSEStock "CNE"
-fetchBarsForFTSEStock "CPG"
-fetchBarsForFTSEStock "CPI"
-fetchBarsForFTSEStock "CSCG"
-fetchBarsForFTSEStock "DGE"
-fetchBarsForFTSEStock "EMG"
-fetchBarsForFTSEStock "ENRC"
-fetchBarsForFTSEStock "ESSR"
+lSymbols.Add "CCL"
+lSymbols.Add "CNA"
+lSymbols.Add "CNE"
+lSymbols.Add "CPG"
+lSymbols.Add "CPI"
+lSymbols.Add "CSCG"
+lSymbols.Add "DGE"
+lSymbols.Add "EMG"
+lSymbols.Add "ENRC"
+lSymbols.Add "ESSR"
 '30
-fetchBarsForFTSEStock "EXPN"
-fetchBarsForFTSEStock "FRES"
-fetchBarsForFTSEStock "GFS"
-fetchBarsForFTSEStock "GKN"
-fetchBarsForFTSEStock "GSK"
-fetchBarsForFTSEStock "HL."
-fetchBarsForFTSEStock "HMSO"
-fetchBarsForFTSEStock "HSBA"
-fetchBarsForFTSEStock "IAG"
-fetchBarsForFTSEStock "IAP"
+lSymbols.Add "EXPN"
+lSymbols.Add "FRES"
+lSymbols.Add "GFS"
+lSymbols.Add "GKN"
+lSymbols.Add "GSK"
+lSymbols.Add "HL."
+lSymbols.Add "HMSO"
+lSymbols.Add "HSBA"
+lSymbols.Add "IAG"
+lSymbols.Add "IAP"
 '40
-fetchBarsForFTSEStock "IHG"
-fetchBarsForFTSEStock "III"
-fetchBarsForFTSEStock "IMI"
-fetchBarsForFTSEStock "IMT"
-fetchBarsForFTSEStock "INVP"
-fetchBarsForFTSEStock "IPR"
-fetchBarsForFTSEStock "ISAT"
-fetchBarsForFTSEStock "ISYS"
-fetchBarsForFTSEStock "ITRK"
-fetchBarsForFTSEStock "ITV"
+lSymbols.Add "IHG"
+lSymbols.Add "III"
+lSymbols.Add "IMI"
+lSymbols.Add "IMT"
+lSymbols.Add "INVP"
+lSymbols.Add "IPR"
+lSymbols.Add "ISAT"
+lSymbols.Add "ISYS"
+lSymbols.Add "ITRK"
+lSymbols.Add "ITV"
 '50
+
+Dim t As New FetchFTSEBarsTask
+t.Initialise Me, lSymbols
+
+StartTask t, PriorityNormal
 
 Exit Sub
 
@@ -395,63 +411,69 @@ Private Sub ManyFetchButton2_Click()
 Const ProcName As String = "ManyFetchButton2_Click"
 On Error GoTo Err
 
-fetchBarsForFTSEStock "JMAT"
-fetchBarsForFTSEStock "KAZ"
-fetchBarsForFTSEStock "KGF"
-fetchBarsForFTSEStock "LAND"
-fetchBarsForFTSEStock "LGEN"
-fetchBarsForFTSEStock "LLOY"
-fetchBarsForFTSEStock "LMI"
-fetchBarsForFTSEStock "MKS"
-fetchBarsForFTSEStock "MRW"
-fetchBarsForFTSEStock "NG."
+Dim lSymbols As New EnumerableCollection
+lSymbols.Add "JMAT"
+lSymbols.Add "KAZ"
+lSymbols.Add "KGF"
+lSymbols.Add "LAND"
+lSymbols.Add "LGEN"
+lSymbols.Add "LLOY"
+lSymbols.Add "LMI"
+lSymbols.Add "MKS"
+lSymbols.Add "MRW"
+lSymbols.Add "NG."
 '60
-fetchBarsForFTSEStock "NXT"
-fetchBarsForFTSEStock "OML"
-fetchBarsForFTSEStock "PFC"
-fetchBarsForFTSEStock "PRU"
-fetchBarsForFTSEStock "PSON"
-fetchBarsForFTSEStock "RB."
-fetchBarsForFTSEStock "RBS"
-fetchBarsForFTSEStock "RDSA"
-fetchBarsForFTSEStock "RDSB"
-fetchBarsForFTSEStock "REL"
+lSymbols.Add "NXT"
+lSymbols.Add "OML"
+lSymbols.Add "PFC"
+lSymbols.Add "PRU"
+lSymbols.Add "PSON"
+lSymbols.Add "RB."
+lSymbols.Add "RBS"
+lSymbols.Add "RDSA"
+lSymbols.Add "RDSB"
+lSymbols.Add "REL"
 '70
-fetchBarsForFTSEStock "REX"
-fetchBarsForFTSEStock "RIO"
-fetchBarsForFTSEStock "RR."
-fetchBarsForFTSEStock "RRS"
-fetchBarsForFTSEStock "RSA"
-fetchBarsForFTSEStock "RSL"
-fetchBarsForFTSEStock "SAB"
-fetchBarsForFTSEStock "SBRY"
-fetchBarsForFTSEStock "SDR"
-fetchBarsForFTSEStock "SDRC"
+lSymbols.Add "REX"
+lSymbols.Add "RIO"
+lSymbols.Add "RR."
+lSymbols.Add "RRS"
+lSymbols.Add "RSA"
+lSymbols.Add "RSL"
+lSymbols.Add "SAB"
+lSymbols.Add "SBRY"
+lSymbols.Add "SDR"
+lSymbols.Add "SDRC"
 '80
-fetchBarsForFTSEStock "SGE"
-fetchBarsForFTSEStock "SHP"
-fetchBarsForFTSEStock "SL."
-fetchBarsForFTSEStock "SMIN"
-fetchBarsForFTSEStock "SN."
-fetchBarsForFTSEStock "SRP"
-fetchBarsForFTSEStock "SSE"
-fetchBarsForFTSEStock "STAN"
-fetchBarsForFTSEStock "SVT"
-fetchBarsForFTSEStock "TLW"
+lSymbols.Add "SGE"
+lSymbols.Add "SHP"
+lSymbols.Add "SL."
+lSymbols.Add "SMIN"
+lSymbols.Add "SN."
+lSymbols.Add "SRP"
+lSymbols.Add "SSE"
+lSymbols.Add "STAN"
+lSymbols.Add "SVT"
+lSymbols.Add "TLW"
 '90
-fetchBarsForFTSEStock "TSCO"
-fetchBarsForFTSEStock "TT."
-fetchBarsForFTSEStock "ULVR"
-fetchBarsForFTSEStock "UU."
-fetchBarsForFTSEStock "VED"
-fetchBarsForFTSEStock "VOD"
-fetchBarsForFTSEStock "WEIR"
-fetchBarsForFTSEStock "WG."
-fetchBarsForFTSEStock "WOS"
-fetchBarsForFTSEStock "WPP"
+lSymbols.Add "TSCO"
+lSymbols.Add "TT."
+lSymbols.Add "ULVR"
+lSymbols.Add "UU."
+lSymbols.Add "VED"
+lSymbols.Add "VOD"
+lSymbols.Add "WEIR"
+lSymbols.Add "WG."
+lSymbols.Add "WOS"
+lSymbols.Add "WPP"
 '100
-fetchBarsForFTSEStock "WTB"
-fetchBarsForFTSEStock "XTA"
+lSymbols.Add "WTB"
+lSymbols.Add "XTA"
+
+Dim t As New FetchFTSEBarsTask
+t.Initialise Me, lSymbols
+
+StartTask t, PriorityNormal
 
 Exit Sub
 
@@ -479,6 +501,35 @@ End Sub
 ' Methods
 '@================================================================================
 
+Friend Function FetchBarsForFTSEStock(ByVal pSymbol As String) As IFuture
+Const ProcName As String = "FetchBarsForFTSEStock"
+On Error GoTo Err
+
+Dim lBarSpecFuture As IFuture
+Dim lContractSpec As IContractSpecifier
+
+Set lContractSpec = CreateContractSpecifier(pSymbol, , "LSE", SecTypeStock, "GBP")
+
+Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
+                GetTimePeriod(20, TimePeriodSecond), _
+                Now - 7#, _
+                Now, _
+                2000, _
+                BarTypeTrade, _
+                , _
+                , _
+                False, _
+                CDate("08:00"), _
+                CDate("16:30"))
+
+Set FetchBarsForFTSEStock = FetchBars(lContractSpec, lBarSpecFuture)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -498,47 +549,18 @@ ManyFetchButton1.Enabled = True
 ManyFetchButton2.Enabled = True
 End Sub
 
-Private Sub FetchBars(ByVal pContractSpec As IContractSpecifier, ByVal pBarSpecFuture As IFuture)
+Private Function FetchBars(ByVal pContractSpec As IContractSpecifier, ByVal pBarSpecFuture As IFuture) As IFuture
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
-Dim lListener As New BarListener
-lListener.Initialise pBarSpecFuture, mHistDataStore, pContractSpec, (ShowBarOnReceipt.Value = vbChecked), (ShowBarsAtEndCheck.Value = vbChecked)
+Dim lFetcher As New BarFetcher
+Set FetchBars = lFetcher.Fetch(pBarSpecFuture, mHistDataStore, pContractSpec, (ShowBarOnReceiptCheck.Value = vbChecked), (ShowBarsAtEndCheck.Value = vbChecked))
 
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub fetchBarsForFTSEStock(ByVal pSymbol As String)
-Const ProcName As String = "fetchBarsForFTSEStock"
-On Error GoTo Err
-
-Dim lBarSpecFuture As IFuture
-Dim lContractSpec As IContractSpecifier
-
-Set lContractSpec = CreateContractSpecifier(pSymbol, , "LSE", SecTypeStock, "GBP")
-
-Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
-                GetTimePeriod(5, TimePeriodMinute), _
-                Now - 7#, _
-                Now, _
-                2000, _
-                BarTypeTrade, _
-                , _
-                , _
-                False, _
-                CDate("08:00"), _
-                CDate("16:30"))
-
-FetchBars lContractSpec, lBarSpecFuture
-
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"

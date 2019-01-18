@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BarListener"
+Attribute VB_Name = "BarFetcher"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -40,7 +40,7 @@ Implements IBarFetchListener
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "BarListener"
+Private Const ModuleName                            As String = "BarFetcher"
 
 '@================================================================================
 ' Member variables
@@ -154,25 +154,26 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
+Friend Function Fetch( _
                 ByVal pBarSpecFuture As IFuture, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pShowEachBar As Boolean, _
-                ByVal pShowAllBarsAtEnd As Boolean)
-Const ProcName As String = "Initialise"
+                ByVal pShowAllBarsAtEnd As Boolean) As IFuture
+Const ProcName As String = "Fetch"
 On Error GoTo Err
 
 Set mContractSpec = pContractSpec
 mShowEachBar = pShowEachBar
 mShowAllBarsAtEnd = pShowAllBarsAtEnd
-mFutureWaiter.Add pHistDataStore.FetchBars(pBarSpecFuture, Me, pContractSpec)
+Set Fetch = pHistDataStore.FetchBars(pBarSpecFuture, Me, pContractSpec)
+mFutureWaiter.Add Fetch
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 '@================================================================================
 ' Helper Functions
@@ -183,6 +184,8 @@ Const ProcName As String = "processReturnedBars"
 On Error GoTo Err
 
 LogMessage "Historical data fetch completed: " & mbars.Count & " bars retrieved for " & mContractSpec.ToString
+If mbars.Count = 0 Then Exit Sub
+
 LogMessage "First bar: " & mbars.Bar(1).ToString
 LogMessage "Last bar: " & mbars.Bar(0).ToString
 
