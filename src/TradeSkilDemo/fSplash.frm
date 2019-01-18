@@ -118,7 +118,7 @@ Private Const ModuleName                            As String = "fSplash"
 
 Private Sub Form_Load()
 ProductLabel.caption = AppName
-VersionLabel.caption = "Version" & App.Major & "." & App.Minor & "." & App.Revision
+VersionLabel.caption = "Version " & App.Major & "." & App.Minor & "." & App.Revision
 
 GetLogger("log").AddLogListener Me
 End Sub
