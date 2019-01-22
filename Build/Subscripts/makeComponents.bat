@@ -100,7 +100,7 @@ echo Making components for TradeWright.TradeBuild.ServiceProviders
 echo.
 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat IBAPI IBAPI /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat IBAPI IBAPI /T:DLL /B:%BINARY_COMPAT% /C
 if errorlevel 1 pause
 call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause

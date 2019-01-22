@@ -1,14 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.106
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TradeBuildPlatformSetup", "TradeBuildPlatformSetup\TradeBuildPlatformSetup.vdproj", "{F1A9F6A2-9408-4CD7-B706-1D87EB315762}"
-	ProjectSection(ProjectDependencies) = postProject
-		{EC9232A3-FE53-438A-B41A-1E7526108FD7} = {EC9232A3-FE53-438A-B41A-1E7526108FD7}
-	EndProjectSection
-EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TradeBuildPlatformMerge", "TradeBuildPlatformMerge\TradeBuildPlatformMerge.vdproj", "{DC9232A3-FE53-438A-B41A-1E7526108FD7}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TradeBuildPlatformSetup", "TradeBuildPlatformSetup\TradeBuildPlatformSetup.vdproj", "{BF0D6CCC-1558-453A-95F5-18ADDDCD4A00}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,16 +13,19 @@ Global
 		Release|Default = Release|Default
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F1A9F6A2-9408-4CD7-B706-1D87EB315762}.Debug|Default.ActiveCfg = Debug
-		{F1A9F6A2-9408-4CD7-B706-1D87EB315762}.Debug|Default.Build.0 = Debug
-		{F1A9F6A2-9408-4CD7-B706-1D87EB315762}.Release|Default.ActiveCfg = Release
-		{F1A9F6A2-9408-4CD7-B706-1D87EB315762}.Release|Default.Build.0 = Release
 		{DC9232A3-FE53-438A-B41A-1E7526108FD7}.Debug|Default.ActiveCfg = Debug
 		{DC9232A3-FE53-438A-B41A-1E7526108FD7}.Debug|Default.Build.0 = Debug
 		{DC9232A3-FE53-438A-B41A-1E7526108FD7}.Release|Default.ActiveCfg = Release
 		{DC9232A3-FE53-438A-B41A-1E7526108FD7}.Release|Default.Build.0 = Release
+		{BF0D6CCC-1558-453A-95F5-18ADDDCD4A00}.Debug|Default.ActiveCfg = Debug
+		{BF0D6CCC-1558-453A-95F5-18ADDDCD4A00}.Debug|Default.Build.0 = Debug
+		{BF0D6CCC-1558-453A-95F5-18ADDDCD4A00}.Release|Default.ActiveCfg = Release
+		{BF0D6CCC-1558-453A-95F5-18ADDDCD4A00}.Release|Default.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8D393E4B-A82B-49A4-861B-A4DD54929560}
 	EndGlobalSection
 EndGlobal
