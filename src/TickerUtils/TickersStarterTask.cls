@@ -191,7 +191,7 @@ If ev.Future.IsAvailable Then
 ElseIf ev.Future.IsCancelled Then
     mTaskContext.Finish Empty, True
 ElseIf ev.Future.IsFaulted Then
-    mTaskContext.Finish Empty, True
+    mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 End If
 
 Exit Sub

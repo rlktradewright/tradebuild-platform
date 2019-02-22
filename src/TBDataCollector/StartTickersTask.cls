@@ -228,6 +228,7 @@ On Error GoTo Err
 
 If ev.Cancelled Then
     gLogger.Log "Starting tickers cancelled for contract spec: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelSevere
+    mTaskContext.Continue
 ElseIf ev.ErrorNumber <> 0 Then
     gLogger.Log "Error " & ev.ErrorNumber & " starting tickers: " & ev.ErrorMessage, ProcName, ModuleName, LogLevelSevere
     If Not mTaskContext Is Nothing Then mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
