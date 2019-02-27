@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#337.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#338.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   12540
@@ -362,7 +362,10 @@ Private Sub ContractSpecBuilder1_NotReady()
 Const ProcName As String = "ContractSpecBuilder1_NotReady"
 On Error GoTo Err
 
-If Not mContractFuture Is Nothing Then mContractFuture.Cancel
+If Not mContractFuture Is Nothing Then
+    If Not mContractFuture.IsPending Then mContractFuture.Cancel
+    Set mContractFuture = Nothing
+End If
 
 OrderTicket.Clear
 DOMDisplay.Finish
@@ -381,7 +384,10 @@ Private Sub ContractSpecBuilder1_Ready()
 Const ProcName As String = "ContractSpecBuilder1_Ready"
 On Error GoTo Err
 
-If Not mContractFuture Is Nothing Then mContractFuture.Cancel
+If Not mContractFuture Is Nothing Then
+    If mContractFuture.IsPending Then mContractFuture.Cancel
+    Set mContractFuture = Nothing
+End If
 Set mContract = Nothing
 
 OrderTicket.Clear
