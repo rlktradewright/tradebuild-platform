@@ -2715,13 +2715,15 @@ Set mActiveOrderContext = Value
 Set mContract = gGetContractFromContractFuture(mActiveOrderContext.ContractFuture)
 
 Set mDataSource = mActiveOrderContext.DataSource
-If mDataSource Is Nothing Then
-ElseIf ticksAvailable Then
-    mAskPrice = mDataSource.CurrentTick(TickTypeAsk).Price
-    mBidPrice = mDataSource.CurrentTick(TickTypeBid).Price
-    mTradePrice = mDataSource.CurrentTick(TickTypeTrade).Price
+If Not mDataSource Is Nothing Then
+    If Not mDataSource.IsMarketDataRequested Then mDataSource.StartMarketData
     mDataSource.AddGenericTickListener Me
     mDataSource.AddStateChangeListener Me
+    If ticksAvailable Then
+        mAskPrice = mDataSource.CurrentTick(TickTypeAsk).Price
+        mBidPrice = mDataSource.CurrentTick(TickTypeBid).Price
+        mTradePrice = mDataSource.CurrentTick(TickTypeTrade).Price
+    End If
 End If
 
 If mActiveOrderContext.IsReady Then
