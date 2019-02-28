@@ -89,12 +89,10 @@ Attribute mTwsAPI.VB_VarHelpID = -1
 Private mMarketDataTable()                          As TickerTableEntry
 Private mMarketDataTableFirstFreeIndex              As Long
 Private mMarketDataTableNextIndex                   As Long
-Private mMarketDataTableMaxUsedIndex                As Long
 
 Private mMarketDepthTable()                         As TickerTableEntry
 Private mMarketDepthTableFirstFreeIndex             As Long
 Private mMarketDepthTableNextIndex                  As Long
-Private mMarketDepthTableMaxUsedIndex               As Long
 
 Private mContractRequester                          As ContractDetailsRequester
 Private mHistoricalDataRequester                    As HistDataRequester
@@ -113,11 +111,9 @@ Private mIsTwsConnectedToIBServers                  As Boolean
 Private Sub Class_Initialize()
 ReDim mMarketDataTable(3) As TickerTableEntry
 mMarketDataTableFirstFreeIndex = NullIndex
-mMarketDataTableMaxUsedIndex = NullIndex
 
 ReDim mMarketDepthTable(3) As TickerTableEntry
 mMarketDepthTableFirstFreeIndex = NullIndex
-mMarketDepthTableMaxUsedIndex = NullIndex
 
 Set mFutureWaiter = New FutureWaiter
 End Sub
@@ -534,31 +530,21 @@ Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
-Dim lBuilder As TickStreamBuilder
-Set lBuilder = ev.Source
-
 Dim lStreamId As Long
-lStreamId = lBuilder.TickStream.StreamId
+Dim lIsMarketData As Boolean
+lIsMarketData = isStreamBuilderForMarketData(ev.Source, lStreamId)
 
 If ev.State = TickStreamStates.TickStreamStateFinished Then
-    If lStreamId <= mMarketDataTableMaxUsedIndex Then
-        If mMarketDataTable(lStreamId).TickStreamBuilder Is lBuilder Then
-            CancelMarketData lStreamId
-        End If
-    ElseIf lStreamId <= mMarketDepthTableMaxUsedIndex Then
-        If mMarketDepthTable(lStreamId).TickStreamBuilder Is lBuilder Then
-            CancelMarketDepth lStreamId
-        End If
+    If lIsMarketData Then
+        CancelMarketData lStreamId
+    Else
+        CancelMarketDepth lStreamId
     End If
 ElseIf ev.State = TickStreamStates.TickStreamStateRunning Then
-    If lStreamId <= mMarketDataTableMaxUsedIndex Then
-        If mMarketDataTable(lStreamId).TickStreamBuilder Is lBuilder Then
-            If isReadyForData(mMarketDataTable, lStreamId) Then reqMarketData lStreamId
-        End If
-    ElseIf lStreamId <= mMarketDepthTableMaxUsedIndex Then
-        If mMarketDepthTable(lStreamId).TickStreamBuilder Is lBuilder Then
-            If isReadyForData(mMarketDepthTable, lStreamId) Then reqMarketDepth lStreamId
-        End If
+    If lIsMarketData Then
+        If isReadyForData(mMarketDataTable, lStreamId) Then reqMarketData lStreamId
+    Else
+        If isReadyForData(mMarketDepthTable, lStreamId) Then reqMarketDepth lStreamId
     End If
 End If
 
@@ -718,7 +704,7 @@ On Error GoTo Err
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
 
-pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, mMarketDataTableMaxUsedIndex, pStreamId, pContractFuture, pErrorListener)
+pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, pStreamId, pContractFuture, pErrorListener)
 
 gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
 
@@ -738,7 +724,7 @@ On Error GoTo Err
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
 
-pStreamId = getTableEntry(mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, mMarketDepthTableMaxUsedIndex, pStreamId, pContractFuture, pErrorListener)
+pStreamId = getTableEntry(mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, pStreamId, pContractFuture, pErrorListener)
 mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
 
 gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
@@ -876,7 +862,6 @@ Private Function getTableEntry( _
                 ByRef pTable() As TickerTableEntry, _
                 ByRef pNextIndex As Long, _
                 ByRef pFirstFreeIndex As Long, _
-                ByRef pMaxUsedIndex As Long, _
                 ByVal pIndex As Long, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pErrorListener As IMarketDataErrorListener) As Long
@@ -905,8 +890,6 @@ Else
     Loop
 End If
 
-If lIndex > pMaxUsedIndex Then pMaxUsedIndex = lIndex
-    
 With pTable(lIndex)
     .InUse = True
     Set .ErrorListener = pErrorListener
@@ -978,6 +961,28 @@ With pTickerTable(pStreamId)
                     .TickStreamBuilder.TickStream.ClockFuture.IsAvailable And _
                     .TickStreamBuilder.TickStream.State = TickStreamStateRunning
 End With
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isStreamBuilderForMarketData( _
+                ByVal pBuilder As TickStreamBuilder, _
+                ByRef pStreamId As Long) As Boolean
+Const ProcName As String = "isStreamBuilderForMarketData"
+On Error GoTo Err
+
+pStreamId = pBuilder.TickStream.StreamId
+
+If mMarketDataTable(pStreamId).TickStreamBuilder Is pBuilder Then
+    isStreamBuilderForMarketData = True
+ElseIf mMarketDepthTable(pStreamId).TickStreamBuilder Is pBuilder Then
+    isStreamBuilderForMarketData = False
+Else
+    Assert False, "Unexpected TickStreamBuilder"
+End If
 
 Exit Function
 
