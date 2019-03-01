@@ -1,46 +1,71 @@
 VERSION 5.00
 Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#338.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   12540
+   ClientHeight    =   12615
    ClientLeft      =   60
    ClientTop       =   450
-   ClientWidth     =   16395
+   ClientWidth     =   16695
    LinkTopic       =   "Form1"
-   ScaleHeight     =   12540
-   ScaleWidth      =   16395
+   ScaleHeight     =   12615
+   ScaleWidth      =   16695
    StartUpPosition =   3  'Windows Default
+   Begin TWControls40.TWButton ClosePositionsButton 
+      Height          =   1215
+      Left            =   14640
+      TabIndex        =   7
+      Top             =   120
+      Width           =   1935
+      _ExtentX        =   3413
+      _ExtentY        =   2143
+      Caption         =   "Close All Positions"
+      DefaultBorderColor=   15793920
+      DisabledBackColor=   0
+      Enabled         =   0   'False
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseOverBackColor=   0
+      PushedBackColor =   0
+   End
    Begin VB.CheckBox ShowMarketDepthCheck 
       Caption         =   "Show market depth"
       Height          =   375
-      Left            =   11520
+      Left            =   11760
       TabIndex        =   6
-      Top             =   240
+      Top             =   1560
       Width           =   3015
    End
    Begin TradingUI27.DOMDisplay DOMDisplay 
-      Height          =   11775
-      Left            =   11520
+      Height          =   10455
+      Left            =   11760
       TabIndex        =   5
-      Top             =   720
+      Top             =   2040
       Width           =   4815
       _ExtentX        =   8493
-      _ExtentY        =   20770
+      _ExtentY        =   18441
    End
    Begin TradingUI27.OrdersSummary OrdersSummary 
       Height          =   3495
       Left            =   120
       TabIndex        =   3
       Top             =   6240
-      Width           =   11175
-      _ExtentX        =   19711
+      Width           =   11535
+      _ExtentX        =   20346
       _ExtentY        =   6165
    End
    Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
-      Height          =   3690
+      Height          =   3510
       Left            =   120
       TabIndex        =   1
-      Top             =   600
+      Top             =   840
       Width           =   2535
       _ExtentX        =   4471
       _ExtentY        =   6191
@@ -56,16 +81,16 @@ Begin VB.Form Form1
       TabIndex        =   4
       TabStop         =   0   'False
       Top             =   9840
-      Width           =   11295
+      Width           =   11535
    End
    Begin TradingUI27.OrderTicket OrderTicket 
-      Height          =   6255
-      Left            =   2640
+      Height          =   6135
+      Left            =   2880
       TabIndex        =   2
       Top             =   0
       Width           =   8775
       _ExtentX        =   15478
-      _ExtentY        =   11033
+      _ExtentY        =   10821
    End
    Begin VB.CheckBox UsePositionManagerCheck 
       Caption         =   "Use Position Manager"
@@ -156,6 +181,8 @@ Private mMarketDataManager                          As IMarketDataManager
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mTheme                                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -201,6 +228,10 @@ mFutureWaiter.Add CreateFutureFromTask(mOrderManager.RecoverOrdersFromPreviousSe
                                         mClient, _
                                         mMarketDataManager, _
                                         mClient))
+                                        
+Set mTheme = New BlackTheme
+Me.BackColor = mTheme.BaseColor
+gApplyTheme mTheme, Me.Controls
 
 Exit Sub
 
