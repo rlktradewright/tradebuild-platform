@@ -201,6 +201,7 @@ InitialiseTWUtilities
 
 ApplicationGroupName = "TradeWright"
 ApplicationName = "OrdersTest1"
+DefaultLogLevel = LogLevelHighDetail
 SetupDefaultLogging Command
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
 
@@ -394,7 +395,9 @@ Const ProcName As String = "ContractSpecBuilder1_NotReady"
 On Error GoTo Err
 
 If Not mContractFuture Is Nothing Then
-    If Not mContractFuture.IsPending Then mContractFuture.Cancel
+    If mContractFuture.IsPending Then
+        mContractFuture.Cancel
+    End If
     Set mContractFuture = Nothing
 End If
 
@@ -416,7 +419,9 @@ Const ProcName As String = "ContractSpecBuilder1_Ready"
 On Error GoTo Err
 
 If Not mContractFuture Is Nothing Then
-    If mContractFuture.IsPending Then mContractFuture.Cancel
+    If mContractFuture.IsPending Then
+        mContractFuture.Cancel
+    End If
     Set mContractFuture = Nothing
 End If
 Set mContract = Nothing
@@ -511,7 +516,7 @@ If ev.Future.IsAvailable Then
             mContract.Specifier.SecType = SecTypeIndex _
         Then
             LogMessage "Non-tradeable contract found"
-        ElseIf mContract.ExpiryDate < Int(Now) Then
+        ElseIf IsContractExpired(mContract.ExpiryDate) Then
             LogMessage "Expired contract found"
         Else
             LogMessage "Found contract " & mContract.Specifier.ToString
@@ -671,17 +676,19 @@ Const ProcName As String = "releaseUnusedPositionManager"
 On Error GoTo Err
 
 If pPositionManager Is Nothing Then Exit Sub
+If pPositionManager.IsFinished Then Exit Sub
 If pPositionManager.PositionSize <> 0 Or pPositionManager.PendingPositionSize <> 0 Then Exit Sub
 
 pPositionManager.RemoveChangeListener Me
 pPositionManager.DataSource.StopMarketData
-pPositionManager.Finish
 
 If pPositionManager.IsSimulated Then
     mPositionManagersSimulated.Remove pPositionManager
 Else
     mPositionManagersLive.Remove pPositionManager
 End If
+
+pPositionManager.Finish
 
 Exit Sub
 
@@ -696,9 +703,9 @@ Const ProcName As String = "setupOrderContext"
 On Error GoTo Err
 
 If pUsePositionManager Then
-    releaseUnusedPositionManager mPositionManagerLive
+    'releaseUnusedPositionManager mPositionManagerLive
     Set mPositionManagerLive = Nothing
-    releaseUnusedPositionManager mPositionManagerSimulated
+    'releaseUnusedPositionManager mPositionManagerSimulated
     Set mPositionManagerSimulated = Nothing
     
     Dim lDataSource As IMarketDataSource
@@ -707,25 +714,26 @@ If pUsePositionManager Then
         Set lDataSource = mPositionManagerLive.DataSource
     End If
     
-    If mPositionManagersSimulated.Contains(pContract.Specifier.Key) Then Set mPositionManagerSimulated = mPositionManagersSimulated.Item(pContract.Specifier.Key)
+    If mPositionManagersSimulated.Contains(pContract.Specifier.Key) Then
+        Set mPositionManagerSimulated = mPositionManagersSimulated.Item(pContract.Specifier.Key)
+        Set lDataSource = mPositionManagerSimulated.DataSource
+    End If
     
-    If mPositionManagerLive Is Nothing Or mPositionManagerSimulated Is Nothing Then
-        If lDataSource Is Nothing Then
-            Set lDataSource = getDataSource(pContract)
-            If ShowMarketDepthCheck.Value = vbChecked Then DOMDisplay.DataSource = lDataSource
-        End If
-        
-        If mPositionManagerLive Is Nothing Then
-            Set mPositionManagerLive = mOrderManager.CreateRecoverablePositionManager(pContract.Specifier.Key, lDataSource, mClient, ApplicationName, "DefaultGroup")
-            mPositionManagerLive.AddChangeListener Me
-            mPositionManagerLive.OrderSubmitter.AddOrderSubmissionListener Me
-        End If
-        
-        If mPositionManagerSimulated Is Nothing Then
-            Set mPositionManagerSimulated = mOrderManager.CreatePositionManager(pContract.Specifier.Key, lDataSource, mOrderSubmitterFactorySimulated, "DefaultGroup", True)
-            mPositionManagerSimulated.AddChangeListener Me
-            mPositionManagerSimulated.OrderSubmitter.AddOrderSubmissionListener Me
-        End If
+    If lDataSource Is Nothing Then
+        Set lDataSource = getDataSource(pContract)
+        If ShowMarketDepthCheck.Value = vbChecked Then DOMDisplay.DataSource = lDataSource
+    End If
+    
+    If mPositionManagerLive Is Nothing Then
+        Set mPositionManagerLive = mOrderManager.CreateRecoverablePositionManager(pContract.Specifier.Key, lDataSource, mClient, ApplicationName, "DefaultGroup")
+        mPositionManagerLive.AddChangeListener Me
+        mPositionManagerLive.OrderSubmitter.AddOrderSubmissionListener Me
+    End If
+    
+    If mPositionManagerSimulated Is Nothing Then
+        Set mPositionManagerSimulated = mOrderManager.CreatePositionManager(pContract.Specifier.Key, lDataSource, mOrderSubmitterFactorySimulated, "DefaultGroup", True)
+        mPositionManagerSimulated.AddChangeListener Me
+        mPositionManagerSimulated.OrderSubmitter.AddOrderSubmissionListener Me
     End If
     
     Set mOrderContextsLive = mPositionManagerLive.OrderContexts
