@@ -289,6 +289,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "AVGCOST", _
             "AUC", _
             "BASKET", _
+            "BENCHPX", _
             "COND", _
             "CONDORDER", _
             "CONSCOST", _
