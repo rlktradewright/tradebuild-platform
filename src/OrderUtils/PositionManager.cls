@@ -977,6 +977,8 @@ On Error GoTo Err
 
 mProfitListeners.Add pListener
 
+If mExecutions.Count = 0 Then Exit Sub
+
 Dim ev As ProfitEventData
 Set ev.Source = Me
 ev.CurrencyCode = mCurrencyCode
