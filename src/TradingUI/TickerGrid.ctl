@@ -1827,7 +1827,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get AllowUserResizing() As AllowUserResizeSettings
+Public Property Get AllowUserResizing() As TWControls40.AllowUserResizeSettings
 Attribute AllowUserResizing.VB_Description = "Specifies whethe the user is allowed to change the size of columns and/or rows."
 Attribute AllowUserResizing.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Const ProcName As String = "AllowUserResizing"
@@ -1841,7 +1841,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let AllowUserResizing(ByVal New_AllowUserResizing As AllowUserResizeSettings)
+Public Property Let AllowUserResizing(ByVal New_AllowUserResizing As TWControls40.AllowUserResizeSettings)
 Const ProcName As String = "AllowUserResizing"
 On Error GoTo Err
 
