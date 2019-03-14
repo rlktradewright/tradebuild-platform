@@ -108,8 +108,6 @@ For Each oc In mOrderContexts
     If Not oc Is mBalancingOrderContext Then oc.NotifyPositionCloseout mLastExecutionReport
 Next
 
-Assert mPositionManager.PositionSize = 0, "Position size is not zero"
-
 doFinalActions
  
 Exit Sub
@@ -171,6 +169,8 @@ mFlags = pFlags
 mOrderContextsWasEnabled = mOrderContexts.Enabled
 mOrderContexts.Enabled = False  ' prevent any further orders being placed
                                 ' while the position is being closed
+
+
 
 If Not (mFlags And ClosePositionsCancelOrders) = ClosePositionsCancelOrders Then
     placeBalancingOrder
@@ -303,8 +303,6 @@ gLogBracketOrderMessage "Close positions at market: (Curr price=" & _
                 Me
 
 mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
-
-Set mBalancingOrderContext = Nothing
 
 Exit Sub
 
