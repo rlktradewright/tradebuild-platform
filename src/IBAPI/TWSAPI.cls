@@ -867,7 +867,11 @@ Friend Sub Initialise( _
                 ByVal pClientId As Long, _
                 Optional ByVal pLogTwsMessages As Boolean = True)
 AssertArgument pPort > 0, "Port must be > 0"
-AssertArgument pClientId >= 0, "ClientID must be >= 0"
+
+' We check the clientId is at most 9 digits when converted to a string, so that
+' we can append a "1" at the start of the clientId string to get round the
+' bug in TWS - see the comment in ApiConnectionNegotiator.NegotiateApiConnection()
+AssertArgument pClientId >= 0 And pClientId < 1000000000, "ClientID must be >= 0 and < 1000000000"
 
 If pServer = "" Then pServer = "127.0.0.1"
 mServer = pServer

@@ -172,7 +172,14 @@ On Error GoTo Err
 gLog "Connecting to Tws: negotiating versions and client id", ModuleName, ProcName
 mWriter.AddString ClientVersion, "Client version"
 mWriter.Send forceLogMessage:=True
-mWriter.AddString pClientId, "Client id"
+
+' We add a 1 to the front of the cientId because
+' TWS, when dealing with a client of this version, ignores
+' the first character of the clientID string: the result is
+' that OPEN_ORDER. ORDER_STATUS and EXECUTION messages are
+' are returned with a different clientId to what the client
+' expects
+mWriter.AddString "1" & CStr(pClientId), "Client id"
 mWriter.Send forceLogMessage:=True
 
 Exit Sub
