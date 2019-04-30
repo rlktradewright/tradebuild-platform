@@ -33,6 +33,8 @@ Private Const InputSep                      As String = ","
 
 Private Const EchoCommand                   As String = "$ECHO"
 
+Private Const DefaultClientId               As Long = "952361208"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -326,9 +328,9 @@ ElseIf Not IsInteger(port, 1) Then
 End If
     
 If clientId = "" Then
-    clientId = "1952361208"
-ElseIf Not IsInteger(clientId, 0) Then
-        gCon.WriteErrorLine "Error: clientId must be an integer >= 0"
+    clientId = DefaultClientId
+ElseIf Not IsInteger(clientId, 0, 999999999) Then
+        gCon.WriteErrorLine "Error: clientId must be an integer >= 0 and <= 999999999"
         setupTwsServiceProvider = False
 End If
     

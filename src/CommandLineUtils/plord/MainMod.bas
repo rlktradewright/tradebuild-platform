@@ -87,6 +87,8 @@ Private Const No                                    As String = "NO"
 
 Public Const TickDesignator                         As String = "T"
 
+Private Const DefaultClientId                       As Long = 906564398
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -536,9 +538,9 @@ ElseIf Not IsInteger(port, 0) Then
 End If
     
 If clientId = "" Then
-    clientId = &H71A3DD2E
-ElseIf Not IsInteger(clientId, 0) Then
-    gWriteErrorLine "Error: clientId must be an integer >= 0"
+    clientId = DefaultClientId
+ElseIf Not IsInteger(clientId, 0, 999999999) Then
+    gWriteErrorLine "Error: clientId must be an integer >= 0 and <= 999999999"
     setupTws = False
 End If
 
@@ -687,7 +689,7 @@ gCon.WriteLineToConsole "    twsserver  ::= STRING name or IP address of compute
 gCon.WriteLineToConsole "                          is running"
 gCon.WriteLineToConsole "    port       ::= INTEGER port to be used for API connection"
 gCon.WriteLineToConsole "    clientid   ::= INTEGER client id >=0 to be used for API connection (default"
-gCon.WriteLineToConsole "                           value is 1906564398"
+gCon.WriteLineToConsole "                           value is " & DefaultClientId & ")"
 gCon.WriteLineToConsole "    resultspath ::= path to the folder in which results files  are to be created"
 gCon.WriteLineToConsole "                    (defaults to the logfile path)"
 gCon.WriteLineToConsole "    logfilepath ::= path to the folder where the program logfile is to be"

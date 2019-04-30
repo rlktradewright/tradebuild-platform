@@ -56,6 +56,8 @@ Private Const SwitchFromFile                As String = "fromfile"
 Private Const SwitchFromTws                 As String = "fromtws"
 Private Const SwitchLogToConsole            As String = "logtoconsole"
 
+Private Const DefaultClientId               As Long = 205644991
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -750,9 +752,9 @@ ElseIf Not IsInteger(port, 0) Then
 End If
     
 If clientId = "" Then
-    clientId = &H7A92DC3F
-ElseIf Not IsInteger(clientId, 0) Then
-    gCon.WriteErrorLine "Error: clientId must be an integer >= 0"
+    clientId = DefaultClientId
+ElseIf Not IsInteger(clientId, 0, 999999999) Then
+    gCon.WriteErrorLine "Error: clientId must be an integer >= 0 and <= 999999999"
     setupTwsProviders = False
 End If
 
