@@ -534,7 +534,9 @@ Dim lStreamId As Long
 Dim lIsMarketData As Boolean
 lIsMarketData = isStreamBuilderForMarketData(ev.Source, lStreamId)
 
-If ev.State = TickStreamStates.TickStreamStateFinished Then
+If lStreamId = -1 Then
+    ' already stopped - nothing to do
+ElseIf ev.State = TickStreamStates.TickStreamStateFinished Then
     If lIsMarketData Then
         CancelMarketData lStreamId
     Else
@@ -981,7 +983,10 @@ If mMarketDataTable(pStreamId).TickStreamBuilder Is pBuilder Then
 ElseIf mMarketDepthTable(pStreamId).TickStreamBuilder Is pBuilder Then
     isStreamBuilderForMarketData = False
 Else
-    Assert False, "Unexpected TickStreamBuilder"
+    ' the stream has already been stopped (eg due to an error being notified
+    ' via IMarketDataConsumer or IMarketDepthConsumer)
+    isStreamBuilderForMarketData = False
+    pStreamId = -1
 End If
 
 Exit Function
