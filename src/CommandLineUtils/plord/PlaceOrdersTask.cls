@@ -73,7 +73,7 @@ Static sBracketOrdersEn As Enumerator
 
 If sProcessor Is Nothing Then
     If Not mProcessorsEn.MoveNext Then
-        If Not mMonitor Then mProcessors.Clear
+        mProcessors.Clear
         gInputPaused = False
         mTaskContext.Finish Empty, False
         gInputPaused = False

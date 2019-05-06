@@ -312,15 +312,16 @@ inString = Trim$(gCon.ReadLine(":"))
 
 Do While inString <> gCon.EofString
     mLineNumber = mLineNumber + 1
+    
     If inString = "" Then
-        ' ignore blank lines
+        ' ignore blank lines - and don't write to the log because
+        ' the FileAutoReader program sends blank lines very frequently
     ElseIf Left$(inString, 1) = "#" Then
+        gLogger.Log "StdIn: " & inString, ProcName, ModuleName
         ' ignore comments
     Else
         gLogger.Log "StdIn: " & inString, ProcName, ModuleName
-        Dim lExit As Boolean
-        processCommand inString, lExit
-        If lExit Then Exit Do
+        If Not processCommand(inString) Then Exit Do
     End If
     
     Do While gInputPaused
@@ -335,7 +336,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processCommand(ByVal pInstring As String, ByRef pExit As Boolean)
+Private Function processCommand(ByVal pInstring As String) As Boolean
 Const ProcName As String = "processCommand"
 On Error GoTo Err
 
@@ -347,8 +348,8 @@ params = Trim$(Right$(pInstring, Len(pInstring) - Len(command)))
 
 If command = ExitCommand Then
     gWriteLineToConsole "Exiting"
-    pExit = True
-    Exit Sub
+    processCommand = False
+    Exit Function
 End If
 
 If command = Help1Command Then
@@ -380,11 +381,13 @@ Else
     End Select
 End If
 
-Exit Sub
+processCommand = True
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Function processContractCommand(ByVal pParams As String) As Processor
 Const ProcName As String = "processContractCommand"
