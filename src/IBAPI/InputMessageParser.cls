@@ -989,6 +989,11 @@ mReader.LogInputMessage True
 
 If mNextOrderID < BaseOrderId Then mNextOrderID = BaseOrderId
 
+' add an arbitrary large number to cater for the case where the last
+' TWS session was ended untidily, without TWS saving its settings
+mNextOrderID = mNextOrderID + 10000
+
+
 ' Note that we do this here rather than in processInitialData().
 ' This because there are various conditions that can arise after
 ' the initial API connection sequence is successful but before
