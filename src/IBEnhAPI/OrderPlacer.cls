@@ -44,6 +44,7 @@ Implements ITwsConnectionStateListener
 Private Const ModuleName                            As String = "OrderPlacer"
 
 Private Const OrderRecoveryExecutionsRequestId      As Long = 777
+Private Const ReconnectionExecutionsRequestId       As Long = 333
 
 '@================================================================================
 ' Member variables
@@ -146,8 +147,10 @@ On Error GoTo Err
 
 Static sExecutions As New EnumerableCollection
 
-If sExecutions.Contains(pExecution.ExecId) Then Exit Sub
-sExecutions.Add pExecution, pExecution.ExecId
+If pReqId = ReconnectionExecutionsRequestId Then
+    If sExecutions.Contains(pExecution.ExecId) Then Exit Sub
+    sExecutions.Add pExecution, pExecution.ExecId
+End If
 
 Dim lOrder As IOrder
 Dim lorderId As String
@@ -201,11 +204,14 @@ Private Sub IOrderInfoConsumer_NotifyOpenOrder(ByVal pOrderId As Long, ByVal pCo
 Const ProcName As String = "IOrderInfoConsumer_NotifyOpenOrder"
 On Error GoTo Err
 
-Dim lOrder As IOrder
+If pOrder.ClientId <> mTwsAPI.ClientId Then
+    gLog "Ignoring order " & pOrder.OrderId & " for clientID " & pOrder.ClientId, ModuleName, ProcName
+    Exit Sub
+End If
+
 Dim lorderId As String
 If isKnownOrder(pOrderId) Then
-    Set lOrder = GetOrder(pOrderId)
-    lorderId = lOrder.Id
+    lorderId = GetOrder(pOrderId).Id
 End If
 
 Dim lOrderReport As IOrderReport
@@ -317,7 +323,7 @@ Case ApiConnNotConnected
 Case ApiConnConnecting
 
 Case ApiConnConnected
-    doStartOrderRecovery
+    doStartOrderRecovery ReconnectionExecutionsRequestId
 Case ApiConnFailed
 
 End Select
@@ -335,7 +341,7 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionRecovered"
 On Error GoTo Err
 
-doStartOrderRecovery
+doStartOrderRecovery ReconnectionExecutionsRequestId
 
 Exit Sub
 
@@ -444,6 +450,8 @@ Friend Sub StartOrderRecovery( _
 Const ProcName As String = "StartOrderRecovery"
 On Error GoTo Err
 
+Assert mOrderRecoveryListener Is Nothing, "Order recovery is already in progress"
+
 Set mOrderRecoveryListener = pOrderRecoveryListener
 mStartOrderRecoveryFrom = pStartFrom
 
@@ -452,7 +460,7 @@ If Not (mTwsAPI.ConnectionState = TwsConnConnected And mTwsAPI.IsTwsConnectedToI
     Exit Sub
 End If
 
-doStartOrderRecovery
+doStartOrderRecovery OrderRecoveryExecutionsRequestId
 
 Exit Sub
 
@@ -464,7 +472,7 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub doStartOrderRecovery()
+Private Sub doStartOrderRecovery(pReqId As Long)
 Const ProcName As String = "doStartOrderRecovery"
 On Error GoTo Err
 
@@ -472,10 +480,7 @@ gLog "Requesting open orders and executions", ModuleName, ProcName
 
 gRequestOpenOrders mTwsAPI
 
-' we request executions for all clientIDs: this is so that an application
-' that has been given a different clientID can still recover orders
-' from the previous session
-gRequestExecutions mTwsAPI, 0, mStartOrderRecoveryFrom
+gRequestExecutions mTwsAPI, pReqId, mTwsAPI.ClientId, mStartOrderRecoveryFrom
 
 Exit Sub
 

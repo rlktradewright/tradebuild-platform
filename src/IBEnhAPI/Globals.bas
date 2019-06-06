@@ -83,7 +83,7 @@ With gContractSpecToTwsContract
     .Multiplier = pContractSpecifier.Multiplier
     If .CurrencyCode = "GBP" And .Multiplier <> 1 Then .Multiplier = .Multiplier * 100
     .OptRight = gOptionRightToTwsOptRight(pContractSpecifier.Right)
-    .SecType = gSecTypeToTwsSecType(pContractSpecifier.SecType)
+    .Sectype = gSecTypeToTwsSecType(pContractSpecifier.Sectype)
     .Strike = pContractSpecifier.Strike
     .Symbol = pContractSpecifier.Symbol
     If Not pContractSpecifier.ComboLegs Is Nothing Then
@@ -129,7 +129,7 @@ On Error GoTo Err
 Dim lContract As TwsContract
 Dim lContractDetails As TwsContractDetails
 
-Assert pContract.Specifier.SecType <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
+Assert pContract.Specifier.Sectype <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
 
 Set lContractDetails = New TwsContractDetails
 Set lContract = gContractSpecToTwsContract(pContract.Specifier)
@@ -431,7 +431,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub gRequestExecutions(ByVal pTwsAPI As TwsAPI, ByVal pClientId As Long, ByVal pFrom As Date)
+Public Sub gRequestExecutions( _
+                ByVal pTwsAPI As TwsAPI, _
+                ByVal pReqId As Long, _
+                ByVal pClientId As Long, _
+                ByVal pFrom As Date)
 Const ProcName As String = "gRequestExecutions"
 On Error GoTo Err
 
@@ -439,7 +443,7 @@ Dim lExecFilter As TwsExecutionFilter
 Set lExecFilter = New TwsExecutionFilter
 lExecFilter.ClientId = pClientId
 lExecFilter.Time = pFrom
-pTwsAPI.RequestExecutions 1, lExecFilter
+pTwsAPI.RequestExecutions pReqId, lExecFilter
 
 Exit Sub
 
@@ -551,7 +555,7 @@ Dim lBuilder As ContractBuilder
 
 With pTwsContractDetails
     With .Summary
-        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.SecType), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
+        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
         If .Expiry <> "" Then
             lBuilder.ExpiryDate = CDate(Left$(.Expiry, 4) & "/" & _
                                                 Mid$(.Expiry, 5, 2) & "/" & _
