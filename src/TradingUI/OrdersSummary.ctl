@@ -437,7 +437,7 @@ If TypeOf ev.Source Is IBracketOrder Then
                                     .BracketOrder.Contract.Specifier.LocalSymbol, _
                                     lBracketOrder.CloseoutOrder, _
                                     lBracketOrderIndex, _
-                                    "Closeout", _
+                                    BracketOrderRoleCloseout, _
                                     .secType, _
                                     .TickSize
         Case BracketOrderChangeTypes.BracketOrderCloseoutOrderChanged
@@ -1520,6 +1520,26 @@ With mBracketOrderGridMappingTable(lIndex)
                                 .TickSize
     End If
 
+    If Not pBracketOrder.CloseoutOrder Is Nothing Then
+        If .TargetGridOffset >= 0 Then
+            .CloseoutGridOffset = .TargetGridOffset + 1
+        ElseIf .StopLossGridOffset >= 0 Then
+            .CloseoutGridOffset = .StopLossGridOffset + 1
+        ElseIf .EntryGridOffset >= 0 Then
+            .CloseoutGridOffset = .EntryGridOffset + 1
+        Else
+            .CloseoutGridOffset = 1
+        End If
+        
+        addOrderEntryToBracketOrderGrid .GridIndex + .CloseoutGridOffset, _
+                                lSymbol, _
+                                pBracketOrder.CloseoutOrder, _
+                                generateRowData(lPositionManagerGridMappingIndex, lIndex, BracketOrderRoles.BracketOrderRoleCloseout), _
+                                BracketOrderRoles.BracketOrderRoleCloseout, _
+                                .secType, _
+                                .TickSize
+    End If
+
     If Not pBracketOrder.EntryOrder Is Nothing Then _
                     setupMessage pBracketOrder.EntryOrder, _
                                 getMessage(pBracketOrder.EntryOrder), _
@@ -1531,6 +1551,11 @@ With mBracketOrderGridMappingTable(lIndex)
     If Not pBracketOrder.TargetOrder Is Nothing Then _
                     setupMessage pBracketOrder.TargetOrder, _
                                 getMessage(pBracketOrder.TargetOrder), _
+                                lIndex
+
+    If Not pBracketOrder.CloseoutOrder Is Nothing Then _
+                    setupMessage pBracketOrder.CloseoutOrder, _
+                                getMessage(pBracketOrder.CloseoutOrder), _
                                 lIndex
 
 End With
