@@ -865,7 +865,7 @@ mTableBuilder.AddStateTableEntry _
 
 ' A state timeout has occurred. This can simply be ignored.
 mTableBuilder.AddStateTableEntry _
-            BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimTimeoutExpired, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _

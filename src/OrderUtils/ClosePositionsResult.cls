@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "OrderPersistenceItem"
+Attribute VB_Name = "ClosePositionsResult"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -21,8 +21,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements IJSONable
 
 '@================================================================================
 ' Events
@@ -40,29 +38,22 @@ Implements IJSONable
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "OrderPersistenceItem"
+Private Const ModuleName                            As String = "ClosePositionsResult"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTimestamp                                  As Date
-Private mRecoveryContextName                        As String
-Private mData                                       As Variant
-Private mItemType                                   As String
-Private mProgId                                     As String
+Private mNumberOfPositionsClosed                    As Long
+Private mNumberOfPositionsNotClosed                 As Long
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' IJSONAble Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-Private Function IJSONAble_ToJSON() As String
-IJSONAble_ToJSON = ToJSON
-End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -72,81 +63,30 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Let Data(ByVal Value As Variant)
-gSetVariant mData, Value
+Friend Property Let NumberOfPositionsClosed(ByVal Value As Long)
+mNumberOfPositionsClosed = Value
 End Property
 
-Public Property Get Data() As Variant
-gSetVariant Data, mData
+Public Property Get NumberOfPositionsClosed() As Long
+NumberOfPositionsClosed = mNumberOfPositionsClosed
 End Property
 
-Public Property Let ItemType(ByVal Value As String)
-mItemType = Value
+Friend Property Get NumberOfPositionsNotClosed() As Long
+NumberOfPositionsNotClosed = mNumberOfPositionsNotClosed
 End Property
 
-Public Property Get ItemType() As String
-ItemType = mItemType
-End Property
-
-Public Property Let RecoveryContextName(ByVal Value As String)
-mRecoveryContextName = Value
-End Property
-
-Public Property Get RecoveryContextName() As String
-RecoveryContextName = mRecoveryContextName
-End Property
-
-Public Property Let ProgId(ByVal Value As String)
-mProgId = Value
-End Property
-
-Public Property Get ProgId() As String
-ProgId = mProgId
-End Property
-
-Public Property Let Timestamp(ByVal Value As Date)
-mTimestamp = Value
-End Property
-
-Public Property Get Timestamp() As Date
-Timestamp = mTimestamp
+Public Property Let NumberOfPositionsNotClosed(ByVal Value As Long)
+mNumberOfPositionsNotClosed = Value
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Function ToJSON() As String
-Dim jb As JSONBuilder
-Set jb = New JSONBuilder
-
-jb.BeginObject
-
-jb.EncodeName "$ProgID"
-jb.EncodeValue ProjectName & "." & ModuleName
-
-jb.EncodeName "RecoveryContextName"
-jb.EncodeValue mRecoveryContextName
-
-jb.EncodeName "Timestamp"
-jb.EncodeValue mTimestamp
-
-jb.EncodeName "ItemType"
-jb.EncodeValue mItemType
-
-jb.EncodeName "ProgId"
-jb.EncodeValue mProgId
-
-jb.EncodeName "Data"
-jb.EncodeValue mData
-
-jb.EndObject
-
-ToJSON = jb.JSONString
-End Function
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 

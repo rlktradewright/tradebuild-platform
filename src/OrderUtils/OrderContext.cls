@@ -48,7 +48,7 @@ Private Const ModuleName                As String = "OrderContext"
 '@================================================================================
 
 Private mGroupName                      As String
-Private mContextsName                   As String
+Private mRecoveryContextName            As String
 Private mName                           As String
 
 Private mSessionName                    As String
@@ -93,6 +93,8 @@ Private mTimerList                      As TimerList
 
 Private WithEvents mFutureWaiter        As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mBracketOrderRecoveryController As BracketOrderRecoveryCtlr
 
 '@================================================================================
 ' Class Event Handlers
@@ -182,8 +184,8 @@ Public Property Get CompletedSize() As Long
 CompletedSize = mCompletedSize
 End Property
 
-Public Property Get ContextsName() As String
-ContextsName = mContextsName
+Public Property Get RecoveryContextName() As String
+RecoveryContextName = mRecoveryContextName
 End Property
 
 Public Property Get ContractFuture() As IFuture
@@ -207,6 +209,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get GroupName() As String
+GroupName = mGroupName
 End Property
 
 Public Property Get IsActive() As Boolean
@@ -541,21 +547,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub CloseOut()
+Public Function CloseOut() As TaskController
 Const ProcName As String = "CloseOut"
 On Error GoTo Err
 
-Dim lBracketOrder As IBracketOrder
-For Each lBracketOrder In mActiveBracketOrders
-    lBracketOrder.CloseOut
-Next
+Dim t As New CloseoutOrderContextTask
 
-Exit Sub
+Set CloseOut = StartTask(New CloseoutOrderContextTask, PriorityNormal, , , Me)
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
-End Sub
+End Function
 
 Public Function CreateBuyBracketOrder( _
                 ByVal Number As Long, _
@@ -622,7 +626,7 @@ validateBracketTargetType pBracketTargetType
 
 Dim lBracketOrder As BracketOrder
 Set lBracketOrder = New BracketOrder
-lBracketOrder.Initialise nextKey, mContextsName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
+lBracketOrder.Initialise nextKey, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
 lBracketOrder.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
 lBracketOrder.EntryOrder = createEntryOrder(pAction, pNumber, pBracketEntryType, pEntryPrice, pEntryTriggerPrice, pEntryOffset)
@@ -739,6 +743,9 @@ If pAddToActiveBracketOrders Then
     mActiveBracketOrders.Add pBracketOrder
     If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
 End If
+
+setOrderRecoveryForBracketOrder pBracketOrder
+
 fireChange OrderContextActiveStateChanged
 pBracketOrder.Execute
 
@@ -789,7 +796,7 @@ End Function
 Friend Sub Initialise( _
                 ByVal pName As String, _
                 ByVal pSessionName As String, _
-                ByVal pContextsName As String, _
+                ByVal pRecoveryContextName As String, _
                 ByVal pGroupName As String, _
                 ByVal pIsSimulated As Boolean, _
                 ByVal pContractFuture As IFuture, _
@@ -798,14 +805,14 @@ Friend Sub Initialise( _
                 ByVal pOrderAuthoriser As IOrderAuthoriser, _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
                 ByVal pAccumulatedOrders As Orders, _
-                ByVal pSimulatedClockFuture As IFuture)
+                ByVal pSimulatedClockFuture As IFuture, _
+                ByVal pBracketOrderRecoveryController As BracketOrderRecoveryCtlr)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-mGroupName = pGroupName
 mName = pName
 mSessionName = pSessionName
-mContextsName = pContextsName
+mRecoveryContextName = pRecoveryContextName
 mGroupName = pGroupName
 mIsSimulated = pIsSimulated
 
@@ -829,6 +836,8 @@ Set mOrderSubmitter = pOrderSubmitter
 Set pOrderAuthoriser = pOrderAuthoriser
 Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
 Set mAccumulatedOrders = pAccumulatedOrders
+
+Set mBracketOrderRecoveryController = pBracketOrderRecoveryController
 
 Exit Sub
 
@@ -973,7 +982,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function NewOrder() As IOrder
+Friend Function NewExecution(ByVal pSetOrderRecovery As Boolean) As IExecutionReport
+Const ProcName As String = "NewExecution"
+On Error GoTo Err
+
+Dim lExec As New Execution
+If pSetOrderRecovery And Not mBracketOrderRecoveryController Is Nothing Then
+    lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
+End If
+lExec.GroupName = mGroupName
+
+Set NewExecution = lExec
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function NewOrder(ByVal pSetOrderRecovery As Boolean) As IOrder
 Const ProcName As String = "NewOrder"
 On Error GoTo Err
 
@@ -983,6 +1010,12 @@ Set lOrder = mTemplateOrder.Clone
 lOrder.Id = GenerateGUIDString
 
 If Not mAccumulatedOrders Is Nothing Then mAccumulatedOrders.Add lOrder
+
+If pSetOrderRecovery And Not mBracketOrderRecoveryController Is Nothing Then
+    Dim lObj As IRecoverable
+    Set lObj = lOrder
+    lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
+End If
 
 Set NewOrder = lOrder
 
@@ -1010,22 +1043,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Friend Sub NotifyPositionCloseout( _
-                ByVal pExec As IExecutionReport)
-Const ProcName As String = "NotifyPositionCloseout"
-On Error GoTo Err
-
-Dim lBracketOrder As IBracketOrder
-For Each lBracketOrder In mClosedBracketOrders
-    lBracketOrder.NotifyCloseout pExec
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "RemoveChangeListenerChangeListener"
@@ -1122,7 +1139,7 @@ Const ProcName As String = "createEntryOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
-Set lOrder = NewOrder
+Set lOrder = NewOrder(False)
 
 lOrder.Action = pAction
 lOrder.Quantity = pNumber
@@ -1194,7 +1211,7 @@ Const ProcName As String = "createStopLossOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
-Set lOrder = NewOrder
+Set lOrder = NewOrder(False)
 
 lOrder.Action = pAction
 lOrder.Quantity = pNumber
@@ -1241,7 +1258,7 @@ Const ProcName As String = "createTargetOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
-Set lOrder = NewOrder
+Set lOrder = NewOrder(False)
 lOrder.Action = pAction
 lOrder.Quantity = pNumber
 
@@ -1338,7 +1355,7 @@ On Error GoTo Err
 
 Static currID As Long
 currID = currID + 1
-nextKey = mSessionName & "/" & mContextsName & "/" & mName & "/" & currID
+nextKey = mSessionName & "/" & mRecoveryContextName & "/" & mName & "/" & currID
 
 Exit Function
 
@@ -1364,8 +1381,33 @@ On Error GoTo Err
 
 Set mContract = pContract
 Set mTemplateOrder = New Order
-mTemplateOrder.Initialise mGroupName, mContextsName, mContract.Specifier, Me
+mTemplateOrder.Initialise mGroupName, mRecoveryContextName, mContract.Specifier, Me
 mTemplateOrder.IsSimulated = mIsSimulated
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setOrderRecoveryForBracketOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "setOrderRecoveryForBracketOrder"
+On Error GoTo Err
+
+If mBracketOrderRecoveryController Is Nothing Then Exit Sub
+
+Dim lObj As IRecoverable
+Set lObj = pBracketOrder
+lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
+
+Set lObj = pBracketOrder.EntryOrder
+If Not lObj Is Nothing Then lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
+
+Set lObj = pBracketOrder.StopLossOrder
+If Not lObj Is Nothing Then lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
+
+Set lObj = pBracketOrder.TargetOrder
+If Not lObj Is Nothing Then lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
 
 Exit Sub
 

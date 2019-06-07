@@ -80,7 +80,7 @@ Private mProviderIsReady                        As Boolean
 
 Private WithEvents mBracketOrders               As BracketOrders
 Attribute mBracketOrders.VB_VarHelpID = -1
-Private WithEvents mOrders                      As Orders
+Private mOrders                                 As Orders
 Attribute mOrders.VB_VarHelpID = -1
 Private mExecutions                             As Executions
 
@@ -124,7 +124,8 @@ Private mRecovering                             As Boolean
 ' has told us to do so
 Private mClosingPosition                        As Boolean
 
-Private mCloser                                 As PositionCloser
+Private WithEvents mPositionCloser              As PositionCloser
+Attribute mPositionCloser.VB_VarHelpID = -1
 
 Private mRecoverableObjectListeners             As New Listeners
 
@@ -278,30 +279,37 @@ If mExecutions.Contains(pExecutionReport.Id) Then
     ' we've already had this notification
     Set lExec = mExecutions.Item(pExecutionReport.Id)
     lExec.SyncToExecutionReport pExecutionReport
+    lExec.SaveRecoveryInfo
     mExecutions.NotifyChange lExec
-Else
-    If TypeOf pExecutionReport Is Execution Then
-        Set lExec = pExecutionReport
-    Else
-        Set lExec = New Execution
-        lExec.Id = pExecutionReport.Id
-        If mSummary.IsSimulated Then lExec.IsSimulated = True
-        lExec.SyncToExecutionReport pExecutionReport
-    End If
-    lExec.GroupName = mSummary.GroupName
-    lExec.PositionManagerName = mSummary.Name
-    
-    mExecutions.Add lExec
-    
-    If Not mBracketOrderRecoveryController Is Nothing Then
-        lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
-    End If
-    
-    If Not mRecovering Then mOrders.Item(lExec.OrderId).NotifyFill lExec
-    processExecution lExec
-    
-    fireChange PositionManagerChangeTypes.PositionSizeChanged
+    Exit Sub
 End If
+
+If TypeOf pExecutionReport Is Execution Then
+    Set lExec = pExecutionReport
+Else
+    Set lExec = New Execution
+    lExec.Id = pExecutionReport.Id
+    If mSummary.IsSimulated Then lExec.IsSimulated = True
+    lExec.SyncToExecutionReport pExecutionReport
+End If
+lExec.GroupName = mSummary.GroupName
+lExec.RecoveryContextName = mSummary.Name
+
+If Not mBracketOrderRecoveryController Is Nothing Then
+    lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
+End If
+
+lExec.SaveRecoveryInfo
+
+mExecutions.Add lExec
+
+If Not mRecovering Then mOrders.Item(lExec.OrderId).NotifyFill lExec
+
+processExecution lExec
+
+If Not mRecovering Then SaveRecoveryInfo
+
+fireChange PositionManagerChangeTypes.PositionSizeChanged
 
 Exit Sub
 
@@ -352,8 +360,8 @@ End Sub
 ' IPositionMember Interface Members
 '@================================================================================
 
-Private Property Get IPositionMember_PositionManagerName() As String
-IPositionMember_PositionManagerName = mSummary.Name
+Private Property Get IPositionMember_RecoveryContextName() As String
+IPositionMember_RecoveryContextName = mSummary.Name
 End Property
 
 '@================================================================================
@@ -486,13 +494,8 @@ Case CollItemAdded
     Dim lBracketOrder As IBracketOrder
     Set lBracketOrder = ev.AffectedItem
     lBracketOrder.AddChangeListener Me
-    
-    Set lObj = lBracketOrder
-    If Not mBracketOrderRecoveryController Is Nothing Then lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
     fireChange PositionSizeChanged
 Case CollItemRemoved
-    Set lObj = ev.AffectedItem
-    If Not mBracketOrderRecoveryController Is Nothing Then lObj.RemoveRecoverableObjectListener mBracketOrderRecoveryController
     fireChange PositionSizeChanged
 End Select
 
@@ -506,34 +509,10 @@ End Sub
 ' mOrderContexts Event Handlers
 '@================================================================================
 
-Private Sub mOrderContexts_PositionsClosed()
+Private Sub mPositionCloser_PositionClosed()
 mClosingPosition = False
-Set mCloser = Nothing
+Set mPositionCloser = Nothing
 fireChange PositionClosed
-End Sub
-
-'@================================================================================
-' mOrders Event Handlers
-'@================================================================================
-
-Private Sub mOrders_CollectionChanged(ev As CollectionChangeEventData)
-Const ProcName As String = "mOrders_CollectionChanged"
-On Error GoTo Err
-
-Dim lObj As IRecoverable
-Select Case ev.changeType
-Case CollItemAdded
-    Set lObj = ev.AffectedItem
-    If Not mBracketOrderRecoveryController Is Nothing Then lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
-Case CollItemRemoved
-    Set lObj = ev.AffectedItem
-    If Not mBracketOrderRecoveryController Is Nothing Then lObj.RemoveRecoverableObjectListener mBracketOrderRecoveryController
-End Select
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -681,6 +660,24 @@ On Error GoTo Err
 
 checkInitialised
 Set Executions = mExecutions
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get HasBracketOrdersWithNonZeroSizes() As Boolean
+Const ProcName As String = "HasBracketOrdersWithNonZeroSizes"
+On Error GoTo Err
+
+Dim lBracketOrder As BracketOrder
+For Each lBracketOrder In mBracketOrders
+    If lBracketOrder.Size <> 0 Then
+        HasBracketOrdersWithNonZeroSizes = True
+        Exit Property
+    End If
+Next
 
 Exit Property
 
@@ -1017,8 +1014,7 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ClosePositions( _
-                Optional ByVal pFlags As ClosePositionsFlags = ClosePositionsCancelOrders Or ClosePositionsWaitForCancel)
+Public Sub ClosePositions()
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
@@ -1026,15 +1022,10 @@ checkInitialised
 
 If mClosingPosition Then Exit Sub
 
-If PositionSize = 0 And PendingPositionSize = 0 Then
-    fireChange PositionClosed
-    Exit Sub
-End If
-
 mClosingPosition = True
 
-Set mCloser = New PositionCloser
-mCloser.ClosePositions Me, pFlags
+Set mPositionCloser = New PositionCloser
+mPositionCloser.ClosePositions Me
 
 Exit Sub
 
@@ -1054,6 +1045,7 @@ AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is nothing"
 checkInitialised
 
 Set mOrderSubmitter = pOrderSubmitter
+mProviderIsReady = (mOrderSubmitter.State = OrderSubmitterStateReady)
 mOrderSubmitter.AddOrderSubmissionListener Me
 mOrderSubmitter.AddStateChangeListener Me
 
@@ -1079,7 +1071,7 @@ End If
 Set mBracketOrderRecoveryController = pBracketOrderRecoveryCtlr
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
 
-Set mOrderContexts = mOrderManager.CreateOrderContexts(mSummary.Name, mContractFuture, mOrderSubmitter, mDataSource, mSummary.GroupName, mSummary.IsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, mContractFuture, mOrderSubmitter, mBracketOrderRecoveryController, mDataSource, mSummary.GroupName, mSummary.IsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 
 Exit Sub
 
@@ -1132,6 +1124,7 @@ Set mDataSource = pDataSource
 mDataSource.AddGenericTickListener Me
 
 Set mOrderSubmitter = pOrderSubmitterFactory.CreateOrderSubmitter(mDataSource)
+mProviderIsReady = (mOrderSubmitter.State = OrderSubmitterStateReady)
 mOrderSubmitter.AddOrderSubmissionListener Me
 mOrderSubmitter.AddStateChangeListener Me
 
@@ -1575,7 +1568,7 @@ On Error GoTo Err
 If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
     Set mOrderContexts = mOrderManager.GetOrderContexts(mSummary.Name, mSummary.IsSimulated)
     If mOrderContexts Is Nothing Then _
-        Set mOrderContexts = mOrderManager.CreateOrderContexts(mSummary.Name, mContractFuture, mOrderSubmitter, mDataSource, mSummary.GroupName, mSummary.IsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+        Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, mContractFuture, mOrderSubmitter, mBracketOrderRecoveryController, mDataSource, mSummary.GroupName, mSummary.IsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 End If
 
 If mContractFuture.IsAvailable Then
@@ -1715,8 +1708,6 @@ Else
     
 End If
 
-If Not mRecovering Then SaveRecoveryInfo
-
 Exit Sub
 
 Err:
@@ -1734,7 +1725,7 @@ If mRecoverableObjectListeners Is Nothing Or mRecoverableObjectListeners.Count =
 
 mInitialRecoveryDataSaved = True
 fireRecoveryDataChanged
-mSummary.setClean
+mSummary.SetClean
 
 Exit Sub
 

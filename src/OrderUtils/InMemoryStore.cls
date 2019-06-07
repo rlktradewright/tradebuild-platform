@@ -168,11 +168,11 @@ On Error GoTo Err
 
 Dim opg As OrderPersistenceDataGroup
 
-If Not mOrderPersistenceDataGroups.Contains(pOpItem.PositionManagerName) Then
+If Not mOrderPersistenceDataGroups.Contains(pOpItem.RecoveryContextName) Then
     Set opg = New OrderPersistenceDataGroup
-    mOrderPersistenceDataGroups.Add opg, pOpItem.PositionManagerName
+    mOrderPersistenceDataGroups.Add opg, pOpItem.RecoveryContextName
 Else
-    Set opg = mOrderPersistenceDataGroups.Item(pOpItem.PositionManagerName)
+    Set opg = mOrderPersistenceDataGroups.Item(pOpItem.RecoveryContextName)
 End If
 
 opg.Add pOpItem
@@ -187,7 +187,7 @@ Friend Sub Delete(ByVal pOpItem As OrderPersistenceItem)
 Const ProcName As String = "Delete"
 On Error GoTo Err
 
-If mOrderPersistenceDataGroups.Contains(pOpItem.PositionManagerName) Then mOrderPersistenceDataGroups.Remove pOpItem.PositionManagerName
+If mOrderPersistenceDataGroups.Contains(pOpItem.RecoveryContextName) Then mOrderPersistenceDataGroups.Remove pOpItem.RecoveryContextName
 
 Exit Sub
 

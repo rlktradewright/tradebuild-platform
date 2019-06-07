@@ -51,7 +51,7 @@ Private Const ModuleName                            As String = "Execution"
 '@================================================================================
 
 Private mGroupName                                  As String
-Private mPositionManagerName                        As String
+Private mRecoveryContextName                        As String
 
 Private mAccountIdentifier                          As String
 Private mAction                                     As OrderActions
@@ -68,6 +68,8 @@ Private mTimezoneName                               As String
 Private mIsSimulated                                As Boolean
 
 Private mRecoverableObjectListeners                 As New Listeners
+
+Private mIsDirty                                    As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -110,7 +112,7 @@ IExecutionReport_IsSimulated = mIsSimulated
 End Property
 
 Private Property Let IExecutionReport_OrderId(ByVal Value As String)
-mOrderId = Value
+setFieldValue mOrderId, Value
 End Property
 
 Private Property Get IExecutionReport_OrderId() As String
@@ -137,8 +139,9 @@ End Property
 ' IPositionMember Interface Members
 '@================================================================================
 
-Private Property Get IPositionMember_PositionManagerName() As String
-IPositionMember_PositionManagerName = mPositionManagerName
+Private Property Get IPositionMember_RecoveryContextName() As String
+Assert mRecoveryContextName <> "", "mRecoveryContextName is not set"
+IPositionMember_RecoveryContextName = mRecoveryContextName
 End Property
 
 '@================================================================================
@@ -169,6 +172,7 @@ On Error GoTo Err
 Dim lExec As Execution
 Set lExec = pData
 SyncToExecutionReport lExec
+mIsDirty = False
 
 Exit Sub
 
@@ -222,7 +226,7 @@ End Function
 '@================================================================================
 
 Public Property Let AccountIdentifier(ByVal Value As String)
-mAccountIdentifier = Value
+setFieldValue mAccountIdentifier, Value
 End Property
 
 Public Property Get AccountIdentifier() As String
@@ -230,7 +234,7 @@ AccountIdentifier = mAccountIdentifier
 End Property
 
 Public Property Let Action(ByVal Value As OrderActions)
-mAction = Value
+setFieldValue mAction, Value
 End Property
 
 Public Property Get Action() As OrderActions
@@ -238,7 +242,7 @@ Action = mAction
 End Property
 
 Public Property Let BrokerId(ByVal Value As String)
-mBrokerId = Value
+setFieldValue mBrokerId, Value
 End Property
 
 Public Property Get BrokerId() As String
@@ -246,7 +250,7 @@ BrokerId = mBrokerId
 End Property
 
 Public Property Let GroupName(ByVal Value As String)
-mGroupName = Value
+setFieldValue mGroupName, Value
 End Property
 
 Public Property Get GroupName() As String
@@ -254,7 +258,7 @@ GroupName = mGroupName
 End Property
 
 Public Property Let FillingExchange(ByVal Value As String)
-mFillingExchange = Value
+setFieldValue mFillingExchange, Value
 End Property
 
 Public Property Get FillingExchange() As String
@@ -262,7 +266,7 @@ FillingExchange = mFillingExchange
 End Property
 
 Public Property Let FillTime(ByVal Value As Date)
-mFillTime = Value
+setFieldValue mFillTime, Value
 End Property
 
 Public Property Get FillTime() As Date
@@ -270,15 +274,19 @@ FillTime = mFillTime
 End Property
 
 Public Property Let Id(ByVal Value As String)
-mExecId = Value
+setFieldValue mExecId, Value
 End Property
 
 Public Property Get Id() As String
 Id = mExecId
 End Property
 
+Public Property Get IsDirty() As Boolean
+IsDirty = mIsDirty
+End Property
+
 Public Property Let IsLiquidation(ByVal Value As Boolean)
-mIsLiquidation = Value
+setFieldValue mIsLiquidation, Value
 End Property
 
 Public Property Get IsLiquidation() As Boolean
@@ -286,7 +294,7 @@ IsLiquidation = mIsLiquidation
 End Property
 
 Public Property Let IsSimulated(ByVal Value As Boolean)
-mIsSimulated = Value
+setFieldValue mIsSimulated, Value
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -294,23 +302,23 @@ IsSimulated = mIsSimulated
 End Property
 
 Public Property Let OrderId(ByVal Value As String)
-mOrderId = Value
+setFieldValue mOrderId, Value
 End Property
 
 Public Property Get OrderId() As String
 OrderId = mOrderId
 End Property
 
-Public Property Let PositionManagerName(ByVal Value As String)
-mPositionManagerName = Value
+Public Property Let RecoveryContextName(ByVal Value As String)
+setFieldValue mRecoveryContextName, Value
 End Property
 
-Public Property Get PositionManagerName() As String
-PositionManagerName = mPositionManagerName
+Public Property Get RecoveryContextName() As String
+RecoveryContextName = mRecoveryContextName
 End Property
 
 Public Property Let Price(ByVal Value As Double)
-mPrice = Value
+setFieldValue mPrice, Value
 End Property
 
 Public Property Get Price() As Double
@@ -318,7 +326,7 @@ Price = mPrice
 End Property
 
 Public Property Let Quantity(ByVal Value As Long)
-mQuantity = Value
+setFieldValue mQuantity, Value
 End Property
 
 Public Property Get Quantity() As Long
@@ -326,7 +334,7 @@ Quantity = mQuantity
 End Property
 
 Public Property Let SecurityName(ByVal Value As String)
-mSecurityName = Value
+setFieldValue mSecurityName, Value
 End Property
 
 Public Property Get SecurityName() As String
@@ -334,7 +342,7 @@ SecurityName = mSecurityName
 End Property
 
 Public Property Let TimezoneName(ByVal Value As String)
-mTimezoneName = Value
+setFieldValue mTimezoneName, Value
 End Property
 
 Public Property Get TimezoneName() As String
@@ -374,25 +382,22 @@ Friend Sub SyncToExecutionReport( _
 Const ProcName As String = "SyncToExecutionReport"
 On Error GoTo Err
 
-Dim changed As Boolean
-
 With pExecReport
-    If .Id <> mExecId Then mExecId = .Id: changed = True
-    If .FillTime <> mFillTime Then mFillTime = .FillTime: changed = True
-    If .TimezoneName <> mTimezoneName Then mTimezoneName = .TimezoneName: changed = True
-    If .AccountIdentifier <> mAccountIdentifier Then mAccountIdentifier = .AccountIdentifier: changed = True
-    If .SecurityName <> mSecurityName Then mSecurityName = .SecurityName: changed = True
-    If .FillingExchange <> mFillingExchange Then mFillingExchange = .FillingExchange: changed = True
-    If .Action <> mAction Then mAction = .Action: changed = True
-    If .Quantity <> mQuantity Then mQuantity = .Quantity: changed = True
-    If .Price <> mPrice Then mPrice = .Price: changed = True
-    If .BrokerId <> mBrokerId Then mBrokerId = .BrokerId: changed = True
-    If .OrderId <> mOrderId Then mOrderId = .OrderId: changed = True
-    If .IsLiquidation <> mIsLiquidation Then mIsLiquidation = .IsLiquidation: changed = True
-    If .IsSimulated <> mIsSimulated Then mIsSimulated = .IsSimulated: changed = True
+    setFieldValue mExecId, .Id
+    setFieldValue mFillTime, .FillTime
+    setFieldValue mTimezoneName, .TimezoneName
+    setFieldValue mAccountIdentifier, .AccountIdentifier
+    setFieldValue mSecurityName, .SecurityName
+    setFieldValue mFillingExchange, .FillingExchange
+    setFieldValue mAction, .Action
+    setFieldValue mQuantity, .Quantity
+    setFieldValue mPrice, .Price
+    setFieldValue mBrokerId, .BrokerId
+    setFieldValue mOrderId, .OrderId
+    setFieldValue mIsLiquidation, .IsLiquidation
+    setFieldValue mIsSimulated, .IsSimulated
 End With
 
-If changed Then SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -403,12 +408,19 @@ Friend Sub SaveRecoveryInfo()
 Const ProcName As String = "SaveRecoveryInfo"
 On Error GoTo Err
 
+If Not mIsDirty Then Exit Sub
+
 fireRecoveryDataChanged
+mIsDirty = False
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetClean()
+mIsDirty = False
 End Sub
 
 Public Function ToJSON() As String
@@ -451,8 +463,8 @@ jb.EncodeNameAndValue "IsSimulated", mIsSimulated, False
 jb.EncodeName "OrderId"
 jb.EncodeValue mOrderId
 
-jb.EncodeName "PositionManagerName"
-jb.EncodeValue mPositionManagerName
+jb.EncodeName "RecoveryContextName"
+jb.EncodeValue mRecoveryContextName
 
 jb.EncodeName "Price"
 jb.EncodeValue mPrice
@@ -510,4 +522,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub setFieldValue(currentValue As Variant, newValue As Variant)
+Const ProcName As String = "setFieldValue"
+On Error GoTo Err
 
+Assert VarType(currentValue) <> vbObject, "Field of type Object cannot be updated with this method"
+Assert VarType(currentValue) = VarType(newValue)
+
+If currentValue = newValue Then Exit Sub
+
+currentValue = newValue
+mIsDirty = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub

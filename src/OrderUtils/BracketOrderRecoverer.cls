@@ -50,6 +50,8 @@ Private mPositionManager                            As PositionManager
 Private mOrderSubmissionListener                    As IOrderSubmissionListener
 
 Private mOrderContext                               As OrderContext
+
+Private mPositionCloser                             As PositionCloser
     
 '@================================================================================
 ' Class Event Handlers
@@ -83,6 +85,8 @@ Friend Sub FinishRecovery()
 Const ProcName As String = "FinishRecovery"
 On Error GoTo Err
 
+If mOrderContext.Name = BalancingOrderContextName Then Exit Sub
+
 setUnrecoveredOrderAsCancelled mBracketOrder.EntryOrder
 setUnrecoveredOrderAsCancelled mBracketOrder.StopLossOrder
 setUnrecoveredOrderAsCancelled mBracketOrder.TargetOrder
@@ -105,7 +109,8 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pPositionManager As PositionManager, _
                 ByVal pOrderContext As OrderContext, _
-                ByVal pKey As String)
+                ByVal pKey As String, _
+                ByVal pListener As IRecoverableObjectListener)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -127,6 +132,10 @@ mBracketOrder.Initialise pKey, _
                         mPositionManager.DataSource, _
                         mPositionManager.IsSimulated
 
+Dim lObj As IRecoverable
+Set lObj = mBracketOrder
+lObj.AddRecoverableObjectListener pListener
+
 Exit Sub
 
 Err:
@@ -137,6 +146,11 @@ Friend Sub NotifyExecutionReport( _
                 ByVal pExecutionReport As IExecutionReport)
 Const ProcName As String = "NotifyExecutionReport"
 On Error GoTo Err
+
+If mOrderContext.Name = BalancingOrderContextName Then
+    Set mPositionCloser = New PositionCloser
+    mPositionCloser.RecoverBalancingOrder mBracketOrder, mPositionManager
+End If
 
 mOrderSubmissionListener.NotifyExecutionReport pExecutionReport
 

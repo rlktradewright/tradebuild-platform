@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ClosePositionsTask"
+Attribute VB_Name = "CloseoutOrderContextTask"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IChangeListener
+Implements IStateChangeListener
 Implements ITask
 
 '@================================================================================
@@ -41,53 +41,43 @@ Implements ITask
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "ClosePositionsTask"
+Private Const ModuleName                            As String = "CloseoutOrderContextTask"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTaskContext                        As TaskContext
-Private mNumberRemaining                    As Long
-Private mTypes                              As PositionTypes
+Private mTaskContext                                As TaskContext
 
-Private mClosePositionsResult               As ClosePositionsResult
+Private mBracketOrdersToCloseout                    As New EnumerableCollection
 
-Private mWorkspaces                         As WorkSpaces
+Private mOrderContextName                             As String
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' IChangeListener Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
 
-Private Sub IChangeListener_Change(ev As ChangeEventData)
-Dim pm As PositionManager
-Dim changeType As PositionManagerChangeTypes
-
-Const ProcName As String = "IChangeListener_Change"
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
-Set pm = ev.Source
-changeType = ev.changeType
-Select Case changeType
-Case PositionManagerChangeTypes.PositionClosed
-    If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then
-        mNumberRemaining = mNumberRemaining - 1
-        mClosePositionsResult.NumberOfPositionsClosed = mClosePositionsResult.NumberOfPositionsClosed + 1
-        pm.RemoveChangeListener Me
-        If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
+Dim lBracketOrder As IBracketOrder
+Set lBracketOrder = ev.Source
+
+Dim lState As BracketOrderStates
+lState = ev.State
+
+If lState = BracketOrderStateClosed Then
+    mBracketOrdersToCloseout.Remove lBracketOrder
+    If mBracketOrdersToCloseout.Count = 0 Then
+        gLog "Closeout completed for order context: " & mOrderContextName, ProcName, ModuleName
+        mTaskContext.Finish Empty, False
     End If
-Case PositionManagerChangeTypes.ProviderReadinessChanged
-    If Not pm.ProviderIsReady Then
-        mNumberRemaining = mNumberRemaining - 1
-        mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
-        pm.RemoveChangeListener Me
-        If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
-    End If
-End Select
+End If
 
 Exit Sub
 
@@ -100,19 +90,32 @@ End Sub
 '@================================================================================
 
 Private Sub ITask_Cancel()
-    
+
 End Sub
 
-Private Sub ITask_run()
-Const ProcName As String = "ITask_run"
+Private Sub ITask_Run()
+Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-initiateCloses
-If mNumberRemaining = 0 Then
-    mTaskContext.Finish 0, False
-Else
-    mTaskContext.Suspend -1
+Static sEn As Enumerator
+If sEn Is Nothing Then
+    If mBracketOrdersToCloseout.Count = 0 Then
+        gLog "Closeout completed for order context: " & mOrderContextName, ProcName, ModuleName
+        mTaskContext.Finish Empty, False
+        Exit Sub
+    End If
+    Set sEn = mBracketOrdersToCloseout.Enumerator
 End If
+
+If Not sEn.MoveNext Then
+    mTaskContext.Suspend -1
+    Exit Sub
+End If
+
+Dim lBracketOrder As IBracketOrder
+Set lBracketOrder = sEn.Current
+lBracketOrder.CloseOut
+lBracketOrder.AddStateChangeListener Me
 
 Exit Sub
 
@@ -121,7 +124,23 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
+Const ProcName As String = "ITask_TaskContext"
+On Error GoTo Err
+
 Set mTaskContext = Value
+Dim lOrderContext As OrderContext
+Set lOrderContext = mTaskContext.Data
+mOrderContextName = lOrderContext.Name
+
+Dim lBracketOrder As IBracketOrder
+For Each lBracketOrder In lOrderContext.ActiveBracketOrders
+    mBracketOrdersToCloseout.Add lBracketOrder
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get ITask_TaskName() As String
@@ -140,58 +159,10 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
-                ByVal pWorkspaces As WorkSpaces, _
-                ByVal pTypes As PositionTypes)
-Set mWorkspaces = pWorkspaces
-mTypes = pTypes
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
 
-Private Sub check( _
-                ByVal pm As PositionManager)
-Const ProcName As String = "check"
-On Error GoTo Err
 
-If pm.PositionSize <> 0 Or _
-    pm.PendingPositionSize <> 0 _
-Then
-    If pm.ProviderIsReady Then
-        mNumberRemaining = mNumberRemaining + 1
-        pm.ClosePositions
-        pm.AddChangeListener Me
-    Else
-        mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
-    End If
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub initiateCloses()
-Const ProcName As String = "initiateCloses"
-On Error GoTo Err
-
-Dim ws As WorkSpace
-Dim tckr As Ticker
-
-For Each ws In mWorkspaces
-    For Each tckr In ws.Tickers
-        If mTypes And PositionTypeLive Then check tckr.PositionManager
-        If mTypes And PositionTypeSimulated Then check tckr.PositionManagerSimulated
-    Next
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 

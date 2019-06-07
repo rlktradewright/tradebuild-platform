@@ -807,8 +807,8 @@ End Sub
 ' IPositionMember Interface Members
 '@================================================================================
 
-Private Property Get IPositionMember_PositionManagerName() As String
-IPositionMember_PositionManagerName = mContextsName
+Private Property Get IPositionMember_RecoveryContextName() As String
+IPositionMember_RecoveryContextName = mContextsName
 End Property
 
 '@================================================================================
@@ -858,7 +858,7 @@ If mSummary.EntryOrderId <> "" And mEntryOrder Is Nothing And Not mOrderContext 
 If mSummary.StopLossOrderId <> "" And mStopLossOrder Is Nothing And Not mOrderContext Is Nothing Then StopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
 If mSummary.TargetOrderId <> "" And mTargetOrder Is Nothing And Not mOrderContext Is Nothing Then TargetOrder = CreateAnOrder(mSummary.TargetOrderId)
 
-mSummary.setClean
+mSummary.SetClean
 
 Exit Sub
 
@@ -1038,7 +1038,6 @@ gLogOrderMessage "Entry order fill: " & _
                 mEntryOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
 placePeggedOrders pExec.Quantity
-SaveRecoveryInfo
         
 ' we do this after placing any pegged orders. Then, in
 ' a recovery situation, the pegged orders will not be
@@ -2189,11 +2188,11 @@ mNewTargetQuantity = -1
 ' remain valid
 '@/
 gSyncToOrder mEntryOrder, mEntryOrderCopy
-mEntryOrder.setClean
+mEntryOrder.SetClean
 gSyncToOrder mStopLossOrder, mStopOrderCopy
-mStopLossOrder.setClean
+mStopLossOrder.SetClean
 gSyncToOrder mTargetOrder, mTargetOrderCopy
-mTargetOrder.setClean
+mTargetOrder.SetClean
 
 mIsDirty = False
 fireChange BracketOrderChangeTypes.BracketOrderChangesCancelled
@@ -2225,16 +2224,16 @@ Const ProcName As String = "Checkpoint"
 On Error GoTo Err
 
 Set mEntryOrderCopy = mEntryOrder.Clone
-mEntryOrder.setClean
+mEntryOrder.SetClean
 
 If Not mStopLossOrder Is Nothing Then
     Set mStopOrderCopy = mStopLossOrder.Clone
-    mStopLossOrder.setClean
+    mStopLossOrder.SetClean
 End If
 
 If Not mTargetOrder Is Nothing Then
     Set mTargetOrderCopy = mTargetOrder.Clone
-    mTargetOrder.setClean
+    mTargetOrder.SetClean
 End If
 
 Exit Sub
@@ -2377,16 +2376,10 @@ On Error GoTo Err
 
 If Size = 0 Then Exit Sub
 
-Dim lExec As New Execution
-lExec.SyncToExecutionReport pExec
-lExec.Quantity = Abs(Size)
-If Size > 0 Then
-    lExec.Action = OrderActionSell
-Else
-    lExec.Action = OrderActionBuy
-End If
+createCloseoutOrder
 
-processExecution lExec
+pExec.OrderId = mCloseoutOrder.Id
+mCloseoutOrder.NotifyFill pExec
 
 fireChange BracketOrderPositionCloseoutNotified
 RaiseEvent PositionCloseoutNotified
@@ -3247,6 +3240,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub createCloseoutOrder()
+Const ProcName As String = "createCloseoutOrder"
+On Error GoTo Err
+
+CloseoutOrder = mOrderContext.NewOrder(True)
+
+mCloseoutOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
+mCloseoutOrder.Quantity = Abs(Size)
+mCloseoutOrder.OrderType = OrderTypes.OrderTypeMarket
+mCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
+
+SaveRecoveryInfo
+
+fireChange BracketOrderCloseoutOrderCreated
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Function doActions( _
                 ByRef pActions() As OpActions, _
                 ByVal pPreviousState As BracketOrderStates, _
@@ -3300,7 +3314,12 @@ Private Function doCompletionActions()
 Const ProcName As String = "doCompletionActions"
 On Error GoTo Err
 
-If Not mOrderContext Is Nothing Then mOrderContext.NotifyBracketOrderClosed Me
+If Not mOrderContext Is Nothing Then
+    If mOrderContext.Name <> BalancingOrderContextName Then
+        mOrderContext.NotifyBracketOrderClosed Me
+    End If
+End If
+
 fireChange BracketOrderCompleted
 RaiseEvent Completed
 
@@ -3561,16 +3580,8 @@ Private Function placeCloseoutOrder()
 Const ProcName As String = "placeCloseoutOrder"
 On Error GoTo Err
 
-Dim lOrder As IOrder
-Set lOrder = mOrderContext.NewOrder
-CloseoutOrder = lOrder
+createCloseoutOrder
 
-mCloseoutOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
-mCloseoutOrder.Quantity = Abs(Size)
-mCloseoutOrder.OrderType = OrderTypes.OrderTypeMarket
-mCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
-
-fireChange BracketOrderCloseoutOrderCreated
 RaiseEvent CloseoutOrderCreated
 mOrderSubmitter.ModifyBracketOrder Me, False, False, False, True
 
@@ -3578,7 +3589,6 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
 Private Function placeOrders()
@@ -3635,6 +3645,7 @@ End If
 If updated Then Update
 
 mSummary.PeggedOrdersProcessed = True
+SaveRecoveryInfo
 
 Exit Sub
 
@@ -3650,7 +3661,6 @@ On Error GoTo Err
 ' Note that the Order object ensures that pExec will always
 ' be an Execution object, not just some other object that
 ' implements IExecutionReport
-pExec.SaveRecoveryInfo
 
 If mSummary.Size = 0 Then
     mStartTime = pExec.FillTime
@@ -3737,7 +3747,7 @@ If mRecoverableObjectListeners Is Nothing Or mRecoverableObjectListeners.Count =
 
 fireRecoveryDataChanged
 
-mSummary.setClean
+mSummary.SetClean
 
 Exit Sub
 

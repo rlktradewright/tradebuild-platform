@@ -821,8 +821,8 @@ End Property
 ' IPositionMember Interface Members
 '@================================================================================
 
-Private Property Get IPositionMember_PositionManagerName() As String
-IPositionMember_PositionManagerName = mSummary.ContextsName
+Private Property Get IPositionMember_RecoveryContextName() As String
+IPositionMember_RecoveryContextName = mSummary.ContextsName
 End Property
 
 '@================================================================================
@@ -1624,6 +1624,9 @@ Else
     lExec.Id = pExec.Id
     If mIsSimulated Then lExec.IsSimulated = True
     lExec.SyncToExecutionReport pExec
+    lExec.GroupName = mGroupName
+    lExec.RecoveryContextName = mSummary.ContextsName
+    lExec.SaveRecoveryInfo
 End If
 
 If mContractSpecifier Is Nothing Then
@@ -1676,7 +1679,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub Initialise( _
+Friend Sub Initialise( _
                 ByVal pGroupName As String, _
                 ByVal pContextsName As String, _
                 ByVal pContractSpec As IContractSpecifier, _

@@ -56,11 +56,11 @@ Attribute mBalancingOrderContext.VB_VarHelpID = -1
 Private WithEvents mBalancingBracketOrder           As BracketOrder
 Attribute mBalancingBracketOrder.VB_VarHelpID = -1
 
-Private mFlags                                      As ClosePositionsFlags
-
 Private mOrderContextsWasEnabled                    As Boolean
 
 Private mPositionManager                            As PositionManager
+Private mContract                                   As IContract
+Private mClock                                      As Clock
 
 Private mLastExecutionReport                        As IExecutionReport
 
@@ -104,8 +104,37 @@ mBalancingBracketOrder.SetSize 0
 ' adjust the other BracketOrders to take account of the settling Order
 
 Dim oc As OrderContext
+Dim i As Long
 For Each oc In mOrderContexts
-    If Not oc Is mBalancingOrderContext Then oc.NotifyPositionCloseout mLastExecutionReport
+    If Not oc Is mBalancingOrderContext Then
+        Dim lBracketOrder As IBracketOrder
+        For Each lBracketOrder In oc.ClosedBracketOrders
+            If lBracketOrder.Size <> 0 Then
+                
+                ' NB: we don't save recovery data for this execution
+                ' because it will simply be recreated at recovery
+                
+                Dim lExec As Execution
+                Set lExec = oc.NewExecution(True)
+                lExec.GroupName = oc.GroupName
+                lExec.RecoveryContextName = oc.RecoveryContextName
+                lExec.SyncToExecutionReport mLastExecutionReport
+                
+                ' give this execution a unique id
+                i = i + 1
+                lExec.Id = lExec.Id & "{" & i & "}"
+    
+                lExec.Quantity = Abs(lBracketOrder.Size)
+                If lBracketOrder.Size > 0 Then
+                    lExec.Action = OrderActionSell
+                Else
+                    lExec.Action = OrderActionBuy
+                End If
+                
+                lBracketOrder.NotifyCloseout lExec
+            End If
+        Next
+    End If
 Next
 
 doFinalActions
@@ -157,35 +186,41 @@ End Sub
 '@================================================================================
 
 Friend Sub ClosePositions( _
-                ByVal pPositionManager As PositionManager, _
-                ByVal pFlags As ClosePositionsFlags)
+                ByVal pPositionManager As PositionManager)
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
 Set mPositionManager = pPositionManager
+If Not mPositionManager.HasBracketOrdersWithNonZeroSizes Then
+    RaiseEvent PositionClosed
+    Exit Sub
+End If
+
 Set mOrderContexts = mPositionManager.OrderContexts
-mFlags = pFlags
+Set mContract = mPositionManager.ContractFuture.Value
+Set mClock = mPositionManager.DataSource.ClockFuture.Value
 
 mOrderContextsWasEnabled = mOrderContexts.Enabled
 mOrderContexts.Enabled = False  ' prevent any further orders being placed
                                 ' while the position is being closed
 
+If Not cancelOrders Then ensureAllBracketOrdersClosedOut
 
+Exit Sub
 
-If Not (mFlags And ClosePositionsCancelOrders) = ClosePositionsCancelOrders Then
-    placeBalancingOrder
-    Exit Sub
-End If
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
-Dim lCancelling As Boolean
-lCancelling = cancelOrders
+Friend Sub RecoverBalancingOrder( _
+                ByVal pBracketOrder As BracketOrder, _
+                ByVal pPositionManager As PositionManager)
+Const ProcName As String = "RecoverBalancingOrder"
+On Error GoTo Err
 
-If Not lCancelling Or Not (mFlags And ClosePositionsWaitForCancel) = ClosePositionsWaitForCancel Then
-    ' either nothing to cancel or we're not waiting
-    ' for cancellations to complete
-    placeBalancingOrder
-    Exit Sub
-End If
+Set mBalancingBracketOrder = pBracketOrder
+Set mPositionManager = pPositionManager
+Set mOrderContexts = mPositionManager.OrderContexts
 
 Exit Sub
 
@@ -205,7 +240,7 @@ Dim lOrderContext As OrderContext
 For Each lOrderContext In mOrderContexts
     If lOrderContext.Cancel Then
         cancelOrders = True
-        If (mFlags And ClosePositionsWaitForCancel) = ClosePositionsWaitForCancel Then lOrderContext.AddChangeListener Me
+        lOrderContext.AddChangeListener Me
     End If
 Next
 
@@ -220,7 +255,6 @@ Const ProcName As String = "doFinalActions"
 On Error GoTo Err
 
 mOrderContexts.Enabled = mOrderContextsWasEnabled
-mOrderContexts.NotifyPositionsClosed
 If mPositionManager.EndingSession Then
     gLogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
 End If
@@ -232,26 +266,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub handleInactiveOrderContext(ByVal pOrderContext As OrderContext)
-Const ProcName As String = "handleInactiveOrderContext"
+Private Sub ensureAllBracketOrdersClosedOut()
+Const ProcName As String = "ensureAllBracketOrdersClosedOut"
 On Error GoTo Err
 
-Dim Size As Long
-
-Dim OrderContext As OrderContext
-For Each OrderContext In mOrderContexts
-    If OrderContext.IsActive Then Exit Sub
-    Size = Size + OrderContext.Size
-Next
-
-' If we get here, all OrderContexts must be complete.
-
-' Now, if there is a net position, need to close it out
-
-If Size = 0 Then
-    doFinalActions
-Else
+If mPositionManager.PositionSize <> 0 Then
     placeBalancingOrder
+Else
+    ' we have some bracket orders that net out to no position
+    ' but have not been closed out, so we need to mark them
+    ' to market
+    markToMarket
 End If
 
 Exit Sub
@@ -260,14 +285,68 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub handleInactiveOrderContext(ByVal pOrderContext As OrderContext)
+Const ProcName As String = "handleInactiveOrderContext"
+On Error GoTo Err
+
+If mOrderContexts.HasActiveBracketOrders Then Exit Sub
+
+' If we get here, all bracket orders must be closed.
+
+ensureAllBracketOrdersClosedOut
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub markToMarket()
+Const ProcName As String = "markToMarket"
+On Error GoTo Err
+
+' closeout non-zero-size bracket orders marking them to mnarket
+
+Dim oc As OrderContext
+For Each oc In mOrderContexts
+    If Not oc Is mBalancingOrderContext Then
+        Dim lBracketOrder As IBracketOrder
+        For Each lBracketOrder In oc.ClosedBracketOrders
+            If lBracketOrder.Size <> 0 Then
+                Dim lExec As Execution
+                lExec = oc.NewExecution(True)
+                lExec.GroupName = oc.GroupName
+                lExec.RecoveryContextName = oc.RecoveryContextName
+                lExec.Quantity = Abs(lBracketOrder.Size)
+                If lBracketOrder.Size > 0 Then
+                    lExec.Action = OrderActionSell
+                Else
+                    lExec.Action = OrderActionBuy
+                End If
+                lExec.FillingExchange = "TRADEBUILD"
+                lExec.FillTime = mClock.Timestamp
+                lExec.Id = "MarkToMarket"
+                lExec.Price = mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price
+                lExec.SecurityName = mContract.Specifier.LocalSymbol & "@" & mContract.Specifier.Exchange
+                lExec.TimezoneName = mContract.TimezoneName
+                
+                lBracketOrder.NotifyCloseout lExec
+            
+                lExec.SaveRecoveryInfo
+            End If
+        Next
+    End If
+Next
+
+doFinalActions
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub placeBalancingOrder()
 Const ProcName As String = "placeBalancingOrder"
 On Error GoTo Err
-
-If mPositionManager.PositionSize = 0 Then
-    doFinalActions
-    Exit Sub
-End If
 
 Set mBalancingOrderContext = mOrderContexts.BalancingOrderContext
 If Not mBalancingOrderContext.IsReady Then Exit Sub

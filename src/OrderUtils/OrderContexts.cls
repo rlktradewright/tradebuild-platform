@@ -41,8 +41,6 @@ Implements IStateChangeListener
 Event CollectionChanged( _
                 ev As CollectionChangeEventData)
                 
-Event PositionsClosed()
-
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -50,7 +48,6 @@ Event PositionsClosed()
 Private Const ModuleName                        As String = "OrderContexts"
 
 Private Const DefaultOrderContextName           As String = "$default"
-Private Const BalancingOrderContextName         As String = "$balancing"
 
 '@================================================================================
 ' Enums
@@ -96,6 +93,8 @@ Private mCollectionChangeListeners              As New Listeners
 
 Private WithEvents mFutureWaiter                As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mBracketOrderRecoveryController         As BracketOrderRecoveryCtlr
 
 '@================================================================================
 ' Class Event Handlers
@@ -326,6 +325,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Friend Property Get HasActiveBracketOrders() As Boolean
+Const ProcName As String = "HasActiveBracketOrders"
+On Error GoTo Err
+
+Dim lOrderContext As OrderContext
+For Each lOrderContext In mOrderContexts
+    If lOrderContext.Name = BalancingOrderContextName Then
+    ElseIf lOrderContext.ActiveBracketOrders.Count > 0 Then
+        HasActiveBracketOrders = True
+        Exit Property
+    End If
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get IsProviderReady() As Boolean
 IsProviderReady = mProviderIsReady And _
         (Not mPermittedOrderProperties Is Nothing)
@@ -356,7 +374,7 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = New OrderContext
-Add.Initialise pName, mOrderManager.SessionName, mName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture
+Add.Initialise pName, mOrderManager.SessionName, mName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture, mBracketOrderRecoveryController
  
 mOrderContexts.Add Add, pName
 Add.PermittedOrderProperties = mPermittedOrderProperties
@@ -429,7 +447,8 @@ Friend Sub Initialise( _
                 ByVal pOrderAuthoriser As IOrderAuthoriser, _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
                 ByVal pAccumulatedOrders As Orders, _
-                ByVal pSimulatedClockFuture As IFuture)
+                ByVal pSimulatedClockFuture As IFuture, _
+                ByVal pBracketOrderRecoveryController As BracketOrderRecoveryCtlr)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -460,6 +479,8 @@ Set pOrderAuthoriser = pOrderAuthoriser
 Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
 Set mAccumulatedOrders = pAccumulatedOrders
 Set mSimulatedClockFuture = pSimulatedClockFuture
+
+Set mBracketOrderRecoveryController = pBracketOrderRecoveryController
 
 mOrderSubmitter.AddStateChangeListener Me
 mProviderIsReady = (mOrderSubmitter.State = OrderSubmitterStateReady)
@@ -504,18 +525,6 @@ Const ProcName As String = "NotifyChange"
 On Error GoTo Err
 
 mOrderContexts.NotifyChange pOrderContext.Name
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub NotifyPositionsClosed()
-Const ProcName As String = "NotifyPositionsClosed"
-On Error GoTo Err
-
-RaiseEvent PositionsClosed
 
 Exit Sub
 

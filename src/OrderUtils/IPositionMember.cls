@@ -60,7 +60,7 @@ Private Const ModuleName                            As String = "IPositionMember
 ' Properties
 '@================================================================================
 
-Public Property Get PositionManagerName() As String
+Public Property Get RecoveryContextName() As String
 End Property
 
 '@================================================================================

@@ -98,6 +98,23 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function CloseAllPositions( _
+                ByVal pTypes As PositionTypes) As IFuture
+Const ProcName As String = "CloseAllPositions"
+On Error GoTo Err
+
+Dim t As New CloseAllPositionsTask
+t.Initialise Me, pTypes
+Set CloseAllPositions = t.Future
+
+StartTask t, PriorityNormal
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function CreateOrderContexts( _
                 ByVal pName As String, _
                 ByVal pContractFuture As IFuture, _
@@ -115,13 +132,41 @@ On Error GoTo Err
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is Nothing"
 
-Set CreateOrderContexts = New OrderContexts
-CreateOrderContexts.Initialise pName, Me, pGroupName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture
+Set CreateOrderContexts = CreateOrderContextsEx(pName, pContractFuture, pOrderSubmitter, Nothing, pDataSource, pGroupName, pIsSimulated, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function CreateOrderContextsEx( _
+                ByVal pName As String, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pOrderSubmitter As IOrderSubmitter, _
+                ByVal pBracketOrderRecoveryController As BracketOrderRecoveryCtlr, _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pGroupName As String, _
+                ByVal pIsSimulated As Boolean, _
+                ByVal pOrderAuthoriser As IOrderAuthoriser, _
+                ByVal pAccumulatedBracketOrders As BracketOrders, _
+                ByVal pAccumulatedOrders As Orders, _
+                ByVal pSimulatedClockFuture As IFuture) As OrderContexts
+Const ProcName As String = "CreateOrderContexts"
+On Error GoTo Err
+
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
+AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is Nothing"
+
+Dim lOrderContexts As New OrderContexts
+lOrderContexts.Initialise pName, Me, pGroupName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture, pBracketOrderRecoveryController
 If pIsSimulated Then
-    mOrderContextsCollectionSimulated.Add CreateOrderContexts, pName
+    mOrderContextsCollectionSimulated.Add lOrderContexts, pName
 Else
-    mOrderContextsCollectionLive.Add CreateOrderContexts, pName
+    mOrderContextsCollectionLive.Add lOrderContexts, pName
 End If
+
+Set CreateOrderContextsEx = lOrderContexts
 
 Exit Function
 

@@ -44,16 +44,16 @@ Private Const ModuleName                            As String = "OrderIdMap"
 ' Member variables
 '@================================================================================
 
-Private mOrderIds                                   As Collection
-Private mBrokerIds                                  As Collection
+Private mOrderIds                                   As EnumerableCollection
+Private mBrokerIds                                  As EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mOrderIds = New Collection
-Set mBrokerIds = New Collection
+Set mOrderIds = New EnumerableCollection
+Set mBrokerIds = New EnumerableCollection
 End Sub
 
 '@================================================================================
@@ -78,9 +78,8 @@ Friend Sub Add( _
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-On Error Resume Next
-mOrderIds.Add pOrderId, pBrokerId
-mBrokerIds.Add pBrokerId, pOrderId
+If Not mOrderIds.Contains(pBrokerId) Then mOrderIds.Add pOrderId, pBrokerId
+If Not mBrokerIds.Contains(pOrderId) Then mBrokerIds.Add pBrokerId, pOrderId
 
 Exit Sub
 
@@ -91,12 +90,9 @@ End Sub
 Friend Function GetBrokerId( _
                 ByRef pOrderId As String) As String
 Const ProcName As String = "GetBrokerId"
-
 On Error GoTo Err
 
-On Error Resume Next
-GetBrokerId = mBrokerIds.Item(pOrderId)
-On Error GoTo Err
+mBrokerIds.TryItem pOrderId, GetBrokerId
 
 Exit Function
 
@@ -107,12 +103,9 @@ End Function
 Friend Function GetOrderId( _
                 ByRef pBrokerId As String) As String
 Const ProcName As String = "GetOrderId"
-
 On Error GoTo Err
 
-On Error Resume Next
-GetOrderId = mOrderIds.Item(pBrokerId)
-On Error GoTo Err
+mOrderIds.TryItem pBrokerId, GetOrderId
     
 Exit Function
 

@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ClosePositionsTask"
+Attribute VB_Name = "CloseAllPositionsTask"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -41,19 +41,22 @@ Implements ITask
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "ClosePositionsTask"
+Private Const ModuleName                            As String = "CloseAllPositionsTask"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTaskContext                        As TaskContext
-Private mNumberRemaining                    As Long
-Private mTypes                              As PositionTypes
+Private mTaskContext                                As TaskContext
 
-Private mClosePositionsResult               As ClosePositionsResult
+Private mNumberRemaining                            As Long
 
-Private mWorkspaces                         As WorkSpaces
+Private mClosePositionsResult                       As New ClosePositionsResult
+
+Private mFutureBuilder                              As New FutureBuilder
+
+Private mEnLive                                     As Enumerator
+Private mEnSimulated                                As Enumerator
 
 '@================================================================================
 ' Class Event Handlers
@@ -64,30 +67,37 @@ Private mWorkspaces                         As WorkSpaces
 '@================================================================================
 
 Private Sub IChangeListener_Change(ev As ChangeEventData)
-Dim pm As PositionManager
-Dim changeType As PositionManagerChangeTypes
-
 Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
+Dim pm As PositionManager
 Set pm = ev.Source
+
+Dim changeType As PositionManagerChangeTypes
 changeType = ev.changeType
+
 Select Case changeType
+Case PositionSizeChanged
+    Exit Sub
 Case PositionManagerChangeTypes.PositionClosed
     If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then
         mNumberRemaining = mNumberRemaining - 1
         mClosePositionsResult.NumberOfPositionsClosed = mClosePositionsResult.NumberOfPositionsClosed + 1
         pm.RemoveChangeListener Me
-        If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
     End If
 Case PositionManagerChangeTypes.ProviderReadinessChanged
     If Not pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining - 1
         mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
         pm.RemoveChangeListener Me
-        If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
+    ElseIf pm.ProviderIsReady Then
+        mNumberRemaining = mNumberRemaining + 1
+        pm.ClosePositions
+        pm.AddChangeListener Me
     End If
 End Select
+
+If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 
 Exit Sub
 
@@ -103,13 +113,30 @@ Private Sub ITask_Cancel()
     
 End Sub
 
-Private Sub ITask_run()
+Private Sub ITask_Run()
 Const ProcName As String = "ITask_run"
 On Error GoTo Err
 
-initiateCloses
+If mEnLive Is Nothing Then
+ElseIf mEnLive.MoveNext Then
+    processPM mEnLive.Current
+    Exit Sub
+Else
+    Set mEnLive = Nothing
+End If
+
+If mEnSimulated Is Nothing Then
+ElseIf mEnSimulated.MoveNext Then
+    processPM mEnSimulated.Current
+    Exit Sub
+Else
+    Set mEnSimulated = Nothing
+End If
+
 If mNumberRemaining = 0 Then
-    mTaskContext.Finish 0, False
+    mFutureBuilder.Value = mClosePositionsResult
+    mFutureBuilder.Complete
+    mTaskContext.Finish mClosePositionsResult, False
 Else
     mTaskContext.Suspend -1
 End If
@@ -136,37 +163,46 @@ End Property
 ' Properties
 '@================================================================================
 
+Public Property Get Future() As IFuture
+Set Future = mFutureBuilder.Future
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pWorkspaces As WorkSpaces, _
+                ByVal pOrderManager As OrderManager, _
                 ByVal pTypes As PositionTypes)
-Set mWorkspaces = pWorkspaces
-mTypes = pTypes
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+If pTypes And PositionTypeLive Then Set mEnLive = pOrderManager.PositionManagersLive.Enumerator
+If pTypes And PositionTypeSimulated Then Set mEnSimulated = pOrderManager.PositionManagersSimulated.Enumerator
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-
-Private Sub check( _
+Private Sub processPM( _
                 ByVal pm As PositionManager)
-Const ProcName As String = "check"
+Const ProcName As String = "processPM"
 On Error GoTo Err
 
-If pm.PositionSize <> 0 Or _
-    pm.PendingPositionSize <> 0 _
-Then
-    If pm.ProviderIsReady Then
-        mNumberRemaining = mNumberRemaining + 1
-        pm.ClosePositions
-        pm.AddChangeListener Me
-    Else
-        mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
-    End If
+If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then Exit Sub
+
+If pm.ProviderIsReady Then
+    mNumberRemaining = mNumberRemaining + 1
+    pm.ClosePositions
+    pm.AddChangeListener Me
+Else
+    mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
 End If
 
 Exit Sub
@@ -175,23 +211,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub initiateCloses()
-Const ProcName As String = "initiateCloses"
-On Error GoTo Err
 
-Dim ws As WorkSpace
-Dim tckr As Ticker
 
-For Each ws In mWorkspaces
-    For Each tckr In ws.Tickers
-        If mTypes And PositionTypeLive Then check tckr.PositionManager
-        If mTypes And PositionTypeSimulated Then check tckr.PositionManagerSimulated
-    Next
-Next
 
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 

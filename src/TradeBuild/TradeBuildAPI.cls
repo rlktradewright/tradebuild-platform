@@ -289,15 +289,14 @@ End Property
 '@================================================================================
 
 Public Function CloseAllPositions( _
-                Optional ByVal pTypes As PositionTypes = PositionTypeAll, _
-                Optional ByVal pFlags As ClosePositionFlags = ClosePositionCancelOrders Or ClosePositionWaitForCancel) As TaskController
+                Optional ByVal pTypes As PositionTypes = PositionTypeAll) As TaskController
 Const ProcName As String = "CloseAllPositions"
 On Error GoTo Err
 
 Assert mClosePositionsTC Is Nothing, "Positions are already being closed"
 
 Dim t As New ClosePositionsTask
-t.Initialise mWorkspaces, pTypes, pFlags
+t.Initialise mWorkspaces, pTypes
 Set mClosePositionsTC = StartTask(t, PriorityHigh)
 Set CloseAllPositions = mClosePositionsTC
 

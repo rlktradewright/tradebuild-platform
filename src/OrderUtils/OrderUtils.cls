@@ -108,11 +108,6 @@ Public Enum BracketTargetTypes
     BracketTargetTypeAuto = &H8000000
 End Enum
 
-Public Enum ClosePositionsFlags
-    ClosePositionsCancelOrders = 1
-    ClosePositionsWaitForCancel = 2
-End Enum
-
 Public Enum OrderActions
     OrderActionNone = 0
     OrderActionBuy = 1
@@ -271,6 +266,12 @@ Public Enum ProfitChangeTypes
     ProfitChangeProfitThresholdExceeded
     ProfitChangeLossThresholdExceeded
     ProfitChangeDrawdownThresholdExceeded
+End Enum
+
+Public Enum PositionTypes
+    PositionTypeLive = 1
+    PositionTypeSimulated = 2
+    PositionTypeAll = 3
 End Enum
 
 Public Enum ProfitTypes
