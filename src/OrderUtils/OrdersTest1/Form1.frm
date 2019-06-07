@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#338.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#342.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
@@ -22,7 +22,6 @@ Begin VB.Form Form1
       Caption         =   "Close All Positions"
       DefaultBorderColor=   15793920
       DisabledBackColor=   0
-      Enabled         =   0   'False
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -142,6 +141,10 @@ Implements ILogListener
 
 Private Const ModuleName                            As String = "Form1"
 
+Private Const ApiPort                               As Long = 7497
+Private Const ClientId                              As Long = 120961434
+Private Const TwsHost                               As String = "ESSY"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -149,8 +152,6 @@ Private Const ModuleName                            As String = "Form1"
 Private WithEvents mUnhandledErrorHandler           As UnhandledErrorHandler
 Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
 Private mIsInDev                                    As Boolean
-
-Private mClientId                                   As Long
 
 Private mClient                                     As Client
 
@@ -210,8 +211,8 @@ Set mFutureWaiter = New FutureWaiter
 Set mPositionManagersLive = mOrderManager.PositionManagersLive
 Set mPositionManagersSimulated = mOrderManager.PositionManagersSimulated
 
-mClientId = 1132256741
-Set mClient = GetClient("Essy", 7497, mClientId, , , True, , Me)
+Set mClient = GetClient(TwsHost, ApiPort, ClientId, , , True, , Me)
+mClient.SetTwsLogLevel TwsLogLevelDetail
 
 Set mContractStore = mClient.GetContractStore
 Set mOrderSubmitterLive = mClient.CreateOrderSubmitter
@@ -390,6 +391,18 @@ End Sub
 ' Control Event Handlers
 '@================================================================================
 
+Private Sub ClosePositionsButton_Click()
+Const ProcName As String = "ClosePositionsButton_Click"
+On Error GoTo Err
+
+mFutureWaiter.Add mOrderManager.CloseAllPositions(PositionTypeAll)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub ContractSpecBuilder1_NotReady()
 Const ProcName As String = "ContractSpecBuilder1_NotReady"
 On Error GoTo Err
@@ -516,12 +529,16 @@ If ev.Future.IsAvailable Then
             mContract.Specifier.SecType = SecTypeIndex _
         Then
             LogMessage "Non-tradeable contract found"
-        ElseIf IsContractExpired(mContract.ExpiryDate) Then
+        ElseIf IsContractExpired(mContract) Then
             LogMessage "Expired contract found"
         Else
             LogMessage "Found contract " & mContract.Specifier.ToString
             setupOrderContext mContract, UsePositionManagerCheck.Value
         End If
+    ElseIf TypeOf ev.Future.Value Is ClosePositionsResult Then
+        Dim lCPR As ClosePositionsResult
+        Set lCPR = ev.Future.Value
+        LogMessage "Close all positions completed - positions closed: " & lCPR.NumberOfPositionsClosed
     End If
 ElseIf ev.Future.IsFaulted Then
     LogMessage ev.Future.ErrorMessage
@@ -583,7 +600,7 @@ If UsePositionManagerCheck.Value = vbUnchecked Then Exit Sub
 
 If Not sPositionManagerForms.Contains(pPositionManager.Name) Then
     Set lForm = New PositionForm
-    lForm.Initialise pPositionManager
+    lForm.Initialise pPositionManager, mTheme
     sPositionManagerForms.Add lForm, pPositionManager.Name
 Else
     Set lForm = sPositionManagerForms.Item(pPositionManager.Name)

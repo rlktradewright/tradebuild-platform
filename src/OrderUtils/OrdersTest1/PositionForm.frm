@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#253.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#340.0#0"; "TradingUI27.ocx"
 Begin VB.Form PositionForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Form2"
@@ -12,6 +12,7 @@ Begin VB.Form PositionForm
    MinButton       =   0   'False
    ScaleHeight     =   5265
    ScaleWidth      =   11415
+   ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin VB.TextBox LogText 
       Appearance      =   0  'Flat
@@ -246,6 +247,8 @@ Private Const ModuleName                            As String = "PositionForm"
 Private WithEvents mPositionManager                 As PositionManager
 Attribute mPositionManager.VB_VarHelpID = -1
 
+Private mTheme                                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -258,7 +261,7 @@ Private Sub ClosePositionButton_Click()
 Const ProcName As String = "ClosePositionButton_Click"
 On Error GoTo Err
 
-mPositionManager.ClosePositions ClosePositionsCancelOrders + ClosePositionsWaitForCancel
+mPositionManager.ClosePositions
 
 Exit Sub
 
@@ -343,7 +346,9 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise(pPositionManager As PositionManager)
+Friend Sub Initialise( _
+                ByVal pPositionManager As PositionManager, _
+                ByVal pTheme As ITheme)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -356,6 +361,10 @@ Me.Caption = "Position for " & lContract.Specifier.LocalSymbol
 PositionSizeText.Text = mPositionManager.PositionSize
 PendingSizeText.Text = mPositionManager.PendingPositionSize
 mPositionManager.AddProfitListener Me
+
+Set mTheme = pTheme
+Me.BackColor = mTheme.BaseColor
+gApplyTheme mTheme, Me.Controls
 
 Exit Sub
 

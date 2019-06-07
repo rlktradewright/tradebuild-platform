@@ -3,4 +3,6 @@ Project=..\OrderUtils.vbp
 StartupProject=OrdersTest1.vbp
 Project=..\..\IBAPI\IBAPI.vbp
 Project=..\..\TradingUI\TradingUI.vbp
-Project=..\..\IBEnhancedAPI\IBEnhancedAPI.vbp
+Project=..\..\IBEnhAPI\IBEnhAPI.vbp
+Project=..\..\..\..\tradewright-common\src\TWControls\TWControls.vbp
+Project=..\..\ContractUtils\ContractUtils.vbp
