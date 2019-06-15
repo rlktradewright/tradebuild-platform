@@ -29,7 +29,7 @@ call makedll.bat ContractUtils ContractUtils /T:DLL /B:%BINARY_COMPAT% /c
 if errorlevel 1 pause
 call makedll.bat BarUtils BarUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
-call makedll.bat TickUtils TickUtils /T:OCX /B:%BINARY_COMPAT%
+call makedll.bat TickUtils TickUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat StudyUtils StudyUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
