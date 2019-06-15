@@ -27,7 +27,7 @@ call setDllProjectComp.bat ContractUtils ContractUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call setDllProjectComp.bat BarUtils BarUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
-call setDllProjectComp.bat TickUtils TickUtils /T:OCX /B:%BINARY_COMPAT%
+call setDllProjectComp.bat TickUtils TickUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call setDllProjectComp.bat StudyUtils StudyUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
