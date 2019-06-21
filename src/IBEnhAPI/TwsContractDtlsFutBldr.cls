@@ -118,7 +118,9 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
 ElseIf TypeOf ev.Future.Value Is EnumerableCollection Then
     Dim lTwsContracts As EnumerableCollection
     Set lTwsContracts = ev.Future.Value
-    If lTwsContracts.Count <> 1 Then
+    If lTwsContracts.Count = 0 Then
+        mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract not found", ProjectName & "." & ModuleName & ":" & ProcName
+    ElseIf lTwsContracts.Count > 1 Then
         mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract's specifier is not uniquely specified", ProjectName & "." & ModuleName & ":" & ProcName
     Else
         gLogger.Log "TwsContractDetails retrieved from IB for IContract: " & mContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail

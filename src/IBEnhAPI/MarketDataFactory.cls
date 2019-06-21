@@ -564,15 +564,23 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If Not ev.Future.IsAvailable Then Exit Sub
-
 Dim lStreamId As Long
 lStreamId = ev.ContinuationData
 
 If lStreamId < MarketDepthIdOffset Then
-    If handleCompletedFuture(ev.Future, mMarketDataTable, lStreamId) Then reqMarketData lStreamId
+    If ev.Future.IsFaulted Then
+        mMarketDataTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
+        releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId
+    ElseIf handleCompletedFuture(ev.Future, mMarketDataTable, lStreamId) Then
+        reqMarketData lStreamId
+    End If
 Else
-    If handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId - MarketDepthIdOffset) Then reqMarketDepth lStreamId - MarketDepthIdOffset
+    If ev.Future.IsFaulted Then
+        mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
+        releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId
+    ElseIf handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId - MarketDepthIdOffset) Then
+        reqMarketDepth lStreamId - MarketDepthIdOffset
+    End If
 End If
 
 Exit Sub
