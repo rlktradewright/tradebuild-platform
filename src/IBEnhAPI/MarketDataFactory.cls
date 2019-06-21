@@ -978,16 +978,24 @@ On Error GoTo Err
 
 pStreamId = pBuilder.TickStream.StreamId
 
-If mMarketDataTable(pStreamId).TickStreamBuilder Is pBuilder Then
-    isStreamBuilderForMarketData = True
-ElseIf mMarketDepthTable(pStreamId).TickStreamBuilder Is pBuilder Then
-    isStreamBuilderForMarketData = False
-Else
-    ' the stream has already been stopped (eg due to an error being notified
-    ' via IMarketDataConsumer or IMarketDepthConsumer)
-    isStreamBuilderForMarketData = False
-    pStreamId = -1
+If pStreamId <= UBound(mMarketDataTable) Then
+    If mMarketDataTable(pStreamId).TickStreamBuilder Is pBuilder Then
+        isStreamBuilderForMarketData = True
+        Exit Function
+    End If
 End If
+
+If pStreamId <= UBound(mMarketDepthTable) Then
+    If mMarketDepthTable(pStreamId).TickStreamBuilder Is pBuilder Then
+        isStreamBuilderForMarketData = False
+        Exit Function
+    End If
+End If
+
+' the stream has already been stopped (eg due to an error being notified
+' via IMarketDataConsumer or IMarketDepthConsumer)
+isStreamBuilderForMarketData = False
+pStreamId = -1
 
 Exit Function
 
