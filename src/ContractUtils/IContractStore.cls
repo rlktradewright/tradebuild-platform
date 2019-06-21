@@ -64,11 +64,6 @@ Private Const ModuleName                            As String = "IContractStore"
 ' Methods
 '@================================================================================
 
-'Public Function FetchContract( _
-'                ByVal pContractSpecifier As IContractSpecifier, _
-'                Optional ByVal pCookie As Variant) As IFuture
-'End Function
-
 Public Function FetchContracts( _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 Optional ByVal pListener As IContractFetchListener, _

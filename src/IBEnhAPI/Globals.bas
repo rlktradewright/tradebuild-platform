@@ -76,14 +76,30 @@ Set gContractSpecToTwsContract = New TwsContract
 
 With gContractSpecToTwsContract
     .CurrencyCode = pContractSpecifier.CurrencyCode
-    .Exchange = pContractSpecifier.Exchange
+    Dim lExchange As String: lExchange = pContractSpecifier.Exchange
+    If lExchange = "SMART" Then
+    ElseIf lExchange = "SMARTUK" Then
+        .PrimaryExch = "LSE"
+        .Exchange = "SMART"
+    ElseIf lExchange = "SMARTUS" Then
+        .PrimaryExch = "NASDAQ"
+        .Exchange = "SMART"
+    ElseIf lExchange = "SMARTEUR" Then
+        .PrimaryExch = "IBIS"
+        .Exchange = "SMART"
+    ElseIf InStr(1, lExchange, "SMART/") = 1 Then
+        .PrimaryExch = Right$(lExchange, Len(lExchange) - Len("SMART/"))
+        .Exchange = "SMART"
+    Else
+        .Exchange = lExchange
+    End If
     .Expiry = pContractSpecifier.Expiry
     .IncludeExpired = True
     .LocalSymbol = pContractSpecifier.LocalSymbol
     .Multiplier = pContractSpecifier.Multiplier
     If .CurrencyCode = "GBP" And .Multiplier <> 1 Then .Multiplier = .Multiplier * 100
     .OptRight = gOptionRightToTwsOptRight(pContractSpecifier.Right)
-    .Sectype = gSecTypeToTwsSecType(pContractSpecifier.Sectype)
+    .SecType = gSecTypeToTwsSecType(pContractSpecifier.SecType)
     .Strike = pContractSpecifier.Strike
     .Symbol = pContractSpecifier.Symbol
     If Not pContractSpecifier.ComboLegs Is Nothing Then
@@ -129,7 +145,7 @@ On Error GoTo Err
 Dim lContract As TwsContract
 Dim lContractDetails As TwsContractDetails
 
-Assert pContract.Specifier.Sectype <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
+Assert pContract.Specifier.SecType <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
 
 Set lContractDetails = New TwsContractDetails
 Set lContract = gContractSpecToTwsContract(pContract.Specifier)
@@ -555,7 +571,18 @@ Dim lBuilder As ContractBuilder
 
 With pTwsContractDetails
     With .Summary
-        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
+        If .Exchange = "SMART" Then
+            If .PrimaryExch = "NASDAQ" Or .PrimaryExch = "NYSE" Then
+                .Exchange = "SMARTUS"
+            ElseIf .PrimaryExch = "EBS" Or .PrimaryExch = "IBIS" Or .PrimaryExch = "FWB" Or .PrimaryExch = "SWB" Then
+                .Exchange = "SMARTEUR"
+            ElseIf .PrimaryExch = "LSE" Then
+                .PrimaryExch = "SMARTUK"
+            Else
+                .PrimaryExch = "SMART/" & .PrimaryExch
+            End If
+        End If
+        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.SecType), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
         If .Expiry <> "" Then
             lBuilder.ExpiryDate = CDate(Left$(.Expiry, 4) & "/" & _
                                                 Mid$(.Expiry, 5, 2) & "/" & _
