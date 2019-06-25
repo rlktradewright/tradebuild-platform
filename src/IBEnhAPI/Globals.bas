@@ -21,6 +21,20 @@ Public Const NumDaysInMonth                     As Long = 22
 Public Const NumDaysInYear                      As Long = 260
 Public Const NumMonthsInYear                    As Long = 12
 
+Public Const ExchangeSmart                      As String = "SMART"
+Public Const ExchangeSmartEUR                   As String = "SMARTEUR"
+Public Const ExchangeSmartUK                    As String = "SMARTUK"
+Public Const ExchangeSmartUS                    As String = "SMARTUS"
+Public Const ExchangeSmartQualified             As String = "SMART/"
+
+Public Const PrimaryExchangeEBS                 As String = "EBS"
+Public Const PrimaryExchangeFWB                 As String = "FWB"
+Public Const PrimaryExchangeIBIS                As String = "IBIS"
+Public Const PrimaryExchangeLSE                 As String = "LSE"
+Public Const PrimaryExchangeSWB                 As String = "SWB"
+Public Const PrimaryExchangeNASDAQ              As String = "NASDAQ"
+Public Const PrimaryExchangeNYSE                As String = "NYSE"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -76,20 +90,20 @@ Set gContractSpecToTwsContract = New TwsContract
 
 With gContractSpecToTwsContract
     .CurrencyCode = pContractSpecifier.CurrencyCode
-    Dim lExchange As String: lExchange = pContractSpecifier.Exchange
-    If lExchange = "SMART" Then
-    ElseIf lExchange = "SMARTUK" Then
-        .PrimaryExch = "LSE"
-        .Exchange = "SMART"
-    ElseIf lExchange = "SMARTUS" Then
-        .PrimaryExch = "NASDAQ"
-        .Exchange = "SMART"
-    ElseIf lExchange = "SMARTEUR" Then
-        .PrimaryExch = "IBIS"
-        .Exchange = "SMART"
-    ElseIf InStr(1, lExchange, "SMART/") = 1 Then
-        .PrimaryExch = Right$(lExchange, Len(lExchange) - Len("SMART/"))
-        .Exchange = "SMART"
+    Dim lExchange As String: lExchange = UCase$(pContractSpecifier.Exchange)
+    If lExchange = ExchangeSmart Then
+    ElseIf lExchange = ExchangeSmartUK Then
+        .PrimaryExch = PrimaryExchangeLSE
+        .Exchange = ExchangeSmart
+    ElseIf lExchange = ExchangeSmartUS Then
+        .PrimaryExch = PrimaryExchangeNASDAQ
+        .Exchange = ExchangeSmart
+    ElseIf lExchange = ExchangeSmartEUR Then
+        .PrimaryExch = PrimaryExchangeIBIS
+        .Exchange = ExchangeSmart
+    ElseIf InStr(1, lExchange, ExchangeSmartQualified) = 1 Then
+        .PrimaryExch = Right$(lExchange, Len(lExchange) - Len(ExchangeSmartQualified))
+        .Exchange = ExchangeSmart
     Else
         .Exchange = lExchange
     End If
@@ -571,15 +585,15 @@ Dim lBuilder As ContractBuilder
 
 With pTwsContractDetails
     With .Summary
-        If .Exchange = "SMART" Then
-            If .PrimaryExch = "NASDAQ" Or .PrimaryExch = "NYSE" Then
-                .Exchange = "SMARTUS"
-            ElseIf .PrimaryExch = "EBS" Or .PrimaryExch = "IBIS" Or .PrimaryExch = "FWB" Or .PrimaryExch = "SWB" Then
-                .Exchange = "SMARTEUR"
-            ElseIf .PrimaryExch = "LSE" Then
-                .PrimaryExch = "SMARTUK"
+        If .Exchange = ExchangeSmart Then
+            If .PrimaryExch = PrimaryExchangeNASDAQ Or .PrimaryExch = PrimaryExchangeNYSE Then
+                .Exchange = ExchangeSmartUS
+            ElseIf .PrimaryExch = PrimaryExchangeEBS Or .PrimaryExch = PrimaryExchangeIBIS Or .PrimaryExch = PrimaryExchangeFWB Or .PrimaryExch = PrimaryExchangeSWB Then
+                .Exchange = ExchangeSmartEUR
+            ElseIf .PrimaryExch = PrimaryExchangeLSE Then
+                .PrimaryExch = ExchangeSmartUK
             Else
-                .PrimaryExch = "SMART/" & .PrimaryExch
+                .PrimaryExch = ExchangeSmartQualified & .PrimaryExch
             End If
         End If
         Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.SecType), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))

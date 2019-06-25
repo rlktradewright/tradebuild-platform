@@ -1315,7 +1315,7 @@ Public Sub RequestContractDetails( _
 Const ProcName As String = "RequestContractDetails"
 On Error GoTo Err
 
-Const VERSION = 7
+Const VERSION = 8
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 AssertArgument pContract.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
@@ -1339,7 +1339,9 @@ With pContract
     mWriter.AddDouble .Strike, "Strike"
     mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
     mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
-    mWriter.AddString IIf(.Exchange = "", "*", .Exchange), "Exchange"
+    If .Exchange = "" Then .Exchange = "*"
+    mWriter.AddString .Exchange, "Exchange"
+    mWriter.AddString .PrimaryExch, "PrimaryExchange"
     mWriter.AddString .CurrencyCode, "Currency"
     
     mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"

@@ -177,54 +177,86 @@ If mTaskContext.CancelPending Then
     Exit Sub
 End If
 
-If mContractSpecifier.Sectype = SecTypeNone Then
+If mContractSpecifier.SecType = SecTypeNone Then
     ' no Sectype supplied, so we'll place a separate Request for each of the following:
     '       Futures
     '       Indexes
     '       Stocks
     '       Cash
-    mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
-                                                    mContractSpecifier.Symbol, _
-                                                    mContractSpecifier.Exchange, _
-                                                    SecTypeFuture, _
-                                                    mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier))
     
-    If mContractSpecifier.LocalSymbol = "" Then
-        mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.Symbol, _
-                                                        "", _
+    If isSmartExchange(mContractSpecifier.Exchange) Then
+        ' SMART exchanges only apply to stocks
+        If mContractSpecifier.LocalSymbol = "" Then
+            mRequestId1 = requestContracts(CreateContractSpecifier("", _
+                                                            mContractSpecifier.Symbol, _
+                                                            mContractSpecifier.Exchange, _
+                                                            SecTypeStock, _
+                                                            mContractSpecifier.CurrencyCode, _
+                                                            "", _
+                                                            mContractSpecifier.Multiplier))
+        ElseIf mContractSpecifier.Symbol = "" Then
+            ' only the local symbol has been supplied: we use this as the symbol instead because
+            ' in practice that gives better results
+            mRequestId1 = requestContracts(CreateContractSpecifier("", _
+                                                            mContractSpecifier.LocalSymbol, _
+                                                            mContractSpecifier.Exchange, _
+                                                            SecTypeStock, _
+                                                            mContractSpecifier.CurrencyCode, _
+                                                            "", _
+                                                            mContractSpecifier.Multiplier))
+        Else
+            mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                            mContractSpecifier.Symbol, _
+                                                            mContractSpecifier.Exchange, _
+                                                            SecTypeStock, _
+                                                            mContractSpecifier.CurrencyCode, _
+                                                            "", _
+                                                            mContractSpecifier.Multiplier))
+        End If
+    Else
+        mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.Symbol, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         mContractSpecifier.Expiry, _
                                                         mContractSpecifier.Multiplier))
-    End If
+        
+        If mContractSpecifier.LocalSymbol = "" Then
+            mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.Symbol, _
+                                                            "", _
+                                                            mContractSpecifier.Exchange, _
+                                                            SecTypeFuture, _
+                                                            mContractSpecifier.CurrencyCode, _
+                                                            mContractSpecifier.Expiry, _
+                                                            mContractSpecifier.Multiplier))
+        End If
+        
+        mRequestId3 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.Symbol, _
+                                                        mContractSpecifier.Exchange, _
+                                                        SecTypeIndex, _
+                                                        mContractSpecifier.CurrencyCode, _
+                                                        mContractSpecifier.Expiry, _
+                                                        mContractSpecifier.Multiplier))
     
-    mRequestId3 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
-                                                    mContractSpecifier.Symbol, _
-                                                    mContractSpecifier.Exchange, _
-                                                    SecTypeIndex, _
-                                                    mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier))
-
-    mRequestId4 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
-                                                    mContractSpecifier.Symbol, _
-                                                    mContractSpecifier.Exchange, _
-                                                    SecTypeStock, _
-                                                    mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier))
-
-    mRequestId5 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
-                                                    mContractSpecifier.Symbol, _
-                                                    mContractSpecifier.Exchange, _
-                                                    SecTypeCash, _
-                                                    mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier))
-
+        mRequestId4 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.Symbol, _
+                                                        mContractSpecifier.Exchange, _
+                                                        SecTypeStock, _
+                                                        mContractSpecifier.CurrencyCode, _
+                                                        mContractSpecifier.Expiry, _
+                                                        mContractSpecifier.Multiplier))
+    
+        mRequestId5 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.Symbol, _
+                                                        mContractSpecifier.Exchange, _
+                                                        SecTypeCash, _
+                                                        mContractSpecifier.CurrencyCode, _
+                                                        mContractSpecifier.Expiry, _
+                                                        mContractSpecifier.Multiplier))
+    
+    End If
 Else
     Dim lTwsContract As TwsContractDetails
     Set lTwsContract = mContractCache.Item(mContractSpecifier)
@@ -364,6 +396,15 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function isSmartExchange(ByVal pExchange As String) As Boolean
+pExchange = UCase$(pExchange)
+isSmartExchange = (pExchange = ExchangeSmart Or _
+                    pExchange = ExchangeSmartEUR Or _
+                    pExchange = ExchangeSmartUK Or _
+                    pExchange = ExchangeSmartUS Or _
+                    InStr(1, pExchange, ExchangeSmartQualified) <> 0)
+End Function
 
 Private Sub processContract(ByVal pContractDetails As TwsContractDetails)
 Const ProcName As String = "processContract"
