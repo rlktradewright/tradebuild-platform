@@ -274,12 +274,40 @@ Public Function gCreateContractSpecifier( _
                 ByVal Expiry As String, _
                 ByVal Multiplier As Double, _
                 ByVal Strike As Double, _
-                ByVal Right As OptionRights) As ContractSpecifier
+                ByVal Right As OptionRights) As IContractSpecifier
 Const ProcName As String = "gCreateContractSpecifier"
 On Error GoTo Err
 
-Set gCreateContractSpecifier = New ContractSpecifier
-gCreateContractSpecifier.Initialise LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Multiplier, Strike, Right
+Dim lSpec As New ContractSpecifier
+lSpec.Initialise LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Multiplier, Strike, Right
+Set gCreateContractSpecifier = lSpec
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gCreateContractSpecifierFromString(ByVal pSpecString As String) As IContractSpecifier
+Const ProcName As String = "gCreateContractSpecifierFromString"
+On Error GoTo Err
+
+Dim lIndex As Long
+lIndex = InStr(1, pSpecString, "@")
+
+Dim lLocalSymbol As String
+Dim lExchange As String
+
+AssertArgument lIndex <> 1, "Contract specifier cannot start with @"
+
+If lIndex = 0 Then
+    lLocalSymbol = pSpecString
+Else
+    lLocalSymbol = Left$(pSpecString, lIndex - 1)
+    lExchange = Right$(pSpecString, Len(pSpecString) - lIndex)
+End If
+
+Set gCreateContractSpecifierFromString = gCreateContractSpecifier(lLocalSymbol, "", lExchange, SecTypeNone, "", "", 1#, 0#, OptNone)
 
 Exit Function
 
@@ -289,7 +317,6 @@ End Function
 
 Public Function gGetContractSpecKey(ByVal pSpec As IContractSpecifier) As String
 Const ProcName As String = "gGetContractSpecKey"
-
 On Error GoTo Err
 
 gGetContractSpecKey = pSpec.LocalSymbol & "|" & _
@@ -508,6 +535,11 @@ Const ProcName As String = "gIsValidExpiry"
 On Error GoTo Err
 
 Dim d As Date
+
+If IsInteger(Value, 0, 10) Then
+    gIsValidExpiry = True
+    Exit Function
+End If
 
 If IsDate(Value) Then
     d = CDate(Value)

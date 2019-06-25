@@ -405,6 +405,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function CreateContractSpecifierFromString( _
+                ByVal SpecString As String) As IContractSpecifier
+Const ProcName As String = "CreateContractSpecifierFromString"
+On Error GoTo Err
+
+Set CreateContractSpecifierFromString = gCreateContractSpecifierFromString(SpecString)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function CreateContractFromXML( _
                 ByVal xmlString As String) As IContract
 Const ProcName As String = "CreateContractFromXML"
