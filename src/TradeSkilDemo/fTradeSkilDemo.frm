@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#321.2#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#342.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -596,7 +596,7 @@ Private Sub TickerGrid1_TickerSymbolEntered(ByVal pSymbol As String, ByVal pPref
 Const ProcName As String = "TickerGrid1_TickerSymbolEntered"
 On Error GoTo Err
 
-mContractsFutureWaiter.Add FetchContracts(CreateContractSpecifier(, pSymbol), mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary), pPreferredRow
+mContractsFutureWaiter.Add FetchContracts(CreateContractSpecifierFromString(pSymbol), mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary), pPreferredRow
 
 Exit Sub
 

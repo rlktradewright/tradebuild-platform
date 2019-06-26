@@ -792,7 +792,7 @@ On Error GoTo Err
 
 RaiseEvent KeyPress(KeyAscii)
 
-If isAlphaNumeric(KeyAscii) Then processAlphaNumericKey KeyAscii
+If isAlphaNumeric(KeyAscii) Or KeyAscii = Asc("@") Then processAlphaNumericKey KeyAscii
 
 Exit Sub
 
@@ -2786,7 +2786,11 @@ If Not mEnteringTickerSymbol Then
     If Not startEnteringTickerSymbol Then Exit Sub
 End If
 
-setTickerNameColumnValue mTickerSymbolRow, getTickerNameColumnValue(mTickerSymbolRow) & UCase$(Chr$(KeyAscii))
+If Len(getTickerNameColumnValue(mTickerSymbolRow)) = 0 And KeyAscii = Asc("@") Then
+    ' ignore @ key
+Else
+    setTickerNameColumnValue mTickerSymbolRow, getTickerNameColumnValue(mTickerSymbolRow) & UCase$(Chr$(KeyAscii))
+End If
 
 Exit Sub
 
