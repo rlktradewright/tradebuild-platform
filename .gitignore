@@ -5,6 +5,7 @@
 *.lib
 *.log
 *.msi
+*.msix
 *.msm
 *.obj
 *.oca
