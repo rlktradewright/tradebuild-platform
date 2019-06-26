@@ -59,10 +59,15 @@ Private mBracketOrders                              As New EnumerableCollection
 
 Private mBOSpec                                     As BracketOrderSpecification
 
+Private mOrderManager                               As OrderManager
+
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 Private mPositionManager                            As PositionManager
 
 Private mOrderContext                               As OrderContext
+
+Private mScopeName                                  As String
+Private mGroupName                                  As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -84,31 +89,28 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
+gInputPaused = False
+
 If ev.Future.IsCancelled Then
     gWriteErrorLine "Error: contract fetch was cancelled"
-    Set mContract = Nothing
-    Set mDataSource = Nothing
 ElseIf ev.Future.IsFaulted Then
     gWriteErrorLine "Error: " & ev.Future.ErrorMessage
-    Set mContract = Nothing
-    Set mDataSource = Nothing
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
     
     If IsContractExpired(mContract) Then
         gWriteErrorLine "Error: contract has expired"
-        Set mContract = Nothing
-        Set mDataSource = Nothing
     Else
-        Dim lOrderManager As New OrderManager
-        Set mPositionManager = lOrderManager.CreatePositionManager(mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory)
+        If mScopeName = "" Then
+            Set mPositionManager = mOrderManager.CreatePositionManager(mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory)
+        Else
+            Set mPositionManager = mOrderManager.CreateRecoverablePositionManager(mGroupName & "$$" & mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory, mScopeName, mGroupName)
+        End If
         Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
         mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
+        gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, EndOrdersCommand, ResetCommand
     End If
 End If
-
-gSetValidNextCommands BracketCommand, EndOrdersCommand
-gInputPaused = False
 
 Exit Sub
 
@@ -151,9 +153,15 @@ End Property
 Friend Sub Initialise( _
                 ByVal pContractStore As IContractStore, _
                 ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pOrderManager As OrderManager, _
+                ByVal pScopeName As String, _
+                ByVal pGroupName As String, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
 Set mContractStore = pContractStore
 Set mMarketDataManager = pMarketDataManager
+Set mOrderManager = pOrderManager
+mScopeName = pScopeName
+mGroupName = pGroupName
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
 End Sub
 
@@ -239,29 +247,32 @@ mBOSpec.Action = getOrderAction(lClp.Arg(0))
 If mBOSpec.Action = OrderActionNone Then gWriteErrorLine "Order action must be BUY or SELL"
 
 Dim lQuantity As String: lQuantity = lClp.Arg(1)
-If lQuantity = "" Then gWriteErrorLine ("Quantity is missing")
-
-If Not IsInteger(lQuantity, 1) Then gWriteErrorLine ("Quantity must be an integer > 0")
-mBOSpec.Quantity = CInt(lQuantity)
+If lQuantity = "" Then
+    gWriteErrorLine ("Quantity is missing")
+ElseIf Not IsInteger(lQuantity, 1) Then
+    gWriteErrorLine ("Quantity must be an integer > 0")
+Else
+    mBOSpec.Quantity = CInt(lQuantity)
+End If
 
 Dim lSwitchName As String
 lSwitchName = CancelAfterSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.CancelAfter = CInt(lClp.switchValue(lSwitchName))
+If lClp.Switch(lSwitchName) Then mBOSpec.CancelAfter = CInt(lClp.SwitchValue(lSwitchName))
 If mBOSpec.CancelAfter < 0 Then gWriteErrorLine "CancelAfter must be an integer >= 0"
 
 lSwitchName = CancelPriceSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.CancelPrice = CDbl(lClp.switchValue(lSwitchName))
+If lClp.Switch(lSwitchName) Then mBOSpec.CancelPrice = CDbl(lClp.SwitchValue(lSwitchName))
 
 lSwitchName = GoodAfterTimeSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.GoodAfterTime = CDate(lClp.switchValue(lSwitchName))
+If lClp.Switch(lSwitchName) Then mBOSpec.GoodAfterTime = CDate(lClp.SwitchValue(lSwitchName))
 
 lSwitchName = GoodTillDateSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.switchValue(lSwitchName))
+If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.SwitchValue(lSwitchName))
 
 lSwitchName = TimezoneSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.switchValue(lSwitchName)
+If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.SwitchValue(lSwitchName)
 
-gSetValidNextCommands EntryCommand
+gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, BracketCommand, ResetCommand
 
 Exit Sub
 
@@ -281,11 +292,26 @@ Friend Function processContractCommand( _
 Const ProcName As String = "ProcessContractCommand"
 On Error GoTo Err
 
+If Trim$(pParams) = "" Then
+    showContractHelp
+    Exit Function
+End If
+
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(pParams, " ")
+
+Dim lSpecString As String
+lSpecString = lClp.Arg(0)
+
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = parseContractSpec(pParams)
+If lSpecString <> "" Then
+    Set lContractSpec = CreateContractSpecifierFromString(lSpecString)
+Else
+    Set lContractSpec = parseContractSpec(lClp)
+End If
 
 If lContractSpec Is Nothing Then
-    gSetValidNextCommands ContractCommand, EndOrdersCommand
+    gSetValidNextCommands ListCommand, ContractCommand, EndOrdersCommand, ResetCommand
     Exit Function
 End If
 
@@ -300,6 +326,12 @@ processContractCommand = True
 Exit Function
 
 Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description
+    processContractCommand = False
+    Exit Function
+End If
+
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
@@ -309,7 +341,7 @@ On Error GoTo Err
 
 mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands BracketCommand, ContractCommand, EndOrdersCommand
+gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, ContractCommand, EndOrdersCommand, ResetCommand
 
 Exit Sub
 
@@ -329,22 +361,26 @@ mBOSpec.EntryType = getEntryOrderType(lClp.Arg(0))
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.EntryPrice = CDbl(lClp.switchValue(PriceSwitch))
+If lClp.Switch(PriceSwitch) Then mBOSpec.EntryPrice = CDbl(lClp.SwitchValue(PriceSwitch))
 
 lSwitchName = TriggerPriceSwitch
 If lClp.Switch(TriggerPriceSwitch) Then
-    mBOSpec.EntryTriggerPrice = CDbl(lClp.switchValue(TriggerPriceSwitch))
+    mBOSpec.EntryTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch))
 ElseIf lClp.Switch(TriggerPriceSwitch1) Then
-    mBOSpec.EntryTriggerPrice = CDbl(lClp.switchValue(TriggerPriceSwitch1))
+    mBOSpec.EntryTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch1))
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.EntryOffset = parseOffset(lClp.switchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then mBOSpec.EntryOffset = parseOffset(lClp.SwitchValue(OffsetSwitch))
 
 lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
+If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
-gSetValidNextCommands StopLossCommand, TargetCommand, EndBracketCommand
+If mBOSpec.EntryType = BracketEntryTypeNone Then
+    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+Else
+    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+End If
 
 Exit Sub
 
@@ -371,25 +407,25 @@ mBOSpec.StopLossType = getStopLossOrderType(lClp.Arg(0))
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.StopLossPrice = CDbl(lClp.switchValue(PriceSwitch))
+If lClp.Switch(PriceSwitch) Then mBOSpec.StopLossPrice = CDbl(lClp.SwitchValue(PriceSwitch))
 
 lSwitchName = TriggerPriceSwitch
 If lClp.Switch(TriggerPriceSwitch) Then
-    mBOSpec.StopLossTriggerPrice = CDbl(lClp.switchValue(TriggerPriceSwitch))
+    mBOSpec.StopLossTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch))
 ElseIf lClp.Switch(TriggerPriceSwitch1) Then
-    mBOSpec.StopLossTriggerPrice = CDbl(lClp.switchValue(TriggerPriceSwitch1))
+    mBOSpec.StopLossTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch1))
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.StopLossOffset = parseOffset(lClp.switchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then mBOSpec.StopLossOffset = parseOffset(lClp.SwitchValue(OffsetSwitch))
 
 lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
+If lClp.Switch(TIFSwitch) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
-If mBOSpec.TargetType = BracketTargetTypeNone Then
-    gSetValidNextCommands TargetCommand, EndBracketCommand
+If mBOSpec.EntryType = BracketEntryTypeNone Then
+    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
-    gSetValidNextCommands EndBracketCommand
+    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
 End If
 
 Exit Sub
@@ -417,25 +453,25 @@ mBOSpec.TargetType = getTargetOrderType(lClp.Arg(0))
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.TargetPrice = CDbl(lClp.switchValue(PriceSwitch))
+If lClp.Switch(PriceSwitch) Then mBOSpec.TargetPrice = CDbl(lClp.SwitchValue(PriceSwitch))
 
 lSwitchName = TriggerPriceSwitch
 If lClp.Switch(TriggerPriceSwitch) Then
-    mBOSpec.TargetTriggerPrice = CDbl(lClp.switchValue(TriggerPriceSwitch))
+    mBOSpec.TargetTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch))
 ElseIf lClp.Switch(TriggerPriceSwitch1) Then
-    mBOSpec.TargetTriggerPrice = CDbl(lClp.switchValue(TriggerPriceSwitch1))
+    mBOSpec.TargetTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch1))
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.TargetOffset = parseOffset(lClp.switchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then mBOSpec.TargetOffset = parseOffset(lClp.SwitchValue(OffsetSwitch))
 
 lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.switchValue(TIFSwitch))
+If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
-If mBOSpec.StopLossType = BracketStopLossTypeNone Then
-    gSetValidNextCommands StopLossCommand, EndBracketCommand
+If mBOSpec.EntryType = BracketEntryTypeNone Then
+    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
-    gSetValidNextCommands EndBracketCommand
+    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
 End If
 
 Exit Sub
@@ -530,21 +566,13 @@ End If
 End Function
 
 Private Function parseContractSpec( _
-                ByVal params As String) As IContractSpecifier
+                ByVal pClp As CommandLineParser) As IContractSpecifier
 Const ProcName As String = "parseContractSpec"
 On Error GoTo Err
 
-If Trim$(params) = "" Then
-    showContractHelp
-    Exit Function
-End If
-
-Dim lClp As CommandLineParser
-Set lClp = CreateCommandLineParser(params, " ")
-
-If lClp.Arg(0) = "?" Or _
-    lClp.Switch("?") Or _
-    lClp.NumberOfSwitches = 0 _
+If pClp.Arg(0) = "?" Or _
+    pClp.Switch("?") Or _
+    (pClp.Arg(0) = "" And pClp.NumberOfSwitches = 0) _
 Then
     showContractHelp
     Exit Function
@@ -553,33 +581,33 @@ End If
 Dim validParams As Boolean
 validParams = True
 
-Dim lSectypeStr As String: lSectypeStr = lClp.switchValue(SecTypeSwitch)
-If lSectypeStr = "" Then lSectypeStr = lClp.switchValue(SecTypeSwitch1)
+Dim lSectypeStr As String: lSectypeStr = pClp.SwitchValue(SecTypeSwitch)
+If lSectypeStr = "" Then lSectypeStr = pClp.SwitchValue(SecTypeSwitch1)
 
-Dim lExchange As String: lExchange = lClp.switchValue(ExchangeSwitch)
-If lExchange = "" Then lExchange = lClp.switchValue(ExchangeSwitch1)
+Dim lExchange As String: lExchange = pClp.SwitchValue(ExchangeSwitch)
+If lExchange = "" Then lExchange = pClp.SwitchValue(ExchangeSwitch1)
 
-Dim lLocalSymbol As String: lLocalSymbol = lClp.switchValue(LocalSymbolSwitch)
-If lLocalSymbol = "" Then lLocalSymbol = lClp.switchValue(LocalSymbolSwitch1)
+Dim lLocalSymbol As String: lLocalSymbol = pClp.SwitchValue(LocalSymbolSwitch)
+If lLocalSymbol = "" Then lLocalSymbol = pClp.SwitchValue(LocalSymbolSwitch1)
 
-Dim lSymbol As String: lSymbol = lClp.switchValue(SymbolSwitch)
-If lSymbol = "" Then lSymbol = lClp.switchValue(SymbolSwitch1)
+Dim lSymbol As String: lSymbol = pClp.SwitchValue(SymbolSwitch)
+If lSymbol = "" Then lSymbol = pClp.SwitchValue(SymbolSwitch1)
 
-Dim lCurrency As String: lCurrency = lClp.switchValue(CurrencySwitch)
-If lCurrency = "" Then lCurrency = lClp.switchValue(CurrencySwitch1)
+Dim lCurrency As String: lCurrency = pClp.SwitchValue(CurrencySwitch)
+If lCurrency = "" Then lCurrency = pClp.SwitchValue(CurrencySwitch1)
 
-Dim lExpiry As String: lExpiry = lClp.switchValue(ExpirySwitch)
-If lExpiry = "" Then lExpiry = lClp.switchValue(ExpirySwitch1)
+Dim lExpiry As String: lExpiry = pClp.SwitchValue(ExpirySwitch)
+If lExpiry = "" Then lExpiry = pClp.SwitchValue(ExpirySwitch1)
 
-Dim lMultiplier As String: lMultiplier = lClp.switchValue(MultiplierSwitch)
-If lMultiplier = "" Then lMultiplier = lClp.switchValue(MultiplierSwitch1)
+Dim lMultiplier As String: lMultiplier = pClp.SwitchValue(MultiplierSwitch)
+If lMultiplier = "" Then lMultiplier = pClp.SwitchValue(MultiplierSwitch1)
 If lMultiplier = "" Then lMultiplier = "1.0"
 
-Dim lStrike As String: lStrike = lClp.switchValue(StrikeSwitch)
-If lStrike = "" Then lStrike = lClp.switchValue(StrikeSwitch1)
+Dim lStrike As String: lStrike = pClp.SwitchValue(StrikeSwitch)
+If lStrike = "" Then lStrike = pClp.SwitchValue(StrikeSwitch1)
 If lStrike = "" Then lStrike = "0.0"
 
-Dim lRight As String: lRight = lClp.switchValue(RightSwitch)
+Dim lRight As String: lRight = pClp.SwitchValue(RightSwitch)
 
 Dim lSectype As SecurityTypes
 lSectype = SecTypeFromString(lSectypeStr)

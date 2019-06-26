@@ -26,18 +26,22 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "plord"
+Public Const ProjectName                            As String = "plord27"
 Private Const ModuleName                            As String = "MainMod"
 
+Private Const LogFileSwitch                         As String = "LOG"
+Private Const MonitorSwitch                         As String = "MONITOR"
+Private Const ResultsDirSwitch                      As String = "RESULTSDIR"
+Private Const RecoveryFileDirSwitch                 As String = "RECOVERYFILEDIR"
+Private Const ScopeNameSwitch                       As String = "SCOPENAME"
+Private Const StageOrdersSwitch                     As String = "STAGEORDERS"
+Private Const StopAtSwitch                          As String = "STOPAT"
 Private Const TwsSwitch                             As String = "TWS"
 
 Public Const CancelAfterSwitch                      As String = "CANCELAFTER"
 Public Const CancelPriceSwitch                      As String = "CANCELPRICE"
-Public Const LogFileSwitch                          As String = "LOG"
-Public Const MonitorSwitch                          As String = "MONITOR"
 Public Const OffsetSwitch                           As String = "OFFSET"
 Public Const PriceSwitch                            As String = "PRICE"
-Public Const ResultsDirSwitch                       As String = "RESULTSDIR"
 Public Const TIFSwitch                              As String = "TIF"
 Public Const TrailBySwitch                          As String = "TRAILBY"
 Public Const TrailPercentSwitch                     As String = "TRAILPERCENT"
@@ -71,23 +75,33 @@ Public Const EndBracketCommand                      As String = "ENDBRACKET"
 Public Const EndOrdersCommand                       As String = "ENDORDERS"
 Public Const EntryCommand                           As String = "ENTRY"
 Public Const ExitCommand                            As String = "EXIT"
+Public Const GroupCommand                           As String = "GROUP"
 Public Const HelpCommand                            As String = "HELP"
 Public Const Help1Command                           As String = "?"
+Public Const ListCommand                            As String = "LIST"
 Public Const OrderCommand                           As String = "ORDER"
 Public Const QuitCommand                            As String = "QUIT"
+Public Const ResetCommand                           As String = "RESET"
+Public Const StageOrdersCommand                     As String = "STAGEORDERS"
 Public Const StopLossCommand                        As String = "STOPLOSS"
 Public Const TargetCommand                          As String = "TARGET"
-Public Const StageOrdersCommand                     As String = "STAGEORDERS"
+
+Public Const GroupsSubcommand                       As String = "GROUPS"
+Public Const PositionsSubcommand                    As String = "POSITIONS"
+Public Const TradesSubcommand                       As String = "TRADES"
 
 Public Const ValueSeparator                         As String = ":"
 Public Const SwitchPrefix                           As String = "/"
 
+Private Const Default                               As String = "DEFAULT"
 Private Const Yes                                   As String = "YES"
 Private Const No                                    As String = "NO"
 
 Public Const TickDesignator                         As String = "T"
 
 Private Const DefaultClientId                       As Long = 906564398
+
+Private Const DefaultOrderGroupName                 As String = "G"
 
 '@================================================================================
 ' Member variables
@@ -102,16 +116,22 @@ Public gLogToConsole                                As Boolean
 ' don't want any further user input until we know whether it has succeeded.
 Public gInputPaused                                 As Boolean
 
-Public gErrorCount                                  As Long
-
 Public gNumberOfOrdersPlaced                        As Long
+
+Private mErrorCount                                 As Long
 
 Private mFatalErrorHandler                          As FatalErrorHandler
 
 Private mContractStore                              As IContractStore
 Private mMarketDataManager                          As IMarketDataManager
+
+Private mScopeName                                  As String
+Private mOrderManager                               As New OrderManager
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 
+Private mGroupName                                  As String
+
+Private mStageOrdersDefault                         As Boolean
 Private mStageOrders                                As Boolean
 
 Private mProcessor                                  As Processor
@@ -129,6 +149,11 @@ Private mClp                                        As CommandLineParser
 Private mMonitor                                    As Boolean
 
 Private mLineNumber                                 As Long
+
+Private mRecoveryFileDir                            As String
+
+Private mOrderPersistenceDataStore                  As IOrderPersistenceDataStore
+Private mOrderRecoveryAgent                         As IOrderRecoveryAgent
 
 '@================================================================================
 ' Class Event Handlers
@@ -220,7 +245,7 @@ Dim s As String
 s = "Error on line " & mLineNumber & ": " & pMessage
 gCon.WriteErrorLine s
 gLogger.Log "StdErr: " & s, ProcName, ModuleName
-gErrorCount = gErrorCount + 1
+mErrorCount = mErrorCount + 1
 End Sub
 
 Public Sub gWriteLineToConsole(ByVal pMessage As String)
@@ -255,12 +280,14 @@ Set mClp = CreateCommandLineParser(command)
 
 If Trim$(command) = "/?" Or Trim$(command) = "-?" Then
     showUsage
-ElseIf mClp.Switch(TwsSwitch) Then
-    If setupTws(mClp.switchValue(TwsSwitch)) Then process
-ElseIf setupTws("") Then
+    Exit Sub
+End If
+
+If setupTws(mClp.SwitchValue(TwsSwitch)) Then
     process
 Else
     showUsage
+    Exit Sub
 End If
 
 If mMonitor And gNumberOfOrdersPlaced > 0 Then
@@ -289,23 +316,99 @@ For i = 0 To UBound(mValidNextCommands)
 Next
 End Function
 
+Private Sub listGroupNames()
+Const ProcName As String = "listGroupNames"
+On Error GoTo Err
+
+Dim lVar As Variant
+For Each lVar In mOrderManager.GetGroupNames
+    Dim lPM As PositionManager
+    Set lPM = lVar
+    Dim lGroupName As String
+    lGroupName = lPM.GroupName
+    gWriteLineToConsole IIf(lGroupName = mGroupName, "* ", "  ") & lPM.GroupName
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub listPositions()
+Const ProcName As String = "listPositions"
+On Error GoTo Err
+
+Dim lVar As Variant
+For Each lVar In mOrderManager.PositionManagersLive
+    Dim lPM As PositionManager
+    Set lPM = lVar
+    Dim lContract As IContract
+    Set lContract = lPM.ContractFuture.Value
+    gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
+                        padStringRight(lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange, 25) & _
+                        " Size=" & padStringleft(lPM.PositionSize, 5) & _
+                        IIf(lPM.PendingPositionSize <> 0, " PendingSize=" & padStringleft(lPM.PendingPositionSize, 5), "") & _
+                        " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 8)
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub listTrades()
+Const ProcName As String = "listTrades"
+On Error GoTo Err
+
+Dim lPmVar As Variant
+For Each lPmVar In mOrderManager.PositionManagersLive
+    Dim lPM As PositionManager
+    Set lPM = lPmVar
+    Dim lContract As IContract
+    Set lContract = lPM.ContractFuture.Value
+    gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
+                        padStringRight(lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange, 25)
+    
+    Dim lTradeVar As Variant
+    For Each lTradeVar In lPM.Executions
+        Dim lTrade As Execution
+        Set lTrade = lTradeVar
+        gWriteLineToConsole "  " & FormatTimestamp(lTrade.FillTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs) & " " & _
+        padStringRight(IIf(lTrade.Action = OrderActionBuy, "BUY", "SELL"), 5) & _
+        padStringleft(lTrade.Quantity, 5) & _
+        padStringleft(FormatPrice(lTrade.Price, lContract.Specifier.SecType, lContract.TickSize), 9) & _
+        " " & lTrade.TimezoneName
+    Next
+Next
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function padStringRight(ByVal pInput As String, ByVal pLength As Long) As String
+pInput = Left$(pInput, pLength)
+padStringRight = pInput & Space$(pLength - Len(pInput))
+End Function
+
+Public Function padStringleft(ByVal pInput As String, ByVal pLength As Long) As String
+pInput = Right$(pInput, pLength)
+padStringleft = Space$(pLength - Len(pInput)) & pInput
+End Function
+
 Private Sub process()
 Const ProcName As String = "process"
 On Error GoTo Err
 
-If Not mClp.Switch(MonitorSwitch) Then
-    mMonitor = False
-ElseIf mClp.switchValue(MonitorSwitch) = "" Then
-    mMonitor = True
-ElseIf UCase$(mClp.switchValue(MonitorSwitch)) = "YES" Then
-    mMonitor = True
-ElseIf UCase$(mClp.switchValue(MonitorSwitch)) = "NO" Then
-    mMonitor = False
-Else
-    gWriteErrorLine "The /" & MonitorSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)"
-End If
+setMonitor
+setStageOrders
+setOrderRecovery
 
-gSetValidNextCommands StageOrdersCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand
 
 Dim inString As String
 inString = Trim$(gCon.ReadLine(":"))
@@ -330,6 +433,9 @@ Do While inString <> gCon.EofString
     inString = Trim$(gCon.ReadLine(":"))
 Loop
 
+If Not mOrderPersistenceDataStore Is Nothing Then mOrderPersistenceDataStore.Finish
+Set mOrderPersistenceDataStore = Nothing
+
 Exit Sub
 
 Err:
@@ -346,7 +452,7 @@ command = UCase$(Split(pInstring, " ")(0))
 Dim params As String
 params = Trim$(Right$(pInstring, Len(pInstring) - Len(command)))
 
-If command = ExitCommand Then
+If command = ExitCommand Or command = QuitCommand Then
     gWriteLineToConsole "Exiting"
     processCommand = False
     Exit Function
@@ -355,15 +461,18 @@ End If
 If command = Help1Command Then
     gCon.WriteLine "Valid commands at this point are: " & Join(mValidNextCommands, ",")
 ElseIf command = HelpCommand Then
-        showStdInHelp
+    showStdInHelp
 ElseIf Not isCommandValid(command) Then
     gWriteErrorLine "Valid commands at this point are: " & Join(mValidNextCommands, ",")
 Else
     Select Case command
     Case ContractCommand
+        Set mProcessor = Nothing
         Set mProcessor = processContractCommand(params)
     Case StageOrdersCommand
         processStageOrdersCommand params
+    Case GroupCommand
+        processGroupCommand params
     Case BracketCommand
         mProcessor.ProcessBracketCommand params
     Case EntryCommand
@@ -376,6 +485,10 @@ Else
         mProcessor.ProcessEndBracketCommand
     Case EndOrdersCommand
         processEndOrdersCommand
+    Case ResetCommand
+        processResetCommand
+    Case ListCommand
+        processListCommand params
     Case Else
         gWriteErrorLine "Invalid command '" & command & "'"
     End Select
@@ -397,10 +510,13 @@ Dim lProcessor As New Processor
 lProcessor.StageOrders = mStageOrders
 mProcessors.Add lProcessor
         
-lProcessor.Initialise mContractStore, mMarketDataManager, mOrderSubmitterFactory
+lProcessor.Initialise mContractStore, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
 
 gInputPaused = True
-If Not lProcessor.processContractCommand(pParams) Then gInputPaused = False
+If Not lProcessor.processContractCommand(pParams) Then
+    gInputPaused = False
+    Set lProcessor = Nothing
+End If
 
 Set processContractCommand = lProcessor
 
@@ -414,13 +530,13 @@ Private Sub processEndOrdersCommand()
 Const ProcName As String = "processEndOrdersCommand"
 On Error GoTo Err
 
-If gErrorCount <> 0 Then
-    gWriteErrorLine gErrorCount & " errors have been found - no orders will be placed"
-    gErrorCount = 0
+If mErrorCount <> 0 Then
+    gWriteErrorLine mErrorCount & " errors have been found - no orders will be placed"
+    mErrorCount = 0
     If Not mProcessor Is Nothing Then
-        gSetValidNextCommands BracketCommand
+        gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, ResetCommand
     Else
-        gSetValidNextCommands ContractCommand
+        gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, ResetCommand
     End If
     Exit Sub
 End If
@@ -443,9 +559,44 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processGroupCommand( _
+                ByVal pParams As String)
+mGroupName = pParams
+End Sub
+
+Private Sub processListCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processListCommand"
+On Error GoTo Err
+
+If UCase$(pParams) = GroupsSubcommand Then
+    listGroupNames
+ElseIf UCase$(pParams) = PositionsSubcommand Then
+    listPositions
+ElseIf UCase$(pParams) = TradesSubcommand Then
+    listTrades
+Else
+    gWriteErrorLine ListCommand & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & " or " & TradesSubcommand
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processResetCommand()
+mProcessors.Clear
+mStageOrdersDefault = mStageOrdersDefault
+mErrorCount = 0
+gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, ResetCommand
+End Sub
+
 Private Sub processStageOrdersCommand( _
                 ByVal pParams As String)
 Select Case UCase$(pParams)
+Case Default
+    mStageOrders = mStageOrdersDefault
 Case Yes
     mStageOrders = True
 Case No
@@ -454,7 +605,55 @@ Case Else
     gWriteErrorLine StageOrdersCommand & " parameter must be either YES or NO"
 End Select
 
-gSetValidNextCommands ContractCommand
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, StageOrdersCommand, ResetCommand
+End Sub
+
+Private Sub setMonitor()
+If Not mClp.Switch(MonitorSwitch) Then
+    mMonitor = False
+ElseIf mClp.SwitchValue(MonitorSwitch) = "" Then
+    mMonitor = True
+ElseIf UCase$(mClp.SwitchValue(MonitorSwitch)) = Yes Then
+    mMonitor = True
+ElseIf UCase$(mClp.SwitchValue(MonitorSwitch)) = No Then
+    mMonitor = False
+Else
+    gWriteErrorLine "The /" & MonitorSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)"
+End If
+End Sub
+
+Private Sub setOrderRecovery()
+Const ProcName As String = "setOrderRecovery"
+On Error GoTo Err
+
+If Not mClp.Switch(ScopeNameSwitch) Then Exit Sub
+mScopeName = mClp.SwitchValue(ScopeNameSwitch)
+If mScopeName = "" Then Exit Sub
+
+mGroupName = DefaultOrderGroupName
+mRecoveryFileDir = ApplicationSettingsFolder
+If mClp.SwitchValue(RecoveryFileDirSwitch) <> "" Then mRecoveryFileDir = mClp.SwitchValue(RecoveryFileDirSwitch)
+
+If mOrderPersistenceDataStore Is Nothing Then Set mOrderPersistenceDataStore = CreateOrderPersistenceDataStore(mRecoveryFileDir)
+
+mOrderManager.RecoverOrdersFromPreviousSession mScopeName, mOrderPersistenceDataStore, mOrderRecoveryAgent, mMarketDataManager, mOrderSubmitterFactory
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setStageOrders()
+If mClp.SwitchValue(StageOrdersSwitch) = "" Then
+    mStageOrdersDefault = False
+ElseIf UCase$(mClp.SwitchValue(StageOrdersSwitch)) = Yes Then
+    mStageOrdersDefault = True
+ElseIf UCase$(mClp.SwitchValue(StageOrdersSwitch)) = No Then
+    mStageOrdersDefault = False
+Else
+    gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)"
+End If
 End Sub
 
 Private Sub setupResultsLogging(ByVal pClp As CommandLineParser)
@@ -468,11 +667,11 @@ sSetup = True
 Dim lResultsPath As String
 
 If pClp.Switch(ResultsDirSwitch) Then
-    If pClp.switchValue(ResultsDirSwitch) <> "" Then lResultsPath = pClp.switchValue(ResultsDirSwitch)
+    If pClp.SwitchValue(ResultsDirSwitch) <> "" Then lResultsPath = pClp.SwitchValue(ResultsDirSwitch)
 ElseIf pClp.Switch(LogFileSwitch) Then
-    If pClp.switchValue(LogFileSwitch) Then
+    If pClp.SwitchValue(LogFileSwitch) Then
         Dim fso As New FileSystemObject
-        lResultsPath = fso.GetParentFolderName(pClp.switchValue(LogFileSwitch))
+        lResultsPath = fso.GetParentFolderName(pClp.SwitchValue(LogFileSwitch))
     End If
 End If
 
@@ -517,21 +716,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function setupTws( _
-                ByVal switchValue As String) As Boolean
+                ByVal SwitchValue As String) As Boolean
 Const ProcName As String = "setupTws"
 On Error GoTo Err
 
-Dim mClp As CommandLineParser
-Set mClp = CreateCommandLineParser(switchValue, ",")
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(SwitchValue, ",")
 
 Dim server As String
-server = mClp.Arg(0)
+server = lClp.Arg(0)
 
 Dim port As String
-port = mClp.Arg(1)
+port = lClp.Arg(1)
 
 Dim clientId As String
-clientId = mClp.Arg(2)
+clientId = lClp.Arg(2)
 
 If port = "" Then
     port = 7496
@@ -553,6 +752,7 @@ Set lTwsClient = GetClient(server, CLng(port), CLng(clientId))
 Set mContractStore = lTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(lTwsClient.GetMarketDataFactory)
 Set mOrderSubmitterFactory = lTwsClient
+Set mOrderRecoveryAgent = lTwsClient
     
 setupTws = True
 
@@ -563,19 +763,25 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub showContractHelp()
-gCon.WriteLineToConsole "    contractcommand  ::= contract  [(/<specifier>[;/<specifier>]...) NEWLINE]"
+gCon.WriteLineToConsole "    contractcommand  ::= contract [ <localsymbol>[@<exchangename>]]"
+gCon.WriteLineToConsole "                                  |"
+gCon.WriteLineToConsole "                                  [/<specifier>[;/<specifier>]...]NEWLINE"
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "    specifier ::= [ local[symbol]:<localsymbol>"
 gCon.WriteLineToConsole "                  | symb[ol]:<symbol>"
 gCon.WriteLineToConsole "                  | sec[type]:[ STK | FUT | FOP | CASH | OPT]"
 gCon.WriteLineToConsole "                  | exch[ange]:<exchangename>"
 gCon.WriteLineToConsole "                  | curr[ency]:<currencycode>"
-gCon.WriteLineToConsole "                  | exp[iry]:[yyyymm | yyyymmdd]"
+gCon.WriteLineToConsole "                  | exp[iry]:[yyyymm | yyyymmdd | <offset>]"
 gCon.WriteLineToConsole "                  | mult[iplier]:<multiplier>"
 gCon.WriteLineToConsole "                  | str[ike]:<price>"
 gCon.WriteLineToConsole "                  | right:[ CALL | PUT ]"
 gCon.WriteLineToConsole "                  ]"
 gCon.WriteLineToConsole ""
+End Sub
+
+Private Sub showListHelp()
+gCon.WriteLineToConsole "    listcommand   ::= list [groups | positions | trades])"
 End Sub
 
 Private Sub showOrderHelp()
@@ -646,9 +852,11 @@ End Sub
 Private Sub showStdInHelp()
 gCon.WriteLineToConsole "StdIn Format:"
 gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "#comment"
+gCon.WriteLineToConsole "#comment NEWLINE"
 gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "stageorders [yes|no]"
+gCon.WriteLineToConsole "[stageorders [yes|no|default] NEWLINE]]"
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "[group [<groupname> NEWLINE"
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "<contractcommand>"
 gCon.WriteLineToConsole ""
@@ -656,11 +864,17 @@ gCon.WriteLineToConsole "[<ordercommand>|<bracketcommand>]..."
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "endorders NEWLINE"
 gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "reset NEWLINE"
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "<listcommand>"
+gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "where"
 gCon.WriteLineToConsole ""
 showContractHelp
 gCon.WriteLineToConsole ""
 showOrderHelp
+gCon.WriteLineToConsole ""
+showListHelp
 End Sub
 
 Private Sub showStdOutHelp()
@@ -682,9 +896,11 @@ End Sub
 
 Private Sub showUsage()
 gCon.WriteLineToConsole "Usage:"
-gCon.WriteLineToConsole "plord27 -tws[:[<twsserver>][,[<port>][,[<clientid>]]]] [-monitor:[yes|no]] "
-gCon.WriteLineToConsole "       [-resultsdir:<resultspath>] [-stopAt:<hh:mm>] [-log:<logfilepath>"
-gCon.WriteLineToConsole "       [-loglevel:[ I | N | D | M | H }"
+gCon.WriteLineToConsole "plord27 -tws[:[<twsserver>][,[<port>][,[<clientid>]]]] [-monitor[:[yes|no]]] "
+gCon.WriteLineToConsole "       [-resultsdir:<resultspath>] [-stopAt:<hh:mm>] [-log:<logfilepath>]"
+gCon.WriteLineToConsole "       [-loglevel:[ I | N | D | M | H }]"
+gCon.WriteLineToConsole "       [-stageorders[:[yes|no]]]"
+gCon.WriteLineToConsole "       [-scopename:<scope>] [-recoveryfiledir:<recoverypath>]"
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "  where"
 gCon.WriteLineToConsole ""
@@ -697,6 +913,9 @@ gCon.WriteLineToConsole "    resultspath ::= path to the folder in which results
 gCon.WriteLineToConsole "                    (defaults to the logfile path)"
 gCon.WriteLineToConsole "    logfilepath ::= path to the folder where the program logfile is to be"
 gCon.WriteLineToConsole "                    created"
+gCon.WriteLineToConsole "    scope       ::= order recovery scope name"
+gCon.WriteLineToConsole "    recoverypath ::= path to the folder in which order recovery files  are to"
+gCon.WriteLineToConsole "                     be created(defaults to the logfile path)"
 gCon.WriteLineToConsole ""
 showStdInHelp
 gCon.WriteLineToConsole ""

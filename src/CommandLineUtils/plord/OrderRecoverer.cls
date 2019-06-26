@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "PlaceOrdersTask"
+Attribute VB_Name = "OrderRecoverer"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -21,8 +21,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements ITask
 
 '@================================================================================
 ' Events
@@ -40,60 +38,39 @@ Implements ITask
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "PlaceOrdersTask"
+Private Const ModuleName                            As String = "OrderRecoverer"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTaskContext                                As TaskContext
-Private mProcessors                                 As EnumerableCollection
-Private mProcessorsEn                               As Enumerator
-Private mMonitor                                    As Boolean
+Private WithEvents mTaskController                  As TaskController
+Attribute mTaskController.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' ITask Interface Members
+' XXXX Interface Members
 '@================================================================================
 
-Private Sub ITask_Cancel()
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
 
-End Sub
-
-Private Sub ITask_Run()
-Const ProcName As String = "ITask_Run"
+Private Sub mTaskController_Completed(ev As TaskCompletionEventData)
+Const ProcName As String = "mTaskController_Completed"
 On Error GoTo Err
 
-Static sProcessor As Processor
-Static sBracketOrdersEn As Enumerator
-
-
-If sProcessor Is Nothing Then
-    If Not mProcessorsEn.MoveNext Then
-        mProcessors.Clear
-        gInputPaused = False
-        mTaskContext.Finish Empty, False
-        gInputPaused = False
-        gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BracketCommand, ResetCommand
-        gWriteLineToStdOut EndOrdersCommand
-        Exit Sub
-    Else
-        Set sProcessor = mProcessorsEn.Current
-        Set sBracketOrdersEn = sProcessor.BracketOrders.Enumerator
-        sProcessor.WriteContractSpecToConsole
-    End If
-End If
-
-If Not sProcessor.IsReadyToPlaceOrders Then
-    mTaskContext.Suspend 10
-ElseIf sBracketOrdersEn.MoveNext Then
-        sProcessor.PlaceOrder sBracketOrdersEn.Current
-        mTaskContext.Suspend 25
-Else
-    Set sProcessor = Nothing
+gInputPaused = False
+If ev.Cancelled Then
+    gWriteErrorLine "Error: order recovery was cancelled"
+ElseIf ev.ErrorNumber <> 0 Then
+    gWriteErrorLine "Error: order recovery received error (" & ev.ErrorNumber & ") " & _
+                    ev.ErrorMessage & vbCrLf & _
+                    "At:" & vbCrLf & _
+                    ev.ErrorSource
 End If
 
 Exit Sub
@@ -101,18 +78,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
-Set mTaskContext = Value
-End Property
-
-Private Property Get ITask_TaskName() As String
-ITask_TaskName = mTaskContext.Name
-End Property
-
-'@================================================================================
-' XXXX Event Handlers
-'@================================================================================
 
 '@================================================================================
 ' Properties
@@ -122,18 +87,22 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
-                ByVal pProcessors As EnumerableCollection, _
-                ByVal pStageOrders As Boolean, _
-                ByVal pMonitor As Boolean)
-Const ProcName As String = "Initialise"
+Friend Sub RecoverOrders( _
+                ByVal pOrderManager As OrderManager, _
+                ByVal pScopeName As String, _
+                ByVal pDataStore As IOrderPersistenceDataStore, _
+                ByVal pRecoveryAgent As IOrderRecoveryAgent, _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
+Const ProcName As String = "RecoverOrdersFromPreviousSession"
 On Error GoTo Err
 
-Set mProcessors = pProcessors
-Set mProcessorsEn = mProcessors.Enumerator
-mMonitor = pMonitor
-
-gWriteLineToStdOut StageOrdersCommand & " " & IIf(pStageOrders, "YES", "NO")
+Set mTaskController = pOrderManager.RecoverOrdersFromPreviousSession(pScopeName, _
+                                                                    pDataStore, _
+                                                                    pRecoveryAgent, _
+                                                                    pMarketDataManager, _
+                                                                    pOrderSubmitterFactory)
+gInputPaused = True
 
 Exit Sub
 
