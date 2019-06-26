@@ -132,7 +132,7 @@ On Error GoTo Err
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is Nothing"
 
-Set CreateOrderContexts = CreateOrderContextsEx(pName, pContractFuture, pOrderSubmitter, Nothing, pDataSource, pGroupName, pIsSimulated, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture)
+Set CreateOrderContexts = CreateOrderContextsEx(pName, pContractFuture, pOrderSubmitter, Nothing, pDataSource, pGroupName, "", pIsSimulated, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture)
 
 Exit Function
 
@@ -147,6 +147,7 @@ Friend Function CreateOrderContextsEx( _
                 ByVal pBracketOrderRecoveryController As BracketOrderRecoveryCtlr, _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pGroupName As String, _
+                ByVal pRecoveryContextName As String, _
                 ByVal pIsSimulated As Boolean, _
                 ByVal pOrderAuthoriser As IOrderAuthoriser, _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
@@ -159,7 +160,7 @@ AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is Nothing"
 
 Dim lOrderContexts As New OrderContexts
-lOrderContexts.Initialise pName, Me, pGroupName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture, pBracketOrderRecoveryController
+lOrderContexts.Initialise pName, Me, pGroupName, pRecoveryContextName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture, pBracketOrderRecoveryController
 If pIsSimulated Then
     mOrderContextsCollectionSimulated.Add lOrderContexts, pName
 Else
@@ -213,6 +214,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function GetGroupNames() As EnumerableCollection
+Const ProcName As String = "GetGroupNames"
+On Error GoTo Err
+
+Dim lGroupNames As New EnumerableCollection
+Dim lPm As PositionManager
+
+For Each lPm In mPositionManagersLive
+    lGroupNames.Add lPm
+Next
+
+Set GetGroupNames = lGroupNames
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function GetOrderContexts( _
                 ByVal pName As String, _
                 ByVal pIsSimulated As Boolean) As OrderContexts
@@ -233,7 +253,7 @@ End Function
 
 Public Function GetPositionManager( _
                 ByVal pName As String, _
-                ByVal pIsSimulated As Boolean) As OrderContexts
+                ByVal pIsSimulated As Boolean) As PositionManager
 Const ProcName As String = "GetPositionManager"
 On Error GoTo Err
 
@@ -242,6 +262,26 @@ If pIsSimulated Then
 Else
     If mPositionManagersLive.Contains(pName) Then Set GetPositionManager = mPositionManagersLive.Item(pName)
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetPositionManagersForGroup( _
+                ByVal pGroupName As String) As PositionManagers
+Const ProcName As String = "GetPositionManagersForGroup"
+On Error GoTo Err
+
+Dim lPms As New PositionManagers
+Dim lPm As PositionManager
+
+For Each lPm In mPositionManagersLive
+    If lPm.GroupName = pGroupName Then lPms.Add lPm
+Next
+
+Set GetPositionManagersForGroup = lPms
 
 Exit Function
 

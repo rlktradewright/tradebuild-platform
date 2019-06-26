@@ -75,6 +75,7 @@ Private mAccumulatedOrders                      As Orders
 
 Private mName                                   As String
 Private mGroupName                              As String
+Private mRecoveryContextName                    As String
 
 Private WithEvents mOrderContexts               As EnumerableCollection
 Attribute mOrderContexts.VB_VarHelpID = -1
@@ -440,6 +441,7 @@ Friend Sub Initialise( _
                 ByVal pName As String, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pGroupName As String, _
+                ByVal pRecoveryContextName As String, _
                 ByVal pIsSimulated As Boolean, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pDataSource As IMarketDataSource, _
@@ -455,6 +457,7 @@ On Error GoTo Err
 mName = pName
 Set mOrderManager = pOrderManager
 mGroupName = pGroupName
+mRecoveryContextName = pRecoveryContextName
 
 mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture

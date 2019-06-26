@@ -88,6 +88,7 @@ Private mTaskContext                                As TaskContext
 Private mState                                      As RecoveryStates
 
 Private mPositionManagers                           As PositionManagers
+Private mPositionManagersByRecoveryContextName      As New EnumerableCollection
 
 Private mNumOrderContextsWaiting                    As Long
 
@@ -307,7 +308,7 @@ ElseIf mState = RecoveryStateCreatingOrderContexts Then
             ensurePositionManagerExists lOpItem
         ElseIf TypeOf lOpItem.Data Is BracketOrderSummary Then
             Dim lPm As PositionManager
-            Set lPm = GetPositionManager(lOpItem.RecoveryContextName)
+            Set lPm = GetPositionManager(lOpItem)
             
             If Not IsContractExpired(lPm.ContractFuture.Value) Then
                 Dim lBracketOrderSummary As BracketOrderSummary
@@ -401,7 +402,7 @@ Dim lContract As IContract
 Set lContract = ev.Future.Value
 
 Dim lPm As PositionManager
-Set lPm = GetPositionManager(lOpItem.RecoveryContextName)
+Set lPm = GetPositionManager(lOpItem)
 
 Dim lDataSource As MarketDataSource
 If IsContractExpired(lContract) Then
@@ -515,10 +516,9 @@ Private Sub ensurePositionManagerExists(ByVal pOpItem As OrderPersistenceItem)
 Const ProcName As String = "ensurePositionManagerExists"
 On Error GoTo Err
 
-If mPositionManagers.Contains(pOpItem.RecoveryContextName) Then Exit Sub
-
 Dim lSummary As PositionManagerSummary
 Set lSummary = pOpItem.Data
+If mPositionManagers.Contains(lSummary.Name) Then Exit Sub
 
 Dim lPm As New PositionManager
 lPm.PreInitialise mOrderManager
@@ -528,6 +528,7 @@ Set lRecoverable = lPm
 lRecoverable.LoadRecoveryData lSummary
 
 mPositionManagers.Add lPm
+mPositionManagersByRecoveryContextName.Add lPm, pOpItem.RecoveryContextName
 
 mFutureWaiter.Add lPm.ContractFuture, pOpItem
 
@@ -615,14 +616,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function GetPositionManager( _
-                ByVal pName As String) As PositionManager
+                ByVal lOpItem As OrderPersistenceItem) As PositionManager
 Const ProcName As String = "GetPositionManager"
 On Error GoTo Err
 
-Assert mPositionManagers.Contains(pName), "PositionManager " & pName & " not recovered"
+Assert mPositionManagersByRecoveryContextName.Contains(lOpItem.RecoveryContextName), "PositionManager " & lOpItem.RecoveryContextName & " not recovered"
 
 Dim lPm As PositionManager
-Set lPm = mPositionManagers.Item(pName)
+Set lPm = mPositionManagersByRecoveryContextName.Item(lOpItem.RecoveryContextName)
 
 Set GetPositionManager = lPm
 
@@ -678,7 +679,7 @@ If mBracketOrderRecoverers.Contains(lSummary.Key) Then
     Set lBor = mBracketOrderRecoverers.Item(lSummary.Key)
 Else
     Dim lPm As PositionManager
-    Set lPm = GetPositionManager(pOpi.RecoveryContextName)
+    Set lPm = GetPositionManager(pOpi)
     Set lBor = createBracketOrderRecoverer(lPm, lSummary.ContextName, lSummary.Key)
     mBracketOrderRecoverers.Add lBor, lSummary.Key
 End If
@@ -699,7 +700,7 @@ On Error GoTo Err
 Dim lExec As Execution
 Set lExec = pOpi.Data
 
-lExec.SetClean
+lExec.setClean
 
 Dim lBor As BracketOrderRecoverer
 Set lBor = mOrderIdToBracketOrderRecoverer.Item(lExec.OrderId)
@@ -770,7 +771,7 @@ Const ProcName As String = "processOrderPersistenceItem"
 On Error GoTo Err
 
 Dim lPm As PositionManager
-Set lPm = GetPositionManager(pOpItem.RecoveryContextName)
+Set lPm = GetPositionManager(pOpItem)
 Debug.Print "PositionManager object key: " & GetObjectKey(lPm)
 
 If IsContractExpired(lPm.ContractFuture.Value) Then
@@ -807,7 +808,7 @@ Dim lSummary As PositionManagerSummary
 Set lSummary = pOpi.Data
 
 Dim lRecoverable As IRecoverable
-Set lRecoverable = GetPositionManager(pOpi.RecoveryContextName)
+Set lRecoverable = GetPositionManager(pOpi)
 
 lRecoverable.LoadRecoveryData lSummary
 

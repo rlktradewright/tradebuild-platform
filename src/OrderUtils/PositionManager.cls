@@ -361,7 +361,7 @@ End Sub
 '@================================================================================
 
 Private Property Get IPositionMember_RecoveryContextName() As String
-IPositionMember_RecoveryContextName = mSummary.Name
+IPositionMember_RecoveryContextName = RecoveryContextName
 End Property
 
 '@================================================================================
@@ -889,6 +889,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Friend Property Get RecoveryContextName() As String
+RecoveryContextName = mSummary.Name
+End Property
+
 Public Property Get Risk() As Currency
 Const ProcName As String = "Risk"
 On Error GoTo Err
@@ -1071,7 +1075,18 @@ End If
 Set mBracketOrderRecoveryController = pBracketOrderRecoveryCtlr
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
 
-Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, mContractFuture, mOrderSubmitter, mBracketOrderRecoveryController, mDataSource, mSummary.GroupName, mSummary.IsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, _
+                                                        mContractFuture, _
+                                                        mOrderSubmitter, _
+                                                        mBracketOrderRecoveryController, _
+                                                        mDataSource, _
+                                                        mSummary.GroupName, _
+                                                        RecoveryContextName, _
+                                                        mSummary.IsSimulated, _
+                                                        Me, _
+                                                        mBracketOrders, _
+                                                        mOrders, _
+                                                        IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 
 Exit Sub
 
@@ -1568,7 +1583,18 @@ On Error GoTo Err
 If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
     Set mOrderContexts = mOrderManager.GetOrderContexts(mSummary.Name, mSummary.IsSimulated)
     If mOrderContexts Is Nothing Then _
-        Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, mContractFuture, mOrderSubmitter, mBracketOrderRecoveryController, mDataSource, mSummary.GroupName, mSummary.IsSimulated, Me, mBracketOrders, mOrders, IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+        Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, _
+                                                                mContractFuture, _
+                                                                mOrderSubmitter, _
+                                                                mBracketOrderRecoveryController, _
+                                                                mDataSource, _
+                                                                mSummary.GroupName, _
+                                                                RecoveryContextName, _
+                                                                mSummary.IsSimulated, _
+                                                                Me, _
+                                                                mBracketOrders, _
+                                                                mOrders, _
+                                                                IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
 End If
 
 If mContractFuture.IsAvailable Then
@@ -1725,7 +1751,7 @@ If mRecoverableObjectListeners Is Nothing Or mRecoverableObjectListeners.Count =
 
 mInitialRecoveryDataSaved = True
 fireRecoveryDataChanged
-mSummary.SetClean
+mSummary.setClean
 
 Exit Sub
 
