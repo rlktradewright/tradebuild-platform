@@ -22,11 +22,15 @@ Public Const NumDaysInYear                      As Long = 260
 Public Const NumMonthsInYear                    As Long = 12
 
 Public Const ExchangeSmart                      As String = "SMART"
+Public Const ExchangeSmartCAN                   As String = "SMARTCAN"
 Public Const ExchangeSmartEUR                   As String = "SMARTEUR"
+Public Const ExchangeSmartNASDAQ                As String = "SMARTNASDAQ"
+Public Const ExchangeSmartNYSE                  As String = "SMARTNYSE"
 Public Const ExchangeSmartUK                    As String = "SMARTUK"
 Public Const ExchangeSmartUS                    As String = "SMARTUS"
 Public Const ExchangeSmartQualified             As String = "SMART/"
 
+Public Const PrimaryExchangeARCA                As String = "ARCA"
 Public Const PrimaryExchangeEBS                 As String = "EBS"
 Public Const PrimaryExchangeFWB                 As String = "FWB"
 Public Const PrimaryExchangeIBIS                As String = "IBIS"
@@ -34,6 +38,7 @@ Public Const PrimaryExchangeLSE                 As String = "LSE"
 Public Const PrimaryExchangeSWB                 As String = "SWB"
 Public Const PrimaryExchangeNASDAQ              As String = "NASDAQ"
 Public Const PrimaryExchangeNYSE                As String = "NYSE"
+Public Const PrimaryExchangeVENTURE             As String = "VENTURE"
 
 '================================================================================
 ' Enums
@@ -91,12 +96,20 @@ Set gContractSpecToTwsContract = New TwsContract
 With gContractSpecToTwsContract
     .CurrencyCode = pContractSpecifier.CurrencyCode
     Dim lExchange As String: lExchange = UCase$(pContractSpecifier.Exchange)
-    If lExchange = ExchangeSmart Then
+    If lExchange = ExchangeSmartCAN Then
+        .PrimaryExch = PrimaryExchangeVENTURE
+        .Exchange = ExchangeSmart
     ElseIf lExchange = ExchangeSmartUK Then
         .PrimaryExch = PrimaryExchangeLSE
         .Exchange = ExchangeSmart
-    ElseIf lExchange = ExchangeSmartUS Then
+    ElseIf lExchange = ExchangeSmartNASDAQ Then
         .PrimaryExch = PrimaryExchangeNASDAQ
+        .Exchange = ExchangeSmart
+    ElseIf lExchange = ExchangeSmartNYSE Then
+        .PrimaryExch = PrimaryExchangeNYSE
+        .Exchange = ExchangeSmart
+    ElseIf lExchange = ExchangeSmartUS Then
+        .PrimaryExch = PrimaryExchangeARCA
         .Exchange = ExchangeSmart
     ElseIf lExchange = ExchangeSmartEUR Then
         .PrimaryExch = PrimaryExchangeIBIS
@@ -584,32 +597,51 @@ On Error GoTo Err
 Dim lBuilder As ContractBuilder
 
 With pTwsContractDetails
+    Set lBuilder = CreateContractBuilder(gTwsContractToContractSpecifier(.Summary, .PriceMagnifier))
     With .Summary
-        If .Exchange = ExchangeSmart Then
-            If .PrimaryExch = PrimaryExchangeNASDAQ Or .PrimaryExch = PrimaryExchangeNYSE Then
-                .Exchange = ExchangeSmartUS
-            ElseIf .PrimaryExch = PrimaryExchangeEBS Or .PrimaryExch = PrimaryExchangeIBIS Or .PrimaryExch = PrimaryExchangeFWB Or .PrimaryExch = PrimaryExchangeSWB Then
-                .Exchange = ExchangeSmartEUR
-            ElseIf .PrimaryExch = PrimaryExchangeLSE Then
-                .PrimaryExch = ExchangeSmartUK
-            Else
-                .PrimaryExch = ExchangeSmartQualified & .PrimaryExch
-            End If
-        End If
-        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.SecType), .CurrencyCode, .Expiry, .Multiplier / pTwsContractDetails.PriceMagnifier, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
         If .Expiry <> "" Then
             lBuilder.ExpiryDate = CDate(Left$(.Expiry, 4) & "/" & _
-                                                Mid$(.Expiry, 5, 2) & "/" & _
-                                                Right$(.Expiry, 2))
+                                        Mid$(.Expiry, 5, 2) & "/" & _
+                                        Right$(.Expiry, 2))
         End If
     End With
     lBuilder.Description = .LongName
     lBuilder.TickSize = .MinTick
     lBuilder.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(.TimeZoneId)
-
 End With
 
 Set gTwsContractDetailsToContract = lBuilder.Contract
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gTwsContractToContractSpecifier( _
+                ByVal pTwsContract As TwsContract, _
+                ByVal pPriceMagnifier) As IContractSpecifier
+Const ProcName As String = "gTwsContractToContractSpecifier"
+On Error GoTo Err
+
+Dim lContractSpec As IContractSpecifier
+With pTwsContract
+    Dim lExchange As String: lExchange = .Exchange
+    If lExchange = ExchangeSmart Then
+        lExchange = ExchangeSmartQualified & .PrimaryExch
+    End If
+    Set lContractSpec = CreateContractSpecifier(.LocalSymbol, _
+                                                .Symbol, _
+                                                lExchange, _
+                                                gTwsSecTypeToSecType(.SecType), _
+                                                .CurrencyCode, _
+                                                .Expiry, _
+                                                .Multiplier / pPriceMagnifier, _
+                                                .Strike, _
+                                                gTwsOptionRightToOptionRight(.OptRight))
+End With
+
+Set gTwsContractToContractSpecifier = lContractSpec
 
 Exit Function
 

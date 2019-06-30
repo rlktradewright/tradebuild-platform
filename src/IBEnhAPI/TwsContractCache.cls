@@ -70,13 +70,11 @@ Friend Sub Add(ByVal pContractDetails As TwsContractDetails)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-If pContractDetails.Summary.Sectype = TwsSecTypeCombo Then Exit Sub
+If pContractDetails.Summary.SecType = TwsSecTypeCombo Then Exit Sub
 If Not IsValidExchangeCode(pContractDetails.Summary.Exchange) Then Exit Sub
 
 Dim lSpec As IContractSpecifier
-With pContractDetails.Summary
-    Set lSpec = CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Multiplier, .Strike, gTwsOptionRightToOptionRight(.OptRight))
-End With
+Set lSpec = gTwsContractToContractSpecifier(pContractDetails.Summary, pContractDetails.PriceMagnifier)
 
 Dim lKey As String
 lKey = lSpec.Key
@@ -103,7 +101,7 @@ Friend Function Item(ByVal pContractSpec As IContractSpecifier) As TwsContractDe
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-If pContractSpec.Sectype = SecTypeCombo Then Exit Function
+If pContractSpec.SecType = SecTypeCombo Then Exit Function
 
 Dim lKey As String
 lKey = pContractSpec.Key
