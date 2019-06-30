@@ -81,6 +81,9 @@ Public Sub AddCollectionChangeListener( _
                 ByVal pListener As ICollectionChangeListener)
 End Sub
 
+Public Function Contains(ByVal pKey As IContractSpecifier) As Boolean
+End Function
+
 Public Function ItemAtIndex(ByVal pIndex As Long) As IContract
 End Function
 

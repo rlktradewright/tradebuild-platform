@@ -202,19 +202,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gContractToXML(ByVal pContract As IContract) As String
-Dim XMLdoc As DOMDocument30
-Dim lContractElement As IXMLDOMElement
-Dim Specifier As IXMLDOMElement
-Dim ComboLegs As IXMLDOMElement
-Dim ComboLeg As IXMLDOMElement
-Dim comboLegObj As ComboLeg
-
 Const ProcName As String = "gContractToXML"
-
 On Error GoTo Err
 
-Set XMLdoc = New DOMDocument30
-Set lContractElement = XMLdoc.createElement("contract")
+Dim XMLdoc As DOMDocument30: Set XMLdoc = New DOMDocument30
+Dim lContractElement As IXMLDOMElement: Set lContractElement = XMLdoc.createElement("contract")
 Set XMLdoc.documentElement = lContractElement
 lContractElement.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
 lContractElement.setAttribute "minimumtick", pContract.TickSize
@@ -224,7 +216,7 @@ lContractElement.setAttribute "Description", pContract.Description
 lContractElement.setAttribute "numberofdecimals", pContract.NumberOfDecimals
 lContractElement.setAttribute "timezonename", pContract.TimezoneName
 
-Set Specifier = XMLdoc.createElement("specifier")
+Dim Specifier As IXMLDOMElement: Set Specifier = XMLdoc.createElement("specifier")
 lContractElement.appendChild Specifier
 Specifier.setAttribute "symbol", pContract.Specifier.Symbol
 Specifier.setAttribute "sectype", pContract.Specifier.SecType
@@ -236,11 +228,12 @@ Specifier.setAttribute "multiplier", pContract.Specifier.Multiplier
 Specifier.setAttribute "right", pContract.Specifier.Right
 Specifier.setAttribute "strike", pContract.Specifier.Strike
 
-Set ComboLegs = XMLdoc.createElement("combolegs")
+Dim ComboLegs As IXMLDOMElement: Set ComboLegs = XMLdoc.createElement("combolegs")
 Specifier.appendChild ComboLegs
 If Not pContract.Specifier.ComboLegs Is Nothing Then
+    Dim comboLegObj As ComboLeg
     For Each comboLegObj In pContract.Specifier.ComboLegs
-        Set ComboLeg = XMLdoc.createElement("comboleg")
+        Dim ComboLeg As IXMLDOMElement: Set ComboLeg = XMLdoc.createElement("comboleg")
         ComboLegs.appendChild ComboLeg
         
         Set Specifier = XMLdoc.createElement("specifier")
@@ -294,11 +287,10 @@ On Error GoTo Err
 
 Dim lIndex As Long
 lIndex = InStr(1, pSpecString, "@")
+AssertArgument lIndex <> 1, "Contract specifier cannot start with @"
 
 Dim lLocalSymbol As String
 Dim lExchange As String
-
-AssertArgument lIndex <> 1, "Contract specifier cannot start with @"
 
 If lIndex = 0 Then
     lLocalSymbol = pSpecString
@@ -400,9 +392,10 @@ Public Function gLoadContractFromConfig(ByVal pConfig As ConfigurationSection) A
 Const ProcName As String = "gLoadContractFromConfig"
 On Error GoTo Err
 
-Dim lContract As New Contract
 Dim lSpec As ContractSpecifier
 Set lSpec = gLoadContractSpecFromConfig(pConfig.AddConfigurationSection(ConfigSectionContractSpecifier))
+
+Dim lContract As New Contract
 lContract.Specifier = lSpec
 
 With pConfig
@@ -494,20 +487,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gIsValidExchangeCode(ByVal Code As String) As Boolean
-Dim bottom As Long
-Dim top As Long
-Dim middle As Long
-
 Const ProcName As String = "gIsValidExchangeCode"
-
 On Error GoTo Err
 
 If mMaxExchangeCodesIndex = 0 Then setupExchangeCodes
 
 Code = UCase$(Code)
-bottom = 0
-top = mMaxExchangeCodesIndex
-middle = Fix((bottom + top) / 2)
+
+Dim bottom As Long: bottom = 0
+Dim top As Long: top = mMaxExchangeCodesIndex
+Dim middle As Long: middle = Fix((bottom + top) / 2)
 
 Do
     If Code < mExchangeCodes(middle) Then
@@ -522,6 +511,28 @@ Do
 Loop Until bottom = middle
 
 If Code = mExchangeCodes(middle) Then gIsValidExchangeCode = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gIsValidExchangeSpecifier(ByVal pExchangeSpec As String) As Boolean
+Const ProcName As String = "gIsValidExchangeSpecifier"
+On Error GoTo Err
+
+pExchangeSpec = UCase$(pExchangeSpec)
+
+Const ExchangeSmartQualified As String = "SMART/"
+If InStr(1, pExchangeSpec, ExchangeSmartQualified) <> 1 Then
+    gIsValidExchangeSpecifier = gIsValidExchangeCode(pExchangeSpec)
+    Exit Function
+End If
+
+gIsValidExchangeSpecifier = gIsValidExchangeCode( _
+                                Right$(pExchangeSpec, _
+                                        Len(pExchangeSpec) - Len(ExchangeSmartQualified)))
 
 Exit Function
 
@@ -666,12 +677,12 @@ End Select
 End Function
 
 Public Property Get gRegExp() As RegExp
-Static lRegExp As RegExp
 Const ProcName As String = "gRegExp"
 On Error GoTo Err
 
-If lRegExp Is Nothing Then Set lRegExp = New RegExp
-Set gRegExp = lRegExp
+Static sRegExp As RegExp
+If sRegExp Is Nothing Then Set sRegExp = New RegExp
+Set gRegExp = sRegExp
 
 Exit Property
 
@@ -790,13 +801,11 @@ End Sub
 
 Public Function gUnEscapeRegexSpecialChar( _
                 ByRef inString As String) As String
-Dim i As Long
 Dim s As String
-Dim ch As String
 Dim skipNextCheck As Boolean
-
+Dim i As Long
 For i = 1 To Len(inString)
-    ch = Mid$(inString, i, 1)
+    Dim ch As String: ch = Mid$(inString, i, 1)
     If skipNextCheck Then
         s = s & ch
         skipNextCheck = False
@@ -823,7 +832,6 @@ End Sub
 
 Private Sub addExchangeCode(ByVal Code As String)
 Const ProcName As String = "addExchangeCode"
-
 On Error GoTo Err
 
 mMaxExchangeCodesIndex = mMaxExchangeCodesIndex + 1
@@ -842,7 +850,6 @@ Private Sub addCurrencyDesc( _
                 ByVal Code As String, _
                 ByVal Description As String)
 Const ProcName As String = "addCurrencyDesc"
-
 On Error GoTo Err
 
 mMaxCurrencyDescsIndex = mMaxCurrencyDescsIndex + 1
@@ -859,12 +866,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getCurrencyIndex(ByVal Code As String) As Long
-Dim bottom As Long
-Dim top As Long
-Dim middle As Long
-
 Const ProcName As String = "getCurrencyIndex"
-
 On Error GoTo Err
 
 If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
@@ -872,9 +874,10 @@ If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
 getCurrencyIndex = -1
 
 Code = UCase$(Code)
-bottom = 0
-top = mMaxCurrencyDescsIndex
-middle = Fix((bottom + top) / 2)
+
+Dim bottom As Long: bottom = 0
+Dim top As Long: top = mMaxCurrencyDescsIndex
+Dim middle As Long: middle = Fix((bottom + top) / 2)
 
 Do
     If Code < mCurrencyDescs(middle).Code Then
@@ -898,7 +901,6 @@ End Function
 
 Private Sub setupExchangeCodes()
 Const ProcName As String = "setupExchangeCodes"
-
 On Error GoTo Err
 
 ReDim mExchangeCodes(31) As String
@@ -1002,7 +1004,10 @@ addExchangeCode "SEHK"
 addExchangeCode "SFB"
 addExchangeCode "SGX"
 addExchangeCode "SMART"
+addExchangeCode "SMARTCAN"
 addExchangeCode "SMARTEUR"
+addExchangeCode "SMARTNASDAQ"
+addExchangeCode "SMARTNYSE"
 addExchangeCode "SMARTUK"
 addExchangeCode "SMARTUS"
 addExchangeCode "SNFE"
@@ -1028,12 +1033,10 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub setupCurrencyDescs()
 Const ProcName As String = "setupCurrencyDescs"
-
 On Error GoTo Err
 
 ReDim mCurrencyDescs(127) As CurrencyDescriptor
@@ -1218,5 +1221,4 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub

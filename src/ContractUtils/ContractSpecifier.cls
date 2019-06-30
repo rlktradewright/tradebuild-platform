@@ -313,7 +313,7 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 AssertArgument LocalSymbol <> "" Or Symbol <> "", "Symbol must be supplied if LocalSymbol is not supplied"
-AssertArgument Exchange = "" Or gIsValidExchangeCode(Exchange), "'" & Exchange & "' is not a valid Exchange Code"
+AssertArgument Exchange = "" Or gIsValidExchangeSpecifier(Exchange), "'" & Exchange & "' is not a valid Exchange specifier"
 If Expiry <> "" Then AssertArgument gIsValidExpiry(Expiry), "'" & Expiry & "' is not a valid Expiry format"
 
 Select Case SecType

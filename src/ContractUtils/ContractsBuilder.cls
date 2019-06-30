@@ -104,20 +104,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-'Friend Sub Initialise( _
-'                ByVal ContractSpec As IContractSpecifier)
-'Const ProcName As String = "Initialise"
-'On Error GoTo Err
-'
-'Set mContracts = New Contracts
-'mContracts.Initialise ContractSpec
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================

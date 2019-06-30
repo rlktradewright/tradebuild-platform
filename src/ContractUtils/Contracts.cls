@@ -100,6 +100,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function IContracts_Contains(ByVal pKey As IContractSpecifier) As Boolean
+Const ProcName As String = "IContracts_Contains"
+On Error GoTo Err
+
+IContracts_Contains = Contains(pKey)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Property Get IContracts_Count() As Long
 Const ProcName As String = "IContracts_Count"
 On Error GoTo Err
@@ -241,8 +253,9 @@ Friend Sub Add(ByVal pContract As IContract)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-AddContract mContracts, pContract
-fireCollectionChange CollItemAdded, pContract
+If AddContract(mContracts, pContract) Then
+    fireCollectionChange CollItemAdded, pContract
+End If
 
 Exit Sub
 
@@ -262,6 +275,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function Contains(ByVal pKey As IContractSpecifier) As Boolean
+Const ProcName As String = "Contains"
+On Error GoTo Err
+
+Contains = mContracts.Contains(createComparable(pKey))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Function Item(ByVal pKey As IContractSpecifier) As IContract
 Const ProcName As String = "Item"
@@ -342,17 +367,23 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Sub AddContract(ByVal pContracts As SortedDictionary, ByVal pContract As IContract)
+Private Function AddContract( _
+                ByVal pContracts As SortedDictionary, _
+                ByVal pContract As IContract) As Boolean
 Const ProcName As String = "addContract"
 On Error GoTo Err
 
-pContracts.Add pContract, createComparable(pContract.Specifier)
+Dim lKey As ContractComparable: Set lKey = createComparable(pContract.Specifier)
+If pContracts.Contains(lKey) Then Exit Function
 
-Exit Sub
+pContracts.Add pContract, lKey
+AddContract = True
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Function createComparable(ByVal pContractSpec As IContractSpecifier) As ContractComparable
 Const ProcName As String = "createComparable"
