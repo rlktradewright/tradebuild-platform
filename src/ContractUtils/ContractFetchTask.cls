@@ -74,12 +74,20 @@ Private mContractsBuilder                           As New ContractsBuilder
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mExpiryOffset                               As Long
+Private mSortKeys()                                 As ContractSortKeyIds
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
+
+mExpiryOffset = -1
+
+ReDim mSortKeys(0) As ContractSortKeyIds
+mSortKeys(0) = ContractSortKeyExpiry
 End Sub
 
 '@================================================================================
@@ -110,6 +118,54 @@ End Sub
 Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
+
+If gIsOffsetExpiry(mContractSpec.Expiry) And _
+    mContractsBuilder.Contracts.Count <> 0 _
+Then
+    mExpiryOffset = CLng(mContractSpec.Expiry)
+    
+    ' we've now got at least one contract that meets the specified
+    ' contract spec. Now we need to find all the contracts that do
+    ' so (apart from the expiry date)
+    Dim lContractSpec As IContractSpecifier
+    Set lContractSpec = mContractsBuilder.Contracts.ItemAtIndex(1).Specifier
+    With lContractSpec
+        Set mContractSpec = gCreateContractSpecifier("", _
+                                                    .Symbol, _
+                                                    .Exchange, _
+                                                    .SecType, _
+                                                    .CurrencyCode, _
+                                                    "", _
+                                                    .Multiplier, _
+                                                    .Strike, _
+                                                    .Right)
+    End With
+    mTaskContext.Continue
+    Exit Sub
+End If
+
+If mExpiryOffset <> -1 Then
+    mContractsBuilder.Contracts.SortKeys = mSortKeys
+    Dim lAllContracts As IContracts: Set lAllContracts = mContractsBuilder.Contracts
+    
+    Set mContractsBuilder = New ContractsBuilder
+    Dim lContract As IContract
+    Dim lIndex As Long: lIndex = -1
+    For Each lContract In lAllContracts
+        If gIsContractExpired(lContract) Then
+            lIndex = -1
+        Else
+            lIndex = lIndex + 1
+        End If
+        If lIndex = mExpiryOffset Then
+            ' we've found the contract we're after
+            mContractsBuilder.Add lContract
+            If Not mListener Is Nothing Then mListener.NotifyContract pCookie, lContract
+            Exit For
+        End If
+    Next
+End If
+
 
 Dim lContracts As IContracts
 Set lContracts = mContractsBuilder.Contracts
@@ -162,18 +218,20 @@ On Error GoTo Err
 
 If Not futureIsPending Then Exit Sub
 
-If mSingleContractOnly Then
+If gIsOffsetExpiry(mContractSpec.Expiry) Or mExpiryOffset <> -1 Then
+    mContractsBuilder.Add pContract
+Else
     If mContractsBuilder.Contracts.Count = 1 Then
         mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract is not uniquely specified", ""
         mFetchFuture.Cancel
         mTaskContext.Finish Empty, False
         Exit Sub
     End If
+    
+    mContractsBuilder.Add pContract
+    
+    If Not mListener Is Nothing Then mListener.NotifyContract pCookie, pContract
 End If
-
-mContractsBuilder.Add pContract
-
-If Not mListener Is Nothing Then mListener.NotifyContract pCookie, pContract
 
 Exit Sub
 

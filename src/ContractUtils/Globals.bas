@@ -59,6 +59,8 @@ Public Const DefaultMultiplier                          As Double = 1#
 Public Const DefaultTickSize                            As Double = 0.01
 Public Const DefaultTimezoneName                        As String = "Eastern Standard Time"
 
+Public Const MaxContractExpiryOffset                    As Long = 10
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -540,17 +542,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gIsOffsetExpiry( _
+                ByVal Value As String) As Boolean
+gIsOffsetExpiry = IsInteger(Value, 0, 10)
+End Function
+
 Public Function gIsValidExpiry( _
                 ByVal Value As String) As Boolean
 Const ProcName As String = "gIsValidExpiry"
 On Error GoTo Err
 
-Dim d As Date
-
-If IsInteger(Value, 0, 10) Then
+If gIsOffsetExpiry(Value) Then
     gIsValidExpiry = True
     Exit Function
 End If
+
+Dim d As Date
 
 If IsDate(Value) Then
     d = CDate(Value)

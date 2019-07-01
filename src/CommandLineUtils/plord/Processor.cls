@@ -617,7 +617,8 @@ If lSectypeStr <> "" And lSectype = SecTypeNone Then
 End If
 
 If lExpiry <> "" Then
-    If IsDate(lExpiry) Then
+    If IsInteger(lExpiry, 0, MaxContractExpiryOffset) Then
+    ElseIf IsDate(lExpiry) Then
         lExpiry = Format(CDate(lExpiry), "yyyymmdd")
     ElseIf Len(lExpiry) = 6 Then
         If Not IsDate(Left$(lExpiry, 4) & "/" & Right$(lExpiry, 2) & "/01") Then

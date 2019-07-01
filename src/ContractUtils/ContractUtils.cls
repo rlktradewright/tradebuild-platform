@@ -146,6 +146,10 @@ End Property
 Public Property Get HalfThirtySecondIndicators() As String()
 HalfThirtySecondIndicators = gHalfThirtySecondIndicators
 End Property
+
+Public Property Get MaxContractExpiryOffset() As Long
+MaxContractExpiryOffset = Globals.MaxContractExpiryOffset
+End Property
                 
 Public Property Let QuarterThirtySecondIndicators( _
                 ByRef Value() As String)
@@ -644,6 +648,11 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function IsContractSpecOffsetExpiry( _
+                ByVal pContractSpec As IContractSpecifier) As Boolean
+IsContractSpecOffsetExpiry = gIsOffsetExpiry(pContractSpec.Expiry)
 End Function
 
 Public Function IsValidCurrencyCode(ByVal CurrencyCode As String) As Boolean
