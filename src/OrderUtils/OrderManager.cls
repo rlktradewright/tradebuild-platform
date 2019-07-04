@@ -103,9 +103,29 @@ Public Function CloseAllPositions( _
 Const ProcName As String = "CloseAllPositions"
 On Error GoTo Err
 
-Dim t As New CloseAllPositionsTask
-t.Initialise Me, pTypes
+Dim t As New ClosePositionsTask
+t.Initialise Me, "", pTypes
 Set CloseAllPositions = t.Future
+
+StartTask t, PriorityNormal
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CloseGroupPositions( _
+                ByVal pGroupName As String, _
+                Optional ByVal pTypes As PositionTypes = PositionTypeLive) As IFuture
+Const ProcName As String = "CloseGroupPositions"
+On Error GoTo Err
+
+AssertArgument pGroupName <> "", "Group name must be supplied"
+
+Dim t As New ClosePositionsTask
+t.Initialise Me, pGroupName, pTypes
+Set CloseGroupPositions = t.Future
 
 StartTask t, PriorityNormal
 
@@ -222,7 +242,7 @@ Dim lGroupNames As New EnumerableCollection
 Dim lPm As PositionManager
 
 For Each lPm In mPositionManagersLive
-    lGroupNames.Add lPm
+    lGroupNames.Add lPm.GroupName
 Next
 
 Set GetGroupNames = lGroupNames

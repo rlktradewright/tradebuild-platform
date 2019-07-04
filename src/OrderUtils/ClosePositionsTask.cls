@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "CloseAllPositionsTask"
+Attribute VB_Name = "ClosePositionsTask"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -41,7 +41,7 @@ Implements ITask
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "CloseAllPositionsTask"
+Private Const ModuleName                            As String = "ClosePositionsTask"
 
 '@================================================================================
 ' Member variables
@@ -57,6 +57,8 @@ Private mFutureBuilder                              As New FutureBuilder
 
 Private mEnLive                                     As Enumerator
 Private mEnSimulated                                As Enumerator
+
+Private mGroupName                                  As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -82,13 +84,21 @@ Case PositionSizeChanged
 Case PositionManagerChangeTypes.PositionClosed
     If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then
         mNumberRemaining = mNumberRemaining - 1
-        mClosePositionsResult.NumberOfPositionsClosed = mClosePositionsResult.NumberOfPositionsClosed + 1
+        If pm.IsSimulated Then
+            mClosePositionsResult.NumberOfSimulatedPositionsClosed = mClosePositionsResult.NumberOfSimulatedPositionsClosed + 1
+        Else
+            mClosePositionsResult.NumberOfLivePositionsClosed = mClosePositionsResult.NumberOfLivePositionsClosed + 1
+        End If
         pm.RemoveChangeListener Me
     End If
 Case PositionManagerChangeTypes.ProviderReadinessChanged
     If Not pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining - 1
-        mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
+        If pm.IsSimulated Then
+            mClosePositionsResult.NumberOfSimulatedPositionsNotClosed = mClosePositionsResult.NumberOfSimulatedPositionsNotClosed + 1
+        Else
+            mClosePositionsResult.NumberOfLivePositionsNotClosed = mClosePositionsResult.NumberOfLivePositionsNotClosed + 1
+        End If
         pm.RemoveChangeListener Me
     ElseIf pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining + 1
@@ -173,12 +183,14 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
-                ByVal pTypes As PositionTypes)
+                Optional ByVal pGroupName As String, _
+                Optional ByVal pTypes As PositionTypes = PositionTypeLive)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If pTypes And PositionTypeLive Then Set mEnLive = pOrderManager.PositionManagersLive.Enumerator
-If pTypes And PositionTypeSimulated Then Set mEnSimulated = pOrderManager.PositionManagersSimulated.Enumerator
+mGroupName = pGroupName
+If (pTypes And PositionTypeLive) = PositionTypeLive Then Set mEnLive = pOrderManager.PositionManagersLive.Enumerator
+If (pTypes And PositionTypeSimulated) = PositionTypeSimulated Then Set mEnSimulated = pOrderManager.PositionManagersSimulated.Enumerator
 
 Exit Sub
 
@@ -195,6 +207,8 @@ Private Sub processPM( _
 Const ProcName As String = "processPM"
 On Error GoTo Err
 
+If mGroupName <> "" And pm.GroupName <> mGroupName Then Exit Sub
+
 If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then Exit Sub
 
 If pm.ProviderIsReady Then
@@ -202,7 +216,11 @@ If pm.ProviderIsReady Then
     pm.ClosePositions
     pm.AddChangeListener Me
 Else
-    mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
+    If pm.IsSimulated Then
+        mClosePositionsResult.NumberOfSimulatedPositionsNotClosed = mClosePositionsResult.NumberOfSimulatedPositionsNotClosed + 1
+    Else
+        mClosePositionsResult.NumberOfLivePositionsNotClosed = mClosePositionsResult.NumberOfLivePositionsNotClosed + 1
+    End If
 End If
 
 Exit Sub

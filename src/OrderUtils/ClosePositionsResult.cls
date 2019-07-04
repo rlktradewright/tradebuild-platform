@@ -44,8 +44,11 @@ Private Const ModuleName                            As String = "ClosePositionsR
 ' Member variables
 '@================================================================================
 
-Private mNumberOfPositionsClosed                    As Long
-Private mNumberOfPositionsNotClosed                 As Long
+Private mNumberOfLivePositionsClosed                As Long
+Private mNumberOfLivePositionsNotClosed             As Long
+
+Private mNumberOfSimulatedPositionsClosed           As Long
+Private mNumberOfSimulatedPositionsNotClosed        As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -63,20 +66,36 @@ Private mNumberOfPositionsNotClosed                 As Long
 ' Properties
 '@================================================================================
 
-Friend Property Let NumberOfPositionsClosed(ByVal Value As Long)
-mNumberOfPositionsClosed = Value
+Friend Property Let NumberOfLivePositionsClosed(ByVal Value As Long)
+mNumberOfLivePositionsClosed = Value
 End Property
 
-Public Property Get NumberOfPositionsClosed() As Long
-NumberOfPositionsClosed = mNumberOfPositionsClosed
+Public Property Get NumberOfLivePositionsClosed() As Long
+NumberOfLivePositionsClosed = mNumberOfLivePositionsClosed
 End Property
 
-Friend Property Get NumberOfPositionsNotClosed() As Long
-NumberOfPositionsNotClosed = mNumberOfPositionsNotClosed
+Friend Property Let NumberOfLivePositionsNotClosed(ByVal Value As Long)
+mNumberOfLivePositionsNotClosed = Value
 End Property
 
-Public Property Let NumberOfPositionsNotClosed(ByVal Value As Long)
-mNumberOfPositionsNotClosed = Value
+Public Property Get NumberOfLivePositionsNotClosed() As Long
+NumberOfLivePositionsNotClosed = mNumberOfLivePositionsNotClosed
+End Property
+
+Friend Property Let NumberOfSimulatedPositionsClosed(ByVal Value As Long)
+mNumberOfSimulatedPositionsClosed = Value
+End Property
+
+Public Property Get NumberOfSimulatedPositionsClosed() As Long
+NumberOfSimulatedPositionsClosed = mNumberOfSimulatedPositionsClosed
+End Property
+
+Friend Property Let NumberOfSimulatedPositionsNotClosed(ByVal Value As Long)
+mNumberOfSimulatedPositionsNotClosed = Value
+End Property
+
+Public Property Get NumberOfSimulatedPositionsNotClosed() As Long
+NumberOfSimulatedPositionsNotClosed = mNumberOfSimulatedPositionsNotClosed
 End Property
 
 '@================================================================================
