@@ -226,6 +226,10 @@ End Sub
 ' IOrderSubmitterFactory Interface Members
 '@================================================================================
 
+Private Property Get IOrderSubmitterFactory_Capabilities() As OrderSubmitterCapabilities
+IOrderSubmitterFactory_Capabilities = Capabilities
+End Property
+
 Private Function IOrderSubmitterFactory_CreateOrderSubmitter(Optional ByVal pDataSource As IMarketDataSource) As IOrderSubmitter
 Set IOrderSubmitterFactory_CreateOrderSubmitter = CreateOrderSubmitter
 End Function
@@ -241,6 +245,10 @@ End Property
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get Capabilities() As OrderSubmitterCapabilities
+Capabilities = OrderSubmitterCapabilities.OrderSubmitterCapabilityCanStageOrders
+End Property
 
 Public Property Get ClientId() As Long
 ClientId = mClientId

@@ -63,6 +63,10 @@ End Sub
 ' IOrderSubmitterFactory Interface Members
 '@================================================================================
 
+Private Property Get IOrderSubmitterFactory_Capabilities() As OrderSubmitterCapabilities
+IOrderSubmitterFactory_Capabilities = OrderSubmitterCapabilityNone
+End Property
+
 Private Function IOrderSubmitterFactory_CreateOrderSubmitter(Optional ByVal pDataSource As IMarketDataSource) As IOrderSubmitter
 Const ProcName As String = "IOrderSubmitterFactory_CreateOrderSubmitter"
 On Error GoTo Err

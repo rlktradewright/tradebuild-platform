@@ -507,12 +507,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let IOrderSubmitter_OrdersAreStaged(ByVal RHS As Boolean)
-IOrderSubmitter_OrdersAreStaged = False
+Private Property Let IOrderSubmitter_OrdersAreStaged(ByVal Value As Boolean)
+Const ProcName As String = "IOrderSubmitter_OrdersAreStaged"
+On Error GoTo Err
+
+Assert Not Value, "Order Staging is not supported", ErrorCodes.ErrUnsupportedOperationException
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrderSubmitter_OrdersAreStaged() As Boolean
-Assert False, "Order Staging is not supported", ErrorCodes.ErrUnsupportedOperationException
+IOrderSubmitter_OrdersAreStaged = False
 End Property
 
 Private Property Get IOrderSubmitter_PermittedOrderTypes() As Long

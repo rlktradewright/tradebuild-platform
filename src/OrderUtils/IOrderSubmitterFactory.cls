@@ -60,6 +60,9 @@ Private Const ModuleName                            As String = "IOrderSubmitter
 ' Properties
 '@================================================================================
 
+Public Property Get Capabilities() As OrderSubmitterCapabilities
+End Property
+
 Public Property Get NeedsDataSource() As Boolean
 End Property
 
