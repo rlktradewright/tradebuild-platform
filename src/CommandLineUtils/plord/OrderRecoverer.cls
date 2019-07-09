@@ -56,7 +56,7 @@ Attribute mTaskController.VB_VarHelpID = -1
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mTaskController Event Handlers
 '@================================================================================
 
 Private Sub mTaskController_Completed(ev As TaskCompletionEventData)
@@ -65,9 +65,9 @@ On Error GoTo Err
 
 gInputPaused = False
 If ev.Cancelled Then
-    gWriteErrorLine "Error: order recovery was cancelled"
+    gWriteErrorLine "order recovery was cancelled"
 ElseIf ev.ErrorNumber <> 0 Then
-    gWriteErrorLine "Error: order recovery received error (" & ev.ErrorNumber & ") " & _
+    gWriteErrorLine "order recovery received error (" & ev.ErrorNumber & ") " & _
                     ev.ErrorMessage & vbCrLf & _
                     "At:" & vbCrLf & _
                     ev.ErrorSource

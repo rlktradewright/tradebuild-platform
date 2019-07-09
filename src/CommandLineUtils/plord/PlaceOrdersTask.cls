@@ -67,7 +67,7 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-Static sProcessor As Processor
+Static sProcessor As ContractProcessor
 Static sBracketOrdersEn As Enumerator
 
 
@@ -77,7 +77,7 @@ If sProcessor Is Nothing Then
         gInputPaused = False
         mTaskContext.Finish Empty, False
         gInputPaused = False
-        gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BracketCommand, ResetCommand
+        gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BracketCommand, ResetCommand, CloseoutCommand
         gWriteLineToStdOut EndOrdersCommand
         Exit Sub
     Else
@@ -107,7 +107,7 @@ Set mTaskContext = Value
 End Property
 
 Private Property Get ITask_TaskName() As String
-ITask_TaskName = mTaskContext.Name
+ITask_TaskName = mTaskContext.name
 End Property
 
 '@================================================================================
@@ -123,13 +123,13 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pProcessors As EnumerableCollection, _
+                ByVal pContractProcessors As EnumerableCollection, _
                 ByVal pStageOrders As Boolean, _
                 ByVal pMonitor As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mProcessors = pProcessors
+Set mProcessors = pContractProcessors
 Set mProcessorsEn = mProcessors.Enumerator
 mMonitor = pMonitor
 

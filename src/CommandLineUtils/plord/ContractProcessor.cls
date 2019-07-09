@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Processor"
+Attribute VB_Name = "ContractProcessor"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "Processor"
+Private Const ModuleName                            As String = "ContractProcessor"
 
 '@================================================================================
 ' Member variables
@@ -92,14 +92,14 @@ On Error GoTo Err
 gInputPaused = False
 
 If ev.Future.IsCancelled Then
-    gWriteErrorLine "Error: contract fetch was cancelled"
+    gWriteErrorLine "contract fetch was cancelled"
 ElseIf ev.Future.IsFaulted Then
-    gWriteErrorLine "Error: " & ev.Future.ErrorMessage
+    gWriteErrorLine ev.Future.ErrorMessage
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
     
     If IsContractExpired(mContract) Then
-        gWriteErrorLine "Error: contract has expired"
+        gWriteErrorLine "contract has expired"
     Else
         If mScopeName = "" Then
             Set mPositionManager = mOrderManager.CreatePositionManager(mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory)
@@ -108,7 +108,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
         End If
         Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
         mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
-        gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, EndOrdersCommand, ResetCommand
+        gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
     End If
 End If
 
@@ -124,6 +124,10 @@ End Sub
 
 Friend Property Get BracketOrders() As EnumerableCollection
 Set BracketOrders = mBracketOrders
+End Property
+
+Friend Property Get Contract() As IContract
+Set Contract = mContract
 End Property
 
 Friend Property Get IsReadyToPlaceOrders() As Boolean
@@ -272,7 +276,7 @@ If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.SwitchValue(l
 lSwitchName = TimezoneSwitch
 If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.SwitchValue(lSwitchName)
 
-gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, BracketCommand, ResetCommand
+gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, BracketCommand, ResetCommand, CloseoutCommand
 
 Exit Sub
 
@@ -292,7 +296,9 @@ Friend Function processContractCommand( _
 Const ProcName As String = "ProcessContractCommand"
 On Error GoTo Err
 
-If Trim$(pParams) = "" Then
+If Trim$(pParams) = "" Then Exit Function
+
+If Trim$(pParams) = HelpCommand Or Trim$(pParams) = Help1Command Then
     showContractHelp
     Exit Function
 End If
