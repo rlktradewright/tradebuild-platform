@@ -54,7 +54,7 @@ Public Const ConfigSettingTickSize                      As String = "&TickSize"
 Public Const ConfigSettingTimezoneName                  As String = "&Timezone"
 
 Public Const DefaultDaysBeforeExpiryToSwitch            As Long = 0
-Public Const DefaultExpiry                              As String = ""
+Public Const DefaultExpiry                              As String = "1899-12-30"
 Public Const DefaultMultiplier                          As Double = 1#
 Public Const DefaultTickSize                            As Double = 0.01
 Public Const DefaultTimezoneName                        As String = "Eastern Standard Time"
@@ -544,7 +544,7 @@ End Function
 
 Public Function gIsOffsetExpiry( _
                 ByVal Value As String) As Boolean
-gIsOffsetExpiry = IsInteger(Value, 0, 10)
+gIsOffsetExpiry = IsInteger(Value, 0, MaxContractExpiryOffset)
 End Function
 
 Public Function gIsValidExpiry( _
