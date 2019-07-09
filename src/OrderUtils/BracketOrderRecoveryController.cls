@@ -411,7 +411,7 @@ Else
     Set lDataSource = mMarketDataManager.CreateMarketDataSource(lPm.ContractFuture, False)
     lDataSource.StartMarketData
     
-    lPm.CompleteRecoveryInitialisation mOrderSubmitterFactory.CreateOrderSubmitter, lDataSource, Me
+    lPm.CompleteRecoveryInitialisation mOrderSubmitterFactory.CreateOrderSubmitter(lDataSource), lDataSource, Me
     
     lPm.StartRecovery
 End If

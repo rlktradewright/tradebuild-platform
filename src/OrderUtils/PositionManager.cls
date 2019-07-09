@@ -84,7 +84,7 @@ Private mOrders                                 As Orders
 Attribute mOrders.VB_VarHelpID = -1
 Private mExecutions                             As Executions
 
-Private WithEvents mOrderContexts               As OrderContexts
+Private mOrderContexts                          As OrderContexts
 Attribute mOrderContexts.VB_VarHelpID = -1
 
 ' Indicates that money management has told us to end the Session. Note
@@ -124,7 +124,7 @@ Private mRecovering                             As Boolean
 ' has told us to do so
 Private mClosingPosition                        As Boolean
 
-Private WithEvents mPositionCloser              As PositionCloser
+Private mPositionCloser                         As PositionCloser
 Attribute mPositionCloser.VB_VarHelpID = -1
 
 Private mRecoverableObjectListeners             As New Listeners
@@ -503,16 +503,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mOrderContexts Event Handlers
-'@================================================================================
-
-Private Sub mPositionCloser_PositionClosed()
-mClosingPosition = False
-Set mPositionCloser = Nothing
-fireChange PositionClosed
 End Sub
 
 '@================================================================================
@@ -1029,7 +1019,10 @@ If mClosingPosition Then Exit Sub
 mClosingPosition = True
 
 Set mPositionCloser = New PositionCloser
-mPositionCloser.ClosePositions Me
+If mPositionCloser.ClosePositions(Me) Then
+    mClosingPosition = False
+    fireChange PositionClosed
+End If
 
 Exit Sub
 
@@ -1712,6 +1705,11 @@ If mQuantityOutstanding <> 0 Then
 Else
     'we need to notify the position change after the final Profit
     calcProfits
+    
+    If mClosingPosition Then
+        mClosingPosition = False
+        fireChange PositionClosed
+    End If
     
     gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
     gLogTradeProfile FormatTimestamp(mTradeStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _

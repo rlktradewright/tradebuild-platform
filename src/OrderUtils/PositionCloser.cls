@@ -28,8 +28,6 @@ Implements IChangeListener
 ' Events
 '@================================================================================
 
-Event PositionClosed()
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -185,15 +183,15 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub ClosePositions( _
-                ByVal pPositionManager As PositionManager)
+Friend Function ClosePositions( _
+                ByVal pPositionManager As PositionManager) As Boolean
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
 Set mPositionManager = pPositionManager
 If Not mPositionManager.HasBracketOrdersWithNonZeroSizes Then
-    RaiseEvent PositionClosed
-    Exit Sub
+    ClosePositions = True
+    Exit Function
 End If
 
 Set mOrderContexts = mPositionManager.OrderContexts
@@ -206,11 +204,13 @@ mOrderContexts.Enabled = False  ' prevent any further orders being placed
 
 If Not cancelOrders Then ensureAllBracketOrdersClosedOut
 
-Exit Sub
+ClosePositions = False
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Friend Sub RecoverBalancingOrder( _
                 ByVal pBracketOrder As BracketOrder, _
@@ -258,7 +258,6 @@ mOrderContexts.Enabled = mOrderContextsWasEnabled
 If mPositionManager.EndingSession Then
     gLogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
 End If
-RaiseEvent PositionClosed
 
 Exit Sub
 

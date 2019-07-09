@@ -213,8 +213,8 @@ If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then Exit Sub
 
 If pm.ProviderIsReady Then
     mNumberRemaining = mNumberRemaining + 1
-    pm.ClosePositions
     pm.AddChangeListener Me
+    pm.ClosePositions
 Else
     If pm.IsSimulated Then
         mClosePositionsResult.NumberOfSimulatedPositionsNotClosed = mClosePositionsResult.NumberOfSimulatedPositionsNotClosed + 1
