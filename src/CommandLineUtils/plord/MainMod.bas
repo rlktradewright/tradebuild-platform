@@ -183,6 +183,12 @@ If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("plord", Project
 Set gLogger = sLogger
 End Property
 
+Public Property Get gRegExp() As RegExp
+Static lRegexp As RegExp
+If lRegexp Is Nothing Then Set lRegexp = New RegExp
+Set gRegExp = lRegexp
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -338,6 +344,20 @@ For i = 0 To UBound(mValidNextCommands)
         Exit Function
     End If
 Next
+End Function
+
+Private Function isGroupValid(ByVal pGroup As String) As Boolean
+Const ProcName As String = "isGroupValid"
+On Error GoTo Err
+
+gRegExp.Global = True
+gRegExp.Pattern = "^[a-zA-Z0-9][\w-]*$"
+isGroupValid = gRegExp.Test(pGroup)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub listGroupNames()
@@ -530,8 +550,12 @@ If UCase$(pParams) = All Then
     mCloseoutProcessor.CloseoutAll
     gInputPaused = True
 ElseIf UCase$(pParams) <> "" Then
-    mCloseoutProcessor.CloseoutGroup UCase$(pParams)
-    gInputPaused = True
+    If Not isGroupValid(pParams) Then
+        gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore"
+    Else
+        mCloseoutProcessor.CloseoutGroup UCase$(pParams)
+        gInputPaused = True
+    End If
 Else
     gWriteErrorLine CloseoutCommand & " parameter must be a group name or ALL"
 End If
@@ -601,7 +625,11 @@ End Sub
 
 Private Sub processGroupCommand( _
                 ByVal pParams As String)
-mGroupName = pParams
+If Not isGroupValid(pParams) Then
+    gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore"
+Else
+    mGroupName = pParams
+End If
 End Sub
 
 Private Sub processListCommand( _

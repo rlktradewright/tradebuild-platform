@@ -7,6 +7,7 @@ Reference=*\G{6FA5621C-ACAE-42B7-BA00-CFEA7C03952A}#1d7.0#0#..\..\..\Bin\TradeWr
 Reference=*\G{D081990A-7912-48FD-A0EB-EE13AFF6502C}#168.0#0#..\..\..\Bin\TradeWright.TradeBuild.Platform\MarketDataUtils27.dll#TradeWright Market Data Utilities v2.7
 Reference=*\G{420B2830-E718-11CF-893D-00A0C9054228}#1.0#0#C:\Windows\System32\scrrun.dll#Microsoft Scripting Runtime
 Reference=*\G{CA336116-171C-4AC5-8B92-817DFA031266}#3.0#0#..\..\..\Bin\TradeWright.TradeBuild.Platform\OrderUtils27.dll#TradeWright OrderUtilities v2.7
+Reference=*\G{3F4DACA7-160D-11D2-A8E9-00104B365C9F}#5.5#0#C:\Windows\System32\vbscript.dll\3#Microsoft VBScript Regular Expressions 5.5
 Module=MainMod; MainMod.bas
 Class=FatalErrorHandler; FatalErrorHandler.cls
 Class=ContractProcessor; ContractProcessor.cls
