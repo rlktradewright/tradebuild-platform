@@ -539,6 +539,9 @@ If pInput = "" Then
 Else
     getEntryOrderType = BracketEntryTypeFromString(pInput)
 End If
+If (mOrderContext.PermittedOrderTypes And BracketEntryTypeToOrderType(getEntryOrderType)) = 0 Then
+    gWriteErrorLine "Entry order type not supported: " & pInput
+End If
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid entry order type: " & pInput
     getEntryOrderType = BracketEntryTypeNone
@@ -552,6 +555,9 @@ If pInput = "" Then
 Else
     getStopLossOrderType = BracketStopLossTypeFromString(pInput)
 End If
+If (mOrderContext.PermittedOrderTypes And BracketStopLossTypeToOrderType(getStopLossOrderType)) = 0 Then
+    gWriteErrorLine "Stop-loss order type not supported: " & pInput
+End If
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid stop-loss order type: " & pInput
     getStopLossOrderType = BracketStopLossTypeNone
@@ -564,6 +570,9 @@ If pInput = "" Then
     getTargetOrderType = BracketTargetTypeNone
 Else
     getTargetOrderType = BracketTargetTypeFromString(pInput)
+End If
+If (mOrderContext.PermittedOrderTypes And BracketTargetTypeToOrderType(getTargetOrderType)) = 0 Then
+    gWriteErrorLine "Target order type not supported: " & pInput
 End If
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid target order type: " & pInput
