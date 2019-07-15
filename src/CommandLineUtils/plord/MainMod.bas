@@ -325,11 +325,12 @@ End Sub
 
 Private Function getPrompt() As String
 If mContractProcessor Is Nothing Then
-    getPrompt = DefaultPrompt
+    getPrompt = mGroupName & DefaultPrompt
 ElseIf mContractProcessor.Contract Is Nothing Then
-    getPrompt = DefaultPrompt
+    getPrompt = mGroupName & DefaultPrompt
 Else
-    getPrompt = mContractProcessor.Contract.Specifier.LocalSymbol & _
+    getPrompt = mGroupName & "!" & _
+                mContractProcessor.Contract.Specifier.LocalSymbol & _
                 "@" & _
                 mContractProcessor.Contract.Specifier.Exchange & _
                 DefaultPrompt
