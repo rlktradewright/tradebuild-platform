@@ -16,6 +16,7 @@ Class=PlaceOrdersTask; PlaceOrdersTask.cls
 Class=OrderRecoverer; OrderRecoverer.cls
 Class=CloseoutProcessor; CloseoutProcessor.cls
 Module=gConfig; GConfig.bas
+Class=ContractResolver; ContractResolver.cls
 Startup="Sub Main"
 HelpFile=""
 Title="plord27"

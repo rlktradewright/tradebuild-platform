@@ -44,10 +44,6 @@ Private Const ModuleName                            As String = "ContractProcess
 ' Member variables
 '@================================================================================
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
-Private mContractStore                              As IContractStore
 Private mMarketDataManager                          As IMarketDataManager
 
 Private mContract                                   As IContract
@@ -73,50 +69,13 @@ Private mGroupName                                  As String
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
-End Sub
-
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
 
 '@================================================================================
-' mFutureWaiter Event Handlers
+' XXXX Event Handlers
 '@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-gInputPaused = False
-
-If ev.Future.IsCancelled Then
-    gWriteErrorLine "contract fetch was cancelled"
-ElseIf ev.Future.IsFaulted Then
-    gWriteErrorLine ev.Future.ErrorMessage
-ElseIf TypeOf ev.Future.Value Is IContract Then
-    Set mContract = ev.Future.Value
-    
-    If IsContractExpired(mContract) Then
-        gWriteErrorLine "contract has expired"
-    Else
-        If mScopeName = "" Then
-            Set mPositionManager = mOrderManager.CreatePositionManager(mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory)
-        Else
-            Set mPositionManager = mOrderManager.CreateRecoverablePositionManager(mGroupName & "$$" & mContract.Specifier.Key, mDataSource, mOrderSubmitterFactory, mScopeName, mGroupName)
-        End If
-        Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-        mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
-        gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
-    End If
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
@@ -155,18 +114,46 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pContractStore As IContractStore, _
+                ByVal pName As String, _
+                ByVal pContractFuture As IFuture, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
                 ByVal pGroupName As String, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
-Set mContractStore = pContractStore
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mContract = pContractFuture.Value
 Set mMarketDataManager = pMarketDataManager
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
 mGroupName = pGroupName
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
+
+Set mDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, False)
+mDataSource.StartMarketData
+
+If mScopeName = "" Then
+    Set mPositionManager = mOrderManager.CreatePositionManager( _
+                                pName, _
+                                mDataSource, _
+                                mOrderSubmitterFactory)
+Else
+    Set mPositionManager = mOrderManager.CreateRecoverablePositionManager( _
+                                pName, _
+                                mDataSource, _
+                                mOrderSubmitterFactory, _
+                                mScopeName, _
+                                mGroupName)
+End If
+Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PlaceOrder(ByVal pBOS As BracketOrderSpecification)
@@ -290,56 +277,6 @@ ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
 End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Friend Function processContractCommand( _
-                ByVal pParams As String) As Boolean
-Const ProcName As String = "ProcessContractCommand"
-On Error GoTo Err
-
-If Trim$(pParams) = "" Then Exit Function
-
-If Trim$(pParams) = HelpCommand Or Trim$(pParams) = Help1Command Then
-    showContractHelp
-    Exit Function
-End If
-
-Dim lClp As CommandLineParser
-Set lClp = CreateCommandLineParser(pParams, " ")
-
-Dim lSpecString As String
-lSpecString = lClp.Arg(0)
-
-Dim lContractSpec As IContractSpecifier
-If lSpecString <> "" Then
-    Set lContractSpec = CreateContractSpecifierFromString(lSpecString)
-Else
-    Set lContractSpec = parseContractSpec(lClp)
-End If
-
-If lContractSpec Is Nothing Then
-    gSetValidNextCommands ListCommand, ContractCommand, EndOrdersCommand, ResetCommand
-    Exit Function
-End If
-
-Dim lContractFuture As IFuture
-Set lContractFuture = FetchContract(lContractSpec, mContractStore)
-mFutureWaiter.Add lContractFuture
-Set mDataSource = mMarketDataManager.CreateMarketDataSource(lContractFuture, False)
-mDataSource.StartMarketData
-
-processContractCommand = True
-
-Exit Function
-
-Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description
-    processContractCommand = False
-    Exit Function
-End If
-
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Friend Sub ProcessEndBracketCommand()
 Const ProcName As String = "ProcessEndBracketCommand"
@@ -577,127 +514,6 @@ End If
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid target order type: " & pInput
     getTargetOrderType = BracketTargetTypeNone
-End If
-End Function
-
-Private Function parseContractSpec( _
-                ByVal pClp As CommandLineParser) As IContractSpecifier
-Const ProcName As String = "parseContractSpec"
-On Error GoTo Err
-
-If pClp.Arg(0) = "?" Or _
-    pClp.Switch("?") Or _
-    (pClp.Arg(0) = "" And pClp.NumberOfSwitches = 0) _
-Then
-    showContractHelp
-    Exit Function
-End If
-
-Dim validParams As Boolean
-validParams = True
-
-Dim lSectypeStr As String: lSectypeStr = pClp.SwitchValue(SecTypeSwitch)
-If lSectypeStr = "" Then lSectypeStr = pClp.SwitchValue(SecTypeSwitch1)
-
-Dim lExchange As String: lExchange = pClp.SwitchValue(ExchangeSwitch)
-If lExchange = "" Then lExchange = pClp.SwitchValue(ExchangeSwitch1)
-
-Dim lLocalSymbol As String: lLocalSymbol = pClp.SwitchValue(LocalSymbolSwitch)
-If lLocalSymbol = "" Then lLocalSymbol = pClp.SwitchValue(LocalSymbolSwitch1)
-
-Dim lSymbol As String: lSymbol = pClp.SwitchValue(SymbolSwitch)
-If lSymbol = "" Then lSymbol = pClp.SwitchValue(SymbolSwitch1)
-
-Dim lCurrency As String: lCurrency = pClp.SwitchValue(CurrencySwitch)
-If lCurrency = "" Then lCurrency = pClp.SwitchValue(CurrencySwitch1)
-
-Dim lExpiry As String: lExpiry = pClp.SwitchValue(ExpirySwitch)
-If lExpiry = "" Then lExpiry = pClp.SwitchValue(ExpirySwitch1)
-
-Dim lMultiplier As String: lMultiplier = pClp.SwitchValue(MultiplierSwitch)
-If lMultiplier = "" Then lMultiplier = pClp.SwitchValue(MultiplierSwitch1)
-If lMultiplier = "" Then lMultiplier = "1.0"
-
-Dim lStrike As String: lStrike = pClp.SwitchValue(StrikeSwitch)
-If lStrike = "" Then lStrike = pClp.SwitchValue(StrikeSwitch1)
-If lStrike = "" Then lStrike = "0.0"
-
-Dim lRight As String: lRight = pClp.SwitchValue(RightSwitch)
-
-Dim lSectype As SecurityTypes
-lSectype = SecTypeFromString(lSectypeStr)
-If lSectypeStr <> "" And lSectype = SecTypeNone Then
-    gWriteErrorLine "Invalid Sectype '" & lSectypeStr & "'"
-    validParams = False
-End If
-
-If lExpiry <> "" Then
-    If IsInteger(lExpiry, 0, MaxContractExpiryOffset) Then
-    ElseIf IsDate(lExpiry) Then
-        lExpiry = Format(CDate(lExpiry), "yyyymmdd")
-    ElseIf Len(lExpiry) = 6 Then
-        If Not IsDate(Left$(lExpiry, 4) & "/" & Right$(lExpiry, 2) & "/01") Then
-            gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
-            validParams = False
-        End If
-    ElseIf Len(lExpiry) = 8 Then
-        If Not IsDate(Left$(lExpiry, 4) & "/" & Mid$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
-            gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
-            validParams = False
-        End If
-    Else
-        gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
-        validParams = False
-    End If
-End If
-            
-Dim Multiplier As Double
-If lMultiplier = "" Then
-    Multiplier = 1#
-ElseIf IsNumeric(lMultiplier) Then
-    Multiplier = CDbl(lMultiplier)
-Else
-    gWriteErrorLine "Invalid multiplier '" & lMultiplier & "'"
-    validParams = False
-End If
-            
-Dim Strike As Double
-If lStrike <> "" Then
-    If IsNumeric(lStrike) Then
-        Strike = CDbl(lStrike)
-    Else
-        gWriteErrorLine "Invalid strike '" & lStrike & "'"
-        validParams = False
-    End If
-End If
-
-Dim optRight As OptionRights
-optRight = OptionRightFromString(lRight)
-If lRight <> "" And optRight = OptNone Then
-    gWriteErrorLine "Invalid right '" & lRight & "'"
-    validParams = False
-End If
-
-        
-If validParams Then
-    Set parseContractSpec = CreateContractSpecifier(lLocalSymbol, _
-                                            lSymbol, _
-                                            lExchange, _
-                                            lSectype, _
-                                            lCurrency, _
-                                            lExpiry, _
-                                            Multiplier, _
-                                            Strike, _
-                                            optRight)
-End If
-
-Exit Function
-
-Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description
-Else
-    gHandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 

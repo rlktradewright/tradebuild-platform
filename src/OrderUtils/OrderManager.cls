@@ -242,7 +242,7 @@ Dim lGroupNames As New EnumerableCollection
 Dim lPm As PositionManager
 
 For Each lPm In mPositionManagersLive
-    lGroupNames.Add lPm.GroupName
+    If Not lGroupNames.Contains(lPm.GroupName) Then lGroupNames.Add lPm.GroupName, lPm.GroupName
 Next
 
 Set GetGroupNames = lGroupNames

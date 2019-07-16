@@ -143,6 +143,7 @@ Private mContractProcessor                          As ContractProcessor
 Private mCloseoutProcessor                          As CloseoutProcessor
 
 Private mContractProcessors                         As New EnumerableCollection
+Private mGroupContractProcessors                    As SortedDictionary
 
 Private mCommandNumber                              As Long
 
@@ -228,6 +229,50 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
+Public Sub gNotifyContractFutureAvailable(ByVal pContractFuture As IFuture)
+Const ProcName As String = "gNotifyContractAvailable"
+On Error GoTo Err
+
+Const PositionManagerNameSeparator As String = "&&"
+
+gInputPaused = False
+
+If pContractFuture.IsCancelled Then
+    gWriteErrorLine "contract fetch was cancelled"
+ElseIf pContractFuture.IsFaulted Then
+    gWriteErrorLine pContractFuture.ErrorMessage
+ElseIf TypeOf pContractFuture.Value Is IContract Then
+    Dim lContract As IContract
+    Set lContract = pContractFuture.Value
+    
+    If IsContractExpired(lContract) Then
+        gWriteErrorLine "contract has expired"
+    Else
+        Dim lContractProcessorName As String
+        lContractProcessorName = mGroupName & _
+                                PositionManagerNameSeparator & _
+                                lContract.Specifier.Key
+    
+        If Not mContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
+            Set mContractProcessor = New ContractProcessor
+            mContractProcessor.StageOrders = mStageOrders
+            mContractProcessor.Initialise lContractProcessorName, pContractFuture, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
+            mContractProcessors.Add mContractProcessor, lContractProcessorName
+        End If
+        
+        If mGroupContractProcessors.Contains(mGroupName) Then mGroupContractProcessors.Remove mGroupName
+        mGroupContractProcessors.Add mContractProcessor, mGroupName
+    End If
+End If
+
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
@@ -293,13 +338,14 @@ mCloseoutProcessor.Initialise mOrderManager
 
 Set gCon = GetConsole
 
-Set mClp = CreateCommandLineParser(command)
-
 If Trim$(command) = "/?" Or Trim$(command) = "-?" Then
     showUsage
     Exit Sub
 End If
 
+Set mGroupContractProcessors = CreateSortedDictionary(KeyTypeString)
+
+Set mClp = CreateCommandLineParser(command)
 If setupTws(mClp.SwitchValue(TwsSwitch), mClp.Switch(SimulateOrdersSwitch)) Then
     process
 Else
@@ -438,6 +484,127 @@ pInput = Right$(pInput, pLength)
 padStringleft = Space$(pLength - Len(pInput)) & pInput
 End Function
 
+Private Function parseContractSpec( _
+                ByVal pClp As CommandLineParser) As IContractSpecifier
+Const ProcName As String = "parseContractSpec"
+On Error GoTo Err
+
+If pClp.Arg(0) = "?" Or _
+    pClp.Switch("?") Or _
+    (pClp.Arg(0) = "" And pClp.NumberOfSwitches = 0) _
+Then
+    showContractHelp
+    Exit Function
+End If
+
+Dim validParams As Boolean
+validParams = True
+
+Dim lSectypeStr As String: lSectypeStr = pClp.SwitchValue(SecTypeSwitch)
+If lSectypeStr = "" Then lSectypeStr = pClp.SwitchValue(SecTypeSwitch1)
+
+Dim lExchange As String: lExchange = pClp.SwitchValue(ExchangeSwitch)
+If lExchange = "" Then lExchange = pClp.SwitchValue(ExchangeSwitch1)
+
+Dim lLocalSymbol As String: lLocalSymbol = pClp.SwitchValue(LocalSymbolSwitch)
+If lLocalSymbol = "" Then lLocalSymbol = pClp.SwitchValue(LocalSymbolSwitch1)
+
+Dim lSymbol As String: lSymbol = pClp.SwitchValue(SymbolSwitch)
+If lSymbol = "" Then lSymbol = pClp.SwitchValue(SymbolSwitch1)
+
+Dim lCurrency As String: lCurrency = pClp.SwitchValue(CurrencySwitch)
+If lCurrency = "" Then lCurrency = pClp.SwitchValue(CurrencySwitch1)
+
+Dim lExpiry As String: lExpiry = pClp.SwitchValue(ExpirySwitch)
+If lExpiry = "" Then lExpiry = pClp.SwitchValue(ExpirySwitch1)
+
+Dim lMultiplier As String: lMultiplier = pClp.SwitchValue(MultiplierSwitch)
+If lMultiplier = "" Then lMultiplier = pClp.SwitchValue(MultiplierSwitch1)
+If lMultiplier = "" Then lMultiplier = "1.0"
+
+Dim lStrike As String: lStrike = pClp.SwitchValue(StrikeSwitch)
+If lStrike = "" Then lStrike = pClp.SwitchValue(StrikeSwitch1)
+If lStrike = "" Then lStrike = "0.0"
+
+Dim lRight As String: lRight = pClp.SwitchValue(RightSwitch)
+
+Dim lSectype As SecurityTypes
+lSectype = SecTypeFromString(lSectypeStr)
+If lSectypeStr <> "" And lSectype = SecTypeNone Then
+    gWriteErrorLine "Invalid Sectype '" & lSectypeStr & "'"
+    validParams = False
+End If
+
+If lExpiry <> "" Then
+    If IsInteger(lExpiry, 0, MaxContractExpiryOffset) Then
+    ElseIf IsDate(lExpiry) Then
+        lExpiry = Format(CDate(lExpiry), "yyyymmdd")
+    ElseIf Len(lExpiry) = 6 Then
+        If Not IsDate(Left$(lExpiry, 4) & "/" & Right$(lExpiry, 2) & "/01") Then
+            gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
+            validParams = False
+        End If
+    ElseIf Len(lExpiry) = 8 Then
+        If Not IsDate(Left$(lExpiry, 4) & "/" & Mid$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
+            gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
+            validParams = False
+        End If
+    Else
+        gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
+        validParams = False
+    End If
+End If
+            
+Dim Multiplier As Double
+If lMultiplier = "" Then
+    Multiplier = 1#
+ElseIf IsNumeric(lMultiplier) Then
+    Multiplier = CDbl(lMultiplier)
+Else
+    gWriteErrorLine "Invalid multiplier '" & lMultiplier & "'"
+    validParams = False
+End If
+            
+Dim Strike As Double
+If lStrike <> "" Then
+    If IsNumeric(lStrike) Then
+        Strike = CDbl(lStrike)
+    Else
+        gWriteErrorLine "Invalid strike '" & lStrike & "'"
+        validParams = False
+    End If
+End If
+
+Dim optRight As OptionRights
+optRight = OptionRightFromString(lRight)
+If lRight <> "" And optRight = OptNone Then
+    gWriteErrorLine "Invalid right '" & lRight & "'"
+    validParams = False
+End If
+
+        
+If validParams Then
+    Set parseContractSpec = CreateContractSpecifier(lLocalSymbol, _
+                                            lSymbol, _
+                                            lExchange, _
+                                            lSectype, _
+                                            lCurrency, _
+                                            lExpiry, _
+                                            Multiplier, _
+                                            Strike, _
+                                            optRight)
+End If
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
+End Function
+
 Private Sub process()
 Const ProcName As String = "process"
 On Error GoTo Err
@@ -449,7 +616,7 @@ setOrderRecovery
 gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, CloseoutCommand
 
 Dim inString As String
-inString = Trim$(gCon.ReadLine(DefaultPrompt))
+inString = Trim$(gCon.ReadLine(getPrompt))
 
 Do While inString <> gCon.EofString
     mLineNumber = mLineNumber + 1
@@ -505,8 +672,7 @@ ElseIf Not isCommandValid(command) Then
 Else
     Select Case command
     Case ContractCommand
-        Set mContractProcessor = Nothing
-        Set mContractProcessor = processContractCommand(params)
+        processContractCommand params
     Case StageOrdersCommand
         processStageOrdersCommand params
     Case GroupCommand
@@ -550,6 +716,9 @@ On Error GoTo Err
 If UCase$(pParams) = All Then
     mCloseoutProcessor.CloseoutAll
     gInputPaused = True
+ElseIf UCase$(pParams) = DefaultOrderGroupName Then
+    mCloseoutProcessor.CloseoutGroup UCase$(pParams)
+    gInputPaused = True
 ElseIf UCase$(pParams) <> "" Then
     If Not isGroupValid(pParams) Then
         gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore"
@@ -567,29 +736,49 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function processContractCommand(ByVal pParams As String) As ContractProcessor
+Private Sub processContractCommand(ByVal pParams As String)
 Const ProcName As String = "processContractCommand"
 On Error GoTo Err
 
-Dim lProcessor As New ContractProcessor
-lProcessor.StageOrders = mStageOrders
-mContractProcessors.Add lProcessor
-        
-lProcessor.Initialise mContractStore, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
+If Trim$(pParams) = "" Then Exit Sub
 
-gInputPaused = True
-If Not lProcessor.processContractCommand(pParams) Then
-    gInputPaused = False
-    Set lProcessor = Nothing
+If Trim$(pParams) = HelpCommand Or Trim$(pParams) = Help1Command Then
+    showContractHelp
+    Exit Sub
 End If
 
-Set processContractCommand = lProcessor
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(pParams, " ")
 
-Exit Function
+Dim lSpecString As String
+lSpecString = lClp.Arg(0)
+
+Dim lContractSpec As IContractSpecifier
+If lSpecString <> "" Then
+    Set lContractSpec = CreateContractSpecifierFromString(lSpecString)
+Else
+    Set lContractSpec = parseContractSpec(lClp)
+End If
+
+If lContractSpec Is Nothing Then
+    gSetValidNextCommands ListCommand, ContractCommand, EndOrdersCommand, ResetCommand
+    Exit Sub
+End If
+
+Dim lResolver As New ContractResolver
+lResolver.Initialise lContractSpec, mContractStore
+
+gInputPaused = True
+
+Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
+End Sub
 
 Private Sub processEndOrdersCommand()
 Const ProcName As String = "processEndOrdersCommand"
@@ -626,11 +815,14 @@ End Sub
 
 Private Sub processGroupCommand( _
                 ByVal pParams As String)
-If Not isGroupValid(pParams) Then
+If pParams = "" Or pParams = DefaultOrderGroupName Then
+    mGroupName = DefaultOrderGroupName
+ElseIf Not isGroupValid(pParams) Then
     gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore"
 Else
     mGroupName = pParams
 End If
+If Not mGroupContractProcessors.TryItem(mGroupName, mContractProcessor) Then Set mContractProcessor = Nothing
 End Sub
 
 Private Sub processListCommand( _
