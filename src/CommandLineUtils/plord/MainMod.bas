@@ -71,6 +71,7 @@ Public Const StrikeSwitch1                          As String = "STR"
 Public Const TimezoneSwitch                         As String = "TIMEZONE"
 
 Public Const BracketCommand                         As String = "BRACKET"
+Public Const BuyCommand                             As String = "BUY"
 Public Const CloseoutCommand                        As String = "CLOSEOUT"
 Public Const ContractCommand                        As String = "CONTRACT"
 Public Const EndBracketCommand                      As String = "ENDBRACKET"
@@ -81,9 +82,9 @@ Public Const GroupCommand                           As String = "GROUP"
 Public Const HelpCommand                            As String = "HELP"
 Public Const Help1Command                           As String = "?"
 Public Const ListCommand                            As String = "LIST"
-Public Const OrderCommand                           As String = "ORDER"
 Public Const QuitCommand                            As String = "QUIT"
 Public Const ResetCommand                           As String = "RESET"
+Public Const SellCommand                            As String = "SELL"
 Public Const StageOrdersCommand                     As String = "STAGEORDERS"
 Public Const StopLossCommand                        As String = "STOPLOSS"
 Public Const TargetCommand                          As String = "TARGET"
@@ -229,49 +230,58 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
-Public Sub gNotifyContractFutureAvailable(ByVal pContractFuture As IFuture)
+Public Function gNotifyContractFutureAvailable( _
+                ByVal pContractFuture As IFuture) As ContractProcessor
 Const ProcName As String = "gNotifyContractAvailable"
 On Error GoTo Err
 
 Const PositionManagerNameSeparator As String = "&&"
 
-gInputPaused = False
-
 If pContractFuture.IsCancelled Then
-    gWriteErrorLine "contract fetch was cancelled"
-ElseIf pContractFuture.IsFaulted Then
-    gWriteErrorLine pContractFuture.ErrorMessage
-ElseIf TypeOf pContractFuture.Value Is IContract Then
-    Dim lContract As IContract
-    Set lContract = pContractFuture.Value
-    
-    If IsContractExpired(lContract) Then
-        gWriteErrorLine "contract has expired"
-    Else
-        Dim lContractProcessorName As String
-        lContractProcessorName = mGroupName & _
-                                PositionManagerNameSeparator & _
-                                lContract.Specifier.Key
-    
-        If Not mContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
-            Set mContractProcessor = New ContractProcessor
-            mContractProcessor.StageOrders = mStageOrders
-            mContractProcessor.Initialise lContractProcessorName, pContractFuture, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
-            mContractProcessors.Add mContractProcessor, lContractProcessorName
-        End If
-        
-        If mGroupContractProcessors.Contains(mGroupName) Then mGroupContractProcessors.Remove mGroupName
-        mGroupContractProcessors.Add mContractProcessor, mGroupName
-    End If
+    gWriteErrorLine "Contract fetch was cancelled"
+    gInputPaused = False
+    Exit Function
 End If
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
+If pContractFuture.IsFaulted Then
+    gWriteErrorLine pContractFuture.ErrorMessage
+    gInputPaused = False
+    Exit Function
+End If
 
-Exit Sub
+Assert TypeOf pContractFuture.Value Is IContract, "Unexpected future value"
+
+Dim lContract As IContract
+Set lContract = pContractFuture.Value
+
+If IsContractExpired(lContract) Then
+    gWriteErrorLine "Contract has expired"
+    gInputPaused = False
+    Exit Function
+End If
+    
+Dim lContractProcessorName As String
+lContractProcessorName = mGroupName & _
+                        PositionManagerNameSeparator & _
+                        lContract.Specifier.Key
+
+If Not mContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
+    Set mContractProcessor = New ContractProcessor
+    mContractProcessor.StageOrders = mStageOrders
+    mContractProcessor.Initialise lContractProcessorName, pContractFuture, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
+    mContractProcessors.Add mContractProcessor, lContractProcessorName
+End If
+
+If mGroupContractProcessors.Contains(mGroupName) Then mGroupContractProcessors.Remove mGroupName
+mGroupContractProcessors.Add mContractProcessor, mGroupName
+
+Set gNotifyContractFutureAvailable = mContractProcessor
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
@@ -613,7 +623,7 @@ If Not setMonitor Then Exit Sub
 If Not setStageOrders Then Exit Sub
 setOrderRecovery
 
-gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, CloseoutCommand
 
 Dim inString As String
 inString = Trim$(gCon.ReadLine(getPrompt))
@@ -654,8 +664,8 @@ On Error GoTo Err
 Dim command As String
 command = UCase$(Split(pInstring, " ")(0))
 
-Dim params As String
-params = Trim$(Right$(pInstring, Len(pInstring) - Len(command)))
+Dim Params As String
+Params = Trim$(Right$(pInstring, Len(pInstring) - Len(command)))
 
 If command = ExitCommand Or command = QuitCommand Then
     gWriteLineToConsole "Exiting"
@@ -672,19 +682,23 @@ ElseIf Not isCommandValid(command) Then
 Else
     Select Case command
     Case ContractCommand
-        processContractCommand params
+        processContractCommand Params
     Case StageOrdersCommand
-        processStageOrdersCommand params
+        processStageOrdersCommand Params
     Case GroupCommand
-        processGroupCommand params
+        processGroupCommand Params
+    Case BuyCommand
+        ProcessBuyCommand Params
+    Case SellCommand
+        ProcessSellCommand Params
     Case BracketCommand
-        mContractProcessor.ProcessBracketCommand params
+        mContractProcessor.ProcessBracketCommand Params
     Case EntryCommand
-        mContractProcessor.ProcessEntryCommand params
+        mContractProcessor.ProcessEntryCommand Params
     Case StopLossCommand
-        mContractProcessor.ProcessStopLossCommand params
+        mContractProcessor.ProcessStopLossCommand Params
     Case TargetCommand
-        mContractProcessor.ProcessTargetCommand params
+        mContractProcessor.ProcessTargetCommand Params
     Case EndBracketCommand
         mContractProcessor.ProcessEndBracketCommand
     Case EndOrdersCommand
@@ -692,9 +706,9 @@ Else
     Case ResetCommand
         processResetCommand
     Case ListCommand
-        processListCommand params
+        processListCommand Params
     Case CloseoutCommand
-        processCloseoutCommand params
+        processCloseoutCommand Params
     Case Else
         gWriteErrorLine "Invalid command '" & command & "'"
     End Select
@@ -707,6 +721,54 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub ProcessBuyCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processBuyCommand"
+On Error GoTo Err
+
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
+Dim lArg0 As String: lArg0 = lClp.Arg(0)
+
+If Not IsInteger(lArg0, 1) Then
+    ' the first arg is  a contract spec
+    Dim lContractSpec As IContractSpecifier
+    Set lContractSpec = CreateContractSpecifierFromString(lArg0)
+
+    If lContractSpec Is Nothing Then Exit Sub
+    
+    Dim lData As New BuySellCommandData
+    lData.Action = OrderActionBuy
+    lData.Params = Right$(pParams, Len(pParams) - Len(lArg0))
+    
+    Dim lResolver As New ContractResolver
+    lResolver.Initialise lContractSpec, mContractStore, lData
+    
+    gInputPaused = True
+ElseIf Not mContractProcessor Is Nothing Then
+    mContractProcessor.ProcessBuyCommand pParams
+Else
+    gWriteErrorLine "No contract has been specified in this group"
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ProcessSellCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processBuyCommand"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub processCloseoutCommand( _
                 ByVal pParams As String)
@@ -761,12 +823,16 @@ Else
 End If
 
 If lContractSpec Is Nothing Then
-    gSetValidNextCommands ListCommand, ContractCommand, EndOrdersCommand, ResetCommand
+    If Not mContractProcessor Is Nothing Then
+        gSetValidNextCommands ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+    Else
+        gSetValidNextCommands ListCommand, ContractCommand, EndOrdersCommand, ResetCommand
+    End If
     Exit Sub
 End If
 
 Dim lResolver As New ContractResolver
-lResolver.Initialise lContractSpec, mContractStore
+lResolver.Initialise lContractSpec, mContractStore, Nothing
 
 gInputPaused = True
 
@@ -785,12 +851,12 @@ Const ProcName As String = "processEndOrdersCommand"
 On Error GoTo Err
 
 If mErrorCount <> 0 Then
-    gWriteErrorLine mErrorCount & " errors have been found - no orders will be placed"
+    gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed"
     mErrorCount = 0
     If Not mContractProcessor Is Nothing Then
-        gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, ResetCommand, CloseoutCommand
+        gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
     Else
-        gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, ResetCommand, CloseoutCommand
+        gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
     End If
     Exit Sub
 End If
@@ -801,7 +867,7 @@ For Each lProcessor In mContractProcessors
     lNumberOfOrders = lNumberOfOrders + lProcessor.BracketOrders.Count
 Next
 If lNumberOfOrders = 0 Then
-    gWriteErrorLine "No orders have been placed"
+    gWriteLineToConsole "No orders have been defined"
     Exit Sub
 End If
 
@@ -833,6 +899,12 @@ Else
     mGroupName = pParams
 End If
 If Not mGroupContractProcessors.TryItem(mGroupName, mContractProcessor) Then Set mContractProcessor = Nothing
+
+If Not mContractProcessor Is Nothing Then
+    gSetValidNextCommands ListCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+Else
+    gSetValidNextCommands ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+End If
 End Sub
 
 Private Sub processListCommand( _
@@ -861,7 +933,7 @@ mContractProcessors.Clear
 Set mContractProcessor = Nothing
 mStageOrdersDefault = mStageOrdersDefault
 mErrorCount = 0
-gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Sub processStageOrdersCommand( _
@@ -881,7 +953,7 @@ Case Else
     gWriteErrorLine StageOrdersCommand & " parameter must be either YES or NO or DEFAULT"
 End Select
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, StageOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, StageOrdersCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Function setMonitor() As Boolean
@@ -1083,8 +1155,13 @@ gCon.WriteLineToConsole "    listcommand   ::= list [groups | positions | trades
 End Sub
 
 Private Sub showOrderHelp()
-gCon.WriteLineToConsole "    ordercommand   ::= order <action> <quantity> <entryordertype> "
-gCon.WriteLineToConsole "                           [/<orderattr>]... NEWLINE"
+gCon.WriteLineToConsole "    buycommand  ::= buy [<contract>] <quantity> <entryordertype> "
+gCon.WriteLineToConsole "                        [<price> [<triggerprice]]"
+gCon.WriteLineToConsole "                        [/<bracketattr> | /<orderattr>]... NEWLINE"
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "    sellcommand ::= sell [<contract>] <quantity> <entryordertype> "
+gCon.WriteLineToConsole "                         [/<bracketattr> | /<orderattr>]... NEWLINE"
+gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "    bracketcommand ::= bracket <action> <quantity> [/<bracketattr>]... NEWLINE"
 gCon.WriteLineToConsole "                       entry <entryordertype> [/<orderattr>]...  NEWLINE"
 gCon.WriteLineToConsole "                       [stoploss <stoplossorderType> [/<orderattr>]...  NEWLINE]"
@@ -1162,7 +1239,7 @@ gCon.WriteLineToConsole "[group [<groupname>] NEWLINE]"
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "<contractcommand>"
 gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "[<ordercommand>|<bracketcommand>]..."
+gCon.WriteLineToConsole "[<buycommand>|<sellcommand>|<bracketcommand>]..."
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "endorders NEWLINE"
 gCon.WriteLineToConsole ""

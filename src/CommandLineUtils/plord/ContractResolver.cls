@@ -47,6 +47,10 @@ Private Const ModuleName                            As String = "ContractResolve
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private WithEvents mContractProcessor               As ContractProcessor
+Attribute mContractProcessor.VB_VarHelpID = -1
+Private mContinuationData                           As BuySellCommandData
+
 Private mSelfRef                                    As Object
 
 '@================================================================================
@@ -58,6 +62,22 @@ Private mSelfRef                                    As Object
 '@================================================================================
 
 '@================================================================================
+' mContractProcessor Event Handlers
+'@================================================================================
+
+Private Sub mContractProcessor_IsReady()
+Const ProcName As String = "mContractProcessor_IsReady"
+On Error GoTo Err
+
+processContinuationData
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mFutureWaiter Event Handlers
 '@================================================================================
 
@@ -65,8 +85,9 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-gNotifyContractFutureAvailable ev.Future
-Set mSelfRef = Nothing
+Set mContractProcessor = gNotifyContractFutureAvailable(ev.Future)
+
+If mContractProcessor.IsReadyToPlaceOrders Then processContinuationData
 
 Exit Sub
 
@@ -85,7 +106,8 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pContractSpec As IContractSpecifier, _
-                ByVal pContractStore As IContractStore)
+                ByVal pContractStore As IContractStore, _
+                ByVal pContinuationData As BuySellCommandData)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -95,6 +117,7 @@ Dim lContractFuture As IFuture
 Set lContractFuture = FetchContract(pContractSpec, pContractStore)
 Set mFutureWaiter = New FutureWaiter
 mFutureWaiter.Add lContractFuture
+Set mContinuationData = pContinuationData
 
 Exit Sub
 
@@ -106,6 +129,26 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub processContinuationData()
+Const ProcName As String = "processContinuationData"
+On Error GoTo Err
 
+If mContinuationData Is Nothing Then
+ElseIf mContinuationData.Action = OrderActionBuy Then
+    mContractProcessor.ProcessBuyCommand mContinuationData.Params
+ElseIf mContinuationData.Action = OrderActionSell Then
+    mContractProcessor.ProcessSellCommand mContinuationData.Params
+End If
+
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
+
+gInputPaused = False
+Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 

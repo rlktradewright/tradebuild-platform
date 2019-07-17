@@ -26,6 +26,8 @@ Option Explicit
 ' Events
 '@================================================================================
 
+Event IsReady()
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -60,7 +62,8 @@ Private mOrderManager                               As OrderManager
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 Private mPositionManager                            As PositionManager
 
-Private mOrderContext                               As OrderContext
+Private WithEvents mOrderContext                    As OrderContext
+Attribute mOrderContext.VB_VarHelpID = -1
 
 Private mScopeName                                  As String
 Private mGroupName                                  As String
@@ -74,8 +77,26 @@ Private mGroupName                                  As String
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mOrderContext Event Handlers
 '@================================================================================
+
+Private Sub mOrderContext_Change(ev As ChangeEventData)
+Const ProcName As String = "mOrderContext_Change"
+On Error GoTo Err
+
+Dim lChangeType As OrderContextChangeTypes: lChangeType = ev.ChangeType
+
+If ev.ChangeType = OrderContextChangeTypes.OrderContextReadyStateChanged And _
+    mOrderContext.IsReady _
+Then
+    RaiseEvent IsReady
+End If
+    
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -282,13 +303,39 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub ProcessBuyCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "ProcessBuyCommand"
+On Error GoTo Err
+
+processBuyOrSellCommand OrderActionBuy, pParams
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub ProcessSellCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "ProcessSellCommand"
+On Error GoTo Err
+
+processBuyOrSellCommand OrderActionSell, pParams
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub ProcessEndBracketCommand()
 Const ProcName As String = "ProcessEndBracketCommand"
 On Error GoTo Err
 
 mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, ContractCommand, EndOrdersCommand, ResetCommand
+gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, ContractCommand, EndOrdersCommand, ResetCommand
 
 Exit Sub
 
@@ -531,6 +578,86 @@ Else
     parseOffset = CLng(CDbl(pValue) / mContract.TickSize)
 End If
 End Function
+
+Private Sub processBuyOrSellCommand( _
+                ByVal pAction As OrderActions, _
+                ByVal pParams As String)
+Const ProcName As String = "processBuyOrSellCommand"
+On Error GoTo Err
+
+Set mBOSpec = New BracketOrderSpecification
+mBOSpec.Action = pAction
+mBOSpec.EntryTIF = OrderTIFDay
+mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
+mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
+
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
+
+Dim lQuantity As String: lQuantity = lClp.Arg(0)
+If lQuantity = "" Then
+    gWriteErrorLine ("Quantity is missing")
+ElseIf Not IsInteger(lQuantity, 1) Then
+    gWriteErrorLine ("Quantity must be an integer > 0")
+Else
+    mBOSpec.Quantity = CInt(lQuantity)
+End If
+
+mBOSpec.EntryType = getEntryOrderType(lClp.Arg(1))
+If mBOSpec.EntryType = BracketEntryTypeNone Then Exit Sub
+
+Dim lPriceOrOffset As String: lPriceOrOffset = lClp.Arg(2)
+If lPriceOrOffset <> "" Then
+    Select Case mBOSpec.EntryType
+    Case BracketEntryTypeMarketIfTouched, _
+            BracketEntryTypeStop
+        mBOSpec.EntryTriggerPrice = CDbl(lPriceOrOffset)
+    Case BracketEntryTypeMarketToLimit, _
+            BracketEntryTypeLimit, _
+            BracketEntryTypeLimitOnOpen, _
+            BracketEntryTypeLimitOnClose, _
+            BracketEntryTypeLimitIfTouched, _
+            BracketEntryTypeStopLimit
+        mBOSpec.EntryPrice = CDbl(lPriceOrOffset)
+    Case BracketEntryTypeBid, _
+            BracketEntryTypeAsk, _
+            BracketEntryTypeLast
+        mBOSpec.EntryOffset = parseOffset(lPriceOrOffset)
+    Case Else
+        gWriteErrorLine "Price must not be specified for this order type"
+    End Select
+End If
+    
+Dim lTriggerPrice As String: lTriggerPrice = lClp.Arg(3)
+If lTriggerPrice <> "" Then
+    Select Case mBOSpec.EntryType
+    Case BracketEntryTypeLimitIfTouched, _
+            BracketEntryTypeStopLimit
+        mBOSpec.EntryTriggerPrice = CDbl(lTriggerPrice)
+    Case Else
+        gWriteErrorLine "Trigger price must not be specified for this order type"
+    End Select
+End If
+
+Dim lSwitchName As String
+lSwitchName = TIFSwitch
+If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
+
+mBracketOrders.Add mBOSpec
+
+gSetValidNextCommands ContractCommand, BuyCommand, SellCommand, BracketCommand, ResetCommand, CloseoutCommand
+
+Exit Sub
+
+Err:
+If Err.Number = VBErrorCodes.VbErrTypeMismatch Then
+    gWriteErrorLine lSwitchName & ": invalid value"
+    Resume Next
+ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description
+    Resume Next
+End If
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
 

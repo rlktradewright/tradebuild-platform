@@ -17,6 +17,7 @@ Class=OrderRecoverer; OrderRecoverer.cls
 Class=CloseoutProcessor; CloseoutProcessor.cls
 Module=gConfig; GConfig.bas
 Class=ContractResolver; ContractResolver.cls
+Class=BuySellCommandData; BuySellCommandData.cls
 Startup="Sub Main"
 HelpFile=""
 Title="plord27"
