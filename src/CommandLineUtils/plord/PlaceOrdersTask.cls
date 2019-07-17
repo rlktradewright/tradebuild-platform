@@ -73,7 +73,6 @@ Static sBracketOrdersEn As Enumerator
 
 If sProcessor Is Nothing Then
     If Not mProcessorsEn.MoveNext Then
-        mProcessors.Clear
         gInputPaused = False
         mTaskContext.Finish Empty, False
         gInputPaused = False
@@ -82,17 +81,23 @@ If sProcessor Is Nothing Then
         Exit Sub
     Else
         Set sProcessor = mProcessorsEn.Current
-        Set sBracketOrdersEn = sProcessor.BracketOrders.Enumerator
-        sProcessor.WriteContractSpecToConsole
+        If sProcessor.BracketOrders.Count = 0 Then
+            Set sProcessor = Nothing
+            Exit Sub
+        Else
+            Set sBracketOrdersEn = sProcessor.BracketOrders.Enumerator
+            sProcessor.WriteContractSpecToConsole
+        End If
     End If
 End If
 
 If Not sProcessor.IsReadyToPlaceOrders Then
     mTaskContext.Suspend 10
 ElseIf sBracketOrdersEn.MoveNext Then
-        sProcessor.PlaceOrder sBracketOrdersEn.Current
-        mTaskContext.Suspend 25
+    sProcessor.PlaceOrder sBracketOrdersEn.Current
+    mTaskContext.Suspend 25
 Else
+    sProcessor.ClearOrders
     Set sProcessor = Nothing
 End If
 

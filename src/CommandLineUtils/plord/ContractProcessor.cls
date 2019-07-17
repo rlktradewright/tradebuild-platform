@@ -113,6 +113,10 @@ End Property
 ' Methods
 '@================================================================================
 
+Friend Sub ClearOrders()
+mBracketOrders.Clear
+End Sub
+
 Friend Sub Initialise( _
                 ByVal pName As String, _
                 ByVal pContractFuture As IFuture, _

@@ -795,6 +795,16 @@ If mErrorCount <> 0 Then
     Exit Sub
 End If
 
+Dim lNumberOfOrders As Long
+Dim lProcessor As ContractProcessor
+For Each lProcessor In mContractProcessors
+    lNumberOfOrders = lNumberOfOrders + lProcessor.BracketOrders.Count
+Next
+If lNumberOfOrders = 0 Then
+    gWriteErrorLine "No orders have been placed"
+    Exit Sub
+End If
+
 ' if there have been no errors, we need to tell each ContractProcessor to submit
 ' its orders. To avoid exceeding the API's input message limits, we do this
 ' asynchronously with a task, which means we need to inhibit user input
