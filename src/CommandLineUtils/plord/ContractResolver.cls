@@ -51,6 +51,8 @@ Private WithEvents mContractProcessor               As ContractProcessor
 Attribute mContractProcessor.VB_VarHelpID = -1
 Private mContinuationData                           As BuySellCommandData
 
+Private mBatchOrders                                As Boolean
+
 Private mSelfRef                                    As Object
 
 '@================================================================================
@@ -107,7 +109,8 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pContractStore As IContractStore, _
-                ByVal pContinuationData As BuySellCommandData)
+                ByVal pContinuationData As BuySellCommandData, _
+                ByVal pBatchOrders As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -118,6 +121,7 @@ Set lContractFuture = FetchContract(pContractSpec, pContractStore)
 Set mFutureWaiter = New FutureWaiter
 mFutureWaiter.Add lContractFuture
 Set mContinuationData = pContinuationData
+mBatchOrders = pBatchOrders
 
 Exit Sub
 
@@ -135,9 +139,9 @@ On Error GoTo Err
 
 If mContinuationData Is Nothing Then
 ElseIf mContinuationData.Action = OrderActionBuy Then
-    mContractProcessor.ProcessBuyCommand mContinuationData.Params
+    If mContractProcessor.ProcessBuyCommand(mContinuationData.Params) And Not mBatchOrders Then gProcessOrders
 ElseIf mContinuationData.Action = OrderActionSell Then
-    mContractProcessor.ProcessSellCommand mContinuationData.Params
+    If mContractProcessor.ProcessSellCommand(mContinuationData.Params) And Not mBatchOrders Then gProcessOrders
 End If
 
 gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand, CloseoutCommand

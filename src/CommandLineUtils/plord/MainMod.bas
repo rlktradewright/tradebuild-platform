@@ -29,6 +29,7 @@ Option Explicit
 Public Const ProjectName                            As String = "plord27"
 Private Const ModuleName                            As String = "MainMod"
 
+Private Const BatchOrdersSwitch                     As String = "BATCHORDERS"
 Private Const LogFileSwitch                         As String = "LOG"
 Private Const MonitorSwitch                         As String = "MONITOR"
 Private Const ResultsDirSwitch                      As String = "RESULTSDIR"
@@ -70,6 +71,7 @@ Public Const StrikeSwitch                           As String = "STRIKE"
 Public Const StrikeSwitch1                          As String = "STR"
 Public Const TimezoneSwitch                         As String = "TIMEZONE"
 
+Public Const BatchOrdersCommand                     As String = "BATCHORDERS"
 Public Const BracketCommand                         As String = "BRACKET"
 Public Const BuyCommand                             As String = "BUY"
 Public Const CloseoutCommand                        As String = "CLOSEOUT"
@@ -162,6 +164,9 @@ Private mOrderPersistenceDataStore                  As IOrderPersistenceDataStor
 Private mOrderRecoveryAgent                         As IOrderRecoveryAgent
 
 Private mConfigStore                                As ConfigurationStore
+
+Private mBatchOrdersDefault                         As Boolean
+Private mBatchOrders                                As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -267,7 +272,6 @@ lContractProcessorName = mGroupName & _
 
 If Not mContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
     Set mContractProcessor = New ContractProcessor
-    mContractProcessor.StageOrders = mStageOrders
     mContractProcessor.Initialise lContractProcessorName, pContractFuture, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
     mContractProcessors.Add mContractProcessor, lContractProcessorName
 End If
@@ -295,6 +299,28 @@ Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Descripti
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
+
+Public Sub gProcessOrders()
+Const ProcName As String = "gProcessOrders"
+On Error GoTo Err
+
+' we need to tell each ContractProcessor to submit
+' its orders. To avoid exceeding the API's input message limits, we do this
+' asynchronously with a task, which means we need to inhibit user input
+' until it has completed.
+gInputPaused = True
+
+Dim t As New PlaceOrdersTask
+t.Initialise mContractProcessors, mStageOrders, mMonitor
+StartTask t, PriorityNormal
+
+setupResultsLogging mClp
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gSetValidNextCommands(ParamArray values() As Variant)
@@ -391,6 +417,21 @@ Else
                 mContractProcessor.Contract.Specifier.Exchange & _
                 DefaultPrompt
 End If
+End Function
+
+Private Function getNumberOfUnprocessedOrders() As Long
+Const ProcName As String = "getNumberOfUnprocessedOrders"
+On Error GoTo Err
+
+Dim lProcessor As ContractProcessor
+For Each lProcessor In mContractProcessors
+    getNumberOfUnprocessedOrders = getNumberOfUnprocessedOrders + lProcessor.BracketOrders.Count
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isCommandValid(ByVal pCommand As String) As Boolean
@@ -621,9 +662,11 @@ On Error GoTo Err
 
 If Not setMonitor Then Exit Sub
 If Not setStageOrders Then Exit Sub
+If Not setBatchOrders Then Exit Sub
+
 setOrderRecovery
 
-gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, CloseoutCommand, ResetCommand
 
 Dim inString As String
 inString = Trim$(gCon.ReadLine(getPrompt))
@@ -683,6 +726,8 @@ Else
     Select Case command
     Case ContractCommand
         processContractCommand Params
+    Case BatchOrdersCommand
+        processBatchOrdersCommand Params
     Case StageOrdersCommand
         processStageOrdersCommand Params
     Case GroupCommand
@@ -701,6 +746,7 @@ Else
         mContractProcessor.ProcessTargetCommand Params
     Case EndBracketCommand
         mContractProcessor.ProcessEndBracketCommand
+        If mErrorCount = 0 And Not mBatchOrders Then gProcessOrders
     Case EndOrdersCommand
         processEndOrdersCommand
     Case ResetCommand
@@ -722,31 +768,65 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub processBatchOrdersCommand( _
+                ByVal pParams As String)
+Select Case UCase$(pParams)
+Case Default
+    mBatchOrders = mBatchOrdersDefault
+Case Yes
+    mBatchOrders = True
+Case No
+    mBatchOrders = False
+Case Else
+    gWriteErrorLine BatchOrdersCommand & " parameter must be either YES or NO or DEFAULT"
+End Select
+
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+End Sub
+
 Private Sub ProcessBuyCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "processBuyCommand"
+On Error GoTo Err
+
+processBuyOrSellCommand OrderActionBuy, pParams
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processBuyOrSellCommand( _
+                ByVal pAction As OrderActions, _
+                ByVal pParams As String)
+Const ProcName As String = "processBuyOrSellCommand"
 On Error GoTo Err
 
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 Dim lArg0 As String: lArg0 = lClp.Arg(0)
 
 If Not IsInteger(lArg0, 1) Then
-    ' the first arg is  a contract spec
+    ' the first arg is a contract spec
     Dim lContractSpec As IContractSpecifier
     Set lContractSpec = CreateContractSpecifierFromString(lArg0)
 
     If lContractSpec Is Nothing Then Exit Sub
     
     Dim lData As New BuySellCommandData
-    lData.Action = OrderActionBuy
+    lData.Action = pAction
     lData.Params = Right$(pParams, Len(pParams) - Len(lArg0))
     
     Dim lResolver As New ContractResolver
-    lResolver.Initialise lContractSpec, mContractStore, lData
+    lResolver.Initialise lContractSpec, mContractStore, lData, mBatchOrders
     
     gInputPaused = True
 ElseIf Not mContractProcessor Is Nothing Then
-    mContractProcessor.ProcessBuyCommand pParams
+    If pAction = OrderActionBuy Then
+        If mContractProcessor.ProcessBuyCommand(pParams) And Not mBatchOrders Then gProcessOrders
+    Else
+        If mContractProcessor.ProcessSellCommand(pParams) And Not mBatchOrders Then gProcessOrders
+    End If
 Else
     gWriteErrorLine "No contract has been specified in this group"
 End If
@@ -761,7 +841,7 @@ Private Sub ProcessSellCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
-
+processBuyOrSellCommand OrderActionSell, pParams
 
 
 Exit Sub
@@ -832,7 +912,7 @@ If lContractSpec Is Nothing Then
 End If
 
 Dim lResolver As New ContractResolver
-lResolver.Initialise lContractSpec, mContractStore, Nothing
+lResolver.Initialise lContractSpec, mContractStore, Nothing, mBatchOrders
 
 gInputPaused = True
 
@@ -853,35 +933,16 @@ On Error GoTo Err
 If mErrorCount <> 0 Then
     gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed"
     mErrorCount = 0
-    If Not mContractProcessor Is Nothing Then
-        gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
-    Else
-        gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
-    End If
+    gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
     Exit Sub
 End If
 
-Dim lNumberOfOrders As Long
-Dim lProcessor As ContractProcessor
-For Each lProcessor In mContractProcessors
-    lNumberOfOrders = lNumberOfOrders + lProcessor.BracketOrders.Count
-Next
-If lNumberOfOrders = 0 Then
+If getNumberOfUnprocessedOrders = 0 Then
     gWriteLineToConsole "No orders have been defined"
     Exit Sub
 End If
 
-' if there have been no errors, we need to tell each ContractProcessor to submit
-' its orders. To avoid exceeding the API's input message limits, we do this
-' asynchronously with a task, which means we need to inhibit user input
-' until it has completed.
-gInputPaused = True
-
-Dim t As New PlaceOrdersTask
-t.Initialise mContractProcessors, mStageOrders, mMonitor
-StartTask t, PriorityNormal
-
-setupResultsLogging mClp
+gProcessOrders
 
 Exit Sub
 
@@ -931,9 +992,10 @@ End Sub
 Private Sub processResetCommand()
 mContractProcessors.Clear
 Set mContractProcessor = Nothing
-mStageOrdersDefault = mStageOrdersDefault
+mStageOrders = mStageOrdersDefault
+mBatchOrders = mBatchOrdersDefault
 mErrorCount = 0
-gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Sub processStageOrdersCommand( _
@@ -953,8 +1015,22 @@ Case Else
     gWriteErrorLine StageOrdersCommand & " parameter must be either YES or NO or DEFAULT"
 End Select
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, StageOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
 End Sub
+
+Private Function setBatchOrders() As Boolean
+setBatchOrders = True
+If mClp.SwitchValue(BatchOrdersSwitch) = "" Then
+    mBatchOrdersDefault = False
+ElseIf UCase$(mClp.SwitchValue(BatchOrdersSwitch)) = Yes Then
+    mBatchOrdersDefault = True
+ElseIf UCase$(mClp.SwitchValue(BatchOrdersSwitch)) = No Then
+    mBatchOrdersDefault = False
+Else
+    gWriteErrorLine "The /" & BatchOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)"
+    setBatchOrders = False
+End If
+End Function
 
 Private Function setMonitor() As Boolean
 setMonitor = True

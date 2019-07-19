@@ -50,6 +50,7 @@ Private mTaskContext                                As TaskContext
 Private mProcessors                                 As EnumerableCollection
 Private mProcessorsEn                               As Enumerator
 Private mMonitor                                    As Boolean
+Private mStageOrders                                As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -94,7 +95,7 @@ End If
 If Not sProcessor.IsReadyToPlaceOrders Then
     mTaskContext.Suspend 10
 ElseIf sBracketOrdersEn.MoveNext Then
-    sProcessor.PlaceOrder sBracketOrdersEn.Current
+    sProcessor.PlaceOrder sBracketOrdersEn.Current, mStageOrders
     mTaskContext.Suspend 25
 Else
     sProcessor.ClearOrders
@@ -137,8 +138,9 @@ On Error GoTo Err
 Set mProcessors = pContractProcessors
 Set mProcessorsEn = mProcessors.Enumerator
 mMonitor = pMonitor
+mStageOrders = pStageOrders
 
-gWriteLineToStdOut StageOrdersCommand & " " & IIf(pStageOrders, "YES", "NO")
+gWriteLineToStdOut StageOrdersCommand & " " & IIf(mStageOrders, "YES", "NO")
 
 Exit Sub
 

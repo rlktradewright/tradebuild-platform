@@ -51,8 +51,6 @@ Private mMarketDataManager                          As IMarketDataManager
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 
-Private mStageOrders                                As Boolean
-
 Private mBracketOrders                              As New EnumerableCollection
 
 Private mBOSpec                                     As BracketOrderSpecification
@@ -67,6 +65,8 @@ Attribute mOrderContext.VB_VarHelpID = -1
 
 Private mScopeName                                  As String
 Private mGroupName                                  As String
+
+Private mTimezone                                   As TimeZone
 
 '@================================================================================
 ' Class Event Handlers
@@ -122,14 +122,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let StageOrders(ByVal Value As Boolean)
-mStageOrders = Value
-End Property
-
-Friend Property Get StageOrders() As Boolean
-StageOrders = mStageOrders
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -150,6 +142,7 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContract = pContractFuture.Value
+Set mTimezone = GetTimeZone(mContract.TimezoneName)
 Set mMarketDataManager = pMarketDataManager
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
@@ -173,7 +166,6 @@ Else
                                 mGroupName)
 End If
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
 
 Exit Sub
 
@@ -181,13 +173,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub PlaceOrder(ByVal pBOS As BracketOrderSpecification)
+Friend Sub PlaceOrder(ByVal pBOS As BracketOrderSpecification, pStage As Boolean)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
-gWriteLineToStdOut "TIME " & FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601)
+gWriteLineToStdOut "TIME " & FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), TimestampDateAndTimeISO8601)
 gWriteLineToStdOut pBOS.ToString
-    
+
+mOrderContext.OrderSubmitter.OrdersAreStaged = pStage
+
 Dim lBO As IBracketOrder
 With pBOS
     If .Action = OrderActionBuy Then
@@ -303,31 +297,31 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ProcessBuyCommand( _
-                ByVal pParams As String)
+Friend Function ProcessBuyCommand( _
+                ByVal pParams As String) As Boolean
 Const ProcName As String = "ProcessBuyCommand"
 On Error GoTo Err
 
-processBuyOrSellCommand OrderActionBuy, pParams
+ProcessBuyCommand = processBuyOrSellCommand(OrderActionBuy, pParams)
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
-Friend Sub ProcessSellCommand( _
-                ByVal pParams As String)
+Friend Function ProcessSellCommand( _
+                ByVal pParams As String) As Boolean
 Const ProcName As String = "ProcessSellCommand"
 On Error GoTo Err
 
-processBuyOrSellCommand OrderActionSell, pParams
+ProcessSellCommand = processBuyOrSellCommand(OrderActionSell, pParams)
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Friend Sub ProcessEndBracketCommand()
 Const ProcName As String = "ProcessEndBracketCommand"
@@ -579,11 +573,13 @@ Else
 End If
 End Function
 
-Private Sub processBuyOrSellCommand( _
+Private Function processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _
-                ByVal pParams As String)
+                ByVal pParams As String) As Boolean
 Const ProcName As String = "processBuyOrSellCommand"
 On Error GoTo Err
+
+processBuyOrSellCommand = True
 
 Set mBOSpec = New BracketOrderSpecification
 mBOSpec.Action = pAction
@@ -595,15 +591,20 @@ Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 
 Dim lQuantity As String: lQuantity = lClp.Arg(0)
 If lQuantity = "" Then
+    processBuyOrSellCommand = False
     gWriteErrorLine ("Quantity is missing")
 ElseIf Not IsInteger(lQuantity, 1) Then
+    processBuyOrSellCommand = False
     gWriteErrorLine ("Quantity must be an integer > 0")
 Else
     mBOSpec.Quantity = CInt(lQuantity)
 End If
 
 mBOSpec.EntryType = getEntryOrderType(lClp.Arg(1))
-If mBOSpec.EntryType = BracketEntryTypeNone Then Exit Sub
+If mBOSpec.EntryType = BracketEntryTypeNone Then
+    processBuyOrSellCommand = False
+    Exit Function
+End If
 
 Dim lPriceOrOffset As String: lPriceOrOffset = lClp.Arg(2)
 If lPriceOrOffset <> "" Then
@@ -623,6 +624,7 @@ If lPriceOrOffset <> "" Then
             BracketEntryTypeLast
         mBOSpec.EntryOffset = parseOffset(lPriceOrOffset)
     Case Else
+        processBuyOrSellCommand = False
         gWriteErrorLine "Price must not be specified for this order type"
     End Select
 End If
@@ -634,6 +636,7 @@ If lTriggerPrice <> "" Then
             BracketEntryTypeStopLimit
         mBOSpec.EntryTriggerPrice = CDbl(lTriggerPrice)
     Case Else
+        processBuyOrSellCommand = False
         gWriteErrorLine "Trigger price must not be specified for this order type"
     End Select
 End If
@@ -646,7 +649,7 @@ mBracketOrders.Add mBOSpec
 
 gSetValidNextCommands ContractCommand, BuyCommand, SellCommand, BracketCommand, ResetCommand, CloseoutCommand
 
-Exit Sub
+Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrTypeMismatch Then
@@ -657,7 +660,7 @@ ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     Resume Next
 End If
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 
 
