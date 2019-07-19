@@ -841,8 +841,8 @@ Private Sub ProcessSellCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
-processBuyOrSellCommand OrderActionSell, pParams
 
+processBuyOrSellCommand OrderActionSell, pParams
 
 Exit Sub
 

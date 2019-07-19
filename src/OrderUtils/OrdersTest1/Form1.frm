@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#342.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#344.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
@@ -538,7 +538,9 @@ If ev.Future.IsAvailable Then
     ElseIf TypeOf ev.Future.Value Is ClosePositionsResult Then
         Dim lCPR As ClosePositionsResult
         Set lCPR = ev.Future.Value
-        LogMessage "Close all positions completed - positions closed: " & lCPR.NumberOfPositionsClosed
+        LogMessage "Close all positions completed:"
+        LogMessage "    Live positions closed:      " & lCPR.NumberOfLivePositionsClosed
+        LogMessage "    Simulated positions closed: " & lCPR.NumberOfSimulatedPositionsClosed
     End If
 ElseIf ev.Future.IsFaulted Then
     LogMessage ev.Future.ErrorMessage
