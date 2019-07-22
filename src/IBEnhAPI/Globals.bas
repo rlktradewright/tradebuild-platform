@@ -312,7 +312,7 @@ Case "CREATED"
     gOrderStatusFromString = OrderStatusCreated
 Case "REJECTED", "INACTIVE"
     gOrderStatusFromString = OrderStatusRejected
-Case "PENDINGSUBMIT"
+Case "PENDINGSUBMIT", "APIPENDING"
     gOrderStatusFromString = OrderStatusPendingSubmit
 Case "PRESUBMITTED"
     gOrderStatusFromString = OrderStatusPreSubmitted
@@ -627,7 +627,7 @@ On Error GoTo Err
 Dim lContractSpec As IContractSpecifier
 With pTwsContract
     Dim lExchange As String: lExchange = .Exchange
-    If lExchange = ExchangeSmart Then
+    If lExchange = ExchangeSmart And .PrimaryExch <> "" Then
         lExchange = ExchangeSmartQualified & .PrimaryExch
     End If
     Set lContractSpec = CreateContractSpecifier(.LocalSymbol, _
