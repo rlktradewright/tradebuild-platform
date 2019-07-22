@@ -64,6 +64,7 @@ Private Const DefaultOrderContextName           As String = "$default"
 Private mOrderManager                           As OrderManager
 
 Private mContractFuture                         As IFuture
+Private mSecType                                As SecurityTypes
 
 Private mDataSource                             As IMarketDataSource
 Private mDataSourceIsReady                      As Boolean
@@ -150,9 +151,12 @@ Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
+Debug.Print GenericTickToString(ev.Tick)
+
 If mDataSource.HasCurrentTick(TickTypeAsk) And _
         mDataSource.HasCurrentTick(TickTypeBid) And _
-        mDataSource.HasCurrentTick(TickTypeTrade) _
+        (mDataSource.HasCurrentTick(TickTypeTrade) Or _
+        mSecType = SecTypeCash) _
 Then
     mDataSourceIsReady = True
     mDataSource.RemoveGenericTickListener Me
@@ -207,13 +211,18 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
-Set mPermittedOrderProperties = ev.Future.Value
-
-Dim lOrderContext As OrderContext
-For Each lOrderContext In mOrderContexts
-    lOrderContext.PermittedOrderProperties = mPermittedOrderProperties
-    lOrderContext.IsProviderReady = IsProviderReady
-Next
+If TypeOf ev.Future.Value Is IPermittedOrderProperties Then
+    Set mPermittedOrderProperties = ev.Future.Value
+    
+    Dim lOrderContext As OrderContext
+    For Each lOrderContext In mOrderContexts
+        lOrderContext.PermittedOrderProperties = mPermittedOrderProperties
+        lOrderContext.IsProviderReady = IsProviderReady
+    Next
+ElseIf TypeOf ev.Future.Value Is IContract Then
+    Dim lContract As IContract: Set lContract = ev.Future.Value
+    mSecType = lContract.Specifier.SecType
+End If
 
 Exit Sub
 
@@ -461,6 +470,7 @@ mRecoveryContextName = pRecoveryContextName
 
 mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
+mFutureWaiter.Add mContractFuture
 Set mDataSource = pDataSource
 If mDataSource Is Nothing Then
     mDataSourceIsReady = True

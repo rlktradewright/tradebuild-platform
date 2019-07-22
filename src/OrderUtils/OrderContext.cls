@@ -274,6 +274,36 @@ Public Property Get OrderSubmitter() As IOrderSubmitter
 Set OrderSubmitter = mOrderSubmitter
 End Property
 
+Public Property Get PendingBuySize() As Long
+Const ProcName As String = "PendingBuySize"
+On Error GoTo Err
+
+Dim lBracketOrder As IBracketOrder
+For Each lBracketOrder In mActiveBracketOrders
+    If lBracketOrder.LongPosition Then PendingBuySize = PendingBuySize + lBracketOrder.PendingSize
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get PendingSellSize() As Long
+Const ProcName As String = "PendingSellSize"
+On Error GoTo Err
+
+Dim lBracketOrder As IBracketOrder
+For Each lBracketOrder In mActiveBracketOrders
+    If Not lBracketOrder.LongPosition Then PendingSellSize = PendingSellSize + lBracketOrder.PendingSize
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get PendingSize() As Long
 Const ProcName As String = "PendingSize"
 On Error GoTo Err

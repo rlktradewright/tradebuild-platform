@@ -657,6 +657,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Friend Property Get HasBracketOrdersWithNonZeroPendingSizes() As Boolean
+Const ProcName As String = "HasBracketOrdersWithNonZeroPendingSizes"
+On Error GoTo Err
+
+Dim lBracketOrder As BracketOrder
+For Each lBracketOrder In mBracketOrders
+    If lBracketOrder.PendingSize <> 0 Then
+        HasBracketOrdersWithNonZeroPendingSizes = True
+        Exit Property
+    End If
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Friend Property Get HasBracketOrdersWithNonZeroSizes() As Boolean
 Const ProcName As String = "HasBracketOrdersWithNonZeroSizes"
 On Error GoTo Err
@@ -793,6 +811,27 @@ Public Property Get OrderSubmitter() As IOrderSubmitter
 Set OrderSubmitter = mOrderSubmitter
 End Property
 
+Public Property Get PendingBuyPositionSize() As Integer
+Const ProcName As String = "PendingBuyPositionSize"
+On Error GoTo Err
+
+checkInitialised
+
+Dim Size As Long
+
+Dim OrderContext As OrderContext
+For Each OrderContext In mOrderContexts
+    Size = Size + OrderContext.PendingBuySize
+Next
+
+PendingBuyPositionSize = Size
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get PendingPositionSize() As Integer
 Const ProcName As String = "PendingPositionSize"
 On Error GoTo Err
@@ -807,6 +846,27 @@ For Each OrderContext In mOrderContexts
 Next
 
 PendingPositionSize = Size
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get PendingSellPositionSize() As Integer
+Const ProcName As String = "PendingSellPositionSize"
+On Error GoTo Err
+
+checkInitialised
+
+Dim Size As Long
+
+Dim OrderContext As OrderContext
+For Each OrderContext In mOrderContexts
+    Size = Size + OrderContext.PendingSellSize
+Next
+
+PendingSellPositionSize = Size
 
 Exit Property
 

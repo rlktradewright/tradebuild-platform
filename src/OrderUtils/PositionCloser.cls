@@ -189,7 +189,9 @@ Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
 Set mPositionManager = pPositionManager
-If Not mPositionManager.HasBracketOrdersWithNonZeroSizes Then
+If mPositionManager.HasBracketOrdersWithNonZeroSizes Then
+ElseIf mPositionManager.HasBracketOrdersWithNonZeroPendingSizes Then
+Else
     ClosePositions = True
     Exit Function
 End If
@@ -312,8 +314,7 @@ For Each oc In mOrderContexts
         Dim lBracketOrder As IBracketOrder
         For Each lBracketOrder In oc.ClosedBracketOrders
             If lBracketOrder.Size <> 0 Then
-                Dim lExec As Execution
-                lExec = oc.NewExecution(True)
+                Dim lExec As Execution: Set lExec = oc.NewExecution(True)
                 lExec.GroupName = oc.GroupName
                 lExec.RecoveryContextName = oc.RecoveryContextName
                 lExec.Quantity = Abs(lBracketOrder.Size)
@@ -338,6 +339,8 @@ For Each oc In mOrderContexts
 Next
 
 doFinalActions
+
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
