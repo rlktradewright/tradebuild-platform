@@ -654,9 +654,11 @@ Exit Function
 Err:
 If Err.Number = VBErrorCodes.VbErrTypeMismatch Then
     gWriteErrorLine lSwitchName & ": invalid value"
+    processBuyOrSellCommand = False
     Resume Next
 ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine Err.Description
+    processBuyOrSellCommand = False
     Resume Next
 End If
 gHandleUnexpectedError ProcName, ModuleName

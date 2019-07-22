@@ -89,7 +89,11 @@ On Error GoTo Err
 
 Set mContractProcessor = gNotifyContractFutureAvailable(ev.Future)
 
-If mContractProcessor.IsReadyToPlaceOrders Then processContinuationData
+If Not mContractProcessor Is Nothing Then
+    If mContractProcessor.IsReadyToPlaceOrders Then processContinuationData
+End If
+
+gInputPaused = False
 
 Exit Sub
 
@@ -146,7 +150,6 @@ End If
 
 gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
 
-gInputPaused = False
 Set mSelfRef = Nothing
 
 Exit Sub

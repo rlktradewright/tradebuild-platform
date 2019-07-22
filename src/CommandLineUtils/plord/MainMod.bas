@@ -244,13 +244,11 @@ Const PositionManagerNameSeparator As String = "&&"
 
 If pContractFuture.IsCancelled Then
     gWriteErrorLine "Contract fetch was cancelled"
-    gInputPaused = False
     Exit Function
 End If
 
 If pContractFuture.IsFaulted Then
     gWriteErrorLine pContractFuture.ErrorMessage
-    gInputPaused = False
     Exit Function
 End If
 
@@ -261,7 +259,6 @@ Set lContract = pContractFuture.Value
 
 If IsContractExpired(lContract) Then
     gWriteErrorLine "Contract has expired"
-    gInputPaused = False
     Exit Function
 End If
     
@@ -480,13 +477,18 @@ On Error GoTo Err
 
 Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
-    If lPM.PositionSize <> 0 Or lPM.PendingPositionSize <> 0 Then
+    If lPM.PositionSize <> 0 Or _
+        lPM.PendingBuyPositionSize <> 0 Or _
+        lPM.PendingSellPositionSize <> 0 _
+    Then
         Dim lContract As IContract
         Set lContract = lPM.ContractFuture.Value
         gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
                             padStringRight(lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange, 25) & _
-                            " Size=" & padStringleft(lPM.PositionSize, 5) & _
-                            IIf(lPM.PendingPositionSize <> 0, " PendingSize=" & padStringleft(lPM.PendingPositionSize, 5), "") & _
+                            " Size=" & padStringleft(lPM.PositionSize & _
+                                                    "(" & lPM.PendingBuyPositionSize & _
+                                                    "/" & _
+                                                    lPM.PendingSellPositionSize & ")", 10) & _
                             " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 8)
     End If
 Next
@@ -1181,7 +1183,7 @@ ElseIf Not IsInteger(clientId, 0, 999999999) Then
 End If
 
 Dim lTwsClient As Client
-Set lTwsClient = GetClient(server, CLng(port), CLng(clientId))
+Set lTwsClient = GetClient(server, CLng(port), CLng(clientId), pLogTwsMessages:=True)
 
 Set mContractStore = lTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(lTwsClient.GetMarketDataFactory)
