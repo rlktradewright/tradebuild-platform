@@ -401,7 +401,7 @@ On Error GoTo Err
 
 If Not lSPsConfig Is Nothing Then lSPsConfig.Remove
 
-If pTwsClientId < 0 Then pTwsClientId = Rnd * &H6FFFFFFF + &H10000000
+If pTwsClientId < 0 Then pTwsClientId = Rnd * 999999999
 
 Set lSPsConfig = pConfig.AddConfigurationSection(ConfigSectionServiceProviders, , ServiceProvidersRenderer)
 
