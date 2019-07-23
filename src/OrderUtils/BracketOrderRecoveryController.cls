@@ -125,6 +125,7 @@ If ev.changeType = OrderContextChangeTypes.OrderContextReadyStateChanged And _
 Then
     gLog "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name
     mNumOrderContextsWaiting = mNumOrderContextsWaiting - 1
+    lOrderContext.RemoveChangeListener Me
     If mNumOrderContextsWaiting = 0 And mState = RecoveryStateWaitingForOrderContexts Then
         mState = RecoveryStateProcessingInfo
         mTaskContext.Continue
@@ -602,9 +603,13 @@ If pPositionManager.OrderContexts.Contains(pContextName) Then
 Else
     gLog "Creating order context", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName
     Set lOrderContext = pPositionManager.OrderContexts.Add(pContextName)
-    lOrderContext.AddChangeListener Me
-    mNumOrderContextsWaiting = mNumOrderContextsWaiting + 1
-    gLog "Order contexts awaiting ready", ProcName, ModuleName, mNumOrderContextsWaiting
+    If lOrderContext.IsProviderReady Then
+        gLog "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name
+    Else
+        lOrderContext.AddChangeListener Me
+        mNumOrderContextsWaiting = mNumOrderContextsWaiting + 1
+        gLog "Order contexts awaiting ready", ProcName, ModuleName, mNumOrderContextsWaiting
+    End If
 End If
 
 Set getOrderContext = lOrderContext
