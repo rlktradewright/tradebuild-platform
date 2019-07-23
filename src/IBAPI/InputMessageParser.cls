@@ -238,13 +238,10 @@ Friend Sub GetMessageIDandVersion(ByVal pReader As BufferedReader, ByRef pMessag
 Const ProcName As String = "GetMessageIDandVersion"
 On Error GoTo Err
 
-If pReader.GetLongCheckpointed(pMessageId, "Msg id") Then
-    pReader.AppendToMessage "("
-    pReader.AppendToMessage gInputMessageIdToString(pMessageId)
-    pReader.AppendToMessage ") "
+pReader.GetLongCheckpointed pMessageId, "Msg id"
+If pReader.GetLongCheckpointed(pVersion, "Version") Then
+    pReader.SetCurrentMessageIdAndVersion pMessageId, pVersion
 End If
-    
-pReader.GetLongCheckpointed pVersion, "Version"
 
 Exit Sub
 
@@ -295,10 +292,12 @@ Private Sub getAccountDownloadEnd(ByVal pVersion As Long)
 Const ProcName As String = "getAccountDownloadEnd"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim accountName As String
 accountName = mReader.GetString("Account name")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.EndAcccountValue accountName
 
@@ -312,13 +311,15 @@ Private Sub getAccountSummary(ByVal pVersion As Long)
 Const ProcName As String = "getAccountSummary"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lRequestId As Long: lRequestId = mReader.GetLong("Request Id")
 Dim lAccount As String: lAccount = mReader.GetString("Account")
 Dim lTag As String: lTag = mReader.GetString("Tag")
 Dim lValue As String: lValue = mReader.GetString("Value")
 Dim lCurrency As String: lCurrency = mReader.GetString("Currency")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.NotifyAccountSummary lRequestId, lAccount, lTag, lValue, lCurrency
 
@@ -332,9 +333,11 @@ Private Sub getAccountSummaryEnd(ByVal pVersion As Long)
 Const ProcName As String = "getAccountSummaryEnd"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lRequestId As Long: lRequestId = mReader.GetLong("RequestId")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.EndAccountSummary lRequestId
 
@@ -348,9 +351,11 @@ Private Sub getAccountTime(ByVal pVersion As Long)
 Const ProcName As String = "getAccountTime"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim accountTime As String: accountTime = mReader.GetString("Account Time")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.NotifyAccountTime accountTime
 
@@ -364,12 +369,14 @@ Private Sub getAccountValue(ByVal pVersion As Long)
 Const ProcName As String = "getAccountValue"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim key As String: key = mReader.GetString("Key")
 Dim val As String: val = mReader.GetString("Value")
 Dim cur As String: cur = mReader.GetString("Currency")
 Dim accountName As String: If pVersion >= 2 Then accountName = mReader.GetString("Account Name")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.NotifyAccountValue key, val, cur, accountName
 
@@ -383,6 +390,8 @@ Private Sub getBondContractData(ByVal pVersion As Long)
 ' not currently supported
 Const ProcName As String = "getBondContractData"
 On Error GoTo Err
+
+mReader.BeginLogMessage
 
 Dim lRequestId As Long
 If (pVersion >= 3) Then lRequestId = mReader.GetLong("Req Id")
@@ -430,7 +439,7 @@ If pVersion >= 5 Then
     End If
 End If
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mContractDetailsConsumer Is Nothing Then mContractDetailsConsumer.NotifyError lRequestId, ErrorCodes.ErrUnsupportedOperationException, "Bonds not yet supported"
 
@@ -444,6 +453,8 @@ Private Sub getCommissionReport(ByVal pVersion As Long)
 Const ProcName As String = "getCommissionReport"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lCommissionReport As New TwsCommissionReport
 lCommissionReport.ExecId = mReader.GetString("ExecId")
 lCommissionReport.Commission = mReader.GetDouble("Commission")
@@ -452,7 +463,7 @@ lCommissionReport.RealizedPNL = mReader.GetDouble("RealizedPNL")
 lCommissionReport.Yield = mReader.GetDouble("Yield")
 lCommissionReport.YieldRedemptionDate = mReader.GetLong("YieldRedemptionDate")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -463,6 +474,8 @@ End Sub
 Private Sub getContractData(ByVal pVersion As Long)
 Const ProcName As String = "getContractData"
 On Error GoTo Err
+
+mReader.BeginLogMessage
 
 Dim lReqId As Long
 Dim lContract As New TwsContract
@@ -544,7 +557,7 @@ If pVersion >= 7 Then
     End If
 End If
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mContractDetailsConsumer Is Nothing Then mContractDetailsConsumer.NotifyContract lReqId, lContractDetails
 
@@ -558,10 +571,12 @@ Private Sub getContractEnd(ByVal pVersion As Long)
 Const ProcName As String = "getContractEnd"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim reqId As Long
 reqId = gGetCallersRequestIdFromTwsContractRequestId(mReader.GetLong("Req Id"))
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mContractDetailsConsumer Is Nothing Then mContractDetailsConsumer.EndContractDetails reqId
 
@@ -575,10 +590,12 @@ Private Sub getCurrentTime(ByVal pVersion As Long)
 Const ProcName As String = "getCurrentTime"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lSystemTime As Double: lSystemTime = mReader.GetDouble("SystemTime")
 Dim lTime As Date: lTime = gGetDateFromUnixSystemTime(lSystemTime)
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -590,13 +607,15 @@ Private Sub getDeltaNeutralValidation(ByVal pVersion As Long)
 Const ProcName As String = "getDeltaNeutralValidation"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim reqId As Long: reqId = mReader.GetLong("ReqID")
 
 Dim ConId As Long: ConId = mReader.GetLong("ConID")
 Dim Delta As Double: Delta = mReader.GetDouble("Delta")
 Dim Price As Double: Price = mReader.GetDouble("Price")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -607,6 +626,8 @@ End Sub
 Private Sub getErrorMsg(ByVal pVersion As Long)
 Const ProcName As String = "getErrorMsg"
 On Error GoTo Err
+
+mReader.BeginLogMessage True
 
 Static sLostConnectionToIb As Boolean
 Dim id As Long
@@ -625,7 +646,7 @@ Debug.Print "Error code: " & lErrorCode
 lErrorMsg = mReader.GetString("Error msg")
 Debug.Print "Error msg: " & lErrorMsg
 
-mReader.LogInputMessage True
+mReader.EndLogMessage
 
 ' first handle some messages that relate to specific ids, but need to be handled
 ' generically and treated as program errors, since they indicate that something is
@@ -724,6 +745,8 @@ Private Sub getExecutionData(ByVal pVersion As Long)
 Const ProcName As String = "getExecutionData"
 On Error GoTo Err
 
+mReader.BeginLogMessage True
+
 Dim lReqId As Long: lReqId = -1
 If (pVersion >= 7) Then lReqId = gGetCallersRequestIdFromTwsExecutionsRequestId(mReader.GetLong("lReqId"))
 
@@ -775,7 +798,7 @@ With lExecution
     End If
 End With
 
-mReader.LogInputMessage True
+mReader.EndLogMessage
 
 If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyExecution lReqId, lContract, lExecution
 
@@ -789,10 +812,12 @@ Private Sub getExecutionDataEnd(ByVal pVersion As Long)
 Const ProcName As String = "getExecutionDataEnd"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim reqId  As Long
 
 reqId = gGetCallersRequestIdFromTwsExecutionsRequestId(mReader.GetLong("reqId"))
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.EndExecutions reqId
 Exit Sub
@@ -805,10 +830,12 @@ Private Sub getFAData(ByVal pVersion As Long)
 Const ProcName As String = "getFAData"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim DataType As TwsFADataTypes: DataType = mReader.GetLong("Data type")
 Dim XMLData As String: XMLData = mReader.GetString("XML data")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -820,10 +847,12 @@ Private Sub getFundamentalData(ByVal pVersion As Long)
 Const ProcName As String = "getFundamentalData"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lReqId As Long: lReqId = mReader.GetLong("ReqID")
 Dim lData As String: lData = mReader.GetString("Data")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -834,6 +863,8 @@ End Sub
 Private Sub getHistoricalData(ByVal pVersion As Long)
 Const ProcName As String = "getHistoricalData"
 On Error GoTo Err
+
+mReader.BeginLogMessage
 
 Static sStartInfo As TwsHistDataStartInfo
 Static sBar As TwsBar
@@ -877,7 +908,7 @@ mReader.BeginCheckpointScope
     Next
 mReader.EndCheckpointScope
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.EndHistData sStartInfo.RequestId
 
@@ -891,9 +922,11 @@ Private Sub getManagedAccounts(ByVal pVersion As Long)
 Const ProcName As String = "getManagedAccounts"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim accountsList As String: accountsList = mReader.GetString("Accounts list")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -905,10 +938,12 @@ Private Sub getMarketDataType(ByVal pVersion As Long)
 Const ProcName As String = "getMarketDataType"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lReqId As Long: lReqId = mReader.GetLong("ReqID")
 Dim lMarketDataType As Long: lMarketDataType = mReader.GetLong("MarketDataType")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -920,6 +955,8 @@ Private Sub getMarketDepth(ByVal pVersion As Long)
 Const ProcName As String = "getMarketDepth"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim id As Long: id = mReader.GetLong("Id")
 Dim lPosition As Long: lPosition = mReader.GetLong("POSITION")
 Dim lOperation As TwsDOMOperations:  lOperation = mReader.GetLong("Operation")
@@ -927,7 +964,7 @@ Dim lSide As TwsDOMSides: lSide = mReader.GetLong("Side")
 Dim lPrice As Double: lPrice = mReader.GetDouble("Price")
 Dim lSize As Long: lSize = mReader.GetLong("Size")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyMarketDepth gGetCallersRequestIdFromTwsMarketDepthRequestId(id), lPosition, "", lOperation, lSide, lPrice, lSize
 
@@ -941,6 +978,8 @@ Private Sub getMarketDepthL2(ByVal pVersion As Long)
 Const ProcName As String = "getMarketDepthL2"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim id As Long: id = mReader.GetLong("Id")
 Dim lPosition As Long: lPosition = mReader.GetLong("POSITION")
 Dim lMarketMaker As String: lMarketMaker = mReader.GetString("Marketmaker")
@@ -949,7 +988,7 @@ Dim lSide As TwsDOMSides: lSide = mReader.GetLong("Side")
 Dim lPrice As Double: lPrice = mReader.GetDouble("Price")
 Dim lSize As Long: lSize = mReader.GetLong("Size")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyMarketDepth gGetCallersRequestIdFromTwsMarketDepthRequestId(id), lPosition, lMarketMaker, lOperation, lSide, lPrice, lSize
 
@@ -963,12 +1002,14 @@ Private Sub getNewsBulletins(ByVal pVersion As Long)
 Const ProcName As String = "getNewsBulletins"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lMsgId As Long: lMsgId = mReader.GetLong("Id")
 Dim msgType As Long: msgType = mReader.GetLong("Type")
 Dim newsMessage As String: newsMessage = mReader.GetString("Message")
 Dim originatingExch As String: originatingExch = mReader.GetString("Orig Exchange")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -980,12 +1021,14 @@ Private Sub getNextValidId(ByVal pVersion As Long)
 Const ProcName As String = "getNextValidId"
 On Error GoTo Err
 
-mNextOrderID = mReader.GetLong("Next id")
-
 ' we force logging of this because its occurrence is important in the
 ' connection sequence, and it's nice to be able to see explicitly
 ' in the log when it occurs
-mReader.LogInputMessage True
+mReader.BeginLogMessage True
+
+mNextOrderID = mReader.GetLong("Next id")
+
+mReader.EndLogMessage
 
 If mNextOrderID < BaseOrderId Then mNextOrderID = BaseOrderId
 
@@ -1015,6 +1058,8 @@ End Sub
 Private Sub getOpenOrder(ByVal pVersion As Long)
 Const ProcName As String = "getOpenOrder"
 On Error GoTo Err
+
+mReader.BeginLogMessage True
 
 Dim i As Long
 
@@ -1282,7 +1327,7 @@ With lOrder
     End If
 End With
 
-mReader.LogInputMessage True
+mReader.EndLogMessage
 
 If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyOpenOrder lOrder.OrderId, lContract, lOrder, lOrderState
 
@@ -1296,7 +1341,8 @@ Private Sub getOpenOrderEnd(ByVal pVersion As Long)
 Const ProcName As String = "getOpenOrderEnd"
 On Error GoTo Err
 
-mReader.LogInputMessage
+mReader.BeginLogMessage True
+mReader.EndLogMessage
 
 If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.EndOpenOrders
 Exit Sub
@@ -1308,6 +1354,8 @@ End Sub
 Private Sub getOrderStatus(ByVal pVersion As Long)
 Const ProcName As String = "getOrderStatus"
 On Error GoTo Err
+
+mReader.BeginLogMessage True
 
 ' NB: lAvgFillPrice and lLastFillPrice ought to be subjected to adjustPrice,
 ' but we can't call that here because we don't know the currency code. But not really
@@ -1334,7 +1382,7 @@ If pVersion >= 5 Then lClientID = mReader.GetLong("Client id")
 
 If pVersion >= 6 Then lWhyHeld = mReader.GetString("Why held")
 
-mReader.LogInputMessage True
+mReader.EndLogMessage
 
 If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyOrderStatus lorderId, lStatus, lFilled, lRemaining, lAvgFillPrice, lPermId, lParentId, lLastFillPrice, lClientID, lWhyHeld
 
@@ -1347,6 +1395,8 @@ End Sub
 Private Sub getPortfolioValue(ByVal pVersion As Long)
 Const ProcName As String = "getPortfolioValue"
 On Error GoTo Err
+
+mReader.BeginLogMessage
 
 Dim lContract As New TwsContract
 
@@ -1385,7 +1435,7 @@ Dim lAccountName As String: If pVersion >= 4 Then lAccountName = mReader.GetStri
 
 If pVersion = 6 And mServerVersion = 39 Then lContract.PrimaryExch = mReader.GetString("Primary Exchange")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.NotifyPortfolioUpdate lContract, lPosition, lMarketPrice, lMarketValue, lAverageCost, lUnrealizedPNL, lRealizedPNL, lAccountName
 
@@ -1398,6 +1448,8 @@ End Sub
 Private Sub getPosition(ByVal pVersion As Long)
 Const ProcName As String = "getPosition"
 On Error GoTo Err
+
+mReader.BeginLogMessage True
 
 Dim lAccount As String: lAccount = mReader.GetString("Account")
 Dim lContract As New TwsContract
@@ -1418,7 +1470,7 @@ Dim lPosition As Long: lPosition = mReader.GetLong("Position")
 Dim lAverageCost As Double
 If pVersion >= 3 Then lAverageCost = mReader.GetDouble("Average Cost")
 
-mReader.LogInputMessage True
+mReader.EndLogMessage
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.NotifyPosition lAccount, lContract, lPosition, lAverageCost
 
@@ -1432,7 +1484,8 @@ Private Sub getPositionEnd(ByVal pVersion As Long)
 Const ProcName As String = "getPositionEnd"
 On Error GoTo Err
 
-mReader.LogInputMessage True
+mReader.BeginLogMessage True
+mReader.EndLogMessage
 
 If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.EndPosition
 
@@ -1445,6 +1498,8 @@ End Sub
 Private Sub getRealtimeBars(ByVal pVersion As Long)
 Const ProcName As String = "getRealtimeBars"
 On Error GoTo Err
+
+mReader.BeginLogMessage
 
 Dim lReqId As Long: lReqId = mReader.GetLong("ReqId")
 
@@ -1461,7 +1516,7 @@ With lBar
     .TickVolume = mReader.GetLong("TickVolume")
 End With
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyRealtimeBar gGetCallersRequestIdFromTwsHistRequestId(lReqId), lBar
 
@@ -1474,6 +1529,8 @@ End Sub
 Private Sub getScannerData(ByVal pVersion As Long)
 Const ProcName As String = "getScannerData"
 On Error GoTo Err
+
+mReader.BeginLogMessage
 
 Static sRequestId As Long
 Static sNumberOfElements As Long
@@ -1528,7 +1585,7 @@ mReader.BeginCheckpointScope
     Next
 mReader.EndCheckpointScope
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.EndScannerData sRequestId
 
@@ -1542,9 +1599,11 @@ Private Sub getScannerParameters(ByVal pVersion As Long)
 Const ProcName As String = "getScannerParameters"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim xml  As String: xml = mReader.GetString("XML")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 Exit Sub
 
@@ -1556,6 +1615,8 @@ Private Sub getTickEFP(ByVal pVersion As Long)
 Const ProcName As String = "getTickEFP"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lTickerId As Long: lTickerId = mReader.GetLong("Ticker Id")
 Dim lTickType As Long: lTickType = mReader.GetLong("Tick Type")
 Dim lBasisPoints  As Double: lBasisPoints = mReader.GetDouble("Basis Points")
@@ -1566,7 +1627,7 @@ Dim lFutureExpiry As String: lFutureExpiry = mReader.GetString("Future Expiry")
 Dim lDividendImpact As Double: lDividendImpact = mReader.GetDouble("Dividend Impact")
 Dim lDividendsToExpiry As Double: lDividendsToExpiry = mReader.GetDouble("Dividends To Expiry")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickEFP lTickerId, lTickType, lBasisPoints, lFormattedBasisPoints, lImpliedFuturesPrice, lHoldDays, lFutureExpiry, lDividendImpact, lDividendsToExpiry
 
@@ -1580,11 +1641,13 @@ Private Sub getTickGeneric(ByVal pVersion As Long)
 Const ProcName As String = "getTickGeneric"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lTickerId As Long: lTickerId = mReader.GetLong("tickerId")
 Dim lTickType As Long: lTickType = mReader.GetLong("tickType")
 Dim lValue As Double: lValue = mReader.GetDouble("Value")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickGeneric gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lValue
 
@@ -1597,6 +1660,8 @@ End Sub
 Private Sub getTickOptionComputation(ByVal pVersion As Long)
 Const ProcName As String = "getTickOptionComputation"
 On Error GoTo Err
+
+mReader.BeginLogMessage
 
 Dim lTickerId As Long: lTickerId = mReader.GetLong("tickerId")
 Dim lTickType As Long: lTickType = mReader.GetLong("tickType")
@@ -1650,7 +1715,7 @@ If (pVersion >= 6) Then
     End If
 End If
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickOptionComputation gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lImpliedVol, lDelta, lOptPrice, lPvDividend, lGamma, lVega, lTheta, lUndPrice
 
@@ -1663,6 +1728,8 @@ End Sub
 Private Sub getTickPrice(ByVal pVersion As Long)
 Const ProcName As String = "getTickPrice"
 On Error GoTo Err
+
+mReader.BeginLogMessage
 
 Dim lTickType As Long
 Dim lTickerId As Long
@@ -1677,7 +1744,7 @@ lPrice = mReader.GetDouble("Price")
 If pVersion >= 2 Then lSize = mReader.GetLong("Size")
 If pVersion >= 3 Then lCanAutoExecute = mReader.GetBoolean("Can autoexecute")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickPrice gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lPrice, lSize, lCanAutoExecute
 
@@ -1689,17 +1756,19 @@ End Sub
 
 Private Sub getTickSize(ByVal pVersion As Long)
 Const ProcName As String = "getTickSize"
+On Error GoTo Err
+
+mReader.BeginLogMessage
+
 Dim lTickType As Long
 Dim lTickerId As Long
 Dim lSize As Long
-
-On Error GoTo Err
 
 lTickerId = mReader.GetLong("Ticker id")
 lTickType = mReader.GetLong("Tick type")
 lSize = mReader.GetLong("Size")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickSize gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lSize
 
@@ -1714,8 +1783,10 @@ Private Sub getTickSnapshotEnd(ByVal pVersion As Long)
 Const ProcName As String = "getTickSnapshotEnd"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lReqId As Long: lReqId = mReader.GetLong("reqID")
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.EndTickSnapshot gGetCallersRequestIdFromTwsMarketDataRequestId(lReqId)
 
@@ -1729,11 +1800,13 @@ Private Sub getTickString(ByVal pVersion As Long)
 Const ProcName As String = "getTickString"
 On Error GoTo Err
 
+mReader.BeginLogMessage
+
 Dim lTickerId As Long: lTickerId = mReader.GetLong("tickerId")
 Dim lTickType As Long: lTickType = mReader.GetLong("tickType")
 Dim lValue As String: lValue = mReader.GetString("Value")
 
-mReader.LogInputMessage
+mReader.EndLogMessage
 
 If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickString gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lValue
 

@@ -763,7 +763,7 @@ Dim lReader As New BufferedReader
 lReader.Initialise mInMessageHandler, mLogTwsMessages
 
 Set mSocketHandler = New SocketHandler
-mSocketHandler.Initialise mServer, mPort, lReader, mProgramErrorHandler
+mSocketHandler.Initialise mServer, mPort, lReader, mProgramErrorHandler, mLogTwsMessages
 mSocketHandler.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 
 Set mWriter = New BufferedWriter

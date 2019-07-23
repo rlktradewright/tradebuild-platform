@@ -60,7 +60,13 @@ Private mMessageStartIndex                          As Long
 
 Private mInputMessageHandler                        As InputMessageHandler
 
+Private mDefaultLogTwsMessages                      As Boolean
 Private mLogTwsMessages                             As Boolean
+Private mLogRawMessages                             As Boolean
+Private mForceLogMessage                            As Boolean
+
+Private mMessageId                              As Long
+Private mVersion                                    As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -123,32 +129,32 @@ Dim lBytesReceived As Long
 
 lBytesReceived = UBound(pData) + 1
 
-gLogger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, LogLevels.LogLevelHighDetail
+If mLogRawMessages Then gLogger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, LogLevels.LogLevelHighDetail
 
 If (mBufferNextFreeIndex = mInputParseIndex) And _
     mMessageStartIndex < 0 _
 Then
     ' no unprocessed data so start at the beginning of the buffer again
-    gLogger.Log "Reusing buffer from start", ProcName, ModuleName, LogLevels.LogLevelHighDetail
+    If mLogRawMessages Then gLogger.Log "Reusing buffer from start", ProcName, ModuleName, LogLevels.LogLevelHighDetail
     mBufferNextFreeIndex = 0
     mInputParseIndex = 0
     mInputParseIndexChk = 0
 End If
 
 If mBufferNextFreeIndex + lBytesReceived <= UBound(mBuffer) + 1 Then
-    gLogger.Log "Appending data to buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
+    If mLogRawMessages Then gLogger.Log "Appending data to buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
 Else
     If lBytesReceived <= getFreeBufferSpaceSize Then
         ' copy the existing contents (from the start of the current message) down to the start of the buffer
         If mMessageStartIndex < 0 Then
-            gLogger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
+            If mLogRawMessages Then gLogger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
             moveBufferContents 0, mInputParseIndex, mBufferNextFreeIndex - mInputParseIndex
         Else
-            gLogger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
+            If mLogRawMessages Then gLogger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
             moveBufferContents 0, mMessageStartIndex, mBufferNextFreeIndex - mMessageStartIndex
         End If
     Else
-        If gLogger.IsLoggable(LogLevelHighDetail) Then
+        If mLogRawMessages And gLogger.IsLoggable(LogLevelHighDetail) Then
             gLogger.Log "Extending buffer to " & CStr(2 * (UBound(mBuffer) + 1) - 1) & " bytes", ProcName, ModuleName, LogLevels.LogLevelHighDetail
         End If
         ReDim Preserve mBuffer(2 * (UBound(mBuffer) + 1) - 1) As Byte
@@ -177,18 +183,6 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Friend Sub AppendToMessage(ByVal pValue As String)
-Const ProcName As String = "AppendToMessage"
-On Error GoTo Err
-
-If mLogTwsMessages Then mInMessageBuilder.Append pValue
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
 Friend Sub BeginCheckpointScope()
 mCheckpointScopeIndex = mCheckpointScopeIndex + 1
 If mCheckpointScopeIndex > UBound(mCurrCheckpointNumber) Then
@@ -199,18 +193,45 @@ mCurrCheckpointNumber(mCheckpointScopeIndex) = 0
 If mNextCheckpointToProcess(mCheckpointScopeIndex) = 0 Then mNextCheckpointToProcess(mCheckpointScopeIndex) = 1
 End Sub
 
+Friend Sub BeginLogMessage( _
+                Optional ByVal pForceLog As Boolean = False)
+Const ProcName As String = "BeginLogMessage"
+On Error GoTo Err
+
+If pForceLog Then
+    mLogTwsMessages = True
+    mForceLogMessage = True
+Else
+    mLogTwsMessages = mDefaultLogTwsMessages
+End If
+If mLogTwsMessages Then
+    mInMessageBuilder.Clear
+    mInMessageBuilder.Append "IN: "
+    mInMessageBuilder.Append "Msg id"
+    mInMessageBuilder.Append "="
+    mInMessageBuilder.Append mMessageId
+    mInMessageBuilder.Append ";"
+    mInMessageBuilder.Append "("
+    mInMessageBuilder.Append gInputMessageIdToString(mMessageId)
+    mInMessageBuilder.Append ") "
+    mInMessageBuilder.Append "Version"
+    mInMessageBuilder.Append "="
+    mInMessageBuilder.Append mVersion
+End If
+
+Exit Sub
+
+Err:
+'gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub BeginMessage()
 Const ProcName As String = "BeginMessage"
 On Error GoTo Err
 
 If alreadyProcessedItem Then Exit Sub
 
-If mLogTwsMessages Then
-    mInMessageBuilder.Clear
-    mInMessageBuilder.Append "IN: "
-    mMessageStartIndex = mInputParseIndex
-End If
-
+mMessageStartIndex = mInputParseIndex
 Checkpoint
 
 Exit Sub
@@ -232,6 +253,28 @@ Friend Sub EndCheckpointScope()
 mNextCheckpointToProcess(mCheckpointScopeIndex) = 0
 mCheckpointScopeIndex = mCheckpointScopeIndex - 1
 mInputParseIndexChk = mInputParseIndex
+End Sub
+
+Friend Sub EndLogMessage()
+Const ProcName As String = "EndLogMessage"
+On Error GoTo Err
+
+If Not mLogTwsMessages Then Exit Sub
+
+If mForceLogMessage Then
+    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, LogLevelSevere
+ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
+    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, LogLevelHighDetail
+End If
+
+mLogTwsMessages = False
+mForceLogMessage = False
+mMessageId = 0
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub EndMessage()
@@ -387,30 +430,21 @@ Friend Sub Initialise( _
                 ByVal pInputMessageHandler As InputMessageHandler, _
                 ByVal pLogTwsMessages As Boolean)
 Set mInputMessageHandler = pInputMessageHandler
+mDefaultLogTwsMessages = pLogTwsMessages
 mLogTwsMessages = pLogTwsMessages
-End Sub
-
-Friend Sub LogInputMessage(Optional ByVal pForceLogMessage As Boolean)
-Const ProcName As String = "LogInputMessage"
-On Error GoTo Err
-
-If Not mLogTwsMessages Then Exit Sub
-
-If pForceLogMessage Then
-    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, LogLevelSevere
-ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
-    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, LogLevelHighDetail
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
+mLogRawMessages = pLogTwsMessages
 End Sub
 
 Friend Sub Rollback()
 mInputParseIndex = mInputParseIndexChk
 mCheckpointScopeIndex = 0
+End Sub
+
+Friend Sub SetCurrentMessageIdAndVersion( _
+                ByVal pMessageId As Long, _
+                ByVal pVersion As Long)
+mMessageId = pMessageId
+mVersion = pVersion
 End Sub
 
 '@================================================================================

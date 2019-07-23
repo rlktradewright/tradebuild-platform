@@ -283,7 +283,7 @@ s = "Error while processing input message: " & vbCrLf & _
 Debug.Print "Error " & errNum & ": " & errDesc & vbCrLf & s
 
 gLog s, ModuleName, ProcName, pLogLevel:=LogLevelSevere
-mReader.LogInputMessage True
+mReader.EndLogMessage
 
 gHandleUnexpectedError mProgramErrorHandler, pErrorNumber:=errNum, pErrorDesc:=errDesc, pErrorSource:=errSource, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub

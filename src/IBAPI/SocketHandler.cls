@@ -83,6 +83,8 @@ Private mTempConnectionRetryIntervalSecs            As Long
 
 Private mProgramErrorHandler                        As IProgramErrorListener
 
+Private mLogTwsMessages                             As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -177,8 +179,10 @@ mSocket.GetData lSocketInputData, vbArray + vbByte
 Dim lBytesReceived As Long
 lBytesReceived = UBound(lSocketInputData) + 1
 
-If gSocketLogger.IsLoggable(LogLevelMediumDetail) Then
-    gSocketLogger.Log showBuffer("In buf: ", lSocketInputData), ProcName, ModuleName, LogLevels.LogLevelMediumDetail
+If mLogTwsMessages Then
+    If gSocketLogger.IsLoggable(LogLevelMediumDetail) Then
+        gSocketLogger.Log showBuffer("In buf: ", lSocketInputData), ProcName, ModuleName, LogLevels.LogLevelMediumDetail
+    End If
 End If
 
 mBufferedReader.AddData lSocketInputData
@@ -372,19 +376,21 @@ Friend Sub Initialise( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pBufferedReader As BufferedReader, _
-                ByVal pProgramErrorHandler As IProgramErrorListener)
+                ByVal pProgramErrorHandler As IProgramErrorListener, _
+                ByVal pLogTwsMessages As Boolean)
 If pServer = "" Then pServer = "127.0.0.1"
 mServer = pServer
 mPort = pPort
 Set mBufferedReader = pBufferedReader
 Set mProgramErrorHandler = pProgramErrorHandler
+mLogTwsMessages = pLogTwsMessages
 End Sub
 
 Friend Sub Send(ByRef pData() As Byte)
 Const ProcName As String = "Send"
 On Error GoTo Err
 
-If gSocketLogger.IsLoggable(LogLevelMediumDetail) Then
+If mLogTwsMessages And gSocketLogger.IsLoggable(LogLevelMediumDetail) Then
     gSocketLogger.Log showBuffer("Out buf: ", pData), ProcName, ModuleName, LogLevels.LogLevelMediumDetail
 End If
 mSocket.SendData pData
