@@ -31,6 +31,7 @@ Private Const ModuleName                            As String = "MainMod"
 
 Private Const BatchOrdersSwitch                     As String = "BATCHORDERS"
 Private Const LogFileSwitch                         As String = "LOG"
+Private Const LogApiMessages                        As String = "LOGAPIMESSAGES"
 Private Const MonitorSwitch                         As String = "MONITOR"
 Private Const ResultsDirSwitch                      As String = "RESULTSDIR"
 Private Const RecoveryFileDirSwitch                 As String = "RECOVERYFILEDIR"
@@ -1183,7 +1184,7 @@ ElseIf Not IsInteger(clientId, 0, 999999999) Then
 End If
 
 Dim lTwsClient As Client
-Set lTwsClient = GetClient(server, CLng(port), CLng(clientId), pLogTwsMessages:=True)
+Set lTwsClient = GetClient(server, CLng(port), CLng(clientId), pLogTwsMessages:=lClp.Switch(LogApiMessages))
 
 Set mContractStore = lTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(lTwsClient.GetMarketDataFactory)
@@ -1365,6 +1366,7 @@ gCon.WriteLineToConsole "plord27 -tws[:[<twsserver>][,[<port>][,[<clientid>]]]] 
 gCon.WriteLineToConsole "       [-resultsdir:<resultspath>] [-stopAt:<hh:mm>] [-log:<logfilepath>]"
 gCon.WriteLineToConsole "       [-loglevel:[ I | N | D | M | H }]"
 gCon.WriteLineToConsole "       [-stageorders[:[yes|no]]]"
+gCon.WriteLineToConsole "       [-simulateorders] [-logapimessages]"
 gCon.WriteLineToConsole "       [-scopename:<scope>] [-recoveryfiledir:<recoverypath>]"
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole "  where"
