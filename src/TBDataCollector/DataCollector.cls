@@ -520,6 +520,7 @@ mOutputPath = ""
 Set mTradeBuildAPI = CreateTradeBuildAPIFromConfig(mConfig, _
                                                 "", _
                                                 SPRoleContractDataPrimary + _
+                                                SPRoleContractDataSecondary + _
                                                 SPRoleHistoricalDataOutput + _
                                                 SPRoleRealtimeData + _
                                                 SPRoleTickfileInput + _
