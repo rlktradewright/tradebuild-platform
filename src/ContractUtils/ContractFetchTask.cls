@@ -221,7 +221,7 @@ If Not futureIsPending Then Exit Sub
 If gIsOffsetExpiry(mContractSpec.Expiry) Or mExpiryOffset <> -1 Then
     mContractsBuilder.Add pContract
 Else
-    If mContractsBuilder.Contracts.Count = 1 Then
+    If mContractsBuilder.Contracts.Count = 1 And mSingleContractOnly Then
         mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract is not uniquely specified", ""
         mFetchFuture.Cancel
         mTaskContext.Finish Empty, False
