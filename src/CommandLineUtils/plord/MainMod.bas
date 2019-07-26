@@ -358,6 +358,11 @@ Public Sub Main()
 Const ProcName As String = "Main"
 On Error GoTo Err
 
+If Trim$(command) = "/?" Or Trim$(command) = "-?" Then
+    showUsage
+    Exit Sub
+End If
+
 InitialiseTWUtilities
 
 Set mFatalErrorHandler = New FatalErrorHandler
@@ -372,15 +377,12 @@ mCloseoutProcessor.Initialise mOrderManager
 
 Set gCon = GetConsole
 
-If Trim$(command) = "/?" Or Trim$(command) = "-?" Then
-    showUsage
-    Exit Sub
-End If
+logProgramId
 
 Set mGroupContractProcessors = CreateSortedDictionary(KeyTypeString)
 
 Set mClp = CreateCommandLineParser(command)
-If setupTws(mClp.SwitchValue(TwsSwitch), mClp.Switch(SimulateOrdersSwitch)) Then
+If setupTws(mClp.SwitchValue(TwsSwitch), mClp.Switch(SimulateOrdersSwitch), mClp.Switch(LogApiMessages)) Then
     process
 Else
     showUsage
@@ -526,6 +528,24 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub logProgramId()
+Const ProcName As String = "logProgramId"
+On Error GoTo Err
+
+Dim s As String
+s = App.ProductName & " V" & App.Major & "." & App.Minor & "." & App.Revision & vbCrLf & _
+    App.LegalCopyright
+gWriteLineToConsole s
+s = s & vbCrLf & "Arguments: " & command
+gLogger.Log s, ProcName, ModuleName
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
 End Sub
 
 Public Function padStringRight(ByVal pInput As String, ByVal pLength As Long) As String
@@ -675,15 +695,15 @@ Dim inString As String
 inString = Trim$(gCon.ReadLine(getPrompt))
 
 Do While inString <> gCon.EofString
-    mLineNumber = mLineNumber + 1
-    
     If inString = "" Then
         ' ignore blank lines - and don't write to the log because
         ' the FileAutoReader program sends blank lines very frequently
     ElseIf Left$(inString, 1) = "#" Then
+        ' ignore comments except log and write to console
         gLogger.Log "StdIn: " & inString, ProcName, ModuleName
-        ' ignore comments
+        gWriteLineToConsole inString
     Else
+        mLineNumber = mLineNumber + 1
         gLogger.Log "StdIn: " & inString, ProcName, ModuleName
         If Not processCommand(inString) Then Exit Do
     End If
@@ -1153,7 +1173,8 @@ End Sub
 
 Private Function setupTws( _
                 ByVal SwitchValue As String, _
-                ByVal pSimulateOrders As Boolean) As Boolean
+                ByVal pSimulateOrders As Boolean, _
+                ByVal pLogApiMessages As Boolean) As Boolean
 Const ProcName As String = "setupTws"
 On Error GoTo Err
 
@@ -1184,7 +1205,7 @@ ElseIf Not IsInteger(clientId, 0, 999999999) Then
 End If
 
 Dim lTwsClient As Client
-Set lTwsClient = GetClient(server, CLng(port), CLng(clientId), pLogTwsMessages:=lClp.Switch(LogApiMessages))
+Set lTwsClient = GetClient(server, CLng(port), CLng(clientId), pLogTwsMessages:=pLogApiMessages)
 
 Set mContractStore = lTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(lTwsClient.GetMarketDataFactory)
