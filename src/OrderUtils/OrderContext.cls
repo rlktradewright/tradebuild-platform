@@ -254,7 +254,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get IsProviderReady() As Boolean
+Public Property Get IsProviderReady() As Boolean
 IsProviderReady = mProviderIsReady
 End Property
 
