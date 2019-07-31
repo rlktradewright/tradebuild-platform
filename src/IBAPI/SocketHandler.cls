@@ -83,7 +83,7 @@ Private mTempConnectionRetryIntervalSecs            As Long
 
 Private mProgramErrorHandler                        As IProgramErrorListener
 
-Private mLogTwsMessages                             As Boolean
+Private mRawApiMessageLogLevel                      As LogLevels
 
 '@================================================================================
 ' Class Event Handlers
@@ -179,10 +179,8 @@ mSocket.GetData lSocketInputData, vbArray + vbByte
 Dim lBytesReceived As Long
 lBytesReceived = UBound(lSocketInputData) + 1
 
-If mLogTwsMessages Then
-    If gSocketLogger.IsLoggable(LogLevelMediumDetail) Then
-        gSocketLogger.Log showBuffer("In buf: ", lSocketInputData), ProcName, ModuleName, LogLevels.LogLevelMediumDetail
-    End If
+If gSocketLogger.IsLoggable(mRawApiMessageLogLevel) Then
+    gSocketLogger.Log showBuffer("In buf: ", lSocketInputData), ProcName, ModuleName, mRawApiMessageLogLevel
 End If
 
 mBufferedReader.AddData lSocketInputData
@@ -377,21 +375,27 @@ Friend Sub Initialise( _
                 ByVal pPort As Long, _
                 ByVal pBufferedReader As BufferedReader, _
                 ByVal pProgramErrorHandler As IProgramErrorListener, _
-                ByVal pLogTwsMessages As Boolean)
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions)
 If pServer = "" Then pServer = "127.0.0.1"
 mServer = pServer
 mPort = pPort
 Set mBufferedReader = pBufferedReader
 Set mProgramErrorHandler = pProgramErrorHandler
-mLogTwsMessages = pLogTwsMessages
+If pLogRawApiMessages = ApiMessageLoggingOptionAlways Then
+    mRawApiMessageLogLevel = LogLevelNormal
+ElseIf pLogRawApiMessages = ApiMessageLoggingOptionDefault Then
+    mRawApiMessageLogLevel = LogLevelMediumDetail
+Else
+    mRawApiMessageLogLevel = LogLevelNone
+End If
 End Sub
 
 Friend Sub Send(ByRef pData() As Byte)
 Const ProcName As String = "Send"
 On Error GoTo Err
 
-If mLogTwsMessages And gSocketLogger.IsLoggable(LogLevelMediumDetail) Then
-    gSocketLogger.Log showBuffer("Out buf: ", pData), ProcName, ModuleName, LogLevels.LogLevelMediumDetail
+If gSocketLogger.IsLoggable(mRawApiMessageLogLevel) Then
+    gSocketLogger.Log showBuffer("Out buf: ", pData), ProcName, ModuleName, mRawApiMessageLogLevel
 End If
 mSocket.SendData pData
 

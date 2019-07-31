@@ -130,6 +130,8 @@ Case 399
     ' contains information about the order which doesn't invalidate it - for example
     ' order won't be submitted to exchange until start of next trading session
     GetOrderSubmitter(pOrderId).NotifyMessage GetOrder(pOrderId).Id, pErrorMsg
+Case 10148  ' Trying to cancel an order that is already filled or cancelled
+    ' Just ignore this
 Case Else
     GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
     notifyStatus pOrderId, OrderStatuses.OrderStatusRejected

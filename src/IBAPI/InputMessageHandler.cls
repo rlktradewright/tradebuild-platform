@@ -71,7 +71,7 @@ Private mStatsRecorder                              As PerformanceStatsRecorder
 
 Private mProgramErrorHandler                        As IProgramErrorListener
 
-Private mLogTwsMessages                             As Boolean
+Private mLogApiMessageStats                         As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -217,7 +217,7 @@ Friend Sub Initialise( _
                 ByVal pStatsRecorder As PerformanceStatsRecorder, _
                 ByVal pErrorAndNotificationConsumer As IErrorAndNotificationConsumer, _
                 ByVal pProgramErrorHandler As IProgramErrorListener, _
-                ByVal pLogTwsMessages As Boolean)
+                ByVal pLogApiMessageStats As Boolean)
 Set mConnectionNegotiator = pConnectionNegotiator
 Set mReader = pReader
 Set mWriter = pWriter
@@ -225,7 +225,7 @@ Set mStatsRecorder = pStatsRecorder
 mApiConnectionEstablished = False
 Set mErrorAndNotificationConsumer = pErrorAndNotificationConsumer
 Set mProgramErrorHandler = pProgramErrorHandler
-mLogTwsMessages = pLogTwsMessages
+mLogApiMessageStats = pLogApiMessageStats
 End Sub
 
 Friend Sub ProcessData(ByVal pTimeStamp As Date)
@@ -234,7 +234,6 @@ On Error GoTo Err
 
 Static sRetryCount As Long
 
-gLog "Processing socket data", ModuleName, ProcName, , LogLevelDetail
 mReader.BeginCheckpointScope
     
 If Not mApiConnectionEstablished Then
@@ -356,7 +355,7 @@ Static sEventCount As Long
 Const ProcName As String = "updateStats"
 On Error GoTo Err
 
-If mLogTwsMessages Then
+If mLogApiMessageStats Then
     mStatsRecorder.UpdateMessageTypeStats pMessageId, pMessageElapsedTime
     sEventCount = sEventCount + 1
     

@@ -630,20 +630,14 @@ On Error GoTo Err
 mReader.BeginLogMessage True
 
 Static sLostConnectionToIb As Boolean
-Dim id As Long
-Dim lErrorCode As Long
-Dim lErrorMsg As String
-Dim execFilter As TwsExecutionFilter
-Dim index As Long
 
-
-id = mReader.GetLong("Id")
+Dim id As Long: id = mReader.GetLong("Id")
 Debug.Print "Error id: " & id
 
-lErrorCode = mReader.GetLong("Error code")
+Dim lErrorCode As Long: lErrorCode = mReader.GetLong("Error code")
 Debug.Print "Error code: " & lErrorCode
 
-lErrorMsg = mReader.GetString("Error msg")
+Dim lErrorMsg As String: lErrorMsg = mReader.GetString("Error msg")
 Debug.Print "Error msg: " & lErrorMsg
 
 mReader.EndLogMessage

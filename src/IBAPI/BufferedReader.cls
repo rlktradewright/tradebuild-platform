@@ -60,12 +60,14 @@ Private mMessageStartIndex                          As Long
 
 Private mInputMessageHandler                        As InputMessageHandler
 
-Private mDefaultLogTwsMessages                      As Boolean
-Private mLogTwsMessages                             As Boolean
-Private mLogRawMessages                             As Boolean
-Private mForceLogMessage                            As Boolean
+Private mLogApiMessages                             As ApiMessageLoggingOptions
 
-Private mMessageId                              As Long
+Private mApiMessageLogLevel                         As LogLevels
+Private mLogCurrentApiMessage                       As Boolean
+
+Private mRawApiMessageLogLevel                      As LogLevels
+
+Private mMessageId                                  As Long
 Private mVersion                                    As Long
 
 '@================================================================================
@@ -125,39 +127,37 @@ Const ProcName As String = "AddData"
 On Error GoTo Err
 
 Static sProcessingMessages As Boolean
-Dim lBytesReceived As Long
 
-lBytesReceived = UBound(pData) + 1
+Dim lBytesReceived As Long: lBytesReceived = UBound(pData) + 1
 
-If mLogRawMessages Then gLogger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, LogLevels.LogLevelHighDetail
+gLogger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, mRawApiMessageLogLevel
 
 If (mBufferNextFreeIndex = mInputParseIndex) And _
     mMessageStartIndex < 0 _
 Then
     ' no unprocessed data so start at the beginning of the buffer again
-    If mLogRawMessages Then gLogger.Log "Reusing buffer from start", ProcName, ModuleName, LogLevels.LogLevelHighDetail
+    gLogger.Log "Reusing buffer from start", ProcName, ModuleName, mRawApiMessageLogLevel
     mBufferNextFreeIndex = 0
     mInputParseIndex = 0
     mInputParseIndexChk = 0
 End If
 
 If mBufferNextFreeIndex + lBytesReceived <= UBound(mBuffer) + 1 Then
-    If mLogRawMessages Then gLogger.Log "Appending data to buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
+    gLogger.Log "Appending data to buffer", ProcName, ModuleName, mRawApiMessageLogLevel
 Else
     If lBytesReceived <= getFreeBufferSpaceSize Then
         ' copy the existing contents (from the start of the current message) down to the start of the buffer
         If mMessageStartIndex < 0 Then
-            If mLogRawMessages Then gLogger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
+            gLogger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
             moveBufferContents 0, mInputParseIndex, mBufferNextFreeIndex - mInputParseIndex
         Else
-            If mLogRawMessages Then gLogger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, LogLevels.LogLevelHighDetail
+            gLogger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
             moveBufferContents 0, mMessageStartIndex, mBufferNextFreeIndex - mMessageStartIndex
         End If
     Else
-        If mLogRawMessages And gLogger.IsLoggable(LogLevelHighDetail) Then
-            gLogger.Log "Extending buffer to " & CStr(2 * (UBound(mBuffer) + 1) - 1) & " bytes", ProcName, ModuleName, LogLevels.LogLevelHighDetail
-        End If
-        ReDim Preserve mBuffer(2 * (UBound(mBuffer) + 1) - 1) As Byte
+        Dim lNewBound As Long: lNewBound = 2 * (UBound(mBuffer) + 1) - 1
+        gLogger.Log "Extending buffer to " & CStr(lNewBound) & " bytes", ProcName, ModuleName, mRawApiMessageLogLevel
+        ReDim Preserve mBuffer(lNewBound) As Byte
     End If
 End If
 
@@ -199,24 +199,29 @@ Const ProcName As String = "BeginLogMessage"
 On Error GoTo Err
 
 If pForceLog Then
-    mLogTwsMessages = True
-    mForceLogMessage = True
+    mApiMessageLogLevel = LogLevelSevere
+ElseIf mLogApiMessages = ApiMessageLoggingOptionAlways Then
+    mApiMessageLogLevel = LogLevelNormal
+ElseIf mLogApiMessages = ApiMessageLoggingOptionDefault Then
+    mApiMessageLogLevel = LogLevelHighDetail
 Else
-    mLogTwsMessages = mDefaultLogTwsMessages
+    mApiMessageLogLevel = LogLevelNone
 End If
-If mLogTwsMessages Then
+If gSocketLogger.IsLoggable(mApiMessageLogLevel) Then
+    mLogCurrentApiMessage = True
     mInMessageBuilder.Clear
     mInMessageBuilder.Append "IN: "
-    mInMessageBuilder.Append "Msg id"
+    mInMessageBuilder.Append "Msg id "
+    mInMessageBuilder.Append "("
+    mInMessageBuilder.Append gInputMessageIdToString(mMessageId)
+    mInMessageBuilder.Append ")"
     mInMessageBuilder.Append "="
     mInMessageBuilder.Append mMessageId
     mInMessageBuilder.Append ";"
-    mInMessageBuilder.Append "("
-    mInMessageBuilder.Append gInputMessageIdToString(mMessageId)
-    mInMessageBuilder.Append ") "
     mInMessageBuilder.Append "Version"
     mInMessageBuilder.Append "="
     mInMessageBuilder.Append mVersion
+    mInMessageBuilder.Append ";"
 End If
 
 Exit Sub
@@ -259,16 +264,10 @@ Friend Sub EndLogMessage()
 Const ProcName As String = "EndLogMessage"
 On Error GoTo Err
 
-If Not mLogTwsMessages Then Exit Sub
-
-If mForceLogMessage Then
-    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, LogLevelSevere
-ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
-    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, LogLevelHighDetail
+If mLogCurrentApiMessage Then
+    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, mApiMessageLogLevel
 End If
 
-mLogTwsMessages = False
-mForceLogMessage = False
 mMessageId = 0
 
 Exit Sub
@@ -396,7 +395,7 @@ For i = mInputParseIndex To mBufferNextFreeIndex - 1
         'Debug.Print "Got string: mInputIndex=" & mInputParseIndex & " value=" & s
         mInputParseIndex = i + 1
         GetString = s
-        If mLogTwsMessages Then
+        If mLogCurrentApiMessage Then
             mInMessageBuilder.Append pFieldName
             mInMessageBuilder.Append "="
             mInMessageBuilder.Append s
@@ -428,11 +427,17 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pInputMessageHandler As InputMessageHandler, _
-                ByVal pLogTwsMessages As Boolean)
+                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions)
 Set mInputMessageHandler = pInputMessageHandler
-mDefaultLogTwsMessages = pLogTwsMessages
-mLogTwsMessages = pLogTwsMessages
-mLogRawMessages = pLogTwsMessages
+mLogApiMessages = pLogApiMessages
+If pLogRawApiMessages = ApiMessageLoggingOptionAlways Then
+    mRawApiMessageLogLevel = LogLevelNormal
+ElseIf pLogRawApiMessages = ApiMessageLoggingOptionDefault Then
+    mRawApiMessageLogLevel = LogLevelHighDetail
+Else
+    mRawApiMessageLogLevel = LogLevelNone
+End If
 End Sub
 
 Friend Sub Rollback()

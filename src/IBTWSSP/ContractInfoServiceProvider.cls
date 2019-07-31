@@ -208,7 +208,16 @@ Const ProcName As String = "IContractSP_GetContractStore"
 On Error GoTo Err
 
 If mClient Is Nothing Then
-    Set mClient = GetClient(mServer, mPort, mClientID, mSessionID, mConnectionRetryIntervalSecs, True, , Me)
+    Set mClient = GetClient(mServer, _
+                            mPort, _
+                            mClientID, _
+                            mSessionID, _
+                            mConnectionRetryIntervalSecs, _
+                            ApiMessageLoggingOptionDefault, _
+                            ApiMessageLoggingOptionDefault, _
+                            True, _
+                            , _
+                            Me)
     Set mContractStore = mClient.GetContractStore
 End If
 

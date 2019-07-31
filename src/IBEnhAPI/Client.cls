@@ -57,7 +57,9 @@ Private mServer                                     As String
 Private mPort                                       As Long
 Private mClientId                                   As Long
 Private mConnectionRetryIntervalSecs                As Long
-Private mLogTwsMessages                             As Boolean
+Private mLogApiMessages                             As ApiMessageLoggingOptions
+Private mLogRawApiMessages                          As ApiMessageLoggingOptions
+Private mLogApiMessageStats                         As Boolean
 
 Private mTwsConnectionStateListeners                As Listeners
 
@@ -431,7 +433,9 @@ Friend Sub Initialise( _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
                 ByVal pConnectionRetryIntervalSecs As Long, _
-                ByVal pLogTwsMessages As Boolean, _
+                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogApiMessageStats As Boolean, _
                 ByVal pDeferConnection As Boolean, _
                 ByVal pConnectionStateListener As ITwsConnectionStateListener, _
                 ByVal pProgramErrorHandler As IProgramErrorListener, _
@@ -445,7 +449,9 @@ mServer = pServer
 mPort = pPort
 mClientId = pClientId
 mConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
-mLogTwsMessages = pLogTwsMessages
+mLogApiMessages = pLogApiMessages
+mLogRawApiMessages = pLogRawApiMessages
+mLogApiMessageStats = pLogApiMessageStats
 
 Set mTwsAPI = getAPIInstance(pServer, pPort, pClientId)
 
@@ -514,7 +520,13 @@ Private Function getAPIInstance( _
 Const ProcName As String = "getAPIInstance"
 On Error GoTo Err
 
-Set getAPIInstance = GetAPI(pServer, pPort, pClientId, mConnectionRetryIntervalSecs, mLogTwsMessages)
+Set getAPIInstance = GetAPI(pServer, _
+                            pPort, _
+                            pClientId, _
+                            mConnectionRetryIntervalSecs, _
+                            mLogApiMessages, _
+                            mLogRawApiMessages, _
+                            mLogApiMessageStats)
 getAPIInstance.ConnectionStatusConsumer = Me
 
 Exit Function

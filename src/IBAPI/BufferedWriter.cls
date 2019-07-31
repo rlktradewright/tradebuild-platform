@@ -51,6 +51,9 @@ Private mOutputBufferIndex                          As Long
 
 Private mOutMessageBuilder                          As StringBuilder
 
+Private mApiMessageLogLevel                         As LogLevels
+Private mRawApiMessageLogLevel                      As LogLevels
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -198,8 +201,27 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Friend Sub Initialise(ByVal pSocketHandler As SocketHandler)
+Friend Sub Initialise( _
+                ByVal pSocketHandler As SocketHandler, _
+                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions)
 Set mSocketHandler = pSocketHandler
+
+If pLogApiMessages = ApiMessageLoggingOptionAlways Then
+    mApiMessageLogLevel = LogLevelNormal
+ElseIf pLogApiMessages = ApiMessageLoggingOptionDefault Then
+    mApiMessageLogLevel = LogLevelHighDetail
+Else
+    mApiMessageLogLevel = LogLevelNone
+End If
+
+If pLogRawApiMessages = ApiMessageLoggingOptionAlways Then
+    mRawApiMessageLogLevel = LogLevelNormal
+ElseIf pLogRawApiMessages = ApiMessageLoggingOptionDefault Then
+    mRawApiMessageLogLevel = LogLevelHighDetail
+Else
+    mRawApiMessageLogLevel = LogLevelNone
+End If
 End Sub
 
 Friend Sub Send(Optional ByVal forceLogMessage As Boolean)
@@ -226,14 +248,14 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub logSocketOutputMessage(Optional ByVal forceLogMessage As Boolean)
+Private Sub logSocketOutputMessage(Optional ByVal pForceLogMessage As Boolean)
 Const ProcName As String = "logSocketOutputMessage"
 On Error GoTo Err
 
-If forceLogMessage Then
+If pForceLogMessage Then
     gSocketLogger.Log mOutMessageBuilder.ToString, ProcName, ModuleName, LogLevelSevere
-ElseIf gSocketLogger.IsLoggable(LogLevelHighDetail) Then
-    gSocketLogger.Log mOutMessageBuilder.ToString, ProcName, ModuleName, LogLevelHighDetail
+ElseIf gSocketLogger.IsLoggable(mApiMessageLogLevel) Then
+    gSocketLogger.Log mOutMessageBuilder.ToString, ProcName, ModuleName, mApiMessageLogLevel
 End If
 
 Exit Sub

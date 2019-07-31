@@ -84,6 +84,12 @@ Private Const TICK_SHORTABLE                     As Long = 46
 ' Enums
 '@================================================================================
 
+Public Enum ApiMessageLoggingOptions
+    ApiMessageLoggingOptionNone
+    ApiMessageLoggingOptionDefault
+    ApiMessageLoggingOptionAlways
+End Enum
+
 Public Enum TwsAuctionStrategies
     TwsAuctionStrategyMatch = 1
     TwsAuctionStrategyImprovement = 2
@@ -341,11 +347,13 @@ Public Function GetAPI( _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
                 Optional ByVal pConnectionRetryIntervalSecs As Long = 10, _
-                Optional ByVal pLogTwsMessages As Boolean = False) As TwsAPI
+                Optional ByVal pLogApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
+                Optional ByVal pLogRawApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
+                Optional ByVal pLogApiMessageStats As Boolean = False) As TwsAPI
 Const ProcName As String = "GetAPI"
 On Error GoTo Err
 
-Set GetAPI = gGetApi(pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogTwsMessages)
+Set GetAPI = gGetApi(pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogApiMessages, pLogRawApiMessages, pLogApiMessageStats)
 
 Exit Function
 

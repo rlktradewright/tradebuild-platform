@@ -81,7 +81,9 @@ Private mConnectionRetryIntervalSecs                As Long
 
 Private mLogLevel                                   As TwsLogLevels
 
-Private mLogTwsMessages                             As Boolean
+Private mLogApiMessages                             As ApiMessageLoggingOptions
+Private mLogRawApiMessages                          As ApiMessageLoggingOptions
+Private mLogApiMessageStats                         As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -760,14 +762,14 @@ Const ProcName As String = "Connect"
 On Error GoTo Err
 
 Dim lReader As New BufferedReader
-lReader.Initialise mInMessageHandler, mLogTwsMessages
+lReader.Initialise mInMessageHandler, mLogApiMessages, mLogRawApiMessages
 
 Set mSocketHandler = New SocketHandler
-mSocketHandler.Initialise mServer, mPort, lReader, mProgramErrorHandler, mLogTwsMessages
+mSocketHandler.Initialise mServer, mPort, lReader, mProgramErrorHandler, mLogRawApiMessages
 mSocketHandler.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 
 Set mWriter = New BufferedWriter
-mWriter.Initialise mSocketHandler
+mWriter.Initialise mSocketHandler, mLogApiMessages, mLogRawApiMessages
 
 Set mConnectionNegotiator = New ApiConnectionNegotiator
 mConnectionNegotiator.Initialise lReader, mWriter
@@ -778,7 +780,7 @@ mInMessageHandler.Initialise mConnectionNegotiator, _
                             mStatsRecorder, _
                             mErrorAndNotificationConsumer, _
                             mProgramErrorHandler, _
-                            mLogTwsMessages
+                            mLogApiMessageStats
 
 mSocketHandler.Connect
 
@@ -865,7 +867,9 @@ Friend Sub Initialise( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
-                Optional ByVal pLogTwsMessages As Boolean = True)
+                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogApiMessageStats As Boolean)
 AssertArgument pPort > 0, "Port must be > 0"
 
 ' We check the clientId is at most 9 digits when converted to a string, so that
@@ -877,7 +881,9 @@ If pServer = "" Then pServer = "127.0.0.1"
 mServer = pServer
 mPort = pPort
 mClientID = pClientId
-mLogTwsMessages = pLogTwsMessages
+mLogApiMessages = pLogApiMessages
+mLogRawApiMessages = pLogRawApiMessages
+mLogApiMessageStats = pLogApiMessageStats
 End Sub
 
 Public Sub PlaceOrder( _
@@ -2029,6 +2035,7 @@ Private Sub startPerformanceLogging()
 Const ProcName As String = "startPerformanceLogging"
 On Error GoTo Err
 
+If Not mLogApiMessageStats Then Exit Sub
 If Not gLogger.IsLoggable(LogLevelDetail) Then Exit Sub
 startPerformanceTLISecond
 startPerformanceTLIPeriod

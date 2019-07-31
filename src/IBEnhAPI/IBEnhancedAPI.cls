@@ -43,6 +43,12 @@ Public Enum ApiConnectionStates
     ApiConnFailed
 End Enum
 
+Public Enum ApiMessageLoggingOptions
+    ApiMessageLoggingOptionNone = IBAPI970.ApiMessageLoggingOptionNone
+    ApiMessageLoggingOptionDefault = IBAPI970.ApiMessageLoggingOptionDefault
+    ApiMessageLoggingOptionAlways = IBAPI970.ApiMessageLoggingOptionAlways
+End Enum
+
 ' These are defined indentically to those in IBAPI. This is so that users of this
 ' library do not also need a reference to the IBAPI project.
 Public Enum TwsLogLevels
@@ -99,7 +105,9 @@ Public Function GetClient( _
                 ByVal pClientId As Long, _
                 Optional ByVal pSessionID As String, _
                 Optional ByVal pConnectionRetryIntervalSecs As Long = 60, _
-                Optional ByVal pLogTwsMessages As Boolean, _
+                Optional ByVal pLogApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
+                Optional ByVal pLogRawApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
+                Optional ByVal pLogApiMessageStats As Boolean = False, _
                 Optional ByVal pDeferConnection As Boolean, _
                 Optional ByVal pConnectionStateListener As ITwsConnectionStateListener, _
                 Optional ByVal pProgramErrorHandler As IProgramErrorListener, _
@@ -110,7 +118,19 @@ On Error GoTo Err
 
 If pSessionID = "" Then pSessionID = GenerateGUIDString
 
-Set GetClient = gGetClient(pSessionID, pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogTwsMessages, pDeferConnection, pConnectionStateListener, pProgramErrorHandler, pApiErrorListener, pApiNotificationListener)
+Set GetClient = gGetClient(pSessionID, _
+                            pServer, _
+                            pPort, _
+                            pClientId, _
+                            pConnectionRetryIntervalSecs, _
+                            pLogApiMessages, _
+                            pLogRawApiMessages, _
+                            pLogApiMessageStats, _
+                            pDeferConnection, _
+                            pConnectionStateListener, _
+                            pProgramErrorHandler, _
+                            pApiErrorListener, _
+                            pApiNotificationListener)
 
 Exit Function
 

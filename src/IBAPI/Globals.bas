@@ -317,12 +317,14 @@ Public Function gGetApi( _
                 ByVal pPort As String, _
                 ByVal pClientId As Long, _
                 ByVal pConnectionRetryIntervalSecs As Long, _
-                ByVal pLogTwsMessages As Boolean) As TwsAPI
+                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogApiMessageStats As Boolean) As TwsAPI
 Const ProcName As String = "gGetApi"
 On Error GoTo Err
 
 Set gGetApi = New TwsAPI
-gGetApi.Initialise pServer, pPort, pClientId, pLogTwsMessages
+gGetApi.Initialise pServer, pPort, pClientId, pLogApiMessages, pLogRawApiMessages, pLogApiMessageStats
 gGetApi.ConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
 
 Exit Function
@@ -678,9 +680,9 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function gRoundTimeToSecond( _
-                ByVal pTimestamp As Date) As Date
+                ByVal pTimeStamp As Date) As Date
 Const ProcName As String = "gRoundTimeToSecond"
-gRoundTimeToSecond = Int((pTimestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
+gRoundTimeToSecond = Int((pTimeStamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
 End Function
 
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
@@ -786,11 +788,11 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 
 End Function
 
-Public Function gTruncateTimeToNextMinute(ByVal pTimestamp As Date) As Date
+Public Function gTruncateTimeToNextMinute(ByVal pTimeStamp As Date) As Date
 Const ProcName As String = "gTruncateTimeToNextMinute"
 On Error GoTo Err
 
-gTruncateTimeToNextMinute = Int((pTimestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
+gTruncateTimeToNextMinute = Int((pTimeStamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
 
 Exit Function
 
@@ -798,11 +800,11 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Public Function gTruncateTimeToMinute(ByVal pTimestamp As Date) As Date
+Public Function gTruncateTimeToMinute(ByVal pTimeStamp As Date) As Date
 Const ProcName As String = "gTruncateTimeToMinute"
 On Error GoTo Err
 
-gTruncateTimeToMinute = Int((pTimestamp + OneMicrosecond) / OneMinute) * OneMinute
+gTruncateTimeToMinute = Int((pTimeStamp + OneMicrosecond) / OneMinute) * OneMinute
 
 Exit Function
 

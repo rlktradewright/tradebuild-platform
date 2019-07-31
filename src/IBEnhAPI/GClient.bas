@@ -60,7 +60,9 @@ Public Function gGetClient( _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
                 ByVal pConnectionRetryIntervalSecs As Long, _
-                ByVal pLogTwsMessages As Boolean, _
+                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogApiMessageStats As Boolean, _
                 ByVal pDeferConnection As Boolean, _
                 ByVal pConnectionStateListener As ITwsConnectionStateListener, _
                 ByVal pProgramErrorHandler As IProgramErrorListener, _
@@ -79,7 +81,19 @@ If Not mClientCollection.Contains(lKey) Then
     Set gGetClient = New Client
     mClientCollection.Add gGetClient, lKey
     
-    gGetClient.Initialise pSessionID, pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogTwsMessages, pDeferConnection, pConnectionStateListener, pProgramErrorHandler, pApiErrorListener, pApiNotificationListener
+    gGetClient.Initialise pSessionID, _
+                        pServer, _
+                        pPort, _
+                        pClientId, _
+                        pConnectionRetryIntervalSecs, _
+                        pLogApiMessages, _
+                        pLogRawApiMessages, _
+                        pLogApiMessageStats, _
+                        pDeferConnection, _
+                        pConnectionStateListener, _
+                        pProgramErrorHandler, _
+                        pApiErrorListener, _
+                        pApiNotificationListener
 Else
     Set gGetClient = mClientCollection(lKey)
     Assert gGetClient.SessionID = pSessionID, "Client already started in another session"
