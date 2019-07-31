@@ -207,7 +207,7 @@ Private Sub processPM( _
 Const ProcName As String = "processPM"
 On Error GoTo Err
 
-If mGroupName <> "" And pm.GroupName <> mGroupName Then Exit Sub
+If mGroupName <> "" And (pm.GroupName <> mGroupName) Then Exit Sub
 
 If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then Exit Sub
 

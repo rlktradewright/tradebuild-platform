@@ -882,13 +882,13 @@ If UCase$(pParams) = All Then
     mCloseoutProcessor.CloseoutAll
     gInputPaused = True
 ElseIf UCase$(pParams) = DefaultOrderGroupName Then
-    mCloseoutProcessor.CloseoutGroup UCase$(pParams)
+    mCloseoutProcessor.CloseoutGroup DefaultOrderGroupName
     gInputPaused = True
-ElseIf UCase$(pParams) <> "" Then
+ElseIf pParams <> "" Then
     If Not isGroupValid(pParams) Then
         gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore"
     Else
-        mCloseoutProcessor.CloseoutGroup UCase$(pParams)
+        mCloseoutProcessor.CloseoutGroup pParams
         gInputPaused = True
     End If
 Else
