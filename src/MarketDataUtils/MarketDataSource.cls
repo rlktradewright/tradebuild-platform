@@ -673,6 +673,20 @@ Public Property Get ContractFuture() As IFuture
 Set ContractFuture = mContractFuture
 End Property
 
+Public Property Get CurrentQuote(ByVal pTickType As TickTypes) As Quote
+Const ProcName As String = "CurrentQuote"
+On Error GoTo Err
+
+checkNotFinished
+Assert mState = MarketDataSourceStateRunning, "Not in Running state"
+CurrentQuote = DataSourceBase.GetCurrentQuote(pTickType)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get CurrentTick(ByVal pTickType As TickTypes) As GenericTick
 Const ProcName As String = "CurrentTick"
 On Error GoTo Err
@@ -681,20 +695,6 @@ checkNotFinished
 
 Assert mState = MarketDataSourceStateRunning, "Not in Running state"
 CurrentTick = DataSourceBase.GetCurrentTick(pTickType)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get CurrentQuote(ByVal pTickType As TickTypes) As Quote
-Const ProcName As String = "CurrentQuote"
-On Error GoTo Err
-
-checkNotFinished
-Assert mState = MarketDataSourceStateRunning, "Not in Running state"
-CurrentQuote = DataSourceBase.GetCurrentQuote(pTickType)
 
 Exit Property
 

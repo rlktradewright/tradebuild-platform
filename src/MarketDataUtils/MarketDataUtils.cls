@@ -153,6 +153,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function GetCurrentTickSummary(ByVal pDataSource As IMarketDataSource) As String
+Const ProcName As String = "GetCurrentTickSummary"
+On Error GoTo Err
+
+GetCurrentTickSummary = gGetCurrentTickSummary(pDataSource)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function GetFormattedPriceFromQuoteEvent(ByRef ev As QuoteEventData) As String
 Dim lDataSource As IMarketDataSource
 Const ProcName As String = "GetFormattedPriceFromQuoteEvent"
