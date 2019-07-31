@@ -89,9 +89,7 @@ On Error GoTo Err
 
 Set mContractProcessor = gNotifyContractFutureAvailable(ev.Future)
 
-If Not mContractProcessor Is Nothing Then
-    If mContractProcessor.IsReadyToPlaceOrders Then processContinuationData
-End If
+If Not mContractProcessor Is Nothing Then processContinuationData
 
 gInputPaused = False
 
@@ -143,9 +141,9 @@ On Error GoTo Err
 
 If mContinuationData Is Nothing Then
 ElseIf mContinuationData.Action = OrderActionBuy Then
-    If mContractProcessor.ProcessBuyCommand(mContinuationData.Params) And Not mBatchOrders Then gProcessOrders
+    If mContractProcessor.ProcessBuyCommand(mContinuationData.Params) And Not mBatchOrders Then gPlaceOrdersTask.AddContractProcessor mContractProcessor, mContinuationData.StageOrders
 ElseIf mContinuationData.Action = OrderActionSell Then
-    If mContractProcessor.ProcessSellCommand(mContinuationData.Params) And Not mBatchOrders Then gProcessOrders
+    If mContractProcessor.ProcessSellCommand(mContinuationData.Params) And Not mBatchOrders Then gPlaceOrdersTask.AddContractProcessor mContractProcessor, mContinuationData.StageOrders
 End If
 
 gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand, CloseoutCommand

@@ -139,6 +139,7 @@ Friend Sub CloseoutGroup(ByVal pGroupName As String)
 Const ProcName As String = "CloseoutGroup"
 On Error GoTo Err
 
+AssertArgument mOrderManager.GetGroupNames.Contains(pGroupName), "No such group"
 mFutureWaiter.Add mOrderManager.CloseGroupPositions(pGroupName)
 
 Exit Sub

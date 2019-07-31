@@ -29,9 +29,9 @@ Option Explicit
 Public Const ProjectName                            As String = "plord27"
 Private Const ModuleName                            As String = "MainMod"
 
+Private Const ApiMessageLoggingSwitch               As String = "APIMESSAGELOGGING"
 Private Const BatchOrdersSwitch                     As String = "BATCHORDERS"
 Private Const LogFileSwitch                         As String = "LOG"
-Private Const LogApiMessages                        As String = "LOGAPIMESSAGES"
 Private Const MonitorSwitch                         As String = "MONITOR"
 Private Const ResultsDirSwitch                      As String = "RESULTSDIR"
 Private Const RecoveryFileDirSwitch                 As String = "RECOVERYFILEDIR"
@@ -126,6 +126,10 @@ Public gLogToConsole                                As Boolean
 Public gInputPaused                                 As Boolean
 
 Public gNumberOfOrdersPlaced                        As Long
+
+Public gPlaceOrdersTask                             As PlaceOrdersTask
+
+Public gBracketOrderListener                       As New BracketOrderListener
 
 Private mErrorCount                                 As Long
 
@@ -299,28 +303,6 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
-Public Sub gProcessOrders()
-Const ProcName As String = "gProcessOrders"
-On Error GoTo Err
-
-' we need to tell each ContractProcessor to submit
-' its orders. To avoid exceeding the API's input message limits, we do this
-' asynchronously with a task, which means we need to inhibit user input
-' until it has completed.
-gInputPaused = True
-
-Dim t As New PlaceOrdersTask
-t.Initialise mContractProcessors, mStageOrders, mMonitor
-StartTask t, PriorityNormal
-
-setupResultsLogging mClp
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Public Sub gSetValidNextCommands(ParamArray values() As Variant)
 ReDim mValidNextCommands(UBound(values)) As String
 Dim i As Long
@@ -339,18 +321,17 @@ gLogger.Log "StdErr: " & s, ProcName, ModuleName
 mErrorCount = mErrorCount + 1
 End Sub
 
-Public Sub gWriteLineToConsole(ByVal pMessage As String)
+Public Sub gWriteLineToConsole(ByVal pMessage As String, Optional ByVal pLogit As Boolean)
 Const ProcName As String = "gWriteLineToConsole"
 
-gLogger.Log "Con: " & pMessage, ProcName, ModuleName
+If pLogit Then gLogger.Log "Con: " & pMessage, ProcName, ModuleName
 gCon.WriteLineToConsole pMessage
 End Sub
 
 Public Sub gWriteLineToStdOut(ByVal pMessage As String)
 Const ProcName As String = "gWriteLineToStdOut"
 
-gLogger.Log "StdOut: " & pMessage, ProcName, ModuleName
-LogMessage pMessage
+LogMessage "StdOut: " & pMessage
 gCon.WriteLine pMessage
 End Sub
 
@@ -379,15 +360,35 @@ Set gCon = GetConsole
 
 logProgramId
 
+Set gPlaceOrdersTask = New PlaceOrdersTask
+StartTask gPlaceOrdersTask, PriorityNormal
+
 Set mGroupContractProcessors = CreateSortedDictionary(KeyTypeString)
 
 Set mClp = CreateCommandLineParser(command)
-If setupTws(mClp.SwitchValue(TwsSwitch), mClp.Switch(SimulateOrdersSwitch), mClp.Switch(LogApiMessages)) Then
-    process
-Else
+
+Dim lLogApiMessages As ApiMessageLoggingOptions
+Dim lLogRawApiMessages As ApiMessageLoggingOptions
+Dim lLogApiMessageStats As Boolean
+If Not validateApiMessageLogging( _
+                mClp.SwitchValue(ApiMessageLoggingSwitch), _
+                lLogApiMessages, _
+                lLogRawApiMessages, _
+                lLogApiMessageStats) Then
+    gWriteLineToConsole "API message logging setting is invalid"
+    Exit Sub
+End If
+
+If Not setupTwsApi(mClp.SwitchValue(TwsSwitch), _
+                mClp.Switch(SimulateOrdersSwitch), _
+                lLogApiMessages, _
+                lLogRawApiMessages, _
+                lLogApiMessageStats) Then
     showUsage
     Exit Sub
 End If
+
+process
 
 If mMonitor And gNumberOfOrdersPlaced > 0 Then
     Do While True
@@ -537,15 +538,14 @@ On Error GoTo Err
 Dim s As String
 s = App.ProductName & " V" & App.Major & "." & App.Minor & "." & App.Revision & vbCrLf & _
     App.LegalCopyright
-gWriteLineToConsole s
+gWriteLineToConsole s, False
 s = s & vbCrLf & "Arguments: " & command
-gLogger.Log s, ProcName, ModuleName
+LogMessage s
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Public Function padStringRight(ByVal pInput As String, ByVal pLength As Long) As String
@@ -700,11 +700,11 @@ Do While inString <> gCon.EofString
         ' the FileAutoReader program sends blank lines very frequently
     ElseIf Left$(inString, 1) = "#" Then
         ' ignore comments except log and write to console
-        gLogger.Log "StdIn: " & inString, ProcName, ModuleName
+        LogMessage "StdIn: " & inString
         gWriteLineToConsole inString
     Else
         mLineNumber = mLineNumber + 1
-        gLogger.Log "StdIn: " & inString, ProcName, ModuleName
+        LogMessage "StdIn: " & inString
         If Not processCommand(inString) Then Exit Do
     End If
     
@@ -769,8 +769,9 @@ Else
         mContractProcessor.ProcessTargetCommand Params
     Case EndBracketCommand
         mContractProcessor.ProcessEndBracketCommand
-        If mErrorCount = 0 And Not mBatchOrders Then gProcessOrders
+        If mErrorCount = 0 And Not mBatchOrders Then processOrders
     Case EndOrdersCommand
+        gWriteLineToStdOut EndOrdersCommand
         processEndOrdersCommand
     Case ResetCommand
         processResetCommand
@@ -839,6 +840,7 @@ If Not IsInteger(lArg0, 1) Then
     Dim lData As New BuySellCommandData
     lData.Action = pAction
     lData.Params = Right$(pParams, Len(pParams) - Len(lArg0))
+    lData.StageOrders = mStageOrders
     
     Dim lResolver As New ContractResolver
     lResolver.Initialise lContractSpec, mContractStore, lData, mBatchOrders
@@ -846,9 +848,9 @@ If Not IsInteger(lArg0, 1) Then
     gInputPaused = True
 ElseIf Not mContractProcessor Is Nothing Then
     If pAction = OrderActionBuy Then
-        If mContractProcessor.ProcessBuyCommand(pParams) And Not mBatchOrders Then gProcessOrders
+        If mContractProcessor.ProcessBuyCommand(pParams) And Not mBatchOrders Then processOrders
     Else
-        If mContractProcessor.ProcessSellCommand(pParams) And Not mBatchOrders Then gProcessOrders
+        If mContractProcessor.ProcessSellCommand(pParams) And Not mBatchOrders Then processOrders
     End If
 Else
     gWriteErrorLine "No contract has been specified in this group"
@@ -898,6 +900,10 @@ End If
 Exit Sub
 
 Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description
+    Exit Sub
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -965,7 +971,7 @@ If getNumberOfUnprocessedOrders = 0 Then
     Exit Sub
 End If
 
-gProcessOrders
+processOrders
 
 Exit Sub
 
@@ -989,6 +995,25 @@ If Not mContractProcessor Is Nothing Then
 Else
     gSetValidNextCommands ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
 End If
+End Sub
+
+Private Sub processOrders()
+Const ProcName As String = "processOrders"
+On Error GoTo Err
+
+' To avoid exceeding the API's input message limits, we process orders
+' asynchronously with a task
+
+gPlaceOrdersTask.AddContractProcessors mContractProcessors, mStageOrders
+
+setupResultsLogging mClp
+
+gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processListCommand( _
@@ -1171,11 +1196,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function setupTws( _
+Private Function setupTwsApi( _
                 ByVal SwitchValue As String, _
                 ByVal pSimulateOrders As Boolean, _
-                ByVal pLogApiMessages As Boolean) As Boolean
-Const ProcName As String = "setupTws"
+                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogApiMessageStats As Boolean) As Boolean
+Const ProcName As String = "setupTwsApi"
 On Error GoTo Err
 
 Dim lClp As CommandLineParser
@@ -1194,18 +1221,23 @@ If port = "" Then
     port = 7496
 ElseIf Not IsInteger(port, 0) Then
     gWriteErrorLine "port must be an integer > 0"
-    setupTws = False
+    setupTwsApi = False
 End If
     
 If clientId = "" Then
     clientId = DefaultClientId
 ElseIf Not IsInteger(clientId, 0, 999999999) Then
     gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999"
-    setupTws = False
+    setupTwsApi = False
 End If
 
 Dim lTwsClient As Client
-Set lTwsClient = GetClient(server, CLng(port), CLng(clientId), pLogTwsMessages:=pLogApiMessages)
+Set lTwsClient = GetClient(server, _
+                        CLng(port), _
+                        CLng(clientId), _
+                        pLogApiMessages:=pLogApiMessages, _
+                        pLogRawApiMessages:=pLogRawApiMessages, _
+                        pLogApiMessageStats:=pLogApiMessageStats)
 
 Set mContractStore = lTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(lTwsClient.GetMarketDataFactory)
@@ -1219,7 +1251,7 @@ Else
     Set mOrderSubmitterFactory = lTwsClient
 End If
     
-setupTws = True
+setupTwsApi = True
 
 Exit Function
 
@@ -1228,188 +1260,241 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub showCloseoutHelp()
-gCon.WriteLineToConsole "    closeoutcommand   ::= closeout [ <groupname> | ALL ])"
+gWriteLineToConsole "    closeoutcommand  ::= closeout [ <groupname> | ALL ])"
+gWriteLineToConsole "                                  [ LMT:<percentofspread> ]"
+gWriteLineToConsole ""
+gWriteLineToConsole "    percentofspread  ::= DOUBLE"
+gWriteLineToConsole ""
 End Sub
 
 Public Sub showContractHelp()
-gCon.WriteLineToConsole "    contractcommand  ::= contract [ <localsymbol>[@<exchangename>]"
-gCon.WriteLineToConsole "                                  | <localsymbol>@SMART/<routinghint>"
-gCon.WriteLineToConsole "                                  | /<specifier>[;/<specifier>]..."
-gCon.WriteLineToConsole "                                  ] NEWLINE"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "    specifier ::= [ local[symbol]:<localsymbol>"
-gCon.WriteLineToConsole "                  | symb[ol]:<symbol>"
-gCon.WriteLineToConsole "                  | sec[type]:[ STK | FUT | FOP | CASH | OPT]"
-gCon.WriteLineToConsole "                  | exch[ange]:<exchangename>"
-gCon.WriteLineToConsole "                  | curr[ency]:<currencycode>"
-gCon.WriteLineToConsole "                  | exp[iry]:[yyyymm | yyyymmdd | <offset>]"
-gCon.WriteLineToConsole "                  | mult[iplier]:<multiplier>"
-gCon.WriteLineToConsole "                  | str[ike]:<price>"
-gCon.WriteLineToConsole "                  | right:[ CALL | PUT ]"
-gCon.WriteLineToConsole "                  ]"
-gCon.WriteLineToConsole ""
+gWriteLineToConsole "    contractcommand  ::= contract [ <localsymbol>[@<exchangename>]"
+gWriteLineToConsole "                                  | <localsymbol>@SMART/<routinghint>"
+gWriteLineToConsole "                                  | /<specifier>[;/<specifier>]..."
+gWriteLineToConsole "                                  ] NEWLINE"
+gWriteLineToConsole ""
+gWriteLineToConsole "    specifier ::= [ local[symbol]:<localsymbol>"
+gWriteLineToConsole "                  | symb[ol]:<symbol>"
+gWriteLineToConsole "                  | sec[type]:[ STK | FUT | FOP | CASH | OPT]"
+gWriteLineToConsole "                  | exch[ange]:<exchangename>"
+gWriteLineToConsole "                  | curr[ency]:<currencycode>"
+gWriteLineToConsole "                  | exp[iry]:[yyyymm | yyyymmdd | <offset>]"
+gWriteLineToConsole "                  | mult[iplier]:<multiplier>"
+gWriteLineToConsole "                  | str[ike]:<price>"
+gWriteLineToConsole "                  | right:[ CALL | PUT ]"
+gWriteLineToConsole "                  ]"
+gWriteLineToConsole ""
 End Sub
 
 Private Sub showListHelp()
-gCon.WriteLineToConsole "    listcommand   ::= list [groups | positions | trades])"
+gWriteLineToConsole "    listcommand  ::= list [groups | positions | trades])"
 End Sub
 
 Private Sub showOrderHelp()
-gCon.WriteLineToConsole "    buycommand  ::= buy [<contract>] <quantity> <entryordertype> "
-gCon.WriteLineToConsole "                        [<price> [<triggerprice]]"
-gCon.WriteLineToConsole "                        [/<bracketattr> | /<orderattr>]... NEWLINE"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "    sellcommand ::= sell [<contract>] <quantity> <entryordertype> "
-gCon.WriteLineToConsole "                         [/<bracketattr> | /<orderattr>]... NEWLINE"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "    bracketcommand ::= bracket <action> <quantity> [/<bracketattr>]... NEWLINE"
-gCon.WriteLineToConsole "                       entry <entryordertype> [/<orderattr>]...  NEWLINE"
-gCon.WriteLineToConsole "                       [stoploss <stoplossorderType> [/<orderattr>]...  NEWLINE]"
-gCon.WriteLineToConsole "                       [target <targetorderType> [/<orderattr>]...  ] NEWLINE"
-gCon.WriteLineToConsole "                       endbracket NEWLINE"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "    action     ::= [ buy | sell ]"
-gCon.WriteLineToConsole "    quantity   ::= INTEGER >= 1"
-gCon.WriteLineToConsole "    entryordertype  ::= [ mkt"
-gCon.WriteLineToConsole "                        | lmt"
-gCon.WriteLineToConsole "                        | stp"
-gCon.WriteLineToConsole "                        | stplmt"
-gCon.WriteLineToConsole "                        | mit"
-gCon.WriteLineToConsole "                        | lit"
-gCon.WriteLineToConsole "                        | moc"
-gCon.WriteLineToConsole "                        | loc"
-gCon.WriteLineToConsole "                        | trail"
-gCon.WriteLineToConsole "                        | traillmt"
-gCon.WriteLineToConsole "                        | mtl"
-gCon.WriteLineToConsole "                        | moo"
-gCon.WriteLineToConsole "                        | loo"
-gCon.WriteLineToConsole "                        | bid"
-gCon.WriteLineToConsole "                        | ask"
-gCon.WriteLineToConsole "                        | last"
-gCon.WriteLineToConsole "                        ]"
-gCon.WriteLineToConsole "    stoplossordertype  ::= [ mkt"
-gCon.WriteLineToConsole "                           | stp"
-gCon.WriteLineToConsole "                           | stplmt"
-gCon.WriteLineToConsole "                           | auto"
-gCon.WriteLineToConsole "                           | trail"
-gCon.WriteLineToConsole "                           | traillmt"
-gCon.WriteLineToConsole "                           ]"
-gCon.WriteLineToConsole "    targetordertype  ::= [ mkt"
-gCon.WriteLineToConsole "                         | lmt"
-gCon.WriteLineToConsole "                         | mit"
-gCon.WriteLineToConsole "                         | lit"
-gCon.WriteLineToConsole "                         | mtl"
-gCon.WriteLineToConsole "                         | auto"
-gCon.WriteLineToConsole "                         ]"
-gCon.WriteLineToConsole "    orderattr  ::= [ price:<price>"
-gCon.WriteLineToConsole "                   | trigger[price]:<price>"
-gCon.WriteLineToConsole "                   | trailby:<numberofticks>"
-gCon.WriteLineToConsole "                   | trailpercent:<percentage>"
-gCon.WriteLineToConsole "                   | offset:<numberofticks>"
-gCon.WriteLineToConsole "                   | tif:<tifvalue>"
-gCon.WriteLineToConsole "                   ]"
-gCon.WriteLineToConsole "    bracketattr  ::= [ cancelafter:<canceltime>"
-gCon.WriteLineToConsole "                     | cancelprice:<price>"
-gCon.WriteLineToConsole "                     | goodaftertime:DATETIME"
-gCon.WriteLineToConsole "                     | goodtilldate:DATETIME"
-gCon.WriteLineToConsole "                     | timezone:TIMEZONENAME"
-gCon.WriteLineToConsole "                     ]"
-gCon.WriteLineToConsole "    price  ::= DOUBLE"
-gCon.WriteLineToConsole "    numberofticks  ::= INTEGER"
-gCon.WriteLineToConsole "    percentage  ::= DOUBLE <= 10.0"
-gCon.WriteLineToConsole "    tifvalue  ::= [ DAY"
-gCon.WriteLineToConsole "                  | GTC"
-gCon.WriteLineToConsole "                  | IOC"
-gCon.WriteLineToConsole "                  ]"
+gWriteLineToConsole "    buycommand  ::= buy [<contract>] <quantity> <entryordertype> "
+gWriteLineToConsole "                        [<price> [<triggerprice]]"
+gWriteLineToConsole "                        [/<bracketattr> | /<orderattr>]... NEWLINE"
+gWriteLineToConsole ""
+gWriteLineToConsole "    sellcommand ::= sell [<contract>] <quantity> <entryordertype> "
+gWriteLineToConsole "                         [/<bracketattr> | /<orderattr>]... NEWLINE"
+gWriteLineToConsole ""
+gWriteLineToConsole "    bracketcommand ::= bracket <action> <quantity> [/<bracketattr>]... NEWLINE"
+gWriteLineToConsole "                       entry <entryordertype> [/<orderattr>]...  NEWLINE"
+gWriteLineToConsole "                       [stoploss <stoplossorderType> [/<orderattr>]...  NEWLINE]"
+gWriteLineToConsole "                       [target <targetorderType> [/<orderattr>]...  ] NEWLINE"
+gWriteLineToConsole "                       endbracket NEWLINE"
+gWriteLineToConsole ""
+gWriteLineToConsole "    action     ::= [ buy | sell ]"
+gWriteLineToConsole "    quantity   ::= INTEGER >= 1"
+gWriteLineToConsole "    entryordertype  ::= [ mkt"
+gWriteLineToConsole "                        | lmt"
+gWriteLineToConsole "                        | stp"
+gWriteLineToConsole "                        | stplmt"
+gWriteLineToConsole "                        | mit"
+gWriteLineToConsole "                        | lit"
+gWriteLineToConsole "                        | moc"
+gWriteLineToConsole "                        | loc"
+gWriteLineToConsole "                        | trail"
+gWriteLineToConsole "                        | traillmt"
+gWriteLineToConsole "                        | mtl"
+gWriteLineToConsole "                        | moo"
+gWriteLineToConsole "                        | loo"
+gWriteLineToConsole "                        | bid"
+gWriteLineToConsole "                        | ask"
+gWriteLineToConsole "                        | last"
+gWriteLineToConsole "                        ]"
+gWriteLineToConsole "    stoplossordertype  ::= [ mkt"
+gWriteLineToConsole "                           | stp"
+gWriteLineToConsole "                           | stplmt"
+gWriteLineToConsole "                           | auto"
+gWriteLineToConsole "                           | trail"
+gWriteLineToConsole "                           | traillmt"
+gWriteLineToConsole "                           ]"
+gWriteLineToConsole "    targetordertype  ::= [ mkt"
+gWriteLineToConsole "                         | lmt"
+gWriteLineToConsole "                         | mit"
+gWriteLineToConsole "                         | lit"
+gWriteLineToConsole "                         | mtl"
+gWriteLineToConsole "                         | auto"
+gWriteLineToConsole "                         ]"
+gWriteLineToConsole "    orderattr  ::= [ price:<price>"
+gWriteLineToConsole "                   | trigger[price]:<price>"
+gWriteLineToConsole "                   | trailby:<numberofticks>"
+gWriteLineToConsole "                   | trailpercent:<percentage>"
+gWriteLineToConsole "                   | offset:<numberofticks>"
+gWriteLineToConsole "                   | tif:<tifvalue>"
+gWriteLineToConsole "                   ]"
+gWriteLineToConsole "    bracketattr  ::= [ cancelafter:<canceltime>"
+gWriteLineToConsole "                     | cancelprice:<price>"
+gWriteLineToConsole "                     | goodaftertime:DATETIME"
+gWriteLineToConsole "                     | goodtilldate:DATETIME"
+gWriteLineToConsole "                     | timezone:TIMEZONENAME"
+gWriteLineToConsole "                     ]"
+gWriteLineToConsole "    price  ::= DOUBLE"
+gWriteLineToConsole "    numberofticks  ::= INTEGER"
+gWriteLineToConsole "    percentage  ::= DOUBLE <= 10.0"
+gWriteLineToConsole "    tifvalue  ::= [ DAY"
+gWriteLineToConsole "                  | GTC"
+gWriteLineToConsole "                  | IOC"
+gWriteLineToConsole "                  ]"
 
 End Sub
 
 Private Sub showReverseHelp()
-gCon.WriteLineToConsole "    reversecommand   ::= reverse [ <groupname> | ALL ])"
+gWriteLineToConsole "    reversecommand   ::= reverse [ <groupname> | ALL ])"
 End Sub
 
 Private Sub showStdInHelp()
-gCon.WriteLineToConsole "StdIn Format:"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "#comment NEWLINE"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "[stageorders [yes|no|default] NEWLINE]"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "[group [<groupname>] NEWLINE]"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "<contractcommand>"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "[<buycommand>|<sellcommand>|<bracketcommand>]..."
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "endorders NEWLINE"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "reset NEWLINE"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "<listcommand>"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "<closeoutcommand>"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "<reversecommand>"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "where"
-gCon.WriteLineToConsole ""
+gWriteLineToConsole "StdIn Format:"
+gWriteLineToConsole ""
+gWriteLineToConsole "#comment NEWLINE"
+gWriteLineToConsole ""
+gWriteLineToConsole "[stageorders [yes|no|default] NEWLINE]"
+gWriteLineToConsole ""
+gWriteLineToConsole "[group [<groupname>] NEWLINE]"
+gWriteLineToConsole ""
+gWriteLineToConsole "<contractcommand>"
+gWriteLineToConsole ""
+gWriteLineToConsole "[<buycommand>|<sellcommand>|<bracketcommand>]..."
+gWriteLineToConsole ""
+gWriteLineToConsole "endorders NEWLINE"
+gWriteLineToConsole ""
+gWriteLineToConsole "reset NEWLINE"
+gWriteLineToConsole ""
+gWriteLineToConsole "<listcommand>"
+gWriteLineToConsole ""
+gWriteLineToConsole "<closeoutcommand>"
+gWriteLineToConsole ""
+gWriteLineToConsole "<reversecommand>"
+gWriteLineToConsole ""
+gWriteLineToConsole "where"
+gWriteLineToConsole ""
 showContractHelp
-gCon.WriteLineToConsole ""
+gWriteLineToConsole ""
 showOrderHelp
-gCon.WriteLineToConsole ""
+gWriteLineToConsole ""
 showListHelp
-gCon.WriteLineToConsole ""
+gWriteLineToConsole ""
 showCloseoutHelp
-gCon.WriteLineToConsole ""
+gWriteLineToConsole ""
 showReverseHelp
 End Sub
 
 Private Sub showStdOutHelp()
-gCon.WriteLineToConsole "StdOut Format:"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "CONTRACT <contractdetails>"
-gCon.WriteLineToConsole "TIME <timestamp>"
-gCon.WriteLineToConsole "<orderdetails>"
-gCon.WriteLineToConsole "<bracketorderdetails>"
-gCon.WriteLineToConsole "ENDORDERS"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "  where"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "    contractdetails      ::= same format as for contract input"
-gCon.WriteLineToConsole "    timestamp            ::= yyyy-mm-dd hh:mm:ss"
-gCon.WriteLineToConsole "    orderdetails         ::= Same format as single order input"
-gCon.WriteLineToConsole "    bracketorderdetails  ::= Same format as bracket order input"
+gWriteLineToConsole "StdOut Format:"
+gWriteLineToConsole ""
+gWriteLineToConsole "CONTRACT <contractdetails>"
+gWriteLineToConsole "TIME <timestamp>"
+gWriteLineToConsole "<orderdetails>"
+gWriteLineToConsole "<bracketorderdetails>"
+gWriteLineToConsole "ENDORDERS"
+gWriteLineToConsole ""
+gWriteLineToConsole "  where"
+gWriteLineToConsole ""
+gWriteLineToConsole "    contractdetails      ::= same format as for contract input"
+gWriteLineToConsole "    timestamp            ::= yyyy-mm-dd hh:mm:ss"
+gWriteLineToConsole "    orderdetails         ::= Same format as single order input"
+gWriteLineToConsole "    bracketorderdetails  ::= Same format as bracket order input"
 End Sub
 
 Private Sub showUsage()
-gCon.WriteLineToConsole "Usage:"
-gCon.WriteLineToConsole "plord27 -tws[:[<twsserver>][,[<port>][,[<clientid>]]]] [-monitor[:[yes|no]]] "
-gCon.WriteLineToConsole "       [-resultsdir:<resultspath>] [-stopAt:<hh:mm>] [-log:<logfilepath>]"
-gCon.WriteLineToConsole "       [-loglevel:[ I | N | D | M | H }]"
-gCon.WriteLineToConsole "       [-stageorders[:[yes|no]]]"
-gCon.WriteLineToConsole "       [-simulateorders] [-logapimessages]"
-gCon.WriteLineToConsole "       [-scopename:<scope>] [-recoveryfiledir:<recoverypath>]"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "  where"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "    twsserver  ::= STRING name or IP address of computer where TWS/Gateway"
-gCon.WriteLineToConsole "                          is running"
-gCon.WriteLineToConsole "    port       ::= INTEGER port to be used for API connection"
-gCon.WriteLineToConsole "    clientid   ::= INTEGER client id >=0 to be used for API connection (default"
-gCon.WriteLineToConsole "                           value is " & DefaultClientId & ")"
-gCon.WriteLineToConsole "    resultspath ::= path to the folder in which results files are to be created"
-gCon.WriteLineToConsole "                    (defaults to the logfile path)"
-gCon.WriteLineToConsole "    logfilepath ::= path to the folder where the program logfile is to be"
-gCon.WriteLineToConsole "                    created"
-gCon.WriteLineToConsole "    scope       ::= order recovery scope name"
-gCon.WriteLineToConsole "    recoverypath ::= path to the folder in which order recovery files are to"
-gCon.WriteLineToConsole "                     be created(defaults to the logfile path)"
-gCon.WriteLineToConsole ""
+gWriteLineToConsole "Usage:"
+gWriteLineToConsole "plord27 -tws[:[<twsserver>][,[<port>][,[<clientid>]]]] [-monitor[:[yes|no]]] "
+gWriteLineToConsole "       [-resultsdir:<resultspath>] [-stopAt:<hh:mm>] [-log:<logfilepath>]"
+gWriteLineToConsole "       [-loglevel:[ I | N | D | M | H }]"
+gWriteLineToConsole "       [-stageorders[:[yes|no]]]"
+gWriteLineToConsole "       [-simulateorders] [-apimessagelogging:[D|A|N][D|A|N][Y|N]]"
+gWriteLineToConsole "       [-scopename:<scope>] [-recoveryfiledir:<recoverypath>]"
+gWriteLineToConsole ""
+gWriteLineToConsole "  where"
+gWriteLineToConsole ""
+gWriteLineToConsole "    twsserver  ::= STRING name or IP address of computer where TWS/Gateway"
+gWriteLineToConsole "                          is running"
+gWriteLineToConsole "    port       ::= INTEGER port to be used for API connection"
+gWriteLineToConsole "    clientid   ::= INTEGER client id >=0 to be used for API connection (default"
+gWriteLineToConsole "                           value is " & DefaultClientId & ")"
+gWriteLineToConsole "    resultspath ::= path to the folder in which results files are to be created"
+gWriteLineToConsole "                    (defaults to the logfile path)"
+gWriteLineToConsole "    logfilepath ::= path to the folder where the program logfile is to be"
+gWriteLineToConsole "                    created"
+gWriteLineToConsole "    scope       ::= order recovery scope name"
+gWriteLineToConsole "    recoverypath ::= path to the folder in which order recovery files are to"
+gWriteLineToConsole "                     be created(defaults to the logfile path)"
+gWriteLineToConsole ""
 showStdInHelp
-gCon.WriteLineToConsole ""
+gWriteLineToConsole ""
 showStdOutHelp
-gCon.WriteLineToConsole ""
+gWriteLineToConsole ""
 End Sub
 
+Private Function validateApiMessageLogging( _
+                ByVal pApiMessageLogging As String, _
+                ByRef pLogApiMessages As ApiMessageLoggingOptions, _
+                ByRef pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByRef pLogApiMessageStats As Boolean) As Boolean
+Const Always As String = "A"
+Const Default As String = "D"
+Const No As String = "N"
+Const None As String = "N"
+Const Yes As String = "Y"
 
+pApiMessageLogging = UCase$(pApiMessageLogging)
+
+validateApiMessageLogging = False
+If Len(pApiMessageLogging) <> 3 Then Exit Function
+
+Dim s As String
+s = Left$(pApiMessageLogging, 1)
+If s = None Then
+    pLogApiMessages = ApiMessageLoggingOptionNone
+ElseIf s = Default Then
+    pLogApiMessages = ApiMessageLoggingOptionDefault
+ElseIf s = Always Then
+    pLogApiMessages = ApiMessageLoggingOptionAlways
+Else
+    Exit Function
+End If
+
+s = Mid(pApiMessageLogging, 2, 1)
+If s = None Then
+    pLogRawApiMessages = ApiMessageLoggingOptionNone
+ElseIf s = Default Then
+    pLogRawApiMessages = ApiMessageLoggingOptionDefault
+ElseIf s = Always Then
+    pLogRawApiMessages = ApiMessageLoggingOptionAlways
+Else
+    Exit Function
+End If
+
+s = Mid(pApiMessageLogging, 3, 1)
+If s = No Then
+    pLogApiMessageStats = False
+ElseIf s = Yes Then
+    pLogApiMessageStats = True
+Else
+    Exit Function
+End If
+
+validateApiMessageLogging = True
+End Function
 

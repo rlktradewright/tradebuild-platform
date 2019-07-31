@@ -46,6 +46,7 @@ Private Const ModuleName                            As String = "BuySellCommandD
 
 Public Action                                       As OrderActions
 Public Params                                       As String
+Public StageOrders                                  As Boolean
 
 '@================================================================================
 ' Class Event Handlers

@@ -61,7 +61,7 @@ Public TargetPrice                                  As Double
 Public TargetOffset                                 As Long
 Public TargetTriggerPrice                           As Double
 Public EntryTIF                                     As OrderTIFs
-Public StopLossTIF                                      As OrderTIFs
+Public StopLossTIF                                  As OrderTIFs
 Public TargetTIF                                    As OrderTIFs
 Public CancelPrice                                  As Double
 Public CancelAfter                                  As Long

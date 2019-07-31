@@ -66,8 +66,6 @@ Attribute mOrderContext.VB_VarHelpID = -1
 Private mScopeName                                  As String
 Private mGroupName                                  As String
 
-Private mTimezone                                   As TimeZone
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -110,16 +108,8 @@ Friend Property Get Contract() As IContract
 Set Contract = mContract
 End Property
 
-Friend Property Get IsReadyToPlaceOrders() As Boolean
-Const ProcName As String = "IsReadyToPlaceOrders"
-On Error GoTo Err
-
-IsReadyToPlaceOrders = mOrderContext.IsReady
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Property Get OrderContext() As OrderContext
+Set OrderContext = mOrderContext
 End Property
 
 '@================================================================================
@@ -142,7 +132,6 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContract = pContractFuture.Value
-Set mTimezone = GetTimeZone(mContract.TimezoneName)
 Set mMarketDataManager = pMarketDataManager
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
@@ -166,73 +155,6 @@ Else
                                 mGroupName)
 End If
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub PlaceOrder(ByVal pBOS As BracketOrderSpecification, pStage As Boolean)
-Const ProcName As String = "PlaceOrder"
-On Error GoTo Err
-
-gWriteLineToStdOut "TIME " & FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), TimestampDateAndTimeISO8601)
-gWriteLineToStdOut pBOS.ToString
-
-mOrderContext.OrderSubmitter.OrdersAreStaged = pStage
-
-Dim lBO As IBracketOrder
-With pBOS
-    If .Action = OrderActionBuy Then
-        Set lBO = mOrderContext.CreateBuyBracketOrder(.Quantity, _
-                          .EntryType, _
-                          .EntryPrice, _
-                          .EntryOffset, _
-                          .EntryTriggerPrice, _
-                          .StopLossType, _
-                          .StopLossTriggerPrice, _
-                          .StopLossOffset, _
-                          .StopLossPrice, _
-                          .TargetType, _
-                          .TargetPrice, _
-                          .TargetOffset, _
-                          .TargetTriggerPrice)
-    Else
-        Set lBO = mOrderContext.CreateSellBracketOrder(.Quantity, _
-                          .EntryType, _
-                          .EntryPrice, _
-                          .EntryOffset, _
-                          .EntryTriggerPrice, _
-                          .StopLossType, _
-                          .StopLossTriggerPrice, _
-                          .StopLossOffset, _
-                          .StopLossPrice, _
-                          .TargetType, _
-                          .TargetPrice, _
-                          .TargetOffset, _
-                          .TargetTriggerPrice)
-    End If
-    
-    lBO.CancelAfter = .CancelAfter
-    lBO.CancelPrice = .CancelPrice
-    lBO.EntryOrder.TimeInForce = .EntryTIF
-    If Not lBO.StopLossOrder Is Nothing Then lBO.StopLossOrder.TimeInForce = .StopLossTIF
-    If Not lBO.TargetOrder Is Nothing Then lBO.TargetOrder.TimeInForce = .TargetTIF
-    If .GoodAfterTime <> 0 Then
-        lBO.EntryOrder.GoodAfterTime = .GoodAfterTime
-        lBO.EntryOrder.GoodAfterTimeTZ = .TimezoneName
-    End If
-    If .GoodTillDate <> 0 Then
-        lBO.EntryOrder.GoodTillDate = .GoodTillDate
-        lBO.EntryOrder.GoodTillDateTZ = .TimezoneName
-    End If
-End With
-
-mOrderContext.ExecuteBracketOrder lBO
-CreateBracketProfitCalculator lBO, mDataSource
-
-gNumberOfOrdersPlaced = gNumberOfOrdersPlaced + 1
 
 Exit Sub
 
@@ -472,31 +394,6 @@ ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine Err.Description
     Resume Next
 End If
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub WriteContractSpecToConsole()
-Const ProcName As String = "WriteContractSpecToConsole"
-On Error GoTo Err
-
-Dim s As String
-s = ContractCommand & " "
-s = s & gGenerateSwitch(SymbolSwitch, mContract.Specifier.Symbol)
-s = s & gGenerateSwitch(LocalSymbolSwitch, mContract.Specifier.LocalSymbol)
-s = s & gGenerateSwitch(SecTypeSwitch, SecTypeToShortString(mContract.Specifier.SecType))
-s = s & gGenerateSwitch(ExchangeSwitch, mContract.Specifier.Exchange)
-If mContract.Specifier.Expiry <> "" Then s = s & gGenerateSwitch(ExpirySwitch, mContract.Specifier.Expiry)
-s = s & gGenerateSwitch(CurrencySwitch, mContract.Specifier.CurrencyCode)
-If mContract.Specifier.Multiplier <> 1 Then s = s & gGenerateSwitch(MultiplierSwitch, mContract.Specifier.Multiplier)
-If mContract.Specifier.Right <> OptNone Then
-    s = s & gGenerateSwitch(RightSwitch, OptionRightToString(mContract.Specifier.Right))
-    s = s & gGenerateSwitch(StrikeSwitch, mContract.Specifier.Strike)
-End If
-gWriteLineToStdOut s
-
-Exit Sub
-
-Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
