@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#337.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   7800
@@ -507,7 +507,7 @@ If ConnectButton.Caption = CaptionConnect Then
     ConnectButton.Enabled = False
     
     mClientId = CLng(ClientIdText.Text)
-    Set mClient = GetClient(ServerText.Text, CLng(PortText.Text), mClientId, , , True, , Me)
+    Set mClient = GetClient(ServerText.Text, CLng(PortText.Text), mClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me)
     
     Set mOrderSubmitter = mClient.CreateOrderSubmitter
     mOrderSubmitter.AddOrderSubmissionListener Me
