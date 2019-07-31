@@ -414,6 +414,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function BracketOrderStateToString(ByVal pState As BracketOrderStates) As String
+Const ProcName As String = "BracketOrderStateToString"
+On Error GoTo Err
+
+BracketOrderStateToString = gBracketOrderStateToString(pState)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function BracketStopLossTypeFromString(ByVal Value As String) As BracketStopLossTypes
 Const ProcName As String = "BracketStopLossTypeFromString"
 On Error GoTo Err

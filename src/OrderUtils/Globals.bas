@@ -289,6 +289,33 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gBracketOrderStateToString(ByVal pState As BracketOrderStates) As String
+Const ProcName As String = "gBracketOrderRoleToString"
+On Error GoTo Err
+
+Select Case pState
+Case BracketOrderStateCreated
+    gBracketOrderStateToString = "Created"
+Case BracketOrderStateSubmitted
+    gBracketOrderStateToString = "Submitted"
+Case BracketOrderStateCancelling
+    gBracketOrderStateToString = "Cancelling"
+Case BracketOrderStateClosingOut
+    gBracketOrderStateToString = "Closing out"
+Case BracketOrderStateClosed
+    gBracketOrderStateToString = "Closed"
+Case BracketOrderStateAwaitingOtherOrderCancel
+    gBracketOrderStateToString = "Awaiting order cancellation"
+Case Else
+    gBracketOrderStateToString = "*Unknown*"
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gBracketStopLossTypeFromString(ByVal Value As String) As BracketStopLossTypes
 Const ProcName As String = "gBracketStopLossTypeToString"
 On Error GoTo Err
