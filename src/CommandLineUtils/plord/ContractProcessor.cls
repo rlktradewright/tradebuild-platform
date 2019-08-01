@@ -249,7 +249,7 @@ Friend Sub ProcessEndBracketCommand()
 Const ProcName As String = "ProcessEndBracketCommand"
 On Error GoTo Err
 
-mBracketOrders.Add mBOSpec
+If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
 gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, ContractCommand, EndOrdersCommand, ResetCommand
 
@@ -286,7 +286,7 @@ If lClp.Switch(OffsetSwitch) Then mBOSpec.EntryOffset = parseOffset(lClp.SwitchV
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
-If mBOSpec.EntryType = BracketEntryTypeNone Then
+If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
     gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
     gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
@@ -332,7 +332,7 @@ If lClp.Switch(OffsetSwitch) Then mBOSpec.StopLossOffset = parseOffset(lClp.Swit
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
-If mBOSpec.EntryType = BracketEntryTypeNone Then
+If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
     gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
     gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
@@ -378,7 +378,7 @@ If lClp.Switch(OffsetSwitch) Then mBOSpec.TargetOffset = parseOffset(lClp.Switch
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
-If mBOSpec.EntryType = BracketEntryTypeNone Then
+If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
     gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
     gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
@@ -412,7 +412,9 @@ If Err.Number = ErrorCodes.ErrIllegalArgumentException Then getOrderAction = Ord
 End Function
 
 Private Function getEntryOrderType(ByVal pInput As String) As BracketEntryTypes
-On Error Resume Next
+Const ProcName As String = "getEntryOrderType"
+On Error GoTo Err
+
 If pInput = "" Then
     getEntryOrderType = BracketEntryTypeNone
 Else
@@ -421,14 +423,22 @@ End If
 If (mOrderContext.PermittedOrderTypes And BracketEntryTypeToOrderType(getEntryOrderType)) = 0 Then
     gWriteErrorLine "Entry order type not supported: " & pInput
 End If
+
+Exit Function
+
+Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid entry order type: " & pInput
     getEntryOrderType = BracketEntryTypeNone
+Else
+    gHandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 
 Private Function getStopLossOrderType(ByVal pInput As String) As BracketStopLossTypes
-On Error Resume Next
+Const ProcName As String = "getStopLossOrderType"
+On Error GoTo Err
+
 If pInput = "" Then
     getStopLossOrderType = BracketStopLossTypeNone
 Else
@@ -441,14 +451,22 @@ If (getStopLossOrderType = BracketStopLossTypeAuto And _
 Else
     gWriteErrorLine "Stop-loss order type not supported: " & pInput
 End If
+
+Exit Function
+
+Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid stop-loss order type: " & pInput
     getStopLossOrderType = BracketStopLossTypeNone
+Else
+    gHandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 
 Private Function getTargetOrderType(ByVal pInput As String) As BracketTargetTypes
-On Error Resume Next
+Const ProcName As String = "getTargetOrderType"
+On Error GoTo Err
+
 If pInput = "" Then
     getTargetOrderType = BracketTargetTypeNone
 Else
@@ -460,9 +478,15 @@ If getTargetOrderType = BracketTargetTypeAuto Or _
 Else
     gWriteErrorLine "Target order type not supported: " & pInput
 End If
+
+Exit Function
+
+Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid target order type: " & pInput
     getTargetOrderType = BracketTargetTypeNone
+Else
+    gHandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 

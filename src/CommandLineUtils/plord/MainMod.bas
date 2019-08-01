@@ -129,7 +129,7 @@ Public gNumberOfOrdersPlaced                        As Long
 
 Public gPlaceOrdersTask                             As PlaceOrdersTask
 
-Public gBracketOrderListener                       As New BracketOrderListener
+Public gBracketOrderListener                        As New BracketOrderListener
 
 Private mErrorCount                                 As Long
 
@@ -188,6 +188,10 @@ Private mBatchOrders                                As Boolean
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get gErrorCount() As Long
+gErrorCount = mErrorCount
+End Property
 
 Public Property Get gLogger() As FormattingLogger
 Static sLogger As FormattingLogger
@@ -769,7 +773,12 @@ Else
         mContractProcessor.ProcessTargetCommand Params
     Case EndBracketCommand
         mContractProcessor.ProcessEndBracketCommand
-        If mErrorCount = 0 And Not mBatchOrders Then processOrders
+        If mErrorCount = 0 And Not mBatchOrders Then
+            processOrders
+        Else
+            gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed"
+            mErrorCount = 0
+        End If
     Case EndOrdersCommand
         gWriteLineToStdOut EndOrdersCommand
         processEndOrdersCommand
