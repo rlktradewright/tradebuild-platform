@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#344.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
@@ -211,7 +211,7 @@ Set mFutureWaiter = New FutureWaiter
 Set mPositionManagersLive = mOrderManager.PositionManagersLive
 Set mPositionManagersSimulated = mOrderManager.PositionManagersSimulated
 
-Set mClient = GetClient(TwsHost, ApiPort, ClientId, , , True, , Me)
+Set mClient = GetClient(TwsHost, ApiPort, ClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me)
 mClient.SetTwsLogLevel TwsLogLevelDetail
 
 Set mContractStore = mClient.GetContractStore

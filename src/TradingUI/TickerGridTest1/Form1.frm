@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#337.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Ticker Grid Test1"
    ClientHeight    =   10065
@@ -176,10 +176,10 @@ Else
 End If
 
 mClientId = 1132256741
-Set mDataClient = GetClient("Essy", 7497, mClientId, , , True, , Me)
+Set mDataClient = GetClient("Essy", 7497, mClientId, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
 mDataClient.SetTwsLogLevel TwsLogLevelDetail
 
-Set mContractClient = GetClient("Essy", 7497, mClientId + 1, , , True, , Me)
+Set mContractClient = GetClient("Essy", 7497, mClientId + 1, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
 
 Set mContractStore = mContractClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(mDataClient.GetMarketDataFactory)

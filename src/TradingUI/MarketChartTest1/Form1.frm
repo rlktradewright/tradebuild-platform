@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#337.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
@@ -359,7 +359,7 @@ Else
 End If
 
 mClientId = 1413860445
-Set mDataClient = GetClient("Essy", 7497, mClientId, , , True, , Me)
+Set mDataClient = GetClient("Essy", 7497, mClientId, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
 mDataClient.SetTwsLogLevel TwsLogLevelDetail
 
 Set mContractStore = mDataClient.GetContractStore
