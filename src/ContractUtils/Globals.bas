@@ -433,7 +433,7 @@ With pConfig
                                             gSecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, "")), _
                                             .GetSetting(ConfigSettingContractSpecCurrency, ""), _
                                             .GetSetting(ConfigSettingContractSpecExpiry, ""), _
-                                            .GetSetting(ConfigSettingContractSpecMultiplier, DefaultMultiplier), _
+                                            CDbl(.GetSetting(ConfigSettingContractSpecMultiplier, DefaultMultiplier)), _
                                             CDbl(.GetSetting(ConfigSettingContractSpecStrikePrice, "0.0")), _
                                             gOptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, "")))
 

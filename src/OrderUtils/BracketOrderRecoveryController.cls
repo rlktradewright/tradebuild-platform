@@ -353,14 +353,6 @@ ElseIf mState = RecoveryStateProcessingInfo Then
 ElseIf mState = RecoveryStateRecoveringOrders Then
     On Error GoTo ErrWithRestoreData
     
-    Dim en As Enumerator
-    Set en = mPositionManagers.Enumerator
-    Do While en.MoveNext
-        Dim lRecoverable As IRecoverable
-        Set lRecoverable = en.Current
-        lRecoverable.FinishRecovery
-    Loop
-    
     gLog "Starting order recovery", ProcName, ModuleName
     mRecoveryAgent.StartOrderRecovery Me, mStartRecoveryFrom
     mTaskContext.Suspend -1
@@ -560,10 +552,13 @@ Next
 Set mBracketOrderRecoverers = Nothing
 
 Dim lPMsToRemove As New EnumerableCollection
-
 Dim en As Enumerator
 Set en = mPositionManagers.Enumerator
 Do While en.MoveNext
+    Dim lRecoverable As IRecoverable
+    Set lRecoverable = en.Current
+    lRecoverable.FinishRecovery
+
     Dim pm As PositionManager
     Set pm = en.Current
     

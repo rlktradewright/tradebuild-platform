@@ -1383,9 +1383,10 @@ Private Function nextKey() As String
 Const ProcName As String = "nextKey"
 On Error GoTo Err
 
-Static currID As Long
-currID = currID + 1
-nextKey = mSessionName & "/" & mRecoveryContextName & "/" & mName & "/" & currID
+nextKey = GenerateTextID
+'Static currID As Long
+'currID = currID + 1
+'nextKey = mSessionName & "/" & mRecoveryContextName & "/" & mName & "/" & currID
 
 Exit Function
 
