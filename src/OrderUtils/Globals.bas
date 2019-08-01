@@ -335,6 +335,8 @@ Case "TRADE", "LAST TRADE PRICE"
     gBracketStopLossTypeFromString = BracketStopLossTypeLast
 Case "AUTO"
     gBracketStopLossTypeFromString = BracketStopLossTypeAuto
+Case Else
+    AssertArgument False, "Invalid stoploss order type"
 End Select
 
 Exit Function
@@ -364,7 +366,7 @@ Case BracketStopLossTypeLast
 Case BracketStopLossTypeAuto
     gBracketStopLossTypeToOrderType = OrderTypeAutoStop
 Case Else
-    AssertArgument False, "Invalid entry type"
+    AssertArgument False, "Invalid stoploss order type"
 End Select
 
 Exit Function
@@ -392,6 +394,8 @@ Case BracketStopLossTypeLast
     gBracketStopLossTypeToShortString = "TRADE"
 Case BracketStopLossTypeAuto
     gBracketStopLossTypeToShortString = "AUTO"
+Case Else
+    AssertArgument False, "Invalid stoploss order type"
 End Select
 
 Exit Function
@@ -419,6 +423,8 @@ Case BracketStopLossTypeLast
     gBracketStopLossTypeToString = "Last Trade Price"
 Case BracketStopLossTypeAuto
     gBracketStopLossTypeToString = "Auto"
+Case Else
+    AssertArgument False, "Invalid stoploss order type"
 End Select
 
 Exit Function
@@ -448,6 +454,8 @@ Case "LAST", "LAST TRADE PRICE"
     gBracketTargetTypeFromString = BracketTargetTypeLast
 Case "AUTO"
     gBracketTargetTypeFromString = BracketTargetTypeAuto
+Case Else
+    AssertArgument False, "Invalid target order type"
 End Select
 
 Exit Function
@@ -487,7 +495,7 @@ Case BracketTargetTypeLast
 Case BracketTargetTypeAuto
     gBracketTargetTypeToOrderType = OrderTypeAutoLimit
 Case Else
-    AssertArgument False, "Invalid entry type"
+    AssertArgument False, "Invalid target order type"
 End Select
 
 Exit Function
@@ -515,6 +523,8 @@ Case BracketTargetTypeLast
     gBracketTargetTypeToShortString = "LAST"
 Case BracketTargetTypeAuto
     gBracketTargetTypeToShortString = "AUTO"
+Case Else
+    AssertArgument False, "Invalid target order type"
 End Select
 
 Exit Function
@@ -542,6 +552,8 @@ Case BracketTargetTypeLast
     gBracketTargetTypeToString = "Last Trade Price"
 Case BracketTargetTypeAuto
     gBracketTargetTypeToString = "Auto"
+Case Else
+    AssertArgument False, "Invalid target order type"
 End Select
 
 Exit Function
