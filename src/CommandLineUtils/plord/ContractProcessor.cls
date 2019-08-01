@@ -434,7 +434,11 @@ If pInput = "" Then
 Else
     getStopLossOrderType = BracketStopLossTypeFromString(pInput)
 End If
-If (mOrderContext.PermittedOrderTypes And BracketStopLossTypeToOrderType(getStopLossOrderType)) = 0 Then
+If (getStopLossOrderType = BracketStopLossTypeAuto And _
+        mOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop)) Or _
+    (mOrderContext.PermittedOrderTypes And _
+        BracketStopLossTypeToOrderType(getStopLossOrderType)) <> 0 Then
+Else
     gWriteErrorLine "Stop-loss order type not supported: " & pInput
 End If
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
@@ -450,7 +454,10 @@ If pInput = "" Then
 Else
     getTargetOrderType = BracketTargetTypeFromString(pInput)
 End If
-If (mOrderContext.PermittedOrderTypes And BracketTargetTypeToOrderType(getTargetOrderType)) = 0 Then
+If getTargetOrderType = BracketTargetTypeAuto Or _
+    (mOrderContext.PermittedOrderTypes And _
+        BracketTargetTypeToOrderType(getTargetOrderType)) <> 0 Then
+Else
     gWriteErrorLine "Target order type not supported: " & pInput
 End If
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
