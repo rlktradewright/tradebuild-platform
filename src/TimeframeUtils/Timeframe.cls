@@ -93,8 +93,6 @@ Private WithEvents mBarFetchListener        As BarFetchListener
 Attribute mBarFetchListener.VB_VarHelpID = -1
 Private mMaxNumberOfBars                    As Long
 
-Private mFetchBarsNeeded                    As Boolean
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -117,9 +115,7 @@ Private Sub IDeferredAction_Run(ByVal Data As Variant)
 Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
-If mMaxNumberOfBars <> 0 Then mFetchBarsNeeded = True
-
-If mFetchBarsNeeded And Not mContractFuture Is Nothing And Not mHistDataStore Is Nothing Then
+If mMaxNumberOfBars <> 0 And Not mContractFuture Is Nothing And Not mHistDataStore Is Nothing Then
     
     Set mBarFetchListener = mBarStudy.InitialBarFetchListener
     Set mInitialBarsFuture = mHistDataStore.FetchBars(CreateBarDataSpecifierFuture(mContractFuture, _
