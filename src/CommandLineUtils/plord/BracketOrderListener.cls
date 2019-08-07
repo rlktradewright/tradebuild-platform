@@ -95,8 +95,10 @@ Dim lBo As IBracketOrder: Set lBo = ev.Source
 Select Case lChangeType
 Case BracketOrderCompleted
     gWriteLineToStdOut lBo.Key & ": bracket order completed"
+    Remove lBo
 Case BracketOrderSelfCancelled
     gWriteLineToStdOut lBo.Key & ": bracket order cancelled"
+    Remove lBo
 Case BracketOrderEntryOrderChanged
 
 Case BracketOrderEntryOrderFilled
@@ -116,7 +118,7 @@ Case BracketOrderCloseoutOrderChanged
 Case BracketOrderCloseoutOrderFilled
     gWriteLineToStdOut lBo.Key & ": closeout order filled " & lBo.CloseoutOrder.QuantityFilled & "; remaining " & lBo.CloseoutOrder.QuantityRemaining
 Case BracketOrderSizeChanged
-    gWriteLineToStdOut lBo.Key & ": bracket order size changed: " & lBo.Size
+
 Case BracketOrderStateChanged
     gWriteLineToStdOut lBo.Key & ": bracket order state changed: " & BracketOrderStateToString(lBo.State)
 Case BracketOrderChangesPending
