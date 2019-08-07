@@ -827,6 +827,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
+
+End Sub
+
 Private Sub IRecoverable_FinishRecovery()
 Const ProcName As String = "IRecoverable_FinishRecovery"
 On Error GoTo Err
@@ -858,7 +862,7 @@ If mSummary.EntryOrderId <> "" And mEntryOrder Is Nothing And Not mOrderContext 
 If mSummary.StopLossOrderId <> "" And mStopLossOrder Is Nothing And Not mOrderContext Is Nothing Then StopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
 If mSummary.TargetOrderId <> "" And mTargetOrder Is Nothing And Not mOrderContext Is Nothing Then TargetOrder = CreateAnOrder(mSummary.TargetOrderId)
 
-mSummary.SetClean
+mSummary.setClean
 
 Exit Sub
 
@@ -2188,11 +2192,11 @@ mNewTargetQuantity = -1
 ' remain valid
 '@/
 gSyncToOrder mEntryOrder, mEntryOrderCopy
-mEntryOrder.SetClean
+mEntryOrder.setClean
 gSyncToOrder mStopLossOrder, mStopOrderCopy
-mStopLossOrder.SetClean
+mStopLossOrder.setClean
 gSyncToOrder mTargetOrder, mTargetOrderCopy
-mTargetOrder.SetClean
+mTargetOrder.setClean
 
 mIsDirty = False
 fireChange BracketOrderChangeTypes.BracketOrderChangesCancelled
@@ -2224,16 +2228,16 @@ Const ProcName As String = "Checkpoint"
 On Error GoTo Err
 
 Set mEntryOrderCopy = mEntryOrder.Clone
-mEntryOrder.SetClean
+mEntryOrder.setClean
 
 If Not mStopLossOrder Is Nothing Then
     Set mStopOrderCopy = mStopLossOrder.Clone
-    mStopLossOrder.SetClean
+    mStopLossOrder.setClean
 End If
 
 If Not mTargetOrder Is Nothing Then
     Set mTargetOrderCopy = mTargetOrder.Clone
-    mTargetOrder.SetClean
+    mTargetOrder.setClean
 End If
 
 Exit Sub
@@ -3229,7 +3233,7 @@ Const ProcName As String = "CreateAnOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
-Set lOrder = mOrderContext.CreateRawOrder(pId)
+Set lOrder = mOrderContext.CreateRawOrder(pId, True)
 
 lOrder.Initialise mGroupName, mContextsName, mContract.Specifier, mOrderContext
 Set CreateAnOrder = lOrder
@@ -3747,7 +3751,7 @@ If mRecoverableObjectListeners Is Nothing Or mRecoverableObjectListeners.Count =
 
 fireRecoveryDataChanged
 
-mSummary.SetClean
+mSummary.setClean
 
 Exit Sub
 

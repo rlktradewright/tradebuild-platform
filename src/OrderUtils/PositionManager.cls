@@ -117,6 +117,7 @@ Private mLastAsk                                As Double
 Private mProfitListeners                        As Listeners
 Private mChangeListeners                        As Listeners
 
+Private mProcessingRecoveryData                 As Boolean
 Private mRecovering                             As Boolean
 
 ' Indicates that all OrderContexts are being closed, either as a result of
@@ -303,11 +304,13 @@ lExec.SaveRecoveryInfo
 
 mExecutions.Add lExec
 
-If Not mRecovering Then mOrders.Item(lExec.OrderId).NotifyFill lExec
+If Not mProcessingRecoveryData Then
+    mOrders.Item(lExec.OrderId).NotifyFill lExec
+End If
 
 processExecution lExec
 
-If Not mRecovering Then SaveRecoveryInfo
+If Not mProcessingRecoveryData Then SaveRecoveryInfo
 
 fireChange PositionManagerChangeTypes.PositionSizeChanged
 
@@ -378,6 +381,10 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
+mProcessingRecoveryData = False
 End Sub
 
 Private Sub IRecoverable_FinishRecovery()
@@ -1280,6 +1287,7 @@ On Error GoTo Err
 
 checkInitialised
 
+mProcessingRecoveryData = True
 mRecovering = True
 
 Exit Sub

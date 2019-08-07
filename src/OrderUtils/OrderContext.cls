@@ -677,7 +677,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function CreateRawOrder(ByVal Id As String) As IOrder
+Friend Function CreateRawOrder( _
+                ByVal Id As String, _
+                ByVal pSetOrderRecovery As Boolean) As IOrder
 Const ProcName As String = "CreateRawOrder"
 On Error GoTo Err
 
@@ -689,6 +691,10 @@ Set CreateRawOrder = lOrder
 
 If Not mAccumulatedOrders Is Nothing Then mAccumulatedOrders.Add lOrder
 
+If pSetOrderRecovery And Not mBracketOrderRecoveryController Is Nothing Then
+    Dim lObj As IRecoverable: Set lObj = lOrder
+    lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
+End If
 Exit Function
 
 Err:
@@ -1042,8 +1048,7 @@ lOrder.Id = GenerateGUIDString
 If Not mAccumulatedOrders Is Nothing Then mAccumulatedOrders.Add lOrder
 
 If pSetOrderRecovery And Not mBracketOrderRecoveryController Is Nothing Then
-    Dim lObj As IRecoverable
-    Set lObj = lOrder
+    Dim lObj As IRecoverable: Set lObj = lOrder
     lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
 End If
 
@@ -1383,10 +1388,8 @@ Private Function nextKey() As String
 Const ProcName As String = "nextKey"
 On Error GoTo Err
 
-nextKey = GenerateTextID
-'Static currID As Long
-'currID = currID + 1
-'nextKey = mSessionName & "/" & mRecoveryContextName & "/" & mName & "/" & currID
+Dim lTimestamp As Double: lTimestamp = GetTimestamp
+nextKey = Hex((CLng(Int(lTimestamp)) Mod 100) * 10000000 + CLng(Right$(Int(lTimestamp * 886400000), 8)))
 
 Exit Function
 

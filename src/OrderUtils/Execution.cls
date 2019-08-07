@@ -161,6 +161,10 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
+
+End Sub
+
 Private Sub IRecoverable_FinishRecovery()
 
 End Sub
@@ -419,7 +423,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub SetClean()
+Friend Sub setClean()
 mIsDirty = False
 End Sub
 

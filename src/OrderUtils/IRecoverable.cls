@@ -73,6 +73,9 @@ End Property
 Public Sub AddRecoverableObjectListener(ByVal pListener As IRecoverableObjectListener)
 End Sub
 
+Public Sub FinishProcessingOrderPersistenceData()
+End Sub
+
 Public Sub FinishRecovery()
 End Sub
 

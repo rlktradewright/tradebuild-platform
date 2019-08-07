@@ -841,6 +841,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
+
+End Sub
+
 Private Sub IRecoverable_FinishRecovery()
 
 End Sub
