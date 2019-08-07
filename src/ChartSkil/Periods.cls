@@ -340,21 +340,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function ItemDup( _
-                ByVal index As Date, _
-                ByVal duplicateNumber As Long) As Period
-Const ProcName As String = "ItemDup"
-On Error GoTo Err
-
-If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
-mPeriods.TryItem generateKey(index, duplicateNumber), ItemDup
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
@@ -541,6 +526,7 @@ lPeriod.PeriodNumber = pPeriodNumber
 
 lPeriod.Timestamp = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime)
 
+
 Dim lLabelTimestamp As Date
 Dim lKey As Date
 lKey = generateKeyAndLabelTimestamp(lPeriod.Timestamp, 0, lLabelTimestamp)
@@ -663,7 +649,7 @@ Case TimePeriodDay, TimePeriodWeek, TimePeriodMonth, TimePeriodYear
 End Select
 
 
-generateKeyAndLabelTimestamp = pLabelTimestamp + pDuplicateNumber * OneMicroSecond
+generateKeyAndLabelTimestamp = pLabelTimestamp + pDuplicateNumber * TenMicroSeconds
 
 Exit Function
 
@@ -766,52 +752,60 @@ End If
 End Function
 
 Private Function getXWithIrregularPeriods( _
-                ByVal Timestamp As Date, _
-                ByVal forceNewPeriod As Boolean, _
-                ByVal duplicateNumber As Long) As Double
+                ByVal pTimestamp As Date, _
+                ByVal pForceNewPeriod As Boolean, _
+                ByVal pDuplicateNumber As Long) As Double
 Const ProcName As String = "getXWithIrregularPeriods"
 On Error GoTo Err
 
 Dim lPeriod As Period
-If forceNewPeriod Then
-    Set lPeriod = AddPeriod(Timestamp, True)
+If pForceNewPeriod Then
+    Set lPeriod = AddPeriod(pTimestamp, True)
     getXWithIrregularPeriods = lPeriod.PeriodNumber
-Else
-    Set lPeriod = ItemDup(Timestamp, duplicateNumber)
-    
-    If Not lPeriod Is Nothing Then
-        getXWithIrregularPeriods = lPeriod.PeriodNumber
-    Else
-        Dim lPrevKey As Variant
-        lPrevKey = mPeriods.PreviousKey(Timestamp)
-        
-        Dim lNextKey As Variant
-        lNextKey = mPeriods.NextKey(Timestamp)
-        
-        If Not (IsEmpty(lPrevKey) Or IsEmpty(lNextKey)) Then
-            ' two consecutive periods exist and this timestamp falls
-            ' before the second of them. We interpolate between them
-            getXWithIrregularPeriods = getInterpolatedX(Timestamp, mPeriods.Item(lPrevKey).PeriodNumber, lPrevKey, lNextKey)
-        ElseIf Not IsEmpty(lPrevKey) Then
-            ' the timestamp is later than the end of the last period.
-            ' We add another period based on the timestamp.
-            Set lPeriod = AddPeriod(Timestamp)
-            getXWithIrregularPeriods = lPeriod.PeriodNumber
-        ElseIf Not IsEmpty(lNextKey) Then
-            ' timestamp is before the first period, so we create
-            ' a new period with a period number one less than
-            ' the current first period, but we don't add it to
-            ' the chart because we can't currently have negative
-            ' x values on the chart
-            Set lPeriod = createPeriod(Timestamp, mPeriods.FirstItem.PeriodNumber, False)
-            getXWithIrregularPeriods = lPeriod.PeriodNumber
-        Else
-            ' no periods exist
-            Set lPeriod = AddPeriod(Timestamp)
-            getXWithIrregularPeriods = lPeriod.PeriodNumber
-        End If
-    End If
+    Exit Function
 End If
+
+Dim lKey As Date: lKey = generateKey(pTimestamp, pDuplicateNumber)
+If mPeriods.TryItem(lKey, lPeriod) Then
+    getXWithIrregularPeriods = lPeriod.PeriodNumber
+    Exit Function
+End If
+    
+Dim lPrevKey As Variant
+lPrevKey = mPeriods.PreviousKey(lKey)
+
+Dim lNextKey As Variant
+lNextKey = mPeriods.NextKey(lKey)
+
+If Not (IsEmpty(lPrevKey) Or IsEmpty(lNextKey)) Then
+    ' two consecutive periods exist and this timestamp falls
+    ' between them, so we interpolate
+    getXWithIrregularPeriods = getInterpolatedX(lKey, mPeriods.Item(lPrevKey).PeriodNumber, lPrevKey, lNextKey)
+    Exit Function
+End If
+
+If Not IsEmpty(lPrevKey) Then
+    ' the pTimestamp is later than the end of the last period.
+    ' We add another period based on the pTimestamp.
+    Set lPeriod = AddPeriod(lKey)
+    getXWithIrregularPeriods = lPeriod.PeriodNumber
+    Exit Function
+End If
+
+If Not IsEmpty(lNextKey) Then
+    ' pTimestamp is before the first period, so we create
+    ' a new period with a period number one less than
+    ' the current first period, but we don't add it to
+    ' the chart because we can't currently have negative
+    ' x values on the chart
+    Set lPeriod = createPeriod(lKey, mPeriods.FirstItem.PeriodNumber - 1, True)
+    getXWithIrregularPeriods = lPeriod.PeriodNumber
+    Exit Function
+End If
+    
+' no periods exist
+Set lPeriod = AddPeriod(lKey)
+getXWithIrregularPeriods = lPeriod.PeriodNumber
 
 Exit Function
 

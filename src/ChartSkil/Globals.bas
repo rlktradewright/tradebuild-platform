@@ -21,7 +21,7 @@ Public Const MinusInfinityLong As Long = &H80000000
 
 Public Const Log10 As Double = 2.30258509299405
 
-Public Const OneMicroSecond As Double = 1.15740740740741E-11
+Public Const TenMicroSeconds As Double = 10# * 1.15740740740741E-11
 
 Public Const MaxSystemColor As Long = &H80000018
 
