@@ -68,11 +68,13 @@ Attribute mBarStudySupport.VB_VarHelpID = -1
 
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
-Private WithEvents mBar As BarUtils27.Bar
+Private WithEvents mBar As Barutils27.Bar
 Attribute mBar.VB_VarHelpID = -1
 
 Private mPriceTickSize As Double
 Private mVolumeTickSize As Double
+
+Private mVolumePerBar As Long
 
 Private mTimestamp As Date
 
@@ -87,6 +89,19 @@ End Sub
 '@================================================================================
 ' IBarStudy Interface Members
 '@================================================================================
+
+Private Property Let IBarStudy_AllowInitialBars(ByVal Value As Boolean)
+Const ProcName As String = "IBarStudy_AllowInitialBars"
+On Error GoTo Err
+
+mBarStudySupport.Start Value
+If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 Private Property Get IBarStudy_BarsFuture() As IFuture
 Const ProcName As String = "IBarStudy_BarsFuture"
@@ -252,7 +267,7 @@ End Sub
 Private Function customGetStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
-Dim Bar As BarUtils27.Bar
+Dim Bar As Barutils27.Bar
 Dim sv As SValue
 
 Const ProcName As String = "customGetStudyValue"
@@ -348,14 +363,12 @@ On Error GoTo Err
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(ConstVolumeBarsParamVolPerBar)
-        Dim lVolumePerBar As Long
-        lVolumePerBar = param.Value
-        AssertArgument lVolumePerBar > 0, "Volume per bar parameter must be > 0"
+        mVolumePerBar = param.Value
+        AssertArgument mVolumePerBar > 0, "Volume per bar parameter must be > 0"
     End Select
 Next
 
-Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(lVolumePerBar, TimePeriodVolume), mSession, mPriceTickSize)
-If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
+Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(mVolumePerBar, TimePeriodVolume), mSession, mPriceTickSize)
 
 Exit Sub
 

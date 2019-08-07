@@ -115,8 +115,12 @@ Private Sub IDeferredAction_Run(ByVal Data As Variant)
 Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
-If mMaxNumberOfBars <> 0 And Not mContractFuture Is Nothing And Not mHistDataStore Is Nothing Then
-    
+If mMaxNumberOfBars = 0 Or mContractFuture Is Nothing Or mHistDataStore Is Nothing Then
+    fireStateChange TimeframeStateLoaded
+    logAMessage "starting BarStudy", ProcName
+    mStudyBase.StudyManager.StartStudy mBarStudy, 0
+Else
+    mBarStudy.AllowInitialBars = True
     Set mBarFetchListener = mBarStudy.InitialBarFetchListener
     Set mInitialBarsFuture = mHistDataStore.FetchBars(CreateBarDataSpecifierFuture(mContractFuture, _
                                                                 mTimePeriod, _
@@ -129,8 +133,6 @@ If mMaxNumberOfBars <> 0 And Not mContractFuture Is Nothing And Not mHistDataSto
                                                                 mIncludeBarsOutsideSession), _
                                                     mBarFetchListener)
     mFutureWaiter.Add mInitialBarsFuture
-Else
-    fireStateChange TimeframeStateLoaded
 End If
 
 
@@ -208,6 +210,8 @@ Private Sub mFutureWaiter_WaitAllCompleted(ev As TWUtilities40.FutureWaitComplet
 Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
 On Error GoTo Err
 
+logAMessage "starting BarStudy", ProcName
+mStudyBase.StudyManager.StartStudy mBarStudy, 0
 fireStateChange TimeframeStateLoaded
 RaiseEvent BarsLoaded
 
@@ -232,7 +236,7 @@ If ev.Future.IsFaulted Then
     End If
 Else
     Dim lInitialBars As Bars
-    Set lInitialBars = mInitialBarsFuture.Value
+    Set lInitialBars = ev.Future.Value
     logAMessage "initial bars loaded: " & lInitialBars.Count, ProcName
 End If
 
@@ -338,9 +342,7 @@ Set mClockFuture = pClockFuture
 
 If mToTime <> MaxDate Then mIsHistorical = True
 
-Set mBarStudy = CreateBarStudy(mTimePeriod, mStudyBase, mIncludeBarsOutsideSession)
-logAMessage "starting BarStudy", ProcName
-mStudyBase.StudyManager.StartStudy mBarStudy, 0
+Set mBarStudy = CreateBarStudy(True, mTimePeriod, mStudyBase, mIncludeBarsOutsideSession)
 
 Set mBarsFuture = mBarStudy.BarsFuture
 

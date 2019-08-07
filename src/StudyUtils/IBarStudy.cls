@@ -64,14 +64,25 @@ Option Explicit
 ' Properties
 '@================================================================================
 
-Public Property Get InitialBarFetchListener() As IBarFetchListener
+''
+' Specifies whether initial bars can be defined for this <code>IBarStudy</code>.
+'
+' @remarks
+'    If <code>True</code>, then the <code>InitialBarFetchListener</code> and
+'    <code>InitialBarsFuture</code> properties are disabled.
+'
+' @param Value
+'
+'@/
+'
+Public Property Let AllowInitialBars(ByVal Value As Boolean)
 End Property
 
 ''
-' Returns the <code>Bars</code> object containing the Bars created by this
-' <code>BarStudy</code> object.
+' Returns an <code>IFuture</code> object that will yield the <code>Bars</code>Bars
+' created by this <code>IBarStudy</code> object.
 '
-' @return the<code>Bars</code> object.
+' @return The<code>Bars</code> object.
 '
 '@/
 Public Property Get BarsFuture() As IFuture
@@ -96,10 +107,30 @@ Public Property Get HighValueName() As String
 End Property
 
 ''
+' Returns an <code>IBarFetchListener</code> object that can be used to build the
+' intial bars dynamically, rather than via the <code>InitialBarsFuture</code>
+' parameter.
+'
+' @remarks
+'
+' @return
+'
+' @param name
+'
+' @see
+'
+'@/
+'
+Public Property Get InitialBarFetchListener() As IBarFetchListener
+End Property
+
+''
 ' Sets the <code>Bars</code> object containing the initial bars for this
 ' <code>BarStudy</code> object.
 '
-' @param Value the initial <code>Bars</code> object.
+' @param Value
+'  An <code>IFuture</code> object that will provide the initial <code>Bars</code> for
+'  this <code>IBarStudy</code>.
 '
 ' @remarks
 '   It is not necessary for all the initial bars to have been loaded into the
@@ -108,10 +139,6 @@ End Property
 '   this <code>BarStudy</code> until loading of initial bars has been completed: if this
 '   rule is not observed, any bars created as a result of values notified by the underlying
 '   study may be interleaved with the initial bars, and hence be in the wrong sequence.
-'
-'   An <code>ErrorCodes.ErrIllegalStateException</code> error is raised if this property
-'   is set after the <code>Bars</code> property has been accessed.
-'
 '@/
 Public Property Let InitialBarsFuture(ByVal Value As IFuture)
 End Property

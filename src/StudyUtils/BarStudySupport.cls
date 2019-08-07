@@ -69,6 +69,10 @@ Attribute mBars.VB_VarHelpID = -1
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mAllowInitialBars                           As Boolean
+
+Private mTimePeriod                                 As TimePeriod
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -131,10 +135,6 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get Bars() As Bars
-Set Bars = mBars
-End Property
-
 Public Property Get BarsBuilder() As BarsBuilder
 Set BarsBuilder = mBarsBuilder
 End Property
@@ -155,10 +155,14 @@ Public Property Get InitialBarFetchListener() As IBarFetchListener
 Const ProcName As String = "InitialBarFetchListener"
 On Error GoTo Err
 
+AssertArgument mAllowInitialBars, "Initial bars not allowed"
 Assert Not mInitialBarsFutureSupplied, "InitialBarsFuture has been supplied"
 
 If mBarFetchListener Is Nothing Then Set mBarFetchListener = New BarFetchListener
 Set InitialBarFetchListener = mBarFetchListener
+
+Set mBarsBuilder = CreateBarsBuilder(mTimePeriod, mSession, mPriceTickSize)
+setupBars mBarsBuilder
 
 Exit Property
 
@@ -170,6 +174,7 @@ Public Property Let InitialBarsFuture(ByVal Value As IFuture)
 Const ProcName As String = "InitialBarsFuture"
 On Error GoTo Err
 
+AssertArgument mAllowInitialBars, "Initial bars not allowed"
 Assert mBarFetchListener Is Nothing, "InitialBarFetchListener has been requested - InitialBarsFuture cannot be supplied"
 
 mInitialBarsFutureSupplied = True
@@ -204,25 +209,43 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+Set mTimePeriod = pTimePeriod
 Set mSession = pSession
 mPriceTickSize = pPriceTickSize
 
 Set mBarsFutureBuilder = New FutureBuilder
-If pTimePeriod.Length = 0 Then
-    setupBars CreateBarsBuilder(pTimePeriod, _
-                                Nothing, _
-                                mPriceTickSize)
-Else
-    setupBars CreateBarsBuilder(pTimePeriod, _
-                                mSession, _
-                                mPriceTickSize)
-End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Sub Start( _
+                ByVal pAllowInitialBars As Boolean)
+Const ProcName As String = "Start"
+On Error GoTo Err
+
+mAllowInitialBars = pAllowInitialBars
+If Not mAllowInitialBars Then
+    If mTimePeriod.Length = 0 Then
+        setupBars CreateBarsBuilder(mTimePeriod, _
+                                    Nothing, _
+                                    mPriceTickSize)
+    Else
+        setupBars CreateBarsBuilder(mTimePeriod, _
+                                    mSession, _
+                                    mPriceTickSize)
+    End If
+End If
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 
 '@================================================================================
 ' Helper Functions

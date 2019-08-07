@@ -223,9 +223,9 @@ gLogger.Log "Creating bar study for timeperiod: " & pTimePeriod.ToShortString, P
 Dim lBarStudy As IBarStudy
 
 If pUpdateLatestBar Then
-    Set lBarStudy = CreateBarStudy(pTimePeriod, pStudyBase, True, fetchLatestBar(pHistDataStore, pContractFuture, pClockFuture, pTimePeriod, pBarType))
+    Set lBarStudy = CreateBarStudy(True, pTimePeriod, pStudyBase, True, fetchLatestBar(pHistDataStore, pContractFuture, pClockFuture, pTimePeriod, pBarType))
 Else
-    Set lBarStudy = CreateBarStudy(pTimePeriod, pStudyBase, True)
+    Set lBarStudy = CreateBarStudy(False, pTimePeriod, pStudyBase, True)
 End If
 Set createABarStudy = lBarStudy
 

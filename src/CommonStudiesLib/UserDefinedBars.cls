@@ -67,7 +67,7 @@ Attribute mBarStudySupport.VB_VarHelpID = -1
 
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
-Private WithEvents mBar As BarUtils27.Bar
+Private WithEvents mBar As Barutils27.Bar
 Attribute mBar.VB_VarHelpID = -1
 
 Private mValueTickSize As Double
@@ -85,6 +85,21 @@ End Sub
 '@================================================================================
 ' IBarStudy Interface Members
 '@================================================================================
+
+Private Property Let IBarStudy_AllowInitialBars(ByVal Value As Boolean)
+Const ProcName As String = "IBarStudy_AllowInitialBars"
+On Error GoTo Err
+
+If Not Value Then
+    Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(0, TimePeriodNone), Nothing, mValueTickSize)
+    If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 Private Property Get IBarStudy_BarsFuture() As IFuture
 Const ProcName As String = "IBarStudy_BarsFuture"
@@ -251,7 +266,7 @@ Private Function customGetStudyValue( _
 Const ProcName As String = "customGetStudyValue"
 On Error GoTo Err
 
-Dim Bar As BarUtils27.Bar
+Dim Bar As Barutils27.Bar
 Set Bar = mBars.Bar(ref)
 
 Dim sv As SValue
@@ -338,9 +353,6 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Const ProcName As String = "customProcessParameters"
 On Error GoTo Err
-
-Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(0, TimePeriodNone), Nothing, mValueTickSize)
-If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
 
 Exit Sub
 
