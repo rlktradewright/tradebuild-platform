@@ -88,7 +88,7 @@ On Error GoTo Err
 If Not ev.changeType = CollItemAdded Then Exit Sub
 
 Set mCurrentBar = ev.AffectedItem
-If mBarTimePeriod.Length <> 0 Then mBarEndTime = gStoD(gBarEndTime(mCurrentBar.Timestamp, _
+If mBarTimePeriod.Length <> 0 Then mBarEndTime = gCentiSecondstoDate(gBarEndTime(mCurrentBar.Timestamp, _
                                                             mBarTimePeriod, _
                                                             mMainSession.SessionStartTime, _
                                                             mMainSession.SessionEndTime))
@@ -320,7 +320,7 @@ Friend Sub InitialiseWithInitialBars( _
                 ByVal pInitialBars As Bars, _
                 ByVal pSession As Session, _
                 ByVal pTickSize As Double)
-Const ProcName As String = "InitialiseWithInitialBars"
+ Const ProcName As String = "InitialiseWithInitialBars"
 On Error GoTo Err
 
 gLogger.Log "Initialise with " & pInitialBars.Count & " initial bars", ProcName, ModuleName, LogLevelHighDetail
@@ -341,7 +341,7 @@ If mBars.Count > 0 Then
     Set mCurrentBar = mBars.Bar(0)
     
     If Not mInitialBarsSession Is Nothing Then
-        mBarEndTime = gStoD(gBarEndTime(mCurrentBar.Timestamp, _
+        mBarEndTime = gCentiSecondstoDate(gBarEndTime(mCurrentBar.Timestamp, _
                                     mBarTimePeriod, _
                                     mInitialBarsSession.SessionStartTime, _
                                     mInitialBarsSession.SessionEndTime))
@@ -552,7 +552,7 @@ If mBarTimePeriod.Units = TimePeriodNone Or mBarTimePeriod.Length = 0 Then
 Else
     mCurrentBarNumber = mCurrentBarNumber + 1
     lBar.BarNumber = mCurrentBarNumber
-    lBar.Timestamp = gStoD(gBarStartTime(Timestamp, _
+    lBar.Timestamp = gCentiSecondstoDate(gBarStartTime(Timestamp, _
                                     mBarTimePeriod, _
                                     mMainSession.SessionStartTime))
 End If

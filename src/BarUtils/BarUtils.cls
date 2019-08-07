@@ -88,10 +88,18 @@ Public Function BarEndTime( _
 Const ProcName As String = "BarEndTime"
 On Error GoTo Err
 
-BarEndTime = gStoD(gBarEndTime(Timestamp, _
-                                BarTimePeriod, _
-                                gNormaliseSessionTime(SessionStartTime), _
-                                gNormaliseSessionTime(SessionEndTime)))
+Select Case BarTimePeriod.Units
+Case TimePeriodVolume, _
+        TimePeriodTickVolume, _
+        TimePeriodTickMovement, _
+        TimePeriodNone
+    BarEndTime = Timestamp
+Case Else
+    BarEndTime = gCentiSecondstoDate(gBarEndTime(Timestamp, _
+                                    BarTimePeriod, _
+                                    gNormaliseSessionTime(SessionStartTime), _
+                                    gNormaliseSessionTime(SessionEndTime)))
+End Select
 
 Exit Function
 
@@ -106,9 +114,17 @@ Public Function BarStartTime( _
 Const ProcName As String = "BarStartTime"
 On Error GoTo Err
 
-BarStartTime = gStoD(gBarStartTime(Timestamp, _
-                                BarTimePeriod, _
-                                gNormaliseSessionTime(SessionStartTime)))
+Select Case BarTimePeriod.Units
+Case TimePeriodVolume, _
+        TimePeriodTickVolume, _
+        TimePeriodTickMovement, _
+        TimePeriodNone
+    BarStartTime = Timestamp
+Case Else
+    BarStartTime = gCentiSecondstoDate(gBarStartTime(Timestamp, _
+                                    BarTimePeriod, _
+                                    gNormaliseSessionTime(SessionStartTime)))
+End Select
 
 Exit Function
 
