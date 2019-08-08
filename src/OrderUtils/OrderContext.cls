@@ -656,7 +656,7 @@ validateBracketTargetType pBracketTargetType
 
 Dim lBracketOrder As BracketOrder
 Set lBracketOrder = New BracketOrder
-lBracketOrder.Initialise nextKey, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
+lBracketOrder.Initialise GIdProvider.gNextKey, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
 lBracketOrder.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
 lBracketOrder.EntryOrder = createEntryOrder(pAction, pNumber, pBracketEntryType, pEntryPrice, pEntryTriggerPrice, pEntryOffset)
@@ -1382,19 +1382,6 @@ If mDataSource Is Nothing Then
 Else
     isDataSourceRunning = (mDataSource.State = MarketDataSourceStateRunning)
 End If
-End Function
-
-Private Function nextKey() As String
-Const ProcName As String = "nextKey"
-On Error GoTo Err
-
-Dim lTimestamp As Double: lTimestamp = GetTimestamp
-nextKey = Hex((CLng(Int(lTimestamp)) Mod 100) * 10000000 + CLng(Right$(Int(lTimestamp * 886400000), 8)))
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function priceToString(ByVal pPrice As Double) As String

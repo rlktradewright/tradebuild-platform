@@ -123,6 +123,7 @@ Set mOrderSubmissionListener = mPositionManager
 
 Set mOrderContext = pOrderContext
 
+GIdProvider.gAddExistingKey pKey
 mBracketOrder.Initialise pKey, _
                         mPositionManager.Name, _
                         mPositionManager.GroupName, _
