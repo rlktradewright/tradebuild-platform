@@ -343,6 +343,8 @@ Public Sub Main()
 Const ProcName As String = "Main"
 On Error GoTo Err
 
+Set gCon = GetConsole
+
 If Trim$(command) = "/?" Or Trim$(command) = "-?" Then
     showUsage
     Exit Sub
@@ -359,8 +361,6 @@ Set mConfigStore = gGetConfigStore
 
 Set mCloseoutProcessor = New CloseoutProcessor
 mCloseoutProcessor.Initialise mOrderManager
-
-Set gCon = GetConsole
 
 logProgramId
 
@@ -1470,6 +1470,7 @@ Const Yes As String = "Y"
 pApiMessageLogging = UCase$(pApiMessageLogging)
 
 validateApiMessageLogging = False
+If Len(pApiMessageLogging) = 0 Then pApiMessageLogging = Default & Default & No
 If Len(pApiMessageLogging) <> 3 Then Exit Function
 
 Dim s As String
