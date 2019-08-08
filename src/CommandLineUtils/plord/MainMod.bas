@@ -497,7 +497,7 @@ For Each lPM In mOrderManager.PositionManagersLive
                                                     "(" & lPM.PendingBuyPositionSize & _
                                                     "/" & _
                                                     lPM.PendingSellPositionSize & ")", 10) & _
-                            " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 8)
+                            " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 9)
     End If
 Next
 
@@ -520,10 +520,11 @@ For Each lPM In mOrderManager.PositionManagersLive
     
     Dim lTrade As Execution
     For Each lTrade In lPM.Executions
-        gWriteLineToConsole "  " & FormatTimestamp(lTrade.FillTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs) & " " & _
+        gWriteLineToConsole "  " & FormatTimestamp(lTrade.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & " " & _
         padStringRight(IIf(lTrade.Action = OrderActionBuy, "BUY", "SELL"), 5) & _
         padStringleft(lTrade.Quantity, 5) & _
         padStringleft(FormatPrice(lTrade.Price, lContract.Specifier.SecType, lContract.TickSize), 9) & _
+        padStringRight(" " & lTrade.FillingExchange, 10) & _
         " " & lTrade.TimezoneName
     Next
 Next
