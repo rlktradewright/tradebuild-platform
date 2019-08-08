@@ -100,6 +100,10 @@ echo Making components for TradeWright.TradeBuild.ServiceProviders
 echo.
 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
+
+:: temporary fix for refusal of VB6 to compile this module if
+:: the output dll exists
+if exist %BIN-PATH%\IBApi27.dll del %BIN-PATH%\IBApi27.dll
 call makedll.bat IBAPI IBAPI /T:DLL /B:%BINARY_COMPAT% /C
 if errorlevel 1 pause
 call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
