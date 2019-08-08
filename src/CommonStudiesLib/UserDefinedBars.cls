@@ -90,10 +90,8 @@ Private Property Let IBarStudy_AllowInitialBars(ByVal Value As Boolean)
 Const ProcName As String = "IBarStudy_AllowInitialBars"
 On Error GoTo Err
 
-If Not Value Then
-    Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(0, TimePeriodNone), Nothing, mValueTickSize)
-    If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
-End If
+mBarStudySupport.Start Value
+If mBarStudySupport.BarsFuture.IsAvailable Then Set mBars = mBarStudySupport.BarsFuture.Value
 
 Exit Property
 
@@ -353,6 +351,8 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Const ProcName As String = "customProcessParameters"
 On Error GoTo Err
+
+Set mBarStudySupport = CreateBarStudySupport(GetTimePeriod(0, TimePeriodNone), Nothing, mValueTickSize)
 
 Exit Sub
 

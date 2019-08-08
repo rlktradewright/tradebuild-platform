@@ -115,12 +115,14 @@ Private Sub IDeferredAction_Run(ByVal Data As Variant)
 Const ProcName As String = "IDeferredAction_Run"
 On Error GoTo Err
 
-If mMaxNumberOfBars = 0 Or mContractFuture Is Nothing Or mHistDataStore Is Nothing Then
-    fireStateChange TimeframeStateLoaded
+Dim lFetchInitialBars As Boolean: lFetchInitialBars = CBool(Data)
+
+If Not lFetchInitialBars Then
     logAMessage "starting BarStudy", ProcName
     mStudyBase.StudyManager.StartStudy mBarStudy, 0
+    fireStateChange TimeframeStateLoaded
+    RaiseEvent BarsLoaded
 Else
-    mBarStudy.AllowInitialBars = True
     Set mBarFetchListener = mBarStudy.InitialBarFetchListener
     Set mInitialBarsFuture = mHistDataStore.FetchBars(CreateBarDataSpecifierFuture(mContractFuture, _
                                                                 mTimePeriod, _
@@ -342,11 +344,13 @@ Set mClockFuture = pClockFuture
 
 If mToTime <> MaxDate Then mIsHistorical = True
 
-Set mBarStudy = CreateBarStudy(True, mTimePeriod, mStudyBase, mIncludeBarsOutsideSession)
+Dim lFetchInitialBars As Boolean
+lFetchInitialBars = (mMaxNumberOfBars <> 0 And Not mContractFuture Is Nothing And Not mHistDataStore Is Nothing)
+Set mBarStudy = CreateBarStudy(lFetchInitialBars, mTimePeriod, mStudyBase, mIncludeBarsOutsideSession)
 
 Set mBarsFuture = mBarStudy.BarsFuture
 
-DeferAction Me
+DeferAction Me, lFetchInitialBars
 
 Exit Sub
 

@@ -554,6 +554,7 @@ Set lBarStudy = pStudyBase.StudyManager.AddStudy(pStudyName, _
                                         InputValueNames, _
                                         pIncludeDataOutsideSession, _
                                         pParams)
+lBarStudy.AllowInitialBars = pAllowInitialBars
 If Not pInitialBarsFuture Is Nothing Then lBarStudy.InitialBarsFuture = pInitialBarsFuture
 Set setupBarStudy = lBarStudy
 
