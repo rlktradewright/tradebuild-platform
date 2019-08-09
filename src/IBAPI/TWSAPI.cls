@@ -1788,7 +1788,7 @@ gLog "Requesting open orders", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_OPEN_ORDERS
 mWriter.AddString VERSION, "Version"
-mWriter.Send
+mWriter.Send True
 
 Exit Sub
 

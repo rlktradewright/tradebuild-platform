@@ -806,7 +806,7 @@ Private Sub getExecutionDataEnd(ByVal pVersion As Long)
 Const ProcName As String = "getExecutionDataEnd"
 On Error GoTo Err
 
-mReader.BeginLogMessage
+mReader.BeginLogMessage True
 
 Dim reqId  As Long
 
