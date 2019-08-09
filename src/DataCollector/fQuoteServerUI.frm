@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fDataCollectorUI 
@@ -406,7 +406,6 @@ Implements IDeferredAction
 Implements IBarOutputMonitor
 Implements IGenericTickListener
 Implements IRawMarketDepthListener
-Implements IStateChangeListener
 Implements ITickfileOutputMonitor
 Implements ILogListener
 
@@ -423,6 +422,8 @@ Private Const ModuleName                As String = "fDataCollectorUI"
 Private Const TickerScrollMax As Integer = 32767
 Private Const TickerScrollMin As Integer = 0
 
+Private Const RefreshTimerPulsesForLightOn As Long = 2
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -433,7 +434,8 @@ Private Const TickerScrollMin As Integer = 0
 
 Private Type TickerTableEntry
     Ticker                  As Ticker
-    tli                     As TimerListItem
+    NeedsRefresh            As Boolean
+    DataLightOffPulseNumber As Currency
 End Type
 
 '================================================================================
@@ -452,6 +454,9 @@ Private mNoDataRestartSecs As Long
 
 Private WithEvents mClock As Clock
 Attribute mClock.VB_VarHelpID = -1
+Private WithEvents mRefreshTimer As IntervalTimer
+Attribute mRefreshTimer.VB_VarHelpID = -1
+Private mRefreshTimerCount As Currency  ' use currency to ensure no overflows
 
 Private mNumTicksSinceConnected As Long
 Private mNumTicksThisSecond As Long
@@ -850,28 +855,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' StateChangeListener Interface Members
-'================================================================================
-
-Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "IStateChangeListener_Change"
-On Error GoTo Err
-
-Dim tli As TimerListItem
-Set tli = ev.Source
-If Not tli Is Nothing Then
-    If ev.State = TimerListItemStates.TimerListItemStateExpired Then
-        switchDataLightOff tli.Data
-    End If
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'================================================================================
 ' Form Control Event Handlers
 '================================================================================
 
@@ -953,6 +936,7 @@ SecsSinceLastTickText.Refresh
 
 If mNoDataRestartSecs > 0 And mConnected And lSecsSinceLastTick >= mNoDataRestartSecs And mNumTicksSinceConnected > 0 Then
     Set mClock = Nothing
+    stopRefreshTimer
     stopCollecting "Stopping collection: possible undetected loss of connection to provider", False
     
     LogMessage "Restarting collection in 10 seconds"
@@ -1133,7 +1117,7 @@ If Index > UBound(mTickers) Then
     ReDim Preserve mTickers(Index / 100 * 100 + 99) As TickerTableEntry
 End If
 Set mTickers(Index).Ticker = pTicker
-Set mTickers(Index).tli = Nothing
+'Set mTickers(Index).Tli = Nothing
 
 If Index > ShortNameText.UBound Then
     Dim i As Long
@@ -1169,7 +1153,7 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mFutureWaiter `Event Handlers
+' mFutureWaiter Event Handlers
 '================================================================================
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
@@ -1189,7 +1173,36 @@ ShortNameText(lIndex).ToolTipText = lContract.Specifier.localSymbol
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' mRefreshTimer Event Handlers
+'================================================================================
+
+Private Sub mRefreshTimer_TimerExpired(ev As TimerExpiredEventData)
+Const ProcName As String = "mRefreshTimer_TimerExpired"
+On Error GoTo Err
+
+mRefreshTimerCount = mRefreshTimerCount + 1
+
+Dim i As Long
+For i = 0 To UBound(mTickers)
+    If mTickers(i).NeedsRefresh Then
+        DataLightLabel(i).Refresh
+        mTickers(i).NeedsRefresh = False
+    End If
+    If mTickers(i).DataLightOffPulseNumber <> 0 And _
+        mRefreshTimerCount >= mTickers(i).DataLightOffPulseNumber _
+    Then
+        switchDataLightOff i
+    End If
+Next
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -1480,6 +1493,8 @@ StartStopButton.enabled = True
 mLastTickTime = GetTimestamp
 
 Set mClock = GetClock
+Set mRefreshTimer = CreateIntervalTimer(100, ExpiryTimeUnitMilliseconds, 100)
+mRefreshTimer.StartTimer
 
 Exit Sub
 
@@ -1492,6 +1507,7 @@ Const ProcName As String = "setStopped"
 On Error GoTo Err
 
 Set mClock = Nothing
+stopRefreshTimer
 
 mCollectingData = False
 StartStopButton.Caption = "Start"
@@ -1500,8 +1516,6 @@ mConnected = False
 ConnectionStatusText.BackColor = vbButtonFace
 
 clearTickers
-
-Set mClock = Nothing
 
 SecsSinceLastTickText = ""
 TicksPerSecText = ""
@@ -1612,6 +1626,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub stopRefreshTimer()
+Const ProcName As String = "stopRefreshTimer"
+On Error GoTo Err
+
+If Not mRefreshTimer Is Nothing Then
+    mRefreshTimer.StopTimer
+    Set mRefreshTimer = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub switchDataLightOn( _
                 ByVal Index As Long)
 Const ProcName As String = "switchDataLightOn"
@@ -1619,16 +1648,15 @@ On Error GoTo Err
 
 If Not mActivityMonitorVisible Then Exit Sub
 
-If Not mTickers(Index).tli Is Nothing Then
-    mTickers(Index).tli.RemoveStateChangeListener Me
-    mTickers(Index).tli.Cancel
-End If
+'If mTickers(Index).Tli Is Nothing Then
+    'Set mTickers(Index).Tli = mTimerList.Add(Index, 200, ExpiryTimeUnitMilliseconds)
+    'mTickers(Index).Tli.AddStateChangeListener Me
+    mTickers(Index).NeedsRefresh = True
+    mTickers(Index).DataLightOffPulseNumber = mRefreshTimerCount + RefreshTimerPulsesForLightOn
+'End If
 
-Set mTickers(Index).tli = mTimerList.Add(Index, 200, ExpiryTimeUnitMilliseconds)
-mTickers(Index).tli.AddStateChangeListener Me
 
 DataLightLabel(Index).BackColor = Rnd() * &HFFFFFF
-DataLightLabel(Index).Refresh
 ConnectionStatusText.BackColor = vbGreen
 
 Exit Sub
@@ -1642,14 +1670,14 @@ Private Sub switchDataLightOff( _
 Const ProcName As String = "switchDataLightOff"
 On Error GoTo Err
 
-If Not mTickers(Index).tli Is Nothing Then
-    mTickers(Index).tli.RemoveStateChangeListener Me
-    mTickers(Index).tli.Cancel
-    Set mTickers(Index).tli = Nothing
-End If
+'If Not mTickers(Index).Tli Is Nothing Then
+'    mTickers(Index).Tli.RemoveStateChangeListener Me
+'    mTickers(Index).Tli.Cancel
+'    Set mTickers(Index).Tli = Nothing
+    mTickers(Index).NeedsRefresh = True
+'End If
 
 DataLightLabel(Index).BackColor = mTheme.BackColor
-DataLightLabel(Index).Refresh
 
 Exit Sub
 
