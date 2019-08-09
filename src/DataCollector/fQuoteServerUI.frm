@@ -1117,7 +1117,6 @@ If Index > UBound(mTickers) Then
     ReDim Preserve mTickers(Index / 100 * 100 + 99) As TickerTableEntry
 End If
 Set mTickers(Index).Ticker = pTicker
-'Set mTickers(Index).Tli = Nothing
 
 If Index > ShortNameText.UBound Then
     Dim i As Long
@@ -1648,13 +1647,8 @@ On Error GoTo Err
 
 If Not mActivityMonitorVisible Then Exit Sub
 
-'If mTickers(Index).Tli Is Nothing Then
-    'Set mTickers(Index).Tli = mTimerList.Add(Index, 200, ExpiryTimeUnitMilliseconds)
-    'mTickers(Index).Tli.AddStateChangeListener Me
-    mTickers(Index).NeedsRefresh = True
-    mTickers(Index).DataLightOffPulseNumber = mRefreshTimerCount + RefreshTimerPulsesForLightOn
-'End If
-
+mTickers(Index).NeedsRefresh = True
+mTickers(Index).DataLightOffPulseNumber = mRefreshTimerCount + RefreshTimerPulsesForLightOn
 
 DataLightLabel(Index).BackColor = Rnd() * &HFFFFFF
 ConnectionStatusText.BackColor = vbGreen
@@ -1670,13 +1664,7 @@ Private Sub switchDataLightOff( _
 Const ProcName As String = "switchDataLightOff"
 On Error GoTo Err
 
-'If Not mTickers(Index).Tli Is Nothing Then
-'    mTickers(Index).Tli.RemoveStateChangeListener Me
-'    mTickers(Index).Tli.Cancel
-'    Set mTickers(Index).Tli = Nothing
-    mTickers(Index).NeedsRefresh = True
-'End If
-
+mTickers(Index).NeedsRefresh = True
 DataLightLabel(Index).BackColor = mTheme.BackColor
 
 Exit Sub
