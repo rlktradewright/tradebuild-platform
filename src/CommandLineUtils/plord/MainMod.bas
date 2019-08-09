@@ -410,18 +410,9 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function getPrompt() As String
-If mContractProcessor Is Nothing Then
-    getPrompt = mGroupName & DefaultPrompt
-ElseIf mContractProcessor.Contract Is Nothing Then
-    getPrompt = mGroupName & DefaultPrompt
-Else
-    getPrompt = mGroupName & "!" & _
-                mContractProcessor.Contract.Specifier.LocalSymbol & _
-                "@" & _
-                mContractProcessor.Contract.Specifier.Exchange & _
-                DefaultPrompt
-End If
+Private Function getContractName(ByVal pContract As IContract) As String
+AssertArgument Not pContract Is Nothing
+getContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
 End Function
 
 Private Function getNumberOfUnprocessedOrders() As Long
@@ -437,6 +428,18 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getPrompt() As String
+If mContractProcessor Is Nothing Then
+    getPrompt = mGroupName & DefaultPrompt
+ElseIf mContractProcessor.Contract Is Nothing Then
+    getPrompt = mGroupName & DefaultPrompt
+Else
+    getPrompt = mGroupName & "!" & _
+                getContractName(mContractProcessor.Contract) & _
+                DefaultPrompt
+End If
 End Function
 
 Private Function isCommandValid(ByVal pCommand As String) As Boolean
@@ -470,7 +473,14 @@ On Error GoTo Err
 Dim lVar As Variant
 For Each lVar In mOrderManager.GetGroupNames
     Dim lGroupName As String: lGroupName = lVar
-    gWriteLineToConsole IIf(lGroupName = mGroupName, "* ", "  ") & lGroupName
+    Dim lContractProcessor As ContractProcessor
+    Dim lContractName As String
+    If mGroupContractProcessors.TryItem(lGroupName, lContractProcessor) Then
+        lContractName = getContractName(lContractProcessor.Contract)
+    End If
+    gWriteLineToConsole IIf(lGroupName = mGroupName, "* ", "  ") & _
+                        padStringRight(lGroupName, 20) & _
+                        padStringRight(lContractName, 25)
 Next
 
 Exit Sub
@@ -492,7 +502,7 @@ For Each lPM In mOrderManager.PositionManagersLive
         Dim lContract As IContract
         Set lContract = lPM.ContractFuture.Value
         gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                            padStringRight(lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange, 25) & _
+                            padStringRight(getContractName(lContract), 25) & _
                             " Size=" & padStringleft(lPM.PositionSize & _
                                                     "(" & lPM.PendingBuyPositionSize & _
                                                     "/" & _
@@ -516,7 +526,7 @@ For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange, 25)
+                        padStringRight(getContractName(lContract), 25)
     
     Dim lTrade As Execution
     For Each lTrade In lPM.Executions
