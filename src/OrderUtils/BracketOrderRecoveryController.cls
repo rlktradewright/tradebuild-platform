@@ -601,17 +601,17 @@ On Error GoTo Err
 Dim lOrderContext As OrderContext
 
 If pPositionManager.OrderContexts.Contains(pContextName) Then
-    gLog "Order context already exists", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName
+    gLog "Order context already exists", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName, LogLevelDetail
     Set lOrderContext = pPositionManager.OrderContexts(pContextName)
 Else
-    gLog "Creating order context", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName
+    gLog "Creating order context", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName, LogLevelDetail
     Set lOrderContext = pPositionManager.OrderContexts.Add(pContextName)
     If lOrderContext.IsProviderReady Then
-        gLog "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name
+        gLog "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name, LogLevelDetail
     Else
         lOrderContext.AddChangeListener Me
         mNumOrderContextsWaiting = mNumOrderContextsWaiting + 1
-        gLog "Order contexts awaiting ready", ProcName, ModuleName, mNumOrderContextsWaiting
+        gLog "Order contexts awaiting ready", ProcName, ModuleName, mNumOrderContextsWaiting, LogLevelDetail
     End If
 End If
 
