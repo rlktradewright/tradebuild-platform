@@ -1011,9 +1011,9 @@ End If
 If Not mGroupContractProcessors.TryItem(mGroupName, mContractProcessor) Then Set mContractProcessor = Nothing
 
 If Not mContractProcessor Is Nothing Then
-    gSetValidNextCommands ListCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands GroupCommand, ListCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
 Else
-    gSetValidNextCommands ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands GroupCommand, ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
 End If
 End Sub
 
