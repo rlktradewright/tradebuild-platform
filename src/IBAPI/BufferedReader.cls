@@ -207,7 +207,9 @@ ElseIf mLogApiMessages = ApiMessageLoggingOptionDefault Then
 Else
     mApiMessageLogLevel = LogLevelNone
 End If
-If gSocketLogger.IsLoggable(mApiMessageLogLevel) Then
+If Not gSocketLogger.IsLoggable(mApiMessageLogLevel) Then
+    mLogCurrentApiMessage = False
+Else
     mLogCurrentApiMessage = True
     mInMessageBuilder.Clear
     mInMessageBuilder.Append "IN: "
