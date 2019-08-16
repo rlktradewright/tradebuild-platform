@@ -51,6 +51,9 @@ Private WithEvents mContractProcessor               As ContractProcessor
 Attribute mContractProcessor.VB_VarHelpID = -1
 Private mContinuationData                           As BuySellCommandData
 
+Private WithEvents mOrderContext                    As OrderContext
+Attribute mOrderContext.VB_VarHelpID = -1
+
 Private mBatchOrders                                As Boolean
 
 Private mSelfRef                                    As Object
@@ -89,7 +92,13 @@ On Error GoTo Err
 
 Set mContractProcessor = gNotifyContractFutureAvailable(ev.Future)
 
-If Not mContractProcessor Is Nothing Then processContinuationData
+If Not mContractProcessor Is Nothing Then
+    If Not mContractProcessor.OrderContext.IsProviderReady Then
+        Set mOrderContext = mContractProcessor.OrderContext
+    Else
+        processContinuationData
+    End If
+End If
 
 gInputPaused = False
 
@@ -99,6 +108,28 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+'@================================================================================
+' mOrderContext Event Handlers
+'@================================================================================
+
+Private Sub mOrderContextEv_Change(ev As ChangeEventData)
+Const ProcName As String = "mOrderContextEv_Change"
+On Error GoTo Err
+
+If ev.ChangeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
+
+If Not mOrderContext.IsProviderReady Then
+    Exit Sub
+End If
+
+processContinuationData
+gInputPaused = False
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties

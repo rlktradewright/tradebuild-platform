@@ -74,9 +74,9 @@ On Error GoTo Err
 
 If ev.ChangeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
 
-If Not (IsReadyToPlaceEntryOrder(mBracketOrderSpec.EntryType) And _
-        IsReadyToPlaceStopLossOrder(mBracketOrderSpec.StopLossType) And _
-        IsReadyToPlaceTargetOrder(mBracketOrderSpec.TargetType)) Then
+If Not mOrderContext.IsReadyForBracketOrder(mBracketOrderSpec.EntryType, _
+                    mBracketOrderSpec.StopLossType, _
+                    mBracketOrderSpec.TargetType) Then
     Exit Sub
 End If
 
@@ -126,9 +126,9 @@ If sAttempts = 0 Then
     gWriteLineToStdOut mBracketOrderSpec.ToString
 End If
 
-If Not (IsReadyToPlaceEntryOrder(mBracketOrderSpec.EntryType) And _
-        IsReadyToPlaceStopLossOrder(mBracketOrderSpec.StopLossType) And _
-        IsReadyToPlaceTargetOrder(mBracketOrderSpec.TargetType)) Then
+If Not mOrderContext.IsReadyForBracketOrder(mBracketOrderSpec.EntryType, _
+                                            mBracketOrderSpec.StopLossType, _
+                                            mBracketOrderSpec.TargetType) Then
     Set mOrderContextEv = mOrderContext
     gWriteLineToStdOut "Order is pending, waiting for the provider to be ready"
     Exit Function
@@ -211,63 +211,6 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function IsReadyToPlaceEntryOrder(ByVal pOrderType As BracketEntryTypes) As Boolean
-Const ProcName As String = "IsReadyToPlaceEntryOrder"
-On Error GoTo Err
-
-IsReadyToPlaceEntryOrder = False
-If Not mOrderContext.IsProviderReady Then Exit Function
-
-If pOrderType = BracketEntryTypeAsk And Not mOrderContext.DataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
-If pOrderType = BracketEntryTypeBid And Not mOrderContext.DataSource.HasCurrentTick(TickTypeBid) Then Exit Function
-If pOrderType = BracketEntryTypeLast And Not mOrderContext.DataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
-
-IsReadyToPlaceEntryOrder = True
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function IsReadyToPlaceStopLossOrder(ByVal pOrderType As BracketStopLossTypes) As Boolean
-Const ProcName As String = "IsReadyToPlaceStopLossOrder"
-On Error GoTo Err
-
-IsReadyToPlaceStopLossOrder = False
-If Not mOrderContext.IsProviderReady Then Exit Function
-
-If pOrderType = BracketStopLossTypeAsk And Not mOrderContext.DataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
-If pOrderType = BracketStopLossTypeBid And Not mOrderContext.DataSource.HasCurrentTick(TickTypeBid) Then Exit Function
-If pOrderType = BracketStopLossTypeLast And Not mOrderContext.DataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
-
-IsReadyToPlaceStopLossOrder = True
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function IsReadyToPlaceTargetOrder(ByVal pOrderType As BracketTargetTypes) As Boolean
-Const ProcName As String = "IsReadyToPlaceTargetOrder"
-On Error GoTo Err
-
-IsReadyToPlaceTargetOrder = False
-If Not mOrderContext.IsProviderReady Then Exit Function
-
-If pOrderType = BracketTargetTypeAsk And Not mOrderContext.DataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
-If pOrderType = BracketTargetTypeBid And Not mOrderContext.DataSource.HasCurrentTick(TickTypeBid) Then Exit Function
-If pOrderType = BracketTargetTypeLast And Not mOrderContext.DataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
-
-IsReadyToPlaceTargetOrder = True
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Sub writeContractSpecToStdOut()
 Const ProcName As String = "writeContractSpecToStdOut"
