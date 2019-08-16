@@ -136,13 +136,11 @@ Begin VB.Form fDataCollectorUI
       TabPicture(1)   =   "fQuoteServerUI.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LogText"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Configuration"
       TabPicture(2)   =   "fQuoteServerUI.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "ConfigurationPicture"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       Begin VB.PictureBox ConfigurationPicture 
          BorderStyle     =   0  'None
@@ -1114,7 +1112,7 @@ Dim Index As Long
 Index = pTicker.Handle
 
 If Index > UBound(mTickers) Then
-    ReDim Preserve mTickers(Index / 100 * 100 + 99) As TickerTableEntry
+    ReDim Preserve mTickers(Index) As TickerTableEntry
 End If
 Set mTickers(Index).Ticker = pTicker
 
@@ -1188,7 +1186,6 @@ mRefreshTimerCount = mRefreshTimerCount + 1
 Dim i As Long
 For i = 0 To UBound(mTickers)
     If mTickers(i).NeedsRefresh Then
-        DataLightLabel(i).Refresh
         mTickers(i).NeedsRefresh = False
     End If
     If mTickers(i).DataLightOffPulseNumber <> 0 And _
@@ -1197,6 +1194,8 @@ For i = 0 To UBound(mTickers)
         switchDataLightOff i
     End If
 Next
+
+TickersContainerPicture.Refresh
 
 Exit Sub
 
