@@ -321,14 +321,14 @@ Const ProcName As String = "gWriteErrorLine"
 Dim s As String
 s = "Error on line " & mLineNumber & ": " & pMessage
 gCon.WriteErrorLine s
-gLogger.Log "StdErr: " & s, ProcName, ModuleName
+LogMessage "StdErr: " & s
 mErrorCount = mErrorCount + 1
 End Sub
 
 Public Sub gWriteLineToConsole(ByVal pMessage As String, Optional ByVal pLogit As Boolean)
 Const ProcName As String = "gWriteLineToConsole"
 
-If pLogit Then gLogger.Log "Con: " & pMessage, ProcName, ModuleName
+If pLogit Then LogMessage "Con: " & pMessage
 gCon.WriteLineToConsole pMessage
 End Sub
 
@@ -906,6 +906,9 @@ If UCase$(pParams) = All Then
 ElseIf UCase$(pParams) = DefaultOrderGroupName Then
     mCloseoutProcessor.CloseoutGroup DefaultOrderGroupName
     gInputPaused = True
+ElseIf pParams = "" Then
+    mCloseoutProcessor.CloseoutGroup mGroupName
+    gInputPaused = True
 ElseIf pParams <> "" Then
     If Not isGroupValid(pParams) Then
         gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore"
@@ -1011,9 +1014,9 @@ End If
 If Not mGroupContractProcessors.TryItem(mGroupName, mContractProcessor) Then Set mContractProcessor = Nothing
 
 If Not mContractProcessor Is Nothing Then
-    gSetValidNextCommands GroupCommand, ListCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
 Else
-    gSetValidNextCommands GroupCommand, ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
 End If
 End Sub
 
@@ -1313,7 +1316,7 @@ End Sub
 
 Private Sub showOrderHelp()
 gWriteLineToConsole "    buycommand  ::= buy [<contract>] <quantity> <entryordertype> "
-gWriteLineToConsole "                        [<price> [<triggerprice]]"
+gWriteLineToConsole "                        [<priceoroffset> [<triggerprice]]"
 gWriteLineToConsole "                        [/<bracketattr> | /<orderattr>]... NEWLINE"
 gWriteLineToConsole ""
 gWriteLineToConsole "    sellcommand ::= sell [<contract>] <quantity> <entryordertype> "
