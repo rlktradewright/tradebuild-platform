@@ -259,7 +259,17 @@ IsProviderReady = mProviderIsReady
 End Property
 
 Public Property Get IsReady() As Boolean
-IsReady = (mDataSourceIsReady And mProviderIsReady And mEnabled And Not mContract Is Nothing And Not mTimerList Is Nothing)
+IsReady = (mProviderIsReady And mEnabled And Not mContract Is Nothing And Not mTimerList Is Nothing)
+End Property
+
+Public Property Get IsReadyForBracketOrder( _
+                ByVal pEntryType As BracketEntryTypes, _
+                Optional ByVal pStopLossType As BracketStopLossTypes = BracketStopLossTypeNone, _
+                Optional ByVal pTargetType As BracketTargetTypes = BracketTargetTypeNone)
+IsReadyForBracketOrder = IsReady And _
+                        isReadyToPlaceEntryOrder(pEntryType) And _
+                        isReadyToPlaceStopLossOrder(pStopLossType) And _
+                        isReadyToPlaceTargetOrder(pTargetType)
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -647,7 +657,9 @@ Friend Function CreateBracketOrder(ByVal pAction As OrderActions, _
 Const ProcName As String = "CreateBracketOrder"
 On Error GoTo Err
 
-Assert IsReady, "The service provider is not Ready"
+Assert IsReadyForBracketOrder(pBracketEntryType, _
+                            pBracketStopLossType, _
+                            pBracketTargetType), "The service provider is not Ready"
 Assert pNumber > 0, "The quantity must be greater than zero"
 
 validateBracketEntryType pBracketEntryType
@@ -1382,6 +1394,60 @@ If mDataSource Is Nothing Then
 Else
     isDataSourceRunning = (mDataSource.State = MarketDataSourceStateRunning)
 End If
+End Function
+
+Private Function isReadyToPlaceEntryOrder(ByVal pOrderType As BracketEntryTypes) As Boolean
+Const ProcName As String = "isReadyToPlaceEntryOrder"
+On Error GoTo Err
+
+isReadyToPlaceEntryOrder = False
+
+If pOrderType = BracketEntryTypeAsk And Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
+If pOrderType = BracketEntryTypeBid And Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Function
+If pOrderType = BracketEntryTypeLast And Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
+
+isReadyToPlaceEntryOrder = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isReadyToPlaceStopLossOrder(ByVal pOrderType As BracketStopLossTypes) As Boolean
+Const ProcName As String = "isReadyToPlaceStopLossOrder"
+On Error GoTo Err
+
+isReadyToPlaceStopLossOrder = False
+
+If pOrderType = BracketStopLossTypeAsk And Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
+If pOrderType = BracketStopLossTypeBid And Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Function
+If pOrderType = BracketStopLossTypeLast And Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
+
+isReadyToPlaceStopLossOrder = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isReadyToPlaceTargetOrder(ByVal pOrderType As BracketTargetTypes) As Boolean
+Const ProcName As String = "isReadyToPlaceTargetOrder"
+On Error GoTo Err
+
+isReadyToPlaceTargetOrder = False
+
+If pOrderType = BracketTargetTypeAsk And Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
+If pOrderType = BracketTargetTypeBid And Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Function
+If pOrderType = BracketTargetTypeLast And Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
+
+isReadyToPlaceTargetOrder = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function priceToString(ByVal pPrice As Double) As String
