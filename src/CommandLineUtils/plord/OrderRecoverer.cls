@@ -47,6 +47,8 @@ Private Const ModuleName                            As String = "OrderRecoverer"
 Private WithEvents mTaskController                  As TaskController
 Attribute mTaskController.VB_VarHelpID = -1
 
+Private mSelfRef                                    As Object
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -72,6 +74,8 @@ ElseIf ev.ErrorNumber <> 0 Then
                     "At:" & vbCrLf & _
                     ev.ErrorSource
 End If
+
+Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -103,6 +107,7 @@ Set mTaskController = pOrderManager.RecoverOrdersFromPreviousSession(pScopeName,
                                                                     pMarketDataManager, _
                                                                     pOrderSubmitterFactory)
 gInputPaused = True
+Set mSelfRef = Me
 
 Exit Sub
 
