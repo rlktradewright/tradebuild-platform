@@ -86,41 +86,47 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+'@================================================================================
+' IChangeListener Interface Members
+'@================================================================================
+
 Private Sub IChangeListener_Change(ev As ChangeEventData)
 Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
+
+Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
 
 Dim lChangeType As BracketOrderChangeTypes: lChangeType = ev.ChangeType
 Dim lBo As IBracketOrder: Set lBo = ev.Source
 Select Case lChangeType
 Case BracketOrderCompleted
-    gWriteLineToStdOut lBo.Key & ": bracket order completed"
+    gWriteLineToStdOut lTime & lBo.Key & ": bracket order completed"
     Remove lBo
 Case BracketOrderSelfCancelled
-    gWriteLineToStdOut lBo.Key & ": bracket order cancelled"
+    gWriteLineToStdOut lTime & lBo.Key & ": bracket order cancelled"
     Remove lBo
 Case BracketOrderEntryOrderChanged
 
 Case BracketOrderEntryOrderFilled
-    gWriteLineToStdOut lBo.Key & ": entry order filled " & lBo.EntryOrder.QuantityFilled & "; remaining " & lBo.EntryOrder.QuantityRemaining
+    gWriteLineToStdOut lTime & lBo.Key & ": entry order filled " & lBo.EntryOrder.QuantityFilled & "; remaining " & lBo.EntryOrder.QuantityRemaining
 Case BracketOrderStopLossOrderChanged
 
 Case BracketOrderStopLossOrderFilled
-    gWriteLineToStdOut lBo.Key & ": stop-loss order filled " & lBo.StopLossOrder.QuantityFilled & "; remaining " & lBo.StopLossOrder.QuantityRemaining
+    gWriteLineToStdOut lTime & lBo.Key & ": stop-loss order filled " & lBo.StopLossOrder.QuantityFilled & "; remaining " & lBo.StopLossOrder.QuantityRemaining
 Case BracketOrderTargetOrderChanged
 
 Case BracketOrderTargetOrderFilled
-    gWriteLineToStdOut lBo.Key & ": target order filled " & lBo.TargetOrder.QuantityFilled & "; remaining " & lBo.TargetOrder.QuantityRemaining
+    gWriteLineToStdOut lTime & lBo.Key & ": target order filled " & lBo.TargetOrder.QuantityFilled & "; remaining " & lBo.TargetOrder.QuantityRemaining
 Case BracketOrderCloseoutOrderCreated
-    gWriteLineToStdOut lBo.Key & ": closeout order created"
+    gWriteLineToStdOut lTime & lBo.Key & ": closeout order created"
 Case BracketOrderCloseoutOrderChanged
 
 Case BracketOrderCloseoutOrderFilled
-    gWriteLineToStdOut lBo.Key & ": closeout order filled " & lBo.CloseoutOrder.QuantityFilled & "; remaining " & lBo.CloseoutOrder.QuantityRemaining
+    gWriteLineToStdOut lTime & lBo.Key & ": closeout order filled " & lBo.CloseoutOrder.QuantityFilled & "; remaining " & lBo.CloseoutOrder.QuantityRemaining
 Case BracketOrderSizeChanged
 
 Case BracketOrderStateChanged
-    gWriteLineToStdOut lBo.Key & ": bracket order state changed: " & BracketOrderStateToString(lBo.State)
+    gWriteLineToStdOut lTime & lBo.Key & ": bracket order state changed: " & BracketOrderStateToString(lBo.State)
 Case BracketOrderChangesPending
 
 Case BracketOrderChangesApplied
