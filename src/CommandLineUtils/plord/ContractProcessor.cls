@@ -66,6 +66,9 @@ Attribute mOrderContext.VB_VarHelpID = -1
 Private mScopeName                                  As String
 Private mGroupName                                  As String
 
+Private mLatestBuyCommandParams                     As String
+Private mLatestSellCommandParams                    As String
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -106,6 +109,14 @@ End Property
 
 Friend Property Get Contract() As IContract
 Set Contract = mContract
+End Property
+
+Friend Property Get LatestBuyCommandParams() As String
+LatestBuyCommandParams = mLatestBuyCommandParams
+End Property
+
+Friend Property Get LatestSellCommandParams() As String
+LatestSellCommandParams = mLatestSellCommandParams
 End Property
 
 Friend Property Get OrderContext() As OrderContext
@@ -251,7 +262,7 @@ On Error GoTo Err
 
 If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, ContractCommand, EndOrdersCommand, ResetCommand
+gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, SellAgainCommand, ContractCommand, EndOrdersCommand, ResetCommand
 
 Exit Sub
 
@@ -575,7 +586,13 @@ If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.Switch
 
 mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands ContractCommand, BuyCommand, SellCommand, BracketCommand, ResetCommand, CloseoutCommand
+If pAction = OrderActionBuy Then
+    mLatestBuyCommandParams = pParams
+Else
+    mLatestSellCommandParams = pParams
+End If
+
+gSetValidNextCommands ContractCommand, BuyCommand, SellCommand, SellAgainCommand, BracketCommand, ResetCommand, CloseoutCommand
 
 Exit Function
 

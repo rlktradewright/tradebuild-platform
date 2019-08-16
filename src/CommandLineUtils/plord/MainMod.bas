@@ -75,6 +75,7 @@ Public Const TimezoneSwitch                         As String = "TIMEZONE"
 Public Const BatchOrdersCommand                     As String = "BATCHORDERS"
 Public Const BracketCommand                         As String = "BRACKET"
 Public Const BuyCommand                             As String = "BUY"
+Public Const BuyAgainCommand                        As String = "B"
 Public Const CloseoutCommand                        As String = "CLOSEOUT"
 Public Const ContractCommand                        As String = "CONTRACT"
 Public Const EndBracketCommand                      As String = "ENDBRACKET"
@@ -88,6 +89,7 @@ Public Const ListCommand                            As String = "LIST"
 Public Const QuitCommand                            As String = "QUIT"
 Public Const ResetCommand                           As String = "RESET"
 Public Const SellCommand                            As String = "SELL"
+Public Const SellAgainCommand                       As String = "S"
 Public Const StageOrdersCommand                     As String = "STAGEORDERS"
 Public Const StopLossCommand                        As String = "STOPLOSS"
 Public Const TargetCommand                          As String = "TARGET"
@@ -120,9 +122,8 @@ Public gCon                                         As Console
 
 Public gLogToConsole                                As Boolean
 
-' This flag is set when a Contract command is being processed: this is because
-' the contract fetch and starting the market data happen asynchronously, and we
-' don't want any further user input until we know whether it has succeeded.
+' This flag is set when various asynchronous operations are being performed, and
+' we' don't want any further user input until we know whether it has succeeded.
 Public gInputPaused                                 As Boolean
 
 Public gNumberOfOrdersPlaced                        As Long
@@ -704,7 +705,7 @@ If Not setBatchOrders Then Exit Sub
 
 setOrderRecovery
 
-gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, CloseoutCommand, ResetCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, CloseoutCommand, ResetCommand
 
 Dim inString As String
 inString = Trim$(gCon.ReadLine(getPrompt))
@@ -772,8 +773,12 @@ Else
         processGroupCommand Params
     Case BuyCommand
         ProcessBuyCommand Params
+    Case BuyAgainCommand
+        ProcessBuyAgainCommand Params
     Case SellCommand
         ProcessSellCommand Params
+    Case SellAgainCommand
+        ProcessSellAgainCommand Params
     Case BracketCommand
         mContractProcessor.ProcessBracketCommand Params
     Case EntryCommand
@@ -825,7 +830,7 @@ Case Else
     gWriteErrorLine BatchOrdersCommand & " parameter must be either YES or NO or DEFAULT"
 End Select
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Sub ProcessBuyCommand( _
@@ -834,6 +839,25 @@ Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
 
 processBuyOrSellCommand OrderActionBuy, pParams
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ProcessBuyAgainCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "ProcessBuyAgainCommand"
+On Error GoTo Err
+
+If mContractProcessor Is Nothing Then
+    gWriteErrorLine "No Buy command to repeat"
+ElseIf mContractProcessor.LatestBuyCommandParams = "" Then
+    gWriteErrorLine "No Buy command to repeat"
+Else
+    ProcessBuyCommand mContractProcessor.LatestBuyCommandParams
+End If
 
 Exit Sub
 
@@ -888,6 +912,25 @@ Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
 
 processBuyOrSellCommand OrderActionSell, pParams
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ProcessSellAgainCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "ProcessSellAgainCommand"
+On Error GoTo Err
+
+If mContractProcessor Is Nothing Then
+    gWriteErrorLine "No Sell command to repeat"
+ElseIf mContractProcessor.LatestSellCommandParams = "" Then
+    gWriteErrorLine "No Sell command to repeat"
+Else
+    ProcessSellCommand mContractProcessor.LatestSellCommandParams
+End If
 
 Exit Sub
 
@@ -956,7 +999,7 @@ End If
 
 If lContractSpec Is Nothing Then
     If Not mContractProcessor Is Nothing Then
-        gSetValidNextCommands ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+        gSetValidNextCommands ListCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
     Else
         gSetValidNextCommands ListCommand, ContractCommand, EndOrdersCommand, ResetCommand
     End If
@@ -985,7 +1028,7 @@ On Error GoTo Err
 If mErrorCount <> 0 Then
     gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed"
     mErrorCount = 0
-    gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+    gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
     Exit Sub
 End If
 
@@ -1014,9 +1057,9 @@ End If
 If Not mGroupContractProcessors.TryItem(mGroupName, mContractProcessor) Then Set mContractProcessor = Nothing
 
 If Not mContractProcessor Is Nothing Then
-    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
 Else
-    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, BuyCommand, SellCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
 End If
 End Sub
 
@@ -1031,7 +1074,7 @@ gPlaceOrdersTask.AddContractProcessors mContractProcessors, mStageOrders
 
 setupResultsLogging mClp
 
-gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
 
 Exit Sub
 
@@ -1066,7 +1109,7 @@ Set mContractProcessor = Nothing
 mStageOrders = mStageOrdersDefault
 mBatchOrders = mBatchOrdersDefault
 mErrorCount = 0
-gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Sub processStageOrdersCommand( _
@@ -1086,7 +1129,7 @@ Case Else
     gWriteErrorLine StageOrdersCommand & " parameter must be either YES or NO or DEFAULT"
 End Select
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Function setBatchOrders() As Boolean
