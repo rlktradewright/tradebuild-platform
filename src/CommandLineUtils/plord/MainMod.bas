@@ -737,6 +737,8 @@ Loop
 If Not mOrderPersistenceDataStore Is Nothing Then mOrderPersistenceDataStore.Finish
 Set mOrderPersistenceDataStore = Nothing
 
+gWriteLineToConsole "Exiting", True
+
 Exit Sub
 
 Err:
@@ -754,7 +756,6 @@ Dim Params As String
 Params = Trim$(Right$(pInstring, Len(pInstring) - Len(command)))
 
 If command = ExitCommand Or command = QuitCommand Then
-    gWriteLineToConsole "Exiting", True
     processCommand = False
     Exit Function
 End If
