@@ -114,6 +114,9 @@ Private Const DefaultOrderGroupName                 As String = "$"
 
 Private Const DefaultPrompt                         As String = ":"
 
+Private Const CloseoutMarket                        As String = "MKT"
+Private Const CloseoutLimit                         As String = "LMT"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -947,24 +950,41 @@ Private Sub processCloseoutCommand( _
 Const ProcName As String = "processCloseoutCommand"
 On Error GoTo Err
 
-If UCase$(pParams) = All Then
+gRegExp.Global = False
+gRegExp.IgnoreCase = True
+gRegExp.Pattern = "^((all)|([a-zA-Z0-9][\w-]*))?( +((mkt)|((lmt)(:(-)?(\d{1,3}))?))?)?$"
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(pParams)
+
+If lMatches.Count <> 1 Then
+    gWriteErrorLine "Invalid command: syntax error"
+    Exit Sub
+End If
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+Dim lAllGroups As Boolean: lAllGroups = lMatch.SubMatches(1) <> ""
+Dim lGroupName As String: lGroupName = lMatch.SubMatches(2)
+Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
+Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(9) = "-", -1, 1)
+
+Dim lSpreadFactor As Long: lSpreadFactor = CLng("0" & lMatch.SubMatches(10)) * lSpreadFactorSign
+
+mCloseoutProcessor.SpreadFactor = lSpreadFactor
+mCloseoutProcessor.UseLimitOrders = lUseLimitOrders
+
+If lAllGroups Then
     mCloseoutProcessor.CloseoutAll
     gInputPaused = True
-ElseIf UCase$(pParams) = DefaultOrderGroupName Then
-    mCloseoutProcessor.CloseoutGroup DefaultOrderGroupName
-    gInputPaused = True
-ElseIf pParams = "" Then
+ElseIf lGroupName = "" Then
     mCloseoutProcessor.CloseoutGroup mGroupName
     gInputPaused = True
-ElseIf pParams <> "" Then
-    If Not isGroupValid(pParams) Then
-        gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore"
-    Else
-        mCloseoutProcessor.CloseoutGroup pParams
-        gInputPaused = True
-    End If
+ElseIf Not mOrderManager.GetGroupNames.Contains(lGroupName) Then
+    gWriteErrorLine "No such group"
 Else
-    gWriteErrorLine CloseoutCommand & " parameter must be a group name or ALL"
+    mCloseoutProcessor.CloseoutGroup lGroupName
+    gInputPaused = True
 End If
 
 Exit Sub
@@ -1332,9 +1352,9 @@ End Function
 
 Private Sub showCloseoutHelp()
 gWriteLineToConsole "    closeoutcommand  ::= closeout [ <groupname> | ALL ])"
-gWriteLineToConsole "                                  [ LMT:<percentofspread> ]"
+gWriteLineToConsole "                                  [ LMT[:<percentofspread>] ]"
 gWriteLineToConsole ""
-gWriteLineToConsole "    percentofspread  ::= DOUBLE"
+gWriteLineToConsole "    percentofspread  ::= INTEGER"
 gWriteLineToConsole ""
 End Sub
 

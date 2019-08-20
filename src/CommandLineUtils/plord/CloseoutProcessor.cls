@@ -55,6 +55,8 @@ Private mNumberOfLivePositionsNotClosed             As Long
 Private mNumberOfSimulatedPositionsClosed           As Long
 Private mNumberOfSimulatedPositionsNotClosed        As Long
 
+Private mUseLimitOrders                             As Boolean
+Private mSpreadFactor                               As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -115,6 +117,14 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Let SpreadFactor(ByVal Value As Long)
+mSpreadFactor = Value
+End Property
+
+Friend Property Let UseLimitOrders(ByVal Value As Boolean)
+mUseLimitOrders = Value
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -139,7 +149,6 @@ Friend Sub CloseoutGroup(ByVal pGroupName As String)
 Const ProcName As String = "CloseoutGroup"
 On Error GoTo Err
 
-AssertArgument mOrderManager.GetGroupNames.Contains(pGroupName), "No such group"
 mFutureWaiter.Add mOrderManager.CloseGroupPositions(pGroupName)
 
 Exit Sub
