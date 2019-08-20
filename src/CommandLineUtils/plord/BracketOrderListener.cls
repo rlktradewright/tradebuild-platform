@@ -61,7 +61,7 @@ Const ProcName As String = "IBracketOrderErrorListener_NotifyBracketOrderError"
 On Error GoTo Err
 
 Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
-gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage)
+gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage), True
 
 Exit Sub
 
@@ -78,7 +78,7 @@ Const ProcName As String = "IBracketOrderMsgListener_NotifyBracketOrderMessage"
 On Error GoTo Err
 
 Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
-gWriteLineToConsole generateMessage(lOrder, lOrder.Message)
+gWriteLineToConsole generateMessage(lOrder, lOrder.Message), True
 
 Exit Sub
 

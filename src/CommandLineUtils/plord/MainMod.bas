@@ -380,7 +380,7 @@ If Not validateApiMessageLogging( _
                 lLogApiMessages, _
                 lLogRawApiMessages, _
                 lLogApiMessageStats) Then
-    gWriteLineToConsole "API message logging setting is invalid"
+    gWriteLineToConsole "API message logging setting is invalid", True
     Exit Sub
 End If
 
@@ -481,7 +481,8 @@ For Each lVar In mOrderManager.GetGroupNames
     End If
     gWriteLineToConsole IIf(lGroupName = mGroupName, "* ", "  ") & _
                         padStringRight(lGroupName, 20) & _
-                        padStringRight(lContractName, 25)
+                        padStringRight(lContractName, 25), _
+                        True
 Next
 
 Exit Sub
@@ -508,7 +509,8 @@ For Each lPM In mOrderManager.PositionManagersLive
                                                     "(" & lPM.PendingBuyPositionSize & _
                                                     "/" & _
                                                     lPM.PendingSellPositionSize & ")", 10) & _
-                            " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 9)
+                            " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 9), _
+                            True
     End If
 Next
 
@@ -527,16 +529,18 @@ For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(getContractName(lContract), 25)
+                        padStringRight(getContractName(lContract), 25), _
+                        True
     
     Dim lTrade As Execution
     For Each lTrade In lPM.Executions
         gWriteLineToConsole "  " & FormatTimestamp(lTrade.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & " " & _
-        padStringRight(IIf(lTrade.Action = OrderActionBuy, "BUY", "SELL"), 5) & _
-        padStringleft(lTrade.Quantity, 5) & _
-        padStringleft(FormatPrice(lTrade.Price, lContract.Specifier.SecType, lContract.TickSize), 9) & _
-        padStringRight(" " & lTrade.FillingExchange, 10) & _
-        " " & lTrade.TimezoneName
+                        padStringRight(IIf(lTrade.Action = OrderActionBuy, "BUY", "SELL"), 5) & _
+                        padStringleft(lTrade.Quantity, 5) & _
+                        padStringleft(FormatPrice(lTrade.Price, lContract.Specifier.SecType, lContract.TickSize), 9) & _
+                        padStringRight(" " & lTrade.FillingExchange, 10) & _
+                        " " & lTrade.TimezoneName, _
+        True
     Next
 Next
 
@@ -750,7 +754,7 @@ Dim Params As String
 Params = Trim$(Right$(pInstring, Len(pInstring) - Len(command)))
 
 If command = ExitCommand Or command = QuitCommand Then
-    gWriteLineToConsole "Exiting"
+    gWriteLineToConsole "Exiting", True
     processCommand = False
     Exit Function
 End If
@@ -792,7 +796,7 @@ Else
         If mErrorCount = 0 And Not mBatchOrders Then
             processOrders
         Else
-            gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed"
+            gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed", True
             mErrorCount = 0
         End If
     Case EndOrdersCommand
@@ -1026,14 +1030,14 @@ Const ProcName As String = "processEndOrdersCommand"
 On Error GoTo Err
 
 If mErrorCount <> 0 Then
-    gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed"
+    gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed", True
     mErrorCount = 0
     gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
     Exit Sub
 End If
 
 If getNumberOfUnprocessedOrders = 0 Then
-    gWriteLineToConsole "No orders have been defined"
+    gWriteLineToConsole "No orders have been defined", True
     Exit Sub
 End If
 

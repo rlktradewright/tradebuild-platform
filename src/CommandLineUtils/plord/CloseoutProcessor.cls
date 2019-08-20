@@ -76,10 +76,10 @@ Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
 On Error GoTo Err
 
-If mNumberOfLivePositionsClosed <> 0 Then gWriteLineToConsole "Live positions closed: " & mNumberOfLivePositionsClosed
-If mNumberOfLivePositionsNotClosed <> 0 Then gWriteLineToConsole "Live positions not closed: " & mNumberOfLivePositionsNotClosed
-If mNumberOfSimulatedPositionsClosed <> 0 Then gWriteLineToConsole "Simulated positions closed: " & mNumberOfSimulatedPositionsClosed
-If mNumberOfSimulatedPositionsNotClosed <> 0 Then gWriteLineToConsole "Simulated positions not closed: " & mNumberOfSimulatedPositionsNotClosed
+If mNumberOfLivePositionsClosed <> 0 Then gWriteLineToConsole "Live positions closed: " & mNumberOfLivePositionsClosed, True
+If mNumberOfLivePositionsNotClosed <> 0 Then gWriteLineToConsole "Live positions not closed: " & mNumberOfLivePositionsNotClosed, True
+If mNumberOfSimulatedPositionsClosed <> 0 Then gWriteLineToConsole "Simulated positions closed: " & mNumberOfSimulatedPositionsClosed, True
+If mNumberOfSimulatedPositionsNotClosed <> 0 Then gWriteLineToConsole "Simulated positions not closed: " & mNumberOfSimulatedPositionsNotClosed, True
 
 mNumberOfLivePositionsClosed = 0
 mNumberOfLivePositionsNotClosed = 0
