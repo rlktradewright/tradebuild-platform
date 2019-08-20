@@ -262,7 +262,7 @@ On Error GoTo Err
 
 If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, SellAgainCommand, ContractCommand, EndOrdersCommand, ResetCommand
+gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, SellAgainCommand, ContractCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
 
 Exit Sub
 
