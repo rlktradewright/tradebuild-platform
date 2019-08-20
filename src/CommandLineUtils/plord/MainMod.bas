@@ -165,8 +165,6 @@ Private mClp                                        As CommandLineParser
 
 Private mMonitor                                    As Boolean
 
-Private mLineNumber                                 As Long
-
 Private mRecoveryFileDir                            As String
 
 Private mOrderPersistenceDataStore                  As IOrderPersistenceDataStore
@@ -323,7 +321,7 @@ Public Sub gWriteErrorLine(ByVal pMessage As String)
 Const ProcName As String = "gWriteErrorLine"
 
 Dim s As String
-s = "Error on line " & mLineNumber & ": " & pMessage
+s = "Error: " & pMessage
 gCon.WriteErrorLine s
 LogMessage "StdErr: " & s
 mErrorCount = mErrorCount + 1
@@ -726,7 +724,6 @@ Do While inString <> gCon.EofString
         LogMessage "StdIn: " & inString
         gWriteLineToConsole inString
     Else
-        mLineNumber = mLineNumber + 1
         LogMessage "StdIn: " & inString
         If Not processCommand(inString) Then Exit Do
     End If
