@@ -67,12 +67,13 @@ On Error GoTo Err
 
 gInputPaused = False
 If ev.Cancelled Then
-    gWriteErrorLine "order recovery was cancelled"
+    gWriteErrorLine "order recovery was cancelled", True
 ElseIf ev.ErrorNumber <> 0 Then
     gWriteErrorLine "order recovery received error (" & ev.ErrorNumber & ") " & _
-                    ev.ErrorMessage & vbCrLf & _
-                    "At:" & vbCrLf & _
-                    ev.ErrorSource
+                        ev.ErrorMessage & vbCrLf & _
+                        "At:" & vbCrLf & _
+                        ev.ErrorSource, _
+                    True
 End If
 
 Set mSelfRef = Nothing

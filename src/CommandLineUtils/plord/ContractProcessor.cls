@@ -531,10 +531,10 @@ Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 Dim lQuantity As String: lQuantity = lClp.Arg(0)
 If lQuantity = "" Then
     processBuyOrSellCommand = False
-    gWriteErrorLine ("Quantity is missing")
+    gWriteErrorLine "Quantity is missing", True
 ElseIf Not IsInteger(lQuantity, 1) Then
     processBuyOrSellCommand = False
-    gWriteErrorLine ("Quantity must be an integer > 0")
+    gWriteErrorLine "Quantity must be an integer > 0", True
 Else
     mBOSpec.Quantity = CInt(lQuantity)
 End If
@@ -564,7 +564,7 @@ If lPriceOrOffset <> "" Then
         mBOSpec.EntryOffset = parseOffset(lPriceOrOffset)
     Case Else
         processBuyOrSellCommand = False
-        gWriteErrorLine "Price must not be specified for this order type"
+        gWriteErrorLine "Price must not be specified for this order type", True
     End Select
 End If
     
@@ -576,7 +576,7 @@ If lTriggerPrice <> "" Then
         mBOSpec.EntryTriggerPrice = CDbl(lTriggerPrice)
     Case Else
         processBuyOrSellCommand = False
-        gWriteErrorLine "Trigger price must not be specified for this order type"
+        gWriteErrorLine "Trigger price must not be specified for this order type", True
     End Select
 End If
 
@@ -598,11 +598,11 @@ Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrTypeMismatch Then
-    gWriteErrorLine lSwitchName & ": invalid value"
+    gWriteErrorLine lSwitchName & ": invalid value", True
     processBuyOrSellCommand = False
     Resume Next
 ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description
+    gWriteErrorLine Err.Description, True
     processBuyOrSellCommand = False
     Resume Next
 End If

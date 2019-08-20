@@ -175,6 +175,8 @@ Private mConfigStore                                As ConfigurationStore
 Private mBatchOrdersDefault                         As Boolean
 Private mBatchOrders                                As Boolean
 
+Private mBracketOrderDefinitionInProgress           As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -254,12 +256,12 @@ On Error GoTo Err
 Const PositionManagerNameSeparator As String = "&&"
 
 If pContractFuture.IsCancelled Then
-    gWriteErrorLine "Contract fetch was cancelled"
+    gWriteErrorLine "Contract fetch was cancelled", True
     Exit Function
 End If
 
 If pContractFuture.IsFaulted Then
-    gWriteErrorLine pContractFuture.ErrorMessage
+    gWriteErrorLine pContractFuture.ErrorMessage, True
     Exit Function
 End If
 
@@ -269,9 +271,12 @@ Dim lContract As IContract
 Set lContract = pContractFuture.Value
 
 If IsContractExpired(lContract) Then
-    gWriteErrorLine "Contract has expired"
+    gWriteErrorLine "Contract has expired", True
     Exit Function
 End If
+
+' we now have a valid contract, so zero the error count
+mErrorCount = 0
     
 Dim lContractProcessorName As String
 lContractProcessorName = mGroupName & _
@@ -317,14 +322,16 @@ For i = 0 To UBound(values)
 Next
 End Sub
 
-Public Sub gWriteErrorLine(ByVal pMessage As String)
+Public Sub gWriteErrorLine( _
+                ByVal pMessage As String, _
+                Optional ByVal pDontIncrementErrorCount As Boolean = False)
 Const ProcName As String = "gWriteErrorLine"
 
 Dim s As String
 s = "Error: " & pMessage
 gCon.WriteErrorLine s
 LogMessage "StdErr: " & s
-mErrorCount = mErrorCount + 1
+If Not pDontIncrementErrorCount Then mErrorCount = mErrorCount + 1
 End Sub
 
 Public Sub gWriteLineToConsole(ByVal pMessage As String, Optional ByVal pLogit As Boolean)
@@ -765,7 +772,8 @@ If command = Help1Command Then
 ElseIf command = HelpCommand Then
     showStdInHelp
 ElseIf Not isCommandValid(command) Then
-    gWriteErrorLine "Valid commands at this point are: " & Join(mValidNextCommands, ",")
+    gWriteErrorLine "Valid commands at this point are: " & Join(mValidNextCommands, ","), Not mBracketOrderDefinitionInProgress
+
 Else
     Select Case command
     Case ContractCommand
@@ -785,6 +793,7 @@ Else
     Case SellAgainCommand
         ProcessSellAgainCommand Params
     Case BracketCommand
+        mBracketOrderDefinitionInProgress = True
         mContractProcessor.ProcessBracketCommand Params
     Case EntryCommand
         mContractProcessor.ProcessEntryCommand Params
@@ -793,6 +802,7 @@ Else
     Case TargetCommand
         mContractProcessor.ProcessTargetCommand Params
     Case EndBracketCommand
+        mBracketOrderDefinitionInProgress = False
         mContractProcessor.ProcessEndBracketCommand
         If mErrorCount = 0 And Not mBatchOrders Then
             processOrders
@@ -810,7 +820,7 @@ Else
     Case CloseoutCommand
         processCloseoutCommand Params
     Case Else
-        gWriteErrorLine "Invalid command '" & command & "'"
+        gWriteErrorLine "Invalid command '" & command & "'", True
     End Select
 End If
 
@@ -832,7 +842,7 @@ Case Yes
 Case No
     mBatchOrders = False
 Case Else
-    gWriteErrorLine BatchOrdersCommand & " parameter must be either YES or NO or DEFAULT"
+    gWriteErrorLine BatchOrdersCommand & " parameter must be either YES or NO or DEFAULT", True
 End Select
 
 gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
@@ -857,9 +867,9 @@ Const ProcName As String = "ProcessBuyAgainCommand"
 On Error GoTo Err
 
 If mContractProcessor Is Nothing Then
-    gWriteErrorLine "No Buy command to repeat"
+    gWriteErrorLine "No Buy command to repeat", True
 ElseIf mContractProcessor.LatestBuyCommandParams = "" Then
-    gWriteErrorLine "No Buy command to repeat"
+    gWriteErrorLine "No Buy command to repeat", True
 Else
     ProcessBuyCommand mContractProcessor.LatestBuyCommandParams
 End If
@@ -902,7 +912,7 @@ ElseIf Not mContractProcessor Is Nothing Then
         If mContractProcessor.ProcessSellCommand(pParams) And Not mBatchOrders Then processOrders
     End If
 Else
-    gWriteErrorLine "No contract has been specified in this group"
+    gWriteErrorLine "No contract has been specified in this group", True
 End If
 
 Exit Sub
@@ -930,9 +940,9 @@ Const ProcName As String = "ProcessSellAgainCommand"
 On Error GoTo Err
 
 If mContractProcessor Is Nothing Then
-    gWriteErrorLine "No Sell command to repeat"
+    gWriteErrorLine "No Sell command to repeat", True
 ElseIf mContractProcessor.LatestSellCommandParams = "" Then
-    gWriteErrorLine "No Sell command to repeat"
+    gWriteErrorLine "No Sell command to repeat", True
 Else
     ProcessSellCommand mContractProcessor.LatestSellCommandParams
 End If
@@ -956,7 +966,7 @@ Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(pParams)
 
 If lMatches.Count <> 1 Then
-    gWriteErrorLine "Invalid command: syntax error"
+    gWriteErrorLine "Invalid command: syntax error", True
     Exit Sub
 End If
 
@@ -979,7 +989,7 @@ ElseIf lGroupName = "" Then
     mCloseoutProcessor.CloseoutGroup mGroupName
     gInputPaused = True
 ElseIf Not mOrderManager.GetGroupNames.Contains(lGroupName) Then
-    gWriteErrorLine "No such group"
+    gWriteErrorLine "No such group", True
 Else
     mCloseoutProcessor.CloseoutGroup lGroupName
     gInputPaused = True
@@ -989,7 +999,7 @@ Exit Sub
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description
+    gWriteErrorLine Err.Description, True
     Exit Sub
 End If
 gHandleUnexpectedError ProcName, ModuleName
@@ -1037,7 +1047,7 @@ Exit Sub
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description
+    gWriteErrorLine Err.Description, True
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -1072,7 +1082,7 @@ Private Sub processGroupCommand( _
 If pParams = "" Or pParams = DefaultOrderGroupName Then
     mGroupName = DefaultOrderGroupName
 ElseIf Not isGroupValid(pParams) Then
-    gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore"
+    gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore", True
 Else
     mGroupName = pParams
 End If
@@ -1116,7 +1126,7 @@ ElseIf UCase$(pParams) = PositionsSubcommand Then
 ElseIf UCase$(pParams) = TradesSubcommand Then
     listTrades
 Else
-    gWriteErrorLine ListCommand & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & " or " & TradesSubcommand
+    gWriteErrorLine ListCommand & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & " or " & TradesSubcommand, True
 End If
 
 Exit Sub
@@ -1141,14 +1151,14 @@ Case Default
     mStageOrders = mStageOrdersDefault
 Case Yes
     If Not (mOrderSubmitterFactory.Capabilities And OrderSubmitterCapabilityCanStageOrders) = OrderSubmitterCapabilityCanStageOrders Then
-        gWriteErrorLine StageOrdersCommand & " parameter cannot be YES with current configuration"
+        gWriteErrorLine StageOrdersCommand & " parameter cannot be YES with current configuration", True
         Exit Sub
     End If
     mStageOrders = True
 Case No
     mStageOrders = False
 Case Else
-    gWriteErrorLine StageOrdersCommand & " parameter must be either YES or NO or DEFAULT"
+    gWriteErrorLine StageOrdersCommand & " parameter must be either YES or NO or DEFAULT", True
 End Select
 
 gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
@@ -1163,7 +1173,7 @@ ElseIf UCase$(mClp.SwitchValue(BatchOrdersSwitch)) = Yes Then
 ElseIf UCase$(mClp.SwitchValue(BatchOrdersSwitch)) = No Then
     mBatchOrdersDefault = False
 Else
-    gWriteErrorLine "The /" & BatchOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)"
+    gWriteErrorLine "The /" & BatchOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)", True
     setBatchOrders = False
 End If
 End Function
@@ -1179,7 +1189,7 @@ ElseIf UCase$(mClp.SwitchValue(MonitorSwitch)) = Yes Then
 ElseIf UCase$(mClp.SwitchValue(MonitorSwitch)) = No Then
     mMonitor = False
 Else
-    gWriteErrorLine "The /" & MonitorSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive, default is YES)"
+    gWriteErrorLine "The /" & MonitorSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive, default is YES)", True
     setMonitor = False
 End If
 End Function
@@ -1213,7 +1223,7 @@ If mClp.SwitchValue(StageOrdersSwitch) = "" Then
     mStageOrdersDefault = False
 ElseIf UCase$(mClp.SwitchValue(StageOrdersSwitch)) = Yes Then
     If Not (mOrderSubmitterFactory.Capabilities And OrderSubmitterCapabilityCanStageOrders) = OrderSubmitterCapabilityCanStageOrders Then
-        gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it cannot be YES with the current configuration"
+        gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it cannot be YES with the current configuration", True
         setStageOrders = False
         Exit Function
     End If
@@ -1221,7 +1231,7 @@ ElseIf UCase$(mClp.SwitchValue(StageOrdersSwitch)) = Yes Then
 ElseIf UCase$(mClp.SwitchValue(StageOrdersSwitch)) = No Then
     mStageOrdersDefault = False
 Else
-    gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)"
+    gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)", True
     setStageOrders = False
 End If
 End Function
@@ -1309,14 +1319,14 @@ clientId = lClp.Arg(2)
 If port = "" Then
     port = 7496
 ElseIf Not IsInteger(port, 0) Then
-    gWriteErrorLine "port must be an integer > 0"
+    gWriteErrorLine "port must be an integer > 0", True
     setupTwsApi = False
 End If
     
 If clientId = "" Then
     clientId = DefaultClientId
 ElseIf Not IsInteger(clientId, 0, 999999999) Then
-    gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999"
+    gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999", True
     setupTwsApi = False
 End If
 
