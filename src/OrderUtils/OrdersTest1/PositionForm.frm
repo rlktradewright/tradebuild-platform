@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#340.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#349.0#0"; "TradingUI27.ocx"
 Begin VB.Form PositionForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Form2"
@@ -261,7 +261,7 @@ Private Sub ClosePositionButton_Click()
 Const ProcName As String = "ClosePositionButton_Click"
 On Error GoTo Err
 
-mPositionManager.ClosePositions
+mPositionManager.ClosePositions False
 
 Exit Sub
 

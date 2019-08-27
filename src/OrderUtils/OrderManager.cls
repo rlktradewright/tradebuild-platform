@@ -117,6 +117,8 @@ End Function
 
 Public Function CloseGroupPositions( _
                 ByVal pGroupName As String, _
+                ByVal pUseLimitOrder As Boolean, _
+                Optional ByVal pBidAskSpreadPercent As Long = 0, _
                 Optional ByVal pTypes As PositionTypes = PositionTypeLive) As IFuture
 Const ProcName As String = "CloseGroupPositions"
 On Error GoTo Err
@@ -124,7 +126,7 @@ On Error GoTo Err
 AssertArgument pGroupName <> "", "Group name must be supplied"
 
 Dim t As New ClosePositionsTask
-t.Initialise Me, pGroupName, pTypes
+t.Initialise Me, pUseLimitOrder, pBidAskSpreadPercent, pGroupName, pTypes
 Set CloseGroupPositions = t.Future
 
 StartTask t, PriorityNormal

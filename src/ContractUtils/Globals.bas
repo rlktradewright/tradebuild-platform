@@ -374,6 +374,114 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gGetTickSizeForOptions( _
+                ByVal pCurrentPrice As Double) As Double
+Dim lTickSize As Double
+If pCurrentPrice <= 3# Then
+    lTickSize = 0.01
+Else
+    lTickSize = 0.05
+End If
+gGetTickSizeForOptions = lTickSize
+End Function
+
+Public Function gGetTickSizeForStocks( _
+                ByVal pExchange As String, _
+                ByVal pCurrentPrice As Double) As Double
+Dim lTickSize As Double
+
+Select Case UCase$(pExchange)
+Case "LSE", "BATEUK", "CHIXUK", "TRQXUK"
+    If pCurrentPrice <= 0.001 Then
+        lTickSize = 0.000001
+    ElseIf pCurrentPrice <= 0.002 Then
+        lTickSize = 0.000001
+    ElseIf pCurrentPrice <= 0.005 Then
+        lTickSize = 0.000001
+    ElseIf pCurrentPrice <= 0.01 Then
+        lTickSize = 0.000002
+    ElseIf pCurrentPrice <= 0.02 Then
+        lTickSize = 0.000005
+    ElseIf pCurrentPrice <= 0.05 Then
+        lTickSize = 0.00001
+    ElseIf pCurrentPrice <= 0.1 Then
+        lTickSize = 0.00002
+    ElseIf pCurrentPrice <= 0.2 Then
+        lTickSize = 0.00005
+    ElseIf pCurrentPrice <= 0.5 Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 1 Then
+        lTickSize = 0.0002
+    ElseIf pCurrentPrice <= 2 Then
+        lTickSize = 0.0005
+    ElseIf pCurrentPrice <= 5 Then
+        lTickSize = 0.001
+    ElseIf pCurrentPrice <= 10 Then
+        lTickSize = 0.002
+    ElseIf pCurrentPrice <= 20 Then
+        lTickSize = 0.005
+    ElseIf pCurrentPrice <= 50 Then
+        lTickSize = 0.01
+    ElseIf pCurrentPrice <= 100 Then
+        lTickSize = 0.02
+    ElseIf pCurrentPrice <= 200 Then
+        lTickSize = 0.05
+    ElseIf pCurrentPrice <= 500 Then
+        lTickSize = 0.1
+    Else
+        lTickSize = 0.2
+    End If
+Case "FWB", "IBIS", "BATEDE", "CHIXDE", "EBS", "FWB", "SWB", "TGATE", "TRQXDE", "VSE"
+    If pCurrentPrice <= 0.1 Then
+        lTickSize = 0.0005
+    ElseIf pCurrentPrice <= 0.2 Then
+        lTickSize = 0.001
+    ElseIf pCurrentPrice <= 0.5 Then
+        lTickSize = 0.002
+    ElseIf pCurrentPrice <= 1 Then
+        lTickSize = 0.005
+    ElseIf pCurrentPrice <= 2 Then
+        lTickSize = 0.01
+    ElseIf pCurrentPrice <= 5 Then
+        lTickSize = 0.02
+    ElseIf pCurrentPrice <= 10 Then
+        lTickSize = 0.05
+    ElseIf pCurrentPrice <= 20 Then
+        lTickSize = 0.1
+    ElseIf pCurrentPrice <= 50 Then
+        lTickSize = 0.2
+    ElseIf pCurrentPrice <= 100 Then
+        lTickSize = 0.5
+    ElseIf pCurrentPrice <= 200 Then
+        lTickSize = 1
+    ElseIf pCurrentPrice <= 500 Then
+        lTickSize = 2
+    ElseIf pCurrentPrice <= 1000 Then
+        lTickSize = 5
+    ElseIf pCurrentPrice <= 2000 Then
+        lTickSize = 10
+    ElseIf pCurrentPrice <= 5000 Then
+        lTickSize = 20
+    ElseIf pCurrentPrice <= 10000 Then
+        lTickSize = 50
+    ElseIf pCurrentPrice <= 20000 Then
+        lTickSize = 100
+    ElseIf pCurrentPrice <= 50000 Then
+        lTickSize = 200
+    Else
+        lTickSize = 500
+    End If
+Case "VENTURE"
+    If pCurrentPrice <= 0.5 Then
+        lTickSize = 0.005
+    Else
+        lTickSize = 0.01
+    End If
+End Select
+
+gGetTickSizeForStocks = lTickSize
+End Function
+
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _

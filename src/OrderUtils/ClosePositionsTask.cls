@@ -60,6 +60,9 @@ Private mEnSimulated                                As Enumerator
 
 Private mGroupName                                  As String
 
+Private mUseLimitOrders                             As Boolean
+Private mBidAskSpreadPercent                        As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -91,6 +94,16 @@ Case PositionManagerChangeTypes.PositionClosed
         End If
         pm.RemoveChangeListener Me
     End If
+Case PositionManagerChangeTypes.PositionCloseFailed
+    mNumberRemaining = mNumberRemaining - 1
+    If pm.IsSimulated Then
+        mClosePositionsResult.AddSimluatedErrorMessage pm.ContractName & ": " & pm.PositionCloseErrorMessage
+        mClosePositionsResult.NumberOfSimulatedPositionsNotClosed = mClosePositionsResult.NumberOfSimulatedPositionsNotClosed + 1
+    Else
+        mClosePositionsResult.AddLiveErrorMessage pm.ContractName & ": " & pm.PositionCloseErrorMessage
+        mClosePositionsResult.NumberOfLivePositionsNotClosed = mClosePositionsResult.NumberOfLivePositionsNotClosed + 1
+    End If
+    pm.RemoveChangeListener Me
 Case PositionManagerChangeTypes.ProviderReadinessChanged
     If Not pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining - 1
@@ -102,7 +115,7 @@ Case PositionManagerChangeTypes.ProviderReadinessChanged
         pm.RemoveChangeListener Me
     ElseIf pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining + 1
-        pm.ClosePositions
+        pm.ClosePositions mUseLimitOrders, mBidAskSpreadPercent
         pm.AddChangeListener Me
     End If
 End Select
@@ -183,12 +196,16 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
+                ByVal pUseLimitOrder As Boolean, _
+                Optional ByVal pBidAskSpreadPercent As Long = 0, _
                 Optional ByVal pGroupName As String, _
                 Optional ByVal pTypes As PositionTypes = PositionTypeLive)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mGroupName = pGroupName
+mUseLimitOrders = pUseLimitOrder
+mBidAskSpreadPercent = pBidAskSpreadPercent
 If (pTypes And PositionTypeLive) = PositionTypeLive Then Set mEnLive = pOrderManager.PositionManagersLive.Enumerator
 If (pTypes And PositionTypeSimulated) = PositionTypeSimulated Then Set mEnSimulated = pOrderManager.PositionManagersSimulated.Enumerator
 
@@ -214,7 +231,7 @@ If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then Exit Sub
 If pm.ProviderIsReady Then
     mNumberRemaining = mNumberRemaining + 1
     pm.AddChangeListener Me
-    pm.ClosePositions
+    pm.ClosePositions mUseLimitOrders, mBidAskSpreadPercent
 Else
     If pm.IsSimulated Then
         mClosePositionsResult.NumberOfSimulatedPositionsNotClosed = mClosePositionsResult.NumberOfSimulatedPositionsNotClosed + 1

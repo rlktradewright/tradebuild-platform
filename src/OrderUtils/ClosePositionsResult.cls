@@ -50,6 +50,9 @@ Private mNumberOfLivePositionsNotClosed             As Long
 Private mNumberOfSimulatedPositionsClosed           As Long
 Private mNumberOfSimulatedPositionsNotClosed        As Long
 
+Private mSimulatedErrorMessages                     As New Collection
+Private mLiveErrorMessages                          As New Collection
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -65,6 +68,10 @@ Private mNumberOfSimulatedPositionsNotClosed        As Long
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get LiveErrorMessages() As Collection
+Set LiveErrorMessages = mLiveErrorMessages
+End Property
 
 Friend Property Let NumberOfLivePositionsClosed(ByVal Value As Long)
 mNumberOfLivePositionsClosed = Value
@@ -98,9 +105,21 @@ Public Property Get NumberOfSimulatedPositionsNotClosed() As Long
 NumberOfSimulatedPositionsNotClosed = mNumberOfSimulatedPositionsNotClosed
 End Property
 
+Public Property Get SimulatedErrorMessages() As Collection
+Set SimulatedErrorMessages = mSimulatedErrorMessages
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub AddLiveErrorMessage(ByVal pMessage As String)
+mLiveErrorMessages.Add pMessage
+End Sub
+
+Friend Sub AddSimluatedErrorMessage(ByVal pMessage As String)
+mSimulatedErrorMessages.Add pMessage
+End Sub
 
 '@================================================================================
 ' Helper Functions

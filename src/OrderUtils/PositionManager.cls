@@ -110,6 +110,7 @@ Private mTradeStartTimezoneName                 As String
 Private mTickValue                              As Currency
 Private mTickSize                               As Double
 Private mCurrencyCode                           As String
+Private mContractName                           As String
 
 Private mLastBid                                As Double
 Private mLastAsk                                As Double
@@ -125,8 +126,9 @@ Private mRecovering                             As Boolean
 ' has told us to do so
 Private mClosingPosition                        As Boolean
 
-Private mPositionCloser                         As PositionCloser
+Private WithEvents mPositionCloser              As PositionCloser
 Attribute mPositionCloser.VB_VarHelpID = -1
+Private mPositionCloseErrorMessage              As String
 
 Private mRecoverableObjectListeners             As New Listeners
 
@@ -152,7 +154,7 @@ Set mExecutions = New Executions
 
 Set mProfitListeners = New Listeners
 Set mChangeListeners = New Listeners
-
+mContractName = "N/A"
 End Sub
 
 Private Sub Class_Terminate()
@@ -513,6 +515,26 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' mPositionCloser Event Handlers
+'@================================================================================
+
+Private Sub mPositionCloser_PositionNotClosed(ByVal pErrorMessage As String)
+Const ProcName As String = "mPositionCloser_PositionNotClosed"
+On Error GoTo Err
+
+mClosingPosition = False
+
+mPositionCloseErrorMessage = pErrorMessage
+fireChange PositionCloseFailed
+Set mPositionCloser = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mSession Event Handlers
 '@================================================================================
 
@@ -593,6 +615,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get ContractName() As String
+ContractName = mContractName
 End Property
 
 Public Property Get DataSource() As IMarketDataSource
@@ -881,6 +907,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get PositionCloseErrorMessage() As String
+PositionCloseErrorMessage = mPositionCloseErrorMessage
+End Property
+
 Public Property Get PositionSize() As Integer
 Const ProcName As String = "PositionSize"
 On Error GoTo Err
@@ -1075,7 +1105,9 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ClosePositions()
+Public Sub ClosePositions( _
+                ByVal pUseLimitOrder As Boolean, _
+                Optional ByVal pBidAskSpreadPercent As Long = 0)
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
@@ -1083,13 +1115,11 @@ checkInitialised
 
 If mClosingPosition Then Exit Sub
 
+mPositionCloseErrorMessage = ""
 mClosingPosition = True
 
 Set mPositionCloser = New PositionCloser
-If mPositionCloser.ClosePositions(Me) Then
-    mClosingPosition = False
-    fireChange PositionClosed
-End If
+mPositionCloser.ClosePositions Me, pUseLimitOrder, pBidAskSpreadPercent
 
 Exit Sub
 
@@ -1392,7 +1422,7 @@ If mMoneyManager.CloseAll(mSessionProfit, _
 Then
     If Not mClosingPosition Then
         gLogMoneyManagement "Close all positions: " & msg, mSummary.IsSimulated, Me
-        ClosePositions
+        ClosePositions False
     End If
 Else
     If lEndSession And Not mClosingPosition Then
@@ -1776,6 +1806,7 @@ Else
     
     If mClosingPosition Then
         mClosingPosition = False
+        Set mPositionCloser = Nothing
         fireChange PositionClosed
     End If
     
@@ -1836,6 +1867,7 @@ mSummary.Contract = lContract
 mTickValue = lContract.TickValue
 mTickSize = lContract.TickSize
 mCurrencyCode = lContract.Specifier.CurrencyCode
+mContractName = lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange
 
 Exit Sub
 

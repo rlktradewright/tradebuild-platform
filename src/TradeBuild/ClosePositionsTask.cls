@@ -162,7 +162,7 @@ If pm.PositionSize <> 0 Or _
 Then
     If pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining + 1
-        pm.ClosePositions
+        pm.ClosePositions False
         pm.AddChangeListener Me
     Else
         mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1

@@ -260,6 +260,7 @@ Public Enum PositionManagerChangeTypes
     PositionSizeChanged
     ProviderReadinessChanged
     PositionClosed
+    PositionCloseFailed
 End Enum
 
 Public Enum ProfitChangeTypes

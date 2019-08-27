@@ -23,10 +23,13 @@ Option Explicit
 '@================================================================================
 
 Implements IChangeListener
+Implements IDeferredAction
 
 '@================================================================================
 ' Events
 '@================================================================================
+
+Event PositionNotClosed(ByVal pErrorMessage As String)
 
 '@================================================================================
 ' Enums
@@ -62,6 +65,9 @@ Private mClock                                      As Clock
 
 Private mLastExecutionReport                        As IExecutionReport
 
+Private mUseLimitorder                              As Boolean
+Private mBidAskSpreadPercent                        As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -90,6 +96,36 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' IDeferredAction Interface Members
+'@================================================================================
+
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
+On Error GoTo Err
+
+If mPositionManager.HasBracketOrdersWithNonZeroSizes Then
+ElseIf mPositionManager.HasBracketOrdersWithNonZeroPendingSizes Then
+Else
+    Exit Sub
+End If
+
+Set mOrderContexts = mPositionManager.OrderContexts
+Set mContract = mPositionManager.ContractFuture.Value
+Set mClock = mPositionManager.DataSource.ClockFuture.Value
+
+mOrderContextsWasEnabled = mOrderContexts.Enabled
+mOrderContexts.Enabled = False  ' prevent any further orders being placed
+                                ' while the position is being closed
+
+If Not cancelOrders Then ensureAllBracketOrdersClosedOut
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mBalancingBracketOrder Event Handlers
 '@================================================================================
 
@@ -101,6 +137,13 @@ mBalancingBracketOrder.SetSize 0
 
 ' adjust the other BracketOrders to take account of the settling Order
 
+If mLastExecutionReport Is Nothing Then
+    ' the balancing bracket order has failed due to some error
+    doFinalActions
+    RaiseEvent PositionNotClosed(mBalancingBracketOrder.EntryOrder.ErrorMessage)
+    Exit Sub
+End If
+    
 Dim oc As OrderContext
 Dim i As Long
 For Each oc In mOrderContexts
@@ -163,9 +206,12 @@ Private Sub mBalancingOrderContext_Change(ev As ChangeEventData)
 Const ProcName As String = "mBalancingOrderContext_Change"
 On Error GoTo Err
 
-If ev.changeType = OrderContextChangeTypes.OrderContextReadyStateChanged And _
-    mBalancingOrderContext.IsReady _
-Then
+If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
+
+If mBalancingOrderContext.IsReadyForBracketOrder( _
+            IIf(mUseLimitorder, _
+                BracketEntryTypes.BracketEntryTypeLimit, _
+                BracketEntryTypes.BracketEntryTypeMarket)) Then
     placeBalancingOrder
 End If
 
@@ -183,36 +229,24 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Function ClosePositions( _
-                ByVal pPositionManager As PositionManager) As Boolean
+Friend Sub ClosePositions( _
+                ByVal pPositionManager As PositionManager, _
+                ByVal pUseLimitOrder As Boolean, _
+                ByVal pBidAskSpreadPercent As Long)
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
 Set mPositionManager = pPositionManager
-If mPositionManager.HasBracketOrdersWithNonZeroSizes Then
-ElseIf mPositionManager.HasBracketOrdersWithNonZeroPendingSizes Then
-Else
-    ClosePositions = True
-    Exit Function
-End If
+mUseLimitorder = pUseLimitOrder
+mBidAskSpreadPercent = pBidAskSpreadPercent
 
-Set mOrderContexts = mPositionManager.OrderContexts
-Set mContract = mPositionManager.ContractFuture.Value
-Set mClock = mPositionManager.DataSource.ClockFuture.Value
+DeferAction Me
 
-mOrderContextsWasEnabled = mOrderContexts.Enabled
-mOrderContexts.Enabled = False  ' prevent any further orders being placed
-                                ' while the position is being closed
-
-If Not cancelOrders Then ensureAllBracketOrdersClosedOut
-
-ClosePositions = False
-
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 Friend Sub RecoverBalancingOrder( _
                 ByVal pBracketOrder As BracketOrder, _
@@ -308,6 +342,15 @@ On Error GoTo Err
 
 ' closeout non-zero-size bracket orders marking them to mnarket
 
+If Not mPositionManager.DataSource.HasCurrentTick(TickTypeBid) Or _
+    Not mPositionManager.DataSource.HasCurrentTick(TickTypeAsk) Then
+    RaiseEvent PositionNotClosed("No bid or ask tick available")
+    Exit Sub
+End If
+
+Dim lBidPrice As Double: lBidPrice = mPositionManager.DataSource.CurrentTick(TickTypeBid).Price
+Dim lAskPrice As Double: lBidPrice = mPositionManager.DataSource.CurrentTick(TickTypeAsk).Price
+
 Dim oc As OrderContext
 For Each oc In mOrderContexts
     If Not oc Is mBalancingOrderContext Then
@@ -351,34 +394,85 @@ Const ProcName As String = "placeBalancingOrder"
 On Error GoTo Err
 
 Set mBalancingOrderContext = mOrderContexts.BalancingOrderContext
-If Not mBalancingOrderContext.IsReady Then Exit Sub
+If Not mBalancingOrderContext.IsReadyForBracketOrder( _
+            IIf(mUseLimitorder, _
+                BracketEntryTypes.BracketEntryTypeLimit, _
+                BracketEntryTypes.BracketEntryTypeMarket)) Then
+    Exit Sub
+End If
 
 Dim lContract As IContract
 Set lContract = mPositionManager.DataSource.ContractFuture.Value
 
-Set mBalancingBracketOrder = _
-                mBalancingOrderContext.CreateBracketOrder( _
-                            IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
-                            Abs(mPositionManager.PositionSize), _
-                            BracketEntryTypes.BracketEntryTypeMarket, _
-                            0#, _
-                            0, _
-                            0#, _
-                            BracketStopLossTypes.BracketStopLossTypeNone, _
-                            0#, _
-                            0, _
-                            0#, _
-                            BracketTargetTypes.BracketTargetTypeNone, _
-                            0#, _
-                            0, _
-                            0#)
-
-gLogBracketOrderMessage "Close positions at market", _
-                mPositionManager.DataSource, _
-                lContract, _
-                mBalancingBracketOrder.Key, _
-                mPositionManager.IsSimulated, _
-                Me
+If mUseLimitorder Then
+    Dim lBid As Double: lBid = mPositionManager.DataSource.CurrentTick(TickTypeBid).Price
+    Dim lAsk As Double: lAsk = mPositionManager.DataSource.CurrentTick(TickTypeAsk).Price
+    
+    Dim lTicksize As Double
+    If lContract.Specifier.SecType = SecTypeOption Or _
+                        lContract.Specifier.SecType = SecTypeFuturesOption _
+    Then
+        lTicksize = GetTickSizeForOptions(lBid)
+    ElseIf lContract.Specifier.SecType = SecTypeStock Then
+        lTicksize = GetTickSizeForStocks(lContract.Specifier.Exchange, lBid)
+    End If
+    If lTicksize = 0# Then lTicksize = lContract.TickSize
+    
+    Dim lPriceOffset As Double: lPriceOffset = Int(mBidAskSpreadPercent * (CLng(lAsk / lTicksize) - CLng(lBid / lTicksize)) / 100#) * lTicksize
+    Dim lEntryPrice As Double
+    If mPositionManager.PositionSize < 0 Then
+        lEntryPrice = lBid + lPriceOffset
+    Else
+        lEntryPrice = lAsk - lPriceOffset
+    End If
+    Set mBalancingBracketOrder = _
+                    mBalancingOrderContext.CreateBracketOrder( _
+                                IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
+                                Abs(mPositionManager.PositionSize), _
+                                BracketEntryTypes.BracketEntryTypeLimit, _
+                                lEntryPrice, _
+                                0, _
+                                0#, _
+                                BracketStopLossTypes.BracketStopLossTypeNone, _
+                                0#, _
+                                0, _
+                                0#, _
+                                BracketTargetTypes.BracketTargetTypeNone, _
+                                0#, _
+                                0, _
+                                0#)
+    
+    gLogBracketOrderMessage "Close positions at limit: lEntryPrice", _
+                    mPositionManager.DataSource, _
+                    lContract, _
+                    mBalancingBracketOrder.Key, _
+                    mPositionManager.IsSimulated, _
+                    Me
+Else
+    Set mBalancingBracketOrder = _
+                    mBalancingOrderContext.CreateBracketOrder( _
+                                IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
+                                Abs(mPositionManager.PositionSize), _
+                                BracketEntryTypes.BracketEntryTypeMarket, _
+                                0#, _
+                                0, _
+                                0#, _
+                                BracketStopLossTypes.BracketStopLossTypeNone, _
+                                0#, _
+                                0, _
+                                0#, _
+                                BracketTargetTypes.BracketTargetTypeNone, _
+                                0#, _
+                                0, _
+                                0#)
+    
+    gLogBracketOrderMessage "Close positions at market", _
+                    mPositionManager.DataSource, _
+                    lContract, _
+                    mBalancingBracketOrder.Key, _
+                    mPositionManager.IsSimulated, _
+                    Me
+End If
 
 mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
 
