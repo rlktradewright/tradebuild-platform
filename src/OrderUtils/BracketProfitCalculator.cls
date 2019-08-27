@@ -570,7 +570,7 @@ gLogBracketOrderProfileString FormatTimestamp(mBracketOrder.StartTime, Timestamp
             mProfit & "," & _
             mMaxProfit & "," & _
             mMaxLoss & "," & _
-            mBracketOrder.Risk, _
+            IIf(mBracketOrder.Risk = MaxCurrency, "Max", mBracketOrder.Risk), _
             mBracketOrder.IsSimulated, _
             Me
 

@@ -110,7 +110,8 @@ Public Const TickDesignator                         As String = "T"
 
 Private Const DefaultClientId                       As Long = 906564398
 
-Private Const DefaultOrderGroupName                 As String = "$"
+Private Const DefaultGroupName                      As String = "$"
+Private Const AllGroups                             As String = "ALL"
 
 Private Const DefaultPrompt                         As String = ":"
 
@@ -152,7 +153,6 @@ Private mStageOrdersDefault                         As Boolean
 Private mStageOrders                                As Boolean
 
 Private mContractProcessor                          As ContractProcessor
-Private mCloseoutProcessor                          As CloseoutProcessor
 
 Private mContractProcessors                         As New EnumerableCollection
 Private mGroupContractProcessors                    As SortedDictionary
@@ -367,9 +367,6 @@ ApplicationName = "plord"
 SetupDefaultLogging command, True, True
 
 Set mConfigStore = gGetConfigStore
-
-Set mCloseoutProcessor = New CloseoutProcessor
-mCloseoutProcessor.Initialise mOrderManager
 
 logProgramId
 
@@ -960,7 +957,7 @@ On Error GoTo Err
 
 gRegExp.Global = False
 gRegExp.IgnoreCase = True
-gRegExp.Pattern = "^((all)|([a-zA-Z0-9][\w-]*))?( +((mkt)|((lmt)(:(-)?(\d{1,3}))?))?)?$"
+gRegExp.Pattern = "^((all|\$)|([a-zA-Z0-9][\w-]*))?( +((mkt)|((lmt)(:(-)?(\d{1,3}))?))?)?$"
 
 Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(pParams)
@@ -972,27 +969,32 @@ End If
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
-Dim lAllGroups As Boolean: lAllGroups = lMatch.SubMatches(1) <> ""
-Dim lGroupName As String: lGroupName = lMatch.SubMatches(2)
+Dim lAllGroups As Boolean
+Dim lGroupName As String
+If lMatch.SubMatches(1) = AllGroups Then
+    lAllGroups = True
+ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
+    lGroupName = DefaultGroupName
+Else
+    lGroupName = lMatch.SubMatches(2)
+End If
+    
 Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
 Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(9) = "-", -1, 1)
 
 Dim lSpreadFactor As Long: lSpreadFactor = CLng("0" & lMatch.SubMatches(10)) * lSpreadFactorSign
 
-mCloseoutProcessor.SpreadFactor = lSpreadFactor
-mCloseoutProcessor.UseLimitOrders = lUseLimitOrders
+Dim lCloseoutProcessor As New CloseoutProcessor
+lCloseoutProcessor.Initialise mOrderManager, lUseLimitOrders, lSpreadFactor
 
 If lAllGroups Then
-    mCloseoutProcessor.CloseoutAll
-    gInputPaused = True
+    lCloseoutProcessor.CloseoutAll
 ElseIf lGroupName = "" Then
-    mCloseoutProcessor.CloseoutGroup mGroupName
-    gInputPaused = True
+    lCloseoutProcessor.CloseoutGroup mGroupName
 ElseIf Not mOrderManager.GetGroupNames.Contains(lGroupName) Then
     gWriteErrorLine "No such group", True
 Else
-    mCloseoutProcessor.CloseoutGroup lGroupName
-    gInputPaused = True
+    lCloseoutProcessor.CloseoutGroup lGroupName
 End If
 
 Exit Sub
@@ -1079,8 +1081,8 @@ End Sub
 
 Private Sub processGroupCommand( _
                 ByVal pParams As String)
-If pParams = "" Or pParams = DefaultOrderGroupName Then
-    mGroupName = DefaultOrderGroupName
+If pParams = "" Or pParams = DefaultGroupName Then
+    mGroupName = DefaultGroupName
 ElseIf Not isGroupValid(pParams) Then
     gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore", True
 Else
@@ -1367,10 +1369,15 @@ gWriteLineToConsole ""
 End Sub
 
 Public Sub showContractHelp()
-gWriteLineToConsole "    contractcommand  ::= contract [ <localsymbol>[@<exchangename>]"
+gWriteLineToConsole "    contractcommand  ::= contract <contractspecification>"
+gWriteLineToConsole ""
+gWriteLineToConsole "    contractspecification ::=     [ <localsymbol>[@<exchangename>]"
 gWriteLineToConsole "                                  | <localsymbol>@SMART/<routinghint>"
 gWriteLineToConsole "                                  | /<specifier>[;/<specifier>]..."
 gWriteLineToConsole "                                  ] NEWLINE"
+gWriteLineToConsole ""
+gWriteLineToConsole ""
+gWriteLineToConsole ""
 gWriteLineToConsole ""
 gWriteLineToConsole "    specifier ::= [ local[symbol]:<localsymbol>"
 gWriteLineToConsole "                  | symb[ol]:<symbol>"
@@ -1485,6 +1492,8 @@ gWriteLineToConsole ""
 gWriteLineToConsole "<closeoutcommand>"
 gWriteLineToConsole ""
 gWriteLineToConsole "<reversecommand>"
+gWriteLineToConsole ""
+gWriteLineToConsole "quote <contractspecification>"
 gWriteLineToConsole ""
 gWriteLineToConsole "where"
 gWriteLineToConsole ""

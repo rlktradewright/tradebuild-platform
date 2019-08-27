@@ -58,6 +58,11 @@ Private mNumberOfSimulatedPositionsNotClosed        As Long
 Private mUseLimitOrders                             As Boolean
 Private mSpreadFactor                               As Long
 
+Private mLiveErrorMessages                          As String
+Private mSimulatedErrorMessages                     As String
+
+Private mSelfRef                                    As Object
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -80,15 +85,13 @@ On Error GoTo Err
 
 If mNumberOfLivePositionsClosed <> 0 Then gWriteLineToConsole "Live positions closed: " & mNumberOfLivePositionsClosed, True
 If mNumberOfLivePositionsNotClosed <> 0 Then gWriteLineToConsole "Live positions not closed: " & mNumberOfLivePositionsNotClosed, True
+If mLiveErrorMessages <> "" Then gWriteLineToConsole mLiveErrorMessages
+
 If mNumberOfSimulatedPositionsClosed <> 0 Then gWriteLineToConsole "Simulated positions closed: " & mNumberOfSimulatedPositionsClosed, True
 If mNumberOfSimulatedPositionsNotClosed <> 0 Then gWriteLineToConsole "Simulated positions not closed: " & mNumberOfSimulatedPositionsNotClosed, True
+If mSimulatedErrorMessages <> "" Then gWriteLineToConsole mSimulatedErrorMessages
 
-mNumberOfLivePositionsClosed = 0
-mNumberOfLivePositionsNotClosed = 0
-mNumberOfSimulatedPositionsClosed = 0
-mNumberOfSimulatedPositionsNotClosed = 0
-
-gInputPaused = False
+Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -104,8 +107,20 @@ Dim lResult As ClosePositionsResult: Set lResult = ev.Future.Value
 
 mNumberOfLivePositionsClosed = mNumberOfLivePositionsClosed + lResult.NumberOfLivePositionsClosed
 mNumberOfLivePositionsNotClosed = mNumberOfLivePositionsNotClosed + lResult.NumberOfLivePositionsNotClosed
+Dim lMessage As Variant
+If lResult.LiveErrorMessages.Count <> 0 Then
+    For Each lMessage In lResult.LiveErrorMessages
+        mLiveErrorMessages = mLiveErrorMessages & lMessage & vbCrLf
+    Next
+End If
+
 mNumberOfSimulatedPositionsClosed = mNumberOfSimulatedPositionsClosed + lResult.NumberOfSimulatedPositionsClosed
 mNumberOfSimulatedPositionsNotClosed = mNumberOfSimulatedPositionsNotClosed + lResult.NumberOfSimulatedPositionsNotClosed
+If lResult.SimulatedErrorMessages.Count <> 0 Then
+    For Each lMessage In lResult.SimulatedErrorMessages
+        mSimulatedErrorMessages = mSimulatedErrorMessages & lMessage & vbCrLf
+    Next
+End If
 
 Exit Sub
 
@@ -116,14 +131,6 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
-
-Friend Property Let SpreadFactor(ByVal Value As Long)
-mSpreadFactor = Value
-End Property
-
-Friend Property Let UseLimitOrders(ByVal Value As Boolean)
-mUseLimitOrders = Value
-End Property
 
 '@================================================================================
 ' Methods
@@ -149,7 +156,7 @@ Friend Sub CloseoutGroup(ByVal pGroupName As String)
 Const ProcName As String = "CloseoutGroup"
 On Error GoTo Err
 
-mFutureWaiter.Add mOrderManager.CloseGroupPositions(pGroupName)
+mFutureWaiter.Add mOrderManager.CloseGroupPositions(pGroupName, mUseLimitOrders, mSpreadFactor)
 
 Exit Sub
 
@@ -157,8 +164,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Initialise(ByVal pOrderManager As OrderManager)
+Friend Sub Initialise( _
+                ByVal pOrderManager As OrderManager, _
+                ByVal pUseLimitOrders As Boolean, _
+                ByVal pSpreadFactor As Long)
+Set mSelfRef = Me
 Set mOrderManager = pOrderManager
+mUseLimitOrders = pUseLimitOrders
+mSpreadFactor = pSpreadFactor
 End Sub
 
 '@================================================================================
