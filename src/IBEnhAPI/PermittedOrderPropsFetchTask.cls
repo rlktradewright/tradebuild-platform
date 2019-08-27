@@ -308,6 +308,7 @@ For i = 0 To UBound(lOrderTypesStr)
         Case "NODARK", _
             "NONALGO", _
             "OCA", _
+            "OPENCLOSE", _
             "OPG", _
             "OPGREROUT", _
             "PAON", _
