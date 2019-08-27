@@ -87,6 +87,7 @@ Public Const HelpCommand                            As String = "HELP"
 Public Const Help1Command                           As String = "?"
 Public Const ListCommand                            As String = "LIST"
 Public Const QuitCommand                            As String = "QUIT"
+Public Const QuoteCommand                           As String = "QUOTE"
 Public Const ResetCommand                           As String = "RESET"
 Public Const SellCommand                            As String = "SELL"
 Public Const SellAgainCommand                       As String = "S"
@@ -400,12 +401,6 @@ End If
 
 process
 
-If mMonitor And gNumberOfOrdersPlaced > 0 Then
-    Do While True
-        Wait 10
-    Loop
-End If
-
 Exit Sub
 
 Err:
@@ -419,6 +414,21 @@ End Sub
 Private Function getContractName(ByVal pContract As IContract) As String
 AssertArgument Not pContract Is Nothing
 getContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
+End Function
+
+Private Function getInputLine() As String
+Const ProcName As String = "getInputLine"
+On Error GoTo Err
+
+Do While gInputPaused
+    Wait 20
+Loop
+getInputLine = Trim$(gCon.ReadLine(getPrompt))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNumberOfUnprocessedOrders() As Long
@@ -714,10 +724,9 @@ If Not setBatchOrders Then Exit Sub
 
 setOrderRecovery
 
-gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, CloseoutCommand, ResetCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, QuoteCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, CloseoutCommand, ResetCommand
 
-Dim inString As String
-inString = Trim$(gCon.ReadLine(getPrompt))
+Dim inString As String: inString = getInputLine
 
 Do While inString <> gCon.EofString
     If inString = "" Then
@@ -732,10 +741,7 @@ Do While inString <> gCon.EofString
         If Not processCommand(inString) Then Exit Do
     End If
     
-    Do While gInputPaused
-        Wait 20
-    Loop
-    inString = Trim$(gCon.ReadLine(getPrompt))
+    inString = getInputLine
 Loop
 
 If Not mOrderPersistenceDataStore Is Nothing Then mOrderPersistenceDataStore.Finish
@@ -816,6 +822,8 @@ Else
         processListCommand Params
     Case CloseoutCommand
         processCloseoutCommand Params
+    Case QuoteCommand
+        processQuoteCommand Params
     Case Else
         gWriteErrorLine "Invalid command '" & command & "'", True
     End Select
@@ -842,7 +850,7 @@ Case Else
     gWriteErrorLine BatchOrdersCommand & " parameter must be either YES or NO or DEFAULT", True
 End Select
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, QuoteCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Sub ProcessBuyCommand( _
@@ -1033,9 +1041,9 @@ End If
 
 If lContractSpec Is Nothing Then
     If Not mContractProcessor Is Nothing Then
-        gSetValidNextCommands ListCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
+        gSetValidNextCommands ListCommand, ContractCommand, QuoteCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
     Else
-        gSetValidNextCommands ListCommand, ContractCommand, EndOrdersCommand, ResetCommand
+        gSetValidNextCommands ListCommand, ContractCommand, QuoteCommand, EndOrdersCommand, ResetCommand
     End If
     Exit Sub
 End If
@@ -1062,7 +1070,7 @@ On Error GoTo Err
 If mErrorCount <> 0 Then
     gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed", True
     mErrorCount = 0
-    gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+    gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
     Exit Sub
 End If
 
@@ -1091,9 +1099,9 @@ End If
 If Not mGroupContractProcessors.TryItem(mGroupName, mContractProcessor) Then Set mContractProcessor = Nothing
 
 If Not mContractProcessor Is Nothing Then
-    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
 Else
-    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, QuoteCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
 End If
 End Sub
 
@@ -1108,7 +1116,7 @@ gPlaceOrdersTask.AddContractProcessors mContractProcessors, mStageOrders
 
 setupResultsLogging mClp
 
-gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
 
 Exit Sub
 
@@ -1137,13 +1145,53 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processQuoteCommand(ByVal pParams As String)
+Const ProcName As String = "processQuoteCommand"
+On Error GoTo Err
+
+If pParams = "" Then
+    If Not mContractProcessor Is Nothing Then
+        gWriteLineToConsole mContractProcessor.ContractName & _
+                            ": " & _
+                            GetCurrentTickSummary(mContractProcessor.DataSource)
+    Else
+        gWriteLineToConsole "No current contract"
+    End If
+Else
+    Dim lClp As CommandLineParser
+    Set lClp = CreateCommandLineParser(pParams, " ")
+    
+    Dim lSpecString As String: lSpecString = lClp.Arg(0)
+    
+    Dim lContractSpec As IContractSpecifier
+    If lSpecString <> "" Then
+        Set lContractSpec = CreateContractSpecifierFromString(lSpecString)
+    Else
+        Set lContractSpec = parseContractSpec(lClp)
+    End If
+    If lContractSpec Is Nothing Then Exit Sub
+    
+    Dim lQuoteFetcher As New QuoteFetcher
+    lQuoteFetcher.FetchQuote lContractSpec, mContractStore, mMarketDataManager
+End If
+
+Exit Sub
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description, True
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
+End Sub
+
 Private Sub processResetCommand()
 mContractProcessors.Clear
 Set mContractProcessor = Nothing
 mStageOrders = mStageOrdersDefault
 mBatchOrders = mBatchOrdersDefault
 mErrorCount = 0
-gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, QuoteCommand, BuyCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Sub processStageOrdersCommand( _
@@ -1163,7 +1211,7 @@ Case Else
     gWriteErrorLine StageOrdersCommand & " parameter must be either YES or NO or DEFAULT", True
 End Select
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, BuyCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, QuoteCommand, BuyCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Function setBatchOrders() As Boolean
@@ -1204,7 +1252,7 @@ If Not mClp.Switch(ScopeNameSwitch) Then Exit Sub
 mScopeName = mClp.SwitchValue(ScopeNameSwitch)
 If mScopeName = "" Then Exit Sub
 
-mGroupName = DefaultOrderGroupName
+mGroupName = DefaultGroupName
 mRecoveryFileDir = ApplicationSettingsFolder
 If mClp.SwitchValue(RecoveryFileDirSwitch) <> "" Then mRecoveryFileDir = mClp.SwitchValue(RecoveryFileDirSwitch)
 

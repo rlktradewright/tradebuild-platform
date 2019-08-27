@@ -111,6 +111,14 @@ Friend Property Get Contract() As IContract
 Set Contract = mContract
 End Property
 
+Friend Property Get ContractName() As String
+ContractName = mContract.Specifier.LocalSymbol & "@" & mContract.Specifier.Exchange
+End Property
+
+Friend Property Get DataSource() As IMarketDataSource
+Set DataSource = mDataSource
+End Property
+
 Friend Property Get LatestBuyCommandParams() As String
 LatestBuyCommandParams = mLatestBuyCommandParams
 End Property
@@ -215,7 +223,7 @@ If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.SwitchValue(l
 lSwitchName = TimezoneSwitch
 If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.SwitchValue(lSwitchName)
 
-gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, BracketCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands EntryCommand, StopLossCommand, QuoteCommand, TargetCommand, BracketCommand, ResetCommand, CloseoutCommand
 
 Exit Sub
 
@@ -262,7 +270,7 @@ On Error GoTo Err
 
 If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands ListCommand, GroupCommand, BracketCommand, BuyCommand, SellCommand, SellAgainCommand, ContractCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ListCommand, GroupCommand, QuoteCommand, BracketCommand, BuyCommand, SellCommand, SellAgainCommand, ContractCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
 
 Exit Sub
 
@@ -298,9 +306,9 @@ lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
 If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
-    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
 End If
 
 Exit Sub
@@ -344,9 +352,9 @@ lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
 If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
-    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
 End If
 
 Exit Sub
@@ -390,9 +398,9 @@ lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
 If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
-    gSetValidNextCommands EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
 End If
 
 Exit Sub
@@ -592,7 +600,7 @@ Else
     mLatestSellCommandParams = pParams
 End If
 
-gSetValidNextCommands ContractCommand, BuyCommand, SellCommand, SellAgainCommand, BracketCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands ContractCommand, QuoteCommand, BuyCommand, SellCommand, SellAgainCommand, BracketCommand, ResetCommand, CloseoutCommand
 
 Exit Function
 

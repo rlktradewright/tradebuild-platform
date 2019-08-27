@@ -134,7 +134,7 @@ Case BracketOrderChangesApplied
 Case BracketOrderChangesCancelled
 
 Case BracketOrderPositionCloseoutNotified
-
+    gWriteLineToStdOut lTime & lBo.Key & ": closed out"
 End Select
 
 Exit Sub

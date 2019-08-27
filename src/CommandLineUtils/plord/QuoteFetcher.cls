@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "OrderRecoverer"
+Attribute VB_Name = "QuoteFetcher"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -21,6 +21,8 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IGenericTickListener
 
 '@================================================================================
 ' Events
@@ -38,53 +40,53 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "OrderRecoverer"
+Private Const ModuleName                            As String = "QuoteFetcher"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTaskController                  As TaskController
-Attribute mTaskController.VB_VarHelpID = -1
-
 Private mSelfRef                                    As Object
+
+Private mDataSource                                 As IMarketDataSource
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' IGenericTickListener Interface Members
 '@================================================================================
 
-'@================================================================================
-' mTaskController Event Handlers
-'@================================================================================
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+mDataSource.RemoveGenericTickListener Me
+Set mSelfRef = Nothing
+End Sub
 
-Private Sub mTaskController_Completed(ev As TaskCompletionEventData)
-Const ProcName As String = "mTaskController_Completed"
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-gInputPaused = False
-If ev.Cancelled Then
-    gWriteErrorLine "order recovery was cancelled", True
-ElseIf ev.ErrorNumber <> 0 Then
-    gWriteErrorLine "order recovery received error (" & ev.ErrorNumber & ") " & _
-                        ev.ErrorMessage & vbCrLf & _
-                        "At:" & vbCrLf & _
-                        ev.ErrorSource, _
-                    True
-Else
-    gWriteLineToConsole "order recovery completed", True
+If mDataSource.HasCurrentTick(TickTypeAsk) And _
+    mDataSource.HasCurrentTick(TickTypeBid) And _
+    mDataSource.HasCurrentTick(TickTypeTrade) Then
+    Dim lContract As IContract: Set lContract = mDataSource.ContractFuture.Value
+    gWriteLineToConsole lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange & _
+                        ": " & _
+                        GetCurrentTickSummary(mDataSource)
+    mDataSource.RemoveGenericTickListener Me
+    Set mSelfRef = Nothing
 End If
-
-Set mSelfRef = Nothing
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+'@================================================================================
+' ???? Event Handlers
+'@================================================================================
 
 '@================================================================================
 ' Properties
@@ -94,23 +96,21 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub RecoverOrders( _
-                ByVal pOrderManager As OrderManager, _
-                ByVal pScopeName As String, _
-                ByVal pDataStore As IOrderPersistenceDataStore, _
-                ByVal pRecoveryAgent As IOrderRecoveryAgent, _
-                ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
-Const ProcName As String = "RecoverOrdersFromPreviousSession"
+Friend Sub FetchQuote( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pContractStore As IContractStore, _
+                ByVal pMarketDataManager As IMarketDataManager)
+Const ProcName As String = "FetchQuote"
 On Error GoTo Err
 
-Set mTaskController = pOrderManager.RecoverOrdersFromPreviousSession(pScopeName, _
-                                                                    pDataStore, _
-                                                                    pRecoveryAgent, _
-                                                                    pMarketDataManager, _
-                                                                    pOrderSubmitterFactory)
-gInputPaused = True
 Set mSelfRef = Me
+
+Dim lContractFuture As IFuture
+Set lContractFuture = FetchContract(pContractSpec, pContractStore)
+
+Set mDataSource = pMarketDataManager.CreateMarketDataSource(lContractFuture, False)
+mDataSource.AddGenericTickListener Me
+mDataSource.StartMarketData
 
 Exit Sub
 
