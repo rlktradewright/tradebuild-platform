@@ -965,10 +965,49 @@ On Error GoTo Err
 
 gRegExp.Global = False
 gRegExp.IgnoreCase = True
-gRegExp.Pattern = "^((all|\$)|([a-zA-Z0-9][\w-]*))?( +((mkt)|((lmt)(:(-)?(\d{1,3}))?))?)?$"
+'gRegExp.Pattern = "^((all|\$)|([a-zA-Z0-9][\w-]*))?( +((mkt)|((lmt)(:(-)?(\d{1,3}))?))?)?$"
+
+Dim p As String: p = _
+    "(?:" & _
+        "^" & _
+        "(?!mkt)(?!lmt)" & _
+        "(?:" & _
+            "(all|\$)|([a-zA-Z0-9][\w-]*)" & _
+        ")" & _
+        "(?:" & _
+            " +" & _
+            "(?:" & _
+                "(mkt)|" & _
+                "(?:" & _
+                    "(lmt)" & _
+                    "(?:" & _
+                        ":(-)?(\d{1,3})" & _
+                    ")?" & _
+                ")" & _
+            ")" & _
+        ")?" & _
+        "$" & _
+    ")" & _
+    "|"
+p = p & _
+    "(?:" & _
+        "^" & _
+        " *" & _
+        "(?:" & _
+            "(mkt)|" & _
+            "(?:" & _
+                "(lmt)" & _
+                "(?:" & _
+                    ":(-)?(\d{1,3})" & _
+                ")?" & _
+            ")" & _
+        ")" & _
+        "$" & _
+    ")"
+gRegExp.Pattern = p
 
 Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(pParams)
+Set lMatches = gRegExp.Execute(Trim$(pParams))
 
 If lMatches.Count <> 1 Then
     gWriteErrorLine "Invalid command: syntax error", True
@@ -979,18 +1018,24 @@ Dim lMatch As Match: Set lMatch = lMatches(0)
 
 Dim lAllGroups As Boolean
 Dim lGroupName As String
-If lMatch.SubMatches(1) = AllGroups Then
+If lMatch.SubMatches(0) = AllGroups Then
     lAllGroups = True
 ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
     lGroupName = DefaultGroupName
 Else
-    lGroupName = lMatch.SubMatches(2)
+    lGroupName = lMatch.SubMatches(1)
 End If
     
-Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
-Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(9) = "-", -1, 1)
+Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(3)) = CloseoutLimit Or _
+                                                    UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
+Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(4) = "-" Or lMatch.SubMatches(8) = "-", -1, 1)
 
-Dim lSpreadFactor As Long: lSpreadFactor = CLng("0" & lMatch.SubMatches(10)) * lSpreadFactorSign
+Dim lSpreadFactor As Long
+If lMatch.SubMatches(5) <> "" Then
+    lSpreadFactor = lMatch.SubMatches(5) * lSpreadFactorSign
+ElseIf lMatch.SubMatches(9) <> "" Then
+    lSpreadFactor = lMatch.SubMatches(9) * lSpreadFactorSign
+End If
 
 Dim lCloseoutProcessor As New CloseoutProcessor
 lCloseoutProcessor.Initialise mOrderManager, lUseLimitOrders, lSpreadFactor
