@@ -1412,11 +1412,7 @@ End If
 With theFilter
     mWriter.AddString .ClientID, "Client id"
     mWriter.AddString .AccountCode, "Account code"
-    If .Time = Int(.Time) Then
-        mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd"), ""), "Fill Time"
-    Else
-        mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
-    End If
+    mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
     mWriter.AddString .Symbol, "Symbol"
     mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
     mWriter.AddString .Exchange, "Exchange"
