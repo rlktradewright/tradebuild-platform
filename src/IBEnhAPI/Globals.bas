@@ -120,7 +120,7 @@ With gContractSpecToTwsContract
     Else
         .Exchange = lExchange
     End If
-    .Expiry = pContractSpecifier.Expiry
+    .Expiry = IIf(Len(pContractSpecifier.Expiry) >= 6, pContractSpecifier.Expiry, "")
     .IncludeExpired = True
     .LocalSymbol = pContractSpecifier.LocalSymbol
     .Multiplier = pContractSpecifier.Multiplier

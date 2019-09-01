@@ -832,9 +832,9 @@ With contractSpec
     
     Select Case .SecType
     Case SecTypeFuture
-        addTerm cond, InstrumentColumnExpiryMonth, CondOpLike, .Expiry & "%"
+        If Len(.Expiry) >= 6 Then addTerm cond, InstrumentColumnExpiryMonth, CondOpLike, .Expiry & "%"
     Case SecTypeOption, SecTypeFuturesOption
-        addTerm cond, InstrumentColumnExpiryMonth, CondOpLike, .Expiry & "%"
+        If Len(.Expiry) >= 6 Then addTerm cond, InstrumentColumnExpiryMonth, CondOpLike, .Expiry & "%"
         If .Strike <> 0# Then addTerm cond, InstrumentColumnStrikePrice, CondOpEqual, .Strike
         If .Right <> OptNone Then addTerm cond, InstrumentColumnOptionRight, CondOpEqual, Left$(OptionRightToString(.Right), 1)
     End Select
