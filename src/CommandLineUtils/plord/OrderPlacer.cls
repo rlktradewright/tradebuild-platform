@@ -177,9 +177,17 @@ With mBracketOrderSpec
     
     lBo.CancelAfter = .CancelAfter
     lBo.CancelPrice = .CancelPrice
+    lBo.Description = .Description
     lBo.EntryOrder.TimeInForce = .EntryTIF
-    If Not lBo.StopLossOrder Is Nothing Then lBo.StopLossOrder.TimeInForce = .StopLossTIF
-    If Not lBo.TargetOrder Is Nothing Then lBo.TargetOrder.TimeInForce = .TargetTIF
+    lBo.EntryReason = .EntryReason
+    If Not lBo.StopLossOrder Is Nothing Then
+        lBo.StopLossOrder.TimeInForce = .StopLossTIF
+        lBo.StopReason = .StopLossReason
+    End If
+    If Not lBo.TargetOrder Is Nothing Then
+        lBo.TargetOrder.TimeInForce = .TargetTIF
+        lBo.TargetReason = .TargetReason
+    End If
     If .GoodAfterTime <> 0 Then
         lBo.EntryOrder.GoodAfterTime = .GoodAfterTime
         lBo.EntryOrder.GoodAfterTimeTZ = .TimezoneName

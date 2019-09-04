@@ -43,8 +43,10 @@ Private Const TwsSwitch                             As String = "TWS"
 
 Public Const CancelAfterSwitch                      As String = "CANCELAFTER"
 Public Const CancelPriceSwitch                      As String = "CANCELPRICE"
+Public Const DescriptionSwitch                      As String = "DESCRIPTION"
 Public Const OffsetSwitch                           As String = "OFFSET"
 Public Const PriceSwitch                            As String = "PRICE"
+Public Const ReasonSwitch                           As String = "REASON"
 Public Const TIFSwitch                              As String = "TIF"
 Public Const TrailBySwitch                          As String = "TRAILBY"
 Public Const TrailPercentSwitch                     As String = "TRAILPERCENT"
@@ -512,21 +514,16 @@ On Error GoTo Err
 
 Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
-    If lPM.PositionSize <> 0 Or _
-        lPM.PendingBuyPositionSize <> 0 Or _
-        lPM.PendingSellPositionSize <> 0 _
-    Then
-        Dim lContract As IContract
-        Set lContract = lPM.ContractFuture.Value
-        gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                            padStringRight(getContractName(lContract), 25) & _
-                            " Size=" & padStringleft(lPM.PositionSize & _
-                                                    "(" & lPM.PendingBuyPositionSize & _
-                                                    "/" & _
-                                                    lPM.PendingSellPositionSize & ")", 10) & _
-                            " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 9), _
-                            True
-    End If
+    Dim lContract As IContract
+    Set lContract = lPM.ContractFuture.Value
+    gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
+                        padStringRight(getContractName(lContract), 25) & _
+                        " Size=" & padStringleft(lPM.PositionSize & _
+                                                "(" & lPM.PendingBuyPositionSize & _
+                                                "/" & _
+                                                lPM.PendingSellPositionSize & ")", 10) & _
+                        " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 9), _
+                        True
 Next
 
 Exit Sub
@@ -972,7 +969,7 @@ Dim p As String: p = _
         "^" & _
         "(?!mkt)(?!lmt)" & _
         "(?:" & _
-            "(all|\$)|([a-zA-Z0-9][\w-]*)" & _
+            "(?: *)|(all|\$)|([a-zA-Z0-9][\w-]*)" & _
         ")" & _
         "(?:" & _
             " +" & _
@@ -1370,7 +1367,7 @@ If mMonitor Then
     Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
                                             ProjectName & _
                                             "-" & lFilenameSuffix & _
-                                            ".log", _
+                                            "-Executions" & ".log", _
                                         includeTimestamp:=False, _
                                         includeLogLevel:=False)
     GetLogger("position.orderdetail").AddLogListener lLogfile
@@ -1378,7 +1375,7 @@ If mMonitor Then
     Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
                                             ProjectName & _
                                             "-" & lFilenameSuffix & _
-                                            "-Profile" & ".log", _
+                                            "-BracketOrders" & ".log", _
                                         includeTimestamp:=False, _
                                         includeLogLevel:=False)
     GetLogger("position.bracketorderprofilestring").AddLogListener lLogfile
@@ -1537,6 +1534,7 @@ gWriteLineToConsole "                         | mtl"
 gWriteLineToConsole "                         | auto"
 gWriteLineToConsole "                         ]"
 gWriteLineToConsole "    orderattr  ::= [ price:<price>"
+gWriteLineToConsole "                   [ reason:STRING"
 gWriteLineToConsole "                   | trigger[price]:<price>"
 gWriteLineToConsole "                   | trailby:<numberofticks>"
 gWriteLineToConsole "                   | trailpercent:<percentage>"
@@ -1545,6 +1543,7 @@ gWriteLineToConsole "                   | tif:<tifvalue>"
 gWriteLineToConsole "                   ]"
 gWriteLineToConsole "    bracketattr  ::= [ cancelafter:<canceltime>"
 gWriteLineToConsole "                     | cancelprice:<price>"
+gWriteLineToConsole "                     | description:STRING"
 gWriteLineToConsole "                     | goodaftertime:DATETIME"
 gWriteLineToConsole "                     | goodtilldate:DATETIME"
 gWriteLineToConsole "                     | timezone:TIMEZONENAME"

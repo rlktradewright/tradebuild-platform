@@ -194,6 +194,8 @@ mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
+If lClp.NumberOfArgs <> 2 Then gWriteErrorLine "There must be only two arguments, action (BUY or SELL) and size. Additionally there can be several attributes beginnig with ""/"""
+
 mBOSpec.Action = getOrderAction(lClp.Arg(0))
 If mBOSpec.Action = OrderActionNone Then gWriteErrorLine "Order action must be BUY or SELL"
 
@@ -213,6 +215,9 @@ If mBOSpec.CancelAfter < 0 Then gWriteErrorLine "CancelAfter must be an integer 
 
 lSwitchName = CancelPriceSwitch
 If lClp.Switch(lSwitchName) Then mBOSpec.CancelPrice = CDbl(lClp.SwitchValue(lSwitchName))
+
+lSwitchName = DescriptionSwitch
+If lClp.Switch(lSwitchName) Then mBOSpec.Description = lClp.SwitchValue(lSwitchName)
 
 lSwitchName = GoodAfterTimeSwitch
 If lClp.Switch(lSwitchName) Then mBOSpec.GoodAfterTime = CDate(lClp.SwitchValue(lSwitchName))
@@ -286,6 +291,8 @@ On Error GoTo Err
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
+If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument, the entry order type. Additionally there can be several attributes beginnig with ""/"""
+
 mBOSpec.EntryType = getEntryOrderType(lClp.Arg(0))
 
 Dim lSwitchName As String
@@ -304,6 +311,9 @@ If lClp.Switch(OffsetSwitch) Then mBOSpec.EntryOffset = parseOffset(lClp.SwitchV
 
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
+
+lSwitchName = ReasonSwitch
+If lClp.Switch(ReasonSwitch) Then mBOSpec.EntryReason = lClp.SwitchValue(ReasonSwitch)
 
 If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
@@ -332,6 +342,8 @@ On Error GoTo Err
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
+If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument, the stop-loss order type. Additionally there can be several attributes beginnig with ""/"""
+
 mBOSpec.StopLossType = getStopLossOrderType(lClp.Arg(0))
 
 Dim lSwitchName As String
@@ -347,6 +359,9 @@ End If
 
 lSwitchName = OffsetSwitch
 If lClp.Switch(OffsetSwitch) Then mBOSpec.StopLossOffset = parseOffset(lClp.SwitchValue(OffsetSwitch))
+
+lSwitchName = ReasonSwitch
+If lClp.Switch(ReasonSwitch) Then mBOSpec.StopLossReason = lClp.SwitchValue(ReasonSwitch)
 
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
@@ -380,6 +395,8 @@ Set lClp = CreateCommandLineParser(pParams, " ")
 
 mBOSpec.TargetType = getTargetOrderType(lClp.Arg(0))
 
+If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument, the target order type. Additionally there can be several attributes beginnig with ""/"""
+
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
 If lClp.Switch(PriceSwitch) Then mBOSpec.TargetPrice = CDbl(lClp.SwitchValue(PriceSwitch))
@@ -393,6 +410,9 @@ End If
 
 lSwitchName = OffsetSwitch
 If lClp.Switch(OffsetSwitch) Then mBOSpec.TargetOffset = parseOffset(lClp.SwitchValue(OffsetSwitch))
+
+lSwitchName = ReasonSwitch
+If lClp.Switch(ReasonSwitch) Then mBOSpec.TargetReason = lClp.SwitchValue(ReasonSwitch)
 
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))

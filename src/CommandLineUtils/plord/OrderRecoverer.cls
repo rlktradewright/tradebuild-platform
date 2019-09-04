@@ -75,7 +75,7 @@ ElseIf ev.ErrorNumber <> 0 Then
                         ev.ErrorSource, _
                     True
 Else
-    gWriteLineToConsole "order recovery completed", True
+    LogMessage "Order recovery completed", True
 End If
 
 Set mSelfRef = Nothing

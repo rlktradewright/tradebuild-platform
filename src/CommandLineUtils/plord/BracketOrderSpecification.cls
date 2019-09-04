@@ -68,6 +68,10 @@ Public CancelAfter                                  As Long
 Public GoodAfterTime                                As Date
 Public GoodTillDate                                 As Date
 Public TimezoneName                                 As String
+Public Description                                  As String
+Public EntryReason                                  As String
+Public StopLossReason                               As String
+Public TargetReason                                 As String
 
 '@================================================================================
 ' Class Event Handlers
