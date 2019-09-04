@@ -1811,8 +1811,8 @@ On Error GoTo Err
 
 If mSubscribedToMarketData Then Exit Sub
 mSubscribedToMarketData = True
-DataSourceBase.AddMarketDataSubscription
 setState MarketDataSourceStateRunning
+DataSourceBase.AddMarketDataSubscription
 
 Refresh
 
@@ -1828,8 +1828,8 @@ On Error GoTo Err
 
 If mSubscribedToMarketDepth Then Exit Sub
 mSubscribedToMarketDepth = True
-DataSourceBase.AddMarketDepthSubscription
 setState MarketDataSourceStateRunning
+DataSourceBase.AddMarketDepthSubscription
 
 Exit Sub
 

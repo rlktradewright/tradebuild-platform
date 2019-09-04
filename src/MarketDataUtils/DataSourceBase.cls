@@ -663,30 +663,39 @@ Dim ev As QuoteEventData
 
 Set ev.Source = pDataSource
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeAsk)
 pListener.Ask ev
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeBid)
 pListener.Bid ev
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeHighPrice)
 pListener.High ev
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeLowPrice)
 pListener.Low ev
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeOpenPrice)
 pListener.SessionOpen ev
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeOpenInterest)
 pListener.OpenInterest ev
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeClosePrice)
 pListener.PreviousClose ev
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeTrade)
 pListener.Trade ev
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 ev.Quote = GetCurrentQuote(TickTypeVolume)
 pListener.Volume ev
 
@@ -700,14 +709,31 @@ Private Sub doNotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickL
 Const ProcName As String = "doNotifyCurrentMarketDataTickValues"
 On Error GoTo Err
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mBidTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mAskTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mTradeTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mVolumeTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mHighTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mLowTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mOpenTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mCloseTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mOpenInterestTick, pDataSource
 
 Exit Sub
