@@ -118,6 +118,9 @@ End Property
 Private Property Get IBracketOrder_CumSellPrice() As Double
 End Property
 
+Private Property Let IBracketOrder_Description(ByVal RHS As String)
+End Property
+
 Private Property Get IBracketOrder_Description() As String
 End Property
 
