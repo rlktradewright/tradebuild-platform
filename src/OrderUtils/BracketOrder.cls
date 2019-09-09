@@ -24,7 +24,6 @@ Option Explicit
 '@================================================================================
 
 Implements IBracketOrder
-Implements IPositionMember
 Implements IRecoverable
 Implements IStringable
 
@@ -104,10 +103,9 @@ Private Const ModuleName                As String = "BracketOrder"
 ' Member variables
 '@================================================================================
 
-Private mSummary                                    As BracketOrderSummary
+Private mSummary                                    As BOS
 
-Private mContextsName                               As String
-Private mGroupName                                  As String
+Private mRecoveryContextName                        As String
 
 Private mOrderContext                               As OrderContext
 Private mContract                                   As IContract
@@ -192,7 +190,7 @@ mNewTargetOffset = DummyOffset
 mNewTargetTriggerPrice = -1
 mNewTargetQuantity = -1
 
-Set mSummary = New BracketOrderSummary
+Set mSummary = New BOS
 
 mApplicationIndex = GBracketOrder.gNextApplicationIndex
 
@@ -415,6 +413,10 @@ Private Property Get IBracketOrder_CumSellPrice() As Double
 IBracketOrder_CumSellPrice = CumSellPrice
 End Property
 
+Private Property Let IBracketOrder_Description(ByVal RHS As String)
+Description = RHS
+End Property
+
 Private Property Get IBracketOrder_Description() As String
 IBracketOrder_Description = Description
 End Property
@@ -453,6 +455,10 @@ End Sub
 
 Private Property Get IBracketOrder_ExitPrice() As Double
 IBracketOrder_ExitPrice = ExitPrice
+End Property
+
+Private Property Get IBracketOrder_GroupName() As String
+IBracketOrder_GroupName = GroupName
 End Property
 
 Private Property Get IBracketOrder_IsComplete() As Boolean
@@ -804,14 +810,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' IPositionMember Interface Members
-'@================================================================================
-
-Private Property Get IPositionMember_RecoveryContextName() As String
-IPositionMember_RecoveryContextName = mContextsName
-End Property
-
-'@================================================================================
 ' IRecoverable Interface Members
 '@================================================================================
 
@@ -850,11 +848,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IRecoverable_LoadRecoveryData(ByVal pData As Variant)
+Private Sub IRecoverable_LoadRecoveryData( _
+                ByVal pRecoveryContextName As String, _
+                ByVal pData As Variant)
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
-Set mSummary = pData
+If mRecoveryContextName = "" Then mRecoveryContextName = pRecoveryContextName
+
+Dim lSummary As BOS: Set lSummary = pData
+If mSummary.Key = "" Then
+    mSummary.Key = lSummary.Key
+    GIdProvider.gAddExistingId lSummary.Key
+End If
+lSummary.Diff.UpdateHost mSummary
+
 setState mSummary.State
 
 If mSummary.CloseoutOrderId <> "" And mCloseoutOrder Is Nothing And Not mOrderContext Is Nothing Then CloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
@@ -872,6 +880,10 @@ End Sub
 
 Private Property Get IRecoverable_ProgId() As String
 IRecoverable_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IRecoverable_RecoveryContextName() As String
+IRecoverable_RecoveryContextName = mRecoveryContextName
 End Property
 
 Private Property Get IRecoverable_RecoveryData() As Variant
@@ -921,7 +933,7 @@ On Error GoTo Err
 
 gLogOrderMessage "Closeout order fill: " & _
                     gOrderActionToString(mCloseoutOrder.Action) & " " & pExec.Quantity & " at " & _
-                    pExec.Price, _
+                    pExec.Price & "; remaining: " & mCloseoutOrder.QuantityRemaining, _
                 mCloseoutOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
 processExecution pExec
@@ -1038,7 +1050,7 @@ On Error GoTo Err
 
 gLogOrderMessage "Entry order fill: " & _
                     gOrderActionToString(mEntryOrder.Action) & " " & pExec.Quantity & " at " & _
-                    pExec.Price, _
+                    pExec.Price & "; remaining: " & mEntryOrder.QuantityRemaining, _
                 mEntryOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
 placePeggedOrders pExec.Quantity
@@ -1224,7 +1236,7 @@ On Error GoTo Err
 
 gLogOrderMessage "Stop-loss order fill: " & _
                     gOrderActionToString(mStopLossOrder.Action) & " " & pExec.Quantity & " at " & _
-                    pExec.Price, _
+                    pExec.Price & "; remaining: " & mStopLossOrder.QuantityRemaining, _
                 mStopLossOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
 processExecution pExec
@@ -1349,7 +1361,7 @@ On Error GoTo Err
 
 gLogOrderMessage "Target order fill: " & _
                     gOrderActionToString(mTargetOrder.Action) & " " & pExec.Quantity & " at " & _
-                    pExec.Price, _
+                    pExec.Price & "; remaining: " & mTargetOrder.QuantityRemaining, _
                 mTargetOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
 processExecution pExec
@@ -1668,6 +1680,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get GroupName() As String
+GroupName = mSummary.GroupName
 End Property
 
 Public Property Get IsComplete() As Boolean
@@ -2309,13 +2325,9 @@ fireChange BracketOrderChangeTypes.BracketOrderCreated
 SaveRecoveryInfo    ' ensure the BracketOrder is recorded before
                     ' doing the state change, which will cause
                     ' the orders to be recorded
-If mStopLossOrder Is Nothing Then
-ElseIf mStopLossOrder.OrderType = OrderTypeAutoStop Then mStopLossOrder.SaveRecoveryInfo
-End If
-
-If mTargetOrder Is Nothing Then
-ElseIf mTargetOrder.OrderType = OrderTypeAutoLimit Then mTargetOrder.SaveRecoveryInfo
-End If
+mEntryOrder.SaveRecoveryInfo
+If Not mStopLossOrder Is Nothing Then mStopLossOrder.SaveRecoveryInfo
+If Not mTargetOrder Is Nothing Then mTargetOrder.SaveRecoveryInfo
 
 handleStimulus OpStimuli.StimExecute
 
@@ -2345,7 +2357,7 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pKey As String, _
-                ByVal pContextsName As String, _
+                ByVal pRecoveryContextName As String, _
                 ByVal pGroupName As String, _
                 ByVal pOrderContext As OrderContext, _
                 ByVal pContract As IContract, _
@@ -2356,8 +2368,8 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mSummary.Key = pKey
-mContextsName = pContextsName
-mGroupName = pGroupName
+mRecoveryContextName = pRecoveryContextName
+mSummary.GroupName = pGroupName
 Set mOrderContext = pOrderContext
 mSummary.ContextName = mOrderContext.Name
 Set mContract = pContract
@@ -2383,7 +2395,7 @@ If Size = 0 Then Exit Sub
 createCloseoutOrder
 
 pExec.OrderId = mCloseoutOrder.Id
-mCloseoutOrder.NotifyFill pExec
+mCloseoutOrder.NotifyFillEx pExec, False
 
 fireChange BracketOrderPositionCloseoutNotified
 RaiseEvent PositionCloseoutNotified
@@ -3233,9 +3245,10 @@ Const ProcName As String = "CreateAnOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
-Set lOrder = mOrderContext.CreateRawOrder(pId, True)
+Set lOrder = mOrderContext.CreateRawOrder(pId, True, mRecoveryContextName)
 
-lOrder.Initialise mGroupName, mContextsName, mContract.Specifier, mOrderContext
+
+lOrder.Initialise mSummary.GroupName, mContract.Specifier, mOrderContext
 Set CreateAnOrder = lOrder
 
 Exit Function
@@ -3599,8 +3612,6 @@ Private Function placeOrders()
 Const ProcName As String = "placeOrders"
 On Error GoTo Err
 
-gLogBracketOrderMessage "Execute bracket order: " & ToString, _
-                mDataSource, mContract, Key, mIsSimulated, Me
 mOrderSubmitter.ExecuteBracketOrder Me
 
 Checkpoint
@@ -3646,10 +3657,11 @@ If Not mTargetOrder Is Nothing Then
     End If
 End If
 
-If updated Then Update
-
-mSummary.PeggedOrdersProcessed = True
-SaveRecoveryInfo
+If updated Then
+    mSummary.PeggedOrdersProcessed = True
+    Update
+    SaveRecoveryInfo
+End If
 
 Exit Sub
 

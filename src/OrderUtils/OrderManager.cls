@@ -11,6 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
+
 Option Explicit
 
 ''
@@ -391,10 +392,21 @@ If Not lPm Is Nothing Then
     AssertArgument lPm.IsSimulated = pIsSimulated, "Position manager of this name already exists with a different IsSimulated property"
 Else
     Dim lClr As BracketOrderRecoveryCtlr
-    If pScopeName <> "" Then Set lClr = getBracketOrderRecoveryController(pScopeName)
-    
+    Dim lRecoveryContextName As String
+    If pScopeName <> "" Then
+        Set lClr = getBracketOrderRecoveryController(pScopeName)
+        lRecoveryContextName = gNextId
+    End If
     Set lPm = New PositionManager
-    lPm.Initialise Me, pName, pOrderSubmitterFactory, pDataSource, lClr, pGroupName, pIsSimulated, pMoneyManager
+    lPm.Initialise Me, _
+                    pName, _
+                    pOrderSubmitterFactory, _
+                    pDataSource, _
+                    lClr, _
+                    lRecoveryContextName, _
+                    pGroupName, _
+                    pIsSimulated, _
+                    pMoneyManager
     
     If pIsSimulated Then
         mPositionManagersSimulated.Add lPm

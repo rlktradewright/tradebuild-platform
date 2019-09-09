@@ -27,7 +27,6 @@ Implements IChangeListener
 Implements IGenericTickListener
 Implements IOrderAuthoriser
 Implements IOrderSubmissionListener
-Implements IPositionMember
 Implements IRecoverable
 Implements IStateChangeListener
 
@@ -58,7 +57,7 @@ Private Const ModuleName                        As String = "PositionManager"
 ' Member variables
 '@================================================================================
 
-Private mSummary                                As PositionManagerSummary
+Private mSummary                                As PMS
 
 Private mOrderManager                           As OrderManager
 
@@ -138,12 +137,14 @@ Private mBracketOrderRecoveryController         As BracketOrderRecoveryCtlr
 
 Private mInitialRecoveryDataSaved               As Boolean
 
+Private mRecoveryContextName                    As String
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mSummary = New PositionManagerSummary
+Set mSummary = New PMS
 
 mApplicationIndex = GPositionManager.gNextApplicationIndex
 
@@ -296,7 +297,7 @@ Else
     lExec.SyncToExecutionReport pExecutionReport
 End If
 lExec.GroupName = mSummary.GroupName
-lExec.RecoveryContextName = mSummary.Name
+lExec.RecoveryContextName = mRecoveryContextName
 
 If Not mBracketOrderRecoveryController Is Nothing Then
     lExec.AddRecoverableObjectListener mBracketOrderRecoveryController
@@ -362,14 +363,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' IPositionMember Interface Members
-'@================================================================================
-
-Private Property Get IPositionMember_RecoveryContextName() As String
-IPositionMember_RecoveryContextName = RecoveryContextName
-End Property
-
-'@================================================================================
 ' IRecoverable Interface Members
 '@================================================================================
 
@@ -401,11 +394,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IRecoverable_LoadRecoveryData(ByVal pData As Variant)
+Private Sub IRecoverable_LoadRecoveryData( _
+                ByVal pRecoveryContextName As String, _
+                ByVal pData As Variant)
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
-Set mSummary = pData
+If mRecoveryContextName = "" Then mRecoveryContextName = pRecoveryContextName
+gAddExistingId mRecoveryContextName
+
+Dim lSummary As PMS: Set lSummary = pData
+If mSummary.Name = "" Then mSummary.Name = lSummary.Name
+lSummary.Diff.UpdateHost mSummary
 
 ' we only create a contract future from the summary data the first time,
 ' as it will always be the same contract and we don't want multiple
@@ -417,6 +417,8 @@ If mContractFuture Is Nothing Then
     lBuilder.Complete
     Set mContractFuture = lBuilder.Future
 End If
+
+mSummary.setClean
 
 init
 
@@ -431,6 +433,10 @@ End Sub
 
 Private Property Get IRecoverable_ProgId() As String
 IRecoverable_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IRecoverable_RecoveryContextName() As String
+IRecoverable_RecoveryContextName = mRecoveryContextName
 End Property
 
 Private Property Get IRecoverable_RecoveryData() As Variant
@@ -976,10 +982,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get RecoveryContextName() As String
-RecoveryContextName = mSummary.Name
-End Property
-
 Public Property Get Risk() As Currency
 Const ProcName As String = "Risk"
 On Error GoTo Err
@@ -1171,7 +1173,7 @@ Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, _
                                                         mBracketOrderRecoveryController, _
                                                         mDataSource, _
                                                         mSummary.GroupName, _
-                                                        RecoveryContextName, _
+                                                        mRecoveryContextName, _
                                                         mSummary.IsSimulated, _
                                                         Me, _
                                                         mBracketOrders, _
@@ -1208,6 +1210,7 @@ Friend Sub Initialise( _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pRecoveryController As BracketOrderRecoveryCtlr, _
+                ByVal pRecoveryContextName As String, _
                 ByVal pGroupName As String, _
                 ByVal pIsSimulated As Boolean, _
                 ByVal pMoneyManager As IMoneyManager)
@@ -1233,6 +1236,7 @@ mProviderIsReady = (mOrderSubmitter.State = OrderSubmitterStateReady)
 mOrderSubmitter.AddOrderSubmissionListener Me
 mOrderSubmitter.AddStateChangeListener Me
 
+mRecoveryContextName = pRecoveryContextName
 Set mBracketOrderRecoveryController = pRecoveryController
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
 
@@ -1259,7 +1263,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub PreInitialise(ByVal pOrderManager As OrderManager)
+Friend Sub PreInitialise( _
+                ByVal pOrderManager As OrderManager)
 Set mOrderManager = pOrderManager
 End Sub
 
@@ -1406,8 +1411,6 @@ Private Sub checkCloseall()
 Const ProcName As String = "checkCloseall"
 On Error GoTo Err
 
-'If mIsSimulated Then Exit Sub
-
 If mMoneyManager Is Nothing Then Exit Sub
 
 Dim msg As String
@@ -1468,7 +1471,7 @@ If mBracketOrderRecoveryController Is Nothing Then Exit Sub
 
 mInitialRecoveryDataSaved = False
 gLog "Deleting order recovery info for Position Manager", ProcName, ModuleName, mSummary.Name
-mBracketOrderRecoveryController.DeleteRecoveryInfo mSummary.Name
+mBracketOrderRecoveryController.DeleteRecoveryInfo mRecoveryContextName
 
 Exit Sub
 
@@ -1680,7 +1683,7 @@ If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
                                                                 mBracketOrderRecoveryController, _
                                                                 mDataSource, _
                                                                 mSummary.GroupName, _
-                                                                RecoveryContextName, _
+                                                                mRecoveryContextName, _
                                                                 mSummary.IsSimulated, _
                                                                 Me, _
                                                                 mBracketOrders, _
@@ -1863,7 +1866,7 @@ On Error GoTo Err
 Dim lContract As IContract
 Set lContract = mContractFuture.Value
 
-mSummary.Contract = lContract
+If mSummary.Contract Is Nothing Then mSummary.Contract = lContract
 mTickValue = lContract.TickValue
 mTickSize = lContract.TickSize
 mCurrencyCode = lContract.Specifier.CurrencyCode
@@ -1878,8 +1881,6 @@ End Sub
 Private Sub setupNewSession()
 Const ProcName As String = "setupNewSession"
 On Error GoTo Err
-
-'If mIsSimulated Then Exit Sub
 
 mBracketOrders.Clear
 mOrders.Clear

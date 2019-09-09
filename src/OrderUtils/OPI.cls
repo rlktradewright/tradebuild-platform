@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IPositionMember"
+Attribute VB_Name = "OPI"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -38,11 +38,18 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IPositionMember"
+Private Const ModuleName                            As String = "OPI"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mTimestamp                                  As Date
+Private mRecoveryContextName                        As String
+Private mData                                       As IJSONable
+Private mItemType                                   As String
+
+Private mToString                                   As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,17 +67,103 @@ Private Const ModuleName                            As String = "IPositionMember
 ' Properties
 '@================================================================================
 
-Public Property Get RecoveryContextName() As String
+Public Property Let Data(ByVal Value As Variant)
+gSetVariant mData, Value
+End Property
+
+Public Property Get Data() As Variant
+gSetVariant Data, mData
+End Property
+
+Public Property Let ItemType(ByVal Value As String)
+mItemType = Value
+End Property
+
+Public Property Get ItemType() As String
+ItemType = mItemType
+End Property
+
+Public Property Let RCN(ByVal Value As String)
+mRecoveryContextName = Value
+End Property
+
+Public Property Get RCN() As String
+RCN = mRecoveryContextName
+End Property
+
+Public Property Let Timestamp(ByVal Value As Date)
+mTimestamp = Value
+End Property
+
+Public Property Get Timestamp() As Date
+Timestamp = mTimestamp
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Friend Sub Initialise( _
+                ByVal pRecoveryContextName As String, _
+                ByVal pInfoType As String, _
+                Optional ByVal pData As IJSONable = Nothing)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+mTimestamp = GetTimestamp
+mRecoveryContextName = pRecoveryContextName
+mItemType = pInfoType
+Set mData = pData
+
+Dim s As String
+s = FormatTimestamp(mTimestamp, TimestampDateAndTimeISO8601)
+s = s & "," & mRecoveryContextName
+s = s & "," & mItemType
+
+If Not mData Is Nothing Then s = s & "," & """" & mData.ToJSON & """"
+
+mToString = s
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub InitialiseFromString(ByVal pValue As String)
+Const ProcName As String = "InitialiseFromString"
+On Error GoTo Err
+
+mToString = pValue
+
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pValue, ",")
+
+Dim lTimestampString As String: lTimestampString = lClp.Arg(0)
+Dim index As Long: index = InStrRev(lTimestampString, ".")
+If index = 0 Then
+    mTimestamp = CDate(lTimestampString)
+Else
+    mTimestamp = CDate(Left$(lTimestampString, index - 1)) + _
+                       CDbl(Mid$(lTimestampString, index + 1)) / 86400000
+End If
+
+mRecoveryContextName = lClp.Arg(1)
+mItemType = lClp.Arg(2)
+
+If mItemType = OrderInfoData Then ParseJSON lClp.Arg(3), mData
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Function ToString() As String
+ToString = mToString
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-
 
 

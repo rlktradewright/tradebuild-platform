@@ -668,7 +668,7 @@ validateBracketTargetType pBracketTargetType
 
 Dim lBracketOrder As BracketOrder
 Set lBracketOrder = New BracketOrder
-lBracketOrder.Initialise GIdProvider.gNextKey, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
+lBracketOrder.Initialise GIdProvider.gNextId, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
 lBracketOrder.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
 lBracketOrder.EntryOrder = createEntryOrder(pAction, pNumber, pBracketEntryType, pEntryPrice, pEntryTriggerPrice, pEntryOffset)
@@ -691,7 +691,8 @@ End Function
 
 Friend Function CreateRawOrder( _
                 ByVal Id As String, _
-                ByVal pSetOrderRecovery As Boolean) As IOrder
+                ByVal pSetOrderRecovery As Boolean, _
+                ByVal pRecoveryContextName As String) As IOrder
 Const ProcName As String = "CreateRawOrder"
 On Error GoTo Err
 
@@ -704,6 +705,7 @@ Set CreateRawOrder = lOrder
 If Not mAccumulatedOrders Is Nothing Then mAccumulatedOrders.Add lOrder
 
 If pSetOrderRecovery And Not mBracketOrderRecoveryController Is Nothing Then
+    lOrder.RecoveryContextName = pRecoveryContextName
     Dim lObj As IRecoverable: Set lObj = lOrder
     lObj.AddRecoverableObjectListener mBracketOrderRecoveryController
 End If
@@ -1055,7 +1057,7 @@ On Error GoTo Err
 Dim lOrder As IOrder
 Set lOrder = mTemplateOrder.Clone
 
-lOrder.Id = GenerateGUIDString
+lOrder.Id = gNextId
 
 If Not mAccumulatedOrders Is Nothing Then mAccumulatedOrders.Add lOrder
 
@@ -1468,7 +1470,8 @@ On Error GoTo Err
 
 Set mContract = pContract
 Set mTemplateOrder = New Order
-mTemplateOrder.Initialise mGroupName, mRecoveryContextName, mContract.Specifier, Me
+mTemplateOrder.RecoveryContextName = mRecoveryContextName
+mTemplateOrder.Initialise mGroupName, mContract.Specifier, Me
 mTemplateOrder.IsSimulated = mIsSimulated
 
 Exit Sub

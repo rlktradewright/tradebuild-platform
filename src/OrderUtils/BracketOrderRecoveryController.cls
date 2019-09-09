@@ -54,9 +54,6 @@ End Enum
 
 Private Const ModuleName                            As String = "BracketOrderRecoveryCtlr"
 
-Private Const OrderInfoDelete                       As String = "DELETE"
-Private Const OrderInfoData                         As String = "DATA"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -227,23 +224,17 @@ Const ProcName As String = "IRecoverableObjectListener_NotifyRecoveryDataChanged
 On Error GoTo Err
 
 If mProcessingPersistedData Then Exit Sub
+If mDataStore Is Nothing Then Exit Sub
 
 Dim lRecoverableObj As IRecoverable
 Set lRecoverableObj = ev.Source
 
-Dim lPositionMemberObj As IPositionMember
-Set lPositionMemberObj = ev.Source
+Dim lOpi As New OPI
+lOpi.Initialise lRecoverableObj.RecoveryContextName, _
+                OrderInfoData, _
+                lRecoverableObj.RecoveryData
 
-If mDataStore Is Nothing Then Exit Sub
-
-Dim lOpItem As New OrderPersistenceItem
-lOpItem.Data = lRecoverableObj.RecoveryData
-lOpItem.ItemType = OrderInfoData
-lOpItem.RecoveryContextName = lPositionMemberObj.RecoveryContextName
-lOpItem.ProgId = lRecoverableObj.ProgId
-lOpItem.Timestamp = GetTimestamp
-
-mDataStore.SaveOrderInfo mScopeName, lOpItem.ToJSON
+mDataStore.SaveOrderInfo mScopeName, lOpi.ToString
 
 Exit Sub
 
@@ -271,7 +262,7 @@ End If
 Static sDataStoreEn As Enumerator
 Static sInMemoryStoreEn As Enumerator
 
-Dim lOpItem As OrderPersistenceItem
+Dim lOpItem As OPI
 
 If mState = RecoveryStateStarting Then
     If mRecoveryAgent Is Nothing Or mOrderSubmitterFactory Is Nothing Then
@@ -305,16 +296,16 @@ ElseIf mState = RecoveryStateCreatingOrderContexts Then
     If sInMemoryStoreEn.MoveNext Then
         Set lOpItem = sInMemoryStoreEn.Current
         
-        If TypeOf lOpItem.Data Is PositionManagerSummary Then
+        If TypeOf lOpItem.Data Is PMS Then
             ensurePositionManagerExists lOpItem
-        ElseIf TypeOf lOpItem.Data Is BracketOrderSummary Then
+        ElseIf TypeOf lOpItem.Data Is BOS Then
             Dim lPm As PositionManager
             Set lPm = GetPositionManager(lOpItem)
             
             If Not IsContractExpired(lPm.ContractFuture.Value) Then
-                Dim lBracketOrderSummary As BracketOrderSummary
-                Set lBracketOrderSummary = lOpItem.Data
-                getOrderContext lPm, lBracketOrderSummary.ContextName
+                Dim lBOS As BOS
+                Set lBOS = lOpItem.Data
+                getOrderContext lPm, lBOS.ContextName
             End If
         End If
     Else
@@ -337,12 +328,10 @@ ElseIf mState = RecoveryStateProcessingInfo Then
     If sInMemoryStoreEn.MoveNext Then
         Set lOpItem = sInMemoryStoreEn.Current
         
-        Dim opItemJSON As String
-        opItemJSON = lOpItem.ToJSON
-        gLog "Processing persisted order info", pMsgQualifier:=opItemJSON, pModName:=ModuleName, pProcName:=ProcName, pLogLevel:=LogLevelDetail
+        gLog "Processing persisted order info: " & lOpItem.ToString, ProcName, ModuleName, , LogLevelDetail
     
         If processOrderPersistenceItem(lOpItem) Then
-            mDataStore.SaveOrderInfo mScopeName, opItemJSON
+            mDataStore.SaveOrderInfo mScopeName, lOpItem.ToString
         End If
     Else
         mProcessingPersistedData = False
@@ -360,6 +349,23 @@ ElseIf mState = RecoveryStateRecoveringOrders Then
         Set lRecoverable = en.Current
         lRecoverable.FinishProcessingOrderPersistenceData
     Loop
+    
+    mStartRecoveryFrom = Now
+    Dim lBor As BracketOrderRecoverer
+    For Each lBor In mBracketOrderRecoverers
+        Dim lBo As BracketOrder: Set lBo = lBor.BracketOrder
+        If orderMayBeOutstanding(lBo.EntryOrder) Or _
+            orderMayBeOutstanding(lBo.StopLossOrder) Or _
+            orderMayBeOutstanding(lBo.TargetOrder) Or _
+            orderMayBeOutstanding(lBo.CloseoutOrder) _
+        Then
+            If Int(lBor.UpdateTime) < mStartRecoveryFrom Then
+                ' we subtract 1 second from the update time to allow
+                ' for imprecision in update times
+                mStartRecoveryFrom = lBor.UpdateTime - 1 / 86400
+            End If
+        End If
+    Next
 
     gLog "Starting order recovery", ProcName, ModuleName
     mRecoveryAgent.StartOrderRecovery Me, mStartRecoveryFrom
@@ -396,7 +402,7 @@ If ev.Future.IsFaulted Then Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSour
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
-Dim lOpItem As OrderPersistenceItem
+Dim lOpItem As OPI
 Set lOpItem = ev.ContinuationData
 
 Dim lContract As IContract
@@ -439,11 +445,12 @@ Const ProcName As String = "DeleteRecoveryInfo"
 On Error GoTo Err
 
 If Not mDataStore Is Nothing Then
-    Dim OpItem As New OrderPersistenceItem
-    OpItem.ItemType = OrderInfoDelete
-    OpItem.RecoveryContextName = pRecoveryContextName
-    OpItem.Timestamp = GetTimestamp
-    mDataStore.SaveOrderInfo mScopeName, OpItem.ToJSON
+    Dim s As String
+    s = FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601)
+    s = s & "," & pRecoveryContextName
+    s = s & "," & OrderInfoDelete
+    
+    mDataStore.SaveOrderInfo mScopeName, s
 End If
 
 Exit Sub
@@ -513,11 +520,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub ensurePositionManagerExists(ByVal pOpItem As OrderPersistenceItem)
+Private Sub ensurePositionManagerExists(ByVal pOpItem As OPI)
 Const ProcName As String = "ensurePositionManagerExists"
 On Error GoTo Err
 
-Dim lSummary As PositionManagerSummary
+Dim lSummary As PMS
 Set lSummary = pOpItem.Data
 If mPositionManagers.Contains(lSummary.Name) Then Exit Sub
 
@@ -526,10 +533,10 @@ lPm.PreInitialise mOrderManager
 
 Dim lRecoverable As IRecoverable
 Set lRecoverable = lPm
-lRecoverable.LoadRecoveryData lSummary
+lRecoverable.LoadRecoveryData pOpItem.RCN, lSummary
 
 mPositionManagers.Add lPm
-mPositionManagersByRecoveryContextName.Add lPm, pOpItem.RecoveryContextName
+mPositionManagersByRecoveryContextName.Add lPm, pOpItem.RCN
 
 mFutureWaiter.Add lPm.ContractFuture, pOpItem
 
@@ -624,14 +631,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function GetPositionManager( _
-                ByVal lOpItem As OrderPersistenceItem) As PositionManager
+                ByVal lOpItem As OPI) As PositionManager
 Const ProcName As String = "GetPositionManager"
 On Error GoTo Err
 
-Assert mPositionManagersByRecoveryContextName.Contains(lOpItem.RecoveryContextName), "PositionManager " & lOpItem.RecoveryContextName & " not recovered"
+Assert mPositionManagersByRecoveryContextName.Contains(lOpItem.RCN), "PositionManager " & lOpItem.RCN & " not recovered"
 
 Dim lPm As PositionManager
-Set lPm = mPositionManagersByRecoveryContextName.Item(lOpItem.RecoveryContextName)
+Set lPm = mPositionManagersByRecoveryContextName.Item(lOpItem.RCN)
 
 Set GetPositionManager = lPm
 
@@ -671,16 +678,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processBracketOrder(ByVal pOpi As OrderPersistenceItem)
+Private Function orderMayBeOutstanding(ByVal pOrder As IOrder) As Boolean
+If pOrder Is Nothing Then
+    orderMayBeOutstanding = False
+ElseIf pOrder.Status = OrderStatusCancelled Or _
+    pOrder.Status = OrderStatusFilled Or _
+    pOrder.Status = OrderStatusRejected _
+Then
+    orderMayBeOutstanding = False
+Else
+    orderMayBeOutstanding = True
+End If
+End Function
+
+Private Sub processBracketOrder(ByVal pOpi As OPI)
 Const ProcName As String = "processBracketOrder"
 On Error GoTo Err
 
-Dim lSummary As BracketOrderSummary
+Dim lSummary As BOS
 Set lSummary = pOpi.Data
-
-If mStartRecoveryFrom = 0 Or _
-    Int(lSummary.CreationTime) < mStartRecoveryFrom _
-    Then mStartRecoveryFrom = Int(lSummary.CreationTime)
 
 Dim lBor As BracketOrderRecoverer
 If mBracketOrderRecoverers.Contains(lSummary.Key) Then
@@ -692,7 +708,7 @@ Else
     mBracketOrderRecoverers.Add lBor, lSummary.Key
 End If
 
-lBor.UpdateBracketOrder lSummary
+lBor.UpdateBracketOrder pOpi.RCN, lSummary, pOpi.Timestamp
 mapOrderIdsToBracketOrderRecoverer lBor
 
 Exit Sub
@@ -701,7 +717,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processExecutionReport(ByVal pOpi As OrderPersistenceItem)
+Private Sub processExecutionReport(ByVal pOpi As OPI)
 Const ProcName As String = "processExecutionReport"
 On Error GoTo Err
 
@@ -721,11 +737,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function processOrder(ByVal pOpi As OrderPersistenceItem) As Boolean
+Private Function processOrder(ByVal pOpi As OPI) As Boolean
 Const ProcName As String = "processOrder"
 On Error GoTo Err
 
-Dim lSummary As OrderSummary
+Dim lSummary As OS
 Set lSummary = pOpi.Data
 
 If Not mOrderIdToBracketOrderRecoverer.Contains(lSummary.Id) Then
@@ -743,7 +759,7 @@ Set lBor = mOrderIdToBracketOrderRecoverer.Item(lSummary.Id)
 
 mOrderIdMap.Add lSummary.Id, lSummary.BrokerId
 
-lBor.updateOrder lSummary
+lBor.updateOrder pOpi.RCN, lSummary
 
 processOrder = True
 
@@ -758,8 +774,7 @@ Private Sub processOrderPersistenceInfo( _
 Const ProcName As String = "processOrderPersistenceInfo"
 On Error GoTo Err
 
-Dim OpItem As OrderPersistenceItem
-ParseJSON orderInfo, OpItem
+Dim OpItem As New OPI: OpItem.InitialiseFromString orderInfo
 
 If OpItem.ItemType = OrderInfoData Then
     mInMemoryStore.Add OpItem
@@ -774,7 +789,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function processOrderPersistenceItem( _
-                ByVal pOpItem As OrderPersistenceItem) As Boolean
+                ByVal pOpItem As OPI) As Boolean
 Const ProcName As String = "processOrderPersistenceItem"
 On Error GoTo Err
 
@@ -789,13 +804,13 @@ End If
 
 processOrderPersistenceItem = True
 
-If TypeOf pOpItem.Data Is BracketOrderSummary Then
+If TypeOf pOpItem.Data Is BOS Then
     processBracketOrder pOpItem
-ElseIf TypeOf pOpItem.Data Is OrderSummary Then
+ElseIf TypeOf pOpItem.Data Is OS Then
     If Not processOrder(pOpItem) Then processOrderPersistenceItem = False
 ElseIf TypeOf pOpItem.Data Is Execution Then
     processExecutionReport pOpItem
-ElseIf TypeOf pOpItem.Data Is PositionManagerSummary Then
+ElseIf TypeOf pOpItem.Data Is PMS Then
     processPositionManager pOpItem
 Else
     Assert False, "Unknown order info type"
@@ -808,17 +823,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processPositionManager( _
-                ByVal pOpi As OrderPersistenceItem)
+                ByVal pOpi As OPI)
 Const ProcName As String = "processPositionManager"
 On Error GoTo Err
 
-Dim lSummary As PositionManagerSummary
+Dim lSummary As PMS
 Set lSummary = pOpi.Data
 
 Dim lRecoverable As IRecoverable
 Set lRecoverable = GetPositionManager(pOpi)
 
-lRecoverable.LoadRecoveryData lSummary
+lRecoverable.LoadRecoveryData pOpi.RCN, lSummary
 
 Exit Sub
 
@@ -845,9 +860,9 @@ Dim en As Enumerator
 Set en = mInMemoryStore.Enumerator
 
 Do While en.MoveNext
-    Dim lOpItem As OrderPersistenceItem
+    Dim lOpItem As OPI
     Set lOpItem = en.Current
-    mDataStore.SaveOrderInfo mScopeName, lOpItem.ToJSON
+    mDataStore.SaveOrderInfo mScopeName, lOpItem.ToString
 Loop
 
 HandleUnexpectedError pProcName, ProjectName, ModuleName, , , , lErrNum, lErrMsg, lErrSource

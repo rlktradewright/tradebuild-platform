@@ -24,7 +24,6 @@ Option Explicit
 '@================================================================================
 
 Implements IOrder
-Implements IPositionMember
 Implements IRecoverable
 
 '@================================================================================
@@ -57,13 +56,11 @@ Private Const ModuleName                As String = "Order"
 ' Member variables
 '@================================================================================
 
-Private mSummary                    As OrderSummary
+Private mSummary                    As OS
 
 Private mContractSpecifier          As IContractSpecifier
 
 Private mOrderContext               As OrderContext
-
-Private mGroupName                  As String
 
 Private mIsDirty                    As Boolean
 
@@ -79,12 +76,28 @@ Private mRecoverableObjectListeners As New Listeners
 
 Private mDontCheckAttributeModificationPermitted    As Boolean
 
+Private mRecoveryContextName        As String
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mSummary = New OrderSummary
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
+Set mSummary = New OS
+mSummary.Status = OrderStatuses.OrderStatusCreated
+mSummary.Action = OrderActionBuy
+mSummary.OrderType = OrderTypeMarket
+mSummary.StopTriggerMethod = OrderStopTriggerDefault
+mSummary.TimeInForce = OrderTIFDay
+setDirty
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -163,10 +176,6 @@ End Property
 
 Private Property Get IOrder_BrokerId() As String
 IOrder_BrokerId = mSummary.BrokerId
-End Property
-
-Private Property Get IOrder_ContextsName() As String
-IOrder_ContextsName = mSummary.ContextsName
 End Property
 
 Private Property Get IOrder_ContractSpecifier() As IContractSpecifier
@@ -393,11 +402,14 @@ Private Property Get IOrder_IgnoreRegularTradingHours() As Boolean
 IOrder_IgnoreRegularTradingHours = mSummary.IgnoreRegularTradingHours
 End Property
 
-Private Sub IOrder_Initialise(ByVal pGroupName As String, ByVal pPositionManagerName As String, ByVal pContractSpec As IContractSpecifier, ByVal pOrderContext As OrderContext)
+Private Sub IOrder_Initialise( _
+                ByVal pGroupName As String, _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pOrderContext As OrderContext)
 Const ProcName As String = "IOrder_Initialise"
 On Error GoTo Err
 
-Initialise pGroupName, pPositionManagerName, pContractSpec, pOrderContext
+Initialise pGroupName, pContractSpec, pOrderContext
 
 Exit Sub
 
@@ -818,14 +830,6 @@ IOrder_TriggerPrice = mSummary.TriggerPrice
 End Property
 
 '@================================================================================
-' IPositionMember Interface Members
-'@================================================================================
-
-Private Property Get IPositionMember_RecoveryContextName() As String
-IPositionMember_RecoveryContextName = mSummary.ContextsName
-End Property
-
-'@================================================================================
 ' IRecoverable Interface Members
 '@================================================================================
 
@@ -849,11 +853,22 @@ Private Sub IRecoverable_FinishRecovery()
 
 End Sub
 
-Private Sub IRecoverable_LoadRecoveryData(ByVal pData As Variant)
+Private Sub IRecoverable_LoadRecoveryData( _
+                ByVal pRecoveryContextName As String, _
+                ByVal pData As Variant)
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
-Set mSummary = pData
+If mRecoveryContextName = "" Then mRecoveryContextName = pRecoveryContextName
+
+Dim lSummary As OS: Set lSummary = pData
+If mSummary.BrokerId = "" Then mSummary.BrokerId = lSummary.BrokerId
+If mSummary.Id = "" Then
+    mSummary.Id = lSummary.Id
+    gAddExistingId lSummary.Id
+End If
+lSummary.Diff.UpdateHost mSummary
+
 mSummary.setClean
 
 mNeedsRecovery = IsActive
@@ -866,6 +881,10 @@ End Sub
 
 Private Property Get IRecoverable_ProgId() As String
 IRecoverable_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IRecoverable_RecoveryContextName() As String
+IRecoverable_RecoveryContextName = mRecoveryContextName
 End Property
 
 Private Property Get IRecoverable_RecoveryData() As Variant
@@ -1152,8 +1171,14 @@ Public Property Get GoodTillDateTZ() As String
 GoodTillDateTZ = mSummary.GoodTillDateTZ
 End Property
 
+Public Property Let GroupName(ByVal Value As String)
+If Value = mSummary.GroupName Then Exit Property
+setDirty
+mSummary.GroupName = Value
+End Property
+
 Public Property Get GroupName() As String
-GroupName = mGroupName
+GroupName = mSummary.GroupName
 End Property
 
 Public Property Let Hidden(ByVal Value As Boolean)
@@ -1456,6 +1481,10 @@ Public Property Get QuantityRemaining() As Long
 QuantityRemaining = mSummary.QuantityRemaining
 End Property
 
+Friend Property Let RecoveryContextName(ByVal Value As String)
+mRecoveryContextName = Value
+End Property
+
 Public Property Let SettlingFirm(ByVal Value As String)
 Const ProcName As String = "SettlingFirm"
 On Error GoTo Err
@@ -1595,6 +1624,7 @@ On Error GoTo Err
 checkInitialised
 
 Dim lOrder As New Order
+lOrder.RecoveryContextName = mRecoveryContextName
 lOrder.DontCheckAttributeModificationPermitted = True
 gSyncToOrder lOrder, Me
 lOrder.DontCheckAttributeModificationPermitted = False
@@ -1618,6 +1648,21 @@ Public Sub NotifyFill( _
 Const ProcName As String = "NotifyFill"
 On Error GoTo Err
 
+NotifyFillEx pExec, True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
+End Sub
+
+Friend Sub NotifyFillEx( _
+                ByVal pExec As IExecutionReport, _
+                ByVal pLog As Boolean)
+Const ProcName As String = "NotifyFillEx"
+On Error GoTo Err
+
 checkInitialised
 
 Dim lExec As Execution
@@ -1628,24 +1673,26 @@ Else
     lExec.Id = pExec.Id
     If mIsSimulated Then lExec.IsSimulated = True
     lExec.SyncToExecutionReport pExec
-    lExec.GroupName = mGroupName
-    lExec.RecoveryContextName = mSummary.ContextsName
+    lExec.GroupName = mSummary.GroupName
+    lExec.RecoveryContextName = mRecoveryContextName
     lExec.SaveRecoveryInfo
 End If
 
 If mContractSpecifier Is Nothing Then
     ' happens when an order from a previous session is being recovered before
     ' the relevant ticker is ready
-Else
-    gLogOrderDetail mContractSpecifier.Exchange & "," & _
-            mContractSpecifier.LocalSymbol & "," & _
+ElseIf pLog Then
+    gLogOrderDetail _
+            mSummary.GroupName & "," & _
+            mContractSpecifier.LocalSymbol & "@" & mContractSpecifier.Exchange & "," & _
             lExec.Quantity & "," & _
             lExec.Price & "," & _
             gOrderActionToString(lExec.Action) & "," & _
             FormatTimestamp(lExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             lExec.TimezoneName & "," & _
             lExec.Id & "," & _
-            lExec.BrokerId, _
+            lExec.BrokerId & "," & _
+            Id, _
             mIsSimulated, _
             Me
 End If
@@ -1685,19 +1732,16 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pGroupName As String, _
-                ByVal pContextsName As String, _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pOrderContext As OrderContext)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If mIsInitialised Then Assert pGroupName = mGroupName And _
-                            pContextsName = mSummary.ContextsName And _
+If mIsInitialised Then Assert pGroupName = GroupName And _
                             pContractSpec.Equals(mContractSpecifier) And _
                             pOrderContext Is mOrderContext, "Attempt to change initialisation values"
 
-mGroupName = pGroupName
-mSummary.ContextsName = pContextsName
+GroupName = pGroupName
 Set mOrderContext = pOrderContext
 Set mContractSpecifier = pContractSpec
 mIsInitialised = True
@@ -1905,6 +1949,7 @@ With pExec
     If .Quantity <> mSummary.Quantity Then mSummary.Quantity = .Quantity: changed = True
     If .SettlingFirm <> mSummary.SettlingFirm Then mSummary.SettlingFirm = .SettlingFirm: changed = True
     If .StopTriggerMethod <> mSummary.StopTriggerMethod Then mSummary.StopTriggerMethod = .StopTriggerMethod: changed = True
+    If .Status <> mSummary.Status Then mSummary.Status = .Status: changed = True
     If .SweepToFill <> mSummary.SweepToFill Then mSummary.SweepToFill = .SweepToFill: changed = True
     If .TimeInForce <> mSummary.TimeInForce Then mSummary.TimeInForce = .TimeInForce: changed = True
     If .TriggerPrice <> mSummary.TriggerPrice Then mSummary.TriggerPrice = .TriggerPrice: changed = True
@@ -1921,31 +1966,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-'''
-'' Notifies the specified <code>order</code> of a change of status
-''
-'' @param pStatus    a member of the <code>OrderStatuses</code> enumeration
-''                   specifying the <code>order</code>'s new status
-''
-''@/
-'Public Sub UpdateStatus( _
-'                ByVal pStatus As OrderStatuses)
-'Const ProcName As String = "UpdateStatus"
-'On Error GoTo Err
-'
-'If pStatus <> mStatus Then
-'    mStatus = pStatus
-'    If Not IsActive Then mNeedsRecovery = False
-'    SaveRecoveryInfo
-'    RaiseEvent StatusChanged
-'End If
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
 
 '@================================================================================
 ' Helper Functions

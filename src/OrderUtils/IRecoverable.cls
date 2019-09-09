@@ -63,6 +63,9 @@ Private Const ModuleName                            As String = "IRecoverable"
 Public Property Get ProgId() As String
 End Property
 
+Public Property Get RecoveryContextName() As String
+End Property
+
 Public Property Get RecoveryData() As Variant
 End Property
 
@@ -79,7 +82,7 @@ End Sub
 Public Sub FinishRecovery()
 End Sub
 
-Public Sub LoadRecoveryData(ByVal pData As Variant)
+Public Sub LoadRecoveryData(ByVal pRecoveryContextName As String, ByVal pData As Variant)
 End Sub
 
 Public Sub RemoveRecoverableObjectListener(ByVal pListener As IRecoverableObjectListener)

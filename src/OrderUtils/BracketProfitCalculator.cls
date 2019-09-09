@@ -536,9 +536,18 @@ Private Sub logBracketProfile()
 Const ProcName As String = "logBracketProfile"
 On Error GoTo Err
 
+Static sContractSpec As IContractSpecifier
+
+If sContractSpec Is Nothing Then
+    Dim lContract As IContract
+    Set lContract = mContractFuture.Value
+    Set sContractSpec = lContract.Specifier
+End If
+
 Dim profile As New BracketOrderProfile
 With profile
     .Action = mBracketOrder.EntryOrder.Action
+    .ContractSpec = sContractSpec
     .Description = mBracketOrder.Description
     .EndTime = mBracketOrder.EndTime
     .EntryReason = mBracketOrder.EntryReason
@@ -556,7 +565,10 @@ With profile
 End With
 gLogBracketOrderProfileObject profile, mBracketOrder.IsSimulated, Me
 
-gLogBracketOrderProfileString FormatTimestamp(mBracketOrder.StartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+gLogBracketOrderProfileString _
+            mBracketOrder.GroupName & "," & _
+            sContractSpec.LocalSymbol & "@" & sContractSpec.Exchange & "," & _
+            FormatTimestamp(mBracketOrder.StartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             FormatTimestamp(mBracketOrder.EndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             mBracketOrder.Description & "," & _
             mBracketOrder.Key & "," & _

@@ -90,9 +90,6 @@ End Property
 Public Property Get BrokerId() As String
 End Property
 
-Public Property Get ContextsName() As String
-End Property
-
 Public Property Get ContractSpecifier() As IContractSpecifier
 End Property
 
@@ -330,7 +327,6 @@ End Property
 
 Public Sub Initialise( _
                 ByVal pGroupName As String, _
-                ByVal pContextsName As String, _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pOrderContext As OrderContext)
 End Sub

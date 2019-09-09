@@ -56,8 +56,13 @@ Private Const StrOrderTypeMarketOnOpen       As String = "Market on Open"
 Private Const StrOrderTypeLimitOnOpen        As String = "Limit on Open"
 Private Const StrOrderTypePeggedToPrimary    As String = "Pegged to Primary"
 
-Public Const BalancingOrderContextName      As String = "$balancing"
-Public Const RecoveryOrderContextName       As String = "$recovery"
+Public Const BalancingOrderContextName              As String = "$balancing"
+Public Const RecoveryOrderContextName               As String = "$recovery"
+
+Public Const OrderInfoDelete                        As String = "DELETE"
+Public Const OrderInfoData                          As String = "DATA"
+
+
 
 '@================================================================================
 ' Member variables
@@ -868,10 +873,10 @@ End If
 
 gLogOrder lTimePart & _
             IIf(pIsSimulated, "(simulated) ", "") & _
-            pMessage & _
-            " (" & lTickPart & _
-            IIf(pKey <> "", "id=" & pKey, "") & _
-            ")", _
+            pMessage & vbCrLf & _
+            "Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & vbCrLf & _
+            IIf(pKey <> "", "Bracket id: " & pKey & vbCrLf, "") & _
+            lTickPart, _
         pIsSimulated, _
         pSource
 
@@ -892,9 +897,9 @@ Public Sub gLogOrderMessage( _
 Const ProcName As String = "gLogOrderMessage"
 On Error GoTo Err
 
-gLogBracketOrderMessage pMessage & _
-                        ": (brokerId=" & pOrder.BrokerId & _
-                        "; id=" & pOrder.Id & "): ", _
+gLogBracketOrderMessage pMessage & vbCrLf & _
+                        "BrokerId: " & pOrder.BrokerId & _
+                        "; system id: " & pOrder.Id, _
                         pDataSource, _
                         pContract, _
                         pKey, _
@@ -1380,7 +1385,7 @@ Const ProcName As String = "gSyncToOrder"
 On Error GoTo Err
 
 With pTargetOrder
-    .Initialise .GroupName, pSourceOrder.ContextsName, pSourceOrder.ContractSpecifier, pSourceOrder.OrderContext
+    .Initialise pSourceOrder.GroupName, pSourceOrder.ContractSpecifier, pSourceOrder.OrderContext
     
     ' do this first because modifiability of other attributes may depend on the OrderType
     .OrderType = pSourceOrder.OrderType
@@ -1433,12 +1438,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function gVariantEquals(ByVal p1 As Variant, ByVal p2 As Variant) As Boolean
+If IsMissing(p2) Or IsEmpty(p2) Then
+    gVariantEquals = False
+ElseIf IsNumeric(p1) And IsNumeric(p2) Then
+    gVariantEquals = (p1 = p2)
+ElseIf IsArray(p1) Then
+    gVariantEquals = False
+ElseIf IsObject(p1) And IsObject(p2) Then
+    gVariantEquals = (p1 Is p2)
+Else
+    gVariantEquals = (p1 = p2)
+End If
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
 Private Sub logInfotypeData( _
-                ByVal pInfotype As String, _
+                ByVal pInfoType As String, _
                 ByRef pData As Variant, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
@@ -1448,7 +1467,7 @@ Const ProcName As String = "logInfotypeData"
 On Error GoTo Err
 
 If pLogger Is Nothing Then
-    Set pLogger = GetLogger("position." & pInfotype & IIf(pSimulated, "Simulated", ""))
+    Set pLogger = GetLogger("position." & pInfoType & IIf(pSimulated, "Simulated", ""))
     pLogger.LogToParent = False
 End If
 pLogger.Log pLogLevel, pData, pSource

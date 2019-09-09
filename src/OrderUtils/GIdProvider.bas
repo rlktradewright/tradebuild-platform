@@ -52,11 +52,12 @@ Private Const ModuleName                            As String = "GIdProvider"
 ' Methods
 '@================================================================================
 
-Public Sub gAddExistingKey(ByVal pKey As String)
-Const ProcName As String = "gAddExistingKey"
+Public Sub gAddExistingId(ByVal pKey As String)
+Const ProcName As String = "gAddExistingId"
 On Error GoTo Err
 
-allocatedKeys.Add Nothing, pKey
+If allocatedIds.Contains(pKey) Then Exit Sub
+allocatedIds.Add Nothing, pKey
 
 Exit Sub
 
@@ -64,17 +65,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function gNextKey() As String
-Const ProcName As String = "gNextKey"
+Public Function gNextId() As String
+Const ProcName As String = "gNextId"
 On Error GoTo Err
 
+Const MillisecsPerDay As Long = 24& * 60& * 60& * 1000&
+Const OneMillisec As Double = 1# / MillisecsPerDay
+
+Dim lTimestamp As Double: lTimestamp = GetTimestamp
 
 Do
-    Dim lTimestamp As Double: lTimestamp = GetTimestamp
-    gNextKey = Hex((CLng(Int(lTimestamp)) Mod 100) * 10000000 + CLng(Right$(Int(lTimestamp * 886400000), 8)))
-Loop While allocatedKeys.Contains(gNextKey)
+    gNextId = CStr(Hex(&H10000000 + (CLng(Int(lTimestamp)) Mod 21) * MillisecsPerDay + CLng((lTimestamp - Int(lTimestamp)) * MillisecsPerDay)))
+    gNextId = Right$(gNextId, 4) & Left$(gNextId, 4)
+    If Not allocatedIds.Contains(gNextId) Then Exit Do
+    ' note that hitting a previously used id is most likely to
+    ' occur when calling this function very rapidly
+    lTimestamp = lTimestamp + OneMillisec
+Loop
 
-allocatedKeys.Add Nothing, gNextKey
+allocatedIds.Add Nothing, gNextId
 
 Exit Function
 
@@ -86,13 +95,13 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Function allocatedKeys() As SortedDictionary
-Const ProcName As String = "allocatedKeys"
+Private Function allocatedIds() As SortedDictionary
+Const ProcName As String = "allocatedIds"
 On Error GoTo Err
 
 Static sKeys As SortedDictionary
 If sKeys Is Nothing Then Set sKeys = CreateSortedDictionary(KeyTypeString)
-Set allocatedKeys = sKeys
+Set allocatedIds = sKeys
 
 Exit Function
 

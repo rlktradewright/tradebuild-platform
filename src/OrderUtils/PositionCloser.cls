@@ -207,6 +207,7 @@ Const ProcName As String = "mBalancingOrderContext_Change"
 On Error GoTo Err
 
 If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
+If Not mBalancingBracketOrder Is Nothing Then Exit Sub
 
 If mBalancingOrderContext.IsReadyForBracketOrder( _
             IIf(mUseLimitorder, _
@@ -294,6 +295,7 @@ mOrderContexts.Enabled = mOrderContextsWasEnabled
 If mPositionManager.EndingSession Then
     gLogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
 End If
+Set mBalancingOrderContext = Nothing
 
 Exit Sub
 
@@ -366,9 +368,9 @@ For Each oc In mOrderContexts
                 Else
                     lExec.Action = OrderActionBuy
                 End If
-                lExec.FillingExchange = "TRADEBUILD"
+                lExec.FillingExchange = "*"
                 lExec.FillTime = mClock.Timestamp
-                lExec.Id = "MarkToMarket"
+                lExec.Id = "MarkToMarket:" & GenerateGUIDString
                 lExec.Price = mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price
                 lExec.SecurityName = mContract.Specifier.LocalSymbol & "@" & mContract.Specifier.Exchange
                 lExec.TimezoneName = mContract.TimezoneName

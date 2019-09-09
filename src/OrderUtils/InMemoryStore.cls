@@ -162,17 +162,17 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Add(ByVal pOpItem As OrderPersistenceItem)
+Friend Sub Add(ByVal pOpItem As OPI)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
 Dim opg As OrderPersistenceDataGroup
 
-If Not mOrderPersistenceDataGroups.Contains(pOpItem.RecoveryContextName) Then
+If Not mOrderPersistenceDataGroups.Contains(pOpItem.RCN) Then
     Set opg = New OrderPersistenceDataGroup
-    mOrderPersistenceDataGroups.Add opg, pOpItem.RecoveryContextName
+    mOrderPersistenceDataGroups.Add opg, pOpItem.RCN
 Else
-    Set opg = mOrderPersistenceDataGroups.Item(pOpItem.RecoveryContextName)
+    Set opg = mOrderPersistenceDataGroups.Item(pOpItem.RCN)
 End If
 
 opg.Add pOpItem
@@ -183,11 +183,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Delete(ByVal pOpItem As OrderPersistenceItem)
+Friend Sub Delete(ByVal pOpItem As OPI)
 Const ProcName As String = "Delete"
 On Error GoTo Err
 
-If mOrderPersistenceDataGroups.Contains(pOpItem.RecoveryContextName) Then mOrderPersistenceDataGroups.Remove pOpItem.RecoveryContextName
+If mOrderPersistenceDataGroups.Contains(pOpItem.RCN) Then mOrderPersistenceDataGroups.Remove pOpItem.RCN
 
 Exit Sub
 

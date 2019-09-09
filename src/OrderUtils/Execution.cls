@@ -23,7 +23,6 @@ Option Explicit
 '@================================================================================
 
 Implements IExecutionReport
-Implements IPositionMember
 Implements IRecoverable
 Implements IJSONable
 Implements IStringable
@@ -99,6 +98,10 @@ Private Property Get IExecutionReport_FillTime() As Date
 IExecutionReport_FillTime = mFillTime
 End Property
 
+Private Property Get IExecutionReport_GroupName() As String
+IExecutionReport_GroupName = GroupName
+End Property
+
 Private Property Get IExecutionReport_Id() As String
 IExecutionReport_Id = mExecId
 End Property
@@ -136,15 +139,6 @@ IExecutionReport_TimezoneName = mTimezoneName
 End Property
 
 '@================================================================================
-' IPositionMember Interface Members
-'@================================================================================
-
-Private Property Get IPositionMember_RecoveryContextName() As String
-Assert mRecoveryContextName <> "", "mRecoveryContextName is not set"
-IPositionMember_RecoveryContextName = mRecoveryContextName
-End Property
-
-'@================================================================================
 ' IRecoverable Interface Members
 '@================================================================================
 
@@ -169,9 +163,13 @@ Private Sub IRecoverable_FinishRecovery()
 
 End Sub
 
-Private Sub IRecoverable_LoadRecoveryData(ByVal pData As Variant)
+Private Sub IRecoverable_LoadRecoveryData( _
+                ByVal pRecoveryContextName As String, _
+                ByVal pData As Variant)
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
+
+If mRecoveryContextName = "" Then mRecoveryContextName = pRecoveryContextName
 
 Dim lExec As Execution
 Set lExec = pData
@@ -186,6 +184,10 @@ End Sub
 
 Private Property Get IRecoverable_ProgId() As String
 IRecoverable_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IRecoverable_RecoveryContextName() As String
+IRecoverable_RecoveryContextName = mRecoveryContextName
 End Property
 
 Private Property Get IRecoverable_RecoveryData() As Variant
@@ -466,9 +468,6 @@ jb.EncodeNameAndValue "IsSimulated", mIsSimulated, False
 
 jb.EncodeName "OrderId"
 jb.EncodeValue mOrderId
-
-jb.EncodeName "RecoveryContextName"
-jb.EncodeValue mRecoveryContextName
 
 jb.EncodeName "Price"
 jb.EncodeValue mPrice

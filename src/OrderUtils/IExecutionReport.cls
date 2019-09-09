@@ -75,6 +75,9 @@ End Property
 Public Property Get FillTime() As Date
 End Property
 
+Public Property Get GroupName() As String
+End Property
+
 Public Property Get IsLiquidation() As Boolean
 End Property
 

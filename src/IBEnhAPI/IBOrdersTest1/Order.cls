@@ -104,7 +104,6 @@ Private mNBBOPriceCap               As Double
 Private mOverrideConstraints        As Boolean
     
 Private mGroupName                  As String
-Private mContextsName               As String
 Private mOrderContext               As OrderContext
 
 Private mErrorCode                  As Long
@@ -177,10 +176,6 @@ End Property
 
 Private Property Get IOrder_BrokerId() As String
 IOrder_BrokerId = mBrokerId
-End Property
-
-Private Property Get IOrder_ContextsName() As String
-IOrder_ContextsName = mContextsName
 End Property
 
 Private Property Get IOrder_ContractSpecifier() As IContractSpecifier
@@ -307,8 +302,8 @@ Private Property Get IOrder_IgnoreRegularTradingHours() As Boolean
 IOrder_IgnoreRegularTradingHours = mIgnoreRegularTradingHours
 End Property
 
-Private Sub IOrder_Initialise(ByVal pGroupName As String, ByVal pPositionManagerName As String, ByVal pContractSpec As IContractSpecifier, ByVal pOrderContext As OrderContext)
-Initialise pGroupName, pPositionManagerName, pContractSpec, pOrderContext
+Private Sub IOrder_Initialise(ByVal pGroupName As String, ByVal pContractSpec As ContractUtils27.IContractSpecifier, ByVal pOrderContext As OrderUtils27.OrderContext)
+Initialise pGroupName, pContractSpec, pOrderContext
 End Sub
 
 Private Property Get IOrder_IsActive() As Boolean
@@ -1208,9 +1203,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub Initialise(ByVal pGroupName As String, ByVal pContextsName As String, ByVal pContractSpec As IContractSpecifier, ByVal pOrderContext As OrderContext)
+Public Sub Initialise(ByVal pGroupName As String, ByVal pContractSpec As IContractSpecifier, ByVal pOrderContext As OrderContext)
 mGroupName = pGroupName
-mContextsName = pContextsName
 Set mContractSpec = pContractSpec
 Set mOrderContext = pOrderContext
 End Sub

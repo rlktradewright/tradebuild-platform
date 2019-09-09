@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BracketOrderSummary"
+Attribute VB_Name = "BOS"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -33,7 +33,7 @@ Implements IJSONable
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "BracketOrderSummary"
+Private Const ModuleName                As String = "BOS"
 
 '@================================================================================
 ' Enums
@@ -47,42 +47,43 @@ Private Const ModuleName                As String = "BracketOrderSummary"
 ' Member variables
 '@================================================================================
 
-'Private mContextsName                        As String
-Private mContextName                        As String
-'Private mGroupName As String
+Private mGroupName                                  As String
+Private mContextName                                As String
 
-Private mState As BracketOrderStates
-Private mKey As String
+Private mState                                      As BracketOrderStates
+Private mKey                                        As String
 
-Private mDescription As String
-Private mEntryReason As String
-Private mTargetReason As String
-Private mStopReason As String
+Private mDescription                                As String
+Private mEntryReason                                As String
+Private mTargetReason                               As String
+Private mStopReason                                 As String
 
-Private mSize As Long
+Private mSize                                       As Long
 
-Private mCancelPrice As Double
-Private mCancelTime As Date
+Private mCancelPrice                                As Double
+Private mCancelTime                                 As Date
 
-Private mEntryOrderId As String
+Private mEntryOrderId                               As String
 Attribute mEntryOrderId.VB_VarHelpID = -1
-Private mStopLossOrderId As String
+Private mStopLossOrderId                            As String
 Attribute mStopLossOrderId.VB_VarHelpID = -1
-Private mTargetOrderId As String
+Private mTargetOrderId                              As String
 Attribute mTargetOrderId.VB_VarHelpID = -1
-Private mCloseoutOrderId As String
+Private mCloseoutOrderId                            As String
 Attribute mCloseoutOrderId.VB_VarHelpID = -1
 
-Private mCreationTime As Date
+Private mCreationTime                               As Date
 
-Private mPreventUnprotectedPosition As Boolean
+Private mPreventUnprotectedPosition                 As Boolean
 
-Private mCumBuyPrice As Double
-Private mCumSellPrice As Double
+Private mCumBuyPrice                                As Double
+Private mCumSellPrice                               As Double
 
-Private mPeggedOrdersProcessed As Boolean
+Private mPeggedOrdersProcessed                      As Boolean
 
-Private mIsDirty As Boolean
+Private mIsDirty                                    As Boolean
+
+Private mDiff                                       As New ROD
 
 '@================================================================================
 ' Class Event Handlers
@@ -105,8 +106,10 @@ End Function
 '@================================================================================
 
 Public Property Let CancelPrice(ByVal Value As Double)
-If mCancelPrice <> Value Then setDirty
+If mCancelPrice = Value Then Exit Property
+setDirty
 mCancelPrice = Value
+mDiff.SetProperty "CancelPrice", Value, 0!
 End Property
 
 Public Property Get CancelPrice() As Double
@@ -114,8 +117,10 @@ CancelPrice = mCancelPrice
 End Property
 
 Public Property Let CancelTime(ByVal Value As Date)
-If mCancelTime <> Value Then setDirty
+If mCancelTime = Value Then Exit Property
+setDirty
 mCancelTime = Value
+mDiff.SetProperty "CancelTime", Value, 0!
 End Property
 
 Public Property Get CancelTime() As Date
@@ -123,8 +128,10 @@ CancelTime = mCancelTime
 End Property
 
 Public Property Let CloseoutOrderId(ByVal Value As String)
-If CloseoutOrderId <> Value Then setDirty
+If CloseoutOrderId = Value Then Exit Property
+setDirty
 mCloseoutOrderId = Value
+mDiff.SetProperty "CloseoutOrderId", Value, ""
 End Property
 
 Public Property Get CloseoutOrderId() As String
@@ -132,26 +139,21 @@ CloseoutOrderId = mCloseoutOrderId
 End Property
 
 Public Property Let ContextName(ByVal Value As String)
-If mContextName <> Value Then setDirty
+If mContextName = Value Then Exit Property
+setDirty
 mContextName = Value
+mDiff.SetProperty "ContextName", Value, ""
 End Property
 
 Public Property Get ContextName() As String
 ContextName = mContextName
 End Property
 
-'Public Property Let ContextsName(ByVal Value As String)
-'If mContextsName <> Value Then setDirty
-'mContextsName = Value
-'End Property
-'
-'Public Property Get ContextsName() As String
-'ContextsName = mContextsName
-'End Property
-
 Public Property Let CreationTime(ByVal Value As Date)
-If mCreationTime <> Value Then setDirty
+If mCreationTime = Value Then Exit Property
+setDirty
 mCreationTime = Value
+mDiff.SetProperty "CreationTime", Value, 0!
 End Property
 
 Public Property Get CreationTime() As Date
@@ -159,8 +161,10 @@ CreationTime = mCreationTime
 End Property
 
 Public Property Let CumBuyPrice(ByVal Value As Double)
-If mCumBuyPrice <> Value Then setDirty
+If mCumBuyPrice = Value Then Exit Property
+setDirty
 mCumBuyPrice = Value
+mDiff.SetProperty "CumBuyPrice", Value, 0!
 End Property
 
 Public Property Get CumBuyPrice() As Double
@@ -168,8 +172,10 @@ CumBuyPrice = mCumBuyPrice
 End Property
 
 Public Property Let CumSellPrice(ByVal Value As Double)
-If mCumSellPrice <> Value Then setDirty
+If mCumSellPrice = Value Then Exit Property
+setDirty
 mCumSellPrice = Value
+mDiff.SetProperty "CumSellPrice", Value, 0!
 End Property
 
 Public Property Get CumSellPrice() As Double
@@ -177,17 +183,29 @@ CumSellPrice = mCumSellPrice
 End Property
 
 Public Property Let Description(ByVal Value As String)
-If mDescription <> Value Then setDirty
+If mDescription = Value Then Exit Property
+setDirty
 mDescription = Value
+mDiff.SetProperty "Description", Value, ""
 End Property
 
 Public Property Get Description() As String
 Description = mDescription
 End Property
 
+Public Property Let Diff(ByVal Value As ROD)
+Set mDiff = Value
+End Property
+
+Public Property Get Diff() As ROD
+Set Diff = mDiff
+End Property
+
 Public Property Let EntryOrderId(ByVal Value As String)
-If mEntryOrderId <> Value Then setDirty
+If mEntryOrderId = Value Then Exit Property
+setDirty
 mEntryOrderId = Value
+mDiff.SetProperty "EntryOrderId", Value, ""
 End Property
 
 Public Property Get EntryOrderId() As String
@@ -195,29 +213,34 @@ EntryOrderId = mEntryOrderId
 End Property
 
 Public Property Let EntryReason(ByVal Value As String)
-If mEntryReason <> Value Then setDirty
+If mEntryReason = Value Then Exit Property
+setDirty
 mEntryReason = Value
+mDiff.SetProperty "EntryReason", Value, ""
 End Property
 
 Public Property Get EntryReason() As String
 EntryReason = mEntryReason
 End Property
 
-'Public Property Let GroupName(ByVal Value As String)
-'If mGroupName <> Value Then setDirty
-'mGroupName = Value
-'End Property
-'
-'Public Property Get GroupName() As String
-'GroupName = mGroupName
-'End Property
+Public Property Let GroupName(ByVal Value As String)
+If mGroupName = Value Then Exit Property
+setDirty
+mGroupName = Value
+mDiff.SetProperty "GroupName", Value, ""
+End Property
+
+Public Property Get GroupName() As String
+GroupName = mGroupName
+End Property
 
 Public Property Get IsDirty() As Boolean
 IsDirty = mIsDirty
 End Property
 
 Public Property Let Key(ByVal Value As String)
-If mKey <> Value Then setDirty
+If mKey = Value Then Exit Property
+setDirty
 mKey = Value
 End Property
 
@@ -226,8 +249,10 @@ Key = mKey
 End Property
 
 Public Property Let PeggedOrdersProcessed(ByVal Value As Boolean)
-If mPeggedOrdersProcessed <> Value Then setDirty
+If mPeggedOrdersProcessed = Value Then Exit Property
+setDirty
 mPeggedOrdersProcessed = Value
+mDiff.SetProperty "PeggedOrdersProcessed", Value, False
 End Property
 
 Public Property Get PeggedOrdersProcessed() As Boolean
@@ -235,8 +260,10 @@ PeggedOrdersProcessed = mPeggedOrdersProcessed
 End Property
 
 Public Property Let PreventUnprotectedPosition(ByVal Value As Boolean)
-If mPreventUnprotectedPosition <> Value Then setDirty
+If mPreventUnprotectedPosition = Value Then Exit Property
+setDirty
 mPreventUnprotectedPosition = Value
+mDiff.SetProperty "PreventUnprotectedPosition", Value, False
 End Property
 
 Public Property Get PreventUnprotectedPosition() As Boolean
@@ -244,8 +271,10 @@ PreventUnprotectedPosition = mPreventUnprotectedPosition
 End Property
 
 Public Property Let Size(ByVal Value As Long)
-If mSize <> Value Then setDirty
+If mSize = Value Then Exit Property
+setDirty
 mSize = Value
+mDiff.SetProperty "Size", Value, 0
 End Property
 
 Public Property Get Size() As Long
@@ -253,8 +282,10 @@ Size = mSize
 End Property
 
 Public Property Let State(ByVal Value As BracketOrderStates)
-If mState <> Value Then setDirty
+If mState = Value Then Exit Property
+setDirty
 mState = Value
+mDiff.SetProperty "State", Value, BracketOrderStates.BracketOrderStateCreated
 End Property
 
 Public Property Get State() As BracketOrderStates
@@ -262,8 +293,10 @@ State = mState
 End Property
 
 Public Property Let StopLossOrderId(ByVal Value As String)
-If mStopLossOrderId <> Value Then setDirty
+If mStopLossOrderId = Value Then Exit Property
+setDirty
 mStopLossOrderId = Value
+mDiff.SetProperty "StopLossOrderId", Value, ""
 End Property
 
 Public Property Get StopLossOrderId() As String
@@ -271,8 +304,10 @@ StopLossOrderId = mStopLossOrderId
 End Property
 
 Public Property Let StopReason(ByVal Value As String)
-If mStopReason <> Value Then setDirty
+If mStopReason = Value Then Exit Property
+setDirty
 mStopReason = Value
+mDiff.SetProperty "StopReason", Value, ""
 End Property
 
 Public Property Get StopReason() As String
@@ -280,8 +315,10 @@ StopReason = mStopReason
 End Property
 
 Public Property Let TargetOrderId(ByVal Value As String)
-If mTargetOrderId <> Value Then setDirty
+If mTargetOrderId = Value Then Exit Property
+setDirty
 mTargetOrderId = Value
+mDiff.SetProperty "TargetOrderId", Value, ""
 End Property
 
 Public Property Get TargetOrderId() As String
@@ -289,8 +326,10 @@ TargetOrderId = mTargetOrderId
 End Property
 
 Public Property Let TargetReason(ByVal Value As String)
-If mTargetReason <> Value Then setDirty
+If mTargetReason = Value Then Exit Property
+setDirty
 mTargetReason = Value
+mDiff.SetProperty "TargetReason", Value, ""
 End Property
 
 Public Property Get TargetReason() As String
@@ -303,6 +342,7 @@ End Property
 
 Friend Sub setClean()
 mIsDirty = False
+mDiff.Clear
 End Sub
 
 Friend Function ToJSON() As String
@@ -314,54 +354,10 @@ jb.BeginObject
 jb.EncodeName "$ProgID"
 jb.EncodeValue ProjectName & "." & ModuleName
 
-jb.EncodeNameAndValue "CancelPrice", mCancelPrice, 0#
-
-jb.EncodeNameAndValue "CancelTime", mCancelTime, CDate(0#)
-
-jb.EncodeNameAndValue "CloseoutOrderId", mCloseoutOrderId, ""
-
-jb.EncodeName "ContextName"
-jb.EncodeValue mContextName
-
-'jb.EncodeName "ContextsName"
-'jb.EncodeValue mContextsName
-
-jb.EncodeName "CreationTime"
-jb.EncodeValue mCreationTime
-
-jb.EncodeNameAndValue "CumBuyPrice", mCumBuyPrice, 0#
-
-jb.EncodeNameAndValue "CumSellPrice", mCumSellPrice, 0#
-
-jb.EncodeNameAndValue "Description", mDescription, ""
-
-jb.EncodeName "EntryOrderId"
-jb.EncodeValue mEntryOrderId
-
-jb.EncodeNameAndValue "EntryReason", mEntryReason, ""
-
 jb.EncodeName "Key"
 jb.EncodeValue mKey
 
-jb.EncodeNameAndValue "PeggedOrdersProcessed", mPeggedOrdersProcessed, False
-jb.EncodeNameAndValue "PreventUnprotectedPosition", mPreventUnprotectedPosition, False
-
-jb.EncodeName "Size"
-jb.EncodeValue mSize
-
-jb.EncodeName "State"
-jb.EncodeValue mState
-
-jb.EncodeNameAndValue "StopLossOrderId", mStopLossOrderId, ""
-
-jb.EncodeNameAndValue "StopReason", mStopReason, ""
-
-jb.EncodeNameAndValue "TargetOrderId", mTargetOrderId, ""
-
-jb.EncodeNameAndValue "TargetReason", mTargetReason, ""
-
-'jb.EncodeName "GroupName"
-'jb.EncodeValue mGroupName
+jb.EncodeNameAndValue "Diff", mDiff, Nothing
 
 jb.EndObject
 

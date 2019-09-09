@@ -52,6 +52,8 @@ Private mOrderSubmissionListener                    As IOrderSubmissionListener
 Private mOrderContext                               As OrderContext
 
 Private mPositionCloser                             As PositionCloser
+
+Private mUpdateTime                                 As Date
     
 '@================================================================================
 ' Class Event Handlers
@@ -75,6 +77,10 @@ End Property
 
 Friend Property Get BracketOrder() As IBracketOrder
 Set BracketOrder = mBracketOrder
+End Property
+
+Friend Property Get UpdateTime() As Date
+UpdateTime = mUpdateTime
 End Property
 
 '@================================================================================
@@ -123,9 +129,8 @@ Set mOrderSubmissionListener = mPositionManager
 
 Set mOrderContext = pOrderContext
 
-GIdProvider.gAddExistingKey pKey
 mBracketOrder.Initialise pKey, _
-                        mPositionManager.Name, _
+                        "", _
                         mPositionManager.GroupName, _
                         mOrderContext, _
                         mPositionManager.ContractFuture.Value, _
@@ -191,7 +196,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub updateOrder(ByVal pOs As OrderSummary)
+Friend Sub updateOrder( _
+                ByVal pRecoveryContextName As String, _
+                ByVal pOs As OS)
 Const ProcName As String = "updateOrder"
 On Error GoTo Err
 
@@ -207,7 +214,7 @@ ElseIf orderIdIsForOrder(pOs.Id, mBracketOrder.CloseoutOrder) Then
     Set lRecoverable = mBracketOrder.CloseoutOrder
 End If
 
-lRecoverable.LoadRecoveryData pOs
+lRecoverable.LoadRecoveryData pRecoveryContextName, pOs
 
 Exit Sub
 
@@ -215,14 +222,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub UpdateBracketOrder(ByVal ops As BracketOrderSummary)
+Friend Sub UpdateBracketOrder( _
+                ByVal pRecoveryContextName As String, _
+                ByVal ops As BOS, _
+                ByVal pUpdateTime As Date)
 Const ProcName As String = "UpdateBracketOrder"
 On Error GoTo Err
+
+mUpdateTime = pUpdateTime
 
 Dim lRecoverable As IRecoverable
 
 Set lRecoverable = mBracketOrder
-lRecoverable.LoadRecoveryData ops
+lRecoverable.LoadRecoveryData pRecoveryContextName, ops
 
 Exit Sub
 

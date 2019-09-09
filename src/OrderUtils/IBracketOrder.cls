@@ -96,6 +96,9 @@ End Property
 Public Property Get CumSellPrice() As Double
 End Property
 
+Public Property Let Description(ByVal Value As String)
+End Property
+
 Public Property Get Description() As String
 End Property
 
@@ -115,6 +118,9 @@ Public Property Get EntryReason() As String
 End Property
 
 Public Property Get ExitPrice() As Double
+End Property
+
+Public Property Get GroupName() As String
 End Property
 
 Public Property Get IsComplete() As Boolean

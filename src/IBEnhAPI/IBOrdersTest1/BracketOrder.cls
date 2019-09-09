@@ -143,6 +143,9 @@ End Property
 Private Property Get IBracketOrder_ExitPrice() As Double
 End Property
 
+Private Property Get IBracketOrder_GroupName() As String
+End Property
+
 Private Property Get IBracketOrder_IsComplete() As Boolean
 End Property
 

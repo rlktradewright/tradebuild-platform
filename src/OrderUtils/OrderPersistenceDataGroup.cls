@@ -117,7 +117,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Add(ByVal pItem As OrderPersistenceItem)
+Friend Sub Add(ByVal pItem As OPI)
 Const ProcName As String = "Add"
 On Error GoTo Err
 

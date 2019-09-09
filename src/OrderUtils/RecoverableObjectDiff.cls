@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "OrderPersistenceItem"
+Attribute VB_Name = "ROD"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -40,28 +40,45 @@ Implements IJSONable
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "OrderPersistenceItem"
+Private Const ModuleName                            As String = "ROD"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTimestamp                                  As Date
-Private mRecoveryContextName                        As String
-Private mData                                       As Variant
-Private mItemType                                   As String
-Private mProgId                                     As String
+Private mProperties                                 As New Dictionary
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' IJSONAble Interface Members
+' IJSONable Interface Members
 '@================================================================================
 
 Private Function IJSONAble_ToJSON() As String
-IJSONAble_ToJSON = ToJSON
+Const ProcName As String = "IJSONable_ToJSON"
+On Error GoTo Err
+
+Dim jb As JSONBuilder
+Set jb = New JSONBuilder
+
+jb.BeginObject
+
+jb.EncodeName "$ProgID"
+jb.EncodeValue ProjectName & "." & ModuleName
+
+jb.EncodeName "Properties"
+jb.EncodeValue mProperties
+
+jb.EndObject
+
+IJSONAble_ToJSON = jb.JSONString
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -72,81 +89,60 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Let Data(ByVal Value As Variant)
-gSetVariant mData, Value
-End Property
-
-Public Property Get Data() As Variant
-gSetVariant Data, mData
-End Property
-
-Public Property Let ItemType(ByVal Value As String)
-mItemType = Value
-End Property
-
-Public Property Get ItemType() As String
-ItemType = mItemType
-End Property
-
-Public Property Let RecoveryContextName(ByVal Value As String)
-mRecoveryContextName = Value
-End Property
-
-Public Property Get RecoveryContextName() As String
-RecoveryContextName = mRecoveryContextName
-End Property
-
-Public Property Let ProgId(ByVal Value As String)
-mProgId = Value
-End Property
-
-Public Property Get ProgId() As String
-ProgId = mProgId
-End Property
-
-Public Property Let Timestamp(ByVal Value As Date)
-mTimestamp = Value
-End Property
-
-Public Property Get Timestamp() As Date
-Timestamp = mTimestamp
+Public Property Let Properties(ByVal Value As Dictionary)
+Set mProperties = Value
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Function ToJSON() As String
-Dim jb As JSONBuilder
-Set jb = New JSONBuilder
+Friend Sub Clear()
+Set mProperties = New Dictionary
+End Sub
 
-jb.BeginObject
+Friend Sub SetProperty( _
+                ByVal pName As String, _
+                ByVal pValue As Variant, _
+                Optional ByVal pDefaultValue As Variant)
+Const ProcName As String = "SetProperty"
+On Error GoTo Err
 
-jb.EncodeName "$ProgID"
-jb.EncodeValue ProjectName & "." & ModuleName
+If gVariantEquals(pValue, pDefaultValue) Then Exit Sub
+If mProperties.Exists(pName) Then
+    mProperties.Item(pName) = pValue
+Else
+    mProperties.Add pName, pValue
+End If
 
-jb.EncodeName "RecoveryContextName"
-jb.EncodeValue mRecoveryContextName
+Exit Sub
 
-jb.EncodeName "Timestamp"
-jb.EncodeValue mTimestamp
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
-jb.EncodeName "ItemType"
-jb.EncodeValue mItemType
+Friend Sub UpdateHost(ByVal pHost As Object)
+Const ProcName As String = "UpdateHost"
+On Error GoTo Err
 
-jb.EncodeName "ProgId"
-jb.EncodeValue mProgId
+Dim lKeys() As Variant
+lKeys = mProperties.Keys
 
-jb.EncodeName "Data"
-jb.EncodeValue mData
+Dim lKey As Variant
+For Each lKey In lKeys
+    CallByName pHost, lKey, VbLet, mProperties.Item(lKey)
+Next
 
-jb.EndObject
+Exit Sub
 
-ToJSON = jb.JSONString
-End Function
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 

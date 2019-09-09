@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "PositionManagerSummary"
+Attribute VB_Name = "PMS"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -40,7 +40,7 @@ Implements IJSONable
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "PositionManagerSummary"
+Private Const ModuleName                            As String = "PMS"
 
 '@================================================================================
 ' Member variables
@@ -65,6 +65,8 @@ Private mIsSimulated                                As Boolean
 
 Private mIsDirty                                    As Boolean
 
+Private mDiff                                       As New ROD
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -82,9 +84,10 @@ End Function
 '@================================================================================
 
 Public Property Let Contract(ByVal Value As IContract)
-If mContract Is Value Then Exit Property
+If Not mContract Is Nothing Then Exit Property
 mIsDirty = True
 Set mContract = Value
+mDiff.SetProperty "Contract", Value
 End Property
 
 Public Property Get Contract() As IContract
@@ -95,6 +98,7 @@ Public Property Let CumBuyPrice(ByVal Value As Double)
 If mCumBuyPrice = Value Then Exit Property
 mIsDirty = True
 mCumBuyPrice = Value
+mDiff.SetProperty "CumBuyPrice", Value, 0!
 End Property
 
 Public Property Get CumBuyPrice() As Double
@@ -105,16 +109,26 @@ Public Property Let CumSellPrice(ByVal Value As Double)
 If mCumSellPrice = Value Then Exit Property
 mIsDirty = True
 mCumSellPrice = Value
+mDiff.SetProperty "CumSellPrice", Value, 0!
 End Property
 
 Public Property Get CumSellPrice() As Double
 CumSellPrice = mCumSellPrice
 End Property
 
+Public Property Let Diff(ByVal Value As ROD)
+Set mDiff = Value
+End Property
+
+Public Property Get Diff() As ROD
+Set Diff = mDiff
+End Property
+
 Public Property Let DrawdownLastTrade(ByVal Value As Currency)
 If mDrawdownLastTrade = Value Then Exit Property
 mIsDirty = True
 mDrawdownLastTrade = Value
+mDiff.SetProperty "DrawdownLastTrade", Value, 0!
 End Property
 
 Public Property Get DrawdownLastTrade() As Currency
@@ -125,6 +139,7 @@ Public Property Let GroupName(ByVal Value As String)
 If mGroupName = Value Then Exit Property
 mIsDirty = True
 mGroupName = Value
+mDiff.SetProperty "GroupName", Value, ""
 End Property
 
 Public Property Get GroupName() As String
@@ -139,6 +154,7 @@ Public Property Let IsSimulated(ByVal Value As Boolean)
 If mIsSimulated = Value Then Exit Property
 mIsDirty = True
 mIsSimulated = Value
+mDiff.SetProperty "IsSimulated", Value, False
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -155,18 +171,11 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
-'Public Property Let ProfitIncrementTicks(ByVal Value As Long)
-'mProfitIncrementTicks = Value
-'End Property
-'
-'Public Property Get ProfitIncrementTicks() As Long
-'ProfitIncrementTicks = mProfitIncrementTicks
-'End Property
-
 Public Property Let ProfitLastFlat(ByVal Value As Currency)
 If mProfitLastFlat = Value Then Exit Property
 mIsDirty = True
 mProfitLastFlat = Value
+mDiff.SetProperty "ProfitLastFlat", Value, 0!
 End Property
 
 Public Property Get ProfitLastFlat() As Currency
@@ -177,6 +186,7 @@ Public Property Let ProfitLastTrade(ByVal Value As Currency)
 If mProfitLastTrade = Value Then Exit Property
 mIsDirty = True
 mProfitLastTrade = Value
+mDiff.SetProperty "ProfitLastTrade", Value, 0!
 End Property
 
 Public Property Get ProfitLastTrade() As Currency
@@ -187,6 +197,7 @@ Public Property Let TradingSessionStartTime(ByVal Value As Date)
 If mTradingSessionStartTime = Value Then Exit Property
 mIsDirty = True
 mTradingSessionStartTime = Value
+mDiff.SetProperty "TradingSessionStartTime", Value, 0!
 End Property
 
 Public Property Get TradingSessionStartTime() As Date
@@ -203,6 +214,7 @@ End Property
 
 Friend Sub setClean()
 mIsDirty = False
+mDiff.Clear
 End Sub
 
 Friend Function ToJSON() As String
@@ -214,16 +226,8 @@ jb.BeginObject
 jb.EncodeName "$ProgID"
 jb.EncodeValue ProjectName & "." & ModuleName
 
-jb.EncodeNameAndValue "TradingSessionStartTime", mTradingSessionStartTime, CDate(0#)
-jb.EncodeNameAndValue "Contract", mContract, Nothing
-jb.EncodeNameAndValue "CumBuyPrice", mCumBuyPrice, 0#
-jb.EncodeNameAndValue "CumSellPrice", mCumSellPrice, 0#
-jb.EncodeNameAndValue "GroupName", mGroupName, ""
-jb.EncodeNameAndValue "IsSimulated", mIsSimulated, False
 jb.EncodeNameAndValue "Name", mName, ""
-jb.EncodeNameAndValue "ProfitLastFlat", mProfitLastFlat, 0#
-jb.EncodeNameAndValue "ProfitLastTrade", mProfitLastTrade, 0#
-jb.EncodeNameAndValue "DrawdownLastTrade", mDrawdownLastTrade, 0#
+jb.EncodeNameAndValue "Diff", mDiff, Nothing
 
 jb.EndObject
 
