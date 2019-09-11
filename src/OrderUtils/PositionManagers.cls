@@ -149,7 +149,7 @@ Friend Function Add(ByVal pPositionManager As PositionManager) As PositionManage
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-mPositionManagers.Add pPositionManager, pPositionManager.Name
+mPositionManagers.Add pPositionManager, UCase$(pPositionManager.Name)
 Set Add = pPositionManager
 
 Exit Function
@@ -187,7 +187,7 @@ Public Function Contains(ByVal pName As String) As Boolean
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-Contains = mPositionManagers.Contains(pName)
+Contains = mPositionManagers.Contains(UCase$(pName))
 
 Exit Function
 
@@ -200,7 +200,7 @@ Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-Set Item = mPositionManagers.Item(pName)
+Set Item = mPositionManagers.Item(UCase$(pName))
 
 Exit Function
 
@@ -226,7 +226,7 @@ Public Sub NotifyChange(pPositionManager As PositionManager)
 Const ProcName As String = "NotifyChange"
 On Error GoTo Err
 
-mPositionManagers.NotifyChange pPositionManager.Name
+mPositionManagers.NotifyChange UCase$(pPositionManager.Name)
 
 Exit Sub
 
@@ -238,7 +238,7 @@ Public Sub Remove(ByVal pPositionManager As PositionManager)
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-mPositionManagers.Remove pPositionManager.Name
+mPositionManagers.Remove UCase$(pPositionManager.Name)
 
 Exit Sub
 

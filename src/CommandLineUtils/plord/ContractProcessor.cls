@@ -119,6 +119,10 @@ Friend Property Get DataSource() As IMarketDataSource
 Set DataSource = mDataSource
 End Property
 
+Friend Property Get GroupName() As String
+GroupName = mGroupName
+End Property
+
 Friend Property Get LatestBuyCommandParams() As String
 LatestBuyCommandParams = mLatestBuyCommandParams
 End Property

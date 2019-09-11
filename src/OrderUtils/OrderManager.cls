@@ -245,7 +245,7 @@ Dim lGroupNames As New EnumerableCollection
 Dim lPm As PositionManager
 
 For Each lPm In mPositionManagersLive
-    If Not lGroupNames.Contains(lPm.GroupName) Then lGroupNames.Add lPm.GroupName, lPm.GroupName
+    If Not lGroupNames.Contains(UCase$(lPm.GroupName)) Then lGroupNames.Add lPm.GroupName, UCase$(lPm.GroupName)
 Next
 
 Set GetGroupNames = lGroupNames
@@ -280,6 +280,7 @@ Public Function GetPositionManager( _
 Const ProcName As String = "GetPositionManager"
 On Error GoTo Err
 
+pName = pName
 If pIsSimulated Then
     If mPositionManagersSimulated.Contains(pName) Then Set GetPositionManager = mPositionManagersSimulated.Item(pName)
 Else
@@ -301,7 +302,7 @@ Dim lPms As New PositionManagers
 Dim lPm As PositionManager
 
 For Each lPm In mPositionManagersLive
-    If lPm.GroupName = pGroupName Then lPms.Add lPm
+    If UCase$(lPm.GroupName) = UCase$(pGroupName) Then lPms.Add lPm
 Next
 
 Set GetPositionManagersForGroup = lPms
@@ -378,12 +379,14 @@ Private Function createPosnManager( _
 Const ProcName As String = "createPosnManager"
 On Error GoTo Err
 
+Dim lUCaseName As String: lUCaseName = UCase$(pName)
+
 Dim lPm As PositionManager
 
 If pIsSimulated Then
-    If mPositionManagersSimulated.Contains(pName) Then Set lPm = mPositionManagersSimulated.Item(pName)
+    If mPositionManagersSimulated.Contains(lUCaseName) Then Set lPm = mPositionManagersSimulated.Item(lUCaseName)
 Else
-    If mPositionManagersLive.Contains(pName) Then Set lPm = mPositionManagersLive.Item(pName)
+    If mPositionManagersLive.Contains(lUCaseName) Then Set lPm = mPositionManagersLive.Item(lUCaseName)
 End If
 
 If Not lPm Is Nothing Then

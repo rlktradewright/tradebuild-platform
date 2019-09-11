@@ -282,9 +282,9 @@ End If
 mErrorCount = 0
     
 Dim lContractProcessorName As String
-lContractProcessorName = mGroupName & _
+lContractProcessorName = UCase$(mGroupName & _
                         PositionManagerNameSeparator & _
-                        lContract.Specifier.Key
+                        lContract.Specifier.Key)
 
 If Not mContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
     Set mContractProcessor = New ContractProcessor
@@ -292,8 +292,8 @@ If Not mContractProcessors.TryItem(lContractProcessorName, mContractProcessor) T
     mContractProcessors.Add mContractProcessor, lContractProcessorName
 End If
 
-If mGroupContractProcessors.Contains(mGroupName) Then mGroupContractProcessors.Remove mGroupName
-mGroupContractProcessors.Add mContractProcessor, mGroupName
+If mGroupContractProcessors.Contains(UCase$(mGroupName)) Then mGroupContractProcessors.Remove UCase$(mGroupName)
+mGroupContractProcessors.Add mContractProcessor, UCase$(mGroupName)
 
 Set gNotifyContractFutureAvailable = mContractProcessor
 
@@ -493,7 +493,7 @@ For Each lVar In mOrderManager.GetGroupNames
     Dim lGroupName As String: lGroupName = lVar
     Dim lContractProcessor As ContractProcessor
     Dim lContractName As String
-    If mGroupContractProcessors.TryItem(lGroupName, lContractProcessor) Then
+    If mGroupContractProcessors.TryItem(UCase$(lGroupName), lContractProcessor) Then
         lContractName = getContractName(lContractProcessor.Contract)
     End If
     gWriteLineToConsole IIf(lGroupName = mGroupName, "* ", "  ") & _
@@ -785,10 +785,12 @@ Else
     Case GroupCommand
         processGroupCommand Params
     Case BuyCommand
+        setupResultsLogging mClp
         ProcessBuyCommand Params
     Case BuyAgainCommand
         ProcessBuyAgainCommand Params
     Case SellCommand
+        setupResultsLogging mClp
         ProcessSellCommand Params
     Case SellAgainCommand
         ProcessSellAgainCommand Params
@@ -805,6 +807,7 @@ Else
         mBracketOrderDefinitionInProgress = False
         mContractProcessor.ProcessEndBracketCommand
         If mErrorCount = 0 And Not mBatchOrders Then
+            setupResultsLogging mClp
             processOrders
         Else
             gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed", True
@@ -818,6 +821,7 @@ Else
     Case ListCommand
         processListCommand Params
     Case CloseoutCommand
+        setupResultsLogging mClp
         processCloseoutCommand Params
     Case QuoteCommand
         processQuoteCommand Params
@@ -1138,7 +1142,11 @@ ElseIf Not isGroupValid(pParams) Then
 Else
     mGroupName = pParams
 End If
-If Not mGroupContractProcessors.TryItem(mGroupName, mContractProcessor) Then Set mContractProcessor = Nothing
+If mGroupContractProcessors.TryItem(UCase$(mGroupName), mContractProcessor) Then
+    mGroupName = mContractProcessor.GroupName
+Else
+    Set mContractProcessor = Nothing
+End If
 
 If Not mContractProcessor Is Nothing Then
     gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
@@ -1155,8 +1163,6 @@ On Error GoTo Err
 ' asynchronously with a task
 
 gPlaceOrdersTask.AddContractProcessors mContractProcessors, mStageOrders
-
-setupResultsLogging mClp
 
 gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
 
