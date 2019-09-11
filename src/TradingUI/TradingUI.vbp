@@ -71,6 +71,7 @@ Name="TradingUI27"
 HelpContextID="0"
 Description="TradeWright Trading User Interface Controls v2.7"
 CompatibleMode="2"
+VersionCompatible32="1"
 CompatibleEXE32="..\..\Bin\TradeWright.TradeBuild.Platform\TradingUI27.ocx"
 MajorVer=2
 MinorVer=7
