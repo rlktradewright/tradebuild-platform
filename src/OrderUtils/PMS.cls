@@ -212,6 +212,43 @@ End Property
 ' Methods
 '@================================================================================
 
+' Reset the summary to the 'base' values to make sure recovery data is
+' saved should a new bracket order be placed.
+Friend Sub ResetState()
+Const ProcName As String = "ResetState"
+On Error GoTo Err
+
+Dim lContract As IContract: Set lContract = mContract
+Set mContract = Nothing
+Contract = lContract
+
+CumBuyPrice = 0#
+CumSellPrice = 0#
+DrawdownLastTrade = 0#
+
+Dim lGroupName As String: lGroupName = mGroupName
+mGroupName = ""
+GroupName = lGroupName
+
+IsSimulated = False
+
+Dim lName As String: lName = mName
+mName = ""
+Name = lName
+
+ProfitLastFlat = 0#
+ProfitLastTrade = 0#
+
+Dim lTradingSessionStartTime As Date: lTradingSessionStartTime = mTradingSessionStartTime
+mTradingSessionStartTime = 0#
+TradingSessionStartTime = lTradingSessionStartTime
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub setClean()
 mIsDirty = False
 mDiff.Clear
