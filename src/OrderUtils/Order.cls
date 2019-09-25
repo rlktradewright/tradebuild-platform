@@ -1918,13 +1918,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SyncToOrderReport( _
-                ByVal pExec As IOrderReport)
+                ByVal pReport As IOrderReport)
 Const ProcName As String = "SyncToOrderReport"
 On Error GoTo Err
 
 Dim changed As Boolean
 
-With pExec
+With pReport
     If .Action <> mSummary.Action Then mSummary.Action = .Action: changed = True
     If .AllOrNone <> mSummary.AllOrNone Then mSummary.AllOrNone = .AllOrNone: changed = True
     If .BlockOrder <> mSummary.BlockOrder Then mSummary.BlockOrder = .BlockOrder: changed = True
@@ -1939,6 +1939,7 @@ With pExec
     If .Hidden <> mSummary.Hidden Then mSummary.Hidden = .Hidden: changed = True
     If .IgnoreRegularTradingHours <> mSummary.IgnoreRegularTradingHours Then mSummary.IgnoreRegularTradingHours = .IgnoreRegularTradingHours: changed = True
     If .LimitPrice <> mSummary.LimitPrice Then mSummary.LimitPrice = .LimitPrice: changed = True
+    If .Message <> mSummary.Message Then mSummary.Message = .Message: changed = True
     If .MinimumQuantity <> mSummary.MinimumQuantity Then mSummary.MinimumQuantity = .MinimumQuantity: changed = True
     If .NbboPriceCap <> mSummary.NbboPriceCap Then mSummary.NbboPriceCap = .NbboPriceCap: changed = True
     If .OrderType <> mSummary.OrderType Then mSummary.OrderType = .OrderType: changed = True

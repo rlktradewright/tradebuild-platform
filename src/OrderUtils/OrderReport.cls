@@ -63,6 +63,7 @@ Private mGoodTillDateTZ As String
 Private mHidden As Boolean
 Private mIgnoreRegularTradingHours As Boolean
 Private mLimitPrice As Double
+Private mMessage As String
 Private mMinimumQuantity As Long
 Private mNBBOPriceCap As Double
 Private mOrderType As OrderTypes
@@ -226,6 +227,14 @@ End Property
 
 Private Property Get IOrderReport_LimitPrice() As Double
 IOrderReport_LimitPrice = mLimitPrice
+End Property
+
+Private Property Let IOrderReport_Message(ByVal Value As String)
+Message = Value
+End Property
+
+Private Property Get IOrderReport_Message() As String
+IOrderReport_Message = Message
 End Property
 
 Private Property Let IOrderReport_MinimumQuantity(ByVal Value As Long)
@@ -498,6 +507,14 @@ End Property
 
 Public Property Get LimitPrice() As Double
 LimitPrice = mLimitPrice
+End Property
+
+Public Property Let Message(ByVal Value As String)
+mMessage = Value
+End Property
+
+Public Property Get Message() As String
+Message = mMessage
 End Property
 
 Public Property Let MinimumQuantity(ByVal Value As Long)

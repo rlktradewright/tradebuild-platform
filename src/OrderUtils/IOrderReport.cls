@@ -162,6 +162,12 @@ End Property
 Public Property Get LimitPrice() As Double
 End Property
 
+Public Property Let Message(ByVal Value As String)
+End Property
+
+Public Property Get Message() As String
+End Property
+
 Public Property Let MinimumQuantity(ByVal Value As Long)
 End Property
 
