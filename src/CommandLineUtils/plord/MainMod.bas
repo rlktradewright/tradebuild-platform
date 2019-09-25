@@ -43,11 +43,15 @@ Private Const TwsSwitch                             As String = "TWS"
 
 Public Const CancelAfterSwitch                      As String = "CANCELAFTER"
 Public Const CancelPriceSwitch                      As String = "CANCELPRICE"
+Public Const CloseSwitch                            As String = "CLOSE"
+Public Const DaysSwitch                             As String = "DAYS"
 Public Const DescriptionSwitch                      As String = "DESCRIPTION"
+Public Const EntrySwitch                            As String = "ENTRY"
 Public Const OffsetSwitch                           As String = "OFFSET"
 Public Const PriceSwitch                            As String = "PRICE"
 Public Const ReasonSwitch                           As String = "REASON"
 Public Const TIFSwitch                              As String = "TIF"
+Public Const TimeSwitch                             As String = "TIME"
 Public Const TrailBySwitch                          As String = "TRAILBY"
 Public Const TrailPercentSwitch                     As String = "TRAILPERCENT"
 Public Const TriggerPriceSwitch                     As String = "TRIGGER"
@@ -91,6 +95,7 @@ Public Const ListCommand                            As String = "LIST"
 Public Const QuitCommand                            As String = "QUIT"
 Public Const QuoteCommand                           As String = "QUOTE"
 Public Const ResetCommand                           As String = "RESET"
+Public Const RolloverCommand                        As String = "ROLLOVER"
 Public Const SellCommand                            As String = "SELL"
 Public Const SellAgainCommand                       As String = "S"
 Public Const StageOrdersCommand                     As String = "STAGEORDERS"
@@ -147,7 +152,7 @@ Private mContractStore                              As IContractStore
 Private mMarketDataManager                          As IMarketDataManager
 
 Private mScopeName                                  As String
-Private mOrderManager                               As New OrderManager
+Private mOrderManager                               As OrderManager
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 
 Private mGroupName                                  As String
@@ -803,6 +808,8 @@ Else
         mContractProcessor.ProcessStopLossCommand Params
     Case TargetCommand
         mContractProcessor.ProcessTargetCommand Params
+    Case RolloverCommand
+        mContractProcessor.ProcessRolloverCommand Params
     Case EndBracketCommand
         mBracketOrderDefinitionInProgress = False
         mContractProcessor.ProcessEndBracketCommand
@@ -966,7 +973,6 @@ On Error GoTo Err
 
 gRegExp.Global = False
 gRegExp.IgnoreCase = True
-'gRegExp.Pattern = "^((all|\$)|([a-zA-Z0-9][\w-]*))?( +((mkt)|((lmt)(:(-)?(\d{1,3}))?))?)?$"
 
 Dim p As String: p = _
     "(?:" & _
@@ -1448,6 +1454,11 @@ Else
     Set mOrderSubmitterFactory = lTwsClient
 End If
     
+Set mOrderManager = New OrderManager
+mOrderManager.ContractStorePrimary = mContractStore
+mOrderManager.MarketDataManager = mMarketDataManager
+mOrderManager.OrderSubmitterFactory = mOrderSubmitterFactory
+
 setupTwsApi = True
 
 Exit Function

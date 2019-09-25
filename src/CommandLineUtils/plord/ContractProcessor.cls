@@ -232,7 +232,7 @@ If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.SwitchValue(l
 lSwitchName = TimezoneSwitch
 If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.SwitchValue(lSwitchName)
 
-gSetValidNextCommands EntryCommand, StopLossCommand, QuoteCommand, TargetCommand, BracketCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, BracketCommand, ResetCommand, CloseoutCommand
 
 Exit Sub
 
@@ -320,9 +320,9 @@ lSwitchName = ReasonSwitch
 If lClp.Switch(ReasonSwitch) Then mBOSpec.EntryReason = lClp.SwitchValue(ReasonSwitch)
 
 If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, ResetCommand
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
 End If
 
 Exit Sub
@@ -337,6 +337,84 @@ ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
 End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Sub ProcessRolloverCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "ProcessRolloverCommand"
+On Error GoTo Err
+
+If Not (mContract.Specifier.SecType = SecTypeFuture Or _
+        mContract.Specifier.SecType = SecTypeFuturesOption Or _
+        mContract.Specifier.SecType = SecTypeOption) Then
+    gWriteErrorLine "Rollover only applies to options, futures and futures options"
+End If
+
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(pParams, " ")
+
+If lClp.NumberOfArgs <> 0 Then gWriteErrorLine "Only attributes beginning with ""/"" are permitted"
+
+Dim lSwitchName As String
+lSwitchName = DaysSwitch
+If lClp.Switch(lSwitchName) Then
+    If Not IsInteger(lClp.SwitchValue(lSwitchName), 0, 10) Then
+        gWriteErrorLine "Days must be an integer from 0 to 10"
+    Else
+        mBOSpec.RolloverDays = CLng(lClp.SwitchValue(lSwitchName))
+    End If
+End If
+
+lSwitchName = TimeSwitch
+If lClp.Switch(lSwitchName) Then
+    If Not IsDate(lClp.SwitchValue(lSwitchName)) Then
+        gWriteErrorLine "Time must be hh:mm[:ss]"
+    Else
+        Dim lDate As Date
+        lDate = CDate(lClp.SwitchValue(lSwitchName))
+        If CDbl(lDate) >= 1 Then
+            gWriteErrorLine "Time must be hh:mm[:ss]"
+        Else
+            mBOSpec.RolloverTime = lDate
+        End If
+    End If
+End If
+
+lSwitchName = CloseSwitch
+If lClp.Switch(lSwitchName) Then
+    Dim lRolloverCloseAtMarket As Boolean
+    Dim lRolloverCloseSpreadfactor As Long
+    validateRolloverCloseOrEntry lClp.SwitchValue(lSwitchName), _
+                                lRolloverCloseAtMarket, _
+                                lRolloverCloseSpreadfactor
+    mBOSpec.RolloverCloseAtMarket = lRolloverCloseAtMarket
+    mBOSpec.RolloverCloseSpreadfactor = lRolloverCloseSpreadfactor
+End If
+
+lSwitchName = EntrySwitch
+If lClp.Switch(lSwitchName) Then
+    Dim lRolloverEntryAtMarket As Boolean
+    Dim lRolloverEntrySpreadfactor As Long
+    validateRolloverCloseOrEntry lClp.SwitchValue(lSwitchName), _
+                                lRolloverCloseAtMarket, _
+                                lRolloverCloseSpreadfactor
+    mBOSpec.RolloverEntryAtMarket = lRolloverEntryAtMarket
+    mBOSpec.RolloverEntrySpreadfactor = lRolloverEntrySpreadfactor
+End If
+
+mBOSpec.Rollover = True
+
+If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, ResetCommand
+Else
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 
 Friend Sub ProcessStopLossCommand( _
                 ByVal pParams As String)
@@ -371,9 +449,9 @@ lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
 If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, ResetCommand
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
 End If
 
 Exit Sub
@@ -422,9 +500,9 @@ lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
 
 If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, ResetCommand
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
 End If
 
 Exit Sub
@@ -641,6 +719,46 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub validateRolloverCloseOrEntry( _
+                ByVal pValue As String, _
+                ByRef pRolloverCloseAtMarket As Boolean, _
+                ByRef pRolloverCloseSpreadfactor As Long)
+Const ProcName As String = "validateRolloverCloseOrEntry"
+On Error GoTo Err
 
+gRegExp.Global = False
+gRegExp.IgnoreCase = True
+gRegExp.Pattern = _
+        "^" & _
+            "(mkt)|" & _
+            "(?:" & _
+                "(lmt)" & _
+                "(?:" & _
+                    ":(-)?(\d{1,3})" & _
+                ")?" & _
+            ")" & _
+        "$"
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(pValue))
+
+If lMatches.Count <> 1 Then
+    gWriteErrorLine "Invalid command: syntax error"
+Else
+    Dim lMatch As Match: Set lMatch = lMatches(0)
+    
+    If lMatch.SubMatches(0) <> "" Then
+        pRolloverCloseAtMarket = True
+    Else
+        pRolloverCloseSpreadfactor = IIf(lMatch.SubMatches(2) <> "", -1, 1) * _
+                                            CLng(lMatch.SubMatches(3))
+    End If
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 

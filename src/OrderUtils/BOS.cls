@@ -85,6 +85,11 @@ Private mIsDirty                                    As Boolean
 
 Private mDiff                                       As New ROD
 
+Private mRolloverSpecification                      As RolloverSpecification
+Private mRolloverDate                               As Date
+
+Private mRolloverController                         As RolloverController
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -268,6 +273,38 @@ End Property
 
 Public Property Get PreventUnprotectedPosition() As Boolean
 PreventUnprotectedPosition = mPreventUnprotectedPosition
+End Property
+
+Public Property Let RolloverController(ByVal Value As RolloverController)
+setDirty
+If mRolloverController Is Nothing Then Set mRolloverController = Value
+mDiff.SetProperty "RolloverController", Value, Nothing
+End Property
+
+Public Property Get RolloverController() As RolloverController
+Set RolloverController = mRolloverController
+End Property
+
+Public Property Let RolloverDate(ByVal Value As Date)
+If mRolloverDate = Value Then Exit Property
+setDirty
+mRolloverDate = Value
+mDiff.SetProperty "RolloverDate", Value
+End Property
+
+Public Property Get RolloverDate() As Date
+RolloverDate = mRolloverDate
+End Property
+
+Public Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
+If mRolloverSpecification Is Value Then Exit Property
+setDirty
+Set mRolloverSpecification = Value
+mDiff.SetProperty "RolloverSpecification", Value, Nothing
+End Property
+
+Public Property Get RolloverSpecification() As RolloverSpecification
+Set RolloverSpecification = mRolloverSpecification
 End Property
 
 Public Property Let Size(ByVal Value As Long)

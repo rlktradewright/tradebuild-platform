@@ -47,6 +47,7 @@ Private Const ModuleName                As String = "OrderContext"
 ' Member variables
 '@================================================================================
 
+Private mOrderManager                   As OrderManager
 Private mGroupName                      As String
 Private mRecoveryContextName            As String
 Private mName                           As String
@@ -280,6 +281,10 @@ Friend Property Get Name() As String
 Name = mName
 End Property
 
+Friend Property Get OrderManager() As OrderManager
+Set OrderManager = mOrderManager
+End Property
+
 Public Property Get OrderSubmitter() As IOrderSubmitter
 Set OrderSubmitter = mOrderSubmitter
 End Property
@@ -371,6 +376,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get ScopeName() As String
+ScopeName = mBracketOrderRecoveryController.ScopeName
 End Property
 
 Public Property Get Size() As Long
@@ -845,7 +854,7 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pName As String, _
-                ByVal pSessionName As String, _
+                ByVal pOrderManager As OrderManager, _
                 ByVal pRecoveryContextName As String, _
                 ByVal pGroupName As String, _
                 ByVal pIsSimulated As Boolean, _
@@ -861,7 +870,8 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mName = pName
-mSessionName = pSessionName
+Set mOrderManager = pOrderManager
+mSessionName = mOrderManager.SessionName
 mRecoveryContextName = pRecoveryContextName
 mGroupName = pGroupName
 mIsSimulated = pIsSimulated

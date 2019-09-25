@@ -31,30 +31,30 @@ Private Const ModuleName                            As String = "Globals"
 
 Public Const MaxCurrency                            As Currency = 922337203685477.5807@
 
-Private Const StrOrderTypeNone               As String = ""
-Private Const StrOrderTypeMarket             As String = "Market"
-Private Const StrOrderTypeMarketOnClose      As String = "Market on Close"
-Private Const StrOrderTypeLimit              As String = "Limit"
-Private Const StrOrderTypeLimitOnClose       As String = "Limit on Close"
-Private Const StrOrderTypePegMarket          As String = "Peg to Market"
-Private Const StrOrderTypeStop               As String = "Stop"
-Private Const StrOrderTypeStopLimit          As String = "Stop Limit"
-Private Const StrOrderTypeTrail              As String = "Trailing Stop"
-Private Const StrOrderTypeRelative           As String = "Relative"
-Private Const StrOrderTypeVWAP               As String = "VWAP"
-Private Const StrOrderTypeMarketToLimit      As String = "Market to Limit"
-Private Const StrOrderTypeQuote              As String = "Quote"
-Private Const StrOrderTypeAutoStop           As String = "Auto Stop"
-Private Const StrOrderTypeAutoLimit          As String = "Auto Limit"
-Private Const StrOrderTypeAdjust             As String = "Adjust"
-Private Const StrOrderTypeAlert              As String = "Alert"
-Private Const StrOrderTypeLimitIfTouched     As String = "Limit if Touched"
-Private Const StrOrderTypeMarketIfTouched    As String = "Market if Touched"
-Private Const StrOrderTypeTrailLimit         As String = "Trail Limit"
-Private Const StrOrderTypeMarketWithProtection As String = "Market with Protection"
-Private Const StrOrderTypeMarketOnOpen       As String = "Market on Open"
-Private Const StrOrderTypeLimitOnOpen        As String = "Limit on Open"
-Private Const StrOrderTypePeggedToPrimary    As String = "Pegged to Primary"
+Private Const StrOrderTypeNone                      As String = ""
+Private Const StrOrderTypeMarket                    As String = "Market"
+Private Const StrOrderTypeMarketOnClose             As String = "Market on Close"
+Private Const StrOrderTypeLimit                     As String = "Limit"
+Private Const StrOrderTypeLimitOnClose              As String = "Limit on Close"
+Private Const StrOrderTypePegMarket                 As String = "Peg to Market"
+Private Const StrOrderTypeStop                      As String = "Stop"
+Private Const StrOrderTypeStopLimit                 As String = "Stop Limit"
+Private Const StrOrderTypeTrail                     As String = "Trailing Stop"
+Private Const StrOrderTypeRelative                  As String = "Relative"
+Private Const StrOrderTypeVWAP                      As String = "VWAP"
+Private Const StrOrderTypeMarketToLimit             As String = "Market to Limit"
+Private Const StrOrderTypeQuote                     As String = "Quote"
+Private Const StrOrderTypeAutoStop                  As String = "Auto Stop"
+Private Const StrOrderTypeAutoLimit                 As String = "Auto Limit"
+Private Const StrOrderTypeAdjust                    As String = "Adjust"
+Private Const StrOrderTypeAlert                     As String = "Alert"
+Private Const StrOrderTypeLimitIfTouched            As String = "Limit if Touched"
+Private Const StrOrderTypeMarketIfTouched           As String = "Market if Touched"
+Private Const StrOrderTypeTrailLimit                As String = "Trail Limit"
+Private Const StrOrderTypeMarketWithProtection      As String = "Market with Protection"
+Private Const StrOrderTypeMarketOnOpen              As String = "Market on Open"
+Private Const StrOrderTypeLimitOnOpen               As String = "Limit on Open"
+Private Const StrOrderTypePeggedToPrimary           As String = "Pegged to Primary"
 
 Public Const BalancingOrderContextName              As String = "$balancing"
 Public Const RecoveryOrderContextName               As String = "$recovery"
@@ -575,6 +575,27 @@ On Error GoTo Err
 
 Set gCreateBracketProfitCalculator = New BracketProfitCalculator
 gCreateBracketProfitCalculator.Initialise pBracketOrder, pDataSource
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gCreateRolloverSpecification( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pDays As Long, _
+                ByVal pTime As Date, _
+                ByVal pCloseAtMarket As Boolean, _
+                ByVal pCloseSpreadfactor As Long, _
+                ByVal pEntryAtMarket As Boolean, _
+                ByVal pEntrySpreadfactor As Long) As RolloverSpecification
+Const ProcName As String = "gCreateRolloverSpecification"
+On Error GoTo Err
+
+Set gCreateRolloverSpecification = New RolloverSpecification
+gCreateRolloverSpecification.Initialise pBracketOrder, pDays, pTime, pCloseAtMarket, pCloseSpreadfactor, pEntryAtMarket, pEntrySpreadfactor
+pBracketOrder.RolloverSpecification = gCreateRolloverSpecification
 
 Exit Function
 

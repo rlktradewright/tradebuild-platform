@@ -55,6 +55,13 @@ Private mRecoveryControllers                        As New EnumerableCollection
 Private mPositionManagersLive                       As New PositionManagers
 Private mPositionManagersSimulated                  As New PositionManagers
 
+Private mContractStorePrimary                       As IContractStore
+Private mContractStoreSecondary                     As IContractStore
+
+Private mMarketDataManager                          As IMarketDataManager
+
+Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -82,6 +89,38 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Let ContractStorePrimary(ByVal Value As IContractStore)
+Set mContractStorePrimary = Value
+End Property
+
+Public Property Get ContractStorePrimary() As IContractStore
+Set ContractStorePrimary = mContractStorePrimary
+End Property
+
+Public Property Let ContractStoreSecondary(ByVal Value As IContractStore)
+Set mContractStoreSecondary = Value
+End Property
+
+Public Property Get ContractStoreSecondary() As IContractStore
+Set ContractStoreSecondary = mContractStoreSecondary
+End Property
+
+Public Property Let MarketDataManager(ByVal Value As IMarketDataManager)
+Set mMarketDataManager = Value
+End Property
+
+Public Property Get MarketDataManager() As IMarketDataManager
+Set MarketDataManager = mMarketDataManager
+End Property
+
+Public Property Let OrderSubmitterFactory(ByVal Value As IOrderSubmitterFactory)
+Set mOrderSubmitterFactory = Value
+End Property
+
+Public Property Get OrderSubmitterFactory() As IOrderSubmitterFactory
+Set OrderSubmitterFactory = mOrderSubmitterFactory
+End Property
 
 Public Property Get PositionManagersLive() As PositionManagers
 Set PositionManagersLive = mPositionManagersLive

@@ -25,6 +25,7 @@ Option Explicit
 
 Implements IBracketOrder
 Implements IRecoverable
+Implements IStateChangeListener
 Implements IStringable
 
 '@================================================================================
@@ -169,6 +170,9 @@ Attribute mStateTimeoutTLI.VB_VarHelpID = -1
 Private mStartTime                                  As Date
 Private mEndTime                                    As Date
 Private mTimezoneName                               As String
+
+Private WithEvents mRolloverTLI                     As TimerListItem
+Attribute mRolloverTLI.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -593,6 +597,14 @@ Private Property Get IBracketOrder_Risk() As Currency
 IBracketOrder_Risk = Risk
 End Property
 
+Private Property Let IBracketOrder_RolloverSpecification(ByVal Value As RolloverSpecification)
+RolloverSpecification = Value
+End Property
+
+Private Property Get IBracketOrder_RolloverSpecification() As RolloverSpecification
+Set IBracketOrder_RolloverSpecification = RolloverSpecification
+End Property
+
 Private Sub IBracketOrder_SetNewEntryPrice(ByVal Value As Double)
 Const ProcName As String = "IBracketOrder_SetNewEntryPrice"
 On Error GoTo Err
@@ -839,7 +851,21 @@ If mSummary.CancelPrice <> 0# Then
 End If
 
 If mSummary.CancelTime <> 0 And mSummary.CancelTime > Now Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
-    
+
+If mSummary.RolloverDate <> 0 Then
+    If mSummary.RolloverDate > Now Then
+        Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
+    Else
+        Dim lExpiryTime As Date
+        lExpiryTime = mContract.ExpiryDate + 10# / 24#
+        Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
+        lExpiryTime = ConvertDateTzToLocal(lExpiryTime, lTz)
+        If lExpiryTime > Now Then
+            initiateRollover
+        End If
+    End If
+End If
+
 CheckComplete
 
 Exit Sub
@@ -895,6 +921,23 @@ Const ProcName As String = "IRecoverable_RemoveRecoverableObjectListener"
 On Error GoTo Err
 
 mRecoverableObjectListeners.Remove pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IStateChangeListener Interface Members
+'@================================================================================
+
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
+On Error GoTo Err
+
+mSummary.RolloverController = ev.Source
+SaveRecoveryInfo
 
 Exit Sub
 
@@ -1177,6 +1220,22 @@ Case OrderStatuses.OrderStatusRejected
 End Select
 
 SaveRecoveryInfo
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mRolloverTLI Event Handlers
+'@================================================================================
+
+Private Sub mRolloverTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mRolloverTLI_StateChange"
+On Error GoTo Err
+
+initiateRollover
+
 Exit Sub
 
 Err:
@@ -1481,6 +1540,7 @@ Const ProcName As String = "CancelAfter"
 On Error GoTo Err
 
 Assert State = BracketOrderStateCreated, "CancelAfter cannot be set after execution"
+Assert mSummary.CancelTime = 0, "CancelTime is already set"
 
 mCancelAfter = Value
 
@@ -1513,6 +1573,7 @@ Const ProcName As String = "CancelTime"
 On Error GoTo Err
 
 Assert State = BracketOrderStateCreated, "CancelTime cannot be set after execution"
+Assert mCancelAfter = 0, "CancelAfter is already set"
 
 mSummary.CancelTime = Value
 
@@ -1896,7 +1957,39 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
 
+Friend Property Get RolloverSpecification() As RolloverSpecification
+Set RolloverSpecification = mSummary.RolloverSpecification
+End Property
+
+Friend Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
+Const ProcName As String = "RolloverSpecification"
+On Error GoTo Err
+
+Assert mSummary.State = BracketOrderStateCreated Or _
+        mSummary.State = BracketOrderStateSubmitted, _
+        "Bracket order state does not allow rollover"
+
+mSummary.RolloverSpecification = Value
+
+If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
+
+Dim lRolloverTime As Date
+lRolloverTime = GetOffsetSessionTimes(mContract.ExpiryDate, _
+                                    -1 * mSummary.RolloverSpecification.Days).StartTime + mSummary.RolloverSpecification.Time
+
+Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
+lRolloverTime = ConvertDateTzToLocal(lRolloverTime, lTz)
+Set mRolloverTLI = mTimerList.Add(Nothing, lRolloverTime, ExpiryTimeUnitDateTime)
+mSummary.RolloverDate = lRolloverTime
+
+If mSummary.State = BracketOrderStateSubmitted Then SaveRecoveryInfo
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Size() As Long
@@ -2310,7 +2403,6 @@ mSummary.CreationTime = GetTimestamp
 If mCancelAfter <> 0 Then
     mSummary.CancelTime = mTimerList.Clock.Timestamp + CDbl(mCancelAfter) / 86400#
     mCancelAfter = 0
-    mSummary.CancelTime = mSummary.CancelTime
 End If
 
 If mSummary.CancelTime <> 0 Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
@@ -3592,6 +3684,21 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub initiateRollover()
+Const ProcName As String = "initiateRollover"
+On Error GoTo Err
+
+mSummary.RolloverController = New RolloverController
+mSummary.RolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName
+StartTask mSummary.RolloverController, PriorityNormal
+mSummary.RolloverController.AddStateChangeListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function placeCloseoutOrder()
 Const ProcName As String = "placeCloseoutOrder"

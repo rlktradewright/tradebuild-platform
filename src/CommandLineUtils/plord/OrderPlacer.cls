@@ -196,6 +196,15 @@ With mBracketOrderSpec
         lBo.EntryOrder.GoodTillDate = .GoodTillDate
         lBo.EntryOrder.GoodTillDateTZ = .TimezoneName
     End If
+    If .Rollover Then
+        lBo.RolloverSpecification = CreateRolloverSpecification(lBo, _
+                                            .RolloverDays, _
+                                            .RolloverTime, _
+                                            .RolloverCloseAtMarket, _
+                                            .RolloverCloseSpreadfactor, _
+                                            .RolloverEntryAtMarket, _
+                                            .RolloverEntrySpreadfactor)
+    End If
 End With
 
 gWriteLineToStdOut lBo.Key & ": bracket order placed"

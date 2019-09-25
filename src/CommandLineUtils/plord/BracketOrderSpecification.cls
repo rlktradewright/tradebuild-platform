@@ -72,6 +72,13 @@ Public Description                                  As String
 Public EntryReason                                  As String
 Public StopLossReason                               As String
 Public TargetReason                                 As String
+Public Rollover                                     As Boolean
+Public RolloverDays                                 As Long
+Public RolloverTime                                 As Date
+Public RolloverCloseAtMarket                        As Boolean
+Public RolloverCloseSpreadfactor                    As Long
+Public RolloverEntryAtMarket                        As Boolean
+Public RolloverEntrySpreadfactor                    As Long
 
 '@================================================================================
 ' Class Event Handlers

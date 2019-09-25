@@ -156,6 +156,12 @@ End Property
 Public Property Get Risk() As Currency
 End Property
 
+Public Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
+End Property
+
+Public Property Get RolloverSpecification() As RolloverSpecification
+End Property
+
 Public Property Get Size() As Long
 End Property
 
