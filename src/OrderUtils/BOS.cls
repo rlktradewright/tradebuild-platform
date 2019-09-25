@@ -280,7 +280,7 @@ End Property
 Public Property Let RolloverController(ByVal Value As RolloverController)
 setDirty
 If mRolloverController Is Nothing Then Set mRolloverController = Value
-mDiff.SetProperty "RolloverController", Value, Nothing
+mDiff.SetProperty "RolloverController", Value
 End Property
 
 Public Property Get RolloverController() As RolloverController
@@ -302,7 +302,7 @@ Public Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
 If mRolloverSpecification Is Value Then Exit Property
 setDirty
 Set mRolloverSpecification = Value
-mDiff.SetProperty "RolloverSpecification", Value, Nothing
+mDiff.SetProperty "RolloverSpecification", Value
 End Property
 
 Public Property Get RolloverSpecification() As RolloverSpecification
