@@ -103,12 +103,10 @@ End Sub
 
 Friend Sub SetProperty( _
                 ByVal pName As String, _
-                ByVal pValue As Variant, _
-                Optional ByVal pDefaultValue As Variant)
+                ByVal pValue As Variant)
 Const ProcName As String = "SetProperty"
 On Error GoTo Err
 
-If gVariantEquals(pValue, pDefaultValue) Then Exit Sub
 If mProperties.Exists(pName) Then
     mProperties.Item(pName) = pValue
 Else

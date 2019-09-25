@@ -131,7 +131,7 @@ Public Property Let AllOrNone(ByVal Value As Boolean)
 If mAllOrNone = Value Then Exit Property
 mAllOrNone = Value
 mIsDirty = True
-mDiff.SetProperty "AllOrNone", Value, False
+mDiff.SetProperty "AllOrNone", Value
 End Property
 
 Public Property Get AllOrNone() As Boolean
@@ -142,7 +142,7 @@ Public Property Let AveragePrice(ByVal Value As Double)
 If mAveragePrice = Value Then Exit Property
 mAveragePrice = Value
 mIsDirty = True
-mDiff.SetProperty "AveragePrice", Value, 0#
+mDiff.SetProperty "AveragePrice", Value
 End Property
 
 Public Property Get AveragePrice() As Double
@@ -153,7 +153,7 @@ Public Property Let BlockOrder(ByVal Value As Boolean)
 If mBlockOrder = Value Then Exit Property
 mBlockOrder = Value
 mIsDirty = True
-mDiff.SetProperty "BlockOrder", Value, False
+mDiff.SetProperty "BlockOrder", Value
 End Property
 
 Public Property Get BlockOrder() As Boolean
@@ -182,7 +182,7 @@ Public Property Let DiscretionaryAmount(ByVal Value As Double)
 If mDiscretionaryAmount = Value Then Exit Property
 mDiscretionaryAmount = Value
 mIsDirty = True
-mDiff.SetProperty "DiscretionaryAmount", Value, 0#
+mDiff.SetProperty "DiscretionaryAmount", Value
 End Property
 
 Public Property Get DiscretionaryAmount() As Double
@@ -193,7 +193,7 @@ Public Property Let DisplaySize(ByVal Value As Long)
 If mDisplaySize = Value Then Exit Property
 mDisplaySize = Value
 mIsDirty = True
-mDiff.SetProperty "DisplaySize", Value, 0
+mDiff.SetProperty "DisplaySize", Value
 End Property
 
 Public Property Get DisplaySize() As Long
@@ -204,7 +204,7 @@ Public Property Let ErrorCode(ByVal Value As Long)
 If mErrorCode = Value Then Exit Property
 mErrorCode = Value
 mIsDirty = True
-mDiff.SetProperty "ErrorCode", Value, 0
+mDiff.SetProperty "ErrorCode", Value
 End Property
 
 Public Property Get ErrorCode() As Long
@@ -215,7 +215,7 @@ Public Property Let ErrorMessage(ByVal Value As String)
 If mErrorMessage = Value Then Exit Property
 mErrorMessage = Value
 mIsDirty = True
-mDiff.SetProperty "ErrorMessage", Value, ""
+mDiff.SetProperty "ErrorMessage", Value
 End Property
 
 Public Property Get ErrorMessage() As String
@@ -226,7 +226,7 @@ Public Property Let ETradeOnly(ByVal Value As Boolean)
 If mETradeOnly = Value Then Exit Property
 mETradeOnly = Value
 mIsDirty = True
-mDiff.SetProperty "ETradeOnly", Value, False
+mDiff.SetProperty "ETradeOnly", Value
 End Property
 
 Public Property Get ETradeOnly() As Boolean
@@ -237,7 +237,7 @@ Public Property Let FillTime(ByVal Value As Date)
 If mFillTime = Value Then Exit Property
 mFillTime = Value
 mIsDirty = True
-mDiff.SetProperty "FillTime", Value, 0#
+mDiff.SetProperty "FillTime", Value
 End Property
 
 Public Property Get FillTime() As Date
@@ -248,7 +248,7 @@ Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
 If mFirmQuoteOnly = Value Then Exit Property
 mFirmQuoteOnly = Value
 mIsDirty = True
-mDiff.SetProperty "FirmQuoteOnly", Value, False
+mDiff.SetProperty "FirmQuoteOnly", Value
 End Property
 
 Public Property Get FirmQuoteOnly() As Boolean
@@ -259,7 +259,7 @@ Public Property Let GoodAfterTime(ByVal Value As Date)
 If mGoodAfterTime = Value Then Exit Property
 mGoodAfterTime = Value
 mIsDirty = True
-mDiff.SetProperty "GoodAfterTime", Value, 0#
+mDiff.SetProperty "GoodAfterTime", Value
 End Property
 
 Public Property Get GoodAfterTime() As Date
@@ -270,7 +270,7 @@ Public Property Let GoodAfterTimeTZ(ByVal Value As String)
 If mGoodAfterTimeTZ = Value Then Exit Property
 mGoodAfterTimeTZ = Value
 mIsDirty = True
-mDiff.SetProperty "GoodAfterTimeTZ", Value, ""
+mDiff.SetProperty "GoodAfterTimeTZ", Value
 End Property
 
 Public Property Get GoodAfterTimeTZ() As String
@@ -281,7 +281,7 @@ Public Property Let GoodTillDate(ByVal Value As Date)
 If mGoodTillDate = Value Then Exit Property
 mGoodTillDate = Value
 mIsDirty = True
-mDiff.SetProperty "GoodTillDate", Value, 0#
+mDiff.SetProperty "GoodTillDate", Value
 End Property
 
 Public Property Get GoodTillDate() As Date
@@ -292,7 +292,7 @@ Public Property Let GoodTillDateTZ(ByVal Value As String)
 If mGoodTillDateTZ = Value Then Exit Property
 mGoodTillDateTZ = Value
 mIsDirty = True
-mDiff.SetProperty "GoodTillDateTZ", Value, ""
+mDiff.SetProperty "GoodTillDateTZ", Value
 End Property
 
 Public Property Get GoodTillDateTZ() As String
@@ -303,7 +303,7 @@ Public Property Let GroupName(ByVal Value As String)
 If mGroupName = Value Then Exit Property
 mGroupName = Value
 mIsDirty = True
-mDiff.SetProperty "GroupName", Value, ""
+mDiff.SetProperty "GroupName", Value
 End Property
 
 Public Property Get GroupName() As String
@@ -314,7 +314,7 @@ Public Property Let Hidden(ByVal Value As Boolean)
 If mHidden = Value Then Exit Property
 mHidden = Value
 mIsDirty = True
-mDiff.SetProperty "Hidden", Value, False
+mDiff.SetProperty "Hidden", Value
 End Property
 
 Public Property Get Hidden() As Boolean
@@ -335,7 +335,7 @@ Public Property Let IgnoreRegularTradingHours(ByVal Value As Boolean)
 If mIgnoreRegularTradingHours = Value Then Exit Property
 mIgnoreRegularTradingHours = Value
 mIsDirty = True
-mDiff.SetProperty "IgnoreRegularTradingHours", Value, False
+mDiff.SetProperty "IgnoreRegularTradingHours", Value
 End Property
 
 Public Property Get IgnoreRegularTradingHours() As Boolean
@@ -350,7 +350,7 @@ Public Property Let LastFillPrice(ByVal Value As Double)
 If mLastFillPrice = Value Then Exit Property
 mLastFillPrice = Value
 mIsDirty = True
-mDiff.SetProperty "LastFillPrice", Value, 0#
+mDiff.SetProperty "LastFillPrice", Value
 End Property
 
 Public Property Get LastFillPrice() As Double
@@ -361,7 +361,7 @@ Public Property Let LimitPrice(ByVal Value As Double)
 If mLimitPrice = Value Then Exit Property
 mLimitPrice = Value
 mIsDirty = True
-mDiff.SetProperty "LimitPrice", Value, 0#
+mDiff.SetProperty "LimitPrice", Value
 End Property
 
 Public Property Get LimitPrice() As Double
@@ -372,7 +372,7 @@ Public Property Let Message(ByVal Value As String)
 If mMessage = Value Then Exit Property
 mMessage = Value
 mIsDirty = True
-mDiff.SetProperty "Message", Value, ""
+mDiff.SetProperty "Message", Value
 End Property
 
 Public Property Get Message() As String
@@ -383,7 +383,7 @@ Public Property Let MinimumQuantity(ByVal Value As Long)
 If mMinimumQuantity = Value Then Exit Property
 mMinimumQuantity = Value
 mIsDirty = True
-mDiff.SetProperty "MinimumQuantity", Value, 0
+mDiff.SetProperty "MinimumQuantity", Value
 End Property
 
 Public Property Get MinimumQuantity() As Long
@@ -394,7 +394,7 @@ Public Property Let NbboPriceCap(ByVal Value As Double)
 If mNBBOPriceCap = Value Then Exit Property
 mNBBOPriceCap = Value
 mIsDirty = True
-mDiff.SetProperty "NBBOPriceCap", Value, 0#
+mDiff.SetProperty "NBBOPriceCap", Value
 End Property
 
 Public Property Get NbboPriceCap() As Double
@@ -405,7 +405,7 @@ Public Property Let Offset(ByVal Value As Long)
 If mOffset = Value Then Exit Property
 mOffset = Value
 mIsDirty = True
-mDiff.SetProperty "Offset", Value, 0
+mDiff.SetProperty "Offset", Value
 End Property
 
 Public Property Get Offset() As Long
@@ -427,7 +427,7 @@ Public Property Let Origin(ByVal Value As OrderOrigins)
 If mOrigin = Value Then Exit Property
 mOrigin = Value
 mIsDirty = True
-mDiff.SetProperty "Origin", Value, OrderOrigins.OriginCustomer
+mDiff.SetProperty "Origin", Value
 End Property
 
 Public Property Get Origin() As OrderOrigins
@@ -438,7 +438,7 @@ Public Property Let OriginatorRef(ByVal Value As String)
 If mOriginatorRef = Value Then Exit Property
 mOriginatorRef = Value
 mIsDirty = True
-mDiff.SetProperty "mOriginatorRef", Value, ""
+mDiff.SetProperty "mOriginatorRef", Value
 End Property
 
 Public Property Get OriginatorRef() As String
@@ -449,7 +449,7 @@ Public Property Let OverrideConstraints(ByVal Value As Boolean)
 If mOverrideConstraints = Value Then Exit Property
 mOverrideConstraints = Value
 mIsDirty = True
-mDiff.SetProperty "OverrideConstraints", Value, False
+mDiff.SetProperty "OverrideConstraints", Value
 End Property
 
 Public Property Get OverrideConstraints() As Boolean
@@ -460,7 +460,7 @@ Public Property Let PercentOffset(ByVal Value As Double)
 If mPercentOffset = Value Then Exit Property
 mPercentOffset = Value
 mIsDirty = True
-mDiff.SetProperty "PercentOffset", Value, 0#
+mDiff.SetProperty "PercentOffset", Value
 End Property
 
 Public Property Get PercentOffset() As Double
@@ -471,7 +471,7 @@ Public Property Let ProviderProperties(ByVal Value As Parameters)
 If mProviderProperties Is Value Then Exit Property
 Set mProviderProperties = Value
 mIsDirty = True
-mDiff.SetProperty "ProviderProperties", Value, Nothing
+mDiff.SetProperty "ProviderProperties", Value
 End Property
 
 Public Property Get ProviderProperties() As Parameters
@@ -482,7 +482,7 @@ Public Property Let Quantity(ByVal Value As Long)
 If mQuantity = Value Then Exit Property
 mQuantity = Value
 mIsDirty = True
-mDiff.SetProperty "Quantity", Value, 0
+mDiff.SetProperty "Quantity", Value
 End Property
 
 Public Property Get Quantity() As Long
@@ -493,7 +493,7 @@ Public Property Let QuantityFilled(ByVal Value As Long)
 If mQuantityFilled = Value Then Exit Property
 mQuantityFilled = Value
 mIsDirty = True
-mDiff.SetProperty "QuantityFilled", Value, 0
+mDiff.SetProperty "QuantityFilled", Value
 End Property
 
 Public Property Get QuantityFilled() As Long
@@ -504,7 +504,7 @@ Public Property Let QuantityRemaining(ByVal Value As Long)
 If mQuantityRemaining = Value Then Exit Property
 mQuantityRemaining = Value
 mIsDirty = True
-mDiff.SetProperty "QuantityRemaining", Value, 0
+mDiff.SetProperty "QuantityRemaining", Value
 End Property
 
 Public Property Get QuantityRemaining() As Long
@@ -515,7 +515,7 @@ Public Property Let SettlingFirm(ByVal Value As String)
 If mSettlingFirm = Value Then Exit Property
 mSettlingFirm = Value
 mIsDirty = True
-mDiff.SetProperty "SettlingFirm", Value, ""
+mDiff.SetProperty "SettlingFirm", Value
 End Property
 
 Public Property Get SettlingFirm() As String
@@ -526,7 +526,7 @@ Public Property Let Status(ByVal Value As OrderStatuses)
 If mStatus = Value Then Exit Property
 mStatus = Value
 mIsDirty = True
-mDiff.SetProperty "Status", Value, OrderStatuses.OrderStatusCreated
+mDiff.SetProperty "Status", Value
 End Property
 
 Public Property Get Status() As OrderStatuses
@@ -537,7 +537,7 @@ Public Property Let StopTriggerMethod(ByVal Value As OrderStopTriggerMethods)
 If mStopTriggerMethod = Value Then Exit Property
 mStopTriggerMethod = Value
 mIsDirty = True
-mDiff.SetProperty "StopTriggerMethod", Value, OrderStopTriggerMethods.OrderStopTriggerNone
+mDiff.SetProperty "StopTriggerMethod", Value
 End Property
 
 Public Property Get StopTriggerMethod() As OrderStopTriggerMethods
@@ -548,7 +548,7 @@ Public Property Let SweepToFill(ByVal Value As Boolean)
 If mSweepToFill = Value Then Exit Property
 mSweepToFill = Value
 mIsDirty = True
-mDiff.SetProperty "SweepToFill", Value, False
+mDiff.SetProperty "SweepToFill", Value
 End Property
 
 Public Property Get SweepToFill() As Boolean
@@ -559,7 +559,7 @@ Public Property Let TimeInForce(ByVal Value As OrderTIFs)
 If mTimeInForce = Value Then Exit Property
 mTimeInForce = Value
 mIsDirty = True
-mDiff.SetProperty "TimeInForce", Value, OrderTIFs.OrderTIFNone
+mDiff.SetProperty "TimeInForce", Value
 End Property
 
 Public Property Get TimeInForce() As OrderTIFs
@@ -570,7 +570,7 @@ Public Property Let TriggerPrice(ByVal Value As Double)
 If mTriggerPrice = Value Then Exit Property
 mTriggerPrice = Value
 mIsDirty = True
-mDiff.SetProperty "TriggerPrice", Value, 0#
+mDiff.SetProperty "TriggerPrice", Value
 End Property
 
 Public Property Get TriggerPrice() As Double

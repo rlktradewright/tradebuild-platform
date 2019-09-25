@@ -109,7 +109,7 @@ Public Property Let CancelPrice(ByVal Value As Double)
 If mCancelPrice = Value Then Exit Property
 setDirty
 mCancelPrice = Value
-mDiff.SetProperty "CancelPrice", Value, 0!
+mDiff.SetProperty "CancelPrice", Value
 End Property
 
 Public Property Get CancelPrice() As Double
@@ -120,7 +120,7 @@ Public Property Let CancelTime(ByVal Value As Date)
 If mCancelTime = Value Then Exit Property
 setDirty
 mCancelTime = Value
-mDiff.SetProperty "CancelTime", Value, 0!
+mDiff.SetProperty "CancelTime", Value
 End Property
 
 Public Property Get CancelTime() As Date
@@ -131,7 +131,7 @@ Public Property Let CloseoutOrderId(ByVal Value As String)
 If CloseoutOrderId = Value Then Exit Property
 setDirty
 mCloseoutOrderId = Value
-mDiff.SetProperty "CloseoutOrderId", Value, ""
+mDiff.SetProperty "CloseoutOrderId", Value
 End Property
 
 Public Property Get CloseoutOrderId() As String
@@ -142,7 +142,7 @@ Public Property Let ContextName(ByVal Value As String)
 If mContextName = Value Then Exit Property
 setDirty
 mContextName = Value
-mDiff.SetProperty "ContextName", Value, ""
+mDiff.SetProperty "ContextName", Value
 End Property
 
 Public Property Get ContextName() As String
@@ -153,7 +153,7 @@ Public Property Let CreationTime(ByVal Value As Date)
 If mCreationTime = Value Then Exit Property
 setDirty
 mCreationTime = Value
-mDiff.SetProperty "CreationTime", Value, 0!
+mDiff.SetProperty "CreationTime", Value
 End Property
 
 Public Property Get CreationTime() As Date
@@ -164,7 +164,7 @@ Public Property Let CumBuyPrice(ByVal Value As Double)
 If mCumBuyPrice = Value Then Exit Property
 setDirty
 mCumBuyPrice = Value
-mDiff.SetProperty "CumBuyPrice", Value, 0!
+mDiff.SetProperty "CumBuyPrice", Value
 End Property
 
 Public Property Get CumBuyPrice() As Double
@@ -175,7 +175,7 @@ Public Property Let CumSellPrice(ByVal Value As Double)
 If mCumSellPrice = Value Then Exit Property
 setDirty
 mCumSellPrice = Value
-mDiff.SetProperty "CumSellPrice", Value, 0!
+mDiff.SetProperty "CumSellPrice", Value
 End Property
 
 Public Property Get CumSellPrice() As Double
@@ -186,7 +186,7 @@ Public Property Let Description(ByVal Value As String)
 If mDescription = Value Then Exit Property
 setDirty
 mDescription = Value
-mDiff.SetProperty "Description", Value, ""
+mDiff.SetProperty "Description", Value
 End Property
 
 Public Property Get Description() As String
@@ -205,7 +205,7 @@ Public Property Let EntryOrderId(ByVal Value As String)
 If mEntryOrderId = Value Then Exit Property
 setDirty
 mEntryOrderId = Value
-mDiff.SetProperty "EntryOrderId", Value, ""
+mDiff.SetProperty "EntryOrderId", Value
 End Property
 
 Public Property Get EntryOrderId() As String
@@ -216,7 +216,7 @@ Public Property Let EntryReason(ByVal Value As String)
 If mEntryReason = Value Then Exit Property
 setDirty
 mEntryReason = Value
-mDiff.SetProperty "EntryReason", Value, ""
+mDiff.SetProperty "EntryReason", Value
 End Property
 
 Public Property Get EntryReason() As String
@@ -227,7 +227,7 @@ Public Property Let GroupName(ByVal Value As String)
 If mGroupName = Value Then Exit Property
 setDirty
 mGroupName = Value
-mDiff.SetProperty "GroupName", Value, ""
+mDiff.SetProperty "GroupName", Value
 End Property
 
 Public Property Get GroupName() As String
@@ -252,7 +252,7 @@ Public Property Let PeggedOrdersProcessed(ByVal Value As Boolean)
 If mPeggedOrdersProcessed = Value Then Exit Property
 setDirty
 mPeggedOrdersProcessed = Value
-mDiff.SetProperty "PeggedOrdersProcessed", Value, False
+mDiff.SetProperty "PeggedOrdersProcessed", Value
 End Property
 
 Public Property Get PeggedOrdersProcessed() As Boolean
@@ -263,7 +263,7 @@ Public Property Let PreventUnprotectedPosition(ByVal Value As Boolean)
 If mPreventUnprotectedPosition = Value Then Exit Property
 setDirty
 mPreventUnprotectedPosition = Value
-mDiff.SetProperty "PreventUnprotectedPosition", Value, False
+mDiff.SetProperty "PreventUnprotectedPosition", Value
 End Property
 
 Public Property Get PreventUnprotectedPosition() As Boolean
@@ -274,7 +274,7 @@ Public Property Let Size(ByVal Value As Long)
 If mSize = Value Then Exit Property
 setDirty
 mSize = Value
-mDiff.SetProperty "Size", Value, 0
+mDiff.SetProperty "Size", Value
 End Property
 
 Public Property Get Size() As Long
@@ -285,7 +285,7 @@ Public Property Let State(ByVal Value As BracketOrderStates)
 If mState = Value Then Exit Property
 setDirty
 mState = Value
-mDiff.SetProperty "State", Value, BracketOrderStates.BracketOrderStateCreated
+mDiff.SetProperty "State", Value
 End Property
 
 Public Property Get State() As BracketOrderStates
@@ -296,7 +296,7 @@ Public Property Let StopLossOrderId(ByVal Value As String)
 If mStopLossOrderId = Value Then Exit Property
 setDirty
 mStopLossOrderId = Value
-mDiff.SetProperty "StopLossOrderId", Value, ""
+mDiff.SetProperty "StopLossOrderId", Value
 End Property
 
 Public Property Get StopLossOrderId() As String
@@ -307,7 +307,7 @@ Public Property Let StopReason(ByVal Value As String)
 If mStopReason = Value Then Exit Property
 setDirty
 mStopReason = Value
-mDiff.SetProperty "StopReason", Value, ""
+mDiff.SetProperty "StopReason", Value
 End Property
 
 Public Property Get StopReason() As String
@@ -318,7 +318,7 @@ Public Property Let TargetOrderId(ByVal Value As String)
 If mTargetOrderId = Value Then Exit Property
 setDirty
 mTargetOrderId = Value
-mDiff.SetProperty "TargetOrderId", Value, ""
+mDiff.SetProperty "TargetOrderId", Value
 End Property
 
 Public Property Get TargetOrderId() As String
@@ -329,7 +329,7 @@ Public Property Let TargetReason(ByVal Value As String)
 If mTargetReason = Value Then Exit Property
 setDirty
 mTargetReason = Value
-mDiff.SetProperty "TargetReason", Value, ""
+mDiff.SetProperty "TargetReason", Value
 End Property
 
 Public Property Get TargetReason() As String
