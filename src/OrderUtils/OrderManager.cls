@@ -391,7 +391,7 @@ End If
 
 If Not lPm Is Nothing Then
     AssertArgument Not lPm.IsFinished, "Position manager of this name already exists but has been finished"
-    AssertArgument lPm.GroupName = pGroupName, "Position manager of this name already exists with a different groupname"
+    AssertArgument UCase$(lPm.GroupName) = UCase$(pGroupName), "Position manager of this name already exists with a different groupname"
     AssertArgument lPm.IsSimulated = pIsSimulated, "Position manager of this name already exists with a different IsSimulated property"
 Else
     Dim lClr As BracketOrderRecoveryCtlr

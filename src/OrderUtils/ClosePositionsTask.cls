@@ -203,7 +203,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-mGroupName = pGroupName
+mGroupName = UCase$(pGroupName)
 mUseLimitOrders = pUseLimitOrder
 mBidAskSpreadPercent = pBidAskSpreadPercent
 If (pTypes And PositionTypeLive) = PositionTypeLive Then Set mEnLive = pOrderManager.PositionManagersLive.Enumerator
@@ -224,7 +224,7 @@ Private Sub processPM( _
 Const ProcName As String = "processPM"
 On Error GoTo Err
 
-If mGroupName <> "" And (pm.GroupName <> mGroupName) Then Exit Sub
+If mGroupName <> "" And (UCase$(pm.GroupName) <> mGroupName) Then Exit Sub
 
 If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then Exit Sub
 
