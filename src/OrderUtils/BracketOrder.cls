@@ -3628,31 +3628,29 @@ If mSummary.PeggedOrdersProcessed Then Exit Sub
 
 Dim updated As Boolean
 
-If Not mStopLossOrder Is Nothing Then
-    If mStopLossOrder.Status = OrderStatuses.OrderStatusCreated Then
-        If mStopLossOrder.OrderType = OrderTypes.OrderTypeAutoStop Then
-            ' the stop Price is to be pegged to the entry Price - the
-            ' order's offset property will already contain any required
-            ' offset from that Price
-            mStopLossOrder.OrderType = OrderTypes.OrderTypeStop
-            SetNewStopLossTriggerPrice (mStopLossOrder.Offset * mContract.TickSize) + EntryOrder.LastFillPrice
-            SetNewStopLossQuantity pFillSize
-            updated = True
-        End If
-    End If
+If mStopLossOrder Is Nothing Then
+ElseIf mStopLossOrder.Status <> OrderStatuses.OrderStatusCreated Then
+ElseIf mStopLossOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then
+Else
+    ' the stop Price is to be pegged to the entry Price - the
+    ' order's offset property will already contain any required
+    ' offset from that Price
+    mStopLossOrder.OrderType = OrderTypes.OrderTypeStop
+    SetNewStopLossTriggerPrice (mStopLossOrder.Offset * mContract.TickSize) + EntryOrder.LastFillPrice
+    SetNewStopLossQuantity pFillSize
+    updated = True
 End If
-If Not mTargetOrder Is Nothing Then
-    If mTargetOrder.Status = OrderStatuses.OrderStatusCreated Then
-        If mTargetOrder.OrderType = OrderTypes.OrderTypeAutoLimit Then
-            ' the limit Price is to be pegged to the entry Price - the
-            ' order's offset property will already contain any required
-            ' offset from that Price
-            mTargetOrder.OrderType = OrderTypes.OrderTypeLimit
-            SetNewTargetPrice (mTargetOrder.Offset * mContract.TickSize) + EntryOrder.LastFillPrice
-            SetNewTargetQuantity pFillSize
-            updated = True
-        End If
-    End If
+If mTargetOrder Is Nothing Then
+ElseIf mTargetOrder.Status <> OrderStatuses.OrderStatusCreated Then
+ElseIf mTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
+Else
+    ' the limit Price is to be pegged to the entry Price - the
+    ' order's offset property will already contain any required
+    ' offset from that Price
+    mTargetOrder.OrderType = OrderTypes.OrderTypeLimit
+    SetNewTargetPrice (mTargetOrder.Offset * mContract.TickSize) + EntryOrder.LastFillPrice
+    SetNewTargetQuantity pFillSize
+    updated = True
 End If
 
 If updated Then
