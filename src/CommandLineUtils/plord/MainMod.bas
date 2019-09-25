@@ -492,13 +492,13 @@ On Error GoTo Err
 
 Dim lVar As Variant
 For Each lVar In mOrderManager.GetGroupNames
-    Dim lGroupName As String: lGroupName = lVar
+    Dim lGroupName As String: lGroupName = UCase$(lVar)
     Dim lContractProcessor As ContractProcessor
     Dim lContractName As String
-    If mGroupContractProcessors.TryItem(UCase$(lGroupName), lContractProcessor) Then
+    If mGroupContractProcessors.TryItem(lGroupName, lContractProcessor) Then
         lContractName = getContractName(lContractProcessor.Contract)
     End If
-    gWriteLineToConsole IIf(lGroupName = mGroupName, "* ", "  ") & _
+    gWriteLineToConsole IIf(lGroupName = UCase$(mGroupName), "* ", "  ") & _
                         padStringRight(lGroupName, 20) & _
                         padStringRight(lContractName, 25), _
                         True
@@ -1026,7 +1026,7 @@ If lMatch.SubMatches(0) = AllGroups Then
 ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
     lGroupName = DefaultGroupName
 Else
-    lGroupName = lMatch.SubMatches(1)
+    lGroupName = UCase$(lMatch.SubMatches(1))
 End If
     
 Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(3)) = CloseoutLimit Or _
@@ -1147,6 +1147,13 @@ End If
 If mGroupContractProcessors.TryItem(UCase$(mGroupName), mContractProcessor) Then
     mGroupName = mContractProcessor.GroupName
 Else
+    Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(mGroupName)
+    If lPMs.Count <> 0 Then
+        Dim en As Enumerator: Set en = lPMs.Enumerator
+        en.MoveNext
+        Dim lPM As PositionManager: Set lPM = en.Current
+        mGroupName = lPM.GroupName
+    End If
     Set mContractProcessor = Nothing
 End If
 
