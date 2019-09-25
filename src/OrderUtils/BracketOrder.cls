@@ -166,8 +166,6 @@ Private mNumberOfOrders                             As Long
 Private WithEvents mStateTimeoutTLI                 As TimerListItem
 Attribute mStateTimeoutTLI.VB_VarHelpID = -1
 
-Private mStartTime                                  As Date
-Private mEndTime                                    As Date
 Private mTimezoneName                               As String
 
 '@================================================================================
@@ -1904,11 +1902,11 @@ Size = mSummary.Size
 End Property
 
 Public Property Get StartTime() As Date
-StartTime = mStartTime
+StartTime = mSummary.StartTime
 End Property
 
 Public Property Get EndTime() As Date
-EndTime = mEndTime
+EndTime = mSummary.EndTime
 End Property
 
 Private Sub setState(ByVal Value As BracketOrderStates)
@@ -3679,7 +3677,7 @@ On Error GoTo Err
 ' implements IExecutionReport
 
 If mSummary.Size = 0 Then
-    mStartTime = pExec.FillTime
+    mSummary.StartTime = pExec.FillTime
     mTimezoneName = pExec.TimezoneName
 End If
 
@@ -3691,7 +3689,7 @@ Else
     SetSize Size - pExec.Quantity
 End If
     
-If Size = 0 Then mEndTime = pExec.FillTime
+If Size = 0 Then mSummary.EndTime = pExec.FillTime
 
 fireExecution pExec
 fireChange BracketOrderChangeTypes.BracketOrderSizeChanged

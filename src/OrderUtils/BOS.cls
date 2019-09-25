@@ -73,6 +73,8 @@ Private mCloseoutOrderId                            As String
 Attribute mCloseoutOrderId.VB_VarHelpID = -1
 
 Private mCreationTime                               As Date
+Private mStartTime                                  As Date
+Private mEndTime                                    As Date
 
 Private mPreventUnprotectedPosition                 As Boolean
 
@@ -286,6 +288,28 @@ If mState = Value Then Exit Property
 setDirty
 mState = Value
 mDiff.SetProperty "State", Value
+End Property
+
+Public Property Let StartTime(ByVal Value As Date)
+If mStartTime = Value Then Exit Property
+setDirty
+mStartTime = Value
+mDiff.SetProperty "StartTime", Value
+End Property
+
+Public Property Get StartTime() As Date
+StartTime = mStartTime
+End Property
+
+Public Property Let EndTime(ByVal Value As Date)
+If mEndTime = Value Then Exit Property
+setDirty
+mEndTime = Value
+mDiff.SetProperty "EndTime", Value
+End Property
+
+Public Property Get EndTime() As Date
+EndTime = mEndTime
 End Property
 
 Public Property Get State() As BracketOrderStates
