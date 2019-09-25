@@ -742,7 +742,10 @@ On Error GoTo Err
 mReader.BeginLogMessage True
 
 Dim lReqId As Long: lReqId = -1
-If (pVersion >= 7) Then lReqId = gGetCallersRequestIdFromTwsExecutionsRequestId(mReader.GetLong("lReqId"))
+If (pVersion >= 7) Then
+    lReqId = mReader.GetLong("lReqId")
+    If lReqId <> -1 Then lReqId = gGetCallersRequestIdFromTwsExecutionsRequestId(lReqId)
+End If
 
 Dim lExecution As New TwsExecution
 lExecution.OrderId = mReader.GetLong("OrderId")

@@ -98,7 +98,7 @@ Public Property Let CumBuyPrice(ByVal Value As Double)
 If mCumBuyPrice = Value Then Exit Property
 mIsDirty = True
 mCumBuyPrice = Value
-mDiff.SetProperty "CumBuyPrice", Value, 0!
+mDiff.SetProperty "CumBuyPrice", Value
 End Property
 
 Public Property Get CumBuyPrice() As Double
@@ -109,7 +109,7 @@ Public Property Let CumSellPrice(ByVal Value As Double)
 If mCumSellPrice = Value Then Exit Property
 mIsDirty = True
 mCumSellPrice = Value
-mDiff.SetProperty "CumSellPrice", Value, 0!
+mDiff.SetProperty "CumSellPrice", Value
 End Property
 
 Public Property Get CumSellPrice() As Double
@@ -128,7 +128,7 @@ Public Property Let DrawdownLastTrade(ByVal Value As Currency)
 If mDrawdownLastTrade = Value Then Exit Property
 mIsDirty = True
 mDrawdownLastTrade = Value
-mDiff.SetProperty "DrawdownLastTrade", Value, 0!
+mDiff.SetProperty "DrawdownLastTrade", Value
 End Property
 
 Public Property Get DrawdownLastTrade() As Currency
@@ -139,7 +139,7 @@ Public Property Let GroupName(ByVal Value As String)
 If mGroupName = Value Then Exit Property
 mIsDirty = True
 mGroupName = Value
-mDiff.SetProperty "GroupName", Value, ""
+mDiff.SetProperty "GroupName", Value
 End Property
 
 Public Property Get GroupName() As String
@@ -154,7 +154,7 @@ Public Property Let IsSimulated(ByVal Value As Boolean)
 If mIsSimulated = Value Then Exit Property
 mIsDirty = True
 mIsSimulated = Value
-mDiff.SetProperty "IsSimulated", Value, False
+mDiff.SetProperty "IsSimulated", Value
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -175,7 +175,7 @@ Public Property Let ProfitLastFlat(ByVal Value As Currency)
 If mProfitLastFlat = Value Then Exit Property
 mIsDirty = True
 mProfitLastFlat = Value
-mDiff.SetProperty "ProfitLastFlat", Value, 0!
+mDiff.SetProperty "ProfitLastFlat", Value
 End Property
 
 Public Property Get ProfitLastFlat() As Currency
@@ -186,7 +186,7 @@ Public Property Let ProfitLastTrade(ByVal Value As Currency)
 If mProfitLastTrade = Value Then Exit Property
 mIsDirty = True
 mProfitLastTrade = Value
-mDiff.SetProperty "ProfitLastTrade", Value, 0!
+mDiff.SetProperty "ProfitLastTrade", Value
 End Property
 
 Public Property Get ProfitLastTrade() As Currency
@@ -197,7 +197,7 @@ Public Property Let TradingSessionStartTime(ByVal Value As Date)
 If mTradingSessionStartTime = Value Then Exit Property
 mIsDirty = True
 mTradingSessionStartTime = Value
-mDiff.SetProperty "TradingSessionStartTime", Value, 0!
+mDiff.SetProperty "TradingSessionStartTime", Value
 End Property
 
 Public Property Get TradingSessionStartTime() As Date
@@ -211,6 +211,43 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+' Reset the summary to the 'base' values to make sure recovery data is
+' saved should a new bracket order be placed.
+Friend Sub ResetState()
+Const ProcName As String = "ResetState"
+On Error GoTo Err
+
+Dim lContract As IContract: Set lContract = mContract
+Set mContract = Nothing
+Contract = lContract
+
+CumBuyPrice = 0#
+CumSellPrice = 0#
+DrawdownLastTrade = 0#
+
+Dim lGroupName As String: lGroupName = mGroupName
+mGroupName = ""
+GroupName = lGroupName
+
+IsSimulated = False
+
+Dim lName As String: lName = mName
+mName = ""
+Name = lName
+
+ProfitLastFlat = 0#
+ProfitLastTrade = 0#
+
+Dim lTradingSessionStartTime As Date: lTradingSessionStartTime = mTradingSessionStartTime
+mTradingSessionStartTime = 0#
+TradingSessionStartTime = lTradingSessionStartTime
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub setClean()
 mIsDirty = False

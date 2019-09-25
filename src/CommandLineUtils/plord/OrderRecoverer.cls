@@ -46,6 +46,7 @@ Private Const ModuleName                            As String = "OrderRecoverer"
 
 Private WithEvents mTaskController                  As TaskController
 Attribute mTaskController.VB_VarHelpID = -1
+Private mOrderManager                               As OrderManager
 
 Private mSelfRef                                    As Object
 
@@ -78,6 +79,17 @@ Else
     LogMessage "Order recovery completed", True
 End If
 
+Dim lPM As PositionManager
+For Each lPM In mOrderManager.PositionManagersLive
+    Dim lBo As IBracketOrder
+    For Each lBo In lPM.BracketOrders
+        If lBo.State = BracketOrderStateSubmitted Or _
+            (lBo.State = BracketOrderStateClosed And lBo.Size <> 0) Then
+            CreateBracketProfitCalculator lBo, lPM.DataSource
+        End If
+    Next
+Next
+
 Set mSelfRef = Nothing
 
 Exit Sub
@@ -104,7 +116,8 @@ Friend Sub RecoverOrders( _
 Const ProcName As String = "RecoverOrdersFromPreviousSession"
 On Error GoTo Err
 
-Set mTaskController = pOrderManager.RecoverOrdersFromPreviousSession(pScopeName, _
+Set mOrderManager = pOrderManager
+Set mTaskController = mOrderManager.RecoverOrdersFromPreviousSession(pScopeName, _
                                                                     pDataStore, _
                                                                     pRecoveryAgent, _
                                                                     pMarketDataManager, _

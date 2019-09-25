@@ -257,6 +257,31 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
+Public Function gGetTwsContractRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersContractRequestId, "Max request id is " & MaxCallersContractRequestId
+gGetTwsContractRequestIdFromCallersRequestId = pId + BaseContractRequestId
+End Function
+
+Public Function gGetTwsExecutionsRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersExecutionsRequestId, "Max request id is " & MaxCallersExecutionsRequestId
+gGetTwsExecutionsRequestIdFromCallersRequestId = pId + BaseExecutionsRequestId
+End Function
+
+Public Function gGetTwsHistRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersHistoricalDataRequestId, "Max request id is " & MaxCallersHistoricalDataRequestId
+gGetTwsHistRequestIdFromCallersRequestId = pId + BaseHistoricalDataRequestId
+End Function
+
+Public Function gGetTwsMarketDataRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersMarketDataRequestId, "Max request id is " & MaxCallersMarketDataRequestId
+gGetTwsMarketDataRequestIdFromCallersRequestId = pId + BaseMarketDataRequestId
+End Function
+
+Public Function gGetTwsMarketDepthRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersMarketDepthRequestId, "Max request id is " & MaxCallersMarketDepthRequestId
+gGetTwsMarketDepthRequestIdFromCallersRequestId = pId + BaseMarketDepthRequestId
+End Function
+
 Public Property Get gLogger() As FormattingLogger
 If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.ibapi", ProjectName)
 Set gLogger = mLogger

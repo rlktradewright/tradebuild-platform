@@ -800,9 +800,9 @@ gLogBracketOrderMessage "Execute bracket order: " & pBracketOrder.ToString, mDat
 
 If pAddToActiveBracketOrders Then
     mActiveBracketOrders.Add pBracketOrder
-    If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
 End If
 
+If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
 setOrderRecoveryForBracketOrder pBracketOrder
 
 fireChange OrderContextActiveStateChanged

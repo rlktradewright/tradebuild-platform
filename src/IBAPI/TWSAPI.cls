@@ -596,7 +596,7 @@ If mConnectionState = TwsConnConnected Then
 
     mWriter.AddMessageId CANCEL_HISTORICAL_DATA
     mWriter.AddString VERSION, "Version"
-    mWriter.AddString getTwsHistRequestIdFromCallersRequestId(pRequestId), "Request id"
+    mWriter.AddString gGetTwsHistRequestIdFromCallersRequestId(pRequestId), "Request id"
     mWriter.Send
 End If
 
@@ -616,7 +616,7 @@ Const VERSION = 2
 
 mWriter.AddMessageId CANCEL_MKT_DATA
 mWriter.AddString VERSION, "Version"
-mWriter.AddString getTwsMarketDataRequestIdFromCallersRequestId(pTickerId), "Ticker id"
+mWriter.AddString gGetTwsMarketDataRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send
 
 Exit Sub
@@ -654,7 +654,7 @@ Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_MKT_DEPTH
 mWriter.AddString VERSION, "Version"
-mWriter.AddString getTwsMarketDepthRequestIdFromCallersRequestId(pTickerId), "Ticker id"
+mWriter.AddString gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send
 
 Exit Sub
@@ -729,7 +729,7 @@ Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_REAL_TIME_BARS
 mWriter.AddString VERSION, "Version"
-mWriter.AddString getTwsHistRequestIdFromCallersRequestId(pTickerId), "Ticker id"
+mWriter.AddString gGetTwsHistRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send True
 
 Exit Sub
@@ -1328,7 +1328,7 @@ AssertArgument pContract.Sectype <> TwsSecTypeCombo, "Combo contracts are not su
 AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
 
 Dim lApiId As Long
-lApiId = getTwsContractRequestIdFromCallersRequestId(pRequestId)
+lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
 
 gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
@@ -1393,7 +1393,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 3
 
 Dim lApiId As Long
-lApiId = getTwsExecutionsRequestIdFromCallersRequestId(pRequestId)
+lApiId = gGetTwsExecutionsRequestIdFromCallersRequestId(pRequestId)
 
 gLog "Requesting executions: requester id=" & pRequestId & "; api id=" & lApiId, ModuleName, ProcName
 
@@ -1412,7 +1412,8 @@ End If
 With theFilter
     mWriter.AddString .ClientID, "Client id"
     mWriter.AddString .AccountCode, "Account code"
-    mWriter.AddString IIf(CLng(.Time) <> 0, Format(.Time, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
+    Dim lFromTime As Date: lFromTime = ConvertDateLocalToUTC(.Time)
+    mWriter.AddString IIf(CLng(lFromTime) <> 0, Format(lFromTime, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
     mWriter.AddString .Symbol, "Symbol"
     mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
     mWriter.AddString .Exchange, "Exchange"
@@ -1512,7 +1513,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pRequest.contract.TradingClass = "" And pRequest.contract.ConId = 0), "ConId and TradingClass properties not supported"
 
 Dim lApiId As Long
-lApiId = getTwsHistRequestIdFromCallersRequestId(pRequestId)
+lApiId = gGetTwsHistRequestIdFromCallersRequestId(pRequestId)
 
 gLog "Requesting historical data for: " & UCase$(pRequest.contract.LocalSymbol) & _
             "; requester id=" & pRequestId & _
@@ -1628,7 +1629,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 10
 
 Dim lApiId As Long
-lApiId = getTwsMarketDataRequestIdFromCallersRequestId(pTickerId)
+lApiId = gGetTwsMarketDataRequestIdFromCallersRequestId(pTickerId)
 
 gLog "Requesting market data: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
@@ -1722,7 +1723,7 @@ AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.Trad
 Const VERSION = 4
 
 Dim lApiId As Long
-lApiId = getTwsMarketDepthRequestIdFromCallersRequestId(pTickerId)
+lApiId = gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId)
 
 gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
@@ -1830,7 +1831,7 @@ AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.Trad
 Const VERSION = 2
 
 Dim lApiId As Long
-lApiId = getTwsHistRequestIdFromCallersRequestId(pTickerId)
+lApiId = gGetTwsHistRequestIdFromCallersRequestId(pTickerId)
 
 gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
@@ -1931,31 +1932,6 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-Private Function getTwsContractRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersContractRequestId, "Max request id is " & MaxCallersContractRequestId
-getTwsContractRequestIdFromCallersRequestId = pId + BaseContractRequestId
-End Function
-
-Private Function getTwsExecutionsRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersExecutionsRequestId, "Max request id is " & MaxCallersExecutionsRequestId
-getTwsExecutionsRequestIdFromCallersRequestId = pId + BaseExecutionsRequestId
-End Function
-
-Private Function getTwsHistRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersHistoricalDataRequestId, "Max request id is " & MaxCallersHistoricalDataRequestId
-getTwsHistRequestIdFromCallersRequestId = pId + BaseHistoricalDataRequestId
-End Function
-
-Private Function getTwsMarketDataRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersMarketDataRequestId, "Max request id is " & MaxCallersMarketDataRequestId
-getTwsMarketDataRequestIdFromCallersRequestId = pId + BaseMarketDataRequestId
-End Function
-
-Private Function getTwsMarketDepthRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersMarketDepthRequestId, "Max request id is " & MaxCallersMarketDepthRequestId
-getTwsMarketDepthRequestIdFromCallersRequestId = pId + BaseMarketDepthRequestId
-End Function
 
 Private Function legOpenCloseToString(ByVal Value As TwsLegOpenCloseCodes) As String
 Select Case Value

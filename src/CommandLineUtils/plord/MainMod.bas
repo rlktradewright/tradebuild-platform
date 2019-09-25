@@ -185,6 +185,8 @@ Private mBatchOrders                                As Boolean
 
 Private mBracketOrderDefinitionInProgress           As Boolean
 
+Private mClientId                                   As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -495,13 +497,13 @@ On Error GoTo Err
 
 Dim lVar As Variant
 For Each lVar In mOrderManager.GetGroupNames
-    Dim lGroupName As String: lGroupName = lVar
+    Dim lGroupName As String: lGroupName = UCase$(lVar)
     Dim lContractProcessor As ContractProcessor
     Dim lContractName As String
-    If mGroupContractProcessors.TryItem(UCase$(lGroupName), lContractProcessor) Then
+    If mGroupContractProcessors.TryItem(lGroupName, lContractProcessor) Then
         lContractName = getContractName(lContractProcessor.Contract)
     End If
-    gWriteLineToConsole IIf(lGroupName = mGroupName, "* ", "  ") & _
+    gWriteLineToConsole IIf(lGroupName = UCase$(mGroupName), "* ", "  ") & _
                         padStringRight(lGroupName, 20) & _
                         padStringRight(lContractName, 25), _
                         True
@@ -1030,7 +1032,7 @@ If lMatch.SubMatches(0) = AllGroups Then
 ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
     lGroupName = DefaultGroupName
 Else
-    lGroupName = lMatch.SubMatches(1)
+    lGroupName = UCase$(lMatch.SubMatches(1))
 End If
     
 Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(3)) = CloseoutLimit Or _
@@ -1151,6 +1153,13 @@ End If
 If mGroupContractProcessors.TryItem(UCase$(mGroupName), mContractProcessor) Then
     mGroupName = mContractProcessor.GroupName
 Else
+    Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(mGroupName)
+    If lPMs.Count <> 0 Then
+        Dim en As Enumerator: Set en = lPMs.Enumerator
+        en.MoveNext
+        Dim lPM As PositionManager: Set lPM = en.Current
+        mGroupName = lPM.GroupName
+    End If
     Set mContractProcessor = Nothing
 End If
 
@@ -1363,33 +1372,41 @@ If lResultsPath = "" Then lResultsPath = ApplicationSettingsFolder & "\Results\"
 If Right$(lResultsPath, 1) <> "\" Then lResultsPath = lResultsPath & "\"
 
 Dim lFilenameSuffix As String
-lFilenameSuffix = FormatTimestamp(GetTimestamp, TimestampDateAndTime + TimestampNoMillisecs)
+lFilenameSuffix = FormatTimestamp(GetTimestamp, TimestampDateOnly + TimestampNoMillisecs)
 
 Dim lLogfile As FileLogListener
-Set lLogfile = CreateFileLogListener(lResultsPath & "Logs\" & _
-                                        ProjectName & _
-                                        "-" & lFilenameSuffix & ".log", _
-                                    includeTimestamp:=True, _
-                                    includeLogLevel:=False)
+Set lLogfile = CreateFileLogListener( _
+                    lResultsPath & "Logs\" & _
+                        ProjectName & _
+                        "(" & mClientId & ")" & _
+                        "-" & lFilenameSuffix & _
+                        ".log", _
+                    includeTimestamp:=True, _
+                    includeLogLevel:=False)
 GetLogger("log").AddLogListener lLogfile
 GetLogger("position.order").AddLogListener lLogfile
 GetLogger("position.simulatedorder").AddLogListener lLogfile
 
 If mMonitor Then
-    Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
-                                            ProjectName & _
-                                            "-" & lFilenameSuffix & _
-                                            "-Executions" & ".log", _
-                                        includeTimestamp:=False, _
-                                        includeLogLevel:=False)
+    Set lLogfile = CreateFileLogListener( _
+                    lResultsPath & "Orders\" & _
+                        ProjectName & _
+                        "(" & mClientId & ")" & _
+                        "-" & lFilenameSuffix & _
+                        "-Executions" & _
+                        ".log", _
+                    includeTimestamp:=False, _
+                    includeLogLevel:=False)
     GetLogger("position.orderdetail").AddLogListener lLogfile
     
-    Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
-                                            ProjectName & _
-                                            "-" & lFilenameSuffix & _
-                                            "-BracketOrders" & ".log", _
-                                        includeTimestamp:=False, _
-                                        includeLogLevel:=False)
+    Set lLogfile = CreateFileLogListener( _
+                    lResultsPath & "Orders\" & _
+                        ProjectName & _
+                        "(" & mClientId & ")" & _
+                        "-" & lFilenameSuffix & _
+                        "-BracketOrders" & ".log", _
+                    includeTimestamp:=False, _
+                    includeLogLevel:=False)
     GetLogger("position.bracketorderprofilestring").AddLogListener lLogfile
 End If
 
@@ -1432,12 +1449,14 @@ If clientId = "" Then
 ElseIf Not IsInteger(clientId, 0, 999999999) Then
     gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999", True
     setupTwsApi = False
+Else
+    mClientId = CLng(clientId)
 End If
 
 Dim lTwsClient As Client
 Set lTwsClient = GetClient(server, _
                         CLng(port), _
-                        CLng(clientId), _
+                        mClientId, _
                         pLogApiMessages:=pLogApiMessages, _
                         pLogRawApiMessages:=pLogRawApiMessages, _
                         pLogApiMessageStats:=pLogApiMessageStats)

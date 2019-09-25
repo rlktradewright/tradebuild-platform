@@ -1535,6 +1535,14 @@ If needExistingBracketOrders Then
     SaveRecoveryInfo
 Else
     DeleteRecoveryInfo
+    
+    ' at this point, the PositionManager is in the state it was when last used
+    ' but has been marked as 'clean' in IRecoverable_LoadRecoveryData, so reset it.
+    mSummary.ResetState
+    
+    ' Note that we don't call SaveRecoveryInfo here because we don't want
+    ' to write recovery data until we know we need it (ie when the first new
+    ' bracket order is added)
 End If
 
 Exit Sub

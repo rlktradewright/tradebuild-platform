@@ -149,10 +149,10 @@ On Error GoTo Err
 
 Static sExecutions As New EnumerableCollection
 
-If pReqId = ReconnectionExecutionsRequestId Then
+'If pReqId = ReconnectionExecutionsRequestId Then
     If sExecutions.Contains(pExecution.ExecId) Then Exit Sub
     sExecutions.Add pExecution, pExecution.ExecId
-End If
+'End If
 
 Dim lOrder As IOrder
 Dim lorderId As String
@@ -194,6 +194,10 @@ If Not lOrder Is Nothing Then
 Else
     ' this must be an execution from a previous session
     If Not mOrderRecoveryListener Is Nothing Then mOrderRecoveryListener.NotifyExecutionReport lExecReport
+End If
+
+If lExecReport.FillTime > mStartOrderRecoveryFrom Then
+    mStartOrderRecoveryFrom = lExecReport.FillTime - 2 / 86400
 End If
 
 Exit Sub
@@ -239,6 +243,7 @@ With lOrderReport
     .Id = lorderId
     .IgnoreRegularTradingHours = pOrder.OutsideRth
     .LimitPrice = pOrder.LmtPrice
+    .Message = pOrderState.WarningText
     .MinimumQuantity = pOrder.MinQty
     .NbboPriceCap = pOrder.NbboPriceCap
     .OrderType = gTwsOrderTypeToOrderType(pOrder.OrderType)
@@ -247,6 +252,7 @@ With lOrderReport
     .OverrideConstraints = pOrder.OverridePercentageConstraints
     .Quantity = pOrder.TotalQuantity
     .SettlingFirm = pOrder.SettlingFirm
+    .Status = gOrderStatusFromString(pOrderState.Status)
     .StopTriggerMethod = gTwsTriggerMethodToStopTriggerMethod(pOrder.TriggerMethod)
     .SweepToFill = pOrder.SweepToFill
     .TimeInForce = pOrder.Tif
@@ -435,6 +441,9 @@ lOrder.ParentId = pParentId
 lOrder.OcaGroup = pOcaGroup
 
 If mTwsAPI.ConnectionState = TwsConnConnected Then
+    If mStartOrderRecoveryFrom = 0# Then
+        mStartOrderRecoveryFrom = GetTimestamp
+    End If
     mTwsAPI.PlaceOrder lOrder, pContract
 Else
     queueOrder lOrder, pContract
@@ -477,6 +486,8 @@ End Sub
 Private Sub doStartOrderRecovery(pReqId As Long)
 Const ProcName As String = "doStartOrderRecovery"
 On Error GoTo Err
+
+If CDbl(mStartOrderRecoveryFrom) = 0# Then Exit Sub
 
 gLog "Requesting open orders and executions", ModuleName, ProcName
 
@@ -585,6 +596,9 @@ Set en = mQueuedOrders.Enumerator
 Do While en.MoveNext
     Dim lEntry As OrderQueueEntry
     Set lEntry = en.Current
+    If mStartOrderRecoveryFrom = 0# Then
+        mStartOrderRecoveryFrom = GetTimestamp
+    End If
     mTwsAPI.PlaceOrder lEntry.Order, lEntry.Contract
     en.Remove
 Loop
