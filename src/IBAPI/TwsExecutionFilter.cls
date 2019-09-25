@@ -69,12 +69,12 @@ Public Property Get Symbol() As String
 Symbol = mSymbol
 End Property
 
-Public Property Let time(ByVal Value As Date)
+Public Property Let Time(ByVal Value As Date)
 mTime = Value
 End Property
 
-Public Property Get time() As Date
-time = mTime
+Public Property Get Time() As Date
+Time = mTime
 End Property
 
 
