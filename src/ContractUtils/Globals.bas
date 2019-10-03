@@ -387,7 +387,8 @@ End Function
 
 Public Function gGetTickSizeForStocks( _
                 ByVal pExchange As String, _
-                ByVal pCurrentPrice As Double) As Double
+                ByVal pCurrentPrice As Double, _
+                ByVal pDefaultTickSize As Double) As Double
 Dim lTickSize As Double
 
 Select Case UCase$(pExchange)
@@ -477,6 +478,8 @@ Case "VENTURE"
     Else
         lTickSize = 0.01
     End If
+Case Else
+    lTickSize = pDefaultTickSize
 End Select
 
 gGetTickSizeForStocks = lTickSize

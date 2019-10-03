@@ -321,6 +321,37 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gBracketOrderToStringWithOffsets( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pIncludeOffsets As Boolean) As String
+Const ProcName As String = "gBracketOrderToStringWithOffsets"
+On Error GoTo Err
+
+Dim s As String
+s = gOrderActionToString(pBracketOrder.EntryOrder.Action) & " " & _
+    pBracketOrder.EntryOrder.Quantity & " " & _
+    gGetOrderTypeAndPricesString(pBracketOrder.EntryOrder, pBracketOrder.Contract, pIncludeOffsets)
+
+s = s & "; "
+If Not pBracketOrder.StopLossOrder Is Nothing Then
+    s = s & _
+        gGetOrderTypeAndPricesString(pBracketOrder.StopLossOrder, pBracketOrder.Contract, pIncludeOffsets)
+End If
+
+s = s & "; "
+If Not pBracketOrder.TargetOrder Is Nothing Then
+    s = s & _
+        gGetOrderTypeAndPricesString(pBracketOrder.TargetOrder, pBracketOrder.Contract, pIncludeOffsets)
+End If
+
+gBracketOrderToStringWithOffsets = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gBracketStopLossTypeFromString(ByVal Value As String) As BracketStopLossTypes
 Const ProcName As String = "gBracketStopLossTypeToString"
 On Error GoTo Err
@@ -338,6 +369,10 @@ Case "ASK", "ASK PRICE"
     gBracketStopLossTypeFromString = BracketStopLossTypeAsk
 Case "TRADE", "LAST TRADE PRICE"
     gBracketStopLossTypeFromString = BracketStopLossTypeLast
+Case "TRAIL"
+    gBracketStopLossTypeFromString = BracketStopLossTypeTrail
+Case "TRAILLMT"
+    gBracketStopLossTypeFromString = BracketStopLossTypeTrailLimit
 Case "AUTO"
     gBracketStopLossTypeFromString = BracketStopLossTypeAuto
 Case Else
@@ -362,6 +397,10 @@ Case BracketStopLossTypeStop
     gBracketStopLossTypeToOrderType = OrderTypeStop
 Case BracketStopLossTypeStopLimit
     gBracketStopLossTypeToOrderType = OrderTypeStopLimit
+Case BracketStopLossTypeTrail
+    gBracketStopLossTypeToOrderType = OrderTypeTrail
+Case BracketStopLossTypeTrailLimit
+    gBracketStopLossTypeToOrderType = OrderTypeTrailLimit
 Case BracketStopLossTypeBid
     gBracketStopLossTypeToOrderType = OrderTypeStop
 Case BracketStopLossTypeAsk
@@ -584,7 +623,8 @@ End Function
 
 Public Function gGetOrderTypeAndPricesString( _
                 ByVal pOrder As IOrder, _
-                ByVal pContract As IContract) As String
+                ByVal pContract As IContract, _
+                Optional ByVal pIncludeOffsets As Boolean = False) As String
 Const ProcName As String = "gGetOrderTypeAndPricesString"
 On Error GoTo Err
 
@@ -596,14 +636,30 @@ Case OrderTypeLimit, _
         OrderTypeLimitOnClose, _
         OrderTypeMarketToLimit, _
         OrderTypeLimitOnOpen
-    s = s & " " & gPriceToString(pOrder.LimitPrice, pContract)
+    s = s & " " & gPriceToString(pOrder.LimitPrice, _
+                                pContract, _
+                                pOrder.LimitPriceOffset, _
+                                pOrder.LimitPriceOffsetType, _
+                                pIncludeOffsets)
 Case OrderTypeStop, _
         OrderTypeMarketIfTouched
-    s = s & " " & gPriceToString(pOrder.TriggerPrice, pContract)
+    s = s & " " & gPriceToString(pOrder.TriggerPrice, _
+                                pContract, _
+                                pOrder.TriggerPriceOffset, _
+                                pOrder.TriggerPriceOffset, _
+                                pIncludeOffsets)
 Case OrderTypeStopLimit, _
         OrderTypeLimitIfTouched
-    s = s & " " & gPriceToString(pOrder.LimitPrice, pContract) & _
-        " " & gPriceToString(pOrder.TriggerPrice, pContract)
+    s = s & " " & gPriceToString(pOrder.LimitPrice, _
+                                pContract, _
+                                pOrder.LimitPriceOffset, _
+                                pOrder.LimitPriceOffsetType, _
+                                pIncludeOffsets) & _
+        " " & gPriceToString(pOrder.TriggerPrice, _
+                                pContract, _
+                                pOrder.TriggerPriceOffset, _
+                                pOrder.TriggerPriceOffset, _
+                                pIncludeOffsets)
 Case OrderTypeTrail
 
 Case OrderTypeRelative
@@ -613,9 +669,17 @@ Case OrderTypeVWAP
 Case OrderTypeQuote
 
 Case OrderTypeAutoStop
-
+    s = s & " " & gPriceToString(MaxDouble, _
+                                pContract, _
+                                pOrder.TriggerPriceOffset, _
+                                pOrder.TriggerPriceOffsetType, _
+                                True)
 Case OrderTypeAutoLimit
-
+    s = s & " " & gPriceToString(MaxDouble, _
+                                pContract, _
+                                pOrder.LimitPriceOffset, _
+                                pOrder.LimitPriceOffsetType, _
+                                True)
 Case OrderTypeAdjust
 
 Case OrderTypeAlert
@@ -628,6 +692,46 @@ Case OrderTypeMarketOnOpen
 
 Case OrderTypePeggedToPrimary
 
+Case BracketEntryTypeAsk, _
+        BracketEntryTypeBid, _
+        BracketEntryTypeLast, _
+        BracketStopLossTypeAsk, _
+        BracketStopLossTypeBid, _
+        BracketStopLossTypeLast, _
+        BracketTargetTypeAsk, _
+        BracketTargetTypeBid, _
+        BracketTargetTypeLast
+    If pIncludeOffsets Then
+        s = s & _
+            gPriceToString(MaxDouble, _
+                            pContract, _
+                            pOrder.LimitPriceOffset, _
+                            pOrder.LimitPriceOffsetType, _
+                            True) & _
+            gPriceToString(MaxDouble, _
+                            pContract, _
+                            pOrder.TriggerPriceOffset, _
+                            pOrder.TriggerPriceOffsetType, _
+                            True)
+    End If
+Case BracketStopLossTypeAuto
+    If pIncludeOffsets Then
+        s = s & _
+            gPriceToString(MaxDouble, _
+                            pContract, _
+                            pOrder.TriggerPriceOffset, _
+                            pOrder.TriggerPriceOffsetType, _
+                            True)
+    End If
+Case BracketTargetTypeAuto
+    If pIncludeOffsets Then
+        s = s & _
+            gPriceToString(MaxDouble, _
+                            pContract, _
+                            pOrder.LimitPriceOffset, _
+                            pOrder.LimitPriceOffsetType, _
+                            True)
+    End If
 End Select
 
 gGetOrderTypeAndPricesString = s
@@ -1341,6 +1445,14 @@ Case OrderTypes.OrderTypeAutoLimit
     gOrderTypeToShortString = "AUTOLMT"
 Case OrderTypes.OrderTypeAutoStop
     gOrderTypeToShortString = "AUTOSTP"
+Case BracketEntryTypeAsk, BracketStopLossTypeAsk, BracketTargetTypeAsk
+    gOrderTypeToShortString = "ASK"
+Case BracketEntryTypeBid, BracketStopLossTypeBid, BracketTargetTypeBid
+    gOrderTypeToShortString = "BID"
+Case BracketEntryTypeLast, BracketStopLossTypeBid, BracketTargetTypeBid
+    gOrderTypeToShortString = "LAST"
+Case BracketStopLossTypeAuto, BracketTargetTypeAuto
+    gOrderTypeToShortString = "AUTO"
 Case Else
     AssertArgument False, "Value is not a valid Order Type"
 End Select
@@ -1351,13 +1463,55 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gPriceOffsetToString( _
+                ByVal pOffset As Double, _
+                ByVal pOffsetType As PriceOffsetTypes)
+Select Case pOffsetType
+Case PriceOffsetTypeNone
+    gPriceOffsetToString = ""
+Case PriceOffsetTypeIncrement
+    gPriceOffsetToString = "[" & pOffset & "]"
+Case PriceOffsetTypeNumberOfTicks
+    gPriceOffsetToString = "[" & CInt(pOffset) & "T]"
+Case PriceOffsetTypeBidAskPercent
+    gPriceOffsetToString = "[" & CInt(pOffset) & "%]"
+Case Else
+    AssertArgument False, "Value is not a valid Price Offset Type"
+End Select
+End Function
+
+Public Function gPriceOffsetTypeToString( _
+                ByVal pOffsetType As PriceOffsetTypes)
+Select Case pOffsetType
+Case PriceOffsetTypeNone
+    gPriceOffsetTypeToString = "N/A"
+Case PriceOffsetTypeIncrement
+    gPriceOffsetTypeToString = ""
+Case PriceOffsetTypeNumberOfTicks
+    gPriceOffsetTypeToString = "T"
+Case PriceOffsetTypeBidAskPercent
+    gPriceOffsetTypeToString = "%"
+Case Else
+    AssertArgument False, "Value is not a valid Price Offset Type"
+End Select
+End Function
+
 Public Function gPriceToString( _
                 ByVal pPrice As Double, _
-                ByVal pContract As IContract) As String
+                ByVal pContract As IContract, _
+                Optional ByVal pOffset As Double = 0#, _
+                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone, _
+                Optional ByVal pIncludeOffset As Boolean = False) As String
 Const ProcName As String = "gPriceToString"
 On Error GoTo Err
 
-gPriceToString = FormatPrice(pPrice, pContract.Specifier.SecType, pContract.TickSize)
+If pPrice <> MaxDouble Then
+    gPriceToString = FormatPrice(pPrice, pContract.Specifier.SecType, pContract.TickSize)
+End If
+If pIncludeOffset Then
+    gPriceToString = gPriceToString & _
+                    gPriceOffsetToString(pOffset, pOffsetType)
+End If
 
 Exit Function
 
@@ -1412,9 +1566,11 @@ With pTargetOrder
     .IsSimulated = pSourceOrder.IsSimulated
     .LastFillPrice = pSourceOrder.LastFillPrice
     .LimitPrice = pSourceOrder.LimitPrice
+    .LimitPriceOffset = pSourceOrder.LimitPriceOffset
+    .LimitPriceOffsetType = pSourceOrder.LimitPriceOffsetType
     .MinimumQuantity = pSourceOrder.MinimumQuantity
     .NbboPriceCap = pSourceOrder.NbboPriceCap
-    .Offset = pSourceOrder.Offset
+'    .Offset = pSourceOrder.Offset
     .Origin = pSourceOrder.Origin
     .OriginatorRef = pSourceOrder.OriginatorRef
     .OverrideConstraints = pSourceOrder.OverrideConstraints
@@ -1427,6 +1583,8 @@ With pTargetOrder
     .SweepToFill = pSourceOrder.SweepToFill
     .TimeInForce = pSourceOrder.TimeInForce
     .TriggerPrice = pSourceOrder.TriggerPrice
+    .TriggerPriceOffset = pSourceOrder.TriggerPriceOffset
+    .TriggerPriceOffsetType = pSourceOrder.TriggerPriceOffsetType
 
     ' do this last to prevent status influencing whether attributes are modifiable
     .Status = pSourceOrder.Status

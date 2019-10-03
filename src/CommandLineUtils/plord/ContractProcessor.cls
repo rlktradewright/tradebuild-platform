@@ -301,7 +301,7 @@ mBOSpec.EntryType = getEntryOrderType(lClp.Arg(0))
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.EntryPrice = CDbl(lClp.SwitchValue(PriceSwitch))
+If lClp.Switch(PriceSwitch) Then mBOSpec.EntryLimitPrice = CDbl(lClp.SwitchValue(PriceSwitch))
 
 lSwitchName = TriggerPriceSwitch
 If lClp.Switch(TriggerPriceSwitch) Then
@@ -311,7 +311,12 @@ ElseIf lClp.Switch(TriggerPriceSwitch1) Then
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.EntryOffset = parseOffset(lClp.SwitchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then
+    Dim lOffsetType As PriceOffsetTypes
+    mBOSpec.EntryLimitPriceOffset = parseOffset(lClp.SwitchValue(OffsetSwitch), _
+                                        lOffsetType)
+    mBOSpec.EntryLimitPriceOffsetType = lOffsetType
+End If
 
 lSwitchName = TIFSwitch
 If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
@@ -352,7 +357,7 @@ mBOSpec.StopLossType = getStopLossOrderType(lClp.Arg(0))
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.StopLossPrice = CDbl(lClp.SwitchValue(PriceSwitch))
+If lClp.Switch(PriceSwitch) Then mBOSpec.StopLossLimitPrice = CDbl(lClp.SwitchValue(PriceSwitch))
 
 lSwitchName = TriggerPriceSwitch
 If lClp.Switch(TriggerPriceSwitch) Then
@@ -362,7 +367,12 @@ ElseIf lClp.Switch(TriggerPriceSwitch1) Then
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.StopLossOffset = parseOffset(lClp.SwitchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then
+    Dim lOffsetType As PriceOffsetTypes
+    mBOSpec.StopLossTriggerPriceOffset = parseOffset(lClp.SwitchValue(OffsetSwitch), _
+                                        lOffsetType)
+    mBOSpec.StopLossTriggerPriceOffsetType = lOffsetType
+End If
 
 lSwitchName = ReasonSwitch
 If lClp.Switch(ReasonSwitch) Then mBOSpec.StopLossReason = lClp.SwitchValue(ReasonSwitch)
@@ -403,7 +413,7 @@ If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument,
 
 Dim lSwitchName As String
 lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.TargetPrice = CDbl(lClp.SwitchValue(PriceSwitch))
+If lClp.Switch(PriceSwitch) Then mBOSpec.TargetLimitPrice = CDbl(lClp.SwitchValue(PriceSwitch))
 
 lSwitchName = TriggerPriceSwitch
 If lClp.Switch(TriggerPriceSwitch) Then
@@ -413,7 +423,12 @@ ElseIf lClp.Switch(TriggerPriceSwitch1) Then
 End If
 
 lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then mBOSpec.TargetOffset = parseOffset(lClp.SwitchValue(OffsetSwitch))
+If lClp.Switch(OffsetSwitch) Then
+    Dim lOffsetType As PriceOffsetTypes
+    mBOSpec.TargetLimitPriceOffset = parseOffset(lClp.SwitchValue(OffsetSwitch), _
+                                        lOffsetType)
+    mBOSpec.TargetLimitPriceOffsetType = lOffsetType
+End If
 
 lSwitchName = ReasonSwitch
 If lClp.Switch(ReasonSwitch) Then mBOSpec.TargetReason = lClp.SwitchValue(ReasonSwitch)
@@ -533,14 +548,24 @@ Else
 End If
 End Function
 
-Private Function parseOffset(ByVal pValue As String) As Long
+Private Function parseOffset( _
+                ByVal pValue As String, _
+                ByRef pOffsetType As PriceOffsetTypes) As Double
 If UCase$(Right$(Trim$(pValue), 1)) = TickDesignator Then
     Dim numTicks As String
     numTicks = Left$(pValue, Len(pValue) - 1)
     If Not IsInteger(numTicks) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
     parseOffset = CLng(numTicks)
+    pOffsetType = PriceOffsetTypeNumberOfTicks
+ElseIf UCase$(Right$(Trim$(pValue), 1)) = TickDesignator Then
+    Dim numPercent As String
+    numPercent = Left$(pValue, Len(pValue) - 1)
+    If Not IsInteger(numPercent) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
+    parseOffset = CLng(numPercent)
+    pOffsetType = PriceOffsetTypeBidAskPercent
 Else
-    parseOffset = CLng(CDbl(pValue) / mContract.TickSize)
+    parseOffset = CDbl(pValue)
+    pOffsetType = PriceOffsetTypeIncrement
 End If
 End Function
 
@@ -589,11 +614,11 @@ If lPriceOrOffset <> "" Then
             BracketEntryTypeLimitOnClose, _
             BracketEntryTypeLimitIfTouched, _
             BracketEntryTypeStopLimit
-        mBOSpec.EntryPrice = CDbl(lPriceOrOffset)
+        mBOSpec.EntryLimitPrice = CDbl(lPriceOrOffset)
     Case BracketEntryTypeBid, _
             BracketEntryTypeAsk, _
             BracketEntryTypeLast
-        mBOSpec.EntryOffset = parseOffset(lPriceOrOffset)
+        mBOSpec.EntryLimitPriceOffset = parseOffset(lPriceOrOffset, mBOSpec.EntryLimitPriceOffsetType)
     Case Else
         processBuyOrSellCommand = False
         gWriteErrorLine "Price must not be specified for this order type", True

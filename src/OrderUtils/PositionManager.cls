@@ -418,7 +418,7 @@ If mContractFuture Is Nothing Then
     Set mContractFuture = lBuilder.Future
 End If
 
-mSummary.setClean
+mSummary.SetClean
 
 init
 
@@ -1859,7 +1859,7 @@ If mRecoverableObjectListeners Is Nothing Or mRecoverableObjectListeners.Count =
 
 mInitialRecoveryDataSaved = True
 fireRecoveryDataChanged
-mSummary.setClean
+mSummary.SetClean
 
 Exit Sub
 

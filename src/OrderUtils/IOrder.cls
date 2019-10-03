@@ -204,6 +204,18 @@ End Property
 Public Property Get LimitPrice() As Double
 End Property
 
+Public Property Let LimitPriceOffset(ByVal Value As Double)
+End Property
+
+Public Property Get LimitPriceOffset() As Double
+End Property
+
+Public Property Let LimitPriceOffsetType(ByVal Value As PriceOffsetTypes)
+End Property
+
+Public Property Get LimitPriceOffsetType() As PriceOffsetTypes
+End Property
+
 Public Property Let Message(ByVal Value As String)
 End Property
 
@@ -220,12 +232,6 @@ Public Property Let NbboPriceCap(ByVal Value As Double)
 End Property
 
 Public Property Get NbboPriceCap() As Double
-End Property
-
-Public Property Let Offset(ByVal Value As Long)
-End Property
-
-Public Property Get Offset() As Long
 End Property
 
 Public Property Get OrderContext() As OrderContext
@@ -319,6 +325,18 @@ Public Property Let TriggerPrice(ByVal Value As Double)
 End Property
 
 Public Property Get TriggerPrice() As Double
+End Property
+
+Public Property Let TriggerPriceOffset(ByVal Value As Double)
+End Property
+
+Public Property Get TriggerPriceOffset() As Double
+End Property
+
+Public Property Let TriggerPriceOffsetType(ByVal Value As PriceOffsetTypes)
+End Property
+
+Public Property Get TriggerPriceOffsetType() As PriceOffsetTypes
 End Property
 
 '@================================================================================

@@ -489,6 +489,22 @@ Private Property Get IOrder_LimitPrice() As Double
 IOrder_LimitPrice = mSummary.LimitPrice
 End Property
 
+Private Property Let IOrder_LimitPriceOffset(ByVal Value As Double)
+LimitPriceOffset = Value
+End Property
+
+Private Property Get IOrder_LimitPriceOffset() As Double
+IOrder_LimitPriceOffset = LimitPriceOffset
+End Property
+
+Private Property Let IOrder_LimitPriceOffsetType(ByVal Value As PriceOffsetTypes)
+LimitPriceOffsetType = Value
+End Property
+
+Private Property Get IOrder_LimitPriceOffsetType() As PriceOffsetTypes
+IOrder_LimitPriceOffsetType = LimitPriceOffsetType
+End Property
+
 Private Property Let IOrder_Message(ByVal Value As String)
 Const ProcName As String = "IOrder_Message"
 On Error GoTo Err
@@ -565,21 +581,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let IOrder_Offset(ByVal Value As Long)
-Const ProcName As String = "IOrder_Offset"
-On Error GoTo Err
-
-Offset = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Private Property Get IOrder_Offset() As Long
-IOrder_Offset = Offset
-End Property
+'Private Property Let IOrder_Offset(ByVal Value As Long)
+'Const ProcName As String = "IOrder_Offset"
+'On Error GoTo Err
+'
+'Offset = Value
+'
+'Exit Property
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Property
+'
+'Private Property Get IOrder_Offset() As Long
+'IOrder_Offset = Offset
+'End Property
 
 Private Property Get IOrder_OrderContext() As OrderContext
 Set IOrder_OrderContext = OrderContext
@@ -829,6 +845,22 @@ Private Property Get IOrder_TriggerPrice() As Double
 IOrder_TriggerPrice = mSummary.TriggerPrice
 End Property
 
+Private Property Let IOrder_TriggerPriceOffset(ByVal Value As Double)
+TriggerPriceOffset = Value
+End Property
+
+Private Property Get IOrder_TriggerPriceOffset() As Double
+IOrder_TriggerPriceOffset = TriggerPriceOffset
+End Property
+
+Private Property Let IOrder_TriggerPriceOffsetType(ByVal Value As PriceOffsetTypes)
+TriggerPriceOffsetType = Value
+End Property
+
+Private Property Get IOrder_TriggerPriceOffsetType() As PriceOffsetTypes
+IOrder_TriggerPriceOffsetType = TriggerPriceOffsetType
+End Property
+
 '@================================================================================
 ' IRecoverable Interface Members
 '@================================================================================
@@ -869,7 +901,8 @@ If mSummary.Id = "" Then
 End If
 lSummary.Diff.UpdateHost mSummary
 
-mSummary.setClean
+mSummary.SetClean
+SetClean
 
 mNeedsRecovery = IsActive
 
@@ -1273,6 +1306,42 @@ Public Property Get LimitPrice() As Double
 LimitPrice = mSummary.LimitPrice
 End Property
 
+Public Property Let LimitPriceOffset(ByVal Value As Double)
+Const ProcName As String = "LimitPriceOffset"
+On Error GoTo Err
+
+If Value = mSummary.LimitPriceOffset Then Exit Property
+setDirty
+mSummary.LimitPriceOffset = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get LimitPriceOffset() As Double
+LimitPriceOffset = mSummary.LimitPriceOffset
+End Property
+
+Public Property Let LimitPriceOffsetType(ByVal Value As PriceOffsetTypes)
+Const ProcName As String = "LimitPriceOffsetType"
+On Error GoTo Err
+
+If Value = mSummary.LimitPriceOffsetType Then Exit Property
+setDirty
+mSummary.LimitPriceOffsetType = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get LimitPriceOffsetType() As PriceOffsetTypes
+LimitPriceOffsetType = mSummary.LimitPriceOffsetType
+End Property
+
 Public Property Let Message(ByVal Value As String)
 setDirty
 mSummary.ErrorMessage = ""
@@ -1326,13 +1395,13 @@ Friend Property Get NeedsRecovery() As Boolean
 NeedsRecovery = mNeedsRecovery
 End Property
 
-Friend Property Let Offset(ByVal Value As Long)
-mSummary.Offset = Value
-End Property
-
-Friend Property Get Offset() As Long
-Offset = mSummary.Offset
-End Property
+'Friend Property Let Offset(ByVal Value As Long)
+'mSummary.Offset = Value
+'End Property
+'
+'Friend Property Get Offset() As Long
+'Offset = mSummary.Offset
+'End Property
 
 Public Property Get OrderContext() As OrderContext
 Set OrderContext = mOrderContext
@@ -1611,6 +1680,42 @@ End Property
 
 Public Property Get TriggerPrice() As Double
 TriggerPrice = mSummary.TriggerPrice
+End Property
+
+Public Property Let TriggerPriceOffset(ByVal Value As Double)
+Const ProcName As String = "TriggerPriceOffset"
+On Error GoTo Err
+
+If Value = mSummary.TriggerPriceOffset Then Exit Property
+setDirty
+mSummary.TriggerPriceOffset = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TriggerPriceOffset() As Double
+TriggerPriceOffset = mSummary.TriggerPriceOffset
+End Property
+
+Public Property Let TriggerPriceOffsetType(ByVal Value As PriceOffsetTypes)
+Const ProcName As String = "TriggerPriceOffsetType"
+On Error GoTo Err
+
+If Value = mSummary.TriggerPriceOffsetType Then Exit Property
+setDirty
+mSummary.TriggerPriceOffsetType = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TriggerPriceOffsetType() As PriceOffsetTypes
+TriggerPriceOffsetType = mSummary.TriggerPriceOffsetType
 End Property
 
 '@================================================================================
@@ -1904,7 +2009,7 @@ End Sub
 ' Marks this order as clean, ie all changes have been either
 ' actioned or cancelled.
 '@/
-Public Sub setClean()
+Public Sub SetClean()
 Const ProcName As String = "SetClean"
 On Error GoTo Err
 
@@ -2072,7 +2177,7 @@ If Not mSummary.IsDirty Then Exit Sub
 
 fireRecoveryDataChanged
 
-mSummary.setClean
+mSummary.SetClean
 
 Exit Sub
 

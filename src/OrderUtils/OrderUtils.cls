@@ -90,6 +90,8 @@ Public Enum BracketStopLossTypes
     BracketStopLossTypeNone = 0
     BracketStopLossTypeStop = &H20&
     BracketStopLossTypeStopLimit = &H40&
+    BracketStopLossTypeTrail = &H80&
+    BracketStopLossTypeTrailLimit = &H40000
     BracketStopLossTypeBid = &H1000000
     BracketStopLossTypeAsk = &H2000000
     BracketStopLossTypeLast = &H4000000
@@ -99,13 +101,12 @@ End Enum
 Public Enum BracketTargetTypes
     BracketTargetTypeNone = 0
     BracketTargetTypeLimit = 4
-    BracketTargetTypeMarketToLimit = &H400&
     BracketTargetTypeLimitIfTouched = &H10000
     BracketTargetTypeMarketIfTouched = &H20000
-    BracketTargetTypeBid = &H1000000
-    BracketTargetTypeAsk = &H2000000
-    BracketTargetTypeLast = &H4000000
-    BracketTargetTypeAuto = &H8000000
+    BracketTargetTypeBid = &H10000000
+    BracketTargetTypeAsk = &H20000000
+    BracketTargetTypeLast = &H40000000
+    BracketTargetTypeAuto = &H80000000
 End Enum
 
 Public Enum OrderActions
@@ -273,6 +274,13 @@ Public Enum PositionTypes
     PositionTypeLive = 1
     PositionTypeSimulated = 2
     PositionTypeAll = 3
+End Enum
+
+Public Enum PriceOffsetTypes
+    PriceOffsetTypeNone = 0
+    PriceOffsetTypeIncrement
+    PriceOffsetTypeNumberOfTicks
+    PriceOffsetTypeBidAskPercent
 End Enum
 
 Public Enum ProfitTypes

@@ -49,17 +49,26 @@ Private Const ModuleName                            As String = "BracketOrderSpe
 Public Action                                       As OrderActions
 Public Quantity                                     As Long
 Public EntryType                                    As BracketEntryTypes
-Public EntryPrice                                   As Double
-Public EntryOffset                                  As Long
+Public EntryLimitPrice                              As Double
+Public EntryLimitPriceOffset                        As Double
+Public EntryLimitPriceOffsetType                    As PriceOffsetTypes
 Public EntryTriggerPrice                            As Double
+Public EntryTriggerPriceOffset                      As Double
+Public EntryTriggerPriceOffsetType                  As PriceOffsetTypes
 Public StopLossType                                 As BracketStopLossTypes
-Public StopLossPrice                                As Double
-Public StopLossOffset                               As Long
+Public StopLossLimitPrice                           As Double
+Public StopLossLimitPriceOffset                     As Long
+Public StopLossLimitPriceOffsetType                 As PriceOffsetTypes
 Public StopLossTriggerPrice                         As Double
+Public StopLossTriggerPriceOffset                   As Double
+Public StopLossTriggerPriceOffsetType               As PriceOffsetTypes
 Public TargetType                                   As BracketTargetTypes
-Public TargetPrice                                  As Double
-Public TargetOffset                                 As Long
+Public TargetLimitPrice                             As Double
+Public TargetLimitPriceOffset                       As Long
+Public TargetLimitPriceOffsetType                   As PriceOffsetTypes
 Public TargetTriggerPrice                           As Double
+Public TargetTriggerPriceOffset                     As Double
+Public TargetTriggerPriceOffsetType                 As PriceOffsetTypes
 Public EntryTIF                                     As OrderTIFs
 Public StopLossTIF                                  As OrderTIFs
 Public TargetTIF                                    As OrderTIFs
@@ -163,25 +172,25 @@ End Function
 Private Function generateEntryAttributes() As String
 Dim s As String
 Select Case EntryType
-    Case BracketEntryTypeMarket
-    Case BracketEntryTypeMarketOnOpen
-    Case BracketEntryTypeMarketOnClose
-    Case BracketEntryTypeMarketToLimit
-    Case BracketEntryTypeStop, _
-            BracketEntryTypeMarketIfTouched
-        s = s & gGenerateSwitch(TriggerPriceSwitch, EntryTriggerPrice)
-    Case BracketEntryTypeStopLimit, _
-            BracketEntryTypeLimitIfTouched
-        s = s & gGenerateSwitch(TriggerPriceSwitch, EntryTriggerPrice) & _
-                gGenerateSwitch(PriceSwitch, EntryPrice)
-    Case BracketEntryTypeLimit, _
-            BracketEntryTypeLimitOnOpen, _
-            BracketEntryTypeLimitOnClose
-        s = s & gGenerateSwitch(PriceSwitch, EntryPrice)
-    Case BracketEntryTypeBid, _
-            BracketEntryTypeAsk, _
-            BracketEntryTypeLast
-        s = s & gGenerateSwitch(OffsetSwitch, CStr(EntryOffset) & TickDesignator)
+Case BracketEntryTypeMarket
+Case BracketEntryTypeMarketOnOpen
+Case BracketEntryTypeMarketOnClose
+Case BracketEntryTypeMarketToLimit
+Case BracketEntryTypeStop, _
+        BracketEntryTypeMarketIfTouched
+    s = s & gGenerateSwitch(TriggerPriceSwitch, EntryTriggerPrice)
+Case BracketEntryTypeStopLimit, _
+        BracketEntryTypeLimitIfTouched
+    s = s & gGenerateSwitch(TriggerPriceSwitch, EntryTriggerPrice) & _
+            gGenerateSwitch(PriceSwitch, EntryLimitPrice)
+Case BracketEntryTypeLimit, _
+        BracketEntryTypeLimitOnOpen, _
+        BracketEntryTypeLimitOnClose
+    s = s & gGenerateSwitch(PriceSwitch, EntryLimitPrice)
+Case BracketEntryTypeBid, _
+        BracketEntryTypeAsk, _
+        BracketEntryTypeLast
+    s = s & gGenerateSwitch(OffsetSwitch, gGenerateOffset(EntryLimitPriceOffset, EntryLimitPriceOffsetType))
 End Select
 
 If EntryTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(EntryTIF))
@@ -201,16 +210,16 @@ End Function
 Private Function generateStopLossAttributes() As String
 Dim s As String
 Select Case StopLossType
-    Case BracketStopLossTypeStop
-        s = s & gGenerateSwitch(TriggerPriceSwitch, StopLossTriggerPrice)
-    Case BracketStopLossTypeStopLimit
-        s = s & gGenerateSwitch(TriggerPriceSwitch, StopLossTriggerPrice) & _
-                gGenerateSwitch(PriceSwitch, StopLossPrice)
-    Case BracketStopLossTypeBid, _
-            BracketStopLossTypeAsk, _
-            BracketStopLossTypeAsk, _
-            BracketStopLossTypeAuto
-        s = s & gGenerateSwitch(OffsetSwitch, CStr(StopLossOffset) & TickDesignator)
+Case BracketStopLossTypeStop
+    s = s & gGenerateSwitch(TriggerPriceSwitch, StopLossTriggerPrice)
+Case BracketStopLossTypeStopLimit
+    s = s & gGenerateSwitch(TriggerPriceSwitch, StopLossTriggerPrice) & _
+            gGenerateSwitch(PriceSwitch, StopLossLimitPrice)
+Case BracketStopLossTypeBid, _
+        BracketStopLossTypeAsk, _
+        BracketStopLossTypeAsk, _
+        BracketStopLossTypeAuto
+    s = s & gGenerateSwitch(OffsetSwitch, gGenerateOffset(StopLossTriggerPriceOffset, StopLossTriggerPriceOffsetType))
 End Select
 
 If StopLossTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(StopLossTIF))
@@ -230,19 +239,18 @@ End Function
 Private Function generateTargetAttributes() As String
 Dim s As String
 Select Case TargetType
-    Case BracketTargetTypeMarketToLimit
     Case BracketTargetTypeLimit
-        s = s & gGenerateSwitch(PriceSwitch, TargetPrice)
+        s = s & gGenerateSwitch(PriceSwitch, TargetLimitPrice)
     Case BracketTargetTypeLimitIfTouched
         s = s & gGenerateSwitch(TriggerPriceSwitch, TargetTriggerPrice) & _
-                gGenerateSwitch(PriceSwitch, TargetPrice)
+                gGenerateSwitch(PriceSwitch, TargetLimitPrice)
     Case BracketTargetTypeMarketIfTouched
         s = s & gGenerateSwitch(TriggerPriceSwitch, TargetTriggerPrice)
     Case BracketTargetTypeBid, _
             BracketTargetTypeAsk, _
             BracketTargetTypeLast, _
             BracketTargetTypeAuto
-        s = s & gGenerateSwitch(OffsetSwitch, CStr(TargetOffset) & TickDesignator)
+        s = s & gGenerateSwitch(OffsetSwitch, gGenerateOffset(TargetLimitPriceOffset, TargetLimitPriceOffsetType))
 End Select
 
 If TargetTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(TargetTIF))

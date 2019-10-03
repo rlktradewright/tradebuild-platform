@@ -364,7 +364,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub setClean()
+Friend Sub SetClean()
 mIsDirty = False
 mDiff.Clear
 End Sub

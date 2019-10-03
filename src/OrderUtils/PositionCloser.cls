@@ -416,7 +416,7 @@ If mUseLimitorder Then
     Then
         lTicksize = GetTickSizeForOptions(lBid)
     ElseIf lContract.Specifier.SecType = SecTypeStock Then
-        lTicksize = GetTickSizeForStocks(lContract.Specifier.Exchange, lBid)
+        lTicksize = GetTickSizeForStocks(lContract.Specifier.Exchange, lBid, lContract.TickSize)
     End If
     If lTicksize = 0# Then lTicksize = lContract.TickSize
     

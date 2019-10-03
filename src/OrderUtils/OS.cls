@@ -64,6 +64,8 @@ Private mGroupName                                  As String
 Private mHidden                                     As Boolean
 Private mIgnoreRegularTradingHours                  As Boolean
 Private mLimitPrice                                 As Double
+Private mLimitPriceOffset                           As Double
+Private mLimitPriceOffsetType                       As PriceOffsetTypes
 Private mMessage                                    As String
 Private mMinimumQuantity                            As Long
 Private mNBBOPriceCap                               As Double
@@ -80,6 +82,8 @@ Private mSweepToFill                                As Boolean
 Private mTimeInForce                                As OrderTIFs
 Private mIdentifier                                 As String
 Private mTriggerPrice                               As Double
+Private mTriggerPriceOffset                         As Double
+Private mTriggerPriceOffsetType                     As PriceOffsetTypes
 Private mAveragePrice                               As Double
 Private mFillTime                                   As Date
 Private mQuantityFilled                             As Long
@@ -368,6 +372,28 @@ Public Property Get LimitPrice() As Double
 LimitPrice = mLimitPrice
 End Property
 
+Public Property Let LimitPriceOffset(ByVal Value As Double)
+If mLimitPriceOffset = Value Then Exit Property
+mLimitPriceOffset = Value
+mIsDirty = True
+mDiff.SetProperty "LimitPriceOffset", Value
+End Property
+
+Public Property Get LimitPriceOffset() As Double
+LimitPriceOffset = mLimitPriceOffset
+End Property
+
+Public Property Let LimitPriceOffsetType(ByVal Value As PriceOffsetTypes)
+If mLimitPriceOffsetType = Value Then Exit Property
+mLimitPriceOffsetType = Value
+mIsDirty = True
+mDiff.SetProperty "LimitPriceOffsetType", Value
+End Property
+
+Public Property Get LimitPriceOffsetType() As PriceOffsetTypes
+LimitPriceOffsetType = mLimitPriceOffsetType
+End Property
+
 Public Property Let Message(ByVal Value As String)
 If mMessage = Value Then Exit Property
 mMessage = Value
@@ -577,11 +603,33 @@ Public Property Get TriggerPrice() As Double
 TriggerPrice = mTriggerPrice
 End Property
 
+Public Property Let TriggerPriceOffset(ByVal Value As Double)
+If mTriggerPriceOffset = Value Then Exit Property
+mTriggerPriceOffset = Value
+mIsDirty = True
+mDiff.SetProperty "TriggerPriceOffset", Value
+End Property
+
+Public Property Get TriggerPriceOffset() As Double
+TriggerPriceOffset = mTriggerPriceOffset
+End Property
+
+Public Property Let TriggerPriceOffsetType(ByVal Value As PriceOffsetTypes)
+If mTriggerPriceOffsetType = Value Then Exit Property
+mTriggerPriceOffsetType = Value
+mIsDirty = True
+mDiff.SetProperty "TriggerPriceOffsetType", Value
+End Property
+
+Public Property Get TriggerPriceOffsetType() As PriceOffsetTypes
+TriggerPriceOffsetType = mTriggerPriceOffsetType
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub setClean()
+Friend Sub SetClean()
 mIsDirty = True
 mDiff.Clear
 End Sub

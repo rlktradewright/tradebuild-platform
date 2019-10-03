@@ -342,6 +342,20 @@ For i = 0 To UBound(lOrderTypesStr)
     End If
 Next
 
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketEntryTypes.BracketEntryTypeAsk
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketEntryTypes.BracketEntryTypeBid
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketEntryTypes.BracketEntryTypeLast
+
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketStopLossTypes.BracketStopLossTypeAsk
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketStopLossTypes.BracketStopLossTypeAuto
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketStopLossTypes.BracketStopLossTypeBid
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketStopLossTypes.BracketStopLossTypeLast
+
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketTargetTypes.BracketTargetTypeAsk
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketTargetTypes.BracketTargetTypeAuto
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketTargetTypes.BracketTargetTypeBid
+lPermittedOrderTypes = lPermittedOrderTypes Or BracketTargetTypes.BracketTargetTypeLast
+
 Dim lPermittedStopTriggerMethods As OrderStopTriggerMethods
 lPermittedStopTriggerMethods = OrderStopTriggerMethods.OrderStopTriggerBidAsk Or _
                                 OrderStopTriggerMethods.OrderStopTriggerDefault Or _
