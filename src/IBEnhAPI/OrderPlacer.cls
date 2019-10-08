@@ -130,6 +130,8 @@ Case 399
     ' contains information about the order which doesn't invalidate it - for example
     ' order won't be submitted to exchange until start of next trading session
     GetOrderSubmitter(pOrderId).NotifyMessage GetOrder(pOrderId).Id, pErrorMsg
+Case 10147  ' Trying to cancel an order that TWS doesn't know about
+    ' Just ignore this
 Case 10148  ' Trying to cancel an order that is already filled or cancelled
     ' Just ignore this
 Case Else
