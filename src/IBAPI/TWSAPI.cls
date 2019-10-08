@@ -978,12 +978,12 @@ With pOrder
     If mServerVersion < MIN_SERVER_VER_ORDER_COMBO_LEGS_PRICE Then
         mWriter.AddDouble IIf(.LmtPrice = MaxDouble, 0, .LmtPrice), "Price"
     Else
-        mWriter.AddDouble .LmtPrice, "Price"
+        mWriter.AddDoubleMax .LmtPrice, "Price"
     End If
     If mServerVersion < MIN_SERVER_VER_TRAILING_PERCENT Then
         mWriter.AddDouble IIf(.AuxPrice = MaxDouble, 0, .AuxPrice), "Aux price"
     Else
-        mWriter.AddDouble .AuxPrice, "Aux price"
+        mWriter.AddDoubleMax .AuxPrice, "Aux price"
     End If
     
     ' mwriter.send extended Order fields
@@ -1040,7 +1040,7 @@ If mServerVersion >= MIN_SERVER_VER_ORDER_COMBO_LEGS_PRICE And pContract.Sectype
         For i = 0 To lOrderComboLegsCount - 1
             Dim lOrderComboLeg  As TwsOrderComboLeg
             Set lOrderComboLeg = lOrderComboLegs(i)
-            mWriter.AddString lOrderComboLeg.Price, "Leg" & i & " Price"
+            mWriter.AddDoubleMax lOrderComboLeg.Price, "Leg" & i & " Price"
         Next
     End If
 End If
