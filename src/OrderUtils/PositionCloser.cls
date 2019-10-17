@@ -30,6 +30,7 @@ Implements IDeferredAction
 '@================================================================================
 
 Event PositionNotClosed(ByVal pErrorMessage As String)
+Event PositionClosed()
 
 '@================================================================================
 ' Enums
@@ -179,7 +180,8 @@ For Each oc In mOrderContexts
 Next
 
 doFinalActions
- 
+RaiseEvent PositionClosed
+
 Exit Sub
 
 Err:
@@ -344,14 +346,12 @@ On Error GoTo Err
 
 ' closeout non-zero-size bracket orders marking them to mnarket
 
-If Not mPositionManager.DataSource.HasCurrentTick(TickTypeBid) Or _
-    Not mPositionManager.DataSource.HasCurrentTick(TickTypeAsk) Then
-    RaiseEvent PositionNotClosed("No bid or ask tick available")
+If Not mPositionManager.DataSource.HasCurrentTick(TickTypeTrade) Then
+    RaiseEvent PositionNotClosed("No trade tick available")
     Exit Sub
 End If
 
-Dim lBidPrice As Double: lBidPrice = mPositionManager.DataSource.CurrentTick(TickTypeBid).Price
-Dim lAskPrice As Double: lBidPrice = mPositionManager.DataSource.CurrentTick(TickTypeAsk).Price
+Dim lTradePrice As Double: lTradePrice = mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price
 
 Dim oc As OrderContext
 For Each oc In mOrderContexts
@@ -371,7 +371,7 @@ For Each oc In mOrderContexts
                 lExec.FillingExchange = "*"
                 lExec.FillTime = mClock.Timestamp
                 lExec.Id = "MarkToMarket:" & GenerateGUIDString
-                lExec.Price = mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price
+                lExec.Price = lTradePrice
                 lExec.SecurityName = mContract.Specifier.LocalSymbol & "@" & mContract.Specifier.Exchange
                 lExec.TimezoneName = mContract.TimezoneName
                 
@@ -384,6 +384,7 @@ For Each oc In mOrderContexts
 Next
 
 doFinalActions
+RaiseEvent PositionClosed
 
 Exit Sub
 
@@ -431,18 +432,10 @@ If mUseLimitorder Then
                     mBalancingOrderContext.CreateBracketOrder( _
                                 IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
                                 Abs(mPositionManager.PositionSize), _
-                                BracketEntryTypes.BracketEntryTypeLimit, _
-                                lEntryPrice, _
-                                0, _
-                                0#, _
-                                BracketStopLossTypes.BracketStopLossTypeNone, _
-                                0#, _
-                                0, _
-                                0#, _
-                                BracketTargetTypes.BracketTargetTypeNone, _
-                                0#, _
-                                0, _
-                                0#)
+                                mBalancingOrderContext.CreateEntryOrder( _
+                                    BracketEntryTypeLimit, _
+                                    gNewPriceSpecifier(lEntryPrice, PriceValueTypeValue, 0, PriceOffsetTypeNone) _
+                                ))
     
     gLogBracketOrderMessage "Close positions at limit: lEntryPrice", _
                     mPositionManager.DataSource, _
@@ -455,18 +448,9 @@ Else
                     mBalancingOrderContext.CreateBracketOrder( _
                                 IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
                                 Abs(mPositionManager.PositionSize), _
-                                BracketEntryTypes.BracketEntryTypeMarket, _
-                                0#, _
-                                0, _
-                                0#, _
-                                BracketStopLossTypes.BracketStopLossTypeNone, _
-                                0#, _
-                                0, _
-                                0#, _
-                                BracketTargetTypes.BracketTargetTypeNone, _
-                                0#, _
-                                0, _
-                                0#)
+                                mBalancingOrderContext.CreateEntryOrder( _
+                                    BracketEntryTypeMarket _
+                                ))
     
     gLogBracketOrderMessage "Close positions at market", _
                     mPositionManager.DataSource, _
