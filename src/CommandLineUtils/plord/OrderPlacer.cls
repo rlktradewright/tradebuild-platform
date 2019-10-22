@@ -74,19 +74,7 @@ On Error GoTo Err
 
 If ev.ChangeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
 
-If Not mOrderContext.IsReadyForBracketOrder( _
-                mBracketOrderSpec.EntryType, _
-                mBracketOrderSpec.StopLossType, _
-                mBracketOrderSpec.TargetType, _
-                mBracketOrderSpec.EntryLimitPriceOffsetType, _
-                mBracketOrderSpec.EntryTriggerPriceOffsetType, _
-                mBracketOrderSpec.StopLossLimitPriceOffsetType, _
-                mBracketOrderSpec.StopLossTriggerPriceOffsetType, _
-                mBracketOrderSpec.TargetLimitPriceOffsetType, _
-                mBracketOrderSpec.TargetTriggerPriceOffsetType) _
-Then
-    Exit Sub
-End If
+If Not isReadyForOrder Then Exit Sub
 
 Set mOrderContextEv = Nothing
 gPlaceOrdersTask.AddOrderPlacer Me
@@ -134,17 +122,7 @@ If sAttempts = 0 Then
     gWriteLineToStdOut mBracketOrderSpec.ToString
 End If
 
-If Not mOrderContext.IsReadyForBracketOrder( _
-                mBracketOrderSpec.EntryType, _
-                mBracketOrderSpec.StopLossType, _
-                mBracketOrderSpec.TargetType, _
-                mBracketOrderSpec.EntryLimitPriceOffsetType, _
-                mBracketOrderSpec.EntryTriggerPriceOffsetType, _
-                mBracketOrderSpec.StopLossLimitPriceOffsetType, _
-                mBracketOrderSpec.StopLossTriggerPriceOffsetType, _
-                mBracketOrderSpec.TargetLimitPriceOffsetType, _
-                mBracketOrderSpec.TargetTriggerPriceOffsetType) _
-Then
+If Not isReadyForOrder Then
     Set mOrderContextEv = mOrderContext
     gWriteLineToStdOut "Order is pending, waiting for the provider to be ready"
     Exit Function
@@ -160,56 +138,41 @@ End If
 mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
 
 Dim lBo As IBracketOrder
+
 With mBracketOrderSpec
-    If .Action = OrderActionBuy Then
-        Set lBo = mOrderContext.CreateBuyBracketOrder( _
-                        .Quantity, _
-                        .EntryType, _
-                        .EntryLimitPrice, _
-                        .EntryTriggerPrice, _
-                        .StopLossType, _
-                        .StopLossLimitPrice, _
-                        .StopLossTriggerPrice, _
-                        .TargetType, _
-                        .TargetLimitPrice, _
-                        .TargetTriggerPrice, _
-                        .EntryLimitPriceOffset, _
-                        .EntryLimitPriceOffsetType, _
-                        .EntryTriggerPrice, _
-                        .EntryTriggerPriceOffsetType, _
-                        .StopLossLimitPriceOffset, _
-                        .StopLossLimitPriceOffsetType, _
-                        .StopLossTriggerPriceOffset, _
-                        .StopLossTriggerPriceOffsetType, _
-                        .TargetLimitPriceOffset, _
-                        .TargetLimitPriceOffsetType, _
-                        .TargetTriggerPriceOffset, _
-                        .TargetTriggerPriceOffsetType)
-    Else
-        Set lBo = mOrderContext.CreateSellBracketOrder( _
-                        .Quantity, _
-                        .EntryType, _
-                        .EntryLimitPrice, _
-                        .EntryTriggerPrice, _
-                        .StopLossType, _
-                        .StopLossLimitPrice, _
-                        .StopLossTriggerPrice, _
-                        .TargetType, _
-                        .TargetLimitPrice, _
-                        .TargetTriggerPrice, _
-                        .EntryLimitPriceOffset, _
-                        .EntryLimitPriceOffsetType, _
-                        .EntryTriggerPrice, _
-                        .EntryTriggerPriceOffsetType, _
-                        .StopLossLimitPriceOffset, _
-                        .StopLossLimitPriceOffsetType, _
-                        .StopLossTriggerPriceOffset, _
-                        .StopLossTriggerPriceOffsetType, _
-                        .TargetLimitPriceOffset, _
-                        .TargetLimitPriceOffsetType, _
-                        .TargetTriggerPriceOffset, _
-                        .TargetTriggerPriceOffsetType)
+    Dim lEntryOrder As IOrder
+    Set lEntryOrder = mOrderContext.CreateEntryOrder( _
+                            .EntryType, _
+                            .EntryLimitPriceSpec, _
+                            .EntryTriggerPriceSpec, _
+                            .EntryIgnoreRTH)
+    
+    Dim lStopLossOrder As IOrder
+    If .StopLossType <> OrderTypeNone Then
+        Set lStopLossOrder = mOrderContext.CreateStopLossOrder( _
+                                .StopLossType, _
+                                .StopLossLimitPriceSpec, _
+                                .StopLossTriggerPriceSpec, _
+                                .StopLossIgnoreRTH)
     End If
+
+    Dim lTargetOrder As IOrder
+    If .TargetType <> OrderTypeNone Then
+        Set lTargetOrder = mOrderContext.CreateTargetOrder( _
+                                .TargetType, _
+                                .TargetLimitPriceSpec, _
+                                .TargetTriggerPriceSpec, _
+                                .TargetIgnoreRTH)
+    End If
+
+
+    Set lBo = mOrderContext.CreateBracketOrder( _
+                    .Action, _
+                    .Quantity, _
+                    lEntryOrder, _
+                    lStopLossOrder, _
+                    lTargetOrder _
+                    )
     
     lBo.CancelAfter = .CancelAfter
     lBo.CancelPrice = .CancelPrice
@@ -255,6 +218,22 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function isReadyForOrder() As Boolean
+With mOrderContext
+    If Not .IsReady Then Exit Function
+    
+    If Not .IsReadyToGetTickSize(mContract.Specifier.SecType) Then Exit Function
+    
+    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then Exit Function
+    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then Exit Function
+    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossLimitPriceSpec) Then Exit Function
+    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossTriggerPriceSpec) Then Exit Function
+    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetLimitPriceSpec) Then Exit Function
+    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetTriggerPriceSpec) Then Exit Function
+End With
+isReadyForOrder = True
+End Function
 
 Private Sub writeContractSpecToStdOut()
 Const ProcName As String = "writeContractSpecToStdOut"

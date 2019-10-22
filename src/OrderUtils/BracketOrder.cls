@@ -141,26 +141,14 @@ Private mNewEntryQuantity                           As Long
 Private mNewStopLossQuantity                        As Long
 Private mNewTargetQuantity                          As Long
 
-Private mNewEntryLimitPrice                         As Double
-Private mNewEntryLimitPriceOffset                   As Double
-Private mNewEntryLimitPriceOffsetType               As PriceOffsetTypes
-Private mNewEntryTriggerPrice                       As Double
-Private mNewEntryTriggerPriceOffset                 As Double
-Private mNewEntryTriggerPriceOffsetType             As PriceOffsetTypes
+Private mNewEntryLimitPriceSpec                     As PriceSpecifier
+Private mNewEntryTriggerPriceSpec                   As PriceSpecifier
 
-Private mNewStopLossLimitPrice                      As Double
-Private mNewStopLossLimitPriceOffset                As Double
-Private mNewStopLossLimitPriceOffsetType            As PriceOffsetTypes
-Private mNewStopLossTriggerPrice                    As Double
-Private mNewStopLossTriggerPriceOffset              As Double
-Private mNewStopLossTriggerPriceOffsetType          As PriceOffsetTypes
+Private mNewStopLossLimitPriceSpec                  As PriceSpecifier
+Private mNewStopLossTriggerPriceSpec                As PriceSpecifier
 
-Private mNewTargetLimitPrice                        As Double
-Private mNewTargetLimitPriceOffset                  As Double
-Private mNewTargetLimitPriceOffsetType              As PriceOffsetTypes
-Private mNewTargetTriggerPrice                      As Double
-Private mNewTargetTriggerPriceOffset                As Double
-Private mNewTargetTriggerPriceOffsetType            As PriceOffsetTypes
+Private mNewTargetLimitPriceSpec                    As PriceSpecifier
+Private mNewTargetTriggerPriceSpec                  As PriceSpecifier
 
 Private mIsSimulated                                As Boolean
 
@@ -194,26 +182,14 @@ mNewEntryQuantity = -1
 mNewStopLossQuantity = -1
 mNewTargetQuantity = -1
 
-mNewEntryLimitPrice = -1
-mNewEntryLimitPriceOffset = 0#
-mNewEntryLimitPriceOffsetType = PriceOffsetTypeNone
-mNewEntryTriggerPrice = -1
-mNewEntryTriggerPriceOffset = 0#
-mNewEntryTriggerPriceOffsetType = PriceOffsetTypeNone
+Set mNewEntryLimitPriceSpec = gNewPriceSpecifier
+Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
 
-mNewStopLossLimitPrice = -1
-mNewStopLossLimitPriceOffset = 0#
-mNewStopLossLimitPriceOffsetType = PriceOffsetTypeNone
-mNewStopLossTriggerPrice = -1
-mNewStopLossTriggerPriceOffset = 0#
-mNewStopLossTriggerPriceOffsetType = PriceOffsetTypeNone
+Set mNewStopLossLimitPriceSpec = gNewPriceSpecifier
+Set mNewStopLossTriggerPriceSpec = gNewPriceSpecifier
 
-mNewTargetLimitPrice = -1
-mNewTargetLimitPriceOffset = 0#
-mNewTargetLimitPriceOffsetType = PriceOffsetTypeNone
-mNewTargetTriggerPrice = -1
-mNewTargetTriggerPriceOffset = 0#
-mNewTargetTriggerPriceOffsetType = PriceOffsetTypeNone
+Set mNewTargetLimitPriceSpec = gNewPriceSpecifier
+Set mNewTargetTriggerPriceSpec = gNewPriceSpecifier
 
 Set mSummary = New BOS
 
@@ -282,11 +258,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPrice As Double, Optional ByVal pQuantity As Long = -1&)
+Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1&)
 Const ProcName As String = "IBracketOrder_AdjustStop"
 On Error GoTo Err
 
-AdjustStopLoss pStopTriggerPrice, pQuantity
+AdjustStopLoss pStopTriggerPriceSpec, pQuantity
 
 Exit Sub
 
@@ -294,11 +270,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_AdjustTarget(ByVal pTargetPrice As Double, Optional ByVal pQuantity As Long = -1&)
+Private Sub IBracketOrder_AdjustTarget(ByVal pTargetPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1&)
 Const ProcName As String = "IBracketOrder_AdjustTarget"
 On Error GoTo Err
 
-AdjustTarget pTargetPrice, pQuantity
+AdjustTarget pTargetPriceSpec, pQuantity
 
 Exit Sub
 
@@ -619,13 +595,11 @@ IBracketOrder_Risk = Risk
 End Property
 
 Private Sub IBracketOrder_SetNewEntryLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "IBracketOrder_SetNewEntryLimitPrice"
 On Error GoTo Err
 
-SetNewEntryLimitPrice pPrice, pOffset, pOffsetType
+SetNewEntryLimitPrice pPriceSpec
 
 Exit Sub
 
@@ -634,13 +608,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewEntryTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "IBracketOrder_SetNewEntryTriggerPrice"
 On Error GoTo Err
 
-SetNewEntryTriggerPrice pPrice, pOffset, pOffsetType
+SetNewEntryTriggerPrice pPriceSpec
 
 
 Exit Sub
@@ -651,13 +623,11 @@ End Sub
 
 Private Sub IBracketOrder_SetNewOrderLimitPrice( _
                 ByVal pRole As BracketOrderRoles, _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "IBracketOrder_SetNewOrderPrice"
 On Error GoTo Err
 
-SetNewOrderLimitPrice pRole, pPrice, pOffset, pOffsetType
+SetNewOrderLimitPrice pRole, pPriceSpec
 
 Exit Sub
 
@@ -667,13 +637,11 @@ End Sub
 
 Private Sub IBracketOrder_SetNewOrderTriggerPrice( _
                 ByVal pRole As BracketOrderRoles, _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "IBracketOrder_SetNewOrderTriggerPrice"
 On Error GoTo Err
 
-SetNewOrderTriggerPrice pRole, pPrice, pOffset, pOffsetType
+SetNewOrderTriggerPrice pRole, pPriceSpec
 
 Exit Sub
 
@@ -694,13 +662,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewStopLossLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "IBracketOrder_SetNewStopLossPrice"
 On Error GoTo Err
 
-SetNewStopLossLimitPrice pPrice, pOffset, pOffsetType
+SetNewStopLossLimitPrice pPriceSpec
 
 Exit Sub
 
@@ -721,13 +687,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewStopLossTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "IBracketOrder_SetNewStopLossTriggerPrice"
 On Error GoTo Err
 
-SetNewStopLossTriggerPrice pPrice, pOffset, pOffsetType
+SetNewStopLossTriggerPrice pPriceSpec
 
 Exit Sub
 
@@ -736,13 +700,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewTargetLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "IBracketOrder_SetNewTargetPrice"
 On Error GoTo Err
 
-SetNewTargetLimitPrice pPrice, pOffset, pOffsetType
+SetNewTargetLimitPrice pPriceSpec
 
 Exit Sub
 
@@ -763,13 +725,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewTargetTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "IBracketOrder_SetNewTargetTriggerPrice"
 On Error GoTo Err
 
-SetNewTargetTriggerPrice pPrice, pOffset, pOffsetType
+SetNewTargetTriggerPrice pPriceSpec
 
 Exit Sub
 
@@ -1133,13 +1093,13 @@ mSummary.CancelPrice = 0
 
 If Not mStopLossOrder Is Nothing Then
     If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustStopLoss mStopLossOrder.TriggerPrice, Abs(Size)
+        AdjustStopLoss mStopLossOrder.TriggerPriceSpec, Abs(Size)
     End If
 End If
 
 If Not mTargetOrder Is Nothing Then
     If mTargetOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustTarget mTargetOrder.LimitPrice, Abs(Size)
+        AdjustTarget mTargetOrder.LimitPriceSpec, Abs(Size)
     End If
 End If
 
@@ -1287,7 +1247,7 @@ processExecution pExec
 
 If Not mTargetOrder Is Nothing Then
     If mTargetOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustTarget mTargetOrder.LimitPrice, Abs(Size)
+        AdjustTarget mTargetOrder.LimitPriceSpec, Abs(Size)
     End If
 End If
 
@@ -1413,7 +1373,7 @@ processExecution pExec
 
 If Not mStopLossOrder Is Nothing Then
     If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustStopLoss mStopLossOrder.TriggerPrice, Abs(Size)
+        AdjustStopLoss mStopLossOrder.TriggerPriceSpec, Abs(Size)
     End If
 End If
 
@@ -1914,13 +1874,7 @@ Select Case EntryOrder.OrderType
     Case OrderTypeLimitOnClose
     Case OrderTypePeggedToMarket
     Case OrderTypeRelative
-    Case OrderTypeVWAP
     Case OrderTypeMarketToLimit
-    Case OrderTypeQuote
-    Case OrderTypeAutoStop
-    Case OrderTypeAutoLimit
-    Case OrderTypeAdjust
-    Case OrderTypeAlert
     Case OrderTypeTrailLimit
     Case OrderTypeMarketWithProtection
     Case OrderTypeMarketOnOpen
@@ -1959,17 +1913,14 @@ End Property
 Private Sub setPrice( _
                 ByVal pOrder As IOrder, _
                 ByVal pPermittedOrderTypes As OrderTypes, _
-                ByRef pField As Double, _
-                ByRef pOffset As Double, _
-                ByRef pOffsetType As PriceOffsetTypes, _
-                ByVal pNewPrice As Double, _
-                ByRef pNewOffset As Double, _
-                ByRef pNewOffsetType As PriceOffsetTypes, _
-                ByVal pChangedField As String)
+                ByRef pPriceSpec As PriceSpecifier, _
+                ByVal pNewPriceSpec As PriceSpecifier, _
+                ByVal pChangedFieldName As String)
 Const ProcName As String = "setPrice"
 On Error GoTo Err
 
-Assert Not pOrder Is Nothing, "Order is Nothing"
+AssertArgument Not pOrder Is Nothing, "Order is Nothing"
+AssertArgument pNewPriceSpec.IsValid, "New price specifier is invalid"
 
 Select Case mStateEngine.State
 Case BracketOrderStates.BracketOrderStateCancelling
@@ -1979,17 +1930,15 @@ Case Else
     Assert False, "Action not allowed in state " & mStateEngine.State
 End Select
 
-Assert pOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change " & pChangedField & " - order " & pOrder.Id & " already filled"
+Assert pOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change " & pChangedFieldName & " - order " & pOrder.Id & " already filled"
 
 Assert ((pOrder.OrderType And pPermittedOrderTypes) = CLng(pOrder.OrderType)), _
-         "Can't change " & pChangedField & " for order type " & gOrderTypeToString(pOrder.OrderType)
+         "Can't change " & pChangedFieldName & " for order type " & gOrderTypeToString(pOrder.OrderType)
 
-If pNewPrice <> pField Then
-    gLogBracketOrderMessage "Set " & pChangedField & "=" & gPriceToString(pNewPrice, mContract, pNewOffset, pNewOffsetType), _
+If Not pNewPriceSpec.Equals(pPriceSpec) Then
+    gLogBracketOrderMessage "Set " & pChangedFieldName & "=" & gPriceSpecifierToString(pNewPriceSpec, mContract), _
                     mDataSource, mContract, Key, mIsSimulated, Me
-    pField = mOrderContext.CalculateOffsettedPrice(pOrder.Action, pNewPrice, pOffset, pOffsetType, mContract.Specifier.SecType)
-    pOffset = pNewOffset
-    pOffsetType = pNewOffsetType
+    Set pPriceSpec = pNewPriceSpec
     setDirty
 End If
 
@@ -2246,12 +2195,12 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub AdjustStopLoss(ByVal stopTriggerPrice As Double, _
+Public Sub AdjustStopLoss(ByVal stopTriggerPriceSpec As PriceSpecifier, _
                     Optional ByVal Quantity As Long = -1)
 Const ProcName As String = "AdjustStopLoss"
 On Error GoTo Err
 
-SetNewStopLossTriggerPrice stopTriggerPrice
+SetNewStopLossTriggerPrice stopTriggerPriceSpec
 If Quantity <> -1 Then SetNewStopLossQuantity Quantity
 Update
 
@@ -2262,12 +2211,12 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Public Sub AdjustTarget(ByVal targetPrice As Double, _
+Public Sub AdjustTarget(ByVal targetPriceSpec As PriceSpecifier, _
                     Optional ByVal Quantity As Long = -1)
 Const ProcName As String = "AdjustTarget"
 On Error GoTo Err
 
-SetNewTargetLimitPrice targetPrice
+SetNewTargetLimitPrice targetPriceSpec
 If Quantity <> -1 Then SetNewTargetQuantity Quantity
 Update
 
@@ -2314,26 +2263,14 @@ mNewEntryQuantity = -1
 mNewStopLossQuantity = -1
 mNewTargetQuantity = -1
 
-mNewEntryLimitPrice = -1
-mNewEntryLimitPriceOffset = 0#
-mNewEntryLimitPriceOffsetType = PriceOffsetTypeNone
-mNewEntryTriggerPrice = -1
-mNewEntryTriggerPriceOffset = 0#
-mNewEntryTriggerPriceOffsetType = PriceOffsetTypeNone
+Set mNewEntryLimitPriceSpec = gNewPriceSpecifier
+Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
 
-mNewStopLossLimitPrice = -1
-mNewStopLossLimitPriceOffset = 0#
-mNewStopLossLimitPriceOffsetType = PriceOffsetTypeNone
-mNewStopLossTriggerPrice = -1
-mNewStopLossTriggerPriceOffset = 0#
-mNewStopLossTriggerPriceOffsetType = PriceOffsetTypeNone
+Set mNewStopLossLimitPriceSpec = gNewPriceSpecifier
+Set mNewStopLossTriggerPriceSpec = gNewPriceSpecifier
 
-mNewTargetLimitPrice = -1
-mNewTargetLimitPriceOffset = 0#
-mNewTargetLimitPriceOffsetType = PriceOffsetTypeNone
-mNewTargetTriggerPrice = -1
-mNewTargetTriggerPriceOffset = 0#
-mNewTargetTriggerPriceOffsetType = PriceOffsetTypeNone
+Set mNewTargetLimitPriceSpec = gNewPriceSpecifier
+Set mNewTargetTriggerPriceSpec = gNewPriceSpecifier
 
 ''
 ' note that we can't just use the copies because external
@@ -2607,9 +2544,7 @@ RaiseEvent SelfCancelled
 End Sub
 
 Public Sub SetNewEntryLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewEntryLimitPrice"
 On Error GoTo Err
 
@@ -2620,12 +2555,8 @@ setPrice mEntryOrder, _
             OrderTypeLimitOnOpen Or _
             OrderTypeStopLimit Or _
             OrderTypeTrailLimit, _
-        mNewEntryLimitPrice, _
-        mNewEntryLimitPriceOffset, _
-        mNewEntryLimitPriceOffsetType, _
-        pPrice, _
-        pOffset, _
-        pOffsetType, _
+        mNewEntryLimitPriceSpec, _
+        pPriceSpec, _
         "entry limit price"
 
 Exit Sub
@@ -2635,9 +2566,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewEntryTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewEntryTriggerPrice"
 On Error GoTo Err
 
@@ -2648,12 +2577,8 @@ setPrice mEntryOrder, _
             OrderTypeStopLimit Or _
             OrderTypeTrail Or _
             OrderTypeTrailLimit, _
-        mNewEntryTriggerPrice, _
-        mNewEntryTriggerPriceOffset, _
-        mNewEntryTriggerPriceOffsetType, _
-        pPrice, _
-        pOffset, _
-        pOffsetType, _
+        mNewEntryTriggerPriceSpec, _
+        pPriceSpec, _
         "entry trigger price"
 
 Exit Sub
@@ -2664,19 +2589,17 @@ End Sub
 
 Public Sub SetNewOrderLimitPrice( _
                 ByVal pRole As BracketOrderRoles, _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewOrderLimitPrice"
 On Error GoTo Err
 
 Select Case pRole
 Case BracketOrderRoleEntry
-    SetNewEntryLimitPrice pPrice, pOffset, pOffsetType
+    SetNewEntryLimitPrice pPriceSpec
 Case BracketOrderRoleStopLoss
-    SetNewStopLossLimitPrice pPrice, pOffset, pOffsetType
+    SetNewStopLossLimitPrice pPriceSpec
 Case BracketOrderRoleTarget
-    SetNewTargetLimitPrice pPrice, pOffset, pOffsetType
+    SetNewTargetLimitPrice pPriceSpec
 Case Else
     AssertArgument False, "Invalid pRole"
 End Select
@@ -2689,19 +2612,17 @@ End Sub
 
 Public Sub SetNewOrderTriggerPrice( _
                 ByVal pRole As BracketOrderRoles, _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewOrderTriggerPrice"
 On Error GoTo Err
 
 Select Case pRole
 Case BracketOrderRoleEntry
-    SetNewEntryTriggerPrice pPrice, pOffset, pOffsetType
+    SetNewEntryTriggerPrice pPriceSpec
 Case BracketOrderRoleStopLoss
-    SetNewStopLossTriggerPrice pPrice, pOffset, pOffsetType
+    SetNewStopLossTriggerPrice pPriceSpec
 Case BracketOrderRoleTarget
-    SetNewTargetTriggerPrice pPrice, pOffset, pOffsetType
+    SetNewTargetTriggerPrice pPriceSpec
 Case Else
     AssertArgument False, "Invalid pRole"
 End Select
@@ -2725,9 +2646,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewStopLossLimitPrice"
 On Error GoTo Err
 
@@ -2736,12 +2655,8 @@ setPrice mStopLossOrder, _
             OrderTypeLimitOnOpen Or _
             OrderTypeStopLimit Or _
             OrderTypeTrailLimit, _
-        mNewStopLossLimitPrice, _
-        mNewStopLossLimitPriceOffset, _
-        mNewStopLossLimitPriceOffsetType, _
-        pPrice, _
-        pOffset, _
-        pOffsetType, _
+        mNewStopLossLimitPriceSpec, _
+        pPriceSpec, _
         "stop loss limit price"
 
 Exit Sub
@@ -2763,22 +2678,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewStopLossTriggerPrice"
 On Error GoTo Err
 
 setPrice mStopLossOrder, _
         OrderTypeStop Or _
             OrderTypeStopLimit Or _
+            OrderTypeTrail Or _
             OrderTypeTrailLimit, _
-        mNewStopLossTriggerPrice, _
-        mNewStopLossTriggerPriceOffset, _
-        mNewStopLossTriggerPriceOffsetType, _
-        pPrice, _
-        pOffset, _
-        pOffsetType, _
+        mNewStopLossTriggerPriceSpec, _
+        pPriceSpec, _
         "stop loss trigger price"
 
 Exit Sub
@@ -2788,9 +2698,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewTargetLimitPrice"
 On Error GoTo Err
 
@@ -2799,12 +2707,8 @@ setPrice mTargetOrder, _
             OrderTypeLimitIfTouched Or _
             OrderTypeLimitOnClose Or _
             OrderTypeLimitOnOpen, _
-        mNewTargetLimitPrice, _
-        mNewTargetLimitPriceOffset, _
-        mNewTargetLimitPriceOffsetType, _
-        pPrice, _
-        pOffset, _
-        pOffsetType, _
+        mNewTargetLimitPriceSpec, _
+        pPriceSpec, _
         "target limit price"
 
 Exit Sub
@@ -2826,21 +2730,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewTargetTriggerPrice"
 On Error GoTo Err
 
 setPrice mTargetOrder, _
         OrderTypeLimitIfTouched Or _
             OrderTypeMarketIfTouched, _
-        mNewTargetTriggerPrice, _
-        mNewTargetTriggerPriceOffset, _
-        mNewTargetTriggerPriceOffsetType, _
-        pPrice, _
-        pOffset, _
-        pOffsetType, _
+        mNewTargetTriggerPriceSpec, _
+        pPriceSpec, _
         "target trigger price"
 
 Exit Sub
@@ -2871,12 +2769,7 @@ Public Function ToString() As String
 Const ProcName As String = "ToString"
 On Error GoTo Err
 
-Select Case State
-Case BracketOrderStateCreated
-    ToString = gBracketOrderToStringWithOffsets(Me, True)
-Case Else
-    ToString = gBracketOrderToStringWithOffsets(Me, False)
-End Select
+ToString = gBracketOrderToString(Me)
 
 Exit Function
 
@@ -3099,102 +2992,160 @@ Private Sub checkForPendingUpdates( _
 Const ProcName As String = "checkForPendingUpdates"
 On Error GoTo Err
 
-If Not mEntryOrder Is Nothing Then
-    If mEntryOrder.IsDirty Then updateEntry = True
-    If mNewEntryQuantity >= 0 And _
-        mNewEntryQuantity <> mEntryOrder.Quantity _
-    Then
-        Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change Size - order " & EntryOrder.Id & " already filled"
-        mEntryOrder.Quantity = mNewEntryQuantity
-        updateEntry = True
-    End If
-    mNewEntryQuantity = -1
-    
-    If mNewEntryLimitPrice >= 0 And _
-        mNewEntryLimitPrice <> mEntryOrder.LimitPrice _
-    Then
-        Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change price - order " & mEntryOrder.Id & " already filled"
-        mEntryOrder.LimitPrice = mNewEntryLimitPrice
-        updateEntry = True
-    End If
-    mNewEntryLimitPrice = -1
-    
-    If mNewEntryTriggerPrice >= 0 And _
-        mNewEntryTriggerPrice <> mEntryOrder.TriggerPrice _
-    Then
-        Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change trigger Price - order " & mEntryOrder.Id & " already filled"
-        mEntryOrder.TriggerPrice = mNewEntryTriggerPrice
-        updateEntry = True
-    End If
-    mNewEntryTriggerPrice = -1
-End If
-
-If Not mStopLossOrder Is Nothing Then
-    If mStopLossOrder.IsDirty Then updateStop = True
-    If mNewStopLossLimitPrice >= 0 And _
-        mNewStopLossLimitPrice <> mStopLossOrder.LimitPrice _
-    Then
-        Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change limit price - order " & mStopLossOrder.Id & " already filled"
-        Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusSubmitted, "Can't change limit price - order " & mStopLossOrder.Id & " already submitted"
-        mStopLossOrder.LimitPrice = mNewStopLossLimitPrice
-        updateStop = True
-    End If
-    mNewStopLossLimitPrice = -1
-    
-    If mNewStopLossQuantity >= 0 And _
-        mNewStopLossQuantity <> mStopLossOrder.Quantity _
-    Then
-        Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change stop quantity - order " & mStopLossOrder.Id & " already filled"
-        mStopLossOrder.Quantity = mNewStopLossQuantity
-        updateStop = True
-    End If
-    mNewStopLossQuantity = -1
-
-    If mNewStopLossTriggerPrice >= 0 And _
-        mNewStopLossTriggerPrice <> mStopLossOrder.TriggerPrice _
-    Then
-        Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change trigger Price - order " & mEntryOrder.Id & " already filled"
-        mStopLossOrder.TriggerPrice = mNewStopLossTriggerPrice
-        updateStop = True
-    End If
-    mNewStopLossTriggerPrice = -1
-End If
-
-If Not mTargetOrder Is Nothing Then
-    If mTargetOrder.IsDirty Then updateTarget = True
-    If mNewTargetLimitPrice >= 0 And _
-        mNewTargetLimitPrice <> mTargetOrder.LimitPrice _
-    Then
-        Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change Price - order " & mTargetOrder.Id & " already filled"
-        mTargetOrder.LimitPrice = mNewTargetLimitPrice
-        updateTarget = True
-    End If
-    mNewTargetLimitPrice = -1
-    
-    If mNewTargetQuantity >= 0 And _
-        mNewTargetQuantity <> mTargetOrder.Quantity _
-    Then
-        Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change target quantity - order " & mTargetOrder.Id & " already filled"
-        mTargetOrder.Quantity = mNewTargetQuantity
-        updateTarget = True
-    End If
-    mNewTargetQuantity = -1
-
-    If mNewTargetTriggerPrice >= 0 And _
-        mNewTargetTriggerPrice <> mTargetOrder.TriggerPrice _
-    Then
-        Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change trigger Price - order " & mEntryOrder.Id & " already filled"
-        mTargetOrder.TriggerPrice = mNewTargetTriggerPrice
-        updateTarget = True
-    End If
-    mNewTargetTriggerPrice = -1
-End If
+updateEntry = checkForPendingEntryUpdates
+updateStop = checkForPendingStoplossUpdates
+updateTarget = checkForPendingTargetUpdates
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function checkForPendingEntryUpdates() As Boolean
+Const ProcName As String = "checkForPendingEntryUpdates"
+On Error GoTo Err
+
+If mEntryOrder Is Nothing Then Exit Function
+
+If mEntryOrder.IsDirty Then checkForPendingEntryUpdates = True
+If mNewEntryQuantity >= 0 And _
+    mNewEntryQuantity <> mEntryOrder.Quantity _
+Then
+    Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change Size - order " & EntryOrder.Id & " already filled"
+    mEntryOrder.Quantity = mNewEntryQuantity
+    checkForPendingEntryUpdates = True
+End If
+mNewEntryQuantity = -1
+
+If mNewEntryLimitPriceSpec.IsValid And _
+    (Not mNewEntryLimitPriceSpec.Equals(mEntryOrder.LimitPriceSpec)) _
+Then
+    Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change entry limit price - order " & mEntryOrder.Id & " already filled"
+    mEntryOrder.LimitPriceSpec = mNewEntryLimitPriceSpec
+    mEntryOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
+                                                mEntryOrder.Action, _
+                                                mNewEntryLimitPriceSpec, _
+                                                mContract.Specifier.SecType)
+    checkForPendingEntryUpdates = True
+End If
+Set mNewEntryLimitPriceSpec = gNewPriceSpecifier
+
+If mNewEntryTriggerPriceSpec.IsValid And _
+    (Not mNewEntryTriggerPriceSpec.Equals(mEntryOrder.TriggerPriceSpec)) _
+Then
+    Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change entry trigger Price - order " & mEntryOrder.Id & " already filled"
+    mEntryOrder.TriggerPriceSpec = mNewEntryTriggerPriceSpec
+    mEntryOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
+                                                mEntryOrder.Action, _
+                                                mNewEntryTriggerPriceSpec, _
+                                                mContract.Specifier.SecType)
+    checkForPendingEntryUpdates = True
+End If
+Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function checkForPendingStoplossUpdates() As Boolean
+Const ProcName As String = "checkForPendingStoplossUpdates"
+On Error GoTo Err
+
+If mStopLossOrder Is Nothing Then Exit Function
+
+If mStopLossOrder.IsDirty Then checkForPendingStoplossUpdates = True
+If mNewStopLossLimitPriceSpec.IsValid And _
+    (Not mNewStopLossLimitPriceSpec.Equals(mStopLossOrder.LimitPriceSpec)) _
+Then
+    Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change stop-loss limit price - order " & mStopLossOrder.Id & " already filled"
+    Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusSubmitted, "Can't change stop-loss limit price - order " & mStopLossOrder.Id & " already submitted"
+    mStopLossOrder.LimitPriceSpec = mNewStopLossLimitPriceSpec
+    mStopLossOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
+                                                mStopLossOrder.Action, _
+                                                mNewStopLossLimitPriceSpec, _
+                                                mContract.Specifier.SecType)
+    checkForPendingStoplossUpdates = True
+End If
+Set mNewStopLossLimitPriceSpec = gNewPriceSpecifier
+
+If mNewStopLossQuantity >= 0 And _
+    mNewStopLossQuantity <> mStopLossOrder.Quantity _
+Then
+    Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change stop-loss quantity - order " & mStopLossOrder.Id & " already filled"
+    mStopLossOrder.Quantity = mNewStopLossQuantity
+    checkForPendingStoplossUpdates = True
+End If
+mNewStopLossQuantity = -1
+
+If mNewStopLossTriggerPriceSpec.IsValid And _
+    (Not mNewStopLossTriggerPriceSpec.Equals(mStopLossOrder.TriggerPriceSpec)) _
+Then
+    Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change stop-loss trigger price - order " & mEntryOrder.Id & " already filled"
+    mStopLossOrder.TriggerPriceSpec = mNewStopLossTriggerPriceSpec
+    mStopLossOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
+                                                mStopLossOrder.Action, _
+                                                mNewStopLossTriggerPriceSpec, _
+                                                mContract.Specifier.SecType)
+    checkForPendingStoplossUpdates = True
+End If
+Set mNewStopLossTriggerPriceSpec = gNewPriceSpecifier
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function checkForPendingTargetUpdates() As Boolean
+Const ProcName As String = "checkForPendingTargetUpdates"
+On Error GoTo Err
+
+If mTargetOrder Is Nothing Then Exit Function
+
+If mTargetOrder.IsDirty Then checkForPendingTargetUpdates = True
+If mNewTargetLimitPriceSpec.IsValid And _
+    (Not mNewTargetLimitPriceSpec.Equals(mTargetOrder.LimitPriceSpec)) _
+Then
+    Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change target limit price - order " & mTargetOrder.Id & " already filled"
+    mTargetOrder.LimitPriceSpec = mNewTargetLimitPriceSpec
+    mTargetOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
+                                                mTargetOrder.Action, _
+                                                mNewTargetLimitPriceSpec, _
+                                                mContract.Specifier.SecType)
+    checkForPendingTargetUpdates = True
+End If
+Set mNewTargetLimitPriceSpec = gNewPriceSpecifier
+
+If mNewTargetQuantity >= 0 And _
+    mNewTargetQuantity <> mTargetOrder.Quantity _
+Then
+    Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change target quantity - order " & mTargetOrder.Id & " already filled"
+    mTargetOrder.Quantity = mNewTargetQuantity
+    checkForPendingTargetUpdates = True
+End If
+mNewTargetQuantity = -1
+
+If mNewTargetTriggerPriceSpec.IsValid And _
+    (Not mNewTargetTriggerPriceSpec.Equals(mTargetOrder.TriggerPriceSpec)) _
+Then
+    Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change target trigger price - order " & mEntryOrder.Id & " already filled"
+    mTargetOrder.TriggerPriceSpec = mNewTargetTriggerPriceSpec
+    mTargetOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
+                                                mTargetOrder.Action, _
+                                                mNewTargetTriggerPriceSpec, _
+                                                mContract.Specifier.SecType)
+    checkForPendingTargetUpdates = True
+End If
+Set mNewTargetTriggerPriceSpec = gNewPriceSpecifier
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function CreateAnOrder(ByVal pId As String) As IOrder
 Const ProcName As String = "CreateAnOrder"
@@ -3217,11 +3168,10 @@ Private Sub createCloseoutOrder()
 Const ProcName As String = "createCloseoutOrder"
 On Error GoTo Err
 
-CloseoutOrder = mOrderContext.NewOrder(True)
+CloseoutOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, True)
 
 mCloseoutOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
 mCloseoutOrder.Quantity = Abs(Size)
-mCloseoutOrder.OrderType = OrderTypes.OrderTypeMarket
 mCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
 
 SaveRecoveryInfo
@@ -3578,55 +3528,72 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function placePeggedOrder( _
+                ByVal pOrder As IOrder, _
+                ByVal pRole As BracketOrderRoles) As Boolean
+Const ProcName As String = "placePeggedOrder"
+On Error GoTo Err
+
+If pOrder Is Nothing Then Exit Function
+If pOrder.Status <> OrderStatuses.OrderStatusCreated Then Exit Function
+If Not (pOrder.LimitPriceSpec.RequiresDelayedPriceResolution Or _
+        pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution) Then Exit Function
+If Not (mOrderContext.IsReadyForPriceSpecifier(pOrder.LimitPriceSpec) And _
+        mOrderContext.IsReadyForPriceSpecifier(pOrder.TriggerPriceSpec)) Then
+    mOrderContext.AddChangeListener Me
+    Exit Function
+End If
+
+' the stop-loss limit and/or trigger price are to be pegged to the entry price
+
+If pRole = BracketOrderRoleStopLoss Then
+    If pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
+        SetNewStopLossLimitPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
+                                                    PriceValueTypeValue, _
+                                                    pOrder.LimitPriceSpec.Offset, _
+                                                    pOrder.LimitPriceSpec.OffsetType)
+    End If
+    If pOrder.TriggerPriceSpec.PriceType = PriceValueTypeEntry Then
+        SetNewStopLossTriggerPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
+                                                    PriceValueTypeValue, _
+                                                    pOrder.TriggerPriceSpec.Offset, _
+                                                    pOrder.TriggerPriceSpec.OffsetType)
+    End If
+Else
+    If pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
+        SetNewTargetLimitPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
+                                                    PriceValueTypeValue, _
+                                                    pOrder.LimitPriceSpec.Offset, _
+                                                    pOrder.LimitPriceSpec.OffsetType)
+    End If
+    If pOrder.TriggerPriceSpec.PriceType = PriceValueTypeEntry Then
+        SetNewTargetTriggerPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
+                                                    PriceValueTypeValue, _
+                                                    pOrder.TriggerPriceSpec.Offset, _
+                                                    pOrder.TriggerPriceSpec.OffsetType)
+    End If
+End If
+
+placePeggedOrder = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub placePeggedOrders()
 Const ProcName As String = "placePeggedOrders"
 On Error GoTo Err
 
 If mSummary.PeggedOrdersProcessed Then Exit Sub
 
-Dim updated As Boolean
+Dim lUpdated As Boolean
 
-If mStopLossOrder Is Nothing Then
-ElseIf mStopLossOrder.Status <> OrderStatuses.OrderStatusCreated Then
-ElseIf mStopLossOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then
-ElseIf Not mOrderContext.IsReadyForOffset(mStopLossOrder.TriggerPriceOffsetType) Then
-    mOrderContext.AddChangeListener Me
-Else
-    ' the stop price is to be pegged to the entry price - the
-    ' order's offset property will already contain any required
-    ' offset from that price
-    mStopLossOrder.OrderType = OrderTypes.OrderTypeStop
-    SetNewStopLossTriggerPrice mOrderContext.CalculateOffsettedPrice( _
-                                                mStopLossOrder.Action, _
-                                                EntryOrder.LastFillPrice, _
-                                                mStopLossOrder.TriggerPriceOffset, _
-                                                mStopLossOrder.TriggerPriceOffsetType, _
-                                                mContract.Specifier.SecType)
-    'SetNewStopLossQuantity pFillSize
-    updated = True
-End If
+lUpdated = placePeggedOrder(mStopLossOrder, BracketOrderRoleStopLoss)
+lUpdated = lUpdated Or placePeggedOrder(mTargetOrder, BracketOrderRoleTarget)
 
-If mTargetOrder Is Nothing Then
-ElseIf mTargetOrder.Status <> OrderStatuses.OrderStatusCreated Then
-ElseIf mTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
-ElseIf Not mOrderContext.IsReadyForOffset(mTargetOrder.TriggerPriceOffsetType) Then
-    mOrderContext.AddChangeListener Me
-Else
-    ' the limit price is to be pegged to the entry price - the
-    ' order's offset property will already contain any required
-    ' offset from that price
-    mTargetOrder.OrderType = OrderTypes.OrderTypeLimit
-    SetNewTargetLimitPrice mOrderContext.CalculateOffsettedPrice( _
-                                                mTargetOrder.Action, _
-                                                EntryOrder.LastFillPrice, _
-                                                mTargetOrder.LimitPriceOffset, _
-                                                mTargetOrder.LimitPriceOffsetType, _
-                                                mContract.Specifier.SecType)
-    'SetNewTargetQuantity pFillSize
-    updated = True
-End If
-
-If updated Then
+If lUpdated Then
     mSummary.PeggedOrdersProcessed = True
     Update
     SaveRecoveryInfo

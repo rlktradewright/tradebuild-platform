@@ -202,10 +202,10 @@ End Sub
 Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
-Public Sub AdjustStop(ByVal pStopTriggerPrice As Double, Optional ByVal pQuantity As Long = -1)
+Public Sub AdjustStop(ByVal pStopTriggerPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1)
 End Sub
 
-Public Sub AdjustTarget(ByVal pTargetPrice As Double, Optional ByVal pQuantity As Long = -1)
+Public Sub AdjustTarget(ByVal pTargetPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1)
 End Sub
 
 Public Function Cancel(Optional ByVal pEvenIfFilled As Boolean = False) As Boolean
@@ -245,62 +245,46 @@ Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 Public Sub SetNewEntryLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
 Public Sub SetNewEntryTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
 Public Sub SetNewOrderLimitPrice( _
                 ByVal pRole As BracketOrderRoles, _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
 Public Sub SetNewOrderTriggerPrice( _
                 ByVal pRole As BracketOrderRoles, _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
 Public Sub SetNewEntryQuantity(ByVal pNewQuantity As Long)
 End Sub
 
 Public Sub SetNewStopLossLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
 Public Sub SetNewStopLossQuantity(ByVal pNewQuantity As Long)
 End Sub
 
 Public Sub SetNewStopLossTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
 Public Sub SetNewTargetLimitPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
 Public Sub SetNewTargetQuantity(ByVal pNewQuantity As Long)
 End Sub
 
 Public Sub SetNewTargetTriggerPrice( _
-                ByVal pPrice As Double, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone)
+                ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
 Public Function ToString() As String

@@ -227,6 +227,7 @@ lOrderTypesStr = Split(mContractDetails.OrderTypes, ",")
 
 Dim lPermittedOrderAttributes As OrderAttributes
 lPermittedOrderAttributes = OrderAttributes.OrderAttBlockOrder
+lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttIgnoreRTH
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttMinimumQuantity
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttNBBOPriceCap
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttOriginatorRef
@@ -341,20 +342,6 @@ For i = 0 To UBound(lOrderTypesStr)
         End Select
     End If
 Next
-
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketEntryTypes.BracketEntryTypeAsk
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketEntryTypes.BracketEntryTypeBid
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketEntryTypes.BracketEntryTypeLast
-
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketStopLossTypes.BracketStopLossTypeAsk
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketStopLossTypes.BracketStopLossTypeAuto
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketStopLossTypes.BracketStopLossTypeBid
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketStopLossTypes.BracketStopLossTypeLast
-
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketTargetTypes.BracketTargetTypeAsk
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketTargetTypes.BracketTargetTypeAuto
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketTargetTypes.BracketTargetTypeBid
-lPermittedOrderTypes = lPermittedOrderTypes Or BracketTargetTypes.BracketTargetTypeLast
 
 Dim lPermittedStopTriggerMethods As OrderStopTriggerMethods
 lPermittedStopTriggerMethods = OrderStopTriggerMethods.OrderStopTriggerBidAsk Or _

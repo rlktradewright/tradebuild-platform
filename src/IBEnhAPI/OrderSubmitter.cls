@@ -75,6 +75,8 @@ Private mStageOrders                                As Boolean
 
 Private mIsTwsConnectedToIBServers                  As Boolean
 
+Private mDataSource                                 As IMarketDataSource
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -567,7 +569,7 @@ Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "ExecuteBracketOrder"
 On Error GoTo Err
 
-If pBracketOrder.Contract.Specifier.Sectype = SecTypeCombo Then
+If pBracketOrder.Contract.Specifier.SecType = SecTypeCombo Then
     Dim lTask As ComboContractConversionTask
     Set lTask = New ComboContractConversionTask
     lTask.Initialise mContractRequester, pBracketOrder.Contract.Specifier
@@ -619,7 +621,8 @@ Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pOrderPlacer As OrderPlacer, _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractCache As TwsContractCache)
+                ByVal pContractCache As TwsContractCache, _
+                ByVal pDataSource As IMarketDataSource)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -632,6 +635,7 @@ Else
 End If
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
+Set mDataSource = pDataSource
 
 Exit Sub
 
@@ -643,7 +647,7 @@ Public Sub ModifyOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "ModifyOrder"
 On Error GoTo Err
 
-If pOrder.ContractSpecifier.Sectype = SecTypeCombo Then
+If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     Dim lTask As ComboContractConversionTask
     Set lTask = New ComboContractConversionTask
     lTask.Initialise mContractRequester, pOrder.ContractSpecifier
@@ -675,7 +679,7 @@ Public Sub ModifyBracketOrder( _
 Const ProcName As String = "ModifyBracketOrder"
 On Error GoTo Err
 
-If pBracketOrder.Contract.Specifier.Sectype = SecTypeCombo Then
+If pBracketOrder.Contract.Specifier.SecType = SecTypeCombo Then
     Dim lTask As ComboContractConversionTask
     Set lTask = New ComboContractConversionTask
     lTask.Initialise mContractRequester, pBracketOrder.Contract.Specifier
@@ -971,55 +975,36 @@ Private Sub execBracketOrder( _
 Const ProcName As String = "execBracketOrder"
 On Error GoTo Err
 
-Dim lEntryOrder As IOrder
-Set lEntryOrder = pBracketOrder.EntryOrder
+Dim lEntryOrder As IOrder: Set lEntryOrder = pBracketOrder.EntryOrder
 
-Dim lStopOrder As IOrder
-Set lStopOrder = pBracketOrder.StopLossOrder
+Dim lStopLossOrder As IOrder: Set lStopLossOrder = pBracketOrder.StopLossOrder
+Dim lStopLossOrderCanBePlaced As Boolean: lStopLossOrderCanBePlaced = orderCanBePlaced(lStopLossOrder)
 
-Dim lTargetOrder As IOrder
-Set lTargetOrder = pBracketOrder.TargetOrder
+Dim lTargetOrder As IOrder: Set lTargetOrder = pBracketOrder.TargetOrder
+Dim lTargetOrderCanBePlaced As Boolean: lTargetOrderCanBePlaced = orderCanBePlaced(lTargetOrder)
 
 Dim lPlexId As Long
 lPlexId = getNextBracketId
 
 If Not lEntryOrder Is Nothing Then
-    lEntryOrder.BrokerId = lPlexId + EntryOrderIdIncrement
-    
     Dim Transmit As Boolean
     Transmit = True
     
-    If Not lStopOrder Is Nothing Then
-        If lStopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then
-            lStopOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
-            Transmit = False
-        End If
-    End If
-    If Not lTargetOrder Is Nothing Then
-        If lTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
-            lTargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
-            Transmit = False
-        End If
-    End If
-        
+    If lStopLossOrderCanBePlaced Then Transmit = False
+    If lTargetOrderCanBePlaced Then Transmit = False
+    lEntryOrder.BrokerId = lPlexId + EntryOrderIdIncrement
     placeAnOrder lEntryOrder, pContract, Transmit, 0, "", OrderModeEntry
     
-    If Not lStopOrder Is Nothing Then
+    If lStopLossOrderCanBePlaced Then
         Transmit = True
-        If Not lTargetOrder Is Nothing Then
-            If lTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then Transmit = False
-        End If
-        
-        If lStopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then
-            ' note that AUTOSTP orders will be sent when the entry Order is filled
-            placeAnOrder lStopOrder, pContract, Transmit, lEntryOrder.BrokerId, "", OrderModeStop
-        End If
+        If lTargetOrderCanBePlaced Then Transmit = False
+        lStopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
+        placeAnOrder lStopLossOrder, pContract, Transmit, lEntryOrder.BrokerId, "", OrderModeStop
     End If
     
-    If Not lTargetOrder Is Nothing Then
-        If lTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
-            placeAnOrder lTargetOrder, pContract, True, lEntryOrder.BrokerId, "", OrderModeTarget
-        End If
+    If lTargetOrderCanBePlaced Then
+        lTargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
+        placeAnOrder lTargetOrder, pContract, True, lEntryOrder.BrokerId, "", OrderModeTarget
     End If
     
 Else
@@ -1206,6 +1191,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function orderCanBePlaced(ByVal pOrder As IOrder) As Boolean
+If pOrder Is Nothing Then
+    orderCanBePlaced = False
+Else
+    orderCanBePlaced = _
+            Not (pOrder.LimitPriceSpec.RequiresDelayedPriceResolution Or _
+            pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution)
+End If
+End Function
+
 Private Sub placeAnOrder( _
                 ByVal pOrder As IOrder, _
                 ByVal pContract As TwsContract, _
@@ -1226,7 +1221,7 @@ Assert pOrder.Action <> OrderActionNone, "Order has no action"
 Assert pOrder.OrderType <> OrderTypeNone, "Order has no order type"
 Assert pOrder.Quantity <> 0, "Order has zero quantity"
 
-mOrderPlacer.PlaceOrder Me, pOrder, pContract, IIf(mStageOrders, False, pTransmit), pParentId, pOcaGroup
+mOrderPlacer.PlaceOrder Me, pOrder, pContract, IIf(mStageOrders, False, pTransmit), pParentId, pOcaGroup, mDataSource
 
 If pOrder.Status = OrderStatusCreated Then
     notifyOpenOrder pOrder
@@ -1250,7 +1245,7 @@ On Error GoTo Err
 
 pOrder.BrokerId = CStr(mTwsAPI.NextOrderId)
 
-If pOrder.ContractSpecifier.Sectype = SecTypeCombo Then
+If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     Dim lTask As ComboContractConversionTask
     Set lTask = New ComboContractConversionTask
     lTask.Initialise mContractRequester, pOrder.ContractSpecifier

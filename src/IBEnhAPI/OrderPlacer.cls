@@ -130,6 +130,10 @@ Case 399
     ' contains information about the order which doesn't invalidate it - for example
     ' order won't be submitted to exchange until start of next trading session
     GetOrderSubmitter(pOrderId).NotifyMessage GetOrder(pOrderId).Id, pErrorMsg
+Case 2109
+    ' Indicates the outsideRth flag was set for an order for which there is not a
+    ' regular vs outside regular trading hour distinction
+    ' Ignore this.
 Case 10147  ' Trying to cancel an order that TWS doesn't know about
     ' Just ignore this
 Case 10148  ' Trying to cancel an order that is already filled or cancelled
@@ -428,7 +432,8 @@ Friend Sub PlaceOrder( _
                 ByVal pContract As TwsContract, _
                 ByVal pTransmit As Boolean, _
                 ByVal pParentId As Long, _
-                ByVal pOcaGroup As String)
+                ByVal pOcaGroup As String, _
+                ByVal pDataSource As IMarketDataSource)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
@@ -437,7 +442,7 @@ Dim lOrder As TwsOrder
 
 mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId, pParentId
 
-Set lOrder = gOrderToTwsOrder(pOrder)
+Set lOrder = gOrderToTwsOrder(pOrder, pDataSource)
 lOrder.Transmit = pTransmit
 lOrder.ParentId = pParentId
 lOrder.OcaGroup = pOcaGroup

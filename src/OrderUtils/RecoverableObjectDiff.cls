@@ -107,11 +107,8 @@ Friend Sub SetProperty( _
 Const ProcName As String = "SetProperty"
 On Error GoTo Err
 
-If mProperties.Exists(pName) Then
-    mProperties.Item(pName) = pValue
-Else
-    mProperties.Add pName, pValue
-End If
+If mProperties.Exists(pName) Then mProperties.Remove pName
+mProperties.Add pName, pValue
 
 Exit Sub
 

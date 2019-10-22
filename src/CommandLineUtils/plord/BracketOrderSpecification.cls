@@ -46,29 +46,21 @@ Private Const ModuleName                            As String = "BracketOrderSpe
 ' Member variables
 '@================================================================================
 
+Public Contract                                     As IContract
 Public Action                                       As OrderActions
 Public Quantity                                     As Long
-Public EntryType                                    As BracketEntryTypes
-Public EntryLimitPrice                              As Double
-Public EntryLimitPriceOffset                        As Double
-Public EntryLimitPriceOffsetType                    As PriceOffsetTypes
-Public EntryTriggerPrice                            As Double
-Public EntryTriggerPriceOffset                      As Double
-Public EntryTriggerPriceOffsetType                  As PriceOffsetTypes
-Public StopLossType                                 As BracketStopLossTypes
-Public StopLossLimitPrice                           As Double
-Public StopLossLimitPriceOffset                     As Long
-Public StopLossLimitPriceOffsetType                 As PriceOffsetTypes
-Public StopLossTriggerPrice                         As Double
-Public StopLossTriggerPriceOffset                   As Double
-Public StopLossTriggerPriceOffsetType               As PriceOffsetTypes
-Public TargetType                                   As BracketTargetTypes
-Public TargetLimitPrice                             As Double
-Public TargetLimitPriceOffset                       As Long
-Public TargetLimitPriceOffsetType                   As PriceOffsetTypes
-Public TargetTriggerPrice                           As Double
-Public TargetTriggerPriceOffset                     As Double
-Public TargetTriggerPriceOffsetType                 As PriceOffsetTypes
+Public EntryType                                    As OrderTypes
+Public EntryLimitPriceSpec                          As PriceSpecifier
+Public EntryTriggerPriceSpec                        As PriceSpecifier
+Public EntryIgnoreRTH                               As Boolean
+Public StopLossType                                 As OrderTypes
+Public StopLossLimitPriceSpec                       As PriceSpecifier
+Public StopLossTriggerPriceSpec                     As PriceSpecifier
+Public StopLossIgnoreRTH                            As Boolean
+Public TargetType                                   As OrderTypes
+Public TargetLimitPriceSpec                         As PriceSpecifier
+Public TargetTriggerPriceSpec                       As PriceSpecifier
+Public TargetIgnoreRTH                              As Boolean
 Public EntryTIF                                     As OrderTIFs
 Public StopLossTIF                                  As OrderTIFs
 Public TargetTIF                                    As OrderTIFs
@@ -85,6 +77,15 @@ Public TargetReason                                 As String
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set EntryLimitPriceSpec = NewPriceSpecifier
+Set EntryTriggerPriceSpec = NewPriceSpecifier
+Set StopLossLimitPriceSpec = NewPriceSpecifier
+Set StopLossTriggerPriceSpec = NewPriceSpecifier
+Set TargetLimitPriceSpec = NewPriceSpecifier
+Set TargetTriggerPriceSpec = NewPriceSpecifier
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -138,6 +139,10 @@ End Function
 ' Helper Functions
 '@================================================================================
 
+Private Function formatPriceSpec(ByVal pPriceSpec As PriceSpecifier) As String
+formatPriceSpec = PriceSpecifierToString(pPriceSpec, Contract)
+End Function
+
 Private Function generateBracket() As String
 Dim s As String
 s = BracketCommand
@@ -160,11 +165,11 @@ generateBracket = s & vbCrLf
 End Function
 
 Private Function generateEntry() As String
-If EntryType = BracketEntryTypeNone Then Exit Function
+If EntryType = OrderTypeNone Then Exit Function
 
 Dim s As String
 s = EntryCommand & " "
-s = s & BracketEntryTypeToShortString(EntryType) & " "
+s = s & OrderTypeToShortString(EntryType) & " "
 s = s & generateEntryAttributes
 generateEntry = s & vbCrLf
 End Function
@@ -172,37 +177,40 @@ End Function
 Private Function generateEntryAttributes() As String
 Dim s As String
 Select Case EntryType
-Case BracketEntryTypeMarket
-Case BracketEntryTypeMarketOnOpen
-Case BracketEntryTypeMarketOnClose
-Case BracketEntryTypeMarketToLimit
-Case BracketEntryTypeStop, _
-        BracketEntryTypeMarketIfTouched
-    s = s & gGenerateSwitch(TriggerPriceSwitch, EntryTriggerPrice)
-Case BracketEntryTypeStopLimit, _
-        BracketEntryTypeLimitIfTouched
-    s = s & gGenerateSwitch(TriggerPriceSwitch, EntryTriggerPrice) & _
-            gGenerateSwitch(PriceSwitch, EntryLimitPrice)
-Case BracketEntryTypeLimit, _
-        BracketEntryTypeLimitOnOpen, _
-        BracketEntryTypeLimitOnClose
-    s = s & gGenerateSwitch(PriceSwitch, EntryLimitPrice)
-Case BracketEntryTypeBid, _
-        BracketEntryTypeAsk, _
-        BracketEntryTypeLast
-    s = s & gGenerateSwitch(OffsetSwitch, gGenerateOffset(EntryLimitPriceOffset, EntryLimitPriceOffsetType))
+Case OrderTypeMarket
+Case OrderTypeMarketOnOpen
+Case OrderTypeMarketOnClose
+Case OrderTypeMarketToLimit
+Case OrderTypeStop, _
+        OrderTypeMarketIfTouched
+    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec))
+Case OrderTypeStopLimit, _
+        OrderTypeLimitIfTouched
+    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec)) & _
+            gGenerateSwitch(PriceSwitch, formatPriceSpec(EntryLimitPriceSpec))
+Case OrderTypeLimit, _
+        OrderTypeLimitOnOpen, _
+        OrderTypeLimitOnClose
+    s = s & gGenerateSwitch(PriceSwitch, formatPriceSpec(EntryLimitPriceSpec))
+Case OrderTypeTrail
+    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec))
+Case OrderTypeTrailLimit
+    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec)) & _
+            gGenerateSwitch(PriceSwitch, formatPriceSpec(EntryLimitPriceSpec))
 End Select
 
 If EntryTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(EntryTIF))
+If EntryIgnoreRTH Then s = s & gGenerateSwitch(IgnoreRTHSwitch, "")
+
 generateEntryAttributes = s
 End Function
 
 Private Function generateStopLoss() As String
-If StopLossType = BracketStopLossTypeNone Then Exit Function
+If StopLossType = OrderTypeNone Then Exit Function
 
 Dim s As String
 s = StopLossCommand & " "
-s = s & BracketStopLossTypeToShortString(StopLossType) & " "
+s = s & OrderTypeToShortString(StopLossType) & " "
 s = s & generateStopLossAttributes
 generateStopLoss = s & vbCrLf
 End Function
@@ -210,28 +218,26 @@ End Function
 Private Function generateStopLossAttributes() As String
 Dim s As String
 Select Case StopLossType
-Case BracketStopLossTypeStop
-    s = s & gGenerateSwitch(TriggerPriceSwitch, StopLossTriggerPrice)
-Case BracketStopLossTypeStopLimit
-    s = s & gGenerateSwitch(TriggerPriceSwitch, StopLossTriggerPrice) & _
-            gGenerateSwitch(PriceSwitch, StopLossLimitPrice)
-Case BracketStopLossTypeBid, _
-        BracketStopLossTypeAsk, _
-        BracketStopLossTypeAsk, _
-        BracketStopLossTypeAuto
-    s = s & gGenerateSwitch(OffsetSwitch, gGenerateOffset(StopLossTriggerPriceOffset, StopLossTriggerPriceOffsetType))
+Case OrderTypeStop, _
+        OrderTypeTrail, _
+        OrderTypeTrailLimit
+    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(StopLossTriggerPriceSpec))
+Case OrderTypeStopLimit
+    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(StopLossTriggerPriceSpec)) & _
+            gGenerateSwitch(PriceSwitch, formatPriceSpec(StopLossLimitPriceSpec))
 End Select
 
 If StopLossTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(StopLossTIF))
+If StopLossIgnoreRTH Then s = s & gGenerateSwitch(IgnoreRTHSwitch, "")
 generateStopLossAttributes = s
 End Function
 
 Private Function generateTarget() As String
-If TargetType = BracketTargetTypeNone Then Exit Function
+If TargetType = OrderTypeNone Then Exit Function
 
 Dim s As String
 s = TargetCommand & " "
-s = s & BracketTargetTypeToShortString(TargetType) & " "
+s = s & OrderTypeToShortString(TargetType) & " "
 s = s & generateTargetAttributes
 generateTarget = s & vbCrLf
 End Function
@@ -239,21 +245,17 @@ End Function
 Private Function generateTargetAttributes() As String
 Dim s As String
 Select Case TargetType
-    Case BracketTargetTypeLimit
-        s = s & gGenerateSwitch(PriceSwitch, TargetLimitPrice)
-    Case BracketTargetTypeLimitIfTouched
-        s = s & gGenerateSwitch(TriggerPriceSwitch, TargetTriggerPrice) & _
-                gGenerateSwitch(PriceSwitch, TargetLimitPrice)
-    Case BracketTargetTypeMarketIfTouched
-        s = s & gGenerateSwitch(TriggerPriceSwitch, TargetTriggerPrice)
-    Case BracketTargetTypeBid, _
-            BracketTargetTypeAsk, _
-            BracketTargetTypeLast, _
-            BracketTargetTypeAuto
-        s = s & gGenerateSwitch(OffsetSwitch, gGenerateOffset(TargetLimitPriceOffset, TargetLimitPriceOffsetType))
+    Case OrderTypeLimit
+        s = s & gGenerateSwitch(PriceSwitch, formatPriceSpec(TargetLimitPriceSpec))
+    Case OrderTypeLimitIfTouched
+        s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(TargetTriggerPriceSpec)) & _
+                gGenerateSwitch(PriceSwitch, formatPriceSpec(TargetLimitPriceSpec))
+    Case OrderTypeMarketIfTouched
+        s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(TargetTriggerPriceSpec))
 End Select
 
 If TargetTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(TargetTIF))
+If TargetIgnoreRTH Then s = s & gGenerateSwitch(IgnoreRTHSwitch, "")
 generateTargetAttributes = s
 End Function
 

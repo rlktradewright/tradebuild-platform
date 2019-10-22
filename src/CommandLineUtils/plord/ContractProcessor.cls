@@ -191,6 +191,7 @@ Const ProcName As String = "ProcessBracketCommand"
 On Error GoTo Err
 
 Set mBOSpec = New BracketOrderSpecification
+Set mBOSpec.Contract = mContract
 mBOSpec.EntryTIF = OrderTIFDay
 mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
 mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
@@ -297,34 +298,45 @@ Set lClp = CreateCommandLineParser(pParams, " ")
 
 If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument, the entry order type. Additionally there can be several attributes beginnig with ""/"""
 
-mBOSpec.EntryType = getEntryOrderType(lClp.Arg(0))
+Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(0)
+If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
+    mBOSpec.EntryType = getEntryOrderType(lOrderTypeStr)
 
-Dim lSwitchName As String
-lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.EntryLimitPrice = CDbl(lClp.SwitchValue(PriceSwitch))
-
-lSwitchName = TriggerPriceSwitch
-If lClp.Switch(TriggerPriceSwitch) Then
-    mBOSpec.EntryTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch))
-ElseIf lClp.Switch(TriggerPriceSwitch1) Then
-    mBOSpec.EntryTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch1))
+    If Not IsEntryOrderType(mBOSpec.EntryType) Then
+        mBOSpec.EntryType = OrderTypeNone
+        gWriteErrorLine "Invalid entry order type", True
+    Else
+        Dim lPriceStr As String: lPriceStr = getPriceString(lClp)
+        Dim lTriggerPriceStr As String: lTriggerPriceStr = getTriggerPriceString(lClp)
+        
+        Dim lLimitPriceSpec As PriceSpecifier
+        Dim lTriggerPriceSpec As PriceSpecifier
+        parseOrderPrices IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
+                        IIf(lPriceStr <> "", lTriggerPriceStr, ""), _
+                        mBOSpec.EntryType, _
+                        lLimitPriceSpec, _
+                        lTriggerPriceSpec
+        Set mBOSpec.EntryLimitPriceSpec = lLimitPriceSpec
+        Set mBOSpec.EntryTriggerPriceSpec = lTriggerPriceSpec
+        
+        If mBOSpec.EntryLimitPriceSpec.PriceType = PriceValueTypeEntry Or _
+            mBOSpec.EntryTriggerPriceSpec.PriceType = PriceValueTypeEntry Then
+            gWriteErrorLine "Invalid use of 'ENTRY'", True
+        End If
+    End If
 End If
 
-lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then
-    Dim lOffsetType As PriceOffsetTypes
-    mBOSpec.EntryLimitPriceOffset = parseOffset(lClp.SwitchValue(OffsetSwitch), _
-                                        lOffsetType)
-    mBOSpec.EntryLimitPriceOffsetType = lOffsetType
-End If
-
+Dim lSwitchName  As String
 lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
+If lClp.Switch(lSwitchName) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(lSwitchName))
 
 lSwitchName = ReasonSwitch
-If lClp.Switch(ReasonSwitch) Then mBOSpec.EntryReason = lClp.SwitchValue(ReasonSwitch)
+If lClp.Switch(lSwitchName) Then mBOSpec.EntryReason = lClp.SwitchValue(lSwitchName)
 
-If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
+lSwitchName = IgnoreRTHSwitch
+mBOSpec.EntryIgnoreRTH = lClp.Switch(lSwitchName)
+
+If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
@@ -353,34 +365,40 @@ Set lClp = CreateCommandLineParser(pParams, " ")
 
 If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument, the stop-loss order type. Additionally there can be several attributes beginnig with ""/"""
 
-mBOSpec.StopLossType = getStopLossOrderType(lClp.Arg(0))
+Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(0)
+If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
+    mBOSpec.StopLossType = getStopLossOrderType(lClp.Arg(0))
+
+    If Not IsStopLossOrderType(mBOSpec.StopLossType) Then
+        mBOSpec.StopLossType = OrderTypeNone
+        gWriteErrorLine "Invalid stop-loss order type", True
+    Else
+        Dim lPriceStr As String: lPriceStr = getPriceString(lClp)
+        Dim lTriggerPriceStr As String: lTriggerPriceStr = getTriggerPriceString(lClp)
+        
+        Dim lLimitPriceSpec As PriceSpecifier
+        Dim lTriggerPriceSpec As PriceSpecifier
+        parseOrderPrices IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
+                        IIf(lPriceStr <> "", lTriggerPriceStr, ""), _
+                        mBOSpec.StopLossType, _
+                        lLimitPriceSpec, _
+                        lTriggerPriceSpec
+        Set mBOSpec.StopLossLimitPriceSpec = lLimitPriceSpec
+        Set mBOSpec.StopLossTriggerPriceSpec = lTriggerPriceSpec
+    End If
+End If
 
 Dim lSwitchName As String
-lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.StopLossLimitPrice = CDbl(lClp.SwitchValue(PriceSwitch))
-
-lSwitchName = TriggerPriceSwitch
-If lClp.Switch(TriggerPriceSwitch) Then
-    mBOSpec.StopLossTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch))
-ElseIf lClp.Switch(TriggerPriceSwitch1) Then
-    mBOSpec.StopLossTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch1))
-End If
-
-lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then
-    Dim lOffsetType As PriceOffsetTypes
-    mBOSpec.StopLossTriggerPriceOffset = parseOffset(lClp.SwitchValue(OffsetSwitch), _
-                                        lOffsetType)
-    mBOSpec.StopLossTriggerPriceOffsetType = lOffsetType
-End If
+lSwitchName = TIFSwitch
+If lClp.Switch(lSwitchName) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.SwitchValue(lSwitchName))
 
 lSwitchName = ReasonSwitch
-If lClp.Switch(ReasonSwitch) Then mBOSpec.StopLossReason = lClp.SwitchValue(ReasonSwitch)
+If lClp.Switch(lSwitchName) Then mBOSpec.StopLossReason = lClp.SwitchValue(lSwitchName)
 
-lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.StopLossTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
+lSwitchName = IgnoreRTHSwitch
+mBOSpec.StopLossIgnoreRTH = lClp.Switch(lSwitchName)
 
-If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
+If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
@@ -407,36 +425,42 @@ On Error GoTo Err
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
-mBOSpec.TargetType = getTargetOrderType(lClp.Arg(0))
-
 If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument, the target order type. Additionally there can be several attributes beginnig with ""/"""
 
+Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(0)
+If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
+    mBOSpec.TargetType = getTargetOrderType(lOrderTypeStr)
+    
+    If Not IsTargetOrderType(mBOSpec.TargetType) Then
+        mBOSpec.TargetType = OrderTypeNone
+        gWriteErrorLine "Invalid target order type", True
+    Else
+        Dim lPriceStr As String: lPriceStr = getPriceString(lClp)
+        Dim lTriggerPriceStr As String: lTriggerPriceStr = getTriggerPriceString(lClp)
+        
+        Dim lLimitPriceSpec As PriceSpecifier
+        Dim lTriggerPriceSpec As PriceSpecifier
+        parseOrderPrices IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
+                        IIf(lPriceStr <> "", lTriggerPriceStr, ""), _
+                        mBOSpec.TargetType, _
+                        lLimitPriceSpec, _
+                        lTriggerPriceSpec
+        Set mBOSpec.TargetLimitPriceSpec = lLimitPriceSpec
+        Set mBOSpec.TargetTriggerPriceSpec = lTriggerPriceSpec
+    End If
+End If
+
 Dim lSwitchName As String
-lSwitchName = PriceSwitch
-If lClp.Switch(PriceSwitch) Then mBOSpec.TargetLimitPrice = CDbl(lClp.SwitchValue(PriceSwitch))
-
-lSwitchName = TriggerPriceSwitch
-If lClp.Switch(TriggerPriceSwitch) Then
-    mBOSpec.TargetTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch))
-ElseIf lClp.Switch(TriggerPriceSwitch1) Then
-    mBOSpec.TargetTriggerPrice = CDbl(lClp.SwitchValue(TriggerPriceSwitch1))
-End If
-
-lSwitchName = OffsetSwitch
-If lClp.Switch(OffsetSwitch) Then
-    Dim lOffsetType As PriceOffsetTypes
-    mBOSpec.TargetLimitPriceOffset = parseOffset(lClp.SwitchValue(OffsetSwitch), _
-                                        lOffsetType)
-    mBOSpec.TargetLimitPriceOffsetType = lOffsetType
-End If
+lSwitchName = TIFSwitch
+If lClp.Switch(lSwitchName) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.SwitchValue(lSwitchName))
 
 lSwitchName = ReasonSwitch
-If lClp.Switch(ReasonSwitch) Then mBOSpec.TargetReason = lClp.SwitchValue(ReasonSwitch)
+If lClp.Switch(lSwitchName) Then mBOSpec.TargetReason = lClp.SwitchValue(lSwitchName)
 
-lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.TargetTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
+lSwitchName = IgnoreRTHSwitch
+mBOSpec.TargetIgnoreRTH = lClp.Switch(lSwitchName)
 
-If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
+If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
 Else
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
@@ -469,44 +493,41 @@ End If
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then getOrderAction = OrderActionNone
 End Function
 
-Private Function getEntryOrderType(ByVal pInput As String) As BracketEntryTypes
+Private Function getEntryOrderType(ByVal pInput As String) As OrderTypes
 Const ProcName As String = "getEntryOrderType"
 On Error GoTo Err
 
 If pInput = "" Then
-    getEntryOrderType = BracketEntryTypeNone
+    getEntryOrderType = OrderTypeNone
 Else
-    getEntryOrderType = BracketEntryTypeFromString(pInput)
+    getEntryOrderType = OrderTypeFromString(pInput)
 End If
-If (mOrderContext.PermittedOrderTypes And BracketEntryTypeToOrderType(getEntryOrderType)) = 0 Then
-    gWriteErrorLine "Entry order type not supported: " & pInput
-End If
+AssertArgument IsEntryOrderType(getEntryOrderType)
+AssertArgument (mOrderContext.PermittedOrderTypes And getEntryOrderType) <> 0
 
 Exit Function
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid entry order type: " & pInput
-    getEntryOrderType = BracketEntryTypeNone
+    getEntryOrderType = OrderTypeNone
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 
-Private Function getStopLossOrderType(ByVal pInput As String) As BracketStopLossTypes
+Private Function getStopLossOrderType(ByVal pInput As String) As OrderTypes
 Const ProcName As String = "getStopLossOrderType"
 On Error GoTo Err
 
 If pInput = "" Then
-    getStopLossOrderType = BracketStopLossTypeNone
+    getStopLossOrderType = OrderTypeNone
+ElseIf pInput = AutoPseudoOrderType Then
+    getStopLossOrderType = OrderTypeStop
 Else
-    getStopLossOrderType = BracketStopLossTypeFromString(pInput)
+    getStopLossOrderType = OrderTypeFromString(pInput)
 End If
-If (getStopLossOrderType = BracketStopLossTypeAuto And _
-        mOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop)) Or _
-    (mOrderContext.PermittedOrderTypes And _
-        BracketStopLossTypeToOrderType(getStopLossOrderType)) <> 0 Then
-Else
+If (mOrderContext.PermittedOrderTypes And getStopLossOrderType) = 0 Then
     gWriteErrorLine "Stop-loss order type not supported: " & pInput
 End If
 
@@ -515,25 +536,24 @@ Exit Function
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid stop-loss order type: " & pInput
-    getStopLossOrderType = BracketStopLossTypeNone
+    getStopLossOrderType = OrderTypeNone
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 
-Private Function getTargetOrderType(ByVal pInput As String) As BracketTargetTypes
+Private Function getTargetOrderType(ByVal pInput As String) As OrderTypes
 Const ProcName As String = "getTargetOrderType"
 On Error GoTo Err
 
 If pInput = "" Then
-    getTargetOrderType = BracketTargetTypeNone
+    getTargetOrderType = OrderTypeNone
+ElseIf pInput = AutoPseudoOrderType Then
+    getTargetOrderType = OrderTypeLimit
 Else
-    getTargetOrderType = BracketTargetTypeFromString(pInput)
+    getTargetOrderType = OrderTypeFromString(pInput)
 End If
-If getTargetOrderType = BracketTargetTypeAuto Or _
-    (mOrderContext.PermittedOrderTypes And _
-        BracketTargetTypeToOrderType(getTargetOrderType)) <> 0 Then
-Else
+If (mOrderContext.PermittedOrderTypes And getTargetOrderType) = 0 Then
     gWriteErrorLine "Target order type not supported: " & pInput
 End If
 
@@ -542,31 +562,232 @@ Exit Function
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine "Invalid target order type: " & pInput
-    getTargetOrderType = BracketTargetTypeNone
+    getTargetOrderType = OrderTypeNone
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 
-Private Function parseOffset( _
+Private Function getPriceString(ByVal pClp As CommandLineParser) As String
+Const ProcName As String = "getPriceString"
+On Error GoTo Err
+
+getPriceString = pClp.SwitchValue(PriceSwitch)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getTriggerPriceString(ByVal pClp As CommandLineParser) As String
+Const ProcName As String = "getTriggerPriceString"
+On Error GoTo Err
+
+Dim s As String
+If pClp.Switch(TriggerPriceSwitch) Then
+    s = pClp.SwitchValue(TriggerPriceSwitch)
+ElseIf pClp.Switch(TriggerPriceSwitch1) Then
+    s = pClp.SwitchValue(TriggerPriceSwitch1)
+End If
+getTriggerPriceString = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function parseOrderPrices( _
+                ByVal pArg1 As String, _
+                ByVal pArg2 As String, _
+                ByVal pOrderType As OrderTypes, _
+                ByRef pLimitPriceSpec As PriceSpecifier, _
+                ByRef pTriggerPriceSpec As PriceSpecifier) As Boolean
+Const ProcName As String = "parseOrderPrices"
+On Error GoTo Err
+
+parseOrderPrices = True
+
+Set pLimitPriceSpec = NewPriceSpecifier
+Set pTriggerPriceSpec = NewPriceSpecifier
+
+Select Case pOrderType
+Case OrderTypeMarketIfTouched, _
+        OrderTypeStop, _
+        OrderTypeTrail
+    Set pTriggerPriceSpec = parsePrice(pArg1)
+    If pTriggerPriceSpec.PriceType = PriceValueTypeNone Then
+        parseOrderPrices = False
+        gWriteErrorLine "Trigger price must be specified for this order type", True
+    End If
+Case OrderTypeMarketToLimit, _
+        OrderTypeLimit, _
+        OrderTypeLimitOnOpen, _
+        OrderTypeLimitOnClose, _
+        OrderTypeLimitIfTouched, _
+        OrderTypeStopLimit, _
+        OrderTypeTrailLimit
+    Set pLimitPriceSpec = parsePrice(pArg1)
+    If pLimitPriceSpec.PriceType = PriceValueTypeNone Then
+        parseOrderPrices = False
+        gWriteErrorLine "Limit price must be specified for this order type", True
+    End If
+Case Else
+    If pArg1 <> "" Then
+        parseOrderPrices = False
+        gWriteErrorLine "Price must not be specified for this order type", True
+    End If
+End Select
+    
+Select Case pOrderType
+Case OrderTypeLimitIfTouched, _
+        OrderTypeStopLimit, _
+        OrderTypeTrailLimit
+    Set pTriggerPriceSpec = parsePrice(pArg2)
+    If pTriggerPriceSpec.PriceType = PriceValueTypeNone Then
+        parseOrderPrices = False
+        gWriteErrorLine "Trigger price must be specified for this order type", True
+    End If
+Case Else
+    If pArg2 <> "" Then
+        parseOrderPrices = False
+        gWriteErrorLine "Trigger price must not be specified for this order type", True
+    End If
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function parsePseudoOrder( _
+                ByVal pOrderTypeStr, _
+                ByVal pOffset As String) As Boolean
+Const ProcName As String = "parsePseudoOrder"
+On Error GoTo Err
+
+pOrderTypeStr = UCase$(pOrderTypeStr)
+If pOrderTypeStr = AskPseudoOrderType Then
+    mBOSpec.EntryType = OrderTypeLimit
+    mBOSpec.EntryLimitPriceSpec.PriceType = PriceValueTypeAsk
+    parseOffset pOffset, mBOSpec.EntryLimitPriceSpec
+    parsePseudoOrder = True
+ElseIf pOrderTypeStr = BidPseudoOrderType Then
+    mBOSpec.EntryType = OrderTypeLimit
+    mBOSpec.EntryLimitPriceSpec.PriceType = PriceValueTypeBid
+    parseOffset pOffset, mBOSpec.EntryLimitPriceSpec
+    parsePseudoOrder = True
+ElseIf pOrderTypeStr = LastPseudoOrderType Then
+    mBOSpec.EntryType = OrderTypeLimit
+    mBOSpec.EntryLimitPriceSpec.PriceType = PriceValueTypeLast
+    parseOffset pOffset, mBOSpec.EntryLimitPriceSpec
+    parsePseudoOrder = True
+Else
+    parsePseudoOrder = False
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub parseOffset( _
                 ByVal pValue As String, _
-                ByRef pOffsetType As PriceOffsetTypes) As Double
-If UCase$(Right$(Trim$(pValue), 1)) = TickDesignator Then
+                ByVal pPriceSpec As PriceSpecifier)
+pValue = UCase$(pValue)
+If pValue = "" Then
+    pPriceSpec.Offset = 0#
+    pPriceSpec.OffsetType = PriceOffsetTypeNone
+ElseIf Right$(Trim$(pValue), 1) = TickOffsetDesignator Then
     Dim numTicks As String
     numTicks = Left$(pValue, Len(pValue) - 1)
     If Not IsInteger(numTicks) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
-    parseOffset = CLng(numTicks)
-    pOffsetType = PriceOffsetTypeNumberOfTicks
-ElseIf UCase$(Right$(Trim$(pValue), 1)) = TickDesignator Then
+    pPriceSpec.Offset = CLng(numTicks)
+    pPriceSpec.OffsetType = PriceOffsetTypeNumberOfTicks
+ElseIf Right$(Trim$(pValue), 1) = PercentOffsetDesignator Then
+    ' Note that for legacy purposes, "%" was used for the bid/ask spread
+    ' percent designator
     Dim numPercent As String
     numPercent = Left$(pValue, Len(pValue) - 1)
     If Not IsInteger(numPercent) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
-    parseOffset = CLng(numPercent)
-    pOffsetType = PriceOffsetTypeBidAskPercent
+    pPriceSpec.Offset = CLng(numPercent)
+    pPriceSpec.OffsetType = PriceOffsetTypeBidAskPercent
 Else
-    parseOffset = CDbl(pValue)
-    pOffsetType = PriceOffsetTypeIncrement
+    pPriceSpec.Offset = CDbl(pValue)
+    pPriceSpec.OffsetType = PriceOffsetTypeIncrement
 End If
+End Sub
+
+Private Function parsePrice( _
+                ByVal pValue As String) As PriceSpecifier
+Const ProcName As String = "parsePrice"
+On Error GoTo Err
+
+gRegExp.Global = False
+gRegExp.IgnoreCase = True
+
+Dim p As String
+p = "(?:^(?:(ASK|BID|LAST|ENTRY|(?:[-+]?\d{1,6}(?:.\d{1,6})?)))(?:\[(?:([-+]?\d{1,6}(?:.\d{1,6})?))([T%S]?)\])?$)"
+
+gRegExp.Pattern = p
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(pValue))
+
+If lMatches.Count <> 1 Then
+    gWriteErrorLine "Invalid command: syntax error in " & pValue, True
+    Set parsePrice = NewPriceSpecifier()
+    Exit Function
+End If
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+Dim lPrice As Double
+Dim lPriceType As PriceValueTypes
+Dim lOffset As Double
+Dim lOffsetType As PriceOffsetTypes
+
+Dim lPricePart As String: lPricePart = UCase$(lMatch.SubMatches(0))
+Select Case lPricePart
+Case ""
+    lPriceType = PriceValueTypeNone
+Case AskPriceDesignator
+    lPriceType = PriceValueTypeAsk
+Case BidPriceDesignator
+    lPriceType = PriceValueTypeBid
+Case LastPriceDesignator
+    lPriceType = PriceValueTypeLast
+Case EntryPriceDesignator
+    lPriceType = PriceValueTypeEntry
+Case Else
+    lPriceType = PriceValueTypeValue
+    lPrice = CDbl(lPricePart)
+End Select
+
+Dim lOffsetPart As String: lOffsetPart = lMatch.SubMatches(1)
+If lOffsetPart <> "" Then lOffset = CDbl(lOffsetPart)
+
+Dim lOffsetDesignator As String: lOffsetDesignator = UCase$(lMatch.SubMatches(2))
+Select Case lOffsetDesignator
+Case ""
+    lOffsetType = PriceOffsetTypeIncrement
+Case TickOffsetDesignator
+    lOffsetType = PriceOffsetTypeNumberOfTicks
+Case PercentOffsetDesignator
+    lOffsetType = PriceOffsetTypePercent
+Case BidAskSpreadPercentOffsetDesignator
+    lOffsetType = PriceOffsetTypeBidAskPercent
+End Select
+
+Set parsePrice = NewPriceSpecifier(lPrice, lPriceType, lOffset, lOffsetType)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function processBuyOrSellCommand( _
@@ -578,6 +799,7 @@ On Error GoTo Err
 processBuyOrSellCommand = True
 
 Set mBOSpec = New BracketOrderSpecification
+Set mBOSpec.Contract = mContract
 mBOSpec.Action = pAction
 mBOSpec.EntryTIF = OrderTIFDay
 mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
@@ -596,57 +818,52 @@ Else
     mBOSpec.Quantity = CInt(lQuantity)
 End If
 
-mBOSpec.EntryType = getEntryOrderType(lClp.Arg(1))
-If mBOSpec.EntryType = BracketEntryTypeNone Then
-    processBuyOrSellCommand = False
-    Exit Function
-End If
-
+Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(1)
 Dim lPriceOrOffset As String: lPriceOrOffset = lClp.Arg(2)
-If lPriceOrOffset <> "" Then
-    Select Case mBOSpec.EntryType
-    Case BracketEntryTypeMarketIfTouched, _
-            BracketEntryTypeStop
-        mBOSpec.EntryTriggerPrice = CDbl(lPriceOrOffset)
-    Case BracketEntryTypeMarketToLimit, _
-            BracketEntryTypeLimit, _
-            BracketEntryTypeLimitOnOpen, _
-            BracketEntryTypeLimitOnClose, _
-            BracketEntryTypeLimitIfTouched, _
-            BracketEntryTypeStopLimit
-        mBOSpec.EntryLimitPrice = CDbl(lPriceOrOffset)
-    Case BracketEntryTypeBid, _
-            BracketEntryTypeAsk, _
-            BracketEntryTypeLast
-        mBOSpec.EntryLimitPriceOffset = parseOffset(lPriceOrOffset, mBOSpec.EntryLimitPriceOffsetType)
-    Case Else
-        processBuyOrSellCommand = False
-        gWriteErrorLine "Price must not be specified for this order type", True
-    End Select
-End If
+
+If Not parsePseudoOrder(lOrderTypeStr, lPriceOrOffset) Then
+    mBOSpec.EntryType = getEntryOrderType(lClp.Arg(1))
     
-Dim lTriggerPrice As String: lTriggerPrice = lClp.Arg(3)
-If lTriggerPrice <> "" Then
-    Select Case mBOSpec.EntryType
-    Case BracketEntryTypeLimitIfTouched, _
-            BracketEntryTypeStopLimit
-        mBOSpec.EntryTriggerPrice = CDbl(lTriggerPrice)
-    Case Else
+    If Not IsEntryOrderType(mBOSpec.EntryType) Then
+        mBOSpec.EntryType = OrderTypeNone
+        gWriteErrorLine "Invalid entry order type", True
         processBuyOrSellCommand = False
-        gWriteErrorLine "Trigger price must not be specified for this order type", True
-    End Select
+    Else
+        Dim lLimitPriceSpec As PriceSpecifier
+        Dim lTriggerPriceSpec As PriceSpecifier
+        
+        processBuyOrSellCommand = parseOrderPrices( _
+                                        lPriceOrOffset, _
+                                        lClp.Arg(3), _
+                                        mBOSpec.EntryType, _
+                                        lLimitPriceSpec, _
+                                        lTriggerPriceSpec)
+        Set mBOSpec.EntryLimitPriceSpec = lLimitPriceSpec
+        Set mBOSpec.EntryTriggerPriceSpec = lTriggerPriceSpec
+        
+        If mBOSpec.EntryLimitPriceSpec.PriceType = PriceValueTypeEntry Or _
+            mBOSpec.EntryTriggerPriceSpec.PriceType = PriceValueTypeEntry Then
+            processBuyOrSellCommand = False
+            gWriteErrorLine "Invalid use of 'ENTRY'", True
+        End If
+    End If
 End If
 
 Dim lSwitchName As String
 lSwitchName = TIFSwitch
-If lClp.Switch(TIFSwitch) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(TIFSwitch))
+If lClp.Switch(lSwitchName) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.SwitchValue(lSwitchName))
 
-mBracketOrders.Add mBOSpec
+lSwitchName = IgnoreRTHSwitch
+mBOSpec.EntryIgnoreRTH = lClp.Switch(lSwitchName)
 
-If pAction = OrderActionBuy Then
-    mLatestBuyCommandParams = pParams
-Else
-    mLatestSellCommandParams = pParams
+If processBuyOrSellCommand Then
+    mBracketOrders.Add mBOSpec
+    
+    If pAction = OrderActionBuy Then
+        mLatestBuyCommandParams = pParams
+    Else
+        mLatestSellCommandParams = pParams
+    End If
 End If
 
 gSetValidNextCommands ContractCommand, QuoteCommand, BuyCommand, SellCommand, SellAgainCommand, BracketCommand, ResetCommand, CloseoutCommand

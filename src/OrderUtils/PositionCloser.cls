@@ -213,8 +213,8 @@ If Not mBalancingBracketOrder Is Nothing Then Exit Sub
 
 If mBalancingOrderContext.IsReadyForBracketOrder( _
             IIf(mUseLimitorder, _
-                BracketEntryTypes.BracketEntryTypeLimit, _
-                BracketEntryTypes.BracketEntryTypeMarket)) Then
+                OrderTypes.OrderTypeLimit, _
+                OrderTypes.OrderTypeMarket)) Then
     placeBalancingOrder
 End If
 
@@ -397,47 +397,39 @@ Const ProcName As String = "placeBalancingOrder"
 On Error GoTo Err
 
 Set mBalancingOrderContext = mOrderContexts.BalancingOrderContext
-If Not mBalancingOrderContext.IsReadyForBracketOrder( _
-            IIf(mUseLimitorder, _
-                BracketEntryTypes.BracketEntryTypeLimit, _
-                BracketEntryTypes.BracketEntryTypeMarket)) Then
-    Exit Sub
-End If
+If Not mBalancingOrderContext.IsReady Then Exit Sub
 
 Dim lContract As IContract
 Set lContract = mPositionManager.DataSource.ContractFuture.Value
 
 If mUseLimitorder Then
-    Dim lBid As Double: lBid = mPositionManager.DataSource.CurrentTick(TickTypeBid).Price
-    Dim lAsk As Double: lAsk = mPositionManager.DataSource.CurrentTick(TickTypeAsk).Price
-    
-    Dim lTicksize As Double
-    If lContract.Specifier.SecType = SecTypeOption Or _
-                        lContract.Specifier.SecType = SecTypeFuturesOption _
-    Then
-        lTicksize = GetTickSizeForOptions(lBid)
-    ElseIf lContract.Specifier.SecType = SecTypeStock Then
-        lTicksize = GetTickSizeForStocks(lContract.Specifier.Exchange, lBid, lContract.TickSize)
-    End If
-    If lTicksize = 0# Then lTicksize = lContract.TickSize
-    
-    Dim lPriceOffset As Double: lPriceOffset = Int(mBidAskSpreadPercent * (CLng(lAsk / lTicksize) - CLng(lBid / lTicksize)) / 100#) * lTicksize
-    Dim lEntryPrice As Double
+    Dim lEntryPriceSpec As PriceSpecifier
     If mPositionManager.PositionSize < 0 Then
-        lEntryPrice = lBid + lPriceOffset
+        Set lEntryPriceSpec = gNewPriceSpecifier( _
+                                    0, _
+                                    PriceValueTypes.PriceValueTypeBid, _
+                                    mBidAskSpreadPercent, _
+                                    PriceOffsetTypes.PriceOffsetTypeBidAskPercent)
     Else
-        lEntryPrice = lAsk - lPriceOffset
+        Set lEntryPriceSpec = gNewPriceSpecifier( _
+                                    0, _
+                                    PriceValueTypes.PriceValueTypeAsk, _
+                                    -mBidAskSpreadPercent, _
+                                    PriceOffsetTypes.PriceOffsetTypeBidAskPercent)
     End If
+     
+    If Not mBalancingOrderContext.IsReadyForPriceSpecifier(lEntryPriceSpec) Then Exit Sub
+    
     Set mBalancingBracketOrder = _
                     mBalancingOrderContext.CreateBracketOrder( _
                                 IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
                                 Abs(mPositionManager.PositionSize), _
                                 mBalancingOrderContext.CreateEntryOrder( _
-                                    BracketEntryTypeLimit, _
-                                    gNewPriceSpecifier(lEntryPrice, PriceValueTypeValue, 0, PriceOffsetTypeNone) _
+                                    OrderTypeLimit, _
+                                    lEntryPriceSpec _
                                 ))
     
-    gLogBracketOrderMessage "Close positions at limit: lEntryPrice", _
+    gLogBracketOrderMessage "Close position at limit: % of spread=" & mBidAskSpreadPercent, _
                     mPositionManager.DataSource, _
                     lContract, _
                     mBalancingBracketOrder.Key, _
@@ -449,10 +441,10 @@ Else
                                 IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
                                 Abs(mPositionManager.PositionSize), _
                                 mBalancingOrderContext.CreateEntryOrder( _
-                                    BracketEntryTypeMarket _
+                                    OrderTypeMarket _
                                 ))
     
-    gLogBracketOrderMessage "Close positions at market", _
+    gLogBracketOrderMessage "Close position at market", _
                     mPositionManager.DataSource, _
                     lContract, _
                     mBalancingBracketOrder.Key, _

@@ -993,7 +993,9 @@ Case "LIT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeLimitIfTouched
 Case "MIT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketIfTouched
-Case "TRAILLMT"
+Case "TRAIL LIMIT", "TRAILLMT"
+    ' Note that we get both spellings in the API, eg "TRAIL LIMIT" is OrderStatus
+    ' and "TRAILLMT" in permitted order types
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeTrailLimit
 Case "MKTPROT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketWithProtection
@@ -1024,13 +1026,13 @@ Case TwsOrderTypes.TwsOrderTypeNone
 Case TwsOrderTypes.TwsOrderTypeMarket
     gTwsOrderTypeToString = "MKT"
 Case TwsOrderTypes.TwsOrderTypeMarketOnClose
-    gTwsOrderTypeToString = "MKTCLS"
+    gTwsOrderTypeToString = "MOC"
 Case TwsOrderTypes.TwsOrderTypeLimit
     gTwsOrderTypeToString = "LMT"
 Case TwsOrderTypes.TwsOrderTypeLimitOnClose
-    gTwsOrderTypeToString = "LMTCLS"
+    gTwsOrderTypeToString = "LOC"
 Case TwsOrderTypes.TwsOrderTypePeggedToMarket
-    gTwsOrderTypeToString = "PEGMKT"
+    gTwsOrderTypeToString = "PEG MKT"
 Case TwsOrderTypes.TwsOrderTypeStop
     gTwsOrderTypeToString = "STP"
 Case TwsOrderTypes.TwsOrderTypeStopLimit
@@ -1054,7 +1056,7 @@ Case TwsOrderTypes.TwsOrderTypeLimitIfTouched
 Case TwsOrderTypes.TwsOrderTypeMarketIfTouched
     gTwsOrderTypeToString = "MIT"
 Case TwsOrderTypes.TwsOrderTypeTrailLimit
-    gTwsOrderTypeToString = "TRAILLMT"
+    gTwsOrderTypeToString = "TRAIL LIMIT"
 Case TwsOrderTypes.TwsOrderTypeMarketWithProtection
     gTwsOrderTypeToString = "MKTPROT"
 Case TwsOrderTypes.TwsOrderTypeMarketOnOpen

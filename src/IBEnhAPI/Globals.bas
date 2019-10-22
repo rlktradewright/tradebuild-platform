@@ -376,7 +376,9 @@ Case Else
 End Select
 End Function
 
-Public Function gOrderToTwsOrder(ByVal pOrder As IOrder) As TwsOrder
+Public Function gOrderToTwsOrder( _
+                ByVal pOrder As IOrder, _
+                ByVal pDataSource As IMarketDataSource) As TwsOrder
 Const ProcName As String = "gOrderToTwsOrder"
 On Error GoTo Err
 
@@ -406,7 +408,15 @@ With pOrder
     gOrderToTwsOrder.TriggerMethod = gStopTriggerMethodToTwsTriggerMethod(.StopTriggerMethod)
     gOrderToTwsOrder.SweepToFill = .SweepToFill
     gOrderToTwsOrder.Tif = gOrderTIFToTwsOrderTIF(.TimeInForce)
-    gOrderToTwsOrder.AuxPrice = .TriggerPrice
+    If .OrderType = OrderTypeTrail Then
+        gOrderToTwsOrder.TrailStopPrice = .TriggerPrice
+        gOrderToTwsOrder.AuxPrice = Abs(getMarketPrice(pDataSource, pOrder.Action) - .TriggerPrice)
+    ElseIf .OrderType = OrderTypeTrailLimit Then
+        gOrderToTwsOrder.TrailStopPrice = .TriggerPrice
+        gOrderToTwsOrder.AuxPrice = Abs(getMarketPrice(pDataSource, pOrder.Action) - .TriggerPrice)
+    Else
+        gOrderToTwsOrder.AuxPrice = .TriggerPrice
+    End If
 End With
 
 Exit Function
@@ -440,16 +450,8 @@ Case OrderTypes.OrderTypeTrail
     gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeTrail
 Case OrderTypes.OrderTypeRelative
     gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeRelative
-Case OrderTypes.OrderTypeVWAP
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeVWAP
 Case OrderTypes.OrderTypeMarketToLimit
     gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeMarketToLimit
-Case OrderTypes.OrderTypeQuote
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeQuote
-Case OrderTypes.OrderTypeAdjust
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeAdjust
-Case OrderTypes.OrderTypeAlert
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeAlert
 Case OrderTypes.OrderTypeLimitIfTouched
     gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeLimitIfTouched
 Case OrderTypes.OrderTypeMarketIfTouched
@@ -700,16 +702,8 @@ Case TwsOrderTypes.TwsOrderTypeTrail
     gTwsOrderTypeToOrderType = OrderTypeTrail
 Case TwsOrderTypes.TwsOrderTypeRelative
     gTwsOrderTypeToOrderType = OrderTypeRelative
-Case TwsOrderTypes.TwsOrderTypeVWAP
-    gTwsOrderTypeToOrderType = OrderTypeVWAP
 Case TwsOrderTypes.TwsOrderTypeMarketToLimit
     gTwsOrderTypeToOrderType = OrderTypeMarketToLimit
-Case TwsOrderTypes.TwsOrderTypeQuote
-    gTwsOrderTypeToOrderType = OrderTypeQuote
-Case TwsOrderTypes.TwsOrderTypeAdjust
-    gTwsOrderTypeToOrderType = OrderTypeAdjust
-Case TwsOrderTypes.TwsOrderTypeAlert
-    gTwsOrderTypeToOrderType = OrderTypeAlert
 Case TwsOrderTypes.TwsOrderTypeLimitIfTouched
     gTwsOrderTypeToOrderType = OrderTypeLimitIfTouched
 Case TwsOrderTypes.TwsOrderTypeMarketIfTouched
@@ -725,7 +719,7 @@ Case TwsOrderTypes.TwsOrderTypeLimitOnOpen
 Case TwsOrderTypes.TwsOrderTypePeggedToPrimary
     gTwsOrderTypeToOrderType = OrderTypePeggedToPrimary
 Case Else
-    AssertArgument False, "Unsupported order type"
+    gTwsOrderTypeToOrderType = OrderTypeNone
 End Select
 
 Exit Function
@@ -814,3 +808,32 @@ End Function
 ' Helper Functions
 '================================================================================
 
+Private Function getMarketPrice( _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pAction As OrderActions) As Double
+Const ProcName As String = "getMarketPrice"
+On Error GoTo Err
+
+Dim lMarketPrice As Double
+If pDataSource.HasCurrentTick(TickTypeTrade) Then
+    lMarketPrice = pDataSource.CurrentTick(TickTypeTrade).Price
+ElseIf pDataSource.HasCurrentTick( _
+                        IIf(pAction = OrderActionBuy, _
+                            TickTypeAsk, _
+                            TickTypeBid)) Then
+    lMarketPrice = IIf(pAction = OrderActionBuy, _
+                        pDataSource.CurrentTick(TickTypeAsk).Price, _
+                        pDataSource.CurrentTick(TickTypeBid).Price)
+Else
+    lMarketPrice = IIf(pAction = OrderActionSell, _
+                        pDataSource.CurrentTick(TickTypeAsk).Price, _
+                        pDataSource.CurrentTick(TickTypeBid).Price)
+End If
+
+getMarketPrice = lMarketPrice
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function

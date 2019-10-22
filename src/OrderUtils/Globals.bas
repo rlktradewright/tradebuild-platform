@@ -30,6 +30,7 @@ Public Const ProjectName                            As String = "OrderUtils27"
 Private Const ModuleName                            As String = "Globals"
 
 Public Const MaxCurrency                            As Currency = 922337203685477.5807@
+Public Const MaxDoubleValue                         As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
 Private Const StrOrderTypeNone               As String = ""
 Private Const StrOrderTypeMarket             As String = "Market"
@@ -84,190 +85,66 @@ Public Const OrderInfoData                          As String = "DATA"
 ' Properties
 '@================================================================================
 
+Public Property Get gEntryOrderTypes() As OrderTypes()
+Static s() As OrderTypes
+Static sInitialised As Boolean
+
+If Not sInitialised Then
+    sInitialised = True
+    ReDim s(12) As OrderTypes
+    s(0) = OrderTypeLimit
+    s(1) = OrderTypeLimitIfTouched
+    s(2) = OrderTypeLimitOnClose
+    s(3) = OrderTypeLimitOnOpen
+    s(4) = OrderTypeMarket
+    s(5) = OrderTypeMarketIfTouched
+    s(6) = OrderTypeMarketOnClose
+    s(7) = OrderTypeMarketOnOpen
+    s(8) = OrderTypeMarketToLimit
+    s(9) = OrderTypeStop
+    s(10) = OrderTypeStopLimit
+    s(11) = OrderTypeTrail
+    s(12) = OrderTypeTrailLimit
+End If
+gEntryOrderTypes = s
+End Property
+
+Public Property Get gStopLossOrderTypes() As OrderTypes()
+Static s() As OrderTypes
+Static sInitialised As Boolean
+
+If Not sInitialised Then
+    sInitialised = True
+    ReDim s(3) As OrderTypes
+    s(0) = OrderTypeStop
+    s(1) = OrderTypeStopLimit
+    s(2) = OrderTypeTrail
+    s(3) = OrderTypeTrailLimit
+End If
+gStopLossOrderTypes = s
+End Property
+
+Public Property Get gTargetOrderTypes() As OrderTypes()
+Static s() As OrderTypes
+Static sInitialised As Boolean
+
+If Not sInitialised Then
+    sInitialised = True
+    ReDim s(6) As OrderTypes
+    s(0) = OrderTypeLimit
+    s(1) = OrderTypeLimitIfTouched
+    s(2) = OrderTypeLimitOnClose
+    s(3) = OrderTypeLimitOnOpen
+    s(4) = OrderTypeMarketIfTouched
+    s(5) = OrderTypeMarketOnClose
+    s(6) = OrderTypeMarketOnOpen
+End If
+gTargetOrderTypes = s
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Function gBracketEntryTypeFromString(ByVal Value As String) As BracketEntryTypes
-Const ProcName As String = "gBracketEntryTypeFromString"
-On Error GoTo Err
-
-Select Case UCase$(Value)
-Case "", "NONE"
-    gBracketEntryTypeFromString = BracketEntryTypeNone
-Case "MKT", "MARKET"
-    gBracketEntryTypeFromString = BracketEntryTypeMarket
-Case "MOO", "MARKET ON OPEN"
-    gBracketEntryTypeFromString = BracketEntryTypeMarketOnOpen
-Case "MOC", "MARKET ON CLOSE"
-    gBracketEntryTypeFromString = BracketEntryTypeMarketOnClose
-Case "MIT", "MARKET IF TOUCHED"
-    gBracketEntryTypeFromString = BracketEntryTypeMarketIfTouched
-Case "MTL", "MARKET TO LIMIT"
-    gBracketEntryTypeFromString = BracketEntryTypeMarketToLimit
-Case "BID", "BID PRICE"
-    gBracketEntryTypeFromString = BracketEntryTypeBid
-Case "ASK", "ASK PRICE"
-    gBracketEntryTypeFromString = BracketEntryTypeAsk
-Case "LAST", "LAST TRADE PRICE"
-    gBracketEntryTypeFromString = BracketEntryTypeLast
-Case "LMT", "LIMIT"
-    gBracketEntryTypeFromString = BracketEntryTypeLimit
-Case "LOO", "LIMIT ON OPEN"
-    gBracketEntryTypeFromString = BracketEntryTypeLimitOnOpen
-Case "LOC", "LIMIT ON CLOSE"
-    gBracketEntryTypeFromString = BracketEntryTypeLimitOnClose
-Case "LIT", "LIMIT IF TOUCHED"
-    gBracketEntryTypeFromString = BracketEntryTypeLimitIfTouched
-Case "STP", "STOP"
-    gBracketEntryTypeFromString = BracketEntryTypeStop
-Case "STPLMT", "STOP LIMIT"
-    gBracketEntryTypeFromString = BracketEntryTypeStopLimit
-Case Else
-    AssertArgument False, "Invalid entry order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketEntryTypeToOrderType( _
-                ByVal pBracketEntryType As BracketEntryTypes) As OrderTypes
-Const ProcName As String = "gBracketEntryTypeToOrderType"
-On Error GoTo Err
-
-Select Case pBracketEntryType
-Case BracketEntryTypeNone
-    gBracketEntryTypeToOrderType = OrderTypeNone
-Case BracketEntryTypeMarket
-    gBracketEntryTypeToOrderType = OrderTypeMarket
-Case BracketEntryTypeMarketOnOpen
-    gBracketEntryTypeToOrderType = OrderTypeMarketOnOpen
-Case BracketEntryTypeMarketOnClose
-    gBracketEntryTypeToOrderType = OrderTypeMarketOnClose
-Case BracketEntryTypeMarketIfTouched
-    gBracketEntryTypeToOrderType = OrderTypeMarketIfTouched
-Case BracketEntryTypeMarketToLimit
-    gBracketEntryTypeToOrderType = OrderTypeMarketToLimit
-Case BracketEntryTypeBid
-    gBracketEntryTypeToOrderType = OrderTypeLimit
-Case BracketEntryTypeAsk
-    gBracketEntryTypeToOrderType = OrderTypeLimit
-Case BracketEntryTypeLast
-    gBracketEntryTypeToOrderType = OrderTypeLimit
-Case BracketEntryTypeLimit
-    gBracketEntryTypeToOrderType = OrderTypeLimit
-Case BracketEntryTypeLimitOnOpen
-    gBracketEntryTypeToOrderType = OrderTypeLimitOnOpen
-Case BracketEntryTypeLimitOnClose
-    gBracketEntryTypeToOrderType = OrderTypeLimitOnClose
-Case BracketEntryTypeLimitIfTouched
-    gBracketEntryTypeToOrderType = OrderTypeLimitIfTouched
-Case BracketEntryTypeStop
-    gBracketEntryTypeToOrderType = OrderTypeStop
-Case BracketEntryTypeStopLimit
-    gBracketEntryTypeToOrderType = OrderTypeStopLimit
-Case Else
-    AssertArgument False, "Invalid entry order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketEntryTypeToString(ByVal Value As BracketEntryTypes) As String
-Const ProcName As String = "gBracketEntryTypeToString"
-On Error GoTo Err
-
-Select Case Value
-Case BracketEntryTypeNone
-    gBracketEntryTypeToString = ""
-Case BracketEntryTypeMarket
-    gBracketEntryTypeToString = "Market"
-Case BracketEntryTypeMarketOnOpen
-    gBracketEntryTypeToString = "Market on open"
-Case BracketEntryTypeMarketOnClose
-    gBracketEntryTypeToString = "Market on close"
-Case BracketEntryTypeMarketIfTouched
-    gBracketEntryTypeToString = "Market if touched"
-Case BracketEntryTypeMarketToLimit
-    gBracketEntryTypeToString = "Market to limit"
-Case BracketEntryTypeBid
-    gBracketEntryTypeToString = "Bid Price"
-Case BracketEntryTypeAsk
-    gBracketEntryTypeToString = "Ask Price"
-Case BracketEntryTypeLast
-    gBracketEntryTypeToString = "Last Trade Price"
-Case BracketEntryTypeLimit
-    gBracketEntryTypeToString = "Limit"
-Case BracketEntryTypeLimitOnOpen
-    gBracketEntryTypeToString = "Limit on open"
-Case BracketEntryTypeLimitOnClose
-    gBracketEntryTypeToString = "Limit on close"
-Case BracketEntryTypeLimitIfTouched
-    gBracketEntryTypeToString = "Limit if touched"
-Case BracketEntryTypeStop
-    gBracketEntryTypeToString = "Stop"
-Case BracketEntryTypeStopLimit
-    gBracketEntryTypeToString = "Stop limit"
-Case Else
-    AssertArgument False, "Invalid entry order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketEntryTypeToShortString(ByVal Value As BracketEntryTypes) As String
-Const ProcName As String = "gBracketEntryTypeToShortString"
-On Error GoTo Err
-
-Select Case Value
-Case BracketEntryTypeNone
-    gBracketEntryTypeToShortString = ""
-Case BracketEntryTypeMarket
-    gBracketEntryTypeToShortString = "MKT"
-Case BracketEntryTypeMarketOnOpen
-    gBracketEntryTypeToShortString = "MOO"
-Case BracketEntryTypeMarketOnClose
-    gBracketEntryTypeToShortString = "MOC"
-Case BracketEntryTypeMarketIfTouched
-    gBracketEntryTypeToShortString = "MIT"
-Case BracketEntryTypeMarketToLimit
-    gBracketEntryTypeToShortString = "MTL"
-Case BracketEntryTypeBid
-    gBracketEntryTypeToShortString = "BID"
-Case BracketEntryTypeAsk
-    gBracketEntryTypeToShortString = "ASK"
-Case BracketEntryTypeLast
-    gBracketEntryTypeToShortString = "LAST"
-Case BracketEntryTypeLimit
-    gBracketEntryTypeToShortString = "LMT"
-Case BracketEntryTypeLimitOnOpen
-    gBracketEntryTypeToShortString = "LOO"
-Case BracketEntryTypeLimitOnClose
-    gBracketEntryTypeToShortString = "LOC"
-Case BracketEntryTypeLimitIfTouched
-    gBracketEntryTypeToShortString = "LIT"
-Case BracketEntryTypeStop
-    gBracketEntryTypeToShortString = "STP"
-Case BracketEntryTypeStopLimit
-    gBracketEntryTypeToShortString = "STPLMT"
-Case Else
-    AssertArgument False, "Invalid entry order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Public Function gBracketOrderRoleToString(ByVal pOrderRole As BracketOrderRoles) As String
 Const ProcName As String = "gBracketOrderRoleToString"
@@ -321,284 +198,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gBracketOrderToStringWithOffsets( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pIncludeOffsets As Boolean) As String
-Const ProcName As String = "gBracketOrderToStringWithOffsets"
+Public Function gBracketOrderToString( _
+                ByVal pBracketOrder As IBracketOrder) As String
+Const ProcName As String = "gBracketOrderToString"
 On Error GoTo Err
 
 Dim s As String
 s = gOrderActionToString(pBracketOrder.EntryOrder.Action) & " " & _
     pBracketOrder.EntryOrder.Quantity & " " & _
-    gGetOrderTypeAndPricesString(pBracketOrder.EntryOrder, pBracketOrder.Contract, pIncludeOffsets)
+    gGetOrderTypeAndPricesString(pBracketOrder.EntryOrder, pBracketOrder.Contract)
 
 s = s & "; "
 If Not pBracketOrder.StopLossOrder Is Nothing Then
     s = s & _
-        gGetOrderTypeAndPricesString(pBracketOrder.StopLossOrder, pBracketOrder.Contract, pIncludeOffsets)
+        gGetOrderTypeAndPricesString(pBracketOrder.StopLossOrder, pBracketOrder.Contract)
 End If
 
 s = s & "; "
 If Not pBracketOrder.TargetOrder Is Nothing Then
     s = s & _
-        gGetOrderTypeAndPricesString(pBracketOrder.TargetOrder, pBracketOrder.Contract, pIncludeOffsets)
+        gGetOrderTypeAndPricesString(pBracketOrder.TargetOrder, pBracketOrder.Contract)
 End If
 
-gBracketOrderToStringWithOffsets = s
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketStopLossTypeFromString(ByVal Value As String) As BracketStopLossTypes
-Const ProcName As String = "gBracketStopLossTypeToString"
-On Error GoTo Err
-
-Select Case UCase$(Value)
-Case "", "NONE"
-    gBracketStopLossTypeFromString = BracketStopLossTypeNone
-Case "STP", "STOP"
-    gBracketStopLossTypeFromString = BracketStopLossTypeStop
-Case "STPLMT", "STOP LIMIT"
-    gBracketStopLossTypeFromString = BracketStopLossTypeStopLimit
-Case "BID", "BID PRICE"
-    gBracketStopLossTypeFromString = BracketStopLossTypeBid
-Case "ASK", "ASK PRICE"
-    gBracketStopLossTypeFromString = BracketStopLossTypeAsk
-Case "TRADE", "LAST TRADE PRICE"
-    gBracketStopLossTypeFromString = BracketStopLossTypeLast
-Case "TRAIL"
-    gBracketStopLossTypeFromString = BracketStopLossTypeTrail
-Case "TRAILLMT"
-    gBracketStopLossTypeFromString = BracketStopLossTypeTrailLimit
-Case "AUTO"
-    gBracketStopLossTypeFromString = BracketStopLossTypeAuto
-Case Else
-    AssertArgument False, "Invalid stoploss order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketStopLossTypeToOrderType( _
-                ByVal pBracketStopLossType As BracketStopLossTypes) As OrderTypes
-Const ProcName As String = "gBracketStopLossTypeToOrderType"
-On Error GoTo Err
-
-Select Case pBracketStopLossType
-Case BracketStopLossTypeNone
-    gBracketStopLossTypeToOrderType = OrderTypeNone
-Case BracketStopLossTypeStop
-    gBracketStopLossTypeToOrderType = OrderTypeStop
-Case BracketStopLossTypeStopLimit
-    gBracketStopLossTypeToOrderType = OrderTypeStopLimit
-Case BracketStopLossTypeTrail
-    gBracketStopLossTypeToOrderType = OrderTypeTrail
-Case BracketStopLossTypeTrailLimit
-    gBracketStopLossTypeToOrderType = OrderTypeTrailLimit
-Case BracketStopLossTypeBid
-    gBracketStopLossTypeToOrderType = OrderTypeStop
-Case BracketStopLossTypeAsk
-    gBracketStopLossTypeToOrderType = OrderTypeStop
-Case BracketStopLossTypeLast
-    gBracketStopLossTypeToOrderType = OrderTypeStop
-Case BracketStopLossTypeAuto
-    gBracketStopLossTypeToOrderType = OrderTypeAutoStop
-Case Else
-    AssertArgument False, "Invalid stoploss order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketStopLossTypeToShortString(ByVal Value As BracketStopLossTypes) As String
-Const ProcName As String = "gBracketStopLossTypeToShortString"
-On Error GoTo Err
-
-Select Case Value
-Case BracketStopLossTypeNone
-    gBracketStopLossTypeToShortString = "NONE"
-Case BracketStopLossTypeStop
-    gBracketStopLossTypeToShortString = "STP"
-Case BracketStopLossTypeStopLimit
-    gBracketStopLossTypeToShortString = "STPLMT"
-Case BracketStopLossTypeBid
-    gBracketStopLossTypeToShortString = "BID"
-Case BracketStopLossTypeAsk
-    gBracketStopLossTypeToShortString = "ASK"
-Case BracketStopLossTypeLast
-    gBracketStopLossTypeToShortString = "TRADE"
-Case BracketStopLossTypeAuto
-    gBracketStopLossTypeToShortString = "AUTO"
-Case Else
-    AssertArgument False, "Invalid stoploss order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketStopLossTypeToString(ByVal Value As BracketStopLossTypes)
-Const ProcName As String = "gBracketStopLossTypeToString"
-On Error GoTo Err
-
-Select Case Value
-Case BracketStopLossTypeNone
-    gBracketStopLossTypeToString = "None"
-Case BracketStopLossTypeStop
-    gBracketStopLossTypeToString = "Stop"
-Case BracketStopLossTypeStopLimit
-    gBracketStopLossTypeToString = "Stop limit"
-Case BracketStopLossTypeBid
-    gBracketStopLossTypeToString = "Bid Price"
-Case BracketStopLossTypeAsk
-    gBracketStopLossTypeToString = "Ask Price"
-Case BracketStopLossTypeLast
-    gBracketStopLossTypeToString = "Last Trade Price"
-Case BracketStopLossTypeAuto
-    gBracketStopLossTypeToString = "Auto"
-Case Else
-    AssertArgument False, "Invalid stoploss order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketTargetTypeFromString(ByVal Value As String) As BracketTargetTypes
-Const ProcName As String = "gBracketTargetTypeFromString"
-On Error GoTo Err
-
-Select Case UCase$(Value)
-Case "NONE"
-    gBracketTargetTypeFromString = BracketTargetTypeNone
-Case "LMT", "LIMIT"
-    gBracketTargetTypeFromString = BracketTargetTypeLimit
-Case "LIT", "LIMIT IF TOUCHED"
-    gBracketTargetTypeFromString = BracketTargetTypeLimitIfTouched
-Case "MIT", "MARKET IF TOUCHED"
-    gBracketTargetTypeFromString = BracketTargetTypeMarketIfTouched
-Case "BID", "BID PRICE"
-    gBracketTargetTypeFromString = BracketTargetTypeBid
-Case "ASK", "ASK PRICE"
-    gBracketTargetTypeFromString = BracketTargetTypeAsk
-Case "LAST", "LAST TRADE PRICE"
-    gBracketTargetTypeFromString = BracketTargetTypeLast
-Case "AUTO"
-    gBracketTargetTypeFromString = BracketTargetTypeAuto
-Case Else
-    AssertArgument False, "Invalid target order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-''
-' Converts a member of the BracketTargetTypes enumeration to the equivalent OrderTypes Value.
-'
-' @return           the OrderTypes Value corresponding to the parameter
-' @param pBracketTargetType the BracketTargetTypes Value to be converted
-' @ see
-'
-'@/
-Public Function gBracketTargetTypeToOrderType( _
-                ByVal pBracketTargetType As BracketTargetTypes) As OrderTypes
-Const ProcName As String = "gBracketTargetTypeToOrderType"
-On Error GoTo Err
-
-Select Case pBracketTargetType
-Case BracketTargetTypeNone
-    gBracketTargetTypeToOrderType = OrderTypeNone
-Case BracketTargetTypeLimit
-    gBracketTargetTypeToOrderType = OrderTypeLimit
-Case BracketTargetTypeLimitIfTouched
-    gBracketTargetTypeToOrderType = OrderTypeLimitIfTouched
-Case BracketTargetTypeMarketIfTouched
-    gBracketTargetTypeToOrderType = OrderTypeMarketIfTouched
-Case BracketTargetTypeBid
-    gBracketTargetTypeToOrderType = OrderTypeLimit
-Case BracketTargetTypeAsk
-    gBracketTargetTypeToOrderType = OrderTypeLimit
-Case BracketTargetTypeLast
-    gBracketTargetTypeToOrderType = OrderTypeLimit
-Case BracketTargetTypeAuto
-    gBracketTargetTypeToOrderType = OrderTypeAutoLimit
-Case Else
-    AssertArgument False, "Invalid target order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketTargetTypeToShortString(ByVal Value As BracketTargetTypes) As String
-Const ProcName As String = "gBracketTargetTypeToShortString"
-On Error GoTo Err
-
-Select Case Value
-Case BracketTargetTypeNone
-    gBracketTargetTypeToShortString = "NONE"
-Case BracketTargetTypeLimit
-    gBracketTargetTypeToShortString = "LMT"
-Case BracketTargetTypeMarketIfTouched
-    gBracketTargetTypeToShortString = "MIT"
-Case BracketTargetTypeBid
-    gBracketTargetTypeToShortString = "BID"
-Case BracketTargetTypeAsk
-    gBracketTargetTypeToShortString = "ASK"
-Case BracketTargetTypeLast
-    gBracketTargetTypeToShortString = "LAST"
-Case BracketTargetTypeAuto
-    gBracketTargetTypeToShortString = "AUTO"
-Case Else
-    AssertArgument False, "Invalid target order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gBracketTargetTypeToString(ByVal Value As BracketTargetTypes)
-Const ProcName As String = "gBracketTargetTypeToString"
-On Error GoTo Err
-
-Select Case Value
-Case BracketTargetTypeNone
-    gBracketTargetTypeToString = "None"
-Case BracketTargetTypeLimit
-    gBracketTargetTypeToString = "Limit"
-Case BracketTargetTypeMarketIfTouched
-    gBracketTargetTypeToString = "Market if touched"
-Case BracketTargetTypeBid
-    gBracketTargetTypeToString = "Bid Price"
-Case BracketTargetTypeAsk
-    gBracketTargetTypeToString = "Ask Price"
-Case BracketTargetTypeLast
-    gBracketTargetTypeToString = "Last Trade Price"
-Case BracketTargetTypeAuto
-    gBracketTargetTypeToString = "Auto"
-Case Else
-    AssertArgument False, "Invalid target order type"
-End Select
+gBracketOrderToString = s
 
 Exit Function
 
@@ -623,8 +245,7 @@ End Function
 
 Public Function gGetOrderTypeAndPricesString( _
                 ByVal pOrder As IOrder, _
-                ByVal pContract As IContract, _
-                Optional ByVal pIncludeOffsets As Boolean = False) As String
+                ByVal pContract As IContract) As String
 Const ProcName As String = "gGetOrderTypeAndPricesString"
 On Error GoTo Err
 
@@ -636,102 +257,34 @@ Case OrderTypeLimit, _
         OrderTypeLimitOnClose, _
         OrderTypeMarketToLimit, _
         OrderTypeLimitOnOpen
-    s = s & " " & gPriceToString(pOrder.LimitPrice, _
-                                pContract, _
-                                pOrder.LimitPriceOffset, _
-                                pOrder.LimitPriceOffsetType, _
-                                pIncludeOffsets)
+    s = s & " " & gPriceOrSpecifierToString( _
+                                pOrder.LimitPrice, _
+                                pOrder.LimitPriceSpec, _
+                                pContract)
 Case OrderTypeStop, _
-        OrderTypeMarketIfTouched
-    s = s & " " & gPriceToString(pOrder.TriggerPrice, _
-                                pContract, _
-                                pOrder.TriggerPriceOffset, _
-                                pOrder.TriggerPriceOffset, _
-                                pIncludeOffsets)
+        OrderTypeMarketIfTouched, _
+        OrderTypeTrail
+    s = s & " " & gPriceOrSpecifierToString( _
+                                pOrder.TriggerPrice, _
+                                pOrder.TriggerPriceSpec, _
+                                pContract)
 Case OrderTypeStopLimit, _
-        OrderTypeLimitIfTouched
-    s = s & " " & gPriceToString(pOrder.LimitPrice, _
-                                pContract, _
-                                pOrder.LimitPriceOffset, _
-                                pOrder.LimitPriceOffsetType, _
-                                pIncludeOffsets) & _
-        " " & gPriceToString(pOrder.TriggerPrice, _
-                                pContract, _
-                                pOrder.TriggerPriceOffset, _
-                                pOrder.TriggerPriceOffset, _
-                                pIncludeOffsets)
-Case OrderTypeTrail
-
-Case OrderTypeRelative
-
-Case OrderTypeVWAP
-
-Case OrderTypeQuote
-
-Case OrderTypeAutoStop
-    s = s & " " & gPriceToString(MaxDouble, _
-                                pContract, _
-                                pOrder.TriggerPriceOffset, _
-                                pOrder.TriggerPriceOffsetType, _
-                                True)
-Case OrderTypeAutoLimit
-    s = s & " " & gPriceToString(MaxDouble, _
-                                pContract, _
-                                pOrder.LimitPriceOffset, _
-                                pOrder.LimitPriceOffsetType, _
-                                True)
-Case OrderTypeAdjust
-
-Case OrderTypeAlert
-
-Case OrderTypeTrailLimit
-
+        OrderTypeLimitIfTouched, _
+        OrderTypeTrailLimit
+    s = s & " " & gPriceOrSpecifierToString( _
+                                pOrder.LimitPrice, _
+                                pOrder.LimitPriceSpec, _
+                                pContract) & _
+        " " & gPriceOrSpecifierToString( _
+                                pOrder.TriggerPrice, _
+                                pOrder.TriggerPriceSpec, _
+                                pContract)
 Case OrderTypeMarketWithProtection
 
 Case OrderTypeMarketOnOpen
 
 Case OrderTypePeggedToPrimary
 
-Case BracketEntryTypeAsk, _
-        BracketEntryTypeBid, _
-        BracketEntryTypeLast, _
-        BracketStopLossTypeAsk, _
-        BracketStopLossTypeBid, _
-        BracketStopLossTypeLast, _
-        BracketTargetTypeAsk, _
-        BracketTargetTypeBid, _
-        BracketTargetTypeLast
-    If pIncludeOffsets Then
-        s = s & _
-            gPriceToString(MaxDouble, _
-                            pContract, _
-                            pOrder.LimitPriceOffset, _
-                            pOrder.LimitPriceOffsetType, _
-                            True) & _
-            gPriceToString(MaxDouble, _
-                            pContract, _
-                            pOrder.TriggerPriceOffset, _
-                            pOrder.TriggerPriceOffsetType, _
-                            True)
-    End If
-Case BracketStopLossTypeAuto
-    If pIncludeOffsets Then
-        s = s & _
-            gPriceToString(MaxDouble, _
-                            pContract, _
-                            pOrder.TriggerPriceOffset, _
-                            pOrder.TriggerPriceOffsetType, _
-                            True)
-    End If
-Case BracketTargetTypeAuto
-    If pIncludeOffsets Then
-        s = s & _
-            gPriceToString(MaxDouble, _
-                            pContract, _
-                            pOrder.LimitPriceOffset, _
-                            pOrder.LimitPriceOffsetType, _
-                            True)
-    End If
 End Select
 
 gGetOrderTypeAndPricesString = s
@@ -762,6 +315,48 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
+
+Public Function gIsEntryOrderType(ByVal pOrderType As OrderTypes) As Boolean
+Select Case pOrderType
+Case OrderTypeLimit, _
+        OrderTypeLimitIfTouched, _
+        OrderTypeLimitOnClose, _
+        OrderTypeLimitOnOpen, _
+        OrderTypeMarket, _
+        OrderTypeMarketIfTouched, _
+        OrderTypeMarketOnClose, _
+        OrderTypeMarketOnOpen, _
+        OrderTypeMarketToLimit, _
+        OrderTypeStop, _
+        OrderTypeStopLimit, _
+        OrderTypeTrail, _
+        OrderTypeTrailLimit
+    gIsEntryOrderType = True
+End Select
+End Function
+
+Public Function gIsStopLossOrderType(ByVal pOrderType As OrderTypes) As Boolean
+Select Case pOrderType
+Case OrderTypeStop, _
+        OrderTypeStopLimit, _
+        OrderTypeTrail, _
+        OrderTypeTrailLimit
+    gIsStopLossOrderType = True
+End Select
+End Function
+
+Public Function gIsTargetOrderType(ByVal pOrderType As OrderTypes) As Boolean
+Select Case pOrderType
+Case OrderTypeLimit, _
+        OrderTypeLimitIfTouched, _
+        OrderTypeLimitOnClose, _
+        OrderTypeLimitOnOpen, _
+        OrderTypeMarketIfTouched, _
+        OrderTypeMarketOnClose, _
+        OrderTypeMarketOnOpen
+gIsTargetOrderType = True
+End Select
+End Function
 
 Public Function gIsValidTIF(ByVal Value As OrderTIFs) As Boolean
 Const ProcName As String = "gIsValidTIF"
@@ -1073,6 +668,71 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function gNewPriceSpecifier( _
+                Optional ByVal pPrice As Double = MaxDoubleValue, _
+                Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
+                Optional ByVal pOffset As Double = 0#, _
+                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone) As PriceSpecifier
+Dim p As New PriceSpecifier
+p.Initialise pPrice, pPriceType, pOffset, pOffsetType
+Set gNewPriceSpecifier = p
+End Function
+
+Public Function gPriceOrSpecifierToString( _
+                ByVal pPrice As Double, _
+                ByVal pPriceSpec As PriceSpecifier, _
+                ByVal pContract As IContract) As String
+Const ProcName As String = "gPriceOrSpecifierToString"
+On Error GoTo Err
+
+If pPrice = MaxDoubleValue Then
+    gPriceOrSpecifierToString = gPriceSpecifierToString(pPriceSpec, pContract)
+Else
+    gPriceOrSpecifierToString = FormatPrice(pPrice, pContract.Specifier.SecType, pContract.TickSize)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gPriceSpecifierToString( _
+                ByVal pPriceSpec As PriceSpecifier, _
+                ByVal pContract As IContract) As String
+Const ProcName As String = "gPriceSpecifierToString"
+On Error GoTo Err
+
+Dim s As String
+
+Select Case pPriceSpec.PriceType
+Case PriceValueTypeNone
+Case PriceValueTypeValue
+    If pPriceSpec.Price <> MaxDouble Then
+        s = FormatPrice(pPriceSpec.Price, pContract.Specifier.SecType, pContract.TickSize)
+    End If
+Case PriceValueTypeAsk
+    s = "ASK"
+Case PriceValueTypeBid
+    s = "BID"
+Case PriceValueTypeLast
+    s = "LAST"
+Case PriceValueTypeEntry
+    s = "ENTRY"
+Case Else
+    AssertArgument False, "Invalid price value type"
+End Select
+
+s = s & gPriceOffsetToString(pPriceSpec.Offset, pPriceSpec.OffsetType)
+
+gPriceSpecifierToString = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
@@ -1265,37 +925,30 @@ End Select
 End Function
 
 Public Function gOrderTypeFromString(ByVal Value As String) As OrderTypes
-Static sTypes As Collection
 Const ProcName As String = "gOrderTypeFromString"
 On Error GoTo Err
 
+Static sTypes As Collection
 If sTypes Is Nothing Then
     Set sTypes = New Collection
     
-    sTypes.Add OrderTypeNone, StrOrderTypeNone
-    sTypes.Add OrderTypeMarket, StrOrderTypeMarket
-    sTypes.Add OrderTypeMarketOnClose, StrOrderTypeMarketOnClose
-    sTypes.Add OrderTypeLimit, StrOrderTypeLimit
-    sTypes.Add OrderTypeLimitOnClose, StrOrderTypeLimitOnClose
-    sTypes.Add OrderTypePeggedToMarket, StrOrderTypePegMarket
-    sTypes.Add OrderTypeStop, StrOrderTypeStop
-    sTypes.Add OrderTypeStopLimit, StrOrderTypeStopLimit
-    sTypes.Add OrderTypeTrail, StrOrderTypeTrail
-    sTypes.Add OrderTypeRelative, StrOrderTypeRelative
-    sTypes.Add OrderTypeVWAP, StrOrderTypeVWAP
-    sTypes.Add OrderTypeMarketToLimit, StrOrderTypeMarketToLimit
-    sTypes.Add OrderTypeQuote, StrOrderTypeQuote
-    sTypes.Add OrderTypeAdjust, StrOrderTypeAdjust
-    sTypes.Add OrderTypeAlert, StrOrderTypeAlert
-    sTypes.Add OrderTypeLimitIfTouched, StrOrderTypeLimitIfTouched
-    sTypes.Add OrderTypeMarketIfTouched, StrOrderTypeMarketIfTouched
-    sTypes.Add OrderTypeTrailLimit, StrOrderTypeTrailLimit
-    sTypes.Add OrderTypeMarketWithProtection, StrOrderTypeMarketWithProtection
-    sTypes.Add OrderTypeMarketOnOpen, StrOrderTypeMarketOnOpen
-    sTypes.Add OrderTypeLimitOnOpen, StrOrderTypeLimitOnOpen
-    sTypes.Add OrderTypePeggedToPrimary, StrOrderTypePeggedToPrimary
-    sTypes.Add OrderTypes.OrderTypeAutoLimit, StrOrderTypeAutoLimit
-    sTypes.Add OrderTypes.OrderTypeAutoStop, StrOrderTypeAutoStop
+    sTypes.Add OrderTypeNone, UCase$(StrOrderTypeNone)
+    sTypes.Add OrderTypeMarket, UCase$(StrOrderTypeMarket)
+    sTypes.Add OrderTypeMarketOnClose, UCase$(StrOrderTypeMarketOnClose)
+    sTypes.Add OrderTypeLimit, UCase$(StrOrderTypeLimit)
+    sTypes.Add OrderTypeLimitOnClose, UCase$(StrOrderTypeLimitOnClose)
+    sTypes.Add OrderTypePeggedToMarket, UCase$(StrOrderTypePegMarket)
+    sTypes.Add OrderTypeStop, UCase$(StrOrderTypeStop)
+    sTypes.Add OrderTypeStopLimit, UCase$(StrOrderTypeStopLimit)
+    sTypes.Add OrderTypeTrail, UCase$(StrOrderTypeTrail)
+    sTypes.Add OrderTypeMarketToLimit, UCase$(StrOrderTypeMarketToLimit)
+    sTypes.Add OrderTypeLimitIfTouched, UCase$(StrOrderTypeLimitIfTouched)
+    sTypes.Add OrderTypeMarketIfTouched, UCase$(StrOrderTypeMarketIfTouched)
+    sTypes.Add OrderTypeTrailLimit, UCase$(StrOrderTypeTrailLimit)
+    sTypes.Add OrderTypeMarketWithProtection, UCase$(StrOrderTypeMarketWithProtection)
+    sTypes.Add OrderTypeMarketOnOpen, UCase$(StrOrderTypeMarketOnOpen)
+    sTypes.Add OrderTypeLimitOnOpen, UCase$(StrOrderTypeLimitOnOpen)
+    sTypes.Add OrderTypePeggedToPrimary, UCase$(StrOrderTypePeggedToPrimary)
 
     sTypes.Add OrderTypes.OrderTypeMarket, "MKT"
     sTypes.Add OrderTypes.OrderTypeMarketOnClose, "MKTCLS"
@@ -1306,11 +959,7 @@ If sTypes Is Nothing Then
     sTypes.Add OrderTypes.OrderTypeStopLimit, "STPLMT"
     sTypes.Add OrderTypes.OrderTypeTrail, "TRAIL"
     sTypes.Add OrderTypes.OrderTypeRelative, "REL"
-    sTypes.Add OrderTypes.OrderTypeVWAP, "VWAP"
     sTypes.Add OrderTypes.OrderTypeMarketToLimit, "MTL"
-    sTypes.Add OrderTypes.OrderTypeQuote, "QUOTE"
-    sTypes.Add OrderTypes.OrderTypeAdjust, "ADJUST"
-    sTypes.Add OrderTypes.OrderTypeAlert, "ALERT"
     sTypes.Add OrderTypes.OrderTypeLimitIfTouched, "LIT"
     sTypes.Add OrderTypes.OrderTypeMarketIfTouched, "MIT"
     sTypes.Add OrderTypes.OrderTypeTrailLimit, "TRAILLMT"
@@ -1320,7 +969,7 @@ If sTypes Is Nothing Then
     sTypes.Add OrderTypes.OrderTypePeggedToPrimary, "PEGPRI"
 End If
 
-gOrderTypeFromString = sTypes(Value)
+gOrderTypeFromString = sTypes(UCase$(Value))
 
 Exit Function
 
@@ -1354,16 +1003,8 @@ Case OrderTypeTrail
     gOrderTypeToString = StrOrderTypeTrail
 Case OrderTypeRelative
     gOrderTypeToString = StrOrderTypeRelative
-Case OrderTypeVWAP
-    gOrderTypeToString = StrOrderTypeVWAP
 Case OrderTypeMarketToLimit
     gOrderTypeToString = StrOrderTypeMarketToLimit
-Case OrderTypeQuote
-    gOrderTypeToString = StrOrderTypeQuote
-Case OrderTypeAdjust
-    gOrderTypeToString = StrOrderTypeAdjust
-Case OrderTypeAlert
-    gOrderTypeToString = StrOrderTypeAlert
 Case OrderTypeLimitIfTouched
     gOrderTypeToString = StrOrderTypeLimitIfTouched
 Case OrderTypeMarketIfTouched
@@ -1378,10 +1019,6 @@ Case OrderTypeLimitOnOpen
     gOrderTypeToString = StrOrderTypeLimitOnOpen
 Case OrderTypePeggedToPrimary
     gOrderTypeToString = StrOrderTypePeggedToPrimary
-Case OrderTypeAutoLimit
-    gOrderTypeToString = StrOrderTypeAutoLimit
-Case OrderTypeAutoStop
-    gOrderTypeToString = StrOrderTypeAutoStop
 Case Else
     AssertArgument False, "Invalid order type"
 End Select
@@ -1417,16 +1054,8 @@ Case OrderTypes.OrderTypeTrail
     gOrderTypeToShortString = "TRAIL"
 Case OrderTypes.OrderTypeRelative
     gOrderTypeToShortString = "REL"
-Case OrderTypes.OrderTypeVWAP
-    gOrderTypeToShortString = "VWAP"
 Case OrderTypes.OrderTypeMarketToLimit
     gOrderTypeToShortString = "MTL"
-Case OrderTypes.OrderTypeQuote
-    gOrderTypeToShortString = "QUOTE"
-Case OrderTypes.OrderTypeAdjust
-    gOrderTypeToShortString = "ADJUST"
-Case OrderTypes.OrderTypeAlert
-    gOrderTypeToShortString = "ALERT"
 Case OrderTypes.OrderTypeLimitIfTouched
     gOrderTypeToShortString = "LIT"
 Case OrderTypes.OrderTypeMarketIfTouched
@@ -1441,18 +1070,6 @@ Case OrderTypes.OrderTypeLimitOnOpen
     gOrderTypeToShortString = "LOO"
 Case OrderTypes.OrderTypePeggedToPrimary
     gOrderTypeToShortString = "PEGPRI"
-Case OrderTypes.OrderTypeAutoLimit
-    gOrderTypeToShortString = "AUTOLMT"
-Case OrderTypes.OrderTypeAutoStop
-    gOrderTypeToShortString = "AUTOSTP"
-Case BracketEntryTypeAsk, BracketStopLossTypeAsk, BracketTargetTypeAsk
-    gOrderTypeToShortString = "ASK"
-Case BracketEntryTypeBid, BracketStopLossTypeBid, BracketTargetTypeBid
-    gOrderTypeToShortString = "BID"
-Case BracketEntryTypeLast, BracketStopLossTypeBid, BracketTargetTypeBid
-    gOrderTypeToShortString = "LAST"
-Case BracketStopLossTypeAuto, BracketTargetTypeAuto
-    gOrderTypeToShortString = "AUTO"
 Case Else
     AssertArgument False, "Value is not a valid Order Type"
 End Select
@@ -1472,9 +1089,11 @@ Case PriceOffsetTypeNone
 Case PriceOffsetTypeIncrement
     gPriceOffsetToString = "[" & pOffset & "]"
 Case PriceOffsetTypeNumberOfTicks
-    gPriceOffsetToString = "[" & CInt(pOffset) & "T]"
+    gPriceOffsetToString = "[" & CDbl(pOffset) & "T]"
 Case PriceOffsetTypeBidAskPercent
-    gPriceOffsetToString = "[" & CInt(pOffset) & "%]"
+    gPriceOffsetToString = "[" & CDbl(pOffset) & "S]"
+Case PriceOffsetTypePercent
+    gPriceOffsetToString = "[" & CDbl(pOffset) & "%]"
 Case Else
     AssertArgument False, "Value is not a valid Price Offset Type"
 End Select
@@ -1490,33 +1109,12 @@ Case PriceOffsetTypeIncrement
 Case PriceOffsetTypeNumberOfTicks
     gPriceOffsetTypeToString = "T"
 Case PriceOffsetTypeBidAskPercent
+    gPriceOffsetTypeToString = "S"
+Case PriceOffsetTypePercent
     gPriceOffsetTypeToString = "%"
 Case Else
     AssertArgument False, "Value is not a valid Price Offset Type"
 End Select
-End Function
-
-Public Function gPriceToString( _
-                ByVal pPrice As Double, _
-                ByVal pContract As IContract, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone, _
-                Optional ByVal pIncludeOffset As Boolean = False) As String
-Const ProcName As String = "gPriceToString"
-On Error GoTo Err
-
-If pPrice <> MaxDouble Then
-    gPriceToString = FormatPrice(pPrice, pContract.Specifier.SecType, pContract.TickSize)
-End If
-If pIncludeOffset Then
-    gPriceToString = gPriceToString & _
-                    gPriceOffsetToString(pOffset, pOffsetType)
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
@@ -1541,9 +1139,6 @@ On Error GoTo Err
 With pTargetOrder
     .Initialise pSourceOrder.GroupName, pSourceOrder.ContractSpecifier, pSourceOrder.OrderContext
     
-    ' do this first because modifiability of other attributes may depend on the OrderType
-    .OrderType = pSourceOrder.OrderType
-    
     .Action = pSourceOrder.Action
     .AllOrNone = pSourceOrder.AllOrNone
     .AveragePrice = pSourceOrder.AveragePrice
@@ -1566,8 +1161,7 @@ With pTargetOrder
     .IsSimulated = pSourceOrder.IsSimulated
     .LastFillPrice = pSourceOrder.LastFillPrice
     .LimitPrice = pSourceOrder.LimitPrice
-    .LimitPriceOffset = pSourceOrder.LimitPriceOffset
-    .LimitPriceOffsetType = pSourceOrder.LimitPriceOffsetType
+    .LimitPriceSpec = pSourceOrder.LimitPriceSpec
     .MinimumQuantity = pSourceOrder.MinimumQuantity
     .NbboPriceCap = pSourceOrder.NbboPriceCap
 '    .Offset = pSourceOrder.Offset
@@ -1583,8 +1177,7 @@ With pTargetOrder
     .SweepToFill = pSourceOrder.SweepToFill
     .TimeInForce = pSourceOrder.TimeInForce
     .TriggerPrice = pSourceOrder.TriggerPrice
-    .TriggerPriceOffset = pSourceOrder.TriggerPriceOffset
-    .TriggerPriceOffsetType = pSourceOrder.TriggerPriceOffsetType
+    .TriggerPriceSpec = pSourceOrder.TriggerPriceSpec
 
     ' do this last to prevent status influencing whether attributes are modifiable
     .Status = pSourceOrder.Status

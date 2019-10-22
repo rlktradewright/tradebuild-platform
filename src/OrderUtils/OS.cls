@@ -64,8 +64,7 @@ Private mGroupName                                  As String
 Private mHidden                                     As Boolean
 Private mIgnoreRegularTradingHours                  As Boolean
 Private mLimitPrice                                 As Double
-Private mLimitPriceOffset                           As Double
-Private mLimitPriceOffsetType                       As PriceOffsetTypes
+Private mLimitPriceSpec                             As PriceSpecifier
 Private mMessage                                    As String
 Private mMinimumQuantity                            As Long
 Private mNBBOPriceCap                               As Double
@@ -82,14 +81,12 @@ Private mSweepToFill                                As Boolean
 Private mTimeInForce                                As OrderTIFs
 Private mIdentifier                                 As String
 Private mTriggerPrice                               As Double
-Private mTriggerPriceOffset                         As Double
-Private mTriggerPriceOffsetType                     As PriceOffsetTypes
+Private mTriggerPriceSpec                           As PriceSpecifier
 Private mAveragePrice                               As Double
 Private mFillTime                                   As Date
 Private mQuantityFilled                             As Long
 Private mQuantityRemaining                          As Long
 Private mLastFillPrice                              As Double
-Private mOffset                                     As Long
 Private mPercentOffset                              As Double
 
 Private mIsDirty                                    As Boolean
@@ -101,6 +98,16 @@ Private mDiff                                       As New ROD
 '@================================================================================
 
 Private Sub Class_Initialize()
+mStatus = OrderStatuses.OrderStatusCreated
+mAction = OrderActionBuy
+mOrderType = OrderTypeMarket
+mLimitPrice = MaxDouble
+Set mLimitPriceSpec = gNewPriceSpecifier
+mTriggerPrice = MaxDouble
+Set mTriggerPriceSpec = gNewPriceSpecifier
+mStopTriggerMethod = OrderStopTriggerDefault
+mTimeInForce = OrderTIFDay
+
 Set mProviderProperties = New Parameters
 End Sub
 
@@ -372,26 +379,15 @@ Public Property Get LimitPrice() As Double
 LimitPrice = mLimitPrice
 End Property
 
-Public Property Let LimitPriceOffset(ByVal Value As Double)
-If mLimitPriceOffset = Value Then Exit Property
-mLimitPriceOffset = Value
+Public Property Let LimitPriceSpec(ByVal Value As PriceSpecifier)
+If mLimitPriceSpec Is Value Then Exit Property
+Set mLimitPriceSpec = Value
 mIsDirty = True
-mDiff.SetProperty "LimitPriceOffset", Value
+mDiff.SetProperty "LimitPriceSpec", Value
 End Property
 
-Public Property Get LimitPriceOffset() As Double
-LimitPriceOffset = mLimitPriceOffset
-End Property
-
-Public Property Let LimitPriceOffsetType(ByVal Value As PriceOffsetTypes)
-If mLimitPriceOffsetType = Value Then Exit Property
-mLimitPriceOffsetType = Value
-mIsDirty = True
-mDiff.SetProperty "LimitPriceOffsetType", Value
-End Property
-
-Public Property Get LimitPriceOffsetType() As PriceOffsetTypes
-LimitPriceOffsetType = mLimitPriceOffsetType
+Public Property Get LimitPriceSpec() As PriceSpecifier
+Set LimitPriceSpec = mLimitPriceSpec
 End Property
 
 Public Property Let Message(ByVal Value As String)
@@ -425,17 +421,6 @@ End Property
 
 Public Property Get NbboPriceCap() As Double
 NbboPriceCap = mNBBOPriceCap
-End Property
-
-Public Property Let Offset(ByVal Value As Long)
-If mOffset = Value Then Exit Property
-mOffset = Value
-mIsDirty = True
-mDiff.SetProperty "Offset", Value
-End Property
-
-Public Property Get Offset() As Long
-Offset = mOffset
 End Property
 
 Public Property Let OrderType(ByVal Value As OrderTypes)
@@ -603,26 +588,15 @@ Public Property Get TriggerPrice() As Double
 TriggerPrice = mTriggerPrice
 End Property
 
-Public Property Let TriggerPriceOffset(ByVal Value As Double)
-If mTriggerPriceOffset = Value Then Exit Property
-mTriggerPriceOffset = Value
+Public Property Let TriggerPriceSpec(ByVal Value As PriceSpecifier)
+If mTriggerPriceSpec Is Value Then Exit Property
+Set mTriggerPriceSpec = Value
 mIsDirty = True
-mDiff.SetProperty "TriggerPriceOffset", Value
+mDiff.SetProperty "TriggerPriceSpec", Value
 End Property
 
-Public Property Get TriggerPriceOffset() As Double
-TriggerPriceOffset = mTriggerPriceOffset
-End Property
-
-Public Property Let TriggerPriceOffsetType(ByVal Value As PriceOffsetTypes)
-If mTriggerPriceOffsetType = Value Then Exit Property
-mTriggerPriceOffsetType = Value
-mIsDirty = True
-mDiff.SetProperty "TriggerPriceOffsetType", Value
-End Property
-
-Public Property Get TriggerPriceOffsetType() As PriceOffsetTypes
-TriggerPriceOffsetType = mTriggerPriceOffsetType
+Public Property Get TriggerPriceSpec() As PriceSpecifier
+Set TriggerPriceSpec = mTriggerPriceSpec
 End Property
 
 '@================================================================================

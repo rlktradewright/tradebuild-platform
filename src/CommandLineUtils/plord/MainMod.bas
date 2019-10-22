@@ -45,6 +45,7 @@ Public Const CancelAfterSwitch                      As String = "CANCELAFTER"
 Public Const CancelPriceSwitch                      As String = "CANCELPRICE"
 Public Const DescriptionSwitch                      As String = "DESCRIPTION"
 Public Const OffsetSwitch                           As String = "OFFSET"
+Public Const IgnoreRTHSwitch                        As String = "IGNORERTH"
 Public Const PriceSwitch                            As String = "PRICE"
 Public Const ReasonSwitch                           As String = "REASON"
 Public Const TIFSwitch                              As String = "TIF"
@@ -109,8 +110,21 @@ Private Const Default                               As String = "DEFAULT"
 Private Const Yes                                   As String = "YES"
 Private Const No                                    As String = "NO"
 
-Public Const TickDesignator                         As String = "T"
-Public Const PercentDesignator                      As String = "%"
+Public Const TickOffsetDesignator                   As String = "T"
+Public Const PercentOffsetDesignator                As String = "%"
+Public Const BidAskSpreadPercentOffsetDesignator    As String = "S"
+
+Public Const AskPriceDesignator                     As String = "ASK"
+Public Const BidPriceDesignator                     As String = "BID"
+Public Const LastPriceDesignator                    As String = "LAST"
+Public Const EntryPriceDesignator                   As String = "ENTRY"
+
+' Legacy pseudo-order types from early versions
+Public Const AskPseudoOrderType                     As String = "ASK"
+Public Const BidPseudoOrderType                     As String = "BID"
+Public Const LastPseudoOrderType                    As String = "Last"
+Public Const AutoPseudoOrderType                    As String = "AUTO"
+
 Private Const DefaultClientId                       As Long = 906564398
 
 Private Const DefaultGroupName                      As String = "$"
@@ -223,11 +237,11 @@ Public Function gGenerateOffset( _
                 ByVal pOffsetType As PriceOffsetTypes) As String
 Dim lDesignator As String
 If pOffsetType = PriceOffsetTypeBidAskPercent Then
-    lDesignator = PercentDesignator
+    lDesignator = PercentOffsetDesignator
 ElseIf pOffsetType = PriceOffsetTypeIncrement Then
     lDesignator = ""
 ElseIf pOffsetType = PriceOffsetTypeNumberOfTicks Then
-    lDesignator = TickDesignator
+    lDesignator = TickOffsetDesignator
 End If
 gGenerateOffset = CStr(pValue) & lDesignator
 End Function
@@ -533,7 +547,7 @@ For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(getContractName(lContract), 25) & _
+                        padStringRight(getContractName(lContract), 30) & _
                         " Size=" & padStringleft(lPM.PositionSize & _
                                                 "(" & lPM.PendingBuyPositionSize & _
                                                 "/" & _
@@ -557,7 +571,7 @@ For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(getContractName(lContract), 25), _
+                        padStringRight(getContractName(lContract), 30), _
                         True
     
     Dim lTrade As Execution
@@ -982,7 +996,6 @@ On Error GoTo Err
 
 gRegExp.Global = False
 gRegExp.IgnoreCase = True
-'gRegExp.Pattern = "^((all|\$)|([a-zA-Z0-9][\w-]*))?( +((mkt)|((lmt)(:(-)?(\d{1,3}))?))?)?$"
 
 Dim p As String: p = _
     "(?:" & _
@@ -1592,6 +1605,7 @@ gWriteLineToConsole "                   | /offset:<bidaskspreadpercent>%"
 gWriteLineToConsole "                   | /tif:<tifvalue>"
 gWriteLineToConsole "    priceoroffset ::= <price> | <offset>"
 gWriteLineToConsole "    price  ::= DOUBLE"
+gWriteLineToConsole "    offset ::= DOUBLE"
 gWriteLineToConsole "    points ::= DOUBLE"
 gWriteLineToConsole "    bidaskspreadpercent ::= [+|-]INTEGEER"
 gWriteLineToConsole "    numberofticks  ::= [+|-]INTEGER"

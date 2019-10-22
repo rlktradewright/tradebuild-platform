@@ -1088,7 +1088,7 @@ With lOrder
     .Action = gTwsOrderActionFromString(mReader.GetString("Action"))
     .TotalQuantity = mReader.GetLong("Quantity")
     .OrderType = gTwsOrderTypeFromString(mReader.GetString("Order type"))
-    If .OrderType = TwsOrderTypeNone Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid OrderYype"
+    If .OrderType = TwsOrderTypeNone Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid OrderType"
     If pVersion < 29 Then
         .LmtPrice = mReader.GetDouble("Limit price")
     Else

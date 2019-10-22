@@ -87,11 +87,15 @@ Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
 Set mSummary = New OS
-mSummary.Status = OrderStatuses.OrderStatusCreated
-mSummary.Action = OrderActionBuy
-mSummary.OrderType = OrderTypeMarket
-mSummary.StopTriggerMethod = OrderStopTriggerDefault
-mSummary.TimeInForce = OrderTIFDay
+'mSummary.Status = OrderStatuses.OrderStatusCreated
+'mSummary.Action = OrderActionBuy
+'mSummary.OrderType = OrderTypeMarket
+'mSummary.LimitPrice = MaxDouble
+'mSummary.LimitPriceSpec = gNewPriceSpecifier
+'mSummary.TriggerPrice = MaxDouble
+'mSummary.TriggerPriceSpec = gNewPriceSpecifier
+'mSummary.StopTriggerMethod = OrderStopTriggerDefault
+'mSummary.TimeInForce = OrderTIFDay
 setDirty
 
 Exit Sub
@@ -489,20 +493,12 @@ Private Property Get IOrder_LimitPrice() As Double
 IOrder_LimitPrice = mSummary.LimitPrice
 End Property
 
-Private Property Let IOrder_LimitPriceOffset(ByVal Value As Double)
-LimitPriceOffset = Value
+Private Property Let IOrder_LimitPriceSpec(ByVal Value As PriceSpecifier)
+LimitPriceSpec = Value
 End Property
 
-Private Property Get IOrder_LimitPriceOffset() As Double
-IOrder_LimitPriceOffset = LimitPriceOffset
-End Property
-
-Private Property Let IOrder_LimitPriceOffsetType(ByVal Value As PriceOffsetTypes)
-LimitPriceOffsetType = Value
-End Property
-
-Private Property Get IOrder_LimitPriceOffsetType() As PriceOffsetTypes
-IOrder_LimitPriceOffsetType = LimitPriceOffsetType
+Private Property Get IOrder_LimitPriceSpec() As PriceSpecifier
+Set IOrder_LimitPriceSpec = LimitPriceSpec
 End Property
 
 Private Property Let IOrder_Message(ByVal Value As String)
@@ -581,36 +577,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-'Private Property Let IOrder_Offset(ByVal Value As Long)
-'Const ProcName As String = "IOrder_Offset"
-'On Error GoTo Err
-'
-'Offset = Value
-'
-'Exit Property
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Property
-'
-'Private Property Get IOrder_Offset() As Long
-'IOrder_Offset = Offset
-'End Property
-
 Private Property Get IOrder_OrderContext() As OrderContext
 Set IOrder_OrderContext = OrderContext
-End Property
-
-Private Property Let IOrder_OrderType(ByVal Value As OrderTypes)
-Const ProcName As String = "IOrder_OrderType"
-On Error GoTo Err
-
-OrderType = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_OrderType() As OrderTypes
@@ -845,20 +813,12 @@ Private Property Get IOrder_TriggerPrice() As Double
 IOrder_TriggerPrice = mSummary.TriggerPrice
 End Property
 
-Private Property Let IOrder_TriggerPriceOffset(ByVal Value As Double)
-TriggerPriceOffset = Value
+Private Property Let IOrder_TriggerPriceSpec(ByVal Value As PriceSpecifier)
+TriggerPriceSpec = Value
 End Property
 
-Private Property Get IOrder_TriggerPriceOffset() As Double
-IOrder_TriggerPriceOffset = TriggerPriceOffset
-End Property
-
-Private Property Let IOrder_TriggerPriceOffsetType(ByVal Value As PriceOffsetTypes)
-TriggerPriceOffsetType = Value
-End Property
-
-Private Property Get IOrder_TriggerPriceOffsetType() As PriceOffsetTypes
-IOrder_TriggerPriceOffsetType = TriggerPriceOffsetType
+Private Property Get IOrder_TriggerPriceSpec() As PriceSpecifier
+Set IOrder_TriggerPriceSpec = TriggerPriceSpec
 End Property
 
 '@================================================================================
@@ -1306,13 +1266,13 @@ Public Property Get LimitPrice() As Double
 LimitPrice = mSummary.LimitPrice
 End Property
 
-Public Property Let LimitPriceOffset(ByVal Value As Double)
-Const ProcName As String = "LimitPriceOffset"
+Public Property Let LimitPriceSpec(ByVal Value As PriceSpecifier)
+Const ProcName As String = "LimitPriceSpec"
 On Error GoTo Err
 
-If Value = mSummary.LimitPriceOffset Then Exit Property
+If Value Is mSummary.LimitPriceSpec Then Exit Property
 setDirty
-mSummary.LimitPriceOffset = Value
+mSummary.LimitPriceSpec = Value
 
 Exit Property
 
@@ -1320,26 +1280,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get LimitPriceOffset() As Double
-LimitPriceOffset = mSummary.LimitPriceOffset
-End Property
-
-Public Property Let LimitPriceOffsetType(ByVal Value As PriceOffsetTypes)
-Const ProcName As String = "LimitPriceOffsetType"
-On Error GoTo Err
-
-If Value = mSummary.LimitPriceOffsetType Then Exit Property
-setDirty
-mSummary.LimitPriceOffsetType = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get LimitPriceOffsetType() As PriceOffsetTypes
-LimitPriceOffsetType = mSummary.LimitPriceOffsetType
+Public Property Get LimitPriceSpec() As PriceSpecifier
+Set LimitPriceSpec = mSummary.LimitPriceSpec
 End Property
 
 Public Property Let Message(ByVal Value As String)
@@ -1395,19 +1337,11 @@ Friend Property Get NeedsRecovery() As Boolean
 NeedsRecovery = mNeedsRecovery
 End Property
 
-'Friend Property Let Offset(ByVal Value As Long)
-'mSummary.Offset = Value
-'End Property
-'
-'Friend Property Get Offset() As Long
-'Offset = mSummary.Offset
-'End Property
-
 Public Property Get OrderContext() As OrderContext
 Set OrderContext = mOrderContext
 End Property
 
-Public Property Let OrderType(ByVal Value As OrderTypes)
+Friend Property Let OrderType(ByVal Value As OrderTypes)
 Const ProcName As String = "OrderType"
 On Error GoTo Err
 
@@ -1682,13 +1616,13 @@ Public Property Get TriggerPrice() As Double
 TriggerPrice = mSummary.TriggerPrice
 End Property
 
-Public Property Let TriggerPriceOffset(ByVal Value As Double)
-Const ProcName As String = "TriggerPriceOffset"
+Public Property Let TriggerPriceSpec(ByVal Value As PriceSpecifier)
+Const ProcName As String = "TriggerPriceSpec"
 On Error GoTo Err
 
-If Value = mSummary.TriggerPriceOffset Then Exit Property
+If Value Is mSummary.TriggerPriceSpec Then Exit Property
 setDirty
-mSummary.TriggerPriceOffset = Value
+mSummary.TriggerPriceSpec = Value
 
 Exit Property
 
@@ -1696,26 +1630,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TriggerPriceOffset() As Double
-TriggerPriceOffset = mSummary.TriggerPriceOffset
-End Property
-
-Public Property Let TriggerPriceOffsetType(ByVal Value As PriceOffsetTypes)
-Const ProcName As String = "TriggerPriceOffsetType"
-On Error GoTo Err
-
-If Value = mSummary.TriggerPriceOffsetType Then Exit Property
-setDirty
-mSummary.TriggerPriceOffsetType = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get TriggerPriceOffsetType() As PriceOffsetTypes
-TriggerPriceOffsetType = mSummary.TriggerPriceOffsetType
+Public Property Get TriggerPriceSpec() As PriceSpecifier
+Set TriggerPriceSpec = mSummary.TriggerPriceSpec
 End Property
 
 '@================================================================================
@@ -1956,7 +1872,8 @@ Case OrderAttributes.OrderAttLimitPrice
         OrderTypeLimitOnClose, _
         OrderTypeStopLimit, _
         OrderTypeLimitIfTouched, _
-        OrderTypeLimitOnOpen
+        OrderTypeLimitOnOpen, _
+        OrderTypeTrailLimit
     Case Else
         IsAttributeModifiable = False
     End Select
@@ -1965,7 +1882,9 @@ Case OrderAttributes.OrderAttTriggerPrice
     Case OrderTypeStop, _
         OrderTypeStopLimit, _
         OrderTypeLimitIfTouched, _
-        OrderTypeMarketIfTouched
+        OrderTypeMarketIfTouched, _
+        OrderTypeTrail, _
+        OrderTypeTrailLimit
     Case Else
         IsAttributeModifiable = False
     End Select
@@ -2168,11 +2087,7 @@ Const ProcName As String = "SaveRecoveryInfo"
 On Error GoTo Err
 
 If mIsSimulated Then Exit Sub
-If mSummary.OrderType = OrderTypeAutoLimit Or mSummary.OrderType = OrderTypeAutoStop Then
-    ' ignore OrderStatus for these order types
-ElseIf mSummary.Status = OrderStatuses.OrderStatusCreated Then
-    Exit Sub
-End If
+'If mSummary.Status = OrderStatuses.OrderStatusCreated Then Exit Sub
 If Not mSummary.IsDirty Then Exit Sub
 
 fireRecoveryDataChanged
