@@ -78,6 +78,8 @@ Private mDontCheckAttributeModificationPermitted    As Boolean
 
 Private mRecoveryContextName        As String
 
+Private mProviderProperties                         As Parameters
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -87,15 +89,7 @@ Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
 Set mSummary = New OS
-'mSummary.Status = OrderStatuses.OrderStatusCreated
-'mSummary.Action = OrderActionBuy
-'mSummary.OrderType = OrderTypeMarket
-'mSummary.LimitPrice = MaxDouble
-'mSummary.LimitPriceSpec = gNewPriceSpecifier
-'mSummary.TriggerPrice = MaxDouble
-'mSummary.TriggerPriceSpec = gNewPriceSpecifier
-'mSummary.StopTriggerMethod = OrderStopTriggerDefault
-'mSummary.TimeInForce = OrderTIFDay
+Set mProviderProperties = New Parameters
 setDirty
 
 Exit Sub
@@ -121,7 +115,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Action() As OrderActions
-IOrder_Action = mSummary.Action
+IOrder_Action = Action
 End Property
 
 Private Property Let IOrder_AllOrNone(ByVal Value As Boolean)
@@ -137,7 +131,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_AllOrNone() As Boolean
-IOrder_AllOrNone = mSummary.AllOrNone
+IOrder_AllOrNone = AllOrNone
 End Property
 
 Private Property Let IOrder_AveragePrice(ByVal Value As Double)
@@ -179,7 +173,7 @@ BrokerId = Value
 End Property
 
 Private Property Get IOrder_BrokerId() As String
-IOrder_BrokerId = mSummary.BrokerId
+IOrder_BrokerId = BrokerId
 End Property
 
 Private Property Get IOrder_ContractSpecifier() As IContractSpecifier
@@ -199,7 +193,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_DiscretionaryAmount() As Double
-IOrder_DiscretionaryAmount = mSummary.DiscretionaryAmount
+IOrder_DiscretionaryAmount = DiscretionaryAmount
 End Property
 
 Private Property Let IOrder_DisplaySize(ByVal Value As Long)
@@ -215,7 +209,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_DisplaySize() As Long
-IOrder_DisplaySize = mSummary.DisplaySize
+IOrder_DisplaySize = DisplaySize
 End Property
 
 Private Property Let IOrder_ErrorCode(ByVal Value As Long)
@@ -247,7 +241,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_ETradeOnly() As Boolean
-IOrder_ETradeOnly = mSummary.ETradeOnly
+IOrder_ETradeOnly = ETradeOnly
 End Property
 
 Private Property Let IOrder_FillTime(ByVal Value As Date)
@@ -279,7 +273,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_FirmQuoteOnly() As Boolean
-IOrder_FirmQuoteOnly = mSummary.FirmQuoteOnly
+IOrder_FirmQuoteOnly = FirmQuoteOnly
 End Property
 
 Private Property Let IOrder_GoodAfterTime(ByVal Value As Date)
@@ -295,7 +289,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_GoodAfterTime() As Date
-IOrder_GoodAfterTime = mSummary.GoodAfterTime
+IOrder_GoodAfterTime = GoodAfterTime
 End Property
 
 Private Property Let IOrder_GoodAfterTimeTZ(ByVal Value As String)
@@ -311,7 +305,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_GoodAfterTimeTZ() As String
-IOrder_GoodAfterTimeTZ = mSummary.GoodAfterTimeTZ
+IOrder_GoodAfterTimeTZ = GoodAfterTimeTZ
 End Property
 
 Private Property Let IOrder_GoodTillDate(ByVal Value As Date)
@@ -327,7 +321,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_GoodTillDate() As Date
-IOrder_GoodTillDate = mSummary.GoodTillDate
+IOrder_GoodTillDate = GoodTillDate
 End Property
 
 Private Property Let IOrder_GoodTillDateTZ(ByVal Value As String)
@@ -343,7 +337,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_GoodTillDateTZ() As String
-IOrder_GoodTillDateTZ = mSummary.GoodTillDateTZ
+IOrder_GoodTillDateTZ = GoodTillDateTZ
 End Property
 
 Private Property Get IOrder_GroupName() As String
@@ -371,7 +365,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Hidden() As Boolean
-IOrder_Hidden = mSummary.Hidden
+IOrder_Hidden = Hidden
 End Property
 
 Private Property Let IOrder_Id(ByVal Value As String)
@@ -387,7 +381,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Id() As String
-IOrder_Id = mSummary.Id
+IOrder_Id = Id
 End Property
 
 Private Property Let IOrder_IgnoreRegularTradingHours(ByVal Value As Boolean)
@@ -403,7 +397,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_IgnoreRegularTradingHours() As Boolean
-IOrder_IgnoreRegularTradingHours = mSummary.IgnoreRegularTradingHours
+IOrder_IgnoreRegularTradingHours = IgnoreRegularTradingHours
 End Property
 
 Private Sub IOrder_Initialise( _
@@ -490,7 +484,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_LimitPrice() As Double
-IOrder_LimitPrice = mSummary.LimitPrice
+IOrder_LimitPrice = LimitPrice
 End Property
 
 Private Property Let IOrder_LimitPriceSpec(ByVal Value As PriceSpecifier)
@@ -514,7 +508,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Message() As String
-IOrder_Message = mSummary.Message
+IOrder_Message = Message
 End Property
 
 Private Property Let IOrder_MinimumQuantity(ByVal Value As Long)
@@ -530,7 +524,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_MinimumQuantity() As Long
-IOrder_MinimumQuantity = mSummary.MinimumQuantity
+IOrder_MinimumQuantity = MinimumQuantity
 End Property
 
 Private Property Let IOrder_NbboPriceCap(ByVal Value As Double)
@@ -546,7 +540,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_NbboPriceCap() As Double
-IOrder_NbboPriceCap = mSummary.NbboPriceCap
+IOrder_NbboPriceCap = NbboPriceCap
 End Property
 
 Private Sub IOrder_NotifyError(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -582,7 +576,7 @@ Set IOrder_OrderContext = OrderContext
 End Property
 
 Private Property Get IOrder_OrderType() As OrderTypes
-IOrder_OrderType = mSummary.OrderType
+IOrder_OrderType = OrderType
 End Property
 
 Private Property Let IOrder_Origin(ByVal Value As OrderOrigins)
@@ -598,7 +592,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Origin() As OrderOrigins
-IOrder_Origin = mSummary.Origin
+IOrder_Origin = Origin
 End Property
 
 Private Property Let IOrder_OriginatorRef(ByVal Value As String)
@@ -614,7 +608,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_OriginatorRef() As String
-IOrder_OriginatorRef = mSummary.OriginatorRef
+IOrder_OriginatorRef = OriginatorRef
 End Property
 
 Private Property Let IOrder_OverrideConstraints(ByVal Value As Boolean)
@@ -630,7 +624,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_OverrideConstraints() As Boolean
-IOrder_OverrideConstraints = mSummary.OverrideConstraints
+IOrder_OverrideConstraints = OverrideConstraints
 End Property
 
 Private Property Let IOrder_PercentOffset(ByVal Value As Double)
@@ -649,12 +643,8 @@ Private Property Get IOrder_PercentOffset() As Double
 IOrder_PercentOffset = PercentOffset
 End Property
 
-Private Property Let IOrder_ProviderProperties(ByVal Value As Parameters)
-ProviderProperties = Value
-End Property
-
 Private Property Get IOrder_ProviderProperties() As Parameters
-Set IOrder_ProviderProperties = mSummary.ProviderProperties
+Set IOrder_ProviderProperties = ProviderProperties
 End Property
 
 Private Property Let IOrder_Quantity(ByVal Value As Long)
@@ -665,7 +655,7 @@ Private Property Get IOrder_Quantity() As Long
 Const ProcName As String = "IOrder_Quantity"
 On Error GoTo Err
 
-IOrder_Quantity = mSummary.Quantity
+IOrder_Quantity = Quantity
 
 Exit Property
 
@@ -686,7 +676,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_QuantityFilled() As Long
-IOrder_QuantityFilled = mSummary.QuantityFilled
+IOrder_QuantityFilled = QuantityFilled
 End Property
 
 Private Property Let IOrder_QuantityRemaining(ByVal Value As Long)
@@ -702,7 +692,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_QuantityRemaining() As Long
-IOrder_QuantityRemaining = mSummary.QuantityRemaining
+IOrder_QuantityRemaining = QuantityRemaining
 End Property
 
 Private Property Let IOrder_SettlingFirm(ByVal Value As String)
@@ -718,7 +708,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_SettlingFirm() As String
-IOrder_SettlingFirm = mSummary.SettlingFirm
+IOrder_SettlingFirm = SettlingFirm
 End Property
 
 Private Property Let IOrder_Status(ByVal Value As OrderStatuses)
@@ -734,7 +724,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Status() As OrderStatuses
-IOrder_Status = mSummary.Status
+IOrder_Status = Status
 End Property
 
 Private Property Let IOrder_StopTriggerMethod(ByVal Value As OrderStopTriggerMethods)
@@ -762,7 +752,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_SweepToFill() As Boolean
-IOrder_SweepToFill = mSummary.SweepToFill
+IOrder_SweepToFill = SweepToFill
 End Property
 
 Private Sub IOrder_SyncToOrderReport(ByVal pOrderReport As IOrderReport)
@@ -790,11 +780,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_TimeInForce() As OrderTIFs
-IOrder_TimeInForce = mSummary.TimeInForce
+IOrder_TimeInForce = TimeInForce
 End Property
 
 Private Property Get IOrder_StopTriggerMethod() As OrderStopTriggerMethods
-IOrder_StopTriggerMethod = mSummary.StopTriggerMethod
+IOrder_StopTriggerMethod = StopTriggerMethod
 End Property
 
 Private Property Let IOrder_TriggerPrice(ByVal Value As Double)
@@ -810,7 +800,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_TriggerPrice() As Double
-IOrder_TriggerPrice = mSummary.TriggerPrice
+IOrder_TriggerPrice = TriggerPrice
 End Property
 
 Private Property Let IOrder_TriggerPriceSpec(ByVal Value As PriceSpecifier)
@@ -1439,13 +1429,8 @@ Public Property Get PercentOffset() As Double
 PercentOffset = mSummary.PercentOffset
 End Property
 
-Public Property Let ProviderProperties( _
-                ByVal Value As Parameters)
-Set mSummary.ProviderProperties = Value
-End Property
-
 Public Property Get ProviderProperties() As Parameters
-Set ProviderProperties = mSummary.ProviderProperties
+Set ProviderProperties = mProviderProperties
 End Property
 
 Public Property Let Quantity(ByVal Value As Long)
@@ -1970,7 +1955,7 @@ With pReport
     If .Origin <> mSummary.Origin Then mSummary.Origin = .Origin: changed = True
     If .OriginatorRef <> mSummary.OriginatorRef Then mSummary.OriginatorRef = .OriginatorRef: changed = True
     If .OverrideConstraints <> mSummary.OverrideConstraints Then mSummary.OverrideConstraints = .OverrideConstraints: changed = True
-    If Not propertiesEqual(mSummary.ProviderProperties, .ProviderProperties) Then Set mSummary.ProviderProperties = .ProviderProperties: changed = True
+    If Not propertiesEqual(mProviderProperties, .ProviderProperties) Then Set mProviderProperties = .ProviderProperties: changed = True
     If .Quantity <> mSummary.Quantity Then mSummary.Quantity = .Quantity: changed = True
     If .SettlingFirm <> mSummary.SettlingFirm Then mSummary.SettlingFirm = .SettlingFirm: changed = True
     If .StopTriggerMethod <> mSummary.StopTriggerMethod Then mSummary.StopTriggerMethod = .StopTriggerMethod: changed = True

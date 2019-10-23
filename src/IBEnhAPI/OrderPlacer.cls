@@ -263,6 +263,7 @@ With lOrderReport
     .SweepToFill = pOrder.SweepToFill
     .TimeInForce = pOrder.Tif
     .TriggerPrice = pOrder.AuxPrice
+    .ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, pOrder.OcaGroup
 End With
 
 If isKnownOrder(pOrderId) Then

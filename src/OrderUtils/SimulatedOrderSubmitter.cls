@@ -448,6 +448,15 @@ On Error GoTo Err
 
 Dim lOrder As IOrder
 
+Dim lOCAGroup As String
+If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+If lOCAGroup = "" Then
+    lOCAGroup = GenerateGUIDString
+    If Not pBracketOrder.StopLossOrder Is Nothing Then pBracketOrder.StopLossOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+    If Not pBracketOrder.TargetOrder Is Nothing Then pBracketOrder.TargetOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+End If
+
 If pEntryOrderChanged Then
     PlaceOrder pBracketOrder.EntryOrder, "", "", True
 End If
@@ -567,18 +576,18 @@ Const ProcName As String = "IOrderSubmitter_ResubmitStopAndTargetOrders"
 On Error GoTo Err
 
 
-Dim lOcaGroup As String
-lOcaGroup = GenerateTextID
+Dim lOCAGroup As String
+lOCAGroup = GenerateTextID
 
 Dim lStoporder As IOrder
 Set lStoporder = pBracketOrder.StopLossOrder
 'lStoporder.BrokerId = ""    ' force a new id to be allocated
-PlaceOrder lStoporder, "", lOcaGroup, False
+PlaceOrder lStoporder, "", lOCAGroup, False
 
 Dim lTargetOrder As IOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 'lTargetOrder.BrokerId = "" ' force a new id to be allocated
-PlaceOrder lTargetOrder, "", lOcaGroup, True
+PlaceOrder lTargetOrder, "", lOCAGroup, True
 
 Exit Sub
 

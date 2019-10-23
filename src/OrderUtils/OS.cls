@@ -72,7 +72,6 @@ Private mOrderType                                  As OrderTypes
 Private mOrigin                                     As OrderOrigins
 Private mOriginatorRef                              As String
 Private mOverrideConstraints                        As Boolean
-Private mProviderProperties                         As Parameters
 Private mQuantity                                   As Long
 Private mSettlingFirm                               As String
 Private mStatus                                     As OrderStatuses
@@ -107,8 +106,6 @@ mTriggerPrice = MaxDouble
 Set mTriggerPriceSpec = gNewPriceSpecifier
 mStopTriggerMethod = OrderStopTriggerDefault
 mTimeInForce = OrderTIFDay
-
-Set mProviderProperties = New Parameters
 End Sub
 
 '@================================================================================
@@ -476,17 +473,6 @@ End Property
 
 Public Property Get PercentOffset() As Double
 PercentOffset = mPercentOffset
-End Property
-
-Public Property Let ProviderProperties(ByVal Value As Parameters)
-If mProviderProperties Is Value Then Exit Property
-Set mProviderProperties = Value
-mIsDirty = True
-mDiff.SetProperty "ProviderProperties", Value
-End Property
-
-Public Property Get ProviderProperties() As Parameters
-Set ProviderProperties = mProviderProperties
 End Property
 
 Public Property Let Quantity(ByVal Value As Long)

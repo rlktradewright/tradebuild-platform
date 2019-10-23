@@ -1094,9 +1094,13 @@ If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0
 Dim lPlexId As Long
 
 Dim lOCAGroup As String
-If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue("OCA group")
-If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue("OCA group")
-If lOCAGroup = "" Then lOCAGroup = GenerateGUIDString
+If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+If lOCAGroup = "" Then
+    lOCAGroup = GenerateGUIDString
+    If Not pBracketOrder.StopLossOrder Is Nothing Then pBracketOrder.StopLossOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+    If Not pBracketOrder.TargetOrder Is Nothing Then pBracketOrder.TargetOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+End If
 
 If pEntryOrderChanged Then
     placeAnOrder pBracketOrder.EntryOrder, pContract, True, 0, "", OrderModeEntry

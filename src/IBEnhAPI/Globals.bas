@@ -40,6 +40,8 @@ Public Const PrimaryExchangeNASDAQ              As String = "NASDAQ"
 Public Const PrimaryExchangeNYSE                As String = "NYSE"
 Public Const PrimaryExchangeVENTURE             As String = "VENTURE"
 
+Public Const ProviderPropertyOCAGroup           As String = "OCA group"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -399,6 +401,7 @@ With pOrder
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)
+    gOrderToTwsOrder.OcaGroup = .ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
     gOrderToTwsOrder.OrderType = gOrderTypeToTwsOrderType(.OrderType)
     gOrderToTwsOrder.Origin = .Origin
     gOrderToTwsOrder.OrderRef = .OriginatorRef

@@ -204,9 +204,6 @@ End Property
 Public Property Get OverrideConstraints() As Boolean
 End Property
 
-Public Property Let ProviderProperties(ByVal Value As Parameters)
-End Property
-
 Public Property Get ProviderProperties() As Parameters
 End Property
 

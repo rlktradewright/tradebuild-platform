@@ -258,9 +258,6 @@ End Property
 Public Property Get PercentOffset() As Double
 End Property
 
-Public Property Let ProviderProperties(ByVal Value As Parameters)
-End Property
-
 Public Property Get ProviderProperties() As Parameters
 End Property
 
