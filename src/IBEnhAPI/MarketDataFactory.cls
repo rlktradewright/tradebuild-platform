@@ -769,6 +769,12 @@ On Error GoTo Err
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
 
+If mMarketDataTable(pIndex).ContractDetails Is Nothing Then
+    ' this can happen if the client cancels market data before handleCompletedFuture
+    ' has been called
+    Exit Sub
+End If
+
 If isFTSE100Index(mMarketDataTable(pIndex).ContractDetails.Summary) Then
     mHistoricalDataRequester.CancelRealtimeBars getTickerIdFromIndex(pIndex)
 Else
