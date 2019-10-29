@@ -285,6 +285,33 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function PriceOffsetToString( _
+                ByVal pOffset As Double, _
+                ByVal pOffsetType As PriceOffsetTypes)
+Const ProcName As String = "PriceOffsetToString"
+On Error GoTo Err
+
+PriceOffsetToString = gPriceOffsetToString(pOffset, pOffsetType)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function PriceOffsetTypeToString( _
+                ByVal pOffsetType As PriceOffsetTypes)
+Const ProcName As String = "PriceOffsetTypeToString"
+On Error GoTo Err
+
+PriceOffsetTypeToString = gPriceOffsetTypeToString(pOffsetType)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function PriceSpecifierToString( _
                 ByVal pPriceSpec As PriceSpecifier, _
                 ByVal pContract As IContract)
@@ -294,6 +321,21 @@ On Error GoTo Err
 PriceSpecifierToString = gPriceSpecifierToString(pPriceSpec, _
                             pContract)
                             
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function TypedPriceToString( _
+                ByVal pPrice As Double, _
+                ByVal pPriceType As PriceValueTypes, _
+                ByVal pContract As IContract) As String
+Const ProcName As String = "gTypedPriceToString"
+On Error GoTo Err
+
+TypedPriceToString = gTypedPriceToString(pPrice, pPriceType, pContract)
 
 Exit Function
 

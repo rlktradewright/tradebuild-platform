@@ -3024,7 +3024,6 @@ Then
     Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change entry limit price - order " & mEntryOrder.Id & " already filled"
     mEntryOrder.LimitPriceSpec = mNewEntryLimitPriceSpec
     mEntryOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
-                                                mEntryOrder.Action, _
                                                 mNewEntryLimitPriceSpec, _
                                                 mContract.Specifier.SecType)
     checkForPendingEntryUpdates = True
@@ -3037,7 +3036,6 @@ Then
     Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change entry trigger Price - order " & mEntryOrder.Id & " already filled"
     mEntryOrder.TriggerPriceSpec = mNewEntryTriggerPriceSpec
     mEntryOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
-                                                mEntryOrder.Action, _
                                                 mNewEntryTriggerPriceSpec, _
                                                 mContract.Specifier.SecType)
     checkForPendingEntryUpdates = True
@@ -3064,7 +3062,6 @@ Then
     Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusSubmitted, "Can't change stop-loss limit price - order " & mStopLossOrder.Id & " already submitted"
     mStopLossOrder.LimitPriceSpec = mNewStopLossLimitPriceSpec
     mStopLossOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
-                                                mStopLossOrder.Action, _
                                                 mNewStopLossLimitPriceSpec, _
                                                 mContract.Specifier.SecType)
     checkForPendingStoplossUpdates = True
@@ -3086,7 +3083,6 @@ Then
     Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change stop-loss trigger price - order " & mEntryOrder.Id & " already filled"
     mStopLossOrder.TriggerPriceSpec = mNewStopLossTriggerPriceSpec
     mStopLossOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
-                                                mStopLossOrder.Action, _
                                                 mNewStopLossTriggerPriceSpec, _
                                                 mContract.Specifier.SecType)
     checkForPendingStoplossUpdates = True
@@ -3112,7 +3108,6 @@ Then
     Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change target limit price - order " & mTargetOrder.Id & " already filled"
     mTargetOrder.LimitPriceSpec = mNewTargetLimitPriceSpec
     mTargetOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
-                                                mTargetOrder.Action, _
                                                 mNewTargetLimitPriceSpec, _
                                                 mContract.Specifier.SecType)
     checkForPendingTargetUpdates = True
@@ -3134,7 +3129,6 @@ Then
     Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, "Can't change target trigger price - order " & mEntryOrder.Id & " already filled"
     mTargetOrder.TriggerPriceSpec = mNewTargetTriggerPriceSpec
     mTargetOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
-                                                mTargetOrder.Action, _
                                                 mNewTargetTriggerPriceSpec, _
                                                 mContract.Specifier.SecType)
     checkForPendingTargetUpdates = True
@@ -3499,6 +3493,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function orderRequiresDelayedPriceResolution(ByVal pOrder As IOrder) As Boolean
+If pOrder.LimitPriceSpec Is Nothing Then
+    orderRequiresDelayedPriceResolution = pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution
+ElseIf pOrder.TriggerPriceSpec Is Nothing Then
+    orderRequiresDelayedPriceResolution = pOrder.LimitPriceSpec.RequiresDelayedPriceResolution
+Else
+    orderRequiresDelayedPriceResolution = pOrder.LimitPriceSpec.RequiresDelayedPriceResolution Or _
+                                        pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution
+End If
+End Function
+
 Private Function placeCloseoutOrder()
 Const ProcName As String = "placeCloseoutOrder"
 On Error GoTo Err
@@ -3536,8 +3541,7 @@ On Error GoTo Err
 
 If pOrder Is Nothing Then Exit Function
 If pOrder.Status <> OrderStatuses.OrderStatusCreated Then Exit Function
-If Not (pOrder.LimitPriceSpec.RequiresDelayedPriceResolution Or _
-        pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution) Then Exit Function
+If Not orderRequiresDelayedPriceResolution(pOrder) Then Exit Function
 If Not (mOrderContext.IsReadyForPriceSpecifier(pOrder.LimitPriceSpec) And _
         mOrderContext.IsReadyForPriceSpecifier(pOrder.TriggerPriceSpec)) Then
     mOrderContext.AddChangeListener Me
@@ -3547,26 +3551,30 @@ End If
 ' the stop-loss limit and/or trigger price are to be pegged to the entry price
 
 If pRole = BracketOrderRoleStopLoss Then
-    If pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
+    If pOrder.LimitPriceSpec Is Nothing Then
+    ElseIf pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewStopLossLimitPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
                                                     PriceValueTypeValue, _
                                                     pOrder.LimitPriceSpec.Offset, _
                                                     pOrder.LimitPriceSpec.OffsetType)
     End If
-    If pOrder.TriggerPriceSpec.PriceType = PriceValueTypeEntry Then
+    If pOrder.TriggerPriceSpec Is Nothing Then
+    ElseIf pOrder.TriggerPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewStopLossTriggerPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
                                                     PriceValueTypeValue, _
                                                     pOrder.TriggerPriceSpec.Offset, _
                                                     pOrder.TriggerPriceSpec.OffsetType)
     End If
 Else
-    If pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
+    If pOrder.LimitPriceSpec Is Nothing Then
+    ElseIf pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewTargetLimitPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
                                                     PriceValueTypeValue, _
                                                     pOrder.LimitPriceSpec.Offset, _
                                                     pOrder.LimitPriceSpec.OffsetType)
     End If
-    If pOrder.TriggerPriceSpec.PriceType = PriceValueTypeEntry Then
+    If pOrder.TriggerPriceSpec Is Nothing Then
+    ElseIf pOrder.TriggerPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewTargetTriggerPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
                                                     PriceValueTypeValue, _
                                                     pOrder.TriggerPriceSpec.Offset, _

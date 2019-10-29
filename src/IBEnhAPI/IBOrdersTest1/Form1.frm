@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#359.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   7800
@@ -146,7 +146,7 @@ Begin VB.Form Form1
       Height          =   3690
       Left            =   240
       TabIndex        =   4
-      Top             =   1560
+      Top             =   1080
       Width           =   2295
       _ExtentX        =   4048
       _ExtentY        =   6191
@@ -325,6 +325,7 @@ Private mClientId                                   As Long
 
 Private mClient                                     As Client
 
+Private mMarketDataManager                          As IMarketDataManager
 Private mOrderSubmitter                             As IOrderSubmitter
 Private mContractStore                              As IContractStore
 
@@ -486,7 +487,6 @@ Const ProcName As String = "BuyButton_Click"
 On Error GoTo Err
 
 Dim lOrder As New Order
-
 lOrder.ContractSpecifier = ContractSpecBuilder1.ContractSpecifier
 lOrder.Action = OrderActionBuy
 lOrder.Quantity = CLng(QuantityText)
@@ -508,10 +508,10 @@ If ConnectButton.Caption = CaptionConnect Then
     
     mClientId = CLng(ClientIdText.Text)
     Set mClient = GetClient(ServerText.Text, CLng(PortText.Text), mClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me)
-    
-    Set mOrderSubmitter = mClient.CreateOrderSubmitter
-    mOrderSubmitter.AddOrderSubmissionListener Me
     Set mContractStore = mClient.GetContractStore
+    Set mMarketDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory)
+    
+    mOrderSubmitter.AddOrderSubmissionListener Me
     
     Set mFutureWaiter = New FutureWaiter
 Else
@@ -593,6 +593,9 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
     LogMessage ev.Future.ErrorMessage
 Else
+    Dim lDataSource As IMarketDataSource
+    Set lDataSource = mMarketDataManager.CreateMarketDataSource(ev.Future, False)
+    Set mOrderSubmitter = mClient.CreateOrderSubmitter(lDataSource)
     Set mContract = ev.Future.Value
     ContractText.Text = mContract.Specifier.LocalSymbol & " (" & mContract.Specifier.Exchange & ")  " & mContract.Description
     BuyButton.Enabled = True

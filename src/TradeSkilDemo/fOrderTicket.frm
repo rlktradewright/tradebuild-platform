@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#321.2#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#359.0#0"; "TradingUI27.ocx"
 Begin VB.Form fOrderTicket 
    BorderStyle     =   4  'Fixed ToolWindow
    ClientHeight    =   6135
@@ -83,6 +83,25 @@ Private mTheme                                  As ITheme
 ' Form Event Handlers
 '================================================================================
 
+Private Sub Form_Activate()
+Const ProcName As String = "Form_Activate"
+On Error GoTo Err
+
+If mTheme Is Nothing Then Exit Sub
+
+Static sThemeApplied As Boolean
+If sThemeApplied Then Exit Sub
+sThemeApplied = True
+
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub Form_Deactivate()
 Const ProcName As String = "Form_Deactivate"
 On Error GoTo Err
@@ -96,14 +115,25 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Form_Load()
+Const ProcName As String = "Form_Load"
+On Error GoTo Err
+
 If Not mTheme Is Nothing Then
     Me.BackColor = mTheme.BackColor
     gApplyTheme mTheme, Me.Controls
 End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
 Dim c As QueryUnloadConstants
+Const ProcName As String = "Form_QueryUnload"
+On Error GoTo Err
+
 c = UnloadMode
 Select Case c
 Case vbFormControlMenu
@@ -120,6 +150,11 @@ Case vbFormMDIForm
 Case vbFormOwner
 
 End Select
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -232,10 +267,6 @@ Const ProcName As String = "Theme"
 On Error GoTo Err
 
 Set mTheme = Value
-If mTheme Is Nothing Then Exit Property
-
-Me.BackColor = mTheme.BackColor
-gApplyTheme mTheme, Me.Controls
 
 Exit Property
 

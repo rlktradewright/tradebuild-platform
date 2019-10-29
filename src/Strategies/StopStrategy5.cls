@@ -235,8 +235,8 @@ On Error GoTo Err
 
 If Not IsCurrentTickTrade Then Exit Sub
 
-Dim price As Double
-price = TradePrice
+Dim lPrice As Double
+lPrice = TradePrice
 
 Dim isNewBar  As Boolean
 isNewBar = newbar   ' need to do this first to maintain the bar number
@@ -246,24 +246,24 @@ Assert mEntryOrderFilled, "Tick not expected - entry order not yet filled"
 If Not S.UseIntermediateStops Then
     If mReferencePrice <> mInitialReferencePrice Then
         If mLongPosition Then
-            If price < mReferencePrice Then
+            If lPrice < mReferencePrice Then
                 ' can only happen when the first contra-swing low is broken
                 ' start over again
                 mReferencePrice = mInitialReferencePrice
                 mSwingCount = 0
                 mRestartCount = mRestartCount + 1
                 SetStopReason "IS/" & mRestartCount
-                mHighest = price
+                mHighest = lPrice
             End If
         Else
-            If price > mReferencePrice Then
+            If lPrice > mReferencePrice Then
                 ' can only happen when the first contra-swing high is broken
                 ' start over again
                 mReferencePrice = mInitialReferencePrice
                 mSwingCount = 0
                 mRestartCount = mRestartCount + 1
                 SetStopReason "IS/" & mRestartCount
-                mLowest = price
+                mLowest = lPrice
             End If
         End If
     End If
@@ -286,26 +286,26 @@ newStop = currentStop
 
 If Not S.LongBoll Is Nothing Then
     If mLongPosition Then
-        If price >= BollingerTop(, S.LongBoll) Then
-            setTrailingStop price, "LB/" & mRestartCount
+        If lPrice >= BollingerTop(, S.LongBoll) Then
+            setTrailingStop lPrice, "LB/" & mRestartCount
             Set S.LongBoll = Nothing ' prevent coming in here next time
             mTrailStop = True
             Exit Sub
         End If
-'        If price >= mLongBoll.centre Then
+'        If lPrice >= mLongBoll.centre Then
 '            If mEntryPrice > newStop Then
 '                newStop = mEntryPrice
 '                SetStopReason  "LBE/" & mRestartCount
 '            End If
 '        End If
     Else
-        If price <= BollingerBottom(, S.LongBoll) Then
-            setTrailingStop price, "LB/" & mRestartCount
+        If lPrice <= BollingerBottom(, S.LongBoll) Then
+            setTrailingStop lPrice, "LB/" & mRestartCount
             Set S.LongBoll = Nothing ' prevent coming in here next time
             mTrailStop = True
             Exit Sub
         End If
-'        If price <= mLongBoll.centre Then
+'        If lPrice <= mLongBoll.centre Then
 '            If mEntryPrice < newStop Then
 '                newStop = mEntryPrice
 '                SetStopReason  "LBE/" & mRestartCount
@@ -316,15 +316,15 @@ End If
 
 If S.RewardToRiskRatio <> 0 Then
     If mLongPosition Then
-        If price >= mTargetPrice Then
-            setTrailingStop price, "RR/" & mRestartCount
+        If lPrice >= mTargetPrice Then
+            setTrailingStop lPrice, "RR/" & mRestartCount
             S.RewardToRiskRatio = 0  ' prevent coming in here next time
             mTrailStop = True
             Exit Sub
         End If
     Else
-        If price <= mTargetPrice Then
-            setTrailingStop price, "RR/" & mRestartCount
+        If lPrice <= mTargetPrice Then
+            setTrailingStop lPrice, "RR/" & mRestartCount
             S.RewardToRiskRatio = 0  ' prevent coming in here next time
             mTrailStop = True
             Exit Sub
@@ -334,39 +334,39 @@ End If
 
 If S.SwingToMoveStopTicks > 0 And mNextSwingStopCandidate <> 0 Then
     If mLongPosition Then
-        If price < mNextSwingStopCandidate Then
-            calcNextSwingStopCandidate price
-        ElseIf (price - mNextSwingStopCandidate) >= S.SwingToMoveStopTicks * mTickSize Then
+        If lPrice < mNextSwingStopCandidate Then
+            calcNextSwingStopCandidate lPrice
+        ElseIf (lPrice - mNextSwingStopCandidate) >= S.SwingToMoveStopTicks * mTickSize Then
             If (mNextSwingStopCandidate - S.BreakoutThresholdTicks * mTickSize) > newStop Then
                 newStop = mNextSwingStopCandidate - S.BreakoutThresholdTicks * mTickSize
                 SetStopReason "SM/" & mRestartCount
             End If
             mLastActivatedSwingStopCandidate = mNextSwingStopCandidate
-            calcNextSwingStopCandidate price
+            calcNextSwingStopCandidate lPrice
         End If
     Else
-        If price > mNextSwingStopCandidate Then
-            calcNextSwingStopCandidate price
-        ElseIf (mNextSwingStopCandidate - price) >= S.BreakoutThresholdTicks * mTickSize Then
+        If lPrice > mNextSwingStopCandidate Then
+            calcNextSwingStopCandidate lPrice
+        ElseIf (mNextSwingStopCandidate - lPrice) >= S.BreakoutThresholdTicks * mTickSize Then
             If (mNextSwingStopCandidate + S.BreakoutThresholdTicks * mTickSize) < newStop Then
                 newStop = mNextSwingStopCandidate + S.BreakoutThresholdTicks * mTickSize
                 SetStopReason "SM/" & mRestartCount
             End If
             mLastActivatedSwingStopCandidate = mNextSwingStopCandidate
-            calcNextSwingStopCandidate price
+            calcNextSwingStopCandidate lPrice
         End If
     End If
 End If
     
 If mLongPosition Then
-    If mBreakevenPrice > 0 And price >= mBreakevenPrice Then
+    If mBreakevenPrice > 0 And lPrice >= mBreakevenPrice Then
         If mEntryPrice > newStop Then
             newStop = mEntryPrice
             SetStopReason "SB/" & mRestartCount
         End If
     End If
 Else
-    If mBreakevenPrice > 0 And price <= mBreakevenPrice Then
+    If mBreakevenPrice > 0 And lPrice <= mBreakevenPrice Then
         If mEntryPrice < newStop Then
             newStop = mEntryPrice
             SetStopReason "SB/" & mRestartCount
@@ -387,7 +387,7 @@ ElseIf mLongPosition Then
             mLongTrailStop = False
         End If
     Else
-        If Abs(price - SMA(0, S.LongMA)) <= 2 * mTickSize And _
+        If Abs(lPrice - SMA(0, S.LongMA)) <= 2 * mTickSize And _
             SMA(0, S.LongMA) < SMA(-2, S.LongMA) _
         Then
             ' we're close to the long ma, which is falling, so start
@@ -418,7 +418,7 @@ Else
             mLongTrailStop = False
         End If
     Else
-        If Abs(price - SMA(0, S.LongMA)) <= 2 * mTickSize And _
+        If Abs(lPrice - SMA(0, S.LongMA)) <= 2 * mTickSize And _
             SMA(0, S.LongMA) > SMA(-2, S.LongMA) _
         Then
             ' we're close to the long ma, which is rising, so start
@@ -487,7 +487,7 @@ If Not mTrailStop Then
     If mLongPosition Then
     
         If S.BreakoutThresholdTicks > 0 And mNextSwingStopCandidate = 0 Then
-            calcNextSwingStopCandidate price
+            calcNextSwingStopCandidate lPrice
         End If
         
         If S.TicksSwingToTrail > 0 And HighValue(-1) > (mReferencePrice + S.TicksSwingToTrail * mTickSize) Then
@@ -509,7 +509,7 @@ If Not mTrailStop Then
         If S.ConfirmedBarsForBreakEven <> 0 Then
             If MACDStrengthConfirmed(-1) And _
                 MACDStrengthCount(0) = S.ConfirmedBarsForBreakEven And _
-                price >= mEntryPrice + S.BreakEvenThresholdTicks * mTickSize _
+                lPrice >= mEntryPrice + S.BreakEvenThresholdTicks * mTickSize _
             Then
                 If mEntryPrice > newStop Then
                     newStop = mEntryPrice
@@ -597,7 +597,7 @@ If Not mTrailStop Then
     ElseIf Not mLongPosition Then
         
         If S.BreakoutThresholdTicks > 0 And mNextSwingStopCandidate = 0 Then
-            calcNextSwingStopCandidate price
+            calcNextSwingStopCandidate lPrice
         End If
         
         If S.TicksSwingToTrail > 0 And LowValue(-1) < (mReferencePrice - S.TicksSwingToTrail * mTickSize) Then
@@ -619,7 +619,7 @@ If Not mTrailStop Then
         If S.ConfirmedBarsForBreakEven <> 0 Then
             If MACDWeaknessConfirmed(-1) And _
                 MACDStrengthCount(0) = S.ConfirmedBarsForBreakEven And _
-                price <= mEntryPrice - S.BreakEvenThresholdTicks * mTickSize _
+                lPrice <= mEntryPrice - S.BreakEvenThresholdTicks * mTickSize _
             Then
                 If mEntryPrice < newStop Then
                     newStop = mEntryPrice
@@ -813,7 +813,7 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub calcNextSwingStopCandidate(ByVal price As Double)
+Private Sub calcNextSwingStopCandidate(ByVal pPrice As Double)
 Const ProcName As String = "calcNextSwingStopCandidate"
 On Error GoTo Err
 
@@ -833,7 +833,7 @@ If mLongPosition Then
         i = 0
         mNextSwingStopCandidate = PotentialSwingLow()
     End If
-    Do While (price - SwingLow(i)) < S.BreakoutThresholdTicks * mTickSize And _
+    Do While (pPrice - SwingLow(i)) < S.BreakoutThresholdTicks * mTickSize And _
             SwingLow(i) < mNextSwingStopCandidate And _
             SwingLow(i) > mLastActivatedSwingStopCandidate
         mNextSwingStopCandidate = SwingLow(i)
@@ -847,7 +847,7 @@ Else
         i = 0
         mNextSwingStopCandidate = PotentialSwingHigh()
     End If
-    Do While (SwingHigh(i) - price) < S.BreakoutThresholdTicks * mTickSize And _
+    Do While (SwingHigh(i) - pPrice) < S.BreakoutThresholdTicks * mTickSize And _
             SwingHigh(i) > mNextSwingStopCandidate And _
             SwingHigh(i) < mLastActivatedSwingStopCandidate
         mNextSwingStopCandidate = SwingHigh(i)
@@ -877,7 +877,7 @@ Else
 End If
 End Function
 
-Private Sub setTrailingStop(ByVal price As Double, ByVal reason As String)
+Private Sub setTrailingStop(ByVal pPrice As Double, ByVal reason As String)
 Const ProcName As String = "setTrailingStop"
 On Error GoTo Err
 

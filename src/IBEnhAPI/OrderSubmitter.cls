@@ -1198,10 +1198,13 @@ End Sub
 Private Function orderCanBePlaced(ByVal pOrder As IOrder) As Boolean
 If pOrder Is Nothing Then
     orderCanBePlaced = False
+ElseIf pOrder.LimitPriceSpec Is Nothing Then
+    orderCanBePlaced = Not pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution
+ElseIf pOrder.TriggerPriceSpec Is Nothing Then
+    orderCanBePlaced = Not pOrder.LimitPriceSpec.RequiresDelayedPriceResolution
 Else
-    orderCanBePlaced = _
-            Not (pOrder.LimitPriceSpec.RequiresDelayedPriceResolution Or _
-            pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution)
+    orderCanBePlaced = Not (pOrder.LimitPriceSpec.RequiresDelayedPriceResolution Or _
+                            pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution)
 End If
 End Function
 

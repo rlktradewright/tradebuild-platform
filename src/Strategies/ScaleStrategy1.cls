@@ -164,7 +164,7 @@ If pType <> TickTypes.TickTypeTrade Then Exit Sub
 If Not CanTrade Then Exit Sub
 
 Dim newValue As Double
-newValue = mContext.TradeQuote.price
+newValue = mContext.TradeQuote.Price
 
 If mLongPosition Then
     If newValue < mNextPriceThreshold Then Exit Sub
@@ -197,7 +197,7 @@ If mLongPosition Then
     Set mAdditionalBracketOrder = Buy( _
                     Number:=mUnitSize, _
                     EntryOrder:=DeclareEntryOrder(EntryOrderTypeMarket), _
-                    StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeAuto, Offset:=-newStopOffsetTicks), _
+                    StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:="Entry[" & CStr(-newStopOffsetTicks) & "T]"), _
                     NotifyCompletion:=True)
     If Not mAdditionalBracketOrder Is Nothing Then
         mAdditionalBracketOrders.Add mAdditionalBracketOrder
@@ -207,7 +207,7 @@ Else
     Set mAdditionalBracketOrder = Sell( _
                     Number:=mUnitSize, _
                     EntryOrder:=DeclareEntryOrder(EntryOrderTypeMarket), _
-                    StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeAuto, Offset:=newStopOffsetTicks), _
+                    StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:="Entry[" & CStr(-newStopOffsetTicks) & "T]"), _
                     NotifyCompletion:=True)
     If Not mAdditionalBracketOrder Is Nothing Then
         mAdditionalBracketOrders.Add mAdditionalBracketOrder

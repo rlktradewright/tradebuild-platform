@@ -75,7 +75,9 @@ Private mAveragePrice               As Double
 Private mLastFillPrice              As Double
 Private mOrderType                  As OrderTypes
 Private mLimitPrice                 As Double
+Private mLimitPriceSpec             As PriceSpecifier
 Private mTriggerPrice               As Double
+Private mTriggerPriceSpec           As PriceSpecifier
 Private mOffset                     As Long
 
 Private mTimeInForce                As OrderTIFs
@@ -346,6 +348,14 @@ Private Property Get IOrder_LimitPrice() As Double
 IOrder_LimitPrice = mLimitPrice
 End Property
 
+Private Property Let IOrder_LimitPriceSpec(ByVal Value As PriceSpecifier)
+LimitPriceSpec = Value
+End Property
+
+Private Property Get IOrder_LimitPriceSpec() As PriceSpecifier
+Set IOrder_LimitPriceSpec = LimitPriceSpec
+End Property
+
 Private Property Let IOrder_Message(ByVal Value As String)
 Message = Value
 End Property
@@ -530,6 +540,13 @@ Private Property Get IOrder_TriggerPrice() As Double
 IOrder_TriggerPrice = mTriggerPrice
 End Property
 
+Private Property Let IOrder_TriggerPriceSpec(ByVal Value As PriceSpecifier)
+TriggerPriceSpec = Value
+End Property
+
+Private Property Get IOrder_TriggerPriceSpec() As PriceSpecifier
+Set IOrder_TriggerPriceSpec = TriggerPriceSpec
+End Property
 '@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
@@ -863,6 +880,14 @@ Public Property Get LimitPrice() As Double
 LimitPrice = mLimitPrice
 End Property
 
+Private Property Let LimitPriceSpec(ByVal Value As PriceSpecifier)
+Set mLimitPriceSpec = Value
+End Property
+
+Private Property Get LimitPriceSpec() As PriceSpecifier
+Set LimitPriceSpec = mLimitPriceSpec
+End Property
+
 Public Property Let Message(ByVal Value As String)
 mMessage = Value
 End Property
@@ -1150,6 +1175,14 @@ End Property
 
 Public Property Get TriggerPrice() As Double
 TriggerPrice = mTriggerPrice
+End Property
+
+Friend Property Let TriggerPriceSpec(ByVal Value As PriceSpecifier)
+Set mTriggerPriceSpec = Value
+End Property
+
+Public Property Get TriggerPriceSpec() As PriceSpecifier
+Set TriggerPriceSpec = mTriggerPriceSpec
 End Property
 
 '@================================================================================

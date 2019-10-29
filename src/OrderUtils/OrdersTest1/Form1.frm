@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#358.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
@@ -215,8 +215,6 @@ Set mClient = GetClient(TwsHost, ApiPort, ClientId, , , ApiMessageLoggingOptionA
 mClient.SetTwsLogLevel TwsLogLevelDetail
 
 Set mContractStore = mClient.GetContractStore
-Set mOrderSubmitterLive = mClient.CreateOrderSubmitter
-mOrderSubmitterLive.AddOrderSubmissionListener Me
 Set mMarketDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory)
 
 Set mOrderSubmitterFactorySimulated = New SimOrderSubmitterFactory
@@ -524,6 +522,11 @@ If ev.Future.IsAvailable Then
             If lPM.PositionSize <> 0 Or lPM.PendingPositionSize <> 0 Then ensurePositionFormVisible lPM
         Next
     ElseIf TypeOf ev.Future.Value Is IContract Then
+        Dim lDataSource As IMarketDataSource
+        Set lDataSource = mMarketDataManager.CreateMarketDataSource(ev.Future, False)
+        Set mOrderSubmitterLive = mClient.CreateOrderSubmitter(lDataSource)
+        mOrderSubmitterLive.AddOrderSubmissionListener Me
+        
         Set mContract = ev.Future.Value
         If mContract.Specifier.SecType = SecTypeCombo Or _
             mContract.Specifier.SecType = SecTypeIndex _

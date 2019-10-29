@@ -670,71 +670,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function gNewPriceSpecifier( _
-                Optional ByVal pPrice As Double = MaxDoubleValue, _
-                Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
-                Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone) As PriceSpecifier
-Dim p As New PriceSpecifier
-p.Initialise pPrice, pPriceType, pOffset, pOffsetType
-Set gNewPriceSpecifier = p
-End Function
-
-Public Function gPriceOrSpecifierToString( _
-                ByVal pPrice As Double, _
-                ByVal pPriceSpec As PriceSpecifier, _
-                ByVal pContract As IContract) As String
-Const ProcName As String = "gPriceOrSpecifierToString"
-On Error GoTo Err
-
-If pPrice = MaxDoubleValue Then
-    gPriceOrSpecifierToString = gPriceSpecifierToString(pPriceSpec, pContract)
-Else
-    gPriceOrSpecifierToString = FormatPrice(pPrice, pContract.Specifier.SecType, pContract.TickSize)
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gPriceSpecifierToString( _
-                ByVal pPriceSpec As PriceSpecifier, _
-                ByVal pContract As IContract) As String
-Const ProcName As String = "gPriceSpecifierToString"
-On Error GoTo Err
-
-Dim s As String
-
-Select Case pPriceSpec.PriceType
-Case PriceValueTypeNone
-Case PriceValueTypeValue
-    If pPriceSpec.Price <> MaxDouble Then
-        s = FormatPrice(pPriceSpec.Price, pContract.Specifier.SecType, pContract.TickSize)
-    End If
-Case PriceValueTypeAsk
-    s = "ASK"
-Case PriceValueTypeBid
-    s = "BID"
-Case PriceValueTypeLast
-    s = "LAST"
-Case PriceValueTypeEntry
-    s = "ENTRY"
-Case Else
-    AssertArgument False, "Invalid price value type"
-End Select
-
-s = s & gPriceOffsetToString(pPriceSpec.Offset, pPriceSpec.OffsetType)
-
-gPriceSpecifierToString = s
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
@@ -1082,42 +1017,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gPriceOffsetToString( _
-                ByVal pOffset As Double, _
-                ByVal pOffsetType As PriceOffsetTypes)
-Select Case pOffsetType
-Case PriceOffsetTypeNone
-    gPriceOffsetToString = ""
-Case PriceOffsetTypeIncrement
-    gPriceOffsetToString = "[" & pOffset & "]"
-Case PriceOffsetTypeNumberOfTicks
-    gPriceOffsetToString = "[" & CDbl(pOffset) & "T]"
-Case PriceOffsetTypeBidAskPercent
-    gPriceOffsetToString = "[" & CDbl(pOffset) & "S]"
-Case PriceOffsetTypePercent
-    gPriceOffsetToString = "[" & CDbl(pOffset) & "%]"
-Case Else
-    AssertArgument False, "Value is not a valid Price Offset Type"
-End Select
-End Function
-
-Public Function gPriceOffsetTypeToString( _
-                ByVal pOffsetType As PriceOffsetTypes)
-Select Case pOffsetType
-Case PriceOffsetTypeNone
-    gPriceOffsetTypeToString = "N/A"
-Case PriceOffsetTypeIncrement
-    gPriceOffsetTypeToString = ""
-Case PriceOffsetTypeNumberOfTicks
-    gPriceOffsetTypeToString = "T"
-Case PriceOffsetTypeBidAskPercent
-    gPriceOffsetTypeToString = "S"
-Case PriceOffsetTypePercent
-    gPriceOffsetTypeToString = "%"
-Case Else
-    AssertArgument False, "Value is not a valid Price Offset Type"
-End Select
-End Function
+Public Property Get gRegExp() As RegExp
+Static lRegexp As RegExp
+If lRegexp Is Nothing Then Set lRegexp = New RegExp
+Set gRegExp = lRegexp
+End Property
 
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
 If IsObject(pSource) Then
