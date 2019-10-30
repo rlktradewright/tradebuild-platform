@@ -226,7 +226,13 @@ On Error GoTo Err
 
 If mGroupName <> "" And (UCase$(pm.GroupName) <> mGroupName) Then Exit Sub
 
-If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then Exit Sub
+If pm.PositionSize <> 0 Then
+ElseIf pm.PendingPositionSize <> 0 Then
+ElseIf pm.HasBracketOrdersWithNonZeroSizes Then
+ElseIf pm.HasBracketOrdersWithNonZeroPendingSizes Then
+Else
+    Exit Sub
+End If
 
 If pm.ProviderIsReady Then
     mNumberRemaining = mNumberRemaining + 1
