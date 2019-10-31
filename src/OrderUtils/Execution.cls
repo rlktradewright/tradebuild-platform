@@ -425,7 +425,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub setClean()
+Friend Sub SetClean()
 mIsDirty = False
 End Sub
 

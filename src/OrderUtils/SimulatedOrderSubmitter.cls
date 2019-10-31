@@ -370,46 +370,32 @@ Private Sub IOrderSubmitter_ExecuteBracketOrder(ByVal pBracketOrder As IBracketO
 Const ProcName As String = "IOrderSubmitter_ExecuteBracketOrder"
 On Error GoTo Err
 
-Dim EntryOrder As IOrder
-Set EntryOrder = pBracketOrder.EntryOrder
+Dim lEntryOrder As IOrder: Set lEntryOrder = pBracketOrder.EntryOrder
 
-Dim Stoporder As IOrder
-Set Stoporder = pBracketOrder.StopLossOrder
+Dim lStopLossOrder As IOrder: Set lStopLossOrder = pBracketOrder.StopLossOrder
+Dim lStopLossOrderCanBePlaced As Boolean: lStopLossOrderCanBePlaced = orderCanBePlaced(lStopLossOrder)
 
-Dim TargetOrder As IOrder
-Set TargetOrder = pBracketOrder.TargetOrder
+Dim lTargetOrder As IOrder: Set lTargetOrder = pBracketOrder.TargetOrder
+Dim lTargetOrderCanBePlaced As Boolean: lTargetOrderCanBePlaced = orderCanBePlaced(lTargetOrder)
 
-If Not EntryOrder Is Nothing Then
+If Not lEntryOrder Is Nothing Then
     Dim Transmit As Boolean
     Transmit = True
-    If Not Stoporder Is Nothing Then
-        If Stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then Transmit = False
-    End If
-    If Not TargetOrder Is Nothing Then
-        If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then Transmit = False
-    End If
-        
-    PlaceOrder EntryOrder, "", "", Transmit
+    If lStopLossOrderCanBePlaced Then Transmit = False
+    If lTargetOrderCanBePlaced Then Transmit = False
+    PlaceOrder lEntryOrder, "", "", Transmit
     
     Dim OcaGroup As String
     OcaGroup = GenerateTextID
 
-    If Not Stoporder Is Nothing Then
+    If lStopLossOrderCanBePlaced Then
         Transmit = True
-        If Not TargetOrder Is Nothing Then
-            If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then Transmit = False
-        End If
-        
-        If Stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then
-            ' note that AUTOSTP orders will be sent when the entry order is filled
-            PlaceOrder Stoporder, EntryOrder.Id, OcaGroup, Transmit
-        End If
+        If lTargetOrderCanBePlaced Then Transmit = False
+        PlaceOrder lStopLossOrder, lEntryOrder.Id, OcaGroup, Transmit
     End If
     
-    If Not TargetOrder Is Nothing Then
-        If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
-            PlaceOrder TargetOrder, EntryOrder.Id, OcaGroup, True
-        End If
+    If lTargetOrderCanBePlaced Then
+        PlaceOrder lTargetOrder, lEntryOrder.Id, OcaGroup, True
     End If
     
 Else
@@ -461,6 +447,15 @@ Const ProcName As String = "IOrderSubmitter_ModifyBracketOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
+
+Dim lOCAGroup As String
+If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+If lOCAGroup = "" Then
+    lOCAGroup = GenerateGUIDString
+    If Not pBracketOrder.StopLossOrder Is Nothing Then pBracketOrder.StopLossOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+    If Not pBracketOrder.TargetOrder Is Nothing Then pBracketOrder.TargetOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+End If
 
 If pEntryOrderChanged Then
     PlaceOrder pBracketOrder.EntryOrder, "", "", True
@@ -581,18 +576,18 @@ Const ProcName As String = "IOrderSubmitter_ResubmitStopAndTargetOrders"
 On Error GoTo Err
 
 
-Dim lOcaGroup As String
-lOcaGroup = GenerateTextID
+Dim lOCAGroup As String
+lOCAGroup = GenerateTextID
 
 Dim lStoporder As IOrder
 Set lStoporder = pBracketOrder.StopLossOrder
 'lStoporder.BrokerId = ""    ' force a new id to be allocated
-PlaceOrder lStoporder, "", lOcaGroup, False
+PlaceOrder lStoporder, "", lOCAGroup, False
 
 Dim lTargetOrder As IOrder
 Set lTargetOrder = pBracketOrder.TargetOrder
 'lTargetOrder.BrokerId = "" ' force a new id to be allocated
-PlaceOrder lTargetOrder, "", lOcaGroup, True
+PlaceOrder lTargetOrder, "", lOCAGroup, True
 
 Exit Sub
 
@@ -727,6 +722,16 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function orderCanBePlaced(ByVal pOrder As IOrder) As Boolean
+If pOrder Is Nothing Then
+    orderCanBePlaced = False
+Else
+    orderCanBePlaced = _
+            Not (pOrder.LimitPriceSpec.RequiresDelayedPriceResolution Or _
+            pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution)
+End If
+End Function
 
 Private Sub PlaceOrder( _
                 ByVal pOrder As IOrder, _

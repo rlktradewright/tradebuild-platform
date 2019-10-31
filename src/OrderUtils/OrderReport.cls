@@ -285,10 +285,6 @@ Private Property Get IOrderReport_OverrideConstraints() As Boolean
 IOrderReport_OverrideConstraints = mOverrideConstraints
 End Property
 
-Private Property Let IOrderReport_ProviderProperties(ByVal Value As Parameters)
-Set mProviderProperties = Value
-End Property
-
 Private Property Get IOrderReport_ProviderProperties() As Parameters
 Set IOrderReport_ProviderProperties = mProviderProperties
 End Property
@@ -563,10 +559,6 @@ End Property
 
 Public Property Get OverrideConstraints() As Boolean
 OverrideConstraints = mOverrideConstraints
-End Property
-
-Public Property Let ProviderProperties(ByVal Value As Parameters)
-Set mProviderProperties = Value
 End Property
 
 Public Property Get ProviderProperties() As Parameters

@@ -48,6 +48,7 @@ Public Const DaysSwitch                             As String = "DAYS"
 Public Const DescriptionSwitch                      As String = "DESCRIPTION"
 Public Const EntrySwitch                            As String = "ENTRY"
 Public Const OffsetSwitch                           As String = "OFFSET"
+Public Const IgnoreRTHSwitch                        As String = "IGNORERTH"
 Public Const PriceSwitch                            As String = "PRICE"
 Public Const ReasonSwitch                           As String = "REASON"
 Public Const TIFSwitch                              As String = "TIF"
@@ -114,7 +115,20 @@ Private Const Default                               As String = "DEFAULT"
 Private Const Yes                                   As String = "YES"
 Private Const No                                    As String = "NO"
 
-Public Const TickDesignator                         As String = "T"
+Public Const TickOffsetDesignator                   As String = "T"
+Public Const PercentOffsetDesignator                As String = "%"
+Public Const BidAskSpreadPercentOffsetDesignator    As String = "S"
+
+Public Const AskPriceDesignator                     As String = "ASK"
+Public Const BidPriceDesignator                     As String = "BID"
+Public Const LastPriceDesignator                    As String = "LAST"
+Public Const EntryPriceDesignator                   As String = "ENTRY"
+
+' Legacy pseudo-order types from early versions
+Public Const AskPseudoOrderType                     As String = "ASK"
+Public Const BidPseudoOrderType                     As String = "BID"
+Public Const LastPseudoOrderType                    As String = "Last"
+Public Const AutoPseudoOrderType                    As String = "AUTO"
 
 Private Const DefaultClientId                       As Long = 906564398
 
@@ -222,6 +236,20 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function gGenerateOffset( _
+                ByVal pValue As Double, _
+                ByVal pOffsetType As PriceOffsetTypes) As String
+Dim lDesignator As String
+If pOffsetType = PriceOffsetTypeBidAskPercent Then
+    lDesignator = PercentOffsetDesignator
+ElseIf pOffsetType = PriceOffsetTypeIncrement Then
+    lDesignator = ""
+ElseIf pOffsetType = PriceOffsetTypeNumberOfTicks Then
+    lDesignator = TickOffsetDesignator
+End If
+gGenerateOffset = CStr(pValue) & lDesignator
+End Function
 
 Public Function gGenerateSwitch(ByVal pName As String, ByVal pValue As String) As String
 If InStr(1, pValue, " ") <> 0 Then pValue = """" & pValue & """"
@@ -524,7 +552,7 @@ For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(getContractName(lContract), 25) & _
+                        padStringRight(getContractName(lContract), 30) & _
                         " Size=" & padStringleft(lPM.PositionSize & _
                                                 "(" & lPM.PendingBuyPositionSize & _
                                                 "/" & _
@@ -548,7 +576,7 @@ For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(getContractName(lContract), 25), _
+                        padStringRight(getContractName(lContract), 30), _
                         True
     
     Dim lTrade As Execution
@@ -1487,7 +1515,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub showCloseoutHelp()
-gWriteLineToConsole "    closeoutcommand  ::= closeout [ <groupname> | ALL ])"
+gWriteLineToConsole "    closeoutcommand  ::= closeout [ <groupname> | ALL ]"
 gWriteLineToConsole "                                  [ LMT[:<percentofspread>] ]"
 gWriteLineToConsole ""
 gWriteLineToConsole "    percentofspread  ::= INTEGER"
@@ -1495,50 +1523,56 @@ gWriteLineToConsole ""
 End Sub
 
 Public Sub showContractHelp()
-gWriteLineToConsole "    contractcommand  ::= contract <contractspecification>"
+gWriteLineToConsole "    contractcommand  ::= contract <contractspec>EOL"
 gWriteLineToConsole ""
-gWriteLineToConsole "    contractspecification ::=     [ <localsymbol>[@<exchangename>]"
-gWriteLineToConsole "                                  | <localsymbol>@SMART/<routinghint>"
-gWriteLineToConsole "                                  | /<specifier>[;/<specifier>]..."
-gWriteLineToConsole "                                  ] NEWLINE"
-gWriteLineToConsole ""
-gWriteLineToConsole ""
-gWriteLineToConsole ""
-gWriteLineToConsole ""
-gWriteLineToConsole "    specifier ::= [ local[symbol]:<localsymbol>"
+gWriteLineToConsole "    contractspec     ::= <localsymbol>[@<exchangename>]"
+gWriteLineToConsole "                         | <localsymbol>@SMART/<routinghint>"
+gWriteLineToConsole "                         | /<specifier>[;/<specifier>]..."
+gWriteLineToConsole "    routinghint ::= STRING"
+gWriteLineToConsole "    specifier ::=   local[symbol]:<localsymbol>"
 gWriteLineToConsole "                  | symb[ol]:<symbol>"
-gWriteLineToConsole "                  | sec[type]:[ STK | FUT | FOP | CASH | OPT]"
+gWriteLineToConsole "                  | sec[type]:<sectype>"
 gWriteLineToConsole "                  | exch[ange]:<exchangename>"
 gWriteLineToConsole "                  | curr[ency]:<currencycode>"
-gWriteLineToConsole "                  | exp[iry]:[yyyymm | yyyymmdd | <offset>]"
+gWriteLineToConsole "                  | exp[iry]:<yyyymm> | <yyyymmdd> | <expiryoffset>"
 gWriteLineToConsole "                  | mult[iplier]:<multiplier>"
 gWriteLineToConsole "                  | str[ike]:<price>"
-gWriteLineToConsole "                  | right:[ CALL | PUT ]"
-gWriteLineToConsole "                  ]"
-gWriteLineToConsole ""
+gWriteLineToConsole "                  | right:CALL|PUT"
+gWriteLineToConsole "    localsymbol ::= STRING"
+gWriteLineToConsole "    symbol ::= STRING"
+gWriteLineToConsole "    sectype ::= STK | FUT | FOP | CASH | OPT"
+gWriteLineToConsole "    exchangename ::= STRING"
+gWriteLineToConsole "    currencycode ::= USD | EUR | GBP | JPY | CHF | etc"
+gWriteLineToConsole "    yyyymm       ::= <yyyy><mm>"
+gWriteLineToConsole "    yyyymmdd     ::= <yyyy><mm><dd>"
+gWriteLineToConsole "    yyyy         ::= INTEGER(1900..2100)"
+gWriteLineToConsole "    mm           ::= INTEGER(01..12)"
+gWriteLineToConsole "    dd           ::= INTEGER(01..31)"
+gWriteLineToConsole "    expiryoffset ::= INTEGER(0..10)"
 End Sub
 
 Private Sub showListHelp()
-gWriteLineToConsole "    listcommand  ::= list [groups | positions | trades])"
+gWriteLineToConsole "    listcommand  ::= list groups|positions|trades"
 End Sub
 
 Private Sub showOrderHelp()
 gWriteLineToConsole "    buycommand  ::= buy [<contract>] <quantity> <entryordertype> "
 gWriteLineToConsole "                        [<priceoroffset> [<triggerprice]]"
-gWriteLineToConsole "                        [/<bracketattr> | /<orderattr>]... NEWLINE"
+gWriteLineToConsole "                        [<attribute>]... EOL"
 gWriteLineToConsole ""
 gWriteLineToConsole "    sellcommand ::= sell [<contract>] <quantity> <entryordertype> "
-gWriteLineToConsole "                         [/<bracketattr> | /<orderattr>]... NEWLINE"
+gWriteLineToConsole "                         [<priceoroffset> [<triggerprice]]"
+gWriteLineToConsole "                         [<attribute>]... EOL"
 gWriteLineToConsole ""
-gWriteLineToConsole "    bracketcommand ::= bracket <action> <quantity> [/<bracketattr>]... NEWLINE"
-gWriteLineToConsole "                       entry <entryordertype> [/<orderattr>]...  NEWLINE"
-gWriteLineToConsole "                       [stoploss <stoplossorderType> [/<orderattr>]...  NEWLINE]"
-gWriteLineToConsole "                       [target <targetorderType> [/<orderattr>]...  ] NEWLINE"
-gWriteLineToConsole "                       endbracket NEWLINE"
+gWriteLineToConsole "    bracketcommand ::= bracket <action> <quantity> [<bracketattr>]... EOL"
+gWriteLineToConsole "                       entry <entryordertype> [<orderattr>]...  EOL"
+gWriteLineToConsole "                       [stoploss <stoplossorderType> [<orderattr>]...  EOL]"
+gWriteLineToConsole "                       [target <targetorderType> [<orderattr>]...  ] EOL"
+gWriteLineToConsole "                       endbracket EOL"
 gWriteLineToConsole ""
-gWriteLineToConsole "    action     ::= [ buy | sell ]"
+gWriteLineToConsole "    action     ::= buy | sell"
 gWriteLineToConsole "    quantity   ::= INTEGER >= 1"
-gWriteLineToConsole "    entryordertype  ::= [ mkt"
+gWriteLineToConsole "    entryordertype  ::=   mkt"
 gWriteLineToConsole "                        | lmt"
 gWriteLineToConsole "                        | stp"
 gWriteLineToConsole "                        | stplmt"
@@ -1554,43 +1588,43 @@ gWriteLineToConsole "                        | loo"
 gWriteLineToConsole "                        | bid"
 gWriteLineToConsole "                        | ask"
 gWriteLineToConsole "                        | last"
-gWriteLineToConsole "                        ]"
-gWriteLineToConsole "    stoplossordertype  ::= [ mkt"
+gWriteLineToConsole "    stoplossordertype  ::=   mkt"
 gWriteLineToConsole "                           | stp"
 gWriteLineToConsole "                           | stplmt"
 gWriteLineToConsole "                           | auto"
 gWriteLineToConsole "                           | trail"
 gWriteLineToConsole "                           | traillmt"
-gWriteLineToConsole "                           ]"
-gWriteLineToConsole "    targetordertype  ::= [ mkt"
+gWriteLineToConsole "    targetordertype  ::=   mkt"
 gWriteLineToConsole "                         | lmt"
 gWriteLineToConsole "                         | mit"
 gWriteLineToConsole "                         | lit"
-gWriteLineToConsole "                         | mtl"
 gWriteLineToConsole "                         | auto"
-gWriteLineToConsole "                         ]"
-gWriteLineToConsole "    orderattr  ::= [ price:<price>"
-gWriteLineToConsole "                   [ reason:STRING"
-gWriteLineToConsole "                   | trigger[price]:<price>"
-gWriteLineToConsole "                   | trailby:<numberofticks>"
-gWriteLineToConsole "                   | trailpercent:<percentage>"
-gWriteLineToConsole "                   | offset:<numberofticks>"
-gWriteLineToConsole "                   | tif:<tifvalue>"
-gWriteLineToConsole "                   ]"
-gWriteLineToConsole "    bracketattr  ::= [ cancelafter:<canceltime>"
-gWriteLineToConsole "                     | cancelprice:<price>"
-gWriteLineToConsole "                     | description:STRING"
-gWriteLineToConsole "                     | goodaftertime:DATETIME"
-gWriteLineToConsole "                     | goodtilldate:DATETIME"
-gWriteLineToConsole "                     | timezone:TIMEZONENAME"
-gWriteLineToConsole "                     ]"
+gWriteLineToConsole "    attribute  ::= <bracketattr> | <orderattr>"
+gWriteLineToConsole "    bracketattr  ::=  /cancelafter:<canceltime>"
+gWriteLineToConsole "                     | /cancelprice:<price>"
+gWriteLineToConsole "                     | /description:STRING"
+gWriteLineToConsole "                     | /goodaftertime:DATETIME"
+gWriteLineToConsole "                     | /goodtilldate:DATETIME"
+gWriteLineToConsole "                     | /timezone:TIMEZONENAME"
+gWriteLineToConsole "    orderattr  ::=   /price:<price>"
+gWriteLineToConsole "                   | /reason:STRING"
+gWriteLineToConsole "                   | /trigger[price]:<price>"
+gWriteLineToConsole "                   | /trailby:<numberofticks>"
+gWriteLineToConsole "                   | /trailpercent:<percentage>"
+gWriteLineToConsole "                   | /offset:<points>"
+gWriteLineToConsole "                   | /offset:<numberofticks>T"
+gWriteLineToConsole "                   | /offset:<bidaskspreadpercent>%"
+gWriteLineToConsole "                   | /tif:<tifvalue>"
+gWriteLineToConsole "    priceoroffset ::= <price> | <offset>"
 gWriteLineToConsole "    price  ::= DOUBLE"
-gWriteLineToConsole "    numberofticks  ::= INTEGER"
+gWriteLineToConsole "    offset ::= DOUBLE"
+gWriteLineToConsole "    points ::= DOUBLE"
+gWriteLineToConsole "    bidaskspreadpercent ::= [+|-]INTEGEER"
+gWriteLineToConsole "    numberofticks  ::= [+|-]INTEGER"
 gWriteLineToConsole "    percentage  ::= DOUBLE <= 10.0"
-gWriteLineToConsole "    tifvalue  ::= [ DAY"
+gWriteLineToConsole "    tifvalue  ::=   DAY"
 gWriteLineToConsole "                  | GTC"
 gWriteLineToConsole "                  | IOC"
-gWriteLineToConsole "                  ]"
 
 End Sub
 
@@ -1601,19 +1635,19 @@ End Sub
 Private Sub showStdInHelp()
 gWriteLineToConsole "StdIn Format:"
 gWriteLineToConsole ""
-gWriteLineToConsole "#comment NEWLINE"
+gWriteLineToConsole "#comment EOL"
 gWriteLineToConsole ""
-gWriteLineToConsole "[stageorders [yes|no|default] NEWLINE]"
+gWriteLineToConsole "[stageorders [yes|no|default] EOL]"
 gWriteLineToConsole ""
-gWriteLineToConsole "[group [<groupname>] NEWLINE]"
+gWriteLineToConsole "[group [<groupname>] EOL]"
 gWriteLineToConsole ""
 gWriteLineToConsole "<contractcommand>"
 gWriteLineToConsole ""
 gWriteLineToConsole "[<buycommand>|<sellcommand>|<bracketcommand>]..."
 gWriteLineToConsole ""
-gWriteLineToConsole "endorders NEWLINE"
+gWriteLineToConsole "endorders EOL"
 gWriteLineToConsole ""
-gWriteLineToConsole "reset NEWLINE"
+gWriteLineToConsole "reset EOL"
 gWriteLineToConsole ""
 gWriteLineToConsole "<listcommand>"
 gWriteLineToConsole ""

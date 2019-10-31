@@ -204,6 +204,12 @@ End Property
 Public Property Get LimitPrice() As Double
 End Property
 
+Public Property Let LimitPriceSpec(ByVal Value As PriceSpecifier)
+End Property
+
+Public Property Get LimitPriceSpec() As PriceSpecifier
+End Property
+
 Public Property Let Message(ByVal Value As String)
 End Property
 
@@ -222,16 +228,7 @@ End Property
 Public Property Get NbboPriceCap() As Double
 End Property
 
-Public Property Let Offset(ByVal Value As Long)
-End Property
-
-Public Property Get Offset() As Long
-End Property
-
 Public Property Get OrderContext() As OrderContext
-End Property
-
-Public Property Let OrderType(ByVal Value As OrderTypes)
 End Property
 
 Public Property Get OrderType() As OrderTypes
@@ -259,9 +256,6 @@ Public Property Let PercentOffset(ByVal Value As Double)
 End Property
 
 Public Property Get PercentOffset() As Double
-End Property
-
-Public Property Let ProviderProperties(ByVal Value As Parameters)
 End Property
 
 Public Property Get ProviderProperties() As Parameters
@@ -319,6 +313,12 @@ Public Property Let TriggerPrice(ByVal Value As Double)
 End Property
 
 Public Property Get TriggerPrice() As Double
+End Property
+
+Public Property Let TriggerPriceSpec(ByVal Value As PriceSpecifier)
+End Property
+
+Public Property Get TriggerPriceSpec() As PriceSpecifier
 End Property
 
 '@================================================================================

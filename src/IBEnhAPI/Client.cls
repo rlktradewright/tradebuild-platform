@@ -229,11 +229,11 @@ End Sub
 '@================================================================================
 
 Private Property Get IOrderSubmitterFactory_Capabilities() As OrderSubmitterCapabilities
-IOrderSubmitterFactory_Capabilities = Capabilities
+IOrderSubmitterFactory_Capabilities = OrderSubmitterCapabilities
 End Property
 
 Private Function IOrderSubmitterFactory_CreateOrderSubmitter(Optional ByVal pDataSource As IMarketDataSource) As IOrderSubmitter
-Set IOrderSubmitterFactory_CreateOrderSubmitter = CreateOrderSubmitter
+Set IOrderSubmitterFactory_CreateOrderSubmitter = CreateOrderSubmitter(pDataSource)
 End Function
 
 Private Property Get IOrderSubmitterFactory_NeedsDataSource() As Boolean
@@ -248,8 +248,8 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Get Capabilities() As OrderSubmitterCapabilities
-Capabilities = OrderSubmitterCapabilities.OrderSubmitterCapabilityCanStageOrders
+Public Property Get OrderSubmitterCapabilities() As OrderSubmitterCapabilities
+OrderSubmitterCapabilities = OrderSubmitterCapabilityCanStageOrders
 End Property
 
 Public Property Get ClientId() As Long
@@ -409,14 +409,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateOrderSubmitter() As IOrderSubmitter
+Public Function CreateOrderSubmitter(ByVal pDataSource As IMarketDataSource) As IOrderSubmitter
 Const ProcName As String = "CreateOrderSubmitter"
 On Error GoTo Err
 
 Dim lOrderSubmitter As OrderSubmitter
 
 Set lOrderSubmitter = New OrderSubmitter
-lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer, getContractDetailsRequester, mContractCache
+lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer, getContractDetailsRequester, mContractCache, pDataSource
 
 AddTwsConnectionStateListener lOrderSubmitter
 Set CreateOrderSubmitter = lOrderSubmitter

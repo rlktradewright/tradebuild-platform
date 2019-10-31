@@ -169,8 +169,6 @@ Private Sub IOrderRecoveryListener_NotifyExecutionReport(ByVal pExecutionReport 
 Const ProcName As String = "IOrderRecoveryListener_NotifyExecutionReport"
 On Error GoTo Err
 
-If pExecutionReport.BrokerId = "268435655" Then Stop
-
 Dim lOrderId As String
 lOrderId = mOrderIdMap.GetOrderId(pExecutionReport.BrokerId)
 
@@ -728,7 +726,7 @@ On Error GoTo Err
 Dim lExec As Execution
 Set lExec = pOpi.Data
 
-lExec.setClean
+lExec.SetClean
 
 Dim lBor As BracketOrderRecoverer
 Set lBor = mOrderIdToBracketOrderRecoverer.Item(lExec.OrderId)

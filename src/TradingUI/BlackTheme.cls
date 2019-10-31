@@ -143,7 +143,7 @@ ITheme_DefaultBorderColor = &HF0FF00
 End Property
 
 Private Property Get ITheme_DisabledBackColor() As stdole.OLE_COLOR
-ITheme_DisabledBackColor = &H909090
+ITheme_DisabledBackColor = &H454545
 End Property
 
 Private Property Get ITheme_DisabledFont() As stdole.Font
@@ -283,7 +283,7 @@ ITheme_TabstripForeColor = &HE8A460
 End Property
 
 Private Property Get ITheme_TextBackColor() As stdole.OLE_COLOR
-ITheme_TextBackColor = &H6D6D6D
+ITheme_TextBackColor = &H403010
 End Property
 
 Private Property Get ITheme_TextFont() As stdole.Font
@@ -291,7 +291,7 @@ Private Property Get ITheme_TextFont() As stdole.Font
 End Property
 
 Private Property Get ITheme_TextForeColor() As stdole.OLE_COLOR
-ITheme_TextForeColor = &HE0E0E0
+ITheme_TextForeColor = &HF0F0F0
 End Property
 
 Private Property Get ITheme_ToolbarBackColor() As stdole.OLE_COLOR

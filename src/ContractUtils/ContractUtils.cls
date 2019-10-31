@@ -507,8 +507,9 @@ End Function
 
 Public Function GetTickSizeForStocks( _
                 ByVal pExchange As String, _
-                ByVal pCurrentPrice As Double) As Double
-GetTickSizeForStocks = gGetTickSizeForStocks(pExchange, pCurrentPrice)
+                ByVal pCurrentPrice As Double, _
+                ByVal pDefaultTickSize As Double) As Double
+GetTickSizeForStocks = gGetTickSizeForStocks(pExchange, pCurrentPrice, pDefaultTickSize)
 End Function
                 
 Public Function FetchContract( _

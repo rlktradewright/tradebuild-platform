@@ -1278,7 +1278,6 @@ Const ProcName As String = "PositiveChangeBackColor"
 On Error GoTo Err
 
 PositiveChangeBackColor = mPositiveChangeBackColor
-PropertyChanged "PositiveChangeBackColor"
 
 Exit Property
 
@@ -1308,7 +1307,6 @@ Const ProcName As String = "PositiveChangeForeColor"
 On Error GoTo Err
 
 PositiveChangeForeColor = mPositiveChangeForeColor
-PropertyChanged "PositiveChangeForeColor"
 
 Exit Property
 

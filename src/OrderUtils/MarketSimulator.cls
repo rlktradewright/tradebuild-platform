@@ -589,6 +589,8 @@ lOrderReport.SweepToFill = lOrder.SweepToFill
 lOrderReport.TimeInForce = lOrder.TimeInForce
 lOrderReport.TriggerPrice = lOrder.TriggerPrice
 
+lOrderReport.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, pOrder.OcaGroup
+
 pOrder.Listener.NotifyOrderReport lOrderReport
 
 Exit Sub

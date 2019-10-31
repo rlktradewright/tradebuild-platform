@@ -64,6 +64,7 @@ Private mGroupName                                  As String
 Private mHidden                                     As Boolean
 Private mIgnoreRegularTradingHours                  As Boolean
 Private mLimitPrice                                 As Double
+Private mLimitPriceSpec                             As PriceSpecifier
 Private mMessage                                    As String
 Private mMinimumQuantity                            As Long
 Private mNBBOPriceCap                               As Double
@@ -71,7 +72,6 @@ Private mOrderType                                  As OrderTypes
 Private mOrigin                                     As OrderOrigins
 Private mOriginatorRef                              As String
 Private mOverrideConstraints                        As Boolean
-Private mProviderProperties                         As Parameters
 Private mQuantity                                   As Long
 Private mSettlingFirm                               As String
 Private mStatus                                     As OrderStatuses
@@ -80,12 +80,12 @@ Private mSweepToFill                                As Boolean
 Private mTimeInForce                                As OrderTIFs
 Private mIdentifier                                 As String
 Private mTriggerPrice                               As Double
+Private mTriggerPriceSpec                           As PriceSpecifier
 Private mAveragePrice                               As Double
 Private mFillTime                                   As Date
 Private mQuantityFilled                             As Long
 Private mQuantityRemaining                          As Long
 Private mLastFillPrice                              As Double
-Private mOffset                                     As Long
 Private mPercentOffset                              As Double
 
 Private mIsDirty                                    As Boolean
@@ -97,7 +97,15 @@ Private mDiff                                       As New ROD
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mProviderProperties = New Parameters
+mStatus = OrderStatuses.OrderStatusCreated
+mAction = OrderActionBuy
+mOrderType = OrderTypeMarket
+mLimitPrice = MaxDouble
+Set mLimitPriceSpec = gNewPriceSpecifier
+mTriggerPrice = MaxDouble
+Set mTriggerPriceSpec = gNewPriceSpecifier
+mStopTriggerMethod = OrderStopTriggerDefault
+mTimeInForce = OrderTIFDay
 End Sub
 
 '@================================================================================
@@ -368,6 +376,17 @@ Public Property Get LimitPrice() As Double
 LimitPrice = mLimitPrice
 End Property
 
+Public Property Let LimitPriceSpec(ByVal Value As PriceSpecifier)
+If mLimitPriceSpec Is Value Then Exit Property
+Set mLimitPriceSpec = Value
+mIsDirty = True
+mDiff.SetProperty "LimitPriceSpec", Value
+End Property
+
+Public Property Get LimitPriceSpec() As PriceSpecifier
+Set LimitPriceSpec = mLimitPriceSpec
+End Property
+
 Public Property Let Message(ByVal Value As String)
 If mMessage = Value Then Exit Property
 mMessage = Value
@@ -399,17 +418,6 @@ End Property
 
 Public Property Get NbboPriceCap() As Double
 NbboPriceCap = mNBBOPriceCap
-End Property
-
-Public Property Let Offset(ByVal Value As Long)
-If mOffset = Value Then Exit Property
-mOffset = Value
-mIsDirty = True
-mDiff.SetProperty "Offset", Value
-End Property
-
-Public Property Get Offset() As Long
-Offset = mOffset
 End Property
 
 Public Property Let OrderType(ByVal Value As OrderTypes)
@@ -465,17 +473,6 @@ End Property
 
 Public Property Get PercentOffset() As Double
 PercentOffset = mPercentOffset
-End Property
-
-Public Property Let ProviderProperties(ByVal Value As Parameters)
-If mProviderProperties Is Value Then Exit Property
-Set mProviderProperties = Value
-mIsDirty = True
-mDiff.SetProperty "ProviderProperties", Value
-End Property
-
-Public Property Get ProviderProperties() As Parameters
-Set ProviderProperties = mProviderProperties
 End Property
 
 Public Property Let Quantity(ByVal Value As Long)
@@ -577,11 +574,22 @@ Public Property Get TriggerPrice() As Double
 TriggerPrice = mTriggerPrice
 End Property
 
+Public Property Let TriggerPriceSpec(ByVal Value As PriceSpecifier)
+If mTriggerPriceSpec Is Value Then Exit Property
+Set mTriggerPriceSpec = Value
+mIsDirty = True
+mDiff.SetProperty "TriggerPriceSpec", Value
+End Property
+
+Public Property Get TriggerPriceSpec() As PriceSpecifier
+Set TriggerPriceSpec = mTriggerPriceSpec
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub setClean()
+Friend Sub SetClean()
 mIsDirty = True
 mDiff.Clear
 End Sub

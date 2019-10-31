@@ -564,10 +564,13 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
+If ev.Future.IsCancelled Then Exit Sub
+
 Dim lStreamId As Long
 lStreamId = ev.ContinuationData
 
 If lStreamId < MarketDepthIdOffset Then
+    If Not mMarketDataTable(lStreamId).InUse Then Exit Sub
     If ev.Future.IsFaulted Then
         mMarketDataTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
         releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId
@@ -575,6 +578,7 @@ If lStreamId < MarketDepthIdOffset Then
         reqMarketData lStreamId
     End If
 Else
+    If Not mMarketDepthTable(lStreamId).InUse Then Exit Sub
     If ev.Future.IsFaulted Then
         mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
         releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId
@@ -768,6 +772,12 @@ Const ProcName As String = "cancelMarketDataEx"
 On Error GoTo Err
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
+
+If mMarketDataTable(pIndex).ContractDetails Is Nothing Then
+    ' this can happen if the client cancels market data before handleCompletedFuture
+    ' has been called
+    Exit Sub
+End If
 
 If isFTSE100Index(mMarketDataTable(pIndex).ContractDetails.Summary) Then
     mHistoricalDataRequester.CancelRealtimeBars getTickerIdFromIndex(pIndex)

@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#342.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#358.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -315,6 +315,12 @@ closeChartsAndMarketDepthForms
 
 LogMessage "Closing config editor form"
 gUnloadConfigEditor
+
+LogMessage "Closing order ticket"
+If Not mOrderTicket Is Nothing Then
+    Unload mOrderTicket
+    Set mOrderTicket = Nothing
+End If
 
 LogMessage "Closing other forms"
 For Each f In Forms

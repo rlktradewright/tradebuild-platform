@@ -574,7 +574,7 @@ If PendingBuySize = 0 Then Exit Sub
 
 SetNewQuantity calcTradeSize(lRisk)
 SetNewEntryTriggerPrice lTriggerPrice
-SetNewEntryPrice lTriggerPrice - mEntryLimitOffsetTicks * TickSize
+SetNewEntryLimitPrice lTriggerPrice - mEntryLimitOffsetTicks * TickSize
 SetNewStopLossTriggerPrice lStopPrice
 Update
 
@@ -609,7 +609,7 @@ If PendingSellSize = 0 Then Exit Sub
 
 SetNewQuantity calcTradeSize(lRisk)
 SetNewEntryTriggerPrice lTriggerPrice
-SetNewEntryPrice lTriggerPrice + mEntryLimitOffsetTicks * TickSize
+SetNewEntryLimitPrice lTriggerPrice + mEntryLimitOffsetTicks * TickSize
 SetNewStopLossTriggerPrice lStopPrice
 Update
 
@@ -640,8 +640,8 @@ End If
 
 Set mBracketOrderBuyDummy = BuySimulated( _
                                 Number:=1, _
-                                EntryOrder:=DeclareEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
-                                StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
+                                EntryOrder:=DeclareSimulatedEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
+                                StopLossOrder:=DeclareSimulatedStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
                                 CancelPrice:=lCancelPrice, _
                                 NotifyCompletion:=True)
 
@@ -654,8 +654,7 @@ If lSize = 0 Then Exit Sub
 SetPrimaryBracketOrder Buy( _
                             Number:=lSize, _
                             EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
-                                                        price:=lTriggerPrice, _
-                                                        Offset:=mEntryLimitOffsetTicks, _
+                                                        LimitPrice:=lTriggerPrice, _
                                                         TriggerPrice:=lTriggerPrice), _
                             StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
                             CancelPrice:=lCancelPrice, _
@@ -687,8 +686,8 @@ End If
 
 Set mBracketOrderSellDummy = SellSimulated( _
                                 Number:=1, _
-                                EntryOrder:=DeclareEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
-                                StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
+                                EntryOrder:=DeclareSimulatedEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
+                                StopLossOrder:=DeclareSimulatedStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
                                 CancelPrice:=lCancelPrice, _
                                 NotifyCompletion:=True)
 
@@ -701,8 +700,7 @@ If lSize = 0 Then Exit Sub
 SetPrimaryBracketOrder Sell( _
                             Number:=lSize, _
                             EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
-                                                        price:=lTriggerPrice, _
-                                                        Offset:=-mEntryLimitOffsetTicks, _
+                                                        LimitPrice:=lTriggerPrice, _
                                                         TriggerPrice:=lTriggerPrice), _
                             StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
                             CancelPrice:=lCancelPrice, _

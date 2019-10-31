@@ -119,6 +119,8 @@ Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
+If Not futureIsPending Then Exit Sub
+
 If gIsOffsetExpiry(mContractSpec.Expiry) And _
     mContractsBuilder.Contracts.Count <> 0 _
 Then

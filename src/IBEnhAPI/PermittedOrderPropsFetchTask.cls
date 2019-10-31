@@ -227,6 +227,7 @@ lOrderTypesStr = Split(mContractDetails.OrderTypes, ",")
 
 Dim lPermittedOrderAttributes As OrderAttributes
 lPermittedOrderAttributes = OrderAttributes.OrderAttBlockOrder
+lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttIgnoreRTH
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttMinimumQuantity
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttNBBOPriceCap
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttOriginatorRef

@@ -137,11 +137,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get EntryPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
-Const ProcName As String = "EntryPrice"
+Public Property Get EntryLimitPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
+Const ProcName As String = "EntryLimitPrice"
 On Error GoTo Err
 
-EntryPrice = getBracketOrder(BracketOrder).EntryOrder.LimitPrice
+EntryLimitPrice = getBracketOrder(BracketOrder).EntryOrder.LimitPriceSpec.Price
 
 Exit Property
 
@@ -149,11 +149,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get EntryOffset(Optional ByVal BracketOrder As ResourceIdentifier) As Long
-Const ProcName As String = "EntryOffset"
+Public Property Get EntryLimitPriceSpecifier(Optional ByVal BracketOrder As ResourceIdentifier) As PriceSpecifier
+Const ProcName As String = "EntryLimitPriceSpecifier"
 On Error GoTo Err
 
-EntryOffset = getBracketOrder(BracketOrder).EntryOrder.Offset
+Set EntryLimitPriceSpecifier = getBracketOrder(BracketOrder).EntryOrder.LimitPriceSpec
 
 Exit Property
 
@@ -165,7 +165,19 @@ Public Property Get EntryTriggerPrice(Optional ByVal BracketOrder As ResourceIde
 Const ProcName As String = "EntryTriggerPrice"
 On Error GoTo Err
 
-EntryTriggerPrice = getBracketOrder(BracketOrder).EntryOrder.TriggerPrice
+EntryTriggerPrice = getBracketOrder(BracketOrder).EntryOrder.TriggerPriceSpec.Price
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get EntryTriggerPriceSpecifier(Optional ByVal BracketOrder As ResourceIdentifier) As PriceSpecifier
+Const ProcName As String = "EntryTriggerPriceSpecifier"
+On Error GoTo Err
+
+Set EntryTriggerPriceSpecifier = getBracketOrder(BracketOrder).EntryOrder.TriggerPriceSpec
 
 Exit Property
 
@@ -305,11 +317,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get StopLossPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
-Const ProcName As String = "StopLossPrice"
+Public Property Get StopLossLimitPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
+Const ProcName As String = "StopLossLimitPrice"
 On Error GoTo Err
 
-StopLossPrice = getBracketOrder(BracketOrder).StopLossOrder.LimitPrice
+StopLossLimitPrice = getBracketOrder(BracketOrder).StopLossOrder.LimitPriceSpec.Price
 
 Exit Property
 
@@ -317,11 +329,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get StopLossOffset(Optional ByVal BracketOrder As ResourceIdentifier) As Long
-Const ProcName As String = "StopLossOffset"
+Public Property Get StopLossLimitPriceSpecifier(Optional ByVal BracketOrder As ResourceIdentifier) As PriceSpecifier
+Const ProcName As String = "StopLossLimitPriceSpecifier"
 On Error GoTo Err
 
-StopLossOffset = getBracketOrder(BracketOrder).StopLossOrder.Offset
+Set StopLossLimitPriceSpecifier = getBracketOrder(BracketOrder).StopLossOrder.LimitPriceSpec
 
 Exit Property
 
@@ -333,7 +345,7 @@ Public Property Get StopLossTriggerPrice(Optional ByVal BracketOrder As Resource
 Const ProcName As String = "StopLossTriggerPrice"
 On Error GoTo Err
 
-StopLossTriggerPrice = getBracketOrder(BracketOrder).StopLossOrder.TriggerPrice
+StopLossTriggerPrice = getBracketOrder(BracketOrder).StopLossOrder.TriggerPriceSpec.Price
 
 Exit Property
 
@@ -341,11 +353,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TargetPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
-Const ProcName As String = "TargetPrice"
+Public Property Get StopLossTriggerPriceSpecifier(Optional ByVal BracketOrder As ResourceIdentifier) As PriceSpecifier
+Const ProcName As String = "StopLossTriggerPriceSpecifier"
 On Error GoTo Err
 
-TargetPrice = getBracketOrder(BracketOrder).TargetOrder.LimitPrice
+Set StopLossTriggerPriceSpecifier = getBracketOrder(BracketOrder).StopLossOrder.TriggerPriceSpec
 
 Exit Property
 
@@ -353,11 +365,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TargetOffset(Optional ByVal BracketOrder As ResourceIdentifier) As Long
-Const ProcName As String = "TargetOffset"
+Public Property Get TargetLimitPrice(Optional ByVal BracketOrder As ResourceIdentifier) As Double
+Const ProcName As String = "TargetLimitPrice"
 On Error GoTo Err
 
-TargetOffset = getBracketOrder(BracketOrder).TargetOrder.Offset
+TargetLimitPrice = getBracketOrder(BracketOrder).TargetOrder.LimitPriceSpec.Price
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TargetLimitPriceSpecifier(Optional ByVal BracketOrder As ResourceIdentifier) As PriceSpecifier
+Const ProcName As String = "TargetLimitPriceSpecifier"
+On Error GoTo Err
+
+Set TargetLimitPriceSpecifier = getBracketOrder(BracketOrder).TargetOrder.LimitPriceSpec
 
 Exit Property
 
@@ -369,7 +393,19 @@ Public Property Get TargetTriggerPrice(Optional ByVal BracketOrder As ResourceId
 Const ProcName As String = "TargetTriggerPrice"
 On Error GoTo Err
 
-TargetTriggerPrice = getBracketOrder(BracketOrder).TargetOrder.TriggerPrice
+TargetTriggerPrice = getBracketOrder(BracketOrder).TargetOrder.TriggerPriceSpec.Price
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TargetTriggerPriceSpecifier(Optional ByVal BracketOrder As ResourceIdentifier) As PriceSpecifier
+Const ProcName As String = "TargetTriggerPriceSpecifier"
+On Error GoTo Err
+
+Set TargetTriggerPriceSpecifier = getBracketOrder(BracketOrder).TargetOrder.TriggerPriceSpec
 
 Exit Property
 
@@ -430,13 +466,15 @@ End Property
 '@================================================================================
 
 Public Sub AdjustStop( _
-                ByVal StopTriggerPrice As Double, _
+                ByVal Price As String, _
                 Optional ByVal Quantity As Long = -1, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "AdjustStop"
 On Error GoTo Err
 
-getBracketOrder(BracketOrder).AdjustStop StopTriggerPrice, Quantity
+Dim lPriceSpec As PriceSpecifier
+Assert parsePriceString(Price, lPriceSpec)
+getBracketOrder(BracketOrder).AdjustStop lPriceSpec, Quantity
 
 Exit Sub
 
@@ -635,13 +673,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetNewEntryPrice( _
-                ByVal Price As Double, _
+Public Sub SetNewEntryLimitPrice( _
+                ByVal Price As String, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
-Const ProcName As String = "SetNewEntryPrice"
+Const ProcName As String = "SetNewEntryLimitPrice"
 On Error GoTo Err
 
-getBracketOrder(BracketOrder).SetNewEntryPrice Price
+Dim lPriceSpec As PriceSpecifier
+Assert parsePriceString(Price, lPriceSpec)
+getBracketOrder(BracketOrder).SetNewEntryLimitPrice lPriceSpec
 
 Exit Sub
 
@@ -650,12 +690,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewEntryTriggerPrice( _
-                ByVal Price As Double, _
+                ByVal Price As String, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewEntryTriggerPrice"
 On Error GoTo Err
 
-getBracketOrder(BracketOrder).SetNewEntryTriggerPrice Price
+Dim lPriceSpec As PriceSpecifier
+Assert parsePriceString(Price, lPriceSpec)
+getBracketOrder(BracketOrder).SetNewEntryTriggerPrice lPriceSpec
 
 Exit Sub
 
@@ -669,7 +711,7 @@ Public Sub SetNewQuantity( _
 Const ProcName As String = "SetNewQuantity"
 On Error GoTo Err
 
-getBracketOrder(BracketOrder).SetNewQuantity Quantity
+getBracketOrder(BracketOrder).SetNewEntryQuantity Quantity
 
 Exit Sub
 
@@ -677,27 +719,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetNewStopLossOffset( _
-                ByVal Offset As Long, _
+Public Sub SetNewStopLossLimitPrice( _
+                ByVal Price As String, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
-Const ProcName As String = "SetNewStopLossOffset"
+Const ProcName As String = "SetNewStopLossLimitPrice"
 On Error GoTo Err
 
-getBracketOrder(BracketOrder).SetNewStopLossOffset Offset
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub SetNewStopLossPrice( _
-                ByVal Price As Double, _
-                Optional ByVal BracketOrder As ResourceIdentifier)
-Const ProcName As String = "SetNewStopLossPrice"
-On Error GoTo Err
-
-getBracketOrder(BracketOrder).SetNewStopLossPrice Price
+Dim lPriceSpec As PriceSpecifier
+Assert parsePriceString(Price, lPriceSpec)
+getBracketOrder(BracketOrder).SetNewStopLossLimitPrice lPriceSpec
 
 Exit Sub
 
@@ -706,13 +736,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossTriggerPrice( _
-                ByVal Price As Double, _
+                ByVal Price As String, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
 
 Const ProcName As String = "SetNewStopLossTriggerPrice"
 On Error GoTo Err
 
-getBracketOrder(BracketOrder).SetNewStopLossTriggerPrice Price
+Dim lPriceSpec As PriceSpecifier
+Assert parsePriceString(Price, lPriceSpec)
+getBracketOrder(BracketOrder).SetNewStopLossTriggerPrice lPriceSpec
 
 Exit Sub
 
@@ -720,27 +752,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetNewTargetOffset( _
-                ByVal Offset As Long, _
+Public Sub SetNewTargetLimitPrice( _
+                ByVal Price As String, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
-Const ProcName As String = "SetNewTargetOffset"
+Const ProcName As String = "SetNewTargetLimitPrice"
 On Error GoTo Err
 
-getBracketOrder(BracketOrder).SetNewTargetOffset Offset
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub SetNewTargetPrice( _
-                ByVal Price As Double, _
-                Optional ByVal BracketOrder As ResourceIdentifier)
-Const ProcName As String = "SetNewEntryTriggerPrice"
-On Error GoTo Err
-
-getBracketOrder(BracketOrder).SetNewTargetPrice Price
+Dim lPriceSpec As PriceSpecifier
+Assert parsePriceString(Price, lPriceSpec)
+getBracketOrder(BracketOrder).SetNewTargetLimitPrice lPriceSpec
 
 Exit Sub
 
@@ -749,12 +769,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetTriggerPrice( _
-                ByVal Price As Double, _
+                ByVal Price As String, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewTargetTriggerPrice "
 On Error GoTo Err
 
-getBracketOrder(BracketOrder).SetNewTargetTriggerPrice Price
+Dim lPriceSpec As PriceSpecifier
+Assert parsePriceString(Price, lPriceSpec)
+getBracketOrder(BracketOrder).SetNewTargetTriggerPrice lPriceSpec
 
 Exit Sub
 
@@ -844,38 +866,52 @@ If pOrderContext Is Nothing Then
     Set lOrderContext = getDefaultOrderContext(pIsBuy, pIsSimulated)
 Else
     Set lOrderContext = getOrderContext(pOrderContext)
-    Assert lOrderContext.IsSimulated = pIsSimulated, "Order context has incorrect simulated property"
+    AssertArgument lOrderContext.IsSimulated = pIsSimulated, "Order context has incorrect simulated property"
 End If
+
+
 
 Dim lEntryOrderSpec As OrderSpecifier
 Set lEntryOrderSpec = getOrderSpecifier(pEntryOrder, OrderRoleEntry)
+AssertArgument lEntryOrderSpec.IsSimulated = pIsSimulated, "Entry order has incorrect simulated property"
+Dim lEntryOrder As IOrder
+Set lEntryOrder = lOrderContext.CreateEntryOrder( _
+                                    lEntryOrderSpec.OrderType, _
+                                    lEntryOrderSpec.PriceSpecifier, _
+                                    lEntryOrderSpec.TriggerPriceSpecifier, _
+                                    lEntryOrderSpec.IgnoreRTH)
 
-Dim lStopLossOrderSpec As New OrderSpecifier
-If Not pStopLossOrder Is Nothing Then Set lStopLossOrderSpec = getOrderSpecifier(pStopLossOrder, OrderRoleStopLoss)
+Dim lStopLossOrder As IOrder
+If Not pStopLossOrder Is Nothing Then
+    Dim lStopLossOrderSpec As New OrderSpecifier
+    Set lStopLossOrderSpec = getOrderSpecifier(pStopLossOrder, OrderRoleStopLoss)
+    AssertArgument lStopLossOrderSpec.IsSimulated = pIsSimulated, "Stop loss order has incorrect simulated property"
+    Set lStopLossOrder = lOrderContext.CreateEntryOrder( _
+                                        lStopLossOrderSpec.OrderType, _
+                                        lStopLossOrderSpec.PriceSpecifier, _
+                                        lStopLossOrderSpec.TriggerPriceSpecifier, _
+                                        lStopLossOrderSpec.IgnoreRTH)
+End If
 
-Dim lTargetOrderSpec As New OrderSpecifier
-If Not pTargetOrder Is Nothing Then Set lTargetOrderSpec = getOrderSpecifier(pTargetOrder, OrderRoleTarget)
+Dim lTargetOrder As IOrder
+If Not pTargetOrder Is Nothing Then
+    Dim lTargetOrderSpec As New OrderSpecifier
+    Set lTargetOrderSpec = getOrderSpecifier(pTargetOrder, OrderRoleTarget)
+    AssertArgument lTargetOrderSpec.IsSimulated = pIsSimulated, "Target order has incorrect simulated property"
+    Set lTargetOrder = lOrderContext.CreateEntryOrder( _
+                                        lTargetOrderSpec.OrderType, _
+                                        lTargetOrderSpec.PriceSpecifier, _
+                                        lTargetOrderSpec.TriggerPriceSpecifier, _
+                                        lTargetOrderSpec.IgnoreRTH)
+End If
 
 Dim lBracketOrder As IBracketOrder
-If pIsBuy Then
-    Set lBracketOrder = doBuy( _
-                            lOrderContext, _
-                            pNumber, _
-                            lEntryOrderSpec, _
-                            lStopLossOrderSpec, _
-                            lTargetOrderSpec, _
-                            pCancelPrice, _
-                            pCancelAfter)
-Else
-    Set lBracketOrder = doSell( _
-                            lOrderContext, _
-                            pNumber, _
-                            lEntryOrderSpec, _
-                            lStopLossOrderSpec, _
-                            lTargetOrderSpec, _
-                            pCancelPrice, _
-                            pCancelAfter)
-End If
+Set lBracketOrder = lOrderContext.CreateBracketOrder( _
+                        IIf(pIsBuy, OrderActionBuy, OrderActionSell), _
+                        pNumber, _
+                        lEntryOrder, _
+                        lStopLossOrder, _
+                        lTargetOrder)
 
 Set buyOrSell = gCreateResourceIdentifier(lBracketOrder)
 gStrategyRunner.MapBracketOrderToResourceId lBracketOrder, buyOrSell
@@ -933,80 +969,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function doBuy( _
-                ByVal pOrderContext As OrderContext, _
-                ByVal pNumber As Long, _
-                ByVal pEntryOrderSpec As OrderSpecifier, _
-                ByVal pStopLossOrderSpec As OrderSpecifier, _
-                ByVal pTargetOrderSpec As OrderSpecifier, _
-                ByVal pCancelPrice As Double, _
-                ByVal pCancelAfter As Long) As IBracketOrder
-Const ProcName As String = "doBuy"
-On Error GoTo Err
-
-Set doBuy = pOrderContext.Buy( _
-                        pNumber, _
-                        pEntryOrderSpec.OrderType, _
-                        pEntryOrderSpec.Price, _
-                        pEntryOrderSpec.Offset, _
-                        pEntryOrderSpec.TriggerPrice, _
-                        pStopLossOrderSpec.OrderType, _
-                        pStopLossOrderSpec.TriggerPrice, _
-                        pStopLossOrderSpec.Offset, _
-                        pStopLossOrderSpec.Price, _
-                        pTargetOrderSpec.OrderType, _
-                        pTargetOrderSpec.Price, _
-                        pTargetOrderSpec.Offset, _
-                        pTargetOrderSpec.TriggerPrice, _
-                        pEntryOrderSpec.TIF, _
-                        pStopLossOrderSpec.TIF, _
-                        pTargetOrderSpec.TIF, _
-                        pCancelPrice, _
-                        pCancelAfter)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function doSell( _
-                ByVal pOrderContext As OrderContext, _
-                ByVal pNumber As Long, _
-                ByVal pEntryOrderSpec As OrderSpecifier, _
-                ByVal pStopLossOrderSpec As OrderSpecifier, _
-                ByVal pTargetOrderSpec As OrderSpecifier, _
-                ByVal pCancelPrice As Double, _
-                ByVal pCancelAfter As Long) As IBracketOrder
-Const ProcName As String = "doSell"
-On Error GoTo Err
-
-Set doSell = pOrderContext.Sell( _
-                        pNumber, _
-                        pEntryOrderSpec.OrderType, _
-                        pEntryOrderSpec.Price, _
-                        pEntryOrderSpec.Offset, _
-                        pEntryOrderSpec.TriggerPrice, _
-                        pStopLossOrderSpec.OrderType, _
-                        pStopLossOrderSpec.TriggerPrice, _
-                        pStopLossOrderSpec.Offset, _
-                        pStopLossOrderSpec.Price, _
-                        pTargetOrderSpec.OrderType, _
-                        pTargetOrderSpec.Price, _
-                        pTargetOrderSpec.Offset, _
-                        pTargetOrderSpec.TriggerPrice, _
-                        pEntryOrderSpec.TIF, _
-                        pStopLossOrderSpec.TIF, _
-                        pTargetOrderSpec.TIF, _
-                        pCancelPrice, _
-                        pCancelAfter)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Function getBracketOrder( _
                 ByVal pBracketOrderIdentifier As ResourceIdentifier) As IBracketOrder
 If pBracketOrderIdentifier Is Nothing Then Set pBracketOrderIdentifier = gResourceContext.PrimaryBracketOrder
@@ -1063,6 +1025,21 @@ Set lOrderSpec = lObj
 AssertArgument lOrderSpec.OrderRole = pRole, "Order specifier not correct role (entry, stop-loss or target)"
 
 Set getOrderSpecifier = lOrderSpec
+End Function
+
+Private Function parsePriceString( _
+                ByVal pPriceString As String, _
+                ByRef pPriceSpec As PriceSpecifier) As Boolean
+Const ProcName As String = "parsePriceString"
+On Error GoTo Err
+
+Dim lOrderContext As OrderContext: Set lOrderContext = gTradingContext.DefaultBuyOrderContext
+parsePriceString = lOrderContext.ParsePriceAndOffset(pPriceString, pPriceSpec)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub requestNotification( _

@@ -78,6 +78,12 @@ Private Sub IBracketOrder_AddBracketOrderMessageListener(ByVal pListener As Orde
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "AddBracketOrderMessageListener not supported"
 End Sub
 
+Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1&)
+End Sub
+
+Private Sub IBracketOrder_AdjustTarget(ByVal pTargetPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1&)
+End Sub
+
 Private Property Get IBracketOrder_ApplicationIndex() As Long
 IBracketOrder_ApplicationIndex = gNextAplicationIndex
 End Property
@@ -185,7 +191,7 @@ End Property
 Private Sub IBracketOrder_RemoveBracketOrderErrorListener(ByVal Value As IBracketOrderErrorListener)
 End Sub
 
-Private Sub IBracketOrder_RemoveBracketOrderMessageListener(ByVal Value As OrderUtils27.IBracketOrderMsgListener)
+Private Sub IBracketOrder_RemoveBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
 End Sub
 
 Private Property Get IBracketOrder_Risk() As Currency
@@ -196,6 +202,33 @@ End Property
 
 Private Property Get IBracketOrder_RolloverSpecification() As RolloverSpecification
 End Property
+
+Private Sub IBracketOrder_SetNewEntryLimitPrice(ByVal pPriceSpec As PriceSpecifier)
+End Sub
+
+Private Sub IBracketOrder_SetNewEntryQuantity(ByVal pNewQuantity As Long)
+End Sub
+
+Private Sub IBracketOrder_SetNewEntryTriggerPrice(ByVal pPriceSpec As PriceSpecifier)
+End Sub
+
+Private Sub IBracketOrder_SetNewOrderLimitPrice(ByVal pRole As BracketOrderRoles, ByVal pPriceSpec As PriceSpecifier)
+End Sub
+
+Private Sub IBracketOrder_SetNewOrderTriggerPrice(ByVal pRole As BracketOrderRoles, ByVal pPriceSpec As PriceSpecifier)
+End Sub
+
+Private Sub IBracketOrder_SetNewStopLossLimitPrice(ByVal pPriceSpec As PriceSpecifier)
+End Sub
+
+Private Sub IBracketOrder_SetNewStopLossTriggerPrice(ByVal pPriceSpec As PriceSpecifier)
+End Sub
+
+Private Sub IBracketOrder_SetNewTargetLimitPrice(ByVal pPriceSpec As PriceSpecifier)
+End Sub
+
+Private Sub IBracketOrder_SetNewTargetTriggerPrice(ByVal pPriceSpec As PriceSpecifier)
+End Sub
 
 Private Property Get IBracketOrder_Size() As Long
 End Property
@@ -235,12 +268,6 @@ End Sub
 Private Sub IBracketOrder_AddStateChangeListener(ByVal Value As IStateChangeListener)
 End Sub
 
-Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPrice As Double, Optional ByVal pQuantity As Long = -1)
-End Sub
-
-Private Sub IBracketOrder_AdjustTarget(ByVal pTargetPrice As Double, Optional ByVal pQuantity As Long = -1)
-End Sub
-
 Private Function IBracketOrder_Cancel(Optional ByVal pEvenIfFilled As Boolean = False) As Boolean
 End Function
 
@@ -268,16 +295,7 @@ End Sub
 Private Sub IBracketOrder_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
-Private Sub IBracketOrder_SetNewEntryPrice(ByVal Value As Double)
-End Sub
-
-Private Sub IBracketOrder_SetNewEntryTriggerPrice(ByVal Value As Double)
-End Sub
-
 Private Sub IBracketOrder_SetNewOrderPrice(ByVal pOrderIndex As Long, ByVal Value As Double)
-End Sub
-
-Private Sub IBracketOrder_SetNewOrderTriggerPrice(ByVal pOrderIndex As Long, ByVal Value As Double)
 End Sub
 
 Private Sub IBracketOrder_SetNewQuantity(ByVal Value As Long)
@@ -292,9 +310,6 @@ End Sub
 Private Sub IBracketOrder_SetNewStopLossQuantity(ByVal Value As Long)
 End Sub
 
-Private Sub IBracketOrder_SetNewStopLossTriggerPrice(ByVal Value As Double)
-End Sub
-
 Private Sub IBracketOrder_SetNewTargetPrice(ByVal Value As Double)
 End Sub
 
@@ -302,9 +317,6 @@ Private Sub IBracketOrder_SetNewTargetOffset(ByVal Value As Long)
 End Sub
 
 Private Sub IBracketOrder_SetNewTargetQuantity(ByVal Value As Long)
-End Sub
-
-Private Sub IBracketOrder_SetNewTargetTriggerPrice(ByVal Value As Double)
 End Sub
 
 Private Function IBracketOrder_ToString() As String

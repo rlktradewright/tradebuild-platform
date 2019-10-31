@@ -30,266 +30,6 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum BracketEntryTypes
-    BracketEntryTypeNone = 0
-    BracketEntryTypeMarket = 1
-    BracketEntryTypeMarketOnOpen = &H100000
-    BracketEntryTypeMarketOnClose = 2
-    BracketEntryTypeMarketIfTouched = &H20000
-    BracketEntryTypeMarketToLimit = &H400&
-    BracketEntryTypeBid = &H1000000
-    BracketEntryTypeAsk = &H2000000
-    BracketEntryTypeLast = &H4000000
-    BracketEntryTypeLimit = 4
-    BracketEntryTypeLimitOnOpen = &H200000
-    BracketEntryTypeLimitOnClose = 8
-    BracketEntryTypeLimitIfTouched = &H10000
-    BracketEntryTypeStop = &H20&
-    BracketEntryTypeStopLimit = &H40&
-End Enum
-
-Public Enum BracketOrderChangeTypes
-    BracketOrderCreated = 1
-    BracketOrderCompleted
-    BracketOrderSelfCancelled
-    BracketOrderEntryOrderChanged
-    BracketOrderEntryOrderFilled
-    BracketOrderStopLossOrderChanged
-    BracketOrderStopLossOrderFilled
-    BracketOrderTargetOrderChanged
-    BracketOrderTargetOrderFilled
-    BracketOrderCloseoutOrderCreated
-    BracketOrderCloseoutOrderChanged
-    BracketOrderCloseoutOrderFilled
-    BracketOrderSizeChanged
-    BracketOrderStateChanged
-    BracketOrderChangesPending
-    BracketOrderChangesApplied
-    BracketOrderChangesCancelled
-    BracketOrderPositionCloseoutNotified
-End Enum
-
-Public Enum BracketOrderRoles
-    BracketOrderRoleNone = 0
-    BracketOrderRoleEntry = 1
-    BracketOrderRoleStopLoss
-    BracketOrderRoleTarget
-    BracketOrderRoleCloseout
-End Enum
-
-Public Enum BracketOrderStates
-    BracketOrderStateCreated = 1   ' indicates that the bracket order has been created but none of the orders have yet been placed
-    BracketOrderStateSubmitted     ' indicates that all the orders in the bracket order have been placed
-    BracketOrderStateCancelling    ' indicates that the bracket order is in the process of being cancelled
-    BracketOrderStateClosingOut    ' indicates that the bracket order is being closed out. (When a bracket order has been closed out, there are no outstanding orders and no net Size - note that this may require a closeout order to be placed to negate any existing Size
-    BracketOrderStateClosed        ' indicates that all orders have been completed
-    BracketOrderStateAwaitingOtherOrderCancel  ' indicates that a cancellation notification for either the stop-loss order or the target order, when both exist, has been received
-End Enum
-
-Public Enum BracketStopLossTypes
-    BracketStopLossTypeNone = 0
-    BracketStopLossTypeStop = &H20&
-    BracketStopLossTypeStopLimit = &H40&
-    BracketStopLossTypeBid = &H1000000
-    BracketStopLossTypeAsk = &H2000000
-    BracketStopLossTypeLast = &H4000000
-    BracketStopLossTypeAuto = &H8000000
-End Enum
-
-Public Enum BracketTargetTypes
-    BracketTargetTypeNone = 0
-    BracketTargetTypeLimit = 4
-    BracketTargetTypeMarketToLimit = &H400&
-    BracketTargetTypeLimitIfTouched = &H10000
-    BracketTargetTypeMarketIfTouched = &H20000
-    BracketTargetTypeBid = &H1000000
-    BracketTargetTypeAsk = &H2000000
-    BracketTargetTypeLast = &H4000000
-    BracketTargetTypeAuto = &H8000000
-End Enum
-
-Public Enum OrderActions
-    OrderActionNone = 0
-    OrderActionBuy = 1
-    OrderActionSell = 2
-End Enum
-
-Public Enum OrderAttributes
-    OrderAttOpenClose = 1
-    OrderAttOrigin = 2
-    OrderAttOriginatorRef = 4
-    OrderAttBlockOrder = 8
-    OrderAttSweepToFill = &H10&
-    OrderAttDisplaySize = &H20&
-    OrderAttIgnoreRTH = &H40&
-    OrderAttHidden = &H80&
-    OrderAttDiscretionaryAmount = &H100&
-    OrderAttGoodAfterTime = &H200&
-    OrderAttGoodTillDate = &H400&
-    'OrderAttRTHOnly = &H800&
-    OrderAttRule80A = &H1000&
-    OrderAttSettlingFirm = &H2000&
-    OrderAttAllOrNone = &H4000&
-    OrderAttMinimumQuantity = &H8000&
-    OrderAttPercentOffset = &H10000
-    OrderAttETradeOnly = &H20000
-    OrderAttFirmQuoteOnly = &H40000
-    OrderAttNBBOPriceCap = &H80000
-    OrderAttOverrideConstraints = &H100000
-    OrderAttAction = &H200000
-    OrderAttLimitPrice = &H400000
-    OrderAttOrderType = &H800000
-    OrderAttQuantity = &H1000000
-    OrderAttTimeInForce = &H2000000
-    OrderAttTriggerPrice = &H4000000
-    OrderAttGoodAfterTimeTZ = &H8000000
-    OrderAttGoodTillDateTZ = &H10000000
-    OrderAttStopTriggerMethod = &H20000000
-End Enum
-
-Public Enum OrderOrigins
-    OriginCustomer = 0
-    OriginFirm = 1
-End Enum
-
-''
-'
-'
-' @param OrderStatusCreated
-'   The order has been created but not yet transmitted to the broker
-'
-' @param OrderStatusRejected
-'   The order has been transmitted to the broker but has been rejected
-'   by the broker for some reason.
-'
-' @param OrderStatusPendingSubmit
-'   The order has been transmitted to the broker, but no confirmation has
-'   yet been received that it has been accepted.
-'
-' @param OrderStatusPreSubmitted
-'   The order has been accepted by the broker, but the conditions for it
-'   to be activated have not yet been met.
-'
-' @param OrderStatusSubmitted
-'   The order has been activated at the order destination.
-'
-' @param OrderStatusFilled
-'   The order has been completely filled.
-'
-' @param OrderStatusCancelling
-'   A request to cancel the order has been sent, but confirmation of
-'   the cancel has not yet been received.
-'
-' @param OrderStatusCancelled
-'   The order has been cancelled.
-'
-'@/
-'
-Public Enum OrderStatuses
-    OrderStatusCreated = 0
-    OrderStatusRejected = 1
-    OrderStatusPendingSubmit = 2
-    OrderStatusPreSubmitted = 3
-    OrderStatusSubmitted = 4
-    OrderStatusFilled = 5
-    OrderStatusCancelling = 6
-    OrderStatusCancelled = 7
-End Enum
-
-Public Enum OrderContextChangeTypes
-    OrderContextReadyStateChanged = 1
-    OrderContextActiveStateChanged
-End Enum
-
-Public Enum OrderStopTriggerMethods
-    OrderStopTriggerNone = 0
-    OrderStopTriggerDefault = 1
-    OrderStopTriggerDoubleBidAsk = 2
-    OrderStopTriggerLast = 4
-    OrderStopTriggerDoubleLast = 8
-    OrderStopTriggerBidAsk = 16
-    OrderStopTriggerLastOrBidAsk = 32
-    OrderStopTriggerMidPoint = 64
-End Enum
-
-Public Enum OrderSubmitterCapabilities
-    OrderSubmitterCapabilityNone = 0
-    OrderSubmitterCapabilityCanStageOrders = 1
-End Enum
-
-Public Enum OrderSubmitterStates
-    OrderSubmitterStateReady = 1
-    OrderSubmitterStateNotReady
-End Enum
-
-Public Enum OrderTIFs
-    OrderTIFNone = 0
-    OrderTIFDay = 1
-    OrderTIFGoodTillCancelled = 2
-    OrderTIFImmediateOrCancel = 4
-End Enum
-
-Public Enum OrderTypes
-    OrderTypeNone = 0
-    OrderTypeMarket = 1
-    OrderTypeMarketOnClose = 2
-    OrderTypeLimit = 4
-    OrderTypeLimitOnClose = 8
-    OrderTypePeggedToMarket = &H10&
-    OrderTypeStop = &H20&
-    OrderTypeStopLimit = &H40&
-    OrderTypeTrail = &H80&
-    OrderTypeRelative = &H100&
-    OrderTypeVWAP = &H200&
-    OrderTypeMarketToLimit = &H400&
-    OrderTypeQuote = &H800&
-    OrderTypeAutoStop = &H1000&
-    OrderTypeAutoLimit = &H2000&
-    OrderTypeAdjust = &H4000&
-    OrderTypeAlert = &H8000&
-    OrderTypeLimitIfTouched = &H10000
-    OrderTypeMarketIfTouched = &H20000
-    OrderTypeTrailLimit = &H40000
-    OrderTypeMarketWithProtection = &H80000
-    OrderTypeMarketOnOpen = &H100000
-    OrderTypeLimitOnOpen = &H200000
-    OrderTypePeggedToPrimary = &H400000
-End Enum
-
-Public Enum PositionManagerChangeTypes
-    PositionSizeChanged
-    ProviderReadinessChanged
-    PositionClosed
-    PositionCloseFailed
-End Enum
-
-Public Enum ProfitChangeTypes
-    ProfitChangeProfitThresholdExceeded
-    ProfitChangeLossThresholdExceeded
-    ProfitChangeDrawdownThresholdExceeded
-End Enum
-
-Public Enum PositionTypes
-    PositionTypeLive = 1
-    PositionTypeSimulated = 2
-    PositionTypeAll = 3
-End Enum
-
-Public Enum ProfitTypes
-    ProfitTypeProfit = 1&
-    ProfitTypeMaxProfit = 2&
-    ProfitTypeMaxLoss = 4&
-    ProfitTypeDrawdown = 8&
-    ProfitTypeSessionProfit = &H10&
-    ProfitTypeSessionMaxProfit = &H20&
-    ProfitTypeSessionMaxLoss = &H40&
-    ProfitTypeSessionDrawdown = &H80&
-    ProfitTypeTradeProfit = &H100&
-    ProfitTypeTradeMaxProfit = &H200&
-    ProfitTypeTradeMaxLoss = &H400&
-    ProfitTypeTradeDrawdown = &H800&
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -348,60 +88,21 @@ Private Const ModuleName                            As String = "OrderUtils"
 ' Properties
 '@================================================================================
 
+Public Property Get EntryOrderTypes() As OrderTypes()
+EntryOrderTypes = gEntryOrderTypes
+End Property
+
+Public Property Get StopLossOrderTypes() As OrderTypes()
+StopLossOrderTypes = gStopLossOrderTypes
+End Property
+
+Public Property Get TargetOrderTypes() As OrderTypes()
+TargetOrderTypes = gTargetOrderTypes
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Function BracketEntryTypeFromString(ByVal Value As String) As BracketEntryTypes
-Const ProcName As String = "BracketEntryTypeFromString"
-On Error GoTo Err
-
-BracketEntryTypeFromString = gBracketEntryTypeFromString(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketEntryTypeToOrderType( _
-                ByVal Value As BracketEntryTypes) As OrderTypes
-Const ProcName As String = "BracketEntryTypeToOrderType"
-On Error GoTo Err
-
-BracketEntryTypeToOrderType = gBracketEntryTypeToOrderType(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketEntryTypeToString( _
-                ByVal Value As BracketEntryTypes) As String
-Const ProcName As String = "BracketEntryTypeToString"
-On Error GoTo Err
-
-BracketEntryTypeToString = gBracketEntryTypeToString(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketEntryTypeToShortString( _
-                ByVal Value As BracketEntryTypes) As String
-Const ProcName As String = "BracketEntryTypeToShortString"
-On Error GoTo Err
-
-BracketEntryTypeToShortString = gBracketEntryTypeToShortString(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Public Function BracketOrderRoleToString(ByVal pOrderRole As BracketOrderRoles) As String
 Const ProcName As String = "BracketOrderRoleToString"
@@ -420,125 +121,6 @@ Const ProcName As String = "BracketOrderStateToString"
 On Error GoTo Err
 
 BracketOrderStateToString = gBracketOrderStateToString(pState)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketStopLossTypeFromString(ByVal Value As String) As BracketStopLossTypes
-Const ProcName As String = "BracketStopLossTypeFromString"
-On Error GoTo Err
-
-BracketStopLossTypeFromString = gBracketStopLossTypeFromString(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-''
-' Converts a member of the BracketStopLossTypes enumeration to the equivalent OrderTypes Value.
-'
-' @return           the OrderTypes Value corresponding to the parameter
-' @param Value the BracketStopLossTypes Value to be converted
-' @see
-'
-'@/
-Public Function BracketStopLossTypeToOrderType( _
-                ByVal Value As BracketStopLossTypes) As OrderTypes
-Const ProcName As String = "BracketStopLossTypeToOrderType"
-On Error GoTo Err
-
-BracketStopLossTypeToOrderType = gBracketStopLossTypeToOrderType(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketStopLossTypeToShortString( _
-                ByVal Value As BracketStopLossTypes) As String
-Const ProcName As String = "BracketStopLossTypeToShortString"
-On Error GoTo Err
-
-BracketStopLossTypeToShortString = gBracketStopLossTypeToShortString(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketStopLossTypeToString( _
-                ByVal Value As BracketStopLossTypes)
-Const ProcName As String = "BracketStopLossTypeToString"
-On Error GoTo Err
-
-BracketStopLossTypeToString = gBracketStopLossTypeToString(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketTargetTypeFromString( _
-                ByVal Value As String) As BracketTargetTypes
-Const ProcName As String = "BracketTargetTypeFromString"
-On Error GoTo Err
-
-BracketTargetTypeFromString = gBracketTargetTypeFromString(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-''
-' Converts a member of the <code>BracketTargetTypes</code> enumeration to the equivalent <code>OrderTypes</code> Value.
-'
-' @return           the <code>OrderTypes</code> Value corresponding to the parameter
-' @param Value the <code>BracketTargetTypes</code> Value to be converted
-' @see
-'
-'@/
-Public Function BracketTargetTypeToOrderType( _
-                ByVal Value As BracketTargetTypes) As OrderTypes
-Const ProcName As String = "BracketTargetTypeToOrderType"
-On Error GoTo Err
-
-BracketTargetTypeToOrderType = gBracketTargetTypeToOrderType(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketTargetTypeToString( _
-                ByVal Value As BracketTargetTypes) As String
-Const ProcName As String = "BracketTargetTypeToString"
-On Error GoTo Err
-
-BracketTargetTypeToString = gBracketTargetTypeToString(Value)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function BracketTargetTypeToShortString( _
-                ByVal Value As BracketTargetTypes) As String
-Const ProcName As String = "gBracketTargetTypeToShortString"
-On Error GoTo Err
-
-BracketTargetTypeToShortString = gBracketTargetTypeToShortString(Value)
 
 Exit Function
 
@@ -575,27 +157,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateRolloverSpecification( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pDays As Long, _
-                ByVal pTime As Date, _
-                ByVal pCloseAtMarket As Boolean, _
-                ByVal pCloseSpreadfactor As Long, _
-                ByVal pEntryAtMarket As Boolean, _
-                ByVal pEntrySpreadfactor As Long) As RolloverSpecification
-Const ProcName As String = "CreateRolloverSpecification"
-On Error GoTo Err
+Public Function IsEntryOrderType(ByVal pOrderType As OrderTypes) As Boolean
+IsEntryOrderType = gIsEntryOrderType(pOrderType)
+End Function
 
-Assert pBracketOrder.State = BracketOrderStateCreated Or _
-        pBracketOrder.State = BracketOrderStateSubmitted, _
-        "Rollover not permitted in current state"
+Public Function IsStopLossOrderType(ByVal pOrderType As OrderTypes) As Boolean
+IsStopLossOrderType = gIsStopLossOrderType(pOrderType)
+End Function
 
-Set CreateRolloverSpecification = gCreateRolloverSpecification(pBracketOrder, pDays, pTime, pCloseAtMarket, pCloseSpreadfactor, pEntryAtMarket, pEntrySpreadfactor)
+Public Function IsTargetOrderType(ByVal pOrderType As OrderTypes) As Boolean
+IsTargetOrderType = gIsTargetOrderType(pOrderType)
+End Function
 
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Public Function NewPriceSpecifier( _
+                Optional ByVal pPrice As Double = MaxDoubleValue, _
+                Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
+                Optional ByVal pOffset As Double = 0#, _
+                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone) As PriceSpecifier
+Set NewPriceSpecifier = gNewPriceSpecifier(pPrice, pPriceType, pOffset, pOffsetType)
 End Function
 
 Public Function OrderActionFromString(ByVal Value As String) As OrderActions
@@ -639,6 +218,29 @@ Const ProcName As String = "OrderTIFToString"
 On Error GoTo Err
 
 OrderTIFToString = gOrderTIFToString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateRolloverSpecification( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pDays As Long, _
+                ByVal pTime As Date, _
+                ByVal pCloseAtMarket As Boolean, _
+                ByVal pCloseSpreadfactor As Long, _
+                ByVal pEntryAtMarket As Boolean, _
+                ByVal pEntrySpreadfactor As Long) As RolloverSpecification
+Const ProcName As String = "CreateRolloverSpecification"
+On Error GoTo Err
+
+Assert pBracketOrder.State = BracketOrderStateCreated Or _
+        pBracketOrder.State = BracketOrderStateSubmitted, _
+        "Rollover not permitted in current state"
+
+Set CreateRolloverSpecification = gCreateRolloverSpecification(pBracketOrder, pDays, pTime, pCloseAtMarket, pCloseSpreadfactor, pEntryAtMarket, pEntrySpreadfactor)
 
 Exit Function
 
@@ -706,9 +308,68 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function PriceOffsetToString( _
+                ByVal pOffset As Double, _
+                ByVal pOffsetType As PriceOffsetTypes)
+Const ProcName As String = "PriceOffsetToString"
+On Error GoTo Err
+
+PriceOffsetToString = gPriceOffsetToString(pOffset, pOffsetType)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function PriceOffsetTypeToString( _
+                ByVal pOffsetType As PriceOffsetTypes)
+Const ProcName As String = "PriceOffsetTypeToString"
+On Error GoTo Err
+
+PriceOffsetTypeToString = gPriceOffsetTypeToString(pOffsetType)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function PriceSpecifierToString( _
+                ByVal pPriceSpec As PriceSpecifier, _
+                ByVal pContract As IContract)
+Const ProcName As String = "PriceSpecifierToString"
+On Error GoTo Err
+
+PriceSpecifierToString = gPriceSpecifierToString(pPriceSpec, _
+                            pContract)
+                            
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function TypedPriceToString( _
+                ByVal pPrice As Double, _
+                ByVal pPriceType As PriceValueTypes, _
+                ByVal pContract As IContract) As String
+Const ProcName As String = "gTypedPriceToString"
+On Error GoTo Err
+
+TypedPriceToString = gTypedPriceToString(pPrice, pPriceType, pContract)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
 
 
 

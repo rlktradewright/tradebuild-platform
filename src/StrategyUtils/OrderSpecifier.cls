@@ -44,12 +44,13 @@ Private Const ModuleName                            As String = "OrderSpecifier"
 ' Member variables
 '@================================================================================
 
-Private mOrderRole As OrderRoles
-Private mOrderType As Long
-Private mPrice As Double
-Private mOffset As Long
-Private mTriggerPrice As Double
-Private mTIF As Long
+Private mOrderRole                                  As OrderRoles
+Private mOrderType                                  As Long
+Private mPriceSpec                                  As PriceSpecifier
+Private mTriggerPriceSpec                           As PriceSpecifier
+Private mTIF                                        As Long
+Private mIgnoreRTH                                  As Boolean
+Private mIsSimulated                                As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -67,6 +68,14 @@ Private mTIF As Long
 ' Properties
 '@================================================================================
 
+Friend Property Get IgnoreRTH() As Boolean
+IgnoreRTH = mIgnoreRTH
+End Property
+
+Friend Property Get IsSimulated() As Boolean
+IsSimulated = mIsSimulated
+End Property
+
 Friend Property Get OrderRole() As OrderRoles
 OrderRole = mOrderRole
 End Property
@@ -75,16 +84,12 @@ Friend Property Get OrderType() As Long
 OrderType = mOrderType
 End Property
 
-Friend Property Get Price() As Double
-Price = mPrice
+Friend Property Get PriceSpecifier() As PriceSpecifier
+Set PriceSpecifier = mPriceSpec
 End Property
 
-Friend Property Get Offset() As Long
-Offset = mOffset
-End Property
-
-Friend Property Get TriggerPrice() As Double
-TriggerPrice = mTriggerPrice
+Friend Property Get TriggerPriceSpecifier() As PriceSpecifier
+Set TriggerPriceSpecifier = mTriggerPriceSpec
 End Property
 
 Friend Property Get TIF() As Long
@@ -98,16 +103,18 @@ End Property
 Friend Sub Initialise( _
                 ByVal pOrderRole As OrderRoles, _
                 ByVal pOrderType As Long, _
-                ByVal pPrice As Double, _
-                ByVal pOffset As Long, _
-                ByVal pTriggerPrice As Double, _
-                ByVal pTIF As Long)
+                ByVal pIsSimulated As Boolean, _
+                ByVal pPriceSpec As PriceSpecifier, _
+                ByVal pTriggerPriceSpec As PriceSpecifier, _
+                ByVal pTIF As Long, _
+                ByVal pIgnoreRTH As Boolean)
 mOrderRole = pOrderRole
 mOrderType = pOrderType
-mPrice = pPrice
-mOffset = pOffset
-mTriggerPrice = pTriggerPrice
+mIsSimulated = pIsSimulated
+Set mPriceSpec = pPriceSpec
+Set mTriggerPriceSpec = pTriggerPriceSpec
 mTIF = pTIF
+mIgnoreRTH = pIgnoreRTH
 End Sub
 
 

@@ -168,6 +168,8 @@ On Error GoTo Err
 
 Set mOrderPlacers(allocateEntry).OrderPlacer = pOrderPlacer
 
+mTaskContext.Continue
+
 Exit Sub
 
 Err:

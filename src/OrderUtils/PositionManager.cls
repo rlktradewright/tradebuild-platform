@@ -418,7 +418,7 @@ If mContractFuture Is Nothing Then
     Set mContractFuture = lBuilder.Future
 End If
 
-mSummary.setClean
+mSummary.SetClean
 
 init
 
@@ -467,7 +467,6 @@ If ev.Source Is mOrderSubmitter Then
     Select Case ev.State
     Case OrderSubmitterStateNotReady
         mProviderIsReady = False
-        mClosingPosition = False
         fireChange ProviderReadinessChanged
     Case OrderSubmitterStateReady
         mProviderIsReady = True
@@ -523,6 +522,20 @@ End Sub
 '@================================================================================
 ' mPositionCloser Event Handlers
 '@================================================================================
+
+Private Sub mPositionCloser_PositionClosed()
+Const ProcName As String = "mPositionCloser_PositionClosed"
+On Error GoTo Err
+
+mClosingPosition = False
+Set mPositionCloser = Nothing
+fireChange PositionClosed
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 Private Sub mPositionCloser_PositionNotClosed(ByVal pErrorMessage As String)
 Const ProcName As String = "mPositionCloser_PositionNotClosed"
@@ -1815,12 +1828,6 @@ Else
     'we need to notify the position change after the final Profit
     calcProfits
     
-    If mClosingPosition Then
-        mClosingPosition = False
-        Set mPositionCloser = Nothing
-        fireChange PositionClosed
-    End If
-    
     gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
     gLogTradeProfile FormatTimestamp(mTradeStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             FormatTimestamp(pExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
@@ -1859,7 +1866,7 @@ If mRecoverableObjectListeners Is Nothing Or mRecoverableObjectListeners.Count =
 
 mInitialRecoveryDataSaved = True
 fireRecoveryDataChanged
-mSummary.setClean
+mSummary.SetClean
 
 Exit Sub
 
