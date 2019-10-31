@@ -531,18 +531,18 @@ End Sub
 '                       at which the order is triggered
 ' @param StopLossType  the type of stop-loss order to place:
 '           BracketStopLossTypeNone               no stop-loss order
-'           BracketStopLossTypeStop               use a stop order
-'           BracketStopLossTypeStopLimit          use a stop limit order
+'           OrderTypestop               use a stop order
+'           OrderTypestopLimit          use a stop limit order
 '           BracketStopLossTypeBid                use a stop order at the current Bid (see StopOffset)
 '           BracketStopLossTypeAsk                use a stop order at the current Ask (see StopOffset)
 '           BracketStopLossTypeLast               use a stop order at the last Trade Price (see StopOffset)
 '           BracketStopLossTypeAuto               use a stop order at the fill Price for the
 '                                           entry order (see StopOffset)
-' @param StopPrice      the trigger Price for BracketStopLossTypeStop and BracketStopLossTypeStopLimit
+' @param StopPrice      the trigger Price for OrderTypestop and OrderTypestopLimit
 ' @param StopOffset     number of ticks to modify the StopPrice. For example, for a stop-loss
 '                       order 4 ticks below the entry order fill Price, use BracketStopLossTypeAuto
 '                       and set StopOffset to -4
-' @param StopLimitPrice the limit Price for BracketStopLossTypeStopLimit
+' @param StopLimitPrice the limit Price for OrderTypestopLimit
 ' @param TargetType the type of target order to place:
 '           BracketTargetTypeNone             no target order
 '           BracketTargetTypeLimit            use a limit order

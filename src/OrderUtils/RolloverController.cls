@@ -76,6 +76,10 @@ Attribute mNextOrderContext.VB_VarHelpID = -1
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+mState = RolloverControllerStateInitial
+End Sub
+
 '@================================================================================
 ' IChangeListener Interface Members
 '@================================================================================
@@ -162,17 +166,15 @@ On Error GoTo Err
 
 If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
 
-Dim lEntryOrderType As BracketEntryTypes: lEntryOrderType = mBracketOrder.EntryOrder.OrderType
+Dim lEntryOrderType As OrderTypes: lEntryOrderType = mBracketOrder.EntryOrder.OrderType
 
-Dim lStopLossOrderType As BracketStopLossTypes: lStopLossOrderType = BracketStopLossTypeNone
+Dim lStopLossOrderType As OrderTypes: lStopLossOrderType = OrderTypeNone
 If Not mBracketOrder.StopLossOrder Is Nothing Then lStopLossOrderType = mBracketOrder.StopLossOrder.OrderType
 
-Dim lTargetOrderType As BracketTargetTypes: lTargetOrderType = BracketTargetTypeNone
+Dim lTargetOrderType As OrderTypes: lTargetOrderType = OrderTypeNone
 If Not mBracketOrder.TargetOrder Is Nothing Then lTargetOrderType = mBracketOrder.TargetOrder.OrderType
 
-If Not mNextOrderContext.IsReadyForBracketOrder(lEntryOrderType, _
-                    lStopLossOrderType, _
-                    lTargetOrderType) Then
+If Not mNextOrderContext.IsReadyForBracketOrder(mBracketOrder) Then
     Exit Sub
 End If
 
@@ -233,7 +235,6 @@ Friend Sub Initialise( _
                 ByVal pBracketOrder As IBracketOrder, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String)
-mState = RolloverControllerStateInitial
 Set mBracketOrder = pBracketOrder
 mBracketOrder.AddChangeListener Me
 Set mOrderManager = pOrderManager
@@ -346,46 +347,47 @@ Private Sub placeNextBracketOrder()
 Const ProcName As String = "placeNextBracketOrder"
 On Error GoTo Err
 
-Dim lStopLossType As BracketStopLossTypes
-Dim lStopLossTriggerPrice As Double
-Dim lStopLossOffset As Long
-Dim lStopLossLimitPrice As Double
+Dim lEntryOrder As IOrder
+Set lEntryOrder = mNextOrderContext.CreateEntryOrder(OrderTypeMarket)
 
-If Not mBracketOrder.StopLossOrder Is Nothing Then
-    lStopLossType = mBracketOrder.StopLossOrder.OrderType
-    lStopLossTriggerPrice = mBracketOrder.StopLossOrder.TriggerPrice
-    lStopLossOffset = mBracketOrder.StopLossOrder.Offset
-    lStopLossLimitPrice = mBracketOrder.StopLossOrder.LimitPrice
-End If
-        
-Dim lTargetType As BracketTargetTypes
-Dim lTargetTriggerPrice As Double
-Dim lTargetOffset As Long
-Dim lTargetLimitPrice As Double
-
-If Not mBracketOrder.TargetOrder Is Nothing Then
-    lTargetType = mBracketOrder.TargetOrder.OrderType
-    lTargetTriggerPrice = mBracketOrder.TargetOrder.TriggerPrice
-    lTargetOffset = mBracketOrder.TargetOrder.Offset
-    lTargetLimitPrice = mBracketOrder.TargetOrder.LimitPrice
-End If
+Dim lStopLossOrder As IOrder
+Dim lTargetOrder As IOrder
+With mBracketOrder
+    If Not .StopLossOrder Is Nothing Then
+        Set lStopLossOrder = mNextOrderContext.CreateStopLossOrder( _
+                                        .StopLossOrder.OrderType, _
+                                        gNewPriceSpecifier(.StopLossOrder.LimitPriceSpec.Price, _
+                                                            .StopLossOrder.LimitPriceSpec.PriceType, _
+                                                            .StopLossOrder.LimitPriceSpec.Offset, _
+                                                            .StopLossOrder.LimitPriceSpec.OffsetType), _
+                                        gNewPriceSpecifier(.StopLossOrder.TriggerPriceSpec.Price, _
+                                                            .StopLossOrder.TriggerPriceSpec.PriceType, _
+                                                            .StopLossOrder.TriggerPriceSpec.Offset, _
+                                                            .StopLossOrder.TriggerPriceSpec.OffsetType), _
+                                        .StopLossOrder.IgnoreRegularTradingHours)
+    End If
+    If Not .TargetOrder Is Nothing Then
+        Set lTargetOrder = mNextOrderContext.CreateTargetOrder( _
+                                        .TargetOrder.OrderType, _
+                                        gNewPriceSpecifier(.TargetOrder.LimitPriceSpec.Price, _
+                                                            .TargetOrder.LimitPriceSpec.PriceType, _
+                                                            .TargetOrder.LimitPriceSpec.Offset, _
+                                                            .TargetOrder.LimitPriceSpec.OffsetType), _
+                                        gNewPriceSpecifier(.TargetOrder.TriggerPriceSpec.Price, _
+                                                            .TargetOrder.TriggerPriceSpec.PriceType, _
+                                                            .TargetOrder.TriggerPriceSpec.Offset, _
+                                                            .TargetOrder.TriggerPriceSpec.OffsetType), _
+                                        .TargetOrder.IgnoreRegularTradingHours)
+    End If
+End With
 
 Dim lBo As IBracketOrder
 Set lBo = mNextOrderContext.CreateBracketOrder( _
                 mBracketOrder.EntryOrder.Action, _
                 mBracketOrder.Size, _
-                BracketEntryTypeMarket, _
-                0#, _
-                0, _
-                0#, _
-                lStopLossType, _
-                lStopLossTriggerPrice, _
-                lStopLossOffset, _
-                lStopLossLimitPrice, _
-                lTargetType, _
-                lTargetLimitPrice, _
-                lTargetOffset, _
-                lTargetTriggerPrice)
+                lEntryOrder, _
+                lStopLossOrder, _
+                lTargetOrder)
 
 lBo.Description = mBracketOrder.Description
 lBo.EntryOrder.TimeInForce = mBracketOrder.EntryOrder.TimeInForce

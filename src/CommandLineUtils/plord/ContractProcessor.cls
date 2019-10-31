@@ -420,7 +420,7 @@ End If
 
 mBOSpec.Rollover = True
 
-If mBOSpec.EntryType = BracketEntryTypeNone And gErrorCount = 0 Then
+If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, ResetCommand
 Else
     gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
