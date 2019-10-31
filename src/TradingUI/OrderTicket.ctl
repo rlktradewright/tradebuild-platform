@@ -3636,6 +3636,8 @@ Case BracketIndexes.BracketTargetOrder
     If Not mBracketOrder Is Nothing Then mBracketOrder.SetNewTargetTriggerPrice lPriceSpec
 End Select
 
+validateTriggerPriceFields = True
+
 Exit Function
 
 Err:
