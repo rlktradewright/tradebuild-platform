@@ -115,12 +115,11 @@ On Error GoTo Err
 Static sAttempts As Long
 
 If sAttempts = 0 Then
-    sAttempts = sAttempts + 1
-    
     gWriteLineToStdOut "TIME " & FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), TimestampDateAndTimeISO8601)
     writeContractSpecToStdOut
     gWriteLineToStdOut mBracketOrderSpec.ToString
 End If
+sAttempts = sAttempts + 1
 
 If Not isReadyForOrder Then
     Set mOrderContextEv = mOrderContext
