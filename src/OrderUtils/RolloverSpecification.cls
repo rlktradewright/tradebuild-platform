@@ -46,7 +46,6 @@ Private Const ModuleName                            As String = "RolloverSpecifi
 ' Member variables
 '@================================================================================
 
-Private mBracketOrder                               As IBracketOrder
 Private mDays                                       As Long
 Private mTime                                       As Date
 Private mCloseAtMarket                              As Boolean
@@ -62,8 +61,8 @@ Private mEntrySpreadfactor                          As Long
 ' IJSONable Interface Members
 '@================================================================================
 
-Private Function IJSONable_ToJSON() As String
-IJSONable_ToJSON = ToJSON
+Private Function IJSONAble_ToJSON() As String
+IJSONAble_ToJSON = ToJSON
 End Function
 
 '@================================================================================
@@ -127,14 +126,12 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pBracketOrder As IBracketOrder, _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
                 ByVal pCloseAtMarket As Boolean, _
                 ByVal pCloseSpreadfactor As Long, _
                 ByVal pEntryAtMarket As Boolean, _
                 ByVal pEntrySpreadfactor As Long)
-Set mBracketOrder = pBracketOrder
 mDays = pDays
 mTime = pTime
 mCloseAtMarket = pCloseAtMarket

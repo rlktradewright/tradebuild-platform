@@ -195,7 +195,7 @@ With mBracketOrderSpec
         lBo.EntryOrder.GoodTillDateTZ = .TimezoneName
     End If
     If .Rollover Then
-        lBo.RolloverSpecification = CreateRolloverSpecification(lBo, _
+        lBo.RolloverSpecification = CreateRolloverSpecification( _
                                             .RolloverDays, _
                                             .RolloverTime, _
                                             .RolloverCloseAtMarket, _

@@ -246,7 +246,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gCreateRolloverSpecification( _
-                ByVal pBracketOrder As IBracketOrder, _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
                 ByVal pCloseAtMarket As Boolean, _
@@ -257,8 +256,7 @@ Const ProcName As String = "gCreateRolloverSpecification"
 On Error GoTo Err
 
 Set gCreateRolloverSpecification = New RolloverSpecification
-gCreateRolloverSpecification.Initialise pBracketOrder, pDays, pTime, pCloseAtMarket, pCloseSpreadfactor, pEntryAtMarket, pEntrySpreadfactor
-pBracketOrder.RolloverSpecification = gCreateRolloverSpecification
+gCreateRolloverSpecification.Initialise pDays, pTime, pCloseAtMarket, pCloseSpreadfactor, pEntryAtMarket, pEntrySpreadfactor
 
 Exit Function
 

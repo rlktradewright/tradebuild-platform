@@ -1238,6 +1238,9 @@ Private Sub mRolloverTLI_StateChange(ev As StateChangeEventData)
 Const ProcName As String = "mRolloverTLI_StateChange"
 On Error GoTo Err
 
+Dim lChangeType As TimerListItemStates: lChangeType = ev.State
+If lChangeType <> TimerListItemStateExpired Then Exit Sub
+
 initiateRollover
 
 Exit Sub

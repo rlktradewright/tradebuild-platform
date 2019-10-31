@@ -226,7 +226,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateRolloverSpecification( _
-                ByVal pBracketOrder As IBracketOrder, _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
                 ByVal pCloseAtMarket As Boolean, _
@@ -236,11 +235,7 @@ Public Function CreateRolloverSpecification( _
 Const ProcName As String = "CreateRolloverSpecification"
 On Error GoTo Err
 
-Assert pBracketOrder.State = BracketOrderStateCreated Or _
-        pBracketOrder.State = BracketOrderStateSubmitted, _
-        "Rollover not permitted in current state"
-
-Set CreateRolloverSpecification = gCreateRolloverSpecification(pBracketOrder, pDays, pTime, pCloseAtMarket, pCloseSpreadfactor, pEntryAtMarket, pEntrySpreadfactor)
+Set CreateRolloverSpecification = gCreateRolloverSpecification(pDays, pTime, pCloseAtMarket, pCloseSpreadfactor, pEntryAtMarket, pEntrySpreadfactor)
 
 Exit Function
 

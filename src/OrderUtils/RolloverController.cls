@@ -400,7 +400,7 @@ If Not lBo.TargetOrder Is Nothing Then
     lBo.TargetOrder.TimeInForce = mBracketOrder.TargetOrder.TimeInForce
     lBo.TargetReason = mBracketOrder.TargetReason
 End If
-lBo.RolloverSpecification = gCreateRolloverSpecification(lBo, _
+lBo.RolloverSpecification = gCreateRolloverSpecification( _
                                     mBracketOrder.RolloverSpecification.Days, _
                                     mBracketOrder.RolloverSpecification.Time, _
                                     mBracketOrder.RolloverSpecification.CloseAtMarket, _
