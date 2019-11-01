@@ -374,8 +374,8 @@ If lClp.NumberOfArgs <> 0 Then gWriteErrorLine "Only attributes beginning with "
 Dim lSwitchName As String
 lSwitchName = DaysSwitch
 If lClp.Switch(lSwitchName) Then
-    If Not IsInteger(lClp.SwitchValue(lSwitchName), 0, 10) Then
-        gWriteErrorLine "Days must be an integer from 0 to 10"
+    If Not IsInteger(lClp.SwitchValue(lSwitchName), 0, 20) Then
+        gWriteErrorLine "Days must be an integer from 0 to 20"
     Else
         mBOSpec.RolloverDays = CLng(lClp.SwitchValue(lSwitchName))
     End If
