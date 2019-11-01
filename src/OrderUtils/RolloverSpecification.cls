@@ -48,10 +48,12 @@ Private Const ModuleName                            As String = "RolloverSpecifi
 
 Private mDays                                       As Long
 Private mTime                                       As Date
-Private mCloseAtMarket                              As Boolean
-Private mCloseSpreadfactor                          As Long
-Private mEntryAtMarket                              As Boolean
-Private mEntrySpreadfactor                          As Long
+Private mCloseOrderType                             As OrderTypes
+Private mCloseLimitPriceSpec                        As PriceSpecifier
+Private mCloseTriggerPriceSpec                      As PriceSpecifier
+Private mEntryOrderType                             As OrderTypes
+Private mEntryLimitPriceSpec                        As PriceSpecifier
+Private mEntryTriggerPriceSpec                      As PriceSpecifier
 
 '@================================================================================
 ' Class Event Handlers
@@ -89,36 +91,52 @@ Public Property Get Time() As Date
 Time = mTime
 End Property
 
-Public Property Let CloseAtMarket(ByVal Value As Boolean)
-mCloseAtMarket = Value
+Public Property Let CloseOrderType(ByVal Value As OrderTypes)
+mCloseOrderType = Value
 End Property
 
-Public Property Get CloseAtMarket() As Boolean
-CloseAtMarket = mCloseAtMarket
+Public Property Get CloseOrderType() As OrderTypes
+CloseOrderType = mCloseOrderType
 End Property
 
-Public Property Let CloseSpreadfactor(ByVal Value As Long)
-mCloseSpreadfactor = Value
+Public Property Get CloseLimitPriceSpec() As PriceSpecifier
+Set CloseLimitPriceSpec = mCloseLimitPriceSpec
 End Property
 
-Public Property Get CloseSpreadfactor() As Long
-CloseSpreadfactor = mCloseSpreadfactor
+Public Property Let CloseLimitPriceSpec(ByVal Value As PriceSpecifier)
+Set mCloseLimitPriceSpec = Value
 End Property
 
-Public Property Let EntryAtMarket(ByVal Value As Boolean)
-mEntryAtMarket = Value
+Public Property Get CloseTriggerPriceSpec() As PriceSpecifier
+Set CloseTriggerPriceSpec = mCloseTriggerPriceSpec
 End Property
 
-Public Property Get EntryAtMarket() As Boolean
-EntryAtMarket = mEntryAtMarket
+Public Property Let CloseTriggerPriceSpec(ByVal Value As PriceSpecifier)
+Set mCloseTriggerPriceSpec = Value
 End Property
 
-Public Property Let EntrySpreadfactor(ByVal Value As Long)
-mEntrySpreadfactor = Value
+Public Property Let EntryOrderType(ByVal Value As OrderTypes)
+mEntryOrderType = Value
 End Property
 
-Public Property Get EntrySpreadfactor() As Long
-EntrySpreadfactor = mEntrySpreadfactor
+Public Property Get EntryOrderType() As OrderTypes
+EntryOrderType = mEntryOrderType
+End Property
+
+Public Property Get EntryLimitPriceSpec() As PriceSpecifier
+Set EntryLimitPriceSpec = mEntryLimitPriceSpec
+End Property
+
+Public Property Let EntryLimitPriceSpec(ByVal Value As PriceSpecifier)
+Set mEntryLimitPriceSpec = Value
+End Property
+
+Public Property Get EntryTriggerPriceSpec() As PriceSpecifier
+Set EntryTriggerPriceSpec = mEntryTriggerPriceSpec
+End Property
+
+Public Property Let EntryTriggerPriceSpec(ByVal Value As PriceSpecifier)
+Set mEntryTriggerPriceSpec = Value
 End Property
 
 '@================================================================================
@@ -128,16 +146,20 @@ End Property
 Friend Sub Initialise( _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
-                ByVal pCloseAtMarket As Boolean, _
-                ByVal pCloseSpreadfactor As Long, _
-                ByVal pEntryAtMarket As Boolean, _
-                ByVal pEntrySpreadfactor As Long)
+                ByVal pCloseOrderType As OrderTypes, _
+                ByVal pCloseLimitPriceSpec As PriceSpecifier, _
+                ByVal pCloseTriggerPriceSpec As PriceSpecifier, _
+                ByVal pEntryOrderType As OrderTypes, _
+                ByVal pEntryLimitPriceSpec As PriceSpecifier, _
+                ByVal pEntryTriggerPriceSpec As PriceSpecifier)
 mDays = pDays
 mTime = pTime
-mCloseAtMarket = pCloseAtMarket
-mCloseSpreadfactor = pCloseSpreadfactor
-mEntryAtMarket = pEntryAtMarket
-mEntrySpreadfactor = pEntrySpreadfactor
+mCloseOrderType = pCloseOrderType
+Set mCloseLimitPriceSpec = pCloseLimitPriceSpec
+Set mCloseTriggerPriceSpec = pCloseTriggerPriceSpec
+mEntryOrderType = pEntryOrderType
+Set mEntryLimitPriceSpec = pEntryLimitPriceSpec
+Set mEntryTriggerPriceSpec = pEntryTriggerPriceSpec
 End Sub
 
 '@================================================================================
@@ -153,15 +175,17 @@ jb.BeginObject
 jb.EncodeName "$ProgID"
 jb.EncodeValue ProjectName & "." & ModuleName
 
-jb.EncodeNameAndValue "CloseAtMarket", mCloseAtMarket, False
-jb.EncodeNameAndValue "CloseSpreadfactor", mCloseSpreadfactor, 0
-
 jb.EncodeNameAndValue "Days", mDays, 0
 
-jb.EncodeNameAndValue "EntryAtMarket", mEntryAtMarket, False
-jb.EncodeNameAndValue "EntrySpreadfactor", mEntrySpreadfactor, 0
-
 jb.EncodeNameAndValue "Time", CDbl(mTime), 0
+
+jb.EncodeNameAndValue "CloseOrderType", mCloseOrderType, OrderTypeNone
+jb.EncodeNameAndValue "CloseLimitPriceSpec", mCloseLimitPriceSpec, Nothing
+jb.EncodeNameAndValue "CloseTriggerPriceSpec", mCloseTriggerPriceSpec, Nothing
+
+jb.EncodeNameAndValue "EntryOrderType", mEntryOrderType, OrderTypeNone
+jb.EncodeNameAndValue "EntryLimitPriceSpec", mEntryLimitPriceSpec, Nothing
+jb.EncodeNameAndValue "EntryTriggerPriceSpec", mEntryTriggerPriceSpec, Nothing
 
 jb.EndObject
 

@@ -403,10 +403,12 @@ End If
 lBo.RolloverSpecification = gCreateRolloverSpecification( _
                                     mBracketOrder.RolloverSpecification.Days, _
                                     mBracketOrder.RolloverSpecification.Time, _
-                                    mBracketOrder.RolloverSpecification.CloseAtMarket, _
-                                    mBracketOrder.RolloverSpecification.CloseSpreadfactor, _
-                                    mBracketOrder.RolloverSpecification.EntryAtMarket, _
-                                    mBracketOrder.RolloverSpecification.EntrySpreadfactor)
+                                    mBracketOrder.RolloverSpecification.CloseOrderType, _
+                                    mBracketOrder.RolloverSpecification.CloseLimitPriceSpec, _
+                                    mBracketOrder.RolloverSpecification.CloseTriggerPriceSpec, _
+                                    mBracketOrder.RolloverSpecification.EntryOrderType, _
+                                    mBracketOrder.RolloverSpecification.EntryLimitPriceSpec, _
+                                    mBracketOrder.RolloverSpecification.EntryTriggerPriceSpec)
 
 Exit Sub
 

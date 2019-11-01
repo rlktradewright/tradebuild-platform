@@ -76,10 +76,12 @@ Public TargetReason                                 As String
 Public Rollover                                     As Boolean
 Public RolloverDays                                 As Long
 Public RolloverTime                                 As Date
-Public RolloverCloseAtMarket                        As Boolean
-Public RolloverCloseSpreadfactor                    As Long
-Public RolloverEntryAtMarket                        As Boolean
-Public RolloverEntrySpreadfactor                    As Long
+Public RolloverCloseType                            As OrderTypes
+Public RolloverCloseLimitPriceSpec                  As PriceSpecifier
+Public RolloverCloseTriggerPriceSpec                As PriceSpecifier
+Public RolloverEntryType                            As OrderTypes
+Public RolloverEntryLimitPriceSpec                  As PriceSpecifier
+Public RolloverEntryTriggerPriceSpec                As PriceSpecifier
 
 '@================================================================================
 ' Class Event Handlers

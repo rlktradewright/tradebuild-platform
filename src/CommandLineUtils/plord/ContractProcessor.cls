@@ -403,8 +403,26 @@ If lClp.Switch(lSwitchName) Then
     validateRolloverCloseOrEntry lClp.SwitchValue(lSwitchName), _
                                 lRolloverCloseAtMarket, _
                                 lRolloverCloseSpreadfactor
-    mBOSpec.RolloverCloseAtMarket = lRolloverCloseAtMarket
-    mBOSpec.RolloverCloseSpreadfactor = lRolloverCloseSpreadfactor
+    If lRolloverCloseAtMarket Then
+        mBOSpec.RolloverCloseType = OrderTypeMarket
+    Else
+        mBOSpec.RolloverCloseType = OrderTypeLimit
+        If mBOSpec.Action = OrderActionBuy Then
+            Set mBOSpec.RolloverCloseLimitPriceSpec = _
+                        NewPriceSpecifier( _
+                            0, _
+                            PriceValueTypes.PriceValueTypeBid, _
+                            lRolloverCloseSpreadfactor, _
+                            PriceOffsetTypes.PriceOffsetTypeBidAskPercent)
+        Else
+            Set mBOSpec.RolloverCloseLimitPriceSpec = _
+                        NewPriceSpecifier( _
+                            0, _
+                            PriceValueTypes.PriceValueTypeAsk, _
+                            -lRolloverCloseSpreadfactor, _
+                            PriceOffsetTypes.PriceOffsetTypeBidAskPercent)
+        End If
+    End If
 End If
 
 lSwitchName = EntrySwitch
@@ -412,10 +430,28 @@ If lClp.Switch(lSwitchName) Then
     Dim lRolloverEntryAtMarket As Boolean
     Dim lRolloverEntrySpreadfactor As Long
     validateRolloverCloseOrEntry lClp.SwitchValue(lSwitchName), _
-                                lRolloverCloseAtMarket, _
-                                lRolloverCloseSpreadfactor
-    mBOSpec.RolloverEntryAtMarket = lRolloverEntryAtMarket
-    mBOSpec.RolloverEntrySpreadfactor = lRolloverEntrySpreadfactor
+                                lRolloverEntryAtMarket, _
+                                lRolloverEntrySpreadfactor
+    If lRolloverEntryAtMarket Then
+        mBOSpec.RolloverEntryType = OrderTypeMarket
+    Else
+        mBOSpec.RolloverEntryType = OrderTypeLimit
+        If mBOSpec.Action = OrderActionBuy Then
+            Set mBOSpec.RolloverEntryLimitPriceSpec = _
+                        NewPriceSpecifier( _
+                            0, _
+                            PriceValueTypes.PriceValueTypeBid, _
+                            lRolloverEntrySpreadfactor, _
+                            PriceOffsetTypes.PriceOffsetTypeBidAskPercent)
+        Else
+            Set mBOSpec.RolloverEntryLimitPriceSpec = _
+                        NewPriceSpecifier( _
+                            0, _
+                            PriceValueTypes.PriceValueTypeAsk, _
+                            -lRolloverEntrySpreadfactor, _
+                            PriceOffsetTypes.PriceOffsetTypeBidAskPercent)
+        End If
+    End If
 End If
 
 mBOSpec.Rollover = True

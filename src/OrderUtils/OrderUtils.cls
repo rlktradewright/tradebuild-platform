@@ -228,14 +228,16 @@ End Function
 Public Function CreateRolloverSpecification( _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
-                ByVal pCloseAtMarket As Boolean, _
-                ByVal pCloseSpreadfactor As Long, _
-                ByVal pEntryAtMarket As Boolean, _
-                ByVal pEntrySpreadfactor As Long) As RolloverSpecification
+                ByVal pCloseOrderType As OrderTypes, _
+                ByVal pCloseLimitPriceSpec As PriceSpecifier, _
+                ByVal pCloseTriggerPriceSpec As PriceSpecifier, _
+                ByVal pEntryOrderType As OrderTypes, _
+                ByVal pEntryLimitPriceSpec As PriceSpecifier, _
+                ByVal pEntryTriggerPriceSpec As PriceSpecifier) As RolloverSpecification
 Const ProcName As String = "CreateRolloverSpecification"
 On Error GoTo Err
 
-Set CreateRolloverSpecification = gCreateRolloverSpecification(pDays, pTime, pCloseAtMarket, pCloseSpreadfactor, pEntryAtMarket, pEntrySpreadfactor)
+Set CreateRolloverSpecification = gCreateRolloverSpecification(pDays, pTime, pCloseOrderType, pCloseLimitPriceSpec, pCloseTriggerPriceSpec, pEntryOrderType, pEntryLimitPriceSpec, pEntryTriggerPriceSpec)
 
 Exit Function
 

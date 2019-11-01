@@ -198,10 +198,12 @@ With mBracketOrderSpec
         lBo.RolloverSpecification = CreateRolloverSpecification( _
                                             .RolloverDays, _
                                             .RolloverTime, _
-                                            .RolloverCloseAtMarket, _
-                                            .RolloverCloseSpreadfactor, _
-                                            .RolloverEntryAtMarket, _
-                                            .RolloverEntrySpreadfactor)
+                                            .RolloverCloseType, _
+                                            .RolloverCloseLimitPriceSpec, _
+                                            .RolloverCloseTriggerPriceSpec, _
+                                            .RolloverEntryType, _
+                                            .RolloverEntryLimitPriceSpec, _
+                                            .RolloverEntryTriggerPriceSpec)
     End If
 End With
 
