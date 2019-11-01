@@ -603,7 +603,12 @@ Const ProcName As String = "logProgramId"
 On Error GoTo Err
 
 Dim s As String
-s = App.ProductName & " V" & App.Major & "." & App.Minor & "." & App.Revision & vbCrLf & _
+s = App.ProductName & _
+    " V" & _
+    App.Major & "." & _
+    App.Minor & "." & _
+    App.Revision & "." & _
+    App.FileDescription & vbCrLf & _
     App.LegalCopyright
 gWriteLineToConsole s, False
 s = s & vbCrLf & "Arguments: " & command
