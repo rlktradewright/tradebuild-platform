@@ -145,27 +145,52 @@ End Property
 '@================================================================================
 
 Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NoMoreTicks"
+On Error GoTo Err
+
+mDataSourceIsReady = False
+mDataSource.RemoveGenericTickListener Me
+
+Dim lOrderContext As OrderContext
+For Each lOrderContext In mOrderContexts
+    lOrderContext.IsDataSourceReady = mDataSourceIsReady
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-Debug.Print GenericTickToString(ev.Tick)
+Dim lReceivedBid As Boolean
+Dim lReceivedAsk As Boolean
+Dim lReceivedTrade As Boolean
 
-If mDataSource.HasCurrentTick(TickTypeAsk) And _
-        mDataSource.HasCurrentTick(TickTypeBid) And _
-        (mDataSource.HasCurrentTick(TickTypeTrade) Or _
-        mSecType = SecTypeCash) _
-Then
+Static sIsInitiaised As Boolean
+If Not sIsInitiaised Then
+    sIsInitiaised = True
+    If mDataSource.HasCurrentTick(TickTypeAsk) Then lReceivedAsk = True
+    If mDataSource.HasCurrentTick(TickTypeBid) Then lReceivedBid = True
+    If mDataSource.HasCurrentTick(TickTypeTrade) Then lReceivedTrade = True
+End If
+
+If ev.Tick.TickType = TickTypeAsk Then lReceivedAsk = True
+If ev.Tick.TickType = TickTypeBid Then lReceivedBid = True
+If ev.Tick.TickType = TickTypeTrade Then lReceivedTrade = True
+    
+If lReceivedAsk And lReceivedBid And lReceivedTrade Then
     mDataSourceIsReady = True
     mDataSource.RemoveGenericTickListener Me
-
-    Dim lOrderContext As OrderContext
-    For Each lOrderContext In mOrderContexts
-        lOrderContext.IsDataSourceReady = True
-    Next
 End If
+
+Dim lOrderContext As OrderContext
+For Each lOrderContext In mOrderContexts
+    lOrderContext.IsDataSourceReady = mDataSourceIsReady
+Next
 
 Exit Sub
 
