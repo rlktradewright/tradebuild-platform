@@ -409,7 +409,7 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = New OrderContext
-Add.Initialise pName, mOrderManager.SessionName, mRecoveryContextName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture, mBracketOrderRecoveryController
+Add.Initialise Me, pName, mOrderManager.SessionName, mRecoveryContextName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture, mBracketOrderRecoveryController
  
 mOrderContexts.Add Add, pName
 Add.PermittedOrderProperties = mPermittedOrderProperties
@@ -530,6 +530,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function GetTickSize(pDummyOrder As IOrder) As IFuture
+Const ProcName As String = "getTickSize"
+On Error GoTo Err
+
+Set GetTickSize = mOrderSubmitter.GetTickSize(pDummyOrder)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Function Item(index As Variant) As OrderContext
 Attribute Item.VB_UserMemId = 0

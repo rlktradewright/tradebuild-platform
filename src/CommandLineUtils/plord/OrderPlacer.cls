@@ -222,7 +222,7 @@ Private Function isReadyForOrder() As Boolean
 With mOrderContext
     If Not .IsReady Then Exit Function
     
-    If Not .IsReadyToGetTickSize(mContract.Specifier.SecType) Then Exit Function
+    If Not .IsReadyTickSize(mContract.Specifier.SecType) Then Exit Function
     
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then Exit Function
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then Exit Function

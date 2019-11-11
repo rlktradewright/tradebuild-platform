@@ -875,10 +875,39 @@ lSummary.Diff.UpdateHost mSummary
 
 setState mSummary.State
 
-If mSummary.CloseoutOrderId <> "" And mCloseoutOrder Is Nothing And Not mOrderContext Is Nothing Then CloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
-If mSummary.EntryOrderId <> "" And mEntryOrder Is Nothing And Not mOrderContext Is Nothing Then EntryOrder = CreateAnOrder(mSummary.EntryOrderId)
-If mSummary.StopLossOrderId <> "" And mStopLossOrder Is Nothing And Not mOrderContext Is Nothing Then StopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
-If mSummary.TargetOrderId <> "" And mTargetOrder Is Nothing And Not mOrderContext Is Nothing Then TargetOrder = CreateAnOrder(mSummary.TargetOrderId)
+If Not mOrderContext Is Nothing Then
+    If mSummary.CloseoutOrderId = "" Then
+    ElseIf mCloseoutOrder Is Nothing Then
+        CloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
+    ElseIf mCloseoutOrder.Id <> mSummary.CloseoutOrderId Then
+        Set mCloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
+        mSummary.CloseoutOrderId = mCloseoutOrder.Id
+    End If
+    
+    If mSummary.EntryOrderId = "" Then
+    ElseIf mEntryOrder Is Nothing Then
+        EntryOrder = CreateAnOrder(mSummary.EntryOrderId)
+    ElseIf mEntryOrder.Id <> mSummary.EntryOrderId Then
+        Set mEntryOrder = CreateAnOrder(mSummary.EntryOrderId)
+        mSummary.EntryOrderId = mEntryOrder.Id
+    End If
+    
+    If mSummary.StopLossOrderId = "" Then
+    ElseIf mStopLossOrder Is Nothing Then
+        StopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
+    ElseIf mStopLossOrder.Id <> mSummary.StopLossOrderId Then
+        Set mStopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
+        mSummary.StopLossOrderId = mStopLossOrder.Id
+    End If
+    
+    If mSummary.TargetOrderId = "" Then
+    ElseIf mTargetOrder Is Nothing Then
+        TargetOrder = CreateAnOrder(mSummary.TargetOrderId)
+    ElseIf mTargetOrder.Id <> mSummary.TargetOrderId Then
+        Set mTargetOrder = CreateAnOrder(mSummary.TargetOrderId)
+        mSummary.TargetOrderId = mTargetOrder.Id
+    End If
+End If
 
 mSummary.SetClean
 
@@ -1046,6 +1075,7 @@ Const ProcName As String = "mEntryOrder_Error"
 On Error GoTo Err
 
 handleStimulus OpStimuli.StimOrderError
+
 fireBracketOrderError mEntryOrder, pErrorCode, pErrorMsg
 
 Exit Sub
@@ -2851,6 +2881,7 @@ Case OrderStatuses.OrderStatusCreated
     CancelAfter = 0
     CancelTime = 0
     mEntryOrder.Status = OrderStatuses.OrderStatusCancelled
+    mEntryOrder.SaveRecoveryInfo
 Case Else
     lNeedCancel = True
 End Select
@@ -2859,6 +2890,7 @@ If Not mStopLossOrder Is Nothing Then
     Select Case mStopLossOrder.Status
     Case OrderStatuses.OrderStatusCreated
         mStopLossOrder.Status = OrderStatuses.OrderStatusCancelled
+        mStopLossOrder.SaveRecoveryInfo
     Case Else
         lNeedCancel = True
     End Select
@@ -2868,6 +2900,7 @@ If Not mTargetOrder Is Nothing Then
     Select Case mTargetOrder.Status
     Case OrderStatuses.OrderStatusCreated
         mTargetOrder.Status = OrderStatuses.OrderStatusCancelled
+        mTargetOrder.SaveRecoveryInfo
     Case Else
         lNeedCancel = True
     End Select
@@ -2916,6 +2949,7 @@ If mStopLossOrder Is Nothing Then Exit Function
 Select Case mStopLossOrder.Status
 Case OrderStatuses.OrderStatusCreated
     mStopLossOrder.Status = OrderStatuses.OrderStatusCancelled
+    mStopLossOrder.SaveRecoveryInfo
 Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
@@ -2939,6 +2973,7 @@ If mTargetOrder Is Nothing Then Exit Function
 Select Case mTargetOrder.Status
 Case OrderStatuses.OrderStatusCreated
     mTargetOrder.Status = OrderStatuses.OrderStatusCancelled
+    mTargetOrder.SaveRecoveryInfo
 Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
@@ -3146,7 +3181,7 @@ Const ProcName As String = "CreateAnOrder"
 On Error GoTo Err
 
 Dim lOrder As IOrder
-Set lOrder = mOrderContext.CreateRawOrder(pId, True, mRecoveryContextName)
+Set lOrder = mOrderContext.CreateRawOrder(pId, mRecoveryContextName)
 
 
 lOrder.Initialise mSummary.GroupName, mContract.Specifier, mOrderContext
@@ -3162,7 +3197,7 @@ Private Sub createCloseoutOrder()
 Const ProcName As String = "createCloseoutOrder"
 On Error GoTo Err
 
-CloseoutOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, True)
+CloseoutOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
 
 mCloseoutOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
 mCloseoutOrder.Quantity = Abs(Size)

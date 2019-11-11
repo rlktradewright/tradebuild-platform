@@ -209,13 +209,10 @@ Const ProcName As String = "mBalancingOrderContext_Change"
 On Error GoTo Err
 
 If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
-If Not mBalancingBracketOrder Is Nothing Then Exit Sub
-
-If mBalancingOrderContext.IsReadyForBracketOrder( _
-            IIf(mUseLimitorder, _
-                OrderTypes.OrderTypeLimit, _
-                OrderTypes.OrderTypeMarket)) Then
+If mBalancingBracketOrder Is Nothing Then
     placeBalancingOrder
+ElseIf mBalancingOrderContext.IsReadyForBracketOrder(mBalancingBracketOrder) Then
+    mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
 End If
 
 Exit Sub
@@ -310,6 +307,7 @@ Const ProcName As String = "ensureAllBracketOrdersClosedOut"
 On Error GoTo Err
 
 If mPositionManager.PositionSize <> 0 Then
+    Set mBalancingOrderContext = mOrderContexts.BalancingOrderContext
     placeBalancingOrder
 Else
     ' we have some bracket orders that net out to no position
@@ -396,9 +394,6 @@ Private Sub placeBalancingOrder()
 Const ProcName As String = "placeBalancingOrder"
 On Error GoTo Err
 
-Set mBalancingOrderContext = mOrderContexts.BalancingOrderContext
-If Not mBalancingOrderContext.IsReady Then Exit Sub
-
 Dim lContract As IContract
 Set lContract = mPositionManager.DataSource.ContractFuture.Value
 
@@ -452,7 +447,9 @@ Else
                     Me
 End If
 
-mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
+If mBalancingOrderContext.IsReadyForBracketOrder(mBalancingBracketOrder) Then
+    mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
+End If
 
 Exit Sub
 

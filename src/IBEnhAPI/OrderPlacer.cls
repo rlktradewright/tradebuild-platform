@@ -102,11 +102,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderInfoConsumer_NotifyError(ByVal pOrderId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+Private Sub IOrderInfoConsumer_NotifyError(ByVal pBrokerId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 Const ProcName As String = "IOrderInfoConsumer_NotifyError"
 On Error GoTo Err
 
-If Not mKnownOrders.Contains(pOrderId, mTwsAPI.ClientId) Then Exit Sub
+If Not mKnownOrders.Contains(pBrokerId, mTwsAPI.ClientId) Then Exit Sub
 
 Select Case pErrorCode
 Case 161
@@ -114,22 +114,22 @@ Case 161
     ' Since this can be a race situation, where TWS has cancelled an order but the
     ' notification hasn't arrived via the API, and the application also tries to cancel,
     ' we just ignore it.
-    gLog "Ignored error 161 from TWS (" & pOrderId & "): " & pErrorMsg, ModuleName, ProcName
+    gLog "Ignored error 161 from TWS (" & pBrokerId & "): " & pErrorMsg, ModuleName, ProcName
 Case 202
-    notifyStatus pOrderId, OrderStatuses.OrderStatusCancelled
+    notifyStatus pBrokerId, OrderStatuses.OrderStatusCancelled
 Case 451
     ' TWS sends this when it is unable to transmit the order as requested, typically because
     ' the order value exceeds some restriction
-    GetOrderSubmitter(pOrderId).NotifyMessage GetOrder(pOrderId).Id, pErrorMsg
+    GetOrderSubmitter(pBrokerId).NotifyMessage GetOrder(pBrokerId), pErrorMsg
 Case 382, 383
     ' indicates that the order size or price exceeds the constraints specified
     ' in TWS.
-    GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
-    notifyStatus pOrderId, OrderStatuses.OrderStatusRejected
+    GetOrderSubmitter(pBrokerId).NotifyError GetOrder(pBrokerId), pErrorCode, pErrorMsg
+    notifyStatus pBrokerId, OrderStatuses.OrderStatusRejected
 Case 399
     ' contains information about the order which doesn't invalidate it - for example
     ' order won't be submitted to exchange until start of next trading session
-    GetOrderSubmitter(pOrderId).NotifyMessage GetOrder(pOrderId).Id, pErrorMsg
+    GetOrderSubmitter(pBrokerId).NotifyMessage GetOrder(pBrokerId), pErrorMsg
 Case 2109
     ' Indicates the outsideRth flag was set for an order for which there is not a
     ' regular vs outside regular trading hour distinction
@@ -139,8 +139,8 @@ Case 10147  ' Trying to cancel an order that TWS doesn't know about
 Case 10148  ' Trying to cancel an order that is already filled or cancelled
     ' Just ignore this
 Case Else
-    GetOrderSubmitter(pOrderId).NotifyError GetOrder(pOrderId).Id, pErrorCode, pErrorMsg
-    notifyStatus pOrderId, OrderStatuses.OrderStatusRejected
+    GetOrderSubmitter(pBrokerId).NotifyError GetOrder(pBrokerId), pErrorCode, pErrorMsg
+    notifyStatus pBrokerId, OrderStatuses.OrderStatusRejected
 End Select
 
 Exit Sub
@@ -212,7 +212,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderInfoConsumer_NotifyOpenOrder(ByVal pOrderId As Long, ByVal pContract As TwsContract, ByVal pOrder As TwsOrder, ByVal pOrderState As TwsOrderState)
+Private Sub IOrderInfoConsumer_NotifyOpenOrder(ByVal pBrokerId As Long, ByVal pContract As TwsContract, ByVal pOrder As TwsOrder, ByVal pOrderState As TwsOrderState)
 Const ProcName As String = "IOrderInfoConsumer_NotifyOpenOrder"
 On Error GoTo Err
 
@@ -222,8 +222,8 @@ If pOrder.ClientId <> mTwsAPI.ClientId Then
 End If
 
 Dim lorderId As String
-If isKnownOrder(pOrderId) Then
-    lorderId = GetOrder(pOrderId).Id
+If isKnownOrder(pBrokerId) Then
+    lorderId = GetOrder(pBrokerId).Id
 End If
 
 Dim lOrderReport As IOrderReport
@@ -266,8 +266,8 @@ With lOrderReport
     .ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, pOrder.OcaGroup
 End With
 
-If isKnownOrder(pOrderId) Then
-    GetOrderSubmitter(pOrderId).NotifyOrderReport lOrderReport
+If isKnownOrder(pBrokerId) Then
+    GetOrderSubmitter(pBrokerId).NotifyOrderReport lOrderReport
 Else
     ' this must be an open Order from the previous API session, or this is
     ' a duplicate openOrder message for an Order that has already finished
@@ -281,7 +281,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderInfoConsumer_NotifyOrderStatus( _
-                ByVal pOrderId As Long, _
+                ByVal pBrokerId As Long, _
                 ByVal pStatus As String, _
                 ByVal pFilled As Long, _
                 ByVal pRemaining As Long, _
@@ -297,15 +297,15 @@ On Error GoTo Err
 Dim lStatus As OrderStatuses
 
 lStatus = gOrderStatusFromString(pStatus)
-If isKnownOrder(pOrderId) Then
-    notifyStatus pOrderId, lStatus
+If isKnownOrder(pBrokerId) Then
+    notifyStatus pBrokerId, lStatus
     If lStatus = OrderStatusCancelling And pParentId <> 0 Then
         ' for some reason IB never sends a cancelled status when a target Order
         ' is cancelled after the entry Order has been filled. It just sits there at
         ' 'cancelling' status until Tws is closed (note that it doesn't reappear if
         ' Tws is restarted, so it must have been cancelled).
         ' So we'll treat it as cancelled if we haven't received a fill in say 500 millisecs
-        generateDeferredOrderCancelNotification pOrderId
+        generateDeferredOrderCancelNotification pBrokerId
     End If
     
 Else
@@ -376,7 +376,9 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub CancelOrder(ByVal pOrder As IOrder)
+Friend Sub CancelOrder( _
+                ByVal pOrderSubmitter As OrderSubmitter, _
+                ByVal pOrder As IOrder)
 Const ProcName As String = "CancelOrder"
 On Error GoTo Err
 
@@ -393,7 +395,7 @@ mTwsAPI.CancelOrder pOrder.BrokerId
 If Not mKnownOrders.Contains(pOrder.BrokerId, mTwsAPI.ClientId) Then
     ' this can happen during order recovery if the order has been cancelled
     ' between sessions
-    mKnownOrders.Add pOrder, Nothing, mTwsAPI.ClientId, 0
+    mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId, 0
 End If
 
 mKnownOrders.Cancel pOrder.BrokerId, mTwsAPI.ClientId
@@ -566,7 +568,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub notifyStatus( _
-                ByVal pOrderId As String, _
+                ByVal pBrokerId As String, _
                 ByVal pStatus As OrderStatuses)
 Const ProcName As String = "notifyStatus"
 On Error GoTo Err
@@ -574,13 +576,15 @@ On Error GoTo Err
 Dim lStatusReport As New OrderStatusReport
 Dim lOrder As IOrder
 
-If pStatus = OrderStatuses.OrderStatusCancelled Then mKnownOrders.Cancel pOrderId, mTwsAPI.ClientId
+If pStatus = OrderStatuses.OrderStatusCancelled Then
+    mKnownOrders.Cancel pBrokerId, mTwsAPI.ClientId
+End If
 
-Set lOrder = GetOrder(pOrderId)
+Set lOrder = GetOrder(pBrokerId)
 lStatusReport.OrderId = lOrder.Id
 lStatusReport.BrokerId = lOrder.BrokerId
 lStatusReport.Status = pStatus
-GetOrderSubmitter(pOrderId).NotifyOrderStatusReport lStatusReport
+GetOrderSubmitter(pBrokerId).NotifyOrderStatusReport lStatusReport
 
 Exit Sub
 

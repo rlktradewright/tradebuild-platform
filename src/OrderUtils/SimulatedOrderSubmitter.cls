@@ -41,7 +41,7 @@ Implements IOrderSubmitter
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "SimulatedOrderSubmitter"
+Private Const ModuleName                            As String = "SimulatedOrderSubmitter"
 
 '@================================================================================
 ' Enums
@@ -55,22 +55,28 @@ Private Const ModuleName                    As String = "SimulatedOrderSubmitter
 ' Member variables
 '@================================================================================
 
-Private mSimulator                          As MarketSimulator
+Private mSimulator                                  As MarketSimulator
 
-Private mState                              As OrderSubmitterStates
-Private mStateChangeListeners               As Listeners
+Private mState                                      As OrderSubmitterStates
+Private mStateChangeListeners                       As Listeners
 
-Private mOrderSubmissionListeners           As Listeners
+Private mOrderSubmissionListeners                   As Listeners
 
-Private mFactory                            As SimOrderSubmitterFactory
+Private mFactory                                    As SimOrderSubmitterFactory
 
 Private mKey                                        As String
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mContract                                   As IContract
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
 Set mStateChangeListeners = New Listeners
 Set mOrderSubmissionListeners = New Listeners
 setState OrderSubmitterStateNotReady
@@ -312,6 +318,18 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
+Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "IOrderSubmitter_CancelOrder"
+On Error GoTo Err
+
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not implemented"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub IOrderSubmitter_CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
 Dim Stoporder As IOrder
 
@@ -436,6 +454,10 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function IOrderSubmitter_GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+Set IOrderSubmitter_GetTickSize = CreateFuture(CreateBoxedValue(mContract.TickSize))
+End Function
 
 Private Sub IOrderSubmitter_ModifyBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
@@ -654,8 +676,20 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsAvailable Then Set mContract = ev.Future.Value
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -669,9 +703,13 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise(ByVal pFactory As SimOrderSubmitterFactory, ByVal pKey As String)
+Friend Sub Initialise( _
+                ByVal pFactory As SimOrderSubmitterFactory, _
+                ByVal pKey As String, _
+                ByVal pDataSource As IMarketDataSource)
 Set mFactory = pFactory
 mKey = pKey
+mFutureWaiter.Add pDataSource.ContractFuture
 End Sub
 
 Friend Sub SetSimulator( _

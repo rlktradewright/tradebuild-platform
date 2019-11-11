@@ -583,6 +583,15 @@ mTableBuilder.AddStateTableEntry _
 '                       State:      BracketOrderStateCancelling
 '=======================================================================
 
+' An error has occurred regarding an order. Since the bracket order is already
+' being cancelled, we take no action.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateCancelling, _
+            OpStimuli.StimOrderError, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
+            BracketOrderStates.BracketOrderStateCancelling
+
 ' The application has requested that the bracket order be cancelled, provided
 ' there have been no fills. Since it is already being cancelled, there is
 ' nothing to do.

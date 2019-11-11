@@ -85,6 +85,9 @@ End Sub
 Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
 End Function
 
+Public Sub CancelOrder(ByVal pOrder As IOrder)
+End Sub
+
 Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
 End Sub
 
@@ -93,6 +96,9 @@ End Sub
 
 Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
 End Sub
+
+Public Function GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+End Function
 
 Public Function FetchPermittedOrderProperties( _
                 ByVal pContractFuture As IFuture, _
