@@ -62,6 +62,8 @@ Private mRequestId2                                 As Long
 Private mRequestId3                                 As Long
 Private mRequestId4                                 As Long
 Private mRequestId5                                 As Long
+Private mRequestId6                                 As Long
+Private mRequestId7                                 As Long
 
 Private WithEvents mContractsFutureBuilder          As FutureBuilder
 Attribute mContractsFutureBuilder.VB_VarHelpID = -1
@@ -94,6 +96,8 @@ mRequestId2 = NullIndex
 mRequestId3 = NullIndex
 mRequestId4 = NullIndex
 mRequestId5 = NullIndex
+mRequestId6 = NullIndex
+mRequestId7 = NullIndex
 End Sub
 
 '@================================================================================
@@ -307,6 +311,8 @@ If mRequestId2 <> NullIndex Then mContractRequester.CancelRequest mRequestId2
 If mRequestId3 <> NullIndex Then mContractRequester.CancelRequest mRequestId3
 If mRequestId4 <> NullIndex Then mContractRequester.CancelRequest mRequestId4
 If mRequestId5 <> NullIndex Then mContractRequester.CancelRequest mRequestId5
+If mRequestId6 <> NullIndex Then mContractRequester.CancelRequest mRequestId6
+If mRequestId7 <> NullIndex Then mContractRequester.CancelRequest mRequestId7
 
 Exit Sub
 
@@ -407,6 +413,8 @@ Private Sub requestContractsForNonSMART()
 Const ProcName As String = "requestContractsForNonSMART"
 On Error GoTo Err
 
+Dim s As String
+
 If IsContractSpecOffsetExpiry(mContractSpecifier) Then
     
     ' only Futures and Options can specify expiry in this format
@@ -415,7 +423,7 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
     ' a single contract
     If mContractSpecifier.Strike <> 0# Or mContractSpecifier.Right <> OptNone Then
         If mContractSpecifier.Exchange = "" Or mContractSpecifier.Strike = 0# Or mContractSpecifier.Right = OptNone Then
-            Dim s As String: s = "Exchange, Strike and Right must be specified for offset options"
+            s = "Exchange, Strike and Right must be specified for offset options"
             If Not mListener Is Nothing Then mListener.FetchFailed mCookie, -1, s, ""
             mTaskContext.Error -1, s
         Else
@@ -468,7 +476,7 @@ Else
                                                         mContractSpecifier.Multiplier))
     End If
     
-    mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    mRequestId3 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeIndex, _
@@ -476,7 +484,7 @@ Else
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier))
     
-    mRequestId3 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    mRequestId4 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
@@ -484,13 +492,44 @@ Else
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier))
     
-    mRequestId4 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    mRequestId5 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeCash, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier))
+
+    ' for Options and Future Options, one of the following sets of information must be specified, to
+    ' avoid fetching the entire option chain:
+    '     - localsymbol and exchange (should return 0 or 1 contract)
+    '     - exchange and expiry (returns all strikes and rights)
+    '     - exchange and strike (returns all expiries for that strike)
+    '     - expiry and strike (returns all rights and exchanges for that strike)
+    If mContractSpecifier.LocalSymbol <> "" And mContractSpecifier.Exchange <> "" Or _
+        mContractSpecifier.Exchange <> "" And mContractSpecifier.Expiry <> "" Or _
+        mContractSpecifier.Exchange <> "" And mContractSpecifier.Strike <> 0# Or _
+        mContractSpecifier.Expiry <> "" And mContractSpecifier.Strike <> 0# _
+    Then
+        mRequestId6 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                    mContractSpecifier.Symbol, _
+                                                    mContractSpecifier.Exchange, _
+                                                    SecTypeOption, _
+                                                    mContractSpecifier.CurrencyCode, _
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier, _
+                                                    mContractSpecifier.Strike, _
+                                                    mContractSpecifier.Right))
+        mRequestId7 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                    mContractSpecifier.Symbol, _
+                                                    mContractSpecifier.Exchange, _
+                                                    SecTypeFuturesOption, _
+                                                    mContractSpecifier.CurrencyCode, _
+                                                    mContractSpecifier.Expiry, _
+                                                    mContractSpecifier.Multiplier, _
+                                                    mContractSpecifier.Strike, _
+                                                    mContractSpecifier.Right))
+    End If
 End If
 
 Exit Sub
@@ -555,5 +594,7 @@ If pRequestId = mRequestId2 Then mRequestId2 = NullIndex
 If pRequestId = mRequestId3 Then mRequestId3 = NullIndex
 If pRequestId = mRequestId4 Then mRequestId4 = NullIndex
 If pRequestId = mRequestId5 Then mRequestId5 = NullIndex
+If pRequestId = mRequestId6 Then mRequestId6 = NullIndex
+If pRequestId = mRequestId7 Then mRequestId7 = NullIndex
 End Sub
 
