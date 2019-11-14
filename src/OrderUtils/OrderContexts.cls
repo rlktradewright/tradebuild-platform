@@ -166,23 +166,23 @@ Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-Dim lReceivedBid As Boolean
-Dim lReceivedAsk As Boolean
-Dim lReceivedTrade As Boolean
+Static sReceivedBid As Boolean
+Static sReceivedAsk As Boolean
+Static sReceivedTrade As Boolean
 
-Static sIsInitiaised As Boolean
-If Not sIsInitiaised Then
-    sIsInitiaised = True
-    If mDataSource.HasCurrentTick(TickTypeAsk) Then lReceivedAsk = True
-    If mDataSource.HasCurrentTick(TickTypeBid) Then lReceivedBid = True
-    If mDataSource.HasCurrentTick(TickTypeTrade) Then lReceivedTrade = True
+Static sIsInitialised As Boolean
+If Not sIsInitialised Then
+    sIsInitialised = True
+    If mDataSource.HasCurrentTick(TickTypeAsk) Then sReceivedAsk = True
+    If mDataSource.HasCurrentTick(TickTypeBid) Then sReceivedBid = True
+    If mDataSource.HasCurrentTick(TickTypeTrade) Then sReceivedTrade = True
 End If
 
-If ev.Tick.TickType = TickTypeAsk Then lReceivedAsk = True
-If ev.Tick.TickType = TickTypeBid Then lReceivedBid = True
-If ev.Tick.TickType = TickTypeTrade Then lReceivedTrade = True
+If ev.Tick.TickType = TickTypeAsk Then sReceivedAsk = True
+If ev.Tick.TickType = TickTypeBid Then sReceivedBid = True
+If ev.Tick.TickType = TickTypeTrade Then sReceivedTrade = True
     
-If lReceivedAsk And lReceivedBid And lReceivedTrade Then
+If sReceivedAsk And sReceivedBid And sReceivedTrade Then
     mDataSourceIsReady = True
     mDataSource.RemoveGenericTickListener Me
 End If
