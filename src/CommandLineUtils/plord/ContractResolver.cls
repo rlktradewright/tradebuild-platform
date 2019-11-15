@@ -177,7 +177,7 @@ ElseIf mContinuationData.Action = OrderActionSell Then
     If mContractProcessor.ProcessSellCommand(mContinuationData.Params) And Not mBatchOrders Then gPlaceOrdersTask.AddContractProcessor mContractProcessor, mContinuationData.StageOrders
 End If
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
 Set mSelfRef = Nothing
 

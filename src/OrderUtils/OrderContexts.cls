@@ -178,18 +178,31 @@ If Not sIsInitialised Then
     If mDataSource.HasCurrentTick(TickTypeTrade) Then sReceivedTrade = True
 End If
 
-If ev.Tick.TickType = TickTypeAsk Then sReceivedAsk = True
-If ev.Tick.TickType = TickTypeBid Then sReceivedBid = True
-If ev.Tick.TickType = TickTypeTrade Then sReceivedTrade = True
-    
-If sReceivedAsk And sReceivedBid And sReceivedTrade Then
-    mDataSourceIsReady = True
-    mDataSource.RemoveGenericTickListener Me
+If ev.Tick.TickType = TickTypeAsk Then
+    If sReceivedAsk Then Exit Sub
+    sReceivedAsk = True
+ElseIf ev.Tick.TickType = TickTypeBid Then
+    If sReceivedBid Then Exit Sub
+    sReceivedBid = True
+ElseIf ev.Tick.TickType = TickTypeTrade Then
+    If sReceivedTrade Then Exit Sub
+    sReceivedTrade = True
+Else
+    Exit Sub
 End If
 
 Dim lOrderContext As OrderContext
+If sReceivedAsk And sReceivedBid And sReceivedTrade Then
+    mDataSource.RemoveGenericTickListener Me
+    
+    mDataSourceIsReady = True
+    For Each lOrderContext In mOrderContexts
+        lOrderContext.IsDataSourceReady = mDataSourceIsReady
+    Next
+End If
+
 For Each lOrderContext In mOrderContexts
-    lOrderContext.IsDataSourceReady = mDataSourceIsReady
+    lOrderContext.NotifyDataReadinessChanged
 Next
 
 Exit Sub

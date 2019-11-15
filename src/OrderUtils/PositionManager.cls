@@ -1281,6 +1281,22 @@ Friend Sub PreInitialise( _
 Set mOrderManager = pOrderManager
 End Sub
 
+Public Sub Purge()
+Const ProcName As String = "Purge"
+On Error GoTo Err
+
+Assert Not mRecovering, "Invalid call to Purge during recovery"
+
+DeleteRecoveryInfo
+
+If Not IsFinished Then doFinish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
 Const ProcName As String = "RemoveChangeListener"
 On Error GoTo Err
@@ -1696,7 +1712,7 @@ Const ProcName As String = "init"
 On Error GoTo Err
 
 If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
-    Set mOrderContexts = mOrderManager.GetOrderContexts(mSummary.Name, mSummary.IsSimulated)
+    Set mOrderContexts = mOrderManager.getOrderContexts(mSummary.Name, mSummary.IsSimulated)
     If mOrderContexts Is Nothing Then _
         Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, _
                                                                 mContractFuture, _

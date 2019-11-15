@@ -126,7 +126,7 @@ s = s & generateEntry
 s = s & generateStopLoss
 s = s & generateTarget
 
-s = s & EndBracketCommand
+s = s & gCommands.EndBracketCommand.Name
 ToString = s
 
 Exit Function
@@ -145,7 +145,7 @@ End Function
 
 Private Function generateBracket() As String
 Dim s As String
-s = BracketCommand
+s = gCommands.BracketCommand.Name
 s = s & " "
 
 s = s & OrderActionToString(Action)
@@ -168,7 +168,7 @@ Private Function generateEntry() As String
 If EntryType = OrderTypeNone Then Exit Function
 
 Dim s As String
-s = EntryCommand & " "
+s = gCommands.EntryCommand.Name & " "
 s = s & OrderTypeToShortString(EntryType) & " "
 s = s & generateEntryAttributes
 generateEntry = s & vbCrLf
@@ -209,7 +209,7 @@ Private Function generateStopLoss() As String
 If StopLossType = OrderTypeNone Then Exit Function
 
 Dim s As String
-s = StopLossCommand & " "
+s = gCommands.StopLossCommand.Name & " "
 s = s & OrderTypeToShortString(StopLossType) & " "
 s = s & generateStopLossAttributes
 generateStopLoss = s & vbCrLf
@@ -236,7 +236,7 @@ Private Function generateTarget() As String
 If TargetType = OrderTypeNone Then Exit Function
 
 Dim s As String
-s = TargetCommand & " "
+s = gCommands.TargetCommand.Name & " "
 s = s & OrderTypeToShortString(TargetType) & " "
 s = s & generateTargetAttributes
 generateTarget = s & vbCrLf

@@ -1316,6 +1316,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Sub NotifyDataReadinessChanged()
+Const ProcName As String = "NotifyDataReadinessChanged"
+On Error GoTo Err
+
+fireChange OrderContextReadyStateChanged
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Function ParsePriceAndOffset( _
                 ByVal pPriceString As String, _
                 ByRef pPriceSpec As PriceSpecifier) As Boolean

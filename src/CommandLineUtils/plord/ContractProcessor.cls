@@ -46,8 +46,6 @@ Private Const ModuleName                            As String = "ContractProcess
 ' Member variables
 '@================================================================================
 
-Private mMarketDataManager                          As IMarketDataManager
-
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 
@@ -55,15 +53,11 @@ Private mBracketOrders                              As New EnumerableCollection
 
 Private mBOSpec                                     As BracketOrderSpecification
 
-Private mOrderManager                               As OrderManager
-
-Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 Private mPositionManager                            As PositionManager
 
 Private WithEvents mOrderContext                    As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
 
-Private mScopeName                                  As String
 Private mGroupName                                  As String
 
 Private mLatestBuyCommandParams                     As String
@@ -143,6 +137,41 @@ Friend Sub ClearOrders()
 mBracketOrders.Clear
 End Sub
 
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+mDataSource.Finish
+Set mDataSource = Nothing
+
+mBracketOrders.Clear
+
+mPositionManager.Finish
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Recover( _
+                ByVal pPositionManager As PositionManager)
+Const ProcName As String = "Recover"
+On Error GoTo Err
+
+Set mPositionManager = pPositionManager
+Set mContract = mPositionManager.ContractFuture.Value
+mGroupName = mPositionManager.GroupName
+
+Set mDataSource = mPositionManager.DataSource
+Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 Friend Sub Initialise( _
                 ByVal pName As String, _
                 ByVal pContractFuture As IFuture, _
@@ -155,26 +184,22 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContract = pContractFuture.Value
-Set mMarketDataManager = pMarketDataManager
-Set mOrderManager = pOrderManager
-mScopeName = pScopeName
 mGroupName = pGroupName
-Set mOrderSubmitterFactory = pOrderSubmitterFactory
 
-Set mDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, False)
+Set mDataSource = pMarketDataManager.CreateMarketDataSource(pContractFuture, False)
 mDataSource.StartMarketData
 
-If mScopeName = "" Then
-    Set mPositionManager = mOrderManager.CreatePositionManager( _
+If pScopeName = "" Then
+    Set mPositionManager = pOrderManager.CreatePositionManager( _
                                 pName, _
                                 mDataSource, _
-                                mOrderSubmitterFactory)
+                                pOrderSubmitterFactory)
 Else
-    Set mPositionManager = mOrderManager.CreateRecoverablePositionManager( _
+    Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
                                 pName, _
                                 mDataSource, _
-                                mOrderSubmitterFactory, _
-                                mScopeName, _
+                                pOrderSubmitterFactory, _
+                                pScopeName, _
                                 mGroupName)
 End If
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
@@ -233,7 +258,7 @@ If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.SwitchValue(l
 lSwitchName = TimezoneSwitch
 If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.SwitchValue(lSwitchName)
 
-gSetValidNextCommands EntryCommand, StopLossCommand, QuoteCommand, TargetCommand, BracketCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 
 Exit Sub
 
@@ -280,7 +305,7 @@ On Error GoTo Err
 
 If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands ListCommand, GroupCommand, QuoteCommand, BracketCommand, BuyCommand, SellCommand, SellAgainCommand, ContractCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
 Exit Sub
 
@@ -337,9 +362,9 @@ lSwitchName = IgnoreRTHSwitch
 mBOSpec.EntryIgnoreRTH = lClp.Switch(lSwitchName)
 
 If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
 End If
 
 Exit Sub
@@ -352,6 +377,20 @@ ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine Err.Description
     Resume Next
 End If
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub ProcessQuitCommand()
+Const ProcName As String = "ProcessQuitCommand"
+On Error GoTo Err
+
+Set mBOSpec = Nothing
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
+gWriteLineToConsole "Command definition terminated"
+
+Exit Sub
+
+Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -399,9 +438,9 @@ lSwitchName = IgnoreRTHSwitch
 mBOSpec.StopLossIgnoreRTH = lClp.Switch(lSwitchName)
 
 If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
 End If
 
 Exit Sub
@@ -461,9 +500,9 @@ lSwitchName = IgnoreRTHSwitch
 mBOSpec.TargetIgnoreRTH = lClp.Switch(lSwitchName)
 
 If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
 End If
 
 Exit Sub
@@ -866,7 +905,7 @@ If processBuyOrSellCommand Then
     End If
 End If
 
-gSetValidNextCommands ContractCommand, QuoteCommand, BuyCommand, SellCommand, SellAgainCommand, BracketCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
 Exit Function
 
