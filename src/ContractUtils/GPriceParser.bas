@@ -342,7 +342,6 @@ Public Function gParsePrice( _
                 ByVal pTickSize As Double, _
                 ByRef pPrice As Double) As Boolean
 Const ProcName As String = "gParsePrice"
-
 On Error GoTo Err
 
 pPriceString = Trim$(pPriceString)
@@ -374,12 +373,10 @@ End Function
 Public Function gParsePriceAs32nds( _
                 ByVal pPriceString As String, _
                 ByRef pPrice As Double) As Boolean
-Dim lSubmatches As SubMatches
-
 Const ProcName As String = "gParsePriceAs32nds"
-
 On Error GoTo Err
 
+Dim lSubmatches As SubMatches
 If Not getSubmatches(pPriceString, gParsePriceAs32ndsPattern, lSubmatches) Then Exit Function
 
 If lSubmatches.Count = 0 Then Exit Function
@@ -398,12 +395,10 @@ End Function
 Public Function gParsePriceAs32ndsAndFractions( _
                 ByVal pPriceString As String, _
                 ByRef pPrice As Double) As Boolean
-Dim lSubmatches As SubMatches
-
 Const ProcName As String = "gParsePriceAs32ndsAndFractions"
-
 On Error GoTo Err
 
+Dim lSubmatches As SubMatches
 If Not getSubmatches(pPriceString, _
                     gParsePriceAs32ndsAndFractionsPattern, _
                     lSubmatches) Then Exit Function
@@ -434,12 +429,10 @@ End Function
 Public Function gParsePriceAs64ths( _
                 ByVal pPriceString As String, _
                 ByRef pPrice As Double) As Boolean
-Dim lSubmatches As SubMatches
-
 Const ProcName As String = "gParsePriceAs64ths"
-
 On Error GoTo Err
 
+Dim lSubmatches As SubMatches
 If Not getSubmatches(pPriceString, _
                     gParsePriceAs64thsPattern, _
                     lSubmatches) Then Exit Function
@@ -462,12 +455,10 @@ End Function
 Public Function gParsePriceAs64thsAndFractions( _
                 ByVal pPriceString As String, _
                 ByRef pPrice As Double) As Boolean
-Dim lSubmatches As SubMatches
-
 Const ProcName As String = "gParsePriceAs64thsAndFractions"
-
 On Error GoTo Err
 
+Dim lSubmatches As SubMatches
 If Not getSubmatches(pPriceString, _
                     gParsePriceAs64thsAndFractionsPattern, _
                     lSubmatches) Then Exit Function
@@ -495,9 +486,7 @@ Public Function gParsePriceAsDecimals( _
                 ByVal pPriceString As String, _
                 ByVal pTickSize As Double, _
                 ByRef pPrice As Double) As Boolean
-
 Const ProcName As String = "gParsePriceAsDecimals"
-
 On Error GoTo Err
 
 If IsMatched(pPriceString, getParsePriceAsDecimalsPattern(pTickSize)) Then
@@ -537,11 +526,10 @@ End Sub
 Private Function convertToRegexpChoices( _
                 ByRef choiceStrings() As String) As String
 Dim s As String
-Dim i As Long
-Dim choiceString As String
 
+Dim i As Long
 For i = 0 To UBound(choiceStrings)
-    choiceString = choiceStrings(i)
+    Dim choiceString As String: choiceString = choiceStrings(i)
     If i <> 0 Then s = s & "|"
     s = s & escapeRegexSpecialChar(choiceString)
 Next
@@ -551,12 +539,11 @@ End Function
 
 Private Function escapeRegexSpecialChar( _
                 ByRef inString As String) As String
-Dim i As Long
 Dim s As String
-Dim ch As String
 
+Dim i As Long
 For i = 1 To Len(inString)
-    ch = Mid$(inString, i, 1)
+    Dim ch As String: ch = Mid$(inString, i, 1)
     Select Case ch
     Case "*", "+", "?", "^", "$", "[", "]", "{", "}", "(", ")", "|", "/", "\"
         s = s & "\" & ch
@@ -638,12 +625,9 @@ Private Function generateParsePriceAsDecimalsPattern(ByVal pTickSize As Double) 
 Const ProcName As String = "generateParsePriceAsDecimalsPattern"
 On Error GoTo Err
 
-Dim minTickString As String
-Dim lNumberOfDecimals As Long
+Dim minTickString As String: minTickString = Format(pTickSize, "0.##############")
 
-minTickString = Format(pTickSize, "0.##############")
-
-lNumberOfDecimals = Len(minTickString) - 2
+Dim lNumberOfDecimals As Long: lNumberOfDecimals = Len(minTickString) - 2
 
 generateParsePriceAsDecimalsPattern = "^\d+($" & _
                             "|\.\d{1," & lNumberOfDecimals & "}$)"
@@ -658,9 +642,9 @@ Private Function getParsePriceAsDecimalsPattern(ByVal pTickSize As Double) As St
 Const ProcName As String = "getParsePriceAsDecimalsPattern"
 On Error GoTo Err
 
-Dim i As Long
 Dim lPattern As String
 
+Dim i As Long
 For i = 0 To mParsePriceAsDecimalsPatternsIndex - 1
     If mParsePriceAsDecimalsPatterns(i).TickSize = pTickSize Then
         getParsePriceAsDecimalsPattern = mParsePriceAsDecimalsPatterns(i).Pattern
@@ -682,19 +666,15 @@ Private Function getSubmatches( _
                 ByRef pPriceString As String, _
                 ByRef pPattern As String, _
                 ByRef pSubmatches As SubMatches) As Boolean
-Dim lMatches As MatchCollection
-Dim lMatch As Match
-
 Const ProcName As String = "getSubmatches"
-
 On Error GoTo Err
 
 gRegExp.Pattern = pPattern
-Set lMatches = gRegExp.Execute(pPriceString)
+Dim lMatches As MatchCollection: Set lMatches = gRegExp.Execute(pPriceString)
 
 If lMatches.Count = 0 Then Exit Function
 
-Set lMatch = lMatches(0)
+Dim lMatch As Match: Set lMatch = lMatches(0)
 Set pSubmatches = lMatch.SubMatches
     
 getSubmatches = True
@@ -726,11 +706,10 @@ End Function
 Private Function memberOf( _
                 ByRef pInstring As String, _
                 ByRef pChoices() As String) As Boolean
-Dim i As Long
 Const ProcName As String = "memberOf"
-
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To UBound(pChoices)
     If pChoices(i) = pInstring Then
         memberOf = True
