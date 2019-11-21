@@ -625,6 +625,8 @@ Private Function generateParsePriceAsDecimalsPattern(ByVal pTickSize As Double) 
 Const ProcName As String = "generateParsePriceAsDecimalsPattern"
 On Error GoTo Err
 
+If pTickSize = 0# Then pTickSize = 0.00000000000001
+
 Dim minTickString As String: minTickString = Format(pTickSize, "0.##############")
 
 Dim lNumberOfDecimals As Long: lNumberOfDecimals = Len(minTickString) - 2

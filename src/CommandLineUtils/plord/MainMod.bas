@@ -89,12 +89,6 @@ Private Const No                                    As String = "NO"
 
 Public Const TickOffsetDesignator                   As String = "T"
 Public Const PercentOffsetDesignator                As String = "%"
-Public Const BidAskSpreadPercentOffsetDesignator    As String = "S"
-
-Public Const AskPriceDesignator                     As String = "ASK"
-Public Const BidPriceDesignator                     As String = "BID"
-Public Const LastPriceDesignator                    As String = "LAST"
-Public Const EntryPriceDesignator                   As String = "ENTRY"
 
 ' Legacy pseudo-order types from early versions
 Public Const AskPseudoOrderType                     As String = "ASK"
@@ -224,20 +218,6 @@ Const PositionManagerNameSeparator As String = "&&"
 gGenerateContractProcessorName = UCase$(mGroupName & _
                                         PositionManagerNameSeparator & _
                                         pContractSpec.Key)
-End Function
-
-Public Function gGenerateOffset( _
-                ByVal pValue As Double, _
-                ByVal pOffsetType As PriceOffsetTypes) As String
-Dim lDesignator As String
-If pOffsetType = PriceOffsetTypeBidAskPercent Then
-    lDesignator = PercentOffsetDesignator
-ElseIf pOffsetType = PriceOffsetTypeIncrement Then
-    lDesignator = ""
-ElseIf pOffsetType = PriceOffsetTypeNumberOfTicks Then
-    lDesignator = TickOffsetDesignator
-End If
-gGenerateOffset = CStr(pValue) & lDesignator
 End Function
 
 Public Function gGenerateSwitch(ByVal pName As String, ByVal pValue As String) As String
@@ -494,7 +474,7 @@ Const ProcName As String = "isGroupValid"
 On Error GoTo Err
 
 gRegExp.Global = True
-gRegExp.Pattern = "^\$|[a-zA-Z0-9][\w-]*$"
+gRegExp.Pattern = "^(\$|[a-zA-Z0-9][\w-]*)$"
 isGroupValid = gRegExp.Test(pGroup)
 
 Exit Function
@@ -507,13 +487,17 @@ Private Sub listGroups()
 Const ProcName As String = "listGroups"
 On Error GoTo Err
 
-Dim lVar As Variant
-For Each lVar In mOrderManager.GetGroupNames
-    Dim lGroupName As String: lGroupName = UCase$(lVar)
+Dim lRes As GroupResources
+For Each lRes In mGroups
+    Dim lGroupName As String: lGroupName = lRes.GroupName
     Dim lContractProcessor As ContractProcessor
+    Set lContractProcessor = lRes.CurrentContractProcessor
+    
     Dim lContractName As String
-    If Not mGroups.Item(lGroupName).CurrentContractProcessor Is Nothing Then
-        lContractName = getContractName(mGroups.Item(lGroupName).CurrentContractProcessor.Contract)
+    If lContractProcessor Is Nothing Then
+        lContractName = ""
+    Else
+        lContractName = getContractName(lContractProcessor.Contract)
     End If
     gWriteLineToConsole IIf(lGroupName = UCase$(mGroupName), "* ", "  ") & _
                         padStringRight(lGroupName, 20) & _
@@ -728,6 +712,107 @@ If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
+End Function
+
+Private Function parseLegacyCloseoutCommand( _
+                ByVal pParams As String, _
+                ByRef pGroupName As String, _
+                ByRef pCloseoutMode As CloseoutModes, _
+                ByRef pPriceSspec As PriceSpecifier) As Boolean
+Const ProcName As String = "parseLegacyCloseoutCommand"
+On Error GoTo Err
+
+gRegExp.Global = False
+gRegExp.IgnoreCase = True
+
+Dim p As String: p = _
+    "(?:" & _
+        "^" & _
+        "(?!mkt)(?!lmt)" & _
+        "(?:" & _
+            "(?: *)|(all|\$)|([a-zA-Z0-9][\w-]*)" & _
+        ")" & _
+        "(?:" & _
+            " +" & _
+            "(?:" & _
+                "(mkt)|" & _
+                "(?:" & _
+                    "(lmt)" & _
+                    "(?:" & _
+                        ":(-)?(\d{1,3})" & _
+                    ")?" & _
+                ")" & _
+            ")" & _
+        ")?" & _
+        "$" & _
+    ")" & _
+    "|"
+p = p & _
+    "(?:" & _
+        "^" & _
+        " *" & _
+        "(?:" & _
+            "(mkt)|" & _
+            "(?:" & _
+                "(lmt)" & _
+                "(?:" & _
+                    ":(-)?(\d{1,3})" & _
+                ")?" & _
+            ")" & _
+        ")" & _
+        "$" & _
+    ")"
+gRegExp.Pattern = p
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(pParams))
+
+If lMatches.Count <> 1 Then
+    Exit Function
+End If
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+
+If lMatch.SubMatches(0) = AllGroups Then
+    pGroupName = AllGroups
+ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
+    pGroupName = DefaultGroupName
+Else
+    pGroupName = UCase$(lMatch.SubMatches(1))
+End If
+    
+Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(3)) = CloseoutLimit Or _
+                                                    UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
+If lUseLimitOrders Then
+    pCloseoutMode = CloseoutModeLimit
+Else
+    pCloseoutMode = CloseoutModeMarket
+End If
+
+Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(4) = "-" Or lMatch.SubMatches(8) = "-", -1, 1)
+
+Dim lSpreadFactor As Long
+If lMatch.SubMatches(5) <> "" Then
+    lSpreadFactor = lMatch.SubMatches(5) * lSpreadFactorSign
+ElseIf lMatch.SubMatches(9) <> "" Then
+    lSpreadFactor = lMatch.SubMatches(9) * lSpreadFactorSign
+End If
+
+Set pPriceSspec = NewPriceSpecifier(pPriceType:=PriceValueTypeBidOrAsk, _
+                                    pOffset:=lSpreadFactor, _
+                                    pOffsetType:=PriceOffsetTypeBidAskPercent)
+
+parseLegacyCloseoutCommand = True
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description, True
+    Exit Function
+End If
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub process()
@@ -987,86 +1072,108 @@ Private Sub processCloseoutCommand( _
 Const ProcName As String = "processCloseoutCommand"
 On Error GoTo Err
 
-gRegExp.Global = False
-gRegExp.IgnoreCase = True
+Dim lLimitOrder As String: lLimitOrder = OrderTypeToShortString(OrderTypeLimit)
+Dim lMarketOrder As String: lMarketOrder = OrderTypeToShortString(OrderTypeMarket)
 
-Dim p As String: p = _
-    "(?:" & _
-        "^" & _
-        "(?!mkt)(?!lmt)" & _
-        "(?:" & _
-            "(?: *)|(all|\$)|([a-zA-Z0-9][\w-]*)" & _
-        ")" & _
-        "(?:" & _
-            " +" & _
-            "(?:" & _
-                "(mkt)|" & _
-                "(?:" & _
-                    "(lmt)" & _
-                    "(?:" & _
-                        ":(-)?(\d{1,3})" & _
-                    ")?" & _
-                ")" & _
-            ")" & _
-        ")?" & _
-        "$" & _
-    ")" & _
-    "|"
-p = p & _
-    "(?:" & _
-        "^" & _
-        " *" & _
-        "(?:" & _
-            "(mkt)|" & _
-            "(?:" & _
-                "(lmt)" & _
-                "(?:" & _
-                    ":(-)?(\d{1,3})" & _
-                ")?" & _
-            ")" & _
-        ")" & _
-        "$" & _
-    ")"
-gRegExp.Pattern = p
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 
-Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(Trim$(pParams))
-
-If lMatches.Count <> 1 Then
-    gWriteErrorLine "Invalid command: syntax error", True
-    Exit Sub
-End If
-
-Dim lMatch As Match: Set lMatch = lMatches(0)
-
-Dim lAllGroups As Boolean
 Dim lGroupName As String
-If lMatch.SubMatches(0) = AllGroups Then
-    lAllGroups = True
-ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
-    lGroupName = DefaultGroupName
-Else
-    lGroupName = UCase$(lMatch.SubMatches(1))
-End If
-    
-Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(3)) = CloseoutLimit Or _
-                                                    UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
-Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(4) = "-" Or lMatch.SubMatches(8) = "-", -1, 1)
+Dim lOrderTypeName As String
+Dim lPriceStr As String
 
-Dim lSpreadFactor As Long
-If lMatch.SubMatches(5) <> "" Then
-    lSpreadFactor = lMatch.SubMatches(5) * lSpreadFactorSign
-ElseIf lMatch.SubMatches(9) <> "" Then
-    lSpreadFactor = lMatch.SubMatches(9) * lSpreadFactorSign
+Dim lCloseoutMode As CloseoutModes
+Dim lPriceSpec As PriceSpecifier
+
+Dim lError As Boolean
+
+If lClp.NumberOfArgs = 3 Then
+    lGroupName = lClp.Arg(0)
+    lPriceStr = lClp.Arg(2)
+    lOrderTypeName = UCase$(lClp.Arg(1))
+    If lOrderTypeName = lMarketOrder Then
+        lCloseoutMode = CloseoutModeMarket
+    ElseIf lOrderTypeName = lLimitOrder Then
+        lCloseoutMode = CloseoutModeLimit
+    Else
+        lError = True
+        gWriteErrorLine "Second argument must be either 'MKT' or 'LMT'", True
+    End If
+ElseIf lClp.NumberOfArgs = 2 Then
+    lOrderTypeName = UCase$(lClp.Arg(0))
+    If lOrderTypeName = lLimitOrder Then
+        lCloseoutMode = CloseoutModeLimit
+        lPriceStr = lClp.Arg(1)
+    ElseIf lOrderTypeName = lMarketOrder Then
+        lCloseoutMode = CloseoutModeMarket
+        lPriceStr = lClp.Arg(1)
+    ElseIf isGroupValid(lClp.Arg(0)) Then
+        lGroupName = lClp.Arg(0)
+        lOrderTypeName = UCase$(lClp.Arg(1))
+        If lOrderTypeName = lMarketOrder Then
+            lCloseoutMode = CloseoutModeMarket
+        ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+            lError = True
+            gWriteErrorLine "Syntax error", True
+        End If
+    ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+        lError = True
+        gWriteErrorLine "Syntax error", True
+    End If
+ElseIf lClp.NumberOfArgs = 1 Then
+    lOrderTypeName = UCase$(lClp.Arg(0))
+    If lOrderTypeName = lMarketOrder Then
+        lCloseoutMode = CloseoutModeMarket
+    ElseIf lOrderTypeName = lLimitOrder Then
+        If Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+            lError = True
+            gWriteErrorLine "Closeout price specification is missing", True
+        End If
+    ElseIf isGroupValid(lClp.Arg(0)) Then
+        lGroupName = lClp.Arg(0)
+    ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+        lError = True
+        gWriteErrorLine "Syntax error"
+    End If
+ElseIf lClp.NumberOfArgs = 0 Then
+    lCloseoutMode = CloseoutModeMarket
+Else
+    lError = True
+    gWriteErrorLine "Too many arguments", True
 End If
+
+If lGroupName = "" Then
+    lGroupName = mGroupName
+ElseIf lGroupName <> AllGroups And lGroupName <> DefaultGroupName Then
+    If Not isGroupValid(lGroupName) Then
+        lError = True
+        gWriteErrorLine lGroupName & " is not a valid group name", True
+    ElseIf Not mGroups.Contains(lGroupName) Then
+        lError = True
+        gWriteErrorLine "No such group", True
+    End If
+End If
+
+If lCloseoutMode = CloseoutModeMarket Then
+    If lPriceStr <> "" Then
+        lError = True
+        gWriteErrorLine "A price specification cannot be supplied for closeout at market"
+    End If
+ElseIf lPriceStr = "" And lPriceSpec Is Nothing Then
+    lError = True
+    gWriteErrorLine "Closeout price specification is missing", True
+ElseIf Not lPriceSpec Is Nothing Then
+ElseIf Not ParsePriceAndOffset(lPriceSpec, lPriceStr, SecTypeNone, 0#, True) Then
+    lError = True
+    gWriteErrorLine "Invalid price specification", True
+End If
+
+If lError Then Exit Sub
 
 Dim lCloseoutProcessor As New CloseoutProcessor
-lCloseoutProcessor.Initialise mOrderManager, lUseLimitOrders, lSpreadFactor
+lCloseoutProcessor.Initialise mOrderManager, lCloseoutMode, lPriceSpec
 
-If lAllGroups Then
+If lGroupName = AllGroups Then
     lCloseoutProcessor.CloseoutAll
-ElseIf lGroupName = "" Then
-    lCloseoutProcessor.CloseoutGroup mGroupName
 ElseIf Not mGroups.Contains(lGroupName) Then
     gWriteErrorLine "No such group", True
 Else
@@ -1170,6 +1277,7 @@ End If
 Dim lResources As GroupResources
 If mGroups.TryItem(UCase$(mGroupName), lResources) Then
     Set mContractProcessor = lResources.CurrentContractProcessor
+    mGroupName = lResources.GroupName
 Else
     Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(mGroupName)
     
@@ -1234,33 +1342,43 @@ Private Sub processPurgeCommand( _
 Const ProcName As String = "processPurgeCommand"
 On Error GoTo Err
 
+Dim lRes As GroupResources
+
 If pParams = "" Then
     gWriteLineToConsole "Purging " & mGroupName
-    mGroupName = DefaultGroupName
+    Set mContractProcessor = Nothing
     purgeGroup mGroupName
+    mGroups.Remove mGroupName
+    mGroupName = DefaultGroupName
 ElseIf UCase$(pParams) = AllGroups Then
-    gWriteLineToConsole "Purging default group"
-    purgeGroup DefaultGroupName
-    
-    Dim lRes As GroupResources
     For Each lRes In mGroups
         Dim lGroupName As String: lGroupName = lRes.GroupName
         gWriteLineToConsole "Purging " & lGroupName
         purgeGroup lGroupName
-        If lGroupName = mGroupName Then mGroupName = DefaultGroupName
+        If lGroupName = mGroupName Then
+            mGroupName = DefaultGroupName
+            Set mContractProcessor = Nothing
+        End If
     Next
+    mGroups.Clear
 ElseIf isGroupValid(pParams) Then
-    If Not mGroups.Contains(pParams) Then
+    If Not mGroups.TryItem(pParams, lRes) Then
         gWriteErrorLine "No such group", True
-    Else
-        purgeGroup pParams
+        Exit Sub
+    End If
+    gWriteLineToConsole "Purging " & lRes.GroupName
+    purgeGroup pParams
+    mGroups.Remove pParams
+    If UCase$(pParams) = UCase$(mGroupName) Then
+        mGroupName = DefaultGroupName
+        Set mContractProcessor = Nothing
     End If
 Else
     gWriteErrorLine "Invalid group name", True
     Exit Sub
 End If
 
-gWriteLineToConsole "Purging completed"
+mGroups.Add DefaultGroupName
 
 Exit Sub
 
@@ -1356,16 +1474,16 @@ For Each lOrderPlacer In lRes.OrderPlacers
 Next
 lRes.OrderPlacers.Clear
 
+Dim lPM As PositionManager
+For Each lPM In mOrderManager.GetPositionManagersForGroup(pGroupName)
+    lPM.Purge
+Next
+
 Dim lContractProcessor As ContractProcessor
 For Each lContractProcessor In lRes.ContractProcessors
     lContractProcessor.Finish
 Next
 lRes.ContractProcessors.Clear
-
-Dim lPM As PositionManager
-For Each lPM In mOrderManager.GetPositionManagersForGroup(pGroupName)
-    lPM.Purge
-Next
 
 Exit Sub
 

@@ -1121,8 +1121,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ClosePositions( _
-                ByVal pUseLimitOrder As Boolean, _
-                Optional ByVal pBidAskSpreadPercent As Long = 0)
+                Optional ByVal pCloseoutMode As CloseoutModes = CloseoutModeMarket, _
+                Optional ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
@@ -1134,7 +1134,7 @@ mPositionCloseErrorMessage = ""
 mClosingPosition = True
 
 Set mPositionCloser = New PositionCloser
-mPositionCloser.ClosePositions Me, pUseLimitOrder, pBidAskSpreadPercent
+mPositionCloser.ClosePositions Me, pCloseoutMode, pPriceSpec
 
 Exit Sub
 
@@ -1531,6 +1531,8 @@ Set mOrderSubmitter = Nothing
 Set mBracketOrders = Nothing
 Set mOrders = Nothing
 Set mExecutions = Nothing
+
+mOrderManager.RemovePositionManager Me
 
 mIsFinished = True
 

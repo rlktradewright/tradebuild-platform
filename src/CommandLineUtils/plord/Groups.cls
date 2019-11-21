@@ -78,7 +78,14 @@ Friend Function Add(ByVal pGroupName As String) As GroupResources
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-Dim lResources As New GroupResources
+Dim lResources As GroupResources
+
+If mDict.TryItem(UCase$(pGroupName), lResources) Then
+    Set Add = lResources
+    Exit Function
+End If
+
+Set lResources = New GroupResources
 lResources.GroupName = pGroupName
 
 mDict.Add lResources, UCase$(pGroupName)

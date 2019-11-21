@@ -91,7 +91,7 @@ mDummyOrder.TriggerPrice = 0#
 mDummyOrder.ErrorCode = 0
 mDummyOrder.ErrorMessage = ""
 mDummyOrder.DontCheckAttributeModificationPermitted = False
-mOrderSubmitter.PlaceOrder mDummyOrder
+mOrderSubmitter.PlaceOrderEx mDummyOrder, False, 0, "", OrderModeEntry
 
 Set mTLI = mTimerList.Add(Nothing, 500, ExpiryTimeUnitMilliseconds)
 

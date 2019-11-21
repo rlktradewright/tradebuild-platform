@@ -655,8 +655,7 @@ Select Case pOrderType
 Case OrderTypeMarketIfTouched, _
         OrderTypeStop, _
         OrderTypeTrail
-    Set pTriggerPriceSpec = parsePrice(pArg1)
-    If pTriggerPriceSpec.PriceType = PriceValueTypeNone Then
+    If Not mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pArg1) Then
         parseOrderPrices = False
         gWriteErrorLine "Trigger price must be specified for this order type", True
     End If
@@ -667,8 +666,7 @@ Case OrderTypeMarketToLimit, _
         OrderTypeLimitIfTouched, _
         OrderTypeStopLimit, _
         OrderTypeTrailLimit
-    Set pLimitPriceSpec = parsePrice(pArg1)
-    If pLimitPriceSpec.PriceType = PriceValueTypeNone Then
+    If Not mOrderContext.ParsePriceAndOffset(pLimitPriceSpec, pArg1) Then
         parseOrderPrices = False
         gWriteErrorLine "Limit price must be specified for this order type", True
     End If
@@ -683,8 +681,7 @@ Select Case pOrderType
 Case OrderTypeLimitIfTouched, _
         OrderTypeStopLimit, _
         OrderTypeTrailLimit
-    Set pTriggerPriceSpec = parsePrice(pArg2)
-    If pTriggerPriceSpec.PriceType = PriceValueTypeNone Then
+    If Not mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pArg2) Then
         parseOrderPrices = False
         gWriteErrorLine "Trigger price must be specified for this order type", True
     End If
@@ -759,75 +756,6 @@ Else
     pPriceSpec.OffsetType = PriceOffsetTypeIncrement
 End If
 End Sub
-
-Private Function parsePrice( _
-                ByVal pValue As String) As PriceSpecifier
-Const ProcName As String = "parsePrice"
-On Error GoTo Err
-
-gRegExp.Global = False
-gRegExp.IgnoreCase = True
-
-Dim p As String
-p = "(?:^(?:(ASK|BID|LAST|ENTRY|(?:[-+]?\d{1,6}(?:.\d{1,6})?)))(?:\[(?:([-+]?\d{1,6}(?:.\d{1,6})?))([T%S]?)\])?$)"
-
-gRegExp.Pattern = p
-
-Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(Trim$(pValue))
-
-If lMatches.Count <> 1 Then
-    gWriteErrorLine "Invalid command: syntax error in " & pValue, True
-    Set parsePrice = NewPriceSpecifier()
-    Exit Function
-End If
-
-Dim lMatch As Match: Set lMatch = lMatches(0)
-
-Dim lPrice As Double
-Dim lPriceType As PriceValueTypes
-Dim lOffset As Double
-Dim lOffsetType As PriceOffsetTypes
-
-Dim lPricePart As String: lPricePart = UCase$(lMatch.SubMatches(0))
-Select Case lPricePart
-Case ""
-    lPriceType = PriceValueTypeNone
-Case AskPriceDesignator
-    lPriceType = PriceValueTypeAsk
-Case BidPriceDesignator
-    lPriceType = PriceValueTypeBid
-Case LastPriceDesignator
-    lPriceType = PriceValueTypeLast
-Case EntryPriceDesignator
-    lPriceType = PriceValueTypeEntry
-Case Else
-    lPriceType = PriceValueTypeValue
-    lPrice = CDbl(lPricePart)
-End Select
-
-Dim lOffsetPart As String: lOffsetPart = lMatch.SubMatches(1)
-If lOffsetPart <> "" Then lOffset = CDbl(lOffsetPart)
-
-Dim lOffsetDesignator As String: lOffsetDesignator = UCase$(lMatch.SubMatches(2))
-Select Case lOffsetDesignator
-Case ""
-    lOffsetType = PriceOffsetTypeIncrement
-Case TickOffsetDesignator
-    lOffsetType = PriceOffsetTypeNumberOfTicks
-Case PercentOffsetDesignator
-    lOffsetType = PriceOffsetTypePercent
-Case BidAskSpreadPercentOffsetDesignator
-    lOffsetType = PriceOffsetTypeBidAskPercent
-End Select
-
-Set parsePrice = NewPriceSpecifier(lPrice, lPriceType, lOffset, lOffsetType)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Function processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _

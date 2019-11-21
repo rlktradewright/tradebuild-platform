@@ -320,6 +320,10 @@ Case PriceValueTypeBid
     If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Property
 Case PriceValueTypeLast
     If Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Property
+Case PriceValueTypeMid, _
+        PriceValueTypeBidOrAsk
+    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Property
+    If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Property
 Case PriceValueTypeEntry
 End Select
 
@@ -683,15 +687,29 @@ End Function
 
 Public Function CalculateOffsettedPrice( _
                 ByVal pPriceSpec As PriceSpecifier, _
-                ByVal pSectype As SecurityTypes) As Double
+                ByVal pSectype As SecurityTypes, _
+                ByVal pOrderAction As OrderActions) As Double
 Const ProcName As String = "CalculateOffsettedPrice"
 On Error GoTo Err
+
+If pPriceSpec.PriceType = PriceValueTypeEntry Or _
+        pPriceSpec.PriceType = PriceValueTypeNone Then
+    CalculateOffsettedPrice = MaxDoubleValue
+    Exit Function
+End If
+
+Dim lRoundingMode As TickRoundingModes
+If pOrderAction = OrderActionBuy Then
+    lRoundingMode = TickRoundingModeUp
+Else
+    lRoundingMode = TickRoundingModeDown
+End If
 
 Dim lPrice As Double
 
 Select Case pPriceSpec.PriceType
 Case PriceValueTypeNone
-    lPrice = MaxDoubleValue
+    Assert False
 Case PriceValueTypeValue
     lPrice = pPriceSpec.Price
 Case PriceValueTypeAsk
@@ -701,33 +719,47 @@ Case PriceValueTypeBid
 Case PriceValueTypeLast
     lPrice = getCurrentPrice(TickTypeTrade)
 Case PriceValueTypeEntry
-    lPrice = MaxDoubleValue
+    Assert False
+Case PriceValueTypeMid
+    lPrice = gRoundToTickBoundary((getCurrentPrice(TickTypeAsk) + getCurrentPrice(TickTypeBid)) / 2#, mTickSize, TickRoundingModeNearest)
+Case PriceValueTypeBidOrAsk
+    If pOrderAction = OrderActionBuy Then
+        lPrice = getCurrentPrice(TickTypeBid)
+    Else
+        lPrice = getCurrentPrice(TickTypeAsk)
+    End If
 End Select
-
-If lPrice = MaxDoubleValue Then
-    CalculateOffsettedPrice = MaxDoubleValue
-    Exit Function
-End If
 
 Dim lResult As Double
 
 Select Case pPriceSpec.OffsetType
+Dim lOffset As Double
 Case PriceOffsetTypeNone
     lResult = lPrice
 Case PriceOffsetTypeIncrement
-    lResult = lPrice + pPriceSpec.Offset
+    lOffset = pPriceSpec.Offset
 Case PriceOffsetTypeNumberOfTicks
-    lResult = lPrice + pPriceSpec.Offset * mTickSize
+    lOffset = pPriceSpec.Offset * mTickSize
 Case PriceOffsetTypeBidAskPercent
     Dim lBid As Double: lBid = getCurrentPrice(TickTypeBid)
     Dim lAsk As Double: lAsk = getCurrentPrice(TickTypeAsk)
     
-    lResult = lPrice + Int(pPriceSpec.Offset * (CLng(lAsk / mTickSize) - CLng(lBid / mTickSize)) / 100#) * mTickSize
+    lOffset = pPriceSpec.Offset * (lAsk - lBid) / 100#
 Case PriceOffsetTypePercent
-    lResult = lPrice + Int((pPriceSpec.Offset * lPrice) / 100# / mTickSize) * mTickSize
+    lOffset = pPriceSpec.Offset * lPrice / 100#
 End Select
 
-CalculateOffsettedPrice = lResult
+If Not pPriceSpec.UseCloseoutSemantics And _
+    pPriceSpec.PriceType <> PriceValueTypeBidOrAsk _
+Then
+    lResult = lPrice + lOffset
+ElseIf pOrderAction = OrderActionBuy Then
+    lResult = lPrice + lOffset
+Else
+    lResult = lPrice - lOffset
+End If
+
+CalculateOffsettedPrice = gRoundToTickBoundary(lResult, mTickSize, lRoundingMode)
 
 Exit Function
 
@@ -1329,16 +1361,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ParsePriceAndOffset( _
+                ByRef pPriceSpec As PriceSpecifier, _
                 ByVal pPriceString As String, _
-                ByRef pPriceSpec As PriceSpecifier) As Boolean
+                Optional ByVal pUseCloseoutSemantics As Boolean = False) As Boolean
 Const ProcName As String = "ParsePriceAndOffset"
 On Error GoTo Err
 
 ParsePriceAndOffset = gParsePriceAndOffset( _
+                                pPriceSpec, _
                                 pPriceString, _
                                 mContract.Specifier.SecType, _
                                 mTickSize, _
-                                pPriceSpec)
+                                pUseCloseoutSemantics)
 
 Exit Function
 
@@ -1478,40 +1512,49 @@ Case OrderTypeMarketOnClose
 Case OrderTypeMarketIfTouched
     pOrder.TriggerPrice = CalculateOffsettedPrice( _
                                 pOrder.TriggerPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
 Case OrderTypeMarketToLimit
 Case OrderTypeLimit
     pOrder.LimitPrice = CalculateOffsettedPrice( _
                                 pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
 Case OrderTypeLimitOnOpen
     pOrder.LimitPrice = CalculateOffsettedPrice( _
                                 pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
 Case OrderTypeLimitOnClose
     pOrder.LimitPrice = CalculateOffsettedPrice( _
                                 pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
 Case OrderTypeLimitIfTouched
     pOrder.LimitPrice = CalculateOffsettedPrice( _
                                 pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
     pOrder.TriggerPrice = CalculateOffsettedPrice( _
                                 pOrder.TriggerPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
 Case OrderTypeStop, _
         OrderTypeTrail
     pOrder.TriggerPrice = CalculateOffsettedPrice( _
                                 pOrder.TriggerPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
 Case OrderTypeStopLimit, _
         OrderTypeTrailLimit
     pOrder.LimitPrice = CalculateOffsettedPrice( _
                                 pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
     pOrder.TriggerPrice = CalculateOffsettedPrice( _
                                 pOrder.TriggerPriceSpec, _
-                                mContract.Specifier.SecType)
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
 End Select
 
 Exit Sub
@@ -1532,20 +1575,23 @@ Case OrderTypeStop, _
     If pOrder.TriggerPriceSpec.PriceType <> PriceValueTypeEntry Then
         pOrder.TriggerPrice = CalculateOffsettedPrice( _
                                     pOrder.TriggerPriceSpec, _
-                                    mContract.Specifier.SecType)
+                                    mContract.Specifier.SecType, _
+                                    pOrder.Action)
     End If
 Case OrderTypeStopLimit, _
         OrderTypeTrailLimit
     If pOrder.LimitPriceSpec.PriceType <> PriceValueTypeEntry Then
         pOrder.LimitPrice = CalculateOffsettedPrice( _
                                     pOrder.LimitPriceSpec, _
-                                    mContract.Specifier.SecType)
+                                    mContract.Specifier.SecType, _
+                                    pOrder.Action)
     End If
     
     If pOrder.TriggerPriceSpec.PriceType <> PriceValueTypeEntry Then
         pOrder.TriggerPrice = CalculateOffsettedPrice( _
                                     pOrder.TriggerPriceSpec, _
-                                    mContract.Specifier.SecType)
+                                    mContract.Specifier.SecType, _
+                                    pOrder.Action)
     End If
 End Select
 
@@ -1568,24 +1614,28 @@ Case OrderTypeLimit, _
     If pOrder.LimitPriceSpec.PriceType <> PriceValueTypeEntry Then
         pOrder.LimitPrice = CalculateOffsettedPrice( _
                                     pOrder.LimitPriceSpec, _
-                                    mContract.Specifier.SecType)
+                                    mContract.Specifier.SecType, _
+                                    pOrder.Action)
     End If
 Case OrderTypeLimitIfTouched
     If pOrder.LimitPriceSpec.PriceType <> PriceValueTypeEntry Then
         pOrder.LimitPrice = CalculateOffsettedPrice( _
                                     pOrder.LimitPriceSpec, _
-                                    mContract.Specifier.SecType)
+                                    mContract.Specifier.SecType, _
+                                    pOrder.Action)
     End If
     If pOrder.TriggerPriceSpec.PriceType <> PriceValueTypeEntry Then
         pOrder.TriggerPrice = CalculateOffsettedPrice( _
                                     pOrder.TriggerPriceSpec, _
-                                    mContract.Specifier.SecType)
+                                    mContract.Specifier.SecType, _
+                                    pOrder.Action)
     End If
 Case OrderTypeMarketIfTouched
     If pOrder.TriggerPriceSpec.PriceType <> PriceValueTypeEntry Then
         pOrder.TriggerPrice = CalculateOffsettedPrice( _
                                     pOrder.TriggerPriceSpec, _
-                                    mContract.Specifier.SecType)
+                                    mContract.Specifier.SecType, _
+                                    pOrder.Action)
     End If
 Case OrderTypeMarketOnClose, _
         OrderTypeMarketOnOpen
@@ -1619,18 +1669,6 @@ If mDataSource Is Nothing Then
 Else
     isDataSourceRunning = (mDataSource.State = MarketDataSourceStateRunning)
 End If
-End Function
-
-Private Function priceToString(ByVal pPrice As Double) As String
-Const ProcName As String = "priceToString"
-On Error GoTo Err
-
-priceToString = FormatPrice(pPrice, mContract.Specifier.SecType, mContract.TickSize)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setContract(ByVal pContract As IContract)

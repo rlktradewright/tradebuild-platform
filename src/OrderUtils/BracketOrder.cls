@@ -3060,7 +3060,8 @@ Then
     mEntryOrder.LimitPriceSpec = mNewEntryLimitPriceSpec
     mEntryOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
                                                 mNewEntryLimitPriceSpec, _
-                                                mContract.Specifier.SecType)
+                                                mContract.Specifier.SecType, _
+                                                mEntryOrder.Action)
     checkForPendingEntryUpdates = True
 End If
 Set mNewEntryLimitPriceSpec = gNewPriceSpecifier
@@ -3072,7 +3073,8 @@ Then
     mEntryOrder.TriggerPriceSpec = mNewEntryTriggerPriceSpec
     mEntryOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
                                                 mNewEntryTriggerPriceSpec, _
-                                                mContract.Specifier.SecType)
+                                                mContract.Specifier.SecType, _
+                                                mEntryOrder.Action)
     checkForPendingEntryUpdates = True
 End If
 Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
@@ -3098,7 +3100,8 @@ Then
     mStopLossOrder.LimitPriceSpec = mNewStopLossLimitPriceSpec
     mStopLossOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
                                                 mNewStopLossLimitPriceSpec, _
-                                                mContract.Specifier.SecType)
+                                                mContract.Specifier.SecType, _
+                                                mEntryOrder.Action)
     checkForPendingStoplossUpdates = True
 End If
 Set mNewStopLossLimitPriceSpec = gNewPriceSpecifier
@@ -3119,7 +3122,8 @@ Then
     mStopLossOrder.TriggerPriceSpec = mNewStopLossTriggerPriceSpec
     mStopLossOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
                                                 mNewStopLossTriggerPriceSpec, _
-                                                mContract.Specifier.SecType)
+                                                mContract.Specifier.SecType, _
+                                                mEntryOrder.Action)
     checkForPendingStoplossUpdates = True
 End If
 Set mNewStopLossTriggerPriceSpec = gNewPriceSpecifier
@@ -3144,7 +3148,8 @@ Then
     mTargetOrder.LimitPriceSpec = mNewTargetLimitPriceSpec
     mTargetOrder.LimitPrice = mOrderContext.CalculateOffsettedPrice( _
                                                 mNewTargetLimitPriceSpec, _
-                                                mContract.Specifier.SecType)
+                                                mContract.Specifier.SecType, _
+                                                mEntryOrder.Action)
     checkForPendingTargetUpdates = True
 End If
 Set mNewTargetLimitPriceSpec = gNewPriceSpecifier
@@ -3165,7 +3170,8 @@ Then
     mTargetOrder.TriggerPriceSpec = mNewTargetTriggerPriceSpec
     mTargetOrder.TriggerPrice = mOrderContext.CalculateOffsettedPrice( _
                                                 mNewTargetTriggerPriceSpec, _
-                                                mContract.Specifier.SecType)
+                                                mContract.Specifier.SecType, _
+                                                mEntryOrder.Action)
     checkForPendingTargetUpdates = True
 End If
 Set mNewTargetTriggerPriceSpec = gNewPriceSpecifier

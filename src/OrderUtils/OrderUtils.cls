@@ -285,6 +285,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function ParsePriceAndOffset( _
+                ByRef pPriceSpec As PriceSpecifier, _
+                ByVal pValue As String, _
+                ByVal pSectype As SecurityTypes, _
+                ByVal pTickSize As Double, _
+                Optional ByVal pUseCloseoutSemantics As Boolean = False) As Boolean
+Const ProcName As String = "gParsePriceAndOffset"
+On Error GoTo Err
+
+ParsePriceAndOffset = gParsePriceAndOffset(pPriceSpec, pValue, pSectype, pTickSize, pUseCloseoutSemantics)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+
 Public Function PriceOffsetToString( _
                 ByVal pOffset As Double, _
                 ByVal pOffsetType As PriceOffsetTypes)

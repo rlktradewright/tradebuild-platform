@@ -37,11 +37,6 @@ Implements ITaskCompletionListener
 
 Private Const ModuleName                            As String = "OrderSubmitter"
 
-Private Const OrderModeEntry                        As String = "entry"
-Private Const OrderModeStopLoss                     As String = "stop loss"
-Private Const OrderModeTarget                       As String = "target"
-Private Const OrderModeCloseout                     As String = "closeout"
-
 Private Const EntryOrderIdIncrement                 As Long = 0
 Private Const StopLossOrderIdIncrement              As Long = 1
 Private Const TargetOrderIdIncrement                As Long = 2
@@ -970,7 +965,7 @@ Public Sub PlaceOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
-placeOrderEx pOrder, True, 0, "", OrderModeEntry
+PlaceOrderEx pOrder, True, 0, "", OrderModeEntry
 
 Exit Sub
 
@@ -1009,8 +1004,8 @@ On Error GoTo Err
 Dim lOCAGroup As String
 lOCAGroup = GenerateGUIDString
 
-placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
-placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+PlaceOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
+PlaceOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
 
 Exit Sub
 Err:
@@ -1022,12 +1017,12 @@ Const ProcName As String = "ResubmitStopOrder"
 On Error GoTo Err
 
 If pBracketOrder.TargetOrder Is Nothing Then
-    placeOrderEx pBracketOrder.StopLossOrder, True, "0", "", OrderModeStopLoss
+    PlaceOrderEx pBracketOrder.StopLossOrder, True, "0", "", OrderModeStopLoss
 Else
     Dim lOCAGroup As String
     lOCAGroup = GenerateGUIDString
-    placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
-    placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+    PlaceOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
+    PlaceOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
 End If
 
 Exit Sub
@@ -1040,12 +1035,12 @@ Const ProcName As String = "ResubmitTargetOrder"
 On Error GoTo Err
 
 If pBracketOrder.StopLossOrder Is Nothing Then
-    placeOrderEx pBracketOrder.TargetOrder, True, "0", "", OrderModeTarget
+    PlaceOrderEx pBracketOrder.TargetOrder, True, "0", "", OrderModeTarget
 Else
     Dim lOCAGroup As String
     lOCAGroup = GenerateGUIDString
-    placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
-    placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+    PlaceOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
+    PlaceOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
 End If
 Exit Sub
 Err:
@@ -1218,7 +1213,7 @@ Private Function GetTickSizeForStocks( _
 Dim lTickSize As Double
 
 Select Case UCase$(pExchange)
-Case "LSE", "BATEUK", "CHIXUK", "TRQXUK"
+Case "BATEUK", "CHIXUK", "LSE", "TRQXUK"
     If pCurrentPrice <= 0.001 Then
         lTickSize = 0.000001
     ElseIf pCurrentPrice <= 0.002 Then
@@ -1226,77 +1221,77 @@ Case "LSE", "BATEUK", "CHIXUK", "TRQXUK"
     ElseIf pCurrentPrice <= 0.005 Then
         lTickSize = 0.000001
     ElseIf pCurrentPrice <= 0.01 Then
-        lTickSize = 0.000002
+        lTickSize = 0.000001
     ElseIf pCurrentPrice <= 0.02 Then
-        lTickSize = 0.000005
+        lTickSize = 0.000002
     ElseIf pCurrentPrice <= 0.05 Then
-        lTickSize = 0.00001
+        lTickSize = 0.000005
     ElseIf pCurrentPrice <= 0.1 Then
-        lTickSize = 0.00002
+        lTickSize = 0.00001
     ElseIf pCurrentPrice <= 0.2 Then
+        lTickSize = 0.00002
+    ElseIf pCurrentPrice <= 0.5 Then
         lTickSize = 0.00005
+    ElseIf pCurrentPrice <= 1# Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 2# Then
+        lTickSize = 0.0002
+    ElseIf pCurrentPrice <= 5# Then
+        lTickSize = 0.0005
+    ElseIf pCurrentPrice <= 10# Then
+        lTickSize = 0.001
+    ElseIf pCurrentPrice <= 20# Then
+        lTickSize = 0.002
+    ElseIf pCurrentPrice <= 50# Then
+        lTickSize = 0.005
+    ElseIf pCurrentPrice <= 100# Then
+        lTickSize = 0.01
+    ElseIf pCurrentPrice <= 200# Then
+        lTickSize = 0.02
+    ElseIf pCurrentPrice <= 500# Then
+        lTickSize = 0.05
+    Else
+        lTickSize = 0.1
+    End If
+Case "BATEDE", "CHIXDE", "EBS", "FWB", "IBIS", "SWB", "TGATE", "TRQXDE", "VSE"
+    If pCurrentPrice <= 0.1 Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 0.2 Then
+        lTickSize = 0.0001
     ElseIf pCurrentPrice <= 0.5 Then
         lTickSize = 0.0001
     ElseIf pCurrentPrice <= 1 Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 2 Then
         lTickSize = 0.0002
-    ElseIf pCurrentPrice <= 2 Then
-        lTickSize = 0.0005
     ElseIf pCurrentPrice <= 5 Then
-        lTickSize = 0.001
-    ElseIf pCurrentPrice <= 10 Then
-        lTickSize = 0.002
-    ElseIf pCurrentPrice <= 20 Then
-        lTickSize = 0.005
-    ElseIf pCurrentPrice <= 50 Then
-        lTickSize = 0.01
-    ElseIf pCurrentPrice <= 100 Then
-        lTickSize = 0.02
-    ElseIf pCurrentPrice <= 200 Then
-        lTickSize = 0.05
-    ElseIf pCurrentPrice <= 500 Then
-        lTickSize = 0.1
-    Else
-        lTickSize = 0.2
-    End If
-Case "FWB", "IBIS", "BATEDE", "CHIXDE", "EBS", "FWB", "SWB", "TGATE", "TRQXDE", "VSE"
-    If pCurrentPrice <= 0.1 Then
         lTickSize = 0.0005
-    ElseIf pCurrentPrice <= 0.2 Then
-        lTickSize = 0.001
-    ElseIf pCurrentPrice <= 0.5 Then
-        lTickSize = 0.002
-    ElseIf pCurrentPrice <= 1 Then
-        lTickSize = 0.005
-    ElseIf pCurrentPrice <= 2 Then
-        lTickSize = 0.01
-    ElseIf pCurrentPrice <= 5 Then
-        lTickSize = 0.02
     ElseIf pCurrentPrice <= 10 Then
-        lTickSize = 0.05
+        lTickSize = 0.001
     ElseIf pCurrentPrice <= 20 Then
-        lTickSize = 0.1
+        lTickSize = 0.002
     ElseIf pCurrentPrice <= 50 Then
-        lTickSize = 0.2
+        lTickSize = 0.005
     ElseIf pCurrentPrice <= 100 Then
-        lTickSize = 0.5
+        lTickSize = 0.01
     ElseIf pCurrentPrice <= 200 Then
-        lTickSize = 1
+        lTickSize = 0.02
     ElseIf pCurrentPrice <= 500 Then
-        lTickSize = 2
+        lTickSize = 0.05
     ElseIf pCurrentPrice <= 1000 Then
-        lTickSize = 5
+        lTickSize = 0.1
     ElseIf pCurrentPrice <= 2000 Then
-        lTickSize = 10
+        lTickSize = 0.2
     ElseIf pCurrentPrice <= 5000 Then
-        lTickSize = 20
+        lTickSize = 0.5
     ElseIf pCurrentPrice <= 10000 Then
-        lTickSize = 50
+        lTickSize = 1
     ElseIf pCurrentPrice <= 20000 Then
-        lTickSize = 100
+        lTickSize = 2
     ElseIf pCurrentPrice <= 50000 Then
-        lTickSize = 200
+        lTickSize = 5
     Else
-        lTickSize = 500
+        lTickSize = 10
     End If
 Case "VENTURE"
     If pCurrentPrice <= 0.5 Then
@@ -1492,13 +1487,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub placeOrderEx( _
+Friend Sub PlaceOrderEx( _
                 ByVal pOrder As IOrder, _
                 ByVal pTransmit As Boolean, _
                 ByVal pParentId As Long, _
                 ByVal pOcaGroup As String, _
                 ByVal pOrderMode As String)
-Const ProcName As String = "placeOrderEx"
+Const ProcName As String = "PlaceOrderEx"
 On Error GoTo Err
 
 pOrder.BrokerId = CStr(getNextBracketId + EntryOrderIdIncrement)
