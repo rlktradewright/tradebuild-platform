@@ -377,7 +377,6 @@ LimitPrice = mLimitPrice
 End Property
 
 Public Property Let LimitPriceSpec(ByVal Value As PriceSpecifier)
-If mLimitPriceSpec Is Value Then Exit Property
 Set mLimitPriceSpec = Value
 mIsDirty = True
 mDiff.SetProperty "LimitPriceSpec", Value
@@ -575,7 +574,6 @@ TriggerPrice = mTriggerPrice
 End Property
 
 Public Property Let TriggerPriceSpec(ByVal Value As PriceSpecifier)
-If mTriggerPriceSpec Is Value Then Exit Property
 Set mTriggerPriceSpec = Value
 mIsDirty = True
 mDiff.SetProperty "TriggerPriceSpec", Value

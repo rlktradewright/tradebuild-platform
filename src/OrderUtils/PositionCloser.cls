@@ -144,7 +144,10 @@ If mLastExecutionReport Is Nothing Then
     RaiseEvent PositionNotClosed(mBalancingBracketOrder.EntryOrder.ErrorMessage)
     Exit Sub
 End If
-    
+
+Dim lActualCloseoutOrder As Order
+Set lActualCloseoutOrder = mBalancingBracketOrder.CloseoutOrder
+
 Dim oc As OrderContext
 Dim i As Long
 For Each oc In mOrderContexts
@@ -173,7 +176,15 @@ For Each oc In mOrderContexts
                     lExec.Action = OrderActionBuy
                 End If
                 
-                lBracketOrder.NotifyCloseout lExec
+                Dim lCloseoutOrder As Order
+                Set lCloseoutOrder = lActualCloseoutOrder.Clone
+                lCloseoutOrder.OrderType = lActualCloseoutOrder.OrderType
+                lCloseoutOrder.Quantity = lBracketOrder.Size
+                lCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
+                
+                lExec.OrderId = lCloseoutOrder.Id
+                
+                lBracketOrder.NotifyCloseout lCloseoutOrder, lExec
             End If
         Next
     End If

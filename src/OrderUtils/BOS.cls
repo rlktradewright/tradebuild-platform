@@ -92,6 +92,8 @@ Private mRolloverDate                               As Date
 
 Private mRolloverController                         As RolloverController
 
+Private mCloseoutSpecifier                          As CloseoutSpecifier
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -135,7 +137,7 @@ CancelTime = mCancelTime
 End Property
 
 Public Property Let CloseoutOrderId(ByVal Value As String)
-If CloseoutOrderId = Value Then Exit Property
+If mCloseoutOrderId = Value Then Exit Property
 setDirty
 mCloseoutOrderId = Value
 mDiff.SetProperty "CloseoutOrderId", Value
@@ -143,6 +145,16 @@ End Property
 
 Public Property Get CloseoutOrderId() As String
 CloseoutOrderId = mCloseoutOrderId
+End Property
+
+Public Property Let CloseoutSpecifier(ByVal Value As String)
+setDirty
+Set mCloseoutSpecifier = Value
+mDiff.SetProperty "CloseoutSpecifier", Value
+End Property
+
+Public Property Get CloseoutSpecifier() As CloseoutSpecifier
+Set CloseoutSpecifier = mCloseoutSpecifier
 End Property
 
 Public Property Let ContextName(ByVal Value As String)
