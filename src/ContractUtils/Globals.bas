@@ -60,6 +60,7 @@ Public Const DefaultTickSize                            As Double = 0.01
 Public Const DefaultTimezoneName                        As String = "Eastern Standard Time"
 
 Public Const MaxContractExpiryOffset                    As Long = 10
+Public Const MaxContractDaysBeforeExpiryToSwitch        As Long = 10
 
 '@================================================================================
 ' Member variables
@@ -544,7 +545,24 @@ End Function
 
 Public Function gIsOffsetExpiry( _
                 ByVal Value As String) As Boolean
-gIsOffsetExpiry = IsInteger(Value, 0, MaxContractExpiryOffset)
+gRegExp.Pattern = "^(\d\d?)(?:\[(\d\d?)d\])?$"
+gRegExp.IgnoreCase = True
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(Value))
+
+If lMatches.Count <> 1 Then
+    gIsOffsetExpiry = False
+    Exit Function
+End If
+
+Dim lResult As Boolean: lResult = True
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+If Not IsInteger(lMatch.SubMatches(0), 0, MaxContractExpiryOffset) Then lResult = False
+If Not IsInteger(lMatch.SubMatches(1), 0, MaxContractDaysBeforeExpiryToSwitch) Then lResult = False
+
+gIsOffsetExpiry = lResult
 End Function
 
 Public Function gIsValidExpiry( _
@@ -682,6 +700,28 @@ Case OptPut
     gOptionRightToString = "Put"
 End Select
 End Function
+
+Public Sub gParseOffsetExpiry( _
+                ByVal Value As String, _
+                ByRef pExpiryOffset As Long, _
+                ByRef pDaysBeforeExpiryToSwitch As Long)
+gRegExp.Pattern = "^(\d\d?)(?:\[(\d\d?)d\])?$"
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(Value))
+
+If lMatches.Count <> 1 Then Exit Sub
+
+Dim lResult As Boolean: lResult = True
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+If IsInteger(lMatch.SubMatches(0), 0, MaxContractExpiryOffset) Then
+    pExpiryOffset = lMatch.SubMatches(0)
+End If
+If IsInteger(lMatch.SubMatches(1), 0, MaxContractDaysBeforeExpiryToSwitch) Then
+    pDaysBeforeExpiryToSwitch = lMatch.SubMatches(1)
+End If
+End Sub
 
 Public Property Get gRegExp() As RegExp
 Const ProcName As String = "gRegExp"

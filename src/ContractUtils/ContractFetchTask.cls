@@ -75,6 +75,7 @@ Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mExpiryOffset                               As Long
+Private mDaysBeforeExpiryToSwitch                   As Long
 Private mSortKeys()                                 As ContractSortKeyIds
 
 '@================================================================================
@@ -124,7 +125,7 @@ If Not futureIsPending Then Exit Sub
 If gIsOffsetExpiry(mContractSpec.Expiry) And _
     mContractsBuilder.Contracts.Count <> 0 _
 Then
-    mExpiryOffset = CLng(mContractSpec.Expiry)
+    gParseOffsetExpiry mContractSpec.Expiry, mExpiryOffset, mDaysBeforeExpiryToSwitch
     
     ' we've now got at least one contract that meets the specified
     ' contract spec. Now we need to find all the contracts that do
@@ -159,7 +160,11 @@ If mExpiryOffset <> -1 Then
         Else
             lIndex = lIndex + 1
         End If
-        If lIndex = mExpiryOffset Then
+        If lIndex < mExpiryOffset Then
+        ElseIf GetOffsetSessionTimes( _
+                            lContract.ExpiryDate, _
+                            -mDaysBeforeExpiryToSwitch).StartTime >= Int(CDbl(Now)) _
+        Then
             ' we've found the contract we're after
             mContractsBuilder.Add lContract
             If Not mListener Is Nothing Then mListener.NotifyContract pCookie, lContract
