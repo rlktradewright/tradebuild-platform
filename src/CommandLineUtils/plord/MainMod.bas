@@ -1265,13 +1265,15 @@ End Sub
 
 Private Sub processGroupCommand( _
                 ByVal pParams As String)
-If pParams = "" Or pParams = DefaultGroupName Then
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
+Dim lGroupName As String: lGroupName = lClp.Arg(0)
+If lGroupName = "" Or lGroupName = DefaultGroupName Then
     mGroupName = DefaultGroupName
-ElseIf Not isGroupValid(pParams) Then
+ElseIf Not isGroupValid(lGroupName) Then
     gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore", True
     Exit Sub
 Else
-    mGroupName = pParams
+    mGroupName = lGroupName
 End If
 
 Dim lResources As GroupResources
@@ -1290,6 +1292,12 @@ Else
     End If
     mGroups.Add mGroupName
     Set mContractProcessor = Nothing
+End If
+
+If lClp.NumberOfArgs > 1 Or lClp.NumberOfSwitches > 0 Then
+    Dim lContractArgs As String
+    lContractArgs = Trim$(Right$(pParams, Len(pParams) - InStr(1, pParams, " ")))
+    processContractCommand lContractArgs
 End If
 
 If Not mContractProcessor Is Nothing Then
