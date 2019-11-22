@@ -285,6 +285,8 @@ For i = 0 To UBound(lOrderTypesStr)
         Case "SWEEP"
             lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttSweepToFill
         Case "ACTIVETIM", _
+            "ADJUST", _
+            "ALERT", _
             "ALLOC", _
             "ALGO", _
             "AVGCOST", _

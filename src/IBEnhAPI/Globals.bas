@@ -30,6 +30,11 @@ Public Const ExchangeSmartUK                    As String = "SMARTUK"
 Public Const ExchangeSmartUS                    As String = "SMARTUS"
 Public Const ExchangeSmartQualified             As String = "SMART/"
 
+Public Const OrderModeEntry                     As String = "entry"
+Public Const OrderModeStopLoss                  As String = "stop loss"
+Public Const OrderModeTarget                    As String = "target"
+Public Const OrderModeCloseout                  As String = "closeout"
+
 Public Const PrimaryExchangeARCA                As String = "ARCA"
 Public Const PrimaryExchangeEBS                 As String = "EBS"
 Public Const PrimaryExchangeFWB                 As String = "FWB"
@@ -111,7 +116,9 @@ With gContractSpecToTwsContract
         .PrimaryExch = PrimaryExchangeNYSE
         .Exchange = ExchangeSmart
     ElseIf lExchange = ExchangeSmartUS Then
-        .PrimaryExch = PrimaryExchangeARCA
+        If pContractSpecifier.SecType <> SecTypeOption Then
+            .PrimaryExch = PrimaryExchangeARCA
+        End If
         .Exchange = ExchangeSmart
     ElseIf lExchange = ExchangeSmartEUR Then
         .PrimaryExch = PrimaryExchangeIBIS
@@ -786,11 +793,11 @@ Case "AET"
     gTwsTimezoneNameToStandardTimeZoneName = "AUS Eastern Standard Time"
 Case "Asia/Hong_Kong"
     gTwsTimezoneNameToStandardTimeZoneName = "China Standard Time"
-Case "CST", "CTT"
+Case "CST", "CTT", "CST (Central Standard Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "Central Standard Time"
 Case "GMT", "GB"
     gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
-Case "EST", "EST5EDT"
+Case "EST", "EST5EDT", "EST (Eastern Standard Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "Eastern Standard Time"
 Case "PST", "Pacific/Pitcairn"
     gTwsTimezoneNameToStandardTimeZoneName = "Pacific Standard Time"

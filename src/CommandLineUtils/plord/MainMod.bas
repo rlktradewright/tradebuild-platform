@@ -79,30 +79,6 @@ Public Const StrikeSwitch                           As String = "STRIKE"
 Public Const StrikeSwitch1                          As String = "STR"
 Public Const TimezoneSwitch                         As String = "TIMEZONE"
 
-Public Const BatchOrdersCommand                     As String = "BATCHORDERS"
-Public Const BracketCommand                         As String = "BRACKET"
-Public Const BuyCommand                             As String = "BUY"
-Public Const BuyAgainCommand                        As String = "B"
-Public Const CloseoutCommand                        As String = "CLOSEOUT"
-Public Const ContractCommand                        As String = "CONTRACT"
-Public Const EndBracketCommand                      As String = "ENDBRACKET"
-Public Const EndOrdersCommand                       As String = "ENDORDERS"
-Public Const EntryCommand                           As String = "ENTRY"
-Public Const ExitCommand                            As String = "EXIT"
-Public Const GroupCommand                           As String = "GROUP"
-Public Const HelpCommand                            As String = "HELP"
-Public Const Help1Command                           As String = "?"
-Public Const ListCommand                            As String = "LIST"
-Public Const QuitCommand                            As String = "QUIT"
-Public Const QuoteCommand                           As String = "QUOTE"
-Public Const ResetCommand                           As String = "RESET"
-Public Const RolloverCommand                        As String = "ROLLOVER"
-Public Const SellCommand                            As String = "SELL"
-Public Const SellAgainCommand                       As String = "S"
-Public Const StageOrdersCommand                     As String = "STAGEORDERS"
-Public Const StopLossCommand                        As String = "STOPLOSS"
-Public Const TargetCommand                          As String = "TARGET"
-
 Public Const GroupsSubcommand                       As String = "GROUPS"
 Public Const PositionsSubcommand                    As String = "POSITIONS"
 Public Const TradesSubcommand                       As String = "TRADES"
@@ -117,12 +93,6 @@ Private Const No                                    As String = "NO"
 
 Public Const TickOffsetDesignator                   As String = "T"
 Public Const PercentOffsetDesignator                As String = "%"
-Public Const BidAskSpreadPercentOffsetDesignator    As String = "S"
-
-Public Const AskPriceDesignator                     As String = "ASK"
-Public Const BidPriceDesignator                     As String = "BID"
-Public Const LastPriceDesignator                    As String = "LAST"
-Public Const EntryPriceDesignator                   As String = "ENTRY"
 
 ' Legacy pseudo-order types from early versions
 Public Const AskPseudoOrderType                     As String = "ASK"
@@ -158,6 +128,14 @@ Public gPlaceOrdersTask                             As PlaceOrdersTask
 
 Public gBracketOrderListener                        As New BracketOrderListener
 
+Public gCommands                                    As New Commands
+Public gCommandListAlways                           As New CommandList
+Public gCommandListOrderCreation                    As New CommandList
+Public gCommandListOrderSpecification               As New CommandList
+Public gCommandListOrderCompletion                  As New CommandList
+Public gCommandListGeneral                          As New CommandList
+
+
 Private mErrorCount                                 As Long
 
 Private mFatalErrorHandler                          As FatalErrorHandler
@@ -176,12 +154,11 @@ Private mStageOrders                                As Boolean
 
 Private mContractProcessor                          As ContractProcessor
 
-Private mContractProcessors                         As New EnumerableCollection
-Private mGroupContractProcessors                    As SortedDictionary
+Private mGroups                                     As New Groups
 
 Private mCommandNumber                              As Long
 
-Private mValidNextCommands()                        As String
+Private mNextCommands                               As New NextCommands
 
 Private mClp                                        As CommandLineParser
 
@@ -237,18 +214,14 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function gGenerateOffset( _
-                ByVal pValue As Double, _
-                ByVal pOffsetType As PriceOffsetTypes) As String
-Dim lDesignator As String
-If pOffsetType = PriceOffsetTypeBidAskPercent Then
-    lDesignator = PercentOffsetDesignator
-ElseIf pOffsetType = PriceOffsetTypeIncrement Then
-    lDesignator = ""
-ElseIf pOffsetType = PriceOffsetTypeNumberOfTicks Then
-    lDesignator = TickOffsetDesignator
-End If
-gGenerateOffset = CStr(pValue) & lDesignator
+Public Function gGenerateContractProcessorName( _
+                ByVal pGroupName As String, _
+                ByVal pContractSpec As IContractSpecifier) As String
+Const PositionManagerNameSeparator As String = "&&"
+
+gGenerateContractProcessorName = UCase$(mGroupName & _
+                                        PositionManagerNameSeparator & _
+                                        pContractSpec.Key)
 End Function
 
 Public Function gGenerateSwitch(ByVal pName As String, ByVal pValue As String) As String
@@ -291,8 +264,6 @@ Public Function gNotifyContractFutureAvailable( _
 Const ProcName As String = "gNotifyContractAvailable"
 On Error GoTo Err
 
-Const PositionManagerNameSeparator As String = "&&"
-
 If pContractFuture.IsCancelled Then
     gWriteErrorLine "Contract fetch was cancelled", True
     Exit Function
@@ -317,18 +288,18 @@ End If
 mErrorCount = 0
     
 Dim lContractProcessorName As String
-lContractProcessorName = UCase$(mGroupName & _
-                        PositionManagerNameSeparator & _
-                        lContract.Specifier.Key)
+lContractProcessorName = gGenerateContractProcessorName(mGroupName, lContract.Specifier)
 
-If Not mContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
+Dim lGroupResources As GroupResources
+Set lGroupResources = mGroups.Item(mGroupName)
+
+If Not lGroupResources.ContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
     Set mContractProcessor = New ContractProcessor
     mContractProcessor.Initialise lContractProcessorName, pContractFuture, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
-    mContractProcessors.Add mContractProcessor, lContractProcessorName
+    lGroupResources.ContractProcessors.Add mContractProcessor, lContractProcessorName
 End If
 
-If mGroupContractProcessors.Contains(UCase$(mGroupName)) Then mGroupContractProcessors.Remove UCase$(mGroupName)
-mGroupContractProcessors.Add mContractProcessor, UCase$(mGroupName)
+lGroupResources.CurrentContractProcessor = mContractProcessor
 
 Set gNotifyContractFutureAvailable = mContractProcessor
 
@@ -353,11 +324,12 @@ UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoin
 End Sub
 
 Public Sub gSetValidNextCommands(ParamArray values() As Variant)
-ReDim mValidNextCommands(UBound(values)) As String
+ReDim lCommandLists(UBound(values)) As CommandList
 Dim i As Long
 For i = 0 To UBound(values)
-    mValidNextCommands(i) = values(i)
+    Set lCommandLists(i) = values(i)
 Next
+mNextCommands.SetValidNextCommandLists lCommandLists
 End Sub
 
 Public Sub gWriteErrorLine( _
@@ -392,7 +364,7 @@ On Error GoTo Err
 
 Set gCon = GetConsole
 
-If Trim$(command) = "/?" Or Trim$(command) = "-?" Then
+If Trim$(Command) = "/?" Or Trim$(Command) = "-?" Then
     showUsage
     Exit Sub
 End If
@@ -402,18 +374,21 @@ InitialiseTWUtilities
 Set mFatalErrorHandler = New FatalErrorHandler
 ApplicationGroupName = "TradeWright"
 ApplicationName = "plord"
-SetupDefaultLogging command, True, True
+SetupDefaultLogging Command, True, True
 
 Set mConfigStore = gGetConfigStore
 
 logProgramId
 
+setupCommandLists
+
+Set mGroups = New Groups
+
 Set gPlaceOrdersTask = New PlaceOrdersTask
+gPlaceOrdersTask.Initialise mGroups
 StartTask gPlaceOrdersTask, PriorityNormal
 
-Set mGroupContractProcessors = CreateSortedDictionary(KeyTypeString)
-
-Set mClp = CreateCommandLineParser(command)
+Set mClp = CreateCommandLineParser(Command)
 
 Dim lLogApiMessages As ApiMessageLoggingOptions
 Dim lLogRawApiMessages As ApiMessageLoggingOptions
@@ -473,8 +448,11 @@ Const ProcName As String = "getNumberOfUnprocessedOrders"
 On Error GoTo Err
 
 Dim lProcessor As ContractProcessor
-For Each lProcessor In mContractProcessors
-    getNumberOfUnprocessedOrders = getNumberOfUnprocessedOrders + lProcessor.BracketOrders.Count
+Dim lGroupResources As GroupResources
+For Each lGroupResources In mGroups
+    For Each lProcessor In lGroupResources.ContractProcessors
+        getNumberOfUnprocessedOrders = getNumberOfUnprocessedOrders + lProcessor.BracketOrders.Count
+    Next
 Next
 
 Exit Function
@@ -495,22 +473,12 @@ Else
 End If
 End Function
 
-Private Function isCommandValid(ByVal pCommand As String) As Boolean
-Dim i As Long
-For i = 0 To UBound(mValidNextCommands)
-    If pCommand = mValidNextCommands(i) Then
-        isCommandValid = True
-        Exit Function
-    End If
-Next
-End Function
-
 Private Function isGroupValid(ByVal pGroup As String) As Boolean
 Const ProcName As String = "isGroupValid"
 On Error GoTo Err
 
 gRegExp.Global = True
-gRegExp.Pattern = "^[a-zA-Z0-9][\w-]*$"
+gRegExp.Pattern = "^(\$|[a-zA-Z0-9][\w-]*)$"
 isGroupValid = gRegExp.Test(pGroup)
 
 Exit Function
@@ -519,16 +487,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub listGroupNames()
-Const ProcName As String = "listGroupNames"
+Private Sub listGroups()
+Const ProcName As String = "listGroups"
 On Error GoTo Err
 
-Dim lVar As Variant
-For Each lVar In mOrderManager.GetGroupNames
-    Dim lGroupName As String: lGroupName = UCase$(lVar)
+Dim lRes As GroupResources
+For Each lRes In mGroups
+    Dim lGroupName As String: lGroupName = lRes.GroupName
     Dim lContractProcessor As ContractProcessor
+    Set lContractProcessor = lRes.CurrentContractProcessor
+    
     Dim lContractName As String
-    If mGroupContractProcessors.TryItem(lGroupName, lContractProcessor) Then
+    If lContractProcessor Is Nothing Then
+        lContractName = ""
+    Else
         lContractName = getContractName(lContractProcessor.Contract)
     End If
     gWriteLineToConsole IIf(lGroupName = UCase$(mGroupName), "* ", "  ") & _
@@ -611,7 +583,7 @@ s = App.ProductName & _
     App.FileDescription & vbCrLf & _
     App.LegalCopyright
 gWriteLineToConsole s, False
-s = s & vbCrLf & "Arguments: " & command
+s = s & vbCrLf & "Arguments: " & Command
 LogMessage s
 
 Exit Sub
@@ -751,6 +723,107 @@ Else
 End If
 End Function
 
+Private Function parseLegacyCloseoutCommand( _
+                ByVal pParams As String, _
+                ByRef pGroupName As String, _
+                ByRef pCloseoutMode As CloseoutModes, _
+                ByRef pPriceSspec As PriceSpecifier) As Boolean
+Const ProcName As String = "parseLegacyCloseoutCommand"
+On Error GoTo Err
+
+gRegExp.Global = False
+gRegExp.IgnoreCase = True
+
+Dim p As String: p = _
+    "(?:" & _
+        "^" & _
+        "(?!mkt)(?!lmt)" & _
+        "(?:" & _
+            "(?: *)|(all|\$)|([a-zA-Z0-9][\w-]*)" & _
+        ")" & _
+        "(?:" & _
+            " +" & _
+            "(?:" & _
+                "(mkt)|" & _
+                "(?:" & _
+                    "(lmt)" & _
+                    "(?:" & _
+                        ":(-)?(\d{1,3})" & _
+                    ")?" & _
+                ")" & _
+            ")" & _
+        ")?" & _
+        "$" & _
+    ")" & _
+    "|"
+p = p & _
+    "(?:" & _
+        "^" & _
+        " *" & _
+        "(?:" & _
+            "(mkt)|" & _
+            "(?:" & _
+                "(lmt)" & _
+                "(?:" & _
+                    ":(-)?(\d{1,3})" & _
+                ")?" & _
+            ")" & _
+        ")" & _
+        "$" & _
+    ")"
+gRegExp.Pattern = p
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(pParams))
+
+If lMatches.Count <> 1 Then
+    Exit Function
+End If
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+
+If lMatch.SubMatches(0) = AllGroups Then
+    pGroupName = AllGroups
+ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
+    pGroupName = DefaultGroupName
+Else
+    pGroupName = UCase$(lMatch.SubMatches(1))
+End If
+    
+Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(3)) = CloseoutLimit Or _
+                                                    UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
+If lUseLimitOrders Then
+    pCloseoutMode = CloseoutModeLimit
+Else
+    pCloseoutMode = CloseoutModeMarket
+End If
+
+Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(4) = "-" Or lMatch.SubMatches(8) = "-", -1, 1)
+
+Dim lSpreadFactor As Long
+If lMatch.SubMatches(5) <> "" Then
+    lSpreadFactor = lMatch.SubMatches(5) * lSpreadFactorSign
+ElseIf lMatch.SubMatches(9) <> "" Then
+    lSpreadFactor = lMatch.SubMatches(9) * lSpreadFactorSign
+End If
+
+Set pPriceSspec = NewPriceSpecifier(pPriceType:=PriceValueTypeBidOrAsk, _
+                                    pOffset:=lSpreadFactor, _
+                                    pOffsetType:=PriceOffsetTypeBidAskPercent)
+
+parseLegacyCloseoutCommand = True
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description, True
+    Exit Function
+End If
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub process()
 Const ProcName As String = "process"
 On Error GoTo Err
@@ -761,7 +834,9 @@ If Not setBatchOrders Then Exit Sub
 
 setOrderRecovery
 
-gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, QuoteCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, CloseoutCommand, ResetCommand
+gSetValidNextCommands gCommandListAlways, _
+                    gCommandListGeneral, _
+                    gCommandListOrderCreation
 
 Dim inString As String: inString = getInputLine
 
@@ -796,80 +871,84 @@ Private Function processCommand(ByVal pInstring As String) As Boolean
 Const ProcName As String = "processCommand"
 On Error GoTo Err
 
-Dim command As String
-command = UCase$(Split(pInstring, " ")(0))
+Dim lCommandName As String
+lCommandName = UCase$(Split(pInstring, " ")(0))
 
 Dim Params As String
-Params = Trim$(Right$(pInstring, Len(pInstring) - Len(command)))
+Params = Trim$(Right$(pInstring, Len(pInstring) - Len(lCommandName)))
 
-If command = ExitCommand Or command = QuitCommand Then
+Dim lCommand As Command
+Set lCommand = gCommands.ParseCommand(lCommandName)
+
+If lCommand Is gCommands.ExitCommand Then
     processCommand = False
     Exit Function
 End If
 
-If command = Help1Command Then
-    gCon.WriteLine "Valid commands at this point are: " & Join(mValidNextCommands, ",")
-ElseIf command = HelpCommand Then
+If lCommand Is gCommands.Help1Command Then
+    gCon.WriteLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames
+ElseIf lCommand Is gCommands.HelpCommand Then
     showStdInHelp
-ElseIf Not isCommandValid(command) Then
-    gWriteErrorLine "Valid commands at this point are: " & Join(mValidNextCommands, ","), Not mBracketOrderDefinitionInProgress
-
+ElseIf Not mNextCommands.IsCommandValid(lCommand) Then
+    gWriteErrorLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames, Not mBracketOrderDefinitionInProgress
+ElseIf lCommand Is gCommands.ContractCommand Then
+    processContractCommand Params
+ElseIf lCommand Is gCommands.BatchOrdersCommand Then
+    processBatchOrdersCommand Params
+ElseIf lCommand Is gCommands.StageOrdersCommand Then
+    processStageOrdersCommand Params
+ElseIf lCommand Is gCommands.GroupCommand Then
+    processGroupCommand Params
+ElseIf lCommand Is gCommands.BuyCommand Then
+    setupResultsLogging mClp
+    ProcessBuyCommand Params
+ElseIf lCommand Is gCommands.BuyAgainCommand Then
+    ProcessBuyAgainCommand Params
+ElseIf lCommand Is gCommands.SellCommand Then
+    setupResultsLogging mClp
+    ProcessSellCommand Params
+ElseIf lCommand Is gCommands.SellAgainCommand Then
+    ProcessSellAgainCommand Params
+ElseIf lCommand Is gCommands.BracketCommand Then
+    mBracketOrderDefinitionInProgress = True
+    mContractProcessor.ProcessBracketCommand Params
+ElseIf lCommand Is gCommands.EntryCommand Then
+    mContractProcessor.ProcessEntryCommand Params
+ElseIf lCommand Is gCommands.StopLossCommand Then
+    mContractProcessor.ProcessStopLossCommand Params
+ElseIf lCommand Is gCommands.TargetCommand Then
+    mContractProcessor.ProcessTargetCommand Params
+ElseIf lCommand Is gCommands.RolloverCommand
+	mContractProcessor.ProcessRolloverCommand Params
+ElseIf lCommand Is gCommands.QuitCommand Then
+    mContractProcessor.ProcessQuitCommand
+    mErrorCount = 0
+ElseIf lCommand Is gCommands.EndBracketCommand Then
+    mBracketOrderDefinitionInProgress = False
+    mContractProcessor.ProcessEndBracketCommand
+    If mErrorCount = 0 And Not mBatchOrders Then
+        setupResultsLogging mClp
+        processOrders
+    Else
+        gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed", True
+        mErrorCount = 0
+    End If
+ElseIf lCommand Is gCommands.EndOrdersCommand Then
+    gWriteLineToStdOut lCommandName
+    processEndOrdersCommand
+ElseIf lCommand Is gCommands.ResetCommand Then
+    processResetCommand
+ElseIf lCommand Is gCommands.ListCommand Then
+    processListCommand Params
+ElseIf lCommand Is gCommands.CloseoutCommand Then
+    setupResultsLogging mClp
+    processCloseoutCommand Params
+ElseIf lCommand Is gCommands.QuoteCommand Then
+    processQuoteCommand Params
+ElseIf lCommand Is gCommands.PurgeCommand Then
+    processPurgeCommand Params
 Else
-    Select Case command
-    Case ContractCommand
-        processContractCommand Params
-    Case BatchOrdersCommand
-        processBatchOrdersCommand Params
-    Case StageOrdersCommand
-        processStageOrdersCommand Params
-    Case GroupCommand
-        processGroupCommand Params
-    Case BuyCommand
-        setupResultsLogging mClp
-        ProcessBuyCommand Params
-    Case BuyAgainCommand
-        ProcessBuyAgainCommand Params
-    Case SellCommand
-        setupResultsLogging mClp
-        ProcessSellCommand Params
-    Case SellAgainCommand
-        ProcessSellAgainCommand Params
-    Case BracketCommand
-        mBracketOrderDefinitionInProgress = True
-        mContractProcessor.ProcessBracketCommand Params
-    Case EntryCommand
-        mContractProcessor.ProcessEntryCommand Params
-    Case StopLossCommand
-        mContractProcessor.ProcessStopLossCommand Params
-    Case TargetCommand
-        mContractProcessor.ProcessTargetCommand Params
-    Case RolloverCommand
-        mContractProcessor.ProcessRolloverCommand Params
-    Case EndBracketCommand
-        mBracketOrderDefinitionInProgress = False
-        mContractProcessor.ProcessEndBracketCommand
-        If mErrorCount = 0 And Not mBatchOrders Then
-            setupResultsLogging mClp
-            processOrders
-        Else
-            gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed", True
-            mErrorCount = 0
-        End If
-    Case EndOrdersCommand
-        gWriteLineToStdOut EndOrdersCommand
-        processEndOrdersCommand
-    Case ResetCommand
-        processResetCommand
-    Case ListCommand
-        processListCommand Params
-    Case CloseoutCommand
-        setupResultsLogging mClp
-        processCloseoutCommand Params
-    Case QuoteCommand
-        processQuoteCommand Params
-    Case Else
-        gWriteErrorLine "Invalid command '" & command & "'", True
-    End Select
+    gWriteErrorLine "Invalid command '" & Command & "'", True
 End If
 
 processCommand = True
@@ -890,10 +969,8 @@ Case Yes
 Case No
     mBatchOrders = False
 Case Else
-    gWriteErrorLine BatchOrdersCommand & " parameter must be either YES or NO or DEFAULT", True
+    gWriteErrorLine gCommands.BatchOrdersCommand.Name & " parameter must be either YES or NO or DEFAULT", True
 End Select
-
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, QuoteCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
 End Sub
 
 Private Sub ProcessBuyCommand( _
@@ -1006,87 +1083,109 @@ Private Sub processCloseoutCommand( _
 Const ProcName As String = "processCloseoutCommand"
 On Error GoTo Err
 
-gRegExp.Global = False
-gRegExp.IgnoreCase = True
+Dim lLimitOrder As String: lLimitOrder = OrderTypeToShortString(OrderTypeLimit)
+Dim lMarketOrder As String: lMarketOrder = OrderTypeToShortString(OrderTypeMarket)
 
-Dim p As String: p = _
-    "(?:" & _
-        "^" & _
-        "(?!mkt)(?!lmt)" & _
-        "(?:" & _
-            "(?: *)|(all|\$)|([a-zA-Z0-9][\w-]*)" & _
-        ")" & _
-        "(?:" & _
-            " +" & _
-            "(?:" & _
-                "(mkt)|" & _
-                "(?:" & _
-                    "(lmt)" & _
-                    "(?:" & _
-                        ":(-)?(\d{1,3})" & _
-                    ")?" & _
-                ")" & _
-            ")" & _
-        ")?" & _
-        "$" & _
-    ")" & _
-    "|"
-p = p & _
-    "(?:" & _
-        "^" & _
-        " *" & _
-        "(?:" & _
-            "(mkt)|" & _
-            "(?:" & _
-                "(lmt)" & _
-                "(?:" & _
-                    ":(-)?(\d{1,3})" & _
-                ")?" & _
-            ")" & _
-        ")" & _
-        "$" & _
-    ")"
-gRegExp.Pattern = p
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 
-Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(Trim$(pParams))
-
-If lMatches.Count <> 1 Then
-    gWriteErrorLine "Invalid command: syntax error", True
-    Exit Sub
-End If
-
-Dim lMatch As Match: Set lMatch = lMatches(0)
-
-Dim lAllGroups As Boolean
 Dim lGroupName As String
-If lMatch.SubMatches(0) = AllGroups Then
-    lAllGroups = True
-ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
-    lGroupName = DefaultGroupName
-Else
-    lGroupName = UCase$(lMatch.SubMatches(1))
-End If
-    
-Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(3)) = CloseoutLimit Or _
-                                                    UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
-Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(4) = "-" Or lMatch.SubMatches(8) = "-", -1, 1)
+Dim lOrderTypeName As String
+Dim lPriceStr As String
 
-Dim lSpreadFactor As Long
-If lMatch.SubMatches(5) <> "" Then
-    lSpreadFactor = lMatch.SubMatches(5) * lSpreadFactorSign
-ElseIf lMatch.SubMatches(9) <> "" Then
-    lSpreadFactor = lMatch.SubMatches(9) * lSpreadFactorSign
+Dim lCloseoutMode As CloseoutModes
+Dim lPriceSpec As PriceSpecifier
+
+Dim lError As Boolean
+
+If lClp.NumberOfArgs = 3 Then
+    lGroupName = lClp.Arg(0)
+    lPriceStr = lClp.Arg(2)
+    lOrderTypeName = UCase$(lClp.Arg(1))
+    If lOrderTypeName = lMarketOrder Then
+        lCloseoutMode = CloseoutModeMarket
+    ElseIf lOrderTypeName = lLimitOrder Then
+        lCloseoutMode = CloseoutModeLimit
+    Else
+        lError = True
+        gWriteErrorLine "Second argument must be either 'MKT' or 'LMT'", True
+    End If
+ElseIf lClp.NumberOfArgs = 2 Then
+    lOrderTypeName = UCase$(lClp.Arg(0))
+    If lOrderTypeName = lLimitOrder Then
+        lCloseoutMode = CloseoutModeLimit
+        lPriceStr = lClp.Arg(1)
+    ElseIf lOrderTypeName = lMarketOrder Then
+        lCloseoutMode = CloseoutModeMarket
+        lPriceStr = lClp.Arg(1)
+    ElseIf isGroupValid(lClp.Arg(0)) Then
+        lGroupName = lClp.Arg(0)
+        lOrderTypeName = UCase$(lClp.Arg(1))
+        If lOrderTypeName = lMarketOrder Then
+            lCloseoutMode = CloseoutModeMarket
+        ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+            lError = True
+            gWriteErrorLine "Syntax error", True
+        End If
+    ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+        lError = True
+        gWriteErrorLine "Syntax error", True
+    End If
+ElseIf lClp.NumberOfArgs = 1 Then
+    lOrderTypeName = UCase$(lClp.Arg(0))
+    If lOrderTypeName = lMarketOrder Then
+        lCloseoutMode = CloseoutModeMarket
+    ElseIf lOrderTypeName = lLimitOrder Then
+        If Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+            lError = True
+            gWriteErrorLine "Closeout price specification is missing", True
+        End If
+    ElseIf isGroupValid(lClp.Arg(0)) Then
+        lGroupName = lClp.Arg(0)
+    ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+        lError = True
+        gWriteErrorLine "Syntax error"
+    End If
+ElseIf lClp.NumberOfArgs = 0 Then
+    lCloseoutMode = CloseoutModeMarket
+Else
+    lError = True
+    gWriteErrorLine "Too many arguments", True
 End If
+
+If lGroupName = "" Then
+    lGroupName = mGroupName
+ElseIf lGroupName <> AllGroups And lGroupName <> DefaultGroupName Then
+    If Not isGroupValid(lGroupName) Then
+        lError = True
+        gWriteErrorLine lGroupName & " is not a valid group name", True
+    ElseIf Not mGroups.Contains(lGroupName) Then
+        lError = True
+        gWriteErrorLine "No such group", True
+    End If
+End If
+
+If lCloseoutMode = CloseoutModeMarket Then
+    If lPriceStr <> "" Then
+        lError = True
+        gWriteErrorLine "A price specification cannot be supplied for closeout at market"
+    End If
+ElseIf lPriceStr = "" And lPriceSpec Is Nothing Then
+    lError = True
+    gWriteErrorLine "Closeout price specification is missing", True
+ElseIf Not lPriceSpec Is Nothing Then
+ElseIf Not ParsePriceAndOffset(lPriceSpec, lPriceStr, SecTypeNone, 0#, True) Then
+    lError = True
+    gWriteErrorLine "Invalid price specification", True
+End If
+
+If lError Then Exit Sub
 
 Dim lCloseoutProcessor As New CloseoutProcessor
-lCloseoutProcessor.Initialise mOrderManager, lUseLimitOrders, lSpreadFactor
+lCloseoutProcessor.Initialise mOrderManager, lCloseoutMode, lPriceSpec
 
-If lAllGroups Then
+If lGroupName = AllGroups Then
     lCloseoutProcessor.CloseoutAll
-ElseIf lGroupName = "" Then
-    lCloseoutProcessor.CloseoutGroup mGroupName
-ElseIf Not mOrderManager.GetGroupNames.Contains(lGroupName) Then
+ElseIf Not mGroups.Contains(lGroupName) Then
     gWriteErrorLine "No such group", True
 Else
     lCloseoutProcessor.CloseoutGroup lGroupName
@@ -1106,9 +1205,10 @@ Private Sub processContractCommand(ByVal pParams As String)
 Const ProcName As String = "processContractCommand"
 On Error GoTo Err
 
-If Trim$(pParams) = "" Then Exit Sub
+If pParams = "" Then Exit Sub
 
-If Trim$(pParams) = HelpCommand Or Trim$(pParams) = Help1Command Then
+pParams = UCase$(pParams)
+If gCommands.HelpCommand.parse(pParams) Or gCommands.Help1Command.parse(pParams) Then
     showContractHelp
     Exit Sub
 End If
@@ -1128,9 +1228,9 @@ End If
 
 If lContractSpec Is Nothing Then
     If Not mContractProcessor Is Nothing Then
-        gSetValidNextCommands ListCommand, ContractCommand, QuoteCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
+        gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     Else
-        gSetValidNextCommands ListCommand, ContractCommand, QuoteCommand, EndOrdersCommand, ResetCommand
+        gSetValidNextCommands gCommandListAlways, gCommandListGeneral
     End If
     Exit Sub
 End If
@@ -1157,7 +1257,7 @@ On Error GoTo Err
 If mErrorCount <> 0 Then
     gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed", True
     mErrorCount = 0
-    gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     Exit Sub
 End If
 
@@ -1180,26 +1280,33 @@ If pParams = "" Or pParams = DefaultGroupName Then
     mGroupName = DefaultGroupName
 ElseIf Not isGroupValid(pParams) Then
     gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore", True
+    Exit Sub
 Else
     mGroupName = pParams
 End If
-If mGroupContractProcessors.TryItem(UCase$(mGroupName), mContractProcessor) Then
-    mGroupName = mContractProcessor.GroupName
+
+Dim lResources As GroupResources
+If mGroups.TryItem(UCase$(mGroupName), lResources) Then
+    Set mContractProcessor = lResources.CurrentContractProcessor
+    mGroupName = lResources.GroupName
 Else
     Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(mGroupName)
+    
+    ' get the 'canonical' group name spelling
     If lPMs.Count <> 0 Then
         Dim en As Enumerator: Set en = lPMs.Enumerator
         en.MoveNext
         Dim lPM As PositionManager: Set lPM = en.Current
         mGroupName = lPM.GroupName
     End If
+    mGroups.Add mGroupName
     Set mContractProcessor = Nothing
 End If
 
 If Not mContractProcessor Is Nothing Then
-    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 Else
-    gSetValidNextCommands GroupCommand, CloseoutCommand, ListCommand, ContractCommand, QuoteCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, EndOrdersCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral
 End If
 End Sub
 
@@ -1210,9 +1317,9 @@ On Error GoTo Err
 ' To avoid exceeding the API's input message limits, we process orders
 ' asynchronously with a task
 
-gPlaceOrdersTask.AddContractProcessors mContractProcessors, mStageOrders
+gPlaceOrdersTask.AddContractProcessors mGroups.Item(mGroupName).ContractProcessors, mStageOrders
 
-gSetValidNextCommands ListCommand, StageOrdersCommand, GroupCommand, ContractCommand, QuoteCommand, BracketCommand, BuyCommand, BuyAgainCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
 Exit Sub
 
@@ -1226,14 +1333,63 @@ Const ProcName As String = "processListCommand"
 On Error GoTo Err
 
 If UCase$(pParams) = GroupsSubcommand Then
-    listGroupNames
+    listGroups
 ElseIf UCase$(pParams) = PositionsSubcommand Then
     listPositions
 ElseIf UCase$(pParams) = TradesSubcommand Then
     listTrades
 Else
-    gWriteErrorLine ListCommand & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & " or " & TradesSubcommand, True
+    gWriteErrorLine gCommands.ListCommand.Name & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & " or " & TradesSubcommand, True
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processPurgeCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processPurgeCommand"
+On Error GoTo Err
+
+Dim lRes As GroupResources
+
+If pParams = "" Then
+    gWriteLineToConsole "Purging " & mGroupName
+    Set mContractProcessor = Nothing
+    purgeGroup mGroupName
+    mGroups.Remove mGroupName
+    mGroupName = DefaultGroupName
+ElseIf UCase$(pParams) = AllGroups Then
+    For Each lRes In mGroups
+        Dim lGroupName As String: lGroupName = lRes.GroupName
+        gWriteLineToConsole "Purging " & lGroupName
+        purgeGroup lGroupName
+        If lGroupName = mGroupName Then
+            mGroupName = DefaultGroupName
+            Set mContractProcessor = Nothing
+        End If
+    Next
+    mGroups.Clear
+ElseIf isGroupValid(pParams) Then
+    If Not mGroups.TryItem(pParams, lRes) Then
+        gWriteErrorLine "No such group", True
+        Exit Sub
+    End If
+    gWriteLineToConsole "Purging " & lRes.GroupName
+    purgeGroup pParams
+    mGroups.Remove pParams
+    If UCase$(pParams) = UCase$(mGroupName) Then
+        mGroupName = DefaultGroupName
+        Set mContractProcessor = Nothing
+    End If
+Else
+    gWriteErrorLine "Invalid group name", True
+    Exit Sub
+End If
+
+mGroups.Add DefaultGroupName
 
 Exit Sub
 
@@ -1282,12 +1438,11 @@ End If
 End Sub
 
 Private Sub processResetCommand()
-mContractProcessors.Clear
 Set mContractProcessor = Nothing
 mStageOrders = mStageOrdersDefault
 mBatchOrders = mBatchOrdersDefault
 mErrorCount = 0
-gSetValidNextCommands ListCommand, StageOrdersCommand, BatchOrdersCommand, GroupCommand, ContractCommand, QuoteCommand, BuyCommand, SellCommand, SellAgainCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral
 End Sub
 
 Private Sub processStageOrdersCommand( _
@@ -1297,17 +1452,54 @@ Case Default
     mStageOrders = mStageOrdersDefault
 Case Yes
     If Not (mOrderSubmitterFactory.Capabilities And OrderSubmitterCapabilityCanStageOrders) = OrderSubmitterCapabilityCanStageOrders Then
-        gWriteErrorLine StageOrdersCommand & " parameter cannot be YES with current configuration", True
+        gWriteErrorLine gCommands.StageOrdersCommand.Name & " parameter cannot be YES with current configuration", True
         Exit Sub
     End If
     mStageOrders = True
 Case No
     mStageOrders = False
 Case Else
-    gWriteErrorLine StageOrdersCommand & " parameter must be either YES or NO or DEFAULT", True
+    gWriteErrorLine gCommands.StageOrdersCommand.Name & " parameter must be either YES or NO or DEFAULT", True
 End Select
 
-gSetValidNextCommands ListCommand, GroupCommand, ContractCommand, QuoteCommand, BuyCommand, SellCommand, SellAgainCommand, StageOrdersCommand, BatchOrdersCommand, ResetCommand, CloseoutCommand
+If mContractProcessor Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral
+Else
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
+End If
+End Sub
+
+Private Sub purgeGroup(ByVal pGroupName As String)
+Const ProcName As String = "purgeGroup"
+On Error GoTo Err
+
+Dim lRes As GroupResources
+Set lRes = mGroups.Item(pGroupName)
+
+lRes.CurrentContractProcessor = Nothing
+
+Dim lOrderPlacer As OrderPlacer
+For Each lOrderPlacer In lRes.OrderPlacers
+    lOrderPlacer.Finish
+    gPlaceOrdersTask.RemoveOrderPlacer lOrderPlacer
+Next
+lRes.OrderPlacers.Clear
+
+Dim lPM As PositionManager
+For Each lPM In mOrderManager.GetPositionManagersForGroup(pGroupName)
+    lPM.Purge
+Next
+
+Dim lContractProcessor As ContractProcessor
+For Each lContractProcessor In lRes.ContractProcessors
+    lContractProcessor.Finish
+Next
+lRes.ContractProcessors.Clear
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function setBatchOrders() As Boolean
@@ -1349,13 +1541,14 @@ mScopeName = mClp.SwitchValue(ScopeNameSwitch)
 If mScopeName = "" Then Exit Sub
 
 mGroupName = DefaultGroupName
+mGroups.Add DefaultGroupName
 mRecoveryFileDir = ApplicationSettingsFolder
 If mClp.SwitchValue(RecoveryFileDirSwitch) <> "" Then mRecoveryFileDir = mClp.SwitchValue(RecoveryFileDirSwitch)
 
 If mOrderPersistenceDataStore Is Nothing Then Set mOrderPersistenceDataStore = CreateOrderPersistenceDataStore(mRecoveryFileDir)
 
 Dim lOrderRecoverer As New OrderRecoverer
-lOrderRecoverer.RecoverOrders mOrderManager, mScopeName, mOrderPersistenceDataStore, mOrderRecoveryAgent, mMarketDataManager, mOrderSubmitterFactory
+lOrderRecoverer.RecoverOrders mOrderManager, mScopeName, mOrderPersistenceDataStore, mOrderRecoveryAgent, mMarketDataManager, mOrderSubmitterFactory, mGroups
 
 Exit Sub
 
@@ -1381,6 +1574,42 @@ Else
     setStageOrders = False
 End If
 End Function
+
+Private Sub setupCommandLists()
+gCommandListAlways.Initialise _
+                gCommands.ExitCommand, _
+                gCommands.HelpCommand, _
+                gCommands.Help1Command, _
+                gCommands.ListCommand, _
+                gCommands.PurgeCommand, _
+                gCommands.QuoteCommand, _
+                gCommands.ResetCommand, _
+                gCommands.StageOrdersCommand
+
+gCommandListOrderCreation.Initialise _
+                gCommands.BracketCommand, _
+                gCommands.BuyAgainCommand, _
+                gCommands.BuyCommand, _
+                gCommands.EndOrdersCommand, _
+                gCommands.SellAgainCommand, _
+                gCommands.SellCommand
+
+gCommandListOrderSpecification.Initialise _
+                gCommands.ContractCommand, _
+                gCommands.EntryCommand, _
+                gCommands.QuitCommand, _
+                gCommands.StopLossCommand, _
+                gCommands.TargetCommand
+
+gCommandListOrderCompletion.Initialise _
+                gCommands.EndBracketCommand
+
+gCommandListGeneral.Initialise _
+                gCommands.CloseoutCommand, _
+                gCommands.ContractCommand, _
+                gCommands.EndOrdersCommand, _
+                gCommands.GroupCommand
+End Sub
 
 Private Sub setupResultsLogging(ByVal pClp As CommandLineParser)
 Const ProcName As String = "setupResultsLogging"

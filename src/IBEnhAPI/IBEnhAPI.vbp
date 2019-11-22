@@ -35,6 +35,7 @@ Class=OrderQueueEntry; OrderQueueEntry.cls
 Class=RealtimeBarRequester; RealtimeBarRequester.cls
 Class=Client; Client.cls
 Class=MarketDataFactory; MarketDataFactory.cls
+Class=OptionTickSizeResolver; OptionTickSizeResolver.cls
 Startup="(None)"
 HelpFile=""
 Title="IBENHAPI27"

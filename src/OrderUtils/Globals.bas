@@ -1064,9 +1064,13 @@ Const ProcName As String = "gSyncToOrder"
 On Error GoTo Err
 
 With pTargetOrder
-    .Initialise pSourceOrder.GroupName, pSourceOrder.ContractSpecifier, pSourceOrder.OrderContext
-    
     .Action = pSourceOrder.Action
+    .LimitPrice = pSourceOrder.LimitPrice
+    .LimitPriceSpec = pSourceOrder.LimitPriceSpec
+    .TriggerPrice = pSourceOrder.TriggerPrice
+    .TriggerPriceSpec = pSourceOrder.TriggerPriceSpec
+    .IgnoreRegularTradingHours = pSourceOrder.IgnoreRegularTradingHours
+    
     .AllOrNone = pSourceOrder.AllOrNone
     .AveragePrice = pSourceOrder.AveragePrice
     .BlockOrder = pSourceOrder.BlockOrder
@@ -1083,15 +1087,10 @@ With pTargetOrder
     .GoodTillDate = pSourceOrder.GoodTillDate
     .GoodTillDateTZ = pSourceOrder.GoodTillDateTZ
     .Hidden = pSourceOrder.Hidden
-    .Id = pSourceOrder.Id
-    .IgnoreRegularTradingHours = pSourceOrder.IgnoreRegularTradingHours
     .IsSimulated = pSourceOrder.IsSimulated
     .LastFillPrice = pSourceOrder.LastFillPrice
-    .LimitPrice = pSourceOrder.LimitPrice
-    .LimitPriceSpec = pSourceOrder.LimitPriceSpec
     .MinimumQuantity = pSourceOrder.MinimumQuantity
     .NbboPriceCap = pSourceOrder.NbboPriceCap
-'    .Offset = pSourceOrder.Offset
     .Origin = pSourceOrder.Origin
     .OriginatorRef = pSourceOrder.OriginatorRef
     .OverrideConstraints = pSourceOrder.OverrideConstraints
@@ -1103,8 +1102,6 @@ With pTargetOrder
     .StopTriggerMethod = pSourceOrder.StopTriggerMethod
     .SweepToFill = pSourceOrder.SweepToFill
     .TimeInForce = pSourceOrder.TimeInForce
-    .TriggerPrice = pSourceOrder.TriggerPrice
-    .TriggerPriceSpec = pSourceOrder.TriggerPriceSpec
 
     ' do this last to prevent status influencing whether attributes are modifiable
     .Status = pSourceOrder.Status

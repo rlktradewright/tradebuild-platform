@@ -60,8 +60,8 @@ Private mEnSimulated                                As Enumerator
 
 Private mGroupName                                  As String
 
-Private mUseLimitOrders                             As Boolean
-Private mBidAskSpreadPercent                        As Long
+Private mCloseoutMode                              As CloseoutModes
+Private mPriceSpec                                  As PriceSpecifier
 
 '@================================================================================
 ' Class Event Handlers
@@ -115,7 +115,7 @@ Case PositionManagerChangeTypes.ProviderReadinessChanged
         pm.RemoveChangeListener Me
     ElseIf pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining + 1
-        pm.ClosePositions mUseLimitOrders, mBidAskSpreadPercent
+        pm.ClosePositions mCloseoutMode, mPriceSpec
         pm.AddChangeListener Me
     End If
 End Select
@@ -196,16 +196,16 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
-                ByVal pUseLimitOrder As Boolean, _
-                Optional ByVal pBidAskSpreadPercent As Long = 0, _
+                ByVal pCloseoutMode As CloseoutModes, _
+                Optional ByVal pPriceSpec As PriceSpecifier, _
                 Optional ByVal pGroupName As String, _
                 Optional ByVal pTypes As PositionTypes = PositionTypeLive)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mGroupName = UCase$(pGroupName)
-mUseLimitOrders = pUseLimitOrder
-mBidAskSpreadPercent = pBidAskSpreadPercent
+mCloseoutMode = pCloseoutMode
+Set mPriceSpec = pPriceSpec
 If (pTypes And PositionTypeLive) = PositionTypeLive Then Set mEnLive = pOrderManager.PositionManagersLive.Enumerator
 If (pTypes And PositionTypeSimulated) = PositionTypeSimulated Then Set mEnSimulated = pOrderManager.PositionManagersSimulated.Enumerator
 
@@ -237,7 +237,7 @@ End If
 If pm.ProviderIsReady Then
     mNumberRemaining = mNumberRemaining + 1
     pm.AddChangeListener Me
-    pm.ClosePositions mUseLimitOrders, mBidAskSpreadPercent
+    pm.ClosePositions mCloseoutMode, mPriceSpec
 Else
     If pm.IsSimulated Then
         mClosePositionsResult.NumberOfSimulatedPositionsNotClosed = mClosePositionsResult.NumberOfSimulatedPositionsNotClosed + 1

@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IOrderSubmitter"
+Attribute VB_Name = "Command"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -38,11 +38,13 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IOrderSubmitter"
+Private Const ModuleName                            As String = "Command"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mNames()                                    As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,85 +62,36 @@ Private Const ModuleName                            As String = "IOrderSubmitter
 ' Properties
 '@================================================================================
 
-Public Property Get Capabilities() As OrderSubmitterCapabilities
+Friend Property Get Name() As String
+Name = mNames(0)
 End Property
 
-Public Property Let OrdersAreStaged(ByVal Value As Boolean)
-End Property
-
-Public Property Get OrdersAreStaged() As Boolean
-End Property
-
-Public Property Get State() As OrderSubmitterStates
+Friend Property Get Names() As String
+Names = Join(mNames, " ")
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
+Friend Sub Initialise(ParamArray pNames() As Variant)
+ReDim mNames(UBound(pNames)) As String
+Dim i As Long
+For i = 0 To UBound(pNames)
+    mNames(i) = UCase$(pNames(i))
+Next
 End Sub
 
-Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
-
-Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
+Friend Function parse(ByVal pName As String) As Boolean
+Dim i As Long
+For i = 0 To UBound(mNames)
+    If mNames(i) = UCase$(pName) Then
+        parse = True
+        Exit Function
+    End If
+Next
+parse = False
 End Function
-
-Public Sub CancelOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Function GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
-End Function
-
-Public Function FetchPermittedOrderProperties( _
-                ByVal pContractFuture As IFuture, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
-
-Public Sub Finish()
-End Sub
-
-Public Sub ModifyOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub ModifyBracketOrder( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pEntryOrderChanged As Boolean, _
-                ByVal pStopOrderChanged As Boolean, _
-                ByVal pTargetOrderChanged As Boolean, _
-                ByVal pCloseoutOrderChanged As Boolean)
-End Sub
-
-Public Sub NotifyRecoveredOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub PlaceOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
-End Sub
-
-Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
-
-Public Sub ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
 
 '@================================================================================
 ' Helper Functions

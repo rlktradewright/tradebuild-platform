@@ -500,18 +500,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetTickSizeForOptions( _
-                ByVal pCurrentPrice As Double) As Double
-GetTickSizeForOptions = gGetTickSizeForOptions(pCurrentPrice)
-End Function
-
-Public Function GetTickSizeForStocks( _
-                ByVal pExchange As String, _
-                ByVal pCurrentPrice As Double, _
-                ByVal pDefaultTickSize As Double) As Double
-GetTickSizeForStocks = gGetTickSizeForStocks(pExchange, pCurrentPrice, pDefaultTickSize)
-End Function
-                
 Public Function FetchContract( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pPrimaryContractStore As IContractStore, _

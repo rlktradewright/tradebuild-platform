@@ -1121,8 +1121,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ClosePositions( _
-                ByVal pUseLimitOrder As Boolean, _
-                Optional ByVal pBidAskSpreadPercent As Long = 0)
+                Optional ByVal pCloseoutMode As CloseoutModes = CloseoutModeMarket, _
+                Optional ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
@@ -1134,7 +1134,7 @@ mPositionCloseErrorMessage = ""
 mClosingPosition = True
 
 Set mPositionCloser = New PositionCloser
-mPositionCloser.ClosePositions Me, pUseLimitOrder, pBidAskSpreadPercent
+mPositionCloser.ClosePositions Me, pCloseoutMode, pPriceSpec
 
 Exit Sub
 
@@ -1279,6 +1279,22 @@ End Sub
 Friend Sub PreInitialise( _
                 ByVal pOrderManager As OrderManager)
 Set mOrderManager = pOrderManager
+End Sub
+
+Public Sub Purge()
+Const ProcName As String = "Purge"
+On Error GoTo Err
+
+Assert Not mRecovering, "Invalid call to Purge during recovery"
+
+DeleteRecoveryInfo
+
+If Not IsFinished Then doFinish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
@@ -1516,6 +1532,8 @@ Set mBracketOrders = Nothing
 Set mOrders = Nothing
 Set mExecutions = Nothing
 
+mOrderManager.RemovePositionManager Me
+
 mIsFinished = True
 
 Exit Sub
@@ -1696,7 +1714,7 @@ Const ProcName As String = "init"
 On Error GoTo Err
 
 If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
-    Set mOrderContexts = mOrderManager.GetOrderContexts(mSummary.Name, mSummary.IsSimulated)
+    Set mOrderContexts = mOrderManager.getOrderContexts(mSummary.Name, mSummary.IsSimulated)
     If mOrderContexts Is Nothing Then _
         Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, _
                                                                 mContractFuture, _

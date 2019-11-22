@@ -46,8 +46,6 @@ Private Const ModuleName                            As String = "ContractProcess
 ' Member variables
 '@================================================================================
 
-Private mMarketDataManager                          As IMarketDataManager
-
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 
@@ -55,15 +53,11 @@ Private mBracketOrders                              As New EnumerableCollection
 
 Private mBOSpec                                     As BracketOrderSpecification
 
-Private mOrderManager                               As OrderManager
-
-Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 Private mPositionManager                            As PositionManager
 
 Private WithEvents mOrderContext                    As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
 
-Private mScopeName                                  As String
 Private mGroupName                                  As String
 
 Private mLatestBuyCommandParams                     As String
@@ -143,6 +137,41 @@ Friend Sub ClearOrders()
 mBracketOrders.Clear
 End Sub
 
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+mDataSource.Finish
+Set mDataSource = Nothing
+
+mBracketOrders.Clear
+
+mPositionManager.Finish
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Recover( _
+                ByVal pPositionManager As PositionManager)
+Const ProcName As String = "Recover"
+On Error GoTo Err
+
+Set mPositionManager = pPositionManager
+Set mContract = mPositionManager.ContractFuture.Value
+mGroupName = mPositionManager.GroupName
+
+Set mDataSource = mPositionManager.DataSource
+Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 Friend Sub Initialise( _
                 ByVal pName As String, _
                 ByVal pContractFuture As IFuture, _
@@ -155,26 +184,22 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContract = pContractFuture.Value
-Set mMarketDataManager = pMarketDataManager
-Set mOrderManager = pOrderManager
-mScopeName = pScopeName
 mGroupName = pGroupName
-Set mOrderSubmitterFactory = pOrderSubmitterFactory
 
-Set mDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, False)
+Set mDataSource = pMarketDataManager.CreateMarketDataSource(pContractFuture, False)
 mDataSource.StartMarketData
 
-If mScopeName = "" Then
-    Set mPositionManager = mOrderManager.CreatePositionManager( _
+If pScopeName = "" Then
+    Set mPositionManager = pOrderManager.CreatePositionManager( _
                                 pName, _
                                 mDataSource, _
-                                mOrderSubmitterFactory)
+                                pOrderSubmitterFactory)
 Else
-    Set mPositionManager = mOrderManager.CreateRecoverablePositionManager( _
+    Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
                                 pName, _
                                 mDataSource, _
-                                mOrderSubmitterFactory, _
-                                mScopeName, _
+                                pOrderSubmitterFactory, _
+                                pScopeName, _
                                 mGroupName)
 End If
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
@@ -233,7 +258,7 @@ If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.SwitchValue(l
 lSwitchName = TimezoneSwitch
 If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.SwitchValue(lSwitchName)
 
-gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, BracketCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 
 Exit Sub
 
@@ -280,7 +305,7 @@ On Error GoTo Err
 
 If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
-gSetValidNextCommands ListCommand, GroupCommand, QuoteCommand, BracketCommand, BuyCommand, SellCommand, SellAgainCommand, ContractCommand, EndOrdersCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
 Exit Sub
 
@@ -337,9 +362,9 @@ lSwitchName = IgnoreRTHSwitch
 mBOSpec.EntryIgnoreRTH = lClp.Switch(lSwitchName)
 
 If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
 End If
 
 Exit Sub
@@ -457,9 +482,9 @@ End If
 mBOSpec.Rollover = True
 
 If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
 End If
 
 Exit Sub
@@ -468,6 +493,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub ProcessQuitCommand()
+Const ProcName As String = "ProcessQuitCommand"
+On Error GoTo Err
+
+Set mBOSpec = Nothing
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
+gWriteLineToConsole "Command definition terminated"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub ProcessStopLossCommand( _
                 ByVal pParams As String)
@@ -513,9 +551,9 @@ lSwitchName = IgnoreRTHSwitch
 mBOSpec.StopLossIgnoreRTH = lClp.Switch(lSwitchName)
 
 If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
 End If
 
 Exit Sub
@@ -575,9 +613,9 @@ lSwitchName = IgnoreRTHSwitch
 mBOSpec.TargetIgnoreRTH = lClp.Switch(lSwitchName)
 
 If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 Else
-    gSetValidNextCommands QuoteCommand, EntryCommand, StopLossCommand, TargetCommand, RolloverCommand, EndBracketCommand, ResetCommand
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
 End If
 
 Exit Sub
@@ -730,8 +768,7 @@ Select Case pOrderType
 Case OrderTypeMarketIfTouched, _
         OrderTypeStop, _
         OrderTypeTrail
-    Set pTriggerPriceSpec = parsePrice(pArg1)
-    If pTriggerPriceSpec.PriceType = PriceValueTypeNone Then
+    If Not mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pArg1) Then
         parseOrderPrices = False
         gWriteErrorLine "Trigger price must be specified for this order type", True
     End If
@@ -742,8 +779,7 @@ Case OrderTypeMarketToLimit, _
         OrderTypeLimitIfTouched, _
         OrderTypeStopLimit, _
         OrderTypeTrailLimit
-    Set pLimitPriceSpec = parsePrice(pArg1)
-    If pLimitPriceSpec.PriceType = PriceValueTypeNone Then
+    If Not mOrderContext.ParsePriceAndOffset(pLimitPriceSpec, pArg1) Then
         parseOrderPrices = False
         gWriteErrorLine "Limit price must be specified for this order type", True
     End If
@@ -758,8 +794,7 @@ Select Case pOrderType
 Case OrderTypeLimitIfTouched, _
         OrderTypeStopLimit, _
         OrderTypeTrailLimit
-    Set pTriggerPriceSpec = parsePrice(pArg2)
-    If pTriggerPriceSpec.PriceType = PriceValueTypeNone Then
+    If Not mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pArg2) Then
         parseOrderPrices = False
         gWriteErrorLine "Trigger price must be specified for this order type", True
     End If
@@ -834,75 +869,6 @@ Else
     pPriceSpec.OffsetType = PriceOffsetTypeIncrement
 End If
 End Sub
-
-Private Function parsePrice( _
-                ByVal pValue As String) As PriceSpecifier
-Const ProcName As String = "parsePrice"
-On Error GoTo Err
-
-gRegExp.Global = False
-gRegExp.IgnoreCase = True
-
-Dim p As String
-p = "(?:^(?:(ASK|BID|LAST|ENTRY|(?:[-+]?\d{1,6}(?:.\d{1,6})?)))(?:\[(?:([-+]?\d{1,6}(?:.\d{1,6})?))([T%S]?)\])?$)"
-
-gRegExp.Pattern = p
-
-Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(Trim$(pValue))
-
-If lMatches.Count <> 1 Then
-    gWriteErrorLine "Invalid command: syntax error in " & pValue, True
-    Set parsePrice = NewPriceSpecifier()
-    Exit Function
-End If
-
-Dim lMatch As Match: Set lMatch = lMatches(0)
-
-Dim lPrice As Double
-Dim lPriceType As PriceValueTypes
-Dim lOffset As Double
-Dim lOffsetType As PriceOffsetTypes
-
-Dim lPricePart As String: lPricePart = UCase$(lMatch.SubMatches(0))
-Select Case lPricePart
-Case ""
-    lPriceType = PriceValueTypeNone
-Case AskPriceDesignator
-    lPriceType = PriceValueTypeAsk
-Case BidPriceDesignator
-    lPriceType = PriceValueTypeBid
-Case LastPriceDesignator
-    lPriceType = PriceValueTypeLast
-Case EntryPriceDesignator
-    lPriceType = PriceValueTypeEntry
-Case Else
-    lPriceType = PriceValueTypeValue
-    lPrice = CDbl(lPricePart)
-End Select
-
-Dim lOffsetPart As String: lOffsetPart = lMatch.SubMatches(1)
-If lOffsetPart <> "" Then lOffset = CDbl(lOffsetPart)
-
-Dim lOffsetDesignator As String: lOffsetDesignator = UCase$(lMatch.SubMatches(2))
-Select Case lOffsetDesignator
-Case ""
-    lOffsetType = PriceOffsetTypeIncrement
-Case TickOffsetDesignator
-    lOffsetType = PriceOffsetTypeNumberOfTicks
-Case PercentOffsetDesignator
-    lOffsetType = PriceOffsetTypePercent
-Case BidAskSpreadPercentOffsetDesignator
-    lOffsetType = PriceOffsetTypeBidAskPercent
-End Select
-
-Set parsePrice = NewPriceSpecifier(lPrice, lPriceType, lOffset, lOffsetType)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Function processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _
@@ -980,7 +946,7 @@ If processBuyOrSellCommand Then
     End If
 End If
 
-gSetValidNextCommands ContractCommand, QuoteCommand, BuyCommand, SellCommand, SellAgainCommand, BracketCommand, ResetCommand, CloseoutCommand
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
 Exit Function
 

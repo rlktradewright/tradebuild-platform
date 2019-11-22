@@ -2181,7 +2181,7 @@ On Error GoTo Err
 Dim lPriceString As String
 lPriceString = pPriceText
 If pOffsetText <> "" Then lPriceString = lPriceString & "[" & pOffsetText & "]"
-createPriceSpec = mActiveOrderContext.ParsePriceAndOffset(lPriceString, pPriceSpec)
+createPriceSpec = mActiveOrderContext.ParsePriceAndOffset(pPriceSpec, lPriceString)
 
 Exit Function
 
@@ -2808,6 +2808,9 @@ If lOrderType = OrderTypeNone Then
     Exit Sub
 End If
 
+Dim lOrderAction As OrderActions
+lOrderAction = comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder))
+
 Dim lPrice As Double
 
 Select Case pIndex
@@ -2815,17 +2818,20 @@ Case BracketIndexes.BracketEntryOrder
     If mEntryLimitPriceSpec Is Nothing Then CurrentLimitPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mEntryLimitPriceSpec, _
-                                                    mContract.Specifier.secType)
+                                                    mContract.Specifier.secType, _
+                                                    lOrderAction)
 Case BracketIndexes.BracketStopLossOrder
     If mStopLossLimitPriceSpec Is Nothing Then CurrentLimitPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mStopLossLimitPriceSpec, _
-                                                    mContract.Specifier.secType)
+                                                    mContract.Specifier.secType, _
+                                                    lOrderAction)
 Case BracketIndexes.BracketTargetOrder
     If mTargetLimitPriceSpec Is Nothing Then CurrentLimitPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mTargetLimitPriceSpec, _
-                                                    mContract.Specifier.secType)
+                                                    mContract.Specifier.secType, _
+                                                    lOrderAction)
 End Select
 
 CurrentLimitPriceLabel(pIndex) = IIf(lPrice = MaxDouble, _
@@ -2851,6 +2857,9 @@ If lOrderType = OrderTypeNone Then
     Exit Sub
 End If
 
+Dim lOrderAction As OrderActions
+lOrderAction = comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder))
+
 Dim lPrice As Double
 
 Select Case pIndex
@@ -2858,17 +2867,20 @@ Case BracketIndexes.BracketEntryOrder
     If mEntryTriggerPriceSpec Is Nothing Then CurrentTriggerPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mEntryTriggerPriceSpec, _
-                                                    mContract.Specifier.secType)
+                                                    mContract.Specifier.secType, _
+                                                    lOrderAction)
 Case BracketIndexes.BracketStopLossOrder
     If mStopLossTriggerPriceSpec Is Nothing Then CurrentTriggerPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mStopLossTriggerPriceSpec, _
-                                                    mContract.Specifier.secType)
+                                                    mContract.Specifier.secType, _
+                                                    lOrderAction)
 Case BracketIndexes.BracketTargetOrder
     If mTargetTriggerPriceSpec Is Nothing Then CurrentTriggerPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mTargetTriggerPriceSpec, _
-                                                    mContract.Specifier.secType)
+                                                    mContract.Specifier.secType, _
+                                                    lOrderAction)
 End Select
 
 CurrentTriggerPriceLabel(pIndex) = IIf(lPrice = MaxDouble, _

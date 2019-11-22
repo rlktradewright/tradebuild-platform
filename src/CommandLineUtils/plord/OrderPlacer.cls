@@ -54,8 +54,6 @@ Private mStageOrders                                As Boolean
 
 Private mTimezone                                   As TimeZone
 
-Private mSelfRef                                    As Object
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -104,8 +102,11 @@ Set mOrderContext = pOrderContext
 mStageOrders = pStageOrders
 
 Set mTimezone = GetTimeZone(mContract.TimezoneName)
+End Sub
 
-Set mSelfRef = Me
+Friend Sub Finish()
+Set mOrderContext = Nothing
+Set mOrderContextEv = Nothing
 End Sub
 
 Friend Function PlaceOrder() As Boolean
@@ -215,8 +216,6 @@ gBracketOrderListener.Add lBo
 
 gNumberOfOrdersPlaced = gNumberOfOrdersPlaced + 1
 
-Set mSelfRef = Nothing
-
 PlaceOrder = True
 
 Exit Function
@@ -233,7 +232,7 @@ Private Function isReadyForOrder() As Boolean
 With mOrderContext
     If Not .IsReady Then Exit Function
     
-    If Not .IsReadyToGetTickSize(mContract.Specifier.SecType) Then Exit Function
+    If Not .IsReadyTickSize(mContract.Specifier.SecType) Then Exit Function
     
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then Exit Function
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then Exit Function
@@ -250,7 +249,7 @@ Const ProcName As String = "writeContractSpecToStdOut"
 On Error GoTo Err
 
 Dim s As String
-s = ContractCommand & " "
+s = gCommands.ContractCommand.Name & " "
 s = s & gGenerateSwitch(SymbolSwitch, mContract.Specifier.Symbol)
 s = s & gGenerateSwitch(LocalSymbolSwitch, mContract.Specifier.LocalSymbol)
 s = s & gGenerateSwitch(SecTypeSwitch, SecTypeToShortString(mContract.Specifier.SecType))

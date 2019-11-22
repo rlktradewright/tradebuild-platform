@@ -145,27 +145,65 @@ End Property
 '@================================================================================
 
 Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NoMoreTicks"
+On Error GoTo Err
+
+mDataSourceIsReady = False
+mDataSource.RemoveGenericTickListener Me
+
+Dim lOrderContext As OrderContext
+For Each lOrderContext In mOrderContexts
+    lOrderContext.IsDataSourceReady = mDataSourceIsReady
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-Debug.Print GenericTickToString(ev.Tick)
+Static sReceivedBid As Boolean
+Static sReceivedAsk As Boolean
+Static sReceivedTrade As Boolean
 
-If mDataSource.HasCurrentTick(TickTypeAsk) And _
-        mDataSource.HasCurrentTick(TickTypeBid) And _
-        (mDataSource.HasCurrentTick(TickTypeTrade) Or _
-        mSecType = SecTypeCash) _
-Then
-    mDataSourceIsReady = True
+Static sIsInitialised As Boolean
+If Not sIsInitialised Then
+    sIsInitialised = True
+    If mDataSource.HasCurrentTick(TickTypeAsk) Then sReceivedAsk = True
+    If mDataSource.HasCurrentTick(TickTypeBid) Then sReceivedBid = True
+    If mDataSource.HasCurrentTick(TickTypeTrade) Then sReceivedTrade = True
+End If
+
+If ev.Tick.TickType = TickTypeAsk Then
+    If sReceivedAsk Then Exit Sub
+    sReceivedAsk = True
+ElseIf ev.Tick.TickType = TickTypeBid Then
+    If sReceivedBid Then Exit Sub
+    sReceivedBid = True
+ElseIf ev.Tick.TickType = TickTypeTrade Then
+    If sReceivedTrade Then Exit Sub
+    sReceivedTrade = True
+Else
+    Exit Sub
+End If
+
+Dim lOrderContext As OrderContext
+If sReceivedAsk And sReceivedBid And sReceivedTrade Then
     mDataSource.RemoveGenericTickListener Me
-
-    Dim lOrderContext As OrderContext
+    
+    mDataSourceIsReady = True
     For Each lOrderContext In mOrderContexts
-        lOrderContext.IsDataSourceReady = True
+        lOrderContext.IsDataSourceReady = mDataSourceIsReady
     Next
 End If
+
+For Each lOrderContext In mOrderContexts
+    lOrderContext.NotifyDataReadinessChanged
+Next
 
 Exit Sub
 
@@ -384,7 +422,7 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = New OrderContext
-Add.Initialise pName, mOrderManager, mRecoveryContextName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture, mBracketOrderRecoveryController
+Add.Initialise Me, pName, mOrderManager.SessionName, mRecoveryContextName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture, mBracketOrderRecoveryController
  
 mOrderContexts.Add Add, pName
 Add.PermittedOrderProperties = mPermittedOrderProperties
@@ -505,6 +543,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function GetTickSize(pDummyOrder As IOrder) As IFuture
+Const ProcName As String = "getTickSize"
+On Error GoTo Err
+
+Set GetTickSize = mOrderSubmitter.GetTickSize(pDummyOrder)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Function Item(index As Variant) As OrderContext
 Attribute Item.VB_UserMemId = 0

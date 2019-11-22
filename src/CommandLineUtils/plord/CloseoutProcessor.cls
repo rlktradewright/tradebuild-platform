@@ -55,8 +55,8 @@ Private mNumberOfLivePositionsNotClosed             As Long
 Private mNumberOfSimulatedPositionsClosed           As Long
 Private mNumberOfSimulatedPositionsNotClosed        As Long
 
-Private mUseLimitOrders                             As Boolean
-Private mSpreadFactor                               As Long
+Private mCloseoutMode                               As CloseoutModes
+Private mPriceSpec                                  As PriceSpecifier
 
 Private mLiveErrorMessages                          As String
 Private mSimulatedErrorMessages                     As String
@@ -156,7 +156,7 @@ Friend Sub CloseoutGroup(ByVal pGroupName As String)
 Const ProcName As String = "CloseoutGroup"
 On Error GoTo Err
 
-mFutureWaiter.Add mOrderManager.CloseGroupPositions(pGroupName, mUseLimitOrders, mSpreadFactor)
+mFutureWaiter.Add mOrderManager.CloseGroupPositions(pGroupName, mCloseoutMode, mPriceSpec)
 
 Exit Sub
 
@@ -166,12 +166,12 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
-                ByVal pUseLimitOrders As Boolean, _
-                ByVal pSpreadFactor As Long)
+                ByVal pCloseoutMode As CloseoutModes, _
+                ByVal pPriceSpec As PriceSpecifier)
 Set mSelfRef = Me
 Set mOrderManager = pOrderManager
-mUseLimitOrders = pUseLimitOrders
-mSpreadFactor = pSpreadFactor
+mCloseoutMode = pCloseoutMode
+Set mPriceSpec = pPriceSpec
 End Sub
 
 '@================================================================================

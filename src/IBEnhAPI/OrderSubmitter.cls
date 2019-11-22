@@ -35,17 +35,12 @@ Implements ITaskCompletionListener
 ' Constants
 '================================================================================
 
-Private Const ModuleName                As String = "OrderSubmitter"
+Private Const ModuleName                            As String = "OrderSubmitter"
 
-Private Const OrderModeEntry            As String = "entry"
-Private Const OrderModeStop             As String = "stop loss"
-Private Const OrderModeTarget           As String = "target"
-Private Const OrderModeCloseout         As String = "closeout"
-
-Private Const EntryOrderIdIncrement     As Long = 0
-Private Const StopLossOrderIdIncrement  As Long = 1
-Private Const TargetOrderIdIncrement    As Long = 2
-Private Const CloseoutOrderIdIncrement  As Long = 3
+Private Const EntryOrderIdIncrement                 As Long = 0
+Private Const StopLossOrderIdIncrement              As Long = 1
+Private Const TargetOrderIdIncrement                As Long = 2
+Private Const CloseoutOrderIdIncrement              As Long = 3
 
 '================================================================================
 ' Enums
@@ -77,11 +72,19 @@ Private mIsTwsConnectedToIBServers                  As Boolean
 
 Private mDataSource                                 As IMarketDataSource
 
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mContract                                   As IContract
+
+Private mOptionTickSizeResolver                     As OptionTickSizeResolver
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
 Set mStateChangeListeners = New Listeners
 Set mOrderSubmissionListeners = New Listeners
 End Sub
@@ -131,6 +134,18 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As OrderUtils27.IOrder)
+Const ProcName As String = "IOrderSubmitter_CancelOrder"
+On Error GoTo Err
+
+CancelOrder pOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub IOrderSubmitter_CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_cancelStopOrder"
@@ -192,6 +207,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function IOrderSubmitter_GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+Const ProcName As String = "IOrderSubmitter_GetTickSize"
+On Error GoTo Err
+
+Set IOrderSubmitter_GetTickSize = GetTickSize(pDummyOrder)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub IOrderSubmitter_ModifyOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "IOrderSubmitter_ModifyOrder"
@@ -405,6 +432,22 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
+' mFutureWaiter Event Handlers
+'================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsAvailable Then Set mContract = ev.Future.Value
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'================================================================================
 ' Properties
 '================================================================================
 
@@ -465,8 +508,9 @@ Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    CancelOrder lEntryOrder, OrderModeEntry ' should automatically cancel the other orders
-                                            ' if they have parentid set
+    ' should automatically cancel the other orders
+    ' if they have parentid set
+    cancelAnOrder lEntryOrder, OrderModeEntry
     CancelBracketOrder = True
 End Select
 
@@ -484,7 +528,7 @@ If Not lStopOrder Is Nothing Then
             OrderStatuses.OrderStatusCancelling, _
             OrderStatuses.OrderStatusCancelled, _
             OrderStatuses.OrderStatusRejected
-            CancelOrder lStopOrder, OrderModeStop
+            cancelAnOrder lStopOrder, OrderModeStopLoss
             CancelBracketOrder = True
         End Select
     End Select
@@ -504,7 +548,7 @@ If Not lTargetOrder Is Nothing Then
             OrderStatuses.OrderStatusCancelling, _
             OrderStatuses.OrderStatusCancelled, _
             OrderStatuses.OrderStatusRejected
-            CancelOrder lTargetOrder, OrderModeTarget
+            cancelAnOrder lTargetOrder, OrderModeTarget
             CancelBracketOrder = True
         End Select
     End Select
@@ -517,6 +561,18 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Public Sub CancelOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "CancelOrder"
+On Error GoTo Err
+
+cancelAnOrder pOrder, OrderModeEntry
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "CancelStopOrder"
@@ -534,7 +590,7 @@ Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusCancelled
     Assert False, "Stop Order state invalid for cancellation"
 Case Else
-    CancelOrder lStopOrder, OrderModeStop
+    cancelAnOrder lStopOrder, OrderModeStopLoss
 End Select
 
 Exit Sub
@@ -558,7 +614,7 @@ Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusCancelled
     Assert False, "Target Order state invalid for cancellation"
 Case Else
-    CancelOrder lTargetOrder, OrderModeTarget
+    cancelAnOrder lTargetOrder, OrderModeTarget
 End Select
 Exit Sub
 Err:
@@ -605,6 +661,47 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+Const ProcName As String = "GetTickSize"
+On Error GoTo Err
+
+Dim lTickSize As Double
+Dim lTickType As TickTypes
+Dim lPrice As Double
+
+If mContract.Specifier.SecType = SecTypeOption Or _
+    mContract.Specifier.SecType = SecTypeFuturesOption _
+Then
+    AssertArgument Not pDummyOrder Is Nothing, "No dummy order supplied"
+    If Not mOptionTickSizeResolver Is Nothing Then
+        Set GetTickSize = mOptionTickSizeResolver.TickSizeFuture
+    Else
+        lPrice = getAPrice(lTickType)
+        Set mOptionTickSizeResolver = New OptionTickSizeResolver
+        Set GetTickSize = GetTickSizeForOptions( _
+                                mOptionTickSizeResolver, _
+                                lPrice, _
+                                lTickType, _
+                                pDummyOrder)
+    End If
+    Exit Function
+End If
+
+If mContract.Specifier.SecType = SecTypeStock Then
+    lPrice = getAPrice(lTickType)
+    lTickSize = GetTickSizeForStocks(mContract.Specifier.Exchange, lPrice, mContract.TickSize)
+End If
+
+If lTickSize = 0# Then lTickSize = mContract.TickSize
+
+Set GetTickSize = CreateFuture(CreateBoxedValue(lTickSize))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
@@ -636,6 +733,7 @@ End If
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mDataSource = pDataSource
+mFutureWaiter.Add mDataSource.ContractFuture
 
 Exit Sub
 
@@ -708,11 +806,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyError( _
-                ByVal pOrderId As String, _
+                ByVal pOrder As IOrder, _
                 ByVal pErrorCode As Long, _
                 ByVal pErrorMsg As String)
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
+
+If Not mOptionTickSizeResolver Is Nothing Then
+    If mOptionTickSizeResolver.HandleError(pErrorCode) Then Exit Sub
+End If
 
 Static sInit As Boolean
 Static sCurrentListeners() As Object
@@ -727,7 +829,7 @@ If sSomeListeners Then
     Dim i As Long
     For i = 0 To UBound(sCurrentListeners)
         Set lListener = sCurrentListeners(i)
-        lListener.NotifyError pOrderId, pErrorCode, pErrorMsg
+        lListener.NotifyError pOrder.Id, pErrorCode, pErrorMsg
     Next
 End If
 
@@ -765,7 +867,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyMessage( _
-                ByVal pOrderId As String, _
+                ByVal pOrder As IOrder, _
                 ByVal pMessage As String)
 Const ProcName As String = "NotifyMessage"
 On Error GoTo Err
@@ -783,7 +885,7 @@ If sSomeListeners Then
     Dim i As Long
     For i = 0 To UBound(sCurrentListeners)
         Set lListener = sCurrentListeners(i)
-        lListener.NotifyMessage pOrderId, pMessage
+        lListener.NotifyMessage pOrder.Id, pMessage
     Next
 End If
 
@@ -863,7 +965,7 @@ Public Sub PlaceOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
-placeOrderEx pOrder, True, 0, "", OrderModeEntry
+PlaceOrderEx pOrder, True, 0, "", OrderModeEntry
 
 Exit Sub
 
@@ -902,8 +1004,8 @@ On Error GoTo Err
 Dim lOCAGroup As String
 lOCAGroup = GenerateGUIDString
 
-placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStop
-placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+PlaceOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
+PlaceOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
 
 Exit Sub
 Err:
@@ -915,12 +1017,12 @@ Const ProcName As String = "ResubmitStopOrder"
 On Error GoTo Err
 
 If pBracketOrder.TargetOrder Is Nothing Then
-    placeOrderEx pBracketOrder.StopLossOrder, True, "0", "", OrderModeStop
+    PlaceOrderEx pBracketOrder.StopLossOrder, True, "0", "", OrderModeStopLoss
 Else
     Dim lOCAGroup As String
     lOCAGroup = GenerateGUIDString
-    placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStop
-    placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+    PlaceOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
+    PlaceOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
 End If
 
 Exit Sub
@@ -933,12 +1035,12 @@ Const ProcName As String = "ResubmitTargetOrder"
 On Error GoTo Err
 
 If pBracketOrder.StopLossOrder Is Nothing Then
-    placeOrderEx pBracketOrder.TargetOrder, True, "0", "", OrderModeTarget
+    PlaceOrderEx pBracketOrder.TargetOrder, True, "0", "", OrderModeTarget
 Else
     Dim lOCAGroup As String
     lOCAGroup = GenerateGUIDString
-    placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStop
-    placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+    PlaceOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStopLoss
+    PlaceOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
 End If
 Exit Sub
 Err:
@@ -949,10 +1051,10 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub CancelOrder( _
+Private Sub cancelAnOrder( _
                 ByVal pOrder As IOrder, _
-                ByRef pOrderMode As String)
-Const ProcName As String = "CancelOrder"
+                ByVal pOrderMode As String)
+Const ProcName As String = "cancelAnOrder"
 On Error GoTo Err
 
 logMessage "Cancel " & pOrderMode & " Order: " & _
@@ -960,8 +1062,7 @@ logMessage "Cancel " & pOrderMode & " Order: " & _
             "; TradeBuild id=" & pOrder.Id, _
             ProcName
 
-mOrderPlacer.CancelOrder pOrder
-
+mOrderPlacer.CancelOrder Me, pOrder
 
 Exit Sub
 
@@ -999,7 +1100,7 @@ If Not lEntryOrder Is Nothing Then
         Transmit = True
         If lTargetOrderCanBePlaced Then Transmit = False
         lStopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
-        placeAnOrder lStopLossOrder, pContract, Transmit, lEntryOrder.BrokerId, "", OrderModeStop
+        placeAnOrder lStopLossOrder, pContract, Transmit, lEntryOrder.BrokerId, "", OrderModeStopLoss
     End If
     
     If lTargetOrderCanBePlaced Then
@@ -1048,6 +1149,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function getAPrice(ByRef pTickType As TickTypes) As Double
+Const ProcName As String = "getCurrentPrice"
+On Error GoTo Err
+
+Assert mDataSource.State = MarketDataSourceStateRunning, "Data source is not running"
+If mDataSource.HasCurrentTick(TickTypeTrade) Then
+    pTickType = TickTypeTrade
+    getAPrice = mDataSource.CurrentTick(TickTypeTrade).Price
+ElseIf mDataSource.HasCurrentTick(TickTypeAsk) Then
+    pTickType = TickTypeAsk
+    getAPrice = mDataSource.CurrentTick(TickTypeAsk).Price
+ElseIf mDataSource.HasCurrentTick(TickTypeBid) Then
+    pTickType = TickTypeBid
+    getAPrice = mDataSource.CurrentTick(TickTypeBid).Price
+Else
+    Assert False, "No price available"
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function getNextBracketId() As Long
 Const ProcName As String = "getNextBracketId"
 On Error GoTo Err
@@ -1060,10 +1185,131 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function GetTickSizeForOptions( _
+                ByVal pResolver As OptionTickSizeResolver, _
+                ByVal pExamplePrice As Double, _
+                ByVal pPriceTickType As TickTypes, _
+                ByVal pDummyOrder As IOrder) As IFuture
+Const ProcName As String = "GetTickSizeForOptions"
+On Error GoTo Err
+
+pResolver.Initialise Me, _
+                    pExamplePrice, _
+                    IIf(pPriceTickType = TickTypeAsk, True, False), _
+                    pDummyOrder
+StartTask pResolver, PriorityNormal
+Set GetTickSizeForOptions = pResolver.TickSizeFuture
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function GetTickSizeForStocks( _
+                ByVal pExchange As String, _
+                ByVal pCurrentPrice As Double, _
+                ByVal pDefaultTickSize As Double) As Double
+Dim lTickSize As Double
+
+Select Case UCase$(pExchange)
+Case "BATEUK", "CHIXUK", "LSE", "TRQXUK"
+    If pCurrentPrice <= 0.001 Then
+        lTickSize = 0.000001
+    ElseIf pCurrentPrice <= 0.002 Then
+        lTickSize = 0.000001
+    ElseIf pCurrentPrice <= 0.005 Then
+        lTickSize = 0.000001
+    ElseIf pCurrentPrice <= 0.01 Then
+        lTickSize = 0.000001
+    ElseIf pCurrentPrice <= 0.02 Then
+        lTickSize = 0.000002
+    ElseIf pCurrentPrice <= 0.05 Then
+        lTickSize = 0.000005
+    ElseIf pCurrentPrice <= 0.1 Then
+        lTickSize = 0.00001
+    ElseIf pCurrentPrice <= 0.2 Then
+        lTickSize = 0.00002
+    ElseIf pCurrentPrice <= 0.5 Then
+        lTickSize = 0.00005
+    ElseIf pCurrentPrice <= 1# Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 2# Then
+        lTickSize = 0.0002
+    ElseIf pCurrentPrice <= 5# Then
+        lTickSize = 0.0005
+    ElseIf pCurrentPrice <= 10# Then
+        lTickSize = 0.001
+    ElseIf pCurrentPrice <= 20# Then
+        lTickSize = 0.002
+    ElseIf pCurrentPrice <= 50# Then
+        lTickSize = 0.005
+    ElseIf pCurrentPrice <= 100# Then
+        lTickSize = 0.01
+    ElseIf pCurrentPrice <= 200# Then
+        lTickSize = 0.02
+    ElseIf pCurrentPrice <= 500# Then
+        lTickSize = 0.05
+    Else
+        lTickSize = 0.1
+    End If
+Case "BATEDE", "CHIXDE", "EBS", "FWB", "IBIS", "SWB", "TGATE", "TRQXDE", "VSE"
+    If pCurrentPrice <= 0.1 Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 0.2 Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 0.5 Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 1 Then
+        lTickSize = 0.0001
+    ElseIf pCurrentPrice <= 2 Then
+        lTickSize = 0.0002
+    ElseIf pCurrentPrice <= 5 Then
+        lTickSize = 0.0005
+    ElseIf pCurrentPrice <= 10 Then
+        lTickSize = 0.001
+    ElseIf pCurrentPrice <= 20 Then
+        lTickSize = 0.002
+    ElseIf pCurrentPrice <= 50 Then
+        lTickSize = 0.005
+    ElseIf pCurrentPrice <= 100 Then
+        lTickSize = 0.01
+    ElseIf pCurrentPrice <= 200 Then
+        lTickSize = 0.02
+    ElseIf pCurrentPrice <= 500 Then
+        lTickSize = 0.05
+    ElseIf pCurrentPrice <= 1000 Then
+        lTickSize = 0.1
+    ElseIf pCurrentPrice <= 2000 Then
+        lTickSize = 0.2
+    ElseIf pCurrentPrice <= 5000 Then
+        lTickSize = 0.5
+    ElseIf pCurrentPrice <= 10000 Then
+        lTickSize = 1
+    ElseIf pCurrentPrice <= 20000 Then
+        lTickSize = 2
+    ElseIf pCurrentPrice <= 50000 Then
+        lTickSize = 5
+    Else
+        lTickSize = 10
+    End If
+Case "VENTURE"
+    If pCurrentPrice <= 0.5 Then
+        lTickSize = 0.005
+    Else
+        lTickSize = 0.01
+    End If
+Case Else
+    lTickSize = pDefaultTickSize
+End Select
+
+GetTickSizeForStocks = lTickSize
+End Function
+
 Private Sub logMessage( _
-                ByRef pMsg As String, _
-                ByRef pProcName As String, _
-                Optional ByRef pMsgQualifier As String = vbNullString, _
+                ByVal pMsg As String, _
+                ByVal pProcName As String, _
+                Optional ByVal pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
@@ -1110,7 +1356,7 @@ If pStopOrderChanged Then
         If lPlexId = 0 Then lPlexId = getNextBracketId
         pBracketOrder.StopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
     End If
-    placeAnOrder pBracketOrder.StopLossOrder, pContract, True, lParentId, lOCAGroup, OrderModeStop
+    placeAnOrder pBracketOrder.StopLossOrder, pContract, True, lParentId, lOCAGroup, OrderModeStopLoss
 End If
 If pTargetOrderChanged Then
     If pBracketOrder.TargetOrder.BrokerId = "" Then
@@ -1214,7 +1460,7 @@ Private Sub placeAnOrder( _
                 ByVal pTransmit As Boolean, _
                 ByVal pParentId As Long, _
                 ByVal pOcaGroup As String, _
-                ByRef pOrderMode As String)
+                ByVal pOrderMode As String)
 Const ProcName As String = "placeAnOrder"
 On Error GoTo Err
 
@@ -1241,16 +1487,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub placeOrderEx( _
+Friend Sub PlaceOrderEx( _
                 ByVal pOrder As IOrder, _
                 ByVal pTransmit As Boolean, _
                 ByVal pParentId As Long, _
                 ByVal pOcaGroup As String, _
-                ByRef pOrderMode As String)
-Const ProcName As String = "placeOrderEx"
+                ByVal pOrderMode As String)
+Const ProcName As String = "PlaceOrderEx"
 On Error GoTo Err
 
-pOrder.BrokerId = CStr(mTwsAPI.NextOrderId)
+pOrder.BrokerId = CStr(getNextBracketId + EntryOrderIdIncrement)
 
 If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     Dim lTask As ComboContractConversionTask
@@ -1264,7 +1510,7 @@ If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     lCookie.OrderMode = pOrderMode
     lCookie.ParentId = pParentId
     lCookie.Transmit = pTransmit
-    StartTask(lTask, PriorityNormal, , pOrder).AddTaskCompletionListener Me
+    StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
     placeAnOrder pOrder, gContractSpecToTwsContract(pOrder.ContractSpecifier), pTransmit, pParentId, pOcaGroup, pOrderMode
 End If
