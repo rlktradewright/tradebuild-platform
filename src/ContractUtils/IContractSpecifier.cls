@@ -81,6 +81,9 @@ End Property
 Public Property Get Multiplier() As Double
 End Property
 
+Public Property Get ProviderProperties() As Parameters
+End Property
+
 Public Property Get Right() As OptionRights
 End Property
 

@@ -72,6 +72,9 @@ End Property
 Public Property Get NumberOfDecimals() As Long
 End Property
 
+Public Property Get ProviderProperties() As Parameters
+End Property
+
 Public Property Get SessionStartTime() As Date
 End Property
 

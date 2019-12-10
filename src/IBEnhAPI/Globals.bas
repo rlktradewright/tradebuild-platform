@@ -620,6 +620,36 @@ With pTwsContractDetails
     lBuilder.Description = .LongName
     lBuilder.TickSize = .MinTick
     lBuilder.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(.TimeZoneId)
+    
+    Dim lProviderProps As New Parameters
+    lProviderProps.SetParameterValue "Category", .Category
+    lProviderProps.SetParameterValue "ContractMonth", .ContractMonth
+    lProviderProps.SetParameterValue "EvMultiplier", .EvMultiplier
+    lProviderProps.SetParameterValue "EvRule", .EvRule
+    lProviderProps.SetParameterValue "Industry", .Industry
+    lProviderProps.SetParameterValue "LiquidHours", .LiquidHours
+    lProviderProps.SetParameterValue "MarketName", .MarketName
+    lProviderProps.SetParameterValue "OrderTypes", .OrderTypes
+    
+    Dim ar() As TwsTagValue: ar = .SecIdList
+    Dim u As Long: u = -1
+    On Error Resume Next
+    u = UBound(ar)
+    On Error GoTo Err
+    
+    Dim i As Long
+    Dim s As String
+    For i = 0 To u
+        s = s & IIf(i <> 0, ";", "")
+        s = s & ar(i).Tag & ":" & ar(i).Value
+    Next
+    lProviderProps.SetParameterValue "SecIdList", s
+    
+    lProviderProps.SetParameterValue "Subcategory", .Subcategory
+    lProviderProps.SetParameterValue "TradingHours", .TradingHours
+    lProviderProps.SetParameterValue "UnderConId", .UnderConId
+    lProviderProps.SetParameterValue "ValidExchanges", .ValidExchanges
+    lBuilder.ProviderProperties = lProviderProps
 End With
 
 Set gTwsContractDetailsToContract = lBuilder.Contract
@@ -651,6 +681,11 @@ With pTwsContract
                                                 .Multiplier / pPriceMagnifier, _
                                                 .Strike, _
                                                 gTwsOptionRightToOptionRight(.OptRight))
+    Dim p As New Parameters
+    p.SetParameterValue "ContractId", .ConId
+    p.SetParameterValue "SecId", .SecId
+    p.SetParameterValue "SecIdType", .SecIdType
+    p.SetParameterValue "TradingClass", .TradingClass
 End With
 
 Set gTwsContractToContractSpecifier = lContractSpec

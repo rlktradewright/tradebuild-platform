@@ -67,6 +67,8 @@ Private mDaysBeforeExpiryToSwitch As Long
 Private mProviderIDs As Parameters
 Private mTimezoneName As String
 
+Private mProviderProperties                         As Parameters
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -95,6 +97,10 @@ End Property
 
 Private Property Get IContract_NumberOfDecimals() As Long
 IContract_NumberOfDecimals = NumberOfDecimals
+End Property
+
+Private Property Get IContract_ProviderProperties() As Parameters
+Set IContract_ProviderProperties = ProviderProperties
 End Property
 
 Private Property Get IContract_SessionEndTime() As Date
@@ -203,6 +209,15 @@ End Property
 
 Public Property Get ProviderIDs() As Parameters
 Set ProviderIDs = mProviderIDs
+End Property
+
+Public Property Let ProviderProperties(ByVal Value As Parameters)
+Assert mProviderProperties Is Nothing, "ProviderProperties is already set"
+Set mProviderProperties = Value.Clone
+End Property
+
+Public Property Get ProviderProperties() As Parameters
+Set ProviderProperties = mProviderProperties.Clone
 End Property
 
 Public Property Let SessionStartTime(ByVal Value As Date)

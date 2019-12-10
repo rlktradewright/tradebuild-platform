@@ -85,6 +85,10 @@ Public Property Let ProviderIDs(ByVal Value As Parameters)
 mContract.ProviderIDs = Value
 End Property
 
+Public Property Let ProviderProperties(ByVal Value As Parameters)
+mContract.ProviderProperties = Value
+End Property
+
 Public Property Let SessionStartTime(ByVal Value As Date)
 mContract.SessionStartTime = TimeValue(Value)
 End Property

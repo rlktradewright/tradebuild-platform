@@ -67,6 +67,8 @@ Private mLocalSymbol    As String
 Private mMultiplier     As Double
 Private mComboLegs      As IComboLegs
 
+Private mProviderProperties                         As Parameters
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -109,6 +111,10 @@ End Property
 
 Private Property Get IContractSpecifier_Multiplier() As Double
 IContractSpecifier_Multiplier = Multiplier
+End Property
+
+Private Property Get IContractSpecifier_ProviderProperties() As Parameters
+Set IContractSpecifier_ProviderProperties = ProviderProperties
 End Property
 
 Private Property Get IContractSpecifier_Right() As OptionRights
@@ -231,6 +237,18 @@ Public Property Get Multiplier() As Double
 Multiplier = mMultiplier
 End Property
 
+Public Property Let ProviderProperties(ByVal Value As Parameters)
+Assert mProviderProperties Is Nothing, "ProviderProperties is already set"
+AssertArgument Not Value Is Nothing, "Value is Nothing"
+Set mProviderProperties = Value.Clone
+End Property
+
+Public Property Get ProviderProperties() As Parameters
+If Not mProviderProperties Is Nothing Then
+    Set ProviderProperties = mProviderProperties.Clone
+End If
+End Property
+
 Public Property Let zRight(ByVal Value As OptionRights)
 Attribute zRight.VB_MemberFlags = "40"
 mRight = Value
@@ -346,7 +364,6 @@ mExpiry = Expiry
 mMultiplier = Multiplier
 mStrike = Strike
 mRight = Right
-
 
 Exit Sub
 

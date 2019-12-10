@@ -743,7 +743,7 @@ mReader.BeginLogMessage True
 
 Dim lReqId As Long: lReqId = -1
 If (pVersion >= 7) Then
-    lReqId = mReader.GetLong("lReqId")
+    lReqId = mReader.GetLong("ReqId")
     If lReqId <> -1 Then lReqId = gGetCallersRequestIdFromTwsExecutionsRequestId(lReqId)
 End If
 
@@ -1141,7 +1141,6 @@ With lOrder
         .StockRangeLower = mReader.GetDouble("stockRangeLower")
         .StockRangeUpper = mReader.GetDouble("stockRangeUpper")
         .DisplaySize = mReader.GetLong("displaySize")
-        'setproperty .providerProperties, "rthOnly"
         .BlockOrder = mReader.GetBoolean("blockOrder")
         .SweepToFill = mReader.GetBoolean("sweepToFill")
         .AllOrNone = mReader.GetBoolean("allOrNone")
