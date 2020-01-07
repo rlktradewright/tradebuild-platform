@@ -805,6 +805,34 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub NotifyAboutToPlaceOrder( _
+                ByVal pOrder As IOrder)
+Const ProcName As String = "NotifyAboutToPlaceOrder"
+On Error GoTo Err
+
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mOrderSubmissionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As IOrderSubmissionListener
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyAboutToPlaceOrder pOrder
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub NotifyError( _
                 ByVal pOrder As IOrder, _
                 ByVal pErrorCode As Long, _
@@ -1474,6 +1502,7 @@ Assert pOrder.Action <> OrderActionNone, "Order has no action"
 Assert pOrder.OrderType <> OrderTypeNone, "Order has no order type"
 Assert pOrder.Quantity <> 0, "Order has zero quantity"
 
+NotifyAboutToPlaceOrder pOrder
 mOrderPlacer.PlaceOrder Me, pOrder, pContract, IIf(mStageOrders, False, pTransmit), pParentId, pOcaGroup, mDataSource
 
 If pOrder.Status = OrderStatusCreated Then

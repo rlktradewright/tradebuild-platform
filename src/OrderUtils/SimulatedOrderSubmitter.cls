@@ -90,6 +90,14 @@ End Sub
 ' IOrderSubmissionListener Interface Members
 '@================================================================================
 
+Private Sub IOrderSubmissionListener_NotifyAboutToPlaceOrder(ByVal pOrder As IOrder)
+If TypeOf pOrder Is Order Then
+    Dim lOrder As Order
+    Set lOrder = pOrder
+    lOrder.SaveRecoveryInfo
+End If
+End Sub
+
 Private Sub IOrderSubmissionListener_NotifyError(ByVal pOrderId As String, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 Const ProcName As String = "IOrderSubmissionListener_NotifyError"
 On Error GoTo Err
