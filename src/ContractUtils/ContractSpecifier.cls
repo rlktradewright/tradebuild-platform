@@ -238,15 +238,12 @@ Multiplier = mMultiplier
 End Property
 
 Public Property Let ProviderProperties(ByVal Value As Parameters)
-Assert mProviderProperties Is Nothing, "ProviderProperties is already set"
-AssertArgument Not Value Is Nothing, "Value is Nothing"
 Set mProviderProperties = Value.Clone
 End Property
 
 Public Property Get ProviderProperties() As Parameters
-If Not mProviderProperties Is Nothing Then
-    Set ProviderProperties = mProviderProperties.Clone
-End If
+If mProviderProperties Is Nothing Then Exit Property
+Set ProviderProperties = mProviderProperties.Clone
 End Property
 
 Public Property Let zRight(ByVal Value As OptionRights)

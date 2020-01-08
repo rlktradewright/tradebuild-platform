@@ -89,7 +89,6 @@ Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
 Set mSummary = New OS
-Set mProviderProperties = New Parameters
 setDirty
 
 Exit Sub
@@ -641,6 +640,10 @@ End Property
 
 Private Property Get IOrder_PercentOffset() As Double
 IOrder_PercentOffset = PercentOffset
+End Property
+
+Private Property Let IOrder_ProviderProperties(ByVal Value As Parameters)
+ProviderProperties = Value
 End Property
 
 Private Property Get IOrder_ProviderProperties() As Parameters
@@ -1429,8 +1432,14 @@ Public Property Get PercentOffset() As Double
 PercentOffset = mSummary.PercentOffset
 End Property
 
+Public Property Let ProviderProperties(ByVal Value As Parameters)
+AssertArgument Not Value Is Nothing, "Value is Nothing"
+Set mProviderProperties = Value.Clone
+End Property
+
 Public Property Get ProviderProperties() As Parameters
-Set ProviderProperties = mProviderProperties
+If mProviderProperties Is Nothing Then Exit Property
+Set ProviderProperties = mProviderProperties.Clone
 End Property
 
 Public Property Let Quantity(ByVal Value As Long)

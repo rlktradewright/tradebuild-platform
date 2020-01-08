@@ -1213,6 +1213,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function getOcaGroup(ByVal pOrder As IOrder) As String
+If pOrder Is Nothing Then Exit Function
+If pOrder.ProviderProperties Is Nothing Then Exit Function
+getOcaGroup = pOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+End Function
+
 Private Function GetTickSizeForOptions( _
                 ByVal pResolver As OptionTickSizeResolver, _
                 ByVal pExamplePrice As Double, _
@@ -1368,12 +1374,12 @@ If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0
 Dim lPlexId As Long
 
 Dim lOCAGroup As String
-If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
-If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+lOCAGroup = getOcaGroup(pBracketOrder.StopLossOrder)
+If lOCAGroup = "" Then lOCAGroup = getOcaGroup(pBracketOrder.TargetOrder)
 If lOCAGroup = "" Then
-    lOCAGroup = GenerateGUIDString
-    If Not pBracketOrder.StopLossOrder Is Nothing Then pBracketOrder.StopLossOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
-    If Not pBracketOrder.TargetOrder Is Nothing Then pBracketOrder.TargetOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+    lOCAGroup = GenerateTextID
+    setOcaGroup pBracketOrder.StopLossOrder, lOCAGroup
+    setOcaGroup pBracketOrder.TargetOrder, lOCAGroup
 End If
 
 If pEntryOrderChanged Then
@@ -1543,6 +1549,24 @@ If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
 Else
     placeAnOrder pOrder, gContractSpecToTwsContract(pOrder.ContractSpecifier), pTransmit, pParentId, pOcaGroup, pOrderMode
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setOcaGroup( _
+                ByVal pOrder As IOrder, _
+                ByVal pOcaGroup As String)
+Const ProcName As String = "setOcaGroup"
+On Error GoTo Err
+
+If pOrder Is Nothing Then Exit Sub
+Dim lProps As Parameters: Set lProps = pOrder.ProviderProperties
+If lProps Is Nothing Then Set lProps = New Parameters
+lProps.SetParameterValue ProviderPropertyOCAGroup, pOcaGroup
+pOrder.ProviderProperties = lProps
 
 Exit Sub
 

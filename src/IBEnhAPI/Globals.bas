@@ -408,7 +408,9 @@ With pOrder
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)
-    gOrderToTwsOrder.OcaGroup = .ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+    If Not .ProviderProperties Is Nothing Then
+        gOrderToTwsOrder.OcaGroup = .ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+    End If
     gOrderToTwsOrder.OrderType = gOrderTypeToTwsOrderType(.OrderType)
     gOrderToTwsOrder.Origin = .Origin
     gOrderToTwsOrder.OrderRef = .OriginatorRef
@@ -666,7 +668,7 @@ Public Function gTwsContractToContractSpecifier( _
 Const ProcName As String = "gTwsContractToContractSpecifier"
 On Error GoTo Err
 
-Dim lContractSpec As IContractSpecifier
+Dim lContractSpec As ContractSpecifier
 With pTwsContract
     Dim lExchange As String: lExchange = .Exchange
     If lExchange = ExchangeSmart And .PrimaryExch <> "" Then
@@ -686,6 +688,7 @@ With pTwsContract
     p.SetParameterValue "SecId", .SecId
     p.SetParameterValue "SecIdType", .SecIdType
     p.SetParameterValue "TradingClass", .TradingClass
+    lContractSpec.ProviderProperties = p
 End With
 
 Set gTwsContractToContractSpecifier = lContractSpec

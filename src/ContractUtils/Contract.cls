@@ -212,11 +212,11 @@ Set ProviderIDs = mProviderIDs
 End Property
 
 Public Property Let ProviderProperties(ByVal Value As Parameters)
-Assert mProviderProperties Is Nothing, "ProviderProperties is already set"
 Set mProviderProperties = Value.Clone
 End Property
 
 Public Property Get ProviderProperties() As Parameters
+If mProviderProperties Is Nothing Then Exit Property
 Set ProviderProperties = mProviderProperties.Clone
 End Property
 
