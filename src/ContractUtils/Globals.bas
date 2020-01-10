@@ -119,7 +119,8 @@ End Function
 Public Function gContractSpecsCompare( _
                 ByVal pContractSpec1 As IContractSpecifier, _
                 ByVal pContractSpec2 As IContractSpecifier, _
-                ByRef pSortkeys() As ContractSortKeyIds) As Long
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                ByVal pAscending As Boolean) As Long
 Const ProcName As String = "gContractSpecsCompare"
 On Error GoTo Err
 
@@ -147,7 +148,10 @@ For i = 0 To UBound(pSortkeys)
     Case ContractSortKeyStrike
         gContractSpecsCompare = Sgn(pContractSpec1.Strike - pContractSpec2.Strike)
     End Select
-    If gContractSpecsCompare <> 0 Then Exit Function
+    If gContractSpecsCompare <> 0 Then
+        If Not pAscending Then gContractSpecsCompare = -gContractSpecsCompare
+        Exit Function
+    End If
 Next
 
 Exit Function
@@ -545,24 +549,9 @@ End Function
 
 Public Function gIsOffsetExpiry( _
                 ByVal Value As String) As Boolean
-gRegExp.Pattern = "^(\d\d?)(?:\[(\d\d?)d\])?$"
-gRegExp.IgnoreCase = True
-
-Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(Trim$(Value))
-
-If lMatches.Count <> 1 Then
-    gIsOffsetExpiry = False
-    Exit Function
-End If
-
-Dim lResult As Boolean: lResult = True
-Dim lMatch As Match: Set lMatch = lMatches(0)
-
-If Not IsInteger(lMatch.SubMatches(0), 0, MaxContractExpiryOffset) Then lResult = False
-If Not IsInteger(lMatch.SubMatches(1), 0, MaxContractDaysBeforeExpiryToSwitch) Then lResult = False
-
-gIsOffsetExpiry = lResult
+Dim l1 As Long
+Dim l2 As Long
+gIsOffsetExpiry = gParseOffsetExpiry(Value, l1, l2)
 End Function
 
 Public Function gIsValidExpiry( _
@@ -701,27 +690,45 @@ Case OptPut
 End Select
 End Function
 
-Public Sub gParseOffsetExpiry( _
+Public Function gParseOffsetExpiry( _
                 ByVal Value As String, _
                 ByRef pExpiryOffset As Long, _
-                ByRef pDaysBeforeExpiryToSwitch As Long)
-gRegExp.Pattern = "^(\d\d?)(?:\[(\d\d?)d\])?$"
+                ByRef pDaysBeforeExpiryToSwitch As Long) As Boolean
+Const OffsetExpiryFormat As String = "^(\d\d?)(?:\[(\d\d?)d\])?$"
+
+gRegExp.Pattern = OffsetExpiryFormat
+gRegExp.IgnoreCase = True
 
 Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(Trim$(Value))
 
-If lMatches.Count <> 1 Then Exit Sub
+If lMatches.Count <> 1 Then Exit Function
 
 Dim lResult As Boolean: lResult = True
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
-If IsInteger(lMatch.SubMatches(0), 0, MaxContractExpiryOffset) Then
-    pExpiryOffset = lMatch.SubMatches(0)
+Dim lOffsetStr As String
+lOffsetStr = lMatch.SubMatches(0)
+If lOffsetStr = "" Then
+    pExpiryOffset = 0
+ElseIf IsInteger(lOffsetStr, 0, MaxContractExpiryOffset) Then
+    pExpiryOffset = CInt(lOffsetStr)
+Else
+    lResult = False
 End If
-If IsInteger(lMatch.SubMatches(1), 0, MaxContractDaysBeforeExpiryToSwitch) Then
-    pDaysBeforeExpiryToSwitch = lMatch.SubMatches(1)
+
+Dim lDaysBeforeExpiryStr As String
+lDaysBeforeExpiryStr = lMatch.SubMatches(1)
+If lDaysBeforeExpiryStr = "" Then
+    pDaysBeforeExpiryToSwitch = 0
+ElseIf IsInteger(lDaysBeforeExpiryStr, 0, MaxContractDaysBeforeExpiryToSwitch) Then
+    pDaysBeforeExpiryToSwitch = CInt(lDaysBeforeExpiryStr)
+Else
+    lResult = False
 End If
-End Sub
+
+gParseOffsetExpiry = lResult
+End Function
 
 Public Property Get gRegExp() As RegExp
 Const ProcName As String = "gRegExp"

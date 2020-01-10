@@ -174,7 +174,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 Friend Sub Initialise( _
                 ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
+                ByVal pContract As IContract, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
@@ -183,10 +183,10 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mContract = pContractFuture.Value
+Set mContract = pContract
 mGroupName = pGroupName
 
-Set mDataSource = pMarketDataManager.CreateMarketDataSource(pContractFuture, False)
+Set mDataSource = pMarketDataManager.CreateMarketDataSource(CreateFuture(pContract), False)
 mDataSource.StartMarketData
 
 If pScopeName = "" Then

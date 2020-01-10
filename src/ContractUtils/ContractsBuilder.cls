@@ -63,7 +63,6 @@ Private Sub IContractsBuilder_Add(ByVal pContract As IContract)
 Const ProcName As String = "IContractsBuilder_Add"
 On Error GoTo Err
 
-'AssertArgument gContractSpecsCompatible(mContracts.ContractSpecifier, pContract.Specifier), "Contract not compatible with contract spec"
 Add pContract
 
 Exit Sub
@@ -76,6 +75,22 @@ Private Property Get IContractsBuilder_Contracts() As IContracts
 Set IContractsBuilder_Contracts = Contracts
 End Property
 
+Private Property Let IContractsBuilder_SortAscending(ByVal Value As Boolean)
+SortAscending = Value
+End Property
+
+Private Property Get IContractsBuilder_SortAscending() As Boolean
+IContractsBuilder_SortAscending = SortAscending
+End Property
+
+Private Property Let IContractsBuilder_SortKeys(ByRef Value() As ContractSortKeyIds)
+SortKeys = Value
+End Property
+
+Private Property Get IContractsBuilder_SortKeys() As ContractSortKeyIds()
+IContractsBuilder_SortKeys = SortKeys
+End Property
+
 '@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
@@ -86,6 +101,33 @@ End Property
 
 Public Property Get Contracts() As Contracts
 Set Contracts = mContracts
+End Property
+
+Public Property Let SortAscending(ByVal Value As Boolean)
+mContracts.SortAscending = Value
+End Property
+
+Public Property Get SortAscending() As Boolean
+SortAscending = mContracts.SortAscending
+End Property
+
+Public Property Let SortKeys(ByRef Value() As ContractSortKeyIds)
+Const ProcName As String = "SortKeys"
+On Error GoTo Err
+
+Dim ar() As ContractSortKeyIds
+ar = Value
+
+mContracts.SortKeys = ar
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get SortKeys() As ContractSortKeyIds()
+SortKeys = mContracts.SortKeys
 End Property
 
 '@================================================================================

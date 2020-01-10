@@ -225,6 +225,11 @@ If InStr(1, pValue, " ") <> 0 Then pValue = """" & pValue & """"
 gGenerateSwitch = SwitchPrefix & pName & IIf(pValue = "", " ", ValueSeparator & pValue & " ")
 End Function
 
+Public Function gGetContractName(ByVal pContract As IContract) As String
+AssertArgument Not pContract Is Nothing
+gGetContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
+End Function
+
 Public Sub gHandleFatalError(ev As ErrorEventData)
 On Error Resume Next    ' ignore any further errors that might arise
 
@@ -255,27 +260,12 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
-Public Function gNotifyContractFutureAvailable( _
-                ByVal pContractFuture As IFuture) As ContractProcessor
+Public Function gNotifyContract( _
+                ByVal pContract As IContract) As ContractProcessor
 Const ProcName As String = "gNotifyContractAvailable"
 On Error GoTo Err
 
-If pContractFuture.IsCancelled Then
-    gWriteErrorLine "Contract fetch was cancelled", True
-    Exit Function
-End If
-
-If pContractFuture.IsFaulted Then
-    gWriteErrorLine pContractFuture.ErrorMessage, True
-    Exit Function
-End If
-
-Assert TypeOf pContractFuture.Value Is IContract, "Unexpected future value"
-
-Dim lContract As IContract
-Set lContract = pContractFuture.Value
-
-If IsContractExpired(lContract) Then
+If IsContractExpired(pContract) Then
     gWriteErrorLine "Contract has expired", True
     Exit Function
 End If
@@ -284,20 +274,20 @@ End If
 mErrorCount = 0
     
 Dim lContractProcessorName As String
-lContractProcessorName = gGenerateContractProcessorName(mGroupName, lContract.Specifier)
+lContractProcessorName = gGenerateContractProcessorName(mGroupName, pContract.Specifier)
 
 Dim lGroupResources As GroupResources
 Set lGroupResources = mGroups.Item(mGroupName)
 
 If Not lGroupResources.ContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
     Set mContractProcessor = New ContractProcessor
-    mContractProcessor.Initialise lContractProcessorName, pContractFuture, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
+    mContractProcessor.Initialise lContractProcessorName, pContract, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
     lGroupResources.ContractProcessors.Add mContractProcessor, lContractProcessorName
 End If
 
 lGroupResources.CurrentContractProcessor = mContractProcessor
 
-Set gNotifyContractFutureAvailable = mContractProcessor
+Set gNotifyContract = mContractProcessor
 
 Exit Function
 
@@ -419,11 +409,6 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function getContractName(ByVal pContract As IContract) As String
-AssertArgument Not pContract Is Nothing
-getContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
-End Function
-
 Private Function getInputLine() As String
 Const ProcName As String = "getInputLine"
 On Error GoTo Err
@@ -464,7 +449,7 @@ ElseIf mContractProcessor.Contract Is Nothing Then
     getPrompt = mGroupName & DefaultPrompt
 Else
     getPrompt = mGroupName & "!" & _
-                getContractName(mContractProcessor.Contract) & _
+                gGetContractName(mContractProcessor.Contract) & _
                 DefaultPrompt
 End If
 End Function
@@ -497,7 +482,7 @@ For Each lRes In mGroups
     If lContractProcessor Is Nothing Then
         lContractName = ""
     Else
-        lContractName = getContractName(lContractProcessor.Contract)
+        lContractName = gGetContractName(lContractProcessor.Contract)
     End If
     gWriteLineToConsole IIf(lGroupName = UCase$(mGroupName), "* ", "  ") & _
                         padStringRight(lGroupName, 20) & _
@@ -520,7 +505,7 @@ For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(getContractName(lContract), 30) & _
+                        padStringRight(gGetContractName(lContract), 30) & _
                         " Size=" & padStringleft(lPM.PositionSize & _
                                                 "(" & lPM.PendingBuyPositionSize & _
                                                 "/" & _
@@ -544,7 +529,7 @@ For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(getContractName(lContract), 30), _
+                        padStringRight(gGetContractName(lContract), 30), _
                         True
     
     Dim lTrade As Execution
@@ -594,7 +579,9 @@ padStringleft = Space$(pLength - Len(pInput)) & pInput
 End Function
 
 Private Function parseContractSpec( _
-                ByVal pClp As CommandLineParser) As IContractSpecifier
+                ByVal pClp As CommandLineParser, _
+                ByRef pMaxExpenditure As Long, _
+                ByRef pUnderlyingExchange As String) As IContractSpecifier
 Const ProcName As String = "parseContractSpec"
 On Error GoTo Err
 
@@ -678,6 +665,8 @@ Dim Strike As Double
 If lStrike <> "" Then
     If IsNumeric(lStrike) Then
         Strike = CDbl(lStrike)
+    ElseIf parseStrikeExtension(lStrike, pMaxExpenditure, pUnderlyingExchange) Then
+        Strike = 0#
     Else
         gWriteErrorLine "Invalid strike '" & lStrike & "'"
         validParams = False
@@ -812,6 +801,46 @@ If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     gWriteErrorLine Err.Description, True
     Exit Function
 End If
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function parseStrikeExtension( _
+                ByVal pValue As String, _
+                ByRef pMaxExpenditure As Long, _
+                ByRef pUnderlyingExchange As String) As Boolean
+Const ProcName As String = "parseStrikeExtension"
+On Error GoTo Err
+
+Const MaxExpenditure As Long = 9999999
+Const StrikeFormat As String = "^(?:(?:([1-9]\d{1,6})\$(?:,([a-zA-Z0-9]+))?)?)?$"
+
+gRegExp.Pattern = StrikeFormat
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(pValue))
+
+If lMatches.Count <> 1 Then Exit Function
+
+Dim lResult As Boolean: lResult = True
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+Dim lMaxExpenditure As String
+lMaxExpenditure = lMatch.SubMatches(0)
+If lMaxExpenditure = "" Then
+    pMaxExpenditure = 0
+ElseIf IsInteger(lMaxExpenditure, 0, MaxExpenditure) Then
+    pMaxExpenditure = CInt(lMaxExpenditure)
+Else
+    lResult = False
+End If
+
+pUnderlyingExchange = lMatch.SubMatches(1)
+
+parseStrikeExtension = lResult
+
+Exit Function
+
+Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
@@ -1016,7 +1045,13 @@ If Not IsInteger(lArg0, 1) Then
     lData.StageOrders = mStageOrders
     
     Dim lResolver As New ContractResolver
-    lResolver.Initialise lContractSpec, mContractStore, lData, mBatchOrders
+    lResolver.Initialise lContractSpec, _
+                        mContractStore, _
+                        lData, _
+                        mBatchOrders, _
+                        0, _
+                        "", _
+                        Nothing
     
     gInputPaused = True
 ElseIf Not mContractProcessor Is Nothing Then
@@ -1209,10 +1244,12 @@ Dim lSpecString As String
 lSpecString = lClp.Arg(0)
 
 Dim lContractSpec As IContractSpecifier
+Dim lMaxExpenditure As Long
+Dim lUnderlyingExchange As String
 If lSpecString <> "" Then
     Set lContractSpec = CreateContractSpecifierFromString(lSpecString)
 Else
-    Set lContractSpec = parseContractSpec(lClp)
+    Set lContractSpec = parseContractSpec(lClp, lMaxExpenditure, lUnderlyingExchange)
 End If
 
 If lContractSpec Is Nothing Then
@@ -1225,7 +1262,13 @@ If lContractSpec Is Nothing Then
 End If
 
 Dim lResolver As New ContractResolver
-lResolver.Initialise lContractSpec, mContractStore, Nothing, mBatchOrders
+lResolver.Initialise lContractSpec, _
+                    mContractStore, _
+                    Nothing, _
+                    mBatchOrders, _
+                    lMaxExpenditure, _
+                    lUnderlyingExchange, _
+                    mMarketDataManager
 
 gInputPaused = True
 
@@ -1300,11 +1343,7 @@ If lClp.NumberOfArgs > 1 Or lClp.NumberOfSwitches > 0 Then
     processContractCommand lContractArgs
 End If
 
-If Not mContractProcessor Is Nothing Then
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-Else
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral
-End If
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 End Sub
 
 Private Sub processOrders()
@@ -1416,7 +1455,9 @@ Else
     If lSpecString <> "" Then
         Set lContractSpec = CreateContractSpecifierFromString(lSpecString)
     Else
-        Set lContractSpec = parseContractSpec(lClp)
+        Dim lMaxExpenditure As Long
+        Dim lUnderlyingExchangeName As String
+        Set lContractSpec = parseContractSpec(lClp, lMaxExpenditure, lUnderlyingExchangeName)
     End If
     If lContractSpec Is Nothing Then Exit Sub
     
@@ -1841,6 +1882,7 @@ gWriteLineToConsole "                   | /offset:<points>"
 gWriteLineToConsole "                   | /offset:<numberofticks>T"
 gWriteLineToConsole "                   | /offset:<bidaskspreadpercent>%"
 gWriteLineToConsole "                   | /tif:<tifvalue>"
+gWriteLineToConsole "                   | /ignorerth"
 gWriteLineToConsole "    priceoroffset ::= <price> | <offset>"
 gWriteLineToConsole "    price  ::= DOUBLE"
 gWriteLineToConsole "    offset ::= DOUBLE"

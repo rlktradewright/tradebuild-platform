@@ -438,9 +438,9 @@ Dim s As String
 
 If IsContractSpecOffsetExpiry(mContractSpecifier) Then
     
-    ' only Futures and Options can specify expiry in this format
+    ' only Futures, Options and future options can specify expiry in this format
     
-    ' for options, the exchange, strike and right must be specified, since we're targetting
+    ' for options and future options, the exchange, strike and right must be specified, since we're targetting
     ' a single contract
     If mContractSpecifier.Strike <> 0# Or mContractSpecifier.Right <> OptNone Then
         If mContractSpecifier.Exchange = "" Or mContractSpecifier.Strike = 0# Or mContractSpecifier.Right = OptNone Then
@@ -452,6 +452,15 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
                                                             mContractSpecifier.Symbol, _
                                                             mContractSpecifier.Exchange, _
                                                             SecTypeOption, _
+                                                            mContractSpecifier.CurrencyCode, _
+                                                            "", _
+                                                            mContractSpecifier.Multiplier, _
+                                                            mContractSpecifier.Strike, _
+                                                            mContractSpecifier.Right))
+            mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                            mContractSpecifier.Symbol, _
+                                                            mContractSpecifier.Exchange, _
+                                                            SecTypeFuturesOption, _
                                                             mContractSpecifier.CurrencyCode, _
                                                             "", _
                                                             mContractSpecifier.Multiplier, _
@@ -597,10 +606,10 @@ Private Sub requestContractsForSMART()
 Const ProcName As String = "requestContractsForSMART"
 On Error GoTo Err
 
-' SMART exchanges only apply to stocks and options
+' SMART exchanges only apply to stocks, options and future options
 If IsContractSpecOffsetExpiry(mContractSpecifier) Then
     
-    ' only options can specify expiry in this format.
+    ' only options and future options can specify expiry in this format.
     ' for options, the strike and right must be specified, since we're targetting
     ' a single contract
     If mContractSpecifier.Strike = 0# Or mContractSpecifier.Right = OptNone Then
@@ -612,6 +621,14 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
                                                         mContractSpecifier.Symbol, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeOption, _
+                                                        mContractSpecifier.CurrencyCode, _
+                                                        "", _
+                                                        mContractSpecifier.Multiplier))
+    
+        mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.Symbol, _
+                                                        mContractSpecifier.Exchange, _
+                                                        SecTypeFuturesOption, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
                                                         mContractSpecifier.Multiplier))

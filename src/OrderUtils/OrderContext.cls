@@ -272,118 +272,6 @@ Public Property Get IsReady() As Boolean
 IsReady = (mProviderIsReady And mEnabled And Not mContract Is Nothing And Not mTimerList Is Nothing)
 End Property
 
-Public Property Get IsReadyForBracketOrder( _
-                ByVal pBracketOrder As IBracketOrder) As Boolean
-Const ProcName As String = "IsReadyForBracketOrder"
-On Error GoTo Err
-
-If Not IsReady Then Exit Property
-
-If Not IsReadyTickSize(pBracketOrder.Contract.Specifier.SecType) Then Exit Property
-
-If Not IsReadyForPriceSpecifier(pBracketOrder.EntryOrder.LimitPriceSpec) Then Exit Property
-If Not IsReadyForPriceSpecifier(pBracketOrder.EntryOrder.TriggerPriceSpec) Then Exit Property
-
-If Not pBracketOrder.StopLossOrder Is Nothing Then
-    If Not IsReadyForPriceSpecifier(pBracketOrder.StopLossOrder.LimitPriceSpec) Then Exit Property
-    If Not IsReadyForPriceSpecifier(pBracketOrder.StopLossOrder.TriggerPriceSpec) Then Exit Property
-End If
-
-If Not pBracketOrder.TargetOrder Is Nothing Then
-    If Not IsReadyForPriceSpecifier(pBracketOrder.TargetOrder.LimitPriceSpec) Then Exit Property
-    If Not IsReadyForPriceSpecifier(pBracketOrder.TargetOrder.TriggerPriceSpec) Then Exit Property
-End If
-
-IsReadyForBracketOrder = True
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get IsReadyForPriceSpecifier(ByVal pPriceSpec As PriceSpecifier) As Boolean
-Const ProcName As String = "IsReadyForPriceSpecifier"
-On Error GoTo Err
-
-If pPriceSpec Is Nothing Then
-    IsReadyForPriceSpecifier = True
-    Exit Property
-End If
-
-IsReadyForPriceSpecifier = False
-
-Select Case pPriceSpec.PriceType
-Case PriceValueTypeAsk
-    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Property
-Case PriceValueTypeBid
-    If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Property
-Case PriceValueTypeLast
-    If Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Property
-Case PriceValueTypeMid, _
-        PriceValueTypeBidOrAsk
-    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Property
-    If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Property
-Case PriceValueTypeEntry
-End Select
-
-IsReadyForPriceSpecifier = pPriceSpec.OffsetType <> PriceOffsetTypeBidAskPercent Or _
-                    (mDataSource.HasCurrentTick(TickTypeAsk) And _
-                    mDataSource.HasCurrentTick(TickTypeBid))
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get IsReadyTickSize(ByVal pSectype As SecurityTypes) As Boolean
-Const ProcName As String = "IsReadyTickSize"
-On Error GoTo Err
-
-If mTickSize <> -1# Then
-    IsReadyTickSize = True
-Else
-    If Not mTickSizeFuture Is Nothing Then
-        IsReadyTickSize = False
-    Else
-        Select Case pSectype
-        Case SecTypeStock
-            If dataSourceHasPrice Then
-                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(Nothing)
-                mFutureWaiter.Add mTickSizeFuture
-            End If
-            IsReadyTickSize = False
-        Case SecTypeFuture
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        Case SecTypeOption, _
-                SecTypeFuturesOption
-            If dataSourceHasPrice Then
-                Dim lDummyOrder As IOrder
-                Set lDummyOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeAsk), gNewPriceSpecifier, True)
-                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(lDummyOrder)
-                mFutureWaiter.Add mTickSizeFuture
-            End If
-            IsReadyTickSize = False
-        Case SecTypeCash
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        Case SecTypeCombo
-            Assert False, "Combo orders not supported"
-        Case SecTypeIndex
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        End Select
-    End If
-End If
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Public Property Get IsSimulated() As Boolean
 IsSimulated = mIsSimulated
 End Property
@@ -1236,6 +1124,133 @@ On Error GoTo Err
 
 Assert IsProviderReady, "OrderContext is not ready"
 IsOrderTypeSupported = ((mPermittedOrderProperties.PermittedOrderTypes And Value) = Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function IsReadyForBracketOrder( _
+                ByVal pBracketOrder As IBracketOrder) As Boolean
+Const ProcName As String = "IsReadyForBracketOrder"
+On Error GoTo Err
+
+If Not IsReady Then Exit Function
+
+If Not IsReadyTickSize(pBracketOrder.Contract.Specifier.SecType) Then Exit Function
+
+If Not IsReadyForOrderType(pBracketOrder.EntryOrder.OrderType) Then Exit Function
+If Not IsReadyForPriceSpecifier(pBracketOrder.EntryOrder.LimitPriceSpec) Then Exit Function
+If Not IsReadyForPriceSpecifier(pBracketOrder.EntryOrder.TriggerPriceSpec) Then Exit Function
+
+If Not pBracketOrder.StopLossOrder Is Nothing Then
+    If Not IsReadyForOrderType(pBracketOrder.StopLossOrder.OrderType) Then Exit Function
+    If Not IsReadyForPriceSpecifier(pBracketOrder.StopLossOrder.LimitPriceSpec) Then Exit Function
+    If Not IsReadyForPriceSpecifier(pBracketOrder.StopLossOrder.TriggerPriceSpec) Then Exit Function
+End If
+
+If Not pBracketOrder.TargetOrder Is Nothing Then
+    If Not IsReadyForOrderType(pBracketOrder.TargetOrder.OrderType) Then Exit Function
+    If Not IsReadyForPriceSpecifier(pBracketOrder.TargetOrder.LimitPriceSpec) Then Exit Function
+    If Not IsReadyForPriceSpecifier(pBracketOrder.TargetOrder.TriggerPriceSpec) Then Exit Function
+End If
+
+IsReadyForBracketOrder = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+Const ProcName As String = "IsReadyForOrderType"
+On Error GoTo Err
+
+IsReadyForOrderType = mOrderSubmitter.IsReadyForOrderType(pOrderType)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function IsReadyForPriceSpecifier(ByVal pPriceSpec As PriceSpecifier) As Boolean
+Const ProcName As String = "IsReadyForPriceSpecifier"
+On Error GoTo Err
+
+If pPriceSpec Is Nothing Then
+    IsReadyForPriceSpecifier = True
+    Exit Function
+End If
+
+IsReadyForPriceSpecifier = False
+
+Select Case pPriceSpec.PriceType
+Case PriceValueTypeAsk
+    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
+Case PriceValueTypeBid
+    If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Function
+Case PriceValueTypeLast
+    If Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
+Case PriceValueTypeMid, _
+        PriceValueTypeBidOrAsk
+    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
+    If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Function
+Case PriceValueTypeEntry
+End Select
+
+IsReadyForPriceSpecifier = pPriceSpec.OffsetType <> PriceOffsetTypeBidAskPercent Or _
+                    (mDataSource.HasCurrentTick(TickTypeAsk) And _
+                    mDataSource.HasCurrentTick(TickTypeBid))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function IsReadyTickSize(ByVal pSectype As SecurityTypes) As Boolean
+Const ProcName As String = "IsReadyTickSize"
+On Error GoTo Err
+
+If mTickSize <> -1# Then
+    IsReadyTickSize = True
+Else
+    If Not mTickSizeFuture Is Nothing Then
+        IsReadyTickSize = False
+    Else
+        Select Case pSectype
+        Case SecTypeStock
+            If dataSourceHasPrice Then
+                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(Nothing)
+                mFutureWaiter.Add mTickSizeFuture
+            End If
+            IsReadyTickSize = False
+        Case SecTypeFuture
+            mTickSize = mContract.TickSize
+            IsReadyTickSize = True
+        Case SecTypeOption, _
+                SecTypeFuturesOption
+            If dataSourceHasPrice Then
+                Dim lDummyOrder As IOrder
+                Set lDummyOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeAsk), gNewPriceSpecifier, True)
+                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(lDummyOrder)
+                mFutureWaiter.Add mTickSizeFuture
+            End If
+            IsReadyTickSize = False
+        Case SecTypeCash
+            mTickSize = mContract.TickSize
+            IsReadyTickSize = True
+        Case SecTypeCombo
+            Assert False, "Combo orders not supported"
+        Case SecTypeIndex
+            mTickSize = mContract.TickSize
+            IsReadyTickSize = True
+        End Select
+    End If
+End If
 
 Exit Function
 

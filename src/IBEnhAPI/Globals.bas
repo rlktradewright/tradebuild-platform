@@ -872,10 +872,14 @@ ElseIf pDataSource.HasCurrentTick( _
     lMarketPrice = IIf(pAction = OrderActionBuy, _
                         pDataSource.CurrentTick(TickTypeAsk).Price, _
                         pDataSource.CurrentTick(TickTypeBid).Price)
-Else
-    lMarketPrice = IIf(pAction = OrderActionSell, _
-                        pDataSource.CurrentTick(TickTypeAsk).Price, _
-                        pDataSource.CurrentTick(TickTypeBid).Price)
+ElseIf pDataSource.HasCurrentTick( _
+                        IIf(pAction = OrderActionBuy, _
+                            TickTypeBid, _
+                            TickTypeAsk)) Then
+
+    lMarketPrice = IIf(pAction = OrderActionBuy, _
+                        pDataSource.CurrentTick(TickTypeBid).Price, _
+                        pDataSource.CurrentTick(TickTypeAsk).Price)
 End If
 
 getMarketPrice = lMarketPrice

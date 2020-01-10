@@ -220,6 +220,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function IOrderSubmitter_IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+IOrderSubmitter_IsReadyForOrderType = IsReadyForOrderType(pOrderType)
+End Function
+
 Private Sub IOrderSubmitter_ModifyOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "IOrderSubmitter_ModifyOrder"
 On Error GoTo Err
@@ -740,6 +744,18 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+Select Case pOrderType
+Case OrderTypeTrail, _
+        OrderTypeTrailLimit
+    IsReadyForOrderType = mDataSource.HasCurrentTick(TickTypeAsk) Or _
+                        mDataSource.HasCurrentTick(TickTypeBid) Or _
+                        mDataSource.HasCurrentTick(TickTypeTrade)
+Case Else
+    IsReadyForOrderType = True
+End Select
+End Function
 
 Public Sub ModifyOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "ModifyOrder"
@@ -1366,7 +1382,7 @@ Case OrderStatusFilled, _
         OrderStatusCancelled
     lParentId = 0
 Case Else
-    lParentId = pBracketOrder.EntryOrder.BrokerId
+    lParentId = CInt("0" & pBracketOrder.EntryOrder.BrokerId)
 End Select
 
 If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0

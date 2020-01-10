@@ -467,6 +467,10 @@ Private Function IOrderSubmitter_GetTickSize(ByVal pDummyOrder As IOrder) As IFu
 Set IOrderSubmitter_GetTickSize = CreateFuture(CreateBoxedValue(mContract.TickSize))
 End Function
 
+Private Function IOrderSubmitter_IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+IOrderSubmitter_IsReadyForOrderType = True
+End Function
+
 Private Sub IOrderSubmitter_ModifyBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
                 ByVal pEntryOrderChanged As Boolean, _

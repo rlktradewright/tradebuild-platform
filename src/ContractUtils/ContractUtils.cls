@@ -268,11 +268,16 @@ End Property
 Public Function ContractSpecsCompare( _
                 ByVal pContractSpec1 As IContractSpecifier, _
                 ByVal pContractSpec2 As IContractSpecifier, _
-                ByRef pSortkeys() As ContractSortKeyIds) As Long
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                Optional ByVal pDescending As Boolean) As Long
 Const ProcName As String = "ContractSpecsCompare"
 On Error GoTo Err
 
-ContractSpecsCompare = gContractSpecsCompare(pContractSpec1, pContractSpec2, pSortkeys)
+ContractSpecsCompare = gContractSpecsCompare( _
+                                pContractSpec1, _
+                                pContractSpec2, _
+                                pSortkeys, _
+                                Not pDescending)
 
 Exit Function
 
@@ -401,7 +406,16 @@ Public Function CreateContractSpecifier( _
 Const ProcName As String = "CreateContractSpecifier"
 On Error GoTo Err
 
-Set CreateContractSpecifier = gCreateContractSpecifier(LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Multiplier, Strike, Right)
+Set CreateContractSpecifier = gCreateContractSpecifier( _
+                                    LocalSymbol, _
+                                    Symbol, _
+                                    Exchange, _
+                                    SecType, _
+                                    CurrencyCode, _
+                                    Expiry, _
+                                    Multiplier, _
+                                    Strike, _
+                                    Right)
 
 Exit Function
 
@@ -546,6 +560,35 @@ t.Initialise pContractSpec, pPrimaryContractStore, pSecondaryContractStore, pCoo
 StartTask t, pPriority, pTaskName
 
 Set FetchContracts = t.ContractsFuture
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function FetchContractsSorted( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                Optional ByVal pSortDescending As Boolean = False, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pListener As IContractFetchListener, _
+                Optional ByVal pPriority As TaskPriorities = TaskPriorities.PriorityNormal, _
+                Optional ByVal pTaskName As String, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchContractsSorted"
+On Error GoTo Err
+
+AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
+
+If IsEmpty(pCookie) Then pCookie = GenerateGUIDString
+
+Dim t As New ContractFetchTask
+t.InitialiseSorted pContractSpec, pPrimaryContractStore, pSecondaryContractStore, pCookie, pListener, False, pSortkeys, pSortDescending
+StartTask t, pPriority, pTaskName
+
+Set FetchContractsSorted = t.ContractsFuture
 
 Exit Function
 
