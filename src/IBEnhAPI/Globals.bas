@@ -87,6 +87,12 @@ If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.
 Set gLogger = mLogger
 End Property
 
+Public Property Get gRegExp() As RegExp
+Static lRegExp As RegExp
+If lRegExp Is Nothing Then Set lRegExp = New RegExp
+Set gRegExp = lRegExp
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -623,6 +629,11 @@ With pTwsContractDetails
     lBuilder.TickSize = .MinTick
     lBuilder.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(.TimeZoneId)
     
+    Dim lSessionTimes As SessionTimes
+    lSessionTimes = getSessionTimes(.LiquidHours)
+    lBuilder.SessionStartTime = lSessionTimes.StartTime
+    lBuilder.SessionEndTime = lSessionTimes.EndTime
+    
     Dim lProviderProps As New Parameters
     lProviderProps.SetParameterValue "Category", .Category
     lProviderProps.SetParameterValue "ContractMonth", .ContractMonth
@@ -632,6 +643,7 @@ With pTwsContractDetails
     lProviderProps.SetParameterValue "LiquidHours", .LiquidHours
     lProviderProps.SetParameterValue "MarketName", .MarketName
     lProviderProps.SetParameterValue "OrderTypes", .OrderTypes
+    lProviderProps.SetParameterValue "TradingHours", .TradingHours
     
     Dim ar() As TwsTagValue: ar = .SecIdList
     Dim u As Long: u = -1
@@ -883,6 +895,65 @@ ElseIf pDataSource.HasCurrentTick( _
 End If
 
 getMarketPrice = lMarketPrice
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getSessionTimes(ByVal pLiquidHoursString As String) As SessionTimes
+Const ProcName As String = "getSessionTimes"
+On Error GoTo Err
+
+If Len(pLiquidHoursString) = 0 Then Exit Function
+
+Const SessionTimes As String = "^(?:\d{8}:(\d{2})(\d{2})-\d{8}:(\d{2})(\d{2}))|(?:\d{8}:(CLOSED))$"
+Dim lRegExp As RegExp: Set lRegExp = gRegExp
+lRegExp.Pattern = SessionTimes
+
+Dim lLiquidHours() As String: lLiquidHours = Split(pLiquidHoursString, ";")
+Dim lSessionTimes As SessionTimes
+Dim i As Long
+For i = 0 To 6
+    If i > UBound(lLiquidHours) Then Exit For
+    Dim l As Variant: l = lLiquidHours(i)
+    If getSessionTimesForDay(lRegExp, l, lSessionTimes) Then
+        If getSessionTimes.StartTime = 0 Or lSessionTimes.StartTime < getSessionTimes.StartTime Then
+            getSessionTimes.StartTime = lSessionTimes.StartTime
+        End If
+        If getSessionTimes.EndTime = 0 Or lSessionTimes.EndTime > getSessionTimes.EndTime Then
+            getSessionTimes.EndTime = lSessionTimes.EndTime
+        End If
+    End If
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
+End Function
+
+Private Function getSessionTimesForDay( _
+                ByVal pRegExp As RegExp, _
+                ByVal pSessionTimesString As String, _
+                ByRef pSessionTimes As SessionTimes) As Boolean
+Const ProcName As String = "getSessionTimesForDay"
+On Error GoTo Err
+
+Dim lMatches As MatchCollection
+Set lMatches = pRegExp.Execute(pSessionTimesString)
+
+If lMatches.Count <> 1 Then Exit Function
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+If lMatch.SubMatches(4) = "CLOSED" Then Exit Function
+
+pSessionTimes.StartTime = CDate(lMatch.SubMatches(0) & ":" & lMatch.SubMatches(1))
+pSessionTimes.EndTime = CDate(lMatch.SubMatches(2) & ":" & lMatch.SubMatches(3))
+    
+getSessionTimesForDay = True
 
 Exit Function
 
