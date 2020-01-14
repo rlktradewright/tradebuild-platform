@@ -38,6 +38,7 @@ Private Enum States
     RetrievingBars
     DataRetrieved
     ProcessingBars
+    NotifyingBars
     Cancelling
 End Enum
 
@@ -107,6 +108,7 @@ Private mFromSessionStart                           As Date
 Private mTwsContractDetails                         As TwsContractDetails
 
 Private mListener                                   As IBarFetchListener
+Private mNotifyAtEnd                                As Boolean
 Private mFetcher                                    As HistoricalDataFetcher
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
@@ -117,6 +119,10 @@ Private mCookie                                     As Variant
 Private mFutureBuilder                              As New FutureBuilder
 
 Private mContractCache                              As TwsContractCache
+
+Private mTotalTwsBarsProcessed                      As Long
+
+Private mElapsedTimer                               As New ElapsedTimer
 
 '@================================================================================
 ' Class Event Handlers
@@ -181,22 +187,18 @@ ElseIf mState = DataRetrieved Then
     
     mState = ProcessingBars
 
-    Static et As New ElapsedTimer
-    et.StartTiming
+    mElapsedTimer.StartTiming
     
-    Static sTotalTwsBarsProcessed As Long
-
 ElseIf mState = ProcessingBars Then
     
     If mCurrTWSBarsCollectionIndex < 0 Then
-        fireNotifyBar mCurrentBar
-        gLog "Time to process " & sTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(et.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
-        mHistDataRequester.UnregisterHistoricalDataRequest mRequesterID
-        
-        mFutureWaiter.Add mFutureBuilder.Future
-        mFutureBuilder.Value = mTargetBarsBuilder.Bars
-        mFutureBuilder.Complete
-        mTaskContext.Suspend -1
+        If mNotifyAtEnd Then
+            Set mTWSBarsEn = mTargetBarsBuilder.Bars.Enumerator
+            mState = NotifyingBars
+        Else
+            returnResults
+            mTaskContext.Suspend -1
+        End If
     Else
         If mTWSBarsEn Is Nothing Then Set mTWSBarsEn = mTWSBarsCollections(mCurrTWSBarsCollectionIndex).Enumerator
         
@@ -205,12 +207,19 @@ ElseIf mState = ProcessingBars Then
             lTWSBar = mTWSBarsEn.Current
             processBar lTWSBar
             mTWSBarsEn.Remove
-            sTotalTwsBarsProcessed = sTotalTwsBarsProcessed + 1
+            mTotalTwsBarsProcessed = mTotalTwsBarsProcessed + 1
         Else
             Set mTWSBarsEn = Nothing
             Set mTWSBarsCollections(mCurrTWSBarsCollectionIndex) = Nothing
             mCurrTWSBarsCollectionIndex = mCurrTWSBarsCollectionIndex - 1
         End If
+    End If
+ElseIf mState = NotifyingBars Then
+    If mTWSBarsEn.MoveNext Then
+        fireNotifyBar mTWSBarsEn.Current
+    Else
+        returnResults
+        mTaskContext.Suspend -1
     End If
 End If
 
@@ -267,13 +276,24 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     End If
     
     failpoint = "Create target BarsBuilder"
-    Set mTargetBarsBuilder = CreateBarsBuilder(mTargetBarSpecifier.BarTimePeriod, mTargetSession, mTargetContract.TickSize, mTargetBarSpecifier.MaxNumberOfBars)
+    Set mTargetBarsBuilder = CreateBarsBuilder( _
+                                    mTargetBarSpecifier.BarTimePeriod, _
+                                    mTargetSession, _
+                                    mTargetContract.TickSize, _
+                                    IIf(mTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF, _
+                                        0, _
+                                        mTargetBarSpecifier.MaxNumberOfBars))
     
     mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, CreateFuture(mTargetContract), mContractCache)
 ElseIf TypeOf ev.Future.Value Is TwsContractDetails Then
     Set mTwsContractDetails = ev.Future.Value
-    'Set mTwsTimezone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(mTwsContractDetails.TimeZoneId))
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
+    If Not mWorkingBarSpecifier.BarTimePeriod Is mTargetBarSpecifier.BarTimePeriod Then
+        ' we are building bars from smaller ones, so we can't notify them
+        ' until we have finished building them, as we don't know up front
+        ' how many target bars we'll end up with
+        mNotifyAtEnd = True
+    End If
     mState = RetrievingBars
     mTaskContext.Continue
 ElseIf TypeOf ev.Future.Value Is Bars Then
@@ -294,6 +314,8 @@ End Sub
 Private Sub mTargetBarsBuilder_BarAdded(ByVal pBar As Bar)
 Const ProcName As String = "mBarsBuilder_BarAdded"
 On Error GoTo Err
+
+If mNotifyAtEnd Then Exit Sub
 
 fireNotifyBar mCurrentBar
 
@@ -1183,4 +1205,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub returnResults()
+Const ProcName As String = "returnResults"
+On Error GoTo Err
+
+fireNotifyBar mCurrentBar
+gLog "Time to process " & mTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(mElapsedTimer.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
+mHistDataRequester.UnregisterHistoricalDataRequest mRequesterID
+
+mFutureWaiter.Add mFutureBuilder.Future
+mFutureBuilder.Value = mTargetBarsBuilder.Bars
+mFutureBuilder.Complete
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
