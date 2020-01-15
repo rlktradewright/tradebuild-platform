@@ -42,23 +42,26 @@ Implements IProcessor
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "Processor"
+Private Const ModuleName                            As String = "Processor"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private WithEvents mFutureWaiter            As FutureWaiter
+Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mContractStore                      As IContractStore
-Private mHistDataStore                      As IHistoricalDataStore
-Private mContractSpec                       As IContractSpecifier
-Private mFromDate                           As Date
-Private mToDate                             As Date
-Private mNumber                             As Long
-Private mTimePeriod                         As TimePeriod
-Private mSessionOnly                        As Boolean
+Private mContractStore                              As IContractStore
+Private mHistDataStore                              As IHistoricalDataStore
+Private mContractSpec                               As IContractSpecifier
+Private mFromDate                                   As Date
+Private mToDate                                     As Date
+Private mNumber                                     As Long
+Private mTimePeriod                                 As TimePeriod
+Private mSessionOnly                                As Boolean
+Private mSessionEndTime                             As Date
+Private mSessionStartTime                           As Date
+
                 
 '@================================================================================
 ' Class Event Handlers
@@ -89,7 +92,7 @@ Private Sub IBarFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchCompleted"
 On Error GoTo Err
 
-gLogCompletion
+gLogCompletion mContractSpec
 
 Exit Sub
 
@@ -113,7 +116,7 @@ Private Sub IBarFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pError
 Const ProcName As String = "IBarFetchListener_FetchFailed"
 On Error GoTo Err
 
-gCon.WriteLineToConsole "Fetch failed: " & pErrorMessage
+gCon.WriteLineToConsole "Fetch failed for contract " & gGetContractName(mContractSpec) & ": " & pErrorMessage
 
 Exit Sub
 
@@ -125,7 +128,7 @@ Private Sub IBarFetchListener_FetchStarted(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchStarted"
 On Error GoTo Err
 
-gCon.WriteLineToConsole "Fetch started"
+gCon.WriteLineToConsole "Fetch started for contract " & gGetContractName(mContractSpec)
 
 Exit Sub
 
@@ -189,7 +192,9 @@ mFutureWaiter.Add mHistDataStore.FetchBars( _
                             BarTypes.BarTypeTrade, _
                             CreateClockFuture(lContractFuture), _
                             , _
-                            Not mSessionOnly), _
+                            Not mSessionOnly, _
+                            mSessionStartTime, _
+                            mSessionEndTime), _
                         Me)
 
 Exit Sub
@@ -235,7 +240,8 @@ If Not ev.Future.IsAvailable Then Exit Sub
 If TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
-    gSecType = lContract.Specifier.sectype
+    Set mContractSpec = lContract.Specifier
+    gSecType = lContract.Specifier.SecType
     gTickSize = lContract.TickSize
 End If
 
@@ -274,7 +280,9 @@ Friend Sub Initialise( _
                 ByVal pToDate As Date, _
                 ByVal pNumber As Long, _
                 ByVal pTimePeriod As TimePeriod, _
-                ByVal pSessionOnly As Boolean)
+                ByVal pSessionOnly As Boolean, _
+                ByVal pSessionStartTime As Date, _
+                ByVal pSessionEndTime As Date)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -286,6 +294,8 @@ mToDate = pToDate
 mNumber = pNumber
 Set mTimePeriod = pTimePeriod
 mSessionOnly = pSessionOnly
+mSessionStartTime = pSessionStartTime
+mSessionEndTime = pSessionEndTime
 
 Exit Sub
 
