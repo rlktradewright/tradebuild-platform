@@ -690,6 +690,10 @@ With pTwsContractDetails
     lBuilder.SessionStartTime = lSessionTimes.StartTime
     lBuilder.SessionEndTime = lSessionTimes.EndTime
     
+    lSessionTimes = gGetSessionTimes(.TradingHours)
+    lBuilder.FullSessionStartTime = lSessionTimes.StartTime
+    lBuilder.FullSessionEndTime = lSessionTimes.EndTime
+    
     Dim lProviderProps As New Parameters
     lProviderProps.SetParameterValue "Category", .Category
     lProviderProps.SetParameterValue "ContractMonth", .ContractMonth

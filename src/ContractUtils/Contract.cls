@@ -56,16 +56,18 @@ Private Const ModuleName                As String = "Contract"
 ' Member variables
 '@================================================================================
 
-Private mSpecifier As IContractSpecifier
-Private mTickSize As Double
-Private mNumberOfDecimals As Long
-Private mDescription As String
-Private mSessionStartTime As Date
-Private mSessionEndTime As Date
-Private mExpiryDate As Date
-Private mDaysBeforeExpiryToSwitch As Long
-Private mProviderIDs As Parameters
-Private mTimezoneName As String
+Private mSpecifier                                  As IContractSpecifier
+Private mTickSize                                   As Double
+Private mNumberOfDecimals                           As Long
+Private mDescription                                As String
+Private mSessionStartTime                           As Date
+Private mSessionEndTime                             As Date
+Private mFullSessionStartTime                       As Date
+Private mFullSessionEndTime                         As Date
+Private mExpiryDate                                 As Date
+Private mDaysBeforeExpiryToSwitch                   As Long
+Private mProviderIDs                                As Parameters
+Private mTimezoneName                               As String
 
 Private mProviderProperties                         As Parameters
 
@@ -93,6 +95,14 @@ End Property
 
 Private Property Get IContract_ExpiryDate() As Date
 IContract_ExpiryDate = ExpiryDate
+End Property
+
+Private Property Get IContract_FullSessionEndTime() As Date
+IContract_FullSessionEndTime = FullSessionEndTime
+End Property
+
+Private Property Get IContract_FullSessionStartTime() As Date
+IContract_FullSessionStartTime = FullSessionStartTime
 End Property
 
 Private Property Get IContract_NumberOfDecimals() As Long
@@ -173,6 +183,22 @@ End Property
 
 Public Property Let ExpiryDate(ByVal Value As Date)
 mExpiryDate = Value
+End Property
+
+Public Property Let FullSessionStartTime(ByVal Value As Date)
+mFullSessionStartTime = TimeValue(Value)
+End Property
+
+Public Property Get FullSessionStartTime() As Date
+FullSessionStartTime = mFullSessionStartTime
+End Property
+
+Public Property Let FullSessionEndTime(ByVal Value As Date)
+mFullSessionEndTime = TimeValue(Value)
+End Property
+
+Public Property Get FullSessionEndTime() As Date
+FullSessionEndTime = mFullSessionEndTime
 End Property
 
 Public Property Get Key() As String
@@ -331,6 +357,16 @@ If IsNull(contractEl.getAttribute("sessionendtime")) Then
 Else
     mSessionEndTime = contractEl.getAttribute("sessionendtime")
 End If
+If IsNull(contractEl.getAttribute("fullSessionstarttime")) Then
+    mFullSessionStartTime = "00:00:00"
+Else
+    mFullSessionStartTime = contractEl.getAttribute("fullSessionstarttime")
+End If
+If IsNull(contractEl.getAttribute("fullSessionendtime")) Then
+    mFullSessionEndTime = "00:00:00"
+Else
+    mFullSessionEndTime = contractEl.getAttribute("fullSessionendtime")
+End If
 If IsNull(contractEl.getAttribute("description")) Then
     mDescription = ""
 Else
@@ -450,6 +486,10 @@ jb.EncodeNameAndValue "ProviderIDs", mProviderIDs, Nothing
 jb.EncodeNameAndValue "SessionEndTime", mSessionEndTime, CDate(0#)
 
 jb.EncodeNameAndValue "SessionStartTime", mSessionStartTime, CDate(0#)
+
+jb.EncodeNameAndValue "FullSessionEndTime", mFullSessionEndTime, CDate(0#)
+
+jb.EncodeNameAndValue "FullSessionStartTime", mFullSessionStartTime, CDate(0#)
 
 jb.EncodeNameAndValue "TickSize", mTickSize, DefaultTickSize
 

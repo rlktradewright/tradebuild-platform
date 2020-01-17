@@ -260,24 +260,17 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     
     failpoint = "Set session times"
     
-    Dim lFullSessionTimes As SessionTimes
-    If mTargetBarSpecifier.IncludeBarsOutsideSession And _
-        (mTargetBarSpecifier.CustomSessionStartTime = 0 Or _
-        mTargetBarSpecifier.CustomSessionEndTime = 0) _
-    Then
-        lFullSessionTimes = gGetSessionTimes(mTargetContract.ProviderProperties.GetParameterValue("TradingHours"))
-    End If
     If mTargetBarSpecifier.CustomSessionStartTime <> 0 Then
         mSessionStartTime = mTargetBarSpecifier.CustomSessionStartTime
     ElseIf mTargetBarSpecifier.IncludeBarsOutsideSession Then
-        mSessionStartTime = lFullSessionTimes.StartTime
+        mSessionStartTime = mTargetContract.FullSessionStartTime
     Else
         mSessionStartTime = mTargetContract.SessionStartTime
     End If
     If mTargetBarSpecifier.CustomSessionEndTime <> 0 Then
         mSessionEndTime = mTargetBarSpecifier.CustomSessionEndTime
     ElseIf mTargetBarSpecifier.IncludeBarsOutsideSession Then
-        mSessionEndTime = lFullSessionTimes.EndTime
+        mSessionEndTime = mTargetContract.FullSessionEndTime
     Else
         mSessionEndTime = mTargetContract.SessionEndTime
     End If
@@ -915,7 +908,7 @@ Case TimePeriodUnits.TimePeriodVolume, _
     lSessionStartTime = IIf(pTargetBarSpecifier.CustomSessionStartTime <> 0, pTargetBarSpecifier.CustomSessionStartTime, pTargetBarSpecifier.Contract.SessionStartTime)
     lSessionEndTime = IIf(pTargetBarSpecifier.CustomSessionEndTime <> 0, pTargetBarSpecifier.CustomSessionEndTime, pTargetBarSpecifier.Contract.SessionEndTime)
     If pTargetBarSpecifier.FromDate <> 0 Then
-        lSesstimes = getSessionTimes(pTargetBarSpecifier.FromDate, lSessionStartTime, lSessionEndTime)
+        lSesstimes = GetSessionTimes(pTargetBarSpecifier.FromDate, lSessionStartTime, lSessionEndTime)
     Else
         lSesstimes = GetOffsetSessionTimes(pTargetBarSpecifier.ToDate, -1, lSessionStartTime, lSessionEndTime)
     End If
@@ -1008,7 +1001,7 @@ If (Not isBarFixedDuration) Then
         needMoreBars = False
         Exit Function
     End If
-ElseIf mFirstBarTimeInMessage < mWorkingBarSpecifier.FromDate Then
+ElseIf mFirstBarTimeInMessage <= mWorkingBarSpecifier.FromDate Then
     needMoreBars = False
     Exit Function
 End If
@@ -1030,7 +1023,7 @@ If pIncludeBarsOutsideSession Then
     normaliseTime = pTimestamp
 Else
     Dim lSesstimes As SessionTimes
-    lSesstimes = getSessionTimes(pTimestamp, pSessionStartTime, pSessionEndTime)
+    lSesstimes = GetSessionTimes(pTimestamp, pSessionStartTime, pSessionEndTime)
     If pTimestamp > lSesstimes.EndTime Then
         normaliseTime = lSesstimes.EndTime
     Else

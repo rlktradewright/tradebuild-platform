@@ -81,6 +81,14 @@ Public Property Let ExpiryDate(ByVal Value As Date)
 mContract.ExpiryDate = Value
 End Property
 
+Public Property Let FullSessionStartTime(ByVal Value As Date)
+mContract.FullSessionStartTime = TimeValue(Value)
+End Property
+
+Public Property Let FullSessionEndTime(ByVal Value As Date)
+mContract.FullSessionEndTime = TimeValue(Value)
+End Property
+
 Public Property Let ProviderIDs(ByVal Value As Parameters)
 mContract.ProviderIDs = Value
 End Property
@@ -119,7 +127,9 @@ With mContract
     .DaysBeforeExpiryToSwitch = pContract.DaysBeforeExpiryToSwitch
     .Description = pContract.Description
     .ExpiryDate = pContract.ExpiryDate
-    '.ProviderIDs = pContract.ProviderIDs
+    .FullSessionEndTime = pContract.FullSessionEndTime
+    .FullSessionStartTime = pContract.FullSessionStartTime
+    .ProviderProperties = pContract.ProviderProperties
     .SessionEndTime = pContract.SessionEndTime
     .SessionStartTime = pContract.SessionStartTime
     .Specifier = pContract.Specifier

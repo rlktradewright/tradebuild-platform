@@ -200,6 +200,8 @@ gContractToString = "Specifier=(" & pContract.Specifier.ToString & "); " & _
             "Tick size=" & pContract.TickSize & "; " & _
             "Session start=" & FormatDateTime(pContract.SessionStartTime, vbShortTime) & "; " & _
             "Session end=" & FormatDateTime(pContract.SessionEndTime, vbShortTime) & "; " & _
+            "Full session start=" & FormatDateTime(pContract.FullSessionStartTime, vbShortTime) & "; " & _
+            "Full session end=" & FormatDateTime(pContract.FullSessionEndTime, vbShortTime) & "; " & _
             "TimezoneName=" & pContract.TimezoneName
 
 Exit Function
@@ -219,6 +221,8 @@ lContractElement.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
 lContractElement.setAttribute "minimumtick", pContract.TickSize
 lContractElement.setAttribute "sessionstarttime", Format(pContract.SessionStartTime, "hh:mm:ss")
 lContractElement.setAttribute "sessionendtime", Format(pContract.SessionEndTime, "hh:mm:ss")
+lContractElement.setAttribute "fullsessionstarttime", Format(pContract.FullSessionStartTime, "hh:mm:ss")
+lContractElement.setAttribute "fullsessionendtime", Format(pContract.FullSessionEndTime, "hh:mm:ss")
 lContractElement.setAttribute "Description", pContract.Description
 lContractElement.setAttribute "numberofdecimals", pContract.NumberOfDecimals
 lContractElement.setAttribute "timezonename", pContract.TimezoneName
