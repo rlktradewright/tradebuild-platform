@@ -159,17 +159,27 @@ referenceDate = DateValue(Timestamp)
 Dim referenceTime As Date
 referenceTime = TimeValue(Timestamp)
 
-If referenceTime = 0 Then
-    If pSessionStartTime >= 0.5 Then referenceDate = referenceDate - 1
-ElseIf referenceTime < pSessionStartTime Then
-    referenceDate = referenceDate - 1
+Dim sessionStartDate As Date
+
+If pSessionStartTime < pSessionEndTime Then
+    If referenceTime < pSessionStartTime Then
+        sessionStartDate = referenceDate - 1
+    Else
+        sessionStartDate = referenceDate
+    End If
+Else
+    If referenceTime >= pSessionStartTime Then
+        sessionStartDate = referenceDate
+    Else
+        sessionStartDate = referenceDate - 1
+    End If
 End If
 
-gGetSessionTimesIgnoringWeekend.StartTime = referenceDate + pSessionStartTime
+gGetSessionTimesIgnoringWeekend.StartTime = sessionStartDate + pSessionStartTime
 If pSessionEndTime > pSessionStartTime Then
-    gGetSessionTimesIgnoringWeekend.EndTime = referenceDate + pSessionEndTime
+    gGetSessionTimesIgnoringWeekend.EndTime = sessionStartDate + pSessionEndTime
 Else
-    gGetSessionTimesIgnoringWeekend.EndTime = referenceDate + 1 + pSessionEndTime
+    gGetSessionTimesIgnoringWeekend.EndTime = sessionStartDate + 1 + pSessionEndTime
 End If
 
 Exit Function

@@ -446,7 +446,10 @@ ElseIf mBarTimePeriod.Units = TimePeriodTickVolume Then
     Else
         mCurrentBar.NotifyValue Value.Value
     End If
-ElseIf Value.Timestamp >= mBarEndTime Then
+ElseIf gCentiSecondstoDate(gBarEndTime(Value.Timestamp, _
+                                        mBarTimePeriod, _
+                                        mMainSession.SessionStartTime, _
+                                        mMainSession.SessionEndTime)) > mBarEndTime Then
     createNewBar Value.Timestamp, Value.Value, 0, 0
 Else
     mCurrentBar.NotifyValue Value.Value
