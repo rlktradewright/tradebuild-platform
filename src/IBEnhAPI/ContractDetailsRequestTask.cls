@@ -196,7 +196,7 @@ If mContractSpecifier.SecType = SecTypeNone Then
     ' but we don't include options in this mechanism because there can be thousands of
     ' them
 
-    If isSmartExchange(mContractSpecifier.Exchange) Then
+    If gIsSmartExchange(mContractSpecifier.Exchange) Then
         requestContractsForSMART
     Else
         requestContractsForNonSMART
@@ -357,15 +357,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function isSmartExchange(ByVal pExchange As String) As Boolean
-pExchange = UCase$(pExchange)
-isSmartExchange = (pExchange = ExchangeSmart Or _
-                    pExchange = ExchangeSmartEUR Or _
-                    pExchange = ExchangeSmartUK Or _
-                    pExchange = ExchangeSmartUS Or _
-                    InStr(1, pExchange, ExchangeSmartQualified) <> 0)
-End Function
 
 Private Sub processContract(ByVal pContractDetails As TwsContractDetails)
 Const ProcName As String = "processContract"

@@ -21,29 +21,31 @@ Public Const NumDaysInMonth                     As Long = 22
 Public Const NumDaysInYear                      As Long = 260
 Public Const NumMonthsInYear                    As Long = 12
 
-Public Const ExchangeSmart                      As String = "SMART"
-Public Const ExchangeSmartCAN                   As String = "SMARTCAN"
-Public Const ExchangeSmartEUR                   As String = "SMARTEUR"
-Public Const ExchangeSmartNASDAQ                As String = "SMARTNASDAQ"
-Public Const ExchangeSmartNYSE                  As String = "SMARTNYSE"
-Public Const ExchangeSmartUK                    As String = "SMARTUK"
-Public Const ExchangeSmartUS                    As String = "SMARTUS"
-Public Const ExchangeSmartQualified             As String = "SMART/"
+Private Const ExchangeSmart                     As String = "SMART"
+Private Const ExchangeSmartAUS                  As String = "SMARTAUS"
+Private Const ExchangeSmartCAN                  As String = "SMARTCAN"
+Private Const ExchangeSmartEUR                  As String = "SMARTEUR"
+Private Const ExchangeSmartNASDAQ               As String = "SMARTNASDAQ"
+Private Const ExchangeSmartNYSE                 As String = "SMARTNYSE"
+Private Const ExchangeSmartUK                   As String = "SMARTUK"
+Private Const ExchangeSmartUS                   As String = "SMARTUS"
+Private Const ExchangeSmartQualified            As String = "SMART/"
 
 Public Const OrderModeEntry                     As String = "entry"
 Public Const OrderModeStopLoss                  As String = "stop loss"
 Public Const OrderModeTarget                    As String = "target"
 Public Const OrderModeCloseout                  As String = "closeout"
 
-Public Const PrimaryExchangeARCA                As String = "ARCA"
-Public Const PrimaryExchangeEBS                 As String = "EBS"
-Public Const PrimaryExchangeFWB                 As String = "FWB"
-Public Const PrimaryExchangeIBIS                As String = "IBIS"
-Public Const PrimaryExchangeLSE                 As String = "LSE"
-Public Const PrimaryExchangeSWB                 As String = "SWB"
-Public Const PrimaryExchangeNASDAQ              As String = "NASDAQ"
-Public Const PrimaryExchangeNYSE                As String = "NYSE"
-Public Const PrimaryExchangeVENTURE             As String = "VENTURE"
+Private Const PrimaryExchangeARCA               As String = "ARCA"
+Private Const PrimaryExchangeASX                As String = "ASX"
+Private Const PrimaryExchangeEBS                As String = "EBS"
+Private Const PrimaryExchangeFWB                As String = "FWB"
+Private Const PrimaryExchangeIBIS               As String = "IBIS"
+Private Const PrimaryExchangeLSE                As String = "LSE"
+Private Const PrimaryExchangeSWB                As String = "SWB"
+Private Const PrimaryExchangeNASDAQ             As String = "NASDAQ"
+Private Const PrimaryExchangeNYSE               As String = "NYSE"
+Private Const PrimaryExchangeVENTURE            As String = "VENTURE"
 
 Public Const ProviderPropertyOCAGroup           As String = "OCA group"
 
@@ -109,7 +111,10 @@ Set gContractSpecToTwsContract = New TwsContract
 With gContractSpecToTwsContract
     .CurrencyCode = pContractSpecifier.CurrencyCode
     Dim lExchange As String: lExchange = UCase$(pContractSpecifier.Exchange)
-    If lExchange = ExchangeSmartCAN Then
+    If lExchange = ExchangeSmartAUS Then
+        .PrimaryExch = PrimaryExchangeASX
+        .Exchange = ExchangeSmart
+    ElseIf lExchange = ExchangeSmartCAN Then
         .PrimaryExch = PrimaryExchangeVENTURE
         .Exchange = ExchangeSmart
     ElseIf lExchange = ExchangeSmartUK Then
