@@ -154,7 +154,6 @@ If mTaskContext.CancelPending Then
 End If
 
 If mState = Starting Then
-    If Not mListener Is Nothing Then mListener.FetchStarted mCookie
     mTaskContext.Suspend -1
     Exit Sub
 End If
@@ -166,6 +165,7 @@ If mState = ConvertingComboContract Then
 
 ElseIf mState = RetrievingBars Then
     If needMoreBars Then
+        mNotifyAtEnd = True
         Dim lRequest As TwsHistoricalDataRequest
         prepareForRetrieval
         If generateTwsHistoricalDataRequest(lRequest, mWorkingBarSpecifier, mSessionStartTime, mSessionEndTime) Then
@@ -253,12 +253,35 @@ ElseIf ev.Future.IsFaulted Then
     doFail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     failpoint = "Get contract"
+    If Not mListener Is Nothing Then mListener.FetchStarted mCookie
     Set mTargetBarSpecifier = ev.Future.Value
     Set mTargetContract = mTargetBarSpecifier.Contract
     Set mTargetTimezone = GetTimeZone(mTargetContract.TimezoneName)
     
     failpoint = "Set session times"
-    mSessionStartTime = IIf(mTargetBarSpecifier.CustomSessionStartTime <> 0, mTargetBarSpecifier.CustomSessionStartTime, mTargetContract.SessionStartTime)
+    
+    Dim lFullSessionTimes As SessionTimes
+    If mTargetBarSpecifier.IncludeBarsOutsideSession And _
+        (mTargetBarSpecifier.CustomSessionStartTime = 0 Or _
+        mTargetBarSpecifier.CustomSessionEndTime = 0) _
+    Then
+        lFullSessionTimes = gGetSessionTimes(mTargetContract.ProviderProperties.GetParameterValue("TradingHours"))
+    End If
+    If mTargetBarSpecifier.CustomSessionStartTime <> 0 Then
+        mSessionStartTime = mTargetBarSpecifier.CustomSessionStartTime
+    ElseIf mTargetBarSpecifier.IncludeBarsOutsideSession Then
+        mSessionStartTime = lFullSessionTimes.StartTime
+    Else
+        mSessionStartTime = mTargetContract.SessionStartTime
+    End If
+    If mTargetBarSpecifier.CustomSessionEndTime <> 0 Then
+        mSessionEndTime = mTargetBarSpecifier.CustomSessionEndTime
+    ElseIf mTargetBarSpecifier.IncludeBarsOutsideSession Then
+        mSessionEndTime = lFullSessionTimes.EndTime
+    Else
+        mSessionEndTime = mTargetContract.SessionEndTime
+    End If
+        
     mSessionEndTime = IIf(mTargetBarSpecifier.CustomSessionEndTime <> 0, mTargetBarSpecifier.CustomSessionEndTime, mTargetContract.SessionEndTime)
     
     failpoint = "Set target SessionBuilder"
@@ -288,10 +311,13 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
 ElseIf TypeOf ev.Future.Value Is TwsContractDetails Then
     Set mTwsContractDetails = ev.Future.Value
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
-    If Not mWorkingBarSpecifier.BarTimePeriod Is mTargetBarSpecifier.BarTimePeriod Then
-        ' we are building bars from smaller ones, so we can't notify them
+    If Not mWorkingBarSpecifier.BarTimePeriod Is mTargetBarSpecifier.BarTimePeriod Or _
+        Not mTargetBarSpecifier.IncludeBarsOutsideSession _
+    Then
+        ' we are building bars from smaller ones or skipping source bars that
+        ' are outside the session, so we can't notify the bars
         ' until we have finished building them, as we don't know up front
-        ' how many target bars we'll end up with
+        ' how many intermediate bars we'll end up with
         mNotifyAtEnd = True
     End If
     mState = RetrievingBars
@@ -813,14 +839,32 @@ Set lBarSpec = pTargetBarSpecifier.Clone
 
 Select Case pTargetBarSpecifier.BarTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
-    If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
-        lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodDay)
-    End If
+'    If pTargetBarSpecifier.IncludeBarsOutsideSession Then
+'        If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
+'            lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+'            lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodDay)
+'        End If
+'    Else
+        If lBarSpec.FromDate = 0 Then
+            lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                                pTargetBarSpecifier.BarTimePeriod, _
+                                -pTargetBarSpecifier.MaxNumberOfBars, _
+                                mSessionStartTime, _
+                                mSessionEndTime)
+        End If
+        lBarSpec.BarTimePeriod = GetTimePeriod(15, TimePeriodUnits.TimePeriodMinute)
+        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length * _
+                                    NumberOfBarsInSession(lBarSpec.BarTimePeriod, mSessionStartTime, mSessionEndTime)
+'    End If
 Case TimePeriodUnits.TimePeriodHour
-    If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
-        lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodHour)
+    If pTargetBarSpecifier.IncludeBarsOutsideSession Then
+        If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
+            lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+            lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodHour)
+        End If
+    Else
+        lBarSpec.BarTimePeriod = GetTimePeriod(15, TimePeriodUnits.TimePeriodMinute)
+        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * 4
     End If
 Case TimePeriodUnits.TimePeriodMinute
     If pTargetBarSpecifier.BarTimePeriod.Length Mod 30 = 0 Then
@@ -871,7 +915,7 @@ Case TimePeriodUnits.TimePeriodVolume, _
     lSessionStartTime = IIf(pTargetBarSpecifier.CustomSessionStartTime <> 0, pTargetBarSpecifier.CustomSessionStartTime, pTargetBarSpecifier.Contract.SessionStartTime)
     lSessionEndTime = IIf(pTargetBarSpecifier.CustomSessionEndTime <> 0, pTargetBarSpecifier.CustomSessionEndTime, pTargetBarSpecifier.Contract.SessionEndTime)
     If pTargetBarSpecifier.FromDate <> 0 Then
-        lSesstimes = GetSessionTimes(pTargetBarSpecifier.FromDate, lSessionStartTime, lSessionEndTime)
+        lSesstimes = getSessionTimes(pTargetBarSpecifier.FromDate, lSessionStartTime, lSessionEndTime)
     Else
         lSesstimes = GetOffsetSessionTimes(pTargetBarSpecifier.ToDate, -1, lSessionStartTime, lSessionEndTime)
     End If
@@ -916,8 +960,8 @@ Private Function isInScope(ByVal pTimestamp As Date, ByVal pSession As Session) 
 Const ProcName As String = "isInScope"
 On Error GoTo Err
 
-If mTargetBarSpecifier.IncludeBarsOutsideSession Or _
-    pSession.IsTimeInSession(pTimestamp) _
+'If mTargetBarSpecifier.IncludeBarsOutsideSession Or
+If pSession.IsTimeInSession(pTimestamp) _
 Then
     isInScope = True
 Else
@@ -986,7 +1030,7 @@ If pIncludeBarsOutsideSession Then
     normaliseTime = pTimestamp
 Else
     Dim lSesstimes As SessionTimes
-    lSesstimes = GetSessionTimes(pTimestamp, pSessionStartTime, pSessionEndTime)
+    lSesstimes = getSessionTimes(pTimestamp, pSessionStartTime, pSessionEndTime)
     If pTimestamp > lSesstimes.EndTime Then
         normaliseTime = lSesstimes.EndTime
     Else
