@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
+Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
    BorderStyle     =   5  'Sizable ToolWindow
    ClientHeight    =   6780
@@ -573,7 +573,7 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As StateChangeEventData)
+Private Sub MultiChart1_ChartStateChanged(ByVal Index As Long, ev As StateChangeEventData)
 Const ProcName As String = "MultiChart1_ChartStateChanged"
 On Error GoTo Err
 
