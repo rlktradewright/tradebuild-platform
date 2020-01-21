@@ -1921,7 +1921,7 @@ Const ProcName As String = "ChangeGaugeAndPaint"
 On Error GoTo Err
 
 mData.CalculateInscopeGaugeDependentObjects
-Paint   ' PaintSync
+PaintSync
 If Not mYAxisRegion Is Nothing Then mYAxisRegion.NotifyResizedY
 
 Exit Sub
