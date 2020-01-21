@@ -47,6 +47,8 @@ Public Const ConfigSettingContractSpecSymbol            As String = "&Symbol"
 Public Const ConfigSettingDaysBeforeExpiryToSwitch      As String = "&DaysBeforeExpiryToSwitch"
 Public Const ConfigSettingDescription                   As String = "&Description"
 Public Const ConfigSettingExpiryDate                    As String = "&ExpiryDate"
+Public Const ConfigSettingFullSessionEndTime            As String = "&FullSessionEndTime"
+Public Const ConfigSettingFullSessionStartTime          As String = "&FullSessionStartTime"
 Public Const ConfigSettingMultiplier                    As String = "&Multiplier"
 Public Const ConfigSettingSessionEndTime                As String = "&SessionEndTime"
 Public Const ConfigSettingSessionStartTime              As String = "&SessionStartTime"
@@ -413,6 +415,8 @@ With pConfig
     lContract.DaysBeforeExpiryToSwitch = .GetSetting(ConfigSettingDaysBeforeExpiryToSwitch, DefaultDaysBeforeExpiryToSwitch)
     lContract.Description = .GetSetting(ConfigSettingDescription, "")
     lContract.ExpiryDate = CDate(.GetSetting(ConfigSettingExpiryDate, DefaultExpiry))
+    lContract.FullSessionEndTime = .GetSetting(ConfigSettingFullSessionEndTime, "00:00:00")
+    lContract.FullSessionStartTime = .GetSetting(ConfigSettingFullSessionStartTime, "00:00:00")
     lContract.SessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
     lContract.SessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
     lContract.TickSize = .GetSetting(ConfigSettingTickSize, DefaultTickSize)
@@ -782,6 +786,8 @@ With pConfig
     .SetSetting ConfigSettingExpiryDate, FormatTimestamp(pContract.ExpiryDate, TimestampDateOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingSessionEndTime, FormatTimestamp(pContract.SessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingSessionStartTime, FormatTimestamp(pContract.SessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingFullSessionEndTime, FormatTimestamp(pContract.FullSessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingFullSessionStartTime, FormatTimestamp(pContract.FullSessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingTickSize, pContract.TickSize
     .SetSetting ConfigSettingTimezoneName, pContract.TimezoneName
 End With

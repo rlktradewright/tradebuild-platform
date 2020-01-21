@@ -508,7 +508,11 @@ Set mContractFuture = pContractFuture
 ' note that the contract future must already be in an available state - see the
 ' constraints in MarketDataManager.GetDataSourceBase
 Set mContract = mContractFuture.Value
-Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
+If mOptions And MarketDataSourceOptions.MarketDataSourceOptUseFullSession Then
+    Set mSessionBuilder = CreateSessionBuilder(mContract.FullSessionStartTime, mContract.FullSessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
+Else
+    Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
+End If
 
 Set mVolumeAdjuster = New VolumeAdjuster
 mVolumeAdjuster.Initialise mSessionBuilder.Session, mNoVolumeAdjustments, mNoImpliedTrades

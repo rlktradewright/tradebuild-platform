@@ -124,6 +124,8 @@ Private mTotalTwsBarsProcessed                      As Long
 
 Private mElapsedTimer                               As New ElapsedTimer
 
+Private mTimePeriod1Day                             As TimePeriod
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -132,6 +134,7 @@ Private Sub Class_Initialize()
 ReDim mTWSBarsCollections(3) As EnumerableCollection
 mRequesterID = NullIndex
 Set mFutureWaiter = New FutureWaiter
+Set mTimePeriod1Day = GetTimePeriod(1, TimePeriodDay)
 End Sub
 
 '@================================================================================
@@ -425,6 +428,14 @@ If mTWSBarsCollections(mTWSBarsCollectionsIndex) Is Nothing Then Set mTWSBarsCol
 Dim lTimestamp As Date
 lTimestamp = convertTwsDateStringToTimestamp(pBar.Timestamp)
 
+If mWorkingBarSpecifier.BarTimePeriod Is mTimePeriod1Day Then
+    If mSessionStartTime < mSessionEndTime Then
+        lTimestamp = Int(lTimestamp) + mSessionStartTime
+    Else
+        lTimestamp = Int(lTimestamp) - 1 + mSessionStartTime
+    End If
+End If
+
 If mFirstBarTimeInMessage = 0 Then mFirstBarTimeInMessage = lTimestamp
 If Not notifyTimestamp(lTimestamp, mWorkingBarSpecifier.FromDate, mRetrievalSessionBuilder) Then Exit Sub
 
@@ -578,7 +589,7 @@ Case TimePeriodDay, _
         TimePeriodWeek, _
         TimePeriodMonth, _
         TimePeriodYear
-    lEndTime = Int(lEndTime)
+    'lEndTime = Int(lEndTime)
 End Select
 
 generateRequestEndTime = Format(lEndTime, "yyyymmdd hh\:nn\:ss")
@@ -599,6 +610,7 @@ Const ProcName As String = "generateTwsHistoricalDataRequest"
 On Error GoTo Err
 
 Set pTwsRequest.Contract = mTwsContractDetails.Summary
+pTwsRequest.MainSessionOnly = Not mWorkingBarSpecifier.IncludeBarsOutsideSession
 
 ' Set the Tws bar Size and Duration to retrieve as many bars as possible in one
 ' go, taking account of the following max durations per bar Size.
@@ -832,23 +844,17 @@ Set lBarSpec = pTargetBarSpecifier.Clone
 
 Select Case pTargetBarSpecifier.BarTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
-'    If pTargetBarSpecifier.IncludeBarsOutsideSession Then
-'        If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
-'            lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
-'            lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodDay)
-'        End If
-'    Else
-        If lBarSpec.FromDate = 0 Then
-            lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
-                                pTargetBarSpecifier.BarTimePeriod, _
-                                -pTargetBarSpecifier.MaxNumberOfBars, _
-                                mSessionStartTime, _
-                                mSessionEndTime)
-        End If
-        lBarSpec.BarTimePeriod = GetTimePeriod(15, TimePeriodUnits.TimePeriodMinute)
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length * _
-                                    NumberOfBarsInSession(lBarSpec.BarTimePeriod, mSessionStartTime, mSessionEndTime)
-'    End If
+    If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
+        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+        lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodDay)
+    End If
+    If lBarSpec.FromDate = 0 Then
+        lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                            lBarSpec.BarTimePeriod, _
+                            -lBarSpec.MaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+    End If
 Case TimePeriodUnits.TimePeriodHour
     If pTargetBarSpecifier.IncludeBarsOutsideSession Then
         If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
@@ -877,6 +883,13 @@ Case TimePeriodUnits.TimePeriodMinute
         lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodMinute)
     End If
 Case TimePeriodUnits.TimePeriodMonth
+    If lBarSpec.FromDate = 0 Then
+        lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                            pTargetBarSpecifier.BarTimePeriod, _
+                            -pTargetBarSpecifier.MaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+    End If
     lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
     lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodMonth)
 Case TimePeriodUnits.TimePeriodSecond
@@ -894,9 +907,23 @@ Case TimePeriodUnits.TimePeriodSecond
         lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodSecond)
     End If
 Case TimePeriodUnits.TimePeriodWeek
+    If lBarSpec.FromDate = 0 Then
+        lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                            pTargetBarSpecifier.BarTimePeriod, _
+                            -pTargetBarSpecifier.MaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+    End If
     lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
     lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodWeek)
 Case TimePeriodUnits.TimePeriodYear
+    If lBarSpec.FromDate = 0 Then
+        lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                            pTargetBarSpecifier.BarTimePeriod, _
+                            -pTargetBarSpecifier.MaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+    End If
     lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length * NumMonthsInYear
     lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodMonth)
 Case TimePeriodUnits.TimePeriodVolume, _
@@ -1167,7 +1194,7 @@ If mTWSBarsCollectionsIndex > 0 Then
             TimePeriodWeek, _
             TimePeriodMonth, _
             TimePeriodYear
-        mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage - 1
+        mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage    ' - 1
     Case Else
         mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage
     End Select
@@ -1190,6 +1217,14 @@ On Error GoTo Err
 
 Dim lTimestamp As Date
 lTimestamp = convertTwsDateStringToTimestamp(pBar.Timestamp)
+
+If mWorkingBarSpecifier.BarTimePeriod Is mTimePeriod1Day Then
+    If mSessionStartTime < mSessionEndTime Then
+        lTimestamp = Int(lTimestamp) + mSessionStartTime
+    Else
+        lTimestamp = Int(lTimestamp) - 1 + mSessionStartTime
+    End If
+End If
 
 If Not notifyTimestamp(lTimestamp, mTargetBarSpecifier.FromDate, mTargetSessionBuilder) Then Exit Sub
 

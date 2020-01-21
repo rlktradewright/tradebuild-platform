@@ -96,6 +96,12 @@ End Property
 Public Property Get ToDate() As Date
 End Property
 
+Public Property Let UseFullSession(ByVal RHS As Boolean)
+End Property
+
+Public Property Get UseFullSession() As Boolean
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

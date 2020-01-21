@@ -1510,12 +1510,12 @@ On Error GoTo Err
 Const VERSION = 5
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pRequest.contract.TradingClass = "" And pRequest.contract.ConId = 0), "ConId and TradingClass properties not supported"
+Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pRequest.Contract.TradingClass = "" And pRequest.Contract.ConId = 0), "ConId and TradingClass properties not supported"
 
 Dim lApiId As Long
 lApiId = gGetTwsHistRequestIdFromCallersRequestId(pRequestId)
 
-gLog "Requesting historical data for: " & UCase$(pRequest.contract.LocalSymbol) & _
+gLog "Requesting historical data for: " & UCase$(pRequest.Contract.LocalSymbol) & _
             "; requester id=" & pRequestId & _
             "; api id=" & lApiId & _
             "; barsize=" & pRequest.BarSizeSetting & _
@@ -1527,7 +1527,7 @@ mWriter.AddMessageId REQ_HISTORICAL_DATA
 mWriter.AddString VERSION, "Version"
 mWriter.AddString lApiId, "Request id"
 
-With pRequest.contract
+With pRequest.Contract
     If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .ConId, "Contract id"
     mWriter.AddString .Symbol, "Symbol"
     mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
@@ -1540,7 +1540,7 @@ With pRequest.contract
     mWriter.AddString .CurrencyCode, "Currency"
     
     Dim lExpired  As Boolean
-    lExpired = gContractHasExpired(pRequest.contract)
+    lExpired = gContractHasExpired(pRequest.Contract)
     mWriter.AddString IIf(lExpired, "", UCase$(.LocalSymbol)), "Local Symbol"
     mWriter.AddString .TradingClass, "Trading Class"
     mWriter.AddString IIf(lExpired, 1, 0), "Include expired"   ' can't include expired for non-expiring contracts
@@ -1551,16 +1551,16 @@ mWriter.AddString pRequest.EndDateTime, "End date"
 mWriter.AddString pRequest.BarSizeSetting, "Bar Size"
 
 mWriter.AddString pRequest.Duration, "Duration"
-mWriter.AddString 0, "Use RTH"
+mWriter.AddString IIf(pRequest.MainSessionOnly, 1, 0), "Use RTH"
 mWriter.AddString pRequest.WhatToShow, "What to show"
 
 mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
 
-If pRequest.contract.Sectype = TwsSecTypeCombo Then
-    mWriter.AddString pRequest.contract.ComboLegs.Count, "Combo legs count"
+If pRequest.Contract.Sectype = TwsSecTypeCombo Then
+    mWriter.AddString pRequest.Contract.ComboLegs.Count, "Combo legs count"
     Dim lComboLeg As TwsComboLeg
     Dim i As Long
-    For Each lComboLeg In pRequest.contract.ComboLegs
+    For Each lComboLeg In pRequest.Contract.ComboLegs
         With lComboLeg
             i = i + 1
             mWriter.AddString .ConId, "ConId" & i

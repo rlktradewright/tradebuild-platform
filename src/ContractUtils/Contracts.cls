@@ -462,11 +462,17 @@ On Error GoTo Err
 
 If sortKeysEqual(mSortKeys, Value) Then
     If Not pForce Then Exit Sub
-    If UBound(Value) < 0 Then
+    
+    Dim n As Long: n = -1
+    On Error Resume Next
+    n = UBound(Value)
+    On Error GoTo Err
+    
+    If n >= 0 Then
+        mSortKeys = Value
+    Else
         ReDim mSortKeys(0) As ContractSortKeyIds
         mSortKeys(0) = ContractSortKeyNone
-    Else
-        mSortKeys = Value
     End If
 End If
 
@@ -495,14 +501,25 @@ Private Function sortKeysEqual( _
 Const ProcName As String = "sortKeysEqual"
 On Error GoTo Err
 
-If UBound(pKeys1) < 0 And UBound(pKeys2) < 0 Then
+Dim n1 As Long: n1 = -1
+Dim n2 As Long: n2 = -1
+
+On Error Resume Next
+n1 = UBound(pKeys1)
+n2 = UBound(pKeys2)
+On Error GoTo Err
+
+If n1 < 0 And n2 < 0 Then
     sortKeysEqual = True
-ElseIf UBound(pKeys1) <> UBound(pKeys2) Then
+    Exit Function
+End If
+
+If n1 <> n2 Then
     sortKeysEqual = False
 Else
     sortKeysEqual = True
     Dim i As Long
-    For i = 0 To UBound(pKeys1)
+    For i = 0 To n1
         If pKeys1(i) <> pKeys2(i) Then
             sortKeysEqual = False
             Exit For

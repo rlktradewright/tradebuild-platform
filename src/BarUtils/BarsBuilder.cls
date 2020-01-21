@@ -92,7 +92,17 @@ If mBarTimePeriod.Length <> 0 Then mBarEndTime = gCentiSecondstoDate(gBarEndTime
                                                             mBarTimePeriod, _
                                                             mMainSession.SessionStartTime, _
                                                             mMainSession.SessionEndTime))
-
+If mBarTimePeriod.Units = TimePeriodDay Or _
+    mBarTimePeriod.Units = TimePeriodWeek Or _
+    mBarTimePeriod.Units = TimePeriodMonth Or _
+    mBarTimePeriod.Units = TimePeriodYear _
+Then
+    If mMainSession.SessionEndTime < mMainSession.SessionStartTime Then
+        mCurrentBar.Timestamp = Int(mCurrentBar.Timestamp) + 1
+    Else
+        mCurrentBar.Timestamp = Int(mCurrentBar.Timestamp)
+    End If
+End If
 
 Exit Sub
 

@@ -451,12 +451,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateSessionBuilderFutureFromContractFuture(ByVal pContractFuture As IFuture, ByVal pUseExchangeTimeZone As Boolean) As IFuture
+Public Function CreateSessionBuilderFutureFromContractFuture( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pUseExchangeTimeZone As Boolean, _
+                ByVal pUseFullSession As Boolean) As IFuture
 Const ProcName As String = "CreateSessionBuilderFutureFromContractFuture"
 On Error GoTo Err
 
 Dim lBuilder As New SessionBuilderFutBldr
-lBuilder.Initialise pContractFuture, pUseExchangeTimeZone
+lBuilder.Initialise pContractFuture, pUseExchangeTimeZone, pUseFullSession
 Set CreateSessionBuilderFutureFromContractFuture = lBuilder.Future
 
 Exit Function

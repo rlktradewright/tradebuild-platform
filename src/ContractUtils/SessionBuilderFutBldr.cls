@@ -49,6 +49,7 @@ Attribute mFutureBuilder.VB_VarHelpID = -1
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mUseExchangeTimeZone                        As Boolean
+Private mUseFullSession                             As Boolean
 
 Private mSelfRef                                    As Object
 
@@ -99,8 +100,12 @@ Dim lContract As IContract
 Set lContract = ev.Future.Value
 
 Dim lSessionBuilder As SessionBuilder
-Set lSessionBuilder = CreateSessionBuilder(lContract.SessionStartTime, lContract.SessionEndTime, GetTimeZone(IIf(mUseExchangeTimeZone, lContract.TimezoneName, "")))
-   
+If mUseFullSession Then
+    Set lSessionBuilder = CreateSessionBuilder(lContract.FullSessionStartTime, lContract.FullSessionEndTime, GetTimeZone(IIf(mUseExchangeTimeZone, lContract.TimezoneName, "")))
+Else
+    Set lSessionBuilder = CreateSessionBuilder(lContract.SessionStartTime, lContract.SessionEndTime, GetTimeZone(IIf(mUseExchangeTimeZone, lContract.TimezoneName, "")))
+End If
+
 mFutureBuilder.Value = lSessionBuilder
 mFutureBuilder.Complete
 
@@ -134,12 +139,14 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pContractFuture As IFuture, _
-                ByVal pUseExchangeTimeZone As Boolean)
+                ByVal pUseExchangeTimeZone As Boolean, _
+                ByVal pUseFullSession As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mFutureWaiter.Add pContractFuture
 mUseExchangeTimeZone = pUseExchangeTimeZone
+mUseFullSession = pUseFullSession
 
 Exit Sub
 
