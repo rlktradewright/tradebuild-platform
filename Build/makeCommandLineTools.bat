@@ -1,4 +1,4 @@
-echo off
+@echo off
 setlocal
 
 %TB-PLATFORM-PROJECTS-DRIVE%
@@ -9,6 +9,15 @@ set BIN-PATH=%TB-PLATFORM-PROJECTS-PATH%\Bin
 call setMyVersion.bat
 
 set DEP=/DEP:%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\ExternalDependencies.txt
+
+if not "%~1"=="" (
+	pushd %TB-PLATFORM-PROJECTS-PATH%\src\CommandLineUtils
+	echo =================================
+	echo Making command line utility project %~1
+	call makeExe.bat %~1 %~1 /CONSOLE /NOV6CC /M:E %DEP%
+	popd
+	exit /B
+)
 
 echo =================================
 echo Making command line utility projects
