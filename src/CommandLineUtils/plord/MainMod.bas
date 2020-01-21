@@ -143,14 +143,11 @@ Private mScopeName                                  As String
 Private mOrderManager                               As New OrderManager
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 
-Private mGroupName                                  As String
-
 Private mStageOrdersDefault                         As Boolean
 Private mStageOrders                                As Boolean
 
-Private mContractProcessor                          As ContractProcessor
-
-Private mGroups                                     As New Groups
+Private mCurrentGroup                               As GroupResources
+Private mGroups                                     As Groups
 
 Private mCommandNumber                              As Long
 
@@ -215,7 +212,7 @@ Public Function gGenerateContractProcessorName( _
                 ByVal pContractSpec As IContractSpecifier) As String
 Const PositionManagerNameSeparator As String = "&&"
 
-gGenerateContractProcessorName = UCase$(mGroupName & _
+gGenerateContractProcessorName = UCase$(mCurrentGroup.GroupName & _
                                         PositionManagerNameSeparator & _
                                         pContractSpec.Key)
 End Function
@@ -259,41 +256,6 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
-
-Public Function gNotifyContract( _
-                ByVal pContract As IContract) As ContractProcessor
-Const ProcName As String = "gNotifyContractAvailable"
-On Error GoTo Err
-
-If IsContractExpired(pContract) Then
-    gWriteErrorLine "Contract has expired", True
-    Exit Function
-End If
-
-' we now have a valid contract, so zero the error count
-mErrorCount = 0
-    
-Dim lContractProcessorName As String
-lContractProcessorName = gGenerateContractProcessorName(mGroupName, pContract.Specifier)
-
-Dim lGroupResources As GroupResources
-Set lGroupResources = mGroups.Item(mGroupName)
-
-If Not lGroupResources.ContractProcessors.TryItem(lContractProcessorName, mContractProcessor) Then
-    Set mContractProcessor = New ContractProcessor
-    mContractProcessor.Initialise lContractProcessorName, pContract, mMarketDataManager, mOrderManager, mScopeName, mGroupName, mOrderSubmitterFactory
-    lGroupResources.ContractProcessors.Add mContractProcessor, lContractProcessorName
-End If
-
-lGroupResources.CurrentContractProcessor = mContractProcessor
-
-Set gNotifyContract = mContractProcessor
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
@@ -368,8 +330,6 @@ logProgramId
 
 setupCommandLists
 
-Set mGroups = New Groups
-
 Set gPlaceOrdersTask = New PlaceOrdersTask
 gPlaceOrdersTask.Initialise mGroups
 StartTask gPlaceOrdersTask, PriorityNormal
@@ -396,6 +356,13 @@ If Not setupTwsApi(mClp.SwitchValue(TwsSwitch), _
     showUsage
     Exit Sub
 End If
+
+Set mGroups = New Groups
+mGroups.Initialise mContractStore, _
+                    mMarketDataManager, _
+                    mOrderManager, _
+                    mScopeName, _
+                    mOrderSubmitterFactory
 
 process
 
@@ -443,13 +410,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getPrompt() As String
-If mContractProcessor Is Nothing Then
-    getPrompt = mGroupName & DefaultPrompt
-ElseIf mContractProcessor.Contract Is Nothing Then
-    getPrompt = mGroupName & DefaultPrompt
+If mCurrentGroup.CurrentContractProcessor Is Nothing Then
+    getPrompt = mCurrentGroup.GroupName & DefaultPrompt
+ElseIf mCurrentGroup.CurrentContractProcessor.Contract Is Nothing Then
+    getPrompt = mCurrentGroup.GroupName & DefaultPrompt
 Else
-    getPrompt = mGroupName & "!" & _
-                gGetContractName(mContractProcessor.Contract) & _
+    getPrompt = mCurrentGroup.GroupName & "!" & _
+                gGetContractName(mCurrentGroup.CurrentContractProcessor.Contract) & _
                 DefaultPrompt
 End If
 End Function
@@ -484,7 +451,7 @@ For Each lRes In mGroups
     Else
         lContractName = gGetContractName(lContractProcessor.Contract)
     End If
-    gWriteLineToConsole IIf(lGroupName = UCase$(mGroupName), "* ", "  ") & _
+    gWriteLineToConsole IIf(lRes Is mCurrentGroup, "* ", "  ") & _
                         padStringRight(lGroupName, 20) & _
                         padStringRight(lContractName, 25), _
                         True
@@ -641,7 +608,7 @@ If lExpiry <> "" Then
             validParams = False
         End If
     ElseIf Len(lExpiry) = 8 Then
-        If Not IsDate(Left$(lExpiry, 4) & "/" & Mid$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
+        If Not IsDate(Left$(lExpiry, 4) & "/" & mId$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
             gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
             validParams = False
         End If
@@ -905,6 +872,8 @@ If lCommand Is gCommands.ExitCommand Then
     Exit Function
 End If
 
+Dim lContractProcessor As ContractProcessor: Set lContractProcessor = mCurrentGroup.CurrentContractProcessor
+
 If lCommand Is gCommands.Help1Command Then
     gCon.WriteLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames
 ElseIf lCommand Is gCommands.HelpCommand Then
@@ -912,38 +881,38 @@ ElseIf lCommand Is gCommands.HelpCommand Then
 ElseIf Not mNextCommands.IsCommandValid(lCommand) Then
     gWriteErrorLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames, Not mBracketOrderDefinitionInProgress
 ElseIf lCommand Is gCommands.ContractCommand Then
-    processContractCommand Params
+    processContractCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.BatchOrdersCommand Then
     processBatchOrdersCommand Params
 ElseIf lCommand Is gCommands.StageOrdersCommand Then
     processStageOrdersCommand Params
 ElseIf lCommand Is gCommands.GroupCommand Then
-    processGroupCommand Params
+    processGroupCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.BuyCommand Then
     setupResultsLogging mClp
-    ProcessBuyCommand Params
+    ProcessBuyCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.BuyAgainCommand Then
-    ProcessBuyAgainCommand Params
+    ProcessBuyAgainCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.SellCommand Then
     setupResultsLogging mClp
-    ProcessSellCommand Params
+    ProcessSellCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.SellAgainCommand Then
-    ProcessSellAgainCommand Params
+    ProcessSellAgainCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.BracketCommand Then
     mBracketOrderDefinitionInProgress = True
-    mContractProcessor.ProcessBracketCommand Params
+    lContractProcessor.ProcessBracketCommand Params
 ElseIf lCommand Is gCommands.EntryCommand Then
-    mContractProcessor.ProcessEntryCommand Params
+    lContractProcessor.ProcessEntryCommand Params
 ElseIf lCommand Is gCommands.StopLossCommand Then
-    mContractProcessor.ProcessStopLossCommand Params
+    lContractProcessor.ProcessStopLossCommand Params
 ElseIf lCommand Is gCommands.TargetCommand Then
-    mContractProcessor.ProcessTargetCommand Params
+    lContractProcessor.ProcessTargetCommand Params
 ElseIf lCommand Is gCommands.QuitCommand Then
-    mContractProcessor.ProcessQuitCommand
+    lContractProcessor.ProcessQuitCommand
     mErrorCount = 0
 ElseIf lCommand Is gCommands.EndBracketCommand Then
     mBracketOrderDefinitionInProgress = False
-    mContractProcessor.ProcessEndBracketCommand
+    lContractProcessor.ProcessEndBracketCommand
     If mErrorCount = 0 And Not mBatchOrders Then
         setupResultsLogging mClp
         processOrders
@@ -962,7 +931,7 @@ ElseIf lCommand Is gCommands.CloseoutCommand Then
     setupResultsLogging mClp
     processCloseoutCommand Params
 ElseIf lCommand Is gCommands.QuoteCommand Then
-    processQuoteCommand Params
+    processQuoteCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.PurgeCommand Then
     processPurgeCommand Params
 Else
@@ -992,11 +961,12 @@ End Select
 End Sub
 
 Private Sub ProcessBuyCommand( _
-                ByVal pParams As String)
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor)
 Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
 
-processBuyOrSellCommand OrderActionBuy, pParams
+processBuyOrSellCommand OrderActionBuy, pParams, pContractProcessor
 
 Exit Sub
 
@@ -1005,16 +975,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ProcessBuyAgainCommand( _
-                ByVal pParams As String)
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor)
 Const ProcName As String = "ProcessBuyAgainCommand"
 On Error GoTo Err
 
-If mContractProcessor Is Nothing Then
+If pContractProcessor Is Nothing Then
     gWriteErrorLine "No Buy command to repeat", True
-ElseIf mContractProcessor.LatestBuyCommandParams = "" Then
+ElseIf pContractProcessor.LatestBuyCommandParams = "" Then
     gWriteErrorLine "No Buy command to repeat", True
 Else
-    ProcessBuyCommand mContractProcessor.LatestBuyCommandParams
+    ProcessBuyCommand pContractProcessor.LatestBuyCommandParams, pContractProcessor
 End If
 
 Exit Sub
@@ -1025,7 +996,8 @@ End Sub
 
 Private Sub processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _
-                ByVal pParams As String)
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor)
 Const ProcName As String = "processBuyOrSellCommand"
 On Error GoTo Err
 
@@ -1039,26 +1011,20 @@ If Not IsInteger(lArg0, 1) Then
 
     If lContractSpec Is Nothing Then Exit Sub
     
-    Dim lData As New BuySellCommandData
-    lData.Action = pAction
-    lData.Params = Right$(pParams, Len(pParams) - Len(lArg0))
-    lData.StageOrders = mStageOrders
+    Set pContractProcessor = mCurrentGroup.AddContractProcessor(lContractSpec, _
+                                        Nothing, _
+                                        mBatchOrders, _
+                                        0, _
+                                        "")
     
-    Dim lResolver As New ContractResolver
-    lResolver.Initialise lContractSpec, _
-                        mContractStore, _
-                        lData, _
-                        mBatchOrders, _
-                        0, _
-                        "", _
-                        Nothing
-    
-    gInputPaused = True
-ElseIf Not mContractProcessor Is Nothing Then
+    pParams = Right$(pParams, Len(pParams) - Len(lArg0))
+End If
+
+If Not pContractProcessor Is Nothing Then
     If pAction = OrderActionBuy Then
-        If mContractProcessor.ProcessBuyCommand(pParams) And Not mBatchOrders Then processOrders
+        If pContractProcessor.ProcessBuyCommand(pParams) And Not mBatchOrders Then processOrders
     Else
-        If mContractProcessor.ProcessSellCommand(pParams) And Not mBatchOrders Then processOrders
+        If pContractProcessor.ProcessSellCommand(pParams) And Not mBatchOrders Then processOrders
     End If
 Else
     gWriteErrorLine "No contract has been specified in this group", True
@@ -1071,11 +1037,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ProcessSellCommand( _
-                ByVal pParams As String)
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor)
 Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
 
-processBuyOrSellCommand OrderActionSell, pParams
+processBuyOrSellCommand OrderActionSell, pParams, pContractProcessor
 
 Exit Sub
 
@@ -1084,16 +1051,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ProcessSellAgainCommand( _
-                ByVal pParams As String)
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor)
 Const ProcName As String = "ProcessSellAgainCommand"
 On Error GoTo Err
 
-If mContractProcessor Is Nothing Then
+If pContractProcessor Is Nothing Then
     gWriteErrorLine "No Sell command to repeat", True
-ElseIf mContractProcessor.LatestSellCommandParams = "" Then
+ElseIf pContractProcessor.LatestSellCommandParams = "" Then
     gWriteErrorLine "No Sell command to repeat", True
 Else
-    ProcessSellCommand mContractProcessor.LatestSellCommandParams
+    ProcessSellCommand pContractProcessor.LatestSellCommandParams, pContractProcessor
 End If
 
 Exit Sub
@@ -1177,7 +1145,7 @@ Else
 End If
 
 If lGroupName = "" Then
-    lGroupName = mGroupName
+    lGroupName = mCurrentGroup.GroupName
 ElseIf lGroupName <> AllGroups And lGroupName <> DefaultGroupName Then
     If Not isGroupValid(lGroupName) Then
         lError = True
@@ -1225,7 +1193,9 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processContractCommand(ByVal pParams As String)
+Private Sub processContractCommand( _
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor)
 Const ProcName As String = "processContractCommand"
 On Error GoTo Err
 
@@ -1253,7 +1223,7 @@ Else
 End If
 
 If lContractSpec Is Nothing Then
-    If Not mContractProcessor Is Nothing Then
+    If Not pContractProcessor Is Nothing Then
         gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     Else
         gSetValidNextCommands gCommandListAlways, gCommandListGeneral
@@ -1261,14 +1231,11 @@ If lContractSpec Is Nothing Then
     Exit Sub
 End If
 
-Dim lResolver As New ContractResolver
-lResolver.Initialise lContractSpec, _
-                    mContractStore, _
-                    Nothing, _
-                    mBatchOrders, _
-                    lMaxExpenditure, _
-                    lUnderlyingExchange, _
-                    mMarketDataManager
+mCurrentGroup.AddContractProcessor lContractSpec, _
+                                    Nothing, _
+                                    mBatchOrders, _
+                                    lMaxExpenditure, _
+                                    lUnderlyingExchange
 
 gInputPaused = True
 
@@ -1307,40 +1274,34 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processGroupCommand( _
-                ByVal pParams As String)
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor)
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
+
 Dim lGroupName As String: lGroupName = lClp.Arg(0)
 If lGroupName = "" Or lGroupName = DefaultGroupName Then
-    mGroupName = DefaultGroupName
 ElseIf Not isGroupValid(lGroupName) Then
     gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore", True
     Exit Sub
-Else
-    mGroupName = lGroupName
 End If
 
-Dim lResources As GroupResources
-If mGroups.TryItem(UCase$(mGroupName), lResources) Then
-    Set mContractProcessor = lResources.CurrentContractProcessor
-    mGroupName = lResources.GroupName
-Else
-    Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(mGroupName)
+If Not mGroups.TryItem(UCase$(lGroupName), mCurrentGroup) Then
+    Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(lGroupName)
     
     ' get the 'canonical' group name spelling
     If lPMs.Count <> 0 Then
         Dim en As Enumerator: Set en = lPMs.Enumerator
         en.MoveNext
         Dim lPM As PositionManager: Set lPM = en.Current
-        mGroupName = lPM.GroupName
+        lGroupName = lPM.GroupName
     End If
-    mGroups.Add mGroupName
-    Set mContractProcessor = Nothing
+    Set mCurrentGroup = mGroups.Add(lGroupName)
 End If
 
 If lClp.NumberOfArgs > 1 Or lClp.NumberOfSwitches > 0 Then
     Dim lContractArgs As String
     lContractArgs = Trim$(Right$(pParams, Len(pParams) - InStr(1, pParams, " ")))
-    processContractCommand lContractArgs
+    processContractCommand lContractArgs, pContractProcessor
 End If
 
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
@@ -1353,7 +1314,7 @@ On Error GoTo Err
 ' To avoid exceeding the API's input message limits, we process orders
 ' asynchronously with a task
 
-gPlaceOrdersTask.AddContractProcessors mGroups.Item(mGroupName).ContractProcessors, mStageOrders
+gPlaceOrdersTask.AddContractProcessors mCurrentGroup.ContractProcessors, mStageOrders
 
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
@@ -1392,40 +1353,30 @@ On Error GoTo Err
 Dim lRes As GroupResources
 
 If pParams = "" Then
-    gWriteLineToConsole "Purging " & mGroupName
-    Set mContractProcessor = Nothing
-    purgeGroup mGroupName
-    mGroups.Remove mGroupName
-    mGroupName = DefaultGroupName
+    gWriteLineToConsole "Purging " & mCurrentGroup.GroupName
+    mCurrentGroup.Purge
+    mGroups.Remove mCurrentGroup.GroupName
+    Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 ElseIf UCase$(pParams) = AllGroups Then
     For Each lRes In mGroups
-        Dim lGroupName As String: lGroupName = lRes.GroupName
-        gWriteLineToConsole "Purging " & lGroupName
-        purgeGroup lGroupName
-        If lGroupName = mGroupName Then
-            mGroupName = DefaultGroupName
-            Set mContractProcessor = Nothing
-        End If
+        gWriteLineToConsole "Purging " & lRes.GroupName
+        lRes.Purge
     Next
     mGroups.Clear
+    Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 ElseIf isGroupValid(pParams) Then
     If Not mGroups.TryItem(pParams, lRes) Then
         gWriteErrorLine "No such group", True
         Exit Sub
     End If
     gWriteLineToConsole "Purging " & lRes.GroupName
-    purgeGroup pParams
+    lRes.Purge
     mGroups.Remove pParams
-    If UCase$(pParams) = UCase$(mGroupName) Then
-        mGroupName = DefaultGroupName
-        Set mContractProcessor = Nothing
-    End If
+    Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 Else
     gWriteErrorLine "Invalid group name", True
     Exit Sub
 End If
-
-mGroups.Add DefaultGroupName
 
 Exit Sub
 
@@ -1433,15 +1384,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processQuoteCommand(ByVal pParams As String)
+Private Sub processQuoteCommand( _
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor)
 Const ProcName As String = "processQuoteCommand"
 On Error GoTo Err
 
 If pParams = "" Then
-    If Not mContractProcessor Is Nothing Then
-        gWriteLineToConsole mContractProcessor.ContractName & _
+    If Not pContractProcessor Is Nothing Then
+        gWriteLineToConsole pContractProcessor.ContractName & _
                             ": " & _
-                            GetCurrentTickSummary(mContractProcessor.DataSource)
+                            GetCurrentTickSummary(pContractProcessor.DataSource)
     Else
         gWriteLineToConsole "No current contract"
     End If
@@ -1476,7 +1429,6 @@ End If
 End Sub
 
 Private Sub processResetCommand()
-Set mContractProcessor = Nothing
 mStageOrders = mStageOrdersDefault
 mBatchOrders = mBatchOrdersDefault
 mErrorCount = 0
@@ -1500,44 +1452,7 @@ Case Else
     gWriteErrorLine gCommands.StageOrdersCommand.Name & " parameter must be either YES or NO or DEFAULT", True
 End Select
 
-If mContractProcessor Is Nothing Then
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral
-Else
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-End If
-End Sub
-
-Private Sub purgeGroup(ByVal pGroupName As String)
-Const ProcName As String = "purgeGroup"
-On Error GoTo Err
-
-Dim lRes As GroupResources
-Set lRes = mGroups.Item(pGroupName)
-
-lRes.CurrentContractProcessor = Nothing
-
-Dim lOrderPlacer As OrderPlacer
-For Each lOrderPlacer In lRes.OrderPlacers
-    lOrderPlacer.Finish
-    gPlaceOrdersTask.RemoveOrderPlacer lOrderPlacer
-Next
-lRes.OrderPlacers.Clear
-
-Dim lPM As PositionManager
-For Each lPM In mOrderManager.GetPositionManagersForGroup(pGroupName)
-    lPM.Purge
-Next
-
-Dim lContractProcessor As ContractProcessor
-For Each lContractProcessor In lRes.ContractProcessors
-    lContractProcessor.Finish
-Next
-lRes.ContractProcessors.Clear
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 End Sub
 
 Private Function setBatchOrders() As Boolean
@@ -1578,8 +1493,7 @@ If Not mClp.Switch(ScopeNameSwitch) Then Exit Sub
 mScopeName = mClp.SwitchValue(ScopeNameSwitch)
 If mScopeName = "" Then Exit Sub
 
-mGroupName = DefaultGroupName
-mGroups.Add DefaultGroupName
+Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 mRecoveryFileDir = ApplicationSettingsFolder
 If mClp.SwitchValue(RecoveryFileDirSwitch) <> "" Then mRecoveryFileDir = mClp.SwitchValue(RecoveryFileDirSwitch)
 
@@ -2014,7 +1928,7 @@ Else
     Exit Function
 End If
 
-s = Mid(pApiMessageLogging, 2, 1)
+s = mId(pApiMessageLogging, 2, 1)
 If s = None Then
     pLogRawApiMessages = ApiMessageLoggingOptionNone
 ElseIf s = Default Then
@@ -2025,7 +1939,7 @@ Else
     Exit Function
 End If
 
-s = Mid(pApiMessageLogging, 3, 1)
+s = mId(pApiMessageLogging, 3, 1)
 If s = No Then
     pLogApiMessageStats = False
 ElseIf s = Yes Then

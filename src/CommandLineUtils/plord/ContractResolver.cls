@@ -59,10 +59,6 @@ Private Const ModuleName                            As String = "ContractResolve
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private WithEvents mContractProcessor               As ContractProcessor
-Attribute mContractProcessor.VB_VarHelpID = -1
-Private mContinuationData                           As BuySellCommandData
-
 Private WithEvents mOrderContext                    As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
 
@@ -84,6 +80,8 @@ Private mState                                      As ContractResolverStates
 Private mCandidateContracts                         As IContracts
 Private mCandidateContractsEn                       As Enumerator
 Private mCandidateContract                          As IContract
+
+Private mFutureBuilder                              As New FutureBuilder
 
 Private mSelfRef                                    As Object
 
@@ -145,22 +143,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mContractProcessor Event Handlers
-'@================================================================================
-
-Private Sub mContractProcessor_IsReady()
-Const ProcName As String = "mContractProcessor_IsReady"
-On Error GoTo Err
-
-processContinuationData
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -287,7 +269,6 @@ If Not mOrderContext.IsProviderReady Then
     Exit Sub
 End If
 
-processContinuationData
 gInputPaused = False
 
 Exit Sub
@@ -300,6 +281,10 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Get ContractFuture() As IFuture
+Set ContractFuture = mFutureBuilder.Future
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -307,7 +292,6 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pContractStore As IContractStore, _
-                ByVal pContinuationData As BuySellCommandData, _
                 ByVal pBatchOrders As Boolean, _
                 ByVal pMaxExpenditure As Long, _
                 ByVal pUnderlyingExchangeName As String, _
@@ -319,7 +303,6 @@ Set mSelfRef = Me
 
 Set mContractSpec = pContractSpec
 Set mContractStore = pContractStore
-Set mContinuationData = pContinuationData
 Set mMarketDataManager = pMarketDataManager
 mBatchOrders = pBatchOrders
 mMaxExpenditure = pMaxExpenditure
@@ -396,40 +379,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processContinuationData()
-Const ProcName As String = "processContinuationData"
-On Error GoTo Err
-
-If mContinuationData Is Nothing Then
-ElseIf mContinuationData.Action = OrderActionBuy Then
-    If mContractProcessor.ProcessBuyCommand(mContinuationData.Params) And Not mBatchOrders Then gPlaceOrdersTask.AddContractProcessor mContractProcessor, mContinuationData.StageOrders
-ElseIf mContinuationData.Action = OrderActionSell Then
-    If mContractProcessor.ProcessSellCommand(mContinuationData.Params) And Not mBatchOrders Then gPlaceOrdersTask.AddContractProcessor mContractProcessor, mContinuationData.StageOrders
-End If
-
-gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-
-Set mSelfRef = Nothing
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Sub processTargetContract(ByVal pContract As IContract)
 Const ProcName As String = "processTargetContract"
 On Error GoTo Err
 
-Set mContractProcessor = gNotifyContract(pContract)
-
-If mContractProcessor Is Nothing Then
-    Set mSelfRef = Nothing
-ElseIf Not mContractProcessor.OrderContext.IsProviderReady Then
-    Set mOrderContext = mContractProcessor.OrderContext
-Else
-    processContinuationData
-End If
+mFutureBuilder.Value = pContract
+mFutureBuilder.Complete
 
 Exit Sub
 

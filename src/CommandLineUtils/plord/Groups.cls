@@ -46,6 +46,13 @@ Private Const ModuleName                            As String = "Groups"
 
 Private mDict                                       As SortedDictionary
 
+Private mContractStore                              As IContractStore
+
+Private mMarketDataManager                          As IMarketDataManager
+Private mOrderManager                               As OrderManager
+Private mScopeName                                  As String
+Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -86,7 +93,12 @@ If mDict.TryItem(UCase$(pGroupName), lResources) Then
 End If
 
 Set lResources = New GroupResources
-lResources.GroupName = pGroupName
+lResources.Initialise pGroupName, _
+                        mContractStore, _
+                        mMarketDataManager, _
+                        mOrderManager, _
+                        mScopeName, _
+                        mOrderSubmitterFactory
 
 mDict.Add lResources, UCase$(pGroupName)
 
@@ -109,6 +121,19 @@ End Function
 Friend Function Count() As Long
 Count = mDict.Count
 End Function
+
+Friend Sub Initialise( _
+                ByVal pContractStore As IContractStore, _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pOrderManager As OrderManager, _
+                ByVal pScopeName As String, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
+Set mContractStore = pContractStore
+Set mMarketDataManager = pMarketDataManager
+Set mOrderManager = pOrderManager
+mScopeName = pScopeName
+Set mOrderSubmitterFactory = pOrderSubmitterFactory
+End Sub
 
 Friend Function Item(ByVal pGroupName As String) As GroupResources
 Const ProcName As String = "Item"

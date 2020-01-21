@@ -46,6 +46,8 @@ Private Const ModuleName                            As String = "ContractProcess
 ' Member variables
 '@================================================================================
 
+Private mId                                         As String
+
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 
@@ -117,6 +119,10 @@ Friend Property Get GroupName() As String
 GroupName = mGroupName
 End Property
 
+Friend Property Get Id() As String
+Id = mId
+End Property
+
 Friend Property Get LatestBuyCommandParams() As String
 LatestBuyCommandParams = mLatestBuyCommandParams
 End Property
@@ -133,46 +139,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub ClearOrders()
-mBracketOrders.Clear
-End Sub
-
-Friend Sub Finish()
-Const ProcName As String = "Finish"
-On Error GoTo Err
-
-mDataSource.Finish
-Set mDataSource = Nothing
-
-mBracketOrders.Clear
-
-mPositionManager.Finish
-
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub Recover( _
-                ByVal pPositionManager As PositionManager)
-Const ProcName As String = "Recover"
-On Error GoTo Err
-
-Set mPositionManager = pPositionManager
-Set mContract = mPositionManager.ContractFuture.Value
-mGroupName = mPositionManager.GroupName
-
-Set mDataSource = mPositionManager.DataSource
-Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-Friend Sub Initialise( _
+Friend Sub Activate( _
                 ByVal pName As String, _
                 ByVal pContract As IContract, _
                 ByVal pMarketDataManager As IMarketDataManager, _
@@ -208,6 +175,49 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub AddBracketOrderSpecs( _
+                ByVal pContractProcessor As ContractProcessor)
+Const ProcName As String = "AddBracketOrderSpecs"
+On Error GoTo Err
+
+Dim lBOS As BracketOrderSpecification
+For Each lBOS In pContractProcessor.BracketOrders
+    mBracketOrders.Add lBOS
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub ClearOrders()
+mBracketOrders.Clear
+End Sub
+
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+mDataSource.Finish
+Set mDataSource = Nothing
+
+mBracketOrders.Clear
+
+mPositionManager.Finish
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Initialise( _
+                ByVal pId As String)
+mId = pId
 End Sub
 
 Friend Sub ProcessBracketCommand( _
@@ -518,6 +528,24 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub Recover( _
+                ByVal pPositionManager As PositionManager)
+Const ProcName As String = "Recover"
+On Error GoTo Err
+
+Set mPositionManager = pPositionManager
+Set mContract = mPositionManager.ContractFuture.Value
+mGroupName = mPositionManager.GroupName
+
+Set mDataSource = mPositionManager.DataSource
+Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -542,7 +570,7 @@ Else
     getEntryOrderType = OrderTypeFromString(pInput)
 End If
 AssertArgument IsEntryOrderType(getEntryOrderType)
-AssertArgument (mOrderContext.PermittedOrderTypes And getEntryOrderType) <> 0
+If Not mOrderContext Is Nothing Then AssertArgument (mOrderContext.PermittedOrderTypes And getEntryOrderType) <> 0
 
 Exit Function
 
