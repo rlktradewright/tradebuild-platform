@@ -843,7 +843,11 @@ Dim lBarSpec As BarDataSpecifier
 Set lBarSpec = pTargetBarSpecifier.Clone
 
 Dim lMaxNumberOfBars As Long
-If pTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF Then lMaxNumberOfBars = 1
+If pTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF Then
+    lMaxNumberOfBars = 1
+Else
+    lMaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars
+End If
 
 Select Case pTargetBarSpecifier.BarTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
