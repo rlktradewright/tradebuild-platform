@@ -383,7 +383,7 @@ Set clp = CreateCommandLineParser(params, ",")
 
 If clp.Arg(1) = "?" Or _
     clp.Switch("?") Or _
-    clp.NumberOfArgs = 0 _
+    (clp.NumberOfArgs = 0 And clp.NumberOfSwitches = 0) _
 Then
     showContractHelp
     Exit Sub
