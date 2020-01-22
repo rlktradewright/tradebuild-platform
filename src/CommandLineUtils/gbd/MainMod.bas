@@ -255,6 +255,7 @@ ApplicationName = "gbd"
 SetupDefaultLogging command
 
 mNumber = &H7FFFFFFF
+mTo = MaxDate
 
 Set gCon = GetConsole
 
