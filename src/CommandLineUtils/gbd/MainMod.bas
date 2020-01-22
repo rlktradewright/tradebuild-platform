@@ -254,9 +254,6 @@ ApplicationGroupName = "TradeWright"
 ApplicationName = "gbd"
 SetupDefaultLogging command
 
-'EnableTracing "tradebuild"
-'EnableTracing "tickfilesp"
-
 mNumber = &H7FFFFFFF
 
 Set gCon = GetConsole
@@ -632,7 +629,7 @@ On Error GoTo Err
 
 If mDataSource <> FromFile And mContractSpec Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
-ElseIf mDataSource <> FromFile And mFrom = 0 And mNumber = 0 Then
+ElseIf mDataSource <> FromFile And mFrom = 0 And (mNumber = 0 Or mNumber = &H7FFFFFFF) Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - either 'from' time or number of bars must be specified"
 ElseIf mFrom > mTo And mTo <> 0 Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - 'from' time must not be after 'to' time"
