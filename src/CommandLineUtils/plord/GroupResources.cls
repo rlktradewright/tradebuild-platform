@@ -150,25 +150,29 @@ End Property
 
 Friend Function AddContractProcessor( _
                 ByVal pContractSpec As IContractSpecifier, _
-                ByVal pContinuationData As BuySellCommandData, _
                 ByVal pBatchOrders As Boolean, _
+                ByVal pStageOrders As Boolean, _
                 ByVal pMaxExpenditure As Long, _
                 ByVal pUnderlyingExchangeName As String) As ContractProcessor
 Const ProcName As String = "AddContractProcessor"
 On Error GoTo Err
 
 Dim lContractProcessor As New ContractProcessor
-lContractProcessor.Initialise GenerateGUIDString
-mContractProcessors.Add lContractProcessor, lContractProcessor.Id
-Set mCurrentContractProcessor = lContractProcessor
 
 Dim lContractResolver As New ContractResolver
 lContractResolver.Initialise pContractSpec, _
+                            lContractProcessor, _
                             mContractStore, _
                             pBatchOrders, _
+                            pStageOrders, _
                             pMaxExpenditure, _
                             pUnderlyingExchangeName, _
                             mMarketDataManager
+
+lContractProcessor.Initialise GenerateGUIDString, lContractResolver
+mContractProcessors.Add lContractProcessor, lContractProcessor.Id
+Set mCurrentContractProcessor = lContractProcessor
+
 mFutureWaiter.Add lContractResolver.ContractFuture, lContractProcessor
 
 Set AddContractProcessor = lContractProcessor

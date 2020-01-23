@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BuySellCommandData"
+Attribute VB_Name = "PendingCommand"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -38,13 +38,13 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "BuySellCommandData"
+Private Const ModuleName                            As String = "PendingCommand"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Public Action                                       As OrderActions
+Public Command                                      As Command
 Public Params                                       As String
 Public StageOrders                                  As Boolean
 

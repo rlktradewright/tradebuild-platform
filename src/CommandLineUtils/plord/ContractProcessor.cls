@@ -42,6 +42,8 @@ Event IsReady()
 
 Private Const ModuleName                            As String = "ContractProcessor"
 
+Private Const OrderPendingMessage                   As String = "Order is pending contract resolution"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -59,6 +61,8 @@ Private mPositionManager                            As PositionManager
 
 Private WithEvents mOrderContext                    As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
+
+Private mContractResolver                           As ContractResolver
 
 Private mGroupName                                  As String
 
@@ -160,7 +164,8 @@ If pScopeName = "" Then
     Set mPositionManager = pOrderManager.CreatePositionManager( _
                                 pName, _
                                 mDataSource, _
-                                pOrderSubmitterFactory)
+                                pOrderSubmitterFactory, _
+                                pGroupName)
 Else
     Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
                                 pName, _
@@ -216,14 +221,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pId As String)
+                ByVal pId As String, _
+                ByVal pContractResolver As ContractResolver)
 mId = pId
+Set mContractResolver = pContractResolver
 End Sub
 
 Friend Sub ProcessBracketCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "ProcessBracketCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand gCommands.BracketCommand, pParams
+    Exit Sub
+End If
 
 Set mBOSpec = New BracketOrderSpecification
 Set mBOSpec.Contract = mContract
@@ -288,7 +300,14 @@ Friend Function ProcessBuyCommand( _
 Const ProcName As String = "ProcessBuyCommand"
 On Error GoTo Err
 
-ProcessBuyCommand = processBuyOrSellCommand(OrderActionBuy, pParams)
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand _
+                            gCommands.BuyCommand, _
+                            pParams, _
+                            OrderPendingMessage
+Else
+    ProcessBuyCommand = processBuyOrSellCommand(OrderActionBuy, pParams)
+End If
 
 Exit Function
 
@@ -301,7 +320,14 @@ Friend Function ProcessSellCommand( _
 Const ProcName As String = "ProcessSellCommand"
 On Error GoTo Err
 
-ProcessSellCommand = processBuyOrSellCommand(OrderActionSell, pParams)
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand _
+                            gCommands.SellCommand, _
+                            pParams, _
+                            OrderPendingMessage
+Else
+    ProcessSellCommand = processBuyOrSellCommand(OrderActionSell, pParams)
+End If
 
 Exit Function
 
@@ -312,6 +338,14 @@ End Function
 Friend Sub ProcessEndBracketCommand()
 Const ProcName As String = "ProcessEndBracketCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand _
+                            gCommands.EndBracketCommand, _
+                            "", _
+                            OrderPendingMessage
+    Exit Sub
+End If
 
 If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
@@ -327,6 +361,11 @@ Friend Sub ProcessEntryCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "ProcessEntryCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand gCommands.EntryCommand, pParams
+    Exit Sub
+End If
 
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
@@ -394,6 +433,14 @@ Friend Sub ProcessQuitCommand()
 Const ProcName As String = "ProcessQuitCommand"
 On Error GoTo Err
 
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand _
+                            gCommands.QuitCommand, _
+                            "", _
+                            OrderPendingMessage
+    Exit Sub
+End If
+
 Set mBOSpec = Nothing
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 gWriteLineToConsole "Command definition terminated"
@@ -408,6 +455,11 @@ Friend Sub ProcessStopLossCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "ProcessStopLossCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand gCommands.StopLossCommand, pParams
+    Exit Sub
+End If
 
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
@@ -470,6 +522,11 @@ Friend Sub ProcessTargetCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "ProcessTargetCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand gCommands.TargetCommand, pParams
+    Exit Sub
+End If
 
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
@@ -877,7 +934,5 @@ ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
 End If
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-
 
 

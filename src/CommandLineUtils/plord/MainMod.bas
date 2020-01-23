@@ -330,10 +330,6 @@ logProgramId
 
 setupCommandLists
 
-Set gPlaceOrdersTask = New PlaceOrdersTask
-gPlaceOrdersTask.Initialise mGroups
-StartTask gPlaceOrdersTask, PriorityNormal
-
 Set mClp = CreateCommandLineParser(Command)
 
 Dim lLogApiMessages As ApiMessageLoggingOptions
@@ -357,12 +353,18 @@ If Not setupTwsApi(mClp.SwitchValue(TwsSwitch), _
     Exit Sub
 End If
 
+mScopeName = mClp.SwitchValue(ScopeNameSwitch)
+
 Set mGroups = New Groups
 mGroups.Initialise mContractStore, _
                     mMarketDataManager, _
                     mOrderManager, _
                     mScopeName, _
                     mOrderSubmitterFactory
+
+Set gPlaceOrdersTask = New PlaceOrdersTask
+gPlaceOrdersTask.Initialise mGroups
+StartTask gPlaceOrdersTask, PriorityNormal
 
 process
 
@@ -1012,8 +1014,8 @@ If Not IsInteger(lArg0, 1) Then
     If lContractSpec Is Nothing Then Exit Sub
     
     Set pContractProcessor = mCurrentGroup.AddContractProcessor(lContractSpec, _
-                                        Nothing, _
                                         mBatchOrders, _
+                                        mStageOrders, _
                                         0, _
                                         "")
     
@@ -1232,8 +1234,8 @@ If lContractSpec Is Nothing Then
 End If
 
 mCurrentGroup.AddContractProcessor lContractSpec, _
-                                    Nothing, _
                                     mBatchOrders, _
+                                    mStageOrders, _
                                     lMaxExpenditure, _
                                     lUnderlyingExchange
 
@@ -1489,8 +1491,6 @@ Private Sub setOrderRecovery()
 Const ProcName As String = "setOrderRecovery"
 On Error GoTo Err
 
-If Not mClp.Switch(ScopeNameSwitch) Then Exit Sub
-mScopeName = mClp.SwitchValue(ScopeNameSwitch)
 If mScopeName = "" Then Exit Sub
 
 Set mCurrentGroup = mGroups.Add(DefaultGroupName)
