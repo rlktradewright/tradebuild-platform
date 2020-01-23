@@ -62,7 +62,7 @@ Public Const DefaultTickSize                            As Double = 0.01
 Public Const DefaultTimezoneName                        As String = "Eastern Standard Time"
 
 Public Const MaxContractExpiryOffset                    As Long = 10
-Public Const MaxContractDaysBeforeExpiryToSwitch        As Long = 10
+Public Const MaxContractDaysBeforeExpiryToSwitch        As Long = 20
 
 '@================================================================================
 ' Member variables

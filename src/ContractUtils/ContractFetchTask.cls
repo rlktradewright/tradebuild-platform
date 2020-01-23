@@ -364,12 +364,24 @@ Friend Sub InitialiseSorted( _
 Const ProcName As String = "InitialiseSorted"
 On Error GoTo Err
 
-Set mContractSpec = pContractSpec
-If gIsOffsetExpiry(mContractSpec.Expiry) Then
+If Not gIsOffsetExpiry(pContractSpec.Expiry) Then
+    Set mContractSpec = pContractSpec
+Else
     mIsOffsetExpiry = True
-    gParseOffsetExpiry mContractSpec.Expiry, _
+    gParseOffsetExpiry pContractSpec.Expiry, _
                     mExpiryOffset, _
                     mDaysBeforeExpiryToSwitch
+    With pContractSpec
+        Set mContractSpec = gCreateContractSpecifier(.LocalSymbol, _
+                                                    .Symbol, _
+                                                    .Exchange, _
+                                                    .SecType, _
+                                                    .CurrencyCode, _
+                                                    "", _
+                                                    .Multiplier, _
+                                                    .Strike, _
+                                                    .Right)
+    End With
 End If
 
 Set mPrimaryContractStore = pPrimaryContractStore
@@ -472,9 +484,9 @@ With pFirstContract.Specifier
 End With
 
 Set mContractsBuilder = New ContractsBuilder
-ReDim lsortkeys(0) As ContractSortKeyIds
-lsortkeys(0) = ContractSortKeyExpiry
-mContractsBuilder.SortKeys = lsortkeys
+ReDim lSortkeys(0) As ContractSortKeyIds
+lSortkeys(0) = ContractSortKeyExpiry
+mContractsBuilder.SortKeys = lSortkeys
 
 mTaskContext.Continue
 

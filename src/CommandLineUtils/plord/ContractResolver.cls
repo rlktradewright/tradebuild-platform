@@ -75,6 +75,7 @@ Private mUnderlyingPrice                            As Double
 Private mInitialStrike                              As Double
 
 Private mMaxExpenditure                             As Long
+Private mUnderlyingExchangeName                     As String
 
 Private mState                                      As ContractResolverStates
 
@@ -288,6 +289,29 @@ Friend Property Get ContractFuture() As IFuture
 Set ContractFuture = mFutureBuilder.Future
 End Property
 
+Friend Property Get ContractName() As String
+With mContractSpec
+    Dim lStrikeStr As String
+    If mMaxExpenditure = 0 Then
+        If .Strike <> 0 Then lStrikeStr = CStr(.Strike)
+    Else
+        lStrikeStr = mMaxExpenditure & "$" & _
+                    IIf(mUnderlyingExchangeName <> "", "," & mUnderlyingExchangeName, "")
+    End If
+    
+    ContractName = IIf(.Symbol <> "", .Symbol, "") & _
+                    IIf(.LocalSymbol <> "", ";" & .LocalSymbol, "") & _
+                    ";" & SecTypeToShortString(.SecType) & _
+                    IIf(.Exchange <> "", ";" & .Exchange, "") & _
+                    IIf(.CurrencyCode <> "", ";" & .CurrencyCode, "") & _
+                    IIf(.Expiry <> "", ";" & .Expiry, "") & _
+                    IIf(lStrikeStr <> "", ";" & lStrikeStr, "") & _
+                    IIf(.Right <> OptNone, ";" & OptionRightToString(.Right), "") & _
+                    IIf(.Multiplier <> 1, ";" & .Multiplier, "")
+End With
+
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -324,17 +348,19 @@ Set mMarketDataManager = pMarketDataManager
 mBatchOrders = pBatchOrders
 mStageOrders = pStageOrders
 mMaxExpenditure = pMaxExpenditure
+mUnderlyingExchangeName = pUnderlyingExchangeName
 
 Set mFutureWaiter = New FutureWaiter
 
 If mMaxExpenditure <> 0 Then
+    gWriteLineToConsole "Resolving contract"
     ' we first need to find the underlying contract
     mState = ContractResolverStateFetchingUnderlyingContract
     Dim lUnderlyingContractSpec As IContractSpecifier
     With mContractSpec
         Set lUnderlyingContractSpec = CreateContractSpecifier("", _
                                                     .Symbol, _
-                                                    pUnderlyingExchangeName, _
+                                                    mUnderlyingExchangeName, _
                                                     SecTypeStock, _
                                                     .CurrencyCode, _
                                                     "", _
@@ -403,6 +429,7 @@ On Error GoTo Err
 
 mFutureBuilder.Value = pContract
 mFutureBuilder.Complete
+gWriteLineToConsole "Contract is: " & gGetContractName(pContract)
 
 Exit Sub
 

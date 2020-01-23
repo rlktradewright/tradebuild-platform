@@ -112,7 +112,11 @@ Set Contract = mContract
 End Property
 
 Friend Property Get ContractName() As String
-ContractName = mContract.Specifier.LocalSymbol & "@" & mContract.Specifier.Exchange
+If Not mContract Is Nothing Then
+    ContractName = gGetContractName(mContract)
+Else
+    ContractName = mContractResolver.ContractName
+End If
 End Property
 
 Friend Property Get DataSource() As IMarketDataSource

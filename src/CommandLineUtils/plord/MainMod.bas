@@ -414,11 +414,9 @@ End Function
 Private Function getPrompt() As String
 If mCurrentGroup.CurrentContractProcessor Is Nothing Then
     getPrompt = mCurrentGroup.GroupName & DefaultPrompt
-ElseIf mCurrentGroup.CurrentContractProcessor.Contract Is Nothing Then
-    getPrompt = mCurrentGroup.GroupName & DefaultPrompt
 Else
     getPrompt = mCurrentGroup.GroupName & "!" & _
-                gGetContractName(mCurrentGroup.CurrentContractProcessor.Contract) & _
+                mCurrentGroup.CurrentContractProcessor.ContractName & _
                 DefaultPrompt
 End If
 End Function
