@@ -21,29 +21,31 @@ Public Const NumDaysInMonth                     As Long = 22
 Public Const NumDaysInYear                      As Long = 260
 Public Const NumMonthsInYear                    As Long = 12
 
-Public Const ExchangeSmart                      As String = "SMART"
-Public Const ExchangeSmartCAN                   As String = "SMARTCAN"
-Public Const ExchangeSmartEUR                   As String = "SMARTEUR"
-Public Const ExchangeSmartNASDAQ                As String = "SMARTNASDAQ"
-Public Const ExchangeSmartNYSE                  As String = "SMARTNYSE"
-Public Const ExchangeSmartUK                    As String = "SMARTUK"
-Public Const ExchangeSmartUS                    As String = "SMARTUS"
-Public Const ExchangeSmartQualified             As String = "SMART/"
+Private Const ExchangeSmart                     As String = "SMART"
+Private Const ExchangeSmartAUS                  As String = "SMARTAUS"
+Private Const ExchangeSmartCAN                  As String = "SMARTCAN"
+Private Const ExchangeSmartEUR                  As String = "SMARTEUR"
+Private Const ExchangeSmartNASDAQ               As String = "SMARTNASDAQ"
+Private Const ExchangeSmartNYSE                 As String = "SMARTNYSE"
+Private Const ExchangeSmartUK                   As String = "SMARTUK"
+Private Const ExchangeSmartUS                   As String = "SMARTUS"
+Private Const ExchangeSmartQualified            As String = "SMART/"
 
 Public Const OrderModeEntry                     As String = "entry"
 Public Const OrderModeStopLoss                  As String = "stop loss"
 Public Const OrderModeTarget                    As String = "target"
 Public Const OrderModeCloseout                  As String = "closeout"
 
-Public Const PrimaryExchangeARCA                As String = "ARCA"
-Public Const PrimaryExchangeEBS                 As String = "EBS"
-Public Const PrimaryExchangeFWB                 As String = "FWB"
-Public Const PrimaryExchangeIBIS                As String = "IBIS"
-Public Const PrimaryExchangeLSE                 As String = "LSE"
-Public Const PrimaryExchangeSWB                 As String = "SWB"
-Public Const PrimaryExchangeNASDAQ              As String = "NASDAQ"
-Public Const PrimaryExchangeNYSE                As String = "NYSE"
-Public Const PrimaryExchangeVENTURE             As String = "VENTURE"
+Private Const PrimaryExchangeARCA               As String = "ARCA"
+Private Const PrimaryExchangeASX                As String = "ASX"
+Private Const PrimaryExchangeEBS                As String = "EBS"
+Private Const PrimaryExchangeFWB                As String = "FWB"
+Private Const PrimaryExchangeIBIS               As String = "IBIS"
+Private Const PrimaryExchangeLSE                As String = "LSE"
+Private Const PrimaryExchangeSWB                As String = "SWB"
+Private Const PrimaryExchangeNASDAQ             As String = "NASDAQ"
+Private Const PrimaryExchangeNYSE               As String = "NYSE"
+Private Const PrimaryExchangeVENTURE            As String = "VENTURE"
 
 Public Const ProviderPropertyOCAGroup           As String = "OCA group"
 
@@ -87,6 +89,12 @@ If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.
 Set gLogger = mLogger
 End Property
 
+Public Property Get gRegExp() As RegExp
+Static lRegExp As RegExp
+If lRegExp Is Nothing Then Set lRegExp = New RegExp
+Set gRegExp = lRegExp
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -103,7 +111,10 @@ Set gContractSpecToTwsContract = New TwsContract
 With gContractSpecToTwsContract
     .CurrencyCode = pContractSpecifier.CurrencyCode
     Dim lExchange As String: lExchange = UCase$(pContractSpecifier.Exchange)
-    If lExchange = ExchangeSmartCAN Then
+    If lExchange = ExchangeSmartAUS Then
+        .PrimaryExch = PrimaryExchangeASX
+        .Exchange = ExchangeSmart
+    ElseIf lExchange = ExchangeSmartCAN Then
         .PrimaryExch = PrimaryExchangeVENTURE
         .Exchange = ExchangeSmart
     ElseIf lExchange = ExchangeSmartUK Then
@@ -259,6 +270,57 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Function gGetSessionTimes(ByVal pSessionTimesString As String) As SessionTimes
+Const ProcName As String = "gGetSessionTimes"
+On Error GoTo Err
+
+If Len(pSessionTimesString) = 0 Then Exit Function
+
+Const SessionTimes As String = "^(?:(\d{8}):(\d{2})(\d{2})-(\d{8}):(\d{2})(\d{2}))|(?:\d{8}:(CLOSED))$"
+Dim lRegExp As RegExp: Set lRegExp = gRegExp
+lRegExp.Pattern = SessionTimes
+
+Dim lSessionTimesAr() As String: lSessionTimesAr = Split(pSessionTimesString, ";")
+
+Dim lSessionTimes As SessionTimes
+Dim lNumberOfSessionTimesProcessed As Long
+Dim lSessionDate As Date
+Dim i As Long
+For i = 0 To UBound(lSessionTimesAr)
+    If i > UBound(lSessionTimesAr) Then Exit For
+    Dim l As Variant: l = lSessionTimesAr(i)
+    If getSessionTimesForDay(lRegExp, l, lSessionTimes, lSessionDate) Then
+        If gGetSessionTimes.StartTime = 0 Or lSessionTimes.StartTime < gGetSessionTimes.StartTime Then
+            gGetSessionTimes.StartTime = lSessionTimes.StartTime
+        End If
+        If gGetSessionTimes.EndTime = 0 Or lSessionTimes.EndTime > gGetSessionTimes.EndTime Then
+            gGetSessionTimes.EndTime = lSessionTimes.EndTime
+        End If
+        lNumberOfSessionTimesProcessed = lNumberOfSessionTimesProcessed + 1
+    End If
+    If lNumberOfSessionTimesProcessed = 6 Then Exit For
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
+End Function
+
+Public Function gIsSmartExchange(ByVal pExchange As String) As Boolean
+pExchange = UCase$(pExchange)
+gIsSmartExchange = (pExchange = ExchangeSmart Or _
+                    pExchange = ExchangeSmartAUS Or _
+                    pExchange = ExchangeSmartCAN Or _
+                    pExchange = ExchangeSmartEUR Or _
+                    pExchange = ExchangeSmartNASDAQ Or _
+                    pExchange = ExchangeSmartNYSE Or _
+                    pExchange = ExchangeSmartUK Or _
+                    pExchange = ExchangeSmartUS Or _
+                    InStr(1, pExchange, ExchangeSmartQualified) <> 0)
+End Function
+
 Public Sub gLog(ByRef pMsg As String, _
                 ByRef pModName As String, _
                 ByRef pProcName As String, _
@@ -408,7 +470,9 @@ With pOrder
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)
-    gOrderToTwsOrder.OcaGroup = .ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+    If Not .ProviderProperties Is Nothing Then
+        gOrderToTwsOrder.OcaGroup = .ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+    End If
     gOrderToTwsOrder.OrderType = gOrderTypeToTwsOrderType(.OrderType)
     gOrderToTwsOrder.Origin = .Origin
     gOrderToTwsOrder.OrderRef = .OriginatorRef
@@ -620,6 +684,46 @@ With pTwsContractDetails
     lBuilder.Description = .LongName
     lBuilder.TickSize = .MinTick
     lBuilder.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(.TimeZoneId)
+    
+    Dim lSessionTimes As SessionTimes
+    lSessionTimes = gGetSessionTimes(.LiquidHours)
+    lBuilder.SessionStartTime = lSessionTimes.StartTime
+    lBuilder.SessionEndTime = lSessionTimes.EndTime
+    
+    lSessionTimes = gGetSessionTimes(.TradingHours)
+    lBuilder.FullSessionStartTime = lSessionTimes.StartTime
+    lBuilder.FullSessionEndTime = lSessionTimes.EndTime
+    
+    Dim lProviderProps As New Parameters
+    lProviderProps.SetParameterValue "Category", .Category
+    lProviderProps.SetParameterValue "ContractMonth", .ContractMonth
+    lProviderProps.SetParameterValue "EvMultiplier", .EvMultiplier
+    lProviderProps.SetParameterValue "EvRule", .EvRule
+    lProviderProps.SetParameterValue "Industry", .Industry
+    lProviderProps.SetParameterValue "LiquidHours", .LiquidHours
+    lProviderProps.SetParameterValue "MarketName", .MarketName
+    lProviderProps.SetParameterValue "OrderTypes", .OrderTypes
+    lProviderProps.SetParameterValue "TradingHours", .TradingHours
+    
+    Dim ar() As TwsTagValue: ar = .SecIdList
+    Dim u As Long: u = -1
+    On Error Resume Next
+    u = UBound(ar)
+    On Error GoTo Err
+    
+    Dim i As Long
+    Dim s As String
+    For i = 0 To u
+        s = s & IIf(i <> 0, ";", "")
+        s = s & ar(i).Tag & ":" & ar(i).Value
+    Next
+    lProviderProps.SetParameterValue "SecIdList", s
+    
+    lProviderProps.SetParameterValue "Subcategory", .Subcategory
+    lProviderProps.SetParameterValue "TradingHours", .TradingHours
+    lProviderProps.SetParameterValue "UnderConId", .UnderConId
+    lProviderProps.SetParameterValue "ValidExchanges", .ValidExchanges
+    lBuilder.ProviderProperties = lProviderProps
 End With
 
 Set gTwsContractDetailsToContract = lBuilder.Contract
@@ -636,7 +740,7 @@ Public Function gTwsContractToContractSpecifier( _
 Const ProcName As String = "gTwsContractToContractSpecifier"
 On Error GoTo Err
 
-Dim lContractSpec As IContractSpecifier
+Dim lContractSpec As ContractSpecifier
 With pTwsContract
     Dim lExchange As String: lExchange = .Exchange
     If lExchange = ExchangeSmart And .PrimaryExch <> "" Then
@@ -651,6 +755,12 @@ With pTwsContract
                                                 .Multiplier / pPriceMagnifier, _
                                                 .Strike, _
                                                 gTwsOptionRightToOptionRight(.OptRight))
+    Dim p As New Parameters
+    p.SetParameterValue "ContractId", .ConId
+    p.SetParameterValue "SecId", .SecId
+    p.SetParameterValue "SecIdType", .SecIdType
+    p.SetParameterValue "TradingClass", .TradingClass
+    lContractSpec.ProviderProperties = p
 End With
 
 Set gTwsContractToContractSpecifier = lContractSpec
@@ -795,7 +905,7 @@ Case "Asia/Hong_Kong"
     gTwsTimezoneNameToStandardTimeZoneName = "China Standard Time"
 Case "CST", "CTT", "CST (Central Standard Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "Central Standard Time"
-Case "GMT", "GB"
+Case "GMT", "GB", "GMT (Greenwich Mean Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
 Case "EST", "EST5EDT", "EST (Eastern Standard Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "Eastern Standard Time"
@@ -834,13 +944,57 @@ ElseIf pDataSource.HasCurrentTick( _
     lMarketPrice = IIf(pAction = OrderActionBuy, _
                         pDataSource.CurrentTick(TickTypeAsk).Price, _
                         pDataSource.CurrentTick(TickTypeBid).Price)
-Else
-    lMarketPrice = IIf(pAction = OrderActionSell, _
-                        pDataSource.CurrentTick(TickTypeAsk).Price, _
-                        pDataSource.CurrentTick(TickTypeBid).Price)
+ElseIf pDataSource.HasCurrentTick( _
+                        IIf(pAction = OrderActionBuy, _
+                            TickTypeBid, _
+                            TickTypeAsk)) Then
+
+    lMarketPrice = IIf(pAction = OrderActionBuy, _
+                        pDataSource.CurrentTick(TickTypeBid).Price, _
+                        pDataSource.CurrentTick(TickTypeAsk).Price)
 End If
 
 getMarketPrice = lMarketPrice
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getSessionTimesForDay( _
+                ByVal pRegExp As RegExp, _
+                ByVal pSessionTimesString As String, _
+                ByRef pSessionTimes As SessionTimes, _
+                ByRef pSessionDate As Date) As Boolean
+Const ProcName As String = "getSessionTimesForDay"
+On Error GoTo Err
+
+Dim lMatches As MatchCollection
+Set lMatches = pRegExp.Execute(pSessionTimesString)
+
+If lMatches.Count <> 1 Then Exit Function
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+If lMatch.SubMatches(6) = "CLOSED" Then Exit Function
+
+Dim lSessionDateStr As String
+
+lSessionDateStr = lMatch.SubMatches(0)
+Dim lSessionStartDate As Date
+lSessionStartDate = CDate(Left$(lSessionDateStr, 4) & "/" & Mid$(lSessionDateStr, 5, 2) & "/" & Right$(lSessionDateStr, 2))
+
+lSessionDateStr = lMatch.SubMatches(3)
+Dim lSessionEndDate As Date
+lSessionEndDate = CDate(Left$(lSessionDateStr, 4) & "/" & Mid$(lSessionDateStr, 5, 2) & "/" & Right$(lSessionDateStr, 2))
+
+If lSessionStartDate = pSessionDate And lSessionEndDate = pSessionDate Then Exit Function
+pSessionDate = lSessionEndDate
+
+pSessionTimes.StartTime = CDate(lMatch.SubMatches(1) & ":" & lMatch.SubMatches(2))
+pSessionTimes.EndTime = CDate(lMatch.SubMatches(4) & ":" & lMatch.SubMatches(5))
+    
+getSessionTimesForDay = True
 
 Exit Function
 

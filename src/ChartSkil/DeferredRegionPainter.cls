@@ -94,7 +94,12 @@ If gIsInDev Then
     et.StartTiming
 End If
 
-Select Case mDeferredPaintAction
+Dim lDeferredPaintAction As DeferredPaintActions
+lDeferredPaintAction = mDeferredPaintAction
+mDeferredPaintAction = DeferredPaintRepaintNone
+mDeferredPaintPending = False
+
+Select Case lDeferredPaintAction
 Case DeferredPaintRepaintNone
 
 Case DeferredPaintPaintAreas
@@ -115,8 +120,6 @@ If gIsInDev Then
     s = "Deferred paint: " & Format(et.ElapsedTimeMicroseconds, "0")
     Debug.Print s
 End If
-
-doDeferredPaint DeferredPaintRepaintNone
 
 Exit Sub
 

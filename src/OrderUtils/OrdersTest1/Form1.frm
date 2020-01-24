@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#358.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#362.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   12615
@@ -296,6 +296,9 @@ End Sub
 '@================================================================================
 ' IOrderSubmissionListener Interface Members
 '@================================================================================
+
+Private Sub IOrderSubmissionListener_NotifyAboutToPlaceOrder(ByVal pOrder As OrderUtils27.IOrder)
+End Sub
 
 Private Sub IOrderSubmissionListener_NotifyError(ByVal pOrderId As String, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 LogMessage "Error " & pErrorCode & ": " & pErrorMsg
@@ -761,11 +764,11 @@ If pUsePositionManager Then
     Set mOrderContextsLive = mPositionManagerLive.OrderContexts
     Set mOrderContextsSimulated = mPositionManagerSimulated.OrderContexts
 Else
-    Set mOrderContextsLive = mOrderManager.GetOrderContexts(pContract.Specifier.Key, False)
+    Set mOrderContextsLive = mOrderManager.getOrderContexts(pContract.Specifier.Key, False)
     If mOrderContextsLive Is Nothing Then Set mOrderContextsLive = mOrderManager.CreateOrderContexts(pContract.Specifier.Key, CreateFuture(pContract), mOrderSubmitterLive)
     mOrderContextsLive.OrderSubmitter.AddOrderSubmissionListener Me
 
-    Set mOrderContextsSimulated = mOrderManager.GetOrderContexts(pContract.Specifier.Key, True)
+    Set mOrderContextsSimulated = mOrderManager.getOrderContexts(pContract.Specifier.Key, True)
     If mOrderContextsSimulated Is Nothing Then Set mOrderContextsSimulated = mOrderManager.CreateOrderContexts(pContract.Specifier.Key, CreateFuture(pContract), mOrderSubmitterFactorySimulated.CreateOrderSubmitter, , , True)
     mOrderContextsSimulated.OrderSubmitter.AddOrderSubmissionListener Me
 End If

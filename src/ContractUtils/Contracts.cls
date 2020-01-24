@@ -64,6 +64,8 @@ Private mChangeListeners                As New Listeners
 
 Private mSortKeys()                     As ContractSortKeyIds
 
+Private mAscending                      As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -81,7 +83,7 @@ mSortKeys(5) = ContractSortKeyExpiry
 mSortKeys(6) = ContractSortKeyStrike
 mSortKeys(7) = ContractSortKeyRight
 mSortKeys(8) = ContractSortKeyLocalSymbol
-
+mAscending = True
 End Sub
 
 '@================================================================================
@@ -176,8 +178,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Property Let IContracts_SortAscending(ByVal Value As Boolean)
+SortAscending = Value
+End Property
+
+Private Property Get IContracts_SortAscending() As Boolean
+IContracts_SortAscending = SortAscending
+End Property
+
 Private Property Let IContracts_SortKeys(Value() As ContractSortKeyIds)
-setSortKeys Value
+SortKeys = Value
 End Property
 
 Private Property Get IContracts_SortKeys() As ContractSortKeyIds()
@@ -228,12 +238,22 @@ Public Property Get Enumerator() As Enumerator
 Set Enumerator = mContracts.Enumerator
 End Property
 
+Public Property Let SortAscending(ByVal Value As Boolean)
+If mAscending = Value Then Exit Property
+mAscending = Value
+setSortKeys mSortKeys, True
+End Property
+
+Public Property Get SortAscending() As Boolean
+SortAscending = mAscending
+End Property
+
 Public Property Let SortKeys( _
                 ByRef Value() As ContractSortKeyIds)
 Const ProcName As String = "SortKeys"
 On Error GoTo Err
 
-setSortKeys Value
+setSortKeys Value, False
 
 Exit Property
 
@@ -385,12 +405,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function createComparable(ByVal pContractSpec As IContractSpecifier) As ContractComparable
+Private Function createComparable( _
+                ByVal pContractSpec As IContractSpecifier) As ContractComparable
 Const ProcName As String = "createComparable"
 On Error GoTo Err
 
 Set createComparable = New ContractComparable
-createComparable.Initialise pContractSpec, mSortKeys
+createComparable.Initialise pContractSpec, mSortKeys, mAscending
 
 Exit Function
 
@@ -434,18 +455,28 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSortKeys( _
-                ByRef Value() As ContractSortKeyIds)
+                ByRef Value() As ContractSortKeyIds, _
+                ByVal pForce As Boolean)
 Const ProcName As String = "setSortKeys"
 On Error GoTo Err
 
-If sortKeysEqual(mSortKeys, Value) Then Exit Sub
-
-If UBound(Value) < 0 Then
-    ReDim mSortKeys(0) As ContractSortKeyIds
-    mSortKeys(0) = ContractSortKeyNone
-Else
-    mSortKeys = Value
+If sortKeysEqual(mSortKeys, Value) Then
+    If Not pForce Then Exit Sub
+    
+    Dim n As Long: n = -1
+    On Error Resume Next
+    n = UBound(Value)
+    On Error GoTo Err
+    
+    If n >= 0 Then
+        mSortKeys = Value
+    Else
+        ReDim mSortKeys(0) As ContractSortKeyIds
+        mSortKeys(0) = ContractSortKeyNone
+    End If
 End If
+
+If mContracts.Count = 0 Then Exit Sub
 
 Dim lNewContracts As SortedDictionary
 Set lNewContracts = CreateSortedDictionary(KeyTypeComparable)
@@ -470,14 +501,25 @@ Private Function sortKeysEqual( _
 Const ProcName As String = "sortKeysEqual"
 On Error GoTo Err
 
-If UBound(pKeys1) < 0 And UBound(pKeys2) < 0 Then
+Dim n1 As Long: n1 = -1
+Dim n2 As Long: n2 = -1
+
+On Error Resume Next
+n1 = UBound(pKeys1)
+n2 = UBound(pKeys2)
+On Error GoTo Err
+
+If n1 < 0 And n2 < 0 Then
     sortKeysEqual = True
-ElseIf UBound(pKeys1) <> UBound(pKeys2) Then
+    Exit Function
+End If
+
+If n1 <> n2 Then
     sortKeysEqual = False
 Else
     sortKeysEqual = True
     Dim i As Long
-    For i = 0 To UBound(pKeys1)
+    For i = 0 To n1
         If pKeys1(i) <> pKeys2(i) Then
             sortKeysEqual = False
             Exit For

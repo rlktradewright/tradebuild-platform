@@ -56,6 +56,7 @@ Private mContract               As IContract
 Private mFromDate               As Date
 Private mToDate                 As Date
 Private mEntireSession          As Boolean
+Private mUseFullSession         As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -117,6 +118,14 @@ Private Function ITickfileSpecifier_ToString() As String
 ITickfileSpecifier_ToString = ToString
 End Function
 
+Private Property Let ITickfileSpecifier_UseFullSession(ByVal RHS As Boolean)
+UseFullSession = RHS
+End Property
+
+Private Property Get ITickfileSpecifier_UseFullSession() As Boolean
+ITickfileSpecifier_UseFullSession = UseFullSession
+End Property
+
 '@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
@@ -171,6 +180,14 @@ End Property
 
 Public Property Get ToDate() As Date
 ToDate = mToDate
+End Property
+
+Public Property Let UseFullSession(ByVal RHS As Boolean)
+mUseFullSession = RHS
+End Property
+
+Public Property Get UseFullSession() As Boolean
+UseFullSession = mUseFullSession
 End Property
 
 '@================================================================================

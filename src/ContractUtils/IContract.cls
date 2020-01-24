@@ -69,7 +69,16 @@ End Property
 Public Property Get ExpiryDate() As Date
 End Property
 
+Public Property Get FullSessionStartTime() As Date
+End Property
+
+Public Property Get FullSessionEndTime() As Date
+End Property
+
 Public Property Get NumberOfDecimals() As Long
+End Property
+
+Public Property Get ProviderProperties() As Parameters
 End Property
 
 Public Property Get SessionStartTime() As Date

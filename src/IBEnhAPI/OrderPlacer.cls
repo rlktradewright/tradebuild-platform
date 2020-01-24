@@ -226,8 +226,7 @@ If isKnownOrder(pBrokerId) Then
     lorderId = GetOrder(pBrokerId).Id
 End If
 
-Dim lOrderReport As IOrderReport
-Set lOrderReport = New OrderReport
+Dim lOrderReport As New OrderReport
 
 With lOrderReport
     .Action = gTwsOrderActionToOrderAction(pOrder.Action)
@@ -263,7 +262,9 @@ With lOrderReport
     .SweepToFill = pOrder.SweepToFill
     .TimeInForce = pOrder.Tif
     .TriggerPrice = pOrder.AuxPrice
-    .ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, pOrder.OcaGroup
+    Dim lProviderProps As New Parameters
+    lProviderProps.SetParameterValue ProviderPropertyOCAGroup, pOrder.OcaGroup
+    .ProviderProperties = lProviderProps
 End With
 
 If isKnownOrder(pBrokerId) Then

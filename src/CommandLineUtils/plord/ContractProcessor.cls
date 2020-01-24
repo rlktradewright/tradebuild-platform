@@ -42,9 +42,13 @@ Event IsReady()
 
 Private Const ModuleName                            As String = "ContractProcessor"
 
+Private Const OrderPendingMessage                   As String = "Order is pending contract resolution"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mId                                         As String
 
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
@@ -57,6 +61,8 @@ Private mPositionManager                            As PositionManager
 
 Private WithEvents mOrderContext                    As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
+
+Private mContractResolver                           As ContractResolver
 
 Private mGroupName                                  As String
 
@@ -106,7 +112,11 @@ Set Contract = mContract
 End Property
 
 Friend Property Get ContractName() As String
-ContractName = mContract.Specifier.LocalSymbol & "@" & mContract.Specifier.Exchange
+If Not mContract Is Nothing Then
+    ContractName = gGetContractName(mContract)
+Else
+    ContractName = mContractResolver.ContractName
+End If
 End Property
 
 Friend Property Get DataSource() As IMarketDataSource
@@ -115,6 +125,10 @@ End Property
 
 Friend Property Get GroupName() As String
 GroupName = mGroupName
+End Property
+
+Friend Property Get Id() As String
+Id = mId
 End Property
 
 Friend Property Get LatestBuyCommandParams() As String
@@ -132,6 +146,61 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Activate( _
+                ByVal pName As String, _
+                ByVal pContract As IContract, _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pOrderManager As OrderManager, _
+                ByVal pScopeName As String, _
+                ByVal pGroupName As String, _
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mContract = pContract
+mGroupName = pGroupName
+
+Set mDataSource = pMarketDataManager.CreateMarketDataSource(CreateFuture(pContract), False)
+mDataSource.StartMarketData
+
+If pScopeName = "" Then
+    Set mPositionManager = pOrderManager.CreatePositionManager( _
+                                pName, _
+                                mDataSource, _
+                                pOrderSubmitterFactory, _
+                                pGroupName)
+Else
+    Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
+                                pName, _
+                                mDataSource, _
+                                pOrderSubmitterFactory, _
+                                pScopeName, _
+                                mGroupName)
+End If
+Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub AddBracketOrderSpecs( _
+                ByVal pContractProcessor As ContractProcessor)
+Const ProcName As String = "AddBracketOrderSpecs"
+On Error GoTo Err
+
+Dim lBOS As BracketOrderSpecification
+For Each lBOS In pContractProcessor.BracketOrders
+    mBracketOrders.Add lBOS
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub ClearOrders()
 mBracketOrders.Clear
@@ -155,65 +224,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Recover( _
-                ByVal pPositionManager As PositionManager)
-Const ProcName As String = "Recover"
-On Error GoTo Err
-
-Set mPositionManager = pPositionManager
-Set mContract = mPositionManager.ContractFuture.Value
-mGroupName = mPositionManager.GroupName
-
-Set mDataSource = mPositionManager.DataSource
-Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 Friend Sub Initialise( _
-                ByVal pName As String, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pOrderManager As OrderManager, _
-                ByVal pScopeName As String, _
-                ByVal pGroupName As String, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
-Const ProcName As String = "Initialise"
-On Error GoTo Err
-
-Set mContract = pContractFuture.Value
-mGroupName = pGroupName
-
-Set mDataSource = pMarketDataManager.CreateMarketDataSource(pContractFuture, False)
-mDataSource.StartMarketData
-
-If pScopeName = "" Then
-    Set mPositionManager = pOrderManager.CreatePositionManager( _
-                                pName, _
-                                mDataSource, _
-                                pOrderSubmitterFactory)
-Else
-    Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
-                                pName, _
-                                mDataSource, _
-                                pOrderSubmitterFactory, _
-                                pScopeName, _
-                                mGroupName)
-End If
-Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+                ByVal pId As String, _
+                ByVal pContractResolver As ContractResolver)
+mId = pId
+Set mContractResolver = pContractResolver
 End Sub
 
 Friend Sub ProcessBracketCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "ProcessBracketCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand gCommands.BracketCommand, pParams
+    Exit Sub
+End If
 
 Set mBOSpec = New BracketOrderSpecification
 Set mBOSpec.Contract = mContract
@@ -278,7 +304,14 @@ Friend Function ProcessBuyCommand( _
 Const ProcName As String = "ProcessBuyCommand"
 On Error GoTo Err
 
-ProcessBuyCommand = processBuyOrSellCommand(OrderActionBuy, pParams)
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand _
+                            gCommands.BuyCommand, _
+                            pParams, _
+                            OrderPendingMessage
+Else
+    ProcessBuyCommand = processBuyOrSellCommand(OrderActionBuy, pParams)
+End If
 
 Exit Function
 
@@ -291,7 +324,14 @@ Friend Function ProcessSellCommand( _
 Const ProcName As String = "ProcessSellCommand"
 On Error GoTo Err
 
-ProcessSellCommand = processBuyOrSellCommand(OrderActionSell, pParams)
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand _
+                            gCommands.SellCommand, _
+                            pParams, _
+                            OrderPendingMessage
+Else
+    ProcessSellCommand = processBuyOrSellCommand(OrderActionSell, pParams)
+End If
 
 Exit Function
 
@@ -302,6 +342,14 @@ End Function
 Friend Sub ProcessEndBracketCommand()
 Const ProcName As String = "ProcessEndBracketCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand _
+                            gCommands.EndBracketCommand, _
+                            "", _
+                            OrderPendingMessage
+    Exit Sub
+End If
 
 If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
@@ -317,6 +365,11 @@ Friend Sub ProcessEntryCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "ProcessEntryCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand gCommands.EntryCommand, pParams
+    Exit Sub
+End If
 
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
@@ -497,6 +550,14 @@ Friend Sub ProcessQuitCommand()
 Const ProcName As String = "ProcessQuitCommand"
 On Error GoTo Err
 
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand _
+                            gCommands.QuitCommand, _
+                            "", _
+                            OrderPendingMessage
+    Exit Sub
+End If
+
 Set mBOSpec = Nothing
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 gWriteLineToConsole "Command definition terminated"
@@ -511,6 +572,11 @@ Friend Sub ProcessStopLossCommand( _
                 ByVal pParams As String)
 Const ProcName As String = "ProcessStopLossCommand"
 On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand gCommands.StopLossCommand, pParams
+    Exit Sub
+End If
 
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
@@ -574,6 +640,11 @@ Friend Sub ProcessTargetCommand( _
 Const ProcName As String = "ProcessTargetCommand"
 On Error GoTo Err
 
+If mOrderContext Is Nothing Then
+    mContractResolver.AddPendingCommand gCommands.TargetCommand, pParams
+    Exit Sub
+End If
+
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
@@ -631,6 +702,24 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub Recover( _
+                ByVal pPositionManager As PositionManager)
+Const ProcName As String = "Recover"
+On Error GoTo Err
+
+Set mPositionManager = pPositionManager
+Set mContract = mPositionManager.ContractFuture.Value
+mGroupName = mPositionManager.GroupName
+
+Set mDataSource = mPositionManager.DataSource
+Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -655,7 +744,7 @@ Else
     getEntryOrderType = OrderTypeFromString(pInput)
 End If
 AssertArgument IsEntryOrderType(getEntryOrderType)
-AssertArgument (mOrderContext.PermittedOrderTypes And getEntryOrderType) <> 0
+If Not mOrderContext Is Nothing Then AssertArgument (mOrderContext.PermittedOrderTypes And getEntryOrderType) <> 0
 
 Exit Function
 

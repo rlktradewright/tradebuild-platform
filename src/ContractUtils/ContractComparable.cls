@@ -48,6 +48,7 @@ Private Const ModuleName                            As String = "ContractCompara
 
 Private mSortKeys()                                 As ContractSortKeyIds
 Private mContractSpec                               As IContractSpecifier
+Private mAscending                                  As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -65,7 +66,11 @@ Assert TypeOf pObj Is ContractComparable, "Type of pobj is not ContractComparabl
 
 Dim lComparable As ContractComparable
 Set lComparable = pObj
-IComparable_CompareTo = gContractSpecsCompare(mContractSpec, lComparable.ContractSpec, mSortKeys)
+IComparable_CompareTo = gContractSpecsCompare( _
+                                    mContractSpec, _
+                                    lComparable.ContractSpec, _
+                                    mSortKeys, _
+                                    mAscending)
 
 Exit Function
 
@@ -89,12 +94,16 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise(ByVal pContractSpec As IContractSpecifier, ByRef pSortkeys() As ContractSortKeyIds)
+Friend Sub Initialise( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                ByVal pAscending As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContractSpec = pContractSpec
 mSortKeys = pSortkeys
+mAscending = pAscending
 
 Exit Sub
 

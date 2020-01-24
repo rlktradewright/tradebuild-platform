@@ -47,6 +47,8 @@ Public Const ConfigSettingContractSpecSymbol            As String = "&Symbol"
 Public Const ConfigSettingDaysBeforeExpiryToSwitch      As String = "&DaysBeforeExpiryToSwitch"
 Public Const ConfigSettingDescription                   As String = "&Description"
 Public Const ConfigSettingExpiryDate                    As String = "&ExpiryDate"
+Public Const ConfigSettingFullSessionEndTime            As String = "&FullSessionEndTime"
+Public Const ConfigSettingFullSessionStartTime          As String = "&FullSessionStartTime"
 Public Const ConfigSettingMultiplier                    As String = "&Multiplier"
 Public Const ConfigSettingSessionEndTime                As String = "&SessionEndTime"
 Public Const ConfigSettingSessionStartTime              As String = "&SessionStartTime"
@@ -60,6 +62,7 @@ Public Const DefaultTickSize                            As Double = 0.01
 Public Const DefaultTimezoneName                        As String = "Eastern Standard Time"
 
 Public Const MaxContractExpiryOffset                    As Long = 10
+Public Const MaxContractDaysBeforeExpiryToSwitch        As Long = 20
 
 '@================================================================================
 ' Member variables
@@ -118,7 +121,8 @@ End Function
 Public Function gContractSpecsCompare( _
                 ByVal pContractSpec1 As IContractSpecifier, _
                 ByVal pContractSpec2 As IContractSpecifier, _
-                ByRef pSortkeys() As ContractSortKeyIds) As Long
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                ByVal pAscending As Boolean) As Long
 Const ProcName As String = "gContractSpecsCompare"
 On Error GoTo Err
 
@@ -146,7 +150,10 @@ For i = 0 To UBound(pSortkeys)
     Case ContractSortKeyStrike
         gContractSpecsCompare = Sgn(pContractSpec1.Strike - pContractSpec2.Strike)
     End Select
-    If gContractSpecsCompare <> 0 Then Exit Function
+    If gContractSpecsCompare <> 0 Then
+        If Not pAscending Then gContractSpecsCompare = -gContractSpecsCompare
+        Exit Function
+    End If
 Next
 
 Exit Function
@@ -195,6 +202,8 @@ gContractToString = "Specifier=(" & pContract.Specifier.ToString & "); " & _
             "Tick size=" & pContract.TickSize & "; " & _
             "Session start=" & FormatDateTime(pContract.SessionStartTime, vbShortTime) & "; " & _
             "Session end=" & FormatDateTime(pContract.SessionEndTime, vbShortTime) & "; " & _
+            "Full session start=" & FormatDateTime(pContract.FullSessionStartTime, vbShortTime) & "; " & _
+            "Full session end=" & FormatDateTime(pContract.FullSessionEndTime, vbShortTime) & "; " & _
             "TimezoneName=" & pContract.TimezoneName
 
 Exit Function
@@ -214,6 +223,8 @@ lContractElement.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
 lContractElement.setAttribute "minimumtick", pContract.TickSize
 lContractElement.setAttribute "sessionstarttime", Format(pContract.SessionStartTime, "hh:mm:ss")
 lContractElement.setAttribute "sessionendtime", Format(pContract.SessionEndTime, "hh:mm:ss")
+lContractElement.setAttribute "fullsessionstarttime", Format(pContract.FullSessionStartTime, "hh:mm:ss")
+lContractElement.setAttribute "fullsessionendtime", Format(pContract.FullSessionEndTime, "hh:mm:ss")
 lContractElement.setAttribute "Description", pContract.Description
 lContractElement.setAttribute "numberofdecimals", pContract.NumberOfDecimals
 lContractElement.setAttribute "timezonename", pContract.TimezoneName
@@ -404,6 +415,8 @@ With pConfig
     lContract.DaysBeforeExpiryToSwitch = .GetSetting(ConfigSettingDaysBeforeExpiryToSwitch, DefaultDaysBeforeExpiryToSwitch)
     lContract.Description = .GetSetting(ConfigSettingDescription, "")
     lContract.ExpiryDate = CDate(.GetSetting(ConfigSettingExpiryDate, DefaultExpiry))
+    lContract.FullSessionEndTime = .GetSetting(ConfigSettingFullSessionEndTime, "00:00:00")
+    lContract.FullSessionStartTime = .GetSetting(ConfigSettingFullSessionStartTime, "00:00:00")
     lContract.SessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
     lContract.SessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
     lContract.TickSize = .GetSetting(ConfigSettingTickSize, DefaultTickSize)
@@ -544,7 +557,9 @@ End Function
 
 Public Function gIsOffsetExpiry( _
                 ByVal Value As String) As Boolean
-gIsOffsetExpiry = IsInteger(Value, 0, MaxContractExpiryOffset)
+Dim l1 As Long
+Dim l2 As Long
+gIsOffsetExpiry = gParseOffsetExpiry(Value, l1, l2)
 End Function
 
 Public Function gIsValidExpiry( _
@@ -683,6 +698,46 @@ Case OptPut
 End Select
 End Function
 
+Public Function gParseOffsetExpiry( _
+                ByVal Value As String, _
+                ByRef pExpiryOffset As Long, _
+                ByRef pDaysBeforeExpiryToSwitch As Long) As Boolean
+Const OffsetExpiryFormat As String = "^(\d\d?)(?:\[(\d\d?)d\])?$"
+
+gRegExp.Pattern = OffsetExpiryFormat
+gRegExp.IgnoreCase = True
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(Value))
+
+If lMatches.Count <> 1 Then Exit Function
+
+Dim lResult As Boolean: lResult = True
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+Dim lOffsetStr As String
+lOffsetStr = lMatch.SubMatches(0)
+If lOffsetStr = "" Then
+    pExpiryOffset = 0
+ElseIf IsInteger(lOffsetStr, 0, MaxContractExpiryOffset) Then
+    pExpiryOffset = CInt(lOffsetStr)
+Else
+    lResult = False
+End If
+
+Dim lDaysBeforeExpiryStr As String
+lDaysBeforeExpiryStr = lMatch.SubMatches(1)
+If lDaysBeforeExpiryStr = "" Then
+    pDaysBeforeExpiryToSwitch = 0
+ElseIf IsInteger(lDaysBeforeExpiryStr, 0, MaxContractDaysBeforeExpiryToSwitch) Then
+    pDaysBeforeExpiryToSwitch = CInt(lDaysBeforeExpiryStr)
+Else
+    lResult = False
+End If
+
+gParseOffsetExpiry = lResult
+End Function
+
 Public Property Get gRegExp() As RegExp
 Const ProcName As String = "gRegExp"
 On Error GoTo Err
@@ -731,6 +786,8 @@ With pConfig
     .SetSetting ConfigSettingExpiryDate, FormatTimestamp(pContract.ExpiryDate, TimestampDateOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingSessionEndTime, FormatTimestamp(pContract.SessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingSessionStartTime, FormatTimestamp(pContract.SessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingFullSessionEndTime, FormatTimestamp(pContract.FullSessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingFullSessionStartTime, FormatTimestamp(pContract.FullSessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingTickSize, pContract.TickSize
     .SetSetting ConfigSettingTimezoneName, pContract.TimezoneName
 End With

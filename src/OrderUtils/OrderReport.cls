@@ -85,10 +85,6 @@ Private mIsSimulated As Boolean
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Class_Initialize()
-Set mProviderProperties = New Parameters
-End Sub
-
 '@================================================================================
 ' IOrderReportIOrderReport Interface Members
 '@================================================================================
@@ -286,7 +282,7 @@ IOrderReport_OverrideConstraints = mOverrideConstraints
 End Property
 
 Private Property Get IOrderReport_ProviderProperties() As Parameters
-Set IOrderReport_ProviderProperties = mProviderProperties
+Set IOrderReport_ProviderProperties = ProviderProperties
 End Property
 
 Private Property Let IOrderReport_Quantity(ByVal Value As Long)
@@ -561,8 +557,13 @@ Public Property Get OverrideConstraints() As Boolean
 OverrideConstraints = mOverrideConstraints
 End Property
 
+Public Property Let ProviderProperties(ByVal Value As Parameters)
+Set mProviderProperties = Value.Clone
+End Property
+
 Public Property Get ProviderProperties() As Parameters
-Set ProviderProperties = mProviderProperties
+If mProviderProperties Is Nothing Then Exit Property
+Set ProviderProperties = mProviderProperties.Clone
 End Property
 
 Public Property Let Quantity(ByVal Value As Long)

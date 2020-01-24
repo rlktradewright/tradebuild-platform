@@ -38,6 +38,7 @@ Private Enum States
     RetrievingBars
     DataRetrieved
     ProcessingBars
+    NotifyingBars
     Cancelling
 End Enum
 
@@ -107,6 +108,7 @@ Private mFromSessionStart                           As Date
 Private mTwsContractDetails                         As TwsContractDetails
 
 Private mListener                                   As IBarFetchListener
+Private mNotifyAtEnd                                As Boolean
 Private mFetcher                                    As HistoricalDataFetcher
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
@@ -118,6 +120,12 @@ Private mFutureBuilder                              As New FutureBuilder
 
 Private mContractCache                              As TwsContractCache
 
+Private mTotalTwsBarsProcessed                      As Long
+
+Private mElapsedTimer                               As New ElapsedTimer
+
+Private mTimePeriod1Day                             As TimePeriod
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -126,6 +134,7 @@ Private Sub Class_Initialize()
 ReDim mTWSBarsCollections(3) As EnumerableCollection
 mRequesterID = NullIndex
 Set mFutureWaiter = New FutureWaiter
+Set mTimePeriod1Day = GetTimePeriod(1, TimePeriodDay)
 End Sub
 
 '@================================================================================
@@ -148,7 +157,6 @@ If mTaskContext.CancelPending Then
 End If
 
 If mState = Starting Then
-    If Not mListener Is Nothing Then mListener.FetchStarted mCookie
     mTaskContext.Suspend -1
     Exit Sub
 End If
@@ -160,6 +168,7 @@ If mState = ConvertingComboContract Then
 
 ElseIf mState = RetrievingBars Then
     If needMoreBars Then
+        mNotifyAtEnd = True
         Dim lRequest As TwsHistoricalDataRequest
         prepareForRetrieval
         If generateTwsHistoricalDataRequest(lRequest, mWorkingBarSpecifier, mSessionStartTime, mSessionEndTime) Then
@@ -181,22 +190,18 @@ ElseIf mState = DataRetrieved Then
     
     mState = ProcessingBars
 
-    Static et As New ElapsedTimer
-    et.StartTiming
+    mElapsedTimer.StartTiming
     
-    Static sTotalTwsBarsProcessed As Long
-
 ElseIf mState = ProcessingBars Then
     
     If mCurrTWSBarsCollectionIndex < 0 Then
-        fireNotifyBar mCurrentBar
-        gLog "Time to process " & sTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(et.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
-        mHistDataRequester.UnregisterHistoricalDataRequest mRequesterID
-        
-        mFutureWaiter.Add mFutureBuilder.Future
-        mFutureBuilder.Value = mTargetBarsBuilder.Bars
-        mFutureBuilder.Complete
-        mTaskContext.Suspend -1
+        If mNotifyAtEnd Then
+            Set mTWSBarsEn = mTargetBarsBuilder.Bars.Enumerator
+            mState = NotifyingBars
+        Else
+            returnResults
+            mTaskContext.Suspend -1
+        End If
     Else
         If mTWSBarsEn Is Nothing Then Set mTWSBarsEn = mTWSBarsCollections(mCurrTWSBarsCollectionIndex).Enumerator
         
@@ -205,12 +210,19 @@ ElseIf mState = ProcessingBars Then
             lTWSBar = mTWSBarsEn.Current
             processBar lTWSBar
             mTWSBarsEn.Remove
-            sTotalTwsBarsProcessed = sTotalTwsBarsProcessed + 1
+            mTotalTwsBarsProcessed = mTotalTwsBarsProcessed + 1
         Else
             Set mTWSBarsEn = Nothing
             Set mTWSBarsCollections(mCurrTWSBarsCollectionIndex) = Nothing
             mCurrTWSBarsCollectionIndex = mCurrTWSBarsCollectionIndex - 1
         End If
+    End If
+ElseIf mState = NotifyingBars Then
+    If mTWSBarsEn.MoveNext Then
+        fireNotifyBar mTWSBarsEn.Current
+    Else
+        returnResults
+        mTaskContext.Suspend -1
     End If
 End If
 
@@ -244,12 +256,28 @@ ElseIf ev.Future.IsFaulted Then
     doFail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     failpoint = "Get contract"
+    If Not mListener Is Nothing Then mListener.FetchStarted mCookie
     Set mTargetBarSpecifier = ev.Future.Value
     Set mTargetContract = mTargetBarSpecifier.Contract
     Set mTargetTimezone = GetTimeZone(mTargetContract.TimezoneName)
     
     failpoint = "Set session times"
-    mSessionStartTime = IIf(mTargetBarSpecifier.CustomSessionStartTime <> 0, mTargetBarSpecifier.CustomSessionStartTime, mTargetContract.SessionStartTime)
+    
+    If mTargetBarSpecifier.CustomSessionStartTime <> 0 Then
+        mSessionStartTime = mTargetBarSpecifier.CustomSessionStartTime
+    ElseIf mTargetBarSpecifier.IncludeBarsOutsideSession Then
+        mSessionStartTime = mTargetContract.FullSessionStartTime
+    Else
+        mSessionStartTime = mTargetContract.SessionStartTime
+    End If
+    If mTargetBarSpecifier.CustomSessionEndTime <> 0 Then
+        mSessionEndTime = mTargetBarSpecifier.CustomSessionEndTime
+    ElseIf mTargetBarSpecifier.IncludeBarsOutsideSession Then
+        mSessionEndTime = mTargetContract.FullSessionEndTime
+    Else
+        mSessionEndTime = mTargetContract.SessionEndTime
+    End If
+        
     mSessionEndTime = IIf(mTargetBarSpecifier.CustomSessionEndTime <> 0, mTargetBarSpecifier.CustomSessionEndTime, mTargetContract.SessionEndTime)
     
     failpoint = "Set target SessionBuilder"
@@ -267,13 +295,27 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     End If
     
     failpoint = "Create target BarsBuilder"
-    Set mTargetBarsBuilder = CreateBarsBuilder(mTargetBarSpecifier.BarTimePeriod, mTargetSession, mTargetContract.TickSize, mTargetBarSpecifier.MaxNumberOfBars)
+    Set mTargetBarsBuilder = CreateBarsBuilder( _
+                                    mTargetBarSpecifier.BarTimePeriod, _
+                                    mTargetSession, _
+                                    mTargetContract.TickSize, _
+                                    IIf(mTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF, _
+                                        0, _
+                                        mTargetBarSpecifier.MaxNumberOfBars))
     
     mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, CreateFuture(mTargetContract), mContractCache)
 ElseIf TypeOf ev.Future.Value Is TwsContractDetails Then
     Set mTwsContractDetails = ev.Future.Value
-    'Set mTwsTimezone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(mTwsContractDetails.TimeZoneId))
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
+    If Not mWorkingBarSpecifier.BarTimePeriod Is mTargetBarSpecifier.BarTimePeriod Or _
+        Not mTargetBarSpecifier.IncludeBarsOutsideSession _
+    Then
+        ' we are building bars from smaller ones or skipping source bars that
+        ' are outside the session, so we can't notify the bars
+        ' until we have finished building them, as we don't know up front
+        ' how many intermediate bars we'll end up with
+        mNotifyAtEnd = True
+    End If
     mState = RetrievingBars
     mTaskContext.Continue
 ElseIf TypeOf ev.Future.Value Is Bars Then
@@ -294,6 +336,8 @@ End Sub
 Private Sub mTargetBarsBuilder_BarAdded(ByVal pBar As Bar)
 Const ProcName As String = "mBarsBuilder_BarAdded"
 On Error GoTo Err
+
+If mNotifyAtEnd Then Exit Sub
 
 fireNotifyBar mCurrentBar
 
@@ -383,6 +427,14 @@ If mTWSBarsCollections(mTWSBarsCollectionsIndex) Is Nothing Then Set mTWSBarsCol
 
 Dim lTimestamp As Date
 lTimestamp = convertTwsDateStringToTimestamp(pBar.Timestamp)
+
+If lTimestamp - Int(lTimestamp) = 0# Then
+    If mSessionStartTime < mSessionEndTime Then
+        lTimestamp = Int(lTimestamp) + mSessionStartTime
+    Else
+        lTimestamp = Int(lTimestamp) - 1 + mSessionStartTime
+    End If
+End If
 
 If mFirstBarTimeInMessage = 0 Then mFirstBarTimeInMessage = lTimestamp
 If Not notifyTimestamp(lTimestamp, mWorkingBarSpecifier.FromDate, mRetrievalSessionBuilder) Then Exit Sub
@@ -537,7 +589,7 @@ Case TimePeriodDay, _
         TimePeriodWeek, _
         TimePeriodMonth, _
         TimePeriodYear
-    lEndTime = Int(lEndTime)
+    'lEndTime = Int(lEndTime)
 End Select
 
 generateRequestEndTime = Format(lEndTime, "yyyymmdd hh\:nn\:ss")
@@ -558,6 +610,7 @@ Const ProcName As String = "generateTwsHistoricalDataRequest"
 On Error GoTo Err
 
 Set pTwsRequest.Contract = mTwsContractDetails.Summary
+pTwsRequest.MainSessionOnly = Not mWorkingBarSpecifier.IncludeBarsOutsideSession
 
 ' Set the Tws bar Size and Duration to retrieve as many bars as possible in one
 ' go, taking account of the following max durations per bar Size.
@@ -789,56 +842,96 @@ On Error GoTo Err
 Dim lBarSpec As BarDataSpecifier
 Set lBarSpec = pTargetBarSpecifier.Clone
 
+Dim lMaxNumberOfBars As Long
+If pTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF Then
+    lMaxNumberOfBars = 1
+Else
+    lMaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars
+End If
+
 Select Case pTargetBarSpecifier.BarTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
     If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
         lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodDay)
     End If
+    If lBarSpec.FromDate = 0 Then
+        lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                            lBarSpec.BarTimePeriod, _
+                            -lBarSpec.MaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+    End If
 Case TimePeriodUnits.TimePeriodHour
-    If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
-        lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodHour)
+    If pTargetBarSpecifier.IncludeBarsOutsideSession Then
+        If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
+            lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+            lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodHour)
+        End If
+    Else
+        lBarSpec.BarTimePeriod = GetTimePeriod(15, TimePeriodUnits.TimePeriodMinute)
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * 4
     End If
 Case TimePeriodUnits.TimePeriodMinute
     If pTargetBarSpecifier.BarTimePeriod.Length Mod 30 = 0 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 30)
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 30)
         lBarSpec.BarTimePeriod = GetTimePeriod(30, TimePeriodUnits.TimePeriodMinute)
     ElseIf pTargetBarSpecifier.BarTimePeriod.Length Mod 15 = 0 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 15)
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 15)
         lBarSpec.BarTimePeriod = GetTimePeriod(15, TimePeriodUnits.TimePeriodMinute)
     ElseIf pTargetBarSpecifier.BarTimePeriod.Length Mod 5 = 0 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 5)
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 5)
         lBarSpec.BarTimePeriod = GetTimePeriod(5, TimePeriodUnits.TimePeriodMinute)
     ElseIf pTargetBarSpecifier.BarTimePeriod.Length Mod 2 = 0 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 2)
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 2)
         lBarSpec.BarTimePeriod = GetTimePeriod(2, TimePeriodUnits.TimePeriodMinute)
     ElseIf pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
         lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodMinute)
     End If
 Case TimePeriodUnits.TimePeriodMonth
-    lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+    If lBarSpec.FromDate = 0 Then
+        lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                            lBarSpec.BarTimePeriod, _
+                            -lBarSpec.MaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+    End If
+    lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
     lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodMonth)
 Case TimePeriodUnits.TimePeriodSecond
     If pTargetBarSpecifier.BarTimePeriod.Length Mod 30 = 0 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 30)
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 30)
         lBarSpec.BarTimePeriod = GetTimePeriod(30, TimePeriodUnits.TimePeriodSecond)
     ElseIf pTargetBarSpecifier.BarTimePeriod.Length Mod 15 = 0 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 15)
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 15)
         lBarSpec.BarTimePeriod = GetTimePeriod(15, TimePeriodUnits.TimePeriodSecond)
     ElseIf pTargetBarSpecifier.BarTimePeriod.Length Mod 5 = 0 Then
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 5)
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 5)
         lBarSpec.BarTimePeriod = GetTimePeriod(5, TimePeriodUnits.TimePeriodSecond)
     Else
-        lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
         lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodSecond)
     End If
 Case TimePeriodUnits.TimePeriodWeek
-    lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
+    If lBarSpec.FromDate = 0 Then
+        lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                            lBarSpec.BarTimePeriod, _
+                            -lBarSpec.MaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+    End If
+    lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
     lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodWeek)
 Case TimePeriodUnits.TimePeriodYear
-    lBarSpec.MaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length * NumMonthsInYear
+    If lBarSpec.FromDate = 0 Then
+        lBarSpec.FromDate = OffsetBarStartTime(lBarSpec.ToDate, _
+                            lBarSpec.BarTimePeriod, _
+                            -lBarSpec.MaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+    End If
+    lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length * NumMonthsInYear
     lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodMonth)
 Case TimePeriodUnits.TimePeriodVolume, _
         TimePeriodUnits.TimePeriodTickMovement, _
@@ -859,6 +952,8 @@ Case TimePeriodUnits.TimePeriodVolume, _
 Case Else
     AssertArgument False, "Specified timeframe not supported"
 End Select
+
+If pTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF Then lBarSpec.MaxNumberOfBars = &H7FFFFFFF
 
 Set generateWorkingBarSpecifier = lBarSpec
 
@@ -894,8 +989,8 @@ Private Function isInScope(ByVal pTimestamp As Date, ByVal pSession As Session) 
 Const ProcName As String = "isInScope"
 On Error GoTo Err
 
-If mTargetBarSpecifier.IncludeBarsOutsideSession Or _
-    pSession.IsTimeInSession(pTimestamp) _
+'If mTargetBarSpecifier.IncludeBarsOutsideSession Or
+If pSession.IsTimeInSession(pTimestamp) _
 Then
     isInScope = True
 Else
@@ -942,7 +1037,7 @@ If (Not isBarFixedDuration) Then
         needMoreBars = False
         Exit Function
     End If
-ElseIf mFirstBarTimeInMessage < mWorkingBarSpecifier.FromDate Then
+ElseIf mFirstBarTimeInMessage <= mWorkingBarSpecifier.FromDate Then
     needMoreBars = False
     Exit Function
 End If
@@ -1108,7 +1203,7 @@ If mTWSBarsCollectionsIndex > 0 Then
             TimePeriodWeek, _
             TimePeriodMonth, _
             TimePeriodYear
-        mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage - 1
+        mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage    ' - 1
     Case Else
         mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage
     End Select
@@ -1131,6 +1226,14 @@ On Error GoTo Err
 
 Dim lTimestamp As Date
 lTimestamp = convertTwsDateStringToTimestamp(pBar.Timestamp)
+
+If lTimestamp - Int(lTimestamp) = 0# Then
+    If mSessionStartTime < mSessionEndTime Then
+        lTimestamp = Int(lTimestamp) + mSessionStartTime
+    Else
+        lTimestamp = Int(lTimestamp) - 1 + mSessionStartTime
+    End If
+End If
 
 If Not notifyTimestamp(lTimestamp, mTargetBarSpecifier.FromDate, mTargetSessionBuilder) Then Exit Sub
 
@@ -1183,4 +1286,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub returnResults()
+Const ProcName As String = "returnResults"
+On Error GoTo Err
+
+fireNotifyBar mCurrentBar
+gLog "Time to process " & mTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(mElapsedTimer.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
+mHistDataRequester.UnregisterHistoricalDataRequest mRequesterID
+
+mFutureWaiter.Add mFutureBuilder.Future
+mFutureBuilder.Value = mTargetBarsBuilder.Bars
+mFutureBuilder.Complete
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 

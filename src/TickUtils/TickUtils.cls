@@ -308,12 +308,16 @@ End Enum
 '   Otherwise, the <code>MarketDataSource</code> may adjust volume figures to ensure that volume notified by the
 '   <code>MarketDataSource</code> is always increasing (this adjustment is to eliminate the backward movement in
 '   total Volume that occurs sometimes with some data sources).
+' @param MarketDataSourceOptUseFullSession
+'   If set, data sources for contracts that have main and full trading sessions will use a <code>Session</code>
+'   object that relates to the full session.
 '@/
 Public Enum MarketDataSourceOptions
     MarketDataSourceOptNone = 0
     MarketDataSourceOptUseExchangeTimeZone = 1
     MarketDataSourceOptNoImpliedTrades = 2
     MarketDataSourceOptNoVolumeAdjustments = 4
+    MarketDataSourceOptUseFullSession = 8
 End Enum
 
 Public Enum MarketDataSourceStates

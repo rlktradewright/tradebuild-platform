@@ -32,8 +32,8 @@ if errorlevel 1 pause
 call makeExe.bat HistDataTest1 HistDataTest1 /M:E %DEP%
 if errorlevel 1 pause
 
-call makeExe.bat IBOrdersTest1 IBOrdersTest1 /M:E %DEP%
-if errorlevel 1 pause
+:: call makeExe.bat IBOrdersTest1 IBOrdersTest1 /M:E %DEP%
+:: if errorlevel 1 pause
 
 popd
 

@@ -42,36 +42,38 @@ Implements IProcessor
 '@================================================================================
 
 
-Private Const ModuleName                    As String = "FileProcessor"
+Private Const ModuleName                            As String = "FileProcessor"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mSelfRef As Object
+Private mSelfRef                                    As Object
 
-Private mStudyLibraryManager As New StudyLibraryManager
+Private mStudyLibraryManager                        As New StudyLibraryManager
 
-Private mTickfileSpec As New TickfileSpecifier
-Private mTimePeriod As TimePeriod
+Private mTickfileSpec                               As New TickfileSpecifier
+Private mTimePeriod                                 As TimePeriod
 
-Private WithEvents mReplayController As ReplayController
+Private WithEvents mReplayController                As ReplayController
 Attribute mReplayController.VB_VarHelpID = -1
 
-Private WithEvents mReplayTaskController As TaskController
+Private WithEvents mReplayTaskController            As TaskController
 Attribute mReplayTaskController.VB_VarHelpID = -1
 
-Private mNumber As Long
-Private mSessionOnly As Boolean
+Private mNumber                                     As Long
+Private mSessionOnly                                As Boolean
 
-Private WithEvents mTimer As IntervalTimer
+Private WithEvents mTimer                           As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
-Private WithEvents mFutureWaiter As FutureWaiter
+Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mBars As Bars
-Private mBar As Bar
+Private mBars                                       As Bars
+Private mBar                                        As Bar
+
+Private mContractSpec                               As IContractSpecifier
 
 '@================================================================================
 ' Class Event Handlers
@@ -188,7 +190,8 @@ If TypeOf ev.Future.Value Is Bars Then
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
-    gSecType = lContract.Specifier.sectype
+    Set mContractSpec = lContract.Specifier
+    gSecType = lContract.Specifier.SecType
     gTickSize = lContract.TickSize
 End If
 
@@ -208,7 +211,7 @@ On Error GoTo Err
 
 Finish
 Set gProcessor = Nothing
-gLogCompletion
+gLogCompletion mContractSpec
 Set mSelfRef = Nothing
 
 Exit Sub

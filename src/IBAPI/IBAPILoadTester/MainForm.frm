@@ -16,7 +16,7 @@ Begin VB.Form MainForm
       Height          =   285
       Left            =   1800
       TabIndex        =   2
-      Text            =   "1645326819"
+      Text            =   "645326819"
       Top             =   840
       Width           =   1095
    End

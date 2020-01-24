@@ -220,6 +220,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function IOrderSubmitter_IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+IOrderSubmitter_IsReadyForOrderType = IsReadyForOrderType(pOrderType)
+End Function
+
 Private Sub IOrderSubmitter_ModifyOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "IOrderSubmitter_ModifyOrder"
 On Error GoTo Err
@@ -741,6 +745,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+Select Case pOrderType
+Case OrderTypeTrail, _
+        OrderTypeTrailLimit
+    IsReadyForOrderType = mDataSource.HasCurrentTick(TickTypeAsk) Or _
+                        mDataSource.HasCurrentTick(TickTypeBid) Or _
+                        mDataSource.HasCurrentTick(TickTypeTrade)
+Case Else
+    IsReadyForOrderType = True
+End Select
+End Function
+
 Public Sub ModifyOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "ModifyOrder"
 On Error GoTo Err
@@ -801,6 +817,34 @@ Else
 End If
 
 Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyAboutToPlaceOrder( _
+                ByVal pOrder As IOrder)
+Const ProcName As String = "NotifyAboutToPlaceOrder"
+On Error GoTo Err
+
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mOrderSubmissionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As IOrderSubmissionListener
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.NotifyAboutToPlaceOrder pOrder
+    Next
+End If
+
+Exit Sub
+
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
@@ -1185,6 +1229,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function getOcaGroup(ByVal pOrder As IOrder) As String
+If pOrder Is Nothing Then Exit Function
+If pOrder.ProviderProperties Is Nothing Then Exit Function
+getOcaGroup = pOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+End Function
+
 Private Function GetTickSizeForOptions( _
                 ByVal pResolver As OptionTickSizeResolver, _
                 ByVal pExamplePrice As Double, _
@@ -1332,7 +1382,7 @@ Case OrderStatusFilled, _
         OrderStatusCancelled
     lParentId = 0
 Case Else
-    lParentId = pBracketOrder.EntryOrder.BrokerId
+    lParentId = CInt("0" & pBracketOrder.EntryOrder.BrokerId)
 End Select
 
 If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0
@@ -1340,12 +1390,12 @@ If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0
 Dim lPlexId As Long
 
 Dim lOCAGroup As String
-If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
-If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+lOCAGroup = getOcaGroup(pBracketOrder.StopLossOrder)
+If lOCAGroup = "" Then lOCAGroup = getOcaGroup(pBracketOrder.TargetOrder)
 If lOCAGroup = "" Then
-    lOCAGroup = GenerateGUIDString
-    If Not pBracketOrder.StopLossOrder Is Nothing Then pBracketOrder.StopLossOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
-    If Not pBracketOrder.TargetOrder Is Nothing Then pBracketOrder.TargetOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+    lOCAGroup = GenerateTextID
+    setOcaGroup pBracketOrder.StopLossOrder, lOCAGroup
+    setOcaGroup pBracketOrder.TargetOrder, lOCAGroup
 End If
 
 If pEntryOrderChanged Then
@@ -1474,6 +1524,7 @@ Assert pOrder.Action <> OrderActionNone, "Order has no action"
 Assert pOrder.OrderType <> OrderTypeNone, "Order has no order type"
 Assert pOrder.Quantity <> 0, "Order has zero quantity"
 
+NotifyAboutToPlaceOrder pOrder
 mOrderPlacer.PlaceOrder Me, pOrder, pContract, IIf(mStageOrders, False, pTransmit), pParentId, pOcaGroup, mDataSource
 
 If pOrder.Status = OrderStatusCreated Then
@@ -1514,6 +1565,24 @@ If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
 Else
     placeAnOrder pOrder, gContractSpecToTwsContract(pOrder.ContractSpecifier), pTransmit, pParentId, pOcaGroup, pOrderMode
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setOcaGroup( _
+                ByVal pOrder As IOrder, _
+                ByVal pOcaGroup As String)
+Const ProcName As String = "setOcaGroup"
+On Error GoTo Err
+
+If pOrder Is Nothing Then Exit Sub
+Dim lProps As Parameters: Set lProps = pOrder.ProviderProperties
+If lProps Is Nothing Then Set lProps = New Parameters
+lProps.SetParameterValue ProviderPropertyOCAGroup, pOcaGroup
+pOrder.ProviderProperties = lProps
 
 Exit Sub
 

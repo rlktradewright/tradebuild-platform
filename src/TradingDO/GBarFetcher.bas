@@ -68,7 +68,10 @@ Private Const TradingDaysPerWeek                    As Double = 5
 '@================================================================================
 
 Public Function gCalcSessionTimes(ByVal pSpecifier As BarDataSpecifier, ByVal pInstrument As instrument) As SessionTimes
-If Not pSpecifier.includeBarsOutsideSession Then
+If pSpecifier.includeBarsOutsideSession Then
+    'gCalcSessionTimes.StartTime = IIf(pSpecifier.customSessionStartTime <> 0, pSpecifier.customSessionStartTime, pInstrument.FullSessionStartTime)
+    'gCalcSessionTimes.EndTime = IIf(pSpecifier.customSessionEndTime <> 0, pSpecifier.customSessionEndTime, pInstrument.FullSessionEndTime)
+Else
     gCalcSessionTimes.StartTime = IIf(pSpecifier.customSessionStartTime <> 0, pSpecifier.customSessionStartTime, pInstrument.SessionStartTime)
     gCalcSessionTimes.EndTime = IIf(pSpecifier.customSessionEndTime <> 0, pSpecifier.customSessionEndTime, pInstrument.SessionEndTime)
 End If

@@ -90,6 +90,14 @@ End Sub
 ' IOrderSubmissionListener Interface Members
 '@================================================================================
 
+Private Sub IOrderSubmissionListener_NotifyAboutToPlaceOrder(ByVal pOrder As IOrder)
+If TypeOf pOrder Is Order Then
+    Dim lOrder As Order
+    Set lOrder = pOrder
+    lOrder.SaveRecoveryInfo
+End If
+End Sub
+
 Private Sub IOrderSubmissionListener_NotifyError(ByVal pOrderId As String, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 Const ProcName As String = "IOrderSubmissionListener_NotifyError"
 On Error GoTo Err
@@ -459,6 +467,10 @@ Private Function IOrderSubmitter_GetTickSize(ByVal pDummyOrder As IOrder) As IFu
 Set IOrderSubmitter_GetTickSize = CreateFuture(CreateBoxedValue(mContract.TickSize))
 End Function
 
+Private Function IOrderSubmitter_IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+IOrderSubmitter_IsReadyForOrderType = True
+End Function
+
 Private Sub IOrderSubmitter_ModifyBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
                 ByVal pEntryOrderChanged As Boolean, _
@@ -471,12 +483,12 @@ On Error GoTo Err
 Dim lOrder As IOrder
 
 Dim lOCAGroup As String
-If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
-If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+lOCAGroup = GetOcaGroup(pBracketOrder.StopLossOrder)
+If lOCAGroup = "" Then lOCAGroup = GetOcaGroup(pBracketOrder.TargetOrder)
 If lOCAGroup = "" Then
-    lOCAGroup = GenerateGUIDString
-    If Not pBracketOrder.StopLossOrder Is Nothing Then pBracketOrder.StopLossOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
-    If Not pBracketOrder.TargetOrder Is Nothing Then pBracketOrder.TargetOrder.ProviderProperties.SetParameterValue ProviderPropertyOCAGroup, lOCAGroup
+    lOCAGroup = GenerateTextID
+    setOcaGroup pBracketOrder.StopLossOrder, lOCAGroup
+    setOcaGroup pBracketOrder.TargetOrder, lOCAGroup
 End If
 
 If pEntryOrderChanged Then
@@ -484,11 +496,11 @@ If pEntryOrderChanged Then
 End If
 If pStopOrderChanged Then
     Set lOrder = pBracketOrder.StopLossOrder
-    PlaceOrder lOrder, "", "", True
+    PlaceOrder lOrder, "", lOCAGroup, True
 End If
 If pTargetOrderChanged Then
     Set lOrder = pBracketOrder.TargetOrder
-    PlaceOrder lOrder, "", "", True
+    PlaceOrder lOrder, "", lOCAGroup, True
 End If
 If pCloseoutOrderChanged Then
     PlaceOrder pBracketOrder.CloseoutOrder, "", "", True
@@ -730,6 +742,12 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function GetOcaGroup(ByVal pOrder As IOrder) As String
+If pOrder Is Nothing Then Exit Function
+If pOrder.ProviderProperties Is Nothing Then Exit Function
+GetOcaGroup = pOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
+End Function
+
 Private Sub fireStateChange()
 Const ProcName As String = "fireStateChange"
 On Error GoTo Err
@@ -779,7 +797,26 @@ Private Sub PlaceOrder( _
 Const ProcName As String = "placeOrder"
 On Error GoTo Err
 
+setOcaGroup pOrder, pOcaGroup
 mSimulator.PlaceOrder pOrder, pParentId, pOcaGroup, pTransmit, Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setOcaGroup( _
+                ByVal pOrder As IOrder, _
+                ByVal pOcaGroup As String)
+Const ProcName As String = "setOcaGroup"
+On Error GoTo Err
+
+If pOrder Is Nothing Then Exit Sub
+Dim lProps As Parameters: Set lProps = pOrder.ProviderProperties
+If lProps Is Nothing Then Set lProps = New Parameters
+lProps.SetParameterValue ProviderPropertyOCAGroup, pOcaGroup
+pOrder.ProviderProperties = lProps
 
 Exit Sub
 

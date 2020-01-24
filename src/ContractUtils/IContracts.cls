@@ -66,6 +66,12 @@ End Property
 Public Property Get Enumerator() As Enumerator
 End Property
 
+Public Property Let SortAscending(ByVal Value As Boolean)
+End Property
+
+Public Property Get SortAscending() As Boolean
+End Property
+
 Public Property Let SortKeys( _
                 ByRef Value() As ContractSortKeyIds)
 End Property

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#359.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#361.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   7800
@@ -486,7 +486,7 @@ Private Sub BuyButton_Click()
 Const ProcName As String = "BuyButton_Click"
 On Error GoTo Err
 
-Dim lOrder As New Order
+Dim lOrder As Order
 lOrder.ContractSpecifier = ContractSpecBuilder1.ContractSpecifier
 lOrder.Action = OrderActionBuy
 lOrder.Quantity = CLng(QuantityText)

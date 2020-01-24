@@ -74,8 +74,9 @@ Private mContractsBuilder                           As New ContractsBuilder
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mIsOffsetExpiry                             As Boolean
 Private mExpiryOffset                               As Long
-Private mSortKeys()                                 As ContractSortKeyIds
+Private mDaysBeforeExpiryToSwitch                   As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -86,8 +87,6 @@ Set mFutureWaiter = New FutureWaiter
 
 mExpiryOffset = -1
 
-ReDim mSortKeys(0) As ContractSortKeyIds
-mSortKeys(0) = ContractSortKeyExpiry
 End Sub
 
 '@================================================================================
@@ -121,71 +120,19 @@ On Error GoTo Err
 
 If Not futureIsPending Then Exit Sub
 
-If gIsOffsetExpiry(mContractSpec.Expiry) And _
-    mContractsBuilder.Contracts.Count <> 0 _
-Then
-    mExpiryOffset = CLng(mContractSpec.Expiry)
-    
-    ' we've now got at least one contract that meets the specified
-    ' contract spec. Now we need to find all the contracts that do
-    ' so (apart from the expiry date)
-    Dim lContractSpec As IContractSpecifier
-    Set lContractSpec = mContractsBuilder.Contracts.ItemAtIndex(1).Specifier
-    With lContractSpec
-        Set mContractSpec = gCreateContractSpecifier("", _
-                                                    .Symbol, _
-                                                    .Exchange, _
-                                                    .SecType, _
-                                                    .CurrencyCode, _
-                                                    "", _
-                                                    .Multiplier, _
-                                                    .Strike, _
-                                                    .Right)
-    End With
-    mTaskContext.Continue
+Static sGotSampleContract As Boolean
+
+If mIsOffsetExpiry And Not sGotSampleContract And mContractsBuilder.Contracts.Count <> 0 Then
+    sGotSampleContract = True
+    processSampleContract mContractsBuilder.Contracts.ItemAtIndex(1)
     Exit Sub
 End If
 
-If mExpiryOffset <> -1 Then
-    mContractsBuilder.Contracts.SortKeys = mSortKeys
-    Dim lAllContracts As IContracts: Set lAllContracts = mContractsBuilder.Contracts
-    
-    Set mContractsBuilder = New ContractsBuilder
-    Dim lContract As IContract
-    Dim lIndex As Long: lIndex = -1
-    For Each lContract In lAllContracts
-        If gIsContractExpired(lContract) Then
-            lIndex = -1
-        Else
-            lIndex = lIndex + 1
-        End If
-        If lIndex = mExpiryOffset Then
-            ' we've found the contract we're after
-            mContractsBuilder.Add lContract
-            If Not mListener Is Nothing Then mListener.NotifyContract pCookie, lContract
-            Exit For
-        End If
-    Next
+If mIsOffsetExpiry Then
+    processOffsetContracts pCookie
 End If
 
-
-Dim lContracts As IContracts
-Set lContracts = mContractsBuilder.Contracts
-If lContracts.Count = 0 And Not mUsedSecondaryContractStore Then If trySecondaryContractSP Then Exit Sub
-
-If mSingleContractOnly Then
-    mFutureWaiter.Add mContractFutureBuilder.Future, pCookie
-    If lContracts.Count = 0 Then
-        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "No such contract", ""
-    Else
-        mContractFutureBuilder.Value = lContracts.ItemAtIndex(1)
-        mContractFutureBuilder.Complete
-    End If
-Else
-    mFutureWaiter.Add mContractsFutureBuilder.Future, pCookie
-    mContractsFutureBuilder.Value = lContracts
-    mContractsFutureBuilder.Complete
-End If
+completeContractProcessing pCookie
 
 Exit Sub
 
@@ -220,7 +167,7 @@ On Error GoTo Err
 
 If Not futureIsPending Then Exit Sub
 
-If gIsOffsetExpiry(mContractSpec.Expiry) Or mExpiryOffset <> -1 Then
+If mIsOffsetExpiry Then
     mContractsBuilder.Add pContract
 Else
     If mContractsBuilder.Contracts.Count = 1 And mSingleContractOnly Then
@@ -388,7 +335,55 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mContractSpec = pContractSpec
+Dim ar() As ContractSortKeyIds
+
+InitialiseSorted pContractSpec, _
+                pPrimaryContractStore, _
+                pSecondaryContractStore, _
+                pCookie, _
+                pListener, _
+                pSingleContractOnly, _
+                ar, _
+                False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub InitialiseSorted( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByVal pSecondaryContractStore As IContractStore, _
+                ByVal pCookie As Variant, _
+                ByVal pListener As IContractFetchListener, _
+                ByVal pSingleContractOnly As Boolean, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                ByVal pSortDescending As Boolean)
+Const ProcName As String = "InitialiseSorted"
+On Error GoTo Err
+
+If Not gIsOffsetExpiry(pContractSpec.Expiry) Then
+    Set mContractSpec = pContractSpec
+Else
+    mIsOffsetExpiry = True
+    gParseOffsetExpiry pContractSpec.Expiry, _
+                    mExpiryOffset, _
+                    mDaysBeforeExpiryToSwitch
+    With pContractSpec
+        Set mContractSpec = gCreateContractSpecifier(.LocalSymbol, _
+                                                    .Symbol, _
+                                                    .Exchange, _
+                                                    .SecType, _
+                                                    .CurrencyCode, _
+                                                    "", _
+                                                    .Multiplier, _
+                                                    .Strike, _
+                                                    .Right)
+    End With
+End If
+
 Set mPrimaryContractStore = pPrimaryContractStore
 Set mSecondaryContractStore = pSecondaryContractStore
 
@@ -401,6 +396,14 @@ If mSingleContractOnly Then
     Set mContractFutureBuilder = New FutureBuilder
     mContractFutureBuilder.Cookie = mCookie
 Else
+    On Error Resume Next
+        If UBound(pSortkeys) >= 0 Then
+            Dim ar() As ContractSortKeyIds
+            ar = pSortkeys
+            mContractsBuilder.SortKeys = ar
+        End If
+    On Error GoTo Err
+    mContractsBuilder.SortAscending = Not pSortDescending
     Set mContractsFutureBuilder = New FutureBuilder
     mContractsFutureBuilder.Cookie = mCookie
 End If
@@ -410,10 +413,40 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+                
+
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub completeContractProcessing(ByVal pCookie As Variant)
+Const ProcName As String = "completeContractProcessing"
+On Error GoTo Err
+
+Dim lContracts As IContracts
+Set lContracts = mContractsBuilder.Contracts
+If lContracts.Count = 0 And Not mUsedSecondaryContractStore Then If trySecondaryContractSP Then Exit Sub
+
+If mSingleContractOnly Then
+    mFutureWaiter.Add mContractFutureBuilder.Future, pCookie
+    If lContracts.Count = 0 Then
+        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "No such contract", ""
+    Else
+        mContractFutureBuilder.Value = lContracts.ItemAtIndex(1)
+        mContractFutureBuilder.Complete
+    End If
+Else
+    mFutureWaiter.Add mContractsFutureBuilder.Future, pCookie
+    mContractsFutureBuilder.Value = lContracts
+    mContractsFutureBuilder.Complete
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function futureIsPending() As Boolean
 Const ProcName As String = "futureIsPending"
@@ -430,6 +463,73 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub processSampleContract(ByVal pFirstContract As IContract)
+Const ProcName As String = "processSampleContract"
+On Error GoTo Err
+
+' we've now got at least one contract that meets the specified
+' contract spec. Now we need to find all the contracts that do
+' so (apart from the expiry date)
+With pFirstContract.Specifier
+    Set mContractSpec = gCreateContractSpecifier("", _
+                                                .Symbol, _
+                                                .Exchange, _
+                                                .SecType, _
+                                                .CurrencyCode, _
+                                                "", _
+                                                .Multiplier, _
+                                                .Strike, _
+                                                .Right)
+End With
+
+Set mContractsBuilder = New ContractsBuilder
+ReDim lSortkeys(0) As ContractSortKeyIds
+lSortkeys(0) = ContractSortKeyExpiry
+mContractsBuilder.SortKeys = lSortkeys
+
+mTaskContext.Continue
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processOffsetContracts(ByVal pCookie As Variant)
+Const ProcName As String = "processOffsetContracts"
+On Error GoTo Err
+
+If mExpiryOffset <> -1 Then
+    Dim lAllContracts As IContracts: Set lAllContracts = mContractsBuilder.Contracts
+    
+    Set mContractsBuilder = New ContractsBuilder
+    Dim lContract As IContract
+    Dim lIndex As Long: lIndex = -1
+    For Each lContract In lAllContracts
+        If gIsContractExpired(lContract) Then
+            lIndex = -1
+        Else
+            lIndex = lIndex + 1
+        End If
+        If lIndex < mExpiryOffset Then
+        ElseIf GetOffsetSessionTimes( _
+                            lContract.ExpiryDate, _
+                            -mDaysBeforeExpiryToSwitch).StartTime >= Int(CDbl(Now)) _
+        Then
+            ' we've found the contract we're after
+            mContractsBuilder.Add lContract
+            If Not mListener Is Nothing Then mListener.NotifyContract pCookie, lContract
+            Exit For
+        End If
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function trySecondaryContractSP() As Boolean
 Const ProcName As String = "trySecondaryContractSP"

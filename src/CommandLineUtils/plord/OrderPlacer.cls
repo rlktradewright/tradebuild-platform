@@ -234,10 +234,13 @@ With mOrderContext
     
     If Not .IsReadyTickSize(mContract.Specifier.SecType) Then Exit Function
     
+    If Not .IsReadyForordertype(mBracketOrderSpec.EntryType) Then Exit Function
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then Exit Function
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then Exit Function
+    If Not .IsReadyForordertype(mBracketOrderSpec.StopLossType) Then Exit Function
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossLimitPriceSpec) Then Exit Function
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossTriggerPriceSpec) Then Exit Function
+    If Not .IsReadyForordertype(mBracketOrderSpec.TargetType) Then Exit Function
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetLimitPriceSpec) Then Exit Function
     If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetTriggerPriceSpec) Then Exit Function
 End With

@@ -92,7 +92,17 @@ If mBarTimePeriod.Length <> 0 Then mBarEndTime = gCentiSecondstoDate(gBarEndTime
                                                             mBarTimePeriod, _
                                                             mMainSession.SessionStartTime, _
                                                             mMainSession.SessionEndTime))
-
+If mBarTimePeriod.Units = TimePeriodDay Or _
+    mBarTimePeriod.Units = TimePeriodWeek Or _
+    mBarTimePeriod.Units = TimePeriodMonth Or _
+    mBarTimePeriod.Units = TimePeriodYear _
+Then
+    If mMainSession.SessionEndTime < mMainSession.SessionStartTime Then
+        mCurrentBar.Timestamp = Int(mCurrentBar.Timestamp) + 1
+    Else
+        mCurrentBar.Timestamp = Int(mCurrentBar.Timestamp)
+    End If
+End If
 
 Exit Sub
 
@@ -446,7 +456,10 @@ ElseIf mBarTimePeriod.Units = TimePeriodTickVolume Then
     Else
         mCurrentBar.NotifyValue Value.Value
     End If
-ElseIf Value.Timestamp >= mBarEndTime Then
+ElseIf gCentiSecondstoDate(gBarEndTime(Value.Timestamp, _
+                                        mBarTimePeriod, _
+                                        mMainSession.SessionStartTime, _
+                                        mMainSession.SessionEndTime)) > mBarEndTime Then
     createNewBar Value.Timestamp, Value.Value, 0, 0
 Else
     mCurrentBar.NotifyValue Value.Value

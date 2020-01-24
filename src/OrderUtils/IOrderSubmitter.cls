@@ -108,6 +108,9 @@ End Function
 Public Sub Finish()
 End Sub
 
+Public Function IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+End Function
+
 Public Sub ModifyOrder(ByVal pOrder As IOrder)
 End Sub
 

@@ -876,9 +876,7 @@ If mSummary.RolloverDate <> 0 Then
     End If
 End If
     
-placePeggedOrders
-
-CheckComplete
+If placePeggedOrders Then CheckComplete
 
 Exit Sub
 
@@ -3653,6 +3651,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function hasPeggedOrder(ByVal pOrder As IOrder) As Boolean
+If pOrder Is Nothing Then Exit Function
+If pOrder.Status <> OrderStatuses.OrderStatusCreated Then Exit Function
+If Not orderRequiresDelayedPriceResolution(pOrder) Then Exit Function
+hasPeggedOrder = True
+End Function
+
 Private Function orderRequiresDelayedPriceResolution(ByVal pOrder As IOrder) As Boolean
 If pOrder.LimitPriceSpec Is Nothing Then
     orderRequiresDelayedPriceResolution = pOrder.TriggerPriceSpec.RequiresDelayedPriceResolution
@@ -3699,11 +3704,10 @@ Private Function placePeggedOrder( _
 Const ProcName As String = "placePeggedOrder"
 On Error GoTo Err
 
-If pOrder Is Nothing Then Exit Function
-If pOrder.Status <> OrderStatuses.OrderStatusCreated Then Exit Function
-If Not orderRequiresDelayedPriceResolution(pOrder) Then Exit Function
+If Not hasPeggedOrder(pOrder) Then Exit Function
 If Not (mOrderContext.IsReadyForPriceSpecifier(pOrder.LimitPriceSpec) And _
-        mOrderContext.IsReadyForPriceSpecifier(pOrder.TriggerPriceSpec)) Then
+        mOrderContext.IsReadyForPriceSpecifier(pOrder.TriggerPriceSpec) And _
+        mOrderContext.IsReadyForOrderType(pOrder.OrderType)) Then
     mOrderContext.AddChangeListener Me
     Exit Function
 End If
@@ -3750,11 +3754,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub placePeggedOrders()
+Private Function placePeggedOrders() As Boolean
 Const ProcName As String = "placePeggedOrders"
 On Error GoTo Err
 
-If mSummary.PeggedOrdersProcessed Then Exit Sub
+If mSummary.PeggedOrdersProcessed Then
+    placePeggedOrders = True
+    Exit Function
+End If
+
+If Not (hasPeggedOrder(mStopLossOrder) Or hasPeggedOrder(mTargetOrder)) Then
+    placePeggedOrders = True
+    Exit Function
+End If
 
 Dim lUpdated As Boolean
 
@@ -3765,13 +3777,16 @@ If lUpdated Then
     mSummary.PeggedOrdersProcessed = True
     Update
     SaveRecoveryInfo
+    placePeggedOrders = True
 End If
 
-Exit Sub
+placePeggedOrders = False
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Sub processExecution( _
                 ByVal pExec As Execution)

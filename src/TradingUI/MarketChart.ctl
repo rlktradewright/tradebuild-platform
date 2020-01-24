@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#281.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#307.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -1391,10 +1391,17 @@ If Not pContract Is Nothing Then
     mSecType = pContract.Specifier.secType
     mExchange = pContract.Specifier.Exchange
     mTickSize = pContract.TickSize
-    mSessionEndTime = pContract.SessionEndTime
-    Chart1.SessionEndTime = mSessionEndTime
-    mSessionStartTime = pContract.SessionStartTime
-    Chart1.SessionStartTime = mSessionStartTime
+    If mChartSpec.IncludeBarsOutsideSession Then
+        mSessionEndTime = pContract.FullSessionEndTime
+        Chart1.SessionEndTime = mSessionEndTime
+        mSessionStartTime = pContract.FullSessionStartTime
+        Chart1.SessionStartTime = mSessionStartTime
+    Else
+        mSessionEndTime = pContract.SessionEndTime
+        Chart1.SessionEndTime = mSessionEndTime
+        mSessionStartTime = pContract.SessionStartTime
+        Chart1.SessionStartTime = mSessionStartTime
+    End If
 Else
     mLocalSymbol = ""
     mSecType = SecTypeNone

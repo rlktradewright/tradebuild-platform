@@ -64,6 +64,10 @@ Private Const ModuleName                            As String = "IOrderSubmissio
 ' Methods
 '@================================================================================
 
+Public Sub NotifyAboutToPlaceOrder( _
+                ByVal pOrder As IOrder)
+End Sub
+
 Public Sub NotifyError( _
                 ByVal pOrderId As String, _
                 ByVal pErrorCode As Long, _

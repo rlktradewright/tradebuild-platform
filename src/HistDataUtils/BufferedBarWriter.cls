@@ -377,7 +377,10 @@ Private Sub setupSession()
 Const ProcName As String = "setupSession"
 On Error GoTo Err
 
-Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, Nothing)
+Set mSessionBuilder = CreateSessionBuilder( _
+                                mContract.SessionStartTime, _
+                                mContract.SessionEndTime, _
+                                Nothing)
 Set mSession = mSessionBuilder.Session
 
 Exit Sub
