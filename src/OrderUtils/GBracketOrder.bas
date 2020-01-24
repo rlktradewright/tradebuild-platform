@@ -793,6 +793,17 @@ mTableBuilder.AddStateTableEntry _
 '                       State:      BracketOrderStateClosed
 '=======================================================================
 
+' The bracket order has been completed but the application has requested that
+' the bracket order be closed out. So go to closing out state and place the
+' closeout order.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosed, _
+            OpStimuli.StimCloseout, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpActions.ActPlaceCloseoutOrder
+            
 ' The bracket order has been completed but something unexpected happens. Just
 ' swallow it! An example of this is when an order has been rejected by TWS
 ' but not removed by the user: a cancellation notification may arrive up

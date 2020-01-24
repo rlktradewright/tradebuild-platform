@@ -232,7 +232,7 @@ End Function
 Public Sub Execute()
 End Sub
 
-Public Sub NotifyCloseout(ByVal pExec As IExecutionReport)
+Public Sub NotifyCloseout(ByVal pCloseoutOrder As IOrder, ByVal pExec As IExecutionReport)
 End Sub
 
 Public Sub RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
