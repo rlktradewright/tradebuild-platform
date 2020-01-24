@@ -1520,7 +1520,9 @@ gLog "Requesting historical data for: " & UCase$(pRequest.Contract.LocalSymbol) 
             "; api id=" & lApiId & _
             "; barsize=" & pRequest.BarSizeSetting & _
             "; endTime=" & pRequest.EndDateTime & _
-            "; duration=" & pRequest.Duration, _
+            "; duration=" & pRequest.Duration & _
+            "; whattoshow=" & pRequest.WhatToShow & _
+            "; use rth=" & IIf(pRequest.MainSessionOnly, 1, 0), _
             ModuleName, ProcName
 
 mWriter.AddMessageId REQ_HISTORICAL_DATA
