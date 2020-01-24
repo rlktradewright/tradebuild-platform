@@ -61,6 +61,8 @@ Private mFirstFreeIndex                             As Long
 Private mListHeadIndex                              As Long
 Private mListTailIndex                              As Long
 
+Private mGroups                                     As Groups
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -110,7 +112,7 @@ Set mTaskContext = Value
 End Property
 
 Private Property Get ITask_TaskName() As String
-ITask_TaskName = mTaskContext.name
+ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================
@@ -154,7 +156,7 @@ Next
 
 mTaskContext.Continue
 
-gWriteLineToStdOut StageOrdersCommand & " " & IIf(pStageOrders, "YES", "NO")
+gWriteLineToStdOut gCommands.StageOrdersCommand.Name & " " & IIf(pStageOrders, "YES", "NO")
 
 Exit Sub
 
@@ -176,6 +178,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub Initialise( _
+                ByVal pGroups As Groups)
+Set mGroups = pGroups
+End Sub
+
+Friend Sub RemoveOrderPlacer(ByVal pOrderPlacer As OrderPlacer)
+Const ProcName As String = "RemoveOrderPlacer"
+On Error GoTo Err
+
+Dim lIndex As Long: lIndex = findEntryIndex(pOrderPlacer)
+If lIndex <> NullIndex Then
+    releaseEntry findEntryIndex(pOrderPlacer)
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -190,6 +212,7 @@ Dim lBOS As BracketOrderSpecification
 For Each lBOS In pContractProcessor.BracketOrders
     Dim lOrderPlacer As OrderPlacer
     Set lOrderPlacer = New OrderPlacer
+    mGroups.Item(pContractProcessor.GroupName).OrderPlacers.Add lOrderPlacer
     lOrderPlacer.Initialise lBOS, pContractProcessor.Contract, pContractProcessor.OrderContext, pStageOrders
     Set mOrderPlacers(allocateEntry).OrderPlacer = lOrderPlacer
 Next
@@ -240,6 +263,28 @@ End If
 
 allocateEntryIndex = mNextUnusedIndex
 mNextUnusedIndex = mNextUnusedIndex + 1
+End Function
+
+Private Function findEntryIndex(ByVal pOrderPlacer As OrderPlacer) As Long
+Const ProcName As String = "findEntryIndex"
+On Error GoTo Err
+
+Dim lIndex As Long: lIndex = mListHeadIndex
+
+Do While lIndex <> NullIndex
+    If mOrderPlacers(lIndex).OrderPlacer Is pOrderPlacer Then
+        findEntryIndex = lIndex
+        Exit Function
+    End If
+    lIndex = mOrderPlacers(lIndex).Next
+Loop
+
+findEntryIndex = NullIndex
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub releaseEntry( _

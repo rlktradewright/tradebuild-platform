@@ -381,6 +381,7 @@ pOrder.BrokerId = CStr(sNextBrokerOrderId)
 
 Dim lOrder As New SimulatorOrder
 lOrder.Initialise New Order, pParentId, pOcaGroup, pTransmit, pListener
+lOrder.Order.Initialise pOrder.GroupName, pOrder.ContractSpecifier, pOrder.OrderContext
 gSyncToOrder lOrder.Order, pOrder
 mAllOrders.Add lOrder, pOrder.Id
 

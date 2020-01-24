@@ -438,9 +438,9 @@ Else
 End If
 
 Dim lPriceSpec As PriceSpecifier
-Assert lOrderContext.ParsePriceAndOffset(pLimitPrice, lPriceSpec), "Invalid limit price string"
+Assert lOrderContext.ParsePriceAndOffset(lPriceSpec, pLimitPrice), "Invalid limit price string"
 Dim lTriggerPriceSpec As PriceSpecifier
-Assert lOrderContext.ParsePriceAndOffset(pTriggerPrice, lTriggerPriceSpec), "Invalid trigger price string"
+Assert lOrderContext.ParsePriceAndOffset(lTriggerPriceSpec, pTriggerPrice), "Invalid trigger price string"
 
 checkPriceSpecifiers pOrderRole, pOrderType, lPriceSpec, lTriggerPriceSpec
 

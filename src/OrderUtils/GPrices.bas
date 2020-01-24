@@ -30,8 +30,10 @@ Private Const ModuleName                            As String = "GPrices"
 
 Public Const AskPriceDesignator                     As String = "ASK"
 Public Const BidPriceDesignator                     As String = "BID"
+Public Const BidAskPriceDesignator                  As String = "BIDASK"
 Public Const LastPriceDesignator                    As String = "LAST"
 Public Const EntryPriceDesignator                   As String = "ENTRY"
+Public Const MidPriceDesignator                     As String = "MID"
 
 Public Const TickOffsetDesignator                   As String = "T"
 Public Const PercentOffsetDesignator                As String = "%"
@@ -65,17 +67,19 @@ Public Function gNewPriceSpecifier( _
                 Optional ByVal pPrice As Double = MaxDoubleValue, _
                 Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
                 Optional ByVal pOffset As Double = 0#, _
-                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone) As PriceSpecifier
+                Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone, _
+                Optional ByVal pUseCloseoutSemantics As Boolean = False) As PriceSpecifier
 Dim p As New PriceSpecifier
-p.Initialise pPrice, pPriceType, pOffset, pOffsetType
+p.Initialise pPrice, pPriceType, pOffset, pOffsetType, pUseCloseoutSemantics
 Set gNewPriceSpecifier = p
 End Function
 
 Public Function gParsePriceAndOffset( _
+                ByRef pPriceSpec As PriceSpecifier, _
                 ByVal pValue As String, _
                 ByVal pSectype As SecurityTypes, _
                 ByVal pTickSize As Double, _
-                ByRef pPriceSpec As PriceSpecifier) As Boolean
+                ByVal pUseCloseoutSemantics As Boolean) As Boolean
 Const ProcName As String = "gParsePrice"
 On Error GoTo Err
 
@@ -83,7 +87,7 @@ gRegExp.Global = False
 gRegExp.IgnoreCase = True
 
 Dim p As String
-p = "(?:^(?:(ASK|BID|LAST|ENTRY|(?:[-+]?\d{1,6}(?:.\d{1,6})?)))(?:\[(?:([-+]?\d{1,6}(?:.\d{1,6})?))([T%S]?)\])?$)"
+p = "(?:^(?:(ASK|BID|BIDASK|LAST|ENTRY|MID|(?:[-+]?\d{1,6}(?:.\d{1,6})?))?)(?:\[(?:([-+]?\d{1,6}(?:.\d{1,6})?))([T%S]?)\])?$)"
 
 gRegExp.Pattern = p
 
@@ -97,7 +101,7 @@ End If
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
-Dim lPrice As Double
+Dim lPrice As Double: lPrice = MaxDoubleValue
 Dim lPriceType As PriceValueTypes
 Dim lOffset As Double
 Dim lOffsetType As PriceOffsetTypes
@@ -105,15 +109,19 @@ Dim lOffsetType As PriceOffsetTypes
 Dim lPricePart As String: lPricePart = UCase$(lMatch.SubMatches(0))
 Select Case lPricePart
 Case ""
-    lPriceType = PriceValueTypeNone
+    lPriceType = PriceValueTypeBidOrAsk
 Case AskPriceDesignator
     lPriceType = PriceValueTypeAsk
 Case BidPriceDesignator
     lPriceType = PriceValueTypeBid
+Case BidAskPriceDesignator
+    lPriceType = PriceValueTypeBidOrAsk
 Case LastPriceDesignator
     lPriceType = PriceValueTypeLast
 Case EntryPriceDesignator
     lPriceType = PriceValueTypeEntry
+Case MidPriceDesignator
+    lPriceType = PriceValueTypeMid
 Case Else
     lPriceType = PriceValueTypeValue
     If Not ParsePrice(lPricePart, pSectype, pTickSize, lPrice) Then
@@ -137,7 +145,7 @@ Case BidAskSpreadPercentOffsetDesignator
     lOffsetType = PriceOffsetTypeBidAskPercent
 End Select
 
-Set pPriceSpec = gNewPriceSpecifier(lPrice, lPriceType, lOffset, lOffsetType)
+Set pPriceSpec = gNewPriceSpecifier(lPrice, lPriceType, lOffset, lOffsetType, pUseCloseoutSemantics)
 
 gParsePriceAndOffset = True
 
@@ -226,6 +234,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gRoundToTickBoundary( _
+                ByVal pPrice As Double, _
+                ByVal pTickSize As Double, _
+                ByVal pMode As TickRoundingModes) As Double
+
+Dim lTicksPerUnit As Long: lTicksPerUnit = Round(1# / pTickSize)
+Dim lErrorIncrement As Double: lErrorIncrement = lTicksPerUnit / 10000#
+
+Select Case pMode
+Case TickRoundingModeNearest
+    gRoundToTickBoundary = Round(pPrice * lTicksPerUnit + lErrorIncrement) / lTicksPerUnit
+Case TickRoundingModeDown
+    gRoundToTickBoundary = Int(pPrice * lTicksPerUnit + lErrorIncrement) / lTicksPerUnit
+Case TickRoundingModeUp
+    gRoundToTickBoundary = -Int(-pPrice * lTicksPerUnit + lErrorIncrement) / lTicksPerUnit
+End Select
+End Function
+
 Public Function gTypedPriceToString( _
                 ByVal pPrice As Double, _
                 ByVal pPriceType As PriceValueTypes, _
@@ -249,6 +275,10 @@ Case PriceValueTypeLast
     s = "LAST"
 Case PriceValueTypeEntry
     s = "ENTRY"
+Case PriceValueTypeMid
+    s = "MID"
+Case PriceValueTypeBidOrAsk
+    s = "BIDASK"
 Case Else
     AssertArgument False, "Invalid price value type"
 End Select

@@ -73,7 +73,7 @@ Friend Sub Add( _
                 ByVal pParentId As Long)
 Const ProcName As String = "Add"
 On Error GoTo Err
-
+If pOrderSubmitter Is Nothing Then Stop
 Dim lMapEntry As OrderIdMapEntry
 
 Set lMapEntry.Order = pOrder

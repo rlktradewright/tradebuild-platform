@@ -23,7 +23,6 @@ Option Explicit
 '@================================================================================
 
 Implements IJSONable
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -50,6 +49,7 @@ Private mPrice                                      As Double
 Private mPriceType                                  As PriceValueTypes
 Private mOffset                                     As Double
 Private mOffsetType                                 As PriceOffsetTypes
+Private mUseCloseoutSemantics                       As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -107,6 +107,14 @@ Public Property Get OffsetType() As PriceOffsetTypes
 OffsetType = mOffsetType
 End Property
 
+Public Property Let UseCloseoutSemantics(ByVal Value As Boolean)
+mUseCloseoutSemantics = Value
+End Property
+
+Public Property Get UseCloseoutSemantics() As Boolean
+UseCloseoutSemantics = mUseCloseoutSemantics
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -128,11 +136,13 @@ Friend Sub Initialise( _
                 ByVal pPrice As Double, _
                 ByVal pPriceType As PriceValueTypes, _
                 ByVal pOffset As Double, _
-                ByVal pOffsetType As PriceOffsetTypes)
+                ByVal pOffsetType As PriceOffsetTypes, _
+                ByVal pUseCloseoutSemantics As Boolean)
 mPrice = pPrice
 mPriceType = pPriceType
 mOffset = pOffset
 mOffsetType = pOffsetType
+mUseCloseoutSemantics = pUseCloseoutSemantics
 End Sub
 
 Public Function RequiresDelayedPriceResolution() As Boolean
@@ -165,7 +175,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
 
 '@================================================================================
 ' Helper Functions

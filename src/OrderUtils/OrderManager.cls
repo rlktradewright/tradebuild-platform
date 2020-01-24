@@ -144,7 +144,7 @@ Const ProcName As String = "CloseAllPositions"
 On Error GoTo Err
 
 Dim t As New ClosePositionsTask
-t.Initialise Me, "", pTypes
+t.Initialise Me, False, Nothing, "", pTypes
 Set CloseAllPositions = t.Future
 
 StartTask t, PriorityNormal
@@ -157,8 +157,8 @@ End Function
 
 Public Function CloseGroupPositions( _
                 ByVal pGroupName As String, _
-                ByVal pUseLimitOrder As Boolean, _
-                Optional ByVal pBidAskSpreadPercent As Long = 0, _
+                ByVal pCloseoutMode As CloseoutModes, _
+                Optional ByVal pPriceSpec As PriceSpecifier, _
                 Optional ByVal pTypes As PositionTypes = PositionTypeLive) As IFuture
 Const ProcName As String = "CloseGroupPositions"
 On Error GoTo Err
@@ -166,7 +166,7 @@ On Error GoTo Err
 AssertArgument pGroupName <> "", "Group name must be supplied"
 
 Dim t As New ClosePositionsTask
-t.Initialise Me, pUseLimitOrder, pBidAskSpreadPercent, pGroupName, pTypes
+t.Initialise Me, pCloseoutMode, pPriceSpec, pGroupName, pTypes
 Set CloseGroupPositions = t.Future
 
 StartTask t, PriorityNormal
@@ -295,16 +295,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetOrderContexts( _
+Public Function getOrderContexts( _
                 ByVal pName As String, _
                 ByVal pIsSimulated As Boolean) As OrderContexts
 Const ProcName As String = "GetOrderContexts"
 On Error GoTo Err
 
 If pIsSimulated Then
-    If mOrderContextsCollectionSimulated.Contains(pName) Then Set GetOrderContexts = mOrderContextsCollectionSimulated.Item(pName)
+    If mOrderContextsCollectionSimulated.Contains(pName) Then Set getOrderContexts = mOrderContextsCollectionSimulated.Item(pName)
 Else
-    If mOrderContextsCollectionLive.Contains(pName) Then Set GetOrderContexts = mOrderContextsCollectionLive.Item(pName)
+    If mOrderContextsCollectionLive.Contains(pName) Then Set getOrderContexts = mOrderContextsCollectionLive.Item(pName)
 End If
 
 Exit Function

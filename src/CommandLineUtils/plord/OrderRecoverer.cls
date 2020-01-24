@@ -48,6 +48,8 @@ Private WithEvents mTaskController                  As TaskController
 Attribute mTaskController.VB_VarHelpID = -1
 Private mOrderManager                               As OrderManager
 
+Private mGroups                                     As Groups
+
 Private mSelfRef                                    As Object
 
 '@================================================================================
@@ -90,6 +92,25 @@ For Each lPM In mOrderManager.PositionManagersLive
     Next
 Next
 
+Dim lVar As Variant
+For Each lVar In mOrderManager.GetGroupNames
+    Dim lGroupName As String: lGroupName = UCase$(lVar)
+    Dim lRes As GroupResources: Set lRes = mGroups.Add(lGroupName)
+    
+    
+    Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(lGroupName)
+    For Each lPM In lPMs
+        Dim lContractProcessor As ContractProcessor: Set lContractProcessor = New ContractProcessor
+        lContractProcessor.Recover lPM
+        
+        Dim lContract As IContract: Set lContract = lPM.ContractFuture.Value
+        lRes.ContractProcessors.Add lContractProcessor, _
+                                    gGenerateContractProcessorName( _
+                                            lGroupName, _
+                                            lContract.Specifier)
+    Next
+Next
+
 Set mSelfRef = Nothing
 
 Exit Sub
@@ -112,11 +133,13 @@ Friend Sub RecoverOrders( _
                 ByVal pDataStore As IOrderPersistenceDataStore, _
                 ByVal pRecoveryAgent As IOrderRecoveryAgent, _
                 ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
+                ByVal pGroups As Groups)
 Const ProcName As String = "RecoverOrdersFromPreviousSession"
 On Error GoTo Err
 
 Set mOrderManager = pOrderManager
+Set mGroups = pGroups
 Set mTaskController = mOrderManager.RecoverOrdersFromPreviousSession(pScopeName, _
                                                                     pDataStore, _
                                                                     pRecoveryAgent, _
