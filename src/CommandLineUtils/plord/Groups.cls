@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IOrderSubmitter"
+Attribute VB_Name = "Groups"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -38,15 +38,21 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IOrderSubmitter"
+Private Const ModuleName                            As String = "Groups"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
+Private mDict                                       As SortedDictionary
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mDict = CreateSortedDictionary(KeyTypeString)
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -60,90 +66,103 @@ Private Const ModuleName                            As String = "IOrderSubmitter
 ' Properties
 '@================================================================================
 
-Public Property Get Capabilities() As OrderSubmitterCapabilities
-End Property
-
-Public Property Let OrdersAreStaged(ByVal Value As Boolean)
-End Property
-
-Public Property Get OrdersAreStaged() As Boolean
-End Property
-
-Public Property Get State() As OrderSubmitterStates
+Friend Property Get Enumerator() As Enumerator
+Set Enumerator = mDict.Enumerator
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
-End Sub
+Friend Function Add(ByVal pGroupName As String) As GroupResources
+Const ProcName As String = "Add"
+On Error GoTo Err
 
-Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
+Dim lResources As GroupResources
 
-Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
+If mDict.TryItem(UCase$(pGroupName), lResources) Then
+    Set Add = lResources
+    Exit Function
+End If
+
+Set lResources = New GroupResources
+lResources.GroupName = pGroupName
+
+mDict.Add lResources, UCase$(pGroupName)
+
+Set Add = lResources
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub CancelOrder(ByVal pOrder As IOrder)
+Friend Sub Clear()
+mDict.Clear
 End Sub
 
-Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Function GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+Friend Function Contains(ByVal pGroupName As String) As Boolean
+Contains = mDict.Contains(UCase$(pGroupName))
 End Function
 
-Public Function FetchPermittedOrderProperties( _
-                ByVal pContractFuture As IFuture, _
-                Optional ByVal pCookie As Variant) As IFuture
+Friend Function Count() As Long
+Count = mDict.Count
 End Function
 
-Public Sub Finish()
+Friend Function Item(ByVal pGroupName As String) As GroupResources
+Const ProcName As String = "Item"
+On Error GoTo Err
+
+Set Item = mDict.Item(UCase$(pGroupName))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function NewEnum() As IUnknown
+Attribute NewEnum.VB_UserMemId = -4
+Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+On Error GoTo Err
+
+Set NewEnum = mDict.Enumerator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Sub Remove(ByVal pGroupName As String)
+Const ProcName As String = "Remove"
+On Error GoTo Err
+
+mDict.Remove UCase$(pGroupName)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ModifyOrder(ByVal pOrder As IOrder)
-End Sub
+Friend Function TryItem( _
+                ByVal pGroupName As String, _
+                ByRef pItem As GroupResources) As Boolean
+Const ProcName As String = "TryItem"
+On Error GoTo Err
 
-Public Sub ModifyBracketOrder( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pEntryOrderChanged As Boolean, _
-                ByVal pStopOrderChanged As Boolean, _
-                ByVal pTargetOrderChanged As Boolean, _
-                ByVal pCloseoutOrderChanged As Boolean)
-End Sub
+TryItem = mDict.TryItem(UCase$(pGroupName), pItem)
 
-Public Sub NotifyRecoveredOrder(ByVal pOrder As IOrder)
-End Sub
+Exit Function
 
-Public Sub PlaceOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
-End Sub
-
-Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
-
-Public Sub ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-
-
 

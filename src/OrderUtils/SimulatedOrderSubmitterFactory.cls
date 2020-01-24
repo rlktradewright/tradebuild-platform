@@ -77,7 +77,7 @@ Dim lKey As String
 lKey = GetObjectKey(pDataSource)
 
 Dim lSubmitter As New SimulatedOrderSubmitter
-lSubmitter.Initialise Me, lKey
+lSubmitter.Initialise Me, lKey, pDataSource
 mSubmitters.Add lSubmitter, lKey
 Set IOrderSubmitterFactory_CreateOrderSubmitter = lSubmitter
 

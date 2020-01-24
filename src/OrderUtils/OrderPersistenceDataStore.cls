@@ -165,9 +165,11 @@ On Error GoTo Err
 
 On Error Resume Next
 Dim fso As New FileSystemObject
-Set getPreviousPersistenceFile = fso.OpenTextFile(getRecoveryFileName(pScopeName), _
-                        IOMode.ForReading, _
-                        False)
+If fso.FileExists(getRecoveryFileName(pScopeName)) Then
+    Set getPreviousPersistenceFile = fso.OpenTextFile(getRecoveryFileName(pScopeName), _
+                            IOMode.ForReading, _
+                            False)
+End If
 
 Exit Function
 

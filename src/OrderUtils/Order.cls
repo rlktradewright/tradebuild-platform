@@ -1009,7 +1009,7 @@ Public Property Get DisplaySize() As Long
 DisplaySize = mSummary.DisplaySize
 End Property
 
-Friend Property Let DontCheckAttributeModificationPermitted(ByVal Value As Boolean)
+Public Property Let DontCheckAttributeModificationPermitted(ByVal Value As Boolean)
 mDontCheckAttributeModificationPermitted = Value
 End Property
 
@@ -1504,7 +1504,7 @@ If mSummary.Status = OrderStatusFilled Or mSummary.Status = OrderStatusCancelled
     mSummary.ErrorMessage = ""
 End If
 If Not IsActive Then mNeedsRecovery = False
-SaveRecoveryInfo
+
 RaiseEvent StatusChanged
 
 Exit Property
@@ -1630,6 +1630,7 @@ On Error GoTo Err
 checkInitialised
 
 Dim lOrder As New Order
+lOrder.Initialise GroupName, mContractSpecifier, mOrderContext
 lOrder.RecoveryContextName = mRecoveryContextName
 lOrder.DontCheckAttributeModificationPermitted = True
 gSyncToOrder lOrder, Me
@@ -2072,7 +2073,6 @@ Const ProcName As String = "SaveRecoveryInfo"
 On Error GoTo Err
 
 If mIsSimulated Then Exit Sub
-'If mSummary.Status = OrderStatuses.OrderStatusCreated Then Exit Sub
 If Not mSummary.IsDirty Then Exit Sub
 
 fireRecoveryDataChanged

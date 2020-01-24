@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IOrderSubmitter"
+Attribute VB_Name = "NextCommands"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -38,11 +38,13 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IOrderSubmitter"
+Private Const ModuleName                            As String = "NextCommands"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mNextCommandLists()                         As CommandList
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,84 +62,65 @@ Private Const ModuleName                            As String = "IOrderSubmitter
 ' Properties
 '@================================================================================
 
-Public Property Get Capabilities() As OrderSubmitterCapabilities
-End Property
+Public Property Get ValidCommandNames() As String
+Const ProcName As String = "ValidCommandNames"
+On Error GoTo Err
 
-Public Property Let OrdersAreStaged(ByVal Value As Boolean)
-End Property
+Dim s As String
+Dim i As Long
+For i = 0 To UBound(mNextCommandLists)
+    If i <> 0 Then s = s & " "
+    s = s & mNextCommandLists(i).CommandNames
+Next
+ValidCommandNames = s
 
-Public Property Get OrdersAreStaged() As Boolean
-End Property
+Exit Property
 
-Public Property Get State() As OrderSubmitterStates
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
-End Sub
+Friend Function IsCommandValid(ByVal pCommand As Command) As Boolean
+Const ProcName As String = "IsCommandValid"
+On Error GoTo Err
 
-Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
+If pCommand Is Nothing Then Exit Function
 
-Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
+Dim i As Long
+For i = 0 To UBound(mNextCommandLists)
+    If mNextCommandLists(i).IsValidCommandName(pCommand.Name) Then
+        IsCommandValid = True
+        Exit Function
+    End If
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub CancelOrder(ByVal pOrder As IOrder)
-End Sub
+Friend Sub SetValidNextCommandLists(ByRef pCommandLists() As CommandList)
+Const ProcName As String = "gSetValidNextCommands"
+On Error GoTo Err
 
-Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
+mNextCommandLists = pCommandLists
+'ReDim mNextCommandLists(UBound(pCommandLists)) As CommandList
+'Dim i As Long
+'For i = 0 To UBound(Values)
+'    Dim lCommandList As CommandList
+'    Set lCommandList = pCommandLists(i)
+'    Set mNextCommandLists(i) = lCommandList
+'Next
 
-Public Sub CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
+Exit Sub
 
-Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Function GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
-End Function
-
-Public Function FetchPermittedOrderProperties( _
-                ByVal pContractFuture As IFuture, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
-
-Public Sub Finish()
-End Sub
-
-Public Sub ModifyOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub ModifyBracketOrder( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pEntryOrderChanged As Boolean, _
-                ByVal pStopOrderChanged As Boolean, _
-                ByVal pTargetOrderChanged As Boolean, _
-                ByVal pCloseoutOrderChanged As Boolean)
-End Sub
-
-Public Sub NotifyRecoveredOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub PlaceOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
-End Sub
-
-Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
-
-Public Sub ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

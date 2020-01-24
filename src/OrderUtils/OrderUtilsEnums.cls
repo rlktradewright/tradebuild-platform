@@ -68,6 +68,11 @@ Public Enum BracketOrderStates
     BracketOrderStateAwaitingOtherOrderCancel  ' indicates that a cancellation notification for either the stop-loss order or the target order, when both exist, has been received
 End Enum
 
+Public Enum CloseoutModes
+    CloseoutModeMarket
+    CloseoutModeLimit
+End Enum
+
 Public Enum OrderActions
     OrderActionNone = 0
     OrderActionBuy = 1
@@ -238,6 +243,8 @@ Public Enum PriceValueTypes
     PriceValueTypeBid
     PriceValueTypeLast
     PriceValueTypeEntry
+    PriceValueTypeMid
+    PriceValueTypeBidOrAsk
 End Enum
 
 Public Enum ProfitChangeTypes
@@ -259,6 +266,12 @@ Public Enum ProfitTypes
     ProfitTypeTradeMaxProfit = &H200&
     ProfitTypeTradeMaxLoss = &H400&
     ProfitTypeTradeDrawdown = &H800&
+End Enum
+
+Public Enum TickRoundingModes
+    TickRoundingModeNearest
+    TickRoundingModeDown
+    TickRoundingModeUp
 End Enum
 
 '@================================================================================

@@ -1,8 +1,8 @@
 Type=OleDll
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\System32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\SysWOW64\stdole2.tlb#OLE Automation
 Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#2.0#0#..\..\..\tradewright-common\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
 Reference=*\G{047FE23B-9E6E-4747-9687-ED3C7A5D4204}#1.0#0#..\..\..\tradewright-common\Bin\TradeWright.Common\TWWin32API.tlb#TradeWright Win32 API TypeLib v2.0
-Object={248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0; MSWINSCK.ocx
+Object={248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0; mswinsck.ocx
 Form=WinsockForm.frm
 Class=IContractDetailsConsumer; IContractDetailsConsumer.cls
 Class=IMarketDepthConsumer; IMarketDepthConsumer.cls

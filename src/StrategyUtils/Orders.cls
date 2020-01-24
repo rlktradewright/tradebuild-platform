@@ -1034,7 +1034,7 @@ Const ProcName As String = "parsePriceString"
 On Error GoTo Err
 
 Dim lOrderContext As OrderContext: Set lOrderContext = gTradingContext.DefaultBuyOrderContext
-parsePriceString = lOrderContext.ParsePriceAndOffset(pPriceString, pPriceSpec)
+parsePriceString = lOrderContext.ParsePriceAndOffset(pPriceSpec, pPriceString)
 
 Exit Function
 

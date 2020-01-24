@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IOrderSubmitter"
+Attribute VB_Name = "GroupResources"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -38,11 +38,19 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IOrderSubmitter"
+Private Const ModuleName                            As String = "GroupResources"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mGroupName                                  As String
+
+Private mContractProcessors                         As New EnumerableCollection
+
+Private mCurrentContractProcessor                   As ContractProcessor
+
+Private mOrderPlacers                               As New EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,85 +68,33 @@ Private Const ModuleName                            As String = "IOrderSubmitter
 ' Properties
 '@================================================================================
 
-Public Property Get Capabilities() As OrderSubmitterCapabilities
+Friend Property Get ContractProcessors() As EnumerableCollection
+Set ContractProcessors = mContractProcessors
 End Property
 
-Public Property Let OrdersAreStaged(ByVal Value As Boolean)
+Friend Property Let CurrentContractProcessor(ByVal Value As ContractProcessor)
+Set mCurrentContractProcessor = Value
 End Property
 
-Public Property Get OrdersAreStaged() As Boolean
+Friend Property Get CurrentContractProcessor() As ContractProcessor
+Set CurrentContractProcessor = mCurrentContractProcessor
 End Property
 
-Public Property Get State() As OrderSubmitterStates
+Friend Property Let GroupName(ByVal Value As String)
+mGroupName = Value
+End Property
+
+Friend Property Get GroupName() As String
+GroupName = mGroupName
+End Property
+
+Friend Property Get OrderPlacers() As EnumerableCollection
+Set OrderPlacers = mOrderPlacers
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Sub AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
-End Sub
-
-Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
-
-Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
-End Function
-
-Public Sub CancelOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Function GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
-End Function
-
-Public Function FetchPermittedOrderProperties( _
-                ByVal pContractFuture As IFuture, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
-
-Public Sub Finish()
-End Sub
-
-Public Sub ModifyOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub ModifyBracketOrder( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pEntryOrderChanged As Boolean, _
-                ByVal pStopOrderChanged As Boolean, _
-                ByVal pTargetOrderChanged As Boolean, _
-                ByVal pCloseoutOrderChanged As Boolean)
-End Sub
-
-Public Sub NotifyRecoveredOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub PlaceOrder(ByVal pOrder As IOrder)
-End Sub
-
-Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
-End Sub
-
-Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
-
-Public Sub ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
-
-Public Sub ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
-End Sub
 
 '@================================================================================
 ' Helper Functions
