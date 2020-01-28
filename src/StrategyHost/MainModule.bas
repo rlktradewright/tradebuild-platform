@@ -285,9 +285,28 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function parseSymbol(ByVal pSymbol As String) As IContractSpecifier
+Private Function parseSymbol( _
+                ByVal pSymbol As String) As IContractSpecifier
 Const ProcName As String = "parseSymbol"
 On Error GoTo Err
+
+Const CurrencySwitch                         As String = "CURRENCY"
+Const CurrencySwitch1                        As String = "CURR"
+Const ExchangeSwitch                         As String = "EXCHANGE"
+Const ExchangeSwitch1                        As String = "EXCH"
+Const ExpirySwitch                           As String = "EXPIRY"
+Const ExpirySwitch1                          As String = "EXP"
+Const LocalSymbolSwitch                      As String = "LOCALSYMBOL"
+Const LocalSymbolSwitch1                     As String = "LOCAL"
+Const MultiplierSwitch                       As String = "MULTIPLIER"
+Const MultiplierSwitch1                      As String = "MULT"
+Const RightSwitch                            As String = "RIGHT"
+Const SecTypeSwitch                          As String = "SECTYPE"
+Const SecTypeSwitch1                         As String = "SEC"
+Const SymbolSwitch                           As String = "SYMBOL"
+Const SymbolSwitch1                          As String = "SYMB"
+Const StrikeSwitch                           As String = "STRIKE"
+Const StrikeSwitch1                          As String = "STR"
 
 If Not Left$(pSymbol, 1) = "(" Or Not Right$(pSymbol, 1) = ")" Then Exit Function
 
@@ -295,35 +314,36 @@ pSymbol = Mid$(pSymbol, 2, Len(pSymbol) - 2)
 
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pSymbol, ";")
 
-Dim lLocalSymbol As String: lLocalSymbol = lClp.switchValue("localsymbol")
-If lLocalSymbol = "" Then lLocalSymbol = lClp.switchValue("local")
+Dim validParams As Boolean
+validParams = True
 
-Dim lSymbol As String: lSymbol = lClp.switchValue("symbol")
-If lSymbol = "" Then lSymbol = lClp.switchValue("symb")
+Dim lSectype As String: lSectype = lClp.switchValue(SecTypeSwitch)
+If lSectype = "" Then lSectype = lClp.switchValue(SecTypeSwitch1)
 
-Dim lSectype As String: lSectype = lClp.switchValue("sectype")
-If lSectype = "" Then lSectype = lClp.switchValue("sec")
+Dim lExchange As String: lExchange = lClp.switchValue(ExchangeSwitch)
+If lExchange = "" Then lExchange = lClp.switchValue(ExchangeSwitch1)
 
-Dim lExchange As String: lExchange = lClp.switchValue("exchange")
-If lExchange = "" Then lExchange = lClp.switchValue("exch")
+Dim lLocalSymbol As String: lLocalSymbol = lClp.switchValue(LocalSymbolSwitch)
+If lLocalSymbol = "" Then lLocalSymbol = lClp.switchValue(LocalSymbolSwitch1)
 
-Dim lCurrency As String: lCurrency = lClp.switchValue("currency")
-If lCurrency = "" Then lCurrency = lClp.switchValue("curr")
+Dim lSymbol As String: lSymbol = lClp.switchValue(SymbolSwitch)
+If lSymbol = "" Then lSymbol = lClp.switchValue(SymbolSwitch1)
 
-Dim lExpiry As String: lExpiry = lClp.switchValue("expiry")
-If lExpiry = "" Then lExpiry = lClp.switchValue("exp")
+Dim lCurrency As String: lCurrency = lClp.switchValue(CurrencySwitch)
+If lCurrency = "" Then lCurrency = lClp.switchValue(CurrencySwitch1)
 
-Dim lMultiplier As String: lMultiplier = lClp.switchValue("multiplier")
-If lMultiplier = "" Then lMultiplier = lClp.switchValue("mult")
+Dim lExpiry As String: lExpiry = lClp.switchValue(ExpirySwitch)
+If lExpiry = "" Then lExpiry = lClp.switchValue(ExpirySwitch1)
+
+Dim lMultiplier As String: lMultiplier = lClp.switchValue(MultiplierSwitch)
+If lMultiplier = "" Then lMultiplier = lClp.switchValue(MultiplierSwitch1)
 If lMultiplier = "" Then lMultiplier = "1.0"
 
-Dim lstrike As String
-lstrike = lClp.switchValue("strike")
-If lstrike = "" Then lstrike = lClp.switchValue("str")
-If lstrike = "" Then lstrike = "0.0"
+Dim lStrike As String: lStrike = lClp.switchValue(StrikeSwitch)
+If lStrike = "" Then lStrike = lClp.switchValue(StrikeSwitch1)
+If lStrike = "" Then lStrike = "0.0"
 
-Dim lRight As String
-lRight = lClp.switchValue("right")
+Dim lRight As String: lRight = lClp.switchValue(RightSwitch)
 
 Set parseSymbol = CreateContractSpecifier(lLocalSymbol, _
                                         lSymbol, _
@@ -332,7 +352,7 @@ Set parseSymbol = CreateContractSpecifier(lLocalSymbol, _
                                         lCurrency, _
                                         lExpiry, _
                                         CDbl(lMultiplier), _
-                                        CDbl(lstrike), _
+                                        CDbl(lStrike), _
                                         OptionRightFromString(lRight))
 
 Exit Function
@@ -546,7 +566,7 @@ ElseIf Not IsInteger(Port, 1) Then
 End If
     
 If ClientId = "" Then
-    ClientId = "1215339864"
+    ClientId = "215339864"
 ElseIf Not IsInteger(ClientId, 0) Then
         LogMessage "Error: ClientId must be an integer >= 0"
         setupTwsServiceProviders = False

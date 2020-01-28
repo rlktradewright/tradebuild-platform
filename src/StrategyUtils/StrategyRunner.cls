@@ -70,6 +70,8 @@ Private mTicker                                     As Ticker
 Private mStrategy                                   As IStrategy
 Private mStrategyResourceContext                    As ResourceContext
 
+Private mContract As IContract
+
 Private mPositionManagementStrategyFactories        As EnumerableCollection
 Private mPosnMgmtStrategyResourceContexts           As Collection
 
@@ -222,15 +224,14 @@ If ev.Future.IsFaulted Then
     getStrategyHost.ContractInvalid ev.Future.ErrorMessage
 ElseIf Not ev.Future.IsAvailable Then
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    Dim lContract As IContract
-    Set lContract = ev.Future.Value
+    Set mContract = ev.Future.Value
     
-    Set mTicker = mTickers.CreateTicker(ev.Future, False, lContract.Specifier.Key)
+    Set mTicker = mTickers.CreateTicker(ev.Future, False, mContract.Specifier.Key)
     
     mFutureWaiter.Add mTicker.SessionFuture
     mFutureWaiter.Add mTicker.ClockFuture
 
-    setupLogging lContract.Specifier.LocalSymbol
+    If Not mStrategy Is Nothing Then setupLogging mContract.Specifier.LocalSymbol
 End If
 
 Exit Sub
@@ -331,6 +332,44 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Function GetDefaultParameters( _
+                ByVal pStrategy As IStrategy, _
+                ByVal pPositionManagementStrategyFactories As EnumerableCollection) As Parameters
+Const ProcName As String = "GetDefaultParameters"
+On Error GoTo Err
+
+Set mStrategy = pStrategy
+If Not mContract Is Nothing Then setupLogging mContract.Specifier.LocalSymbol
+Set mPositionManagementStrategyFactories = pPositionManagementStrategyFactories
+
+Dim lParams As New Parameters
+Set mDefaultParameters = lParams
+
+setStrategyRunner mStrategy, Nothing
+mStrategy.DefineDefaultParameters
+gClearStrategyRunner
+
+Dim lPMFactory As IPosnMgmtStrtgyFactory
+For Each lPMFactory In mPositionManagementStrategyFactories
+    Dim lPMFactoryParams As New Parameters
+    Set mDefaultParameters = lPMFactoryParams
+    
+    setStrategyRunner lPMFactory, Nothing
+    lPMFactory.DefineDefaultParameters
+    gClearStrategyRunner
+    
+    Set lParams = mergeParameters(lParams, lPMFactoryParams)
+Next
+
+Set mDefaultParameters = Nothing
+Set GetDefaultParameters = lParams
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Friend Function GetPositionManagementStrategyResourceContext(ByVal pFactory As IPosnMgmtStrtgyFactory) As ResourceContext
 Const ProcName As String = "GetPositionManagementStrategyResourceContext"
@@ -498,43 +537,6 @@ End Sub
 Friend Sub SetNotCurrent()
 gClearStrategyRunner
 End Sub
-
-Public Function GetDefaultParameters( _
-                ByVal pStrategy As IStrategy, _
-                ByVal pPositionManagementStrategyFactories As EnumerableCollection) As Parameters
-Const ProcName As String = "GetDefaultParameters"
-On Error GoTo Err
-
-Set mStrategy = pStrategy
-Set mPositionManagementStrategyFactories = pPositionManagementStrategyFactories
-
-Dim lParams As New Parameters
-Set mDefaultParameters = lParams
-
-setStrategyRunner mStrategy, Nothing
-mStrategy.DefineDefaultParameters
-gClearStrategyRunner
-
-Dim lPMFactory As IPosnMgmtStrtgyFactory
-For Each lPMFactory In mPositionManagementStrategyFactories
-    Dim lPMFactoryParams As New Parameters
-    Set mDefaultParameters = lPMFactoryParams
-    
-    setStrategyRunner lPMFactory, Nothing
-    lPMFactory.DefineDefaultParameters
-    gClearStrategyRunner
-    
-    Set lParams = mergeParameters(lParams, lPMFactoryParams)
-Next
-
-Set mDefaultParameters = Nothing
-Set GetDefaultParameters = lParams
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Public Sub StartLiveData()
 Const ProcName As String = "StartLiveData"
