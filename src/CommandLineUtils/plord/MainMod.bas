@@ -426,12 +426,35 @@ Const ProcName As String = "isGroupValid"
 On Error GoTo Err
 
 gRegExp.Global = True
-gRegExp.Pattern = "^(\$|[a-zA-Z0-9][\w-]*)$"
+gRegExp.IgnoreCase = True
+gRegExp.Pattern = "^(\$|ALL|[a-zA-Z0-9][\w-]*)$"
 isGroupValid = gRegExp.Test(pGroup)
 
 Exit Function
 
 Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isProhibitedGroupName(ByVal pGroup As String) As Boolean
+Const ProcName As String = "isProhibitedGroupName"
+On Error GoTo Err
+
+pGroup = UCase$(pGroup)
+
+isProhibitedGroupName = True
+If pGroup = AllGroups Then Exit Function
+
+Dim lOrderType As OrderTypes: lOrderType = OrderTypes.OrderTypeNone
+lOrderType = OrderTypeFromString(pGroup)
+If lOrderType <> OrderTypeNone Then Exit Function
+
+isProhibitedGroupName = False
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then Resume Next
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
@@ -449,7 +472,7 @@ For Each lRes In mGroups
     If lContractProcessor Is Nothing Then
         lContractName = ""
     Else
-        lContractName = gGetContractName(lContractProcessor.Contract)
+        lContractName = lContractProcessor.ContractName
     End If
     gWriteLineToConsole IIf(lRes Is mCurrentGroup, "* ", "  ") & _
                         padStringRight(lGroupName, 20) & _
@@ -730,7 +753,7 @@ End If
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
 
-If lMatch.SubMatches(0) = AllGroups Then
+If UCase$(lMatch.SubMatches(0)) = AllGroups Then
     pGroupName = AllGroups
 ElseIf lMatch.SubMatches(1) = DefaultGroupName Then
     pGroupName = DefaultGroupName
@@ -742,22 +765,21 @@ Dim lUseLimitOrders As Boolean: lUseLimitOrders = (UCase$(lMatch.SubMatches(3)) 
                                                     UCase$(lMatch.SubMatches(7)) = CloseoutLimit)
 If lUseLimitOrders Then
     pCloseoutMode = CloseoutModeLimit
+    
+    Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(4) = "-" Or lMatch.SubMatches(8) = "-", -1, 1)
+    Dim lSpreadFactor As Long
+    If lMatch.SubMatches(5) <> "" Then
+        lSpreadFactor = lMatch.SubMatches(5) * lSpreadFactorSign
+    ElseIf lMatch.SubMatches(9) <> "" Then
+        lSpreadFactor = lMatch.SubMatches(9) * lSpreadFactorSign
+    End If
+    
+    Set pPriceSspec = NewPriceSpecifier(pPriceType:=PriceValueTypeBidOrAsk, _
+                                        pOffset:=lSpreadFactor, _
+                                        pOffsetType:=PriceOffsetTypeBidAskPercent)
 Else
     pCloseoutMode = CloseoutModeMarket
 End If
-
-Dim lSpreadFactorSign As Long: lSpreadFactorSign = IIf(lMatch.SubMatches(4) = "-" Or lMatch.SubMatches(8) = "-", -1, 1)
-
-Dim lSpreadFactor As Long
-If lMatch.SubMatches(5) <> "" Then
-    lSpreadFactor = lMatch.SubMatches(5) * lSpreadFactorSign
-ElseIf lMatch.SubMatches(9) <> "" Then
-    lSpreadFactor = lMatch.SubMatches(9) * lSpreadFactorSign
-End If
-
-Set pPriceSspec = NewPriceSpecifier(pPriceType:=PriceValueTypeBidOrAsk, _
-                                    pOffset:=lSpreadFactor, _
-                                    pOffsetType:=PriceOffsetTypeBidAskPercent)
 
 parseLegacyCloseoutCommand = True
 
@@ -1089,10 +1111,12 @@ Dim lPriceSpec As PriceSpecifier
 
 Dim lError As Boolean
 
-If lClp.NumberOfArgs = 3 Then
+If parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
+ElseIf lClp.NumberOfArgs = 3 Then
     lGroupName = lClp.Arg(0)
-    lPriceStr = lClp.Arg(2)
     lOrderTypeName = UCase$(lClp.Arg(1))
+    lPriceStr = lClp.Arg(2)
+    
     If lOrderTypeName = lMarketOrder Then
         lCloseoutMode = CloseoutModeMarket
     ElseIf lOrderTypeName = lLimitOrder Then
@@ -1109,33 +1133,19 @@ ElseIf lClp.NumberOfArgs = 2 Then
     ElseIf lOrderTypeName = lMarketOrder Then
         lCloseoutMode = CloseoutModeMarket
         lPriceStr = lClp.Arg(1)
-    ElseIf isGroupValid(lClp.Arg(0)) Then
+    Else
         lGroupName = lClp.Arg(0)
         lOrderTypeName = UCase$(lClp.Arg(1))
-        If lOrderTypeName = lMarketOrder Then
-            lCloseoutMode = CloseoutModeMarket
-        ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
-            lError = True
-            gWriteErrorLine "Syntax error", True
-        End If
-    ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
-        lError = True
-        gWriteErrorLine "Syntax error", True
+        If lOrderTypeName = lMarketOrder Then lCloseoutMode = CloseoutModeMarket
     End If
 ElseIf lClp.NumberOfArgs = 1 Then
     lOrderTypeName = UCase$(lClp.Arg(0))
     If lOrderTypeName = lMarketOrder Then
         lCloseoutMode = CloseoutModeMarket
     ElseIf lOrderTypeName = lLimitOrder Then
-        If Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
-            lError = True
-            gWriteErrorLine "Closeout price specification is missing", True
-        End If
-    ElseIf isGroupValid(lClp.Arg(0)) Then
+        lCloseoutMode = CloseoutModeLimit
+    Else
         lGroupName = lClp.Arg(0)
-    ElseIf Not parseLegacyCloseoutCommand(pParams, lGroupName, lCloseoutMode, lPriceSpec) Then
-        lError = True
-        gWriteErrorLine "Syntax error"
     End If
 ElseIf lClp.NumberOfArgs = 0 Then
     lCloseoutMode = CloseoutModeMarket
@@ -1146,14 +1156,15 @@ End If
 
 If lGroupName = "" Then
     lGroupName = mCurrentGroup.GroupName
-ElseIf lGroupName <> AllGroups And lGroupName <> DefaultGroupName Then
-    If Not isGroupValid(lGroupName) Then
-        lError = True
-        gWriteErrorLine lGroupName & " is not a valid group name", True
-    ElseIf Not mGroups.Contains(lGroupName) Then
-        lError = True
-        gWriteErrorLine "No such group", True
-    End If
+ElseIf UCase$(lGroupName) = AllGroups Then
+    lGroupName = AllGroups
+ElseIf lGroupName = DefaultGroupName Then
+ElseIf Not isGroupValid(lGroupName) Then
+    lError = True
+    gWriteErrorLine lGroupName & " is not a valid group name", True
+ElseIf Not mGroups.Contains(lGroupName) Then
+    lError = True
+    gWriteErrorLine "No such group", True
 End If
 
 If lCloseoutMode = CloseoutModeMarket Then
@@ -1279,7 +1290,9 @@ Private Sub processGroupCommand( _
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 
 Dim lGroupName As String: lGroupName = lClp.Arg(0)
-If lGroupName = "" Or lGroupName = DefaultGroupName Then
+If isProhibitedGroupName(lGroupName) Then
+    gWriteErrorLine "Invalid group name: you can't create a group called '" & lGroupName & "'", True
+    Exit Sub
 ElseIf Not isGroupValid(lGroupName) Then
     gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore", True
     Exit Sub
