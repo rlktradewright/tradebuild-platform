@@ -3649,6 +3649,11 @@ If Not (hasPeggedOrder(mStopLossOrder) Or hasPeggedOrder(mTargetOrder)) Then
     Exit Function
 End If
 
+If mSummary.Size = 0 Then
+    placePeggedOrders = False
+    Exit Function
+End If
+
 Dim lUpdated As Boolean
 
 lUpdated = placePeggedOrder(mStopLossOrder, BracketOrderRoleStopLoss)
