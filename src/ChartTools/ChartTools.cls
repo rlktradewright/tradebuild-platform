@@ -85,7 +85,7 @@ CreateFibRetracementTool.Initialise pChart, pLineSpecs, Layer, pTextStyle
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Function
 
 Public Function CreateLineTool( _
@@ -107,7 +107,7 @@ CreateLineTool.Initialise pChart, pLineStyle, Layer
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Function
 
 '@================================================================================

@@ -61,7 +61,7 @@ Begin VB.UserControl MultiChart
    End
    Begin MSComctlLib.Toolbar ControlToolbar 
       Height          =   330
-      Left            =   6480
+      Left            =   6360
       TabIndex        =   0
       Top             =   6240
       Width           =   2520
@@ -160,7 +160,7 @@ Implements IThemeable
 '@================================================================================
 
 Event Change(ev As ChangeEventData)
-Event ChartStateChanged(ByVal index As Long, ev As StateChangeEventData)
+Event ChartStateChanged(ByVal Index As Long, ev As StateChangeEventData)
 
 '@================================================================================
 ' Enums
@@ -268,7 +268,7 @@ Private Sub ChartSelectorToolbar_ButtonClick(ByVal Button As Button)
 Const ProcName As String = "ChartSelectorToolbar_ButtonClick"
 On Error GoTo Err
 
-mCurrentIndex = switchToChart(Button.index)
+mCurrentIndex = switchToChart(Button.Index)
 fireChange MultiChartSelectionChanged
 
 Exit Sub
@@ -308,17 +308,17 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub TBChart_StateChange(index As Integer, ev As TWUtilities40.StateChangeEventData)
+Private Sub TBChart_StateChange(Index As Integer, ev As TWUtilities40.StateChangeEventData)
 Const ProcName As String = "TBChart_StateChange"
 On Error GoTo Err
 
-index = getIndexFromChartControlIndex(index)
+Index = getIndexFromChartControlIndex(Index)
 
-If index = mCurrentIndex And ev.State = ChartStates.ChartStateRunning Then
+If Index = mCurrentIndex And ev.State = ChartStates.ChartStateRunning Then
     ControlToolbar.Buttons("change").Enabled = True
 End If
 
-RaiseEvent ChartStateChanged(index, ev)
+RaiseEvent ChartStateChanged(Index, ev)
 
 Exit Sub
 
@@ -326,15 +326,15 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub TBChart_TimePeriodChange(index As Integer)
+Private Sub TBChart_TimePeriodChange(Index As Integer)
 Const ProcName As String = "TBChart_TimePeriodChange"
 On Error GoTo Err
 
 Dim lButtonInfo As TWChartButtonInfo
-With ChartSelectorToolbar.Buttons(getIndexFromChartControlIndex(index))
+With ChartSelectorToolbar.Buttons(getIndexFromChartControlIndex(Index))
     lButtonInfo = .Tag
-    lButtonInfo.Caption = TBChart(index).TimePeriod.ToShortString
-    lButtonInfo.ToolTipText = generateTooltipText(TBChart(index).TimePeriod)
+    lButtonInfo.Caption = TBChart(Index).TimePeriod.ToShortString
+    lButtonInfo.ToolTipText = generateTooltipText(TBChart(Index).TimePeriod)
     .Tag = lButtonInfo
     .ToolTipText = lButtonInfo.ToolTipText
 End With
@@ -378,12 +378,12 @@ End Sub
 '@================================================================================
 
 Public Property Get BaseChartController( _
-                Optional ByVal index As Long = -1) As ChartController
+                Optional ByVal Index As Long = -1) As ChartController
 Const ProcName As String = "BaseChartController"
 On Error GoTo Err
 
-index = checkIndex(index)
-Set BaseChartController = getChartFromIndex(index).BaseChartController
+Index = checkIndex(Index)
+Set BaseChartController = getChartFromIndex(Index).BaseChartController
 
 Exit Property
 
@@ -394,12 +394,12 @@ End Property
 ' do not make this Public because the Value returned cannot be handled by non-friend
 ' components
 Friend Property Get Chart( _
-                Optional ByVal index As Long = -1) As MarketChart
+                Optional ByVal Index As Long = -1) As MarketChart
 Const ProcName As String = "Chart"
 On Error GoTo Err
 
-index = checkIndex(index)
-Set Chart = getChartFromIndex(index)
+Index = checkIndex(Index)
+Set Chart = getChartFromIndex(Index)
 
 Exit Property
 
@@ -408,12 +408,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartManager( _
-                Optional ByVal index As Long = -1) As ChartManager
+                Optional ByVal Index As Long = -1) As ChartManager
 Const ProcName As String = "ChartManager"
 On Error GoTo Err
 
-index = checkIndex(index)
-Set ChartManager = getChartFromIndex(index).ChartManager
+Index = checkIndex(Index)
+Set ChartManager = getChartFromIndex(Index).ChartManager
 
 Exit Property
 
@@ -485,12 +485,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LoadingText( _
-                Optional ByVal index As Long = -1) As Text
+                Optional ByVal Index As Long = -1) As Text
 Const ProcName As String = "LoadingText"
 On Error GoTo Err
 
-index = checkIndex(index)
-Set LoadingText = getChartFromIndex(index).LoadingText
+Index = checkIndex(Index)
+Set LoadingText = getChartFromIndex(Index).LoadingText
 
 Exit Property
 
@@ -503,12 +503,12 @@ Set Parent = UserControl.Parent
 End Property
 
 Public Property Get PriceRegion( _
-                Optional ByVal index As Long = -1) As ChartRegion
+                Optional ByVal Index As Long = -1) As ChartRegion
 Const ProcName As String = "PriceRegion"
 On Error GoTo Err
 
-index = checkIndex(index)
-Set PriceRegion = getChartFromIndex(index).PriceRegion
+Index = checkIndex(Index)
+Set PriceRegion = getChartFromIndex(Index).PriceRegion
 
 Exit Property
 
@@ -544,12 +544,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get State( _
-                Optional ByVal index As Long = -1) As ChartStates
+                Optional ByVal Index As Long = -1) As ChartStates
 Const ProcName As String = "State"
 On Error GoTo Err
 
-index = checkIndex(index)
-State = getChartFromIndex(index).State
+Index = checkIndex(Index)
+State = getChartFromIndex(Index).State
 
 Exit Property
 
@@ -584,12 +584,12 @@ Set Theme = mTheme
 End Property
 
 Public Property Get Timeframe( _
-                Optional ByVal index As Long = -1) As Timeframe
+                Optional ByVal Index As Long = -1) As Timeframe
 Const ProcName As String = "Timeframe"
 On Error GoTo Err
 
-index = checkIndex(index)
-Set Timeframe = getChartFromIndex(index).Timeframe
+Index = checkIndex(Index)
+Set Timeframe = getChartFromIndex(Index).Timeframe
 
 Exit Property
 
@@ -598,12 +598,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimePeriod( _
-                Optional ByVal index As Long = -1) As TimePeriod
+                Optional ByVal Index As Long = -1) As TimePeriod
 Const ProcName As String = "TimePeriod"
 On Error GoTo Err
 
-index = checkIndex(index)
-Set TimePeriod = getChartFromIndex(index).TimePeriod
+Index = checkIndex(Index)
+Set TimePeriod = getChartFromIndex(Index).TimePeriod
 
 Exit Property
 
@@ -612,12 +612,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get VolumeRegion( _
-                Optional ByVal index As Long = -1) As ChartRegion
+                Optional ByVal Index As Long = -1) As ChartRegion
 Const ProcName As String = "VolumeRegion"
 On Error GoTo Err
 
-index = checkIndex(index)
-Set VolumeRegion = getChartFromIndex(index).VolumeRegion
+Index = checkIndex(Index)
+Set VolumeRegion = getChartFromIndex(Index).VolumeRegion
 
 Exit Property
 
@@ -667,7 +667,7 @@ End If
 
 If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
 lButton.Value = tbrPressed
-mCurrentIndex = switchToChart(lButton.index)
+mCurrentIndex = switchToChart(lButton.Index)
 Add = mCurrentIndex
 
 fireChange MultiChartSelectionChanged
@@ -723,7 +723,7 @@ lChart.ShowChartRaw pStudyManager, _
 
 If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
 lButton.Value = tbrPressed
-mCurrentIndex = switchToChart(lButton.index)
+mCurrentIndex = switchToChart(lButton.Index)
 AddRaw = mCurrentIndex
 
 fireChange MultiChartSelectionChanged
@@ -777,9 +777,9 @@ Public Sub FocusChart()
 Const ProcName As String = "FocusChart"
 On Error GoTo Err
 
-Dim index As Long
-index = checkIndex(-1)
-TBChart(getChartControlIndexFromIndex(index)).SetFocus
+Dim Index As Long
+Index = checkIndex(-1)
+TBChart(getChartControlIndexFromIndex(Index)).SetFocus
 
 Exit Sub
 
@@ -961,16 +961,16 @@ LoadFromConfig = False
 End Function
 
 Public Sub Remove( _
-                ByVal index As Long)
+                ByVal Index As Long)
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
+AssertArgument Index <= Count And Index >= 1, "Index must not be less than 1 or greater than Count"
 
 Dim nxtIndex As Long
-nxtIndex = nextIndex(index)
-closeChart index
-If index = mCurrentIndex Then mCurrentIndex = 0
+nxtIndex = nextIndex(Index)
+closeChart Index
+If Index = mCurrentIndex Then mCurrentIndex = 0
 
 If nxtIndex <> 0 Then
     SelectChart nxtIndex
@@ -1026,14 +1026,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SelectChart( _
-                ByVal index As Long)
+                ByVal Index As Long)
 Const ProcName As String = "SelectChart"
 On Error GoTo Err
 
-AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
+AssertArgument Index <= Count And Index >= 1, "Index must not be less than 1 or greater than Count"
 
-ChartSelectorToolbar.Buttons.Item(index).Value = tbrPressed
-mCurrentIndex = switchToChart(index)
+ChartSelectorToolbar.Buttons.Item(Index).Value = tbrPressed
+mCurrentIndex = switchToChart(Index)
 fireChange MultiChartSelectionChanged
 
 Exit Sub
@@ -1044,12 +1044,12 @@ End Sub
 
 Public Sub SetStudyManager( _
                 ByVal Value As StudyManager, _
-                Optional ByVal index As Long = -1)
+                Optional ByVal Index As Long = -1)
 Const ProcName As String = "SetStudyManager"
 On Error GoTo Err
 
-index = checkIndex(index)
-getChartFromIndex(index).StudyManager = Value
+Index = checkIndex(Index)
+getChartFromIndex(Index).StudyManager = Value
 
 Exit Sub
 
@@ -1123,18 +1123,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function checkIndex( _
-                ByVal index As Long) As Long
+                ByVal Index As Long) As Long
 Const ProcName As String = "checkIndex"
 On Error GoTo Err
 
-If index = -1 Then
+If Index = -1 Then
     Assert mCurrentIndex >= 1, "No current chart"
-    index = mCurrentIndex
+    Index = mCurrentIndex
 End If
 
-AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
+AssertArgument Index <= Count And Index >= 1, "Index must not be less than 1 or greater than Count"
 
-checkIndex = index
+checkIndex = Index
 
 Exit Function
 
@@ -1143,16 +1143,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub closeChart( _
-                ByVal index As Long)
+                ByVal Index As Long)
 Const ProcName As String = "closeChart"
 On Error GoTo Err
 
 Dim lChart As MarketChart
-Set lChart = getChartFromIndex(index)
+Set lChart = getChartFromIndex(Index)
 lChart.RemoveFromConfig
 lChart.Finish
-unloadChartControl index
-ChartSelectorToolbar.Buttons.Remove index
+unloadChartControl Index
+ChartSelectorToolbar.Buttons.Remove Index
 If ChartSelectorToolbar.Buttons.Count = 0 Then
     ControlToolbar.Buttons("remove").Enabled = False
     TBChart(0).Visible = True
@@ -1204,12 +1204,12 @@ Private Function generateTooltipText(ByVal pPeriodLength As TimePeriod) As Strin
 generateTooltipText = "Switch to " & pPeriodLength.ToString & " chart"
 End Function
 
-Private Function getChartControlIndexFromIndex(index) As Long
+Private Function getChartControlIndexFromIndex(Index) As Long
 Const ProcName As String = "getChartControlIndexFromIndex"
 On Error GoTo Err
 
 Dim l As TWChartButtonInfo
-l = ChartSelectorToolbar.Buttons(index).Tag
+l = ChartSelectorToolbar.Buttons(Index).Tag
 getChartControlIndexFromIndex = l.ChartIndex
 
 Exit Function
@@ -1218,11 +1218,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getChartFromIndex(index) As MarketChart
+Private Function getChartFromIndex(Index) As MarketChart
 Const ProcName As String = "getChartFromIndex"
 On Error GoTo Err
 
-Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(index)).object
+Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(Index)).object
 
 Exit Function
 
@@ -1230,13 +1230,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getIndexFromChartControlIndex(index) As Long
+Private Function getIndexFromChartControlIndex(Index) As Long
 Const ProcName As String = "getIndexFromChartControlIndex"
 On Error GoTo Err
 
 Dim i As Long
 For i = 1 To ChartSelectorToolbar.Buttons.Count
-    If getChartControlIndexFromIndex(i) = index Then
+    If getChartControlIndexFromIndex(i) = Index Then
         getIndexFromChartControlIndex = i
         Exit For
     End If
@@ -1249,19 +1249,19 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub hideChart( _
-                ByVal index As Long)
+                ByVal Index As Long)
 Const ProcName As String = "hideChart"
 On Error GoTo Err
 
 Dim lChart As MarketChart
 
-If index = 0 Or index > Count Then Exit Sub
-Set lChart = getChartFromIndex(index)
+If Index = 0 Or Index > Count Then Exit Sub
+Set lChart = getChartFromIndex(Index)
 If lChart.State = ChartStateRunning Then
     gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
     lChart.DisableDrawing
 End If
-TBChart(getChartControlIndexFromIndex(index)).Visible = False
+TBChart(getChartControlIndexFromIndex(Index)).Visible = False
 
 Exit Sub
 
@@ -1303,12 +1303,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function nextIndex( _
-                ByVal index As Long) As Long
+                ByVal Index As Long) As Long
 Const ProcName As String = "nextIndex"
 On Error GoTo Err
 
-If index > 1 Then
-    nextIndex = index - 1
+If Index > 1 Then
+    nextIndex = Index - 1
 ElseIf Count > 1 Then
     nextIndex = 1
 Else
@@ -1349,15 +1349,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function ShowChart( _
-                ByVal index As Long) As MarketChart
+                ByVal Index As Long) As MarketChart
 Const ProcName As String = "ShowChart"
 On Error GoTo Err
 
 Dim lChart As MarketChart
 
-If index = 0 Then Exit Function
+If Index = 0 Then Exit Function
 
-Set lChart = getChartFromIndex(index)
+Set lChart = getChartFromIndex(Index)
 
 If lChart.LoadedFromConfig And lChart.State = ChartStates.ChartStateCreated Then lChart.Start
 
@@ -1369,11 +1369,11 @@ Else
     ControlToolbar.Buttons("change").Enabled = False
 End If
 
-TBChart(getChartControlIndexFromIndex(index)).Visible = True
-TBChart(getChartControlIndexFromIndex(index)).Top = 0
-TBChart(getChartControlIndexFromIndex(index)).Height = UserControl.Height - IIf(ChartSelectorToolbar.Height > ControlToolbar.Height, ChartSelectorToolbar.Height, ControlToolbar.Height)
+TBChart(getChartControlIndexFromIndex(Index)).Visible = True
+TBChart(getChartControlIndexFromIndex(Index)).Top = 0
+TBChart(getChartControlIndexFromIndex(Index)).Height = UserControl.Height - IIf(ChartSelectorToolbar.Height > ControlToolbar.Height, ChartSelectorToolbar.Height, ControlToolbar.Height)
 
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, index
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, Index
 
 If Not mIsRaw Then TimeframeSelector1.SelectTimeframe lChart.TimePeriod
 
@@ -1433,15 +1433,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function switchToChart( _
-                ByVal index As Long) As Long
+                ByVal Index As Long) As Long
 Const ProcName As String = "switchToChart"
 On Error GoTo Err
 
-If index = mCurrentIndex Then Exit Function
+If Index = mCurrentIndex Then Exit Function
 
 hideChart mCurrentIndex
-ShowChart index
-switchToChart = index
+ShowChart Index
+switchToChart = Index
 
 Exit Function
 
@@ -1449,11 +1449,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub unloadChartControl(ByVal index As Long)
+Private Sub unloadChartControl(ByVal Index As Long)
 Const ProcName As String = "unloadChartControl"
 On Error GoTo Err
 
-Unload TBChart(getChartControlIndexFromIndex(index))
+Unload TBChart(getChartControlIndexFromIndex(Index))
 mCount = mCount - 1
 
 Exit Sub

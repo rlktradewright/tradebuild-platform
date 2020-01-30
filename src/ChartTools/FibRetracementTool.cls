@@ -162,99 +162,77 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_Create(ByVal X As Double, ByVal Y As Double)
-
 Const ProcName As String = "IChartTool_Create"
 On Error GoTo Err
 
-
-
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_DblClick()
-
 Const ProcName As String = "IChartTool_DblClick"
 On Error GoTo Err
-
-
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_Delete()
-Dim ln As ChartSkil27.Line
 Const ProcName As String = "IChartTool_Delete"
 On Error GoTo Err
 
-For Each ln In mLineSeries
-    mRegion.RemoveGraphicObject ln
-Next
 mRegion.RemoveGraphicObjectSeries mLineSeries
-Dim txt As ChartSkil27.Text
-For Each txt In mTextSeries
-    mRegion.RemoveGraphicObject txt
-Next
 mRegion.RemoveGraphicObjectSeries mTextSeries
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_Deselected()
-
 Const ProcName As String = "IChartTool_Deselected"
 On Error GoTo Err
 
-
-
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_EndResize()
-
 Const ProcName As String = "IChartTool_EndResize"
 On Error GoTo Err
-
-
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
-Dim ln As ChartSkil27.Line
-
 Const ProcName As String = "IChartTool_Move"
 On Error GoTo Err
 
 Set mControlPoint1 = NewPoint(mControlPoint1.X + X - mPrevX, mControlPoint1.Y + Y - mPrevY)
 Set mControlPoint2 = NewPoint(mControlPoint2.X + X - mPrevX, mControlPoint2.Y + Y - mPrevY)
 
+Dim ln As ChartSkil27.Line
 For Each ln In mLineSeries
     ln.Point1 = NewPoint(ln.Point1.X + X - mPrevX, ln.Point1.Y + Y - mPrevY)
     ln.Point2 = NewPoint(ln.Point2.X + X - mPrevX, ln.Point2.Y + Y - mPrevY)
 Next
-Dim txt As ChartSkil27.Text
 Dim i As Long
 For i = 1 To mTextSeries.Count
-    Set txt = mTextSeries(i)
+    Dim txt As ChartSkil27.Text: Set txt = mTextSeries(i)
     txt.Position = NewPoint(txt.Position.X + X - mPrevX, txt.Position.Y + Y - mPrevY)
     SetText txt, i
 Next
@@ -264,7 +242,7 @@ mPrevY = Y
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_MoveResize(ByVal selHandleIndex As Long, ByVal X As Double, ByVal Y As Double)
@@ -296,15 +274,15 @@ moveSelectionhandles
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Property Let IChartTool_Region(ByVal RHS As ChartSkil27.ChartRegion)
-Dim i As Long
 Const ProcName As String = "IChartTool_Region"
 On Error GoTo Err
 
 Set mRegion = RHS
+Dim i As Long
 For i = 0 To UBound(mLineSpecs)
     If mLineSpecs(i).Style Is Nothing Then
         Set mLineSpecs(i).Style = New LineStyle
@@ -314,15 +292,10 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Property
 
 Private Sub IChartTool_ResizeCreate(ByVal X As Double, ByVal Y As Double)
-Dim ln As ChartSkil27.Line
-Dim txt As Text
-Dim i As Long
-Dim retr As Double
-
 Const ProcName As String = "IChartTool_ResizeCreate"
 On Error GoTo Err
 
@@ -330,12 +303,16 @@ If mLineSeries Is Nothing Then Exit Sub
 
 Set mControlPoint2 = NewPoint(X, Y)
 
+Dim i As Long
 For i = 1 To mLineSeries.Count
-    Set ln = mLineSeries(i)
-    retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
+    Dim ln As ChartSkil27.Line: Set ln = mLineSeries(i)
+    Dim retr As Double: retr = mControlPoint2.Y - _
+                                (mControlPoint2.Y - mControlPoint1.Y) * _
+                                mLineSpecs(i - 1).Percentage / 100
     ln.Point1 = NewPoint(mControlPoint1.X, retr)
     ln.Point2 = NewPoint(X, retr)
-    Set txt = mTextSeries(i)
+    
+    Dim txt As Text: Set txt = mTextSeries(i)
     txt.Position = ln.Point2
     SetText txt, i
 Next
@@ -343,7 +320,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 
 End Sub
 
@@ -359,7 +336,7 @@ startMove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_StartResize(ByVal selHandleIndex As Long, ByVal X As Single, ByVal Y As Single)
@@ -371,28 +348,26 @@ startMove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub IChartTool_Undo()
-Dim ln As ChartSkil27.Line
-Dim txt As Text
-Dim i As Long
-Dim retr As Double
-
 Const ProcName As String = "IChartTool_Undo"
 On Error GoTo Err
 
 Set mControlPoint1 = mStartPoint1
 Set mControlPoint2 = mStartPoint2
 
+Dim i As Long
 For i = 1 To mLineSeries.Count
-    Set ln = mLineSeries(i)
-    retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
+    Dim ln As ChartSkil27.Line: Set ln = mLineSeries(i)
+    Dim retr As Double: retr = mControlPoint2.Y - _
+                                (mControlPoint2.Y - mControlPoint1.Y) * _
+                                mLineSpecs(i - 1).Percentage / 100
     ln.Point1 = NewPoint(mControlPoint1.X, retr)
     ln.Point2 = NewPoint(mControlPoint2.X, retr)
     ln.Layer = mLayer
-    Set txt = mTextSeries(i)
+    Dim txt As Text: Set txt = mTextSeries(i)
     txt.Position = ln.Point2
     SetText txt, i
     txt.Layer = mLayer
@@ -404,7 +379,7 @@ Set mStartPoint2 = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -531,7 +506,7 @@ Set mAbstractTool = CreateAbstractChartTool(pChart, Me)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -542,19 +517,16 @@ Private Function addRetracementLine( _
                 ByVal index As Long, _
                 ByVal X As Double, _
                 ByVal Y As Double)
-Dim ln As ChartSkil27.Line
-Dim txt As ChartSkil27.Text
-
 Const ProcName As String = "addRetracementLine"
 On Error GoTo Err
 
-Set ln = mLineSeries.Add(, mLineSpecs(index).Style)
+Dim ln As ChartSkil27.Line: Set ln = mLineSeries.Add(, mLineSpecs(index).Style)
 ln.IsSelectable = True
 ln.Layer = LayerNumbers.LayerMax
 ln.SetPosition NewPoint(X, Y), NewPoint(X, Y)
 mAbstractTool.AddSelectableObject ln
 
-Set txt = mTextSeries.Add
+Dim txt As ChartSkil27.Text: Set txt = mTextSeries.Add
 txt.Color = mLineSpecs(index).Style.Color
 txt.Position = NewPoint(X, Y)
 txt.Offset = NewSize(0.2, 0)
@@ -565,7 +537,7 @@ Set addRetracementLine = ln
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Function
 
 Private Sub createSelectionhandles()
@@ -586,24 +558,22 @@ mAbstractTool.AddSelectionHandle mControlPoint2.X, mControlPoint2.Y, True, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub drawLines()
-Dim i As Long
-Dim ln As ChartSkil27.Line
-Dim txt As ChartSkil27.Text
-Dim retr As Double
-
 Const ProcName As String = "drawLines"
 On Error GoTo Err
 
+Dim i As Long
 For i = 1 To mLineSeries.Count
-    Set ln = mLineSeries(i)
-    retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
+    Dim ln As ChartSkil27.Line: Set ln = mLineSeries(i)
+    Dim retr As Double: retr = mControlPoint2.Y - _
+                                (mControlPoint2.Y - mControlPoint1.Y) * _
+                                mLineSpecs(i - 1).Percentage / 100
     ln.Point1 = NewPoint(mControlPoint1.X, retr)
     ln.Point2 = NewPoint(mControlPoint2.X, retr)
-    Set txt = mTextSeries(i)
+    Dim txt As ChartSkil27.Text: Set txt = mTextSeries(i)
     txt.Position = ln.Point2
     SetText txt, i
 Next
@@ -611,7 +581,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub moveSelectionhandles()
@@ -632,12 +602,11 @@ mAbstractTool.MoveSelectionHandle 8, mControlPoint2.X, mControlPoint2.Y
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub notifySelected()
 Const ProcName As String = "notifySelected"
-
 On Error GoTo Err
 
 If Not mAbstractTool.IsSelected Then
@@ -647,10 +616,11 @@ If Not mAbstractTool.IsSelected Then
         mRegion.ClearSelection
     End If
 End If
+
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub SetText( _
@@ -664,7 +634,7 @@ txt.Text = mLineSpecs(index - 1).Percentage & "% (" & mRegion.FormatYValue(txt.P
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub startMove()
@@ -686,5 +656,5 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
