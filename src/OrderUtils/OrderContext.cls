@@ -132,6 +132,7 @@ If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is IContract Then
     setContract ev.Future.Value
+    IsReadyTickSize
     fireChange OrderContextReadyStateChanged
 ElseIf TypeOf ev.Future.Value Is Clock Then
     setTimerListFromSimulatedClock ev.Future.Value
@@ -1062,6 +1063,7 @@ mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
 If mContractFuture.IsAvailable Then
     setContract mContractFuture.Value
+    IsReadyTickSize
 Else
     mFutureWaiter.Add mContractFuture
 End If
@@ -1138,7 +1140,7 @@ On Error GoTo Err
 
 If Not IsReady Then Exit Function
 
-If Not IsReadyTickSize(pBracketOrder.Contract.Specifier.SecType) Then Exit Function
+If Not IsReadyTickSize() Then Exit Function
 
 If Not IsReadyForOrderType(pBracketOrder.EntryOrder.OrderType) Then Exit Function
 If Not IsReadyForPriceSpecifier(pBracketOrder.EntryOrder.LimitPriceSpec) Then Exit Function
@@ -1211,7 +1213,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function IsReadyTickSize(ByVal pSectype As SecurityTypes) As Boolean
+Public Function IsReadyTickSize() As Boolean
 Const ProcName As String = "IsReadyTickSize"
 On Error GoTo Err
 
@@ -1221,7 +1223,7 @@ Else
     If Not mTickSizeFuture Is Nothing Then
         IsReadyTickSize = False
     Else
-        Select Case pSectype
+        Select Case mContract.Specifier.SecType
         Case SecTypeStock
             If dataSourceHasPrice Then
                 Set mTickSizeFuture = mOrderSubmitter.GetTickSize(Nothing)
