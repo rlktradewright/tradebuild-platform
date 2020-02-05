@@ -316,10 +316,15 @@ InitialiseTWUtilities
 
 Set mFatalErrorHandler = New FatalErrorHandler
 
+Set mCLParser = CreateCommandLineParser(Command, " ")
+
+If showHelp Then
+    TerminateTWUtilities
+    Exit Sub
+End If
+
 ApplicationGroupName = "TradeWright"
 ApplicationName = AppTitle
-
-Set mCLParser = CreateCommandLineParser(Command, " ")
 
 Dim lLogOverwrite As Boolean
 lLogOverwrite = mCLParser.Switch(SwitchLogOverwrite)
@@ -334,11 +339,6 @@ RunTasksAtLowerThreadPriority = False
 
 mLeftOffset = -1
 mRightOffset = -1
-
-If showHelp Then
-    TerminateTWUtilities
-    Exit Sub
-End If
 
 setTaskParameters
 
@@ -760,54 +760,54 @@ Private Function showHelp() As Boolean
 Const ProcName As String = "showHelp"
 On Error GoTo Err
 
-If mCLParser.Switch("?") Then
-    Dim s As String
-    s = vbCrLf & _
-            "datacollector27 [configfilename]" & vbCrLf & _
-            "                /setup " & vbCrLf & _
-            "   or " & vbCrLf & _
-            "datacollector27 [configfilename] " & vbCrLf & _
-            "                [/config:configtoload] " & vbCrLf & _
-            "                [/log:filename] " & vbCrLf & _
-            "                [/posn:offsetfromleft,offsetfromtop]" & vbCrLf & _
-            "                [/noAutoStart" & vbCrLf & _
-            "                [/noUI]" & vbCrLf & _
-            "                [/showMonitor]" & vbCrLf & _
-            "                [/exitAt:[day]hh:mm]" & vbCrLf & _
-            "                [/startAt:[day]hh:mm]" & vbCrLf & _
-            "                [/endAt:[day]hh:mm]" & vbCrLf & _
-            "                [/loglevel:levelName]" & vbCrLf
-    s = s & _
-            "                [/noDataRestartSecs:n]" & vbCrLf & _
-            "                [/concurrency:n]" & vbCrLf & _
-            "                [/quantum:n]" & vbCrLf
-    s = s & vbCrLf & _
-            "  where" & vbCrLf & _
-            vbCrLf & _
-            "    levelname is one of:" & vbCrLf & _
-            "       None    or 0" & vbCrLf & _
-            "       Severe  or S" & vbCrLf & _
-            "       Warning or W" & vbCrLf & _
-            "       Info    or I" & vbCrLf & _
-            "       Normal  or N" & vbCrLf & _
-            "       Detail  or D" & vbCrLf & _
-            "       Medium  or M" & vbCrLf & _
-            "       High    or H" & vbCrLf & _
-            "       All     or A"
-    s = s & vbCrLf & _
-            "Example 1:" & vbCrLf & _
-            "   datacollector27 /setup" & vbCrLf & _
-            "       runs the data collector configurer, which enables you to define " & vbCrLf & _
-            "       various configurations for use with different data collector " & vbCrLf & _
-            "       instances. The default configuration file is used to store this" & vbCrLf & _
-            "       information." & vbCrLf & _
-            "Example 2:" & vbCrLf & _
-            "   datacollector27 mysettings.xml /config:""US Futures""" & vbCrLf & _
-            "       runs the data collector in accordance with the configuration" & vbCrLf & _
-            "       called ""US Futures"" defined in the mysettings.xml file."
-    MsgBox s, , "Usage"
-    showHelp = True
-End If
+If Trim$(Command) <> "/?" And Trim$(Command) <> "-?" Then Exit Function
+    
+Dim s As String
+s = vbCrLf & _
+        "datacollector27 [configfilename]" & vbCrLf & _
+        "                /setup " & vbCrLf & _
+        "   or " & vbCrLf & _
+        "datacollector27 [configfilename] " & vbCrLf & _
+        "                [/config:configtoload] " & vbCrLf & _
+        "                [/log:filename] " & vbCrLf & _
+        "                [/posn:offsetfromleft,offsetfromtop]" & vbCrLf & _
+        "                [/noAutoStart" & vbCrLf & _
+        "                [/noUI]" & vbCrLf & _
+        "                [/showMonitor]" & vbCrLf & _
+        "                [/exitAt:[day]hh:mm]" & vbCrLf & _
+        "                [/startAt:[day]hh:mm]" & vbCrLf & _
+        "                [/endAt:[day]hh:mm]" & vbCrLf & _
+        "                [/loglevel:levelName]" & vbCrLf
+s = s & _
+        "                [/noDataRestartSecs:n]" & vbCrLf & _
+        "                [/concurrency:n]" & vbCrLf & _
+        "                [/quantum:n]" & vbCrLf
+s = s & vbCrLf & _
+        "  where" & vbCrLf & _
+        vbCrLf & _
+        "    levelname is one of:" & vbCrLf & _
+        "       None    or 0" & vbCrLf & _
+        "       Severe  or S" & vbCrLf & _
+        "       Warning or W" & vbCrLf & _
+        "       Info    or I" & vbCrLf & _
+        "       Normal  or N" & vbCrLf & _
+        "       Detail  or D" & vbCrLf & _
+        "       Medium  or M" & vbCrLf & _
+        "       High    or H" & vbCrLf & _
+        "       All     or A"
+s = s & vbCrLf & _
+        "Example 1:" & vbCrLf & _
+        "   datacollector27 /setup" & vbCrLf & _
+        "       runs the data collector configurer, which enables you to define " & vbCrLf & _
+        "       various configurations for use with different data collector " & vbCrLf & _
+        "       instances. The default configuration file is used to store this" & vbCrLf & _
+        "       information." & vbCrLf & _
+        "Example 2:" & vbCrLf & _
+        "   datacollector27 mysettings.xml /config:""US Futures""" & vbCrLf & _
+        "       runs the data collector in accordance with the configuration" & vbCrLf & _
+        "       called ""US Futures"" defined in the mysettings.xml file."
+MsgBox s, , "Usage"
+showHelp = True
 
 Exit Function
 
