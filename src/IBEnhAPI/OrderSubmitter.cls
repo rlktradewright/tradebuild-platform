@@ -1048,8 +1048,14 @@ On Error GoTo Err
 Dim lOCAGroup As String
 lOCAGroup = GenerateGUIDString
 
-PlaceOrderEx pBracketOrder.StopLossOrder, 0, False, "0", lOCAGroup, OrderModeStopLoss
-PlaceOrderEx pBracketOrder.TargetOrder, 0, True, "0", lOCAGroup, OrderModeTarget
+Dim lPlexId As Long
+lPlexId = getNextBracketId
+
+pBracketOrder.StopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
+PlaceOrderEx pBracketOrder.StopLossOrder, 0, True, 0, lOCAGroup, OrderModeStopLoss
+
+pBracketOrder.TargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
+PlaceOrderEx pBracketOrder.TargetOrder, 0, True, 0, lOCAGroup, OrderModeTarget
 
 Exit Sub
 Err:
@@ -1060,13 +1066,19 @@ Public Sub ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "ResubmitStopOrder"
 On Error GoTo Err
 
+Dim lPlexId As Long
+lPlexId = getNextBracketId
+pBracketOrder.StopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
+
 If pBracketOrder.TargetOrder Is Nothing Then
-    PlaceOrderEx pBracketOrder.StopLossOrder, 0, True, "0", "", OrderModeStopLoss
+    PlaceOrderEx pBracketOrder.StopLossOrder, 0, True, 0, "", OrderModeStopLoss
 Else
     Dim lOCAGroup As String
     lOCAGroup = GenerateGUIDString
-    PlaceOrderEx pBracketOrder.StopLossOrder, 0, False, "0", lOCAGroup, OrderModeStopLoss
-    PlaceOrderEx pBracketOrder.TargetOrder, 0, True, "0", lOCAGroup, OrderModeTarget
+    PlaceOrderEx pBracketOrder.StopLossOrder, 0, True, 0, lOCAGroup, OrderModeStopLoss
+    
+    pBracketOrder.TargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
+    PlaceOrderEx pBracketOrder.TargetOrder, 0, True, 0, lOCAGroup, OrderModeTarget
 End If
 
 Exit Sub
@@ -1078,13 +1090,20 @@ Public Sub ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "ResubmitTargetOrder"
 On Error GoTo Err
 
+Dim lPlexId As Long
+lPlexId = getNextBracketId
+pBracketOrder.TargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
+
 If pBracketOrder.StopLossOrder Is Nothing Then
-    PlaceOrderEx pBracketOrder.TargetOrder, 0, True, "0", "", OrderModeTarget
+    PlaceOrderEx pBracketOrder.TargetOrder, 0, True, 0, "", OrderModeTarget
 Else
     Dim lOCAGroup As String
     lOCAGroup = GenerateGUIDString
-    PlaceOrderEx pBracketOrder.StopLossOrder, 0, False, "0", lOCAGroup, OrderModeStopLoss
-    PlaceOrderEx pBracketOrder.TargetOrder, 0, True, "0", lOCAGroup, OrderModeTarget
+    
+    pBracketOrder.StopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
+    PlaceOrderEx pBracketOrder.StopLossOrder, 0, True, 0, lOCAGroup, OrderModeStopLoss
+    
+    PlaceOrderEx pBracketOrder.TargetOrder, 0, True, 0, lOCAGroup, OrderModeTarget
 End If
 Exit Sub
 Err:
@@ -1374,20 +1393,7 @@ Private Sub modifyABracketOrder( _
 Const ProcName As String = "modifyABracketOrder"
 On Error GoTo Err
 
-Dim lParentId As Long
-
-Select Case pBracketOrder.EntryOrder.Status
-Case OrderStatusFilled, _
-        OrderStatusCancelling, _
-        OrderStatusCancelled
-    lParentId = 0
-Case Else
-    lParentId = CInt("0" & pBracketOrder.EntryOrder.BrokerId)
-End Select
-
-If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0
-
-Dim lPlexId As Long
+Dim lParentId As Long: lParentId = CLng("0" & pBracketOrder.EntryOrder.BrokerId)
 
 Dim lOCAGroup As String
 lOCAGroup = getOcaGroup(pBracketOrder.StopLossOrder)
@@ -1401,9 +1407,11 @@ End If
 If pEntryOrderChanged Then
     placeAnOrder pBracketOrder.EntryOrder, pContract, 0, True, 0, "", OrderModeEntry
 End If
+
+Dim lPlexId As Long
 If pStopOrderChanged Then
     If pBracketOrder.StopLossOrder.BrokerId = "" Then
-        If lPlexId = 0 Then lPlexId = getNextBracketId
+        lPlexId = getNextBracketId
         pBracketOrder.StopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
     End If
     placeAnOrder pBracketOrder.StopLossOrder, pContract, 0, True, lParentId, lOCAGroup, OrderModeStopLoss
