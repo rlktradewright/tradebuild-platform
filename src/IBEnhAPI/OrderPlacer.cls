@@ -434,6 +434,7 @@ Friend Sub PlaceOrder( _
                 ByVal pOrderSubmitter As OrderSubmitter, _
                 ByVal pOrder As IOrder, _
                 ByVal pContract As TwsContract, _
+                ByVal pLimitPriceOverride, _
                 ByVal pTransmit As Boolean, _
                 ByVal pParentId As Long, _
                 ByVal pOcaGroup As String, _
@@ -447,6 +448,7 @@ Dim lOrder As TwsOrder
 mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId, pParentId
 
 Set lOrder = gOrderToTwsOrder(pOrder, pDataSource)
+If pLimitPriceOverride <> 0 Then lOrder.LmtPrice = pLimitPriceOverride
 lOrder.Transmit = pTransmit
 lOrder.ParentId = pParentId
 lOrder.OcaGroup = pOcaGroup

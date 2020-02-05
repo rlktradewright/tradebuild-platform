@@ -1559,19 +1559,6 @@ Public Property Get CancelTime() As Date
 CancelTime = mSummary.CancelTime
 End Property
 
-Friend Property Let CloseoutOrder(ByVal Value As IOrder)
-Const ProcName As String = "CloseoutOrder"
-On Error GoTo Err
-
-Set mCloseoutOrder = Value
-mSummary.CloseoutOrderId = mCloseoutOrder.Id
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Public Property Get CloseoutOrder() As IOrder
 Set CloseoutOrder = mCloseoutOrder
 End Property
@@ -1643,23 +1630,6 @@ End Property
 
 Public Property Get Description() As String
 Description = mSummary.Description
-End Property
-
-Friend Property Let EntryOrder(ByVal Value As IOrder)
-Const ProcName As String = "EntryOrder"
-On Error GoTo Err
-
-Assert mEntryOrder Is Nothing, "Entry order already exists"
-
-Set mEntryOrder = Value
-mSummary.EntryOrderId = mEntryOrder.Id
-
-mNumberOfOrders = mNumberOfOrders + 1
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get EntryOrder() As IOrder
@@ -2040,25 +2010,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let StopLossOrder(ByVal Value As IOrder)
-Const ProcName As String = "StopLossOrder"
-On Error GoTo Err
-
-Assert mStopLossOrder Is Nothing, "stop-loss order already exists"
-
-mNumberOfOrders = mNumberOfOrders + 1
-Set mStopLossOrder = Value
-mSummary.StopLossOrderId = mStopLossOrder.Id
-
-mStateEngine.SetConditions OpConditions.CondStopOrderExists
-mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Public Property Get StopLossOrder() As IOrder
 Set StopLossOrder = mStopLossOrder
 End Property
@@ -2078,25 +2029,6 @@ End Property
 
 Public Property Get StopReason() As String
 StopReason = mSummary.StopReason
-End Property
-
-Friend Property Let TargetOrder(ByVal Value As IOrder)
-Const ProcName As String = "TargetOrder"
-On Error GoTo Err
-
-Assert mTargetOrder Is Nothing, "Target order already exists"
-
-mNumberOfOrders = mNumberOfOrders + 1
-Set mTargetOrder = Value
-mSummary.TargetOrderId = mTargetOrder.Id
-
-mStateEngine.SetConditions OpConditions.CondTargetOrderExists
-mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TargetOrder() As IOrder
@@ -2571,6 +2503,36 @@ fireChange BracketOrderSelfCancelled
 RaiseEvent SelfCancelled
 End Sub
 
+Friend Sub SetCloseoutOrder(ByVal pOrder As Order)
+Const ProcName As String = "SetCloseoutOrder"
+On Error GoTo Err
+
+Set mCloseoutOrder = pOrder
+mSummary.CloseoutOrderId = mCloseoutOrder.Id
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetEntryOrder(ByVal pOrder As Order)
+Const ProcName As String = "SetEntryOrder"
+On Error GoTo Err
+
+Assert mEntryOrder Is Nothing, "Entry order already exists"
+
+Set mEntryOrder = pOrder
+mSummary.EntryOrderId = mEntryOrder.Id
+
+mNumberOfOrders = mNumberOfOrders + 1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub SetNewEntryLimitPrice( _
                 ByVal pPriceSpec As PriceSpecifier)
 Const ProcName As String = "SetNewEntryLimitPrice"
@@ -2786,6 +2748,44 @@ If mSummary.Size <> 0 Then
 Else
     mStateEngine.ClearConditions OpConditions.CondSizeNonZero
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetStopLossOrder(ByVal pOrder As Order)
+Const ProcName As String = "SetStopLossOrder"
+On Error GoTo Err
+
+Assert mStopLossOrder Is Nothing, "stop-loss order already exists"
+
+mNumberOfOrders = mNumberOfOrders + 1
+Set mStopLossOrder = pOrder
+mSummary.StopLossOrderId = mStopLossOrder.Id
+
+mStateEngine.SetConditions OpConditions.CondStopOrderExists
+mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetTargetOrder(ByVal pOrder As Order)
+Const ProcName As String = "SetTargetOrder"
+On Error GoTo Err
+
+Assert mTargetOrder Is Nothing, "Target order already exists"
+
+mNumberOfOrders = mNumberOfOrders + 1
+Set mTargetOrder = pOrder
+mSummary.TargetOrderId = mTargetOrder.Id
+
+mStateEngine.SetConditions OpConditions.CondTargetOrderExists
+mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
 
 Exit Sub
 

@@ -86,12 +86,10 @@ On Error GoTo Err
 mDummyOrder.DontCheckAttributeModificationPermitted = True
 mDummyOrder.Action = OrderActionBuy
 mDummyOrder.Quantity = 1
-mDummyOrder.LimitPrice = mNewLimitPrice
-mDummyOrder.TriggerPrice = 0#
 mDummyOrder.ErrorCode = 0
 mDummyOrder.ErrorMessage = ""
 mDummyOrder.DontCheckAttributeModificationPermitted = False
-mOrderSubmitter.PlaceOrderEx mDummyOrder, False, 0, "", OrderModeEntry
+mOrderSubmitter.PlaceOrderEx mDummyOrder, mNewLimitPrice, False, 0, "", OrderModeEntry
 
 Set mTLI = mTimerList.Add(Nothing, 500, ExpiryTimeUnitMilliseconds)
 

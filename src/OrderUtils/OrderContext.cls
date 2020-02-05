@@ -854,18 +854,18 @@ Dim lBracketOrder As New BracketOrder
 lBracketOrder.Initialise GIdProvider.gNextId, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
 lBracketOrder.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
-lBracketOrder.EntryOrder = pEntryOrder
+lBracketOrder.SetEntryOrder pEntryOrder
 pEntryOrder.Action = pAction
 lBracketOrder.EntryOrder.Quantity = pQuantity
 
 If Not pStopLossOrder Is Nothing Then
-    lBracketOrder.StopLossOrder = pStopLossOrder
+    lBracketOrder.SetStopLossOrder pStopLossOrder
     lBracketOrder.StopLossOrder.Action = IIf(pAction = OrderActionBuy, OrderActionSell, OrderActionBuy)
     lBracketOrder.StopLossOrder.Quantity = pQuantity
 End If
 
 If Not pTargetOrder Is Nothing Then
-    lBracketOrder.TargetOrder = pTargetOrder
+    lBracketOrder.SetTargetOrder pTargetOrder
     lBracketOrder.TargetOrder.Action = IIf(pAction = OrderActionBuy, OrderActionSell, OrderActionBuy)
     lBracketOrder.TargetOrder.Quantity = pQuantity
 End If
@@ -934,7 +934,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub ExecuteBracketOrderEx(ByVal pBracketOrder As IBracketOrder, _
+Friend Sub ExecuteBracketOrderEx(ByVal pBracketOrder As BracketOrder, _
                     ByVal pCheckMoneyManagement As Boolean, _
                     ByVal pAddToActiveBracketOrders As Boolean)
 Const ProcName As String = "ExecuteBracketOrderEx"
@@ -997,7 +997,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder, _
+Public Sub ExecuteBracketOrder(ByVal pBracketOrder As BracketOrder, _
                     Optional pCheckMoneyManagement As Boolean)
 Const ProcName As String = "ExecuteBracketOrder"
 On Error GoTo Err
@@ -1516,7 +1516,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fixupEntryOrder(pOrder As IOrder)
+Private Sub fixupEntryOrder(pOrder As Order)
 Const ProcName As String = "fixupEntryOrder"
 On Error GoTo Err
 
@@ -1580,7 +1580,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fixupStopLossOrder(pOrder As IOrder)
+Private Sub fixupStopLossOrder(pOrder As Order)
 Const ProcName As String = "fixupStopLossOrder"
 On Error GoTo Err
 
@@ -1618,7 +1618,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fixupTargetOrder(pOrder As IOrder)
+Private Sub fixupTargetOrder(pOrder As Order)
 Const ProcName As String = "fixupTargetOrder"
 On Error GoTo Err
 

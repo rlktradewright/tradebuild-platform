@@ -1038,7 +1038,7 @@ End Sub
 ' @param  pTargetOrder the <code>order</code> that is to be synchronized
 ' @param  pSourceOrder the <code>order</code> to which the target order must be made identical
 '@/
-Public Sub gSyncToOrder(ByVal pTargetOrder As IOrder, ByVal pSourceOrder As IOrder)
+Public Sub gSyncToOrder(ByVal pTargetOrder As Order, ByVal pSourceOrder As IOrder)
 Const ProcName As String = "gSyncToOrder"
 On Error GoTo Err
 
