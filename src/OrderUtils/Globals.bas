@@ -569,14 +569,14 @@ If pDataSource Is Nothing Then
 ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
 Else
     If pDataSource.IsTickReplay Then lTimePart = FormatTimestamp(pDataSource.Timestamp, TimestampDateAndTimeISO8601) & "  "
-    lTickPart = GetCurrentTickSummary(pDataSource) & "; "
+    lTickPart = "    " & GetCurrentTickSummary(pDataSource) & "; "
 End If
 
 gLogOrder lTimePart & _
             IIf(pIsSimulated, "(simulated) ", "") & _
             pMessage & vbCrLf & _
-            "Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & vbCrLf & _
-            IIf(pKey <> "", "Bracket id: " & pKey & vbCrLf, "") & _
+            "    Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & vbCrLf & _
+            IIf(pKey <> "", "    Bracket id: " & pKey & vbCrLf, "") & _
             lTickPart, _
         pIsSimulated, _
         pSource
@@ -599,7 +599,7 @@ Const ProcName As String = "gLogOrderMessage"
 On Error GoTo Err
 
 gLogBracketOrderMessage pMessage & vbCrLf & _
-                        "BrokerId: " & pOrder.BrokerId & _
+                        "    BrokerId: " & pOrder.BrokerId & _
                         "; system id: " & pOrder.Id, _
                         pDataSource, _
                         pContract, _
@@ -1070,6 +1070,7 @@ With pTargetOrder
     .LastFillPrice = pSourceOrder.LastFillPrice
     .MinimumQuantity = pSourceOrder.MinimumQuantity
     .NbboPriceCap = pSourceOrder.NbboPriceCap
+    .OrderType = pSourceOrder.OrderType
     .Origin = pSourceOrder.Origin
     .OriginatorRef = pSourceOrder.OriginatorRef
     .OverrideConstraints = pSourceOrder.OverrideConstraints

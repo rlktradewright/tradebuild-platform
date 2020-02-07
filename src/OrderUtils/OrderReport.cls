@@ -558,7 +558,7 @@ OverrideConstraints = mOverrideConstraints
 End Property
 
 Public Property Let ProviderProperties(ByVal Value As Parameters)
-Set mProviderProperties = Value.Clone
+If Not Value Is Nothing Then Set mProviderProperties = Value.Clone
 End Property
 
 Public Property Get ProviderProperties() As Parameters
