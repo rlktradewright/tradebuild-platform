@@ -379,15 +379,19 @@ Static sNextBrokerOrderId As Long
 sNextBrokerOrderId = sNextBrokerOrderId + 1
 pOrder.BrokerId = CStr(sNextBrokerOrderId)
 
-Dim lOrder As New SimulatorOrder
-lOrder.Initialise New Order, pParentId, pOcaGroup, pTransmit, pListener
-lOrder.Order.Initialise pOrder.GroupName, pOrder.ContractSpecifier, pOrder.OrderContext
-gSyncToOrder lOrder.Order, pOrder
-mAllOrders.Add lOrder, pOrder.Id
+Dim lOrder As New Order
+lOrder.DontCheckAttributeModificationPermitted = True
+lOrder.Initialise pOrder.GroupName, pOrder.ContractSpecifier, pOrder.OrderContext
+lOrder.Id = pOrder.Id
+gSyncToOrder lOrder, pOrder
 
-If pOrder.Status = OrderStatusCreated Then setOrderStatus lOrder, OrderStatusPendingSubmit
+Dim lSimulatorOrder As New SimulatorOrder
+lSimulatorOrder.Initialise lOrder, pParentId, pOcaGroup, pTransmit, pListener
+mAllOrders.Add lSimulatorOrder, pOrder.Id
 
-Set createSimulatorOrder = lOrder
+If pOrder.Status = OrderStatusCreated Then setOrderStatus lSimulatorOrder, OrderStatusPendingSubmit
+
+Set createSimulatorOrder = lSimulatorOrder
 
 Exit Function
 
@@ -581,7 +585,7 @@ lOrderReport.OrderType = lOrder.OrderType
 lOrderReport.Origin = lOrder.Origin
 lOrderReport.OriginatorRef = lOrder.OriginatorRef
 lOrderReport.OverrideConstraints = lOrder.OverrideConstraints
-lOrderReport.ProviderProperties = lOrder.ProviderProperties
+If Not lOrder.ProviderProperties Is Nothing Then lOrderReport.ProviderProperties = lOrder.ProviderProperties
 lOrderReport.Quantity = lOrder.Quantity
 lOrderReport.SettlingFirm = lOrder.SettlingFirm
 lOrderReport.Status = lOrder.Status
@@ -589,8 +593,6 @@ lOrderReport.StopTriggerMethod = lOrder.StopTriggerMethod
 lOrderReport.SweepToFill = lOrder.SweepToFill
 lOrderReport.TimeInForce = lOrder.TimeInForce
 lOrderReport.TriggerPrice = lOrder.TriggerPrice
-
-lOrderReport.ProviderProperties = CreateParametersFromString(ProviderPropertyOCAGroup & "=" & pOrder.OcaGroup)
 
 pOrder.Listener.NotifyOrderReport lOrderReport
 
