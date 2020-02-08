@@ -1945,7 +1945,7 @@ With pReport
     If .Quantity <> mSummary.Quantity Then mSummary.Quantity = .Quantity: changed = True
     If .SettlingFirm <> mSummary.SettlingFirm Then mSummary.SettlingFirm = .SettlingFirm: changed = True
     If .StopTriggerMethod <> mSummary.StopTriggerMethod Then mSummary.StopTriggerMethod = .StopTriggerMethod: changed = True
-    If .Status <> mSummary.Status Then mSummary.Status = .Status: changed = True
+    If .Status <> mSummary.Status Then Status = .Status: changed = True
     If .SweepToFill <> mSummary.SweepToFill Then mSummary.SweepToFill = .SweepToFill: changed = True
     If .TimeInForce <> mSummary.TimeInForce Then mSummary.TimeInForce = .TimeInForce: changed = True
     If .TriggerPrice <> mSummary.TriggerPrice Then mSummary.TriggerPrice = .TriggerPrice: changed = True
