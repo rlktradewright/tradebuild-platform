@@ -563,17 +563,14 @@ Const ProcName As String = "gLogBracketOrderMessage"
 On Error GoTo Err
 
 Dim lTickPart As String
-Dim lTimePart As String
 
 If pDataSource Is Nothing Then
 ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
 Else
-    If pDataSource.IsTickReplay Then lTimePart = FormatTimestamp(pDataSource.Timestamp, TimestampDateAndTimeISO8601) & "  "
     lTickPart = "    " & GetCurrentTickSummary(pDataSource) & "; "
 End If
 
-gLogOrder lTimePart & _
-            IIf(pIsSimulated, "(simulated) ", "") & _
+gLogOrder IIf(pIsSimulated, "(simulated) ", "") & _
             pMessage & vbCrLf & _
             "    Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & vbCrLf & _
             IIf(pKey <> "", "    Bracket id: " & pKey & vbCrLf, "") & _

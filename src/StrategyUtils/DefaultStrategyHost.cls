@@ -68,9 +68,12 @@ Private Sub ILogListener_Notify(ByVal pLogrec As LogRecord)
 Const ProcName As String = "ILogListener_Notify"
 On Error GoTo Err
 
+Dim lMessage As String
 Select Case pLogrec.InfoType
 Case "strategy.tradereason"
-    mView.WriteLogText formatLogRecord(pLogrec, False)
+    lMessage = formatLogRecord(pLogrec, False)
+    mView.WriteLogText lMessage
+    logStrategyHostMessage lMessage
 Case "position.profit"
     mView.NotifySessionProfit CDbl(pLogrec.Data), mModel.Ticker.Timestamp
 Case "position.drawdown"
@@ -85,11 +88,15 @@ Case "position.position"
     mController.NotifyPosition CLng(pLogrec.Data)
 Case "position.order", _
     "position.moneymanagement"
-    LogMessage CStr(pLogrec.Data)
-    mView.WriteLogText formatLogRecord(pLogrec, False)
+    lMessage = formatLogRecord(pLogrec, True)
+    LogMessage lMessage
+    logStrategyHostMessage lMessage
+    mView.WriteLogText lMessage
 Case "position.ordersimulated", _
     "position.moneymanagementsimulated"
-    LogMessage CStr(pLogrec.Data)
+    lMessage = formatLogRecord(pLogrec, True)
+    LogMessage lMessage
+    logStrategyHostMessage lMessage
 End Select
 
 Exit Sub
@@ -329,15 +336,20 @@ Private Function formatLogRecord(ByVal pLogrec As LogRecord, ByVal pIncludeTimes
 Const ProcName As String = "formatLogRecord"
 On Error GoTo Err
 
-Static formatter As ILogFormatter
-Static formatterWithTimestamp As ILogFormatter
+Dim lData As String
+lData = VariantToString(pLogrec.Data)
 
 If pIncludeTimestamp Then
-    If formatterWithTimestamp Is Nothing Then Set formatterWithTimestamp = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal, , True, False)
-    formatLogRecord = formatterWithTimestamp.FormatRecord(pLogrec)
+    Dim lTimepart As String
+    lTimepart = FormatTimestamp(mStrategyRunner.Timestamp, TimestampDateAndTimeISO8601) & "  "
+End If
+
+If InStr(1, lData, vbCrLf) = 0 Then
+    formatLogRecord = lTimepart & lData
 Else
-    If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(, , False, False)
-    formatLogRecord = formatter.FormatRecord(pLogrec)
+    Dim lSpacer As String
+    lSpacer = Space(Len(lTimepart))
+    formatLogRecord = lTimepart & Replace$(lData, vbCrLf, vbCrLf & lSpacer)
 End If
 
 Exit Function
@@ -346,11 +358,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub logStrategyHostMessage(ByVal pMessage As String)
+Const ProcName As String = "logStrategyHostMessage"
+On Error GoTo Err
+
+Static sLogger As Logger
+If sLogger Is Nothing Then Set sLogger = GetLogger("defaultstrategyhost")
+sLogger.Log LogLevelNormal, pMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub setupLogging()
 Const ProcName As String = "setupLogging"
 On Error GoTo Err
 
-GetLogger("log").AddLogListener Me
 GetLogger("position.profit").AddLogListener Me
 GetLogger("position.drawdown").AddLogListener Me
 GetLogger("position.maxprofit").AddLogListener Me

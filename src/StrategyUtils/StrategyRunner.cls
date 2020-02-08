@@ -329,6 +329,18 @@ Friend Property Get PositionManagementStrategyFactories() As EnumerableCollectio
 Set PositionManagementStrategyFactories = mPositionManagementStrategyFactories
 End Property
 
+Friend Property Get Timestamp() As Date
+Const ProcName As String = "Timestamp"
+On Error GoTo Err
+
+Timestamp = mTradingContext.Timestamp
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -738,10 +750,7 @@ Set lLogfile = CreateFileLogListener(lResultsPath & "Logs\" & _
                                         "-" & lFilenameDiscriminator & ".log", _
                                     includeTimestamp:=False, _
                                     includeLogLevel:=False)
-GetLogger("position.order").AddLogListener lLogfile
-GetLogger("position.simulatedorder").AddLogListener lLogfile
-GetLogger("strategy").AddLogListener lLogfile
-GetLogger("position.moneymanagement").AddLogListener lLogfile
+GetLogger("defaultstrategyhost").AddLogListener lLogfile
 
 Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
                                         mStrategy.Name & _
