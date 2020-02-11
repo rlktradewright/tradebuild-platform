@@ -26,6 +26,7 @@ Begin VB.Form fStrategyHost
       _Version        =   393216
       Style           =   1
       Tabs            =   4
+      Tab             =   2
       TabsPerRow      =   4
       TabHeight       =   520
       ShowFocusRect   =   0   'False
@@ -41,9 +42,8 @@ Begin VB.Form fStrategyHost
       EndProperty
       TabCaption(0)   =   "Controls"
       TabPicture(0)   =   "fStrategyHost.frx":0000
-      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "Picture1"
-      Tab(0).Control(0).Enabled=   0   'False
       Tab(0).ControlCount=   1
       TabCaption(1)   =   "Parameters"
       TabPicture(1)   =   "fStrategyHost.frx":001C
@@ -52,8 +52,9 @@ Begin VB.Form fStrategyHost
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Log"
       TabPicture(2)   =   "fStrategyHost.frx":0038
-      Tab(2).ControlEnabled=   0   'False
+      Tab(2).ControlEnabled=   -1  'True
       Tab(2).Control(0)=   "LogPicture"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Results"
       TabPicture(3)   =   "fStrategyHost.frx":0054
@@ -382,7 +383,7 @@ Begin VB.Form fStrategyHost
       Begin VB.PictureBox LogPicture 
          BorderStyle     =   0  'None
          Height          =   3375
-         Left            =   -75000
+         Left            =   0
          ScaleHeight     =   3375
          ScaleWidth      =   11070
          TabIndex        =   21
@@ -392,8 +393,8 @@ Begin VB.Form fStrategyHost
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
             BeginProperty Font 
-               Name            =   "Lucida Console"
-               Size            =   8.25
+               Name            =   "Consolas"
+               Size            =   14.25
                Charset         =   0
                Weight          =   400
                Underline       =   0   'False
@@ -415,7 +416,7 @@ Begin VB.Form fStrategyHost
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   3375
-         Left            =   0
+         Left            =   -75000
          ScaleHeight     =   3375
          ScaleWidth      =   11070
          TabIndex        =   18
@@ -1829,6 +1830,17 @@ TradeChart.BaseChartController.Style = mChartStyle
 LogMessage "Applying theme"
 applyTheme New BlackTheme
 
+Dim aFont As StdFont
+Set aFont = New StdFont
+aFont.Bold = False
+aFont.Italic = False
+aFont.Name = "Consolas"
+aFont.Size = 10
+aFont.Strikethrough = False
+aFont.Underline = False
+
+Set LogText.Font = aFont
+
 LogMessage "Setting controls from model"
 ResultsPathText.Text = mModel.ResultsPath
 NoMoneyManagementCheck.Value = IIf(mModel.UseMoneyManagement, vbUnchecked, vbChecked)
@@ -1891,12 +1903,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub calcAverageCharacterWidths( _
-                ByVal afont As StdFont)
+                ByVal aFont As StdFont)
 Const ProcName As String = "calcAverageCharacterWidths"
 On Error GoTo Err
 
-mLetterWidth = getAverageCharacterWidth("ABCDEFGH IJKLMNOP QRST UVWX YZ", afont)
-mDigitWidth = getAverageCharacterWidth(".0123456789", afont)
+mLetterWidth = getAverageCharacterWidth("ABCDEFGH IJKLMNOP QRST UVWX YZ", aFont)
+mDigitWidth = getAverageCharacterWidth(".0123456789", aFont)
 
 Exit Sub
 
