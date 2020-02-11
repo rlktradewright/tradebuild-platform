@@ -247,12 +247,12 @@ Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal Specifier As IContractSpecifier, _
                 ByVal BarTimePeriod As TimePeriod, _
-                ByVal maxNumberOfBars As Long, _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date, _
+                ByVal MaxNumberOfBars As Long, _
+                ByVal FromDate As Date, _
+                ByVal ToDate As Date, _
                 ByVal customSessionStartTime As Date, _
                 ByVal customSessionEndTime As Date, _
-                ByVal includeBarsOutsideSession As Boolean, _
+                ByVal IncludeBarsOutsideSession As Boolean, _
                 ByVal BarType As BarTypes, _
                 ByVal pListener As IBarFetchListener, _
                 ByVal pCookie As Variant)
@@ -262,12 +262,12 @@ On Error GoTo Err
 Set mDB = db
 Set mSpecifier = Specifier
 Set mBarTimePeriod = BarTimePeriod
-mMaxNumberOfBars = maxNumberOfBars
-mFromDate = fromDate
-mToDate = toDate
+mMaxNumberOfBars = MaxNumberOfBars
+mFromDate = FromDate
+mToDate = ToDate
 mCustomSessionStartTime = customSessionStartTime
 mCustomSessionEndTime = customSessionEndTime
-mIncludeBarsOutsideSession = includeBarsOutsideSession
+mIncludeBarsOutsideSession = IncludeBarsOutsideSession
 mBarType = BarType
 Set mListener = pListener
 gSetVariant mCookie, pCookie

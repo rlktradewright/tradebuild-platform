@@ -152,13 +152,13 @@ End Sub
 Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal Specifier As IContractSpecifier, _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date)
+                ByVal FromDate As Date, _
+                ByVal ToDate As Date)
 Const ProcName As String = "Initialise"
 Set mDB = db
 Set mSpecifier = Specifier
-mFromDate = fromDate
-mToDate = toDate
+mFromDate = FromDate
+mToDate = ToDate
 End Sub
 
 '@================================================================================

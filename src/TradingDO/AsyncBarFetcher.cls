@@ -241,7 +241,7 @@ mUseTickdata = gUseTickData(mSpecifier.BarTimePeriod.Units)
 Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             createNewSessionBuilder(mInstrument).Session, _
                                             mInstrument.TickSize, _
-                                            IIf(mSpecifier.maxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.maxNumberOfBars), _
+                                            IIf(mSpecifier.MaxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.MaxNumberOfBars), _
                                             mSpecifier.NormaliseDailyTimestamps)
 
 mSessionTimes = gCalcSessionTimes(mSpecifier, mInstrument)
@@ -405,7 +405,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function needMoreTicks(ByVal pTotalBars As Long, ByVal pSpecifier As BarDataSpecifier) As Boolean
-needMoreTicks = pTotalBars < pSpecifier.maxNumberOfBars And _
+needMoreTicks = pTotalBars < pSpecifier.MaxNumberOfBars And _
             (pSpecifier.FromDate = 0 Or pSpecifier.ToDate = 0)
 End Function
 
@@ -433,7 +433,7 @@ Select Case mAsyncState
 Case Fetching
     If Not mBarListener Is Nothing Then mBarListener.FetchStarted mCookie
     Dim lBarReqDetails As BarRequestDetails
-    lBarReqDetails = gGenerateBarRequestDetails(mSessionTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.maxNumberOfBars)
+    lBarReqDetails = gGenerateBarRequestDetails(mSessionTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.MaxNumberOfBars)
     mStartAtFromDate = lBarReqDetails.StartAtFromDate
     Set mRSFuture = doFetchBarsAsync(mRSFetcher, mInstrument.Id, lBarReqDetails, mSpecifier.BarType)
     mFutureWaiter.Add mRSFuture
@@ -441,7 +441,7 @@ Case Fetching
 Case Fetched
     If Not mBarListener Is Nothing Then mBarListener.FetchDataRetrieved mCookie
     Set mRS = mRSFuture.Value
-    mBDP.Initialise mTargetBarsBuilder, mRS, mSessionTimes, mSpecifier.maxNumberOfBars, mStartAtFromDate
+    mBDP.Initialise mTargetBarsBuilder, mRS, mSessionTimes, mSpecifier.MaxNumberOfBars, mStartAtFromDate
     mAsyncState = ProcessingBars
 Case ProcessingBars
     If Not mBDP.ProcessNextBar Then

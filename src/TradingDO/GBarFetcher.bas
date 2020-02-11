@@ -68,7 +68,7 @@ Private Const TradingDaysPerWeek                    As Double = 5
 '@================================================================================
 
 Public Function gCalcSessionTimes(ByVal pSpecifier As BarDataSpecifier, ByVal pInstrument As instrument) As SessionTimes
-If pSpecifier.includeBarsOutsideSession Then
+If pSpecifier.IncludeBarsOutsideSession Then
     'gCalcSessionTimes.StartTime = IIf(pSpecifier.customSessionStartTime <> 0, pSpecifier.customSessionStartTime, pInstrument.FullSessionStartTime)
     'gCalcSessionTimes.EndTime = IIf(pSpecifier.customSessionEndTime <> 0, pSpecifier.customSessionEndTime, pInstrument.FullSessionEndTime)
 Else
@@ -134,8 +134,8 @@ Dim lBarLengthMinutes As Long
 
 Select Case pBarTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
-    lBarLengthMinutes = 60
-    lReqDetails.NumberOfBars = lNumberOfTargetBars * 24 / pBarTimePeriod.Length
+    lBarLengthMinutes = 15
+    lReqDetails.NumberOfBars = lNumberOfTargetBars * 96 / pBarTimePeriod.Length
 Case TimePeriodUnits.TimePeriodHour
     lBarLengthMinutes = 60
     lReqDetails.NumberOfBars = lNumberOfTargetBars * pBarTimePeriod.Length

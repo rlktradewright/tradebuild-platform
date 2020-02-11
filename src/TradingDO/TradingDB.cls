@@ -178,7 +178,7 @@ AssertArgument Not pBarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
 AssertArgument pFromDate >= 0, "Invalid from date"
 AssertArgument pToDate >= 0, "Invalid to date"
 AssertArgument pMaxNumberOfBars >= 0, "Invalid max number of bars"
-AssertArgument pFromDate > 0 Or pToDate > 0 Or pMaxNumberOfBars > 0, "At least one of fromDate, toDate and maxNumberOfBars must be supplied"
+AssertArgument pFromDate > 0 Or pToDate > 0 Or pMaxNumberOfBars > 0, "At least one of FromDate, ToDate and MaxNumberOfBars must be supplied"
 
 Dim lInstrument As instrument
 Set lInstrument = InstrumentFactory.LoadBySpecifier(pSpecifier)
@@ -222,7 +222,7 @@ AssertArgument Not pBarTimePeriod Is Nothing, "BarTimePeriod Is Nothing"
 AssertArgument pFromDate >= 0, "Invalid from date"
 AssertArgument pToDate >= 0, "Invalid to date"
 AssertArgument pMaxNumberOfBars >= 0, "Invalid max number of bars"
-AssertArgument pFromDate > 0 Or pToDate > 0 Or pMaxNumberOfBars > 0, "At least one of fromDate, toDate and maxNumberOfBars must be supplied"
+AssertArgument pFromDate > 0 Or pToDate > 0 Or pMaxNumberOfBars > 0, "At least one of FromDate, ToDate and MaxNumberOfBars must be supplied"
 
 Dim fbt As New FetchBarsTask
 fbt.Initialise Me, _

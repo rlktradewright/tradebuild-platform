@@ -149,7 +149,7 @@ If Not mBarListener Is Nothing Then mBarListener.FetchStarted mCookie
 Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             createNewSessionBuilder(mInstrument).Session, _
                                             mInstrument.TickSize, _
-                                            IIf(mSpecifier.maxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.maxNumberOfBars), _
+                                            IIf(mSpecifier.MaxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.MaxNumberOfBars), _
                                             mSpecifier.NormaliseDailyTimestamps)
 
 If gUseTickData(mSpecifier.BarTimePeriod.Units) Then
@@ -267,7 +267,7 @@ Dim lSessTimes As SessionTimes
 lSessTimes = gCalcSessionTimes(mSpecifier, mInstrument)
 
 Dim lReqDetails As BarRequestDetails
-lReqDetails = gGenerateBarRequestDetails(lSessTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.maxNumberOfBars)
+lReqDetails = gGenerateBarRequestDetails(lSessTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.MaxNumberOfBars)
 If Not lReqDetails.BarTimePeriod Is mSpecifier.BarTimePeriod Then
     ' we are building bars from smaller ones, so we can't notify them
     ' until we have finished building them, as we don't know up front
@@ -284,7 +284,7 @@ Set lRS = doFetchBars(lRSFetcher, mInstrument.Id, lReqDetails, mSpecifier.BarTyp
 If Not mBarListener Is Nothing Then mBarListener.FetchDataRetrieved mCookie
 
 Dim lBDP As New BarDataProcessor
-lBDP.Initialise mTargetBarsBuilder, lRS, lSessTimes, mSpecifier.maxNumberOfBars, lReqDetails.StartAtFromDate
+lBDP.Initialise mTargetBarsBuilder, lRS, lSessTimes, mSpecifier.MaxNumberOfBars, lReqDetails.StartAtFromDate
 lBDP.ProcessBars
 
 Exit Sub
@@ -428,7 +428,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function needMoreTicks(ByVal pTotalBars As Long, ByVal pSpecifier As BarDataSpecifier) As Boolean
-needMoreTicks = pTotalBars < pSpecifier.maxNumberOfBars And _
+needMoreTicks = pTotalBars < pSpecifier.MaxNumberOfBars And _
             (pSpecifier.FromDate = 0 Or pSpecifier.ToDate = 0)
 End Function
 
