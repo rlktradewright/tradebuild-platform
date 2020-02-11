@@ -44,12 +44,14 @@ Private Const NumberCommand                         As String = "NUMBER"
 Private Const TimeframeCommand                      As String = "TIMEFRAME"
 Private Const SessCommand                           As String = "SESS"
 Private Const NonSessCommand                        As String = "NONSESS"
+Private Const SessionOnlyCommand                    As String = "SESSIONONLY"
 Private Const MillisecsCommand                      As String = "MILLISECS"
 Private Const NoMillisecsCommand                    As String = "NOMILLISECS"
 Private Const HelpCommand                           As String = "HELP"
 Private Const Help1Command                          As String = "?"
 Private Const SessionEndTimeCommand                 As String = "SESSIONENDTIME"
 Private Const SessionStartTimeCommand               As String = "SESSIONSTARTTIME"
+Private Const DateOnlyCommmand                      As String = "DATEONLY"
 
 Private Const SwitchFromDb                          As String = "fromdb"
 Private Const SwitchFromFile                        As String = "fromfile"
@@ -98,6 +100,8 @@ Private mNumberOfBarsWritten                        As Long
 
 Private mSessionEndTime                             As Date
 Private mSessionStartTime                           As Date
+
+Private mNormaliseDailyBarTimestamps                As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -218,7 +222,11 @@ On Error GoTo Err
 
 If pBar Is Nothing Then Exit Sub
 
-gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateAndTimeISO8601 Or (Not mIncludeMillisecs And TimestampNoMillisecs))
+If mNormaliseDailyBarTimestamps Then
+    gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateOnlyISO8601)
+Else
+    gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateAndTimeISO8601 Or (Not mIncludeMillisecs And TimestampNoMillisecs))
+End If
 gCon.WriteString ","
 gCon.WriteString FormatPrice(pBar.OpenValue, gSecType, gTickSize)
 gCon.WriteString ","
@@ -256,6 +264,7 @@ SetupDefaultLogging command
 
 mNumber = &H7FFFFFFF
 mTo = MaxDate
+mNormaliseDailyBarTimestamps = True
 
 Set gCon = GetConsole
 
@@ -345,8 +354,10 @@ Do While inString <> gCon.EofString
             processSessCommand
         Case NonSessCommand
             processNonSessCommand
+        Case SessionOnlyCommand
+            processSessionOnlyCommand params
         Case MillisecsCommand
-            mIncludeMillisecs = True
+            processMillsecsCommand params
         Case NoMillisecsCommand
             mIncludeMillisecs = False
         Case HelpCommand, Help1Command
@@ -355,6 +366,8 @@ Do While inString <> gCon.EofString
             processSessionEndTimeCommand params
         Case SessionStartTimeCommand
             processSessionStartTimeCommand params
+        Case DateOnlyCommmand
+            processDateOnlyCommand params
         Case Else
             gCon.WriteErrorLine "Invalid command '" & command & "'"
         End Select
@@ -411,6 +424,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processDateOnlyCommand( _
+                ByVal params As String)
+params = UCase$(params)
+If params = "" Or params = "YES" Or params = "TRUE" Or params = "ON" Then
+    mNormaliseDailyBarTimestamps = True
+ElseIf params = "NO" Or params = "FALSE" Or params = "OFF" Then
+    mNormaliseDailyBarTimestamps = False
+Else
+    gCon.WriteErrorLine "Line " & mLineNumber & ": parameter must be YES, NO, ON, OFF, TRUE or FALSE"
+End If
+End Sub
+
 Private Sub processFromCommand( _
                 ByVal params As String)
 Const ProcName As String = "processFromCommand"
@@ -428,6 +453,18 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processMillsecsCommand( _
+                ByVal params As String)
+params = UCase$(params)
+If params = "" Or params = "YES" Or params = "TRUE" Or params = "ON" Then
+    mIncludeMillisecs = True
+ElseIf params = "NO" Or params = "FALSE" Or params = "OFF" Then
+    mIncludeMillisecs = False
+Else
+    gCon.WriteErrorLine "Line " & mLineNumber & ": parameter must be YES, NO, ON, OFF, TRUE or FALSE"
+End If
 End Sub
 
 Private Sub processNonSessCommand()
@@ -568,6 +605,17 @@ Private Sub processSessCommand()
 mSessionOnly = True
 End Sub
 
+Private Sub processSessionOnlyCommand(ByVal pParams As String)
+pParams = UCase$(pParams)
+If pParams = "" Or pParams = "YES" Or pParams = "TRUE" Or pParams = "ON" Then
+    mSessionOnly = True
+ElseIf pParams = "NO" Or pParams = "FALSE" Or pParams = "OFF" Then
+    mSessionOnly = False
+Else
+    gCon.WriteErrorLine "Line " & mLineNumber & ": parameter must be YES, NO, ON, OFF, TRUE or FALSE"
+End If
+End Sub
+
 Private Sub processSessionEndTimeCommand(ByVal pParams As String)
 Const ProcName As String = "processSessionEndTimeCommand"
 On Error GoTo Err
@@ -656,7 +704,8 @@ Else
                             mTimePeriod, _
                             mSessionOnly, _
                             mSessionStartTime, _
-                            mSessionEndTime
+                            mSessionEndTime, _
+                            mNormaliseDailyBarTimestamps
         Set gProcessor = lProcessor
     End If
     
