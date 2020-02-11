@@ -1596,17 +1596,7 @@ Public Property Let SessionEndTime(ByVal Value As Date)
 Const ProcName As String = "SessionEndTime"
 On Error GoTo Err
 
-If mPeriods.TimePeriod Is Nothing Then
-    mPeriods.SessionEndTime = Value
-ElseIf mPeriods.TimePeriod.Units = TimePeriodDay Or _
-    mPeriods.TimePeriod.Units = TimePeriodWeek Or _
-    mPeriods.TimePeriod.Units = TimePeriodMonth Or _
-    mPeriods.TimePeriod.Units = TimePeriodYear _
-Then
-    mPeriods.SessionEndTime = 0#
-Else
-    mPeriods.SessionEndTime = Value
-End If
+mPeriods.SessionEndTime = Value
 
 Exit Property
 
@@ -1623,17 +1613,7 @@ Public Property Let SessionStartTime(ByVal Value As Date)
 Const ProcName As String = "SessionStartTime"
 On Error GoTo Err
 
-If mPeriods.TimePeriod Is Nothing Then
-    mPeriods.SessionStartTime = Value
-ElseIf mPeriods.TimePeriod.Units = TimePeriodDay Or _
-    mPeriods.TimePeriod.Units = TimePeriodWeek Or _
-    mPeriods.TimePeriod.Units = TimePeriodMonth Or _
-    mPeriods.TimePeriod.Units = TimePeriodYear _
-Then
-    mPeriods.SessionStartTime = 0#
-Else
-    mPeriods.SessionStartTime = Value
-End If
+mPeriods.SessionStartTime = Value
 
 Exit Property
 
@@ -1670,15 +1650,6 @@ Const ProcName As String = "TimePeriod"
 On Error GoTo Err
 
 mPeriods.TimePeriod = Value
-If mPeriods.TimePeriod Is Nothing Then
-ElseIf mPeriods.TimePeriod.Units = TimePeriodDay Or _
-    mPeriods.TimePeriod.Units = TimePeriodWeek Or _
-    mPeriods.TimePeriod.Units = TimePeriodMonth Or _
-    mPeriods.TimePeriod.Units = TimePeriodYear _
-Then
-    mPeriods.SessionStartTime = 0#
-    mPeriods.SessionEndTime = 0#
-End If
 
 Exit Property
 
