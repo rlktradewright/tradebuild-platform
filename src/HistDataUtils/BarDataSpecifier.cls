@@ -58,6 +58,7 @@ Private mMaxNumberOfBars As Long
 Private mCustomSessionStartTime As Date
 Private mCustomSessionEndTime As Date
 Private mIncludeBarsOutsideSession As Boolean
+Private mNormaliseDailyTimestamps As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -151,6 +152,14 @@ End Property
 
 Public Property Get MaxNumberOfBars() As Long
 MaxNumberOfBars = mMaxNumberOfBars
+End Property
+
+Public Property Let NormaliseDailyTimestamps(ByVal Value As Boolean)
+mNormaliseDailyTimestamps = Value
+End Property
+
+Public Property Get NormaliseDailyTimestamps() As Boolean
+NormaliseDailyTimestamps = mNormaliseDailyTimestamps
 End Property
 
 Public Property Let ToDate(ByVal Value As Date)

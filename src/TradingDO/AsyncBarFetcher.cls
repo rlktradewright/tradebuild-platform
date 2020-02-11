@@ -38,7 +38,6 @@ Private Enum AsyncStates
     Fetching
     Fetched
     ProcessingBars
-    NotifyingBars
     ProcessingTicks
     ConcatenatingPartialResults
     AppendingBars
@@ -83,7 +82,6 @@ Private mSpecifier                                  As BarDataSpecifier
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mNotifyAtEnd                                As Boolean
 Private mStartAtFromDate                            As Boolean
 
 Private WithEvents mTargetBarsBuilder               As BarsBuilder
@@ -203,8 +201,6 @@ Private Sub mTargetBarsBuilder_BarAdded(ByVal pBar As Bar)
 Const ProcName As String = "mTargetBarsBuilder_BarAdded"
 On Error GoTo Err
 
-If mNotifyAtEnd Then Exit Sub
-
 fireNotifyBar mCurrentBar
 
 Set mCurrentBar = pBar
@@ -245,11 +241,12 @@ mUseTickdata = gUseTickData(mSpecifier.BarTimePeriod.Units)
 Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             createNewSessionBuilder(mInstrument).Session, _
                                             mInstrument.TickSize, _
-                                            IIf(mSpecifier.maxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.maxNumberOfBars))
+                                            IIf(mSpecifier.maxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.maxNumberOfBars), _
+                                            mSpecifier.NormaliseDailyTimestamps)
 
 mSessionTimes = gCalcSessionTimes(mSpecifier, mInstrument)
 
-If taskName = "" Then taskName = "BarFetcher/" & mInstrument.ShortName & "(" & mSpecifier.BarTimePeriod.ToString & ")" & FormatTimestamp(mSpecifier.fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(mSpecifier.toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+If taskName = "" Then taskName = "BarFetcher/" & mInstrument.ShortName & "(" & mSpecifier.BarTimePeriod.ToString & ")" & FormatTimestamp(mSpecifier.FromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(mSpecifier.ToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
 Set FetchBarsAsync = StartTask(Me, PriorityNormal, taskName, cookie)
 
 Exit Function
@@ -348,7 +345,7 @@ End Function
 
 Private Function filterByTime( _
                 ByVal timestamp As Date) As Boolean
-filterByTime = (timestamp >= mSpecifier.fromDate And timestamp < mSpecifier.toDate)
+filterByTime = (timestamp >= mSpecifier.FromDate And timestamp < mSpecifier.ToDate)
 End Function
 
 Private Sub fireFetchCancelled()
@@ -409,7 +406,7 @@ End Sub
 
 Private Function needMoreTicks(ByVal pTotalBars As Long, ByVal pSpecifier As BarDataSpecifier) As Boolean
 needMoreTicks = pTotalBars < pSpecifier.maxNumberOfBars And _
-            (pSpecifier.fromDate = 0 Or pSpecifier.toDate = 0)
+            (pSpecifier.FromDate = 0 Or pSpecifier.ToDate = 0)
 End Function
 
 Private Sub returnAsyncResults()
@@ -436,14 +433,8 @@ Select Case mAsyncState
 Case Fetching
     If Not mBarListener Is Nothing Then mBarListener.FetchStarted mCookie
     Dim lBarReqDetails As BarRequestDetails
-    lBarReqDetails = gGenerateBarRequestDetails(mSessionTimes, mSpecifier.BarTimePeriod, mSpecifier.fromDate, mSpecifier.toDate, mSpecifier.maxNumberOfBars)
+    lBarReqDetails = gGenerateBarRequestDetails(mSessionTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.maxNumberOfBars)
     mStartAtFromDate = lBarReqDetails.StartAtFromDate
-    If Not lBarReqDetails.BarTimePeriod Is mSpecifier.BarTimePeriod Then
-        ' we are building bars from smaller ones, so we can't notify them
-        ' until we have finished building them, as we don't know up front
-        ' how many target bars we'll end up with
-        mNotifyAtEnd = True
-    End If
     Set mRSFuture = doFetchBarsAsync(mRSFetcher, mInstrument.Id, lBarReqDetails, mSpecifier.BarType)
     mFutureWaiter.Add mRSFuture
     mTaskContext.Suspend -1
@@ -453,18 +444,7 @@ Case Fetched
     mBDP.Initialise mTargetBarsBuilder, mRS, mSessionTimes, mSpecifier.maxNumberOfBars, mStartAtFromDate
     mAsyncState = ProcessingBars
 Case ProcessingBars
-    If mBDP.ProcessNextBar Then
-    ElseIf mNotifyAtEnd Then
-        Set en = mTargetBarsBuilder.Bars.Enumerator
-        mAsyncState = NotifyingBars
-    Else
-        returnAsyncResults
-        mTaskContext.Suspend -1
-    End If
-Case NotifyingBars
-    If en.MoveNext Then
-        fireNotifyBar en.Current
-    Else
+    If Not mBDP.ProcessNextBar Then
         returnAsyncResults
         mTaskContext.Suspend -1
     End If
@@ -483,8 +463,8 @@ On Error GoTo Err
 Select Case mAsyncState
 Case Fetching
     If Not mBarListener Is Nothing Then mBarListener.FetchStarted mCookie
-    mAppending = (mSpecifier.toDate = 0)
-    gGenerateTickRequestDetails mSessionTimes, mSpecifier.fromDate, mSpecifier.toDate, mPrevFromDate, mPrevToDate
+    mAppending = (mSpecifier.ToDate = 0)
+    gGenerateTickRequestDetails mSessionTimes, mSpecifier.FromDate, mSpecifier.ToDate, mPrevFromDate, mPrevToDate
     Set mRSFuture = doFetchTicksAsync(mRSFetcher, mInstrument.Id, mPrevFromDate, mPrevToDate, mSessionTimes)
     mFutureWaiter.Add mRSFuture
     mTaskContext.Suspend -1

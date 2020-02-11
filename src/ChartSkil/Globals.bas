@@ -632,25 +632,6 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
-Public Function gNormaliseTimestamp( _
-                ByVal pTimestamp As Date, _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pSessionStartTime As Date, _
-                ByVal pSessionEndTime As Date) As Date
-Select Case pTimePeriod.Units
-Case TimePeriodDay, TimePeriodWeek, TimePeriodMonth, TimePeriodYear
-    If pSessionStartTime >= pSessionEndTime And _
-        pTimestamp >= pSessionStartTime _
-    Then
-        gNormaliseTimestamp = Int(pTimestamp) + 1
-    Else
-        gNormaliseTimestamp = Int(pTimestamp)
-    End If
-Case Else
-    gNormaliseTimestamp = pTimestamp
-End Select
-End Function
-
 Public Function gRadiansToDegrees( _
                 ByVal radians As Double) As Double
 gRadiansToDegrees = radians * 180 / Pi

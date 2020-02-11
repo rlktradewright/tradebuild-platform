@@ -261,7 +261,7 @@ Const ProcName As String = "fetchLatestBar"
 On Error GoTo Err
 
 Dim lBarSpecFuture As IFuture
-Set lBarSpecFuture = gCreateBarDataSpecifierFuture(pContractFuture, pTimePeriod, 0, 0, 2, pBarType, pClockFuture, False, True, 0, 0)
+Set lBarSpecFuture = gCreateBarDataSpecifierFuture(pContractFuture, pTimePeriod, 0, 0, 2, pBarType, pClockFuture, False, True, False, 0, 0)
 Set fetchLatestBar = pHistDataStore.FetchBars(lBarSpecFuture, Nothing)
 
 Exit Function

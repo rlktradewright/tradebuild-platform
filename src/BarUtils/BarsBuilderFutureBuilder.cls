@@ -126,12 +126,13 @@ Friend Sub Initialise( _
                 ByVal pSession As Session, _
                 ByVal pTickSize As Double, _
                 ByVal pNumberOfBarsToCache As Long, _
+                ByVal pNormaliseDailyTimestamps As Boolean, _
                 ByVal pSave As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Dim lBarsBuilder As New BarsBuilder
-lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pSave
+lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pNormaliseDailyTimestamps, pSave
 
 gLogger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
 mFutureBuilder.Value = lBarsBuilder

@@ -46,7 +46,7 @@ Private Const ModuleName                    As String = "BarsBuilder"
 ' Member variables
 '@================================================================================
 
-Private WithEvents mBars                    As Bars
+Private mBars                               As Bars
 Attribute mBars.VB_VarHelpID = -1
 
 Private mCurrentBar                         As Bar
@@ -69,6 +69,8 @@ Private mOpenInterestParser                 As VolumeParser
 
 Private mCacheSize                          As Long
 
+Private mNormaliseDailyTimestamps           As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -76,27 +78,6 @@ Private mCacheSize                          As Long
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
-
-'@================================================================================
-' mBars Event Handlers
-'@================================================================================
-
-Private Sub mBars_CollectionChanged(ev As CollectionChangeEventData)
-Const ProcName As String = "mBars_CollectionChanged"
-On Error GoTo Err
-
-If Not ev.changeType = CollItemAdded Then Exit Sub
-
-Set mCurrentBar = ev.AffectedItem
-If mBarTimePeriod.Length <> 0 Then mBarEndTime = gCentiSecondstoDate(gBarEndTime(mCurrentBar.Timestamp, _
-                                                            mBarTimePeriod, _
-                                                            mMainSession.SessionStartTime, _
-                                                            mMainSession.SessionEndTime))
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' mMainSession Event Handlers
@@ -185,9 +166,8 @@ lBar.Initialise Timestamp, _
                 Volume, _
                 TickVolume, _
                 OpenInterest
-mCurrentBarNumber = mCurrentBarNumber + 1
-If Not mBars Is Nothing Then mBars.Add lBar, mCurrentBarNumber, Timestamp
-FireBarAdded lBar
+
+AddThisBar lBar
 
 Exit Sub
 
@@ -206,7 +186,15 @@ AssertArgument Not pBar Is Nothing, "pBar is nothing"
 mCurrentBarNumber = mCurrentBarNumber + 1
 pBar.BarNumber = mCurrentBarNumber
 pBar.SetBarChanged
-If Not mBars Is Nothing Then mBars.Add pBar, mCurrentBarNumber, pBar.Timestamp
+
+Set mCurrentBar = pBar
+If mBarTimePeriod.Length <> 0 Then mBarEndTime = gCentiSecondsToDate(gBarEndTime(mCurrentBar.Timestamp, _
+                                                            mBarTimePeriod, _
+                                                            mMainSession.SessionStartTime, _
+                                                            mMainSession.SessionEndTime))
+
+If Not mBars Is Nothing Then mBars.Add mCurrentBar, mCurrentBarNumber, pBar.Timestamp
+
 FireBarAdded pBar
 
 Exit Sub
@@ -289,6 +277,7 @@ Friend Sub Initialise( _
                 ByVal pSession As Session, _
                 ByVal pTickSize As Double, _
                 ByVal pNumberOfBarsToCache As Long, _
+                ByVal pNormaliseDailyTimestamps As Boolean, _
                 ByVal pSave As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -298,6 +287,7 @@ gLogger.Log "Initialise for " & pBarTimePeriod.ToShortString, ProcName, ModuleNa
 Set mBarTimePeriod = pBarTimePeriod
 setTickSize pTickSize
 mCacheSize = pNumberOfBarsToCache
+mNormaliseDailyTimestamps = pNormaliseDailyTimestamps
 
 createVolumeAndOpenInterestParsers pSession
 
@@ -305,7 +295,7 @@ Set mMainSession = pSession
 
 If pSave Then
     Set mBars = New Bars
-    mBars.Initialise pBarTimePeriod, mCacheSize, pSession, mTickSize
+    mBars.Initialise pBarTimePeriod, mCacheSize, pSession, mTickSize, mNormaliseDailyTimestamps
 End If
 
 Exit Sub
@@ -326,6 +316,7 @@ gLogger.Log "Initialise with " & pInitialBars.Count & " initial bars", ProcName,
 Set mBars = pInitialBars
 Set mBarTimePeriod = mBars.BarTimePeriod
 mCacheSize = mBars.BarsCache.CyclicSize
+mNormaliseDailyTimestamps = mBars.DailyTimestampsAreNormalised
 
 setTickSize pTickSize
 
@@ -339,7 +330,7 @@ If mBars.Count > 0 Then
     Set mCurrentBar = mBars.Bar(0)
     
     If Not mInitialBarsSession Is Nothing Then
-        mBarEndTime = gCentiSecondstoDate(gBarEndTime(mCurrentBar.Timestamp, _
+        mBarEndTime = gCentiSecondsToDate(gBarEndTime(mCurrentBar.Timestamp, _
                                     mBarTimePeriod, _
                                     mInitialBarsSession.SessionStartTime, _
                                     mInitialBarsSession.SessionEndTime))
@@ -368,9 +359,9 @@ If mCurrentBar Is Nothing Then
 End If
 
 If mBarTimePeriod.Length = 0 Then
-    ' the caller will sUpply Bar numbers
+    ' the caller will supply Bar numbers
     If newBar(oi.BarNumber) Then
-        createNewBar oi.BarStartTime, mCurrentBar.CloseValue, 0, mOpenInterestParser.Notify(oi.Value)
+        createNewCustomPeriodBar oi.BarStartTime, mCurrentBar.CloseValue, 0, mOpenInterestParser.Notify(oi.Value)
     Else
         mCurrentBar.NotifyOpenInterest mOpenInterestParser.Notify(oi.Value)
     End If
@@ -397,7 +388,7 @@ If IsEmpty(Value.Value) Then Exit Sub
 If mBarTimePeriod.Units = TimePeriodNone Or mBarTimePeriod.Length = 0 Then
     ' the caller sUpplies Bar numbers
     If newBar(Value.BarNumber) Then
-        createNewBar Value.BarStartTime, Value.Value, 0, 0
+        createNewCustomPeriodBar Value.BarStartTime, Value.Value, 0, 0
     Else
         mCurrentBar.NotifyValue Value.Value
     End If
@@ -444,7 +435,7 @@ ElseIf mBarTimePeriod.Units = TimePeriodTickVolume Then
     Else
         mCurrentBar.NotifyValue Value.Value
     End If
-ElseIf gCentiSecondstoDate(gBarEndTime(Value.Timestamp, _
+ElseIf gCentiSecondsToDate(gBarEndTime(Value.Timestamp, _
                                         mBarTimePeriod, _
                                         mMainSession.SessionStartTime, _
                                         mMainSession.SessionEndTime)) > mBarEndTime Then
@@ -547,16 +538,39 @@ Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession
 
 Dim lBar As New Bar
 
-If mBarTimePeriod.Units = TimePeriodNone Or mBarTimePeriod.Length = 0 Then
-    lBar.BarNumber = mCurrentBarNumber
-    lBar.Timestamp = Timestamp
-Else
-    mCurrentBarNumber = mCurrentBarNumber + 1
-    lBar.BarNumber = mCurrentBarNumber
-    lBar.Timestamp = gCentiSecondstoDate(gBarStartTime(Timestamp, _
-                                    mBarTimePeriod, _
-                                    mMainSession.SessionStartTime))
-End If
+mCurrentBarNumber = mCurrentBarNumber + 1
+lBar.BarNumber = mCurrentBarNumber
+lBar.Timestamp = gCentiSecondsToDate(gBarStartTime(Timestamp, _
+                                mBarTimePeriod, _
+                                mMainSession.SessionStartTime))
+
+AddThisBar lBar
+
+If initialValue <> MaxDouble Then lBar.NotifyValue initialValue
+If initialVolume <> 0 Then lBar.NotifyVolume initialVolume
+If initialOpenInterest <> 0 Then lBar.NotifyOpenInterest initialOpenInterest
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub createNewCustomPeriodBar( _
+                ByVal Timestamp As Date, _
+                ByVal initialValue As Double, _
+                ByVal initialVolume As Long, _
+                ByVal initialOpenInterest As Long)
+Const ProcName As String = "createNewCustomPeriodBar"
+On Error GoTo Err
+
+Assert Not mBarTimePeriod Is Nothing, "mBarTimePeriod is nothing"
+Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession is nothing"
+
+Dim lBar As New Bar
+
+lBar.BarNumber = mCurrentBarNumber
+lBar.Timestamp = Timestamp
 
 If Not mBars Is Nothing Then mBars.Add lBar, mCurrentBarNumber, Timestamp
 FireBarAdded lBar

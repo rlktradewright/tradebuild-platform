@@ -159,6 +159,7 @@ Friend Sub Initialise( _
                 ByVal pClockFuture As IFuture, _
                 ByVal pExcludeCurrentBar As Boolean, _
                 ByVal pIncludeBarsOutsideSession As Boolean, _
+                ByVal pNormaliseDailyTimestamps As Boolean, _
                 ByVal pCustomSessionStartTime As Date, _
                 ByVal pCustomSessionEndTime As Date)
 Const ProcName As String = "Initialise"
@@ -174,6 +175,7 @@ mBarSpecifier.ToDate = pToTime
 mBarSpecifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
 mBarSpecifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
 mBarSpecifier.MaxNumberOfBars = pMaxNumberOfBars
+mBarSpecifier.NormaliseDailyTimestamps = pNormaliseDailyTimestamps
 mExcludeCurrentBar = pExcludeCurrentBar
 
 mFutureWaiter.Add mContractFuture

@@ -301,7 +301,8 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
                                     mTargetContract.TickSize, _
                                     IIf(mTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF, _
                                         0, _
-                                        mTargetBarSpecifier.MaxNumberOfBars))
+                                        mTargetBarSpecifier.MaxNumberOfBars), _
+                                    mTargetBarSpecifier.NormaliseDailyTimestamps)
     
     mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, CreateFuture(mTargetContract), mContractCache)
 ElseIf TypeOf ev.Future.Value Is TwsContractDetails Then

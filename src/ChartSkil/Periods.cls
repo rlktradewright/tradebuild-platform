@@ -646,7 +646,7 @@ Private Function generateKeyAndLabelTimestamp( _
 Const ProcName As String = "generateKeyAndLabelTimestamp"
 On Error GoTo Err
 
-pLabelTimestamp = gNormaliseTimestamp(pPeriodStart, mTimePeriod, mSessionStartTime, mSessionEndTime)
+pLabelTimestamp = NormaliseBarTimestamp(pPeriodStart, mTimePeriod, mSessionStartTime, mSessionEndTime)
 
 generateKeyAndLabelTimestamp = pPeriodStart + pDuplicateNumber * TenMicroSeconds
 
@@ -705,7 +705,7 @@ Case TimePeriodNone, TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovem
     If pPeriod.PeriodNumber Mod 10 <> 1 Then Exit Function
     lGridLineTime = pPeriod.LabelTimestamp
 Case Else
-    lGridLineTime = gNormaliseTimestamp( _
+    lGridLineTime = NormaliseBarTimestamp( _
                         BarStartTime(pPeriod.LabelTimestamp, _
                                     mVerticalGridTimePeriod, _
                                     mSessionStartTime), _
