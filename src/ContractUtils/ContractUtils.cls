@@ -588,7 +588,7 @@ AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cann
 If IsEmpty(pCookie) Then pCookie = GenerateGUIDString
 
 Dim t As New ContractFetchTask
-t.InitialiseSorted pContractSpec, pPrimaryContractStore, pSecondaryContractStore, pCookie, pListener, False, pSortkeys, pSortDescending
+t.InitialiseSorted pContractSpec, pPrimaryContractStore, pSecondaryContractStore, pCookie, pListener, pSortkeys, pSortDescending
 StartTask t, pPriority, pTaskName
 
 Set FetchContractsSorted = t.ContractsFuture
