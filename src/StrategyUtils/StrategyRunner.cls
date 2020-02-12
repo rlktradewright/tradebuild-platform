@@ -355,12 +355,14 @@ Set mStrategy = pStrategy
 If Not mContract Is Nothing Then setupLogging mContract.Specifier.LocalSymbol
 Set mPositionManagementStrategyFactories = pPositionManagementStrategyFactories
 
-Dim lParams As New Parameters
-Set mDefaultParameters = lParams
+Dim lStrategyParams As New Parameters
+Set mDefaultParameters = lStrategyParams
 
-setStrategyRunner mStrategy, Nothing
-mStrategy.DefineDefaultParameters
-gClearStrategyRunner
+If Not mStrategy Is Nothing Then
+    setStrategyRunner mStrategy, Nothing
+    mStrategy.DefineDefaultParameters
+    gClearStrategyRunner
+End If
 
 Dim lPMFactory As IPosnMgmtStrtgyFactory
 For Each lPMFactory In mPositionManagementStrategyFactories
@@ -371,11 +373,11 @@ For Each lPMFactory In mPositionManagementStrategyFactories
     lPMFactory.DefineDefaultParameters
     gClearStrategyRunner
     
-    Set lParams = mergeParameters(lParams, lPMFactoryParams)
+    Set lStrategyParams = mergeParameters(lStrategyParams, lPMFactoryParams)
 Next
 
-Set mDefaultParameters = Nothing
-Set GetDefaultParameters = lParams
+Set mDefaultParameters = lStrategyParams
+Set GetDefaultParameters = lStrategyParams
 
 Exit Function
 

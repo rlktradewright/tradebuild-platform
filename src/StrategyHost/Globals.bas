@@ -138,6 +138,9 @@ ElseIf TypeOf pControl Is Toolbar Then
 ElseIf TypeOf pControl Is SSTab Then
     pControl.BackColor = pTheme.TabstripBackColor
     pControl.ForeColor = pTheme.TabstripForeColor
+ElseIf TypeOf pControl Is DataGrid Then
+    pControl.BackColor = pTheme.GridBackColorFixed
+    pControl.ForeColor = pTheme.GridForeColor
 ElseIf TypeOf pControl Is Object  Then
     On Error Resume Next
     If TypeOf pControl.object Is IThemeable Then
