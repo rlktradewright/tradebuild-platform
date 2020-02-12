@@ -167,7 +167,7 @@ lBar.Initialise Timestamp, _
                 TickVolume, _
                 OpenInterest
 
-AddThisBar lBar
+addABar lBar
 
 Exit Sub
 
@@ -180,12 +180,25 @@ Public Sub AddThisBar( _
 Const ProcName As String = "AddThisBar"
 On Error GoTo Err
 
+pBar.SetBarChanged
+addABar pBar
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub addABar( _
+                ByVal pBar As Bar)
+Const ProcName As String = "addABar"
+On Error GoTo Err
+
 Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession is nothing"
 AssertArgument Not pBar Is Nothing, "pBar is nothing"
 
 mCurrentBarNumber = mCurrentBarNumber + 1
 pBar.BarNumber = mCurrentBarNumber
-pBar.SetBarChanged
 
 Set mCurrentBar = pBar
 If mBarTimePeriod.Length <> 0 Then mBarEndTime = gCentiSecondsToDate(gBarEndTime(mCurrentBar.Timestamp, _
@@ -538,13 +551,11 @@ Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession
 
 Dim lBar As New Bar
 
-mCurrentBarNumber = mCurrentBarNumber + 1
-lBar.BarNumber = mCurrentBarNumber
 lBar.Timestamp = gCentiSecondsToDate(gBarStartTime(Timestamp, _
                                 mBarTimePeriod, _
                                 mMainSession.SessionStartTime))
 
-AddThisBar lBar
+addABar lBar
 
 If initialValue <> MaxDouble Then lBar.NotifyValue initialValue
 If initialVolume <> 0 Then lBar.NotifyVolume initialVolume
@@ -571,6 +582,8 @@ Dim lBar As New Bar
 
 lBar.BarNumber = mCurrentBarNumber
 lBar.Timestamp = Timestamp
+
+Set mCurrentBar = lBar
 
 If Not mBars Is Nothing Then mBars.Add lBar, mCurrentBarNumber, Timestamp
 FireBarAdded lBar
