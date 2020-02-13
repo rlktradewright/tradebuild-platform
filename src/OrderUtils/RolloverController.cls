@@ -166,14 +166,6 @@ On Error GoTo Err
 
 If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
 
-Dim lEntryOrderType As OrderTypes: lEntryOrderType = mBracketOrder.EntryOrder.OrderType
-
-Dim lStopLossOrderType As OrderTypes: lStopLossOrderType = OrderTypeNone
-If Not mBracketOrder.StopLossOrder Is Nothing Then lStopLossOrderType = mBracketOrder.StopLossOrder.OrderType
-
-Dim lTargetOrderType As OrderTypes: lTargetOrderType = OrderTypeNone
-If Not mBracketOrder.TargetOrder Is Nothing Then lTargetOrderType = mBracketOrder.TargetOrder.OrderType
-
 If Not mNextOrderContext.IsReadyForBracketOrder(mBracketOrder) Then
     Exit Sub
 End If
@@ -287,11 +279,15 @@ Case SecTypeFuture
                                         mOrderManager.ContractStorePrimary, _
                                         mOrderManager.ContractStoreSecondary)
     
+    Dim lDataSource As IMarketDataSource
+    Set lDataSource = mOrderManager.MarketDataManager.CreateMarketDataSource( _
+                                            lContractFuture, _
+                                            True)
+    lDataSource.StartMarketData
+    
     Set mNextPositionManager = mOrderManager.CreateRecoverablePositionManager( _
                                             gNextId, _
-                                            mOrderManager.MarketDataManager.CreateMarketDataSource( _
-                                                            lContractFuture, _
-                                                            True), _
+                                            lDataSource, _
                                             mOrderManager.OrderSubmitterFactory, _
                                             mScopeName, _
                                             mBracketOrder.GroupName, _
@@ -384,7 +380,7 @@ End With
 Dim lBo As IBracketOrder
 Set lBo = mNextOrderContext.CreateBracketOrder( _
                 mBracketOrder.EntryOrder.Action, _
-                mBracketOrder.Size, _
+                mBracketOrder.EntryOrder.QuantityFilled, _
                 lEntryOrder, _
                 lStopLossOrder, _
                 lTargetOrder)
