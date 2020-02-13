@@ -222,11 +222,17 @@ On Error GoTo Err
 
 If pBar Is Nothing Then Exit Sub
 
-If mNormaliseDailyBarTimestamps Then
+If Not mNormaliseDailyBarTimestamps Then
+    gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateAndTimeISO8601 Or (Not mIncludeMillisecs And TimestampNoMillisecs))
+ElseIf mTimePeriod.Units = TimePeriodDay Or _
+        mTimePeriod.Units = TimePeriodWeek Or _
+        mTimePeriod.Units = TimePeriodMonth Or _
+        mTimePeriod.Units = TimePeriodYear Then
     gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateOnlyISO8601)
 Else
     gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateAndTimeISO8601 Or (Not mIncludeMillisecs And TimestampNoMillisecs))
 End If
+
 gCon.WriteString ","
 gCon.WriteString FormatPrice(pBar.OpenValue, gSecType, gTickSize)
 gCon.WriteString ","
