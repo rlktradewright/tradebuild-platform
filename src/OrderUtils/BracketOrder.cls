@@ -495,12 +495,11 @@ IBracketOrder_LongPosition = LongPosition
 End Property
 
 Private Sub IBracketOrder_NotifyCloseout( _
-                ByVal pCloseoutOrder As IOrder, _
                 ByVal pExec As IExecutionReport)
 Const ProcName As String = "IBracketOrder_NotifyCloseout"
 On Error GoTo Err
 
-NotifyCloseout pCloseoutOrder, pExec
+NotifyCloseout pExec
 
 Exit Sub
 
@@ -2584,21 +2583,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyCloseout( _
-                ByVal pCloseoutOrder As IOrder, _
                 ByVal pExec As IExecutionReport)
 Const ProcName As String = "NotifyCloseout"
 On Error GoTo Err
 
 If Size = 0 Then Exit Sub
 
-'createCloseoutOrder
+createCloseoutOrder
 
-Set mCloseoutOrder = pCloseoutOrder
+pExec.OrderId = mCloseoutOrder.Id
 mCloseoutOrder.NotifyFillEx pExec, False
 
-SaveRecoveryInfo
-
-fireChange BracketOrderCloseoutOrderCreated
 fireChange BracketOrderPositionCloseoutNotified
 RaiseEvent PositionCloseoutNotified
 Exit Sub
@@ -3301,25 +3296,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-'Private Sub createCloseoutOrder()
-'Const ProcName As String = "createCloseoutOrder"
-'On Error GoTo Err
-'
-'CloseoutOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
-'
-'mCloseoutOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
-'mCloseoutOrder.Quantity = Abs(Size)
-'mCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
-'
-'SaveRecoveryInfo
-'
-'fireChange BracketOrderCloseoutOrderCreated
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
+Private Sub createCloseoutOrder()
+Const ProcName As String = "createCloseoutOrder"
+On Error GoTo Err
+
+CloseoutOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
+
+mCloseoutOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
+mCloseoutOrder.Quantity = Abs(Size)
+mCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
+
+SaveRecoveryInfo
+
+fireChange BracketOrderCloseoutOrderCreated
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function doActions( _
                 ByRef pActions() As OpActions, _

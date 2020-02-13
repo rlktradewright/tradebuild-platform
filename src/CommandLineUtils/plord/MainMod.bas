@@ -916,8 +916,8 @@ ElseIf lCommand Is gCommands.StopLossCommand Then
     lContractProcessor.ProcessStopLossCommand Params
 ElseIf lCommand Is gCommands.TargetCommand Then
     lContractProcessor.ProcessTargetCommand Params
-ElseIf lCommand Is gCommands.RolloverCommand
-	lContractProcessor.ProcessRolloverCommand Params
+ElseIf lCommand Is gCommands.RolloverCommand Then
+    lContractProcessor.ProcessRolloverCommand Params
 ElseIf lCommand Is gCommands.QuitCommand Then
     lContractProcessor.ProcessQuitCommand
     mErrorCount = 0
@@ -1559,6 +1559,7 @@ gCommandListOrderSpecification.Initialise _
                 gCommands.ContractCommand, _
                 gCommands.EntryCommand, _
                 gCommands.QuitCommand, _
+                gCommands.RolloverCommand, _
                 gCommands.StopLossCommand, _
                 gCommands.TargetCommand
 

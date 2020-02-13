@@ -176,15 +176,7 @@ For Each oc In mOrderContexts
                     lExec.Action = OrderActionBuy
                 End If
                 
-                Dim lCloseoutOrder As Order
-                Set lCloseoutOrder = lActualCloseoutOrder.Clone
-                lCloseoutOrder.OrderType = lActualCloseoutOrder.OrderType
-                lCloseoutOrder.Quantity = lBracketOrder.Size
-                lCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
-                
-                lExec.OrderId = lCloseoutOrder.Id
-                
-                lBracketOrder.NotifyCloseout lCloseoutOrder, lExec
+                lBracketOrder.NotifyCloseout lExec
             End If
         Next
     End If

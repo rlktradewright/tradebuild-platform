@@ -73,7 +73,7 @@ End Function
 '@================================================================================
 
 Public Property Let OrderType(ByVal Value As OrderTypes)
-Set mOrderType = Value
+mOrderType = Value
 End Property
 
 Public Property Get OrderType() As OrderTypes

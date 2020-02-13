@@ -147,7 +147,7 @@ Public Property Get CloseoutOrderId() As String
 CloseoutOrderId = mCloseoutOrderId
 End Property
 
-Public Property Let CloseoutSpecifier(ByVal Value As String)
+Public Property Let CloseoutSpecifier(ByVal Value As CloseoutSpecifier)
 setDirty
 Set mCloseoutSpecifier = Value
 mDiff.SetProperty "CloseoutSpecifier", Value

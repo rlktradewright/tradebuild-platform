@@ -58,6 +58,7 @@ Private Const PurgeCommandName                      As String = "PURGE"
 Private Const QuitCommandName                       As String = "QUIT"
 Private Const QuoteCommandName                      As String = "QUOTE"
 Private Const ResetCommandName                      As String = "RESET"
+Private Const RolloverCommandName                   As String = "ROLLOVER"
 Private Const SellCommandName                       As String = "SELL"
 Private Const SellAgainCommandName                  As String = "S"
 Private Const StageOrdersCommandName                As String = "STAGEORDERS"
@@ -86,6 +87,7 @@ Private mPurgeCommand                               As New Command
 Private mQuitCommand                                As New Command
 Private mQuoteCommand                               As New Command
 Private mResetCommand                               As New Command
+Private mRolloverCommand                            As New Command
 Private mSellCommand                                As New Command
 Private mSellAgainCommand                           As New Command
 Private mStageOrdersCommand                         As New Command
@@ -120,6 +122,7 @@ addCommand mPurgeCommand, PurgeCommandName
 addCommand mQuitCommand, QuitCommandName
 addCommand mQuoteCommand, QuoteCommandName
 addCommand mResetCommand, ResetCommandName
+addCommand mRolloverCommand, RolloverCommandName
 addCommand mSellCommand, SellCommandName
 addCommand mSellAgainCommand, SellAgainCommandName
 addCommand mStageOrdersCommand, StageOrdersCommandName
@@ -211,6 +214,10 @@ End Property
 
 Friend Property Get ResetCommand() As Command
 Set ResetCommand = mResetCommand
+End Property
+
+Friend Property Get RolloverCommand() As Command
+Set RolloverCommand = mRolloverCommand
 End Property
 
 Friend Property Get SellCommand() As Command
