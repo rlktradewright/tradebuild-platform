@@ -859,19 +859,22 @@ If mSummary.CancelPrice <> 0# Then
     lPriceCanceller.Initialise Me, mSummary.CancelPrice, mDataSource
 End If
 
-If mSummary.CancelTime <> 0 And mSummary.CancelTime > Now Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
+If mSummary.CancelTime <> 0 And mSummary.CancelTime > GetTimestamp Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
 
 If mSummary.RolloverDate <> 0 Then
-    If mSummary.RolloverDate > Now Then
-        Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
-    Else
+    If mSummary.RolloverDate <= GetTimestamp Then
         Dim lExpiryTime As Date
         lExpiryTime = mContract.ExpiryDate + 10# / 24#
         Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
         lExpiryTime = ConvertDateTzToLocal(lExpiryTime, lTz)
-        If lExpiryTime > Now Then
+        If lExpiryTime > GetTimestamp Then
             initiateRollover
         End If
+    ElseIf Int(mSummary.RolloverDate - GetTimestamp) > 20 Then
+        ' too long for a timer list entry! Max is about 24 days
+        Set mRolloverTLI = mTimerList.Add(Nothing, GetTimestamp + 20, ExpiryTimeUnitDateTime)
+    Else
+        Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
     End If
 End If
     
@@ -903,34 +906,30 @@ setState mSummary.State
 If Not mOrderContext Is Nothing Then
     If mSummary.CloseoutOrderId = "" Then
     ElseIf mCloseoutOrder Is Nothing Then
-        CloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
+        SetCloseoutOrder CreateAnOrder(mSummary.CloseoutOrderId)
     ElseIf mCloseoutOrder.Id <> mSummary.CloseoutOrderId Then
-        Set mCloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
-        mSummary.CloseoutOrderId = mCloseoutOrder.Id
+        SetCloseoutOrder CreateAnOrder(mSummary.CloseoutOrderId)
     End If
     
     If mSummary.EntryOrderId = "" Then
     ElseIf mEntryOrder Is Nothing Then
-        EntryOrder = CreateAnOrder(mSummary.EntryOrderId)
+        SetEntryOrder CreateAnOrder(mSummary.EntryOrderId)
     ElseIf mEntryOrder.Id <> mSummary.EntryOrderId Then
-        Set mEntryOrder = CreateAnOrder(mSummary.EntryOrderId)
-        mSummary.EntryOrderId = mEntryOrder.Id
+        SetEntryOrder CreateAnOrder(mSummary.EntryOrderId)
     End If
     
     If mSummary.StopLossOrderId = "" Then
     ElseIf mStopLossOrder Is Nothing Then
-        StopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
+        SetStopLossOrder CreateAnOrder(mSummary.StopLossOrderId)
     ElseIf mStopLossOrder.Id <> mSummary.StopLossOrderId Then
-        Set mStopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
-        mSummary.StopLossOrderId = mStopLossOrder.Id
+        SetStopLossOrder CreateAnOrder(mSummary.StopLossOrderId)
     End If
     
     If mSummary.TargetOrderId = "" Then
     ElseIf mTargetOrder Is Nothing Then
-        TargetOrder = CreateAnOrder(mSummary.TargetOrderId)
+        SetTargetOrder CreateAnOrder(mSummary.TargetOrderId)
     ElseIf mTargetOrder.Id <> mSummary.TargetOrderId Then
-        Set mTargetOrder = CreateAnOrder(mSummary.TargetOrderId)
-        mSummary.TargetOrderId = mTargetOrder.Id
+        SetTargetOrder CreateAnOrder(mSummary.TargetOrderId)
     End If
 End If
 
@@ -1270,7 +1269,15 @@ On Error GoTo Err
 Dim lChangeType As TimerListItemStates: lChangeType = ev.State
 If lChangeType <> TimerListItemStateExpired Then Exit Sub
 
-initiateRollover
+If GetTimestamp >= mSummary.RolloverDate Then
+    initiateRollover
+ElseIf Int(mSummary.RolloverDate - GetTimestamp) > 20 Then
+    ' too long for a timer list entry! Max is about 24 days
+    Set mRolloverTLI = mTimerList.Add(Nothing, GetTimestamp + 20, ExpiryTimeUnitDateTime)
+Else
+    Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
+End If
+
 
 Exit Sub
 
@@ -1981,9 +1988,14 @@ lRolloverTime = GetOffsetSessionTimes(mContract.ExpiryDate, _
                                     -1 * mSummary.RolloverSpecification.Days).StartTime + mSummary.RolloverSpecification.Time
 
 Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
-lRolloverTime = ConvertDateTzToLocal(lRolloverTime, lTz)
-Set mRolloverTLI = mTimerList.Add(Nothing, lRolloverTime, ExpiryTimeUnitDateTime)
-mSummary.RolloverDate = lRolloverTime
+mSummary.RolloverDate = ConvertDateTzToLocal(lRolloverTime, lTz)
+
+If Int(mSummary.RolloverDate - GetTimestamp) > 20 Then
+    ' too long for a timer list entry! Max is about 24 days
+    Set mRolloverTLI = mTimerList.Add(Nothing, GetTimestamp + 20, ExpiryTimeUnitDateTime)
+Else
+    Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
+End If
 
 If mSummary.State = BracketOrderStateSubmitted Then SaveRecoveryInfo
 
@@ -3301,6 +3313,8 @@ End Function
 Private Sub createCloseoutOrder()
 Const ProcName As String = "createCloseoutOrder"
 On Error GoTo Err
+
+If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
 
 Set mCloseoutOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
 
