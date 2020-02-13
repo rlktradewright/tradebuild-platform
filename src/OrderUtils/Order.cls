@@ -470,18 +470,6 @@ Private Property Get IOrder_LastFillPrice() As Double
 IOrder_LastFillPrice = LastFillPrice
 End Property
 
-Private Property Let IOrder_LimitPrice(ByVal Value As Double)
-Const ProcName As String = "IOrder_LimitPrice"
-On Error GoTo Err
-
-LimitPrice = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Private Property Get IOrder_LimitPrice() As Double
 IOrder_LimitPrice = LimitPrice
 End Property
@@ -788,18 +776,6 @@ End Property
 
 Private Property Get IOrder_StopTriggerMethod() As OrderStopTriggerMethods
 IOrder_StopTriggerMethod = StopTriggerMethod
-End Property
-
-Private Property Let IOrder_TriggerPrice(ByVal Value As Double)
-Const ProcName As String = "IOrder_TriggerPrice"
-On Error GoTo Err
-
-TriggerPrice = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_TriggerPrice() As Double
@@ -1240,7 +1216,7 @@ Public Property Get LastFillPrice() As Double
 LastFillPrice = mSummary.LastFillPrice
 End Property
 
-Public Property Let LimitPrice(ByVal Value As Double)
+Friend Property Let LimitPrice(ByVal Value As Double)
 Const ProcName As String = "LimitPrice"
 On Error GoTo Err
 
@@ -1591,7 +1567,7 @@ Public Property Get TimeInForce() As OrderTIFs
 TimeInForce = mSummary.TimeInForce
 End Property
 
-Public Property Let TriggerPrice(ByVal Value As Double)
+Friend Property Let TriggerPrice(ByVal Value As Double)
 Const ProcName As String = "TriggerPrice"
 On Error GoTo Err
 
@@ -1969,7 +1945,7 @@ With pReport
     If .Quantity <> mSummary.Quantity Then mSummary.Quantity = .Quantity: changed = True
     If .SettlingFirm <> mSummary.SettlingFirm Then mSummary.SettlingFirm = .SettlingFirm: changed = True
     If .StopTriggerMethod <> mSummary.StopTriggerMethod Then mSummary.StopTriggerMethod = .StopTriggerMethod: changed = True
-    If .Status <> mSummary.Status Then mSummary.Status = .Status: changed = True
+    If .Status <> mSummary.Status Then Status = .Status: changed = True
     If .SweepToFill <> mSummary.SweepToFill Then mSummary.SweepToFill = .SweepToFill: changed = True
     If .TimeInForce <> mSummary.TimeInForce Then mSummary.TimeInForce = .TimeInForce: changed = True
     If .TriggerPrice <> mSummary.TriggerPrice Then mSummary.TriggerPrice = .TriggerPrice: changed = True

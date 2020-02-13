@@ -321,10 +321,32 @@ Friend Sub AddPendingCommand( _
                 ByVal pParams As String, _
                 Optional ByVal pMessage As String)
 Dim lCommand As New PendingCommand
-Set lCommand.Command = gCommands.BuyCommand
+Set lCommand.Command = pCommand
 lCommand.Params = pParams
 mPendingCommands.Add lCommand, GetTimestamp
-If pMessage <> "" Then gWriteLineToConsole pMessage
+If pMessage <> "" Then gWriteLineToConsole pMessage, True
+End Sub
+
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+Set mContractProcessor = Nothing
+mPendingCommands.Clear
+mFutureWaiter.Cancel
+mFutureBuilder.Cancel
+
+If Not mDataSource Is Nothing Then
+    If mDataSource.IsMarketDataRequested Then
+        mDataSource.RemoveGenericTickListener Me
+        mDataSource.StopMarketData
+    End If
+    Set mDataSource = Nothing
+End If
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -353,7 +375,7 @@ mUnderlyingExchangeName = pUnderlyingExchangeName
 Set mFutureWaiter = New FutureWaiter
 
 If mMaxExpenditure <> 0 Then
-    gWriteLineToConsole "Resolving contract"
+    gWriteLineToConsole "Resolving contract", True
     ' we first need to find the underlying contract
     mState = ContractResolverStateFetchingUnderlyingContract
     Dim lUnderlyingContractSpec As IContractSpecifier
@@ -429,7 +451,7 @@ On Error GoTo Err
 
 mFutureBuilder.Value = pContract
 mFutureBuilder.Complete
-gWriteLineToConsole "Contract is: " & gGetContractName(pContract)
+gWriteLineToConsole "Contract is: " & gGetContractName(pContract), True
 
 Exit Sub
 
@@ -443,6 +465,7 @@ On Error GoTo Err
 
 Dim c As PendingCommand
 For Each c In mPendingCommands
+    gWriteLineToConsole c.Command.Name & " " & c.Params, True
     If c.Command Is gCommands.BracketCommand Then
         mContractProcessor.ProcessBracketCommand c.Params
     ElseIf c.Command Is gCommands.BuyCommand Then
@@ -460,10 +483,9 @@ For Each c In mPendingCommands
     ElseIf c.Command Is gCommands.TargetCommand Then
         mContractProcessor.ProcessTargetCommand c.Params
     End If
-    
-    gPlaceOrdersTask.AddContractProcessor mContractProcessor, mStageOrders
 Next
 
+gPlaceOrdersTask.AddContractProcessor mContractProcessor, mStageOrders
 mPendingCommands.Clear
 
 Exit Sub

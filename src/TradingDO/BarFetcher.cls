@@ -149,7 +149,8 @@ If Not mBarListener Is Nothing Then mBarListener.FetchStarted mCookie
 Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             createNewSessionBuilder(mInstrument).Session, _
                                             mInstrument.TickSize, _
-                                            IIf(mSpecifier.maxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.maxNumberOfBars))
+                                            IIf(mSpecifier.MaxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.MaxNumberOfBars), _
+                                            mSpecifier.NormaliseDailyTimestamps)
 
 If gUseTickData(mSpecifier.BarTimePeriod.Units) Then
     fetchBarsUsingTickdata
@@ -266,7 +267,7 @@ Dim lSessTimes As SessionTimes
 lSessTimes = gCalcSessionTimes(mSpecifier, mInstrument)
 
 Dim lReqDetails As BarRequestDetails
-lReqDetails = gGenerateBarRequestDetails(lSessTimes, mSpecifier.BarTimePeriod, mSpecifier.fromDate, mSpecifier.toDate, mSpecifier.maxNumberOfBars)
+lReqDetails = gGenerateBarRequestDetails(lSessTimes, mSpecifier.BarTimePeriod, mSpecifier.FromDate, mSpecifier.ToDate, mSpecifier.MaxNumberOfBars)
 If Not lReqDetails.BarTimePeriod Is mSpecifier.BarTimePeriod Then
     ' we are building bars from smaller ones, so we can't notify them
     ' until we have finished building them, as we don't know up front
@@ -283,7 +284,7 @@ Set lRS = doFetchBars(lRSFetcher, mInstrument.Id, lReqDetails, mSpecifier.BarTyp
 If Not mBarListener Is Nothing Then mBarListener.FetchDataRetrieved mCookie
 
 Dim lBDP As New BarDataProcessor
-lBDP.Initialise mTargetBarsBuilder, lRS, lSessTimes, mSpecifier.maxNumberOfBars, lReqDetails.StartAtFromDate
+lBDP.Initialise mTargetBarsBuilder, lRS, lSessTimes, mSpecifier.MaxNumberOfBars, lReqDetails.StartAtFromDate
 lBDP.ProcessBars
 
 Exit Sub
@@ -298,14 +299,14 @@ Const ProcName As String = "fetchBarsUsingTickdata"
 On Error GoTo Err
 
 Dim lAppending As Boolean
-lAppending = (mSpecifier.toDate = 0)
+lAppending = (mSpecifier.ToDate = 0)
 
 Dim lSessTimes As SessionTimes
 lSessTimes = gCalcSessionTimes(mSpecifier, mInstrument)
 
 Dim lPrevFromDate As Date
 Dim lPrevToDate As Date
-gGenerateTickRequestDetails lSessTimes, mSpecifier.fromDate, mSpecifier.toDate, lPrevFromDate, lPrevToDate
+gGenerateTickRequestDetails lSessTimes, mSpecifier.FromDate, mSpecifier.ToDate, lPrevFromDate, lPrevToDate
 
 Dim lRSFetcher As New RecordsetFetcher
 lRSFetcher.Initialise mDB
@@ -367,7 +368,7 @@ End Sub
 
 Private Function filterByTime( _
                 ByVal timestamp As Date) As Boolean
-filterByTime = (timestamp >= mSpecifier.fromDate And timestamp < mSpecifier.toDate)
+filterByTime = (timestamp >= mSpecifier.FromDate And timestamp < mSpecifier.ToDate)
 End Function
 
 Private Sub fireFetchCancelled()
@@ -427,8 +428,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function needMoreTicks(ByVal pTotalBars As Long, ByVal pSpecifier As BarDataSpecifier) As Boolean
-needMoreTicks = pTotalBars < pSpecifier.maxNumberOfBars And _
-            (pSpecifier.fromDate = 0 Or pSpecifier.toDate = 0)
+needMoreTicks = pTotalBars < pSpecifier.MaxNumberOfBars And _
+            (pSpecifier.FromDate = 0 Or pSpecifier.ToDate = 0)
 End Function
 
 Private Sub notifyBars(ByVal pBars As Bars)

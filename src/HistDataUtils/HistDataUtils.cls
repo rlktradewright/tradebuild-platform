@@ -111,12 +111,25 @@ Public Function CreateBarDataSpecifierFuture( _
                 Optional ByVal pClockFuture As IFuture, _
                 Optional ByVal pExcludeCurrentBar As Boolean, _
                 Optional ByVal pIncludeBarsOutsideSession As Boolean, _
+                Optional ByVal pNormaliseDailyTimestamps As Boolean, _
                 Optional ByVal pCustomSessionStartTime As Date, _
                 Optional ByVal pCustomSessionEndTime As Date) As IFuture
 Const ProcName As String = "CreateBarDataSpecifierFuture"
 On Error GoTo Err
 
-Set CreateBarDataSpecifierFuture = gCreateBarDataSpecifierFuture(pContractFuture, pBarTimePeriod, pToTime, pFromTime, pMaxNumberOfBars, pBarType, pClockFuture, pExcludeCurrentBar, pIncludeBarsOutsideSession, pCustomSessionStartTime, pCustomSessionEndTime)
+Set CreateBarDataSpecifierFuture = gCreateBarDataSpecifierFuture( _
+                                        pContractFuture, _
+                                        pBarTimePeriod, _
+                                        pToTime, _
+                                        pFromTime, _
+                                        pMaxNumberOfBars, _
+                                        pBarType, _
+                                        pClockFuture, _
+                                        pExcludeCurrentBar, _
+                                        pIncludeBarsOutsideSession, _
+                                        pNormaliseDailyTimestamps, _
+                                        pCustomSessionStartTime, _
+                                        pCustomSessionEndTime)
 
 Exit Function
 

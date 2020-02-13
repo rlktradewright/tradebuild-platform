@@ -712,13 +712,13 @@ End Property
 '@================================================================================
 
 Public Function CreateTickStream( _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date) As TickStream
+                ByVal FromDate As Date, _
+                ByVal ToDate As Date) As TickStream
 Const ProcName As String = "CreateTickStream"
 On Error GoTo Err
 
 Set CreateTickStream = New TickStream
-CreateTickStream.Initialise mDB, Id, fromDate, toDate
+CreateTickStream.Initialise mDB, Id, FromDate, ToDate
 
 Exit Function
 
@@ -772,10 +772,10 @@ Dim Specifier As BarDataSpecifier
 Set Specifier = New BarDataSpecifier
 Specifier.BarTimePeriod = pBarTimePeriod
 Specifier.BarType = pBarType
-Specifier.fromDate = pFromDate
-Specifier.includeBarsOutsideSession = pIncludeBarsOutsideSession
-Specifier.maxNumberOfBars = pMaxNumberOfBars
-Specifier.toDate = pToDate
+Specifier.FromDate = pFromDate
+Specifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
+Specifier.MaxNumberOfBars = pMaxNumberOfBars
+Specifier.ToDate = pToDate
 Specifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
 
 Dim bf As BarFetcher
@@ -824,10 +824,10 @@ End Select
 Dim Specifier As New BarDataSpecifier
 Specifier.BarTimePeriod = pBarTimePeriod
 Specifier.BarType = pBarType
-Specifier.fromDate = pFromDate
-Specifier.includeBarsOutsideSession = pIncludeBarsOutsideSession
-Specifier.maxNumberOfBars = pMaxNumberOfBars
-Specifier.toDate = pToDate
+Specifier.FromDate = pFromDate
+Specifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
+Specifier.MaxNumberOfBars = pMaxNumberOfBars
+Specifier.ToDate = pToDate
 Specifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
 
 Dim bf As New AsyncBarFetcher

@@ -198,9 +198,6 @@ End Property
 Public Property Get LastFillPrice() As Double
 End Property
 
-Public Property Let LimitPrice(ByVal Value As Double)
-End Property
-
 Public Property Get LimitPrice() As Double
 End Property
 
@@ -310,9 +307,6 @@ Public Property Let TimeInForce(ByVal Value As OrderTIFs)
 End Property
 
 Public Property Get TimeInForce() As OrderTIFs
-End Property
-
-Public Property Let TriggerPrice(ByVal Value As Double)
 End Property
 
 Public Property Get TriggerPrice() As Double

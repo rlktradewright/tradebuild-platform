@@ -1680,6 +1680,7 @@ EditText.Text = ""
 EditText.Visible = False
 mIsEditing = False
 mEditedCol = -1
+mEditedOrderRole = BracketOrderRoleNone
 BracketOrderGrid.SetFocus
 
 Exit Sub
@@ -2275,17 +2276,45 @@ Dim lOrder As IOrder
 Set lOrder = getSelectedOrder
 
 Dim lPrice As Double
-If mEditedCol = OrderPrice Then
+Dim lPriceSpec As PriceSpecifier
+If mEditedCol = OrderPrice Or mEditedCol = OrderAuxPrice Then
     If ParsePrice(EditText.Text, mSelectedBracketOrder.Contract.Specifier.secType, mSelectedBracketOrder.Contract.TickSize, lPrice) Then
-        lOrder.LimitPrice = lPrice
+        Set lPriceSpec = NewPriceSpecifier(lPrice, PriceValueTypeValue)
+    End If
+End If
+
+If mEditedCol = OrderPrice Then
+    If Not lPriceSpec Is Nothing Then
+        Select Case SelectedOrderRole
+        Case BracketOrderRoleEntry
+            mSelectedBracketOrder.SetNewEntryLimitPrice lPriceSpec
+        Case BracketOrderRoleStopLoss
+            mSelectedBracketOrder.SetNewStopLossLimitPrice lPriceSpec
+        Case BracketOrderRoleTarget
+            mSelectedBracketOrder.SetNewTargetLimitPrice lPriceSpec
+        End Select
     End If
 ElseIf mEditedCol = OrderAuxPrice Then
-    If ParsePrice(EditText.Text, mSelectedBracketOrder.Contract.Specifier.secType, mSelectedBracketOrder.Contract.TickSize, lPrice) Then
-        lOrder.TriggerPrice = lPrice
+    If Not lPriceSpec Is Nothing Then
+        Select Case SelectedOrderRole
+        Case BracketOrderRoleEntry
+            mSelectedBracketOrder.SetNewEntryTriggerPrice lPriceSpec
+        Case BracketOrderRoleStopLoss
+            mSelectedBracketOrder.SetNewStopLossTriggerPrice lPriceSpec
+        Case BracketOrderRoleTarget
+            mSelectedBracketOrder.SetNewTargetTriggerPrice lPriceSpec
+        End Select
     End If
 ElseIf mEditedCol = OrderQuantity Then
     If IsInteger(EditText.Text, 0) Then
-        lOrder.Quantity = CLng(EditText.Text)
+        Select Case SelectedOrderRole
+        Case BracketOrderRoleEntry
+            mSelectedBracketOrder.SetNewEntryQuantity CLng(EditText.Text)
+        Case BracketOrderRoleStopLoss
+            mSelectedBracketOrder.SetNewStopLossQuantity CLng(EditText.Text)
+        Case BracketOrderRoleTarget
+            mSelectedBracketOrder.SetNewTargetQuantity CLng(EditText.Text)
+        End Select
     End If
 End If
     

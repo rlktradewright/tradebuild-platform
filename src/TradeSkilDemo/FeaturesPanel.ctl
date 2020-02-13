@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#359.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#366.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
@@ -73,13 +73,13 @@ Begin VB.UserControl FeaturesPanel
          Top             =   0
          Width           =   4125
          Begin TWControls40.TWImageCombo CurrentConfigCombo 
-            Height          =   300
+            Height          =   270
             Left            =   240
             TabIndex        =   58
             Top             =   390
             Width           =   3615
             _ExtentX        =   6376
-            _ExtentY        =   529
+            _ExtentY        =   476
             Appearance      =   0
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -131,13 +131,13 @@ Begin VB.UserControl FeaturesPanel
                   Width           =   1455
                End
                Begin TWControls40.TWImageCombo ChartStylesCombo 
-                  Height          =   300
+                  Height          =   270
                   Left            =   120
                   TabIndex        =   53
                   Top             =   480
                   Width           =   2160
                   _ExtentX        =   3810
-                  _ExtentY        =   529
+                  _ExtentY        =   476
                   Appearance      =   0
                   BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                      Name            =   "MS Sans Serif"
@@ -275,13 +275,13 @@ Begin VB.UserControl FeaturesPanel
          Top             =   0
          Width           =   4125
          Begin TWControls40.TWImageCombo ReplaySpeedCombo 
-            Height          =   300
+            Height          =   270
             Left            =   1200
             TabIndex        =   38
             Top             =   4080
             Width           =   2775
             _ExtentX        =   4895
-            _ExtentY        =   529
+            _ExtentY        =   476
             Appearance      =   0
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -426,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   118226947
+            Format          =   49020931
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -461,13 +461,13 @@ Begin VB.UserControl FeaturesPanel
             _ExtentY        =   7858
          End
          Begin TradingUI27.TimeframeSelector HistChartTimeframeSelector 
-            Height          =   300
+            Height          =   270
             Left            =   1920
             TabIndex        =   24
             Top             =   120
             Width           =   2055
             _ExtentX        =   3625
-            _ExtentY        =   529
+            _ExtentY        =   476
          End
          Begin MSComCtl2.DTPicker ToDatePicker 
             Height          =   375
@@ -480,17 +480,17 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   118226947
+            Format          =   49020931
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
-            Height          =   300
+            Height          =   270
             Left            =   1920
             TabIndex        =   27
             Top             =   2280
             Width           =   2055
             _ExtentX        =   3625
-            _ExtentY        =   529
+            _ExtentY        =   476
             Appearance      =   0
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -599,13 +599,13 @@ Begin VB.UserControl FeaturesPanel
             EndProperty
          End
          Begin TWControls40.TWImageCombo LiveChartStylesCombo 
-            Height          =   300
+            Height          =   270
             Left            =   1920
             TabIndex        =   12
             Top             =   1560
             Width           =   2055
             _ExtentX        =   3625
-            _ExtentY        =   529
+            _ExtentY        =   476
             Appearance      =   0
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
                Name            =   "MS Sans Serif"
@@ -620,13 +620,13 @@ Begin VB.UserControl FeaturesPanel
             Text            =   ""
          End
          Begin TradingUI27.TimeframeSelector LiveChartTimeframeSelector 
-            Height          =   300
+            Height          =   270
             Left            =   1920
             TabIndex        =   16
             Top             =   120
             Width           =   2055
             _ExtentX        =   3625
-            _ExtentY        =   529
+            _ExtentY        =   476
          End
          Begin VB.Label Label18 
             Caption         =   "Timeframe"
@@ -1196,7 +1196,7 @@ Const ProcName As String = "CurrentConfigCombo_Click"
 On Error GoTo Err
 
 Dim lNewAppInstanceConfig As ConfigurationSection
-Set lNewAppInstanceConfig = getAppInstanceConfig(mConfigStore, CurrentConfigCombo.SelectedItem.Key)
+Set lNewAppInstanceConfig = GetAppInstanceConfig(mConfigStore, CurrentConfigCombo.SelectedItem.Key)
 
 If lNewAppInstanceConfig Is mAppInstanceConfig Then Exit Sub
 
@@ -1998,19 +1998,19 @@ On Error GoTo Err
 Dim lConfig As ConfigurationSection
 Set lConfig = mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionHistoricCharts)
 
-Dim fromDate As Date
+Dim FromDate As Date
 If IsNull(FromDatePicker.Value) Then
-    fromDate = CDate(0)
+    FromDate = CDate(0)
 Else
-    fromDate = DateSerial(FromDatePicker.Year, FromDatePicker.Month, FromDatePicker.Day) + _
+    FromDate = DateSerial(FromDatePicker.Year, FromDatePicker.Month, FromDatePicker.Day) + _
                 TimeSerial(FromDatePicker.Hour, FromDatePicker.Minute, 0)
 End If
 
-Dim toDate As Date
+Dim ToDate As Date
 If IsNull(ToDatePicker.Value) Then
-    toDate = Now
+    ToDate = Now
 Else
-    toDate = DateSerial(ToDatePicker.Year, ToDatePicker.Month, ToDatePicker.Day) + _
+    ToDate = DateSerial(ToDatePicker.Year, ToDatePicker.Month, ToDatePicker.Day) + _
                 TimeSerial(ToDatePicker.Hour, ToDatePicker.Minute, 0)
 End If
 
@@ -2020,7 +2020,7 @@ mChartForms.AddHistoricAsync HistChartTimeframeSelector.TimePeriod, _
                     mTradeBuildAPI.HistoricalDataStoreInput, _
                     mTradeBuildAPI.BarFormatterLibManager, _
                     lConfig, _
-                    CreateChartSpecifier(CLng(NumHistHistoryBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), fromDate, toDate), _
+                    CreateChartSpecifier(CLng(NumHistHistoryBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), FromDate, ToDate), _
                     ChartStylesManager.Item(HistChartStylesCombo.SelectedItem.Text), _
                     gMainForm, _
                     mTheme

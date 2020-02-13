@@ -95,7 +95,7 @@ Case TimePeriodVolume, _
         TimePeriodNone
     BarEndTime = Timestamp
 Case Else
-    BarEndTime = gCentiSecondstoDate(gBarEndTime(Timestamp, _
+    BarEndTime = gCentiSecondsToDate(gBarEndTime(Timestamp, _
                                     BarTimePeriod, _
                                     gNormaliseSessionTime(SessionStartTime), _
                                     gNormaliseSessionTime(SessionEndTime)))
@@ -121,7 +121,7 @@ Case TimePeriodVolume, _
         TimePeriodNone
     BarStartTime = Timestamp
 Case Else
-    BarStartTime = gCentiSecondstoDate(gBarStartTime(Timestamp, _
+    BarStartTime = gCentiSecondsToDate(gBarStartTime(Timestamp, _
                                     BarTimePeriod, _
                                     gNormaliseSessionTime(SessionStartTime)))
 End Select
@@ -165,6 +165,7 @@ Public Function CreateBarsBuilder( _
                 Optional ByVal pSession As Session, _
                 Optional ByVal pTickSize As Double, _
                 Optional ByVal pNumberOfBarsToCache As Long, _
+                Optional ByVal pNormaliseDailyTimestamps As Boolean, _
                 Optional ByVal pSave As Boolean = True) As BarsBuilder
 Const ProcName As String = "CreateBarsBuilder"
 On Error GoTo Err
@@ -173,7 +174,7 @@ AssertArgument Not pBarTimePeriod Is Nothing, "pBarTimePeriod is Nothing"
 AssertArgument Not pSession Is Nothing Or pBarTimePeriod.Length = 0, "pSession is Nothing"
 
 Dim lBarsBuilder As New BarsBuilder
-lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pSave
+lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pNormaliseDailyTimestamps, pSave
 Set CreateBarsBuilder = lBarsBuilder
 
 Exit Function
@@ -187,6 +188,7 @@ Public Function CreateBarsBuilderFuture( _
                 ByVal pSessionFuture As IFuture, _
                 Optional ByVal pTickSize As Double, _
                 Optional ByVal pNumberOfBarsToCache As Long, _
+                Optional ByVal pNormaliseDailyTimestamps As Boolean, _
                 Optional ByVal pSave As Boolean = True) As IFuture
 Const ProcName As String = "CreateBarsBuilderFuture"
 On Error GoTo Err
@@ -195,7 +197,7 @@ AssertArgument Not pBarTimePeriod Is Nothing, "pBarTimePeriod is Nothing"
 AssertArgument Not pSessionFuture Is Nothing, "pSessionFuture is Nothing"
 
 Dim lFutureBuilder As New BarsBuilderFutureBuilder
-lFutureBuilder.Initialise pBarTimePeriod, pSessionFuture, pTickSize, pNumberOfBarsToCache, pSave
+lFutureBuilder.Initialise pBarTimePeriod, pSessionFuture, pTickSize, pNumberOfBarsToCache, pNormaliseDailyTimestamps, pSave
 Set CreateBarsBuilderFuture = lFutureBuilder.Future
 
 Exit Function
@@ -288,6 +290,17 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function NormaliseBarTimestamp( _
+                ByVal pTimestamp As Date, _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pSessionStartTime As Date, _
+                ByVal pSessionEndTime As Date) As Date
+NormaliseBarTimestamp = gNormaliseTimestamp(pTimestamp, _
+                                            pTimePeriod, _
+                                            pSessionStartTime, _
+                                            pSessionEndTime)
 End Function
 
 Public Function NumberOfBarsInSession( _

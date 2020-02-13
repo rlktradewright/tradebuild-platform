@@ -335,35 +335,6 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Dim ar() As ContractSortKeyIds
-
-InitialiseSorted pContractSpec, _
-                pPrimaryContractStore, _
-                pSecondaryContractStore, _
-                pCookie, _
-                pListener, _
-                pSingleContractOnly, _
-                ar, _
-                False
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub InitialiseSorted( _
-                ByVal pContractSpec As IContractSpecifier, _
-                ByVal pPrimaryContractStore As IContractStore, _
-                ByVal pSecondaryContractStore As IContractStore, _
-                ByVal pCookie As Variant, _
-                ByVal pListener As IContractFetchListener, _
-                ByVal pSingleContractOnly As Boolean, _
-                ByRef pSortkeys() As ContractSortKeyIds, _
-                ByVal pSortDescending As Boolean)
-Const ProcName As String = "InitialiseSorted"
-On Error GoTo Err
-
 If Not gIsOffsetExpiry(pContractSpec.Expiry) Then
     Set mContractSpec = pContractSpec
 Else
@@ -396,14 +367,6 @@ If mSingleContractOnly Then
     Set mContractFutureBuilder = New FutureBuilder
     mContractFutureBuilder.Cookie = mCookie
 Else
-    On Error Resume Next
-        If UBound(pSortkeys) >= 0 Then
-            Dim ar() As ContractSortKeyIds
-            ar = pSortkeys
-            mContractsBuilder.SortKeys = ar
-        End If
-    On Error GoTo Err
-    mContractsBuilder.SortAscending = Not pSortDescending
     Set mContractsFutureBuilder = New FutureBuilder
     mContractsFutureBuilder.Cookie = mCookie
 End If
@@ -414,8 +377,41 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
                 
+Friend Sub InitialiseSorted( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByVal pSecondaryContractStore As IContractStore, _
+                ByVal pCookie As Variant, _
+                ByVal pListener As IContractFetchListener, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                ByVal pSortDescending As Boolean)
+Const ProcName As String = "InitialiseSorted"
+On Error GoTo Err
 
+Dim n As Long: n = -1
+On Error Resume Next
+    n = UBound(pSortkeys)
+On Error GoTo Err
+AssertArgument n >= 0, "Empty sort keys"
 
+Dim ar() As ContractSortKeyIds: ar = pSortkeys
+
+mContractsBuilder.SortKeys = ar
+mContractsBuilder.SortAscending = Not pSortDescending
+
+Initialise pContractSpec, _
+    pPrimaryContractStore, _
+    pSecondaryContractStore, _
+    pCookie, _
+    pListener, _
+    False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+                
 '@================================================================================
 ' Helper Functions
 '@================================================================================

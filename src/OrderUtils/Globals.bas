@@ -584,20 +584,17 @@ Const ProcName As String = "gLogBracketOrderMessage"
 On Error GoTo Err
 
 Dim lTickPart As String
-Dim lTimePart As String
 
 If pDataSource Is Nothing Then
 ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
 Else
-    If pDataSource.IsTickReplay Then lTimePart = FormatTimestamp(pDataSource.Timestamp, TimestampDateAndTimeISO8601) & "  "
-    lTickPart = GetCurrentTickSummary(pDataSource) & "; "
+    lTickPart = "    " & GetCurrentTickSummary(pDataSource) & "; "
 End If
 
-gLogOrder lTimePart & _
-            IIf(pIsSimulated, "(simulated) ", "") & _
+gLogOrder IIf(pIsSimulated, "(simulated) ", "") & _
             pMessage & vbCrLf & _
-            "Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & vbCrLf & _
-            IIf(pKey <> "", "Bracket id: " & pKey & vbCrLf, "") & _
+            "    Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & vbCrLf & _
+            IIf(pKey <> "", "    Bracket id: " & pKey & vbCrLf, "") & _
             lTickPart, _
         pIsSimulated, _
         pSource
@@ -620,7 +617,7 @@ Const ProcName As String = "gLogOrderMessage"
 On Error GoTo Err
 
 gLogBracketOrderMessage pMessage & vbCrLf & _
-                        "BrokerId: " & pOrder.BrokerId & _
+                        "    BrokerId: " & pOrder.BrokerId & _
                         "; system id: " & pOrder.Id, _
                         pDataSource, _
                         pContract, _
@@ -1059,7 +1056,7 @@ End Sub
 ' @param  pTargetOrder the <code>order</code> that is to be synchronized
 ' @param  pSourceOrder the <code>order</code> to which the target order must be made identical
 '@/
-Public Sub gSyncToOrder(ByVal pTargetOrder As IOrder, ByVal pSourceOrder As IOrder)
+Public Sub gSyncToOrder(ByVal pTargetOrder As Order, ByVal pSourceOrder As IOrder)
 Const ProcName As String = "gSyncToOrder"
 On Error GoTo Err
 
@@ -1091,6 +1088,7 @@ With pTargetOrder
     .LastFillPrice = pSourceOrder.LastFillPrice
     .MinimumQuantity = pSourceOrder.MinimumQuantity
     .NbboPriceCap = pSourceOrder.NbboPriceCap
+    .OrderType = pSourceOrder.OrderType
     .Origin = pSourceOrder.Origin
     .OriginatorRef = pSourceOrder.OriginatorRef
     .OverrideConstraints = pSourceOrder.OverrideConstraints

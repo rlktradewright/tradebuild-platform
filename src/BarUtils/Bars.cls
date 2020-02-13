@@ -78,6 +78,8 @@ Private mUpdateSequence             As Long
 Private mSession                    As Session
 Private mTickSize                   As Double
 
+Private mNormaliseDailyTimestamps           As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -531,6 +533,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get DailyTimestampsAreNormalised() As Boolean
+DailyTimestampsAreNormalised = mNormaliseDailyTimestamps
+End Property
+
 Public Property Get OpenValue(Optional ByVal ref As Long) As Double
 Const ProcName As String = "OpenValue"
 On Error GoTo Err
@@ -599,6 +605,15 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 change
+
+If mNormaliseDailyTimestamps Then
+    pBar.Timestamp = gNormaliseTimestamp( _
+                        pBar.Timestamp, _
+                        mBarTimePeriod, _
+                        mSession.SessionStartTime, _
+                        mSession.SessionEndTime)
+End If
+
 mBarsCache.AddValue pBar, _
                     BarNumber, _
                     Timestamp, _
@@ -697,7 +712,8 @@ Friend Sub Initialise( _
                 ByVal pBarTimePeriod As TimePeriod, _
                 ByVal pNumberOfBarsToCache As Long, _
                 ByVal pSession As Session, _
-                ByVal pTickSize As Double)
+                ByVal pTickSize As Double, _
+                ByVal pNormaliseDailyTimestamps As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -706,6 +722,7 @@ Set mBarsCache = New ValueCache
 mBarsCache.Initialise pNumberOfBarsToCache, "Bar"
 Set mSession = pSession
 mTickSize = pTickSize
+mNormaliseDailyTimestamps = pNormaliseDailyTimestamps
 
 Exit Sub
 

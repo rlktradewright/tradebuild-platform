@@ -221,8 +221,8 @@ mFutureWaiter.Add mContractStore.FetchContracts(mSpecifier)
 End Sub
 
 Friend Sub StartData( _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date, _
+                ByVal FromDate As Date, _
+                ByVal ToDate As Date, _
                 ByVal Speed As Long, _
                 ByVal raw As Boolean)
 If mContract Is Nothing Then
@@ -232,11 +232,11 @@ End If
 
 Dim tfs As New TickfileSpecifier
 tfs.Contract = mContract
-If fromDate < 1 Then fromDate = Date + fromDate
-tfs.fromDate = fromDate
-If toDate = 0 Then toDate = Now
-If toDate < 1 Then toDate = Date + toDate
-tfs.toDate = toDate
+If FromDate < 1 Then FromDate = Date + FromDate
+tfs.FromDate = FromDate
+If ToDate = 0 Then ToDate = Now
+If ToDate < 1 Then ToDate = Date + ToDate
+tfs.ToDate = ToDate
 
 Dim inFormats() As TickfileFormatSpecifier
 inFormats = mTickfileStore.SupportedFormats

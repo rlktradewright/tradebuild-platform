@@ -912,6 +912,10 @@ Set lBracketOrder = lOrderContext.CreateBracketOrder( _
                         lEntryOrder, _
                         lStopLossOrder, _
                         lTargetOrder)
+lBracketOrder.CancelAfter = pCancelAfter
+lBracketOrder.CancelPrice = pCancelPrice
+
+lOrderContext.ExecuteBracketOrder lBracketOrder, True
 
 Set buyOrSell = gCreateResourceIdentifier(lBracketOrder)
 gStrategyRunner.MapBracketOrderToResourceId lBracketOrder, buyOrSell

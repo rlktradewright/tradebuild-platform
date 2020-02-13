@@ -106,6 +106,7 @@ Private Sub IBracketOrderEventSink_NotifyBracketOrderCompletion( _
 Const ProcName As String = "IBracketOrderEventSink_NotifyBracketOrderCompletion"
 On Error GoTo Err
 
+ClearPrimaryBracketOrder
 checkTradingOpportunity
 
 Exit Sub
@@ -315,7 +316,7 @@ If PendingSimulatedSellSize = 0 Then Exit Function
 
 LogTradeMessage "Previous signal cancelled - cancelling pending sell orders"
 CancelBracketOrder False, mBracketOrderSellDummy
-If PendingSellSize <> 0 Then
+If PendingsellSize <> 0 Then
     CancelBracketOrder
 End If
 
@@ -486,6 +487,7 @@ Const ProcName As String = "IsPendingBuyOrders"
 On Error GoTo Err
 
 IsPendingBuyOrders = PendingSimulatedBuySize <> 0
+LogTradeMessage "Pending buy orders: " & CStr(IsPendingBuyOrders)
 
 Exit Function
 
@@ -498,6 +500,7 @@ Const ProcName As String = "IsPendingSellOrders"
 On Error GoTo Err
 
 IsPendingSellOrders = PendingSimulatedSellSize <> 0
+LogTradeMessage "Pending sell orders: " & CStr(IsPendingSellOrders)
 
 Exit Function
 
@@ -553,11 +556,17 @@ Private Sub ModifyPendingBuyOrders()
 Const ProcName As String = "ModifyPendingBuyOrders"
 On Error GoTo Err
 
-If Not CanTrade Then Exit Sub
+If Not CanTrade Then
+    LogTradeMessage "ModifyPendingBuyOrders: can't trade"
+    Exit Sub
+End If
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceLong
-If lTriggerPrice >= EntryTriggerPrice(mBracketOrderBuyDummy) Then Exit Sub
+If lTriggerPrice >= EntryTriggerPrice(mBracketOrderBuyDummy) Then
+    LogTradeMessage "ModifyPendingBuyOrders: no modification needed"
+    Exit Sub
+End If
 
 Dim lStopPrice As Double
 Dim lBreakevenPrice As Double
@@ -568,6 +577,7 @@ calcPricesForBuy lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice, lRisk
 SetNewEntryTriggerPrice lTriggerPrice, mBracketOrderBuyDummy
 SetNewStopLossTriggerPrice lStopPrice, mBracketOrderBuyDummy
 
+LogTradeMessage "ModifyPendingBuyOrders simulated"
 Update mBracketOrderBuyDummy
     
 If PendingBuySize = 0 Then Exit Sub
@@ -576,6 +586,7 @@ SetNewQuantity calcTradeSize(lRisk)
 SetNewEntryTriggerPrice lTriggerPrice
 SetNewEntryLimitPrice lTriggerPrice - mEntryLimitOffsetTicks * TickSize
 SetNewStopLossTriggerPrice lStopPrice
+LogTradeMessage "ModifyPendingBuyOrders"
 Update
 
 Exit Sub
@@ -588,11 +599,17 @@ Private Sub ModifyPendingSellOrders()
 Const ProcName As String = "ModifyPendingSellOrders"
 On Error GoTo Err
 
-If Not CanTrade Then Exit Sub
+If Not CanTrade Then
+    LogTradeMessage "ModifyPendingSellOrders: can't trade"
+    Exit Sub
+End If
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceShort
-If lTriggerPrice <= EntryTriggerPrice(mBracketOrderSellDummy) Then Exit Sub
+If lTriggerPrice <= EntryTriggerPrice(mBracketOrderSellDummy) Then
+    LogTradeMessage "ModifyPendingSellOrders: no modification needed"
+    Exit Sub
+End If
 
 Dim lStopPrice As Double
 Dim lBreakevenPrice As Double
@@ -603,14 +620,16 @@ calcPricesForSell lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice, lRis
 SetNewEntryTriggerPrice lTriggerPrice, mBracketOrderSellDummy
 SetNewStopLossTriggerPrice lStopPrice, mBracketOrderSellDummy
 
+LogTradeMessage "ModifyPendingSellOrders simulated"
 Update mBracketOrderSellDummy
     
-If PendingSellSize = 0 Then Exit Sub
+If PendingsellSize = 0 Then Exit Sub
 
 SetNewQuantity calcTradeSize(lRisk)
 SetNewEntryTriggerPrice lTriggerPrice
 SetNewEntryLimitPrice lTriggerPrice + mEntryLimitOffsetTicks * TickSize
 SetNewStopLossTriggerPrice lStopPrice
+LogTradeMessage "ModifyPendingSellOrders"
 Update
 
 Exit Sub
@@ -624,7 +643,12 @@ Private Sub PlaceBuyOrders()
 Const ProcName As String = "PlaceBuyOrders"
 On Error GoTo Err
 
-If Not CanTrade Then Exit Sub
+If Not CanTrade Then
+    LogTradeMessage "PlaceBuyOrders: can't trade"
+    Exit Sub
+End If
+
+Assert ActiveBuySize = 0 And PendingBuySize = 0, "ActiveBuySize <> 0 or PendingBuySize <> 0"
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceLong
@@ -638,6 +662,7 @@ If Not calcPricesForBuy(lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice
     Exit Sub
 End If
 
+LogTradeMessage "PlaceBuyOrders simulated"
 Set mBracketOrderBuyDummy = BuySimulated( _
                                 Number:=1, _
                                 EntryOrder:=DeclareSimulatedEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
@@ -645,12 +670,14 @@ Set mBracketOrderBuyDummy = BuySimulated( _
                                 CancelPrice:=lCancelPrice, _
                                 NotifyCompletion:=True)
 
-If mBracketOrderBuyDummy Is Nothing Then Exit Sub
-If ActiveBuySize <> 0 Or PendingBuySize <> 0 Then Exit Sub
+'If mBracketOrderBuyDummy Is Nothing Then Exit Sub
+'If ActiveBuySize <> 0 Or PendingBuySize <> 0 Then Exit Sub
+Assert Not mBracketOrderBuyDummy Is Nothing, "Failed to create dummy buy bracket oder"
 
 Dim lSize As Long: lSize = calcTradeSize(lRisk)
 If lSize = 0 Then Exit Sub
 
+LogTradeMessage "PlaceBuyOrders"
 SetPrimaryBracketOrder Buy( _
                             Number:=lSize, _
                             EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
@@ -670,7 +697,12 @@ Private Sub PlaceSellOrders()
 Const ProcName As String = "PlaceSellOrders"
 On Error GoTo Err
 
-If Not CanTrade Then Exit Sub
+If Not CanTrade Then
+    LogTradeMessage "PlaceSellOrders: can't trade"
+    Exit Sub
+End If
+
+Assert ActivesellSize = 0 And PendingsellSize = 0, "ActiveSellSize <> 0 or PendingSellSize <> 0"
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceShort
@@ -684,6 +716,7 @@ If Not calcPricesForSell(lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPric
     Exit Sub
 End If
 
+LogTradeMessage "PlaceSellOrders simulated"
 Set mBracketOrderSellDummy = SellSimulated( _
                                 Number:=1, _
                                 EntryOrder:=DeclareSimulatedEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
@@ -691,12 +724,14 @@ Set mBracketOrderSellDummy = SellSimulated( _
                                 CancelPrice:=lCancelPrice, _
                                 NotifyCompletion:=True)
 
-If mBracketOrderSellDummy Is Nothing Then Exit Sub
-If ActiveSellSize <> 0 Or PendingSellSize <> 0 Then Exit Sub
+'If mBracketOrderSellDummy Is Nothing Then Exit Sub
+'If ActivesellSize <> 0 Or PendingsellSize <> 0 Then Exit Sub
+Assert Not mBracketOrderSellDummy Is Nothing, "Failed to create dummy sell bracket oder"
 
 Dim lSize As Long: lSize = calcTradeSize(lRisk)
 If lSize = 0 Then Exit Sub
 
+LogTradeMessage "PlaceSellOrders"
 SetPrimaryBracketOrder Sell( _
                             Number:=lSize, _
                             EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _

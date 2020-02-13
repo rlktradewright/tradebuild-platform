@@ -133,6 +133,7 @@ If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is IContract Then
     setContract ev.Future.Value
+    IsReadyTickSize
     fireChange OrderContextReadyStateChanged
 ElseIf TypeOf ev.Future.Value Is Clock Then
     setTimerListFromSimulatedClock ev.Future.Value
@@ -862,18 +863,18 @@ Dim lBracketOrder As New BracketOrder
 lBracketOrder.Initialise GIdProvider.gNextId, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
 lBracketOrder.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
-lBracketOrder.EntryOrder = pEntryOrder
+lBracketOrder.SetEntryOrder pEntryOrder
 pEntryOrder.Action = pAction
 lBracketOrder.EntryOrder.Quantity = pQuantity
 
 If Not pStopLossOrder Is Nothing Then
-    lBracketOrder.StopLossOrder = pStopLossOrder
+    lBracketOrder.SetStopLossOrder pStopLossOrder
     lBracketOrder.StopLossOrder.Action = IIf(pAction = OrderActionBuy, OrderActionSell, OrderActionBuy)
     lBracketOrder.StopLossOrder.Quantity = pQuantity
 End If
 
 If Not pTargetOrder Is Nothing Then
-    lBracketOrder.TargetOrder = pTargetOrder
+    lBracketOrder.SetTargetOrder pTargetOrder
     lBracketOrder.TargetOrder.Action = IIf(pAction = OrderActionBuy, OrderActionSell, OrderActionBuy)
     lBracketOrder.TargetOrder.Quantity = pQuantity
 End If
@@ -942,7 +943,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub ExecuteBracketOrderEx(ByVal pBracketOrder As IBracketOrder, _
+Friend Sub ExecuteBracketOrderEx(ByVal pBracketOrder As BracketOrder, _
                     ByVal pCheckMoneyManagement As Boolean, _
                     ByVal pAddToActiveBracketOrders As Boolean)
 Const ProcName As String = "ExecuteBracketOrderEx"
@@ -1005,7 +1006,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder, _
+Public Sub ExecuteBracketOrder(ByVal pBracketOrder As BracketOrder, _
                     Optional pCheckMoneyManagement As Boolean)
 Const ProcName As String = "ExecuteBracketOrder"
 On Error GoTo Err
@@ -1072,6 +1073,7 @@ mIsSimulated = pIsSimulated
 Set mContractFuture = pContractFuture
 If mContractFuture.IsAvailable Then
     setContract mContractFuture.Value
+    IsReadyTickSize
 Else
     mFutureWaiter.Add mContractFuture
 End If
@@ -1148,7 +1150,7 @@ On Error GoTo Err
 
 If Not IsReady Then Exit Function
 
-If Not IsReadyTickSize(pBracketOrder.Contract.Specifier.SecType) Then Exit Function
+If Not IsReadyTickSize() Then Exit Function
 
 If Not IsReadyForOrderType(pBracketOrder.EntryOrder.OrderType) Then Exit Function
 If Not IsReadyForPriceSpecifier(pBracketOrder.EntryOrder.LimitPriceSpec) Then Exit Function
@@ -1221,7 +1223,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function IsReadyTickSize(ByVal pSectype As SecurityTypes) As Boolean
+Public Function IsReadyTickSize() As Boolean
 Const ProcName As String = "IsReadyTickSize"
 On Error GoTo Err
 
@@ -1231,7 +1233,7 @@ Else
     If Not mTickSizeFuture Is Nothing Then
         IsReadyTickSize = False
     Else
-        Select Case pSectype
+        Select Case mContract.Specifier.SecType
         Case SecTypeStock
             If dataSourceHasPrice Then
                 Set mTickSizeFuture = mOrderSubmitter.GetTickSize(Nothing)
@@ -1524,7 +1526,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fixupEntryOrder(pOrder As IOrder)
+Private Sub fixupEntryOrder(pOrder As Order)
 Const ProcName As String = "fixupEntryOrder"
 On Error GoTo Err
 
@@ -1588,7 +1590,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fixupStopLossOrder(pOrder As IOrder)
+Private Sub fixupStopLossOrder(pOrder As Order)
 Const ProcName As String = "fixupStopLossOrder"
 On Error GoTo Err
 
@@ -1626,7 +1628,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fixupTargetOrder(pOrder As IOrder)
+Private Sub fixupTargetOrder(pOrder As Order)
 Const ProcName As String = "fixupTargetOrder"
 On Error GoTo Err
 

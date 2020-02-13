@@ -210,13 +210,16 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-mDataSource.Finish
-Set mDataSource = Nothing
+If Not mContractResolver Is Nothing Then
+    mContractResolver.Finish
+    Set mContractResolver = Nothing
+End If
 
 mBracketOrders.Clear
-
-mPositionManager.Finish
-
+If Not mPositionManager Is Nothing Then
+    mPositionManager.Finish
+    If Not mDataSource Is Nothing Then mDataSource.Finish
+End If
 
 Exit Sub
 
@@ -238,6 +241,7 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     mContractResolver.AddPendingCommand gCommands.BracketCommand, pParams
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
     Exit Sub
 End If
 
@@ -305,6 +309,7 @@ Const ProcName As String = "ProcessBuyCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     mContractResolver.AddPendingCommand _
                             gCommands.BuyCommand, _
                             pParams, _
@@ -325,6 +330,7 @@ Const ProcName As String = "ProcessSellCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     mContractResolver.AddPendingCommand _
                             gCommands.SellCommand, _
                             pParams, _
@@ -344,6 +350,7 @@ Const ProcName As String = "ProcessEndBracketCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     mContractResolver.AddPendingCommand _
                             gCommands.EndBracketCommand, _
                             "", _
@@ -367,6 +374,7 @@ Const ProcName As String = "ProcessEntryCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
     mContractResolver.AddPendingCommand gCommands.EntryCommand, pParams
     Exit Sub
 End If
@@ -551,10 +559,11 @@ Const ProcName As String = "ProcessQuitCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     mContractResolver.AddPendingCommand _
                             gCommands.QuitCommand, _
                             "", _
-                            OrderPendingMessage
+                            "Command definition terminated"
     Exit Sub
 End If
 
@@ -574,6 +583,7 @@ Const ProcName As String = "ProcessStopLossCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
     mContractResolver.AddPendingCommand gCommands.StopLossCommand, pParams
     Exit Sub
 End If
@@ -641,6 +651,7 @@ Const ProcName As String = "ProcessTargetCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
     mContractResolver.AddPendingCommand gCommands.TargetCommand, pParams
     Exit Sub
 End If

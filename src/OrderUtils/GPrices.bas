@@ -83,6 +83,12 @@ Public Function gParsePriceAndOffset( _
 Const ProcName As String = "gParsePrice"
 On Error GoTo Err
 
+If pValue = "" Then
+    Set pPriceSpec = gNewPriceSpecifier(MaxDoubleValue, PriceValueTypeNone, 0, PriceOffsetTypeNone)
+    gParsePriceAndOffset = True
+    Exit Function
+End If
+
 gRegExp.Global = False
 gRegExp.IgnoreCase = True
 

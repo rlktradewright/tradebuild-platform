@@ -511,7 +511,7 @@ loadChartStyles mConfigStore
 ensureBuiltInChartStylesExist
     
 Dim lAppInstanceConfig As ConfigurationSection
-Set lAppInstanceConfig = getAppInstanceConfig(mConfigStore)
+Set lAppInstanceConfig = GetAppInstanceConfiguration(mConfigStore)
 If lAppInstanceConfig Is Nothing Then
     LogMessage "Program exiting at user request"
     gFinishConfigChangeMonitoring
@@ -650,8 +650,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getAppInstanceConfig(ByVal pConfigStore As ConfigurationStore) As ConfigurationSection
-Const ProcName As String = "getAppInstanceConfig"
+Private Function GetAppInstanceConfiguration(ByVal pConfigStore As ConfigurationStore) As ConfigurationSection
+Const ProcName As String = "GetAppInstanceConfiguration"
 On Error GoTo Err
 
 Dim lAppInstanceConfig As ConfigurationSection
@@ -670,7 +670,7 @@ If configName = "" Then
     End If
 Else
     LogMessage "Getting app instance config with name '" & configName & "'", LogLevelDetail
-    Set lAppInstanceConfig = ConfigUtils.getAppInstanceConfig(pConfigStore, configName)
+    Set lAppInstanceConfig = GetAppInstanceConfig(pConfigStore, configName)
     If lAppInstanceConfig Is Nothing Then
         LogMessage "App instance config '" & configName & "' not found"
     Else
@@ -686,7 +686,7 @@ If lAppInstanceConfig Is Nothing Then
             "Error"
 End If
 
-Set getAppInstanceConfig = lAppInstanceConfig
+Set GetAppInstanceConfiguration = lAppInstanceConfig
 
 Exit Function
 

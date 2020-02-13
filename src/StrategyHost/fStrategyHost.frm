@@ -3,23 +3,23 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#348.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#366.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
    ClientHeight    =   9225
    ClientLeft      =   60
    ClientTop       =   450
-   ClientWidth     =   11040
+   ClientWidth     =   11115
    LinkTopic       =   "Form1"
    ScaleHeight     =   9225
-   ScaleWidth      =   11040
+   ScaleWidth      =   11115
    StartUpPosition =   3  'Windows Default
    Begin TabDlg.SSTab SSTab2 
       Height          =   3675
       Left            =   0
       TabIndex        =   14
-      Top             =   -30
+      Top             =   0
       Width           =   11070
       _ExtentX        =   19526
       _ExtentY        =   6482
@@ -42,13 +42,13 @@ Begin VB.Form fStrategyHost
       TabCaption(0)   =   "Controls"
       TabPicture(0)   =   "fStrategyHost.frx":0000
       Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "Picture1"
+      Tab(0).Control(0)=   "ControlsPicture"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).ControlCount=   1
       TabCaption(1)   =   "Parameters"
       TabPicture(1)   =   "fStrategyHost.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Picture4"
+      Tab(1).Control(0)=   "ParametersPicture"
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Log"
       TabPicture(2)   =   "fStrategyHost.frx":0038
@@ -392,8 +392,8 @@ Begin VB.Form fStrategyHost
             Appearance      =   0  'Flat
             BorderStyle     =   0  'None
             BeginProperty Font 
-               Name            =   "Lucida Console"
-               Size            =   8.25
+               Name            =   "Consolas"
+               Size            =   14.25
                Charset         =   0
                Weight          =   400
                Underline       =   0   'False
@@ -410,7 +410,7 @@ Begin VB.Form fStrategyHost
             Width           =   10935
          End
       End
-      Begin VB.PictureBox Picture1 
+      Begin VB.PictureBox ControlsPicture 
          Appearance      =   0  'Flat
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
@@ -421,21 +421,11 @@ Begin VB.Form fStrategyHost
          TabIndex        =   18
          Top             =   300
          Width           =   11070
-         Begin VB.PictureBox FontPicture 
-            Height          =   615
-            Left            =   7080
-            ScaleHeight     =   555
-            ScaleWidth      =   1155
-            TabIndex        =   58
-            Top             =   2760
-            Visible         =   0   'False
-            Width           =   1215
-         End
          Begin TWControls40.TWImageCombo StopStrategyFactoryCombo 
             Height          =   330
             Left            =   6240
             TabIndex        =   3
-            Top             =   600
+            Top             =   960
             Width           =   3495
             _ExtentX        =   6165
             _ExtentY        =   582
@@ -455,7 +445,7 @@ Begin VB.Form fStrategyHost
             Height          =   330
             Left            =   6240
             TabIndex        =   2
-            Top             =   120
+            Top             =   390
             Width           =   3495
             _ExtentX        =   6165
             _ExtentY        =   582
@@ -471,12 +461,42 @@ Begin VB.Form fStrategyHost
             MouseIcon       =   "fStrategyHost.frx":008C
             Text            =   ""
          End
+         Begin VB.PictureBox StopStrategyFactoryErrorPicture 
+            BorderStyle     =   0  'None
+            Height          =   300
+            Left            =   9720
+            ScaleHeight     =   300
+            ScaleWidth      =   300
+            TabIndex        =   60
+            Top             =   960
+            Width           =   300
+         End
+         Begin VB.PictureBox StrategyErrorPicture 
+            BorderStyle     =   0  'None
+            Height          =   300
+            Left            =   9720
+            ScaleHeight     =   300
+            ScaleWidth      =   300
+            TabIndex        =   59
+            Top             =   390
+            Width           =   300
+         End
+         Begin VB.PictureBox FontPicture 
+            Height          =   615
+            Left            =   7080
+            ScaleHeight     =   555
+            ScaleWidth      =   1155
+            TabIndex        =   58
+            Top             =   2760
+            Visible         =   0   'False
+            Width           =   1215
+         End
          Begin TWControls40.TWButton ResultsPathButton 
             Height          =   285
             Left            =   10080
             TabIndex        =   10
             ToolTipText     =   "Click to select results path"
-            Top             =   2040
+            Top             =   2160
             Width           =   375
             _ExtentX        =   661
             _ExtentY        =   503
@@ -499,7 +519,7 @@ Begin VB.Form fStrategyHost
             Height          =   375
             Left            =   9360
             TabIndex        =   12
-            Top             =   2880
+            Top             =   3000
             Width           =   1095
             _ExtentX        =   1931
             _ExtentY        =   661
@@ -524,7 +544,7 @@ Begin VB.Form fStrategyHost
             Height          =   375
             Left            =   9360
             TabIndex        =   11
-            Top             =   2430
+            Top             =   2550
             Width           =   1095
             _ExtentX        =   1931
             _ExtentY        =   661
@@ -559,7 +579,7 @@ Begin VB.Form fStrategyHost
             Height          =   195
             Left            =   6240
             TabIndex        =   4
-            Top             =   1080
+            Top             =   1320
             Value           =   1  'Checked
             Width           =   1815
          End
@@ -577,7 +597,7 @@ Begin VB.Form fStrategyHost
             Height          =   195
             Left            =   6240
             TabIndex        =   6
-            Top             =   1560
+            Top             =   1800
             Width           =   1935
          End
          Begin VB.CheckBox ProfitProfileCheck 
@@ -585,7 +605,7 @@ Begin VB.Form fStrategyHost
             Height          =   195
             Left            =   6240
             TabIndex        =   5
-            Top             =   1320
+            Top             =   1560
             Width           =   1455
          End
          Begin VB.CheckBox NoMoneyManagementCheck 
@@ -593,7 +613,7 @@ Begin VB.Form fStrategyHost
             Height          =   195
             Left            =   8280
             TabIndex        =   8
-            Top             =   1560
+            Top             =   1800
             Width           =   2055
          End
          Begin VB.CheckBox SeparateSessionsCheck 
@@ -601,7 +621,7 @@ Begin VB.Form fStrategyHost
             Height          =   195
             Left            =   8280
             TabIndex        =   7
-            Top             =   1320
+            Top             =   1560
             Value           =   1  'Checked
             Width           =   2415
          End
@@ -609,12 +629,31 @@ Begin VB.Form fStrategyHost
             Height          =   285
             Left            =   7200
             TabIndex        =   9
-            Top             =   2040
+            Top             =   2160
             Width           =   2835
+         End
+         Begin VB.Label Label 
+            Caption         =   "Optionally, choose a stop strategy "
+            Height          =   255
+            Index           =   2
+            Left            =   6240
+            TabIndex        =   62
+            Top             =   720
+            Width           =   2775
+         End
+         Begin VB.Label Label 
+            Caption         =   "Choose a strategy"
+            Height          =   255
+            Index           =   1
+            Left            =   6240
+            TabIndex        =   61
+            Top             =   150
+            Width           =   1575
          End
          Begin VB.Label Label 
             Caption         =   "Symbol"
             Height          =   375
+            Index           =   0
             Left            =   120
             TabIndex        =   20
             Top             =   120
@@ -625,11 +664,11 @@ Begin VB.Form fStrategyHost
             Height          =   255
             Left            =   6240
             TabIndex        =   19
-            Top             =   2040
+            Top             =   2160
             Width           =   975
          End
       End
-      Begin VB.PictureBox Picture4 
+      Begin VB.PictureBox ParametersPicture 
          BorderStyle     =   0  'None
          Height          =   3375
          Left            =   -75000
@@ -639,13 +678,13 @@ Begin VB.Form fStrategyHost
          Top             =   300
          Width           =   11070
          Begin MSDataGridLib.DataGrid ParamGrid 
-            Height          =   2985
+            Height          =   3345
             Left            =   0
             TabIndex        =   13
             Top             =   0
-            Width           =   10695
-            _ExtentX        =   18865
-            _ExtentY        =   5265
+            Width           =   10935
+            _ExtentX        =   19288
+            _ExtentY        =   5900
             _Version        =   393216
             AllowUpdate     =   -1  'True
             AllowArrows     =   -1  'True
@@ -963,6 +1002,10 @@ Private mDigitWidth                                     As Single
 
 Private mMsgBox                                         As fModelessMessageBox
 
+Private mStrategy                                       As IStrategy
+Private mPMFactory                                      As IPosnMgmtStrtgyFactory
+
+Private mDummyParams                                    As New Parameters
 
 '================================================================================
 ' Form Event Handlers
@@ -1004,10 +1047,12 @@ If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
 SSTab1.Width = ScaleWidth
 SSTab2.Width = ScaleWidth
 
-Picture1.Width = SSTab2.Width
-Picture4.Width = SSTab2.Width
+ControlsPicture.Width = SSTab2.Width
+ParametersPicture.Width = SSTab2.Width
 LogPicture.Width = SSTab2.Width
 ResultsPicture.Width = SSTab2.Width
+
+LogText.Width = LogPicture.Width
 
 If ScaleHeight < minimumHeight Or mDetailsHidden Then
     Me.WindowState = FormWindowStateConstants.vbNormal
@@ -1759,7 +1804,7 @@ Private Sub StopStrategyFactoryCombo_Change()
 Const ProcName As String = "StopStrategyFactoryCombo_Change"
 On Error GoTo Err
 
-getDefaultParams
+If validateStopStrategyFactoryCombo Then getDefaultParams
 
 Exit Sub
 
@@ -1771,7 +1816,7 @@ Private Sub StopStrategyFactoryCombo_Click()
 Const ProcName As String = "StopStrategyFactoryCombo_Click"
 On Error GoTo Err
 
-getDefaultParams
+If validateStopStrategyFactoryCombo Then getDefaultParams
 
 Exit Sub
 
@@ -1779,11 +1824,23 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub StopStrategyFactoryCombo_Validate(Cancel As Boolean)
+Const ProcName As String = "StopStrategyFactoryCombo_Validate"
+On Error GoTo Err
+
+Cancel = (Not validateStopStrategyFactoryCombo)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub StrategyCombo_Change()
 Const ProcName As String = "StrategyCombo_Change"
 On Error GoTo Err
 
-getDefaultParams
+If validateStrategyCombo Then getDefaultParams
 
 Exit Sub
 
@@ -1795,12 +1852,28 @@ Private Sub StrategyCombo_Click()
 Const ProcName As String = "StrategyCombo_Click"
 On Error GoTo Err
 
-getDefaultParams
+If validateStrategyCombo Then getDefaultParams
 
 Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub StrategyCombo_Validate(Cancel As Boolean)
+Const ProcName As String = "StrategyCombo_Validate"
+On Error GoTo Err
+
+Cancel = (Not validateStrategyCombo)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub TickfileOrganiser1_TickfileCountChanged()
+checkReadyToStart
 End Sub
 
 '================================================================================
@@ -1827,6 +1900,19 @@ TradeChart.BaseChartController.Style = mChartStyle
 
 LogMessage "Applying theme"
 applyTheme New BlackTheme
+
+Dim aFont As StdFont
+Set aFont = New StdFont
+aFont.Bold = False
+aFont.Italic = False
+aFont.Name = "Consolas"
+aFont.Size = 10
+aFont.Strikethrough = False
+aFont.Underline = False
+
+Set LogText.Font = aFont
+
+setDummyParams
 
 LogMessage "Setting controls from model"
 ResultsPathText.Text = mModel.ResultsPath
@@ -1883,6 +1969,9 @@ Set mTheme = pTheme
 Me.BackColor = mTheme.BaseColor
 gApplyTheme mTheme, Me.Controls
 
+StrategyErrorPicture.BackColor = ControlsPicture.BackColor
+StopStrategyFactoryErrorPicture.BackColor = ControlsPicture.BackColor
+
 Exit Sub
 
 Err:
@@ -1890,17 +1979,23 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub calcAverageCharacterWidths( _
-                ByVal afont As StdFont)
+                ByVal aFont As StdFont)
 Const ProcName As String = "calcAverageCharacterWidths"
 On Error GoTo Err
 
-mLetterWidth = getAverageCharacterWidth("ABCDEFGH IJKLMNOP QRST UVWX YZ", afont)
-mDigitWidth = getAverageCharacterWidth(".0123456789", afont)
+mLetterWidth = getAverageCharacterWidth("ABCDEFGH IJKLMNOP QRST UVWX YZ", aFont)
+mDigitWidth = getAverageCharacterWidth(".0123456789", aFont)
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub checkReadyToStart()
+If Not mStrategy Is Nothing And _
+    (TickfileOrganiser1.TickfileCount <> 0 Or _
+    Not mModel.Symbol Is Nothing) Then StartButton.Enabled = True
 End Sub
 
 Private Sub clearPerformanceFields()
@@ -1942,18 +2037,19 @@ Private Sub getDefaultParams()
 Const ProcName As String = "getDefaultParams"
 On Error GoTo Err
 
-If StrategyCombo.Text = "" Then Exit Sub
-If StopStrategyFactoryCombo.Text = "" Then Exit Sub
+If mStrategy Is Nothing And mPMFactory Is Nothing Then Exit Sub
 
 Dim lPMFactories As New EnumerableCollection
-lPMFactories.Add CreateObject(StopStrategyFactoryCombo.Text)
-Set mParams = mController.GetDefaultParameters(CreateObject(StrategyCombo.Text), lPMFactories)
+If Not mPMFactory Is Nothing Then lPMFactories.Add mPMFactory
+
+Set mParams = mController.GetDefaultParameters(mStrategy, lPMFactories)
 
 Set ParamGrid.DataSource = mParams
+ParamGrid.Width = ParametersPicture.Width
 ParamGrid.Columns(0).Width = ParamGrid.Width * 0.6
-ParamGrid.Columns(1).Width = ParamGrid.Width * 0.3
+ParamGrid.Columns(1).Width = ParamGrid.Width * 0.4
 
-StartButton.Enabled = True
+checkReadyToStart
 
 Exit Sub
 
@@ -1985,7 +2081,7 @@ Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
-                                                    GetTimeZone(mContract.TimezoneName)))
+                                                    GetTimeZone(mContract.TimeZoneName)))
 
 gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
 ProfitChart.DisableDrawing
@@ -2013,7 +2109,7 @@ Set mTradeStudyBase = CreateStudyBaseForDoubleInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
-                                                    GetTimeZone(mContract.TimezoneName)))
+                                                    GetTimeZone(mContract.TimeZoneName)))
 
 gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
 TradeChart.DisableDrawing
@@ -2079,6 +2175,26 @@ If mModel.ShowChart And mPosition <> 0 Then
     mProfitStudyBase.NotifyValue mOverallProfit + mSessionProfit, pTimestamp
     mTradeStudyBase.NotifyValue mOverallProfit + mSessionProfit, pTimestamp
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setDummyParams()
+Const ProcName As String = "setDummyParams"
+On Error GoTo Err
+
+Dim i As Long
+For i = 1 To 100
+    mDummyParams.SetParameterValue Space(i), ""
+Next
+
+Set ParamGrid.DataSource = mDummyParams
+ParamGrid.Width = ParametersPicture.Width
+ParamGrid.Columns(0).Width = ParamGrid.Width * 0.6
+ParamGrid.Columns(1).Width = ParamGrid.Width * 0.4
 
 Exit Sub
 
@@ -2192,6 +2308,60 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function validateStopStrategyFactoryCombo() As Boolean
+Const ProcName As String = "validateStopStrategyFactoryCombo"
+On Error GoTo Err
+
+Dim lFactory As IPosnMgmtStrtgyFactory
+If StopStrategyFactoryCombo.Text <> "" Then
+    Set lFactory = CreateObject(StopStrategyFactoryCombo.Text)
+    Set mPMFactory = lFactory
+Else
+    Set mPMFactory = Nothing
+End If
+StopStrategyFactoryErrorPicture.BackColor = ControlsPicture.BackColor
+StopStrategyFactoryErrorPicture.ToolTipText = ""
+validateStopStrategyFactoryCombo = True
+
+Exit Function
+
+Err:
+If Err.Number = 429 Or Err.Number = VBErrorCodes.VbErrTypeMismatch Then
+    StopStrategyFactoryErrorPicture.BackColor = vbRed
+    StopStrategyFactoryErrorPicture.ToolTipText = "Can't create this object"
+    validateStopStrategyFactoryCombo = False
+    Exit Function
+End If
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function validateStrategyCombo() As Boolean
+Const ProcName As String = "validateStrategyCombo"
+On Error GoTo Err
+
+Dim lStrategy As IStrategy
+If StrategyCombo.Text <> "" Then
+    Set lStrategy = CreateObject(StrategyCombo.Text)
+    Set mStrategy = lStrategy
+Else
+    Set mStrategy = Nothing
+End If
+StrategyErrorPicture.BackColor = ControlsPicture.BackColor
+StrategyErrorPicture.ToolTipText = ""
+validateStrategyCombo = True
+
+Exit Function
+
+Err:
+If Err.Number = 429 Or Err.Number = VBErrorCodes.VbErrTypeMismatch Then
+    StrategyErrorPicture.BackColor = vbRed
+    StrategyErrorPicture.ToolTipText = "Can't create this object"
+    validateStrategyCombo = False
+    Exit Function
+End If
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub WriteLogText(ByVal pMessage As String)
 Const ProcName As String = "writeLogText"

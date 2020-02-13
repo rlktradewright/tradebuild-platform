@@ -82,6 +82,7 @@ Public Function gCreateBarDataSpecifierFuture( _
                 ByVal pClockFuture As IFuture, _
                 ByVal pExcludeCurrentBar As Boolean, _
                 ByVal pIncludeBarsOutsideSession As Boolean, _
+                ByVal pNormaliseDailyTimestamps As Boolean, _
                 ByVal pCustomSessionStartTime As Date, _
                 ByVal pCustomSessionEndTime As Date) As IFuture
 Const ProcName As String = "gCreateBarDataSpecifier"
@@ -91,7 +92,18 @@ AssertArgument Not pContractFuture Is Nothing
 AssertArgument Not pBarTimePeriod Is Nothing
 
 Dim lBarDataSpecifierFutureBuilder As New BarDataSpecFutureBldr
-lBarDataSpecifierFutureBuilder.Initialise pContractFuture, pBarTimePeriod, pToTime, pFromTime, pMaxNumberOfBars, pBarType, pClockFuture, pExcludeCurrentBar, pIncludeBarsOutsideSession, pCustomSessionStartTime, pCustomSessionEndTime
+lBarDataSpecifierFutureBuilder.Initialise pContractFuture, _
+                                            pBarTimePeriod, _
+                                            pToTime, _
+                                            pFromTime, _
+                                            pMaxNumberOfBars, _
+                                            pBarType, _
+                                            pClockFuture, _
+                                            pExcludeCurrentBar, _
+                                            pIncludeBarsOutsideSession, _
+                                            pNormaliseDailyTimestamps, _
+                                            pCustomSessionStartTime, _
+                                            pCustomSessionEndTime
 Set gCreateBarDataSpecifierFuture = lBarDataSpecifierFutureBuilder.Future
 
 Exit Function

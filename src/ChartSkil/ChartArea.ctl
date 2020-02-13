@@ -1592,11 +1592,11 @@ Attribute SessionEndTime.VB_MemberFlags = "400"
 SessionEndTime = mPeriods.SessionEndTime
 End Property
 
-Public Property Let SessionEndTime(ByVal val As Date)
+Public Property Let SessionEndTime(ByVal Value As Date)
 Const ProcName As String = "SessionEndTime"
 On Error GoTo Err
 
-mPeriods.SessionEndTime = val
+mPeriods.SessionEndTime = Value
 
 Exit Property
 

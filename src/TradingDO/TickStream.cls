@@ -54,10 +54,10 @@ Private Const ModuleName                    As String = "TickStream"
 Private mDB                                 As TradingDB
 Private WithEvents mConnector               As Connector
 Attribute mConnector.VB_VarHelpID = -1
-Private WithEvents mConnection              As ADODB.connection
+Private WithEvents mConnection              As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
-Private WithEvents mRs                      As ADODB.Recordset
-Attribute mRs.VB_VarHelpID = -1
+Private WithEvents mRS                      As ADODB.Recordset
+Attribute mRS.VB_VarHelpID = -1
 
 Private mAsynchronous                       As Boolean
 
@@ -90,7 +90,7 @@ Private Sub mConnection_ExecuteComplete( _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pCommand As ADODB.Command, _
                 ByVal pRecordset As ADODB.Recordset, _
-                ByVal pConnection As ADODB.connection)
+                ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnection_ExecuteComplete"
 On Error GoTo Err
 
@@ -104,7 +104,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     End If
 Else
     If mAsynchronous Then
-        Set mRs.ActiveConnection = Nothing
+        Set mRS.ActiveConnection = Nothing
         If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
     Else
         mFetchComplete = True
@@ -122,7 +122,7 @@ End Sub
 '@===============================================================================
 
 Private Sub mConnector_Connected( _
-                ByVal pConnection As ADODB.connection)
+                ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnector_Connected"
 On Error GoTo Err
 
@@ -203,13 +203,13 @@ Public Sub Cancel()
 Const ProcName As String = "Cancel"
 On Error GoTo Err
 
-If Not mRs Is Nothing Then
-    If gIsStateSet(mRs.State, adStateOpen) Then
-        mRs.Close
+If Not mRS Is Nothing Then
+    If gIsStateSet(mRS.State, adStateOpen) Then
+        mRS.Close
     Else
-        mRs.Cancel
+        mRS.Cancel
     End If
-    Set mRs = Nothing
+    Set mRS = Nothing
 End If
 
 If Not mConnection Is Nothing Then
@@ -232,7 +232,7 @@ Public Function GetNextTick( _
 Const ProcName As String = "GetNextTick"
 On Error GoTo Err
 
-If mRs Is Nothing Then
+If mRS Is Nothing Then
     Assert mAsynchronous, "Must call StartStream before calling GetNextTick"
         
     Debug.Print "GetNextTick: no recordset"
@@ -256,15 +256,15 @@ End Function
 Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal instrumentID As Long, _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date)
+                ByVal FromDate As Date, _
+                ByVal ToDate As Date)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mDB = db
 mInstrumentID = instrumentID
-mFromDate = gTruncateTimeToMinute(fromDate)
-mToDate = gTruncateTimeToNextMinute(toDate)
+mFromDate = gTruncateTimeToMinute(FromDate)
+mToDate = gTruncateTimeToNextMinute(ToDate)
 
 Exit Sub
 
@@ -301,21 +301,21 @@ Const ProcName As String = "createNewTickDecoder"
 On Error GoTo Err
 
 Dim PeriodStartTime As Date
-PeriodStartTime = gRoundTimeToSecond(mRs("DateTime"))
+PeriodStartTime = gRoundTimeToSecond(mRS("DateTime"))
 
 Dim format As String
-format = mRs("Version")
+format = mRS("Version")
 
 Dim BasePrice As Double
-BasePrice = mRs("baseprice")
+BasePrice = mRS("baseprice")
 
 Dim TickSize As Double
-TickSize = mRs("ticksize")
+TickSize = mRS("ticksize")
 
-Dim Data() As Byte
-Data = mRs("data")
+Dim data() As Byte
+data = mRS("data")
 
-Set createNewTickDecoder = CreateTickDecoder(PeriodStartTime, TickSize, BasePrice, Data, format)
+Set createNewTickDecoder = CreateTickDecoder(PeriodStartTime, TickSize, BasePrice, data, format)
 Debug.Print "createNewTickDecoder: " & FormatTimestamp(PeriodStartTime, TimestampDateAndTime + TimestampNoMillisecs)
 
 Exit Function
@@ -361,11 +361,11 @@ cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection
 
-Set mRs = New ADODB.Recordset
-mRs.cursorlocation = adUseClient
+Set mRS = New ADODB.Recordset
+mRS.cursorlocation = adUseClient
 If mAsynchronous Then
-    mRs.Properties("Initial Fetch Size") = 0
-    mRs.Open cmd, _
+    mRS.Properties("Initial Fetch Size") = 0
+    mRS.Open cmd, _
             , _
             CursorTypeEnum.adOpenForwardOnly, _
             , _
@@ -373,7 +373,7 @@ If mAsynchronous Then
             ExecuteOptionEnum.adAsyncFetchNonBlocking + _
             ExecuteOptionEnum.adAsyncExecute
 Else
-    mRs.Open cmd, _
+    mRS.Open cmd, _
             , _
             CursorTypeEnum.adOpenForwardOnly, _
             , _
@@ -392,10 +392,10 @@ On Error GoTo Err
 
 Set mDecoder = Nothing
 
-If Not gIsStateSet(mRs.State, adStateOpen) Then
-    gLogger.Log "recordset state is " & mRs.State, ProcName, ModuleName, LogLevelDetail
-    Debug.Print "Recordset state is " & mRs.State
-ElseIf mRs.EOF Then
+If Not gIsStateSet(mRS.State, adStateOpen) Then
+    gLogger.Log "recordset state is " & mRS.State, ProcName, ModuleName, LogLevelDetail
+    Debug.Print "Recordset state is " & mRS.State
+ElseIf mRS.EOF Then
     If Not mFetchComplete Then
         Debug.Print "getNextDecoder: waiting for data"
     Else
@@ -406,7 +406,7 @@ Else
     Set mDecoder = createNewTickDecoder
     getNextDecoder = True
     
-    mRs.MoveNext
+    mRS.MoveNext
 End If
 
 Exit Function

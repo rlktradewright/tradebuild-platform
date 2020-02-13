@@ -61,6 +61,7 @@ Private mTimePeriod                                 As TimePeriod
 Private mSessionOnly                                As Boolean
 Private mSessionEndTime                             As Date
 Private mSessionStartTime                           As Date
+Private mNormaliseDailyBarTimestamps                As Boolean
 
                 
 '@================================================================================
@@ -193,6 +194,7 @@ mFutureWaiter.Add mHistDataStore.FetchBars( _
                             CreateClockFuture(lContractFuture), _
                             , _
                             Not mSessionOnly, _
+                            mNormaliseDailyBarTimestamps, _
                             mSessionStartTime, _
                             mSessionEndTime), _
                         Me)
@@ -282,7 +284,8 @@ Friend Sub Initialise( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pSessionOnly As Boolean, _
                 ByVal pSessionStartTime As Date, _
-                ByVal pSessionEndTime As Date)
+                ByVal pSessionEndTime As Date, _
+                ByVal pNormaliseDailyBarTimestamps As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -296,6 +299,7 @@ Set mTimePeriod = pTimePeriod
 mSessionOnly = pSessionOnly
 mSessionStartTime = pSessionStartTime
 mSessionEndTime = pSessionEndTime
+mNormaliseDailyBarTimestamps = pNormaliseDailyBarTimestamps
 
 Exit Sub
 
