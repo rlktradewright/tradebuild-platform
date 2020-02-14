@@ -1,6 +1,6 @@
 # User Guides
 
-##[Command Line Utilities](/CommandLineUtilities)
+##[Command Line Utilities](Docs/UserGuides/CommandLineUtilities)
 
-[Place Orders](/CommandLineUtilities/PlaceOrders)
+[Place Orders](Docs/UserGuides/CommandLineUtilities/PlaceOrders)
 
