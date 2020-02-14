@@ -1,10 +1,10 @@
 # TRADEBUILD PLATFORM DOCUMENTS
 
-## [User Guides](Docs/UserGuides)
+## [User Guides](UserGuides)
 
-[Command Line Utilities](Docs/UserGuides/CommandLineUtilities)
+[Command Line Utilities](UserGuides/CommandLineUtilities)
 
 
-## [Resources](Docs/Resources)
+## [Resources](Resources)
 
-[Sample Worksheet for Placing Orders via Excel](/DocsResources/SampleWorksheetForPlacingOrdersViaExcel)
+[Sample Worksheet for Placing Orders via Excel](Resources/SampleWorksheetForPlacingOrdersViaExcel)
