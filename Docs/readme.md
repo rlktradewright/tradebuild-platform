@@ -12,5 +12,5 @@
 
 ## [File Formats](FileFormats)
 
-## [Tickfile Format](FileFormats/tickfileformat.md)
+[Tickfile Format](FileFormats/tickfileformat.md)
 
