@@ -10,4 +10,7 @@
 [Sample Worksheet for Placing Orders via Excel](Resources/SampleWorksheetForPlacingOrdersViaExcel)
 
 
-## {File Formats](FileFormats)
+## [File Formats](FileFormats)
+
+## [Tickfile Format](FileFormats/tickfileformat.md)
+
