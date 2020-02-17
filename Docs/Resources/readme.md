@@ -1,4 +1,4 @@
 # RESOURCES
 
 
-[Sample Worksheet for Placing Orders via Excel](SampleWorksheetForPlacingOrdersViaExcel)
+[Resources for use with the PlaceOrders program](ForPlaceOrdersProgram)
