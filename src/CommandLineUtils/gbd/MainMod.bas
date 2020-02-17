@@ -18,7 +18,7 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum Switches
+Public Enum DataSources
     FromDb
     FromFile
     FromTws
@@ -77,7 +77,7 @@ Public gLogToConsole                                As Boolean
 
 Public gProcessor                                   As IProcessor
 
-Private mDataSource                                 As Switches
+Private mDataSource                                 As DataSources
 
 Private mTickfileName                               As String
 
@@ -103,6 +103,12 @@ Private mSessionStartTime                           As Date
 
 Private mNormaliseDailyBarTimestamps                As Boolean
 
+Private mTWSConnectionMonitor                       As TWSConnectionMonitor
+
+Private mProviderReady                              As Boolean
+
+Private mNumberOfFetchesInProgress                  As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -118,6 +124,12 @@ Private mNormaliseDailyBarTimestamps                As Boolean
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("gbd", ProjectName)
+Set gLogger = sLogger
+End Property
 
 '@================================================================================
 ' Methods
@@ -177,19 +189,6 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
-Public Sub gLogCompletion(ByVal pContractSpec As IContractSpecifier)
-Const ProcName As String = "gLogCompletion"
-On Error GoTo Err
-
-gCon.WriteLineToConsole "Fetch completed for contract: " & gGetContractName(pContractSpec)
-gCon.WriteLineToConsole "Number of bars output:  " & CStr(mNumberOfBarsWritten)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Public Sub gLogDataRetrieved()
 Const ProcName As String = "gLogDataRetrieved"
 On Error GoTo Err
@@ -214,6 +213,58 @@ Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Descripti
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
+
+Public Sub gNotifyAPIConnectionStateChange( _
+                ByVal pState As ApiConnectionStates, _
+                ByVal pMessage As String)
+Const ProcName As String = "gNotifyAPIConnectionStateChange"
+On Error GoTo Err
+
+Select Case pState
+Case ApiConnNotConnected
+    gCon.WriteLineToConsole "Not connected to TWS: " & pMessage
+    mProviderReady = False
+Case ApiConnConnecting
+    gCon.WriteLineToConsole "Connecting to TWS: " & pMessage
+    mProviderReady = False
+Case ApiConnConnected
+    gCon.WriteLineToConsole "Connected to TWS: " & pMessage
+    mProviderReady = True
+Case ApiConnFailed
+    gCon.WriteLineToConsole "Connection to TWS failed: " & pMessage
+    mProviderReady = False
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gNotifyFetchCompletion(ByVal pContractSpec As IContractSpecifier)
+Const ProcName As String = "gNotifyFetchCompletion"
+On Error GoTo Err
+
+mNumberOfFetchesInProgress = mNumberOfFetchesInProgress - 1
+gCon.WriteLineToConsole "Fetch completed for contract: " & gGetContractName(pContractSpec)
+gCon.WriteLineToConsole "Number of bars output:  " & CStr(mNumberOfBarsWritten)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gNotifyIBServerConnectionClosed()
+gCon.WriteLineToConsole "Connection from TWS to IB servers closed"
+mProviderReady = False
+End Sub
+
+Public Sub gNotifyIBServerConnectionRecovered( _
+                ByVal pDataLost As Boolean)
+gCon.WriteLineToConsole "Connection from TWS to IB servers recovered"
+mProviderReady = True
 End Sub
 
 Public Sub gOutputBar(ByVal pBar As Bar)
@@ -323,63 +374,73 @@ inDev = True
 End Function
 
 Private Sub process()
-Dim inString As String
-Dim command As String
-Dim params As String
-
 Const ProcName As String = "process"
 On Error GoTo Err
 
-inString = Trim$(gCon.ReadLine(":"))
-Do While inString <> gCon.EofString
-    mLineNumber = mLineNumber + 1
-    If inString = "" Then
-        ' ignore blank lines
-    ElseIf Left$(inString, 1) = "#" Then
-        ' ignore comments
-    Else
-        ' process command
-        command = UCase$(Split(inString, " ")(0))
-        params = Trim$(Right$(inString, Len(inString) - Len(command)))
-        Select Case command
-        Case ContractCommand
-            processContractCommand params
-        Case FromCommand
-            processFromCommand params
-        Case ToCommand
-            processToCommand params
-        Case StartCommand
-            processStartCommand
-        Case StopCommand
-            processStopCommand
-        Case NumberCommand
-            processNumberCommand params
-        Case TimeframeCommand
-            processTimeframeCommand params
-        Case SessCommand
-            processSessCommand
-        Case NonSessCommand
-            processNonSessCommand
-        Case SessionOnlyCommand
-            processSessionOnlyCommand params
-        Case MillisecsCommand
-            processMillsecsCommand params
-        Case NoMillisecsCommand
-            mIncludeMillisecs = False
-        Case HelpCommand, Help1Command
-            showStdInHelp
-        Case SessionEndTimeCommand
-            processSessionEndTimeCommand params
-        Case SessionStartTimeCommand
-            processSessionStartTimeCommand params
-        Case DateOnlyCommmand
-            processDateOnlyCommand params
-        Case Else
-            gCon.WriteErrorLine "Invalid command '" & command & "'"
-        End Select
+Do
+    If mProviderReady Then
+        Dim inString As String
+        inString = Trim$(gCon.ReadLine(":"))
+        If inString = gCon.EofString Then Exit Do
+        gLogger.Log "gCon: " & inString, ProcName, ModuleName
+        
+        mLineNumber = mLineNumber + 1
+        
+        If inString = "" Then
+            ' ignore blank lines
+        ElseIf Left$(inString, 1) = "#" Then
+            ' ignore comments
+        Else
+            ' process command
+            Dim command As String
+            command = UCase$(Split(inString, " ")(0))
+            
+            Dim params As String
+            params = Trim$(Right$(inString, Len(inString) - Len(command)))
+            
+            Select Case command
+            Case ContractCommand
+                processContractCommand params
+            Case FromCommand
+                processFromCommand params
+            Case ToCommand
+                processToCommand params
+            Case StartCommand
+                processStartCommand
+            Case StopCommand
+                processStopCommand
+            Case NumberCommand
+                processNumberCommand params
+            Case TimeframeCommand
+                processTimeframeCommand params
+            Case SessCommand
+                processSessCommand
+            Case NonSessCommand
+                processNonSessCommand
+            Case SessionOnlyCommand
+                processSessionOnlyCommand params
+            Case MillisecsCommand
+                processMillsecsCommand params
+            Case NoMillisecsCommand
+                mIncludeMillisecs = False
+            Case HelpCommand, Help1Command
+                showStdInHelp
+            Case SessionEndTimeCommand
+                processSessionEndTimeCommand params
+            Case SessionStartTimeCommand
+                processSessionStartTimeCommand params
+            Case DateOnlyCommmand
+                processDateOnlyCommand params
+            Case Else
+                gCon.WriteErrorLine "Invalid command '" & command & "'"
+            End Select
+        End If
     End If
-    inString = Trim$(gCon.ReadLine(":"))
     Wait 10
+Loop
+
+Do While mNumberOfFetchesInProgress <> 0
+    Wait 50
 Loop
 
 Exit Sub
@@ -716,6 +777,7 @@ Else
     End If
     
     gProcessor.StartData
+    mNumberOfFetchesInProgress = mNumberOfFetchesInProgress + 1
     
 End If
 
@@ -1059,6 +1121,8 @@ End If
 
 Dim lTwsClient As Client
 Set lTwsClient = GetClient(server, CLng(port), CLng(clientId))
+Set mTWSConnectionMonitor = New TWSConnectionMonitor
+lTwsClient.AddTwsConnectionStateListener mTWSConnectionMonitor
 
 Set mHistDataStore = lTwsClient.GetHistoricalDataStore
 Set mContractStore = lTwsClient.GetContractStore

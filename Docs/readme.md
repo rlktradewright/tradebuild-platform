@@ -7,7 +7,7 @@
 
 ## [Resources](Resources)
 
-[Resources for Use with the PlaceOrders Program](ForPlaceOrdersProgram)
+[Resources for Use with the PlaceOrders Program](Resources/ForPlaceOrdersProgram)
 
 
 ## [File Formats](FileFormats)

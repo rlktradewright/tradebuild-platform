@@ -438,10 +438,33 @@ informational comments). It is intended to provide additional commands to specif
 particular retrieval operation.
 
 
-## 7. How To Input Commands from a File
-
-NB: this does not currently work and needs further investigation.
+## 7. How To Input Commands from a File or Another Program
 
 The standard command-line input redirection operator ‘<’ can be used to read commands from a file.
+
+For example, create a file called `C:\Qaz\getbars.txt` containing the following commands:
+
+```
+contract /symbol:ES /sectype:fut /expiry:0 /exchange:globex
+timeframe 5 mins
+from 2020/02/17
+to 2020/02/18
+start
+```
+
+Now run a command like this:
+
+`gbd27 -fromTWS <  C:\Qaz\getbars.txt > C:\Qaz\Bars.txt`
+
+The commands will be read from the `getbars.txt` file, and the output will be sent to `Bars.txt`.
+
+Similarly the standard pipe operator '|' can be used to pass output from another program as input to gbd27.
+For example:
+
+`type E:\qaz\GetBars.txt | gbd27 -fromTWS > C:\Qaz\Bars.txt`
+
+
+
+
 
 

@@ -93,7 +93,7 @@ Private Sub IBarFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchCompleted"
 On Error GoTo Err
 
-gLogCompletion mContractSpec
+gNotifyFetchCompletion mContractSpec
 
 Exit Sub
 

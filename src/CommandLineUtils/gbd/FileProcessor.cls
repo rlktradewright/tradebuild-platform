@@ -211,7 +211,7 @@ On Error GoTo Err
 
 Finish
 Set gProcessor = Nothing
-gLogCompletion mContractSpec
+gNotifyFetchCompletion mContractSpec
 Set mSelfRef = Nothing
 
 Exit Sub
