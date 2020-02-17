@@ -150,27 +150,6 @@ gCon.WriteErrorString ": "
 gCon.WriteErrorLine ev.ErrorMessage
 gCon.WriteErrorLine "At:"
 gCon.WriteErrorLine ev.ErrorSource
-
-' kill off any timers
-'TerminateTWUtilities
-
-' At this point, we don't know what state things are in, so it's not feasible to return to
-' the caller. All we can do is terminate abruptly.
-'
-' Note that normally one would use the End statement to terminate a VB6 program abruptly. But
-' the TWUtilities component interferes with the End statement's processing and may prevent
-' proper shutdown, so we use the TWUtilities component's EndProcess method instead.
-'
-' However if we are running in the development environment, then we call End because the
-' EndProcess method kills the entire development environment as well which can have undesirable
-' side effects if other components are also loaded.
-
-'If mIsInDev Then
-'    End
-'Else
-'    EndProcess
-'End If
-
 End Sub
 
 Public Sub gHandleUnexpectedError( _
@@ -310,8 +289,6 @@ End Sub
 Public Sub Main()
 On Error GoTo Err
 
-Debug.Print "Running in development environment: " & CStr(inDev)
-
 InitialiseTWUtilities
 
 Set mFatalErrorHandler = New FatalErrorHandler
@@ -367,11 +344,6 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function inDev() As Boolean
-mIsInDev = True
-inDev = True
-End Function
 
 Private Sub process()
 Const ProcName As String = "process"
