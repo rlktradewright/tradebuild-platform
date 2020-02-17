@@ -1,6 +1,6 @@
-# TRADEBUILD PLATFORM DOCUMENTS
+# FILE FORMATS
 
-## [User Guides](UserGuides)
+## [Tickfile Format](TickfileFormat)
 
 [Command Line Utilities](UserGuides/CommandLineUtilities)
 
