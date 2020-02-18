@@ -32,6 +32,7 @@ Name="MktDataUtils27"
 HelpContextID="0"
 Description="TradeWright Market Data Utilities v2.7"
 CompatibleMode="2"
+VersionCompatible32="1"
 CompatibleEXE32="..\..\Bin\TradeWright.TradeBuild.Platform\MarketDataUtils27.dll"
 MajorVer=2
 MinorVer=7
