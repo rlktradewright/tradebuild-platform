@@ -377,11 +377,27 @@ For example:
 ### 4.11 Millisecs Command
 
 This command specifies that milliseconds are to be included in the bar timestamps. When the program starts, 
-this is assumed to be false. In practice this is never useful when information is being source from TWS, 
+this is assumed to be false. In practice this is never useful when information is being sourced from TWS, 
 as TWS historical data is never timestamped at the sub-second level. 
 
+The command has a parameter which must be one of the following, with the obvious meanings:
 
-### 4.12 NoMillisecscsommand
+yes
+true
+on
+
+no
+false
+off
+
+If the parameter is not included, 'no' is assumed.
+
+When the program starts, `millisecs off` is automatically set.
+
+Note that 'millisecs off` is exactly equivalent to `nomillisecs`.
+
+
+### 4.12 NoMillisecs Command
 
 This command specifies that milliseconds are not to be included in the bar timestamps. When the program starts,
 this is assumed to be true. In practice this is never useful when information is being source from TWS, 
