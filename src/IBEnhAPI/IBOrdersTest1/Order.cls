@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IOrder
+Implements OrderUtils27.IOrder
 
 '@================================================================================
 ' Events
@@ -184,10 +184,6 @@ Private Property Get IOrder_ContractSpecifier() As IContractSpecifier
 Set IOrder_ContractSpecifier = ContractSpecifier
 End Property
 
-Private Property Get IOrder_ContractSpec() As IContractSpecifier
-Set IOrder_ContractSpec = mContractSpec
-End Property
-
 Private Property Let IOrder_DiscretionaryAmount(ByVal Value As Double)
 DiscretionaryAmount = Value
 End Property
@@ -340,10 +336,6 @@ Private Property Get IOrder_LastFillPrice() As Double
 IOrder_LastFillPrice = LastFillPrice
 End Property
 
-Private Property Let IOrder_LimitPrice(ByVal Value As Double)
-LimitPrice = Value
-End Property
-
 Private Property Get IOrder_LimitPrice() As Double
 IOrder_LimitPrice = mLimitPrice
 End Property
@@ -406,10 +398,6 @@ End Property
 
 Private Property Get IOrder_OrderStopTriggerMethod() As OrderStopTriggerMethods
 IOrder_OrderStopTriggerMethod = mStopTriggerMethod
-End Property
-
-Private Property Let IOrder_OrderType(ByVal Value As OrderTypes)
-OrderType = Value
 End Property
 
 Private Property Get IOrder_OrderType() As OrderTypes
@@ -530,10 +518,6 @@ End Property
 
 Private Property Get IOrder_TimeInForce() As OrderTIFs
 IOrder_TimeInForce = mTimeInForce
-End Property
-
-Private Property Let IOrder_TriggerPrice(ByVal Value As Double)
-TriggerPrice = Value
 End Property
 
 Private Property Get IOrder_TriggerPrice() As Double
@@ -947,8 +931,7 @@ Set OrderContext = mOrderContext
 End Property
 
 Friend Property Let OrderType(ByVal Value As OrderTypes)
-Const ProcName As String = "orderType"
-
+Const ProcName As String = "OrderType"
 On Error GoTo Err
 
 If Value = mOrderType Then Exit Property
