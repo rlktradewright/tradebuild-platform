@@ -588,13 +588,13 @@ Dim lTickPart As String
 If pDataSource Is Nothing Then
 ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
 Else
-    lTickPart = "    " & GetCurrentTickSummary(pDataSource) & "; "
+    lTickPart = vbCrLf & "    " & GetCurrentTickSummary(pDataSource) & "; "
 End If
 
 gLogOrder IIf(pIsSimulated, "(simulated) ", "") & _
             pMessage & vbCrLf & _
-            "    Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & vbCrLf & _
-            IIf(pKey <> "", "    Bracket id: " & pKey & vbCrLf, "") & _
+            "    Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & _
+            IIf(pKey <> "", vbCrLf & "    Bracket id: " & pKey, "") & _
             lTickPart, _
         pIsSimulated, _
         pSource

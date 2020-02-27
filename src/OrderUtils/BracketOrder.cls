@@ -49,7 +49,7 @@ Event OrderMessage(ByRef ev As BracketOrderMessageEventData)
 Event PositionCloseoutNotified()
 Event SelfCancelled()
 Event SizeChanged()
-Event StateChange(ByRef ef As StateChangeEventData)
+Event StateChange(ByRef ev As StateChangeEventData)
 Event StopLossOrderChanged()
 Event StopLossOrderFilled()
 Event TargetOrderChanged()
@@ -173,6 +173,11 @@ Private mTimezoneName                               As String
 
 Private WithEvents mRolloverTLI                     As TimerListItem
 Attribute mRolloverTLI.VB_VarHelpID = -1
+
+Private mNextBracketOrder                           As IBracketOrder
+Private mNextContract                               As IContract
+
+Private mRolloverController                         As RolloverController
 
 '@================================================================================
 ' Class Event Handlers
@@ -973,7 +978,22 @@ Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
-mSummary.RolloverController = ev.Source
+Dim lState As RolloverControllerStates: lState = ev.State
+Select Case lState
+Case RolloverControllerStateClosingCurrentPosition
+    fireChange BracketOrderChangeTypes.BracketOrderRolloverInitiated
+Case RolloverControllerStateCreatingNextBracketOrder
+    Set mNextContract = mRolloverController.NextContract
+    fireChange BracketOrderRolloverGotContract
+Case RolloverControllerStateCompleted
+    Set mNextBracketOrder = mRolloverController.NextBracketOrder
+    fireChange BracketOrderChangeTypes.BracketOrderRolloverCompleted
+    mOrderContext.NotifyBracketOrderClosed Me
+    mRolloverController.RemoveStateChangeListener Me
+    mSummary.RolloverDate = 0
+    mSummary.RolloverSpecification = Nothing
+End Select
+
 SaveRecoveryInfo
 
 Exit Sub
@@ -1793,7 +1813,7 @@ Public Property Get IsSimulated() As Boolean
 IsSimulated = mIsSimulated
 End Property
 
-Friend Property Get Key() As String
+Public Property Get Key() As String
 Key = mSummary.Key
 End Property
 
@@ -1807,6 +1827,14 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get NextBracketOrder() As IBracketOrder
+Set NextBracketOrder = mNextBracketOrder
+End Property
+
+Public Property Get NextContract() As IContract
+Set NextContract = mNextContract
 End Property
 
 Public Property Get Order(ByVal pRole As BracketOrderRoles) As IOrder
@@ -1983,9 +2011,13 @@ mSummary.RolloverSpecification = Value
 
 If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
 
+If mSummary.RolloverSpecification Is Nothing Then Exit Property
+
 Dim lRolloverTime As Date
-lRolloverTime = GetOffsetSessionTimes(mContract.ExpiryDate, _
-                                    -1 * mSummary.RolloverSpecification.Days).StartTime + mSummary.RolloverSpecification.Time
+lRolloverTime = GetOffsetSessionTimes( _
+                    mContract.ExpiryDate, _
+                    -1 * mSummary.RolloverSpecification.Days).StartTime + _
+                        mSummary.RolloverSpecification.Time
 
 Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
 mSummary.RolloverDate = ConvertDateTzToLocal(lRolloverTime, lTz)
@@ -3316,11 +3348,14 @@ On Error GoTo Err
 
 If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
 
-Set mCloseoutOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
+Dim lOrder As IOrder
+Set lOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
 
-mCloseoutOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
-mCloseoutOrder.Quantity = Abs(Size)
-mCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
+lOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
+lOrder.Quantity = Abs(Size)
+lOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
+
+SetCloseoutOrder lOrder
 
 SaveRecoveryInfo
 
@@ -3386,7 +3421,9 @@ Const ProcName As String = "doCompletionActions"
 On Error GoTo Err
 
 If Not mOrderContext Is Nothing Then
-    If mOrderContext.Name <> BalancingOrderContextName Then
+    If mOrderContext.Name <> BalancingOrderContextName And _
+        mSummary.RolloverDate = 0 _
+    Then
         mOrderContext.NotifyBracketOrderClosed Me
     End If
 End If
@@ -3651,10 +3688,12 @@ Private Sub initiateRollover()
 Const ProcName As String = "initiateRollover"
 On Error GoTo Err
 
-mSummary.RolloverController = New RolloverController
-mSummary.RolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName
-StartTask mSummary.RolloverController, PriorityNormal
-mSummary.RolloverController.AddStateChangeListener Me
+If mRolloverController Is Nothing Then
+    Set mRolloverController = New RolloverController
+End If
+mRolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName
+StartTask mRolloverController, PriorityNormal
+mRolloverController.AddStateChangeListener Me
 
 Exit Sub
 

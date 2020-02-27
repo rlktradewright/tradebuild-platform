@@ -150,7 +150,19 @@ End If
 mRecoveryContextName = lClp.Arg(1)
 mItemType = lClp.Arg(2)
 
-If mItemType = OrderInfoData Then ParseJSON lClp.Arg(3), mData
+If mItemType = OrderInfoData Then
+    ParseJSON lClp.Arg(3), mData
+    If TypeOf mData Is PMS Then
+        Dim lPMS As PMS: Set lPMS = mData
+        lPMS.Diff.UpdateHost lPMS
+    ElseIf TypeOf mData Is BOS Then
+        Dim lBOS As BOS: Set lBOS = mData
+        lBOS.Diff.UpdateHost lBOS
+    ElseIf TypeOf mData Is OS Then
+        Dim lOS As OS: Set lOS = mData
+        lOS.Diff.UpdateHost lOS
+    End If
+End If
 
 Exit Sub
 

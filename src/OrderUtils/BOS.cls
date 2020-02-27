@@ -90,8 +90,6 @@ Private mDiff                                       As New ROD
 Private mRolloverSpecification                      As RolloverSpecification
 Private mRolloverDate                               As Date
 
-Private mRolloverController                         As RolloverController
-
 Private mCloseoutSpecifier                          As CloseoutSpecifier
 
 '@================================================================================
@@ -287,16 +285,6 @@ End Property
 
 Public Property Get PreventUnprotectedPosition() As Boolean
 PreventUnprotectedPosition = mPreventUnprotectedPosition
-End Property
-
-Public Property Let RolloverController(ByVal Value As RolloverController)
-setDirty
-If mRolloverController Is Nothing Then Set mRolloverController = Value
-mDiff.SetProperty "RolloverController", Value
-End Property
-
-Public Property Get RolloverController() As RolloverController
-Set RolloverController = mRolloverController
 End Property
 
 Public Property Let RolloverDate(ByVal Value As Date)

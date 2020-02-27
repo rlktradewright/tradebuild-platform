@@ -49,6 +49,9 @@ Public Enum BracketOrderChangeTypes
     BracketOrderChangesApplied
     BracketOrderChangesCancelled
     BracketOrderPositionCloseoutNotified
+    BracketOrderRolloverInitiated
+    BracketOrderRolloverGotContract
+    BracketOrderRolloverCompleted
 End Enum
 
 Public Enum BracketOrderRoles
@@ -266,6 +269,17 @@ Public Enum ProfitTypes
     ProfitTypeTradeMaxProfit = &H200&
     ProfitTypeTradeMaxLoss = &H400&
     ProfitTypeTradeDrawdown = &H800&
+End Enum
+
+Public Enum RolloverControllerStates
+    RolloverControllerStateInitial = 0
+    RolloverControllerStateClosingCurrentPosition
+    RolloverControllerStateFindingNextContract
+    RolloverControllerStateCreatingNextPositionManager
+    RolloverControllerStateWaitingForOrderContext
+    RolloverControllerStateCreatingNextBracketOrder
+    RolloverControllerStateExecutingNextBracketOrder
+    RolloverControllerStateCompleted
 End Enum
 
 Public Enum TickRoundingModes
