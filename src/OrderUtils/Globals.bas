@@ -245,20 +245,99 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gCreateOptionRolloverSpecification( _
+                ByVal pDays As Long, _
+                ByVal pTime As Date, _
+                ByVal pStrikeMode As RolloverStrikeModes, _
+                ByVal pStrikeValue As Long, _
+                ByVal pUnderlyingExchangeName As String, _
+                ByVal pCloseOrderType As OrderTypes, _
+                ByVal pCloseTimeoutSecs As Long, _
+                ByVal pCloseLimitPriceSpec As PriceSpecifier, _
+                ByVal pCloseTriggerPriceSpec As PriceSpecifier, _
+                ByVal pEntryOrderType As OrderTypes, _
+                ByVal pEntryTimeoutSecs As Long, _
+                ByVal pEntryLimitPriceSpec As PriceSpecifier, _
+                ByVal pEntryTriggerPriceSpec As PriceSpecifier) As RolloverSpecification
+Const ProcName As String = "gCreateOptionRolloverSpecification"
+On Error GoTo Err
+
+Set gCreateOptionRolloverSpecification = New RolloverSpecification
+gCreateOptionRolloverSpecification.InitialiseForOption _
+                                                pDays, _
+                                                pTime, _
+                                                pStrikeMode, _
+                                                pStrikeValue, _
+                                                pUnderlyingExchangeName, _
+                                                pCloseOrderType, _
+                                                pCloseTimeoutSecs, _
+                                                pCloseLimitPriceSpec, _
+                                                pCloseTriggerPriceSpec, _
+                                                pEntryOrderType, _
+                                                pEntryTimeoutSecs, _
+                                                pEntryLimitPriceSpec, _
+                                                pEntryTriggerPriceSpec
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gCreateRolloverSpecification( _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
                 ByVal pCloseOrderType As OrderTypes, _
+                ByVal pCloseTimeoutSecs As Long, _
                 ByVal pCloseLimitPriceSpec As PriceSpecifier, _
                 ByVal pCloseTriggerPriceSpec As PriceSpecifier, _
                 ByVal pEntryOrderType As OrderTypes, _
+                ByVal pEntryTimeoutSecs As Long, _
                 ByVal pEntryLimitPriceSpec As PriceSpecifier, _
                 ByVal pEntryTriggerPriceSpec As PriceSpecifier) As RolloverSpecification
 Const ProcName As String = "gCreateRolloverSpecification"
 On Error GoTo Err
 
 Set gCreateRolloverSpecification = New RolloverSpecification
-gCreateRolloverSpecification.Initialise pDays, pTime, pCloseOrderType, pCloseLimitPriceSpec, pCloseTriggerPriceSpec, pEntryOrderType, pEntryLimitPriceSpec, pEntryTriggerPriceSpec
+gCreateRolloverSpecification.Initialise _
+            pDays, _
+            pTime, _
+            pCloseOrderType, _
+            pCloseTimeoutSecs, _
+            pCloseLimitPriceSpec, _
+            pCloseTriggerPriceSpec, _
+            pEntryOrderType, _
+            pEntryTimeoutSecs, _
+            pEntryLimitPriceSpec, _
+            pEntryTriggerPriceSpec
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gGetOptionContract( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pContractStore As IContractStore, _
+                ByVal pMaxExpenditure As Long, _
+                ByVal pStrikeIncrement As Long, _
+                ByVal pUnderlyingExchangeName As String, _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pListener As IStateChangeListener) As IFuture
+Const ProcName As String = "gGetOptionContract"
+On Error GoTo Err
+
+Dim lContractResolver As New OptionContractResolver
+Set gGetOptionContract = lContractResolver.ResolveContract( _
+                                                pContractSpec, _
+                                                pContractStore, _
+                                                pMaxExpenditure, _
+                                                pStrikeIncrement, _
+                                                pUnderlyingExchangeName, _
+                                                pMarketDataManager, _
+                                                pListener)
+
 
 Exit Function
 
@@ -356,6 +435,17 @@ Case OrderTypeLimit, _
         OrderTypeTrailLimit
     gIsEntryOrderType = True
 End Select
+End Function
+
+Public Function gIsNullPriceSpecifier(ByVal pPriceSpec As PriceSpecifier) As Boolean
+If pPriceSpec Is Nothing Then
+    gIsNullPriceSpecifier = True
+Else
+    gIsNullPriceSpecifier = pPriceSpec.Price = MaxDoubleValue And _
+                            pPriceSpec.PriceType = PriceValueTypeNone And _
+                            pPriceSpec.Offset = 0 And _
+                            pPriceSpec.OffsetType = PriceOffsetTypeNone
+End If
 End Function
 
 Public Function gIsStopLossOrderType(ByVal pOrderType As OrderTypes) As Boolean

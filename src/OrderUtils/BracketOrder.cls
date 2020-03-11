@@ -121,6 +121,9 @@ Private mCancelAfter                                As Long
 Private WithEvents mCancelTLI                       As TimerListItem
 Attribute mCancelTLI.VB_VarHelpID = -1
 
+Private WithEvents mForceCloseTLI                   As TimerListItem
+Attribute mForceCloseTLI.VB_VarHelpID = -1
+
 Private WithEvents mEntryOrder                      As Order
 Attribute mEntryOrder.VB_VarHelpID = -1
 Private mEntryOrderCopy                             As Order
@@ -178,6 +181,7 @@ Private mNextBracketOrder                           As IBracketOrder
 Private mNextContract                               As IContract
 
 Private mRolloverController                         As RolloverController
+Private mIsRolloverInProgress                       As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -866,22 +870,9 @@ End If
 
 If mSummary.CancelTime <> 0 And mSummary.CancelTime > GetTimestamp Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
 
-If mSummary.RolloverDate <> 0 Then
-    If mSummary.RolloverDate <= GetTimestamp Then
-        Dim lExpiryTime As Date
-        lExpiryTime = mContract.ExpiryDate + 10# / 24#
-        Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
-        lExpiryTime = ConvertDateTzToLocal(lExpiryTime, lTz)
-        If lExpiryTime > GetTimestamp Then
-            initiateRollover
-        End If
-    ElseIf Int(mSummary.RolloverDate - GetTimestamp) > 20 Then
-        ' too long for a timer list entry! Max is about 24 days
-        Set mRolloverTLI = mTimerList.Add(Nothing, GetTimestamp + 20, ExpiryTimeUnitDateTime)
-    Else
-        Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
-    End If
-End If
+If mSummary.RolloverDate <> 0 And _
+    (mSummary.State = BracketOrderStateSubmitted Or _
+    mSummary.State = BracketOrderStateClosed) Then setRolloverTLI
     
 If placePeggedOrders Then CheckComplete
 
@@ -981,17 +972,20 @@ On Error GoTo Err
 Dim lState As RolloverControllerStates: lState = ev.State
 Select Case lState
 Case RolloverControllerStateClosingCurrentPosition
+    mIsRolloverInProgress = True
     fireChange BracketOrderChangeTypes.BracketOrderRolloverInitiated
 Case RolloverControllerStateCreatingNextBracketOrder
     Set mNextContract = mRolloverController.NextContract
     fireChange BracketOrderRolloverGotContract
 Case RolloverControllerStateCompleted
+    mIsRolloverInProgress = False
     Set mNextBracketOrder = mRolloverController.NextBracketOrder
-    fireChange BracketOrderChangeTypes.BracketOrderRolloverCompleted
-    mOrderContext.NotifyBracketOrderClosed Me
     mRolloverController.RemoveStateChangeListener Me
     mSummary.RolloverDate = 0
-    mSummary.RolloverSpecification = Nothing
+    RolloverSpecification = Nothing
+    
+    fireChange BracketOrderChangeTypes.BracketOrderRolloverCompleted
+    mOrderContext.NotifyBracketOrderClosed Me
 End Select
 
 SaveRecoveryInfo
@@ -1279,6 +1273,23 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' mForceCloseTLI Event Handlers
+'@================================================================================
+
+Private Sub mForceCloseTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mForceCloseTLI_StateChange"
+On Error GoTo Err
+
+mSummary.CloseoutSpecifier = Nothing
+CloseOut
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mRolloverTLI Event Handlers
 '@================================================================================
 
@@ -1289,15 +1300,7 @@ On Error GoTo Err
 Dim lChangeType As TimerListItemStates: lChangeType = ev.State
 If lChangeType <> TimerListItemStateExpired Then Exit Sub
 
-If GetTimestamp >= mSummary.RolloverDate Then
-    initiateRollover
-ElseIf Int(mSummary.RolloverDate - GetTimestamp) > 20 Then
-    ' too long for a timer list entry! Max is about 24 days
-    Set mRolloverTLI = mTimerList.Add(Nothing, GetTimestamp + 20, ExpiryTimeUnitDateTime)
-Else
-    Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
-End If
-
+setRolloverTLI
 
 Exit Sub
 
@@ -1781,6 +1784,10 @@ Public Property Get GroupName() As String
 GroupName = mSummary.GroupName
 End Property
 
+Public Property Get HasRolloverSpecification() As Boolean
+HasRolloverSpecification = (Not mSummary.RolloverSpecification Is Nothing)
+End Property
+
 Public Property Get IsComplete() As Boolean
 Const ProcName As String = "IsComplete"
 On Error GoTo Err
@@ -1807,6 +1814,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IsRolloverInProgress() As Boolean
+IsRolloverInProgress = mIsRolloverInProgress
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -1995,6 +2006,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get RolloverDate() As Date
+RolloverDate = mSummary.RolloverDate
+End Property
+
 Friend Property Get RolloverSpecification() As RolloverSpecification
 Set RolloverSpecification = mSummary.RolloverSpecification
 End Property
@@ -2003,33 +2018,34 @@ Friend Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
 Const ProcName As String = "RolloverSpecification"
 On Error GoTo Err
 
-Assert mSummary.State = BracketOrderStateCreated Or _
+If mSummary.RolloverSpecification Is Nothing And Value Is Nothing Then Exit Property
+
+Assert Value Is Nothing Or _
+        mSummary.State = BracketOrderStateCreated Or _
         mSummary.State = BracketOrderStateSubmitted, _
         "Bracket order state does not allow rollover"
 
 mSummary.RolloverSpecification = Value
+mSummary.RolloverDate = 0
 
 If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
 
-If mSummary.RolloverSpecification Is Nothing Then Exit Property
-
-Dim lRolloverTime As Date
-lRolloverTime = GetOffsetSessionTimes( _
-                    mContract.ExpiryDate, _
-                    -1 * mSummary.RolloverSpecification.Days).StartTime + _
-                        mSummary.RolloverSpecification.Time
-
-Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
-mSummary.RolloverDate = ConvertDateTzToLocal(lRolloverTime, lTz)
-
-If Int(mSummary.RolloverDate - GetTimestamp) > 20 Then
-    ' too long for a timer list entry! Max is about 24 days
-    Set mRolloverTLI = mTimerList.Add(Nothing, GetTimestamp + 20, ExpiryTimeUnitDateTime)
-Else
-    Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
+If Not mSummary.RolloverSpecification Is Nothing Then
+    Dim lRolloverTime As Date
+    lRolloverTime = GetOffsetSessionTimes( _
+                        mContract.ExpiryDate, _
+                        -1 * mSummary.RolloverSpecification.Days).StartTime + _
+                            mSummary.RolloverSpecification.Time
+    
+    Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
+    mSummary.RolloverDate = ConvertDateTzToLocal(lRolloverTime, lTz)
 End If
 
-If mSummary.State = BracketOrderStateSubmitted Then SaveRecoveryInfo
+SaveRecoveryInfo
+
+If mSummary.RolloverSpecification Is Nothing Then Exit Property
+
+If mSummary.State = BracketOrderStateSubmitted Then setRolloverTLI
 
 Exit Property
 
@@ -2111,6 +2127,37 @@ If pNewQuantity <> pOrder.Quantity Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     pField = pNewQuantity
     setDirty
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setRolloverTLI()
+Const ProcName As String = "setRolloverTLI"
+On Error GoTo Err
+
+If mSummary.CumBuyPrice = 0 And mSummary.CumSellPrice = 0 Then
+    ' we haven't had any fills yet, so we need to defer the rollover
+    ' until we have
+    Exit Sub
+End If
+
+If mSummary.RolloverDate <= GetTimestamp Then
+    Dim lExpiryTime As Date
+    lExpiryTime = mContract.ExpiryDate + mContract.SessionEndTime '.ExpiryDate + 10# / 24#
+    Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
+    lExpiryTime = ConvertDateTzToLocal(lExpiryTime, lTz)
+    If lExpiryTime > GetTimestamp Then
+        initiateRollover
+    End If
+ElseIf Int(mSummary.RolloverDate - GetTimestamp) > 20 Then
+    ' too long for a timer list entry! Max is about 24 days
+    Set mRolloverTLI = mTimerList.Add(Nothing, GetTimestamp + 20, ExpiryTimeUnitDateTime)
+Else
+    Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
 End If
 
 Exit Sub
@@ -2504,6 +2551,7 @@ If Not mStopLossOrder Is Nothing Then mStopLossOrder.SaveRecoveryInfo
 If Not mTargetOrder Is Nothing Then mTargetOrder.SaveRecoveryInfo
 
 handleStimulus OpStimuli.StimExecute
+If mSummary.RolloverDate <> 0 Then setRolloverTLI
 
 Exit Sub
 
@@ -3007,6 +3055,30 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function CancelCloseoutOrder()
+Const ProcName As String = "CancelCloseoutOrder"
+On Error GoTo Err
+
+If mCloseoutOrder Is Nothing Then Exit Function
+Select Case mCloseoutOrder.Status
+Case OrderStatuses.OrderStatusCreated
+    mCloseoutOrder.Status = OrderStatuses.OrderStatusCancelled
+    mCloseoutOrder.SaveRecoveryInfo
+Case OrderStatuses.OrderStatusFilled, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
+Case Else
+    gLogOrderMessage "Cancel order", _
+                    mCloseoutOrder, mDataSource, mContract, Key, mIsSimulated, Me
+    mOrderSubmitter.CancelCloseoutOrder Me
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function cancelOrders() As Boolean
 Const ProcName As String = "cancelOrders"
 On Error GoTo Err
@@ -3085,7 +3157,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function CancelStopOrder()
-Const ProcName As String = "cancelStopOrder"
+Const ProcName As String = "CancelStopOrder"
 On Error GoTo Err
 
 If mStopLossOrder Is Nothing Then Exit Function
@@ -3109,7 +3181,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function CancelTargetOrder()
-Const ProcName As String = "cancelTargetOrder"
+Const ProcName As String = "CancelTargetOrder"
 On Error GoTo Err
 
 If mTargetOrder Is Nothing Then Exit Function
@@ -3349,7 +3421,18 @@ On Error GoTo Err
 If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
 
 Dim lOrder As IOrder
-Set lOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
+
+If mSummary.CloseoutSpecifier Is Nothing Then
+    Set lOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
+Else
+    With mSummary.CloseoutSpecifier
+        Set lOrder = mOrderContext.NewOrder(.OrderType, mRecoveryContextName)
+        lOrder.LimitPriceSpec = .LimitPriceSpec
+        lOrder.TriggerPriceSpec = .TriggerPriceSpec
+        lOrder.IgnoreRegularTradingHours = .OutsideRTH
+    End With
+End If
+mOrderContext.FixupEntryOrder lOrder
 
 lOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
 lOrder.Quantity = Abs(Size)
@@ -3405,6 +3488,8 @@ For Each lAction In pActions
     Case OpActions.ActLog
         gLog "Stimulus " & gOpStimuliToString(pStimulus) & " occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mSummary.Key & ")", ProcName, ModuleName, , LogLevelSevere
         doActions = Empty
+    Case OpActions.ActCancelCloseoutOrder
+        doActions = CancelCloseoutOrder
     Case Else
         Assert False, Key & " Invalid Action " & lAction
     End Select
@@ -3726,8 +3811,18 @@ On Error GoTo Err
 createCloseoutOrder
 
 RaiseEvent CloseoutOrderCreated
+
+mStateEngine.SetConditions OpConditions.CondCloseoutOrderExists
+
 mOrderSubmitter.ModifyBracketOrder Me, False, False, False, True
 
+If mSummary.CloseoutSpecifier Is Nothing Then
+ElseIf mSummary.CloseoutSpecifier.ForceCloseAfterSecs <> 0 Then
+    Set mForceCloseTLI = mTimerList.Add( _
+                                    Nothing, _
+                                    mSummary.CloseoutSpecifier.ForceCloseAfterSecs)
+End If
+                            
 Exit Function
 
 Err:
@@ -3865,7 +3960,21 @@ Else
     SetSize Size - pExec.Quantity
 End If
     
-If Size = 0 Then mSummary.EndTime = pExec.FillTime
+If Size = 0 Then
+    If Not IsRolloverInProgress Then
+        If Not mRolloverTLI Is Nothing Then
+            mRolloverTLI.Cancel
+            Set mRolloverTLI = Nothing
+        End If
+        mSummary.RolloverSpecification = Nothing
+        mSummary.RolloverDate = 0
+    End If
+    mSummary.EndTime = pExec.FillTime
+ElseIf (Not mSummary.RolloverSpecification Is Nothing) And _
+        mRolloverTLI Is Nothing _
+Then
+    setRolloverTLI
+End If
 
 SaveRecoveryInfo
 

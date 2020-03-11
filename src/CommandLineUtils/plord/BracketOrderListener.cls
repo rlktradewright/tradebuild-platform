@@ -97,36 +97,55 @@ On Error GoTo Err
 Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
 
 Dim lChangeType As BracketOrderChangeTypes: lChangeType = ev.ChangeType
-Dim lBo As IBracketOrder: Set lBo = ev.Source
+Dim lBo As BracketOrder: Set lBo = ev.Source
+
+Dim lRolloverClause As String: lRolloverClause = generateRolloverClause(lBo)
+
+Dim s As String: s = lTime & lBo.Key & ": "
+Dim s1 As String
+
 Select Case lChangeType
 Case BracketOrderCompleted
-    gWriteLineToStdOut lTime & lBo.Key & ": bracket order completed"
-    Remove lBo
+    s1 = "bracket order completed"
+    If Not lBo.HasRolloverSpecification Then Remove lBo
 Case BracketOrderSelfCancelled
-    gWriteLineToStdOut lTime & lBo.Key & ": bracket order cancelled"
+    s1 = "bracket order cancelled"
     Remove lBo
 Case BracketOrderEntryOrderChanged
 
 Case BracketOrderEntryOrderFilled
-    gWriteLineToStdOut lTime & lBo.Key & ": entry order filled " & lBo.EntryOrder.QuantityFilled & "; remaining " & lBo.EntryOrder.QuantityRemaining
+    s1 = "entry order filled " & _
+        lBo.EntryOrder.QuantityFilled & "; remaining " & _
+        lBo.EntryOrder.QuantityRemaining
 Case BracketOrderStopLossOrderChanged
 
 Case BracketOrderStopLossOrderFilled
-    gWriteLineToStdOut lTime & lBo.Key & ": stop-loss order filled " & lBo.StopLossOrder.QuantityFilled & "; remaining " & lBo.StopLossOrder.QuantityRemaining
+    s1 = "stop-loss order filled " & _
+        lBo.StopLossOrder.QuantityFilled & _
+        "; remaining " & _
+        lBo.StopLossOrder.QuantityRemaining
 Case BracketOrderTargetOrderChanged
 
 Case BracketOrderTargetOrderFilled
-    gWriteLineToStdOut lTime & lBo.Key & ": target order filled " & lBo.TargetOrder.QuantityFilled & "; remaining " & lBo.TargetOrder.QuantityRemaining
+    s1 = "target order filled " & _
+        lBo.TargetOrder.QuantityFilled & _
+        "; remaining " & _
+        lBo.TargetOrder.QuantityRemaining
 Case BracketOrderCloseoutOrderCreated
-    gWriteLineToStdOut lTime & lBo.Key & ": closeout order created"
+    s = s & "closeout order created"
 Case BracketOrderCloseoutOrderChanged
 
 Case BracketOrderCloseoutOrderFilled
-    gWriteLineToStdOut lTime & lBo.Key & ": closeout order filled " & lBo.CloseoutOrder.QuantityFilled & "; remaining " & lBo.CloseoutOrder.QuantityRemaining
+    s1 = "closeout order filled " & _
+        lBo.CloseoutOrder.QuantityFilled & _
+        "; remaining " & _
+        lBo.CloseoutOrder.QuantityRemaining
 Case BracketOrderSizeChanged
 
 Case BracketOrderStateChanged
-    gWriteLineToStdOut lTime & lBo.Key & ": bracket order state changed: " & BracketOrderStateToString(lBo.State)
+    s1 = "bracket order state changed: " & _
+        BracketOrderStateToString(lBo.State) & _
+        lRolloverClause
 Case BracketOrderChangesPending
 
 Case BracketOrderChangesApplied
@@ -134,8 +153,20 @@ Case BracketOrderChangesApplied
 Case BracketOrderChangesCancelled
 
 Case BracketOrderPositionCloseoutNotified
-    gWriteLineToStdOut lTime & lBo.Key & ": closed out"
+    s1 = "closed out"
+Case BracketOrderRolloverInitiated
+    s1 = "bracket order rollover initiated"
+Case BracketOrderRolloverGotContract
+    s1 = "bracket order rolling over to next contract: " & _
+        gGetContractName(lBo.NextContract)
+Case BracketOrderRolloverCompleted
+    s1 = "new bracket order is: " & _
+        lBo.NextBracketOrder.Key
+    Add lBo.NextBracketOrder
+    Remove lBo
 End Select
+
+If s1 <> "" Then gWriteLineToStdOut s & s1
 
 Exit Sub
 
@@ -159,6 +190,13 @@ Friend Sub Add(ByVal pBO As IBracketOrder)
 pBO.AddBracketOrderErrorListener Me
 pBO.AddBracketOrderMessageListener Me
 pBO.AddChangeListener Me
+
+Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
+gWriteLineToStdOut lTime & _
+                    pBO.Key & _
+                    ": bracket order state is: " & _
+                    BracketOrderStateToString(pBO.State) & _
+                    generateRolloverClause(pBO)
 End Sub
 
 Friend Sub Remove(ByVal pBO As IBracketOrder)
@@ -193,4 +231,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function generateRolloverClause(ByVal pBO As BracketOrder) As String
+Dim s As String
+If pBO.HasRolloverSpecification Then
+    If pBO.IsRolloverInProgress Then
+        s = ": rollover in progress"
+    Else
+        s = ": rollover at " & _
+            FormatTimestamp(pBO.RolloverDate, _
+                TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+    End If
+End If
+generateRolloverClause = s
+End Function
 

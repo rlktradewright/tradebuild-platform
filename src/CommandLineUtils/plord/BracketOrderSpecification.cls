@@ -73,15 +73,7 @@ Public Description                                  As String
 Public EntryReason                                  As String
 Public StopLossReason                               As String
 Public TargetReason                                 As String
-Public Rollover                                     As Boolean
-Public RolloverDays                                 As Long
-Public RolloverTime                                 As Date
-Public RolloverCloseType                            As OrderTypes
-Public RolloverCloseLimitPriceSpec                  As PriceSpecifier
-Public RolloverCloseTriggerPriceSpec                As PriceSpecifier
-Public RolloverEntryType                            As OrderTypes
-Public RolloverEntryLimitPriceSpec                  As PriceSpecifier
-Public RolloverEntryTriggerPriceSpec                As PriceSpecifier
+Public RolloverSpec                                 As RolloverSpecification
 
 '@================================================================================
 ' Class Event Handlers
@@ -134,7 +126,7 @@ s = generateBracket
 s = s & generateEntry
 s = s & generateStopLoss
 s = s & generateTarget
-
+s = s & generateRollover
 s = s & gCommands.EndBracketCommand.Name
 ToString = s
 
@@ -192,19 +184,19 @@ Case OrderTypeMarketOnClose
 Case OrderTypeMarketToLimit
 Case OrderTypeStop, _
         OrderTypeMarketIfTouched
-    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec))
+    s = gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec))
 Case OrderTypeStopLimit, _
         OrderTypeLimitIfTouched
-    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec)) & _
+    s = gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec)) & _
             gGenerateSwitch(PriceSwitch, formatPriceSpec(EntryLimitPriceSpec))
 Case OrderTypeLimit, _
         OrderTypeLimitOnOpen, _
         OrderTypeLimitOnClose
-    s = s & gGenerateSwitch(PriceSwitch, formatPriceSpec(EntryLimitPriceSpec))
+    s = gGenerateSwitch(PriceSwitch, formatPriceSpec(EntryLimitPriceSpec))
 Case OrderTypeTrail
-    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec))
+    s = gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec))
 Case OrderTypeTrailLimit
-    s = s & gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec)) & _
+    s = gGenerateSwitch(TriggerPriceSwitch, formatPriceSpec(EntryTriggerPriceSpec)) & _
             gGenerateSwitch(PriceSwitch, formatPriceSpec(EntryLimitPriceSpec))
 End Select
 
@@ -212,6 +204,106 @@ If EntryTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToSt
 If EntryIgnoreRTH Then s = s & gGenerateSwitch(IgnoreRTHSwitch, "")
 
 generateEntryAttributes = s
+End Function
+
+Private Function generateRollover() As String
+If RolloverSpec Is Nothing Then Exit Function
+
+Dim s As String
+s = gCommands.RolloverCommand.Name & " "
+
+s = s & gGenerateSwitch(DaysSwitch, RolloverSpec.Days)
+s = s & gGenerateSwitch(TimeSwitch, FormatTimestamp(RolloverSpec.Time, TimestampTimeOnlyISO8601 + TimestampNoMillisecs))
+s = s & gGenerateSwitch(CloseSwitch, generateRolloverClose)
+s = s & gGenerateSwitch(EntrySwitch, generateRolloverEntry)
+
+generateRollover = s & vbCrLf
+End Function
+
+Private Function generateRolloverClose() As String
+Dim s As String
+
+s = OrderTypeToShortString(RolloverSpec.CloseOrderType) & ";"
+
+Select Case RolloverSpec.CloseOrderType
+Case OrderTypeMarket, _
+        OrderTypeMarketOnOpen, _
+        OrderTypeMarketOnClose, _
+        OrderTypeMarketToLimit
+    s = s & ";"
+    s = s & ";"
+Case OrderTypeStop, _
+        OrderTypeMarketIfTouched
+    s = s & formatPriceSpec(RolloverSpec.CloseTriggerPriceSpec) & ";"
+    s = s & ";"
+Case OrderTypeStopLimit, _
+        OrderTypeLimitIfTouched
+    s = s & formatPriceSpec(RolloverSpec.CloseLimitPriceSpec) & ";"
+    s = s & formatPriceSpec(RolloverSpec.CloseTriggerPriceSpec) & ";"
+Case OrderTypeLimitOnOpen, _
+        OrderTypeLimitOnClose
+    s = s & ";"
+    s = s & ";"
+Case OrderTypeLimit
+    s = s & formatPriceSpec(RolloverSpec.CloseLimitPriceSpec) & ";"
+    s = s & ";"
+Case OrderTypeTrail
+    s = s & formatPriceSpec(RolloverSpec.CloseTriggerPriceSpec) & ";"
+    s = s & ";"
+Case OrderTypeTrailLimit
+    s = s & formatPriceSpec(RolloverSpec.CloseLimitPriceSpec) & ";"
+    s = s & formatPriceSpec(RolloverSpec.CloseTriggerPriceSpec) & ";"
+End Select
+
+If RolloverSpec.CloseTimeoutSecs <> 0 Then s = s & RolloverSpec.CloseTimeoutSecs
+
+Do While Right$(s, 1) = ";"
+    s = Left$(s, Len(s) - 1)
+Loop
+generateRolloverClose = s
+End Function
+
+Private Function generateRolloverEntry() As String
+Dim s As String
+
+s = OrderTypeToShortString(RolloverSpec.EntryOrderType) & ";"
+
+Select Case RolloverSpec.CloseOrderType
+Case OrderTypeMarket, _
+        OrderTypeMarketOnOpen, _
+        OrderTypeMarketOnClose, _
+        OrderTypeMarketToLimit
+    s = s & ";"
+    s = s & ";"
+Case OrderTypeStop, _
+        OrderTypeMarketIfTouched
+    s = s & formatPriceSpec(RolloverSpec.EntryTriggerPriceSpec) & ";"
+    s = s & ";"
+Case OrderTypeStopLimit, _
+        OrderTypeLimitIfTouched
+    s = s & formatPriceSpec(RolloverSpec.EntryLimitPriceSpec) & ";"
+    s = s & formatPriceSpec(RolloverSpec.EntryTriggerPriceSpec) & ";"
+Case OrderTypeLimitOnOpen, _
+        OrderTypeLimitOnClose
+    s = s & ";"
+    s = s & ";"
+Case OrderTypeLimit
+    s = s & formatPriceSpec(RolloverSpec.EntryLimitPriceSpec) & ";"
+    s = s & ";"
+Case OrderTypeTrail
+    s = s & formatPriceSpec(RolloverSpec.EntryTriggerPriceSpec) & ";"
+    s = s & ";"
+Case OrderTypeTrailLimit
+    s = s & formatPriceSpec(RolloverSpec.EntryLimitPriceSpec) & ";"
+    s = s & formatPriceSpec(RolloverSpec.EntryTriggerPriceSpec) & ";"
+End Select
+
+If RolloverSpec.EntryTimeoutSecs <> 0 Then s = s & RolloverSpec.EntryTimeoutSecs
+
+Do While Right$(s, 1) = ";"
+    s = Left$(s, Len(s) - 1)
+Loop
+generateRolloverEntry = s
 End Function
 
 Private Function generateStopLoss() As String

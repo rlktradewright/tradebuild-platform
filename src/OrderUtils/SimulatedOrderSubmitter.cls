@@ -326,6 +326,31 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
+Private Sub IOrderSubmitter_CancelCloseoutOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "IOrderSubmitter_CancelCloseoutOrder"
+On Error GoTo Err
+
+Dim CloseoutOrder As IOrder
+
+Set CloseoutOrder = pBracketOrder.StopLossOrder
+Assert Not CloseoutOrder Is Nothing, "bracket order has no closeout order"
+
+Select Case CloseoutOrder.Status
+Case OrderStatuses.OrderStatusCreated, _
+    OrderStatuses.OrderStatusFilled, _
+    OrderStatuses.OrderStatusCancelling, _
+    OrderStatuses.OrderStatusCancelled
+    Assert True, "stop-loss order state invalid for cancellation"
+Case Else
+    mSimulator.CancelOrder CloseoutOrder.Id
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "IOrderSubmitter_CancelOrder"
 On Error GoTo Err
@@ -339,10 +364,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
-Dim Stoporder As IOrder
-
 Const ProcName As String = "IOrderSubmitter_CancelStopOrder"
 On Error GoTo Err
+
+Dim Stoporder As IOrder
 
 Set Stoporder = pBracketOrder.StopLossOrder
 Assert Not Stoporder Is Nothing, "bracket order has no stop-loss order"

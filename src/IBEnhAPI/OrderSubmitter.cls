@@ -135,6 +135,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub IOrderSubmitter_CancelCloseoutOrder(ByVal pBracketOrder As OrderUtils27.IBracketOrder)
+Const ProcName As String = "IOrderSubmitter_CancelCloseoutOrder"
+On Error GoTo Err
+
+CancelCloseoutOrder pBracketOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As OrderUtils27.IOrder)
 Const ProcName As String = "IOrderSubmitter_CancelOrder"
 On Error GoTo Err
@@ -565,6 +577,31 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Public Sub CancelCloseoutOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "CancelCloseoutOrder"
+On Error GoTo Err
+
+Dim lCloseoutOrder As IOrder
+Set lCloseoutOrder = pBracketOrder.CloseoutOrder
+
+Assert Not lCloseoutOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no closeout Order"
+
+Select Case lCloseoutOrder.Status
+Case OrderStatuses.OrderStatusCreated, _
+        OrderStatuses.OrderStatusFilled, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
+    Assert False, "Closeout Order state invalid for cancellation"
+Case Else
+    cancelAnOrder lCloseoutOrder, OrderModeCloseout
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Sub CancelOrder(ByVal pOrder As IOrder)
 Const ProcName As String = "CancelOrder"

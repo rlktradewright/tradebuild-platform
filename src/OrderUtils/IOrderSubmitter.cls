@@ -88,6 +88,9 @@ End Function
 Public Sub CancelOrder(ByVal pOrder As IOrder)
 End Sub
 
+Public Sub CancelCloseoutOrder(ByVal pBracketOrder As IBracketOrder)
+End Sub
+
 Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
 End Sub
 

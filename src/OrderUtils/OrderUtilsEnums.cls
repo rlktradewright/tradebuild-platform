@@ -82,6 +82,16 @@ Public Enum OrderActions
     OrderActionSell = 2
 End Enum
 
+Public Enum OptionContractResolverStates
+    OptionContractResolverStateNone
+    OptionContractResolverStateFetchingUnderlyingContract
+    OptionContractResolverStateWaitingForUnderlyingMarketPrice
+    OptionContractResolverStateFetchingInitialContract
+    OptionContractResolverStateFetchingCandidateContracts
+    OptionContractResolverStateFindingRequiredContract
+    OptionContractResolverStateGotTargetContract
+End Enum
+
 Public Enum OrderAttributes
     OrderAttOpenClose = 1
     OrderAttOrigin = 2
@@ -282,6 +292,15 @@ Public Enum RolloverControllerStates
     RolloverControllerStateCompleted
 End Enum
 
+Public Enum RolloverStrikeModes
+    RolloverStrikeModeNone
+    RolloverStrikeModeCurrentValue
+    RolloverStrikeModeCurrentProfit
+    RolloverStrikeModeAmount
+    RolloverStrikeModePreviousAmount
+    RolloverStrikeModeIncrement
+End Enum
+    
 Public Enum TickRoundingModes
     TickRoundingModeNearest
     TickRoundingModeDown

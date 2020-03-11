@@ -174,6 +174,8 @@ With mBracketOrderSpec
                     lTargetOrder _
                     )
     
+    gBracketOrderListener.Add lBo
+    
     lBo.CancelAfter = .CancelAfter
     lBo.CancelPrice = .CancelPrice
     lBo.Description = .Description
@@ -195,24 +197,13 @@ With mBracketOrderSpec
         lBo.EntryOrder.GoodTillDate = .GoodTillDate
         lBo.EntryOrder.GoodTillDateTZ = .TimezoneName
     End If
-    If .Rollover Then
-        lBo.RolloverSpecification = CreateRolloverSpecification( _
-                                            .RolloverDays, _
-                                            .RolloverTime, _
-                                            .RolloverCloseType, _
-                                            .RolloverCloseLimitPriceSpec, _
-                                            .RolloverCloseTriggerPriceSpec, _
-                                            .RolloverEntryType, _
-                                            .RolloverEntryLimitPriceSpec, _
-                                            .RolloverEntryTriggerPriceSpec)
-    End If
+    If Not .RolloverSpec Is Nothing Then lBo.RolloverSpecification = .RolloverSpec
 End With
 
 gWriteLineToStdOut lBo.Key & ": bracket order placed"
 
 mOrderContext.ExecuteBracketOrder lBo
 CreateBracketProfitCalculator lBo, mOrderContext.DataSource
-gBracketOrderListener.Add lBo
 
 gNumberOfOrdersPlaced = gNumberOfOrdersPlaced + 1
 

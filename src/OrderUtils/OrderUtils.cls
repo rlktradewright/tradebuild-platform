@@ -161,6 +161,10 @@ Public Function IsEntryOrderType(ByVal pOrderType As OrderTypes) As Boolean
 IsEntryOrderType = gIsEntryOrderType(pOrderType)
 End Function
 
+Public Function IsNullPriceSpecifier(ByVal pPriceSpec As PriceSpecifier) As Boolean
+IsNullPriceSpecifier = gIsNullPriceSpecifier(pPriceSpec)
+End Function
+
 Public Function IsStopLossOrderType(ByVal pOrderType As OrderTypes) As Boolean
 IsStopLossOrderType = gIsStopLossOrderType(pOrderType)
 End Function
@@ -225,19 +229,95 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function CreateOptionRolloverSpecification( _
+                ByVal pDays As Long, _
+                ByVal pTime As Date, _
+                ByVal pStrikeMode As RolloverStrikeModes, _
+                ByVal pStrikeValue As Long, _
+                ByVal pUnderlyingExchangeName As String, _
+                ByVal pCloseOrderType As OrderTypes, _
+                ByVal pCloseTimeoutSecs As Long, _
+                ByVal pCloseLimitPriceSpec As PriceSpecifier, _
+                ByVal pCloseTriggerPriceSpec As PriceSpecifier, _
+                ByVal pEntryOrderType As OrderTypes, _
+                ByVal pEntryTimeoutSecs As Long, _
+                ByVal pEntryLimitPriceSpec As PriceSpecifier, _
+                ByVal pEntryTriggerPriceSpec As PriceSpecifier) As RolloverSpecification
+Const ProcName As String = "CreateOptionRolloverSpecification"
+On Error GoTo Err
+
+Set CreateOptionRolloverSpecification = gCreateOptionRolloverSpecification( _
+                                                pDays, _
+                                                pTime, _
+                                                pStrikeMode, _
+                                                pStrikeValue, _
+                                                pUnderlyingExchangeName, _
+                                                pCloseOrderType, _
+                                                pCloseTimeoutSecs, _
+                                                pCloseLimitPriceSpec, _
+                                                pCloseTriggerPriceSpec, _
+                                                pEntryOrderType, _
+                                                pEntryTimeoutSecs, _
+                                                pEntryLimitPriceSpec, _
+                                                pEntryTriggerPriceSpec)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function CreateRolloverSpecification( _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
                 ByVal pCloseOrderType As OrderTypes, _
+                ByVal pCloseTimeoutSecs As Long, _
                 ByVal pCloseLimitPriceSpec As PriceSpecifier, _
                 ByVal pCloseTriggerPriceSpec As PriceSpecifier, _
                 ByVal pEntryOrderType As OrderTypes, _
+                ByVal pEntryTimeoutSecs As Long, _
                 ByVal pEntryLimitPriceSpec As PriceSpecifier, _
                 ByVal pEntryTriggerPriceSpec As PriceSpecifier) As RolloverSpecification
 Const ProcName As String = "CreateRolloverSpecification"
 On Error GoTo Err
 
-Set CreateRolloverSpecification = gCreateRolloverSpecification(pDays, pTime, pCloseOrderType, pCloseLimitPriceSpec, pCloseTriggerPriceSpec, pEntryOrderType, pEntryLimitPriceSpec, pEntryTriggerPriceSpec)
+Set CreateRolloverSpecification = gCreateRolloverSpecification( _
+                                                pDays, _
+                                                pTime, _
+                                                pCloseOrderType, _
+                                                pCloseTimeoutSecs, _
+                                                pCloseLimitPriceSpec, _
+                                                pCloseTriggerPriceSpec, _
+                                                pEntryOrderType, _
+                                                pEntryTimeoutSecs, _
+                                                pEntryLimitPriceSpec, _
+                                                pEntryTriggerPriceSpec)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetOptionContract( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pContractStore As IContractStore, _
+                ByVal pMaxExpenditure As Long, _
+                ByVal pStrikeIncrement As Long, _
+                ByVal pUnderlyingExchangeName As String, _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                Optional ByVal pListener As IStateChangeListener) As IFuture
+Const ProcName As String = "GetOptionContract"
+On Error GoTo Err
+
+Set GetOptionContract = gGetOptionContract( _
+                                pContractSpec, _
+                                pContractStore, _
+                                pMaxExpenditure, _
+                                pStrikeIncrement, _
+                                pUnderlyingExchangeName, _
+                                pMarketDataManager, _
+                                pListener)
 
 Exit Function
 

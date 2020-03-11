@@ -50,7 +50,7 @@ Private mOrderType                                  As OrderTypes
 Private mLimitPriceSpec                             As PriceSpecifier
 Private mTriggerPriceSpec                           As PriceSpecifier
 Private mOutsideRTH                                 As Boolean
-Private mForceCloseAfterMins                        As Long
+Private mForceCloseAfterSecs                        As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -104,12 +104,12 @@ Public Property Get OutsideRTH() As Boolean
 OutsideRTH = mOutsideRTH
 End Property
 
-Public Property Let ForceCloseAfterMins(ByVal Value As Long)
-mForceCloseAfterMins = Value
+Public Property Let ForceCloseAfterSecs(ByVal Value As Long)
+mForceCloseAfterSecs = Value
 End Property
 
-Public Property Get ForceCloseAfterMins() As Long
-ForceCloseAfterMins = mForceCloseAfterMins
+Public Property Get ForceCloseAfterSecs() As Long
+ForceCloseAfterSecs = mForceCloseAfterSecs
 End Property
 
 '@================================================================================
@@ -129,10 +129,12 @@ jb.EncodeName "$ProgID"
 jb.EncodeValue ProjectName & "." & ModuleName
 
 jb.EncodeNameAndValue "OrderType", mOrderType, OrderTypeMarket
-jb.EncodeNameAndValue "LimitPriceSpec", mLimitPriceSpec, Nothing
-jb.EncodeNameAndValue "TriggerPriceSpec", mLimitPriceSpec, Nothing
 jb.EncodeNameAndValue "OutsideRTH", mOutsideRTH, False
-jb.EncodeNameAndValue "ForceCloseAfterMins", mForceCloseAfterMins, 0
+jb.EncodeNameAndValue "ForceCloseAfterSecs", mForceCloseAfterSecs, 0
+If Not gIsNullPriceSpecifier(mLimitPriceSpec) Then _
+    jb.EncodeNameAndValue "LimitPriceSpec", mLimitPriceSpec, Nothing
+If Not gIsNullPriceSpecifier(mTriggerPriceSpec) Then _
+    jb.EncodeNameAndValue "TriggerPriceSpec", mTriggerPriceSpec, Nothing
 
 jb.EndObject
 

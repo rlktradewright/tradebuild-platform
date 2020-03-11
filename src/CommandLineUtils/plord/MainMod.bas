@@ -216,7 +216,7 @@ Public Function gGenerateContractProcessorName( _
                 ByVal pContractSpec As IContractSpecifier) As String
 Const PositionManagerNameSeparator As String = "&&"
 
-gGenerateContractProcessorName = UCase$(mCurrentGroup.GroupName & _
+gGenerateContractProcessorName = UCase$(pGroupName & _
                                         PositionManagerNameSeparator & _
                                         pContractSpec.Key)
 End Function
@@ -810,7 +810,7 @@ Const ProcName As String = "parseStrikeExtension"
 On Error GoTo Err
 
 Const MaxExpenditure As Long = 9999999
-Const StrikeFormat As String = "^(?:(?:([1-9]\d{1,6})\$(?:,([a-zA-Z0-9]+))?)?)?$"
+Const StrikeFormat As String = "^(?:(?:([1-9]\d{1,6})\$(?:(?:;|,)([a-zA-Z0-9]+))?)?)?$"
 
 gRegExp.Pattern = StrikeFormat
 
