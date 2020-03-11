@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IBracketOrder
+Implements OrderUtils27.IBracketOrder
 
 '@================================================================================
 ' Events

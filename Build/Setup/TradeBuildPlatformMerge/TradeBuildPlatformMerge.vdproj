@@ -225,7 +225,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuildPlatform-2.7.236.msm"
+        "OutputFilename" = "8:..\\Bin\\TradeBuildPlatform-2.7.237.msm"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -1051,7 +1051,7 @@
         "Module"
         {
         "ModuleSignature" = "8:MergeModule.4EB5B2E27A794B3384350D2FB58C0123"
-        "Version" = "8:2.7.0.236"
+        "Version" = "8:2.7.0.237"
         "Title" = "8:TradeBuildPlatformMerge"
         "Subject" = "8:"
         "Author" = "8:Richard L King"

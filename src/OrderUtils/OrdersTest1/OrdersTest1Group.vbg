@@ -6,3 +6,4 @@ Project=..\..\TradingUI\TradingUI.vbp
 Project=..\..\IBEnhAPI\IBEnhAPI.vbp
 Project=..\..\..\..\tradewright-common\src\TWControls\TWControls.vbp
 Project=..\..\ContractUtils\ContractUtils.vbp
+Project=..\..\..\..\tradewright-common\src\TWUtilities\TWUtilities.vbp

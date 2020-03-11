@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#361.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#366.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   7800
@@ -23,7 +23,7 @@ Begin VB.Form Form1
       Height          =   285
       Left            =   5640
       TabIndex        =   2
-      Text            =   "1143256749"
+      Text            =   "143256749"
       Top             =   120
       Width           =   1455
    End
@@ -376,6 +376,10 @@ End Sub
 ' IOrderSubmissionListener Interface Members
 '@================================================================================
 
+Private Sub IOrderSubmissionListener_NotifyAboutToPlaceOrder(ByVal pOrder As OrderUtils27.IOrder)
+
+End Sub
+
 Private Sub IOrderSubmissionListener_NotifyError(ByVal pOrderId As String, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 LogMessage "Error " & pErrorCode & ": " & pErrorMsg
 End Sub
@@ -511,8 +515,6 @@ If ConnectButton.Caption = CaptionConnect Then
     Set mContractStore = mClient.GetContractStore
     Set mMarketDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory)
     
-    mOrderSubmitter.AddOrderSubmissionListener Me
-    
     Set mFutureWaiter = New FutureWaiter
 Else
     mClient.Finish
@@ -596,6 +598,7 @@ Else
     Dim lDataSource As IMarketDataSource
     Set lDataSource = mMarketDataManager.CreateMarketDataSource(ev.Future, False)
     Set mOrderSubmitter = mClient.CreateOrderSubmitter(lDataSource)
+    mOrderSubmitter.AddOrderSubmissionListener Me
     Set mContract = ev.Future.Value
     ContractText.Text = mContract.Specifier.LocalSymbol & " (" & mContract.Specifier.Exchange & ")  " & mContract.Description
     BuyButton.Enabled = True
@@ -618,7 +621,7 @@ End Sub
 
 Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
 
-mClient.Finish
+If Not mClient Is Nothing Then mClient.Finish
 
 handleFatalError
 
@@ -706,21 +709,21 @@ inDev = True
 End Function
 
 Private Sub setupEntryOrderTypeCombo()
-addItemToCombo EntryOrderTypeCombo, BracketEntryTypeToString(BracketEntryTypeMarket), BracketEntryTypeMarket
-addItemToCombo EntryOrderTypeCombo, BracketEntryTypeToString(BracketEntryTypeLimit), BracketEntryTypeLimit
-addItemToCombo EntryOrderTypeCombo, BracketEntryTypeToString(BracketEntryTypeStop), BracketEntryTypeStop
-addItemToCombo EntryOrderTypeCombo, BracketEntryTypeToString(BracketEntryTypeStopLimit), BracketEntryTypeStopLimit
+addItemToCombo EntryOrderTypeCombo, OrderTypeToString(OrderTypeMarket), OrderTypeMarket
+addItemToCombo EntryOrderTypeCombo, OrderTypeToString(OrderTypeLimit), OrderTypeLimit
+addItemToCombo EntryOrderTypeCombo, OrderTypeToString(OrderTypeStop), OrderTypeStop
+addItemToCombo EntryOrderTypeCombo, OrderTypeToString(OrderTypeStopLimit), OrderTypeStopLimit
 EntryOrderTypeCombo.ListIndex = 0
 End Sub
 
 Private Sub setupStopLossOrderTypeCombo()
-addItemToCombo StopLossOrderTypeCombo, BracketStopLossTypeToString(BracketStopLossTypeStop), BracketStopLossTypeStop
-addItemToCombo StopLossOrderTypeCombo, BracketStopLossTypeToString(BracketStopLossTypeStopLimit), BracketStopLossTypeStopLimit
+addItemToCombo StopLossOrderTypeCombo, OrderTypeToString(OrderTypeStop), OrderTypeStop
+addItemToCombo StopLossOrderTypeCombo, OrderTypeToString(OrderTypeStopLimit), OrderTypeStopLimit
 StopLossOrderTypeCombo.ListIndex = 0
 End Sub
 
 Private Sub setupTargetOrderTypeCombo()
-addItemToCombo TargetOrderTypeCombo, BracketTargetTypeToString(BracketTargetTypeLimit), BracketTargetTypeLimit
+addItemToCombo TargetOrderTypeCombo, OrderTypeToString(OrderTypeLimit), OrderTypeLimit
 End Sub
 
 Private Sub submitBracketOrder(ByVal pContract As IContract, ByVal pAction As OrderActions)
@@ -731,7 +734,7 @@ Dim lBracketOrder As New BracketOrder
 lBracketOrder.Contract = pContract
 
 Dim lEntryOrder As New Order
-lEntryOrder.OrderType = BracketEntryTypeToOrderType(EntryOrderTypeCombo.ItemData(EntryOrderTypeCombo.ListIndex))
+lEntryOrder.OrderType = EntryOrderTypeCombo.ItemData(EntryOrderTypeCombo.ListIndex)
 lEntryOrder.Action = pAction
 lEntryOrder.Quantity = CLng(QuantityText)
 lEntryOrder.ETradeOnly = True
@@ -743,7 +746,7 @@ lBracketOrder.EntryOrder = lEntryOrder
 
 If StopLossOrderTypeCombo.Text <> "" Then
     Dim lStopLossOrder As New Order
-    lStopLossOrder.OrderType = BracketStopLossTypeToOrderType(StopLossOrderTypeCombo.ItemData(StopLossOrderTypeCombo.ListIndex))
+    lStopLossOrder.OrderType = StopLossOrderTypeCombo.ItemData(StopLossOrderTypeCombo.ListIndex)
     lStopLossOrder.Action = IIf(pAction = OrderActionBuy, OrderActionSell, OrderActionBuy)
     lStopLossOrder.Quantity = CLng(QuantityText)
     lStopLossOrder.ETradeOnly = True
@@ -756,7 +759,7 @@ End If
 
 If TargetOrderTypeCombo.Text <> "" Then
     Dim lTargetOrder As New Order
-    lTargetOrder.OrderType = BracketTargetTypeToOrderType(TargetOrderTypeCombo.ItemData(TargetOrderTypeCombo.ListIndex))
+    lTargetOrder.OrderType = TargetOrderTypeCombo.ItemData(TargetOrderTypeCombo.ListIndex)
     lTargetOrder.Action = IIf(pAction = OrderActionBuy, OrderActionSell, OrderActionBuy)
     lTargetOrder.Quantity = CLng(QuantityText)
     lTargetOrder.ETradeOnly = True

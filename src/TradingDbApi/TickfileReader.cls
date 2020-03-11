@@ -125,10 +125,6 @@ Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
-If processContracts Then
-    logMessage "Fetching ticks asynchronously", ProcName, , LogLevelHighDetail
-    Set mFetchTicksTC = mTradingDB.FetchTicksAsync(mContract.Specifier, mInputTickfileSpecifier.FromDate, mInputTickfileSpecifier.ToDate)
-End If
 Exit Sub
 
 Err:
@@ -290,6 +286,10 @@ If TypeOf ev.Future.Value Is TradingDB Then
     checkFetchContract
 ElseIf TypeOf ev.Future.Value Is IContracts Then
     Set mContracts = ev.Future.Value
+    If processContracts Then
+        logMessage "Fetching ticks asynchronously", ProcName, , LogLevelHighDetail
+        Set mFetchTicksTC = mTradingDB.FetchTicksAsync(mContract.Specifier, mInputTickfileSpecifier.FromDate, mInputTickfileSpecifier.ToDate)
+    End If
 End If
 
 Exit Sub

@@ -517,6 +517,7 @@ Tagged arguments:
 
 | Tag            | Permitted&nbsp;values | Meaning                                      |
 | -------------- | ---------------- | -------------------------------------------- |
+| /cancelafter   | integer > 0     | The time in seconds after which this bracket order will be automatically cancelled. |
 | /cancelprice   | \<price\>       | The traded market price at which the order will be cancelled: |
 |                |                 | If entry order is LMT, MTL or MIT and BUY then cancel when market rises above \<price\> |                                  
 |                |                 | If entry order is LMT, MTL or MIT and SELL then cancel when market falls below \<price\> |                                  
