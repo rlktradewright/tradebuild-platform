@@ -230,26 +230,19 @@ Case OrderTypeMarket, _
         OrderTypeMarketOnOpen, _
         OrderTypeMarketOnClose, _
         OrderTypeMarketToLimit
-    s = s & ";"
-    s = s & ";"
 Case OrderTypeStop, _
         OrderTypeMarketIfTouched
     s = s & formatPriceSpec(RolloverSpec.CloseTriggerPriceSpec) & ";"
-    s = s & ";"
 Case OrderTypeStopLimit, _
         OrderTypeLimitIfTouched
     s = s & formatPriceSpec(RolloverSpec.CloseLimitPriceSpec) & ";"
     s = s & formatPriceSpec(RolloverSpec.CloseTriggerPriceSpec) & ";"
 Case OrderTypeLimitOnOpen, _
         OrderTypeLimitOnClose
-    s = s & ";"
-    s = s & ";"
 Case OrderTypeLimit
     s = s & formatPriceSpec(RolloverSpec.CloseLimitPriceSpec) & ";"
-    s = s & ";"
 Case OrderTypeTrail
     s = s & formatPriceSpec(RolloverSpec.CloseTriggerPriceSpec) & ";"
-    s = s & ";"
 Case OrderTypeTrailLimit
     s = s & formatPriceSpec(RolloverSpec.CloseLimitPriceSpec) & ";"
     s = s & formatPriceSpec(RolloverSpec.CloseTriggerPriceSpec) & ";"
@@ -273,26 +266,19 @@ Case OrderTypeMarket, _
         OrderTypeMarketOnOpen, _
         OrderTypeMarketOnClose, _
         OrderTypeMarketToLimit
-    s = s & ";"
-    s = s & ";"
 Case OrderTypeStop, _
         OrderTypeMarketIfTouched
     s = s & formatPriceSpec(RolloverSpec.EntryTriggerPriceSpec) & ";"
-    s = s & ";"
 Case OrderTypeStopLimit, _
         OrderTypeLimitIfTouched
     s = s & formatPriceSpec(RolloverSpec.EntryLimitPriceSpec) & ";"
     s = s & formatPriceSpec(RolloverSpec.EntryTriggerPriceSpec) & ";"
 Case OrderTypeLimitOnOpen, _
         OrderTypeLimitOnClose
-    s = s & ";"
-    s = s & ";"
 Case OrderTypeLimit
     s = s & formatPriceSpec(RolloverSpec.EntryLimitPriceSpec) & ";"
-    s = s & ";"
 Case OrderTypeTrail
     s = s & formatPriceSpec(RolloverSpec.EntryTriggerPriceSpec) & ";"
-    s = s & ";"
 Case OrderTypeTrailLimit
     s = s & formatPriceSpec(RolloverSpec.EntryLimitPriceSpec) & ";"
     s = s & formatPriceSpec(RolloverSpec.EntryTriggerPriceSpec) & ";"
