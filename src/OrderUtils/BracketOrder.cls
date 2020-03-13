@@ -982,7 +982,10 @@ Case RolloverControllerStateCompleted
     WriteRecoveryDataComment "Rollover completed"
     mIsRolloverInProgress = False
     Set mNextBracketOrder = mRolloverController.NextBracketOrder
+    
     mRolloverController.RemoveStateChangeListener Me
+    Set mRolloverController = Nothing
+    
     mSummary.RolloverDate = 0
     RolloverSpecification = Nothing
     
@@ -2627,6 +2630,10 @@ createCloseoutOrder
 pExec.OrderId = mCloseoutOrder.Id
 mCloseoutOrder.NotifyFillEx pExec, False
 
+mSummary.RolloverDate = 0
+RolloverSpecification = Nothing
+SaveRecoveryInfo
+
 fireChange BracketOrderPositionCloseoutNotified
 RaiseEvent PositionCloseoutNotified
 Exit Sub
@@ -3522,9 +3529,7 @@ Const ProcName As String = "doCompletionActions"
 On Error GoTo Err
 
 If Not mOrderContext Is Nothing Then
-    If mOrderContext.Name <> BalancingOrderContextName And _
-        mSummary.RolloverDate = 0 _
-    Then
+    If mOrderContext.Name <> BalancingOrderContextName Then
         mOrderContext.NotifyBracketOrderClosed Me
     End If
 End If
