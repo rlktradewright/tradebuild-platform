@@ -220,15 +220,18 @@ Case OptionContractResolverStateFetchingInitialContract
         lSortkeys(0) = ContractSortKeyStrike
         
         Dim lSortAscending As Boolean
-        lSortAscending = IIf(mContractSpec.Right = OptCall, True, False)
-        
+        If mMaxExpenditure <> 0 Then
+            lSortAscending = IIf(mContractSpec.Right = OptCall, True, False)
+        Else
+            lSortAscending = IIf(mContractSpec.Right = OptCall, _
+                                IIf(mStrikeIncrement > 0, True, False), _
+                                IIf(mStrikeIncrement > 0, False, True))
+        End If
         mFutureWaiter.Add FetchContractsSorted( _
                                 lCandidateChainContractSpec, _
                                 mContractStore, _
                                 lSortkeys, _
-                                IIf(mContractSpec.Right = OptCall, _
-                                    IIf(mStrikeIncrement > 0, True, False), _
-                                    IIf(mStrikeIncrement > 0, False, True)))
+                                Not lSortAscending)
         fireStateChange OptionContractResolverStateFetchingCandidateContracts
     End If
 Case OptionContractResolverStateFetchingCandidateContracts
