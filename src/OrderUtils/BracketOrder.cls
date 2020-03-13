@@ -972,12 +972,14 @@ On Error GoTo Err
 Dim lState As RolloverControllerStates: lState = ev.State
 Select Case lState
 Case RolloverControllerStateClosingCurrentPosition
+    WriteRecoveryDataComment "Rollover in progress"
     mIsRolloverInProgress = True
     fireChange BracketOrderChangeTypes.BracketOrderRolloverInitiated
 Case RolloverControllerStateCreatingNextBracketOrder
     Set mNextContract = mRolloverController.NextContract
     fireChange BracketOrderRolloverGotContract
 Case RolloverControllerStateCompleted
+    WriteRecoveryDataComment "Rollover completed"
     mIsRolloverInProgress = False
     Set mNextBracketOrder = mRolloverController.NextBracketOrder
     mRolloverController.RemoveStateChangeListener Me
@@ -2350,6 +2352,7 @@ On Error GoTo Err
 
 SetNewStopLossTriggerPrice stopTriggerPriceSpec
 If Quantity <> -1 Then SetNewStopLossQuantity Quantity
+WriteRecoveryDataComment ProcName & "()"
 Update
 
 Exit Sub
@@ -2366,6 +2369,7 @@ On Error GoTo Err
 
 SetNewTargetLimitPrice targetPriceSpec
 If Quantity <> -1 Then SetNewTargetQuantity Quantity
+WriteRecoveryDataComment ProcName & "()"
 Update
 
 Exit Sub
@@ -2385,6 +2389,7 @@ If Not mCancelTLI Is Nothing Then
     Set mCancelTLI = Nothing
 End If
 
+WriteRecoveryDataComment ProcName & "(" & evenIfFilled & ")"
 If evenIfFilled Then
     mStateEngine.ClearConditions OpConditions.CondNoFillCancellation
     Cancel = handleStimulus(OpStimuli.StimCancelEvenIfFill)
@@ -2492,6 +2497,7 @@ gLogBracketOrderMessage "Closing out: " & _
                     "; pending size=" & PendingSize, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 
+WriteRecoveryDataComment ProcName & "()"
 handleStimulus OpStimuli.StimCloseout
 
 Exit Sub
@@ -2542,6 +2548,7 @@ If mSummary.CancelPrice <> 0# Then
 End If
 
 fireChange BracketOrderChangeTypes.BracketOrderCreated
+WriteRecoveryDataComment ProcName & "()"
 
 SaveRecoveryInfo    ' ensure the BracketOrder is recorded before
                     ' doing the state change, which will cause
@@ -2614,6 +2621,7 @@ On Error GoTo Err
 
 If Size = 0 Then Exit Sub
 
+WriteRecoveryDataComment ProcName & "()"
 createCloseoutOrder
 
 pExec.OrderId = mCloseoutOrder.Id
@@ -2752,6 +2760,7 @@ Public Sub SetNewEntryTriggerPrice( _
 Const ProcName As String = "SetNewEntryTriggerPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mEntryOrder, _
         OrderTypeLimitIfTouched Or _
             OrderTypeMarketIfTouched Or _
@@ -2819,6 +2828,7 @@ Public Sub SetNewEntryQuantity(ByVal pNewQuantity As Long)
 Const ProcName As String = "SetNewEntryQuantity"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setQuantity mEntryOrder, mNewEntryQuantity, pNewQuantity
 
 Exit Sub
@@ -2832,6 +2842,7 @@ Public Sub SetNewStopLossLimitPrice( _
 Const ProcName As String = "SetNewStopLossLimitPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mStopLossOrder, _
         OrderTypeLimitOnClose Or _
             OrderTypeLimitOnOpen Or _
@@ -2851,6 +2862,7 @@ Public Sub SetNewStopLossQuantity(ByVal pNewQuantity As Long)
 Const ProcName As String = "SetNewStopLossQuantity"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setQuantity mStopLossOrder, mNewStopLossQuantity, pNewQuantity
 
 Exit Sub
@@ -2864,6 +2876,7 @@ Public Sub SetNewStopLossTriggerPrice( _
 Const ProcName As String = "SetNewStopLossTriggerPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mStopLossOrder, _
         OrderTypeStop Or _
             OrderTypeStopLimit Or _
@@ -2884,6 +2897,7 @@ Public Sub SetNewTargetLimitPrice( _
 Const ProcName As String = "SetNewTargetLimitPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mTargetOrder, _
         OrderTypeLimit Or _
             OrderTypeLimitIfTouched Or _
@@ -2903,6 +2917,7 @@ Public Sub SetNewTargetQuantity(ByVal pNewQuantity As Long)
 Const ProcName As String = "SetNewTargetQuantity"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setQuantity mTargetOrder, mNewTargetQuantity, pNewQuantity
 
 Exit Sub
@@ -2916,6 +2931,7 @@ Public Sub SetNewTargetTriggerPrice( _
 Const ProcName As String = "SetNewTargetTriggerPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mTargetOrder, _
         OrderTypeLimitIfTouched Or _
             OrderTypeMarketIfTouched, _
@@ -3777,6 +3793,7 @@ If mRolloverController Is Nothing Then
     Set mRolloverController = New RolloverController
 End If
 mRolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName
+WriteRecoveryDataComment ProcName & "()"
 StartTask mRolloverController, PriorityNormal
 mRolloverController.AddStateChangeListener Me
 
@@ -4088,5 +4105,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub WriteRecoveryDataComment(ByVal pComment As String)
+Const ProcName As String = "writeRecoveryDataComment"
+On Error GoTo Err
+
+Dim ev As RecoveryDataCommentEventData
+Set ev.Source = Me
+ev.Comment = mSummary.Key & ":" & pComment
+
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mRecoverableObjectListeners.Valid Then
+    sInit = True
+    sSomeListeners = mRecoverableObjectListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As IRecoverableObjectListener
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.WriteRecoveryDataComment ev
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 

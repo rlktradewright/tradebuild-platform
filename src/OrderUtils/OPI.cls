@@ -46,7 +46,7 @@ Private Const ModuleName                            As String = "OPI"
 
 Private mTimestamp                                  As Date
 Private mRecoveryContextName                        As String
-Private mData                                       As IJSONable
+Private mData                                       As Variant
 Private mItemType                                   As String
 
 Private mToString                                   As String

@@ -62,6 +62,7 @@ Public Const RecoveryOrderContextName               As String = "$recovery"
 
 Public Const OrderInfoDelete                        As String = "DELETE"
 Public Const OrderInfoData                          As String = "DATA"
+Public Const OrderInfoComment                       As String = "COMMENT"
 
 Public Const ProviderPropertyOCAGroup               As String = "OCA group"
 

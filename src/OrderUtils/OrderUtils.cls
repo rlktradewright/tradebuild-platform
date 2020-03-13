@@ -62,6 +62,11 @@ Public Type RecoveryDataChangedEventData
     Source              As Object
 End Type
 
+Public Type RecoveryDataCommentEventData
+    Source              As Object
+    Comment            As String
+End Type
+
 '@================================================================================
 ' Constants
 '@================================================================================
