@@ -1490,6 +1490,7 @@ If mSummary.Status = OrderStatusFilled Or mSummary.Status = OrderStatusCancelled
 End If
 If Not IsActive Then mNeedsRecovery = False
 
+SaveRecoveryInfo
 RaiseEvent StatusChanged
 
 Exit Property
