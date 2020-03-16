@@ -47,60 +47,60 @@ Private Const ModuleName                As String = "OrderContext"
 ' Member variables
 '@================================================================================
 
-Private mOrderManager                   As OrderManager
-Private mGroupName                      As String
-Private mRecoveryContextName            As String
-Private mName                           As String
+Private mOrderManager                           As OrderManager
+Private mGroupName                              As String
+Private mRecoveryContextName                    As String
+Private mName                                   As String
 
-Private mSessionName                    As String
+Private mSessionName                            As String
 
-Private mContractFuture                 As IFuture
-Private mContract                       As IContract
-Private mDataSource                     As IMarketDataSource
+Private mContractFuture                         As IFuture
+Private mContract                               As IContract
+Private mDataSource                             As IMarketDataSource
 Attribute mDataSource.VB_VarHelpID = -1
-Private mOrderSubmitter                 As IOrderSubmitter
-Private mOrderAuthoriser                As IOrderAuthoriser
-Private mAccumulatedBracketOrders       As BracketOrders
-Private mAccumulatedOrders              As Orders
+Private mOrderSubmitter                         As IOrderSubmitter
+Private mOrderAuthoriser                        As IOrderAuthoriser
+Private mAccumulatedBracketOrders               As BracketOrders
+Private mAccumulatedOrders                      As Orders
 
 
-Private mIsSimulated                    As Boolean
+Private mIsSimulated                            As Boolean
 
-Private mActiveBracketOrders            As BracketOrders
+Private mActiveBracketOrders                    As BracketOrders
     ' this contains all bracket orders for which one or more orders are
     ' not yet complete (or not yet cancelled)
     
-Private mClosedBracketOrders            As BracketOrders
+Private mClosedBracketOrders                    As BracketOrders
     ' this contains all bracket orders for which all orders have completed (or
     ' been cancelled)
     
-Private mCompletedSize                  As Long
+Private mCompletedSize                          As Long
     ' the total Size for all completed bracket orders (may be non-zero if one
     ' or more completed bracket orders has no target or stop-loss orders)
     
-Private mPermittedOrderProperties       As IPermittedOrderProperties
+Private mPermittedOrderProperties               As IPermittedOrderProperties
 
-Private mEnabled                        As Boolean
-Private mProviderIsReady                As Boolean
-Private mDataSourceIsReady              As Boolean
+Private mEnabled                                As Boolean
+Private mProviderIsReady                        As Boolean
+Private mDataSourceIsReady                      As Boolean
 
-Private mTemplateOrder                  As Order
+Private mTemplateOrder                          As Order
 
-Private mPreventUnprotectedPositions    As Boolean
+Private mPreventUnprotectedPositions            As Boolean
 
-Private mChangeListeners                As New Listeners
+Private mChangeListeners                        As New Listeners
 
-Private mTimerList                      As TimerList
+Private mTimerList                              As TimerList
 
-Private WithEvents mFutureWaiter        As FutureWaiter
+Private WithEvents mFutureWaiter                As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mBracketOrderRecoveryController As BracketOrderRecoveryCtlr
+Private mBracketOrderRecoveryController         As BracketOrderRecoveryCtlr
 
-Private mOrderContextsRef               As WeakReference
+Private mOrderContextsRef                       As WeakReference
 
-Private mTickSizeFuture                 As IFuture
-Private mTickSize                       As Double
+Private mTickSizeFuture                         As IFuture
+Private mTickSize                               As Double
 
 '@================================================================================
 ' Class Event Handlers
