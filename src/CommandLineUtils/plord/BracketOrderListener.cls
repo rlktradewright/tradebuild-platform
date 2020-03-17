@@ -60,7 +60,7 @@ Private Sub IBracketOrderErrorListener_NotifyBracketOrderError(ev As BracketOrde
 Const ProcName As String = "IBracketOrderErrorListener_NotifyBracketOrderError"
 On Error GoTo Err
 
-Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
+Dim lOrder As Iorder: Set lOrder = ev.AffectedOrder
 gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage), True
 
 Exit Sub
@@ -77,7 +77,7 @@ Private Sub IBracketOrderMsgListener_NotifyBracketOrderMessage(ev As BracketOrde
 Const ProcName As String = "IBracketOrderMsgListener_NotifyBracketOrderMessage"
 On Error GoTo Err
 
-Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
+Dim lOrder As Iorder: Set lOrder = ev.AffectedOrder
 gWriteLineToConsole generateMessage(lOrder, lOrder.Message), True
 
 Exit Sub
@@ -115,31 +115,24 @@ Case BracketOrderEntryOrderChanged
 
 Case BracketOrderEntryOrderFilled
     s1 = "entry order filled " & _
-        lBo.EntryOrder.QuantityFilled & "; remaining " & _
-        lBo.EntryOrder.QuantityRemaining
+        filledString(lBo.EntryOrder, lBo.Contract)
 Case BracketOrderStopLossOrderChanged
 
 Case BracketOrderStopLossOrderFilled
     s1 = "stop-loss order filled " & _
-        lBo.StopLossOrder.QuantityFilled & _
-        "; remaining " & _
-        lBo.StopLossOrder.QuantityRemaining
+        filledString(lBo.StopLossOrder, lBo.Contract)
 Case BracketOrderTargetOrderChanged
 
 Case BracketOrderTargetOrderFilled
     s1 = "target order filled " & _
-        lBo.TargetOrder.QuantityFilled & _
-        "; remaining " & _
-        lBo.TargetOrder.QuantityRemaining
+        filledString(lBo.TargetOrder, lBo.Contract)
 Case BracketOrderCloseoutOrderCreated
     s = s & "closeout order created"
 Case BracketOrderCloseoutOrderChanged
 
 Case BracketOrderCloseoutOrderFilled
     s1 = "closeout order filled " & _
-        lBo.CloseoutOrder.QuantityFilled & _
-        "; remaining " & _
-        lBo.CloseoutOrder.QuantityRemaining
+        filledString(lBo.CloseoutOrder, lBo.Contract)
 Case BracketOrderSizeChanged
 
 Case BracketOrderStateChanged
@@ -209,8 +202,19 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function filledString( _
+                ByVal pOrder As Iorder, _
+                ByVal pcontract As IContract) As String
+filledString = pOrder.QuantityFilled & _
+                " at " & formatprice(pOrder.LastFillPrice, _
+                                    pcontract.Specifier.SecType, _
+                                    pcontract.TickSize) & _
+                "; remaining " & _
+                pOrder.QuantityRemaining
+End Function
+
 Private Function generateMessage( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pMessage As String) As String
 Const ProcName As String = "generateMessage"
 On Error GoTo Err
