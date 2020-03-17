@@ -99,7 +99,6 @@ Private mBracketOrderRecoveryController         As BracketOrderRecoveryCtlr
 
 Private mOrderContextsRef                       As WeakReference
 
-Private mTickSizeFuture                         As IFuture
 Private mTickSize                               As Double
 
 '@================================================================================
@@ -138,10 +137,6 @@ If TypeOf ev.Future.Value Is IContract Then
 ElseIf TypeOf ev.Future.Value Is Clock Then
     setTimerListFromSimulatedClock ev.Future.Value
     fireChange OrderContextReadyStateChanged
-ElseIf TypeOf ev.Future.Value Is BoxedValue Then
-    Dim lBoxedValue As BoxedValue: Set lBoxedValue = ev.Future.Value
-    mTickSize = lBoxedValue.Value
-    If mTickSize <> 0# Then fireChange OrderContextReadyStateChanged
 End If
 
 Exit Sub
@@ -257,7 +252,9 @@ On Error GoTo Err
 If mProviderIsReady = Value Then Exit Property
 
 mProviderIsReady = Value
-If mProviderIsReady Then IsReadyTickSize
+If mProviderIsReady Then
+    IsReadyTickSize
+End If
 
 fireChange OrderContextReadyStateChanged
 
@@ -620,7 +617,8 @@ Case PriceValueTypeLast
 Case PriceValueTypeEntry
     Assert False
 Case PriceValueTypeMid
-    lPrice = gRoundToTickBoundary((getCurrentPrice(TickTypeAsk) + getCurrentPrice(TickTypeBid)) / 2#, mTickSize, TickRoundingModeNearest)
+    lPrice = (getCurrentPrice(TickTypeAsk) + _
+                getCurrentPrice(TickTypeBid)) / 2#
 Case PriceValueTypeBidOrAsk
     If pOrderAction = OrderActionBuy Then
         lPrice = getCurrentPrice(TickTypeBid)
@@ -628,6 +626,14 @@ Case PriceValueTypeBidOrAsk
         lPrice = getCurrentPrice(TickTypeAsk)
     End If
 End Select
+
+Dim lEffectiveTickSize As Double: lEffectiveTickSize = mTickSize
+If pSectype <> SecTypeOption Or lPrice < 3# Then
+ElseIf mTickSize = 0.01 Then
+    lEffectiveTickSize = 0.05
+Else
+    lEffectiveTickSize = 0.1
+End If
 
 Dim lResult As Double
 
@@ -638,7 +644,7 @@ Case PriceOffsetTypeNone
 Case PriceOffsetTypeIncrement
     lOffset = pPriceSpec.Offset
 Case PriceOffsetTypeNumberOfTicks
-    lOffset = pPriceSpec.Offset * mTickSize
+    lOffset = pPriceSpec.Offset * lEffectiveTickSize
 Case PriceOffsetTypeBidAskPercent
     Dim lBid As Double: lBid = getCurrentPrice(TickTypeBid)
     Dim lAsk As Double: lAsk = getCurrentPrice(TickTypeAsk)
@@ -658,7 +664,10 @@ Else
     lResult = lPrice - lOffset
 End If
 
-CalculateOffsettedPrice = gRoundToTickBoundary(lResult, mTickSize, lRoundingMode)
+CalculateOffsettedPrice = gRoundToTickBoundary( _
+                                        lResult, _
+                                        lEffectiveTickSize, _
+                                        lRoundingMode)
 
 Exit Function
 
@@ -1294,39 +1303,15 @@ On Error GoTo Err
 
 If mTickSize <> -1# Then
     IsReadyTickSize = True
+ElseIf Not IsProviderReady Then
+    IsReadyTickSize = False
+ElseIf mContract.Specifier.SecType = SecTypeOption Or _
+        mContract.Specifier.SecType = SecTypeFuturesOption Then
+    Dim lDummyOptionOrder As IOrder
+    Set lDummyOptionOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeAsk), gNewPriceSpecifier, True)
+    IsReadyTickSize = getOrderContexts.IsReadyTickSize(lDummyOptionOrder)
 Else
-    If Not mTickSizeFuture Is Nothing Then
-        IsReadyTickSize = False
-    Else
-        Select Case mContract.Specifier.SecType
-        Case SecTypeStock
-            If dataSourceHasPrice And IsProviderReady Then
-                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(Nothing)
-                mFutureWaiter.Add mTickSizeFuture
-            End If
-            IsReadyTickSize = False
-        Case SecTypeFuture
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        Case SecTypeOption, _
-                SecTypeFuturesOption
-            If dataSourceHasPrice And IsProviderReady Then
-                Dim lDummyOrder As IOrder
-                Set lDummyOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeAsk), gNewPriceSpecifier, True)
-                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(lDummyOrder)
-                mFutureWaiter.Add mTickSizeFuture
-            End If
-            IsReadyTickSize = False
-        Case SecTypeCash
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        Case SecTypeCombo
-            Assert False, "Combo orders not supported"
-        Case SecTypeIndex
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        End Select
-    End If
+    IsReadyTickSize = getOrderContexts.IsReadyTickSize(Nothing)
 End If
 
 Exit Function
@@ -1548,15 +1533,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Sub SetTickSize(ByVal pTickSize As Double)
+Const ProcName As String = "SetTickSize"
+On Error GoTo Err
+
+mTickSize = pTickSize
+If mTickSize <> 0# Then fireChange OrderContextReadyStateChanged
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function dataSourceHasPrice() As Boolean
-dataSourceHasPrice = (mDataSource.HasCurrentTick(TickTypeBid) Or _
-                        mDataSource.HasCurrentTick(TickTypeAsk) Or _
-                        mDataSource.HasCurrentTick(TickTypeTrade))
-End Function
 
 Private Sub fireChange(ByVal pChangeType As OrderContextChangeTypes)
 Const ProcName As String = "fireChange"
