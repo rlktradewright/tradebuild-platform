@@ -67,12 +67,19 @@ Private mNextPositionManager                        As PositionManager
 Private WithEvents mNextOrderContext                As OrderContext
 Attribute mNextOrderContext.VB_VarHelpID = -1
 Private mNextContract                               As Contract
-Private mNextBracketOrder                           As BracketOrder
+Private WithEvents mNextBracketOrder                As BracketOrder
 
 Private mMaxExpenditure                             As Long
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mTimerList                                  As TimerList
+
+Private WithEvents mNextBracketFillTLI              As TimerListItem
+Attribute mNextBracketFillTLI.VB_VarHelpID = -1
+
+Private mUseMarketEntry                             As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -126,7 +133,7 @@ Select Case mState
 Case RolloverControllerStateInitial
     gLog mBracketOrder.Key & ": Initiating rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
     gLogBracketOrderMessage "Initiating rollover", _
-                            Nothing, _
+                            mBracketOrder.DataSource, _
                             mBracketOrder.Contract, _
                             mBracketOrder.Key, _
                             mBracketOrder.IsSimulated, _
@@ -136,7 +143,7 @@ Case RolloverControllerStateClosingCurrentPosition
     If mBracketOrder.Size <> 0 Then
         gLog mBracketOrder.Key & ": Closing out current position: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
         gLogBracketOrderMessage "Closing out current position", _
-                                Nothing, _
+                                mBracketOrder.DataSource, _
                                 mBracketOrder.Contract, _
                                 mBracketOrder.Key, _
                                 mBracketOrder.IsSimulated, _
@@ -175,8 +182,27 @@ Case RolloverControllerStateCreatingNextBracketOrder
 Case RolloverControllerStateExecutingNextBracketOrder
     mNextOrderContext.ExecuteBracketOrder mNextBracketOrder
     Set mOrderContext = Nothing
+    
+    If mBracketOrder.RolloverSpecification.EntryTimeoutSecs = 0 Or _
+        mUseMarketEntry _
+    Then
+        setState RolloverControllerStateCompleted
+    Else
+        Set mNextBracketFillTLI = mTimerList.Add( _
+                                    Nothing, _
+                                    mBracketOrder.RolloverSpecification.EntryTimeoutSecs, _
+                                    ExpiryTimeUnitSeconds)
+        mTaskContext.Suspend -1
+    End If
+Case RolloverControllerStateCancellingNextBracketOrder
+    mNextBracketOrder.Cancel
+    mTaskContext.Suspend -1
+Case RolloverControllerStateCompleted
+    mBracketOrder.RemoveChangeListener Me
+    Set mOrderContext = Nothing
+    Set mBracketOrder = Nothing
     Set mNextOrderContext = Nothing
-    setState RolloverControllerStateCompleted
+    Set mNextBracketOrder = Nothing
     mTaskContext.Finish Empty, False
 End Select
 
@@ -221,6 +247,61 @@ If ev.Future.IsAvailable Then
         findNextContract lExpiryOffset + 1
     End If
 End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mNextBracketFillTLI Event Handlers
+'@================================================================================
+
+Private Sub mNextBracketFillTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mNextBracketFillTLI_StateChange"
+On Error GoTo Err
+
+Dim lState As TimerListItemStates: lState = ev.State
+If lState <> TimerListItemStateExpired Then Exit Sub
+
+setState RolloverControllerStateCancellingNextBracketOrder
+mTaskContext.Continue
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mNextBracketOrder Event Handlers
+'@================================================================================
+
+Private Sub mNextBracketOrder_EntryOrderChanged()
+Const ProcName As String = "mNextBracketOrder_EntryOrderChanged"
+On Error GoTo Err
+
+If mNextBracketOrder.State = BracketOrderStateClosed And _
+    mNextBracketOrder.Size = 0 _
+Then
+    ' the cancellation must have completed
+    mUseMarketEntry = True
+    setState RolloverControllerStateCreatingNextBracketOrder
+    mTaskContext.Continue
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mNextBracketOrder_EntryOrderFilled()
+Const ProcName As String = "mNextBracketOrder_EntryOrderFilled"
+On Error GoTo Err
+
+mNextBracketFillTLI.Cancel
 
 Exit Sub
 
@@ -310,10 +391,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub Cancel()
+Const ProcName As String = "Cancel"
+On Error GoTo Err
+
+mBracketOrder.RemoveChangeListener Me
+
+mFutureWaiter.Cancel
+If Not mNextBracketOrder Is Nothing Then mNextBracketOrder.CloseOut
+If Not mNextBracketFillTLI Is Nothing Then mNextBracketFillTLI.Cancel
+
+Set mOrderContext = Nothing
+Set mBracketOrder = Nothing
+Set mNextOrderContext = Nothing
+Set mNextBracketOrder = Nothing
+Set mNextBracketFillTLI = Nothing
+
+mTaskContext.Finish Empty, True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub Initialise( _
                 ByVal pBracketOrder As IBracketOrder, _
                 ByVal pOrderManager As OrderManager, _
-                ByVal pScopeName As String)
+                ByVal pScopeName As String, _
+                ByVal pTimerList As TimerList)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -322,6 +428,7 @@ mBracketOrder.AddChangeListener Me
 Set mOrderContext = mBracketOrder.OrderContext
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
+Set mTimerList = pTimerList
 
 Exit Sub
 
@@ -345,17 +452,26 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function createNextBracketOrder() As BracketOrder
+Private Function createNextBracketOrder( _
+                Optional ByVal pUseMarketOrder As Boolean) As BracketOrder
 Const ProcName As String = "createNextBracketOrder"
 On Error GoTo Err
 
 With mBracketOrder.RolloverSpecification
     Dim lEntryOrder As IOrder
-    Set lEntryOrder = mNextOrderContext.CreateEntryOrder( _
-                                        .EntryOrderType, _
-                                        .EntryLimitPriceSpec, _
-                                        .EntryTriggerPriceSpec, _
-                                        mBracketOrder.EntryOrder.IgnoreRegularTradingHours)
+    If Not pUseMarketOrder Then
+        Set lEntryOrder = mNextOrderContext.CreateEntryOrder( _
+                                            .EntryOrderType, _
+                                            .EntryLimitPriceSpec, _
+                                            .EntryTriggerPriceSpec, _
+                                            mBracketOrder.EntryOrder.IgnoreRegularTradingHours)
+    Else
+        Set lEntryOrder = mNextOrderContext.CreateEntryOrder( _
+                                            OrderTypeMarket, _
+                                            gNewPriceSpecifier(), _
+                                            gNewPriceSpecifier(), _
+                                            mBracketOrder.EntryOrder.IgnoreRegularTradingHours)
+    End If
 End With
 
 Dim lStopLossOrder As IOrder
@@ -668,7 +784,7 @@ With mBracketOrder.RolloverSpecification
     lCloseoutSpec.OutsideRTH = False
     lCloseoutSpec.TriggerPriceSpec = .CloseTriggerPriceSpec
 End With
-mBracketOrder.CloseOut lCloseoutSpec
+mBracketOrder.DoCloseOut lCloseoutSpec
 
 Exit Sub
 

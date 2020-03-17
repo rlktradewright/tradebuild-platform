@@ -983,8 +983,8 @@ mTableBuilder.AddStateTableEntry _
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimCloseout, _
-            SpecialConditions.NoConditions, _
             OpConditions.CondSizeNonZero, _
+            OpConditions.CondCloseoutOrderExists, _
             BracketOrderStates.BracketOrderStateClosingOut
 
 ' Another closeout request has been received, and the size is not zero. The
@@ -992,12 +992,12 @@ mTableBuilder.AddStateTableEntry _
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimCloseout, _
-            OpConditions.CondSizeNonZero, _
+            OpConditions.CondSizeNonZero + OpConditions.CondCloseoutOrderExists, _
             SpecialConditions.NoConditions, _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActCancelCloseoutOrder
 
-' The closeout order has been cancelled. If the size is zero,  We are done,
+' The closeout order has been cancelled. The size is zero,  we are done,
 ' so go to the closed state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
@@ -1006,7 +1006,7 @@ mTableBuilder.AddStateTableEntry _
             OpConditions.CondSizeNonZero, _
             BracketOrderStates.BracketOrderStateClosed
 
-' The closeout order has been cancelled. If the size is non-zero, we place
+' The closeout order has been cancelled. The size is non-zero, so we place
 ' the closeout order again (note that this is a normal situation if the
 ' original closeout order had a 'forceclose' timeout associated with it).
 ' Note that the new closeout order should be a market order.

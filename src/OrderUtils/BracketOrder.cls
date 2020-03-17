@@ -1017,6 +1017,7 @@ Private Sub mCloseoutOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As St
 Const ProcName As String = "mCloseoutOrder_Error"
 On Error GoTo Err
 
+mSummary.CloseoutSpecifier = Nothing
 handleStimulus OpStimuli.StimCloseoutOrderCancelled
 fireBracketOrderError mCloseoutOrder, pErrorCode, pErrorMsg
 
@@ -1285,6 +1286,9 @@ Private Sub mForceCloseTLI_StateChange(ev As StateChangeEventData)
 Const ProcName As String = "mForceCloseTLI_StateChange"
 On Error GoTo Err
 
+Dim lState As TimerListItemStates: lState = ev.State
+If lState <> TimerListItemStateExpired Then Exit Sub
+
 mSummary.CloseoutSpecifier = Nothing
 CloseOut
 
@@ -1302,8 +1306,8 @@ Private Sub mRolloverTLI_StateChange(ev As StateChangeEventData)
 Const ProcName As String = "mRolloverTLI_StateChange"
 On Error GoTo Err
 
-Dim lChangeType As TimerListItemStates: lChangeType = ev.State
-If lChangeType <> TimerListItemStateExpired Then Exit Sub
+Dim lState As TimerListItemStates: lState = ev.State
+If lState <> TimerListItemStateExpired Then Exit Sub
 
 setRolloverTLI
 
@@ -2493,15 +2497,9 @@ Public Sub CloseOut( _
 Const ProcName As String = "CloseOut"
 On Error GoTo Err
 
-mSummary.CloseoutSpecifier = pCloseoutSpec
+If mIsRolloverInProgress Then mRolloverController.Cancel
 
-gLogBracketOrderMessage "Closing out: " & _
-                    "size=" & Size & _
-                    "; pending size=" & PendingSize, _
-                mDataSource, mContract, Key, mIsSimulated, Me
-
-WriteRecoveryDataComment ProcName & "()"
-handleStimulus OpStimuli.StimCloseout
+DoCloseOut pCloseoutSpec
 
 Exit Sub
 
@@ -2528,6 +2526,27 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Friend Sub DoCloseOut( _
+                Optional ByVal pCloseoutSpec As CloseoutSpecifier)
+Const ProcName As String = "DoCloseOut"
+On Error GoTo Err
+
+mSummary.CloseoutSpecifier = pCloseoutSpec
+
+gLogBracketOrderMessage "Closing out: " & _
+                    "size=" & Size & _
+                    "; pending size=" & PendingSize, _
+                mDataSource, mContract, Key, mIsSimulated, Me
+
+WriteRecoveryDataComment ProcName & "()"
+handleStimulus OpStimuli.StimCloseout
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub Execute()
 Const ProcName As String = "Execute"
@@ -3797,7 +3816,7 @@ On Error GoTo Err
 If mRolloverController Is Nothing Then
     Set mRolloverController = New RolloverController
 End If
-mRolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName
+mRolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName, mTimerList
 WriteRecoveryDataComment ProcName & "()"
 StartTask mRolloverController, PriorityNormal
 mRolloverController.AddStateChangeListener Me
