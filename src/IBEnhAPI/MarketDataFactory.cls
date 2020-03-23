@@ -578,12 +578,13 @@ If lStreamId < MarketDepthIdOffset Then
         reqMarketData lStreamId
     End If
 Else
+    lStreamId = lStreamId - MarketDepthIdOffset
     If Not mMarketDepthTable(lStreamId).InUse Then Exit Sub
     If ev.Future.IsFaulted Then
         mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
         releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId
-    ElseIf handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId - MarketDepthIdOffset) Then
-        reqMarketDepth lStreamId - MarketDepthIdOffset
+    ElseIf handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId) Then
+        reqMarketDepth lStreamId
     End If
 End If
 
