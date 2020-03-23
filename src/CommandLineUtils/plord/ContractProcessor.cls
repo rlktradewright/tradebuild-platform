@@ -755,7 +755,9 @@ Select Case pOrderType
 Case OrderTypeMarketIfTouched, _
         OrderTypeStop, _
         OrderTypeTrail
-    If Not mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pArg1) Then
+    If Not mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pArg1) Or _
+        Not pTriggerPriceSpec.IsValid _
+    Then
         parseOrderPrices = False
         gWriteErrorLine "Trigger price must be specified for this order type", True
     End If
@@ -766,7 +768,9 @@ Case OrderTypeMarketToLimit, _
         OrderTypeLimitIfTouched, _
         OrderTypeStopLimit, _
         OrderTypeTrailLimit
-    If Not mOrderContext.ParsePriceAndOffset(pLimitPriceSpec, pArg1) Then
+    If Not mOrderContext.ParsePriceAndOffset(pLimitPriceSpec, pArg1) Or _
+        Not pLimitPriceSpec.IsValid _
+    Then
         parseOrderPrices = False
         gWriteErrorLine "Limit price must be specified for this order type", True
     End If
@@ -781,7 +785,9 @@ Select Case pOrderType
 Case OrderTypeLimitIfTouched, _
         OrderTypeStopLimit, _
         OrderTypeTrailLimit
-    If Not mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pArg2) Then
+    If Not mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pArg2) Or _
+        Not pTriggerPriceSpec.IsValid _
+    Then
         parseOrderPrices = False
         gWriteErrorLine "Trigger price must be specified for this order type", True
     End If
