@@ -26,6 +26,7 @@ Implements IChangeListener
 Implements ICollectionChangeListener
 Implements IDeferredAction
 
+
 '================================================================================
 ' Events
 '================================================================================
@@ -66,6 +67,8 @@ Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mTicker                                     As Ticker
+Private WithEvents mTickerEv                        As Ticker
+Attribute mTickerEv.VB_VarHelpID = -1
 
 Private mStrategy                                   As IStrategy
 Private mStrategyResourceContext                    As ResourceContext
@@ -204,18 +207,6 @@ End Sub
 ' mFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
-On Error GoTo Err
-
-DeferAction Me
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
@@ -227,10 +218,8 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
     
     Set mTicker = mTickers.CreateTicker(ev.Future, False, mContract.Specifier.Key)
+    Set mTickerEv = mTicker
     
-    mFutureWaiter.Add mTicker.SessionFuture
-    mFutureWaiter.Add mTicker.ClockFuture
-
     If Not mStrategy Is Nothing Then setupLogging mContract.Specifier.LocalSymbol
 End If
 
@@ -289,6 +278,28 @@ Const ProcName As String = "mReplayController_TickfileCompleted"
 On Error GoTo Err
 
 getStrategyHost.NotifyTickfileCompleted ev.Specifier, pEventsPlayed
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' mTicker Event Handlers
+'================================================================================
+
+Private Sub mTickerEv_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mTicker_StateChange"
+On Error GoTo Err
+
+Dim lState As MarketDataSourceStates
+lState = ev.State
+
+If lState <> MarketDataSourceStateReady Then Exit Sub
+
+Set mTickerEv = Nothing
+DeferAction Me
 
 Exit Sub
 
