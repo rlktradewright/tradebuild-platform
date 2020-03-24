@@ -156,6 +156,12 @@ End Property
 Public Property Get Risk() As Currency
 End Property
 
+Public Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
+End Property
+
+Public Property Get RolloverSpecification() As RolloverSpecification
+End Property
+
 Public Property Get Size() As Long
 End Property
 
@@ -217,7 +223,7 @@ End Sub
 Public Sub Checkpoint()
 End Sub
 
-Public Sub CloseOut()
+Public Sub CloseOut(Optional ByVal pCloseoutSpec As CloseoutSpecifier)
 End Sub
 
 Public Function ContainsOrder(ByVal pOrder As IOrder) As Boolean

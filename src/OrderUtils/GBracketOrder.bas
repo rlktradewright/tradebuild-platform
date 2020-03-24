@@ -72,6 +72,11 @@ Public Enum OpActions
 
     ' This Action logs the state transition.
     ActLog
+    
+    ' This Action cancels the closeout order if it exists and its current
+    ' status indicates that it is not already either filled, cancelled or
+    ' cancelling.
+    ActCancelCloseoutOrder
 
 End Enum
 
@@ -101,6 +106,10 @@ Public Enum OpConditions
     ' This condition indicates that this bracket order is to prevent unprotected
     ' positions as far as possible.
     CondProtected = &H40&
+
+    ' This condition indicates that the closeout order exists (which implies that
+    ' it has been placed, since it is only created when closeout is requested).
+    CondCloseoutOrderExists = &H80&
 
 End Enum
 
@@ -259,6 +268,8 @@ Case ActCancelTimeout
     gOpActionsToString = "Cancel timeout"
 Case ActLog
     gOpActionsToString = "Log"
+Case ActCancelCloseoutOrder
+    gOpActionsToString = "Cancel closeout order"
 Case Else
     AssertArgument False, "Invalid action " & CStr(pAction)
 End Select
@@ -802,6 +813,27 @@ mTableBuilder.AddStateTableEntry _
 '                       State:      BracketOrderStateClosed
 '=======================================================================
 
+' The bracket order has been completed and has a non-zero size, but the
+' application has requested that the bracket order be closed out. So go to
+' closing out state and place the closeout order.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosed, _
+            OpStimuli.StimCloseout, _
+            OpConditions.CondSizeNonZero, _
+            SpecialConditions.NoConditions, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpActions.ActPlaceCloseoutOrder
+            
+' The bracket order has been completed and has a zero size, but the
+' application has requested that the bracket order be closed out. Just
+' ignore it.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosed, _
+            OpStimuli.StimCloseout, _
+            SpecialConditions.NoConditions, _
+            OpConditions.CondSizeNonZero, _
+            BracketOrderStates.BracketOrderStateClosed
+            
 ' The bracket order has been completed but something unexpected happens. Just
 ' swallow it! An example of this is when an order has been rejected by TWS
 ' but not removed by the user: a cancellation notification may arrive up
@@ -878,8 +910,7 @@ mTableBuilder.AddStateTableEntry _
             OpStimuli.StimTimeoutExpired, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
-            BracketOrderStates.BracketOrderStateClosingOut, _
-            OpActions.ActPlaceCloseoutOrder
+            BracketOrderStates.BracketOrderStateClosingOut
 
 ' The entry order has been cancelled, nothing for us to do.
 mTableBuilder.AddStateTableEntry _
@@ -936,15 +967,56 @@ mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosed, _
             OpActions.ActCompletionActions
 
-' The closeout order has been cancelled. This is a serious situation
-' since we are left with an unprotected position, so raise an alarm.
+' Another closeout request has been received, but the size is already zero,
+' so just ignore it.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpStimuli.StimCloseout, _
+            SpecialConditions.NoConditions, _
+            OpConditions.CondSizeNonZero, _
+            BracketOrderStates.BracketOrderStateClosingOut
+
+' Another closeout request has been received, and the size is not zero. The
+' closeout order has not yet been placed, so we do nothing, because when
+' the closeout order is eventually created it will use the right closeout
+' specification.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpStimuli.StimCloseout, _
+            OpConditions.CondSizeNonZero, _
+            OpConditions.CondCloseoutOrderExists, _
+            BracketOrderStates.BracketOrderStateClosingOut
+
+' Another closeout request has been received, and the size is not zero. The
+' closeout order has already been placed, so we cancel it.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpStimuli.StimCloseout, _
+            OpConditions.CondSizeNonZero + OpConditions.CondCloseoutOrderExists, _
+            SpecialConditions.NoConditions, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpActions.ActCancelCloseoutOrder
+
+' The closeout order has been cancelled. The size is zero,  we are done,
+' so go to the closed state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpStimuli.StimCloseoutOrderCancelled, _
             SpecialConditions.NoConditions, _
+            OpConditions.CondSizeNonZero, _
+            BracketOrderStates.BracketOrderStateClosed
+
+' The closeout order has been cancelled. The size is non-zero, so we place
+' the closeout order again (note that this is a normal situation if the
+' original closeout order had a 'forceclose' timeout associated with it).
+' Note that the new closeout order should be a market order.
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpStimuli.StimCloseoutOrderCancelled, _
+            OpConditions.CondSizeNonZero, _
             SpecialConditions.NoConditions, _
-            BracketOrderStates.BracketOrderStateClosed, _
-            OpActions.ActAlarm, OpActions.ActCompletionActions
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpActions.ActPlaceCloseoutOrder
 
 mTableBuilder.StateTableComplete
 End Sub

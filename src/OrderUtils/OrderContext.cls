@@ -47,59 +47,59 @@ Private Const ModuleName                As String = "OrderContext"
 ' Member variables
 '@================================================================================
 
-Private mGroupName                      As String
-Private mRecoveryContextName            As String
-Private mName                           As String
+Private mOrderManager                           As OrderManager
+Private mGroupName                              As String
+Private mRecoveryContextName                    As String
+Private mName                                   As String
 
-Private mSessionName                    As String
+Private mSessionName                            As String
 
-Private mContractFuture                 As IFuture
-Private mContract                       As IContract
-Private mDataSource                     As IMarketDataSource
+Private mContractFuture                         As IFuture
+Private mContract                               As IContract
+Private mDataSource                             As IMarketDataSource
 Attribute mDataSource.VB_VarHelpID = -1
-Private mOrderSubmitter                 As IOrderSubmitter
-Private mOrderAuthoriser                As IOrderAuthoriser
-Private mAccumulatedBracketOrders       As BracketOrders
-Private mAccumulatedOrders              As Orders
+Private mOrderSubmitter                         As IOrderSubmitter
+Private mOrderAuthoriser                        As IOrderAuthoriser
+Private mAccumulatedBracketOrders               As BracketOrders
+Private mAccumulatedOrders                      As Orders
 
 
-Private mIsSimulated                    As Boolean
+Private mIsSimulated                            As Boolean
 
-Private mActiveBracketOrders            As BracketOrders
+Private mActiveBracketOrders                    As BracketOrders
     ' this contains all bracket orders for which one or more orders are
     ' not yet complete (or not yet cancelled)
     
-Private mClosedBracketOrders            As BracketOrders
+Private mClosedBracketOrders                    As BracketOrders
     ' this contains all bracket orders for which all orders have completed (or
     ' been cancelled)
     
-Private mCompletedSize                  As Long
+Private mCompletedSize                          As Long
     ' the total Size for all completed bracket orders (may be non-zero if one
     ' or more completed bracket orders has no target or stop-loss orders)
     
-Private mPermittedOrderProperties       As IPermittedOrderProperties
+Private mPermittedOrderProperties               As IPermittedOrderProperties
 
-Private mEnabled                        As Boolean
-Private mProviderIsReady                As Boolean
-Private mDataSourceIsReady              As Boolean
+Private mEnabled                                As Boolean
+Private mProviderIsReady                        As Boolean
+Private mDataSourceIsReady                      As Boolean
 
-Private mTemplateOrder                  As Order
+Private mTemplateOrder                          As Order
 
-Private mPreventUnprotectedPositions    As Boolean
+Private mPreventUnprotectedPositions            As Boolean
 
-Private mChangeListeners                As New Listeners
+Private mChangeListeners                        As New Listeners
 
-Private mTimerList                      As TimerList
+Private mTimerList                              As TimerList
 
-Private WithEvents mFutureWaiter        As FutureWaiter
+Private WithEvents mFutureWaiter                As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mBracketOrderRecoveryController As BracketOrderRecoveryCtlr
+Private mBracketOrderRecoveryController         As BracketOrderRecoveryCtlr
 
-Private mOrderContextsRef               As WeakReference
+Private mOrderContextsRef                       As WeakReference
 
-Private mTickSizeFuture                 As IFuture
-Private mTickSize                       As Double
+Private mTickSize                               As Double
 
 '@================================================================================
 ' Class Event Handlers
@@ -137,10 +137,6 @@ If TypeOf ev.Future.Value Is IContract Then
 ElseIf TypeOf ev.Future.Value Is Clock Then
     setTimerListFromSimulatedClock ev.Future.Value
     fireChange OrderContextReadyStateChanged
-ElseIf TypeOf ev.Future.Value Is BoxedValue Then
-    Dim lBoxedValue As BoxedValue: Set lBoxedValue = ev.Future.Value
-    mTickSize = lBoxedValue.Value
-    If mTickSize <> 0# Then fireChange OrderContextReadyStateChanged
 End If
 
 Exit Sub
@@ -256,6 +252,9 @@ On Error GoTo Err
 If mProviderIsReady = Value Then Exit Property
 
 mProviderIsReady = Value
+If mProviderIsReady Then
+    IsReadyTickSize
+End If
 
 fireChange OrderContextReadyStateChanged
 
@@ -279,6 +278,10 @@ End Property
 
 Friend Property Get Name() As String
 Name = mName
+End Property
+
+Friend Property Get OrderManager() As OrderManager
+Set OrderManager = mOrderManager
 End Property
 
 Public Property Get OrderSubmitter() As IOrderSubmitter
@@ -372,6 +375,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get ScopeName() As String
+ScopeName = mBracketOrderRecoveryController.ScopeName
 End Property
 
 Public Property Get Size() As Long
@@ -470,18 +477,18 @@ End Sub
 '                       at which the order is triggered
 ' @param StopLossType  the type of stop-loss order to place:
 '           BracketStopLossTypeNone               no stop-loss order
-'           BracketStopLossTypeStop               use a stop order
-'           BracketStopLossTypeStopLimit          use a stop limit order
+'           OrderTypestop               use a stop order
+'           OrderTypestopLimit          use a stop limit order
 '           BracketStopLossTypeBid                use a stop order at the current Bid (see StopOffset)
 '           BracketStopLossTypeAsk                use a stop order at the current Ask (see StopOffset)
 '           BracketStopLossTypeLast               use a stop order at the last Trade Price (see StopOffset)
 '           BracketStopLossTypeAuto               use a stop order at the fill Price for the
 '                                           entry order (see StopOffset)
-' @param StopPrice      the trigger Price for BracketStopLossTypeStop and BracketStopLossTypeStopLimit
+' @param StopPrice      the trigger Price for OrderTypestop and OrderTypestopLimit
 ' @param StopOffset     number of ticks to modify the StopPrice. For example, for a stop-loss
 '                       order 4 ticks below the entry order fill Price, use BracketStopLossTypeAuto
 '                       and set StopOffset to -4
-' @param StopLimitPrice the limit Price for BracketStopLossTypeStopLimit
+' @param StopLimitPrice the limit Price for OrderTypestopLimit
 ' @param TargetType the type of target order to place:
 '           BracketTargetTypeNone             no target order
 '           BracketTargetTypeLimit            use a limit order
@@ -610,7 +617,8 @@ Case PriceValueTypeLast
 Case PriceValueTypeEntry
     Assert False
 Case PriceValueTypeMid
-    lPrice = gRoundToTickBoundary((getCurrentPrice(TickTypeAsk) + getCurrentPrice(TickTypeBid)) / 2#, mTickSize, TickRoundingModeNearest)
+    lPrice = (getCurrentPrice(TickTypeAsk) + _
+                getCurrentPrice(TickTypeBid)) / 2#
 Case PriceValueTypeBidOrAsk
     If pOrderAction = OrderActionBuy Then
         lPrice = getCurrentPrice(TickTypeBid)
@@ -618,6 +626,14 @@ Case PriceValueTypeBidOrAsk
         lPrice = getCurrentPrice(TickTypeAsk)
     End If
 End Select
+
+Dim lEffectiveTickSize As Double: lEffectiveTickSize = mTickSize
+If pSectype <> SecTypeOption Or lPrice < 3# Then
+ElseIf mTickSize = 0.01 Then
+    lEffectiveTickSize = 0.05
+Else
+    lEffectiveTickSize = 0.1
+End If
 
 Dim lResult As Double
 
@@ -628,7 +644,7 @@ Case PriceOffsetTypeNone
 Case PriceOffsetTypeIncrement
     lOffset = pPriceSpec.Offset
 Case PriceOffsetTypeNumberOfTicks
-    lOffset = pPriceSpec.Offset * mTickSize
+    lOffset = pPriceSpec.Offset * lEffectiveTickSize
 Case PriceOffsetTypeBidAskPercent
     Dim lBid As Double: lBid = getCurrentPrice(TickTypeBid)
     Dim lAsk As Double: lAsk = getCurrentPrice(TickTypeAsk)
@@ -648,7 +664,10 @@ Else
     lResult = lPrice - lOffset
 End If
 
-CalculateOffsettedPrice = gRoundToTickBoundary(lResult, mTickSize, lRoundingMode)
+CalculateOffsettedPrice = gRoundToTickBoundary( _
+                                        lResult, _
+                                        lEffectiveTickSize, _
+                                        lRoundingMode)
 
 Exit Function
 
@@ -944,7 +963,7 @@ AssertArgument Not pBracketOrder Is Nothing, "No bracket order supplied"
 Assert IsReadyForBracketOrder(pBracketOrder), _
         "The service provider is not Ready"
 
-fixupEntryOrder pBracketOrder.EntryOrder
+FixupEntryOrder pBracketOrder.EntryOrder
 fixupStopLossOrder pBracketOrder.StopLossOrder
 fixupTargetOrder pBracketOrder.TargetOrder
 
@@ -1035,10 +1054,74 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Sub FixupEntryOrder(pOrder As Order)
+Const ProcName As String = "fixupEntryOrder"
+On Error GoTo Err
+
+If pOrder Is Nothing Then Exit Sub
+
+Select Case pOrder.OrderType
+Case OrderTypeMarket
+Case OrderTypeMarketOnOpen
+Case OrderTypeMarketOnClose
+Case OrderTypeMarketIfTouched
+    pOrder.TriggerPrice = CalculateOffsettedPrice( _
+                                pOrder.TriggerPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+Case OrderTypeMarketToLimit
+Case OrderTypeLimit
+    pOrder.LimitPrice = CalculateOffsettedPrice( _
+                                pOrder.LimitPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+Case OrderTypeLimitOnOpen
+    pOrder.LimitPrice = CalculateOffsettedPrice( _
+                                pOrder.LimitPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+Case OrderTypeLimitOnClose
+    pOrder.LimitPrice = CalculateOffsettedPrice( _
+                                pOrder.LimitPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+Case OrderTypeLimitIfTouched
+    pOrder.LimitPrice = CalculateOffsettedPrice( _
+                                pOrder.LimitPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+    pOrder.TriggerPrice = CalculateOffsettedPrice( _
+                                pOrder.TriggerPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+Case OrderTypeStop, _
+        OrderTypeTrail
+    pOrder.TriggerPrice = CalculateOffsettedPrice( _
+                                pOrder.TriggerPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+Case OrderTypeStopLimit, _
+        OrderTypeTrailLimit
+    pOrder.LimitPrice = CalculateOffsettedPrice( _
+                                pOrder.LimitPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+    pOrder.TriggerPrice = CalculateOffsettedPrice( _
+                                pOrder.TriggerPriceSpec, _
+                                mContract.Specifier.SecType, _
+                                pOrder.Action)
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub Initialise( _
                 ByVal pOrderContexts As OrderContexts, _
                 ByVal pName As String, _
-                ByVal pSessionName As String, _
+                ByVal pOrderManager As OrderManager, _
                 ByVal pRecoveryContextName As String, _
                 ByVal pGroupName As String, _
                 ByVal pIsSimulated As Boolean, _
@@ -1055,10 +1138,18 @@ On Error GoTo Err
 
 Set mOrderContextsRef = CreateWeakReference(pOrderContexts)
 mName = pName
-mSessionName = pSessionName
+Set mOrderManager = pOrderManager
+mSessionName = mOrderManager.SessionName
 mRecoveryContextName = pRecoveryContextName
 mGroupName = pGroupName
 mIsSimulated = pIsSimulated
+Set mDataSource = pDataSource
+Set mOrderSubmitter = pOrderSubmitter
+Set pOrderAuthoriser = pOrderAuthoriser
+Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
+Set mAccumulatedOrders = pAccumulatedOrders
+
+Set mBracketOrderRecoveryController = pBracketOrderRecoveryController
 
 Set mContractFuture = pContractFuture
 If mContractFuture.IsAvailable Then
@@ -1076,13 +1167,6 @@ Else
     mFutureWaiter.Add pSimulatedClockFuture
 End If
 
-Set mDataSource = pDataSource
-Set mOrderSubmitter = pOrderSubmitter
-Set pOrderAuthoriser = pOrderAuthoriser
-Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
-Set mAccumulatedOrders = pAccumulatedOrders
-
-Set mBracketOrderRecoveryController = pBracketOrderRecoveryController
 
 Exit Sub
 
@@ -1219,39 +1303,15 @@ On Error GoTo Err
 
 If mTickSize <> -1# Then
     IsReadyTickSize = True
+ElseIf Not IsProviderReady Then
+    IsReadyTickSize = False
+ElseIf mContract.Specifier.SecType = SecTypeOption Or _
+        mContract.Specifier.SecType = SecTypeFuturesOption Then
+    Dim lDummyOptionOrder As IOrder
+    Set lDummyOptionOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeAsk), gNewPriceSpecifier, True)
+    IsReadyTickSize = getOrderContexts.IsReadyTickSize(lDummyOptionOrder)
 Else
-    If Not mTickSizeFuture Is Nothing Then
-        IsReadyTickSize = False
-    Else
-        Select Case mContract.Specifier.SecType
-        Case SecTypeStock
-            If dataSourceHasPrice Then
-                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(Nothing)
-                mFutureWaiter.Add mTickSizeFuture
-            End If
-            IsReadyTickSize = False
-        Case SecTypeFuture
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        Case SecTypeOption, _
-                SecTypeFuturesOption
-            If dataSourceHasPrice Then
-                Dim lDummyOrder As IOrder
-                Set lDummyOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeAsk), gNewPriceSpecifier, True)
-                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(lDummyOrder)
-                mFutureWaiter.Add mTickSizeFuture
-            End If
-            IsReadyTickSize = False
-        Case SecTypeCash
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        Case SecTypeCombo
-            Assert False, "Combo orders not supported"
-        Case SecTypeIndex
-            mTickSize = mContract.TickSize
-            IsReadyTickSize = True
-        End Select
-    End If
+    IsReadyTickSize = getOrderContexts.IsReadyTickSize(Nothing)
 End If
 
 Exit Function
@@ -1473,15 +1533,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Sub SetTickSize(ByVal pTickSize As Double)
+Const ProcName As String = "SetTickSize"
+On Error GoTo Err
+
+mTickSize = pTickSize
+If mTickSize <> 0# Then fireChange OrderContextReadyStateChanged
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function dataSourceHasPrice() As Boolean
-dataSourceHasPrice = (mDataSource.HasCurrentTick(TickTypeBid) Or _
-                        mDataSource.HasCurrentTick(TickTypeAsk) Or _
-                        mDataSource.HasCurrentTick(TickTypeTrade))
-End Function
 
 Private Sub fireChange(ByVal pChangeType As OrderContextChangeTypes)
 Const ProcName As String = "fireChange"
@@ -1509,70 +1576,6 @@ If sSomeListeners Then
 End If
 
 RaiseEvent Change(ev)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub fixupEntryOrder(pOrder As Order)
-Const ProcName As String = "fixupEntryOrder"
-On Error GoTo Err
-
-If pOrder Is Nothing Then Exit Sub
-
-Select Case pOrder.OrderType
-Case OrderTypeMarket
-Case OrderTypeMarketOnOpen
-Case OrderTypeMarketOnClose
-Case OrderTypeMarketIfTouched
-    pOrder.TriggerPrice = CalculateOffsettedPrice( _
-                                pOrder.TriggerPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-Case OrderTypeMarketToLimit
-Case OrderTypeLimit
-    pOrder.LimitPrice = CalculateOffsettedPrice( _
-                                pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-Case OrderTypeLimitOnOpen
-    pOrder.LimitPrice = CalculateOffsettedPrice( _
-                                pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-Case OrderTypeLimitOnClose
-    pOrder.LimitPrice = CalculateOffsettedPrice( _
-                                pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-Case OrderTypeLimitIfTouched
-    pOrder.LimitPrice = CalculateOffsettedPrice( _
-                                pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-    pOrder.TriggerPrice = CalculateOffsettedPrice( _
-                                pOrder.TriggerPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-Case OrderTypeStop, _
-        OrderTypeTrail
-    pOrder.TriggerPrice = CalculateOffsettedPrice( _
-                                pOrder.TriggerPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-Case OrderTypeStopLimit, _
-        OrderTypeTrailLimit
-    pOrder.LimitPrice = CalculateOffsettedPrice( _
-                                pOrder.LimitPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-    pOrder.TriggerPrice = CalculateOffsettedPrice( _
-                                pOrder.TriggerPriceSpec, _
-                                mContract.Specifier.SecType, _
-                                pOrder.Action)
-End Select
 
 Exit Sub
 

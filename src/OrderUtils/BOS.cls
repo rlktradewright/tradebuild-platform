@@ -87,6 +87,11 @@ Private mIsDirty                                    As Boolean
 
 Private mDiff                                       As New ROD
 
+Private mRolloverSpecification                      As RolloverSpecification
+Private mRolloverDate                               As Date
+
+Private mCloseoutSpecifier                          As CloseoutSpecifier
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -130,7 +135,7 @@ CancelTime = mCancelTime
 End Property
 
 Public Property Let CloseoutOrderId(ByVal Value As String)
-If CloseoutOrderId = Value Then Exit Property
+If mCloseoutOrderId = Value Then Exit Property
 setDirty
 mCloseoutOrderId = Value
 mDiff.SetProperty "CloseoutOrderId", Value
@@ -138,6 +143,16 @@ End Property
 
 Public Property Get CloseoutOrderId() As String
 CloseoutOrderId = mCloseoutOrderId
+End Property
+
+Public Property Let CloseoutSpecifier(ByVal Value As CloseoutSpecifier)
+setDirty
+Set mCloseoutSpecifier = Value
+mDiff.SetProperty "CloseoutSpecifier", Value
+End Property
+
+Public Property Get CloseoutSpecifier() As CloseoutSpecifier
+Set CloseoutSpecifier = mCloseoutSpecifier
 End Property
 
 Public Property Let ContextName(ByVal Value As String)
@@ -270,6 +285,28 @@ End Property
 
 Public Property Get PreventUnprotectedPosition() As Boolean
 PreventUnprotectedPosition = mPreventUnprotectedPosition
+End Property
+
+Public Property Let RolloverDate(ByVal Value As Date)
+If mRolloverDate = Value Then Exit Property
+setDirty
+mRolloverDate = Value
+mDiff.SetProperty "RolloverDate", Value
+End Property
+
+Public Property Get RolloverDate() As Date
+RolloverDate = mRolloverDate
+End Property
+
+Public Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
+If mRolloverSpecification Is Value Then Exit Property
+setDirty
+Set mRolloverSpecification = Value
+mDiff.SetProperty "RolloverSpecification", Value
+End Property
+
+Public Property Get RolloverSpecification() As RolloverSpecification
+Set RolloverSpecification = mRolloverSpecification
 End Property
 
 Public Property Let Size(ByVal Value As Long)

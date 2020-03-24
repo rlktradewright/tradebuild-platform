@@ -242,10 +242,9 @@ End Function
 
 Public Function gRoundToTickBoundary( _
                 ByVal pPrice As Double, _
-                ByVal pTickSize As Double, _
+                ByVal pEffectiveTickSize As Double, _
                 ByVal pMode As TickRoundingModes) As Double
-
-Dim lTicksPerUnit As Long: lTicksPerUnit = Round(1# / pTickSize)
+Dim lTicksPerUnit As Long: lTicksPerUnit = Round(1# / pEffectiveTickSize)
 Dim lErrorIncrement As Double: lErrorIncrement = lTicksPerUnit / 10000#
 
 Select Case pMode

@@ -64,6 +64,7 @@ Private Const DefaultOrderContextName           As String = "$default"
 Private mOrderManager                           As OrderManager
 
 Private mContractFuture                         As IFuture
+Private mContract                               As IContract
 Private mSecType                                As SecurityTypes
 
 Private mDataSource                             As IMarketDataSource
@@ -98,6 +99,9 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mBracketOrderRecoveryController         As BracketOrderRecoveryCtlr
 
+Private mTickSizeFuture                         As IFuture
+Private mTickSize                               As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -106,6 +110,7 @@ Private Sub Class_Initialize()
 Set mOrderContexts = New EnumerableCollection
 Set mFutureWaiter = New FutureWaiter
 mEnabled = True
+mTickSize = -1
 End Sub
 
 Private Sub Class_Terminate()
@@ -258,8 +263,13 @@ If TypeOf ev.Future.Value Is IPermittedOrderProperties Then
         lOrderContext.IsProviderReady = IsProviderReady
     Next
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    Dim lContract As IContract: Set lContract = ev.Future.Value
-    mSecType = lContract.Specifier.SecType
+    Set mContract = ev.Future.Value
+    mSecType = mContract.Specifier.SecType
+ElseIf TypeOf ev.Future.Value Is BoxedValue Then
+    Set mTickSizeFuture = Nothing
+    Dim lBoxedValue As BoxedValue: Set lBoxedValue = ev.Future.Value
+    mTickSize = lBoxedValue.Value
+    If mTickSize <> 0# Then SetTickSize
 End If
 
 Exit Sub
@@ -422,7 +432,7 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = New OrderContext
-Add.Initialise Me, pName, mOrderManager.SessionName, mRecoveryContextName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture, mBracketOrderRecoveryController
+Add.Initialise Me, pName, mOrderManager, mRecoveryContextName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture, mBracketOrderRecoveryController
  
 mOrderContexts.Add Add, pName
 Add.PermittedOrderProperties = mPermittedOrderProperties
@@ -556,6 +566,55 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Function IsReadyTickSize( _
+                ByVal pDummyOptionOrder As IOrder) As Boolean
+Const ProcName As String = "IsReadyTickSize"
+On Error GoTo Err
+
+If mTickSize <> -1# Then
+    IsReadyTickSize = True
+Else
+    If Not mTickSizeFuture Is Nothing Then
+        IsReadyTickSize = False
+    Else
+        Select Case mContract.Specifier.SecType
+        Case SecTypeStock
+            If dataSourceHasPrice And IsProviderReady Then
+                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(Nothing)
+                mFutureWaiter.Add mTickSizeFuture
+            End If
+            IsReadyTickSize = False
+        Case SecTypeFuture
+            mTickSize = mContract.TickSize
+            SetTickSize
+            IsReadyTickSize = True
+        Case SecTypeOption, _
+                SecTypeFuturesOption
+            If dataSourceHasPrice And IsProviderReady Then
+                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(pDummyOptionOrder)
+                mFutureWaiter.Add mTickSizeFuture
+            End If
+            IsReadyTickSize = False
+        Case SecTypeCash
+            mTickSize = mContract.TickSize
+            SetTickSize
+            IsReadyTickSize = True
+        Case SecTypeCombo
+            Assert False, "Combo orders not supported"
+        Case SecTypeIndex
+            mTickSize = mContract.TickSize
+            SetTickSize
+            IsReadyTickSize = True
+        End Select
+    End If
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function Item(index As Variant) As OrderContext
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
@@ -646,6 +705,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function dataSourceHasPrice() As Boolean
+dataSourceHasPrice = (mDataSource.HasCurrentTick(TickTypeBid) Or _
+                        mDataSource.HasCurrentTick(TickTypeAsk) Or _
+                        mDataSource.HasCurrentTick(TickTypeTrade))
+End Function
+
 Private Sub fireCollectionChanged(ev As CollectionChangeEventData)
 Const ProcName As String = "fireCollectionChanged"
 On Error GoTo Err
@@ -687,4 +752,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub SetTickSize()
+Const ProcName As String = "SetTickSize"
+On Error GoTo Err
+
+Dim lOrderContext As OrderContext
+For Each lOrderContext In mOrderContexts
+    lOrderContext.SetTickSize mTickSize
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 

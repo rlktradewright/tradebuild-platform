@@ -49,6 +49,9 @@ Public Enum BracketOrderChangeTypes
     BracketOrderChangesApplied
     BracketOrderChangesCancelled
     BracketOrderPositionCloseoutNotified
+    BracketOrderRolloverInitiated
+    BracketOrderRolloverGotContract
+    BracketOrderRolloverCompleted
 End Enum
 
 Public Enum BracketOrderRoles
@@ -77,6 +80,16 @@ Public Enum OrderActions
     OrderActionNone = 0
     OrderActionBuy = 1
     OrderActionSell = 2
+End Enum
+
+Public Enum OptionContractResolverStates
+    OptionContractResolverStateNone
+    OptionContractResolverStateFetchingUnderlyingContract
+    OptionContractResolverStateWaitingForUnderlyingMarketPrice
+    OptionContractResolverStateFetchingInitialContract
+    OptionContractResolverStateFetchingCandidateContracts
+    OptionContractResolverStateFindingRequiredContract
+    OptionContractResolverStateGotTargetContract
 End Enum
 
 Public Enum OrderAttributes
@@ -268,6 +281,27 @@ Public Enum ProfitTypes
     ProfitTypeTradeDrawdown = &H800&
 End Enum
 
+Public Enum RolloverControllerStates
+    RolloverControllerStateInitial = 0
+    RolloverControllerStateClosingCurrentPosition
+    RolloverControllerStateFindingNextContract
+    RolloverControllerStateCreatingNextPositionManager
+    RolloverControllerStateWaitingForOrderContext
+    RolloverControllerStateCreatingNextBracketOrder
+    RolloverControllerStateExecutingNextBracketOrder
+    RolloverControllerStateCompleted
+    RolloverControllerStateCancellingNextBracketOrder
+End Enum
+
+Public Enum RolloverStrikeModes
+    RolloverStrikeModeNone
+    RolloverStrikeModeCurrentValue
+    RolloverStrikeModeCurrentProfit
+    RolloverStrikeModeAmount
+    RolloverStrikeModePreviousAmount
+    RolloverStrikeModeIncrement
+End Enum
+    
 Public Enum TickRoundingModes
     TickRoundingModeNearest
     TickRoundingModeDown

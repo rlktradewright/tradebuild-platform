@@ -43,12 +43,16 @@ Private Const TwsSwitch                             As String = "TWS"
 
 Public Const CancelAfterSwitch                      As String = "CANCELAFTER"
 Public Const CancelPriceSwitch                      As String = "CANCELPRICE"
+Public Const CloseSwitch                            As String = "CLOSE"
+Public Const DaysSwitch                             As String = "DAYS"
 Public Const DescriptionSwitch                      As String = "DESCRIPTION"
+Public Const EntrySwitch                            As String = "ENTRY"
 Public Const OffsetSwitch                           As String = "OFFSET"
 Public Const IgnoreRTHSwitch                        As String = "IGNORERTH"
 Public Const PriceSwitch                            As String = "PRICE"
 Public Const ReasonSwitch                           As String = "REASON"
 Public Const TIFSwitch                              As String = "TIF"
+Public Const TimeSwitch                             As String = "TIME"
 Public Const TrailBySwitch                          As String = "TRAILBY"
 Public Const TrailPercentSwitch                     As String = "TRAILPERCENT"
 Public Const TriggerPriceSwitch                     As String = "TRIGGER"
@@ -140,7 +144,7 @@ Private mContractStore                              As IContractStore
 Private mMarketDataManager                          As IMarketDataManager
 
 Private mScopeName                                  As String
-Private mOrderManager                               As New OrderManager
+Private mOrderManager                               As OrderManager
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 
 Private mStageOrdersDefault                         As Boolean
@@ -212,7 +216,7 @@ Public Function gGenerateContractProcessorName( _
                 ByVal pContractSpec As IContractSpecifier) As String
 Const PositionManagerNameSeparator As String = "&&"
 
-gGenerateContractProcessorName = UCase$(mCurrentGroup.GroupName & _
+gGenerateContractProcessorName = UCase$(pGroupName & _
                                         PositionManagerNameSeparator & _
                                         pContractSpec.Key)
 End Function
@@ -546,7 +550,12 @@ Const ProcName As String = "logProgramId"
 On Error GoTo Err
 
 Dim s As String
-s = App.ProductName & " V" & App.Major & "." & App.Minor & "." & App.Revision & vbCrLf & _
+s = App.ProductName & _
+    " V" & _
+    App.Major & "." & _
+    App.Minor & "." & _
+    App.Revision & "." & _
+    App.FileDescription & vbCrLf & _
     App.LegalCopyright
 gWriteLineToConsole s, False
 s = s & vbCrLf & "Arguments: " & Command
@@ -801,7 +810,7 @@ Const ProcName As String = "parseStrikeExtension"
 On Error GoTo Err
 
 Const MaxExpenditure As Long = 9999999
-Const StrikeFormat As String = "^(?:(?:([1-9]\d{1,6})\$(?:,([a-zA-Z0-9]+))?)?)?$"
+Const StrikeFormat As String = "^(?:(?:([1-9]\d{1,6})\$(?:(?:;|,)([a-zA-Z0-9]+))?)?)?$"
 
 gRegExp.Pattern = StrikeFormat
 
@@ -929,6 +938,8 @@ ElseIf lCommand Is gCommands.StopLossCommand Then
     lContractProcessor.ProcessStopLossCommand Params
 ElseIf lCommand Is gCommands.TargetCommand Then
     lContractProcessor.ProcessTargetCommand Params
+ElseIf lCommand Is gCommands.RolloverCommand Then
+    lContractProcessor.ProcessRolloverCommand Params
 ElseIf lCommand Is gCommands.QuitCommand Then
     lContractProcessor.ProcessQuitCommand
     mErrorCount = 0
@@ -1561,6 +1572,7 @@ gCommandListOrderSpecification.Initialise _
                 gCommands.ContractCommand, _
                 gCommands.EntryCommand, _
                 gCommands.QuitCommand, _
+                gCommands.RolloverCommand, _
                 gCommands.StopLossCommand, _
                 gCommands.TargetCommand
 
@@ -1698,6 +1710,11 @@ Else
     Set mOrderSubmitterFactory = lTwsClient
 End If
     
+Set mOrderManager = New OrderManager
+mOrderManager.ContractStorePrimary = mContractStore
+mOrderManager.MarketDataManager = mMarketDataManager
+mOrderManager.OrderSubmitterFactory = mOrderSubmitterFactory
+
 setupTwsApi = True
 
 Exit Function

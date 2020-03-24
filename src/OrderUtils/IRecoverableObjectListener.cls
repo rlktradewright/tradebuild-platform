@@ -67,6 +67,9 @@ Private Const ModuleName                            As String = "IRecoverableObj
 Public Sub NotifyRecoveryDataChanged(ev As RecoveryDataChangedEventData)
 End Sub
 
+Public Sub WriteRecoveryDataComment(ev As RecoveryDataCommentEventData)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

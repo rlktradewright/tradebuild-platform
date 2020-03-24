@@ -124,7 +124,7 @@ End Property
 Private Property Get IBracketOrder_CumSellPrice() As Double
 End Property
 
-Private Property Let IBracketOrder_Description(ByVal RHS As String)
+Private Property Let IBracketOrder_Description(ByVal Value As String)
 End Property
 
 Private Property Get IBracketOrder_Description() As String
@@ -140,7 +140,7 @@ End Property
 Private Property Get IBracketOrder_EntryPrice() As Double
 End Property
 
-Private Property Let IBracketOrder_EntryReason(ByVal RHS As String)
+Private Property Let IBracketOrder_EntryReason(ByVal Value As String)
 End Property
 
 Private Property Get IBracketOrder_EntryReason() As String
@@ -188,13 +188,19 @@ End Property
 Private Property Get IBracketOrder_PreventUnprotectedPosition() As Boolean
 End Property
 
-Private Sub IBracketOrder_RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
+Private Sub IBracketOrder_RemoveBracketOrderErrorListener(ByVal Value As IBracketOrderErrorListener)
 End Sub
 
 Private Sub IBracketOrder_RemoveBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
 End Sub
 
 Private Property Get IBracketOrder_Risk() As Currency
+End Property
+
+Private Property Let IBracketOrder_RolloverSpecification(ByVal Value As RolloverSpecification)
+End Property
+
+Private Property Get IBracketOrder_RolloverSpecification() As RolloverSpecification
 End Property
 
 Private Sub IBracketOrder_SetNewEntryLimitPrice(ByVal pPriceSpec As PriceSpecifier)
@@ -237,7 +243,7 @@ Private Property Get IBracketOrder_StopLossOrder() As IOrder
 Set IBracketOrder_StopLossOrder = StopLossOrder
 End Property
 
-Private Property Let IBracketOrder_StopReason(ByVal RHS As String)
+Private Property Let IBracketOrder_StopReason(ByVal Value As String)
 End Property
 
 Private Property Get IBracketOrder_StopReason() As String
@@ -247,19 +253,19 @@ Private Property Get IBracketOrder_TargetOrder() As IOrder
 Set IBracketOrder_TargetOrder = TargetOrder
 End Property
 
-Private Property Let IBracketOrder_TargetReason(ByVal RHS As String)
+Private Property Let IBracketOrder_TargetReason(ByVal Value As String)
 End Property
 
 Private Property Get IBracketOrder_TargetReason() As String
 End Property
 
-Private Sub IBracketOrder_AddChangeListener(ByVal pListener As IChangeListener)
+Private Sub IBracketOrder_AddChangeListener(ByVal Value As IChangeListener)
 End Sub
 
-Private Sub IBracketOrder_AddExecutionListener(ByVal pListener As IExecutionListener)
+Private Sub IBracketOrder_AddExecutionListener(ByVal Value As IExecutionListener)
 End Sub
 
-Private Sub IBracketOrder_AddStateChangeListener(ByVal pListener As IStateChangeListener)
+Private Sub IBracketOrder_AddStateChangeListener(ByVal Value As IStateChangeListener)
 End Sub
 
 Private Function IBracketOrder_Cancel(Optional ByVal pEvenIfFilled As Boolean = False) As Boolean

@@ -78,7 +78,7 @@ ElseIf ev.ErrorNumber <> 0 Then
                         ev.ErrorSource, _
                     True
 Else
-    LogMessage "Order recovery completed", True
+    LogMessage "Order recovery completed"
 End If
 
 Dim lPM As PositionManager
@@ -89,6 +89,12 @@ For Each lPM In mOrderManager.PositionManagersLive
             (lBo.State = BracketOrderStateClosed And lBo.Size <> 0) Then
             CreateBracketProfitCalculator lBo, lPM.DataSource
         End If
+        If Not lBo.RolloverSpecification Is Nothing And _
+            (lBo.CumBuyPrice <> 0 Or _
+            lBo.CumSellPrice <> 0) _
+        Then
+            gBracketOrderListener.Add lBo
+        End If
     Next
 Next
 
@@ -97,17 +103,23 @@ For Each lVar In mOrderManager.GetGroupNames
     Dim lGroupName As String: lGroupName = UCase$(lVar)
     Dim lRes As GroupResources: Set lRes = mGroups.Add(lGroupName)
     
-    
     Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(lGroupName)
     For Each lPM In lPMs
-        Dim lContractProcessor As ContractProcessor: Set lContractProcessor = New ContractProcessor
-        lContractProcessor.Recover lPM
-        
         Dim lContract As IContract: Set lContract = lPM.ContractFuture.Value
-        lRes.ContractProcessors.Add lContractProcessor, _
-                                    gGenerateContractProcessorName( _
+        Dim lContractProcessorName As String
+        lContractProcessorName = gGenerateContractProcessorName( _
                                             lGroupName, _
                                             lContract.Specifier)
+                                            
+        If Not lRes.ContractProcessors.Contains(lContractProcessorName) Then
+            Dim lContractProcessor As ContractProcessor: Set lContractProcessor = New ContractProcessor
+            lContractProcessor.Recover lPM
+            
+            lRes.ContractProcessors.Add lContractProcessor, _
+                                        gGenerateContractProcessorName( _
+                                                lGroupName, _
+                                                lContract.Specifier)
+        End If
     Next
 Next
 

@@ -26,6 +26,7 @@ Option Explicit
 Implements IBracketOrder
 Implements IChangeListener
 Implements IRecoverable
+Implements IStateChangeListener
 Implements IStringable
 
 '@================================================================================
@@ -48,7 +49,7 @@ Event OrderMessage(ByRef ev As BracketOrderMessageEventData)
 Event PositionCloseoutNotified()
 Event SelfCancelled()
 Event SizeChanged()
-Event StateChange(ByRef ef As StateChangeEventData)
+Event StateChange(ByRef ev As StateChangeEventData)
 Event StopLossOrderChanged()
 Event StopLossOrderFilled()
 Event TargetOrderChanged()
@@ -120,6 +121,9 @@ Private mCancelAfter                                As Long
 Private WithEvents mCancelTLI                       As TimerListItem
 Attribute mCancelTLI.VB_VarHelpID = -1
 
+Private WithEvents mForceCloseTLI                   As TimerListItem
+Attribute mForceCloseTLI.VB_VarHelpID = -1
+
 Private WithEvents mEntryOrder                      As Order
 Attribute mEntryOrder.VB_VarHelpID = -1
 Private mEntryOrderCopy                             As Order
@@ -169,6 +173,15 @@ Private WithEvents mStateTimeoutTLI                 As TimerListItem
 Attribute mStateTimeoutTLI.VB_VarHelpID = -1
 
 Private mTimezoneName                               As String
+
+Private WithEvents mRolloverTLI                     As TimerListItem
+Attribute mRolloverTLI.VB_VarHelpID = -1
+
+Private mNextBracketOrder                           As IBracketOrder
+Private mNextContract                               As IContract
+
+Private mRolloverController                         As RolloverController
+Private mIsRolloverInProgress                       As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -366,11 +379,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_CloseOut()
+Private Sub IBracketOrder_CloseOut( _
+                Optional ByVal pCloseoutSpec As CloseoutSpecifier)
 Const ProcName As String = "IBracketOrder_CloseOut"
 On Error GoTo Err
 
-CloseOut
+CloseOut pCloseoutSpec
 
 Exit Sub
 
@@ -490,7 +504,8 @@ Private Property Get IBracketOrder_LongPosition() As Boolean
 IBracketOrder_LongPosition = LongPosition
 End Property
 
-Private Sub IBracketOrder_NotifyCloseout(ByVal pExec As IExecutionReport)
+Private Sub IBracketOrder_NotifyCloseout( _
+                ByVal pExec As IExecutionReport)
 Const ProcName As String = "IBracketOrder_NotifyCloseout"
 On Error GoTo Err
 
@@ -592,6 +607,14 @@ End Sub
 
 Private Property Get IBracketOrder_Risk() As Currency
 IBracketOrder_Risk = Risk
+End Property
+
+Private Property Let IBracketOrder_RolloverSpecification(ByVal Value As RolloverSpecification)
+RolloverSpecification = Value
+End Property
+
+Private Property Get IBracketOrder_RolloverSpecification() As RolloverSpecification
+Set IBracketOrder_RolloverSpecification = RolloverSpecification
 End Property
 
 Private Sub IBracketOrder_SetNewEntryLimitPrice( _
@@ -846,7 +869,11 @@ If mSummary.CancelPrice <> 0# Then
     lPriceCanceller.Initialise Me, mSummary.CancelPrice, mDataSource
 End If
 
-If mSummary.CancelTime <> 0 And mSummary.CancelTime > Now Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
+If mSummary.CancelTime <> 0 And mSummary.CancelTime > GetTimestamp Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
+
+If mSummary.RolloverDate <> 0 And _
+    (mSummary.State = BracketOrderStateSubmitted Or _
+    mSummary.State = BracketOrderStateClosed) Then setRolloverTLI
     
 If placePeggedOrders Then CheckComplete
 
@@ -876,34 +903,30 @@ setState mSummary.State
 If Not mOrderContext Is Nothing Then
     If mSummary.CloseoutOrderId = "" Then
     ElseIf mCloseoutOrder Is Nothing Then
-        CloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
+        SetCloseoutOrder CreateAnOrder(mSummary.CloseoutOrderId)
     ElseIf mCloseoutOrder.Id <> mSummary.CloseoutOrderId Then
-        Set mCloseoutOrder = CreateAnOrder(mSummary.CloseoutOrderId)
-        mSummary.CloseoutOrderId = mCloseoutOrder.Id
+        SetCloseoutOrder CreateAnOrder(mSummary.CloseoutOrderId)
     End If
     
     If mSummary.EntryOrderId = "" Then
     ElseIf mEntryOrder Is Nothing Then
-        EntryOrder = CreateAnOrder(mSummary.EntryOrderId)
+        SetEntryOrder CreateAnOrder(mSummary.EntryOrderId)
     ElseIf mEntryOrder.Id <> mSummary.EntryOrderId Then
-        Set mEntryOrder = CreateAnOrder(mSummary.EntryOrderId)
-        mSummary.EntryOrderId = mEntryOrder.Id
+        SetEntryOrder CreateAnOrder(mSummary.EntryOrderId)
     End If
     
     If mSummary.StopLossOrderId = "" Then
     ElseIf mStopLossOrder Is Nothing Then
-        StopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
+        SetStopLossOrder CreateAnOrder(mSummary.StopLossOrderId)
     ElseIf mStopLossOrder.Id <> mSummary.StopLossOrderId Then
-        Set mStopLossOrder = CreateAnOrder(mSummary.StopLossOrderId)
-        mSummary.StopLossOrderId = mStopLossOrder.Id
+        SetStopLossOrder CreateAnOrder(mSummary.StopLossOrderId)
     End If
     
     If mSummary.TargetOrderId = "" Then
     ElseIf mTargetOrder Is Nothing Then
-        TargetOrder = CreateAnOrder(mSummary.TargetOrderId)
+        SetTargetOrder CreateAnOrder(mSummary.TargetOrderId)
     ElseIf mTargetOrder.Id <> mSummary.TargetOrderId Then
-        Set mTargetOrder = CreateAnOrder(mSummary.TargetOrderId)
-        mSummary.TargetOrderId = mTargetOrder.Id
+        SetTargetOrder CreateAnOrder(mSummary.TargetOrderId)
     End If
 End If
 
@@ -940,6 +963,46 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' IStateChangeListener Interface Members
+'@================================================================================
+
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
+On Error GoTo Err
+
+Dim lState As RolloverControllerStates: lState = ev.State
+Select Case lState
+Case RolloverControllerStateClosingCurrentPosition
+    WriteRecoveryDataComment "Rollover in progress"
+    mIsRolloverInProgress = True
+    fireChange BracketOrderChangeTypes.BracketOrderRolloverInitiated
+Case RolloverControllerStateCreatingNextBracketOrder
+    Set mNextContract = mRolloverController.NextContract
+    fireChange BracketOrderRolloverGotContract
+Case RolloverControllerStateCompleted
+    WriteRecoveryDataComment "Rollover completed"
+    mIsRolloverInProgress = False
+    Set mNextBracketOrder = mRolloverController.NextBracketOrder
+    
+    mRolloverController.RemoveStateChangeListener Me
+    Set mRolloverController = Nothing
+    
+    mSummary.RolloverDate = 0
+    RolloverSpecification = Nothing
+    
+    fireChange BracketOrderChangeTypes.BracketOrderRolloverCompleted
+    mOrderContext.NotifyBracketOrderClosed Me
+End Select
+
+SaveRecoveryInfo
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' IStringable Interface Members
 '@================================================================================
 
@@ -955,6 +1018,7 @@ Private Sub mCloseoutOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As St
 Const ProcName As String = "mCloseoutOrder_Error"
 On Error GoTo Err
 
+mSummary.CloseoutSpecifier = Nothing
 handleStimulus OpStimuli.StimCloseoutOrderCancelled
 fireBracketOrderError mCloseoutOrder, pErrorCode, pErrorMsg
 
@@ -1209,6 +1273,44 @@ Case OrderStatuses.OrderStatusRejected
 End Select
 
 SaveRecoveryInfo
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mForceCloseTLI Event Handlers
+'@================================================================================
+
+Private Sub mForceCloseTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mForceCloseTLI_StateChange"
+On Error GoTo Err
+
+Dim lState As TimerListItemStates: lState = ev.State
+If lState <> TimerListItemStateExpired Then Exit Sub
+
+DoCloseOut
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mRolloverTLI Event Handlers
+'@================================================================================
+
+Private Sub mRolloverTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mRolloverTLI_StateChange"
+On Error GoTo Err
+
+Dim lState As TimerListItemStates: lState = ev.State
+If lState <> TimerListItemStateExpired Then Exit Sub
+
+setRolloverTLI
+
 Exit Sub
 
 Err:
@@ -1514,6 +1616,7 @@ Const ProcName As String = "CancelAfter"
 On Error GoTo Err
 
 Assert State = BracketOrderStateCreated, Key & " CancelAfter cannot be set after execution"
+Assert mSummary.CancelTime = 0, "CancelTime is already set"
 
 mCancelAfter = Value
 
@@ -1546,6 +1649,7 @@ Const ProcName As String = "CancelTime"
 On Error GoTo Err
 
 Assert State = BracketOrderStateCreated, Key & " CancelTime cannot be set after execution"
+Assert mCancelAfter = 0, "CancelAfter is already set"
 
 mSummary.CancelTime = Value
 
@@ -1689,6 +1793,10 @@ Public Property Get GroupName() As String
 GroupName = mSummary.GroupName
 End Property
 
+Public Property Get HasRolloverSpecification() As Boolean
+HasRolloverSpecification = (Not mSummary.RolloverSpecification Is Nothing)
+End Property
+
 Public Property Get IsComplete() As Boolean
 Const ProcName As String = "IsComplete"
 On Error GoTo Err
@@ -1717,11 +1825,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get IsRolloverInProgress() As Boolean
+IsRolloverInProgress = mIsRolloverInProgress
+End Property
+
 Public Property Get IsSimulated() As Boolean
 IsSimulated = mIsSimulated
 End Property
 
-Friend Property Get Key() As String
+Public Property Get Key() As String
 Key = mSummary.Key
 End Property
 
@@ -1735,6 +1847,14 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get NextBracketOrder() As IBracketOrder
+Set NextBracketOrder = mNextBracketOrder
+End Property
+
+Public Property Get NextContract() As IContract
+Set NextContract = mNextContract
 End Property
 
 Public Property Get Order(ByVal pRole As BracketOrderRoles) As IOrder
@@ -1893,7 +2013,53 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
 
+Public Property Get RolloverDate() As Date
+RolloverDate = mSummary.RolloverDate
+End Property
+
+Friend Property Get RolloverSpecification() As RolloverSpecification
+Set RolloverSpecification = mSummary.RolloverSpecification
+End Property
+
+Friend Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
+Const ProcName As String = "RolloverSpecification"
+On Error GoTo Err
+
+If mSummary.RolloverSpecification Is Nothing And Value Is Nothing Then Exit Property
+
+Assert Value Is Nothing Or _
+        mSummary.State = BracketOrderStateCreated Or _
+        mSummary.State = BracketOrderStateSubmitted, _
+        "Bracket order state does not allow rollover"
+
+mSummary.RolloverSpecification = Value
+mSummary.RolloverDate = 0
+
+If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
+
+If Not mSummary.RolloverSpecification Is Nothing Then
+    Dim lRolloverTime As Date
+    lRolloverTime = GetOffsetSessionTimes( _
+                        mContract.ExpiryDate, _
+                        -1 * mSummary.RolloverSpecification.Days).StartTime + _
+                            mSummary.RolloverSpecification.Time
+    
+    Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
+    mSummary.RolloverDate = ConvertDateTzToLocal(lRolloverTime, lTz)
+End If
+
+SaveRecoveryInfo
+
+If mSummary.RolloverSpecification Is Nothing Then Exit Property
+
+If mSummary.State = BracketOrderStateSubmitted Then setRolloverTLI
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Size() As Long
@@ -1970,6 +2136,37 @@ If pNewQuantity <> pOrder.Quantity Then
                     mDataSource, mContract, Key, mIsSimulated, Me
     pField = pNewQuantity
     setDirty
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setRolloverTLI()
+Const ProcName As String = "setRolloverTLI"
+On Error GoTo Err
+
+If mSummary.CumBuyPrice = 0 And mSummary.CumSellPrice = 0 Then
+    ' we haven't had any fills yet, so we need to defer the rollover
+    ' until we have
+    Exit Sub
+End If
+
+If mSummary.RolloverDate <= GetTimestamp Then
+    Dim lExpiryTime As Date
+    lExpiryTime = mContract.ExpiryDate + mContract.SessionEndTime '.ExpiryDate + 10# / 24#
+    Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
+    lExpiryTime = ConvertDateTzToLocal(lExpiryTime, lTz)
+    If lExpiryTime > GetTimestamp Then
+        initiateRollover
+    End If
+ElseIf Int(mSummary.RolloverDate - GetTimestamp) > 20 Then
+    ' too long for a timer list entry! Max is about 24 days
+    Set mRolloverTLI = mTimerList.Add(Nothing, GetTimestamp + 20, ExpiryTimeUnitDateTime)
+Else
+    Set mRolloverTLI = mTimerList.Add(Nothing, mSummary.RolloverDate, ExpiryTimeUnitDateTime)
 End If
 
 Exit Sub
@@ -2162,6 +2359,7 @@ On Error GoTo Err
 
 SetNewStopLossTriggerPrice stopTriggerPriceSpec
 If Quantity <> -1 Then SetNewStopLossQuantity Quantity
+WriteRecoveryDataComment ProcName & "()"
 Update
 
 Exit Sub
@@ -2178,6 +2376,7 @@ On Error GoTo Err
 
 SetNewTargetLimitPrice targetPriceSpec
 If Quantity <> -1 Then SetNewTargetQuantity Quantity
+WriteRecoveryDataComment ProcName & "()"
 Update
 
 Exit Sub
@@ -2197,6 +2396,7 @@ If Not mCancelTLI Is Nothing Then
     Set mCancelTLI = Nothing
 End If
 
+WriteRecoveryDataComment ProcName & "(" & evenIfFilled & ")"
 If evenIfFilled Then
     mStateEngine.ClearConditions OpConditions.CondNoFillCancellation
     Cancel = handleStimulus(OpStimuli.StimCancelEvenIfFill)
@@ -2292,16 +2492,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub CloseOut()
+Public Sub CloseOut( _
+                Optional ByVal pCloseoutSpec As CloseoutSpecifier)
 Const ProcName As String = "CloseOut"
 On Error GoTo Err
 
-gLogBracketOrderMessage "Closing out: " & _
-                    "size=" & Size & _
-                    "; pending size=" & PendingSize, _
-                mDataSource, mContract, Key, mIsSimulated, Me
+If mIsRolloverInProgress Then mRolloverController.Cancel
 
-handleStimulus OpStimuli.StimCloseout
+WriteRecoveryDataComment ProcName & "()"
+DoCloseOut pCloseoutSpec
 
 Exit Sub
 
@@ -2329,6 +2528,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Sub DoCloseOut( _
+                Optional ByVal pCloseoutSpec As CloseoutSpecifier)
+Const ProcName As String = "DoCloseOut"
+On Error GoTo Err
+
+mSummary.CloseoutSpecifier = pCloseoutSpec
+
+gLogBracketOrderMessage "Closing out: " & _
+                    "size=" & Size & _
+                    "; pending size=" & PendingSize, _
+                mDataSource, mContract, Key, mIsSimulated, Me
+
+WriteRecoveryDataComment ProcName & "()"
+handleStimulus OpStimuli.StimCloseout
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub Execute()
 Const ProcName As String = "Execute"
 On Error GoTo Err
@@ -2341,7 +2561,6 @@ mSummary.CreationTime = lTimestamp
 If mCancelAfter <> 0 Then
     mSummary.CancelTime = lTimestamp + CDbl(mCancelAfter) / 86400#
     mCancelAfter = 0
-    mSummary.CancelTime = mSummary.CancelTime
 End If
 
 If mSummary.CancelTime <> 0 Then Set mCancelTLI = mTimerList.Add(Nothing, mSummary.CancelTime, ExpiryTimeUnits.ExpiryTimeUnitDateTime)
@@ -2352,6 +2571,7 @@ If mSummary.CancelPrice <> 0# Then
 End If
 
 fireChange BracketOrderChangeTypes.BracketOrderCreated
+WriteRecoveryDataComment ProcName & "()"
 
 SaveRecoveryInfo    ' ensure the BracketOrder is recorded before
                     ' doing the state change, which will cause
@@ -2361,6 +2581,7 @@ If Not mStopLossOrder Is Nothing Then mStopLossOrder.SaveRecoveryInfo
 If Not mTargetOrder Is Nothing Then mTargetOrder.SaveRecoveryInfo
 
 handleStimulus OpStimuli.StimExecute
+If mSummary.RolloverDate <> 0 Then setRolloverTLI
 
 Exit Sub
 
@@ -2423,10 +2644,15 @@ On Error GoTo Err
 
 If Size = 0 Then Exit Sub
 
+WriteRecoveryDataComment ProcName & "()"
 createCloseoutOrder
 
 pExec.OrderId = mCloseoutOrder.Id
 mCloseoutOrder.NotifyFillEx pExec, False
+
+mSummary.RolloverDate = 0
+RolloverSpecification = Nothing
+SaveRecoveryInfo
 
 fireChange BracketOrderPositionCloseoutNotified
 RaiseEvent PositionCloseoutNotified
@@ -2561,6 +2787,7 @@ Public Sub SetNewEntryTriggerPrice( _
 Const ProcName As String = "SetNewEntryTriggerPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mEntryOrder, _
         OrderTypeLimitIfTouched Or _
             OrderTypeMarketIfTouched Or _
@@ -2628,6 +2855,7 @@ Public Sub SetNewEntryQuantity(ByVal pNewQuantity As Long)
 Const ProcName As String = "SetNewEntryQuantity"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setQuantity mEntryOrder, mNewEntryQuantity, pNewQuantity
 
 Exit Sub
@@ -2641,6 +2869,7 @@ Public Sub SetNewStopLossLimitPrice( _
 Const ProcName As String = "SetNewStopLossLimitPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mStopLossOrder, _
         OrderTypeLimitOnClose Or _
             OrderTypeLimitOnOpen Or _
@@ -2660,6 +2889,7 @@ Public Sub SetNewStopLossQuantity(ByVal pNewQuantity As Long)
 Const ProcName As String = "SetNewStopLossQuantity"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setQuantity mStopLossOrder, mNewStopLossQuantity, pNewQuantity
 
 Exit Sub
@@ -2673,6 +2903,7 @@ Public Sub SetNewStopLossTriggerPrice( _
 Const ProcName As String = "SetNewStopLossTriggerPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mStopLossOrder, _
         OrderTypeStop Or _
             OrderTypeStopLimit Or _
@@ -2693,6 +2924,7 @@ Public Sub SetNewTargetLimitPrice( _
 Const ProcName As String = "SetNewTargetLimitPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mTargetOrder, _
         OrderTypeLimit Or _
             OrderTypeLimitIfTouched Or _
@@ -2712,6 +2944,7 @@ Public Sub SetNewTargetQuantity(ByVal pNewQuantity As Long)
 Const ProcName As String = "SetNewTargetQuantity"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setQuantity mTargetOrder, mNewTargetQuantity, pNewQuantity
 
 Exit Sub
@@ -2725,6 +2958,7 @@ Public Sub SetNewTargetTriggerPrice( _
 Const ProcName As String = "SetNewTargetTriggerPrice"
 On Error GoTo Err
 
+WriteRecoveryDataComment ProcName & "()"
 setPrice mTargetOrder, _
         OrderTypeLimitIfTouched Or _
             OrderTypeMarketIfTouched, _
@@ -2864,6 +3098,30 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function CancelCloseoutOrder()
+Const ProcName As String = "CancelCloseoutOrder"
+On Error GoTo Err
+
+If mCloseoutOrder Is Nothing Then Exit Function
+Select Case mCloseoutOrder.Status
+Case OrderStatuses.OrderStatusCreated
+    mCloseoutOrder.Status = OrderStatuses.OrderStatusCancelled
+    mCloseoutOrder.SaveRecoveryInfo
+Case OrderStatuses.OrderStatusFilled, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
+Case Else
+    gLogOrderMessage "Cancel order", _
+                    mCloseoutOrder, mDataSource, mContract, Key, mIsSimulated, Me
+    mOrderSubmitter.CancelCloseoutOrder Me
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function cancelOrders() As Boolean
 Const ProcName As String = "cancelOrders"
 On Error GoTo Err
@@ -2942,7 +3200,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function CancelStopOrder()
-Const ProcName As String = "cancelStopOrder"
+Const ProcName As String = "CancelStopOrder"
 On Error GoTo Err
 
 If mStopLossOrder Is Nothing Then Exit Function
@@ -2966,7 +3224,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function CancelTargetOrder()
-Const ProcName As String = "cancelTargetOrder"
+Const ProcName As String = "CancelTargetOrder"
 On Error GoTo Err
 
 If mTargetOrder Is Nothing Then Exit Function
@@ -3203,11 +3461,27 @@ Private Sub createCloseoutOrder()
 Const ProcName As String = "createCloseoutOrder"
 On Error GoTo Err
 
-Set mCloseoutOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
+If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
 
-mCloseoutOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
-mCloseoutOrder.Quantity = Abs(Size)
-mCloseoutOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
+Dim lOrder As IOrder
+
+If mSummary.CloseoutSpecifier Is Nothing Then
+    Set lOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
+Else
+    With mSummary.CloseoutSpecifier
+        Set lOrder = mOrderContext.NewOrder(.OrderType, mRecoveryContextName)
+        lOrder.LimitPriceSpec = .LimitPriceSpec
+        lOrder.TriggerPriceSpec = .TriggerPriceSpec
+        lOrder.IgnoreRegularTradingHours = .OutsideRTH
+    End With
+End If
+mOrderContext.FixupEntryOrder lOrder
+
+lOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
+lOrder.Quantity = Abs(Size)
+lOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
+
+SetCloseoutOrder lOrder
 
 SaveRecoveryInfo
 
@@ -3257,6 +3531,8 @@ For Each lAction In pActions
     Case OpActions.ActLog
         gLog "Stimulus " & gOpStimuliToString(pStimulus) & " occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mSummary.Key & ")", ProcName, ModuleName, , LogLevelSevere
         doActions = Empty
+    Case OpActions.ActCancelCloseoutOrder
+        doActions = CancelCloseoutOrder
     Case Else
         Assert False, Key & " Invalid Action " & lAction
     End Select
@@ -3534,6 +3810,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub initiateRollover()
+Const ProcName As String = "initiateRollover"
+On Error GoTo Err
+
+If mRolloverController Is Nothing Then
+    Set mRolloverController = New RolloverController
+End If
+mRolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName, mTimerList
+WriteRecoveryDataComment ProcName & "()"
+StartTask mRolloverController, PriorityNormal
+mRolloverController.AddStateChangeListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Function hasPeggedOrder(ByVal pOrder As IOrder) As Boolean
 If pOrder Is Nothing Then Exit Function
 If pOrder.Status <> OrderStatuses.OrderStatusCreated Then Exit Function
@@ -3559,8 +3853,18 @@ On Error GoTo Err
 createCloseoutOrder
 
 RaiseEvent CloseoutOrderCreated
+
+mStateEngine.SetConditions OpConditions.CondCloseoutOrderExists
+
 mOrderSubmitter.ModifyBracketOrder Me, False, False, False, True
 
+If mSummary.CloseoutSpecifier Is Nothing Then
+ElseIf mSummary.CloseoutSpecifier.ForceCloseAfterSecs <> 0 Then
+    Set mForceCloseTLI = mTimerList.Add( _
+                                    Nothing, _
+                                    mSummary.CloseoutSpecifier.ForceCloseAfterSecs)
+End If
+                            
 Exit Function
 
 Err:
@@ -3698,7 +4002,21 @@ Else
     SetSize Size - pExec.Quantity
 End If
     
-If Size = 0 Then mSummary.EndTime = pExec.FillTime
+If Size = 0 Then
+    If Not IsRolloverInProgress Then
+        If Not mRolloverTLI Is Nothing Then
+            mRolloverTLI.Cancel
+            Set mRolloverTLI = Nothing
+        End If
+        mSummary.RolloverSpecification = Nothing
+        mSummary.RolloverDate = 0
+    End If
+    mSummary.EndTime = pExec.FillTime
+ElseIf (Not mSummary.RolloverSpecification Is Nothing) And _
+        mRolloverTLI Is Nothing _
+Then
+    setRolloverTLI
+End If
 
 SaveRecoveryInfo
 
@@ -3812,5 +4130,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub WriteRecoveryDataComment(ByVal pComment As String)
+Const ProcName As String = "writeRecoveryDataComment"
+On Error GoTo Err
+
+Dim ev As RecoveryDataCommentEventData
+Set ev.Source = Me
+ev.Comment = mSummary.Key & ":" & pComment
+
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mRecoverableObjectListeners.Valid Then
+    sInit = True
+    sSomeListeners = mRecoverableObjectListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As IRecoverableObjectListener
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.WriteRecoveryDataComment ev
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 

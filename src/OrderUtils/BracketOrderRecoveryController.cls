@@ -240,6 +240,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IRecoverableObjectListener_WriteRecoveryDataComment(ev As RecoveryDataCommentEventData)
+Const ProcName As String = "IRecoverableObjectListener_WriteRecoveryDataComment"
+On Error GoTo Err
+
+If mProcessingPersistedData Then Exit Sub
+If mDataStore Is Nothing Then Exit Sub
+
+Dim lRecoverableObj As IRecoverable
+Set lRecoverableObj = ev.Source
+
+Dim s As String
+s = FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601)
+s = s & "," & lRecoverableObj.RecoveryContextName
+s = s & "," & OrderInfoComment
+s = s & "," & ev.Comment
+
+mDataStore.SaveOrderInfo mScopeName, s
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' ITask Interface Members
 '@================================================================================
@@ -432,6 +456,10 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Get ScopeName() As String
+ScopeName = mScopeName
+End Property
 
 '@================================================================================
 ' Methods
@@ -776,6 +804,8 @@ Dim OpItem As New OPI: OpItem.InitialiseFromString orderInfo
 
 If OpItem.ItemType = OrderInfoData Then
     mInMemoryStore.Add OpItem
+ElseIf OpItem.ItemType = OrderInfoComment Then
+    mInMemoryStore.Add OpItem
 ElseIf OpItem.ItemType = OrderInfoDelete Then
     mInMemoryStore.Delete OpItem
 End If
@@ -810,6 +840,8 @@ ElseIf TypeOf pOpItem.Data Is Execution Then
     processExecutionReport pOpItem
 ElseIf TypeOf pOpItem.Data Is PMS Then
     processPositionManager pOpItem
+ElseIf pOpItem.ItemType = OrderInfoComment Then
+
 Else
     Assert False, "Unknown order info type"
 End If

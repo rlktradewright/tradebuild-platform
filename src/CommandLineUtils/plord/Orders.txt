@@ -1,6 +1,0 @@
-STAGEORDERS YES
-CONTRACT /SecType:"OPT" /Symbol:"MSFT" /Exchange:"AMEX" /Expiry:"20180928" /Strike:"110" /Right:"PUT"
-BRACKET BUY 100
-ENTRY MKT
-ENDBRACKET
-endorders
