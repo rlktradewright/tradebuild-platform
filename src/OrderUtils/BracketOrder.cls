@@ -379,11 +379,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_CloseOut()
+Private Sub IBracketOrder_CloseOut( _
+                Optional ByVal pCloseoutSpec As CloseoutSpecifier)
 Const ProcName As String = "IBracketOrder_CloseOut"
 On Error GoTo Err
 
-CloseOut
+CloseOut pCloseoutSpec
 
 Exit Sub
 
@@ -1289,8 +1290,7 @@ On Error GoTo Err
 Dim lState As TimerListItemStates: lState = ev.State
 If lState <> TimerListItemStateExpired Then Exit Sub
 
-mSummary.CloseoutSpecifier = Nothing
-CloseOut
+DoCloseOut
 
 Exit Sub
 
@@ -2499,6 +2499,7 @@ On Error GoTo Err
 
 If mIsRolloverInProgress Then mRolloverController.Cancel
 
+WriteRecoveryDataComment ProcName & "()"
 DoCloseOut pCloseoutSpec
 
 Exit Sub

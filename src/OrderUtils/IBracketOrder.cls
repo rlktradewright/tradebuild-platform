@@ -223,7 +223,7 @@ End Sub
 Public Sub Checkpoint()
 End Sub
 
-Public Sub CloseOut()
+Public Sub CloseOut(Optional ByVal pCloseoutSpec As CloseoutSpecifier)
 End Sub
 
 Public Function ContainsOrder(ByVal pOrder As IOrder) As Boolean

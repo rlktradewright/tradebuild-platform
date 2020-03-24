@@ -289,8 +289,8 @@ Public Enum RolloverControllerStates
     RolloverControllerStateWaitingForOrderContext
     RolloverControllerStateCreatingNextBracketOrder
     RolloverControllerStateExecutingNextBracketOrder
-    RolloverControllerStateCancellingNextBracketOrder
     RolloverControllerStateCompleted
+    RolloverControllerStateCancellingNextBracketOrder
 End Enum
 
 Public Enum RolloverStrikeModes

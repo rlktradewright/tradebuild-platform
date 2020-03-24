@@ -58,6 +58,8 @@ Private mContractSpec                               As IContractSpecifier
 Private mHeuristicStrike                            As Double
 Private mInitialStrike                              As Double
 
+Private mTickType                                   As TickTypes
+
 Private mStrikeIncrement                            As Long
 
 Private mMaxExpenditure                             As Long
@@ -114,7 +116,7 @@ If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
     fetchInitialContract
     fireStateChange OptionContractResolverStateFetchingInitialContract
 ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
-    If ev.Tick.TickType <> TickTypeAsk Then Exit Sub
+    If ev.Tick.TickType <> mTickType Then Exit Sub
     mDataSource.StopMarketData
     Set mDataSource = Nothing
     
@@ -332,6 +334,7 @@ End Sub
 
 Friend Function ResolveContract( _
                 ByVal pContractSpec As IContractSpecifier, _
+                ByVal pAction As OrderActions, _
                 ByVal pContractStore As IContractStore, _
                 ByVal pMaxExpenditure As Long, _
                 ByVal pStrikeIncrement As Long, _
@@ -353,6 +356,7 @@ If pStrikeIncrement <> 0 Then AssertArgument pContractSpec.Strike <> 0, _
 Set mSelfRef = Me
 
 Set mContractSpec = pContractSpec
+mTickType = IIf(pAction = OrderActionBuy, TickTypeAsk, TickTypeBid)
 Set mContractStore = pContractStore
 Set mMarketDataManager = pMarketDataManager
 mMaxExpenditure = pMaxExpenditure

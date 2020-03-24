@@ -68,6 +68,7 @@ Private WithEvents mNextOrderContext                As OrderContext
 Attribute mNextOrderContext.VB_VarHelpID = -1
 Private mNextContract                               As Contract
 Private WithEvents mNextBracketOrder                As BracketOrder
+Attribute mNextBracketOrder.VB_VarHelpID = -1
 
 Private mMaxExpenditure                             As Long
 
@@ -104,7 +105,6 @@ Select Case lChangeType
 Case BracketOrderChangeTypes.BracketOrderCloseoutOrderFilled
     If mBracketOrder.Size = 0 Then
         mBracketOrder.RemoveChangeListener Me
-        mTaskContext.Continue
         setState RolloverControllerStateFindingNextContract
         mTaskContext.Continue
     End If
@@ -157,9 +157,12 @@ Case RolloverControllerStateClosingCurrentPosition
     End If
 Case RolloverControllerStateFindingNextContract
     gLog mBracketOrder.Key & ": Finding next contract: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
-    If Not mOrderContext.IsDataSourceReady Then mTaskContext.Suspend -1
-    findNextContract 1
-    mTaskContext.Suspend -1
+    If Not orderContextHasBidAndAsk Then
+        mTaskContext.Suspend -1
+    Else
+        findNextContract 1
+        mTaskContext.Suspend -1
+    End If
 Case RolloverControllerStateCreatingNextPositionManager
     Set mNextPositionManager = createNextPositionManager(mNextContract)
     Set mNextOrderContext = mNextPositionManager.OrderContexts.DefaultOrderContext
@@ -171,7 +174,7 @@ Case RolloverControllerStateWaitingForOrderContext
         setState RolloverControllerStateCreatingNextBracketOrder
     End If
 Case RolloverControllerStateCreatingNextBracketOrder
-    Set mNextBracketOrder = createNextBracketOrder
+    Set mNextBracketOrder = createNextBracketOrder(mUseMarketEntry)
     If Not mNextOrderContext.IsReadyForBracketOrder(mNextBracketOrder) Then
         gLog mBracketOrder.Key & ": Waiting for next order context: " & mNextContract.Specifier.ToString, ProcName, ModuleName
         setState RolloverControllerStateWaitingForOrderContext
@@ -278,13 +281,11 @@ End Sub
 ' mNextBracketOrder Event Handlers
 '@================================================================================
 
-Private Sub mNextBracketOrder_EntryOrderChanged()
-Const ProcName As String = "mNextBracketOrder_EntryOrderChanged"
+Private Sub mNextBracketOrder_Completed()
+Const ProcName As String = "mNextBracketOrder_Completed"
 On Error GoTo Err
 
-If mNextBracketOrder.State = BracketOrderStateClosed And _
-    mNextBracketOrder.Size = 0 _
-Then
+If mNextBracketOrder.Size = 0 Then
     ' the cancellation must have completed
     mUseMarketEntry = True
     setState RolloverControllerStateCreatingNextBracketOrder
@@ -301,7 +302,7 @@ Private Sub mNextBracketOrder_EntryOrderFilled()
 Const ProcName As String = "mNextBracketOrder_EntryOrderFilled"
 On Error GoTo Err
 
-mNextBracketFillTLI.Cancel
+If Not mNextBracketFillTLI Is Nothing Then mNextBracketFillTLI.Cancel
 
 Exit Sub
 
@@ -320,7 +321,7 @@ On Error GoTo Err
 If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
 
 If mState = RolloverControllerStateFindingNextContract And _
-    mOrderContext.IsDataSourceReady Then mTaskContext.Continue
+    orderContextHasBidAndAsk Then mTaskContext.Continue
 
 Exit Sub
 
@@ -453,7 +454,7 @@ End Sub
 '@================================================================================
 
 Private Function createNextBracketOrder( _
-                Optional ByVal pUseMarketOrder As Boolean) As BracketOrder
+                ByVal pUseMarketOrder As Boolean) As BracketOrder
 Const ProcName As String = "createNextBracketOrder"
 On Error GoTo Err
 
@@ -680,36 +681,68 @@ On Error GoTo Err
 
 Dim lStrikeIncrement As Double
 Dim lMultiplier As Double: lMultiplier = pCurrentContractSpec.Multiplier
-Dim lBidPrice As Double: lBidPrice = mOrderContext.DataSource.CurrentTick(TickTypeBid).Price
-Dim lAskPrice As Double: lAskPrice = mOrderContext.DataSource.CurrentTick(TickTypeAsk).Price
+
+Dim lBidPrice As Double
+Dim lAskPrice As Double
+Dim lCurrentValue As Long
+If mBracketOrder.RolloverSpecification.StrikeMode = RolloverStrikeModeCurrentValue Or _
+    mBracketOrder.RolloverSpecification.StrikeMode = RolloverStrikeModeCurrentProfit _
+Then
+    lBidPrice = mOrderContext.DataSource.CurrentTick(TickTypeBid).Price
+    lAskPrice = mOrderContext.DataSource.CurrentTick(TickTypeAsk).Price
+
+    If mBracketOrder.LongPosition Then
+        lCurrentValue = CLng(lBidPrice * lMultiplier)
+    Else
+        lCurrentValue = CLng(lAskPrice * lMultiplier)
+    End If
+End If
+
 Dim lCumBuyPrice As Double: lCumBuyPrice = mBracketOrder.CumBuyPrice
 Dim lCumSellPrice As Double: lCumSellPrice = mBracketOrder.CumSellPrice
 Dim lContractsTraded As Long: lContractsTraded = mBracketOrder.EntryOrder.QuantityFilled
 
-
+Dim lStrikeValue As Long: lStrikeValue = mBracketOrder.RolloverSpecification.StrikeValue
 Select Case mBracketOrder.RolloverSpecification.StrikeMode
 Case RolloverStrikeModeNone
     mMaxExpenditure = 0
 Case RolloverStrikeModeCurrentValue
-    If mBracketOrder.LongPosition Then
-        mMaxExpenditure = CLng(lCumBuyPrice * _
-                            lMultiplier / _
-                            lContractsTraded)
-    Else
-        mMaxExpenditure = CLng(lCumSellPrice * _
-                            lMultiplier / _
-                            lContractsTraded)
-    End If
+    mMaxExpenditure = lCurrentValue
+    gLog "Rollover strike mode current value" & _
+        "; max expenditure: " & mMaxExpenditure, _
+        ProcName, ModuleName
 Case RolloverStrikeModeCurrentProfit
     Dim lPrice As Double
     lPrice = IIf(mBracketOrder.LongPosition, lBidPrice, lAskPrice)
-    mMaxExpenditure = CLng((lCumSellPrice + mBracketOrder.Size * lPrice - lCumBuyPrice) * lMultiplier / lContractsTraded)
+    
+    Dim lProfit As Long
+    lProfit = CLng((lCumSellPrice + mBracketOrder.Size * lPrice - lCumBuyPrice) * lMultiplier / lContractsTraded)
+    
+    If lProfit <= 0 Then
+        mMaxExpenditure = lCurrentValue
+    Else
+        mMaxExpenditure = CLng(lCurrentValue - (lStrikeValue * lProfit) / 100)
+    End If
+    gLog "Rollover strike mode current profit" & _
+        "; max expenditure: " & mMaxExpenditure & _
+        "; value: " & lCurrentValue & _
+        "; profit: " & lProfit, _
+        ProcName, ModuleName
 Case RolloverStrikeModeAmount
-    mMaxExpenditure = mBracketOrder.RolloverSpecification.StrikeValue
+    mMaxExpenditure = lStrikeValue
+    gLog "Rollover strike mode amount" & _
+        "; max expenditure: " & mMaxExpenditure, _
+        ProcName, ModuleName
 Case RolloverStrikeModePreviousAmount
-    mMaxExpenditure = mBracketOrder.RolloverSpecification.StrikeValue
+    mMaxExpenditure = lStrikeValue
+    gLog "Rollover strike mode previous amount" & _
+        "; max expenditure: " & mMaxExpenditure, _
+        ProcName, ModuleName
 Case RolloverStrikeModeIncrement
-    lStrikeIncrement = mBracketOrder.RolloverSpecification.StrikeValue
+    lStrikeIncrement = lStrikeValue
+    gLog "Rollover strike mode increment" & _
+        "; max increment by : " & lStrikeIncrement, _
+        ProcName, ModuleName
 End Select
 
 Dim lNextContractSpec As IContractSpecifier
@@ -727,6 +760,7 @@ Set lNextContractSpec = CreateContractSpecifier("", _
 
 Set findNextContractForOption = gGetOptionContract( _
                                     lNextContractSpec, _
+                                    mBracketOrder.EntryOrder.Action, _
                                     mOrderManager.ContractStorePrimary, _
                                     mMaxExpenditure, _
                                     lStrikeIncrement, _
@@ -791,6 +825,28 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function orderContextHasBidAndAsk() As Boolean
+Const ProcName As String = "orderContextHasBidAndAsk"
+On Error GoTo Err
+
+If mBracketOrder.RolloverSpecification.StrikeMode <> RolloverStrikeModeCurrentValue And _
+    mBracketOrder.RolloverSpecification.StrikeMode <> RolloverStrikeModeCurrentProfit _
+Then
+    orderContextHasBidAndAsk = True
+ElseIf Not mOrderContext.DataSource.HasCurrentTick(TickTypeBid) Then
+    orderContextHasBidAndAsk = False
+ElseIf Not mOrderContext.DataSource.HasCurrentTick(TickTypeAsk) Then
+    orderContextHasBidAndAsk = False
+Else
+    orderContextHasBidAndAsk = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub setState(ByVal pState As RolloverControllerStates)
 Const ProcName As String = "setState"

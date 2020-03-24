@@ -306,6 +306,7 @@ End Function
 
 Public Function GetOptionContract( _
                 ByVal pContractSpec As IContractSpecifier, _
+                ByVal pAction As OrderActions, _
                 ByVal pContractStore As IContractStore, _
                 ByVal pMaxExpenditure As Long, _
                 ByVal pStrikeIncrement As Long, _
@@ -317,6 +318,7 @@ On Error GoTo Err
 
 Set GetOptionContract = gGetOptionContract( _
                                 pContractSpec, _
+                                pAction, _
                                 pContractStore, _
                                 pMaxExpenditure, _
                                 pStrikeIncrement, _

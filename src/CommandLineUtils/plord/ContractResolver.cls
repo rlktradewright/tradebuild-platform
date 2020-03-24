@@ -248,6 +248,7 @@ If pMaxExpenditure <> 0 Then
     gWriteLineToConsole "Resolving contract", True
     mFutureWaiter.Add GetOptionContract( _
                             pContractSpec, _
+                            OrderActionBuy, _
                             pContractStore, _
                             pMaxExpenditure, _
                             0, _
@@ -268,13 +269,13 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub processTargetContract(ByVal pContract As IContract)
+Private Sub processTargetContract(ByVal pcontract As IContract)
 Const ProcName As String = "processTargetContract"
 On Error GoTo Err
 
-mFutureBuilder.Value = pContract
+mFutureBuilder.Value = pcontract
 mFutureBuilder.Complete
-gWriteLineToConsole "Contract is: " & gGetContractName(pContract), True
+gWriteLineToConsole "Contract is: " & gGetContractName(pcontract), True
 
 Exit Sub
 

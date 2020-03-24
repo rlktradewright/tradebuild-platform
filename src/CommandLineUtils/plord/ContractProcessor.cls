@@ -152,7 +152,7 @@ End Property
 
 Friend Sub Activate( _
                 ByVal pName As String, _
-                ByVal pContract As IContract, _
+                ByVal pcontract As IContract, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
@@ -161,13 +161,13 @@ Friend Sub Activate( _
 Const ProcName As String = "Activate"
 On Error GoTo Err
 
-Set mContract = pContract
+Set mContract = pcontract
 mGroupName = pGroupName
 
 mMaxExpenditure = mContractResolver.MaxExpenditure
 mUnderlyingExchangeName = mContractResolver.UnderlyingExchangeName
 
-Set mDataSource = pMarketDataManager.CreateMarketDataSource(CreateFuture(pContract), False)
+Set mDataSource = pMarketDataManager.CreateMarketDataSource(CreateFuture(pcontract), False)
 mDataSource.StartMarketData
 
 If pScopeName = "" Then
@@ -501,8 +501,8 @@ If lClp.Switch(EntrySwitch) Then processRolloverEntry _
                                         lEntryTriggerPriceSpec, _
                                         lEntryTimeout
 
-Dim lStrikeMode As RolloverStrikeModes: lStrikeMode = RolloverStrikeModeAmount
-Dim lStrikeValue As Long: lStrikeValue = mMaxExpenditure
+Dim lStrikeMode As RolloverStrikeModes: lStrikeMode = RolloverStrikeModeCurrentValue
+Dim lStrikeValue As Long: lStrikeValue = 0
 
 If lClp.Switch(StrikeSwitch) Then processRolloverStrike _
                                         lClp.SwitchValue(StrikeSwitch), _
@@ -561,7 +561,7 @@ If mOrderContext Is Nothing Then
     mContractResolver.AddPendingCommand _
                             gCommands.QuitCommand, _
                             "", _
-                            "Command definition terminated"
+                            "Bracket order definition terminated"
     Exit Sub
 End If
 
@@ -1234,7 +1234,10 @@ Private Sub processRolloverStrike( _
                 ByVal pValue As String, _
                 ByRef pStrikeMode As RolloverStrikeModes, _
                 ByRef pStrikeValue As Long)
-Const StrikeFormat As String = "^(?:((?:[1-9]\d{1,6})|\+|<|)(\$))|(\+|-)([1-9]\d{0,1})$"
+Const ProcName As String = "processRolloverStrike"
+On Error GoTo Err
+
+Const StrikeFormat As String = "^(?:((?:[1-9]\d{1,6})|(\d\d?\d?)(?:%)|<|)(\$))|(\+|-)([1-9]\d{0,1})$"
 gRegExp.Pattern = StrikeFormat
 
 Dim lMatches As MatchCollection
@@ -1246,27 +1249,36 @@ Else
     Dim lMatch As Match: Set lMatch = lMatches(0)
 
     Dim lAmount As String: lAmount = lMatch.SubMatches(0)
-    Dim lDollar As String: lDollar = lMatch.SubMatches(1)
-    Dim lSign As String: lSign = lMatch.SubMatches(2)
-    Dim lIncrement As String: lIncrement = lMatch.SubMatches(3)
+    Dim lProfitPercentage As Long: lProfitPercentage = lMatch.SubMatches(1)
+    Dim lDollar As String: lDollar = lMatch.SubMatches(2)
+    Dim lSign As String: lSign = lMatch.SubMatches(3)
+    Dim lIncrement As String: lIncrement = lMatch.SubMatches(4)
     
     If lDollar = "$" Then
         If lAmount = "" Then
             pStrikeMode = RolloverStrikeModeCurrentValue
-        ElseIf lAmount = "+" Then
-            pStrikeMode = RolloverStrikeModeCurrentProfit
+            pStrikeValue = 0
         ElseIf lAmount = "<" Then
             pStrikeMode = RolloverStrikeModePreviousAmount
-        Else
-            pStrikeMode = RolloverStrikeModeAmount
-            pStrikeValue = CLng(lAmount)
+            pStrikeValue = mMaxExpenditure
+        ElseIf lProfitPercentage <> 0 Then
+            pStrikeMode = RolloverStrikeModeCurrentProfit
+            pStrikeValue = CLng(lProfitPercentage)
         End If
+    ElseIf lProfitPercentage <> "" Then
+        pStrikeMode = RolloverStrikeModeCurrentProfit
+        pStrikeValue = CLng(lProfitPercentage)
     Else
         pStrikeMode = RolloverStrikeModeIncrement
         pStrikeValue = lIncrement
         If lSign = "-" Then pStrikeValue = -pStrikeValue
     End If
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function processRolloverTime(ByVal pValue As String) As Date
