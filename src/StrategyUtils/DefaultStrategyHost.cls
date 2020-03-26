@@ -90,13 +90,11 @@ Case "position.order", _
     "position.moneymanagement"
     lMessage = formatLogRecord(pLogrec, True)
     LogMessage lMessage
-    logStrategyHostMessage lMessage
     mView.WriteLogText lMessage
 Case "position.ordersimulated", _
     "position.moneymanagementsimulated"
     lMessage = formatLogRecord(pLogrec, True)
     LogMessage lMessage
-    logStrategyHostMessage lMessage
 End Select
 
 Exit Sub
@@ -363,7 +361,10 @@ Const ProcName As String = "logStrategyHostMessage"
 On Error GoTo Err
 
 Static sLogger As Logger
-If sLogger Is Nothing Then Set sLogger = GetLogger("defaultstrategyhost")
+If sLogger Is Nothing Then
+    Set sLogger = GetLogger("defaultstrategyhost")
+    sLogger.LogToParent = True
+End If
 sLogger.Log LogLevelNormal, pMessage
 
 Exit Sub

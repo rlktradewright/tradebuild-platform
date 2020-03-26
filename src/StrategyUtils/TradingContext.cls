@@ -86,7 +86,7 @@ Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
 Set mTradeReasonLogger = GetLogger("strategy.tradereason")
-mTradeReasonLogger.LogToParent = True
+mTradeReasonLogger.LogToParent = False
 
 Set mActivePositionMgmgtStrategies = New Collection
 Set mPositionMgmgtResourceContexts = New Collection
