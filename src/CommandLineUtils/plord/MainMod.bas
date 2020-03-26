@@ -226,9 +226,9 @@ If InStr(1, pValue, " ") <> 0 Then pValue = """" & pValue & """"
 gGenerateSwitch = SwitchPrefix & pName & IIf(pValue = "", " ", ValueSeparator & pValue & " ")
 End Function
 
-Public Function gGetContractName(ByVal pContract As IContract) As String
-AssertArgument Not pContract Is Nothing
-gGetContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
+Public Function gGetContractName(ByVal pcontract As IContract) As String
+AssertArgument Not pcontract Is Nothing
+gGetContractName = pcontract.Specifier.LocalSymbol & "@" & pcontract.Specifier.Exchange
 End Function
 
 Public Sub gHandleFatalError(ev As ErrorEventData)
@@ -552,10 +552,11 @@ On Error GoTo Err
 Dim s As String
 s = App.ProductName & _
     " V" & _
-    App.Major & "." & _
-    App.Minor & "." & _
-    App.Revision & "." & _
-    App.FileDescription & vbCrLf & _
+    App.Major & _
+    "." & App.Minor & _
+    "." & App.Revision & _
+    IIf(App.FileDescription <> "", "." & App.FileDescription, "") & _
+    vbCrLf & _
     App.LegalCopyright
 gWriteLineToConsole s, False
 s = s & vbCrLf & "Arguments: " & Command
