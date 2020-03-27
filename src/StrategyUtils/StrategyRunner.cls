@@ -112,10 +112,15 @@ Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
 If TypeOf ev.Source Is IBracketOrder Then
-    If ev.ChangeType = BracketOrderChangeTypes.BracketOrderCreated Then Exit Sub
+    Select Case ev.ChangeType
+    Case BracketOrderChangeTypes.BracketOrderEntryOrderFilled, _
+            BracketOrderChangeTypes.BracketOrderStopLossOrderChanged, _
+            BracketOrderChangeTypes.BracketOrderCompleted
+    Case Else
+        Exit Sub
+    End Select
     
-    Dim lBracketOrder As IBracketOrder
-    Set lBracketOrder = ev.Source
+    Dim lBracketOrder As IBracketOrder: Set lBracketOrder = ev.Source
     
     Dim en As Enumerator: Set en = mBracketOrderNotificationRequests.GetEnumerator(lBracketOrder)
     Dim lRequest As NotificationRequest
