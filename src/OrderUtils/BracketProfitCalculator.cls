@@ -156,6 +156,8 @@ Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
+If mBracketOrder Is Nothing Then Exit Sub
+
 mCurrentTick = ev.Tick
 
 Select Case ev.Tick.TickType
