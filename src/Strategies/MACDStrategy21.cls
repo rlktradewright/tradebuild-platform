@@ -13,15 +13,11 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-' This is a variant of MACDStrategy7 which uses dummy orders to control the overall
-' entries.
+''
+' This is a strategy which was actually profitable from 2003 to 2005, but is now
+' only used for testing purposes as it is quite complex and is a good exercise for
+' the StrategyHost.
 '
-' First tried using StopStrategy6 for exits. It gave poor results but maybe the
-' stop strategy could be improved.
-'
-' Next, tried using StopStrategy5 but with per-trade money management. No better!
-'
-' Next, tried using stoplimit orders for entries. Better than the basic MACDStrategy7!
 '@/
 
 '@================================================================================
@@ -220,7 +216,15 @@ IStrategy_Name = "MACDStrategy21"
 End Property
 
 Private Sub IStrategy_NotifyNoLivePositions()
-' nothing to do here
+Const ProcName As String = "IStrategy_NotifyNoLivePositions"
+On Error GoTo Err
+
+checkTradingOpportunity
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IStrategy_NotifyNoSimulatedPositions()
@@ -292,13 +296,12 @@ Private Function CancelPendingBuyOrders() As Boolean
 Const ProcName As String = "CancelPendingBuyOrders"
 On Error GoTo Err
 
-If PendingSimulatedBuySize = 0 Then Exit Function
+If PendingBuySize = 0 And PendingSimulatedBuySize = 0 Then Exit Function
 
 LogTradeMessage "Previous signal cancelled - cancelling pending buy orders"
-CancelBracketOrder False, mBracketOrderBuyDummy
-If PendingBuySize <> 0 Then
-    CancelBracketOrder
-End If
+
+If PendingSimulatedBuySize <> 0 Then CancelBracketOrder False, mBracketOrderBuyDummy
+If PendingBuySize <> 0 Then CancelBracketOrder
 
 CancelPendingBuyOrders = True
 
@@ -312,13 +315,12 @@ Private Function CancelPendingSellOrders() As Boolean
 Const ProcName As String = "CancelPendingSellOrders"
 On Error GoTo Err
 
-If PendingSimulatedSellSize = 0 Then Exit Function
+If PendingSellSize = 0 And PendingSimulatedSellSize = 0 Then Exit Function
 
 LogTradeMessage "Previous signal cancelled - cancelling pending sell orders"
-CancelBracketOrder False, mBracketOrderSellDummy
-If PendingsellSize <> 0 Then
-    CancelBracketOrder
-End If
+
+If PendingSimulatedSellSize = 0 Then CancelBracketOrder False, mBracketOrderSellDummy
+If PendingSellSize <> 0 Then CancelBracketOrder
 
 CancelPendingSellOrders = True
 
@@ -351,12 +353,19 @@ On Error GoTo Err
 
 IsBuySignal = False
 
+If ActiveBuySize <> 0 Or _
+    ActiveSimulatedBuySize <> 0 Or _
+    PendingBuySize <> 0 Or _
+    PendingSimulatedBuySize <> 0 _
+Then
+    Exit Function
+End If
+
 Dim lMessage As String
 If Not IsPotentialBuy(lMessage) Then Exit Function
 
 If IsConfirmedBuy(lMessage) Then IsBuySignal = True
-
-If PendingSimulatedBuySize = 0 Then LogTradeMessage lMessage
+LogTradeMessage lMessage
 
 Exit Function
 
@@ -486,8 +495,7 @@ Private Function IsPendingBuyOrders() As Boolean
 Const ProcName As String = "IsPendingBuyOrders"
 On Error GoTo Err
 
-IsPendingBuyOrders = PendingSimulatedBuySize <> 0
-LogTradeMessage "Pending buy orders: " & CStr(IsPendingBuyOrders)
+IsPendingBuyOrders = PendingBuySize <> 0 And PendingSimulatedBuySize <> 0
 
 Exit Function
 
@@ -499,8 +507,7 @@ Private Function IsPendingSellOrders() As Boolean
 Const ProcName As String = "IsPendingSellOrders"
 On Error GoTo Err
 
-IsPendingSellOrders = PendingSimulatedSellSize <> 0
-LogTradeMessage "Pending sell orders: " & CStr(IsPendingSellOrders)
+IsPendingSellOrders = PendingSellSize <> 0 And PendingSimulatedSellSize <> 0
 
 Exit Function
 
@@ -538,13 +545,20 @@ On Error GoTo Err
 
 IsSellSignal = False
 
+If ActiveSellSize <> 0 Or _
+    ActiveSimulatedSellSize <> 0 Or _
+    PendingSellSize <> 0 Or _
+    PendingSimulatedSellSize <> 0 _
+Then
+    Exit Function
+End If
+
 Dim lMessage As String
 
 If Not IsPotentialSell(lMessage) Then Exit Function
 
 If IsConfirmedSell(lMessage) Then IsSellSignal = True
-
-If PendingSimulatedSellSize = 0 Then LogTradeMessage lMessage
+LogTradeMessage lMessage
 
 Exit Function
 
@@ -623,7 +637,7 @@ SetNewStopLossTriggerPrice lStopPrice, mBracketOrderSellDummy
 LogTradeMessage "ModifyPendingSellOrders simulated"
 Update mBracketOrderSellDummy
     
-If PendingsellSize = 0 Then Exit Sub
+If PendingSellSize = 0 Then Exit Sub
 
 SetNewQuantity calcTradeSize(lRisk)
 SetNewEntryTriggerPrice lTriggerPrice
@@ -662,6 +676,8 @@ If Not calcPricesForBuy(lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice
     Exit Sub
 End If
 
+Dim lSize As Long: lSize = calcTradeSize(lRisk)
+
 LogTradeMessage "PlaceBuyOrders simulated"
 Set mBracketOrderBuyDummy = BuySimulated( _
                                 Number:=1, _
@@ -670,11 +686,8 @@ Set mBracketOrderBuyDummy = BuySimulated( _
                                 CancelPrice:=lCancelPrice, _
                                 NotifyCompletion:=True)
 
-'If mBracketOrderBuyDummy Is Nothing Then Exit Sub
-'If ActiveBuySize <> 0 Or PendingBuySize <> 0 Then Exit Sub
 Assert Not mBracketOrderBuyDummy Is Nothing, "Failed to create dummy buy bracket oder"
 
-Dim lSize As Long: lSize = calcTradeSize(lRisk)
 If lSize = 0 Then Exit Sub
 
 LogTradeMessage "PlaceBuyOrders"
@@ -685,7 +698,8 @@ SetPrimaryBracketOrder Buy( _
                                                         TriggerPrice:=lTriggerPrice), _
                             StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
                             CancelPrice:=lCancelPrice, _
-                            CancelAfter:=300)
+                            CancelAfter:=300, _
+                            NotifyCompletion:=True)
 
 Exit Sub
 
@@ -702,7 +716,7 @@ If Not CanTrade Then
     Exit Sub
 End If
 
-Assert ActivesellSize = 0 And PendingsellSize = 0, "ActiveSellSize <> 0 or PendingSellSize <> 0"
+Assert ActiveSellSize = 0 And PendingSellSize = 0, "ActiveSellSize <> 0 or PendingSellSize <> 0"
 
 Dim lTriggerPrice As Double
 lTriggerPrice = getTriggerPriceShort
@@ -716,6 +730,8 @@ If Not calcPricesForSell(lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPric
     Exit Sub
 End If
 
+Dim lSize As Long: lSize = calcTradeSize(lRisk)
+
 LogTradeMessage "PlaceSellOrders simulated"
 Set mBracketOrderSellDummy = SellSimulated( _
                                 Number:=1, _
@@ -724,11 +740,8 @@ Set mBracketOrderSellDummy = SellSimulated( _
                                 CancelPrice:=lCancelPrice, _
                                 NotifyCompletion:=True)
 
-'If mBracketOrderSellDummy Is Nothing Then Exit Sub
-'If ActivesellSize <> 0 Or PendingsellSize <> 0 Then Exit Sub
 Assert Not mBracketOrderSellDummy Is Nothing, "Failed to create dummy sell bracket oder"
 
-Dim lSize As Long: lSize = calcTradeSize(lRisk)
 If lSize = 0 Then Exit Sub
 
 LogTradeMessage "PlaceSellOrders"
@@ -739,7 +752,8 @@ SetPrimaryBracketOrder Sell( _
                                                         TriggerPrice:=lTriggerPrice), _
                             StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
                             CancelPrice:=lCancelPrice, _
-                            CancelAfter:=300)
+                            CancelAfter:=300, _
+                            NotifyCompletion:=True)
 
 Exit Sub
 
