@@ -522,10 +522,14 @@ Public Sub gLogBracketOrderProfileObject( _
 Const ProcName As String = "gLogBracketOrderProfileObject"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "bracketorderprofilestruct", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "bracketorderprofilestruct", pData, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "bracketorderprofilestruct", pData, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -541,10 +545,14 @@ Public Sub gLogBracketOrderProfileString( _
 Const ProcName As String = "gLogBracketOrderProfileString"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "bracketorderprofilestring", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "bracketorderprofilestring", pData, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "bracketorderprofilestring", pData, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -560,10 +568,14 @@ Public Sub gLogDrawDown( _
 Const ProcName As String = "gLogDrawDown"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "drawdown", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "drawdown", pData, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "drawdown", pData, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -579,10 +591,14 @@ Public Sub gLogMaxLoss( _
 Const ProcName As String = "gLogMaxLoss"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "maxloss", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "maxloss", pData, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "maxloss", pData, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -598,10 +614,14 @@ Public Sub gLogMaxProfit( _
 Const ProcName As String = "gLogMaxProfit"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "maxprofit", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "maxprofit", pData, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "maxprofit", pData, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -617,10 +637,14 @@ Public Sub gLogMoneyManagement( _
 Const ProcName As String = "gLogMoneyManagement"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "moneymanagement", pMessage, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "moneymanagement", pMessage, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "moneymanagement", pMessage, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -636,10 +660,14 @@ Public Sub gLogOrder( _
 Const ProcName As String = "gLogOrder"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "order", pMessage, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "order", pMessage, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "order", pMessage, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -655,10 +683,14 @@ Public Sub gLogOrderDetail( _
 Const ProcName As String = "gLogOrderDetail"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "orderdetail", pMessage, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "orderdetail", pMessage, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "orderdetail", pMessage, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -732,10 +764,14 @@ Public Sub gLogPosition( _
 Const ProcName As String = "gLogPosition"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "position", pPosition, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "position", pPosition, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "position", pPosition, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -751,10 +787,14 @@ Public Sub gLogProfit( _
 Const ProcName As String = "gLogProfit"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "profit", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "profit", pData, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "profit", pData, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
@@ -770,10 +810,14 @@ Public Sub gLogTradeProfile( _
 Const ProcName As String = "gLogTradeProfile"
 On Error GoTo Err
 
-Static lLogger As Logger
-Static lLoggerSimulated As Logger
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
 
-logInfotypeData "tradeprofile", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+If pSimulated Then
+    logInfotypeData "tradeprofile", pData, pSimulated, pSource, pLogLevel, sLoggerSimulated
+Else
+    logInfotypeData "tradeprofile", pData, pSimulated, pSource, pLogLevel, sLogger
+End If
 
 Exit Sub
 
