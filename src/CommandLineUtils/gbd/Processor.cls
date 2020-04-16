@@ -54,15 +54,26 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mContractStore                              As IContractStore
 Private mHistDataStore                              As IHistoricalDataStore
 Private mContractSpec                               As IContractSpecifier
+Private mContract                                   As IContract
+Private mSecType                                    As SecurityTypes
+Private mTickSize                                   As Double
+
 Private mFromDate                                   As Date
 Private mToDate                                     As Date
 Private mNumber                                     As Long
 Private mTimePeriod                                 As TimePeriod
 Private mSessionOnly                                As Boolean
-Private mSessionEndTime                             As Date
 Private mSessionStartTime                           As Date
+Private mSessionEndTime                             As Date
+Private mEntireSession                              As Boolean
 Private mNormaliseDailyBarTimestamps                As Boolean
 
+Private mOutputPath                                 As String
+Private mOutputFilename                             As String
+Private mAppend                                     As Boolean
+Private mStream                                     As TextStream
+
+Private mNumberOfBarsOutput                         As Long
                 
 '@================================================================================
 ' Class Event Handlers
@@ -81,7 +92,7 @@ Private Sub IBarFetchListener_FetchCancelled(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchCancelled"
 On Error GoTo Err
 
-gCon.WriteLineToConsole "Cancelled"
+gNotifyFetchCancelled Me
 
 Exit Sub
 
@@ -93,7 +104,7 @@ Private Sub IBarFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchCompleted"
 On Error GoTo Err
 
-gNotifyFetchCompletion mContractSpec
+gNotifyFetchCompleted Me
 
 Exit Sub
 
@@ -105,7 +116,7 @@ Private Sub IBarFetchListener_FetchDataRetrieved(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchDataRetrieved"
 On Error GoTo Err
 
-gLogDataRetrieved
+gNotifyDataRetrieved Me
 
 Exit Sub
 
@@ -117,7 +128,7 @@ Private Sub IBarFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pError
 Const ProcName As String = "IBarFetchListener_FetchFailed"
 On Error GoTo Err
 
-gCon.WriteLineToConsole "Fetch failed for contract " & gGetContractName(mContractSpec) & ": " & pErrorMessage
+gNotifyFetchFailed Me, pErrorMessage
 
 Exit Sub
 
@@ -129,7 +140,7 @@ Private Sub IBarFetchListener_FetchStarted(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchStarted"
 On Error GoTo Err
 
-gCon.WriteLineToConsole "Fetch started for contract " & gGetContractName(mContractSpec)
+gNotifyFetchStarted Me
 
 Exit Sub
 
@@ -141,7 +152,12 @@ Private Sub IBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As 
 Const ProcName As String = "IBarFetchListener_NotifyBar"
 On Error GoTo Err
 
-gOutputBar pBar
+mNumberOfBarsOutput = mNumberOfBarsOutput + 1
+If mStream Is Nothing Then
+    gOutputBarToConsole pBar, mSecType, mTickSize
+Else
+    gOutputBarToTextStream pBar, mSecType, mTickSize, mStream
+End If
 
 Exit Sub
 
@@ -175,29 +191,48 @@ End Sub
 ' IProcessor Interface Members
 '@================================================================================
 
-Private Sub IProcessor_StartData()
+Private Property Get IProcessor_Contract() As IContract
+Const ProcName As String = "IProcessor_Contract"
+On Error GoTo Err
+
+Set IProcessor_Contract = mContract
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IProcessor_FromDate() As Date
+IProcessor_FromDate = mFromDate
+End Property
+
+Private Property Get IProcessor_NumberOfBarsOutput() As Long
+IProcessor_NumberOfBarsOutput = mNumberOfBarsOutput
+End Property
+
+Private Property Get IProcessor_Timeframe() As TimePeriod
+IProcessor_Timeframe = mTimePeriod
+End Property
+
+Public Property Get IProcessor_ToDate() As Date
+IProcessor_ToDate = mToDate
+End Property
+
+Private Sub IProcessor_StartData( _
+                ByVal pOutputPath As String, _
+                ByVal pOutputFilename As String, _
+                ByVal pAppend As Boolean)
 Const ProcName As String = "IProcessor_StartData"
 On Error GoTo Err
+
+mOutputPath = pOutputPath
+mOutputFilename = pOutputFilename
+mAppend = pAppend
 
 Dim lContractFuture As IFuture
 Set lContractFuture = FetchContract(mContractSpec, mContractStore)
 mFutureWaiter.Add lContractFuture
-
-mFutureWaiter.Add mHistDataStore.FetchBars( _
-                        CreateBarDataSpecifierFuture( _
-                            lContractFuture, _
-                            mTimePeriod, _
-                            mFromDate, _
-                            mToDate, _
-                            mNumber, _
-                            BarTypes.BarTypeTrade, _
-                            CreateClockFuture(lContractFuture), _
-                            , _
-                            Not mSessionOnly, _
-                            mNormaliseDailyBarTimestamps, _
-                            mSessionStartTime, _
-                            mSessionEndTime), _
-                        Me)
 
 Exit Sub
 
@@ -237,14 +272,59 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If Not ev.Future.IsAvailable Then Exit Sub
-
-If TypeOf ev.Future.Value Is IContract Then
-    Dim lContract As IContract
-    Set lContract = ev.Future.Value
-    Set mContractSpec = lContract.Specifier
-    gSecType = lContract.Specifier.SecType
-    gTickSize = lContract.TickSize
+If ev.Future.IsCancelled Then
+    gNotifyFetchCancelled Me
+ElseIf ev.Future.IsFaulted Then
+    gNotifyFetchFailed Me, ev.Future.ErrorMessage
+ElseIf TypeOf ev.Future.Value Is IContract Then
+    Set mContract = ev.Future.Value
+    mSecType = mContract.Specifier.SecType
+    mTickSize = mContract.TickSize
+    
+    If mEntireSession Then
+        mFromDate = GetSessionTimes( _
+                            Int(mFromDate) + 0.5, _
+                            IIf(mSessionOnly, mContract.SessionStartTime, mContract.FullSessionStartTime), _
+                            IIf(mSessionOnly, mContract.SessionEndTime, mContract.FullSessionEndTime)).StartTime
+        If mToDate <> MaxDate Then
+            mToDate = GetSessionTimes( _
+                                Int(mToDate) + 0.5, _
+                                IIf(mSessionOnly, mContract.SessionStartTime, mContract.FullSessionStartTime), _
+                                IIf(mSessionOnly, mContract.SessionEndTime, mContract.FullSessionEndTime)).EndTime
+        End If
+    End If
+    
+    If mOutputPath = "" And mOutputFilename = "" Then
+    Else
+        Dim lMessage As String
+        Set mStream = gCreateOutputStream( _
+                            mOutputPath, _
+                            mOutputFilename, _
+                            Me, _
+                            mAppend, _
+                            lMessage)
+        If mStream Is Nothing Then
+            gNotifyFetchFailed Me, lMessage
+            Exit Sub
+        End If
+    End If
+    
+    mFutureWaiter.Add mHistDataStore.FetchBars( _
+                            CreateBarDataSpecifierFuture( _
+                                ev.Future, _
+                                mTimePeriod, _
+                                mFromDate, _
+                                mToDate, _
+                                mNumber, _
+                                BarTypes.BarTypeTrade, _
+                                CreateClockFuture(ev.Future), _
+                                , _
+                                Not mSessionOnly, _
+                                mNormaliseDailyBarTimestamps, _
+                                mSessionStartTime, _
+                                mSessionEndTime), _
+                            Me)
+    
 End If
 
 Exit Sub
@@ -266,7 +346,6 @@ Const ProcName As String = "Finish"
 On Error GoTo Err
 
 GetLogger("").RemoveLogListener Me
-Set gProcessor = Nothing
 
 Exit Sub
 
@@ -285,6 +364,7 @@ Friend Sub Initialise( _
                 ByVal pSessionOnly As Boolean, _
                 ByVal pSessionStartTime As Date, _
                 ByVal pSessionEndTime As Date, _
+                ByVal pEntireSession As Boolean, _
                 ByVal pNormaliseDailyBarTimestamps As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -299,6 +379,7 @@ Set mTimePeriod = pTimePeriod
 mSessionOnly = pSessionOnly
 mSessionStartTime = pSessionStartTime
 mSessionEndTime = pSessionEndTime
+mEntireSession = pEntireSession
 mNormaliseDailyBarTimestamps = pNormaliseDailyBarTimestamps
 
 Exit Sub

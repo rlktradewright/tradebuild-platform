@@ -64,16 +64,22 @@ Attribute mReplayTaskController.VB_VarHelpID = -1
 Private mNumber                                     As Long
 Private mSessionOnly                                As Boolean
 
-Private WithEvents mTimer                           As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
-
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mBars                                       As Bars
 Private mBar                                        As Bar
 
-Private mContractSpec                               As IContractSpecifier
+Private mContract                                   As IContract
+Private mSecType                                    As SecurityTypes
+Private mTickSize                                   As Double
+
+Private mOutputPath                                 As String
+Private mOutputFilename                             As String
+Private mAppend                                     As Boolean
+Private mStream                                     As TextStream
+
+Private mNumberOfBarsOutput                         As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -91,7 +97,7 @@ Private Sub ICollectionChangeListener_Change(ev As CollectionChangeEventData)
 Const ProcName As String = "ICollectionChangeListener_Change"
 On Error GoTo Err
 
-gOutputBar mBar
+outputBar mBar
 Set mBar = ev.AffectedItem
 
 Exit Sub
@@ -104,9 +110,43 @@ End Sub
 ' IProcessor Interface Members
 '@================================================================================
 
-Private Sub IProcessor_StartData()
+Private Property Get IProcessor_Contract() As IContract
+Const ProcName As String = "IProcessor_Contract"
+On Error GoTo Err
+
+Set IProcessor_Contract = mContract
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IProcessor_FromDate() As Date
+IProcessor_FromDate = mTickfileSpec.FromDate
+End Property
+
+Private Property Get IProcessor_NumberOfBarsOutput() As Long
+IProcessor_NumberOfBarsOutput = mNumberOfBarsOutput
+End Property
+
+Private Property Get IProcessor_Timeframe() As TimePeriod
+IProcessor_Timeframe = mTimePeriod
+End Property
+
+Public Property Get IProcessor_ToDate() As Date
+IProcessor_ToDate = mTickfileSpec.ToDate
+End Property
+
+Private Sub IProcessor_StartData( _
+                ByVal pOutputPath As String, _
+                ByVal pOutputFilename As String, _
+                ByVal pAppend As Boolean)
 Const ProcName As String = "IProcessor_StartData"
 On Error GoTo Err
+
+mOutputPath = pOutputPath
+mOutputFilename = pOutputFilename
 
 mStudyLibraryManager.AddBuiltInStudyLibrary
 
@@ -132,11 +172,11 @@ Dim lContractFuture As IFuture
 Set lContractFuture = mReplayController.TickStream(0).ContractFuture
 mFutureWaiter.Add lContractFuture
 
-Dim lticker As Ticker
-Set lticker = lTickers.CreateTicker(lContractFuture, False)
+Dim lTicker As Ticker
+Set lTicker = lTickers.CreateTicker(lContractFuture, False)
 
 Dim lTimeframe As Timeframe
-Set lTimeframe = lticker.Timeframes.Add(mTimePeriod, _
+Set lTimeframe = lTicker.Timeframes.Add(mTimePeriod, _
                                         "", _
                                         0, _
                                         0, _
@@ -150,11 +190,9 @@ Else
     mFutureWaiter.Add lTimeframe.BarsFuture
 End If
 
-lticker.StartMarketData
+lTicker.StartMarketData
 
 Set mReplayTaskController = mReplayController.StartReplay
-
-Set mTimer = CreateIntervalTimer(1000, , 1000)
 
 Exit Sub
 
@@ -188,11 +226,24 @@ If TypeOf ev.Future.Value Is Bars Then
     Set mBars = ev.Future.Value
     mBars.AddCollectionChangeListener Me
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    Dim lContract As IContract
-    Set lContract = ev.Future.Value
-    Set mContractSpec = lContract.Specifier
-    gSecType = lContract.Specifier.SecType
-    gTickSize = lContract.TickSize
+    Set mContract = ev.Future.Value
+    mSecType = mContract.Specifier.SecType
+    mTickSize = mContract.TickSize
+
+    If mOutputPath = "" And mOutputFilename = "" Then
+    Else
+        Dim lMessage As String
+        Set mStream = gCreateOutputStream( _
+                            mOutputPath, _
+                            mOutputFilename, _
+                            Me, _
+                            mAppend, _
+                            lMessage)
+        If mStream Is Nothing Then
+            gNotifyFetchFailed Me, lMessage
+            Exit Sub
+        End If
+    End If
 End If
 
 Exit Sub
@@ -210,8 +261,7 @@ Const ProcName As String = "mReplayTaskController_Completed"
 On Error GoTo Err
 
 Finish
-Set gProcessor = Nothing
-gNotifyFetchCompletion mContractSpec
+gNotifyFetchCompleted Me
 Set mSelfRef = Nothing
 
 Exit Sub
@@ -262,7 +312,8 @@ Friend Sub Initialise( _
                 ByVal pToDate As Date, _
                 ByVal pNumber As Long, _
                 ByVal pTimePeriod As TimePeriod, _
-                ByVal pSessionOnly As Boolean)
+                ByVal pSessionOnly As Boolean, _
+                ByVal pEntireSession As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -274,6 +325,8 @@ mSessionOnly = pSessionOnly
 mTickfileSpec.FileName = pTickfileName
 mTickfileSpec.FromDate = pFromDate
 mTickfileSpec.ToDate = pToDate
+mTickfileSpec.UseFullSession = Not mSessionOnly
+mTickfileSpec.EntireSession = pEntireSession
 
 Set mTimePeriod = pTimePeriod
 
@@ -292,7 +345,7 @@ Private Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-gOutputBar mBar
+outputBar mBar
 mBars.RemoveCollectionChangeListener Me
 
 Exit Sub
@@ -301,8 +354,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub mTimer_TimerExpired(ev As TimerExpiredEventData)
-Static lCounter As Long
-lCounter = lCounter + 1
-gCon.WriteLineToConsole "Timer tick " & lCounter
+Private Sub outputBar(ByVal pBar As Bar)
+Const ProcName As String = "outputBar"
+On Error GoTo Err
+
+mNumberOfBarsOutput = mNumberOfBarsOutput + 1
+If mStream Is Nothing Then
+    gOutputBarToConsole pBar, mSecType, mTickSize
+Else
+    gOutputBarToTextStream pBar, mSecType, mTickSize, mStream
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+

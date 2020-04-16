@@ -786,6 +786,8 @@ Private Sub schedulePaced()
 Const ProcName As String = "schedulePaced"
 On Error GoTo Err
 
+If mConcurrentHistDataRequests >= MaxConcurrentHistDataRequests Then Exit Sub
+
 Dim lReason As String
 Dim lDelay As Long
 lDelay = mPacer.GetDelayTillNextSubmission(lReason)
@@ -795,6 +797,7 @@ If lDelay = 0 Then
     lIndex = getNextReadyRequest
     If lIndex <> NullIndex Then
         submitEntry lIndex
+        mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
         Exit Sub
     End If
 

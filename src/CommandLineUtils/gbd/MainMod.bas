@@ -52,7 +52,47 @@ Private Const Help1Command                          As String = "?"
 Private Const SessionEndTimeCommand                 As String = "SESSIONENDTIME"
 Private Const SessionStartTimeCommand               As String = "SESSIONSTARTTIME"
 Private Const DateOnlyCommmand                      As String = "DATEONLY"
+Private Const OutpuPathCommand                      As String = "OUTPUTPATH"
+Private Const AsyncCommand                          As String = "ASYNC"
+Private Const EntireSessionCommand                  As String = "ENTIRESESSION"
+Private Const ExitCommand                           As String = "EXIT"
+Private Const DateTimeFormatCommand                 As String = "DATETIMEFORMAT"
+Private Const InFileCommand                         As String = "INFILE"
 
+Private Const LatestParameter                       As String = "LATEST"
+Private Const TodayParameter                        As String = "TODAY"
+Private Const TomorrowParameter                     As String = "TOMORROW"
+Private Const YesterdayParameter                    As String = "YESTERDAY"
+Private Const EndOfWeekParameter                    As String = "ENDOFWEEK"
+Private Const StartOfWeekParameter                  As String = "STARTOFWEEK"
+Private Const StartOfPreviousWeekParameter          As String = "STARTOFPREVIOUSWEEK"
+Private Const DateFormatRawParameter                As String = "RAW"
+Private Const DateFormatISOParameter                As String = "ISO"
+Private Const DateFormatLocalParameter              As String = "LOCAL"
+
+Private Const AppendOperator                        As String = ">>"
+Private Const OverwriteOperator                     As String = ">"
+
+Private Const ContractVariable                      As String = "$CONTRACT"
+Private Const SymbolVariable                        As String = "$SYMBOL"
+Private Const LocalSymbolVariable                   As String = "$LOCALSYMBOL"
+Private Const SecTypeVariable                       As String = "$SECTYPE"
+Private Const ExchangeVariable                      As String = "$EXCHANGE"
+Private Const ExpiryVariable                        As String = "$EXPIRY"
+Private Const CurrencyVariable                      As String = "$CURRENCY"
+Private Const MultiplierVariable                    As String = "$MULTIPLIER"
+Private Const StrikeVariable                        As String = "$STRIKE"
+Private Const RightVariable                         As String = "$RIGHT"
+Private Const TodayVariable                         As String = "$TODAY"
+Private Const YesterdayVariable                     As String = "$YESTERDAY"
+Private Const FromDateVariable                      As String = "$FROMDATE"
+Private Const FromTimeVariable                      As String = "$FROMTIME"
+Private Const ToDateVariable                        As String = "$TODATE"
+Private Const ToTimeVariable                        As String = "$TOTIME"
+Private Const TimeframeVariable                     As String = "$TIMEFRAME"
+
+
+Private Const SwitchCommandSeparator                As String = "SEP"
 Private Const SwitchFromDb                          As String = "fromdb"
 Private Const SwitchFromFile                        As String = "fromfile"
 Private Const SwitchFromTws                         As String = "fromtws"
@@ -62,6 +102,9 @@ Private Const DefaultClientId                       As Long = 205644991
 
 Private Const Time235900                            As Double = 0.99930556712963
 
+Private Const FilenameCharsPattern                  As String = "^[^/\*\?""<>|]*$"
+Private Const OutputPathPattern                     As String = "(?:{(\$\w*)})"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -70,12 +113,16 @@ Private mIsInDev                                    As Boolean
 
 Public gCon                                         As Console
 
-Public gSecType                                     As SecurityTypes
-Public gTickSize                                    As Double
-
 Public gLogToConsole                                As Boolean
 
-Public gProcessor                                   As IProcessor
+Private mClp                                        As CommandLineParser
+
+Private mCommandSeparator                           As String
+
+Private mAsync                                      As Boolean
+Private mEntireSession                              As Boolean
+
+Private mProcessors                                 As New EnumerableCollection
 
 Private mDataSource                                 As DataSources
 
@@ -96,8 +143,6 @@ Private mIncludeMillisecs                           As Boolean
 Private mHistDataStore                              As IHistoricalDataStore
 Private mContractStore                              As IContractStore
 
-Private mNumberOfBarsWritten                        As Long
-
 Private mSessionEndTime                             As Date
 Private mSessionStartTime                           As Date
 
@@ -107,7 +152,14 @@ Private mTWSConnectionMonitor                       As TWSConnectionMonitor
 
 Private mProviderReady                              As Boolean
 
-Private mNumberOfFetchesInProgress                  As Long
+Private mOutputPath                                 As String
+
+Private mSubstitutionVariables()                    As String
+Private mMaxSubstitutionVariablesIndex              As Long
+
+Private mTimestampFormat                            As TimestampFormats
+Private mTimestampDateOnlyFormat                    As TimestampFormats
+Private mTimestampTimeOnlyFormat                    As TimestampFormats
 
 '@================================================================================
 ' Class Event Handlers
@@ -125,15 +177,106 @@ Private mNumberOfFetchesInProgress                  As Long
 ' Properties
 '@================================================================================
 
+Public Property Get gFileSystemObject() As FileSystemObject
+Static sFSO As FileSystemObject
+If sFSO Is Nothing Then Set sFSO = New FileSystemObject
+Set gFileSystemObject = sFSO
+End Property
+
 Public Property Get gLogger() As FormattingLogger
 Static sLogger As FormattingLogger
 If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("gbd", ProjectName)
 Set gLogger = sLogger
 End Property
 
+Public Property Get gRegExp() As RegExp
+Static sRegexp As RegExp
+If sRegexp Is Nothing Then Set sRegexp = New RegExp
+Set gRegExp = sRegexp
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function gBinarySearch( _
+                ByVal pString, _
+                ByRef pArray() As String, _
+                Optional ByVal pStartIndex As Long = 0, _
+                Optional ByVal pLength As Long = -1, _
+                Optional ByVal pIsCaseSensitive As Boolean = False) As Long
+Const ProcName As String = "gBinarySearch"
+On Error GoTo Err
+
+AssertArgument pStartIndex >= 0, "pStartIndex must be >= 0"
+
+If pLength < 0 Then
+    pLength = UBound(pArray) - pStartIndex + 1
+Else
+    AssertArgument pStartIndex + pLength <= UBound(pArray) + 1, "Invalid pLength"
+End If
+
+Dim lCompareMethod As VbCompareMethod
+lCompareMethod = IIf(pIsCaseSensitive, VbCompareMethod.vbBinaryCompare, VbCompareMethod.vbTextCompare)
+
+Dim bottom As Long: bottom = pStartIndex
+Dim top As Long: top = bottom + pLength - 1
+Dim middle As Long
+Dim lItemIndex As Long
+Do
+    middle = Int((bottom + top) / 2)
+    Dim lComp As Long: lComp = StrComp(pString, pArray(middle), lCompareMethod)
+    If lComp = -1 Then
+        lItemIndex = &HFFFFFFFF Xor top
+        If middle = bottom Then Exit Do
+        top = middle - 1
+    ElseIf lComp = 1 Then
+        lItemIndex = &HFFFFFFFF Xor top
+        If middle = top Then Exit Do
+        bottom = middle + 1
+    Else
+        lItemIndex = middle
+        Exit Do
+    End If
+Loop 'Until bottom = top And bottom = middle
+
+gBinarySearch = lItemIndex
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gCreateOutputStream( _
+                ByVal pOutputPath As String, _
+                ByVal pOutputFilename As String, _
+                ByVal pProcessor As IProcessor, _
+                ByVal pAppend As Boolean, _
+                ByRef pMessage As String) As TextStream
+Const ProcName As String = "gCreateOutputStream"
+On Error GoTo Err
+
+pOutputPath = gPerformVariableSubstitution(pOutputPath, pProcessor)
+pOutputFilename = gPerformVariableSubstitution(pOutputFilename, pProcessor)
+Dim lFilename As String
+lFilename = gFileSystemObject.BuildPath(pOutputPath, pOutputFilename)
+Set gCreateOutputStream = CreateWriteableTextFile( _
+                                    lFilename, _
+                                    pOverwrite:=(Not pAppend), _
+                                    pUnicode:=True)
+
+Exit Function
+
+Err:
+If Err.Number = 52 Then
+    pMessage = "Invalid filename: " & lFilename
+ElseIf Err.Number = ErrorCodes.ErrSecurityException Then
+    pMessage = Err.Description
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
+End Function
 
 Public Function gGetContractName(ByVal pContractSpec As IContractSpecifier) As String
 AssertArgument Not pContractSpec Is Nothing
@@ -168,18 +311,6 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
-Public Sub gLogDataRetrieved()
-Const ProcName As String = "gLogDataRetrieved"
-On Error GoTo Err
-
-gCon.WriteLineToConsole "Data retrieved from source"
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
@@ -202,16 +333,16 @@ On Error GoTo Err
 
 Select Case pState
 Case ApiConnNotConnected
-    gCon.WriteLineToConsole "Not connected to TWS: " & pMessage
+    gWriteLineToConsole "Not connected to TWS: " & pMessage
     mProviderReady = False
 Case ApiConnConnecting
-    gCon.WriteLineToConsole "Connecting to TWS: " & pMessage
+    gWriteLineToConsole "Connecting to TWS: " & pMessage
     mProviderReady = False
 Case ApiConnConnected
-    gCon.WriteLineToConsole "Connected to TWS: " & pMessage
+    gWriteLineToConsole "Connected to TWS: " & pMessage
     mProviderReady = True
 Case ApiConnFailed
-    gCon.WriteLineToConsole "Connection to TWS failed: " & pMessage
+    gWriteLineToConsole "Connection to TWS failed: " & pMessage
     mProviderReady = False
 End Select
 
@@ -221,13 +352,70 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gNotifyFetchCompletion(ByVal pContractSpec As IContractSpecifier)
-Const ProcName As String = "gNotifyFetchCompletion"
+Public Sub gNotifyDataRetrieved(ByVal pProcessor As IProcessor)
+Const ProcName As String = "gNotifyDataRetrieved"
 On Error GoTo Err
 
-mNumberOfFetchesInProgress = mNumberOfFetchesInProgress - 1
-gCon.WriteLineToConsole "Fetch completed for contract: " & gGetContractName(pContractSpec)
-gCon.WriteLineToConsole "Number of bars output:  " & CStr(mNumberOfBarsWritten)
+gWriteLineToConsole "Data retrieved from source for contract: " & gGetContractName(pProcessor.Contract.Specifier)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gNotifyFetchCancelled( _
+                ByVal pProcessor As IProcessor)
+Const ProcName As String = "gNotifyFetchCancelled"
+On Error GoTo Err
+
+gWriteLineToConsole "Fetch cancelled for contract " & gGetContractName(pProcessor.Contract.Specifier)
+mProcessors.Remove pProcessor
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gNotifyFetchCompleted(ByVal pProcessor As IProcessor)
+Const ProcName As String = "gNotifyFetchCompleted"
+On Error GoTo Err
+
+gWriteLineToConsole "Fetch completed: " & _
+                    pProcessor.NumberOfBarsOutput & _
+                    " bars for contract: " & _
+                    gGetContractName(pProcessor.Contract.Specifier)
+
+mProcessors.Remove pProcessor
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gNotifyFetchFailed( _
+                ByVal pProcessor As IProcessor, _
+                ByVal pErrorMessage As String)
+Const ProcName As String = "gNotifyFetchFailed"
+On Error GoTo Err
+
+gWriteLineToConsole "Fetch failed: " & pErrorMessage
+mProcessors.Remove pProcessor
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gNotifyFetchStarted( _
+                ByVal pProcessor As IProcessor)
+Const ProcName As String = "gNotifyFetchStarted"
+On Error GoTo Err
+
+gWriteLineToConsole "Fetch started for contract " & gGetContractName(pProcessor.Contract.Specifier)
 
 Exit Sub
 
@@ -236,54 +424,145 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gNotifyIBServerConnectionClosed()
-gCon.WriteLineToConsole "Connection from TWS to IB servers closed"
+gWriteLineToConsole "Connection from TWS to IB servers closed"
 mProviderReady = False
 End Sub
 
 Public Sub gNotifyIBServerConnectionRecovered( _
                 ByVal pDataLost As Boolean)
-gCon.WriteLineToConsole "Connection from TWS to IB servers recovered"
+gWriteLineToConsole "Connection from TWS to IB servers recovered"
 mProviderReady = True
 End Sub
 
-Public Sub gOutputBar(ByVal pBar As Bar)
-Const ProcName As String = "gOutputBar"
+Public Sub gOutputBarToConsole( _
+                ByVal pBar As Bar, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double)
+Const ProcName As String = "gOutputBarToConsole"
 On Error GoTo Err
 
 If pBar Is Nothing Then Exit Sub
 
-If Not mNormaliseDailyBarTimestamps Then
-    gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateAndTimeISO8601 Or (Not mIncludeMillisecs And TimestampNoMillisecs))
-ElseIf mTimePeriod.Units = TimePeriodDay Or _
-        mTimePeriod.Units = TimePeriodWeek Or _
-        mTimePeriod.Units = TimePeriodMonth Or _
-        mTimePeriod.Units = TimePeriodYear Then
-    gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateOnlyISO8601)
-Else
-    gCon.WriteString FormatTimestamp(pBar.TimeStamp, TimestampDateAndTimeISO8601 Or (Not mIncludeMillisecs And TimestampNoMillisecs))
-End If
-
-gCon.WriteString ","
-gCon.WriteString FormatPrice(pBar.OpenValue, gSecType, gTickSize)
-gCon.WriteString ","
-gCon.WriteString FormatPrice(pBar.HighValue, gSecType, gTickSize)
-gCon.WriteString ","
-gCon.WriteString FormatPrice(pBar.LowValue, gSecType, gTickSize)
-gCon.WriteString ","
-gCon.WriteString FormatPrice(pBar.CloseValue, gSecType, gTickSize)
-gCon.WriteString ","
-gCon.WriteString pBar.Volume
-gCon.WriteString ","
-gCon.WriteString pBar.TickVolume
-gCon.WriteString ","
-gCon.WriteLine pBar.OpenInterest
-
-mNumberOfBarsWritten = mNumberOfBarsWritten + 1
+gCon.WriteLine formatBar(pBar, pSecType, pTickSize)
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gOutputBarToTextStream( _
+                ByVal pBar As Bar, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double, _
+                ByVal pStream As TextStream)
+Const ProcName As String = "gOutputBarToConsole"
+On Error GoTo Err
+
+If pBar Is Nothing Then Exit Sub
+
+pStream.WriteLine formatBar(pBar, pSecType, pTickSize)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function gPerformVariableSubstitution( _
+                ByVal pString As String, _
+                ByVal pProcessor As IProcessor) As String
+Const ProcName As String = "gPerformVariableSubstitution"
+On Error GoTo Err
+
+Dim lContractSpec As IContractSpecifier
+Set lContractSpec = pProcessor.Contract.Specifier
+
+Dim lRegExp As RegExp: Set lRegExp = gRegExp
+lRegExp.IgnoreCase = True
+
+lRegExp.Pattern = OutputPathPattern
+lRegExp.Global = True
+
+Dim lMatches As MatchCollection
+Set lMatches = lRegExp.Execute(pString)
+
+Dim s As String
+Dim lCurrPosn As Long: lCurrPosn = 1
+
+Dim lMatch As Match
+For Each lMatch In lMatches
+    s = s & Mid$(pString, lCurrPosn, lMatch.FirstIndex - lCurrPosn + 1)
+    lCurrPosn = lMatch.FirstIndex + lMatch.Length + 1
+    
+    Dim lVariable As String: lVariable = UCase$(lMatch.SubMatches(0))
+    Select Case lVariable
+    Case ContractVariable
+        s = s & Replace$(gGetContractName(lContractSpec), "/", "'")
+    Case SymbolVariable
+        s = s & lContractSpec.Symbol
+    Case LocalSymbolVariable
+        s = s & lContractSpec.LocalSymbol
+    Case SecTypeVariable
+        s = s & SecTypeToShortString(lContractSpec.Symbol)
+    Case ExchangeVariable
+        s = s & Replace$(lContractSpec.Exchange, "/", "'")
+    Case ExpiryVariable
+        s = s & lContractSpec.Expiry
+    Case CurrencyVariable
+        s = s & lContractSpec.CurrencyCode
+    Case MultiplierVariable
+        s = s & lContractSpec.Multiplier
+    Case StrikeVariable
+        s = s & lContractSpec.Strike
+    Case RightVariable
+        s = s & OptionRightToString(lContractSpec.Symbol)
+    Case TodayVariable
+        s = s & FormatTimestamp(todayDate, mTimestampDateOnlyFormat)
+    Case YesterdayVariable
+        s = s & FormatTimestamp(yesterdayDate, mTimestampDateOnlyFormat)
+    Case FromDateVariable
+        s = s & FormatTimestamp(pProcessor.FromDate, mTimestampDateOnlyFormat)
+    Case FromTimeVariable
+        s = s & FormatTimestamp(pProcessor.FromDate, mTimestampTimeOnlyFormat)
+    Case ToDateVariable
+        If pProcessor.ToDate = MaxDate Then
+            s = s & LatestParameter
+        Else
+            s = s & FormatTimestamp(pProcessor.ToDate, mTimestampDateOnlyFormat)
+        End If
+    Case ToTimeVariable
+        If pProcessor.ToDate = MaxDate Then
+            s = s & LatestParameter
+        Else
+            s = s & FormatTimestamp(pProcessor.ToDate, mTimestampTimeOnlyFormat)
+        End If
+    Case TimeframeVariable
+        s = s & pProcessor.Timeframe.ToShortString
+    Case Default
+        Assert False, "Unexpected substitution variable: " & lVariable
+    End Select
+Next
+
+gPerformVariableSubstitution = s & Right$(pString, Len(pString) - lCurrPosn + 1)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Sub gWriteErrorLine( _
+                ByVal pMessage As String)
+Dim s As String: s = "Line " & mLineNumber & ": " & pMessage
+gCon.WriteErrorLine s
+LogMessage s
+End Sub
+
+Public Sub gWriteLineToConsole( _
+                ByVal pMessage As String)
+gCon.WriteLineToConsole pMessage
+LogMessage pMessage
 End Sub
 
 Public Sub Main()
@@ -294,35 +573,51 @@ InitialiseTWUtilities
 Set mFatalErrorHandler = New FatalErrorHandler
 ApplicationGroupName = "TradeWright"
 ApplicationName = "gbd"
-SetupDefaultLogging command
+SetupDefaultLogging Command
+
+Set gCon = GetConsole
+
+logProgramId
 
 mNumber = &H7FFFFFFF
 mTo = MaxDate
 mNormaliseDailyBarTimestamps = True
 
-Set gCon = GetConsole
+mTimestampFormat = TimestampDateAndTimeISO8601
+mTimestampDateOnlyFormat = TimestampDateOnlyISO8601
+mTimestampTimeOnlyFormat = TimestampTimeOnlyISO8601
 
-Dim clp As CommandLineParser
-Set clp = CreateCommandLineParser(command)
+mCommandSeparator = ";"
 
-If clp.Switch(SwitchLogToConsole) Then
+Set mClp = CreateCommandLineParser(Command)
+
+If mClp.Switch(SwitchLogToConsole) Then
     gLogToConsole = True
     DefaultLogLevel = LogLevelHighDetail
 End If
 
-If clp.Switch("?") Or _
-    clp.NumberOfSwitches = 0 _
+If mClp.Switch("?") Or _
+    mClp.NumberOfSwitches = 0 _
 Then
     showUsage
-ElseIf clp.Switch(SwitchFromDb) Then
+    TerminateTWUtilities
+    Exit Sub
+End If
+
+setupSubstitutionVariables
+
+If mClp.Switch(SwitchCommandSeparator) Then mCommandSeparator = mClp.switchValue(SwitchCommandSeparator)
+Assert Len(mCommandSeparator) = 1, "The command separator must be a single character"
+
+If mClp.Switch(SwitchFromDb) Then
     mDataSource = FromDb
-    If setupDbProviders(clp.switchValue(SwitchFromDb)) Then process
-ElseIf clp.Switch(SwitchFromFile) Then
+    If setupDbProviders(mClp.switchValue(SwitchFromDb)) Then process
+ElseIf mClp.Switch(SwitchFromFile) Then
     mDataSource = FromFile
-    If setupFileProviders(clp.switchValue(SwitchFromFile)) Then process
-ElseIf clp.Switch(SwitchFromTws) Then
+    If setupFileProviders(mClp.switchValue(SwitchFromFile)) Then process
+ElseIf mClp.Switch(SwitchFromTws) Then
     mDataSource = FromTws
-    If setupTwsProviders(clp.switchValue(SwitchFromTws)) Then process
+    If setupTwsProviders(mClp.switchValue(SwitchFromTws)) Then process
 Else
     showUsage
 End If
@@ -345,73 +640,140 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub addSubstitutionVariable(ByVal pVariable As String)
+Const ProcName As String = "addSubstitutionVariable"
+On Error GoTo Err
+
+mMaxSubstitutionVariablesIndex = mMaxSubstitutionVariablesIndex + 1
+If mMaxSubstitutionVariablesIndex > UBound(mSubstitutionVariables) Then
+    ReDim Preserve mSubstitutionVariables(2 * (UBound(mSubstitutionVariables) + 1) - 1) As String
+End If
+mSubstitutionVariables(mMaxSubstitutionVariablesIndex) = UCase$(pVariable)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function isValidPath(ByVal pPath As String) As Boolean
+Const ProcName As String = "isValidPath"
+On Error GoTo Err
+
+isValidPath = True
+
+Dim lRegExp As RegExp: Set lRegExp = gRegExp
+lRegExp.IgnoreCase = True
+
+lRegExp.Pattern = FilenameCharsPattern
+If Not lRegExp.Test(pPath) Then
+    gWriteErrorLine "invalid characters: cannot contain  / * ? "" < > | "
+    isValidPath = False
+    Exit Function
+End If
+
+lRegExp.Pattern = OutputPathPattern
+lRegExp.Global = True
+
+Dim lMatches As MatchCollection
+Set lMatches = lRegExp.Execute(pPath)
+
+Dim lMatch As Match
+For Each lMatch In lMatches
+    Dim lVariable As String: lVariable = lMatch.SubMatches(0)
+    If Not isValidSubstitutionVariable(lVariable) Then
+        gWriteErrorLine lVariable & " is not a valid substitution variable"
+        isValidPath = False
+    End If
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isValidSubstitutionVariable(ByVal pString As String) As Boolean
+isValidSubstitutionVariable = gBinarySearch( _
+                                pString, _
+                                mSubstitutionVariables, _
+                                0, _
+                                mMaxSubstitutionVariablesIndex + 1) >= 0
+End Function
+
+Private Function formatBar( _
+                ByVal pBar As Bar, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double) As String
+Const ProcName As String = "formatBar"
+On Error GoTo Err
+
+If pBar Is Nothing Then Exit Function
+
+ReDim lTexts(7) As String
+
+If Not mNormaliseDailyBarTimestamps Then
+    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not mIncludeMillisecs And TimestampNoMillisecs))
+ElseIf mTimePeriod.Units = TimePeriodDay Or _
+        mTimePeriod.Units = TimePeriodWeek Or _
+        mTimePeriod.Units = TimePeriodMonth Or _
+        mTimePeriod.Units = TimePeriodYear Then
+    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampDateOnlyFormat)
+Else
+    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not mIncludeMillisecs And TimestampNoMillisecs))
+End If
+
+lTexts(1) = FormatPrice(pBar.OpenValue, pSecType, pTickSize)
+lTexts(2) = FormatPrice(pBar.HighValue, pSecType, pTickSize)
+lTexts(3) = FormatPrice(pBar.LowValue, pSecType, pTickSize)
+lTexts(4) = FormatPrice(pBar.CloseValue, pSecType, pTickSize)
+lTexts(5) = pBar.Volume
+lTexts(6) = pBar.TickVolume
+lTexts(7) = pBar.OpenInterest
+
+formatBar = Join(lTexts, ",")
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub logProgramId()
+Const ProcName As String = "logProgramId"
+On Error GoTo Err
+
+Dim s As String
+s = App.ProductName & _
+    " V" & _
+    App.Major & _
+    "." & App.Minor & _
+    "." & App.Revision & _
+    IIf(App.FileDescription <> "", "." & App.FileDescription, "") & _
+    vbCrLf & _
+    App.LegalCopyright
+gWriteLineToConsole s
+s = s & vbCrLf & "Arguments: " & Command
+LogMessage s
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub process()
 Const ProcName As String = "process"
 On Error GoTo Err
 
-Do
-    If mProviderReady Then
-        Dim inString As String
-        inString = Trim$(gCon.ReadLine(":"))
-        If inString = gCon.EofString Then Exit Do
-        gLogger.Log "gCon: " & inString, ProcName, ModuleName
-        
-        mLineNumber = mLineNumber + 1
-        
-        If inString = "" Then
-            ' ignore blank lines
-        ElseIf Left$(inString, 1) = "#" Then
-            ' ignore comments
-        Else
-            ' process command
-            Dim command As String
-            command = UCase$(Split(inString, " ")(0))
-            
-            Dim params As String
-            params = Trim$(Right$(inString, Len(inString) - Len(command)))
-            
-            Select Case command
-            Case ContractCommand
-                processContractCommand params
-            Case FromCommand
-                processFromCommand params
-            Case ToCommand
-                processToCommand params
-            Case StartCommand
-                processStartCommand
-            Case StopCommand
-                processStopCommand
-            Case NumberCommand
-                processNumberCommand params
-            Case TimeframeCommand
-                processTimeframeCommand params
-            Case SessCommand
-                processSessCommand
-            Case NonSessCommand
-                processNonSessCommand
-            Case SessionOnlyCommand
-                processSessionOnlyCommand params
-            Case MillisecsCommand
-                processMillsecsCommand params
-            Case NoMillisecsCommand
-                mIncludeMillisecs = False
-            Case HelpCommand, Help1Command
-                showStdInHelp
-            Case SessionEndTimeCommand
-                processSessionEndTimeCommand params
-            Case SessionStartTimeCommand
-                processSessionStartTimeCommand params
-            Case DateOnlyCommmand
-                processDateOnlyCommand params
-            Case Else
-                gCon.WriteErrorLine "Invalid command '" & command & "'"
-            End Select
-        End If
-    End If
-    Wait 10
-Loop
+Dim lContinue As Boolean
+processCommandLineCommands lContinue
 
-Do While mNumberOfFetchesInProgress <> 0
+If lContinue Then
+    processStdInComands
+End If
+
+Do While mProcessors.Count <> 0
     Wait 50
 Loop
 
@@ -419,6 +781,124 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processCommand(ByVal pCommandString As String)
+Const ProcName As String = "processCommand"
+On Error GoTo Err
+
+Dim lCommand As String
+lCommand = UCase$(Split(pCommandString, " ")(0))
+
+Dim params As String
+params = Trim$(Right$(pCommandString, Len(pCommandString) - Len(lCommand)))
+
+Select Case lCommand
+Case ContractCommand
+    processContractCommand params
+Case FromCommand
+    processFromCommand params
+Case ToCommand
+    processToCommand params
+Case StartCommand
+    processStartCommand params
+Case StopCommand
+    processStopCommand
+Case NumberCommand
+    processNumberCommand params
+Case TimeframeCommand
+    processTimeframeCommand params
+Case SessCommand
+    processSessCommand
+Case NonSessCommand
+    processNonSessCommand
+Case SessionOnlyCommand
+    processSessionOnlyCommand params
+Case MillisecsCommand
+    processMillsecsCommand params
+Case NoMillisecsCommand
+    mIncludeMillisecs = False
+Case HelpCommand, Help1Command
+    showStdInHelp
+Case SessionEndTimeCommand
+    processSessionEndTimeCommand params
+Case SessionStartTimeCommand
+    processSessionStartTimeCommand params
+Case DateOnlyCommmand
+    processDateOnlyCommand params
+Case OutpuPathCommand
+    processOutputPathCommand params
+Case AsyncCommand
+    processAsyncCommand params
+Case EntireSessionCommand
+    processEntireSessionCommand params
+Case DateTimeFormatCommand
+    processDateTimeFormatCommand params
+Case InFileCommand
+    processInfileCommand params
+Case Else
+    gCon.WriteErrorLine "Invalid lCommand '" & lCommand & "'"
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processCommandLineCommands( _
+                ByRef pContinue As Boolean)
+Const ProcName As String = "processCommandLineCommands"
+On Error GoTo Err
+
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(mClp.Arg(0), mCommandSeparator)
+
+Dim lInputString As String
+
+Dim i As Long
+Do
+    If mProviderReady Then
+        i = i + 1
+        
+        If i > lClp.NumberOfArgs Then Exit Do
+        
+        lInputString = lClp.Arg(i - 1)
+        If UCase$(lInputString) = ExitCommand Then
+            pContinue = False
+            Exit Sub
+        End If
+        
+        gLogger.Log "cmd: " & lInputString, ProcName, ModuleName
+        
+        If lInputString = "" Then
+            ' ignore blank lines
+        ElseIf Left$(lInputString, 1) = "#" Then
+            ' ignore comments
+        Else
+            processCommand lInputString
+        End If
+    End If
+    Wait 10
+Loop
+
+pContinue = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processAsyncCommand(ByVal pParams As String)
+pParams = UCase$(pParams)
+If pParams = "" Or pParams = "YES" Or pParams = "TRUE" Or pParams = "ON" Then
+    mAsync = True
+ElseIf pParams = "NO" Or pParams = "FALSE" Or pParams = "OFF" Then
+    mAsync = False
+Else
+    gWriteErrorLine "parameter must be YES, NO, ON, OFF, TRUE or FALSE"
+End If
 End Sub
 
 Private Sub processContractCommand( _
@@ -431,29 +911,29 @@ If Trim$(params) = "" Then
     Exit Sub
 End If
 
-Dim clp As CommandLineParser
-Set clp = CreateCommandLineParser(params, ",")
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(params, ",")
 
-If clp.Arg(1) = "?" Or _
-    clp.Switch("?") Or _
-    (clp.NumberOfArgs = 0 And clp.NumberOfSwitches = 0) _
+If lClp.Arg(1) = "?" Or _
+    lClp.Switch("?") Or _
+    (lClp.NumberOfArgs = 0 And lClp.NumberOfSwitches = 0) _
 Then
     showContractHelp
     Exit Sub
 End If
 
-If clp.NumberOfArgs > 1 Then
-     Set mContractSpec = processPositionalContractString(clp)
-ElseIf clp.NumberOfArgs = 1 Then
-    Set mContractSpec = CreateContractSpecifierFromString(clp.Arg(0))
+If lClp.NumberOfArgs > 1 Then
+     Set mContractSpec = processPositionalContractString(lClp)
+ElseIf lClp.NumberOfArgs = 1 Then
+    Set mContractSpec = CreateContractSpecifierFromString(lClp.Arg(0))
 Else
-    Set clp = CreateCommandLineParser(params, " ")
-    If clp.NumberOfSwitches = 0 Or _
-        clp.NumberOfArgs > 0 _
+    Set lClp = CreateCommandLineParser(params, " ")
+    If lClp.NumberOfSwitches = 0 Or _
+        lClp.NumberOfArgs > 0 _
     Then
-        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid contract syntax"
+        gWriteErrorLine "Invalid contract syntax"
     Else
-        Set mContractSpec = processTaggedContractString(clp)
+        Set mContractSpec = processTaggedContractString(lClp)
     End If
 End If
 
@@ -471,7 +951,47 @@ If params = "" Or params = "YES" Or params = "TRUE" Or params = "ON" Then
 ElseIf params = "NO" Or params = "FALSE" Or params = "OFF" Then
     mNormaliseDailyBarTimestamps = False
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": parameter must be YES, NO, ON, OFF, TRUE or FALSE"
+    gWriteErrorLine "parameter must be YES, NO, ON, OFF, TRUE or FALSE"
+End If
+End Sub
+
+Private Sub processDateTimeFormatCommand( _
+                ByVal params As String)
+Const ProcName As String = "processDateTimeFormatCommand"
+On Error GoTo Err
+
+params = UCase$(params)
+
+If params = DateFormatISOParameter Then
+    mTimestampFormat = TimestampDateAndTimeISO8601
+    mTimestampDateOnlyFormat = TimestampDateOnlyISO8601
+    mTimestampTimeOnlyFormat = TimestampTimeOnlyISO8601
+ElseIf params = DateFormatLocalParameter Then
+    mTimestampFormat = TimestampDateAndTimeLocal
+    mTimestampDateOnlyFormat = TimestampDateOnlyLocal
+    mTimestampTimeOnlyFormat = TimestampTimeOnlyLocal
+ElseIf params = DateFormatRawParameter Then
+    mTimestampFormat = TimestampDateAndTime
+    mTimestampDateOnlyFormat = TimestampDateOnly
+    mTimestampTimeOnlyFormat = TimestampTimeOnly
+Else
+    gWriteErrorLine "Invalid date/time format '" & params & "'"
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processEntireSessionCommand(ByVal pParams As String)
+pParams = UCase$(pParams)
+If pParams = "" Or pParams = "YES" Or pParams = "TRUE" Or pParams = "ON" Then
+    mEntireSession = True
+ElseIf pParams = "NO" Or pParams = "FALSE" Or pParams = "OFF" Then
+    mEntireSession = False
+Else
+    gWriteErrorLine "parameter must be YES, NO, ON, OFF, TRUE or FALSE"
 End If
 End Sub
 
@@ -480,18 +1000,68 @@ Private Sub processFromCommand( _
 Const ProcName As String = "processFromCommand"
 On Error GoTo Err
 
+params = UCase$(params)
+
 If params = "" Then
     mFrom = 0
 ElseIf IsDate(params) Then
     mFrom = CDate(params)
+ElseIf params = TodayParameter Then
+    mFrom = todayDate
+ElseIf params = YesterdayParameter Then
+    mFrom = yesterdayDate
+ElseIf params = StartOfWeekParameter Then
+    mFrom = Int(Now) - DatePart("w", Now, vbMonday) + vbMonday - 1
+ElseIf params = StartOfPreviousWeekParameter Then
+    mFrom = Int(Now) - DatePart("w", Now, vbMonday) + vbMonday - 8
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid from date '" & params & "'"
+    gWriteErrorLine "Invalid from date '" & params & "'"
 End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processInfileCommand( _
+                ByVal params As String)
+Const ProcName As String = "processInfileCommand"
+On Error GoTo Err
+
+Dim lTs As TextStream
+Set lTs = gFileSystemObject.OpenTextFile(params, ForReading)
+
+Do Until lTs.AtEndOfStream
+    If mProviderReady Then
+        Dim lInputString As String
+        lInputString = lTs.ReadLine
+        
+        If UCase$(lInputString) = ExitCommand Then Exit Sub
+        
+        gLogger.Log "cmd: " & lInputString, ProcName, ModuleName
+        
+        If lInputString = "" Then
+            ' ignore blank lines
+        ElseIf Left$(lInputString, 1) = "#" Then
+            ' ignore comments
+        Else
+            processCommand lInputString
+        End If
+    End If
+    Wait 10
+Loop
+
+Exit Sub
+
+Err:
+If Err.Number = 52 Then
+    gWriteErrorLine "Invalid filename: " & params
+ElseIf Err.Number = VBErrorCodes.VbErrFileNotFound Then
+    gWriteErrorLine "File does not exist: " & params
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Sub
 
 Private Sub processMillsecsCommand( _
@@ -502,7 +1072,7 @@ If params = "" Or params = "YES" Or params = "TRUE" Or params = "ON" Then
 ElseIf params = "NO" Or params = "FALSE" Or params = "OFF" Then
     mIncludeMillisecs = False
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": parameter must be YES, NO, ON, OFF, TRUE or FALSE"
+    gWriteErrorLine "parameter must be YES, NO, ON, OFF, TRUE or FALSE"
 End If
 End Sub
 
@@ -520,10 +1090,23 @@ If IsInteger(params, 1) Then
 ElseIf params = "-1" Or UCase$(params) = "ALL" Then
     mNumber = &H7FFFFFFF
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid number '" & params & "'" & ": must be an integer > 0 or -1"
+    gWriteErrorLine "Invalid number '" & params & "'" & ": must be an integer > 0 or -1"
 End If
 
-If mDataSource = FromFile Then gCon.WriteLineToConsole "number command is ignored for tickfile input"
+If mDataSource = FromFile Then gWriteLineToConsole "number command is ignored for tickfile input"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processOutputPathCommand( _
+                ByVal params As String)
+Const ProcName As String = "processOutputPathCommand"
+On Error GoTo Err
+
+If isValidPath(params) Then mOutputPath = params
 
 Exit Sub
 
@@ -570,7 +1153,7 @@ lOptRightStr = Trim$(pClp.Arg(8))
 Dim lSectype As SecurityTypes
 lSectype = SecTypeFromString(lSectypeStr)
 If lSectypeStr <> "" And lSectype = SecTypeNone Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid lSectype '" & lSectypeStr & "'"
+    gWriteErrorLine "Invalid lSectype '" & lSectypeStr & "'"
     lValidParams = False
 End If
 
@@ -580,16 +1163,16 @@ If lExpiry <> "" Then
         lExpiry = Format(CDate(lExpiry), "yyyymmdd")
     ElseIf Len(lExpiry) = 6 Then
         If Not IsDate(Left$(lExpiry, 4) & "/" & Right$(lExpiry, 2) & "/01") Then
-            gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid lExpiry '" & lExpiry & "'"
+            gWriteErrorLine "Invalid lExpiry '" & lExpiry & "'"
             lValidParams = False
         End If
     ElseIf Len(lExpiry) = 8 Then
         If Not IsDate(Left$(lExpiry, 4) & "/" & Mid$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
-            gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid lExpiry '" & lExpiry & "'"
+            gWriteErrorLine "Invalid lExpiry '" & lExpiry & "'"
             lValidParams = False
         End If
     Else
-        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid lExpiry '" & lExpiry & "'"
+        gWriteErrorLine "Invalid lExpiry '" & lExpiry & "'"
         lValidParams = False
     End If
 End If
@@ -600,7 +1183,7 @@ If lMultiplierStr = "" Then
 ElseIf IsNumeric(lMultiplierStr) Then
     lMultiplier = CDbl(lMultiplierStr)
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid lMultiplier '" & lMultiplierStr & "'"
+    gWriteErrorLine "Invalid lMultiplier '" & lMultiplierStr & "'"
     lValidParams = False
 End If
             
@@ -609,7 +1192,7 @@ If lStrikeStr <> "" Then
     If IsNumeric(lStrikeStr) Then
         lStrike = CDbl(lStrikeStr)
     Else
-        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid lStrike '" & lStrikeStr & "'"
+        gWriteErrorLine "Invalid lStrike '" & lStrikeStr & "'"
         lValidParams = False
     End If
 End If
@@ -617,7 +1200,7 @@ End If
 Dim lOptRight As OptionRights
 lOptRight = OptionRightFromString(lOptRightStr)
 If lOptRightStr <> "" And lOptRight = OptNone Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid right '" & lOptRightStr & "'"
+    gWriteErrorLine "Invalid right '" & lOptRightStr & "'"
     lValidParams = False
 End If
 
@@ -651,7 +1234,7 @@ If pParams = "" Or pParams = "YES" Or pParams = "TRUE" Or pParams = "ON" Then
 ElseIf pParams = "NO" Or pParams = "FALSE" Or pParams = "OFF" Then
     mSessionOnly = False
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": parameter must be YES, NO, ON, OFF, TRUE or FALSE"
+    gWriteErrorLine "parameter must be YES, NO, ON, OFF, TRUE or FALSE"
 End If
 End Sub
 
@@ -660,7 +1243,7 @@ Const ProcName As String = "processSessionEndTimeCommand"
 On Error GoTo Err
 
 If mDataSource = FromFile Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": command ignored for this data source"
+    gWriteErrorLine "command ignored for this data source"
     Exit Sub
 End If
 
@@ -669,12 +1252,12 @@ If pParams = "" Then
 ElseIf IsDate(pParams) Then
     Dim lSessionTime: lSessionTime = CDate(pParams)
     If CDbl(lSessionTime) > Time235900 Or CDbl(lSessionTime) < 0# Then
-        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid session start time '" & pParams & "': the value must be a time between 00:00 and 23:59"
+        gWriteErrorLine "Invalid session start time '" & pParams & "': the value must be a time between 00:00 and 23:59"
     Else
         mSessionEndTime = lSessionTime
     End If
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid session start time '" & pParams & "' is not a date/time"
+    gWriteErrorLine "Invalid session start time '" & pParams & "' is not a date/time"
 End If
 
 Exit Sub
@@ -688,7 +1271,7 @@ Const ProcName As String = "processSessionStartTimeCommand"
 On Error GoTo Err
 
 If mDataSource = FromFile Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": command ignored for this data source"
+    gWriteErrorLine "command ignored for this data source"
     Exit Sub
 End If
 
@@ -697,12 +1280,12 @@ If pParams = "" Then
 ElseIf IsDate(pParams) Then
     Dim lSessionTime: lSessionTime = CDate(pParams)
     If CDbl(lSessionTime) > Time235900 Or CDbl(lSessionTime) < 0# Then
-        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid session start time '" & pParams & "': the value must be a time between 00:00 and 23:59"
+        gWriteErrorLine "Invalid session start time '" & pParams & "': the value must be a time between 00:00 and 23:59"
     Else
         mSessionStartTime = lSessionTime
     End If
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid session start time '" & pParams & "' is not a date/time"
+    gWriteErrorLine "Invalid session start time '" & pParams & "' is not a date/time"
 End If
 
 Exit Sub
@@ -711,47 +1294,106 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processStartCommand()
+Private Sub processStartCommand( _
+                ByVal params As String)
 Const ProcName As String = "processStartCommand"
 On Error GoTo Err
 
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(params, " ")
+
 If mDataSource <> FromFile And mContractSpec Is Nothing Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
+    gWriteErrorLine "Cannot start - no contract specified"
 ElseIf mDataSource <> FromFile And mFrom = 0 And (mNumber = 0 Or mNumber = &H7FFFFFFF) Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - either 'from' time or number of bars must be specified"
+    gWriteErrorLine "Cannot start - either 'from' time or number of bars must be specified"
 ElseIf mFrom > mTo And mTo <> 0 Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - 'from' time must not be after 'to' time"
+    gWriteErrorLine "Cannot start - 'from' time must not be after 'to' time"
 ElseIf mTimePeriod Is Nothing Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - timeframe not specified"
-ElseIf Not gProcessor Is Nothing Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - already running"
+    gWriteErrorLine "Cannot start - timeframe not specified"
+ElseIf Not mAsync And mProcessors.Count <> 0 Then
+    gWriteErrorLine "Cannot start - already running"
+ElseIf lClp.NumberOfArgs > 2 Then
+    gWriteErrorLine "Too many arguments"
 Else
-    mNumberOfBarsWritten = 0
-       
-    If mDataSource = FromFile Then
-        Dim lFileProcessor As New FileProcessor
-        lFileProcessor.Initialise mTickfileName, mFrom, mTo, mNumber, mTimePeriod, mSessionOnly
-        Set gProcessor = lFileProcessor
+    
+    Dim lPathAndFilename As String
+    
+    Dim lAppend As Boolean
+    If lClp.NumberOfArgs = 0 Then
+        lAppend = False
+    ElseIf lClp.NumberOfArgs = 2 Then
+        lPathAndFilename = lClp.Arg(1)
+        If lClp.Arg(0) = AppendOperator Then
+            lAppend = True
+        ElseIf lClp.Arg(0) = OverwriteOperator Then
+            lAppend = False
+        Else
+            gWriteErrorLine "First argument must be '>' or '>>'"
+        End If
+    ElseIf lClp.Arg(0) = AppendOperator Then
+        lAppend = True
+    ElseIf lClp.Arg(0) = OverwriteOperator Then
+        lAppend = False
     Else
-        Dim lProcessor As New Processor
-        lProcessor.Initialise mContractStore, _
-                            mHistDataStore, _
-                            mContractSpec, _
-                            mFrom, _
-                            mTo, _
-                            mNumber, _
-                            mTimePeriod, _
-                            mSessionOnly, _
-                            mSessionStartTime, _
-                            mSessionEndTime, _
-                            mNormaliseDailyBarTimestamps
-        Set gProcessor = lProcessor
+        lPathAndFilename = lClp.Arg(0)
     End If
-    
-    gProcessor.StartData
-    mNumberOfFetchesInProgress = mNumberOfFetchesInProgress + 1
-    
+
+    If isValidPath(lPathAndFilename) Then
+        Dim lProcess As IProcessor
+        If mDataSource = FromFile Then
+            Dim lFileProcessor As New FileProcessor
+            lFileProcessor.Initialise mTickfileName, mFrom, mTo, mNumber, mTimePeriod, mSessionOnly, mEntireSession
+            Set lProcess = lFileProcessor
+        Else
+            Dim lProcessor As New Processor
+            lProcessor.Initialise mContractStore, _
+                                mHistDataStore, _
+                                mContractSpec, _
+                                mFrom, _
+                                mTo, _
+                                mNumber, _
+                                mTimePeriod, _
+                                mSessionOnly, _
+                                mSessionStartTime, _
+                                mSessionEndTime, _
+                                mEntireSession, _
+                                mNormaliseDailyBarTimestamps
+            Set lProcess = lProcessor
+        End If
+        
+        mProcessors.Add lProcess
+        lProcess.StartData mOutputPath, lPathAndFilename, lAppend
+    End If
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processStdInComands()
+Const ProcName As String = "processStdInComands"
+On Error GoTo Err
+
+Do
+    If mProviderReady Then
+        Dim lInputString As String
+        lInputString = Trim$(gCon.ReadLine(":"))
+        If lInputString = gCon.EofString Or UCase$(lInputString) = ExitCommand Then Exit Do
+        gLogger.Log "gCon: " & lInputString, ProcName, ModuleName
+        
+        mLineNumber = mLineNumber + 1
+        
+        If lInputString = "" Then
+            ' ignore blank lines
+        ElseIf Left$(lInputString, 1) = "#" Then
+            ' ignore comments
+        Else
+            processCommand lInputString
+        End If
+    End If
+    Wait 10
+Loop
 
 Exit Sub
 
@@ -763,11 +1405,11 @@ Private Sub processStopCommand()
 Const ProcName As String = "processStopCommand"
 On Error GoTo Err
 
-If gProcessor Is Nothing Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot stop - not started"
-Else
-    gProcessor.StopData
-End If
+'If gProcessor Is Nothing Then
+'    gWriteErrorLine "Cannot stop - not started"
+'Else
+'    gProcessor.StopData
+'End If
 
 Exit Sub
 
@@ -924,27 +1566,27 @@ If Trim$(params) = "" Then
     Exit Sub
 End If
 
-Dim clp As CommandLineParser
-Set clp = CreateCommandLineParser(params, " ")
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(params, " ")
 
-If clp.NumberOfArgs < 1 Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid timeframe - the bar length must be supplied"
+If lClp.NumberOfArgs < 1 Then
+    gWriteErrorLine "Invalid timeframe - the bar length must be supplied"
     Exit Sub
 End If
 
-If Not IsInteger(clp.Arg(0), 1) Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar length '" & Trim$(clp.Arg(0)) & "': must be an integer > 0"
+If Not IsInteger(lClp.Arg(0), 1) Then
+    gWriteErrorLine "Invalid bar length '" & Trim$(lClp.Arg(0)) & "': must be an integer > 0"
     Exit Sub
 End If
 Dim lBarLength As Long
-lBarLength = CLng(clp.Arg(0))
+lBarLength = CLng(lClp.Arg(0))
 
 Dim lBarUnits As TimePeriodUnits
 lBarUnits = TimePeriodMinute
-If Trim$(clp.Arg(1)) <> "" Then
-    lBarUnits = TimePeriodUnitsFromString(clp.Arg(1))
+If Trim$(lClp.Arg(1)) <> "" Then
+    lBarUnits = TimePeriodUnitsFromString(lClp.Arg(1))
     If lBarUnits = TimePeriodNone Then
-        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar units '" & Trim$(clp.Arg(1)) & "': must be one of s,m,h,d,w,mm,v,tv,tm"
+        gWriteErrorLine "Invalid bar units '" & Trim$(lClp.Arg(1)) & "': must be one of s,m,h,d,w,mm,v,tv,tm"
     Exit Sub
     End If
 End If
@@ -970,14 +1612,23 @@ Private Sub processToCommand( _
 Const ProcName As String = "processToCommand"
 On Error GoTo Err
 
+params = UCase$(params)
 If params = "" Then
     mTo = 0
-ElseIf UCase$(params) = "LATEST" Then
+ElseIf params = LatestParameter Then
     mTo = MaxDate
 ElseIf IsDate(params) Then
     mTo = CDate(params)
+ElseIf params = TodayParameter Then
+    mTo = todayDate
+ElseIf params = YesterdayParameter Then
+    mTo = yesterdayDate
+ElseIf params = TomorrowParameter Then
+    mTo = tomorrowDate
+ElseIf params = EndOfWeekParameter Then
+    mTo = Int(Now) - DatePart("w", Now, vbMonday) + vbFriday - 1
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid to date '" & params & "'"
+    gWriteErrorLine "Invalid to date '" & params & "'"
 End If
 
 Exit Sub
@@ -991,25 +1642,25 @@ Private Function setupDbProviders( _
 Const ProcName As String = "setupDbProviders"
 On Error GoTo Err
 
-Dim clp As CommandLineParser
-Set clp = CreateCommandLineParser(switchValue, ",")
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(switchValue, ",")
 
 On Error Resume Next
 
 Dim server As String
-server = clp.Arg(0)
+server = lClp.Arg(0)
 
 Dim dbtypeStr As String
-dbtypeStr = clp.Arg(1)
+dbtypeStr = lClp.Arg(1)
 
 Dim database As String
-database = clp.Arg(2)
+database = lClp.Arg(2)
 
 Dim username As String
-username = clp.Arg(3)
+username = lClp.Arg(3)
 
 Dim password As String
-password = clp.Arg(4)
+password = lClp.Arg(4)
 
 On Error GoTo 0
 
@@ -1020,7 +1671,7 @@ End If
 Dim dbtype As DatabaseTypes
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.WriteErrorLine "Error: invalid dbtype"
+    gWriteErrorLine "Error: invalid dbtype"
     Exit Function
 End If
 
@@ -1053,8 +1704,31 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
+
+Private Sub setupSubstitutionVariables()
+ReDim mSubstitutionVariables(15) As String
+mMaxSubstitutionVariablesIndex = -1
+
+addSubstitutionVariable ContractVariable
+addSubstitutionVariable SymbolVariable
+addSubstitutionVariable LocalSymbolVariable
+addSubstitutionVariable SecTypeVariable
+addSubstitutionVariable ExchangeVariable
+addSubstitutionVariable ExpiryVariable
+addSubstitutionVariable CurrencyVariable
+addSubstitutionVariable MultiplierVariable
+addSubstitutionVariable StrikeVariable
+addSubstitutionVariable RightVariable
+addSubstitutionVariable TodayVariable
+addSubstitutionVariable YesterdayVariable
+addSubstitutionVariable FromDateVariable
+addSubstitutionVariable FromTimeVariable
+addSubstitutionVariable ToDateVariable
+addSubstitutionVariable ToTimeVariable
+
+SortStrings mSubstitutionVariables, EndIndex:=mMaxSubstitutionVariablesIndex
+End Sub
 
 Private Function setupTwsProviders( _
                 ByVal switchValue As String) As Boolean
@@ -1063,31 +1737,31 @@ On Error GoTo Err
 
 On Error Resume Next
 
-Dim clp As CommandLineParser
-Set clp = CreateCommandLineParser(switchValue, ",")
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(switchValue, ",")
 
 Dim server As String
-server = clp.Arg(0)
+server = lClp.Arg(0)
 
 Dim port As String
-port = clp.Arg(1)
+port = lClp.Arg(1)
 
 Dim clientId As String
-clientId = clp.Arg(2)
+clientId = lClp.Arg(2)
 
 On Error GoTo Err
 
 If port = "" Then
     port = 7496
 ElseIf Not IsInteger(port, 0) Then
-    gCon.WriteErrorLine "Error: port must be an integer > 0"
+    gWriteErrorLine "Error: port must be an integer > 0"
     setupTwsProviders = False
 End If
     
 If clientId = "" Then
     clientId = DefaultClientId
 ElseIf Not IsInteger(clientId, 0, 999999999) Then
-    gCon.WriteErrorLine "Error: clientId must be an integer >= 0 and <= 999999999"
+    gWriteErrorLine "Error: clientId must be an integer >= 0 and <= 999999999"
     setupTwsProviders = False
 End If
 
@@ -1097,6 +1771,8 @@ Set mTWSConnectionMonitor = New TWSConnectionMonitor
 lTwsClient.AddTwsConnectionStateListener mTWSConnectionMonitor
 
 Set mHistDataStore = lTwsClient.GetHistoricalDataStore
+lTwsClient.DisableHistoricalDataRequestPacing
+
 Set mContractStore = lTwsClient.GetContractStore
     
 setupTwsProviders = True
@@ -1108,116 +1784,127 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub showContractHelp()
-gCon.WriteLineToConsole "contract localsymbol[@exchange]"
-gCon.WriteLineToConsole "OR   "
-gCon.WriteLineToConsole "contract localsymbol@SMART/primaryexchange"
-gCon.WriteLineToConsole "OR   "
-gCon.WriteLineToConsole "contract localsymbol@<SMART|SMARTAUS|SMARTCAN|SMARTEUR|SMARTNASDAQ|SMARTNYSE|"
-gCon.WriteLineToConsole "                      SMARTUK|SMARTUS>"
-gCon.WriteLineToConsole "OR   "
-gCon.WriteLineToConsole "contract /specifier [/specifier]..."
-gCon.WriteLineToConsole "    where:"
-gCon.WriteLineToConsole "    specifier ::=   local[symbol]:STRING"
-gCon.WriteLineToConsole "                  | symb[ol]:STRING"
-gCon.WriteLineToConsole "                  | sec[type]:<STK|FUT|FOP|CASH|OPT>"
-gCon.WriteLineToConsole "                  | exch[ange]:STRING"
-gCon.WriteLineToConsole "                  | curr[ency]:<USD|EUR|GBP|JPY|CHF | etc>"
-gCon.WriteLineToConsole "                  | exp[iry]:<yyyymm|yyyymmdd|expiryoffset>"
-gCon.WriteLineToConsole "                  | mult[iplier]:INTEGER"
-gCon.WriteLineToConsole "                  | str[ike]:DOUBLE"
-gCon.WriteLineToConsole "                  | right:<CALL|PUT> "
-gCon.WriteLineToConsole "    expiryoffset ::= INTEGER(0..10)"
-gCon.WriteLineToConsole "OR   "
-gCon.WriteLineToConsole "contract localsymbol,sectype,exchange,symbol,currency,expiry,multiplier,strike,"
-gCon.WriteLineToConsole "         right"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "Examples   "
-gCon.WriteLineToConsole "    contract ESH0"
-gCon.WriteLineToConsole "    contract FDAX MAR 20@DTB"
-gCon.WriteLineToConsole "    contract MSFT@SMARTUS"
-gCon.WriteLineToConsole "    contract MSFT@SMART/ISLAND"
-gCon.WriteLineToConsole "    contract /SYMBOL:MSFT /SECTYPE:OPT /EXCHANGE:CBOE /EXPIRY:20200117 "
-gCon.WriteLineToConsole "             /STRIKE:150 /RIGHT:C"
-gCon.WriteLineToConsole "    contract /SYMBOL:ES /SECTYPE:FUT /EXCHANGE:GLOBEX /EXPIRY:1 "
-gCon.WriteLineToConsole "    contract ,FUT,GLOBEX,ES,,1"
+gWriteLineToConsole "contract localsymbol[@exchange]"
+gWriteLineToConsole "OR   "
+gWriteLineToConsole "contract localsymbol@SMART/primaryexchange"
+gWriteLineToConsole "OR   "
+gWriteLineToConsole "contract localsymbol@<SMART|SMARTAUS|SMARTCAN|SMARTEUR|SMARTNASDAQ|SMARTNYSE|"
+gWriteLineToConsole "                      SMARTUK|SMARTUS>"
+gWriteLineToConsole "OR   "
+gWriteLineToConsole "contract /specifier [/specifier]..."
+gWriteLineToConsole "    where:"
+gWriteLineToConsole "    specifier ::=   local[symbol]:STRING"
+gWriteLineToConsole "                  | symb[ol]:STRING"
+gWriteLineToConsole "                  | sec[type]:<STK|FUT|FOP|CASH|OPT>"
+gWriteLineToConsole "                  | exch[ange]:STRING"
+gWriteLineToConsole "                  | curr[ency]:<USD|EUR|GBP|JPY|CHF | etc>"
+gWriteLineToConsole "                  | exp[iry]:<yyyymm|yyyymmdd|expiryoffset>"
+gWriteLineToConsole "                  | mult[iplier]:INTEGER"
+gWriteLineToConsole "                  | str[ike]:DOUBLE"
+gWriteLineToConsole "                  | right:<CALL|PUT> "
+gWriteLineToConsole "    expiryoffset ::= INTEGER(0..10)"
+gWriteLineToConsole "OR   "
+gWriteLineToConsole "contract localsymbol,sectype,exchange,symbol,currency,expiry,multiplier,strike,"
+gWriteLineToConsole "         right"
+gWriteLineToConsole ""
+gWriteLineToConsole "Examples   "
+gWriteLineToConsole "    contract ESH0"
+gWriteLineToConsole "    contract FDAX MAR 20@DTB"
+gWriteLineToConsole "    contract MSFT@SMARTUS"
+gWriteLineToConsole "    contract MSFT@SMART/ISLAND"
+gWriteLineToConsole "    contract /SYMBOL:MSFT /SECTYPE:OPT /EXCHANGE:CBOE /EXPIRY:20200117 "
+gWriteLineToConsole "             /STRIKE:150 /RIGHT:C"
+gWriteLineToConsole "    contract /SYMBOL:ES /SECTYPE:FUT /EXCHANGE:GLOBEX /EXPIRY:1 "
+gWriteLineToConsole "    contract ,FUT,GLOBEX,ES,,1"
 
 End Sub
 
 Private Sub showStdInHelp()
-gCon.WriteLineToConsole "StdIn Format:"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "#comment"
+gWriteLineToConsole "StdIn Format:"
+gWriteLineToConsole ""
+gWriteLineToConsole "#comment"
 
 showContractHelp
 
-gCon.WriteLineToConsole "from starttime"
-gCon.WriteLineToConsole "to [endtime]"
-gCon.WriteLineToConsole "to LATEST"
-gCon.WriteLineToConsole "number n               # -1 or ALL => return all available bars"
+gWriteLineToConsole "from starttime"
+gWriteLineToConsole "to [endtime]"
+gWriteLineToConsole "to LATEST"
+gWriteLineToConsole "number n               # -1 or ALL => return all available bars"
 
 showTimeframeHelp
 
-gCon.WriteLineToConsole "nonsess                # include bars outside session"
-gCon.WriteLineToConsole "sess                   # include only bars within the session"
-gCon.WriteLineToConsole "sessionstarttime time  # time of day the session is deemed to start:"
-gCon.WriteLineToConsole "                       # must between 00:00 and 23:59"
-gCon.WriteLineToConsole "sessionendtime time    # time of day the session is deemed to end:"
-gCon.WriteLineToConsole "                       # must between 00:00 and 23:59"
-gCon.WriteLineToConsole "millisecs              # include millisecs in bar timestamps"
-gCon.WriteLineToConsole "nomillisecs            # exclude millisecs in bar timestamps (default)"
-gCon.WriteLineToConsole "start"
-gCon.WriteLineToConsole "stop"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "Note that if data is from TWS and sessionstarttime and/or"
-gCon.WriteLineToConsole "sessionendtime are not supplied, then the session times will be"
-gCon.WriteLineToConsole "deduced from IB's contract data, but ONLY if the contract has not"
-gCon.WriteLineToConsole "expired (IB does not supply this information for expired contracts."
-gCon.WriteLineToConsole "Otherwise, the session is assumed to run from midnight to midnight."
-gCon.WriteLineToConsole "Since stock and index contracts don't expire, IB's session times "
-gCon.WriteLineToConsole "always apply unless overridden."
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "If data is from the TradeBuild historical database and sessionstarttime"
-gCon.WriteLineToConsole "and/or sessionendtime are not supplied, then the session times will be"
-gCon.WriteLineToConsole "as defined for the relevant contract in the TradeBuild contracts"
-gCon.WriteLineToConsole "database"
+gWriteLineToConsole "nonsess                # include bars outside session"
+gWriteLineToConsole "sess                   # include only bars within the session"
+gWriteLineToConsole "sessionstarttime time  # time of day the session is deemed to start:"
+gWriteLineToConsole "                       # must between 00:00 and 23:59"
+gWriteLineToConsole "sessionendtime time    # time of day the session is deemed to end:"
+gWriteLineToConsole "                       # must between 00:00 and 23:59"
+gWriteLineToConsole "millisecs              # include millisecs in bar timestamps"
+gWriteLineToConsole "nomillisecs            # exclude millisecs in bar timestamps (default)"
+gWriteLineToConsole "start"
+gWriteLineToConsole "stop"
+gWriteLineToConsole ""
+gWriteLineToConsole "Note that if data is from TWS and sessionstarttime and/or"
+gWriteLineToConsole "sessionendtime are not supplied, then the session times will be"
+gWriteLineToConsole "deduced from IB's contract data, but ONLY if the contract has not"
+gWriteLineToConsole "expired (IB does not supply this information for expired contracts."
+gWriteLineToConsole "Otherwise, the session is assumed to run from midnight to midnight."
+gWriteLineToConsole "Since stock and index contracts don't expire, IB's session times "
+gWriteLineToConsole "always apply unless overridden."
+gWriteLineToConsole ""
+gWriteLineToConsole "If data is from the TradeBuild historical database and sessionstarttime"
+gWriteLineToConsole "and/or sessionendtime are not supplied, then the session times will be"
+gWriteLineToConsole "as defined for the relevant contract in the TradeBuild contracts"
+gWriteLineToConsole "database"
 End Sub
 
 Private Sub showTimeframeHelp()
-gCon.WriteLineToConsole "timeframe timeframespec"
-gCon.WriteLineToConsole "  where"
-gCon.WriteLineToConsole "    timeframespec  ::= length [units]"
-gCon.WriteLineToConsole "    units          ::=     s   seconds"
-gCon.WriteLineToConsole "                           m   minutes (default)"
-gCon.WriteLineToConsole "                           h   hours"
-gCon.WriteLineToConsole "                           d   days"
-gCon.WriteLineToConsole "                           w   weeks"
-gCon.WriteLineToConsole "                           mm   months"
-gCon.WriteLineToConsole "                           v   volume (constant volume bars)"
-gCon.WriteLineToConsole "                           tv  tick volume (constant tick volume bars)"
-gCon.WriteLineToConsole "                           tm   ticks movement (constant range bars)"
+gWriteLineToConsole "timeframe timeframespec"
+gWriteLineToConsole "  where"
+gWriteLineToConsole "    timeframespec  ::= length [units]"
+gWriteLineToConsole "    units          ::=     s   seconds"
+gWriteLineToConsole "                           m   minutes (default)"
+gWriteLineToConsole "                           h   hours"
+gWriteLineToConsole "                           d   days"
+gWriteLineToConsole "                           w   weeks"
+gWriteLineToConsole "                           mm   months"
+gWriteLineToConsole "                           v   volume (constant volume bars)"
+gWriteLineToConsole "                           tv  tick volume (constant tick volume bars)"
+gWriteLineToConsole "                           tm   ticks movement (constant range bars)"
 End Sub
 
 Private Sub showUsage()
-gCon.WriteLineToConsole "Usage:"
-gCon.WriteLineToConsole "gbd27 -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
-gCon.WriteLineToConsole "    OR"
-gCon.WriteLineToConsole "    -fromfile:tickfilepath"
-gCon.WriteLineToConsole "    OR"
-gCon.WriteLineToConsole "    -fromtws:[twsserver][,[port][,[clientid]]]"
-gCon.WriteLineToConsole ""
+gWriteLineToConsole "Usage:"
+gWriteLineToConsole "gbd27 -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
+gWriteLineToConsole "    OR"
+gWriteLineToConsole "    -fromfile:tickfilepath"
+gWriteLineToConsole "    OR"
+gWriteLineToConsole "    -fromtws:[twsserver][,[port][,[clientid]]]"
+gWriteLineToConsole ""
 showStdInHelp
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "StdOut Format:"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "timestamp,open,high,low,close,volume,tickvolume"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "  where"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole "    timestamp ::= yyyy-mm-dd hh:mm:ss[.nnn]"
-gCon.WriteLineToConsole ""
-gCon.WriteLineToConsole ""
+gWriteLineToConsole ""
+gWriteLineToConsole "StdOut Format:"
+gWriteLineToConsole ""
+gWriteLineToConsole "timestamp,open,high,low,close,volume,tickvolume"
+gWriteLineToConsole ""
+gWriteLineToConsole "  where"
+gWriteLineToConsole ""
+gWriteLineToConsole "    timestamp ::= yyyy-mm-dd hh:mm:ss[.nnn]"
+gWriteLineToConsole ""
+gWriteLineToConsole ""
 End Sub
 
+Private Function todayDate() As Date
+todayDate = Int(WorkingDayDate(WorkingDayNumber(Now), Now))
+End Function
+
+Private Function tomorrowDate() As Date
+tomorrowDate = Int(WorkingDayDate(WorkingDayNumber(Now) + 1, Now))
+End Function
+
+Private Function yesterdayDate() As Date
+yesterdayDate = Int(WorkingDayDate(WorkingDayNumber(Now) - 1, Now))
+End Function
 
 
 

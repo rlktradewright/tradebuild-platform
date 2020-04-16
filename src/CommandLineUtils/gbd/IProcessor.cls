@@ -60,11 +60,29 @@ Private Const ModuleName                            As String = "IProcessor"
 ' Properties
 '@================================================================================
 
+Public Property Get Contract() As IContract
+End Property
+
+Public Property Get FromDate() As Date
+End Property
+
+Public Property Get NumberOfBarsOutput() As Long
+End Property
+
+Public Property Get Timeframe() As TimePeriod
+End Property
+
+Public Property Get ToDate() As Date
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub StartData()
+Public Sub StartData( _
+                ByVal pOutputPath As String, _
+                ByVal pOutputFilename As String, _
+                ByVal pAppend As Boolean)
 End Sub
 
 Public Sub StopData()
