@@ -2,6 +2,8 @@
 
 ## [User Guides](UserGuides)
 
+[Building TradeBuild](UserGuides/BuildingTradeBuild)
+
 [Command Line Utilities](UserGuides/CommandLineUtilities)
 
 
