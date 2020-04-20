@@ -2,7 +2,7 @@
 
 ## [Building TradeBuild](BuildingTradeBuild)
 
-[How to Build TradeBuild](BuildingTradeBuild/HowToBuildTradeBuild.md)
+[How to Build TradeBuild](BuildingTradeBuild/BuildingTradeBuild.md)
 
 ## [Command Line Utilities User Guides](CommandLineUtilities)
 
