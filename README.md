@@ -53,5 +53,5 @@ TradeBuild makes very heavy use of the [TradeWright Common Components](https://g
 provides many important facilities that are not available in the Visual Basic 6 platform: these include logging, configuration files, 
 support for asynchronous processing, cooperative multitasking etc.
 
-For information on how to build this project, see [How to Build TradeBuild](Docs/BuildingTradeBuild/BuildingTradeBuild.md).
+For information on how to build this project, see [How to Build TradeBuild](Docs/UserGuides/BuildingTradeBuild/BuildingTradeBuild.md).
 
