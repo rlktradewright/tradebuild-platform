@@ -1064,8 +1064,11 @@ addExchangeCode "PHLX"
 addExchangeCode "PINK"
 addExchangeCode "PSE"
 addExchangeCode "PSX"
+addExchangeCode "PURE"
 
 addExchangeCode "RDBK"
+
+addExchangeCode "QBALGO"
 
 addExchangeCode "SBF"
 addExchangeCode "SEHK"
