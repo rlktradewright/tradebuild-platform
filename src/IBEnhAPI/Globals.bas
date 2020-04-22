@@ -466,7 +466,7 @@ With pOrder
     If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
-    gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
+    gOrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)
@@ -905,13 +905,13 @@ Case "Asia/Hong_Kong"
     gTwsTimezoneNameToStandardTimeZoneName = "China Standard Time"
 Case "CST", "CTT", "CST (Central Standard Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "Central Standard Time"
-Case "GMT", "GB", "GMT (Greenwich Mean Time)"
+Case "GMT", "GB", "GMT (Greenwich Mean Time)", "BST (British Summer Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
 Case "EST", "EST5EDT", "EST (Eastern Standard Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "Eastern Standard Time"
 Case "PST", "Pacific/Pitcairn"
     gTwsTimezoneNameToStandardTimeZoneName = "Pacific Standard Time"
-Case "MET"
+Case "MET", "MET (Middle Europe Time)"
     gTwsTimezoneNameToStandardTimeZoneName = "Romance Standard Time"
 Case Else
     gLog "Unrecognised timezone: " & pTimeZoneId, ModuleName, ProcName, , LogLevelSevere
