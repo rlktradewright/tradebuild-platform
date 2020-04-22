@@ -424,12 +424,12 @@ Dim comboLegObj As ComboLeg
 Dim i As Long
 
 ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & "; ", "")
+ToString = ToString & IIf(mSymbol <> "", "symbol=" & mSymbol & "; ", "")
 ToString = ToString & IIf(mExchange <> "", "exchange=" & mExchange & "; ", "")
 ToString = ToString & IIf(mSecType <> 0, "sectype=" & gSecTypeToString(mSecType) & "; ", "")
 ToString = ToString & IIf(mExpiry <> "", "expiry=" & mExpiry & "; ", "")
-ToString = ToString & IIf(mSymbol <> "", "symbol=" & mSymbol & "; ", "")
 ToString = ToString & IIf(mCurrency <> "", "currencycode=" & mCurrency & "; ", "")
-ToString = ToString & IIf(mMultiplier <> 0, "multiplier=" & mMultiplier & "; ", "")
+ToString = ToString & IIf(mMultiplier <> 1, "multiplier=" & mMultiplier & "; ", "")
 Select Case mRight
 Case OptCall, OptPut
     ToString = ToString & "right=" & gOptionRightToString(mRight) & "; "
