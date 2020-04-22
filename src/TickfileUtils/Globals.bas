@@ -559,7 +559,6 @@ Public Function gVerifyContractSpec( _
 If pContractSpec1.Symbol <> "" And pContractSpec1.Symbol <> pContractSpec2.Symbol Then Exit Function
 If pContractSpec1.SecType <> SecTypeNone And pContractSpec1.SecType <> pContractSpec2.SecType Then Exit Function
 If pContractSpec1.Exchange <> "" And pContractSpec1.Exchange <> pContractSpec2.Exchange Then Exit Function
-If pContractSpec1.Exchange <> "" And pContractSpec1.Exchange <> pContractSpec2.Exchange Then Exit Function
 If pContractSpec1.CurrencyCode <> "" And pContractSpec1.CurrencyCode <> pContractSpec2.CurrencyCode Then Exit Function
 If pContractSpec1.Multiplier <> pContractSpec2.Multiplier Then Exit Function
 If pContractSpec1.Right <> OptNone And pContractSpec1.Right <> pContractSpec2.Right Then Exit Function
