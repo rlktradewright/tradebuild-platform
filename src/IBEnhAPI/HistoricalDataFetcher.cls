@@ -186,13 +186,13 @@ Public Function FetchBars( _
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
-Dim lHistDataFetcher As New HistDataRequestTask
-lHistDataFetcher.Initialise pBarDataSpecifierFuture, pListener, Me, mHistDataRequester, mContractRequester, mContractCache, pCookie
+Dim lHistDataFetchTask As New HistDataRequestTask
+lHistDataFetchTask.Initialise pBarDataSpecifierFuture, pListener, Me, mHistDataRequester, mContractRequester, mContractCache, pCookie
 Dim lTc As TaskController
-Set lTc = StartTask(lHistDataFetcher, PriorityLow, , pCookie)
+Set lTc = StartTask(lHistDataFetchTask, PriorityLow, , pCookie)
 mTaskControllers.Add lTc
 lTc.AddTaskCompletionListener Me
-Set FetchBars = lHistDataFetcher.BarsFuture
+Set FetchBars = lHistDataFetchTask.BarsFuture
 
 Exit Function
 

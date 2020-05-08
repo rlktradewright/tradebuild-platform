@@ -59,7 +59,7 @@ End Type
 
 Private Const ModuleName                            As String = "ContractDetailsRequester"
 
-Private Const MaxConcurrentContractDetailsRequests  As Long = 5
+Private Const MaxConcurrentContractDetailsRequests  As Long = 20
 
 '@================================================================================
 ' Member variables
@@ -219,7 +219,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub CancelRequest(ByVal pRequestId As Long)
+Friend Sub cancelRequest(ByVal pRequestId As Long)
 Const ProcName As String = "CancelRequest"
 On Error GoTo Err
 

@@ -71,7 +71,7 @@ End Type
 Private Const ModuleName                            As String = "HistDataRequester"
 
 'Private Const MaxConcurrentHistDataRequests        As Long = 50 ' limit imposed by IB
-Private Const MaxConcurrentHistDataRequests         As Long = 5
+Private Const MaxConcurrentHistDataRequests         As Long = 10
 
 '@================================================================================
 ' Member variables
@@ -179,7 +179,9 @@ Else
     mHistDataRequests(pRequestId).RetryCount = mHistDataRequests(pRequestId).RetryCount + 1
     gLog "Requeue request according to pacing rules: attempt " & mHistDataRequests(pRequestId).RetryCount, ModuleName, ProcName
     queueEntry pRequestId, False
-    If mConcurrentHistDataRequests > 0 Then mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
+    If mConcurrentHistDataRequests > 0 Then
+        mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
+    End If
     doSchedule
     Exit Sub
 End If
@@ -577,7 +579,9 @@ On Error GoTo Err
 mHistDataRequests(pRequestId).State = StateAllocated
 mHistDataRequests(pRequestId).EarliestSubmissionTime = MaxDate
 mHistDataRequests(pRequestId).DelayReason = ""
-If mConcurrentHistDataRequests > 0 Then mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
+If mConcurrentHistDataRequests > 0 Then
+    mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
+End If
 Schedule
 
 Exit Sub
@@ -786,7 +790,9 @@ Private Sub schedulePaced()
 Const ProcName As String = "schedulePaced"
 On Error GoTo Err
 
-If mConcurrentHistDataRequests >= MaxConcurrentHistDataRequests Then Exit Sub
+If mConcurrentHistDataRequests >= MaxConcurrentHistDataRequests Then
+    Exit Sub
+End If
 
 Dim lReason As String
 Dim lDelay As Long

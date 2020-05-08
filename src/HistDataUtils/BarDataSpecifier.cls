@@ -191,6 +191,7 @@ Clone.Contract = Contract
 Clone.FromDate = FromDate
 Clone.IncludeBarsOutsideSession = IncludeBarsOutsideSession
 Clone.MaxNumberOfBars = MaxNumberOfBars
+Clone.NormaliseDailyTimestamps = NormaliseDailyTimestamps
 Clone.SetCustomSessionTimes CustomSessionStartTime, CustomSessionEndTime
 Clone.ToDate = ToDate
 End Function
