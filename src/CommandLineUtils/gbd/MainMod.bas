@@ -69,6 +69,14 @@ Private Const StartOfPreviousWeekParameter          As String = "STARTOFPREVIOUS
 Private Const DateFormatRawParameter                As String = "RAW"
 Private Const DateFormatISOParameter                As String = "ISO"
 Private Const DateFormatLocalParameter              As String = "LOCAL"
+Private Const OutputFormatTimestampParameter        As String = "T"
+Private Const OutputFormatOpenParameter             As String = "O"
+Private Const OutputFormatHighParameter             As String = "H"
+Private Const OutputFormatLowParameter              As String = "L"
+Private Const OutputFormatCloseParameter            As String = "C"
+Private Const OutputFormatVolumeParameter           As String = "V"
+Private Const OutputFormatTickVolumeParameter       As String = "TV"
+Private Const OutputFormatOpenInterestParameter     As String = "OI"
 
 Private Const AppendOperator                        As String = ">>"
 Private Const OverwriteOperator                     As String = ">"
@@ -86,8 +94,10 @@ Private Const RightVariable                         As String = "$RIGHT"
 Private Const TodayVariable                         As String = "$TODAY"
 Private Const YesterdayVariable                     As String = "$YESTERDAY"
 Private Const FromDateVariable                      As String = "$FROMDATE"
+Private Const FromDateTimeVariable                  As String = "$FROMDATETIME"
 Private Const FromTimeVariable                      As String = "$FROMTIME"
 Private Const ToDateVariable                        As String = "$TODATE"
+Private Const ToDateTimeVariable                    As String = "$TODATETIME"
 Private Const ToTimeVariable                        As String = "$TOTIME"
 Private Const TimeframeVariable                     As String = "$TIMEFRAME"
 
@@ -97,6 +107,8 @@ Private Const SwitchFromDb                          As String = "fromdb"
 Private Const SwitchFromFile                        As String = "fromfile"
 Private Const SwitchFromTws                         As String = "fromtws"
 Private Const SwitchLogToConsole                    As String = "logtoconsole"
+Private Const SwitchOutputPath                      As String = "outputpath"
+Private Const SwitchApiMessageLogging               As String = "APIMESSAGELOGGING"
 
 Private Const DefaultClientId                       As Long = 205644991
 
@@ -123,6 +135,7 @@ Private mAsync                                      As Boolean
 Private mEntireSession                              As Boolean
 
 Private mProcessors                                 As New EnumerableCollection
+Private mCurrentProcessor                           As IProcessor
 
 Private mDataSource                                 As DataSources
 
@@ -272,7 +285,7 @@ Err:
 If Err.Number = 52 Then
     pMessage = "Invalid filename: " & lFilename
 ElseIf Err.Number = ErrorCodes.ErrSecurityException Then
-    pMessage = Err.Description
+    pMessage = "Couldn't create file: " & lFilename & ": " & Err.Description
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -356,7 +369,7 @@ Public Sub gNotifyDataRetrieved(ByVal pProcessor As IProcessor)
 Const ProcName As String = "gNotifyDataRetrieved"
 On Error GoTo Err
 
-gWriteLineToConsole "Data retrieved from source for contract: " & gGetContractName(pProcessor.Contract.Specifier)
+LogMessage "Data retrieved from source for contract: " & gGetContractName(pProcessor.ContractSpec)
 
 Exit Sub
 
@@ -369,8 +382,13 @@ Public Sub gNotifyFetchCancelled( _
 Const ProcName As String = "gNotifyFetchCancelled"
 On Error GoTo Err
 
-gWriteLineToConsole "Fetch cancelled for contract " & gGetContractName(pProcessor.Contract.Specifier)
-mProcessors.Remove pProcessor
+If pProcessor.ContractSpec Is Nothing Then
+    gWriteLineToConsole "Fetch cancelled for contract " & pProcessor.DataSourceName
+Else
+    gWriteLineToConsole "Fetch cancelled for contract " & gGetContractName(pProcessor.ContractSpec)
+End If
+If mProcessors.Contains(pProcessor) Then mProcessors.Remove pProcessor
+Set mCurrentProcessor = Nothing
 
 Exit Sub
 
@@ -383,11 +401,12 @@ Const ProcName As String = "gNotifyFetchCompleted"
 On Error GoTo Err
 
 gWriteLineToConsole "Fetch completed: " & _
-                    pProcessor.NumberOfBarsOutput & _
-                    " bars for contract: " & _
-                    gGetContractName(pProcessor.Contract.Specifier)
+            pProcessor.NumberOfBarsOutput & _
+            " bars for contract: " & _
+            gGetContractName(pProcessor.ContractSpec)
 
-mProcessors.Remove pProcessor
+If mProcessors.Contains(pProcessor) Then mProcessors.Remove pProcessor
+Set mCurrentProcessor = Nothing
 
 Exit Sub
 
@@ -401,8 +420,9 @@ Public Sub gNotifyFetchFailed( _
 Const ProcName As String = "gNotifyFetchFailed"
 On Error GoTo Err
 
-gWriteLineToConsole "Fetch failed: " & pErrorMessage
-mProcessors.Remove pProcessor
+gWriteLineToConsole "Fetch failed for " & pProcessor.DataSourceName & ": " & pErrorMessage
+If mProcessors.Contains(pProcessor) Then mProcessors.Remove pProcessor
+Set mCurrentProcessor = Nothing
 
 Exit Sub
 
@@ -415,7 +435,7 @@ Public Sub gNotifyFetchStarted( _
 Const ProcName As String = "gNotifyFetchStarted"
 On Error GoTo Err
 
-gWriteLineToConsole "Fetch started for contract " & gGetContractName(pProcessor.Contract.Specifier)
+LogMessage "Fetch started for contract " & gGetContractName(pProcessor.ContractSpec)
 
 Exit Sub
 
@@ -476,7 +496,7 @@ Const ProcName As String = "gPerformVariableSubstitution"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = pProcessor.Contract.Specifier
+Set lContractSpec = pProcessor.ContractSpec
 
 Dim lRegExp As RegExp: Set lRegExp = gRegExp
 lRegExp.IgnoreCase = True
@@ -523,19 +543,27 @@ For Each lMatch In lMatches
         s = s & FormatTimestamp(yesterdayDate, mTimestampDateOnlyFormat)
     Case FromDateVariable
         s = s & FormatTimestamp(pProcessor.FromDate, mTimestampDateOnlyFormat)
+    Case FromDateTimeVariable
+        s = s & Replace$(FormatTimestamp(pProcessor.FromDate, mTimestampFormat + TimestampNoMillisecs), ":", ".")
     Case FromTimeVariable
-        s = s & FormatTimestamp(pProcessor.FromDate, mTimestampTimeOnlyFormat)
+        s = s & Replace$(FormatTimestamp(pProcessor.FromDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs), ":", ".")
     Case ToDateVariable
         If pProcessor.ToDate = MaxDate Then
             s = s & LatestParameter
         Else
             s = s & FormatTimestamp(pProcessor.ToDate, mTimestampDateOnlyFormat)
         End If
+    Case ToDateTimeVariable
+        If pProcessor.ToDate = MaxDate Then
+            s = s & LatestParameter
+        Else
+            s = s & Replace$(FormatTimestamp(pProcessor.ToDate, mTimestampFormat + TimestampNoMillisecs), ":", ".")
+        End If
     Case ToTimeVariable
         If pProcessor.ToDate = MaxDate Then
             s = s & LatestParameter
         Else
-            s = s & FormatTimestamp(pProcessor.ToDate, mTimestampTimeOnlyFormat)
+            s = s & Replace$(FormatTimestamp(pProcessor.ToDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs), ":", ".")
         End If
     Case TimeframeVariable
         s = s & pProcessor.Timeframe.ToShortString
@@ -591,6 +619,18 @@ mCommandSeparator = ";"
 
 Set mClp = CreateCommandLineParser(Command)
 
+Dim lLogApiMessages As ApiMessageLoggingOptions
+Dim lLogRawApiMessages As ApiMessageLoggingOptions
+Dim lLogApiMessageStats As Boolean
+If Not validateApiMessageLogging( _
+                mClp.switchValue(SwitchApiMessageLogging), _
+                lLogApiMessages, _
+                lLogRawApiMessages, _
+                lLogApiMessageStats) Then
+    gWriteLineToConsole "API message logging setting is invalid"
+    Exit Sub
+End If
+
 If mClp.Switch(SwitchLogToConsole) Then
     gLogToConsole = True
     DefaultLogLevel = LogLevelHighDetail
@@ -609,6 +649,8 @@ setupSubstitutionVariables
 If mClp.Switch(SwitchCommandSeparator) Then mCommandSeparator = mClp.switchValue(SwitchCommandSeparator)
 Assert Len(mCommandSeparator) = 1, "The command separator must be a single character"
 
+If mClp.Switch(SwitchOutputPath) Then processOutputPathCommand mClp.switchValue(SwitchOutputPath)
+
 If mClp.Switch(SwitchFromDb) Then
     mDataSource = FromDb
     If setupDbProviders(mClp.switchValue(SwitchFromDb)) Then process
@@ -617,7 +659,11 @@ ElseIf mClp.Switch(SwitchFromFile) Then
     If setupFileProviders(mClp.switchValue(SwitchFromFile)) Then process
 ElseIf mClp.Switch(SwitchFromTws) Then
     mDataSource = FromTws
-    If setupTwsProviders(mClp.switchValue(SwitchFromTws)) Then process
+    If setupTwsProviders( _
+            mClp.switchValue(SwitchFromTws), _
+            lLogApiMessages, _
+            lLogRawApiMessages, _
+            lLogApiMessageStats) Then process
 Else
     showUsage
 End If
@@ -667,7 +713,7 @@ lRegExp.IgnoreCase = True
 
 lRegExp.Pattern = FilenameCharsPattern
 If Not lRegExp.Test(pPath) Then
-    gWriteErrorLine "invalid characters: cannot contain  / * ? "" < > | "
+    gWriteErrorLine "Invalid characters: path cannot contain  / * ? "" < > | "
     isValidPath = False
     Exit Function
 End If
@@ -753,8 +799,7 @@ s = App.ProductName & _
     vbCrLf & _
     App.LegalCopyright
 gWriteLineToConsole s
-s = s & vbCrLf & "Arguments: " & Command
-LogMessage s
+LogMessage "Arguments: " & Command
 
 Exit Sub
 
@@ -803,7 +848,7 @@ Case ToCommand
 Case StartCommand
     processStartCommand params
 Case StopCommand
-    processStopCommand
+    processStopCommand params
 Case NumberCommand
     processNumberCommand params
 Case TimeframeCommand
@@ -869,17 +914,18 @@ Do
             Exit Sub
         End If
         
-        gLogger.Log "cmd: " & lInputString, ProcName, ModuleName
-        
         If lInputString = "" Then
             ' ignore blank lines
         ElseIf Left$(lInputString, 1) = "#" Then
+            LogMessage "cmd: " & lInputString
             ' ignore comments
         Else
+            LogMessage "cmd: " & lInputString
             processCommand lInputString
         End If
+    Else
+        Wait 10
     End If
-    Wait 10
 Loop
 
 pContinue = True
@@ -1039,17 +1085,16 @@ Do Until lTs.AtEndOfStream
         
         If UCase$(lInputString) = ExitCommand Then Exit Sub
         
-        gLogger.Log "cmd: " & lInputString, ProcName, ModuleName
-        
         If lInputString = "" Then
             ' ignore blank lines
         ElseIf Left$(lInputString, 1) = "#" Then
+            LogMessage "file: " & lInputString
             ' ignore comments
         Else
+            LogMessage "file: " & lInputString
             processCommand lInputString
         End If
     End If
-    Wait 10
 Loop
 
 Exit Sub
@@ -1090,7 +1135,7 @@ If IsInteger(params, 1) Then
 ElseIf params = "-1" Or UCase$(params) = "ALL" Then
     mNumber = &H7FFFFFFF
 Else
-    gWriteErrorLine "Invalid number '" & params & "'" & ": must be an integer > 0 or -1"
+    gWriteErrorLine "Invalid number '" & params & "'" & ": must be an integer > 0 or -1 or 'ALL'"
 End If
 
 If mDataSource = FromFile Then gWriteLineToConsole "number command is ignored for tickfile input"
@@ -1362,6 +1407,7 @@ Else
         
         mProcessors.Add lProcess
         lProcess.StartData mOutputPath, lPathAndFilename, lAppend
+        If Not mAsync Then Set mCurrentProcessor = lProcess
     End If
 End If
 
@@ -1380,19 +1426,21 @@ Do
         Dim lInputString As String
         lInputString = Trim$(gCon.ReadLine(":"))
         If lInputString = gCon.EofString Or UCase$(lInputString) = ExitCommand Then Exit Do
-        gLogger.Log "gCon: " & lInputString, ProcName, ModuleName
         
         mLineNumber = mLineNumber + 1
         
         If lInputString = "" Then
             ' ignore blank lines
         ElseIf Left$(lInputString, 1) = "#" Then
+            LogMessage "con: " & lInputString
             ' ignore comments
         Else
+            LogMessage "con: " & lInputString
             processCommand lInputString
         End If
+    Else
+        Wait 10
     End If
-    Wait 10
 Loop
 
 Exit Sub
@@ -1401,15 +1449,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processStopCommand()
+Private Sub processStopCommand( _
+                ByVal pParams As String)
 Const ProcName As String = "processStopCommand"
 On Error GoTo Err
 
-'If gProcessor Is Nothing Then
-'    gWriteErrorLine "Cannot stop - not started"
-'Else
-'    gProcessor.StopData
-'End If
+If pParams = "" Then
+    If Not mCurrentProcessor Is Nothing Then
+        mCurrentProcessor.StopData
+    ElseIf Not mAsync Then
+        gWriteErrorLine "Error: nothing is running"
+    Else
+        gWriteErrorLine "Error: you must use 'STOP ALL' during async processing"
+    End If
+ElseIf UCase$(pParams) = "ALL" Then
+    If mProcessors.Count = 0 Then
+        gWriteErrorLine "Error: nothing is running"
+    Else
+        Dim lProcessor As IProcessor
+        For Each lProcessor In mProcessors
+            lProcessor.StopData
+        Next
+    End If
+Else
+    gWriteErrorLine "Error: the only parameter allowed is ALL"
+End If
 
 Exit Sub
 
@@ -1724,14 +1788,19 @@ addSubstitutionVariable TodayVariable
 addSubstitutionVariable YesterdayVariable
 addSubstitutionVariable FromDateVariable
 addSubstitutionVariable FromTimeVariable
+addSubstitutionVariable FromDateTimeVariable
 addSubstitutionVariable ToDateVariable
 addSubstitutionVariable ToTimeVariable
+addSubstitutionVariable ToDateTimeVariable
 
 SortStrings mSubstitutionVariables, EndIndex:=mMaxSubstitutionVariablesIndex
 End Sub
 
 Private Function setupTwsProviders( _
-                ByVal switchValue As String) As Boolean
+                ByVal switchValue As String, _
+                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogApiMessageStats As Boolean) As Boolean
 Const ProcName As String = "setupTwsProviders"
 On Error GoTo Err
 
@@ -1766,7 +1835,13 @@ ElseIf Not IsInteger(clientId, 0, 999999999) Then
 End If
 
 Dim lTwsClient As Client
-Set lTwsClient = GetClient(server, CLng(port), CLng(clientId))
+Set lTwsClient = GetClient( _
+                        server, _
+                        CLng(port), _
+                        CLng(clientId), _
+                        pLogApiMessages:=pLogApiMessages, _
+                        pLogRawApiMessages:=pLogRawApiMessages, _
+                        pLogApiMessageStats:=pLogApiMessageStats)
 Set mTWSConnectionMonitor = New TWSConnectionMonitor
 lTwsClient.AddTwsConnectionStateListener mTWSConnectionMonitor
 
@@ -1900,6 +1975,58 @@ End Function
 
 Private Function tomorrowDate() As Date
 tomorrowDate = Int(WorkingDayDate(WorkingDayNumber(Now) + 1, Now))
+End Function
+
+Private Function validateApiMessageLogging( _
+                ByVal pApiMessageLogging As String, _
+                ByRef pLogApiMessages As ApiMessageLoggingOptions, _
+                ByRef pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByRef pLogApiMessageStats As Boolean) As Boolean
+Const Always As String = "A"
+Const Default As String = "D"
+Const No As String = "N"
+Const None As String = "N"
+Const Yes As String = "Y"
+
+pApiMessageLogging = UCase$(pApiMessageLogging)
+
+validateApiMessageLogging = False
+If Len(pApiMessageLogging) = 0 Then pApiMessageLogging = Default & Default & No
+If Len(pApiMessageLogging) <> 3 Then Exit Function
+
+Dim s As String
+s = Left$(pApiMessageLogging, 1)
+If s = None Then
+    pLogApiMessages = ApiMessageLoggingOptionNone
+ElseIf s = Default Then
+    pLogApiMessages = ApiMessageLoggingOptionDefault
+ElseIf s = Always Then
+    pLogApiMessages = ApiMessageLoggingOptionAlways
+Else
+    Exit Function
+End If
+
+s = Mid(pApiMessageLogging, 2, 1)
+If s = None Then
+    pLogRawApiMessages = ApiMessageLoggingOptionNone
+ElseIf s = Default Then
+    pLogRawApiMessages = ApiMessageLoggingOptionDefault
+ElseIf s = Always Then
+    pLogRawApiMessages = ApiMessageLoggingOptionAlways
+Else
+    Exit Function
+End If
+
+s = Mid(pApiMessageLogging, 3, 1)
+If s = No Then
+    pLogApiMessageStats = False
+ElseIf s = Yes Then
+    pLogApiMessageStats = True
+Else
+    Exit Function
+End If
+
+validateApiMessageLogging = True
 End Function
 
 Private Function yesterdayDate() As Date

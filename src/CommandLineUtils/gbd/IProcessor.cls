@@ -60,10 +60,13 @@ Private Const ModuleName                            As String = "IProcessor"
 ' Properties
 '@================================================================================
 
-Public Property Get Contract() As IContract
+Public Property Get ContractSpec() As IContractSpecifier
 End Property
 
 Public Property Get FromDate() As Date
+End Property
+
+Public Property Get DataSourceName() As String
 End Property
 
 Public Property Get NumberOfBarsOutput() As Long

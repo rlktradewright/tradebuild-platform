@@ -110,16 +110,20 @@ End Sub
 ' IProcessor Interface Members
 '@================================================================================
 
-Private Property Get IProcessor_Contract() As IContract
-Const ProcName As String = "IProcessor_Contract"
+Private Property Get IProcessor_ContractSpec() As IContractSpecifier
+Const ProcName As String = "IProcessor_ContractSpec"
 On Error GoTo Err
 
-Set IProcessor_Contract = mContract
+Set IProcessor_ContractSpec = mContract.Specifier
 
 Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Property Get IProcessor_DataSourceName() As String
+IProcessor_DataSourceName = mTickfileSpec.ToString
 End Property
 
 Public Property Get IProcessor_FromDate() As Date

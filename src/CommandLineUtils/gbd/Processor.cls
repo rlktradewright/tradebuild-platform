@@ -50,6 +50,9 @@ Private Const ModuleName                            As String = "Processor"
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+Private mFetchFuture                                As IFuture
+
+Private mStopListening                              As Boolean
 
 Private mContractStore                              As IContractStore
 Private mHistDataStore                              As IHistoricalDataStore
@@ -71,7 +74,6 @@ Private mNormaliseDailyBarTimestamps                As Boolean
 Private mOutputPath                                 As String
 Private mOutputFilename                             As String
 Private mAppend                                     As Boolean
-Private mStream                                     As TextStream
 
 Private mNumberOfBarsOutput                         As Long
                 
@@ -92,6 +94,8 @@ Private Sub IBarFetchListener_FetchCancelled(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchCancelled"
 On Error GoTo Err
 
+If mStopListening Then Exit Sub
+mStopListening = True
 gNotifyFetchCancelled Me
 
 Exit Sub
@@ -104,6 +108,7 @@ Private Sub IBarFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchCompleted"
 On Error GoTo Err
 
+If mStopListening Then Exit Sub
 gNotifyFetchCompleted Me
 
 Exit Sub
@@ -116,6 +121,7 @@ Private Sub IBarFetchListener_FetchDataRetrieved(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchDataRetrieved"
 On Error GoTo Err
 
+If mStopListening Then Exit Sub
 gNotifyDataRetrieved Me
 
 Exit Sub
@@ -128,6 +134,7 @@ Private Sub IBarFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pError
 Const ProcName As String = "IBarFetchListener_FetchFailed"
 On Error GoTo Err
 
+If mStopListening Then Exit Sub
 gNotifyFetchFailed Me, pErrorMessage
 
 Exit Sub
@@ -140,6 +147,7 @@ Private Sub IBarFetchListener_FetchStarted(ByVal pCookie As Variant)
 Const ProcName As String = "IBarFetchListener_FetchStarted"
 On Error GoTo Err
 
+If mStopListening Then Exit Sub
 gNotifyFetchStarted Me
 
 Exit Sub
@@ -152,11 +160,33 @@ Private Sub IBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As 
 Const ProcName As String = "IBarFetchListener_NotifyBar"
 On Error GoTo Err
 
+If mStopListening Then Exit Sub
+If mFromDate = 0 Then mFromDate = pBar.TimeStamp
+
+Static sStream As TextStream
+
+If mOutputPath = "" And mOutputFilename = "" Then
+ElseIf sStream Is Nothing Then
+    Dim lMessage As String
+    Set sStream = gCreateOutputStream( _
+                        mOutputPath, _
+                        mOutputFilename, _
+                        Me, _
+                        mAppend, _
+                        lMessage)
+    If sStream Is Nothing Then
+        mFetchFuture.Cancel
+        gNotifyFetchFailed Me, lMessage
+        mStopListening = True
+        Exit Sub
+    End If
+End If
+    
 mNumberOfBarsOutput = mNumberOfBarsOutput + 1
-If mStream Is Nothing Then
+If sStream Is Nothing Then
     gOutputBarToConsole pBar, mSecType, mTickSize
 Else
-    gOutputBarToTextStream pBar, mSecType, mTickSize, mStream
+    gOutputBarToTextStream pBar, mSecType, mTickSize, sStream
 End If
 
 Exit Sub
@@ -191,11 +221,15 @@ End Sub
 ' IProcessor Interface Members
 '@================================================================================
 
-Private Property Get IProcessor_Contract() As IContract
-Const ProcName As String = "IProcessor_Contract"
+Private Property Get IProcessor_ContractSpec() As IContractSpecifier
+Const ProcName As String = "IProcessor_ContractSpec"
 On Error GoTo Err
 
-Set IProcessor_Contract = mContract
+If mContract Is Nothing Then
+    Set IProcessor_ContractSpec = mContractSpec
+Else
+    Set IProcessor_ContractSpec = mContract.Specifier
+End If
 
 Exit Property
 
@@ -205,6 +239,34 @@ End Property
 
 Public Property Get IProcessor_FromDate() As Date
 IProcessor_FromDate = mFromDate
+End Property
+
+Private Property Get IProcessor_DataSourceName() As String
+Dim s As String
+If Not mContract Is Nothing Then
+    s = gGetContractName(mContract.Specifier)
+Else
+    s = mContractSpec.ToString
+End If
+s = s & " ["
+Dim lFrom As String: lFrom = FormatDateTime( _
+                                IIf(mEntireSession, Int(mFromDate), mFromDate), _
+                                vbGeneralDate)
+Dim lTo As String: lTo = IIf(mToDate = MaxDate, _
+                                "LATEST", _
+                                FormatDateTime( _
+                                    IIf(mEntireSession, Int(mFromDate), mFromDate), _
+                                    vbGeneralDate))
+If mEntireSession Then s = s & "Sessions "
+
+If mFromDate <> 0 And mToDate <> 0 Then
+    s = s & lFrom & " to " & lTo
+ElseIf mFromDate <> 0 Then
+    s = s & " From " & lFrom
+ElseIf mToDate <> 0 Then
+    s = s & " To " & lTo
+End If
+IProcessor_DataSourceName = s & "]"
 End Property
 
 Private Property Get IProcessor_NumberOfBarsOutput() As Long
@@ -274,18 +336,22 @@ On Error GoTo Err
 
 If ev.Future.IsCancelled Then
     gNotifyFetchCancelled Me
+    mStopListening = True
 ElseIf ev.Future.IsFaulted Then
     gNotifyFetchFailed Me, ev.Future.ErrorMessage
+    mStopListening = True
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
     mSecType = mContract.Specifier.SecType
     mTickSize = mContract.TickSize
     
     If mEntireSession Then
-        mFromDate = GetSessionTimes( _
-                            Int(mFromDate) + 0.5, _
-                            IIf(mSessionOnly, mContract.SessionStartTime, mContract.FullSessionStartTime), _
-                            IIf(mSessionOnly, mContract.SessionEndTime, mContract.FullSessionEndTime)).StartTime
+        If mFromDate <> 0 Then
+            mFromDate = GetSessionTimes( _
+                                Int(mFromDate) + 0.5, _
+                                IIf(mSessionOnly, mContract.SessionStartTime, mContract.FullSessionStartTime), _
+                                IIf(mSessionOnly, mContract.SessionEndTime, mContract.FullSessionEndTime)).StartTime
+        End If
         If mToDate <> MaxDate Then
             mToDate = GetSessionTimes( _
                                 Int(mToDate) + 0.5, _
@@ -294,22 +360,8 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
         End If
     End If
     
-    If mOutputPath = "" And mOutputFilename = "" Then
-    Else
-        Dim lMessage As String
-        Set mStream = gCreateOutputStream( _
-                            mOutputPath, _
-                            mOutputFilename, _
-                            Me, _
-                            mAppend, _
-                            lMessage)
-        If mStream Is Nothing Then
-            gNotifyFetchFailed Me, lMessage
-            Exit Sub
-        End If
-    End If
     
-    mFutureWaiter.Add mHistDataStore.FetchBars( _
+    Set mFetchFuture = mHistDataStore.FetchBars( _
                             CreateBarDataSpecifierFuture( _
                                 ev.Future, _
                                 mTimePeriod, _
@@ -324,7 +376,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
                                 mSessionStartTime, _
                                 mSessionEndTime), _
                             Me)
-    
+    mFutureWaiter.Add mFetchFuture
 End If
 
 Exit Sub
