@@ -223,7 +223,7 @@ Const ProcName As String = "AddPeriod"
 On Error GoTo Err
 
 Dim lPeriodStart As Date
-lPeriodStart = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime)
+lPeriodStart = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime, mSessionEndTime)
 
 Dim lPeriod As Period
 Set lPeriod = createNextPeriod(lPeriodStart, pAllowDuplicates)
@@ -265,7 +265,7 @@ Const ProcName As String = "Contains"
 On Error GoTo Err
 
 Dim lPeriodStart As Date
-lPeriodStart = BarStartTime(Timestamp, mTimePeriod, mSessionStartTime)
+lPeriodStart = BarStartTime(Timestamp, mTimePeriod, mSessionStartTime, mSessionEndTime)
 Contains = mPeriods.Contains(generateKey(lPeriodStart, 0))
 
 Exit Function
@@ -367,7 +367,7 @@ On Error GoTo Err
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
 
 Dim lPeriodStart As Date
-lPeriodStart = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime)
+lPeriodStart = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime, mSessionEndTime)
 mPeriods.Remove generateKey(lPeriodStart, 0)
 
 Exit Sub
@@ -385,7 +385,7 @@ On Error GoTo Err
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
 
 Dim lPeriodStart As Date
-lPeriodStart = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime)
+lPeriodStart = BarStartTime(pTimestamp, mTimePeriod, mSessionStartTime, mSessionEndTime)
 mPeriods.Remove generateKey(lPeriodStart, duplicateNumber)
 
 Exit Sub
@@ -403,7 +403,7 @@ On Error GoTo Err
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
 
 Dim lPeriodStart As Date
-lPeriodStart = BarStartTime(Timestamp, mTimePeriod, mSessionStartTime)
+lPeriodStart = BarStartTime(Timestamp, mTimePeriod, mSessionStartTime, mSessionEndTime)
 
 Dim lRequestedItem As Variant
 TryItem = mPeriods.TryItem(generateKey(lPeriodStart, 0), lRequestedItem)
@@ -708,7 +708,8 @@ Case Else
     lGridLineTime = NormaliseBarTimestamp( _
                         BarStartTime(pPeriod.LabelTimestamp, _
                                     mVerticalGridTimePeriod, _
-                                    mSessionStartTime), _
+                                    mSessionStartTime, _
+                                    mSessionEndTime), _
                         mTimePeriod, _
                         mSessionStartTime, _
                         mSessionEndTime)

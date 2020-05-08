@@ -553,7 +553,8 @@ Dim lBar As New Bar
 
 lBar.Timestamp = gCentiSecondsToDate(gBarStartTime(Timestamp, _
                                 mBarTimePeriod, _
-                                mMainSession.SessionStartTime))
+                                mMainSession.SessionStartTime, _
+                                mMainSession.SessionEndTime))
 
 addABar lBar
 

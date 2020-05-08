@@ -279,9 +279,26 @@ On Error GoTo Err
 
 Dim lTimeframe As Timeframe
 If mTicker.IsTickReplay Then
-    Set lTimeframe = mTimeframes.AddHistorical(pTimePeriod, "", pNumberOfBarsToFetch, , BarStartTime(mInitialTimestamp, pTimePeriod, mContract.SessionStartTime), , pIncludeBarsOutsideSession)
+    Set lTimeframe = mTimeframes.AddHistorical( _
+                                    pTimePeriod, _
+                                    "", _
+                                    pNumberOfBarsToFetch, _
+                                    , _
+                                    BarStartTime( _
+                                        mInitialTimestamp, _
+                                        pTimePeriod, _
+                                        mContract.SessionStartTime, _
+                                        mContract.SessionEndTime), _
+                                    , _
+                                    pIncludeBarsOutsideSession)
 Else
-    Set lTimeframe = mTimeframes.Add(pTimePeriod, "", pNumberOfBarsToFetch, , , pIncludeBarsOutsideSession)
+    Set lTimeframe = mTimeframes.Add( _
+                                    pTimePeriod, _
+                                    "", _
+                                    pNumberOfBarsToFetch, _
+                                    , _
+                                    , _
+                                    pIncludeBarsOutsideSession)
 End If
 
 Static sTimeframes As New EnumerableCollection

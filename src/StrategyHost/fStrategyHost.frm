@@ -1697,7 +1697,7 @@ Dim ListItem As ListItem
 Set ListItem = BracketOrderList.SelectedItem
 
 Dim lPeriodNumber As Long
-lPeriodNumber = mPricePeriods(BarStartTime(CDate(ListItem.SubItems(BOListColumns.ColumnStartTime - 1)), mPriceChartTimePeriod, mContract.SessionStartTime)).PeriodNumber
+lPeriodNumber = mPricePeriods(BarStartTime(CDate(ListItem.SubItems(BOListColumns.ColumnStartTime - 1)), mPriceChartTimePeriod, mContract.SessionStartTime, mContract.SessionEndTime)).PeriodNumber
 PriceChart.BaseChartController(1).LastVisiblePeriod = _
             lPeriodNumber + _
             Int((PriceChart.BaseChartController.LastVisiblePeriod - _

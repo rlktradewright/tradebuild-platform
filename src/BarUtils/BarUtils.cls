@@ -110,7 +110,8 @@ End Function
 Public Function BarStartTime( _
                 ByVal Timestamp As Date, _
                 ByVal BarTimePeriod As TimePeriod, _
-                Optional ByVal SessionStartTime As Date) As Date
+                Optional ByVal SessionStartTime As Date, _
+                Optional ByVal SessionEndTime As Date) As Date
 Const ProcName As String = "BarStartTime"
 On Error GoTo Err
 
@@ -123,7 +124,8 @@ Case TimePeriodVolume, _
 Case Else
     BarStartTime = gCentiSecondsToDate(gBarStartTime(Timestamp, _
                                     BarTimePeriod, _
-                                    gNormaliseSessionTime(SessionStartTime)))
+                                    gNormaliseSessionTime(SessionStartTime), _
+                                    gNormaliseSessionTime(SessionEndTime)))
 End Select
 
 Exit Function
@@ -275,6 +277,32 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Sub GetTimespanData( _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByRef pFromTime As Date, _
+                ByRef pToTime As Date, _
+                ByRef pFromSessionTimes As SessionTimes, _
+                ByRef pToSessionTimes As SessionTimes, _
+                ByVal pSessionStartTime As Date, _
+                ByVal pSessionEndTime As Date)
+Const ProcName As String = "GetTimespanData"
+On Error GoTo Err
+
+gGetTimespanData pBarTimePeriod, _
+                pFromTime, _
+                pToTime, _
+                pFromSessionTimes, _
+                pToSessionTimes, _
+                pSessionStartTime, _
+                pSessionEndTime
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+
 Public Function MaxNumberOfBarsInTimespan( _
                 ByVal pBarTimePeriod As TimePeriod, _
                 ByVal pStartTime As Date, _
@@ -284,13 +312,51 @@ Public Function MaxNumberOfBarsInTimespan( _
 Const ProcName As String = "MaxNumberOfBarsInTimespan"
 On Error GoTo Err
 
-MaxNumberOfBarsInTimespan = gMaxNumberOfBarsInTimespan(pBarTimePeriod, pStartTime, pEndTime, pSessionStartTime, pSessionEndTime)
+Dim lFromSessionTimes As SessionTimes
+Dim lToSessionTimes As SessionTimes
+gGetTimespanData pBarTimePeriod, _
+                pStartTime, _
+                pEndTime, _
+                lFromSessionTimes, _
+                lToSessionTimes, _
+                pSessionStartTime, _
+                pSessionEndTime
+
+MaxNumberOfBarsInTimespan = gMaxNumberOfBarsInTimespanNormalized( _
+                                                        pBarTimePeriod, _
+                                                        pStartTime, _
+                                                        pEndTime, _
+                                                        lFromSessionTimes, _
+                                                        lToSessionTimes)
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Public Function MaxNumberOfBarsInTimespanNormalized( _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pStartTime As Date, _
+                ByVal pEndTime As Date, _
+                ByRef pStartSessionTimes As SessionTimes, _
+                ByRef pEndSessionTimes As SessionTimes) As Long
+Const ProcName As String = "gMaxNumberOfBarsInTimespanNormalized"
+On Error GoTo Err
+
+MaxNumberOfBarsInTimespanNormalized = gMaxNumberOfBarsInTimespanNormalized( _
+                                            pBarTimePeriod, _
+                                            pStartTime, _
+                                            pEndTime, _
+                                            pStartSessionTimes, _
+                                            pEndSessionTimes)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 
 Public Function NormaliseBarTimestamp( _
                 ByVal pTimestamp As Date, _

@@ -224,7 +224,8 @@ If mBarSpecifier.ToDate = MaxDate Then
     If mExcludeCurrentBar And Not IsContractExpired(lContract) Then
         mBarSpecifier.ToDate = BarStartTime(lTimestamp, _
                                     mBarSpecifier.BarTimePeriod, _
-                                    lSessionStartTime)
+                                    lSessionStartTime, _
+                                    lSessionEndTime)
     Else
         ' ensure we get the latest bar
         mBarSpecifier.ToDate = BarEndTime(lTimestamp, _

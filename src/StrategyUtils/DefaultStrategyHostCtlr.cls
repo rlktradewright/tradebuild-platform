@@ -592,10 +592,10 @@ On Error GoTo Err
 If Not mModel.ShowChart Then Exit Sub
 
 Dim lLineStartTime As Date
-lLineStartTime = BarStartTime(pBracketOrderProfile.StartTime, mPriceChartTimePeriod, mModel.Contract.SessionStartTime)
+lLineStartTime = BarStartTime(pBracketOrderProfile.StartTime, mPriceChartTimePeriod, mModel.Contract.SessionStartTime, mModel.Contract.SessionEndTime)
 
 Dim lLineEndTime As Date
-lLineEndTime = BarStartTime(pBracketOrderProfile.EndTime, mPriceChartTimePeriod, mModel.Contract.SessionStartTime)
+lLineEndTime = BarStartTime(pBracketOrderProfile.EndTime, mPriceChartTimePeriod, mModel.Contract.SessionStartTime, mModel.Contract.SessionEndTime)
 
 mView.ShowTradeLine lLineStartTime, _
                                 lLineEndTime, _
