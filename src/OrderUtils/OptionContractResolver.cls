@@ -102,14 +102,14 @@ On Error GoTo Err
 If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
     If ev.Tick.TickType <> TickTypeTrade Then Exit Sub
     
-    gLog "Underlying price is: " & ev.Tick.Price, ProcName, ModuleName
+    gLogContractResolution "Underlying price is: " & ev.Tick.Price
     
     If mContractSpec.Right = OptCall Then
-        mHeuristicStrike = ev.Tick.Price - CInt(mMaxExpenditure / 100)
+        mHeuristicStrike = ev.Tick.Price - mMaxExpenditure / 100#
     Else
-        mHeuristicStrike = ev.Tick.Price + CInt(mMaxExpenditure / 100)
+        mHeuristicStrike = ev.Tick.Price + mMaxExpenditure / 100#
     End If
-    mDataSource.StopMarketData
+    mDataSource.Finish
     Set mDataSource = Nothing
     
     mInitialStrike = updateInitialStrike(1#)
@@ -117,15 +117,26 @@ If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
     fireStateChange OptionContractResolverStateFetchingInitialContract
 ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     If ev.Tick.TickType <> mTickType Then Exit Sub
-    mDataSource.StopMarketData
+    mDataSource.Finish
     Set mDataSource = Nothing
     
-    Dim lContractValue As Double
-    lContractValue = ev.Tick.Price * mCandidateContract.Specifier.Multiplier
-    If lContractValue <= mMaxExpenditure Then
+    Dim lContractValue As Long
+    lContractValue = CLng(ev.Tick.Price * mCandidateContract.Specifier.Multiplier)
+    Dim s As String
+    If lContractValue > mMaxExpenditure Then
+        s = "Value of contract with strike: " & _
+                mCandidateContract.Specifier.Strike & _
+                " is " & lContractValue
+        gLogContractResolution s
+    Else
         ' we've found the target contract
-        gLog "Target contract has strike: " & mCandidateContract.Specifier.Strike, ProcName, ModuleName
+        s = "Target contract has strike: " & _
+                mCandidateContract.Specifier.Strike & _
+                " and value: " & lContractValue
+        gLogContractResolution s
+        
         processTargetContract mCandidateContract
+        
         Exit Sub
     End If
         
@@ -137,7 +148,7 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
         mDataSource.AddGenericTickListener Me
         mDataSource.StartMarketData
     Else
-        gLog "No target contract found", ProcName, ModuleName
+        gLogContractResolution "No target contract found"
         Set mSelfRef = Nothing
     End If
 End If
@@ -172,7 +183,7 @@ Select Case mState
 Case OptionContractResolverStateFetchingUnderlyingContract
     Dim lUnderlyingContract As IContract
     Set lUnderlyingContract = ev.Future.Value
-    gLog "Underlying contract is: " & lUnderlyingContract.Specifier.ToString, ProcName, ModuleName
+    gLogContractResolution "Underlying contract is: " & lUnderlyingContract.Specifier.ToString
     Set mDataSource = mMarketDataManager.CreateMarketDataSource(ev.Future, False)
     mDataSource.AddGenericTickListener Me
     mDataSource.StartMarketData
@@ -322,7 +333,7 @@ mFutureBuilder.Cancel
 If Not mDataSource Is Nothing Then
     If mDataSource.IsMarketDataRequested Then
         mDataSource.RemoveGenericTickListener Me
-        mDataSource.StopMarketData
+        mDataSource.Finish
     End If
     Set mDataSource = Nothing
 End If
@@ -457,7 +468,7 @@ Private Sub processTargetContract(ByVal pContract As IContract)
 Const ProcName As String = "processTargetContract"
 On Error GoTo Err
 
-gLog "Contract is: " & pContract.Specifier.ToString, ProcName, ModuleName
+gLogContractResolution "Contract is: " & pContract.Specifier.ToString
 mFutureBuilder.Value = pContract
 mFutureBuilder.Complete
 fireStateChange OptionContractResolverStateGotTargetContract
@@ -475,11 +486,11 @@ On Error GoTo Err
 Dim lStrike As Double
 
 If mContractSpec.Right = OptCall Then
-    lStrike = CInt(Fix((mHeuristicStrike / pRoundTo) + 0.9999)) * pRoundTo
+    lStrike = Int(mHeuristicStrike / pRoundTo) * pRoundTo
 Else
-    lStrike = -CInt(Fix(-mHeuristicStrike / pRoundTo)) * pRoundTo
+    lStrike = -Int(-mHeuristicStrike / pRoundTo) * pRoundTo
 End If
-gLog "Initial strike price is: " & lStrike, ProcName, ModuleName
+gLogContractResolution "Initial strike price is: " & lStrike
 
 updateInitialStrike = lStrike
 

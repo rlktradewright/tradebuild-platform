@@ -560,6 +560,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub gLogContractResolution(ByVal pMsg As String, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Const ProcName As String = "gLog"
+On Error GoTo Err
+
+Static sLogger As Logger
+If sLogger Is Nothing Then Set sLogger = GetLogger("tradebuild.log.orderutils.contractresolution")
+
+sLogger.Log pLogLevel, pMsg
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub gLogDrawDown( _
                 ByVal pData As Currency, _
                 ByVal pSimulated As Boolean, _
