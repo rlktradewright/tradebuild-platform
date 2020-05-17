@@ -106,6 +106,7 @@ On Error GoTo Err
 If mTickStream.State = TickStreamStateFinished Then Exit Sub
 
 mTickStream.NoMoreTicks
+mTickStream.State = TickStreamStateFinished
 
 fireStateChange TickStreamStateFinished
 mStateChangeListeners.Clear
