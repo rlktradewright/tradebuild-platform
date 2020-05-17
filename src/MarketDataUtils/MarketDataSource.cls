@@ -966,13 +966,13 @@ If State = MarketDataSourceStateError Then Exit Sub
 DataSourceBase.RemoveMarketDataSource Me
 setState MarketDataSourceStateFinished
 
-Set mGenericTickListeners = Nothing
-Set mMarketDepthListeners = Nothing
-Set mPriceChangeListeners = Nothing
-Set mQuoteListeners = Nothing
-Set mRawMarketDepthListeners = Nothing
-Set mStateChangeListeners = Nothing
-Set mErrorListeners = Nothing
+mGenericTickListeners.Clear
+mMarketDepthListeners.Clear
+mPriceChangeListeners.Clear
+mQuoteListeners.Clear
+mRawMarketDepthListeners.Clear
+mStateChangeListeners.Clear
+mErrorListeners.Clear
 
 Set mStudyBase = Nothing
 

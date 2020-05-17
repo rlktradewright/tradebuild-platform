@@ -63,10 +63,6 @@ Private mPrevSizeChange                             As ValueChanges
 
 Private Sub Class_Initialize()
 mAllowedTickType = -1
-mPriceChange = ValueChangeNone
-mSizeChange = ValueChangeNone
-mPrevPriceChange = ValueChangeNone
-mPrevSizeChange = ValueChangeNone
 End Sub
 
 '@================================================================================
@@ -136,6 +132,16 @@ End Property
 Friend Sub Initialise(ByVal pTickType As TickTypes)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
+
+Dim lTick As GenericTick
+mTick = lTick
+mPreviousTick = lTick
+mIsLive = False
+
+mPriceChange = ValueChangeNone
+mSizeChange = ValueChangeNone
+mPrevPriceChange = ValueChangeNone
+mPrevSizeChange = ValueChangeNone
 
 validateTickType pTickType
 

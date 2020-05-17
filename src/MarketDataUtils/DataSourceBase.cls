@@ -65,16 +65,8 @@ Private mNumberOfMarketDepthRows                    As Long
 Private mDataSources                                As DataSources
 
 Private mBidTick                                    As New Tick
-Private mRecentBidPriceChange                       As ValueChanges
-Private mRecentBidSizeChange                        As ValueChanges
-
 Private mAskTick                                    As New Tick
-Private mRecentAskPriceChange                       As ValueChanges
-Private mRecentAskSizeChange                        As ValueChanges
-
 Private mTradeTick                                  As New Tick
-Private mRecentTradePriceChange                     As ValueChanges
-Private mRecentTradeSizeChange                      As ValueChanges
 
 Private mOpenTick                                   As New Tick
 Private mHighTick                                   As New Tick
@@ -123,17 +115,7 @@ mDataSources.Initialise Me
 
 Set mPriorityTickListeners = New Listeners
 
-mAskTick.Initialise TickTypeAsk
-mBidTick.Initialise TickTypeBid
-mTradeTick.Initialise TickTypeTrade
-
-mOpenTick.Initialise TickTypeOpenPrice
-mHighTick.Initialise TickTypeHighPrice
-mLowTick.Initialise TickTypeLowPrice
-mCloseTick.Initialise TickTypeClosePrice
-
-mVolumeTick.Initialise TickTypeVolume
-mOpenInterestTick.Initialise TickTypeOpenInterest
+initialiseTicks
 
 Exit Sub
 
@@ -576,14 +558,13 @@ Friend Sub RemoveMarketDataSource(ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "RemoveMarketDataSource"
 On Error GoTo Err
 
-mDataSources.Remove pDataSource
 If pDataSource.SubscribedToMarketData Then mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions - 1
 If pDataSource.SubscribedToMarketDepth Then mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
 CancelMarketData
 CancelMarketDepth
 
+mDataSources.Remove pDataSource
 If mDataSources.NumberOfSubscribers = 0 Then getDataManager.ReleaseDataSourceBase Me
-
 getDataManager.RemoveMarketDataSource pDataSource
 
 Exit Sub
@@ -627,12 +608,12 @@ Const ProcName As String = "CancelMarketData"
 On Error GoTo Err
 
 If mDataTickStream Is Nothing Then Exit Sub
+If mNumberOfMarketDataSubscriptions <> 0 Then Exit Sub
 
-If mNumberOfMarketDataSubscriptions = 0 Then
-    mDataTickStream.RemoveGenericTickListener Me
-    mDataTickStream.Finish
-    Set mDataTickStream = Nothing
-End If
+mDataTickStream.RemoveGenericTickListener Me
+mDataTickStream.Finish
+Set mDataTickStream = Nothing
+initialiseTicks
 
 Exit Sub
 
@@ -645,13 +626,12 @@ Const ProcName As String = "CancelMarketDepth"
 On Error GoTo Err
 
 If mDepthTickStream Is Nothing Then Exit Sub
+If mNumberOfMarketDepthSubscriptions <> 0 Then Exit Sub
 
-If mNumberOfMarketDepthSubscriptions = 0 Then
-    mDepthTickStream.RemoveGenericTickListener Me
-    mDepthTickStream.Finish
-    Set mDepthTickStream = Nothing
-    mDOMManager.Reset
-End If
+mDepthTickStream.RemoveGenericTickListener Me
+mDepthTickStream.Finish
+Set mDepthTickStream = Nothing
+mDOMManager.Reset
 
 Exit Sub
 
@@ -812,6 +792,20 @@ End Sub
 Private Function getDataManager() As MarketDataManager
 Set getDataManager = mMarketDataManagerRef.Target
 End Function
+
+Private Sub initialiseTicks()
+mAskTick.Initialise TickTypeAsk
+mBidTick.Initialise TickTypeBid
+mTradeTick.Initialise TickTypeTrade
+
+mOpenTick.Initialise TickTypeOpenPrice
+mHighTick.Initialise TickTypeHighPrice
+mLowTick.Initialise TickTypeLowPrice
+mCloseTick.Initialise TickTypeClosePrice
+
+mVolumeTick.Initialise TickTypeVolume
+mOpenInterestTick.Initialise TickTypeOpenInterest
+End Sub
 
 Private Sub NotifyMarketDataError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
 Const ProcName As String = "NotifyMarketDataError"
