@@ -195,12 +195,6 @@ Public Property Get gErrorCount() As Long
 gErrorCount = mErrorCount
 End Property
 
-Public Property Get gLogger() As FormattingLogger
-Static sLogger As FormattingLogger
-If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("plord", ProjectName)
-Set gLogger = sLogger
-End Property
-
 Public Property Get gRegExp() As RegExp
 Static lRegexp As RegExp
 If lRegexp Is Nothing Then Set lRegexp = New RegExp
@@ -1622,6 +1616,7 @@ Set lLogfile = CreateFileLogListener( _
                     includeTimestamp:=True, _
                     includeLogLevel:=False)
 GetLogger("log").AddLogListener lLogfile
+GetLogger("tradebuild.log.orderutils.contractresolution").AddLogListener lLogfile
 GetLogger("position.order").AddLogListener lLogfile
 GetLogger("position.simulatedorder").AddLogListener lLogfile
 

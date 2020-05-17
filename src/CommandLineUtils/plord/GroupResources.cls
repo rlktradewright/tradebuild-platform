@@ -93,12 +93,15 @@ ElseIf ev.Future.IsAvailable Then
     lContractProcessorName = gGenerateContractProcessorName(mGroupName, lContract.Specifier)
     If mContractProcessors.TryItem(lContractProcessorName, lExistingContractProcessor) Then
         ' we've already got a ContractProcessor for this contract, so move any
-        ' pending orders from this new one to that one, and delete the new one
+        ' pending orders and commands from this new one to that one, and delete
+        ' the new one
         lExistingContractProcessor.AddBracketOrderSpecs lNewContractProcessor
+        lExistingContractProcessor.AddPendingCommands lNewContractProcessor
         If lNewContractProcessor Is mCurrentContractProcessor Then
             Set mCurrentContractProcessor = lExistingContractProcessor
         End If
         mContractProcessors.Remove lNewContractProcessor.Id
+        lNewContractProcessor.Finish
         
     Else
         mContractProcessors.Remove lNewContractProcessor.Id
@@ -163,13 +166,11 @@ Dim lContractResolver As New ContractResolver
 lContractResolver.Initialise pContractSpec, _
                             lContractProcessor, _
                             mContractStore, _
-                            pBatchOrders, _
-                            pStageOrders, _
                             pMaxExpenditure, _
                             pUnderlyingExchangeName, _
                             mMarketDataManager
 
-lContractProcessor.Initialise GenerateGUIDString, lContractResolver
+lContractProcessor.Initialise GenerateGUIDString, lContractResolver, pStageOrders
 mContractProcessors.Add lContractProcessor, lContractProcessor.Id
 Set mCurrentContractProcessor = lContractProcessor
 

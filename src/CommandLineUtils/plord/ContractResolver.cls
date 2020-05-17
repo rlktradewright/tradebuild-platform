@@ -49,12 +49,6 @@ Private Const ModuleName                            As String = "ContractResolve
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private WithEvents mContractProcessor               As ContractProcessor
-Attribute mContractProcessor.VB_VarHelpID = -1
-
-Private mBatchOrders                                As Boolean
-Private mStageOrders                                As Boolean
-
 Private mContractStore                              As IContractStore
 
 Private mContractSpec                               As IContractSpecifier
@@ -64,17 +58,11 @@ Private mUnderlyingExchangeName                     As String
 
 Private mFutureBuilder                              As New FutureBuilder
 
-Private mPendingCommands                            As SortedDictionary
-
 Private mSelfRef                                    As Object
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Set mPendingCommands = CreateSortedDictionary(KeyTypeDate)
-End Sub
 
 '@================================================================================
 ' IStateChangeListener Interface Members
@@ -101,23 +89,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mContractProcessor Event Handlers
-'@================================================================================
-
-Private Sub mContractProcessor_IsReady()
-Const ProcName As String = "mContractProcessor_IsReady"
-On Error GoTo Err
-
-processPendingCommands
-Set mContractProcessor = Nothing
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -194,23 +165,10 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub AddPendingCommand( _
-                ByVal pCommand As Command, _
-                ByVal pParams As String, _
-                Optional ByVal pMessage As String)
-Dim lCommand As New PendingCommand
-Set lCommand.Command = pCommand
-lCommand.Params = pParams
-mPendingCommands.Add lCommand, GetTimestamp
-If pMessage <> "" Then gWriteLineToConsole pMessage, True
-End Sub
-
 Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-Set mContractProcessor = Nothing
-mPendingCommands.Clear
 mFutureWaiter.Cancel
 mFutureBuilder.Cancel
 
@@ -224,8 +182,6 @@ Friend Sub Initialise( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pContractProcessor As ContractProcessor, _
                 ByVal pContractStore As IContractStore, _
-                ByVal pBatchOrders As Boolean, _
-                ByVal pStageOrders As Boolean, _
                 ByVal pMaxExpenditure As Long, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pMarketDataManager As IMarketDataManager)
@@ -235,10 +191,7 @@ On Error GoTo Err
 Set mSelfRef = Me
 
 Set mContractSpec = pContractSpec
-Set mContractProcessor = pContractProcessor
 Set mContractStore = pContractStore
-mBatchOrders = pBatchOrders
-mStageOrders = pStageOrders
 mMaxExpenditure = pMaxExpenditure
 mUnderlyingExchangeName = pUnderlyingExchangeName
 
@@ -276,43 +229,6 @@ On Error GoTo Err
 mFutureBuilder.Value = pcontract
 mFutureBuilder.Complete
 gWriteLineToConsole "Contract is: " & gGetContractName(pcontract), True
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processPendingCommands()
-Const ProcName As String = "processPendingCommands"
-On Error GoTo Err
-
-Dim c As PendingCommand
-For Each c In mPendingCommands
-    gWriteLineToConsole c.Command.Name & " " & c.Params, True
-    If c.Command Is gCommands.BracketCommand Then
-        mContractProcessor.ProcessBracketCommand c.Params
-    ElseIf c.Command Is gCommands.BuyCommand Then
-        mContractProcessor.ProcessBuyCommand c.Params
-    ElseIf c.Command Is gCommands.EndBracketCommand Then
-        mContractProcessor.ProcessEndBracketCommand
-    ElseIf c.Command Is gCommands.EntryCommand Then
-        mContractProcessor.ProcessEntryCommand c.Params
-    ElseIf c.Command Is gCommands.QuitCommand Then
-        mContractProcessor.ProcessQuitCommand
-    ElseIf c.Command Is gCommands.RolloverCommand Then
-        mContractProcessor.ProcessRolloverCommand c.Params
-    ElseIf c.Command Is gCommands.SellCommand Then
-        mContractProcessor.ProcessSellCommand c.Params
-    ElseIf c.Command Is gCommands.StopLossCommand Then
-        mContractProcessor.ProcessStopLossCommand c.Params
-    ElseIf c.Command Is gCommands.TargetCommand Then
-        mContractProcessor.ProcessTargetCommand c.Params
-    End If
-Next
-
-gPlaceOrdersTask.AddContractProcessor mContractProcessor, mStageOrders
-mPendingCommands.Clear
 
 Exit Sub
 

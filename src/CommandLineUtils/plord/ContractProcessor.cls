@@ -26,8 +26,6 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event IsReady()
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -72,9 +70,16 @@ Private mLatestSellCommandParams                    As String
 Private mMaxExpenditure                             As Long
 Private mUnderlyingExchangeName                     As String
 
+Private mPendingCommands                            As SortedDictionary
+Private mStageOrders                                As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mPendingCommands = CreateSortedDictionary(KeyTypeDate)
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -90,11 +95,9 @@ On Error GoTo Err
 
 Dim lChangeType As OrderContextChangeTypes: lChangeType = ev.ChangeType
 
-If ev.ChangeType = OrderContextChangeTypes.OrderContextReadyStateChanged And _
-    mOrderContext.IsReady _
-Then
-    RaiseEvent IsReady
-End If
+If ev.ChangeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
+
+If mOrderContext.IsReady Then processPendingCommands
     
 Exit Sub
 
@@ -134,6 +137,10 @@ Friend Property Get Id() As String
 Id = mId
 End Property
 
+Friend Property Get IsReady()
+IsReady = mOrderContext.IsReady
+End Property
+
 Friend Property Get LatestBuyCommandParams() As String
 LatestBuyCommandParams = mLatestBuyCommandParams
 End Property
@@ -144,6 +151,10 @@ End Property
 
 Friend Property Get OrderContext() As OrderContext
 Set OrderContext = mOrderContext
+End Property
+
+Friend Property Get PendingCommandsEnumerator() As Enumerator
+Set PendingCommandsEnumerator = mPendingCommands.EntryEnumerator
 End Property
 
 '@================================================================================
@@ -208,6 +219,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub AddPendingCommands( _
+                ByVal pContractProcessor As ContractProcessor)
+Const ProcName As String = "AddPendingCommands"
+On Error GoTo Err
+
+Dim en As Enumerator
+Set en = pContractProcessor.PendingCommandsEnumerator
+
+Do While en.MoveNext
+    Dim lEntry As DictionaryEntry: Set lEntry = en.Current
+    Dim lTimestamp As Date: lTimestamp = lEntry.Key
+    Dim lPendingCommand As PendingCommand: Set lPendingCommand = lEntry.Data
+    addPendingCommand lTimestamp, _
+                        lPendingCommand.Command, _
+                        lPendingCommand.Params
+Loop
+
+If IsReady Then processPendingCommands
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub ClearOrders()
 mBracketOrders.Clear
 End Sub
@@ -227,6 +263,8 @@ If Not mPositionManager Is Nothing Then
     If Not mDataSource Is Nothing Then mDataSource.Finish
 End If
 
+mPendingCommands.Clear
+
 Exit Sub
 
 Err:
@@ -235,9 +273,11 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pId As String, _
-                ByVal pContractResolver As ContractResolver)
+                ByVal pContractResolver As ContractResolver, _
+                ByVal pStageOrders As Boolean)
 mId = pId
 Set mContractResolver = pContractResolver
+mStageOrders = pStageOrders
 End Sub
 
 Friend Sub ProcessBracketCommand( _
@@ -246,7 +286,7 @@ Const ProcName As String = "ProcessBracketCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
-    mContractResolver.AddPendingCommand gCommands.BracketCommand, pParams
+    addPendingCommand GetTimestamp, gCommands.BracketCommand, pParams
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
     Exit Sub
 End If
@@ -316,7 +356,7 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-    mContractResolver.AddPendingCommand _
+    addPendingCommand GetTimestamp, _
                             gCommands.BuyCommand, _
                             pParams, _
                             OrderPendingMessage
@@ -337,7 +377,7 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-    mContractResolver.AddPendingCommand _
+    addPendingCommand GetTimestamp, _
                             gCommands.SellCommand, _
                             pParams, _
                             OrderPendingMessage
@@ -357,7 +397,7 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-    mContractResolver.AddPendingCommand _
+    addPendingCommand GetTimestamp, _
                             gCommands.EndBracketCommand, _
                             "", _
                             OrderPendingMessage
@@ -381,7 +421,7 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
-    mContractResolver.AddPendingCommand gCommands.EntryCommand, pParams
+    addPendingCommand GetTimestamp, gCommands.EntryCommand, pParams
     Exit Sub
 End If
 
@@ -452,16 +492,16 @@ Friend Sub ProcessRolloverCommand( _
 Const ProcName As String = "ProcessRolloverCommand"
 On Error GoTo Err
 
+If mOrderContext Is Nothing Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
+    addPendingCommand GetTimestamp, gCommands.RolloverCommand, pParams
+    Exit Sub
+End If
+
 If Not (mContract.Specifier.SecType = SecTypeFuture Or _
         mContract.Specifier.SecType = SecTypeFuturesOption Or _
         mContract.Specifier.SecType = SecTypeOption) Then
     gWriteErrorLine "Rollover only applies to options, futures and futures options"
-    Exit Sub
-End If
-
-If mOrderContext Is Nothing Then
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
-    mContractResolver.AddPendingCommand gCommands.RolloverCommand, pParams
     Exit Sub
 End If
 
@@ -558,7 +598,7 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-    mContractResolver.AddPendingCommand _
+    addPendingCommand GetTimestamp, _
                             gCommands.QuitCommand, _
                             "", _
                             "Bracket order definition terminated"
@@ -582,7 +622,7 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
-    mContractResolver.AddPendingCommand gCommands.StopLossCommand, pParams
+    addPendingCommand GetTimestamp, gCommands.StopLossCommand, pParams
     Exit Sub
 End If
 
@@ -650,7 +690,7 @@ On Error GoTo Err
 
 If mOrderContext Is Nothing Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
-    mContractResolver.AddPendingCommand gCommands.TargetCommand, pParams
+    addPendingCommand GetTimestamp, gCommands.TargetCommand, pParams
     Exit Sub
 End If
 
@@ -732,6 +772,26 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub addPendingCommand( _
+                ByVal pTimestamp As Date, _
+                ByVal pCommand As Command, _
+                ByVal pParams As String, _
+                Optional ByVal pMessage As String)
+Const ProcName As String = "addPendingCommand"
+On Error GoTo Err
+
+Dim lPendingCommand As New PendingCommand
+Set lPendingCommand.Command = pCommand
+lPendingCommand.Params = pParams
+mPendingCommands.Add lPendingCommand, pTimestamp
+If pMessage <> "" Then gWriteLineToConsole pMessage, True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function getOrderAction(ByVal pInput As String) As OrderActions
 On Error Resume Next
@@ -1171,6 +1231,43 @@ ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
 End If
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub processPendingCommands()
+Const ProcName As String = "processPendingCommands"
+On Error GoTo Err
+
+Dim c As PendingCommand
+For Each c In mPendingCommands
+    gWriteLineToConsole c.Command.Name & " " & c.Params, True
+    If c.Command Is gCommands.BracketCommand Then
+        ProcessBracketCommand c.Params
+    ElseIf c.Command Is gCommands.BuyCommand Then
+        ProcessBuyCommand c.Params
+    ElseIf c.Command Is gCommands.EndBracketCommand Then
+        ProcessEndBracketCommand
+    ElseIf c.Command Is gCommands.EntryCommand Then
+        ProcessEntryCommand c.Params
+    ElseIf c.Command Is gCommands.QuitCommand Then
+        ProcessQuitCommand
+    ElseIf c.Command Is gCommands.RolloverCommand Then
+        ProcessRolloverCommand c.Params
+    ElseIf c.Command Is gCommands.SellCommand Then
+        ProcessSellCommand c.Params
+    ElseIf c.Command Is gCommands.StopLossCommand Then
+        ProcessStopLossCommand c.Params
+    ElseIf c.Command Is gCommands.TargetCommand Then
+        ProcessTargetCommand c.Params
+    End If
+Next
+
+gPlaceOrdersTask.AddContractProcessor Me, mStageOrders
+mPendingCommands.Clear
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub processRolloverClose( _
                 ByVal pValue As String, _
