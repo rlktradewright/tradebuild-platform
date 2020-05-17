@@ -25,6 +25,9 @@ Private Const ModuleName                        As String = "Globals"
 Public Const OneDay As Currency = 8640000       ' in centisecond units
 
 Public Const MaxWorkingDaysPeryear              As Long = 262
+Public Const WorkingDaysPerWeek                 As Long = 5
+Public Const MinWorkingDaysPerMonth             As Long = 20
+Public Const MinWorkingDaysPerYear              As Long = 260
 
 '@================================================================================
 ' Enums
@@ -365,7 +368,7 @@ If offset > 0 Then
 Else
     offset = -offset
 
-    If datumBarStartSecs >= gDateToCentiSeconds(lSessTimes.EndTime) Then
+    If datumBarStartSecs > gDateToCentiSeconds(lSessTimes.EndTime) Then
         ' specified Timestamp was between sessions
         datumBarStartSecs = gBarEndTime(lSessTimes.EndTime, BarTimePeriod, SessionStartTime, SessionEndTime)
     End If
@@ -447,6 +450,8 @@ If lEndTime > pToSessionTimes.EndTime Then
     lEndTime = pToSessionTimes.EndTime
 End If
 
+If lEndTime > pToTime Then lEndTime = pToTime
+
 pFromTime = lStartTime
 pToTime = lEndTime
 
@@ -499,21 +504,15 @@ Select Case pBarTimePeriod.Units
     Case TimePeriodNone, TimePeriodTickMovement, TimePeriodTickVolume, TimePeriodVolume
         AssertArgument False, "Must be a fixed time period"
 End Select
-AssertArgument pStartTime >= pStartSessionTimes.StartTime And _
-                pStartTime < pStartSessionTimes.EndTime, _
+AssertArgument pStartTime >= pStartSessionTimes.StartTime, _
                 "pStartTime is not in pStartSessionTimes"
-AssertArgument pEndTime >= pEndSessionTimes.StartTime And _
-                pEndTime <= pEndSessionTimes.EndTime, _
+AssertArgument pEndTime <= pEndSessionTimes.EndTime, _
                 "pEndTime is not in pEndSessionTimes"
 
 Dim lNumberOfBars As Long
 If pStartSessionTimes.StartTime = pEndSessionTimes.StartTime Then
     lNumberOfBars = calcNumberOfBarsInTimespan(pBarTimePeriod, pStartTime, pEndTime)
 Else
-    lNumberOfBars = calcNumberOfBarsInTimespan(pBarTimePeriod, pStartTime, pStartSessionTimes.EndTime)
-    lNumberOfBars = lNumberOfBars + _
-                    calcNumberOfBarsInTimespan(pBarTimePeriod, pEndSessionTimes.StartTime, pEndTime)
-
     Dim lStartWorkingDate As Date
     lStartWorkingDate = (pStartSessionTimes.StartTime + pStartSessionTimes.EndTime) / 2#
     Dim lStartWorkingDayNumber As Long
@@ -526,18 +525,29 @@ Else
 
     Dim lNumberOfWorkingDaysInInterval As Long
     If Year(lStartWorkingDate) = Year(lEndWorkingDate) Then
-        lNumberOfWorkingDaysInInterval = lEndWorkingDayNumber - lStartWorkingDayNumber - 1
+        lNumberOfWorkingDaysInInterval = lEndWorkingDayNumber - lStartWorkingDayNumber + 1
     Else
         lNumberOfWorkingDaysInInterval = _
                         MaxWorkingDaysPeryear - lStartWorkingDayNumber + _
-                        lEndWorkingDayNumber - 1 + _
+                        lEndWorkingDayNumber + 1 + _
                         (Year(lEndWorkingDate) - Year(lStartWorkingDate) - 1) * MaxWorkingDaysPeryear
-                        
     End If
+        
+    If pBarTimePeriod.Units = TimePeriodWeek Then
+        lNumberOfBars = -Int(-lNumberOfWorkingDaysInInterval / WorkingDaysPerWeek)
+    ElseIf pBarTimePeriod.Units = TimePeriodMonth Then
+        lNumberOfBars = -Int(-lNumberOfWorkingDaysInInterval / MinWorkingDaysPerMonth)
+    ElseIf pBarTimePeriod.Units = TimePeriodYear Then
+        lNumberOfBars = -Int(-lNumberOfWorkingDaysInInterval / MinWorkingDaysPerYear)
+    Else
+        lNumberOfBars = calcNumberOfBarsInTimespan(pBarTimePeriod, pStartTime, pStartSessionTimes.EndTime)
+        lNumberOfBars = lNumberOfBars + _
+                        calcNumberOfBarsInTimespan(pBarTimePeriod, pEndSessionTimes.StartTime, pEndTime)
     
-    lNumberOfBars = lNumberOfBars + _
-                    (lNumberOfWorkingDaysInInterval) * _
-                        gCalcNumberOfBarsInSession(pBarTimePeriod, pStartSessionTimes.StartTime, pStartSessionTimes.EndTime)
+        lNumberOfBars = lNumberOfBars + _
+                        (lNumberOfWorkingDaysInInterval - 2) * _
+                            gCalcNumberOfBarsInSession(pBarTimePeriod, pStartSessionTimes.StartTime, pStartSessionTimes.EndTime)
+    End If
 End If
 
 gMaxNumberOfBarsInTimespanNormalized = lNumberOfBars
@@ -564,7 +574,7 @@ Public Function gNormaliseTimestamp( _
                 ByVal pSessionEndTime As Date) As Date
 Select Case pTimePeriod.Units
 Case TimePeriodDay, TimePeriodWeek, TimePeriodMonth, TimePeriodYear
-    If pSessionStartTime >= pSessionEndTime And _
+    If pSessionStartTime > pSessionEndTime And _
         pTimestamp >= pSessionStartTime _
     Then
         gNormaliseTimestamp = Int(pTimestamp) + 1

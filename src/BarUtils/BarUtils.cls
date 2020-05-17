@@ -341,7 +341,7 @@ Public Function MaxNumberOfBarsInTimespanNormalized( _
                 ByVal pEndTime As Date, _
                 ByRef pStartSessionTimes As SessionTimes, _
                 ByRef pEndSessionTimes As SessionTimes) As Long
-Const ProcName As String = "gMaxNumberOfBarsInTimespanNormalized"
+Const ProcName As String = "MaxNumberOfBarsInTimespanNormalized"
 On Error GoTo Err
 
 MaxNumberOfBarsInTimespanNormalized = gMaxNumberOfBarsInTimespanNormalized( _
