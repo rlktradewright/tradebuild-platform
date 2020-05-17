@@ -986,7 +986,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Sub
 
 Private Sub processDateOnlyCommand( _
