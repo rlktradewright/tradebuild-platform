@@ -73,7 +73,8 @@ Private mFromSessionTimes                           As SessionTimes
 Private mToSessionTimes                             As SessionTimes
 
 Private mIsFromDateCalculated                       As Boolean
-Private mIsMaxNumberOfBarsCalculated                As Boolean
+
+Private mMaxNumberOfBarsToFetch                     As Long
 
 Private mWorkingMaxNumberOfBars                     As Long
 
@@ -99,6 +100,9 @@ Private mCurrTWSBarsCollectionIndex                 As Long
 
 Private mFirstBarTimeInMessage                      As Date
 Private mNumberOfBarsInMessage                      As Long
+
+Private mLatestRetrievalStartDate                   As Date
+Private mAllowMoreBars                              As Boolean
 
 Private mRequesterID                                As Long
 
@@ -192,7 +196,6 @@ ElseIf mState = DataRetrieved Then
     If Not mListener Is Nothing Then mListener.FetchDataRetrieved mCookie
     
     mCurrTWSBarsCollectionIndex = mTWSBarsCollectionsIndex - 1
-    If mCurrTWSBarsCollectionIndex > 1 Then mNotifyAtEnd = True
 
     mAccumulatedVolume = 0
     
@@ -309,19 +312,16 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
                                         mTargetBarSpecifier.MaxNumberOfBars), _
                                     mTargetBarSpecifier.NormaliseDailyTimestamps)
     
+    If mMaxNumberOfBarsToFetch > mTargetBarSpecifier.MaxNumberOfBars Or _
+        mTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF _
+    Then
+        mNotifyAtEnd = True
+    End If
+        
     mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, CreateFuture(mTargetContract), mContractCache)
 ElseIf TypeOf ev.Future.Value Is TwsContractDetails Then
     Set mTwsContractDetails = ev.Future.Value
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
-    If Not mWorkingBarSpecifier.BarTimePeriod Is mTargetBarSpecifier.BarTimePeriod Or _
-        Not mTargetBarSpecifier.IncludeBarsOutsideSession _
-    Then
-        ' we are building bars from smaller ones or skipping source bars that
-        ' are outside the session, so we can't notify the bars
-        ' until we have finished building them, as we don't know up front
-        ' how many intermediate bars we'll end up with
-        mNotifyAtEnd = True
-    End If
     mState = RetrievingBars
     mTaskContext.Continue
 ElseIf TypeOf ev.Future.Value Is Bars Then
@@ -432,28 +432,13 @@ On Error GoTo Err
 If mTWSBarsCollections(mTWSBarsCollectionsIndex) Is Nothing Then Set mTWSBarsCollections(mTWSBarsCollectionsIndex) = New EnumerableCollection
 
 Dim lTimestamp As Date
-lTimestamp = convertTwsDateStringToTimestamp(pBar.Timestamp)
+lTimestamp = getTimestampFromTwsBar(pBar, mWorkingBarSpecifier.BarTimePeriod)
+If mFirstBarTimeInMessage = 0 Then mFirstBarTimeInMessage = lTimestamp
 
-If lTimestamp - Int(lTimestamp) = 0# Then
-    If mSessionStartTime < mSessionEndTime Then
-        lTimestamp = Int(lTimestamp) + mSessionStartTime
-    Else
-        lTimestamp = Int(lTimestamp) - 1 + mSessionStartTime
-    End If
-End If
-
-If mFirstBarTimeInMessage = 0 Then
-    If mWorkingBarSpecifier.BarTimePeriod.Units = TimePeriodWeek Or _
-        mWorkingBarSpecifier.BarTimePeriod.Units = TimePeriodMonth Or _
-        mWorkingBarSpecifier.BarTimePeriod.Units = TimePeriodYear _
-    Then
-        mFirstBarTimeInMessage = BarStartTime(lTimestamp, mWorkingBarSpecifier.BarTimePeriod, 0, 0)
-    Else
-        mFirstBarTimeInMessage = lTimestamp
-    End If
-End If
-
-If Not notifyTimestamp(lTimestamp, mWorkingBarSpecifier.FromDate, mRetrievalSessionBuilder) Then Exit Sub
+If Not notifyTimestamp(lTimestamp, _
+                    mWorkingBarSpecifier.BarTimePeriod, _
+                    mWorkingBarSpecifier.FromDate, _
+                    mRetrievalSessionBuilder) Then Exit Sub
 
 mNumberOfBarsInMessage = mNumberOfBarsInMessage + 1
 mTWSBarsCollections(mTWSBarsCollectionsIndex).Add pBar
@@ -485,6 +470,34 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Sub StartHistData( _
+                ByVal pStartDate As String, _
+                ByVal pEndDate As String, _
+                ByVal pBarCount As Long)
+Const ProcName As String = "StartHistData"
+On Error GoTo Err
+
+mLatestRetrievalStartDate = convertTwsDateStringToTimestamp(pStartDate)
+gLog "Returning bars for: " & _
+        mTargetContract.Specifier.LocalSymbol & "@" & mTargetContract.Specifier.Exchange & _
+        "; start: " & FormatTimestamp( _
+                            mLatestRetrievalStartDate, _
+                            TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & _
+        "; end: " & FormatTimestamp( _
+                            convertTwsDateStringToTimestamp(pEndDate), _
+                            TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & _
+        "; number: " & pBarCount, _
+        ModuleName, _
+        ProcName, _
+        pLogLevel:=LogLevelDetail
+        
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 
 '@================================================================================
 ' Helper Functions
@@ -698,21 +711,21 @@ pTwsRequest.MainSessionOnly = Not mWorkingBarSpecifier.IncludeBarsOutsideSession
 '                   365 D
 '                   12 M
 '                   52 W
-'                   5 Y
-'   1 W           86400 S
+'                   50 Y
+'   1 W             86400 S
 '                   365 D
 '                   12 M
 '                   52 W
-'                   5 Y
-
-'   1 M           86400 S
+'                   50 Y
+'   1 M             86400 S
 '                   365 D
 '                   12 M
 '                   52 W
-'                   5 Y
+'                   50 Y
 
 
 pTwsRequest.EndDateTime = generateRequestEndTime(pWorkingBarSpecifier, pSessionStartTime, pSessionEndTime)
+mAllowMoreBars = False
 
 With pWorkingBarSpecifier
     Dim numBarsInsession As Long
@@ -778,6 +791,7 @@ With pWorkingBarSpecifier
                 pTwsRequest.Duration = (-Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
             Else
                 pTwsRequest.Duration = "20 D"
+                mAllowMoreBars = True
             End If
         Case 10
             pTwsRequest.BarSizeSetting = "10 mins"
@@ -926,9 +940,9 @@ Set lBarSpec = pTargetBarSpecifier.Clone
 
 Dim lMaxNumberOfBars As Long
 If pTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF Then
-    lMaxNumberOfBars = 1
+    lMaxNumberOfBars = mMaxNumberOfBarsToFetch
 Else
-    lMaxNumberOfBars = pTargetBarSpecifier.MaxNumberOfBars
+    lMaxNumberOfBars = mMaxNumberOfBarsToFetch
 End If
 
 Select Case pTargetBarSpecifier.BarTimePeriod.Units
@@ -1013,7 +1027,7 @@ Case Else
     AssertArgument False, "Specified timeframe not supported"
 End Select
 
-If pTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF Then lBarSpec.MaxNumberOfBars = &H7FFFFFFF
+'If pTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF Then lBarSpec.MaxNumberOfBars = &H7FFFFFFF
 mWorkingMaxNumberOfBars = lBarSpec.MaxNumberOfBars
 
 Set generateWorkingBarSpecifier = lBarSpec
@@ -1061,6 +1075,38 @@ getNumberOfPrices = 1
 If pOpenValue <> pHighValue Then getNumberOfPrices = getNumberOfPrices + 1
 If pOpenValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
 If pCloseValue <> pHighValue And pCloseValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
+End Function
+
+Private Function getTimestampFromTwsBar( _
+                ByRef pBar As TwsBar, _
+                ByVal pBarTimePeriod As TimePeriod) As Date
+Const ProcName As String = "getTimestampFromTwsBar"
+On Error GoTo Err
+
+Dim lTimestamp As Date
+lTimestamp = convertTwsDateStringToTimestamp(pBar.Timestamp)
+
+If lTimestamp - Int(lTimestamp) = 0# Then
+    If mSessionStartTime < mSessionEndTime Then
+        lTimestamp = Int(lTimestamp) + mSessionStartTime
+    Else
+        lTimestamp = Int(lTimestamp) - 1 + mSessionStartTime
+    End If
+End If
+
+If pBarTimePeriod.Units = TimePeriodWeek Or _
+    pBarTimePeriod.Units = TimePeriodMonth Or _
+    pBarTimePeriod.Units = TimePeriodYear _
+Then
+    lTimestamp = BarStartTime(lTimestamp, pBarTimePeriod, 0, 0)
+End If
+
+getTimestampFromTwsBar = lTimestamp
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isBarFixedDuration( _
@@ -1113,6 +1159,16 @@ End If
 If mWorkingMaxNumberOfBars > 0 And _
     mTotalBarsRetrieved >= mWorkingMaxNumberOfBars _
 Then
+    needMoreBars = False
+    Exit Function
+End If
+
+If mLatestRetrievalStartDate <= mTargetBarSpecifier.FromDate Then
+    needMoreBars = False
+    Exit Function
+End If
+
+If Not mIsFromDateCalculated And Not mAllowMoreBars Then
     needMoreBars = False
     Exit Function
 End If
@@ -1177,20 +1233,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function notifyTimestamp(ByVal pTimestamp As Date, ByVal pFromDate As Date, ByVal pSessionBuilder As SessionBuilder) As Boolean
+Private Function notifyTimestamp( _
+                ByVal pTimestamp As Date, _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pFromDate As Date, _
+                ByVal pSessionBuilder As SessionBuilder) As Boolean
 Const ProcName As String = "notifyTimestamp"
 On Error GoTo Err
 
 If mState = Cancelling Then Exit Function
 
-Dim lChange As SessionEventData
-lChange = pSessionBuilder.SetSessionCurrentTime(pTimestamp)
-If lChange.ChangeType = SessionChangeStart Then mAccumulatedVolume = 0
-
-If pTimestamp < pFromDate Then
-    notifyTimestamp = False
+If pBarTimePeriod.Units = TimePeriodWeek Or _
+    pBarTimePeriod.Units = TimePeriodMonth Or _
+    pBarTimePeriod.Units = TimePeriodYear _
+Then
+    notifyTimestamp = pTimestamp >= Int(pFromDate)
 Else
-    notifyTimestamp = isInScope(pTimestamp, pSessionBuilder.Session)
+    Dim lChange As SessionEventData
+    lChange = pSessionBuilder.SetSessionCurrentTime(pTimestamp)
+    If lChange.ChangeType = SessionChangeStart Then mAccumulatedVolume = 0
+    
+    If Not mIsFromDateCalculated And pTimestamp < pFromDate Then
+        notifyTimestamp = False
+    Else
+        notifyTimestamp = isInScope(pTimestamp, pSessionBuilder.Session)
+    End If
 End If
 
 Exit Function
@@ -1274,12 +1341,16 @@ Set mRetrievalSessionBuilder = createNewSessionBuilder
 If mTWSBarsCollectionsIndex > 0 Then
     mWorkingBarSpecifier.MaxNumberOfBars = mWorkingMaxNumberOfBars - _
                                             mTotalBarsRetrieved
+    Dim lToDate As Date: lToDate = IIf(mLatestRetrievalStartDate < mFirstBarTimeInMessage, _
+                                        mLatestRetrievalStartDate, _
+                                        mFirstBarTimeInMessage)
+    ' set the from date first
     mWorkingBarSpecifier.FromDate = getFromDate( _
                                         mWorkingBarSpecifier.BarTimePeriod, _
-                                        mFirstBarTimeInMessage, _
+                                        lToDate, _
                                         mWorkingBarSpecifier.MaxNumberOfBars)
+    mWorkingBarSpecifier.ToDate = lToDate
     If mIsFromDateCalculated Then mTargetBarSpecifier.FromDate = mWorkingBarSpecifier.FromDate
-    mWorkingBarSpecifier.ToDate = mFirstBarTimeInMessage
 End If
 
 mFirstBarTimeInMessage = 0
@@ -1297,17 +1368,12 @@ Const ProcName As String = "processBar"
 On Error GoTo Err
 
 Dim lTimestamp As Date
-lTimestamp = convertTwsDateStringToTimestamp(pBar.Timestamp)
+lTimestamp = getTimestampFromTwsBar(pBar, mWorkingBarSpecifier.BarTimePeriod)
 
-If lTimestamp - Int(lTimestamp) = 0# Then
-    If mSessionStartTime < mSessionEndTime Then
-        lTimestamp = Int(lTimestamp) + mSessionStartTime
-    Else
-        lTimestamp = Int(lTimestamp) - 1 + mSessionStartTime
-    End If
-End If
-
-If Not notifyTimestamp(lTimestamp, mTargetBarSpecifier.FromDate, mTargetSessionBuilder) Then Exit Sub
+If Not notifyTimestamp(lTimestamp, _
+                    mTargetBarSpecifier.BarTimePeriod, _
+                    mTargetBarSpecifier.FromDate, _
+                    mTargetSessionBuilder) Then Exit Sub
 
 Dim lSessEv As SessionEventData
 lSessEv = mTargetSessionBuilder.SetSessionCurrentTime(lTimestamp)
@@ -1383,15 +1449,30 @@ Const ProcName As String = "setMaxNumberOfBars"
 On Error GoTo Err
 
 If Not isBarFixedDuration(mTargetBarSpecifier.BarTimePeriod) Then Exit Sub
-If mTargetBarSpecifier.MaxNumberOfBars <> &H7FFFFFFF Then Exit Sub
 
-mIsMaxNumberOfBarsCalculated = True
-mTargetBarSpecifier.MaxNumberOfBars = MaxNumberOfBarsInTimespanNormalized( _
-                                            mTargetBarSpecifier.BarTimePeriod, _
-                                            mTargetBarSpecifier.FromDate, _
-                                            mTargetBarSpecifier.ToDate, _
-                                            mFromSessionTimes, _
-                                            mToSessionTimes)
+If mFromSessionTimes.StartTime = mToSessionTimes.StartTime Then
+    ' all required bars are in the same session
+    If mTargetBarSpecifier.MaxNumberOfBars = &H7FFFFFFF Then
+        mMaxNumberOfBarsToFetch = MaxNumberOfBarsInTimespanNormalized( _
+                                                    mTargetBarSpecifier.BarTimePeriod, _
+                                                    mTargetBarSpecifier.FromDate, _
+                                                    mTargetBarSpecifier.ToDate, _
+                                                    mFromSessionTimes, _
+                                                    mToSessionTimes)
+    Else
+        mMaxNumberOfBarsToFetch = mTargetBarSpecifier.MaxNumberOfBars
+    End If
+Else
+    ' required bars span sessions, so calculate the number from the
+    ' beginning of the 'from' session to ensure we later correctly calculate the
+    ' request's duration parameter
+    mMaxNumberOfBarsToFetch = MaxNumberOfBarsInTimespanNormalized( _
+                                                mTargetBarSpecifier.BarTimePeriod, _
+                                                mFromSessionTimes.StartTime, _
+                                                mTargetBarSpecifier.ToDate, _
+                                                mFromSessionTimes, _
+                                                mToSessionTimes)
+End If
 
 Exit Sub
 

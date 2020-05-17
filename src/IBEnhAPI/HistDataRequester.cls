@@ -71,7 +71,7 @@ End Type
 Private Const ModuleName                            As String = "HistDataRequester"
 
 'Private Const MaxConcurrentHistDataRequests        As Long = 50 ' limit imposed by IB
-Private Const MaxConcurrentHistDataRequests         As Long = 10
+Private Const MaxConcurrentHistDataRequests         As Long = 15
 
 '@================================================================================
 ' Member variables
@@ -224,7 +224,9 @@ Private Sub IHistDataConsumer_StartHistData(ByVal pRequestId As Long, ByVal pSta
 Const ProcName As String = "IHistDataConsumer_StartHistData"
 On Error GoTo Err
 
-
+Dim lHistDataRequestTask As HistDataRequestTask
+Set lHistDataRequestTask = mHistDataRequests(pRequestId).Requester
+lHistDataRequestTask.StartHistData pStartDate, pEndDate, pBarCount
 
 Exit Sub
 

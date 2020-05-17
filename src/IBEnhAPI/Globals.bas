@@ -17,7 +17,6 @@ Public Const OneMinute                          As Double = 1# / 1440#
 Public Const OneSecond                          As Double = 1# / 86400#
 
 Public Const NumDaysInWeek                      As Long = 5
-Public Const NumDaysInMonth                     As Long = 22
 Public Const NumDaysInYear                      As Long = 260
 Public Const NumWeeksInYear                     As Long = 52
 Public Const NumMonthsInYear                    As Long = 12

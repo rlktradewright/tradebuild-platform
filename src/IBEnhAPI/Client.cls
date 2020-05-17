@@ -323,7 +323,7 @@ mTwsAPI.ScannerDataConsumer = Nothing
 
 Set mTwsAPI = Nothing
 
-Set mTwsConnectionStateListeners = Nothing
+mTwsConnectionStateListeners.Clear
 
 gReleaseClient Me
 
