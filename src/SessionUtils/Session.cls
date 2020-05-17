@@ -276,6 +276,8 @@ Dim ev As SessionEventData
 Set ev.Source = Me
 ev.changeType = SessionChangeNone
 
+If pTimestamp = 0 Then Exit Function
+
 mTimestamp = pTimestamp
 
 If Int(pTimestamp) > Int(sPrevTimeNotified) Then
