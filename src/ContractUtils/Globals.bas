@@ -68,11 +68,12 @@ Public Const MaxContractDaysBeforeExpiryToSwitch        As Long = 20
 ' Member variables
 '@================================================================================
 
+Private mExchangeCodesInitialised                       As Boolean
 Private mExchangeCodes()                                As String
 Private mMaxExchangeCodesIndex                          As Long
 
-Private mMaxCurrencyDescsIndex                          As Long
-Private mCurrencyDescs()                                As CurrencyDescriptor
+Private mCurrencyDescsColl                              As SortedDictionary
+Private mCurrencyDescriptors()                          As CurrencyDescriptor
 
 '@================================================================================
 ' Class Event Handlers
@@ -299,20 +300,35 @@ Const ProcName As String = "gCreateContractSpecifierFromString"
 On Error GoTo Err
 
 Dim lIndex As Long
+Dim lLocalSymbolStartIndex As Long
+
+lIndex = InStr(1, pSpecString, ":")
+AssertArgument lIndex <> 1, "Contract specifier cannot start with :"
+Dim lSecType As SecurityTypes
+If lIndex = 0 Then
+    lLocalSymbolStartIndex = 1
+Else
+    lLocalSymbolStartIndex = lIndex + 1
+    Dim lSecTypeStr As String
+    lSecTypeStr = Left$(pSpecString, lIndex - 1)
+    lSecType = gSecTypeFromString(lSecTypeStr)
+    AssertArgument lSecType <> SecTypeNone, "'" & lSecTypeStr & "' is not a valid security type"
+End If
+
 lIndex = InStr(1, pSpecString, "@")
-AssertArgument lIndex <> 1, "Contract specifier cannot start with @"
+AssertArgument lIndex <> 1, "Contract specifier symbol cannot start with @"
 
 Dim lLocalSymbol As String
 Dim lExchange As String
 
 If lIndex = 0 Then
-    lLocalSymbol = pSpecString
+    lLocalSymbol = Right$(pSpecString, Len(pSpecString) - lLocalSymbolStartIndex + 1)
 Else
-    lLocalSymbol = Left$(pSpecString, lIndex - 1)
+    lLocalSymbol = Mid$(pSpecString, lLocalSymbolStartIndex, lIndex - lLocalSymbolStartIndex)
     lExchange = Right$(pSpecString, Len(pSpecString) - lIndex)
 End If
 
-Set gCreateContractSpecifierFromString = gCreateContractSpecifier(lLocalSymbol, "", lExchange, SecTypeNone, "", "", 1#, 0#, OptNone)
+Set gCreateContractSpecifierFromString = gCreateContractSpecifier(lLocalSymbol, "", lExchange, lSecType, "", "", 1#, 0#, OptNone)
 
 Exit Function
 
@@ -345,12 +361,12 @@ Public Function gGetCurrencyDescriptor( _
 Const ProcName As String = "gGetCurrencyDescriptor"
 On Error GoTo Err
 
-If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
-Dim index As Long
-index = getCurrencyIndex(Code)
-AssertArgument index >= 0, "Invalid currency Code"
+If mCurrencyDescsColl Is Nothing Then setupCurrencyDescs
 
-gGetCurrencyDescriptor = mCurrencyDescs(index)
+Code = UCase$(Code)
+AssertArgument mCurrencyDescsColl.Contains(Code), "Invalid currency Code"
+
+gGetCurrencyDescriptor = mCurrencyDescsColl.Item(Code)
 
 Exit Function
 
@@ -362,8 +378,17 @@ Public Function gGetCurrencyDescriptors() As CurrencyDescriptor()
 Const ProcName As String = "gGetCurrencyDescriptors"
 On Error GoTo Err
 
-If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
-gGetCurrencyDescriptors = mCurrencyDescs
+If mCurrencyDescsColl Is Nothing Then
+    setupCurrencyDescs
+    ReDim mCurrencyDescriptors(mCurrencyDescsColl.Count - 1) As CurrencyDescriptor
+    Dim lDesc As Variant
+    Dim i As Long
+    For Each lDesc In mCurrencyDescsColl
+        mCurrencyDescriptors(i) = lDesc
+        i = i + 1
+    Next
+End If
+gGetCurrencyDescriptors = mCurrencyDescriptors
 
 Exit Function
 
@@ -373,10 +398,9 @@ End Function
 
 Public Function gGetExchangeCodes() As String()
 Const ProcName As String = "gGetExchangeCodes"
-
 On Error GoTo Err
 
-If mMaxExchangeCodesIndex = 0 Then setupExchangeCodes
+If Not mExchangeCodesInitialised Then setupExchangeCodes
 gGetExchangeCodes = mExchangeCodes
 
 Exit Function
@@ -493,7 +517,9 @@ Public Function gIsValidCurrencyCode(ByVal Code As String) As Boolean
 Const ProcName As String = "gIsValidCurrencyCode"
 On Error GoTo Err
 
-gIsValidCurrencyCode = (getCurrencyIndex(Code) >= 0)
+If mCurrencyDescsColl Is Nothing Then setupCurrencyDescs
+
+gIsValidCurrencyCode = mCurrencyDescsColl.Contains(UCase$(Code))
 
 Exit Function
 
@@ -505,27 +531,14 @@ Public Function gIsValidExchangeCode(ByVal Code As String) As Boolean
 Const ProcName As String = "gIsValidExchangeCode"
 On Error GoTo Err
 
-If mMaxExchangeCodesIndex = 0 Then setupExchangeCodes
+If Not mExchangeCodesInitialised Then setupExchangeCodes
 
 Code = UCase$(Code)
 
-Dim bottom As Long: bottom = 0
-Dim top As Long: top = mMaxExchangeCodesIndex
-Dim middle As Long: middle = Fix((bottom + top) / 2)
-
-Do
-    If Code < mExchangeCodes(middle) Then
-        top = middle
-    ElseIf Code > mExchangeCodes(middle) Then
-        bottom = middle
-    Else
-        gIsValidExchangeCode = True
-        Exit Function
-    End If
-    middle = Fix((bottom + top) / 2)
-Loop Until bottom = middle
-
-If Code = mExchangeCodes(middle) Then gIsValidExchangeCode = True
+gIsValidExchangeCode = BinarySearchStrings( _
+                            Code, _
+                            mExchangeCodes, _
+                            IsCaseSensitive:=False) >= 0
 
 Exit Function
 
@@ -814,6 +827,8 @@ Case "COMBO", "CMB"
     gSecTypeFromString = SecTypeCombo
 Case "INDEX", "IND"
     gSecTypeFromString = SecTypeIndex
+Case Else
+    gSecTypeFromString = SecTypeNone
 End Select
 End Function
 
@@ -916,52 +931,17 @@ Private Sub addCurrencyDesc( _
 Const ProcName As String = "addCurrencyDesc"
 On Error GoTo Err
 
-mMaxCurrencyDescsIndex = mMaxCurrencyDescsIndex + 1
-If mMaxCurrencyDescsIndex > UBound(mCurrencyDescs) Then
-    ReDim Preserve mCurrencyDescs(2 * (UBound(mCurrencyDescs) + 1) - 1) As CurrencyDescriptor
-End If
-mCurrencyDescs(mMaxCurrencyDescsIndex).Code = UCase$(Code)
-mCurrencyDescs(mMaxCurrencyDescsIndex).Description = UCase$(Description)
+Dim lDescriptor As CurrencyDescriptor
+Code = UCase$(Code)
+lDescriptor.Code = Code
+lDescriptor.Description = Description
+mCurrencyDescsColl.Add lDescriptor, Code
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function getCurrencyIndex(ByVal Code As String) As Long
-Const ProcName As String = "getCurrencyIndex"
-On Error GoTo Err
-
-If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
-
-getCurrencyIndex = -1
-
-Code = UCase$(Code)
-
-Dim bottom As Long: bottom = 0
-Dim top As Long: top = mMaxCurrencyDescsIndex
-Dim middle As Long: middle = Fix((bottom + top) / 2)
-
-Do
-    If Code < mCurrencyDescs(middle).Code Then
-        top = middle
-    ElseIf Code > mCurrencyDescs(middle).Code Then
-        bottom = middle
-    Else
-        getCurrencyIndex = middle
-        Exit Function
-    End If
-    middle = Fix((bottom + top) / 2)
-Loop Until bottom = middle
-
-If Code = mCurrencyDescs(middle).Code Then getCurrencyIndex = middle
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Sub setupExchangeCodes()
 Const ProcName As String = "setupExchangeCodes"
@@ -1099,6 +1079,7 @@ addExchangeCode "VIRTX"
 addExchangeCode "VWAP"
 
 ReDim Preserve mExchangeCodes(mMaxExchangeCodesIndex) As String
+mExchangeCodesInitialised = True
 
 Exit Sub
 
@@ -1110,8 +1091,7 @@ Private Sub setupCurrencyDescs()
 Const ProcName As String = "setupCurrencyDescs"
 On Error GoTo Err
 
-ReDim mCurrencyDescs(127) As CurrencyDescriptor
-mMaxCurrencyDescsIndex = -1
+Set mCurrencyDescsColl = CreateSortedDictionary(KeyTypeString)
 
 addCurrencyDesc "AED", "United Arab Emirates, Dirhams"
 addCurrencyDesc "AFN", "Afghanistan, Afghanis"
@@ -1284,9 +1264,6 @@ addCurrencyDesc "YER", "Yemen, Rials"
 addCurrencyDesc "ZAR", "South Africa, Rand"
 addCurrencyDesc "ZMK", "Zambia, Kwacha"
 addCurrencyDesc "ZWD", "Zimbabwe, Zimbabwe Dollars"
-
-
-ReDim Preserve mCurrencyDescs(mMaxCurrencyDescsIndex) As CurrencyDescriptor
 
 Exit Sub
 
