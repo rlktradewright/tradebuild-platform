@@ -88,9 +88,8 @@ On Error GoTo Err
 
 If mRegion Is Nothing Then Exit Sub
 
-Dim et As ElapsedTimer
+Static et As New ElapsedTimer
 If gIsInDev Then
-    If et Is Nothing Then Set et = New ElapsedTimer
     et.StartTiming
 End If
 
@@ -99,26 +98,31 @@ lDeferredPaintAction = mDeferredPaintAction
 mDeferredPaintAction = DeferredPaintRepaintNone
 mDeferredPaintPending = False
 
+Dim s As String
+
 Select Case lDeferredPaintAction
 Case DeferredPaintRepaintNone
 
 Case DeferredPaintPaintAreas
+    s = "Paint areas"
     mRegion.PaintAreas mAreasToRedraw, mAreasToRedrawIndex + 1
 Case DeferredPaintPaint
+    s = "Paint sync"
     mRegion.PaintSync
 Case DeferredPaintChangeGaugeAndPaint
+    s = "Change gauge and paint"
     mRegion.ChangeGaugeAndPaint
 Case DeferredPaintScaleAndPaint
+    s = "Scale and paint"
     mRegion.ScaleAndPaintSync
 Case DeferredPaintCalculateAndPaint
+    s = "Calculate and paint"
     mRegion.CalculateAndPaintSync
 End Select
 
 
 If gIsInDev Then
-    Dim s As String
-    s = "Deferred paint: " & Format(et.ElapsedTimeMicroseconds, "0")
-    Debug.Print s
+    Debug.Print "Deferred paint (" & s & "): " & Format(et.ElapsedTimeMicroseconds / 1000, "0.000ms")
 End If
 
 Exit Sub

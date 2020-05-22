@@ -356,6 +356,9 @@ Friend Sub CalcVerticalBoundsForGaugeDependentObjects( _
 Const ProcName As String = "CalcVerticalBoundsForGaugeDependentObjects"
 On Error GoTo Err
 
+Static et As New ElapsedTimer
+et.StartTiming
+
 Dim index As Long
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 
@@ -387,6 +390,8 @@ Do While index <> mLastInScopeIndex
     End With
 Loop
 
+Debug.Print "CalcVerticalBoundsForGaugeDependentObjects: time=" & et.ElapsedTimeMicroseconds / 1000 & "ms"
+
 Exit Sub
 
 Err:
@@ -398,6 +403,9 @@ Friend Function CalcVerticalBoundsForNonGaugeDependentObjects( _
                 ByRef scaleMax As Double) As Boolean
 Const ProcName As String = "CalcVerticalBoundsForNonGaugeDependentObjects"
 On Error GoTo Err
+
+Static et As New ElapsedTimer
+et.StartTiming
 
 Dim index As Long
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
@@ -430,6 +438,8 @@ Do While index <> mLastInScopeIndex
         index = .nextInScopeIndex
     End With
 Loop
+
+Debug.Print "CalcVerticalBoundsForNonGaugeDependentObjects: time=" & et.ElapsedTimeMicroseconds / 1000 & "ms"
 
 Exit Function
 
@@ -703,6 +713,9 @@ Friend Function PaintAllVisibleObjects() As Long
 Const ProcName As String = "PaintAllVisibleObjects"
 On Error GoTo Err
 
+Static et As New ElapsedTimer
+et.StartTiming
+
 Dim counter As Long
 
 Dim i As Long
@@ -720,6 +733,8 @@ For i = LayerMinVisible To LayerMax
         End With
     Loop
 Next
+
+Debug.Print "PaintAllVisibleObjects: objects painted: " & counter & "; time=" & et.ElapsedTimeMicroseconds / 1000 & "ms"
 
 PaintAllVisibleObjects = counter
 

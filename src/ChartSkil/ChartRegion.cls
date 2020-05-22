@@ -1901,6 +1901,8 @@ Friend Sub CalculateAndPaintSync()
 Const ProcName As String = "CalculateAndPaintSync"
 On Error GoTo Err
 
+Debug.Print "CalculateAndPaintSync: region " & mHandle & " =========================================="
+
 mData.DetermineInScopeObjects
 calculateVerticalBounds
 mData.DetermineVisibleObjects
@@ -1919,6 +1921,8 @@ End Sub
 Friend Sub ChangeGaugeAndPaint()
 Const ProcName As String = "ChangeGaugeAndPaint"
 On Error GoTo Err
+
+Debug.Print "ChangeGaugeAndPaint:   region " & mHandle & " =========================================="
 
 mData.CalculateInscopeGaugeDependentObjects
 PaintSync
@@ -2205,7 +2209,7 @@ Friend Sub PaintSync()
 Const ProcName As String = "PaintSync"
 On Error GoTo Err
 
-Static et As ElapsedTimer
+Static et As New ElapsedTimer
 
 Dim numVisibleObjects  As Long
 Dim index As Long
@@ -2217,10 +2221,10 @@ Debug.Print "Region " & mHandle & " repaint count = " & repaintCount
 
 mPaintingInProgress = True
 
-If mPerformanceTextVisible Then
-    If et Is Nothing Then Set et = New ElapsedTimer
+'If mPerformanceTextVisible Then
+'    If et Is Nothing Then Set et = New ElapsedTimer
     et.StartTiming
-End If
+'End If
 
 mViewport.PaintBackground
 
@@ -2229,7 +2233,6 @@ paintPeriodBackgrounds
 generateGrid
 
 numVisibleObjects = mData.PaintAllVisibleObjects
-Debug.Print "Region " & mHandle & ": " & numVisibleObjects & " objects painted"
 
 mPaintingInProgress = False
 
@@ -2407,6 +2410,8 @@ End Sub
 Friend Sub ScaleAndPaintSync()
 Const ProcName As String = "ScaleAndPaintSync"
 On Error GoTo Err
+
+Debug.Print "ScaleAndPaintSync:     region " & mHandle & " =========================================="
 
 calculateVerticalBounds
 mData.DetermineVisibleObjects
@@ -3063,10 +3068,16 @@ Private Sub generateGrid()
 Const ProcName As String = "generateGrid"
 On Error GoTo Err
 
+Static et As New ElapsedTimer
+et.StartTiming
 mPriceFormatter.YScaleGridSpacing = mHorizontalGridSpacer.Calculate(mViewport.Height, mViewport.HeightCm)
 
 mHorizontalGrid.Generate mHorizontalGridSpacer.YScaleGridSpacing
+Debug.Print "generateHorizontalGrid time=" & et.ElapsedTimeMicroseconds / 1000 & "ms"
+
+et.StartTiming
 mVerticalGrid.Generate
+Debug.Print "generateVerticalGrid time=" & et.ElapsedTimeMicroseconds / 1000 & "ms"
 
 Exit Sub
 
@@ -3219,6 +3230,8 @@ Private Sub paintPeriodBackgrounds()
 Const ProcName As String = "paintPeriodBackgrounds"
 On Error GoTo Err
 
+Static et As New ElapsedTimer
+et.StartTiming
 With mViewport
     Dim i As Long
     For i = IIf(mMinInViewPeriod < mData.MinPeriodNumber, mData.MinPeriodNumber, mMinInViewPeriod) To IIf(mData.MaxPeriodNumber < mMaxInViewPeriod, mData.MaxPeriodNumber, mMaxInViewPeriod)
@@ -3229,6 +3242,7 @@ With mViewport
         End If
     Next
 End With
+Debug.Print "paintPeriodBackgrounds time=" & et.ElapsedTimeMicroseconds / 1000 & "ms"
 
 Exit Sub
 

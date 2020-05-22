@@ -2095,9 +2095,11 @@ If Not IsDrawingEnabled Then
     Exit Sub
 End If
 
+Debug.Print "ScrollX: " & Value & " ===================================================="
+
 Dim lregion As ChartRegion
 For Each lregion In mRegions
-    lregion.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
+    lregion.SetPeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1   ' mYAxisPosition - 1
 Next
 
 mXAxisRegion.SetPeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1

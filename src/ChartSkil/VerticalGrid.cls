@@ -157,9 +157,9 @@ On Error GoTo Err
 
 If Not mHasGrid And Not mHasGridText Then Exit Sub
 
-Dim lPeriodsNeedingGridlines As New EnumerableCollection
-Dim lPeriodsNeedingGridTexts As New EnumerableCollection
-Dim lPeriodsNeedingCoarseGridTexts As New EnumerableCollection
+Static lPeriodsNeedingGridlines As New EnumerableCollection
+Static lPeriodsNeedingGridTexts As New EnumerableCollection
+Static lPeriodsNeedingCoarseGridTexts As New EnumerableCollection
 
 Dim startPeriod As Long
 startPeriod = Int(IIf(mViewport.Boundary.Left < 1, _
@@ -170,7 +170,8 @@ Dim endPeriod As Long
 endPeriod = Int(IIf(mViewport.Boundary.Right > mPeriods.Count, _
                 mPeriods.Count, _
                 Int(mViewport.Boundary.Right)))
-                
+If endPeriod < startPeriod Then Exit Sub
+
 Dim i As Long
 For i = startPeriod To endPeriod
     Dim lPeriod As Period
@@ -188,8 +189,12 @@ For i = startPeriod To endPeriod
 Next
 
 generateGridLines lPeriodsNeedingGridlines.Enumerator
+lPeriodsNeedingGridlines.Clear
+
 generateGridLabels lPeriodsNeedingGridTexts.Enumerator
+lPeriodsNeedingGridTexts.Clear
 generateCoarseGridLabels lPeriodsNeedingCoarseGridTexts.Enumerator
+lPeriodsNeedingCoarseGridTexts.Clear
 
 Exit Sub
 
