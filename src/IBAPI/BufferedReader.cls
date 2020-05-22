@@ -51,6 +51,7 @@ Private mInputParseIndex                            As Long
 Private mInputParseIndexChk                         As Long
 
 Private mInMessageBuilder                           As StringBuilder
+Private mMessageBuildStarted                        As Boolean
 
 Private mNextCheckpointToProcess()                  As Long
 Private mCurrCheckpointNumber()                     As Long
@@ -210,21 +211,17 @@ End If
 If Not gSocketLogger.IsLoggable(mApiMessageLogLevel) Then
     mLogCurrentApiMessage = False
 Else
-    If mLogCurrentApiMessage Then Exit Sub
     mLogCurrentApiMessage = True
-    mInMessageBuilder.Clear
-    mInMessageBuilder.Append "IN: "
-    mInMessageBuilder.Append "Msg id "
-    mInMessageBuilder.Append "("
-    mInMessageBuilder.Append gInputMessageIdToString(mMessageId)
-    mInMessageBuilder.Append ")"
-    mInMessageBuilder.Append "="
-    mInMessageBuilder.Append mMessageId
-    mInMessageBuilder.Append ";"
-    mInMessageBuilder.Append "Version"
-    mInMessageBuilder.Append "="
-    mInMessageBuilder.Append mVersion
-    mInMessageBuilder.Append ";"
+    If Not mMessageBuildStarted Then
+        mMessageBuildStarted = True
+        mInMessageBuilder.Append "IN: Msg id ("
+        mInMessageBuilder.Append gInputMessageIdToString(mMessageId)
+        mInMessageBuilder.Append ")="
+        mInMessageBuilder.Append mMessageId
+        mInMessageBuilder.Append ";Version="
+        mInMessageBuilder.Append mVersion
+        mInMessageBuilder.Append ";"
+    End If
 End If
 
 Exit Sub
@@ -269,7 +266,10 @@ On Error GoTo Err
 
 If mLogCurrentApiMessage Then
     gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, mApiMessageLogLevel
+    mInMessageBuilder.Clear
 End If
+mMessageBuildStarted = False
+mLogCurrentApiMessage = False
 
 mMessageId = 0
 
