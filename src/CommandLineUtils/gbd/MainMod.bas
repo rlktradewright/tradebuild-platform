@@ -121,8 +121,6 @@ Private Const OutputPathPattern                     As String = "(?:{(\$\w*)})"
 ' Member variables
 '@================================================================================
 
-Private mIsInDev                                    As Boolean
-
 Public gCon                                         As Console
 
 Public gLogToConsole                                As Boolean
@@ -211,55 +209,6 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Function gBinarySearch( _
-                ByVal pString, _
-                ByRef pArray() As String, _
-                Optional ByVal pStartIndex As Long = 0, _
-                Optional ByVal pLength As Long = -1, _
-                Optional ByVal pIsCaseSensitive As Boolean = False) As Long
-Const ProcName As String = "gBinarySearch"
-On Error GoTo Err
-
-AssertArgument pStartIndex >= 0, "pStartIndex must be >= 0"
-
-If pLength < 0 Then
-    pLength = UBound(pArray) - pStartIndex + 1
-Else
-    AssertArgument pStartIndex + pLength <= UBound(pArray) + 1, "Invalid pLength"
-End If
-
-Dim lCompareMethod As VbCompareMethod
-lCompareMethod = IIf(pIsCaseSensitive, VbCompareMethod.vbBinaryCompare, VbCompareMethod.vbTextCompare)
-
-Dim bottom As Long: bottom = pStartIndex
-Dim top As Long: top = bottom + pLength - 1
-Dim middle As Long
-Dim lItemIndex As Long
-Do
-    middle = Int((bottom + top) / 2)
-    Dim lComp As Long: lComp = StrComp(pString, pArray(middle), lCompareMethod)
-    If lComp = -1 Then
-        lItemIndex = &HFFFFFFFF Xor top
-        If middle = bottom Then Exit Do
-        top = middle - 1
-    ElseIf lComp = 1 Then
-        lItemIndex = &HFFFFFFFF Xor top
-        If middle = top Then Exit Do
-        bottom = middle + 1
-    Else
-        lItemIndex = middle
-        Exit Do
-    End If
-Loop 'Until bottom = top And bottom = middle
-
-gBinarySearch = lItemIndex
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Public Function gCreateOutputStream( _
                 ByVal pOutputPath As String, _
@@ -515,61 +464,64 @@ For Each lMatch In lMatches
     s = s & Mid$(pString, lCurrPosn, lMatch.FirstIndex - lCurrPosn + 1)
     lCurrPosn = lMatch.FirstIndex + lMatch.Length + 1
     
+    Dim r As String
+    
     Dim lVariable As String: lVariable = UCase$(lMatch.SubMatches(0))
     Select Case lVariable
     Case ContractVariable
-        s = s & Replace$(gGetContractName(lContractSpec), "/", "'")
+        r = gGetContractName(lContractSpec)
     Case SymbolVariable
-        s = s & lContractSpec.Symbol
+        r = lContractSpec.Symbol
     Case LocalSymbolVariable
-        s = s & lContractSpec.LocalSymbol
+        r = lContractSpec.LocalSymbol
     Case SecTypeVariable
-        s = s & SecTypeToShortString(lContractSpec.Symbol)
+        r = SecTypeToShortString(lContractSpec.Symbol)
     Case ExchangeVariable
-        s = s & Replace$(lContractSpec.Exchange, "/", "'")
+        r = lContractSpec.Exchange
     Case ExpiryVariable
-        s = s & lContractSpec.Expiry
+        r = lContractSpec.Expiry
     Case CurrencyVariable
-        s = s & lContractSpec.CurrencyCode
+        r = lContractSpec.CurrencyCode
     Case MultiplierVariable
-        s = s & lContractSpec.Multiplier
+        r = lContractSpec.Multiplier
     Case StrikeVariable
-        s = s & lContractSpec.Strike
+        r = lContractSpec.Strike
     Case RightVariable
-        s = s & OptionRightToString(lContractSpec.Symbol)
+        r = OptionRightToString(lContractSpec.Symbol)
     Case TodayVariable
-        s = s & FormatTimestamp(todayDate, mTimestampDateOnlyFormat)
+        r = FormatTimestamp(todayDate, mTimestampDateOnlyFormat)
     Case YesterdayVariable
-        s = s & FormatTimestamp(yesterdayDate, mTimestampDateOnlyFormat)
+        r = FormatTimestamp(yesterdayDate, mTimestampDateOnlyFormat)
     Case FromDateVariable
-        s = s & FormatTimestamp(pProcessor.FromDate, mTimestampDateOnlyFormat)
+        r = FormatTimestamp(pProcessor.FromDate, mTimestampDateOnlyFormat)
     Case FromDateTimeVariable
-        s = s & Replace$(FormatTimestamp(pProcessor.FromDate, mTimestampFormat + TimestampNoMillisecs), ":", ".")
+        r = FormatTimestamp(pProcessor.FromDate, mTimestampFormat + TimestampNoMillisecs)
     Case FromTimeVariable
-        s = s & Replace$(FormatTimestamp(pProcessor.FromDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs), ":", ".")
+        r = FormatTimestamp(pProcessor.FromDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs)
     Case ToDateVariable
         If pProcessor.ToDate = MaxDate Then
-            s = s & LatestParameter
+            r = LatestParameter
         Else
-            s = s & FormatTimestamp(pProcessor.ToDate, mTimestampDateOnlyFormat)
+            r = FormatTimestamp(pProcessor.ToDate, mTimestampDateOnlyFormat)
         End If
     Case ToDateTimeVariable
         If pProcessor.ToDate = MaxDate Then
-            s = s & LatestParameter
+            r = LatestParameter
         Else
-            s = s & Replace$(FormatTimestamp(pProcessor.ToDate, mTimestampFormat + TimestampNoMillisecs), ":", ".")
+            r = FormatTimestamp(pProcessor.ToDate, mTimestampFormat + TimestampNoMillisecs)
         End If
     Case ToTimeVariable
         If pProcessor.ToDate = MaxDate Then
-            s = s & LatestParameter
+            r = LatestParameter
         Else
-            s = s & Replace$(FormatTimestamp(pProcessor.ToDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs), ":", ".")
+            r = FormatTimestamp(pProcessor.ToDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs)
         End If
     Case TimeframeVariable
-        s = s & pProcessor.Timeframe.ToShortString
+        r = pProcessor.Timeframe.ToShortString
     Case Default
         Assert False, "Unexpected substitution variable: " & lVariable
     End Select
+    s = s & escapeNonFilenameChars(r)
 Next
 
 gPerformVariableSubstitution = s & Right$(pString, Len(pString) - lCurrPosn + 1)
@@ -702,6 +654,34 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function escapeNonFilenameChars(ByVal pFilename As String) As String
+Dim ar() As Byte
+ar = pFilename
+Dim i As Long
+For i = 0 To UBound(ar) - 1
+    Dim c As String: c = Chr$(ar(i))
+    If c = "/" Then
+        c = "-"
+    ElseIf c = ":" Then
+        c = "."
+    ElseIf c = "*" Then
+        c = "'"
+    ElseIf c = "?" Then
+        c = "~"
+    ElseIf c = """" Then
+        c = "'"
+    ElseIf c = "<" Then
+        c = "_"
+    ElseIf c = ">" Then
+        c = "_"
+    ElseIf c = "|" Then
+        c = "^"
+    End If
+    ar(i) = Asc(c)
+Next
+escapeNonFilenameChars = ar
+End Function
+
 Private Function isValidPath(ByVal pPath As String) As Boolean
 Const ProcName As String = "isValidPath"
 On Error GoTo Err
@@ -740,7 +720,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isValidSubstitutionVariable(ByVal pString As String) As Boolean
-isValidSubstitutionVariable = gBinarySearch( _
+isValidSubstitutionVariable = BinarySearchStrings( _
                                 pString, _
                                 mSubstitutionVariables, _
                                 0, _
