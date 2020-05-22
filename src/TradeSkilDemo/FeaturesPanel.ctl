@@ -24,6 +24,7 @@ Begin VB.UserControl FeaturesPanel
       _ExtentY        =   15928
       _Version        =   393216
       Tabs            =   5
+      Tab             =   1
       TabsPerRow      =   5
       TabHeight       =   2
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -37,14 +38,15 @@ Begin VB.UserControl FeaturesPanel
       EndProperty
       TabCaption(0)   =   "Tab 0"
       TabPicture(0)   =   "FeaturesPanel.ctx":0000
-      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "TickersPicture"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).ControlCount=   1
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "FeaturesPanel.ctx":001C
-      Tab(1).ControlEnabled=   0   'False
+      Tab(1).ControlEnabled=   -1  'True
       Tab(1).Control(0)=   "LiveChartPicture"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "FeaturesPanel.ctx":0038
@@ -426,7 +428,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   49020931
+            Format          =   94240771
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -480,7 +482,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   49020931
+            Format          =   94240771
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -550,7 +552,7 @@ Begin VB.UserControl FeaturesPanel
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   9015
-         Left            =   -75000
+         Left            =   0
          ScaleHeight     =   9015
          ScaleWidth      =   4125
          TabIndex        =   11
@@ -658,7 +660,7 @@ Begin VB.UserControl FeaturesPanel
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   9015
-         Left            =   0
+         Left            =   -75000
          ScaleHeight     =   9015
          ScaleWidth      =   4125
          TabIndex        =   7
@@ -1433,7 +1435,7 @@ Private Sub NumHistHistoryBarsText_Validate(Cancel As Boolean)
 Const ProcName As String = "NumHistHistoryBarsText_Validate"
 On Error GoTo Err
 
-If Not IsInteger(NumHistHistoryBarsText.Text, 0, 2000) Then Cancel = True
+If Not IsInteger(NumHistHistoryBarsText.Text, 0, 10000) Then Cancel = True
 
 Exit Sub
 
@@ -1445,7 +1447,7 @@ Private Sub NumLiveHistoryBarsText_Validate(Cancel As Boolean)
 Const ProcName As String = "NumLiveHistoryBarsText_Validate"
 On Error GoTo Err
 
-If Not IsInteger(NumLiveHistoryBarsText.Text, 0, 2000) Then Cancel = True
+If Not IsInteger(NumLiveHistoryBarsText.Text, 0, 10000) Then Cancel = True
 
 Exit Sub
 
