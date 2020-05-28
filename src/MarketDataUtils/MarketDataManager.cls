@@ -59,9 +59,9 @@ Attribute mFactory.VB_VarHelpID = -1
 Private mStudyLibManager                            As StudyLibraryManager
 
 Private mDataSourceBaseTable()                      As DataSourceBaseTableEntry
-Private mNextDataSourceBaseTableIndex               As Long
-Private mFirstFreeDataSourceBaseTableIndex          As Long
-Private mLastFreeDataSourceBaseTableIndex           As Long
+Private mNextUnusedTableIndex                       As Long
+Private mFirstReleasedTableIndex                    As Long
+Private mLastReleasedTableIndex                     As Long
 
 Private mContractMap                                As ContractMap
 
@@ -78,8 +78,8 @@ Private mNumberOfMarketDepthRows                    As Long
 
 Private Sub Class_Initialize()
 ReDim mDataSourceBaseTable(3) As DataSourceBaseTableEntry
-mFirstFreeDataSourceBaseTableIndex = NullIndex
-mLastFreeDataSourceBaseTableIndex = NullIndex
+mFirstReleasedTableIndex = NullIndex
+mLastReleasedTableIndex = NullIndex
 Set mContractMap = New ContractMap
 End Sub
 
@@ -143,7 +143,7 @@ On Error GoTo Err
 
 Dim i As Long
 
-For i = 0 To mNextDataSourceBaseTableIndex - 1
+For i = 0 To mNextUnusedTableIndex - 1
     If Not mDataSourceBaseTable(i).DataSourceBase Is Nothing Then
         mDataSourceBaseTable(i).DataSourceBase.Finish
         ReleaseDataSourceBase mDataSourceBaseTable(i).DataSourceBase
@@ -184,7 +184,7 @@ Set lContract = pContractFuture.Value
 
 Dim lIndex As Long
 If pTickfileStreamId <> NullIndex Then
-    lIndex = allocateDataSourceBaseTableEntry(pTickfileStreamId)
+    lIndex = allocateTableEntry(pTickfileStreamId)
 Else
     lIndex = getDataSourceBaseIndex(lContract.Specifier)
     If lIndex = -1 Then Exit Function
@@ -274,7 +274,7 @@ Friend Sub ReleaseDataSourceBase(ByVal pDataSourceBase As DataSourceBase)
 Const ProcName As String = "ReleaseDataSourceBase"
 On Error GoTo Err
 
-releaseDataSourceBaseTableEntry pDataSourceBase.StreamId
+releaseTableEntry pDataSourceBase.StreamId
 Dim lContract As IContract
 Set lContract = pDataSourceBase.ContractFuture.Value
 If mContractMap.Contains(lContract.Specifier) Then mContractMap.Remove lContract.Specifier
@@ -337,29 +337,33 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Function allocateDataSourceBaseTableEntry(Optional ByVal pIndex As Long = NullIndex) As Long
-Const ProcName As String = "allocateDataSourceBaseTableEntry"
+Private Function allocateTableEntry(Optional ByVal pIndex As Long = NullIndex) As Long
+Const ProcName As String = "allocateTableEntry"
 On Error GoTo Err
 
+Dim lIndex As Long
+
 If pIndex <> NullIndex Then
+    Assert pIndex >= mNextUnusedTableIndex, "Index has already been used"
     ensureTableSpace pIndex
-    allocateDataSourceBaseTableEntry = pIndex
-ElseIf findNextFreeDataSourceBasetableEntry Then
-    allocateDataSourceBaseTableEntry = mNextDataSourceBaseTableIndex
-ElseIf mFirstFreeDataSourceBaseTableIndex <> NullIndex Then
-    allocateDataSourceBaseTableEntry = mFirstFreeDataSourceBaseTableIndex
-    mFirstFreeDataSourceBaseTableIndex = mDataSourceBaseTable(mFirstFreeDataSourceBaseTableIndex).Next
-    If mFirstFreeDataSourceBaseTableIndex = NullIndex Then mLastFreeDataSourceBaseTableIndex = NullIndex
+    lIndex = pIndex
+ElseIf findNextUnusedTableEntry(lIndex) Then
+ElseIf mFirstReleasedTableIndex <> NullIndex Then
+    lIndex = mFirstReleasedTableIndex
+    mFirstReleasedTableIndex = mDataSourceBaseTable(mFirstReleasedTableIndex).Next
+    If mFirstReleasedTableIndex = NullIndex Then mLastReleasedTableIndex = NullIndex
 Else
-    ensureTableSpace mNextDataSourceBaseTableIndex
-    allocateDataSourceBaseTableEntry = mNextDataSourceBaseTableIndex
+    ensureTableSpace mNextUnusedTableIndex
+    lIndex = mNextUnusedTableIndex
 End If
 
-Assert Not (pIndex = NullIndex And mDataSourceBaseTable(allocateDataSourceBaseTableEntry).InUse), "Stream table entry already in use"
-Assert allocateDataSourceBaseTableEntry <= mFactory.MaxStreamId, "Max stream id exceeded"
+Assert Not (pIndex = NullIndex And mDataSourceBaseTable(lIndex).InUse), "Stream table entry already in use"
+Assert lIndex <= mFactory.MaxStreamId, "Max stream id exceeded"
 
-mDataSourceBaseTable(allocateDataSourceBaseTableEntry).InUse = True
-mDataSourceBaseTable(allocateDataSourceBaseTableEntry).Next = NullIndex
+mDataSourceBaseTable(lIndex).InUse = True
+mDataSourceBaseTable(lIndex).Next = NullIndex
+
+allocateTableEntry = lIndex
 
 Exit Function
 
@@ -381,23 +385,32 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function findNextFreeDataSourceBasetableEntry() As Boolean
-Const ProcName As String = "findNextFreeDataSourceBasetableEntry"
+Private Function findNextUnusedTableEntry(ByRef pIndex As Long) As Boolean
+Const ProcName As String = "findNextUnusedTableEntry"
 On Error GoTo Err
 
-Dim lFound As Boolean
-lFound = False
+Dim lFound As Boolean: lFound = False
 
-Do While mNextDataSourceBaseTableIndex <= UBound(mDataSourceBaseTable)
-    If Not mDataSourceBaseTable(mNextDataSourceBaseTableIndex).InUse Then
+Dim lCurrentIndex As Long
+Do While mNextUnusedTableIndex <= UBound(mDataSourceBaseTable)
+    lCurrentIndex = mNextUnusedTableIndex
+    mNextUnusedTableIndex = mNextUnusedTableIndex + 1
+    If Not mDataSourceBaseTable(lCurrentIndex).InUse Then
         lFound = True
         Exit Do
     End If
-    mNextDataSourceBaseTableIndex = mNextDataSourceBaseTableIndex + 1
 Loop
 
-If mNextDataSourceBaseTableIndex > mFactory.MaxStreamId Then lFound = False
-findNextFreeDataSourceBasetableEntry = lFound
+If Not lFound Then
+    pIndex = NullIndex
+ElseIf lCurrentIndex > mFactory.MaxStreamId Then
+    lFound = False
+    pIndex = NullIndex
+Else
+    pIndex = lCurrentIndex
+End If
+    
+findNextUnusedTableEntry = lFound
 
 Exit Function
 
@@ -435,7 +448,7 @@ Dim lIndex As Long
 If mContractMap.Contains(pContractSpec) Then
     lIndex = mContractMap.Item(pContractSpec)
 Else
-    lIndex = allocateDataSourceBaseTableEntry
+    lIndex = allocateTableEntry
     mContractMap.Add pContractSpec, lIndex
 End If
 
@@ -447,18 +460,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub releaseDataSourceBaseTableEntry(ByVal pIndex As Long)
-Const ProcName As String = "releaseDataSourceBaseTableEntry"
+Private Sub releaseTableEntry(ByVal pIndex As Long)
+Const ProcName As String = "releaseTableEntry"
 On Error GoTo Err
 
-If mLastFreeDataSourceBaseTableIndex <> NullIndex Then
-    mDataSourceBaseTable(mLastFreeDataSourceBaseTableIndex).Next = pIndex
+If pIndex >= mNextUnusedTableIndex Then
+    ' entry was allocated with a caller-specified index, and is
+    ' still above the other used entries, so simply make it unused
 Else
-    mFirstFreeDataSourceBaseTableIndex = pIndex
+    If mLastReleasedTableIndex <> NullIndex Then
+        mDataSourceBaseTable(mLastReleasedTableIndex).Next = pIndex
+    Else
+        mFirstReleasedTableIndex = pIndex
+    End If
+    mLastReleasedTableIndex = pIndex
+    
+    mDataSourceBaseTable(pIndex).Next = NullIndex
 End If
-mLastFreeDataSourceBaseTableIndex = pIndex
-
-mDataSourceBaseTable(pIndex).Next = NullIndex
 mDataSourceBaseTable(pIndex).InUse = False
 Set mDataSourceBaseTable(pIndex).DataSourceBase = Nothing
 
