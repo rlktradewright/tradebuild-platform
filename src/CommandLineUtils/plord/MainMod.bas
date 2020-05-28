@@ -384,6 +384,7 @@ Do While gInputPaused
     Wait 20
 Loop
 getInputLine = Trim$(gCon.ReadLine(getPrompt))
+If getInputLine <> "" Then setupResultsLogging mClp
 
 Exit Function
 
@@ -915,12 +916,10 @@ ElseIf lCommand Is gCommands.StageOrdersCommand Then
 ElseIf lCommand Is gCommands.GroupCommand Then
     processGroupCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.BuyCommand Then
-    setupResultsLogging mClp
     ProcessBuyCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.BuyAgainCommand Then
     ProcessBuyAgainCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.SellCommand Then
-    setupResultsLogging mClp
     ProcessSellCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.SellAgainCommand Then
     ProcessSellAgainCommand Params, lContractProcessor
@@ -942,7 +941,6 @@ ElseIf lCommand Is gCommands.EndBracketCommand Then
     mBracketOrderDefinitionInProgress = False
     lContractProcessor.ProcessEndBracketCommand
     If mErrorCount = 0 And Not mBatchOrders Then
-        setupResultsLogging mClp
         processOrders
     Else
         gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed", True
@@ -956,7 +954,6 @@ ElseIf lCommand Is gCommands.ResetCommand Then
 ElseIf lCommand Is gCommands.ListCommand Then
     processListCommand Params
 ElseIf lCommand Is gCommands.CloseoutCommand Then
-    setupResultsLogging mClp
     processCloseoutCommand Params
 ElseIf lCommand Is gCommands.QuoteCommand Then
     processQuoteCommand Params, lContractProcessor
