@@ -65,6 +65,7 @@ Private mState                                      As OrderSubmitterStates
 Private mStateChangeListeners                       As Listeners
 
 Private mOrderSubmissionListeners                   As Listeners
+Private mCurrentOrderSubmissionListeners()          As Object
 
 Private mStageOrders                                As Boolean
 
@@ -748,6 +749,7 @@ Const ProcName As String = "Finish"
 On Error GoTo Err
 
 mStateChangeListeners.Clear
+mOrderSubmissionListeners.Clear
 
 Exit Sub
 
@@ -863,19 +865,11 @@ Friend Sub NotifyAboutToPlaceOrder( _
 Const ProcName As String = "NotifyAboutToPlaceOrder"
 On Error GoTo Err
 
-Static sInit As Boolean
-Static sCurrentListeners() As Object
-Static sSomeListeners As Boolean
-
-If Not sInit Or Not mOrderSubmissionListeners.Valid Then
-    sInit = True
-    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
-End If
-If sSomeListeners Then
+If getCurrentOrderSubmissionListeners Then
     Dim lListener As IOrderSubmissionListener
     Dim i As Long
-    For i = 0 To UBound(sCurrentListeners)
-        Set lListener = sCurrentListeners(i)
+    For i = 0 To UBound(mCurrentOrderSubmissionListeners)
+        Set lListener = mCurrentOrderSubmissionListeners(i)
         lListener.NotifyAboutToPlaceOrder pOrder
     Next
 End If
@@ -897,19 +891,11 @@ If Not mOptionTickSizeResolver Is Nothing Then
     If mOptionTickSizeResolver.HandleError(pErrorCode) Then Exit Sub
 End If
 
-Static sInit As Boolean
-Static sCurrentListeners() As Object
-Static sSomeListeners As Boolean
-
-If Not sInit Or Not mOrderSubmissionListeners.Valid Then
-    sInit = True
-    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
-End If
-If sSomeListeners Then
+If getCurrentOrderSubmissionListeners Then
     Dim lListener As IOrderSubmissionListener
     Dim i As Long
-    For i = 0 To UBound(sCurrentListeners)
-        Set lListener = sCurrentListeners(i)
+    For i = 0 To UBound(mCurrentOrderSubmissionListeners)
+        Set lListener = mCurrentOrderSubmissionListeners(i)
         lListener.NotifyError pOrder.Id, pErrorCode, pErrorMsg
     Next
 End If
@@ -924,19 +910,11 @@ Friend Sub NotifyExecutionReport(ByVal pExecutionReport As IExecutionReport)
 Const ProcName As String = "NotifyExecutionReport"
 On Error GoTo Err
 
-Static sInit As Boolean
-Static sCurrentListeners() As Object
-Static sSomeListeners As Boolean
-
-If Not sInit Or Not mOrderSubmissionListeners.Valid Then
-    sInit = True
-    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
-End If
-If sSomeListeners Then
+If getCurrentOrderSubmissionListeners Then
     Dim lListener As IOrderSubmissionListener
     Dim i As Long
-    For i = 0 To UBound(sCurrentListeners)
-        Set lListener = sCurrentListeners(i)
+    For i = 0 To UBound(mCurrentOrderSubmissionListeners)
+        Set lListener = mCurrentOrderSubmissionListeners(i)
         lListener.NotifyExecutionReport pExecutionReport
     Next
 End If
@@ -953,19 +931,11 @@ Friend Sub NotifyMessage( _
 Const ProcName As String = "NotifyMessage"
 On Error GoTo Err
 
-Static sInit As Boolean
-Static sCurrentListeners() As Object
-Static sSomeListeners As Boolean
-
-If Not sInit Or Not mOrderSubmissionListeners.Valid Then
-    sInit = True
-    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
-End If
-If sSomeListeners Then
+If getCurrentOrderSubmissionListeners Then
     Dim lListener As IOrderSubmissionListener
     Dim i As Long
-    For i = 0 To UBound(sCurrentListeners)
-        Set lListener = sCurrentListeners(i)
+    For i = 0 To UBound(mCurrentOrderSubmissionListeners)
+        Set lListener = mCurrentOrderSubmissionListeners(i)
         lListener.NotifyMessage pOrder.Id, pMessage
     Next
 End If
@@ -980,19 +950,11 @@ Friend Sub NotifyOrderReport(ByVal pOrderReport As IOrderReport)
 Const ProcName As String = "NotifyOrderReport"
 On Error GoTo Err
 
-Static sInit As Boolean
-Static sCurrentListeners() As Object
-Static sSomeListeners As Boolean
-
-If Not sInit Or Not mOrderSubmissionListeners.Valid Then
-    sInit = True
-    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
-End If
-If sSomeListeners Then
+If getCurrentOrderSubmissionListeners Then
     Dim lListener As IOrderSubmissionListener
     Dim i As Long
-    For i = 0 To UBound(sCurrentListeners)
-        Set lListener = sCurrentListeners(i)
+    For i = 0 To UBound(mCurrentOrderSubmissionListeners)
+        Set lListener = mCurrentOrderSubmissionListeners(i)
         lListener.NotifyOrderReport pOrderReport
     Next
 End If
@@ -1007,19 +969,11 @@ Friend Sub NotifyOrderStatusReport(ByVal pOrderStatusReport As IOrderStatusRepor
 Const ProcName As String = "NotifyOrderStatusReport"
 On Error GoTo Err
 
-Static sInit As Boolean
-Static sCurrentListeners() As Object
-Static sSomeListeners As Boolean
-
-If Not sInit Or Not mOrderSubmissionListeners.Valid Then
-    sInit = True
-    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(sCurrentListeners)
-End If
-If sSomeListeners Then
+If getCurrentOrderSubmissionListeners Then
     Dim lListener As IOrderSubmissionListener
     Dim i As Long
-    For i = 0 To UBound(sCurrentListeners)
-        Set lListener = sCurrentListeners(i)
+    For i = 0 To UBound(mCurrentOrderSubmissionListeners)
+        Set lListener = mCurrentOrderSubmissionListeners(i)
         lListener.NotifyOrderStatusReport pOrderStatusReport
     Next
 End If
@@ -1266,6 +1220,25 @@ ElseIf mDataSource.HasCurrentTick(TickTypeBid) Then
 Else
     Assert False, "No price available"
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getCurrentOrderSubmissionListeners() As Boolean
+Const ProcName As String = "getCurrentOrderSubmissionListeners"
+On Error GoTo Err
+
+Static sInit As Boolean
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mOrderSubmissionListeners.Valid Then
+    sInit = True
+    sSomeListeners = mOrderSubmissionListeners.GetCurrentListeners(mCurrentOrderSubmissionListeners)
+End If
+getCurrentOrderSubmissionListeners = sSomeListeners
 
 Exit Function
 
