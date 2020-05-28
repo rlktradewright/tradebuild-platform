@@ -236,10 +236,12 @@ Dim lIntegerPart As Double: lIntegerPart = Int(pPrice)
 Dim lFractionalPart As Double: lFractionalPart = pPrice - lIntegerPart
 If lFractionalPart < 0.5 Then
     lNewPrice = lIntegerPart + 0.37
-    If pWantLowerPrice Then
-        If lNewPrice > pPrice Then lNewPrice = lIntegerPart - 1 + 0.63
-    Else
-        If lNewPrice < pPrice Then lNewPrice = lIntegerPart + 0.63
+    If lIntegerPart <> 0# Then
+        If pWantLowerPrice Then
+            If lNewPrice > pPrice Then lNewPrice = lIntegerPart - 1 + 0.63
+        Else
+            If lNewPrice < pPrice Then lNewPrice = lIntegerPart + 0.63
+        End If
     End If
 Else
     lNewPrice = lIntegerPart + 0.63
