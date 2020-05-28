@@ -529,37 +529,6 @@ Public Function Buy( _
 Const ProcName As String = "Buy"
 On Error GoTo Err
 
-'Dim s As String
-'s = "Buy" & _
-'                IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.LocalSymbol & _
-'                "; Number=" & Number & vbCrLf & _
-'                "; EntryType=" & gBracketEntryTypeToShortString(EntryType) & _
-'                "; EntryLimitPrice=" & EntryLimitPrice & _
-'                "; EntryTriggerPrice=" & EntryTriggerPrice & vbCrLf & _
-'                "; EntryLimitPriceOffset=" & EntryLimitPriceOffset & _
-'                "; EntryLimitPriceOffsetType=" & gPriceOffsetTypeToString(EntryLimitPriceOffsetType) & _
-'                "; EntryTriggerPriceOffset=" & EntryTriggerPriceOffset & _
-'                "; EntryTriggerPriceOffsetType=" & gPriceOffsetTypeToString(EntryTriggerPriceOffsetType) & vbCrLf & _
-'                "; StopLossType=" & gBracketStopLossTypeToShortString(StopLossType) & _
-'                "; StopLossLimitPrice=" & StopLossLimitPrice & _
-'                "; StopLossTriggerPrice=" & StopLossTriggerPrice & vbCrLf & _
-'                "; StopLossLimitPriceOffset=" & StopLossLimitPriceOffset & _
-'                "; StopLossLimitPriceOffsetType=" & gPriceOffsetTypeToString(StopLossLimitPriceOffsetType) & _
-'                "; StopLossTriggertPriceOffset=" & StopLossTriggerPriceOffset & _
-'                "; StopLossTriggerPriceOffsetType=" & gPriceOffsetTypeToString(StopLossTriggerPriceOffsetType) & vbCrLf & _
-'                "; TargetType=" & gBracketTargetTypeToShortString(TargetType) & _
-'                "; TargetLimitPrice=" & TargetLimitPrice & _
-'                "; TargetTriggerPrice=" & TargetTriggerPrice & vbCrLf & _
-'                "; TargetLimitPriceOffset=" & TargetLimitPriceOffset & _
-'                "; TargetLimitPriceOffsetType=" & gPriceOffsetTypeToString(TargetLimitPriceOffsetType)
-'s = s & _
-'                "; TargetTriggerPriceOffset=" & TargetTriggerPriceOffset & _
-'                "; TargetTriggerPriceOffsetType=" & gPriceOffsetTypeToString(TargetTriggerPriceOffsetType) & vbCrLf & _
-'                "; EntryTIF=" & gOrderTIFToString(EntryTIF) & _
-'                "; StopTIF=" & gOrderTIFToString(StopTIF) & _
-'                "; TargetTIF=" & gOrderTIFToString(TargetTIF)
-'gLog s, ProcName, ModuleName
-                
 Set Buy = CreateBracketOrder(OrderActions. _
                             OrderActionBuy, _
                             Number, _
@@ -588,86 +557,14 @@ Public Function CalculateOffsettedPrice( _
 Const ProcName As String = "CalculateOffsettedPrice"
 On Error GoTo Err
 
-If pPriceSpec.PriceType = PriceValueTypeEntry Or _
-        pPriceSpec.PriceType = PriceValueTypeNone Then
-    CalculateOffsettedPrice = MaxDoubleValue
-    Exit Function
-End If
-
-Dim lRoundingMode As TickRoundingModes
-If pOrderAction = OrderActionBuy Then
-    lRoundingMode = TickRoundingModeUp
-Else
-    lRoundingMode = TickRoundingModeDown
-End If
-
-Dim lPrice As Double
-
-Select Case pPriceSpec.PriceType
-Case PriceValueTypeNone
-    Assert False
-Case PriceValueTypeValue
-    lPrice = pPriceSpec.Price
-Case PriceValueTypeAsk
-    lPrice = getCurrentPrice(TickTypeAsk)
-Case PriceValueTypeBid
-    lPrice = getCurrentPrice(TickTypeBid)
-Case PriceValueTypeLast
-    lPrice = getCurrentPrice(TickTypeTrade)
-Case PriceValueTypeEntry
-    Assert False
-Case PriceValueTypeMid
-    lPrice = (getCurrentPrice(TickTypeAsk) + _
-                getCurrentPrice(TickTypeBid)) / 2#
-Case PriceValueTypeBidOrAsk
-    If pOrderAction = OrderActionBuy Then
-        lPrice = getCurrentPrice(TickTypeBid)
-    Else
-        lPrice = getCurrentPrice(TickTypeAsk)
-    End If
-End Select
-
-Dim lEffectiveTickSize As Double: lEffectiveTickSize = mTickSize
-If pSectype <> SecTypeOption Or lPrice < 3# Then
-ElseIf mTickSize = 0.01 Then
-    lEffectiveTickSize = 0.05
-Else
-    lEffectiveTickSize = 0.1
-End If
-
-Dim lResult As Double
-
-Select Case pPriceSpec.OffsetType
-Dim lOffset As Double
-Case PriceOffsetTypeNone
-    lResult = lPrice
-Case PriceOffsetTypeIncrement
-    lOffset = pPriceSpec.Offset
-Case PriceOffsetTypeNumberOfTicks
-    lOffset = pPriceSpec.Offset * lEffectiveTickSize
-Case PriceOffsetTypeBidAskPercent
-    Dim lBid As Double: lBid = getCurrentPrice(TickTypeBid)
-    Dim lAsk As Double: lAsk = getCurrentPrice(TickTypeAsk)
-    
-    lOffset = pPriceSpec.Offset * (lAsk - lBid) / 100#
-Case PriceOffsetTypePercent
-    lOffset = pPriceSpec.Offset * lPrice / 100#
-End Select
-
-If Not pPriceSpec.UseCloseoutSemantics And _
-    pPriceSpec.PriceType <> PriceValueTypeBidOrAsk _
-Then
-    lResult = lPrice + lOffset
-ElseIf pOrderAction = OrderActionBuy Then
-    lResult = lPrice + lOffset
-Else
-    lResult = lPrice - lOffset
-End If
-
-CalculateOffsettedPrice = gRoundToTickBoundary( _
-                                        lResult, _
-                                        lEffectiveTickSize, _
-                                        lRoundingMode)
+CalculateOffsettedPrice = gCalculateOffsettedPrice( _
+                                pPriceSpec, _
+                                pSectype, _
+                                pOrderAction, _
+                                mTickSize, _
+                                getCurrentPrice(TickTypeBid), _
+                                getCurrentPrice(TickTypeAsk), _
+                                getCurrentPrice(TickTypeTrade))
 
 Exit Function
 
@@ -1482,37 +1379,6 @@ Public Function Sell( _
 Const ProcName As String = "Sell"
 On Error GoTo Err
 
-'Dim s As String
-'s = "Sell" & _
-'                IIf(mIsSimulated, " (simulated): ", ": ") & mContract.Specifier.LocalSymbol & _
-'                "; Number=" & Number & vbCrLf & _
-'                "; EntryType=" & gBracketEntryTypeToShortString(EntryType) & _
-'                "; EntryLimitPrice=" & EntryLimitPrice & _
-'                "; EntryTriggerPrice=" & EntryTriggerPrice & vbCrLf & _
-'                "; EntryLimitPriceOffset=" & EntryLimitPriceOffset & _
-'                "; EntryLimitPriceOffsetType=" & gPriceOffsetTypeToString(EntryLimitPriceOffsetType) & _
-'                "; EntryTriggerPriceOffset=" & EntryTriggerPriceOffset & _
-'                "; EntryTriggerPriceOffsetType=" & gPriceOffsetTypeToString(EntryTriggerPriceOffsetType) & vbCrLf & _
-'                "; StopLossType=" & gBracketStopLossTypeToShortString(StopLossType) & _
-'                "; StopLossLimitPrice=" & StopLossLimitPrice & _
-'                "; StopLossTriggerPrice=" & StopLossTriggerPrice & vbCrLf & _
-'                "; StopLossLimitPriceOffset=" & StopLossLimitPriceOffset & _
-'                "; StopLossLimitPriceOffsetType=" & gPriceOffsetTypeToString(StopLossLimitPriceOffsetType) & _
-'                "; StopLossTriggertPriceOffset=" & StopLossTriggerPriceOffset & _
-'                "; StopLossTriggerPriceOffsetType=" & gPriceOffsetTypeToString(StopLossTriggerPriceOffsetType) & vbCrLf & _
-'                "; TargetType=" & gBracketTargetTypeToShortString(TargetType) & _
-'                "; TargetLimitPrice=" & TargetLimitPrice & _
-'                "; TargetTriggerPrice=" & TargetTriggerPrice & vbCrLf & _
-'                "; TargetLimitPriceOffset=" & TargetLimitPriceOffset & _
-'                "; TargetLimitPriceOffsetType=" & gPriceOffsetTypeToString(TargetLimitPriceOffsetType)
-'s = s & _
-'                "; TargetTriggerPriceOffset=" & TargetTriggerPriceOffset & _
-'                "; TargetTriggerPriceOffsetType=" & gPriceOffsetTypeToString(TargetTriggerPriceOffsetType) & vbCrLf & _
-'                "; EntryTIF=" & gOrderTIFToString(EntryTIF) & _
-'                "; StopTIF=" & gOrderTIFToString(StopTIF) & _
-'                "; TargetTIF=" & gOrderTIFToString(TargetTIF)
-'gLog s, ProcName, ModuleName
-                
 Set Sell = CreateBracketOrder(OrderActions.OrderActionSell, _
                                 Number, _
                                 pEntryOrder, _

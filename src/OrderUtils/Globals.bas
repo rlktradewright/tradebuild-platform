@@ -246,6 +246,100 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gCalculateOffsettedPrice( _
+                ByVal pPriceSpec As PriceSpecifier, _
+                ByVal pSectype As SecurityTypes, _
+                ByVal pOrderAction As OrderActions, _
+                ByVal pTickSize As Double, _
+                ByVal pBidPrice As Double, _
+                ByVal pAskPrice As Double, _
+                ByVal pTradePrice As Double) As Double
+Const ProcName As String = "gCalculateOffsettedPrice"
+On Error GoTo Err
+
+If pPriceSpec.PriceType = PriceValueTypeEntry Or _
+        pPriceSpec.PriceType = PriceValueTypeNone Then
+    gCalculateOffsettedPrice = MaxDoubleValue
+    Exit Function
+End If
+
+Dim lRoundingMode As TickRoundingModes
+If pOrderAction = OrderActionBuy Then
+    lRoundingMode = TickRoundingModeUp
+Else
+    lRoundingMode = TickRoundingModeDown
+End If
+
+Dim lPrice As Double
+
+Select Case pPriceSpec.PriceType
+Case PriceValueTypeNone
+    Assert False
+Case PriceValueTypeValue
+    lPrice = pPriceSpec.Price
+Case PriceValueTypeAsk
+    lPrice = pAskPrice
+Case PriceValueTypeBid
+    lPrice = pBidPrice
+Case PriceValueTypeLast
+    lPrice = pTradePrice
+Case PriceValueTypeEntry
+    Assert False
+Case PriceValueTypeMid
+    lPrice = (pAskPrice + pBidPrice) / 2#
+Case PriceValueTypeBidOrAsk
+    If pOrderAction = OrderActionBuy Then
+        lPrice = pBidPrice
+    Else
+        lPrice = pAskPrice
+    End If
+End Select
+
+Dim lEffectiveTickSize As Double: lEffectiveTickSize = pTickSize
+If pSectype <> SecTypeOption Or lPrice < 3# Then
+ElseIf pTickSize = 0.01 Then
+    lEffectiveTickSize = 0.05
+Else
+    lEffectiveTickSize = 0.1
+End If
+
+Dim lResult As Double
+
+Select Case pPriceSpec.OffsetType
+Dim lOffset As Double
+Case PriceOffsetTypeNone
+    lResult = lPrice
+Case PriceOffsetTypeIncrement
+    lOffset = pPriceSpec.Offset
+Case PriceOffsetTypeNumberOfTicks
+    lOffset = pPriceSpec.Offset * lEffectiveTickSize
+Case PriceOffsetTypeBidAskPercent
+    lOffset = pPriceSpec.Offset * (pAskPrice - pBidPrice) / 100#
+Case PriceOffsetTypePercent
+    lOffset = pPriceSpec.Offset * lPrice / 100#
+End Select
+
+If Not pPriceSpec.UseCloseoutSemantics And _
+    pPriceSpec.PriceType <> PriceValueTypeBidOrAsk _
+Then
+    lResult = lPrice + lOffset
+ElseIf pOrderAction = OrderActionBuy Then
+    lResult = lPrice + lOffset
+Else
+    lResult = lPrice - lOffset
+End If
+
+gCalculateOffsettedPrice = gRoundToTickBoundary( _
+                                        lResult, _
+                                        lEffectiveTickSize, _
+                                        lRoundingMode)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gCreateOptionRolloverSpecification( _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _

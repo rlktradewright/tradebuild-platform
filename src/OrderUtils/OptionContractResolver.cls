@@ -71,6 +71,9 @@ Private mCandidateContracts                         As IContracts
 Private mCandidateContractsEn                       As Enumerator
 Private mCandidateContract                          As IContract
 
+Private mTargetContract                             As IContract
+Private mTargetContractValue                        As Long
+
 Private mFutureBuilder                              As New FutureBuilder
 
 Private mPendingCommands                            As SortedDictionary
@@ -123,21 +126,16 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     Dim lContractValue As Long
     lContractValue = CLng(ev.Tick.Price * mCandidateContract.Specifier.Multiplier)
     Dim s As String
-    If lContractValue > mMaxExpenditure Then
-        s = "Value of contract with strike: " & _
-                mCandidateContract.Specifier.Strike & _
-                " is " & lContractValue
-        gLogContractResolution s
-    Else
-        ' we've found the target contract
-        s = "Target contract has strike: " & _
-                mCandidateContract.Specifier.Strike & _
-                " and value: " & lContractValue
-        gLogContractResolution s
-        
-        processTargetContract mCandidateContract
-        
-        Exit Sub
+    s = "Value of contract with strike: " & _
+            mCandidateContract.Specifier.Strike & _
+            " is " & lContractValue
+    gLogContractResolution s
+    
+    If lContractValue <= mMaxExpenditure And _
+        lContractValue > mTargetContractValue _
+    Then
+        Set mTargetContract = mCandidateContract
+        mTargetContractValue = lContractValue
     End If
         
     ' try the next contract
@@ -147,6 +145,14 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
                                                 CreateFuture(mCandidateContract), False)
         mDataSource.AddGenericTickListener Me
         mDataSource.StartMarketData
+    ElseIf Not mTargetContract Is Nothing Then
+        ' we've found the target contract
+        s = "Target contract has strike: " & _
+                mTargetContract.Specifier.Strike & _
+                " and value: " & mTargetContractValue
+        gLogContractResolution s
+        
+        processTargetContract mTargetContract
     Else
         gLogContractResolution "No target contract found"
         Set mSelfRef = Nothing
