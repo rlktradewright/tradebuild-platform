@@ -466,7 +466,7 @@ With pOrder
     If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
-    gOrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
+    gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)

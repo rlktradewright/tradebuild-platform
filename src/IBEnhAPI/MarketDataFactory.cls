@@ -840,9 +840,13 @@ On Error GoTo Err
 If pTick.TickType = TickTypeMarketDepth Or _
     pTick.TickType = TickTypeMarketDepthReset _
 Then
-    mMarketDepthTable(pStreamId).TickStreamBuilder.NotifyTick pTick
+    If mMarketDepthTable(pStreamId).InUse Then
+        mMarketDepthTable(pStreamId).TickStreamBuilder.NotifyTick pTick
+    End If
 Else
-    mMarketDataTable(pStreamId).TickStreamBuilder.NotifyTick pTick
+    If mMarketDataTable(pStreamId).InUse Then
+        mMarketDataTable(pStreamId).TickStreamBuilder.NotifyTick pTick
+    End If
 End If
 
 Exit Sub
@@ -1097,7 +1101,10 @@ With pTable(pIndex)
     Set .ConsumerContract = Nothing
     Set .ConsumerTimeZone = Nothing
     .DataHasBeenReceived = False
-    Set .TickStreamBuilder = Nothing
+    
+    ' don't do this as it causes a failure if this is during a FireTick call
+    'Set .TickStreamBuilder = Nothing
+    
     .Next = pFirstFreeTableIndex
     pFirstFreeTableIndex = pIndex
 End With
