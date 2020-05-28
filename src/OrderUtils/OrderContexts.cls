@@ -439,6 +439,7 @@ Add.PermittedOrderProperties = mPermittedOrderProperties
 Add.Enabled = mEnabled
 Add.IsProviderReady = IsProviderReady
 Add.IsDataSourceReady = mDataSourceIsReady
+Add.SetTickSize mTickSize
 
 Exit Function
 
