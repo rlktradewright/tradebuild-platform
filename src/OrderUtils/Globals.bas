@@ -278,19 +278,26 @@ Case PriceValueTypeNone
 Case PriceValueTypeValue
     lPrice = pPriceSpec.Price
 Case PriceValueTypeAsk
+    AssertArgument pAskPrice <> MaxDouble, "Ask price not available"
     lPrice = pAskPrice
 Case PriceValueTypeBid
+    AssertArgument pBidPrice <> MaxDouble, "Bid price not available"
     lPrice = pBidPrice
 Case PriceValueTypeLast
+    AssertArgument pTradePrice <> MaxDouble, "Trade price not available"
     lPrice = pTradePrice
 Case PriceValueTypeEntry
     Assert False
 Case PriceValueTypeMid
+    AssertArgument pAskPrice <> MaxDouble, "Ask price not available"
+    AssertArgument pBidPrice <> MaxDouble, "Bid price not available"
     lPrice = (pAskPrice + pBidPrice) / 2#
 Case PriceValueTypeBidOrAsk
     If pOrderAction = OrderActionBuy Then
+        AssertArgument pBidPrice <> MaxDouble, "Bid price not available"
         lPrice = pBidPrice
     Else
+        AssertArgument pAskPrice <> MaxDouble, "Ask price not available"
         lPrice = pAskPrice
     End If
 End Select
@@ -314,6 +321,8 @@ Case PriceOffsetTypeIncrement
 Case PriceOffsetTypeNumberOfTicks
     lOffset = pPriceSpec.Offset * lEffectiveTickSize
 Case PriceOffsetTypeBidAskPercent
+    AssertArgument pAskPrice <> MaxDouble, "Ask price not available"
+    AssertArgument pBidPrice <> MaxDouble, "Bid price not available"
     lOffset = pPriceSpec.Offset * (pAskPrice - pBidPrice) / 100#
 Case PriceOffsetTypePercent
     lOffset = pPriceSpec.Offset * lPrice / 100#

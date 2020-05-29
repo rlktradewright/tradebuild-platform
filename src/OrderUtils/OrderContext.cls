@@ -557,14 +557,23 @@ Public Function CalculateOffsettedPrice( _
 Const ProcName As String = "CalculateOffsettedPrice"
 On Error GoTo Err
 
+Dim lBidPrice As Double: lBidPrice = MaxDouble
+If mDataSource.HasCurrentTick(TickTypeBid) Then lBidPrice = getCurrentPrice(TickTypeBid)
+
+Dim lAskPrice As Double: lAskPrice = MaxDouble
+If mDataSource.HasCurrentTick(TickTypeAsk) Then lAskPrice = getCurrentPrice(TickTypeAsk)
+
+Dim lTradePrice As Double: lTradePrice = MaxDouble
+If mDataSource.HasCurrentTick(TickTypeTrade) Then lTradePrice = getCurrentPrice(TickTypeTrade)
+
 CalculateOffsettedPrice = gCalculateOffsettedPrice( _
                                 pPriceSpec, _
                                 pSectype, _
                                 pOrderAction, _
                                 mTickSize, _
-                                getCurrentPrice(TickTypeBid), _
-                                getCurrentPrice(TickTypeAsk), _
-                                getCurrentPrice(TickTypeTrade))
+                                lBidPrice, _
+                                lAskPrice, _
+                                lTradePrice)
 
 Exit Function
 
