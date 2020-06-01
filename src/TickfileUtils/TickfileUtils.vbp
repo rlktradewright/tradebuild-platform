@@ -39,6 +39,7 @@ HelpContextID="0"
 Description="TradeWright Tickfile Utilities v2.7"
 CompatibleMode="2"
 CompatibleEXE32="..\..\Compat\TradeWright.TradeBuild.Platform\TickfileUtils27.dll"
+VersionCompatible32="1"
 MajorVer=2
 MinorVer=7
 RevisionVer=240

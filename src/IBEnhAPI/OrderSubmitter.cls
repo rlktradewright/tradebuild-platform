@@ -1403,7 +1403,10 @@ Private Sub modifyABracketOrder( _
 Const ProcName As String = "modifyABracketOrder"
 On Error GoTo Err
 
-Dim lParentId As Long: lParentId = CLng("0" & pBracketOrder.EntryOrder.BrokerId)
+Dim lParentId As Long
+If pBracketOrder.EntryOrder.Status <> OrderStatusFilled Then
+    lParentId = CLng("0" & pBracketOrder.EntryOrder.BrokerId)
+End If
 
 Dim lOCAGroup As String
 lOCAGroup = getOcaGroup(pBracketOrder.StopLossOrder)
