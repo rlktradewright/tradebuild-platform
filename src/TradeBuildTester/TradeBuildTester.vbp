@@ -1,7 +1,7 @@
 Type=Exe
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\System32\stdole2.tlb#OLE Automation
 Reference=*\G{C38FF823-ABCF-46B2-B936-C657C244A4D0}#1.0#0#..\..\..\SimplyVBUnit\Framework\Framework\SimplyVBUnitLib.dll#SimplyVBUnit Framework v2.1
-Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#a.3#0#..\..\..\tradewright-common\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
+Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#a.3#0#C:\Program Files\TradeWright Software Systems\TradeWright Utilities Sample Apps v4.0.121\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
 Reference=*\G{9722BE74-1F7D-4CE3-9ECB-59A9FBD2BBB7}#b.1#0#..\..\Bin\TradeWright.TradeBuild.UnitTests\TickfileUtilsUnitTests27.dll#TradeWright Tickfile Utils Unit Tests v2.7
 Reference=*\G{F476AF06-C514-443F-BE74-605D0C22F6F1}#1.0#0#..\..\Bin\TradeWright.TradeBuild.UnitTests\BarUtilsUnitTests27.dll#TradeWright Bar Utils Unit Tests v2.7
 Reference=*\G{FFDEFD81-707F-499D-B32A-02618C09A77F}#1.0#0#..\..\Bin\TradeWright.TradeBuild.UnitTests\SessionUtilsUnitTests27.dll#TradeWright Session Utils Unit Tests v2.7

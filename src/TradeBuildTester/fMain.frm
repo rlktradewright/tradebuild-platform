@@ -83,7 +83,7 @@ Private Sub Form_Load()
     AddTest New TestTickfileManager
     AddTest New TestTickfileReader
     AddTest New TestTickfileReaderDB
-    AddTest New TestTickfileRdrDBAsync
+    AddTest New TestTickfileRdrDbAsync
     AddTest New TestTickfileWriter
     
     AddTest New TestBarUtils
@@ -95,7 +95,7 @@ Private Sub Form_Load()
 End Sub
 
 Private Sub Form_Initialize()
-    Call Me.SimplyVBUnitCtl1.Init(App.EXEName)
+    SimplyVBUnitCtl1.Init App.EXEName
 End Sub
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)

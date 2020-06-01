@@ -906,7 +906,8 @@ Assert.AreEqual "2016-01-10 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("10/1/16 16:42:00"), _
                                 GetTimePeriod(1, TimePeriodDay), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
@@ -915,7 +916,8 @@ Assert.AreEqual "2016-01-14 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("15/1/16 16:31:00"), _
                                 GetTimePeriod(1, TimePeriodDay), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
@@ -941,7 +943,8 @@ Assert.AreEqual "2016-01-10 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("15/1/16 11:57:00"), _
                                 GetTimePeriod(1, TimePeriodWeek), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
@@ -950,7 +953,8 @@ Assert.AreEqual "2015-12-27 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("30/12/15 11:57:00"), _
                                 GetTimePeriod(1, TimePeriodWeek), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
@@ -959,7 +963,8 @@ Assert.AreEqual "2016-01-03 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("03/01/16 17:45:00"), _
                                 GetTimePeriod(1, TimePeriodWeek), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
@@ -975,7 +980,8 @@ Assert.AreEqual "2016-01-03 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("15/1/16 11:57:00"), _
                                 GetTimePeriod(2, TimePeriodWeek), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
@@ -984,7 +990,8 @@ Assert.AreEqual "2015-12-20 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("30/12/15 11:57:00"), _
                                 GetTimePeriod(2, TimePeriodWeek), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
@@ -993,7 +1000,8 @@ Assert.AreEqual "2016-01-03 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("03/01/16 17:45:00"), _
                                 GetTimePeriod(2, TimePeriodWeek), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
@@ -1015,7 +1023,8 @@ Assert.AreEqual "2020-02-29 16:30:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("2020-03-15 11:57:00"), _
                                 GetTimePeriod(1, TimePeriodMonth), _
-                                CDate("16:30")), _
+                                CDate("16:30"), _
+                                CDate("16:15")), _
                     TimestampFormats.TimestampDateAndTimeISO8601)
 End Sub
 
