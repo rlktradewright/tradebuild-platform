@@ -7,7 +7,7 @@
 						<Properties>
 							<Property __Name="Server"/>
 							<Property __Name="Port">7496</Property>
-							<Property __Name="Client Id">1194362192</Property>
+							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
 							<Property __Name="Connection Retry Interval Secs">60</Property>
 							<Property __Name="TWS Log Level">ERROR</Property>
@@ -18,7 +18,7 @@
 							<Property __Name="Role">Primary</Property>
 							<Property __Name="Server"/>
 							<Property __Name="Port">7496</Property>
-							<Property __Name="Client Id">1194362192</Property>
+							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
 							<Property __Name="Connection Retry Interval Secs">60</Property>
 							<Property __Name="TWS Log Level">ERROR</Property>
@@ -29,7 +29,7 @@
 							<Property __Name="Role">Secondary</Property>
 							<Property __Name="Server"/>
 							<Property __Name="Port">7496</Property>
-							<Property __Name="Client Id">1194362192</Property>
+							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
 							<Property __Name="Connection Retry Interval Secs">60</Property>
 							<Property __Name="TWS Log Level">ERROR</Property>
@@ -39,7 +39,7 @@
 						<Properties>
 							<Property __Name="Server"/>
 							<Property __Name="Port">7496</Property>
-							<Property __Name="Client Id">1194362192</Property>
+							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
 							<Property __Name="Connection Retry Interval Secs">60</Property>
 							<Property __Name="TWS Log Level">ERROR</Property>
@@ -54,7 +54,7 @@
 						<Properties>
 							<Property __Name="Server"/>
 							<Property __Name="Port">7496</Property>
-							<Property __Name="Client Id">1194362192</Property>
+							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
 							<Property __Name="Connection Retry Interval Secs">60</Property>
 							<Property __Name="TWS Log Level">ERROR</Property>
