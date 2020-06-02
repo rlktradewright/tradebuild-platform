@@ -345,16 +345,16 @@ Do
     
     Dim userResponse As Long
     userResponse = MsgBox( _
-            "The configuration failed to operate correctly, for this " & vbCrLf & _
+            "The configuration failed to operate correctly, for this" & vbCrLf & _
             "reason:" & vbCrLf & vbCrLf & _
             lErrorMessage & vbCrLf & vbCrLf & _
             "Would you like to manually correct the configuration?" & vbCrLf & vbCrLf & _
             "Click Yes to manually correct the configuration." & vbCrLf & vbCrLf & _
             "Click No to proceed with a new default configuration." & _
-            "The default configuration will connect to TWS running on the " & vbCrLf & _
-            "same computer. It will obtain contract data and historical data " & vbCrLf & _
+            "The default configuration will connect to TWS running on the" & vbCrLf & _
+            "same computer. It will obtain contract data and historical data" & vbCrLf & _
             "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
-            "You may amend the default configuration by going to the " & vbCrLf & _
+            "You may amend the default configuration by going to the" & vbCrLf & _
             "Configuration tab when the program has started." & vbCrLf & vbCrLf & _
             "Click Cancel to exit.", _
             vbYesNoCancel Or vbQuestion, _
@@ -572,14 +572,14 @@ Do While lTradeBuildAPI Is Nothing
     gUnloadSplashScreen
     
     Dim userResponse As Long
-    userResponse = MsgBox("The configuration cannot be loaded. Would you like to " & vbCrLf & _
+    userResponse = MsgBox("The configuration cannot be loaded. Would you like to" & vbCrLf & _
             "manually correct the configuration?" & vbCrLf & vbCrLf & _
             "Click Yes to manually correct the configuration." & vbCrLf & vbCrLf & _
             "Click No to proceed with a new default configuration." & _
-            "The default configuration will connect to TWS running on the " & vbCrLf & _
-            "same computer. It will obtain contract data and historical data " & vbCrLf & _
+            "The default configuration will connect to TWS running on the" & vbCrLf & _
+            "same computer. It will obtain contract data and historical data" & vbCrLf & _
             "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
-            "You may amend the default configuration by going to the " & vbCrLf & _
+            "You may amend the default configuration by going to the" & vbCrLf & _
             "Configuration tab when the program has started." & vbCrLf & vbCrLf & _
             "Click Cancel to exit.", _
             vbYesNoCancel Or vbQuestion, _
@@ -751,11 +751,11 @@ On Error GoTo Err
 Dim userResponse As Long
 userResponse = MsgBox("The configuration file does not exist." & vbCrLf & vbCrLf & _
         "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
-        "The default configuration will connect to TWS running on the " & vbCrLf & _
-        "same computer. It will obtain contract data and historical data " & vbCrLf & _
+        "The default configuration will connect to TWS running on the" & vbCrLf & _
+        "same computer. It will obtain contract data and historical data" & vbCrLf & _
         "from TWS." & vbCrLf & vbCrLf & _
-        "You may amend the default configuration by going to the " & vbCrLf & _
-        "Configuration tab when the program starts and using the " & vbCrLf & _
+        "You may amend the default configuration by going to the" & vbCrLf & _
+        "Configuration tab when the program starts and using the" & vbCrLf & _
         "Configuration Editor." & vbCrLf & vbCrLf & _
         "Click Yes to continue with the default configuration." & vbCrLf & vbCrLf & _
         "Click No to exit the program", _
@@ -777,17 +777,17 @@ On Error GoTo Err
 
 Dim userResponse As Long
 userResponse = MsgBox("The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
-        "This may be because you have installed a new version of " & vbCrLf & _
+        "This may be because you have installed a new version of" & vbCrLf & _
         "the program, or because the file has been corrupted." & vbCrLf & vbCrLf & _
         "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
-        "The default configuration will connect to TWS running on the " & vbCrLf & _
-        "same computer. It will obtain contract data and historical data " & vbCrLf & _
+        "The default configuration will connect to TWS running on the" & vbCrLf & _
+        "same computer. It will obtain contract data and historical data" & vbCrLf & _
         "from TWS." & vbCrLf & vbCrLf & _
-        "You may amend the default configuration by going to the " & vbCrLf & _
-        "Configuration tab when the program starts and using the " & vbCrLf & _
+        "You may amend the default configuration by going to the" & vbCrLf & _
+        "Configuration tab when the program starts and using the" & vbCrLf & _
         "Configuration Editor." & vbCrLf & vbCrLf & _
-        "Note that the default configuration will overwrite your " & vbCrLf & _
-        "current configuration file and all settings in it will be " & vbCrLf & _
+        "Note that the default configuration will overwrite your" & vbCrLf & _
+        "current configuration file and all settings in it will be" & vbCrLf & _
         "lost." & vbCrLf & vbCrLf & _
         "Click Yes (recommended) to continue with the default configuration." & vbCrLf & vbCrLf & _
         "Click No to exit the program", _
