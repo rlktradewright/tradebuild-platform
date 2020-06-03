@@ -1633,7 +1633,12 @@ Const VERSION = 10
 Dim lApiId As Long
 lApiId = gGetTwsMarketDataRequestIdFromCallersRequestId(pTickerId)
 
-gLog "Requesting market data: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
+gLog "Requesting market data" & _
+        IIf(pSnapshot, " (snapshot)", "") & _
+        ": requester id=" & pTickerId & _
+        "; api id=" & lApiId & _
+        "; contract=" & pContract.ToString, _
+        ModuleName, ProcName
 
 Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
 
