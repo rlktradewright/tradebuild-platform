@@ -303,11 +303,13 @@ For i = 0 To UBound(lOrderTypesStr)
             "DEACTDIS", _
             "DEACTEOD", _
             "FOK", _
-            "HPENNY", _
-            "IBDARK", _
+            "HPENNY"
+        Case "IBDARK", _
+            "IBKRATS", _
             "IMB", _
             "LARGE", _
             "LTH", _
+            "MIDPX", _
             "NGCOMB"
         Case "NODARK", _
             "NONALGO", _
