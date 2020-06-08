@@ -24,6 +24,7 @@ Option Explicit
 
 Implements IMarketDataFactory
 Implements IMarketDataManager
+Implements IMarketDataManager10
 Implements IStateChangeListener
 
 '@================================================================================
@@ -44,11 +45,13 @@ Implements IStateChangeListener
 
 Private Const ModuleName                            As String = "TickfileDataManager"
 
+Private Const MyCapabilities                        As Long = MarketDataManagerCapabilities.MarketDataManagerStreaming
+
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mReplayController                As ReplayController
+Private mReplayController                           As ReplayController
 Attribute mReplayController.VB_VarHelpID = -1
 
 Private mDataManager                                As MarketDataManager
@@ -184,6 +187,105 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' IMarketDataManager10 Interface Members
+'@================================================================================
+
+Private Property Get IMarketDataManager10_Capabilities() As MarketDataManagerCapabilities
+IMarketDataManager10_Capabilities = MyCapabilities
+End Property
+
+Private Function IMarketDataManager10_CreateMarketDataSource( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pIsRecoverable As Boolean, _
+                Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
+                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
+Const ProcName As String = "IMarketDataManager10_CreateMarketDataSource"
+On Error GoTo Err
+
+Set IMarketDataManager10_CreateMarketDataSource = CreateMarketDataSource(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IMarketDataManager10_CreateSnapshotMarketDataSource( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pIsRecoverable As Boolean, _
+                Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRefreshInterval As Long = 0&) As IMarketDataSource
+Const ProcName As String = "IMarketDataManager10_CreateSnapshotMarketDataSource"
+On Error GoTo Err
+
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, "Not supported"
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Property Get IMarketDataManager10_DataSources() As EnumerableCollection
+Set IMarketDataManager10_DataSources = DataSources
+End Property
+
+Private Sub IMarketDataManager10_Finish()
+Const ProcName As String = "IMarketDataManager10_Finish"
+On Error GoTo Err
+
+Finish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function IMarketDataManager10_GetMarketDataSource(ByVal pKey As String) As IMarketDataSource
+Const ProcName As String = "IMarketDataManager10_GetMarketDataSource"
+On Error GoTo Err
+
+Set IMarketDataManager10_GetMarketDataSource = GetMarketDataSource(pKey)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub IMarketDataManager10_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "IMarketDataManager10_LoadFromConfig"
+On Error GoTo Err
+
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, "Not supported"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IMarketDataManager10_RemoveFromConfig()
+Const ProcName As String = "IMarketDataManager10_RemoveFromConfig"
+On Error GoTo Err
+
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, "Not supported"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function IMarketDataManager10_Supports(ByVal pCapability As MarketDataManagerCapabilities) As Boolean
+IMarketDataManager10_Supports = (MyCapabilities And pCapability) = pCapability
+End Function
+
+'@================================================================================
 ' IStateChangeListener Interface Members
 '@================================================================================
 
@@ -240,7 +342,7 @@ Dim lTickStream As ITickStream
 Set lTickStream = mTickStreams(GetObjectKey(pContractFuture))
 
 Dim lDataSource As New MarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, lTickStream.ClockFuture, pKey, pStateChangeListener, False, pUseLocalTimeForStudies, lTickStream.StreamId)
+Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, lTickStream.ClockFuture, pKey, pStateChangeListener, False, pUseLocalTimeForStudies, lTickStream.StreamId, False, 0)
 
 Set CreateMarketDataSource = lDataSource
 

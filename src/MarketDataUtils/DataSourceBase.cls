@@ -101,6 +101,9 @@ Private mSomeCurrentPriorityTickListeners           As Boolean
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mIsSnapshot                                 As Boolean
+Private mSnapshotRefreshInterval                    As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -247,6 +250,14 @@ End Property
 
 Friend Property Get DOMManager() As DOMManager
 Set DOMManager = mDOMManager
+End Property
+
+Friend Property Get IsSnapshot() As Boolean
+IsSnapshot = mIsSnapshot
+End Property
+
+Friend Property Get SnapshotRefreshInterval() As Long
+SnapshotRefreshInterval = mSnapshotRefreshInterval
 End Property
 
 Friend Property Get NumberOfMarketDepthRows() As Long
@@ -479,7 +490,9 @@ Friend Sub Initialise( _
                 ByVal pIsTickReplay As Boolean, _
                 ByVal pStreamId As Long, _
                 ByVal pOptions As MarketDataSourceOptions, _
-                ByVal pNumberOfMarketDepthRows As Long)
+                ByVal pNumberOfMarketDepthRows As Long, _
+                ByVal pIsSnapshot As Boolean, _
+                ByVal pRefreshInterval)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -504,6 +517,8 @@ mFutureWaiter.Add pClockFuture
 mStreamId = pStreamId
 mOptions = pOptions
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
+mIsSnapshot = pIsSnapshot
+mSnapshotRefreshInterval = pRefreshInterval
 
 mNoImpliedTrades = mOptions And MarketDataSourceOptions.MarketDataSourceOptNoImpliedTrades
 mNoVolumeAdjustments = mOptions And MarketDataSourceOptions.MarketDataSourceOptNoVolumeAdjustments
@@ -929,7 +944,11 @@ On Error GoTo Err
 
 If mNumberOfMarketDataSubscriptions <> 1 Then Exit Sub
 
-Set mDataTickStream = getDataManager.RequestMarketData(Me)
+If mIsSnapshot Then
+    Set mDataTickStream = getDataManager.RequestMarketDataSnapshot(Me)
+Else
+    Set mDataTickStream = getDataManager.RequestMarketData(Me)
+End If
 mDataTickStream.AddGenericTickListener Me
 
 mDataTickStream.Start

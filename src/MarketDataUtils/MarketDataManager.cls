@@ -48,12 +48,14 @@ Private Const ModuleName                            As String = "MarketDataManag
 
 Private Const ConfigSectionMarketDataSource         As String = "MarketDataSource"
 Private Const ConfigSettingUseLocalTimeForStudies   As String = "&UseLocalTimeForStudies"
+Private Const ConfigSettingIsSnapshot               As String = "&IsSnapshot"
+Private Const ConfigSettingSnapshotRefreshInterval  As String = "&SnapshotRefreshInterval"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mFactory                                    As IMarketDataFactory
+Private mFactory                                    As IMarketDataFactory10
 Attribute mFactory.VB_VarHelpID = -1
 
 Private mStudyLibManager                            As StudyLibraryManager
@@ -106,7 +108,9 @@ Friend Function CreateMarketDataSource( _
                 ByVal pStateChangeListener As IStateChangeListener, _
                 ByVal pIsRecoverable As Boolean, _
                 ByVal pUseLocalTimeForStudies As Boolean, _
-                ByVal pTickfileStreamId As Long) As IMarketDataSource
+                ByVal pTickfileStreamId As Long, _
+                ByVal pIsSnapshot As Boolean, _
+                ByVal pRefreshInterval) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
@@ -120,12 +124,12 @@ Dim lDataSource As New MarketDataSource
 If Not pStateChangeListener Is Nothing Then lDataSource.AddStateChangeListener pStateChangeListener
 
 Dim lConfig As ConfigurationSection
-If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStudies)
+If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStudies, pIsSnapshot, pRefreshInterval)
 
 Dim lStudyManagerFuture As IFuture
 If Not mStudyLibManager Is Nothing Then Set lStudyManagerFuture = mStudyLibManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies)
 
-lDataSource.Initialise Me, pKey, pContractFuture, pClockFuture, lStudyManagerFuture, lConfig, pTickfileStreamId
+lDataSource.Initialise Me, pKey, pContractFuture, pClockFuture, lStudyManagerFuture, lConfig, pTickfileStreamId, pIsSnapshot, pRefreshInterval
 
 mDataSources.Add lDataSource, pKey
 
@@ -171,6 +175,8 @@ End Function
 Friend Function GetDataSourceBase( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pClockFuture As IFuture, _
+                ByVal pIsSnapshot As Boolean, _
+                ByVal pRefreshInterval, _
                 Optional ByVal pTickfileStreamId As Long = NullIndex) As DataSourceBase
 Const ProcName As String = "GetDataSourceBase"
 On Error GoTo Err
@@ -186,7 +192,7 @@ Dim lIndex As Long
 If pTickfileStreamId <> NullIndex Then
     lIndex = allocateTableEntry(pTickfileStreamId)
 Else
-    lIndex = getDataSourceBaseIndex(lContract.Specifier)
+    lIndex = getDataSourceBaseIndex(lContract.Specifier, pIsSnapshot, pRefreshInterval)
     If lIndex = -1 Then Exit Function
 End If
 
@@ -196,7 +202,7 @@ If lDataSourceBase Is Nothing Then
     Set lDataSourceBase = New DataSourceBase
     Set mDataSourceBaseTable(lIndex).DataSourceBase = lDataSourceBase
     
-    lDataSourceBase.Initialise Me, pContractFuture, pClockFuture, pTickfileStreamId <> NullIndex, lIndex, mOptions, mNumberOfMarketDepthRows
+    lDataSourceBase.Initialise Me, pContractFuture, pClockFuture, pTickfileStreamId <> NullIndex, lIndex, mOptions, mNumberOfMarketDepthRows, pIsSnapshot, pRefreshInterval
 End If
 
 Set GetDataSourceBase = lDataSourceBase
@@ -254,7 +260,9 @@ For Each lCs In mConfig
                                 Nothing, _
                                 True, _
                                 lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False"), _
-                                NullIndex
+                                NullIndex, _
+                                lCs.GetSetting(ConfigSettingIsSnapshot, "False"), _
+                                lCs.GetSetting(ConfigSettingSnapshotRefreshInterval, "0")
     End If
 Next
 
@@ -270,14 +278,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ReleaseDataSourceBase(ByVal pDataSourceBase As DataSourceBase)
+Friend Sub ReleaseDataSourceBase( _
+                ByVal pDataSourceBase As DataSourceBase)
 Const ProcName As String = "ReleaseDataSourceBase"
 On Error GoTo Err
 
 releaseTableEntry pDataSourceBase.StreamId
 Dim lContract As IContract
 Set lContract = pDataSourceBase.ContractFuture.Value
-If mContractMap.Contains(lContract.Specifier) Then mContractMap.Remove lContract.Specifier
+If mContractMap.Contains(lContract.Specifier, _
+                        pDataSourceBase.IsSnapshot, _
+                        pDataSourceBase.SnapshotRefreshInterval) Then _
+        mContractMap.Remove lContract.Specifier, _
+                        pDataSourceBase.IsSnapshot, _
+                        pDataSourceBase.SnapshotRefreshInterval
 
 Exit Sub
 
@@ -314,6 +328,24 @@ Const ProcName As String = "RequestMarketData"
 On Error GoTo Err
 
 Set RequestMarketData = mFactory.CreateMarketDataStream(pDataSourceBase.ContractFuture, pDataSourceBase, pDataSourceBase.StreamId)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function RequestMarketDataSnapshot(ByVal pDataSourceBase As DataSourceBase) As ITickStream
+Const ProcName As String = "RequestMarketData"
+On Error GoTo Err
+
+Assert TypeOf mFactory Is IMarketDataFactory10, "Market data snapshots not supported by the factory"
+
+Dim lFactory As IMarketDataFactory10: Set lFactory = mFactory
+Set RequestMarketDataSnapshot = lFactory.CreateSnapshotMarketDataStream( _
+                                    pDataSourceBase.ContractFuture, _
+                                    pDataSourceBase, _
+                                    pDataSourceBase.StreamId)
 
 Exit Function
 
@@ -420,7 +452,9 @@ End Function
 
 Private Function getConfigSection( _
                 ByVal pKey As String, _
-                ByVal pUseLocalTimeForStudies As Boolean) As ConfigurationSection
+                ByVal pUseLocalTimeForStudies As Boolean, _
+                ByVal pIsSnapshot As Boolean, _
+                ByVal pRefreshInterval) As ConfigurationSection
 Const ProcName As String = "getConfigSection"
 On Error GoTo Err
 
@@ -429,6 +463,8 @@ If mConfig Is Nothing Then Exit Function
 Dim lConfig As ConfigurationSection
 Set lConfig = mConfig.AddConfigurationSection(ConfigSectionMarketDataSource & "(" & pKey & ")")
 lConfig.SetSetting ConfigSettingUseLocalTimeForStudies, pUseLocalTimeForStudies
+lConfig.SetSetting ConfigSettingIsSnapshot, pIsSnapshot
+lConfig.SetSetting ConfigSettingSnapshotRefreshInterval, pRefreshInterval
 
 Set getConfigSection = lConfig
 
@@ -439,17 +475,19 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getDataSourceBaseIndex( _
-                ByVal pContractSpec As IContractSpecifier) As Long
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pIsSnapshot As Boolean, _
+                ByVal pRefreshInterval) As Long
 Const ProcName As String = "getDataSourceBaseIndex"
 On Error GoTo Err
 
 Dim lIndex As Long
 
-If mContractMap.Contains(pContractSpec) Then
-    lIndex = mContractMap.Item(pContractSpec)
+If mContractMap.Contains(pContractSpec, pIsSnapshot, pRefreshInterval) Then
+    lIndex = mContractMap.Item(pContractSpec, pIsSnapshot, pRefreshInterval)
 Else
     lIndex = allocateTableEntry
-    mContractMap.Add pContractSpec, lIndex
+    mContractMap.Add pContractSpec, pIsSnapshot, pRefreshInterval, lIndex
 End If
 
 getDataSourceBaseIndex = lIndex

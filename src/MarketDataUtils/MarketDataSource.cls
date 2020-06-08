@@ -120,6 +120,9 @@ Private mPriorityTickListener                       As IGenericTickListener
 
 Private mDontSetReady                               As Boolean
 
+Private mIsSnapshot                                 As Boolean
+Private mSnapshotRefreshInterval                    As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -1274,7 +1277,9 @@ Friend Sub Initialise( _
                 ByVal pClockFuture As IFuture, _
                 ByVal pStudyManagerFuture As IFuture, _
                 ByVal pConfig As ConfigurationSection, _
-                ByVal pTickfileStreamId As Long)
+                ByVal pTickfileStreamId As Long, _
+                ByVal pIsSnapshot As Boolean, _
+                ByVal pSnapshotRefreshInterval As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -1286,6 +1291,8 @@ mKey = pKey
 Set mContractFuture = pContractFuture
 Set mConfig = pConfig
 mTickfileStreamId = pTickfileStreamId
+mIsSnapshot = pIsSnapshot
+mSnapshotRefreshInterval = pSnapshotRefreshInterval
 
 setState MarketDataSourceStateCreated
 
@@ -1726,7 +1733,13 @@ On Error GoTo Err
 Dim lContract As IContract
 Set lContract = mContractFuture.Value
 
-Set mDataSourceBaseRef = CreateWeakReference(getMarketDataManager.GetDataSourceBase(mContractFuture, mClockFutureBuilder.Future, mTickfileStreamId))
+Set mDataSourceBaseRef = CreateWeakReference( _
+                            getMarketDataManager.GetDataSourceBase( _
+                                    mContractFuture, _
+                                    mClockFutureBuilder.Future, _
+                                    mIsSnapshot, _
+                                    mSnapshotRefreshInterval, _
+                                    mTickfileStreamId))
 If Not mPriorityTickListener Is Nothing Then DataSourceBase.AddPriorityTickListener mPriorityTickListener
 DataSourceBase.AddMarketDataSource Me
 

@@ -25,6 +25,7 @@ Option Explicit
 Implements IMarketDataConsumer
 Implements IMarketDepthConsumer
 Implements IMarketDataFactory
+Implements IMarketDataFactory10
 Implements ITwsConnectionStateListener
 Implements IStateChangeListener
 
@@ -42,7 +43,8 @@ Implements IStateChangeListener
 
 Private Type TickerTableEntry
     Next                    As Long
-    InUse                   As Boolean
+    IsInUse                   As Boolean
+    IsSnapShot              As Boolean
     TickStreamBuilder       As TickStreamBuilder
     Incarnation             As Long
     ContractFuture          As IFuture
@@ -122,9 +124,14 @@ End Sub
 ' IMarketDataConsumer Interface Members
 '@================================================================================
 
-Private Sub IMarketDataConsumer_EndTickSnapshot(ByVal pReqId As Long)
+Private Sub IMarketDataConsumer_EndTickSnapshot(ByVal pTickerId As Long)
 Const ProcName As String = "IMarketDataConsumer_EndTickSnapshot"
 On Error GoTo Err
+
+If tickerHasBeenStopped(pTickerId) Then Exit Sub
+
+Dim lIndex As Long
+lIndex = getIndexFromTickerId(pTickerId)
 
 Exit Sub
 
@@ -373,6 +380,50 @@ IMarketDataFactory_MaxStreamId = IncarnationIncrement
 End Property
 
 '@================================================================================
+' IMarketDataFactory10 Interface Members
+'@================================================================================
+
+Private Function IMarketDataFactory10_CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
+Const ProcName As String = "IMarketDataFactory10_CreateMarketDataStream"
+On Error GoTo Err
+
+Set IMarketDataFactory10_CreateMarketDataStream = CreateMarketDataStream(pContractFuture, pErrorListener, pStreamId)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IMarketDataFactory10_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+Const ProcName As String = "IMarketDataFactory10_CreateMarketDepthStream"
+On Error GoTo Err
+
+Set IMarketDataFactory10_CreateMarketDepthStream = CreateMarketDepthStream(pContractFuture, pNumberOfRows, pErrorListener, pStreamId)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IMarketDataFactory10_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TickUtils27.ITickStream
+Const ProcName As String = "IMarketDataFactory10_CreateSnapshotMarketDataStream"
+On Error GoTo Err
+
+Set IMarketDataFactory10_CreateSnapshotMarketDataStream = CreateSnapshotMarketDataStream(pContractFuture, pErrorListener, pStreamId)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Property Get IMarketDataFactory10_MaxStreamId() As Long
+IMarketDataFactory10_MaxStreamId = IncarnationIncrement
+End Property
+
+'@================================================================================
 ' IMarketDepthConsumer Interface Members
 '@================================================================================
 
@@ -570,7 +621,7 @@ Dim lStreamId As Long
 lStreamId = ev.ContinuationData
 
 If lStreamId < MarketDepthIdOffset Then
-    If Not mMarketDataTable(lStreamId).InUse Then Exit Sub
+    If Not mMarketDataTable(lStreamId).IsInUse Then Exit Sub
     If ev.Future.IsFaulted Then
         mMarketDataTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
         releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId
@@ -579,7 +630,7 @@ If lStreamId < MarketDepthIdOffset Then
     End If
 Else
     lStreamId = lStreamId - MarketDepthIdOffset
-    If Not mMarketDepthTable(lStreamId).InUse Then Exit Sub
+    If Not mMarketDepthTable(lStreamId).IsInUse Then Exit Sub
     If ev.Future.IsFaulted Then
         mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
         releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId
@@ -716,15 +767,11 @@ Public Function CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal p
 Const ProcName As String = "CreateMarketDataStream"
 On Error GoTo Err
 
-AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
-AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
-
-pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, pStreamId, pContractFuture, pErrorListener)
-
-gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
-
-prepareTickStream mMarketDataTable, pContractFuture, pStreamId, False
-Set CreateMarketDataStream = mMarketDataTable(pStreamId).TickStreamBuilder.TickStream
+Set CreateMarketDataStream = doCreateMarketDataStream( _
+                                pContractFuture, _
+                                False, _
+                                pErrorListener, _
+                                pStreamId)
 
 Exit Function
 
@@ -736,16 +783,27 @@ Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal 
 Const ProcName As String = "CreateMarketDepthStream"
 On Error GoTo Err
 
-AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
-AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
+Set CreateMarketDepthStream = doCreateMarketDataStream( _
+                                        pContractFuture, _
+                                        False, _
+                                        pErrorListener, _
+                                        pStreamId)
 
-pStreamId = getTableEntry(mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, pStreamId, pContractFuture, pErrorListener)
-mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
+Exit Function
 
-gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
-prepareTickStream mMarketDepthTable, pContractFuture, pStreamId, True
-Set CreateMarketDepthStream = mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream
+Public Function CreateSnapshotMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
+Const ProcName As String = "CreateSnapshotMarketDataStream"
+On Error GoTo Err
+
+Set CreateSnapshotMarketDataStream = doCreateMarketDataStream( _
+                                        pContractFuture, _
+                                        True, _
+                                        pErrorListener, _
+                                        pStreamId)
 
 Exit Function
 
@@ -783,7 +841,9 @@ End If
 If isFTSE100Index(mMarketDataTable(pIndex).ContractDetails.Summary) Then
     mHistoricalDataRequester.CancelRealtimeBars getTickerIdFromIndex(pIndex)
 Else
-    mTwsAPI.CancelMarketData getTickerIdFromIndex(pIndex)
+    If Not mMarketDataTable(pIndex).IsSnapShot Then
+        mTwsAPI.CancelMarketData getTickerIdFromIndex(pIndex)
+    End If
 End If
 
 Exit Sub
@@ -831,6 +891,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function doCreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pIsSnapshot As Boolean, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
+Const ProcName As String = "doCreateMarketDataStream"
+On Error GoTo Err
+
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
+AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
+
+pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, pStreamId, pContractFuture, pIsSnapshot, pErrorListener)
+
+gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
+
+prepareTickStream mMarketDataTable, pContractFuture, pStreamId, False
+Set doCreateMarketDataStream = mMarketDataTable(pStreamId).TickStreamBuilder.TickStream
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub FireTick( _
                 ByVal pStreamId As Long, _
                 ByRef pTick As GenericTick)
@@ -840,11 +920,11 @@ On Error GoTo Err
 If pTick.TickType = TickTypeMarketDepth Or _
     pTick.TickType = TickTypeMarketDepthReset _
 Then
-    If mMarketDepthTable(pStreamId).InUse Then
+    If mMarketDepthTable(pStreamId).IsInUse Then
         mMarketDepthTable(pStreamId).TickStreamBuilder.NotifyTick pTick
     End If
 Else
-    If mMarketDataTable(pStreamId).InUse Then
+    If mMarketDataTable(pStreamId).IsInUse Then
         mMarketDataTable(pStreamId).TickStreamBuilder.NotifyTick pTick
     End If
 End If
@@ -889,6 +969,7 @@ Private Function getTableEntry( _
                 ByRef pFirstFreeIndex As Long, _
                 ByVal pIndex As Long, _
                 ByVal pContractFuture As IFuture, _
+                ByVal pIsSnapshot As Boolean, _
                 ByVal pErrorListener As IMarketDataErrorListener) As Long
 Const ProcName As String = "getTableEntry"
 On Error GoTo Err
@@ -905,10 +986,10 @@ If lIndex = -1 Then
             If pNextIndex > UBound(pTable) Then ReDim Preserve pTable(2 * (UBound(pTable) + 1) - 1) As TickerTableEntry
             lIndex = pNextIndex
             pNextIndex = pNextIndex + 1
-        Loop Until Not pTable(lIndex).InUse And pTable(lIndex).Next <> 0
+        Loop Until Not pTable(lIndex).IsInUse And pTable(lIndex).Next <> 0
     End If
 Else
-    If lIndex <= UBound(pTable) Then AssertArgument Not pTable(lIndex).InUse, "Index already in use"
+    If lIndex <= UBound(pTable) Then AssertArgument Not pTable(lIndex).IsInUse, "Index already in use"
     
     Do While lIndex > UBound(pTable)
         ReDim Preserve pTable(2 * (UBound(pTable) + 1) - 1) As TickerTableEntry
@@ -916,7 +997,8 @@ Else
 End If
 
 With pTable(lIndex)
-    .InUse = True
+    .IsInUse = True
+    .IsSnapShot = pIsSnapshot
     Set .ErrorListener = pErrorListener
     Set .ContractFuture = pContractFuture
     Set .TickStreamBuilder = CreateTickStreamBuilder(lIndex, pContractFuture, CreateClockFuture(pContractFuture))
@@ -1051,7 +1133,7 @@ gLog "Re-establishing market " & IIf(pIsMarketDepth, "depth ", "") & "data: mode
 Dim i As Long
 For i = 0 To UBound(pTickers)
     With pTickers(i)
-        If .InUse Then
+        If .IsInUse Then
             ' in the following, incrementing the ticker id will avoid potential
             ' problems with duplicate or unknown ticker id errors
             If pMode = MarketDataReestablishmentModes.NewTickersOnly And Not .DataHasBeenReceived Then
@@ -1094,8 +1176,9 @@ Const ProcName As String = "releaseTableEntry"
 On Error GoTo Err
 
 With pTable(pIndex)
-    .InUse = False
+    .IsInUse = False
     .Incarnation = incrementIncarnation(pIndex, .Incarnation)
+    .IsSnapShot = False
     Set .ContractDetails = Nothing
     Set .ContractFuture = Nothing
     Set .ConsumerContract = Nothing
@@ -1152,7 +1235,10 @@ ElseIf isFTSE100Index(mMarketDataTable(pIndex).ContractDetails.Summary) Then
                                     mMarketDataTable(pIndex).ContractDetails.Summary, _
                                     lRTBRequester
 Else
-    mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mMarketDataTable(pIndex).ContractDetails.Summary, "", False
+    mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), _
+                                mMarketDataTable(pIndex).ContractDetails.Summary, _
+                                "", _
+                                mMarketDataTable(pIndex).IsSnapShot
 End If
 
 Exit Sub
@@ -1190,7 +1276,7 @@ lTick.TickType = TickTypeMarketDepthReset
 Dim i As Long
 For i = 0 To UBound(mMarketDepthTable)
     With mMarketDepthTable(i)
-        If .InUse Then
+        If .IsInUse Then
             lTick.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .ConsumerTimeZone)
             If pReEstablish Then mTwsAPI.RequestMarketDepth i, .ContractDetails.Summary, .NumberOfRows
             FireTick i, lTick

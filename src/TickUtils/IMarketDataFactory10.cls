@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ContractMap"
+Attribute VB_Name = "IMarketDataFactory10"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
@@ -38,21 +38,15 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "ContractMap"
+Private Const ModuleName                            As String = "IMarketDataFactory10"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mIndexes                                    As EnumerableCollection
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Set mIndexes = New EnumerableCollection
-End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -66,90 +60,25 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get MaxStreamId() As Long
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub Add( _
-                ByVal pContractSpec As IContractSpecifier, _
-                ByVal pIsSnapshot As Boolean, _
-                ByVal pRefreshInterval, _
-                ByVal pIndex As Long)
-Const ProcName As String = "Add"
-On Error GoTo Err
-
-mIndexes.Add pIndex, generateKey(pContractSpec, pIsSnapshot, pRefreshInterval)
-
-Exit Sub
-
-Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Function Contains( _
-                ByVal pContractSpec As IContractSpecifier, _
-                ByVal pIsSnapshot As Boolean, _
-                ByVal pRefreshInterval) As Boolean
-Const ProcName As String = "Contains"
-On Error GoTo Err
-
-Contains = mIndexes.Contains(generateKey(pContractSpec, pIsSnapshot, pRefreshInterval))
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Public Function CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
 End Function
 
-Public Function Item( _
-                ByVal pContractSpec As IContractSpecifier, _
-                ByVal pIsSnapshot As Boolean, _
-                ByVal pRefreshInterval) As Long
-Const ProcName As String = "Item"
-On Error GoTo Err
-
-Item = mIndexes.Item(generateKey(pContractSpec, pIsSnapshot, pRefreshInterval))
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
 End Function
 
-Public Function NewEnum() As IUnknown
-Attribute NewEnum.VB_UserMemId = -4
-Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mIndexes.[NewEnum]
+Public Function CreateSnapshotMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
 End Function
-
-
-Friend Sub Remove( _
-                ByVal pContractSpec As IContractSpecifier, _
-                ByVal pIsSnapshot As Boolean, _
-                ByVal pRefreshInterval)
-Const ProcName As String = "Remove"
-On Error GoTo Err
-
-mIndexes.Remove generateKey(pContractSpec, pIsSnapshot, pRefreshInterval)
-
-Exit Sub
-
-Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function generateKey( _
-                ByVal pContractSpec As IContractSpecifier, _
-                ByVal pIsSnapshot As Boolean, _
-                ByVal pRefreshInterval)
-generateKey = pContractSpec.Key & "$$" & _
-                IIf(pIsSnapshot, "T", "F") & "$$" & _
-                CStr(pRefreshInterval)
-End Function
+
 
