@@ -43,6 +43,9 @@ Implements ITask
 
 Private Const ModuleName                            As String = "ContractFetchTask"
 
+Private Const CookieSampleContractFetch             As String = "Sample"
+Private Const CookieTargetContractFetch             As String = "Target"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -63,9 +66,12 @@ Attribute mContractFutureBuilder.VB_VarHelpID = -1
 
 Private mSingleContractOnly                         As Boolean
 
+Private mGotSampleContract                          As Boolean
+
 Private mListener                                   As IContractFetchListener
 
-Private mCookie                                     As Variant
+Private mCallerCookie                               As Variant
+Private mMyCookie                                   As Variant
 
 Private mFetchFuture                                As IFuture
 
@@ -105,7 +111,7 @@ Else
     mContractsFutureBuilder.Cancel
 End If
 
-If Not mListener Is Nothing Then mListener.FetchCancelled pCookie
+If Not mListener Is Nothing Then mListener.FetchCancelled mCallerCookie
 mTaskContext.Finish Empty, False
 
 Exit Sub
@@ -119,20 +125,13 @@ Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
 If Not futureIsPending Then Exit Sub
-
-Static sGotSampleContract As Boolean
-
-If mIsOffsetExpiry And Not sGotSampleContract And mContractsBuilder.Contracts.Count <> 0 Then
-    sGotSampleContract = True
-    processSampleContract mContractsBuilder.Contracts.ItemAtIndex(1)
-    Exit Sub
+If pCookie = CookieSampleContractFetch Then
+    If mGotSampleContract Then Exit Sub
+ElseIf mIsOffsetExpiry Then
+    processOffsetContracts
 End If
 
-If mIsOffsetExpiry Then
-    processOffsetContracts pCookie
-End If
-
-completeContractProcessing pCookie
+completeContractProcessing
 
 Exit Sub
 
@@ -152,7 +151,7 @@ Else
     mContractsFutureBuilder.Fail pErrorCode, pErrorMessage, pErrorSource
 End If
 
-If Not mListener Is Nothing Then mListener.FetchFailed pCookie, pErrorCode, pErrorMessage, pErrorSource
+If Not mListener Is Nothing Then mListener.FetchFailed mCallerCookie, pErrorCode, pErrorMessage, pErrorSource
 mTaskContext.Finish Empty, False
 
 Exit Sub
@@ -167,7 +166,12 @@ On Error GoTo Err
 
 If Not futureIsPending Then Exit Sub
 
-If mIsOffsetExpiry Then
+If pCookie = CookieSampleContractFetch Then
+    If Not mGotSampleContract Then
+        mGotSampleContract = True
+        processSampleContract pContract
+    End If
+ElseIf mIsOffsetExpiry Then
     mContractsBuilder.Add pContract
 Else
     If mContractsBuilder.Contracts.Count = 1 And mSingleContractOnly Then
@@ -179,7 +183,7 @@ Else
     
     mContractsBuilder.Add pContract
     
-    If Not mListener Is Nothing Then mListener.NotifyContract pCookie, pContract
+    If Not mListener Is Nothing Then mListener.NotifyContract mCallerCookie, pContract
 End If
 
 Exit Sub
@@ -207,7 +211,7 @@ If lContractStore Is Nothing Then
     mUsedSecondaryContractStore = True
 End If
 
-Set mFetchFuture = lContractStore.FetchContracts(mContractSpec, Me, mCookie)
+Set mFetchFuture = lContractStore.FetchContracts(mContractSpec, Me, mMyCookie)
 
 mTaskContext.suspend -1
 
@@ -249,7 +253,9 @@ Private Sub mContractFutureBuilder_Cancelled(ev As CancelledEventData)
 Const ProcName As String = "mContractFutureBuilder_Cancelled"
 On Error GoTo Err
 
-If Not mFetchFuture Is Nothing Then mFetchFuture.Cancel
+If Not mFetchFuture Is Nothing Then
+    If Not mFetchFuture.IsCancelled Then mFetchFuture.Cancel
+End If
 If Not mListener Is Nothing Then mListener.FetchCancelled mContractFutureBuilder.Cookie
 mTaskContext.Finish Empty, True
 
@@ -293,6 +299,7 @@ Exit Sub
 Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
+
 '@================================================================================
 ' Properties
 '@================================================================================
@@ -335,10 +342,22 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+Set mPrimaryContractStore = pPrimaryContractStore
+Set mSecondaryContractStore = pSecondaryContractStore
+
+gSetVariant mCallerCookie, pCookie
+
+Set mListener = pListener
+
+mSingleContractOnly = pSingleContractOnly
+createFutureBuilder
+
 If Not gIsOffsetExpiry(pContractSpec.Expiry) Then
+    mMyCookie = CookieTargetContractFetch
     Set mContractSpec = pContractSpec
 Else
     mIsOffsetExpiry = True
+    mMyCookie = CookieSampleContractFetch
     gParseOffsetExpiry pContractSpec.Expiry, _
                     mExpiryOffset, _
                     mDaysBeforeExpiryToSwitch
@@ -353,22 +372,6 @@ Else
                                                     .Strike, _
                                                     .Right)
     End With
-End If
-
-Set mPrimaryContractStore = pPrimaryContractStore
-Set mSecondaryContractStore = pSecondaryContractStore
-
-gSetVariant mCookie, pCookie
-
-Set mListener = pListener
-
-mSingleContractOnly = pSingleContractOnly
-If mSingleContractOnly Then
-    Set mContractFutureBuilder = New FutureBuilder
-    mContractFutureBuilder.Cookie = mCookie
-Else
-    Set mContractsFutureBuilder = New FutureBuilder
-    mContractsFutureBuilder.Cookie = mCookie
 End If
 
 Exit Sub
@@ -416,7 +419,7 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub completeContractProcessing(ByVal pCookie As Variant)
+Private Sub completeContractProcessing()
 Const ProcName As String = "completeContractProcessing"
 On Error GoTo Err
 
@@ -425,7 +428,7 @@ Set lContracts = mContractsBuilder.Contracts
 If lContracts.Count = 0 And Not mUsedSecondaryContractStore Then If trySecondaryContractSP Then Exit Sub
 
 If mSingleContractOnly Then
-    mFutureWaiter.Add mContractFutureBuilder.Future, pCookie
+    mFutureWaiter.Add mContractFutureBuilder.Future, mCallerCookie
     If lContracts.Count = 0 Then
         mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "No such contract", ""
     Else
@@ -433,9 +436,27 @@ If mSingleContractOnly Then
         mContractFutureBuilder.Complete
     End If
 Else
-    mFutureWaiter.Add mContractsFutureBuilder.Future, pCookie
+    mFutureWaiter.Add mContractsFutureBuilder.Future, mCallerCookie
     mContractsFutureBuilder.Value = lContracts
     mContractsFutureBuilder.Complete
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub createFutureBuilder()
+Const ProcName As String = "createFutureBuilder"
+On Error GoTo Err
+
+If mSingleContractOnly Then
+    Set mContractFutureBuilder = New FutureBuilder
+    mContractFutureBuilder.Cookie = mCallerCookie
+Else
+    Set mContractsFutureBuilder = New FutureBuilder
+    mContractsFutureBuilder.Cookie = mCallerCookie
 End If
 
 Exit Sub
@@ -461,10 +482,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processSampleContract(ByVal pFirstContract As IContract)
+
 Const ProcName As String = "processSampleContract"
 On Error GoTo Err
 
-' we've now got at least one contract that meets the specified
+' we've now got a contract that meets the specified
 ' contract spec. Now we need to find all the contracts that do
 ' so (apart from the expiry date)
 With pFirstContract.Specifier
@@ -479,6 +501,7 @@ With pFirstContract.Specifier
                                                 .Right)
 End With
 
+mMyCookie = CookieTargetContractFetch
 Set mContractsBuilder = New ContractsBuilder
 ReDim lSortkeys(0) As ContractSortKeyIds
 lSortkeys(0) = ContractSortKeyExpiry
@@ -492,7 +515,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processOffsetContracts(ByVal pCookie As Variant)
+Private Sub processOffsetContracts()
 Const ProcName As String = "processOffsetContracts"
 On Error GoTo Err
 
@@ -515,7 +538,7 @@ If mExpiryOffset <> -1 Then
         Then
             ' we've found the contract we're after
             mContractsBuilder.Add lContract
-            If Not mListener Is Nothing Then mListener.NotifyContract pCookie, lContract
+            If Not mListener Is Nothing Then mListener.NotifyContract mCallerCookie, lContract
             Exit For
         End If
     Next
@@ -535,7 +558,7 @@ mUsedSecondaryContractStore = True
 If mSecondaryContractStore Is Nothing Then
     trySecondaryContractSP = False
 Else
-    Set mFetchFuture = mSecondaryContractStore.FetchContracts(mContractSpec, Me, mCookie)
+    Set mFetchFuture = mSecondaryContractStore.FetchContracts(mContractSpec, Me, mMyCookie)
     trySecondaryContractSP = True
 End If
 

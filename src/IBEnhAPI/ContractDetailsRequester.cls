@@ -40,6 +40,7 @@ Private Enum States
     StateRequestQueued
     StateRequestInProgress
     StateRequestCancelling
+    StateRequestCompleted
 End Enum
 
 '@================================================================================
@@ -47,9 +48,12 @@ End Enum
 '@================================================================================
 
 Private Type ContractDetailsRequestTableEntry
+    Index                   As Long ' of this entry
     State                   As States
     Contract                As TwsContract
     Requester               As IContractDetailsConsumer
+    NumberReturned          As Long
+    PendingContracts        As EnumerableCollection
     Next                    As Long
 End Type
 
@@ -74,6 +78,9 @@ Private mFirstFreeRequestsEntry                     As Long
 Private mFirstPendingRequestsEntry                  As Long
 Private mLastPendingRequestsEntry                   As Long
 
+Private mFirstPendingContractsEntry                 As Long
+Private mLastPendingContractsEntry                  As Long
+
 Private mTaskContext                                As TaskContext
 
 Private mConcurrentRequests                         As Long
@@ -92,6 +99,8 @@ ReDim mRequests(7) As ContractDetailsRequestTableEntry
 mFirstFreeRequestsEntry = NullIndex
 mFirstPendingRequestsEntry = NullIndex
 mLastPendingRequestsEntry = NullIndex
+mFirstPendingContractsEntry = NullIndex
+mLastPendingContractsEntry = NullIndex
 End Sub
 
 '@================================================================================
@@ -102,8 +111,15 @@ Private Sub IContractDetailsConsumer_EndContractDetails(ByVal pRequestId As Long
 Const ProcName As String = "IContractDetailsConsumer_EndContractDetails"
 On Error GoTo Err
 
-If mRequests(pRequestId).State <> StateRequestCancelling Then mRequests(pRequestId).Requester.EndContractDetails pRequestId
-CompleteRequest pRequestId
+If mRequests(pRequestId).State = StateRequestCancelling Then
+    releaseEntry pRequestId
+ElseIf mRequests(pRequestId).NumberReturned = 1 Then
+    mRequests(pRequestId).Requester.EndContractDetails pRequestId
+    releaseEntry pRequestId
+Else
+    mRequests(pRequestId).State = StateRequestCompleted
+End If
+CompleteRequest
 
 Exit Sub
 
@@ -115,8 +131,22 @@ Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pC
 Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
-mContractCache.Add pContractDetails
-If mRequests(pRequestId).State <> StateRequestCancelling Then mRequests(pRequestId).Requester.NotifyContract pRequestId, pContractDetails
+If mRequests(pRequestId).NumberReturned = 0 Then
+    mRequests(pRequestId).NumberReturned = 1
+    mContractCache.Add pContractDetails
+    If mRequests(pRequestId).State <> StateRequestCancelling Then mRequests(pRequestId).Requester.NotifyContract pRequestId, pContractDetails
+Else
+    mRequests(pRequestId).NumberReturned = mRequests(pRequestId).NumberReturned + 1
+    If mRequests(pRequestId).PendingContracts Is Nothing Then
+        Set mRequests(pRequestId).PendingContracts = New EnumerableCollection
+        If mFirstPendingContractsEntry = NullIndex Then mFirstPendingContractsEntry = pRequestId
+        If mLastPendingContractsEntry <> NullIndex Then mRequests(mLastPendingContractsEntry).Next = pRequestId
+        mLastPendingContractsEntry = pRequestId
+        mRequests(mLastPendingContractsEntry).Next = NullIndex
+    End If
+    mRequests(pRequestId).PendingContracts.Add pContractDetails
+    mTaskContext.Continue
+End If
 
 Exit Sub
 
@@ -129,7 +159,13 @@ Const ProcName As String = "IContractDetailsConsumer_NotifyError"
 On Error GoTo Err
 
 If mRequests(pRequestId).State <> StateRequestCancelling Then mRequests(pRequestId).Requester.NotifyError pRequestId, pErrorCode, pErrorMsg
-CompleteRequest pRequestId
+CompleteRequest
+
+If mRequests(pRequestId).NumberReturned > 1 Then
+    removeEntryFromPendingContractsQueue pRequestId
+End If
+
+releaseEntry pRequestId
 
 Exit Sub
 
@@ -196,6 +232,37 @@ Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
 doSchedule
+
+If mFirstPendingContractsEntry <> NullIndex Then
+    Dim lPendingContractsEntryIndex As Long
+    lPendingContractsEntryIndex = mFirstPendingContractsEntry
+    
+    With mRequests(lPendingContractsEntryIndex)
+        Dim en As Enumerator: Set en = .PendingContracts.Enumerator
+        If en.MoveNext Then
+            Dim lContractDetails As TwsContractDetails
+            Set lContractDetails = en.Current
+            mContractCache.Add lContractDetails
+            If .State <> StateRequestCancelling Then
+                .Requester.NotifyContract lPendingContractsEntryIndex, lContractDetails
+            End If
+            en.Remove
+        End If
+        If .PendingContracts.Count = 0 And _
+            .State = StateRequestCompleted _
+        Then
+            If .State <> StateRequestCancelling Then
+                .Requester.EndContractDetails lPendingContractsEntryIndex
+            End If
+            removeEntryFromPendingContractsQueue lPendingContractsEntryIndex
+            releaseEntry lPendingContractsEntryIndex
+        End If
+    End With
+End If
+ 
+If mFirstPendingRequestsEntry = NullIndex And _
+    mFirstPendingContractsEntry = NullIndex _
+Then mTaskContext.Suspend -1
 
 Exit Sub
 
@@ -320,6 +387,7 @@ Else
 End If
 
 mRequests(allocateEntry).State = StateAllocated
+mRequests(allocateEntry).Index = allocateEntry
 
 Exit Function
 
@@ -327,12 +395,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub CompleteRequest(ByVal pRequestId As Long)
+Private Sub CompleteRequest()
 Const ProcName As String = "completeRequest"
 On Error GoTo Err
 
 If mConcurrentRequests > 0 Then mConcurrentRequests = mConcurrentRequests - 1
-releaseEntry pRequestId
 Schedule
 
 Exit Sub
@@ -345,24 +412,22 @@ Private Sub doSchedule()
 Const ProcName As String = "doSchedule"
 On Error GoTo Err
 
-Dim lIndex As Long
-Dim lCurrIndex As Long
+If mFirstPendingRequestsEntry = NullIndex Then Exit Sub
 
 gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelDetail
 
 If mTwsAPI.ConnectionState <> TwsConnConnected Then
     gLog "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelDetail
-    mTaskContext.Suspend -1
     Exit Sub
 End If
 
 If Not mIsTwsConnectedToIBServers Then
     gLog "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelDetail
-    mTaskContext.Suspend -1
     Exit Sub
 End If
 
-lIndex = mFirstPendingRequestsEntry
+Dim lIndex As Long: lIndex = mFirstPendingRequestsEntry
+Dim lCurrIndex As Long
 
 Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
     lCurrIndex = lIndex
@@ -375,8 +440,6 @@ Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
     unqueueEntry lCurrIndex
     mRequests(lCurrIndex).State = StateRequestInProgress
 Loop
-
-mTaskContext.Suspend -1
 
 Exit Sub
 
@@ -409,12 +472,31 @@ mFirstFreeRequestsEntry = pIndex
 mRequests(pIndex).State = StateFree
 Set mRequests(pIndex).Contract = Nothing
 Set mRequests(pIndex).Requester = Nothing
+mRequests(pIndex).NumberReturned = 0
+Set mRequests(pIndex).PendingContracts = Nothing
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub removeEntryFromPendingContractsQueue(ByVal pIndexToRelease As Long)
+Dim lIndex As Long: lIndex = mFirstPendingContractsEntry
+Dim lPrevIndex As Long: lPrevIndex = NullIndex
+Do While lIndex <> NullIndex
+    If lIndex = pIndexToRelease Then
+        If lPrevIndex <> NullIndex Then
+            mRequests(lPrevIndex).Next = mRequests(pIndexToRelease).Next
+        Else
+            mFirstPendingContractsEntry = mRequests(pIndexToRelease).Next
+        End If
+        Exit Do
+    End If
+    lPrevIndex = lIndex
+    lIndex = mRequests(lIndex).Next
+Loop
+End Sub
 
 Private Sub unqueueEntry(ByVal pIndex As Long)
 Const ProcName As String = "unqueueEntry"

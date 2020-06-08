@@ -74,6 +74,8 @@ Private mCandidateContracts                         As IContracts
 Private mCandidateContractsEn                       As Enumerator
 Private mCandidateContract                          As IContract
 
+Private mUnsortedOptionChainFetchComplete           As Boolean
+
 Private mTargetContract                             As IContract
 Private mTargetContractValue                        As Long
 
@@ -116,7 +118,7 @@ Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
-' nothing to do here
+mUnsortedOptionChainFetchComplete = True
 
 Exit Sub
 
@@ -150,10 +152,7 @@ Else
 End If
 
 Dim lDataSource As IMarketDataSource
-Set lDataSource = mMarketDataManager.CreateMarketDataSource( _
-                                        CreateFuture(pContract), False)
-lDataSource.AddGenericTickListener Me
-lDataSource.StartMarketData
+Set lDataSource = getMarketData(pContract)
 mContractsAwaitingMarketData = mContractsAwaitingMarketData + 1
 
 fireStateChange OptionContractResolverStateFindingRequiredContract
@@ -182,6 +181,12 @@ If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
     gLogContractResolution "Underlying contract: " & _
                             getContractName(mUnderlyingContract) & _
                             "; price is: " & ev.Tick.Price
+    
+    ' now we want to find an option contract with the specified expiration (which
+    ' may well be an offset expiration, but that should make no difference to us),
+    ' and with a strike price that's around the underlying price minus the max
+    ' expenditure (adjusted for multiplier of course, which at this stage we have
+    ' to assume is 100)
     
     If mContractSpec.Right = OptCall Then
         mHeuristicStrike = ev.Tick.Price - mMaxExpenditure / 100#
@@ -220,7 +225,9 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     End If
     
     mContractsAwaitingMarketData = mContractsAwaitingMarketData - 1
-    If mContractsAwaitingMarketData = 0 Then
+    If mContractsAwaitingMarketData = 0 And _
+        mUnsortedOptionChainFetchComplete _
+    Then
         If Not mTargetContract Is Nothing Then
             ' we've found the target contract
             gLogContractResolution "Target contract: " & _
@@ -266,9 +273,8 @@ End If
 Select Case mState
 Case OptionContractResolverStateFetchingUnderlyingContract
     Set mUnderlyingContract = ev.Future.Value
-    Set mDataSource = mMarketDataManager.CreateMarketDataSource(ev.Future, False)
-    mDataSource.AddGenericTickListener Me
-    mDataSource.StartMarketData
+    
+    Set mDataSource = getMarketData(mUnderlyingContract)
     fireStateChange OptionContractResolverStateWaitingForUnderlyingMarketPrice
 
 Case OptionContractResolverStateFetchingInitialContract
@@ -446,12 +452,6 @@ Private Sub fetchInitialContract()
 Const ProcName As String = "fetchInitialContract"
 On Error GoTo Err
 
-' we want to find an option contract with the specified expiration (which
-' may well be an offset expiration, but that should make no difference to us),
-' and with a strike price that's around the underlying price minus the max
-' expenditure (adjusted for multiplier of course, which at this stage we have
-' to assume is 100)
-
 Dim lInitialContractSpec As IContractSpecifier
 With mContractSpec
     Set lInitialContractSpec = CreateContractSpecifier("", _
@@ -582,6 +582,33 @@ End Sub
 Private Function getContractName( _
                 ByVal pContract As IContract) As String
 getContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
+End Function
+
+Private Function getMarketData(ByVal pContract As IContract) As IMarketDataSource
+Const ProcName As String = "getMarketData"
+On Error GoTo Err
+
+Dim lDataSource As IMarketDataSource
+If TypeOf mMarketDataManager Is IMarketDataManager10 Then
+    Dim lMarketDataManager As IMarketDataManager10
+    Set lMarketDataManager = mMarketDataManager
+    Set lDataSource = lMarketDataManager.CreateSnapshotMarketDataSource( _
+                                            CreateFuture(pContract), _
+                                            False)
+Else
+    Set lDataSource = mMarketDataManager.CreateMarketDataSource( _
+                                            CreateFuture(pContract), _
+                                            False)
+End If
+lDataSource.AddGenericTickListener Me
+lDataSource.StartMarketData
+
+Set getMarketData = lDataSource
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processTargetContract(ByVal pContract As IContract)
