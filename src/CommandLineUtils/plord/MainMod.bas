@@ -141,7 +141,7 @@ Private mErrorCount                                 As Long
 Private mFatalErrorHandler                          As FatalErrorHandler
 
 Private mContractStore                              As IContractStore
-Private mMarketDataManager                          As IMarketDataManager
+Private mMarketDataManager                          As RealTimeDataManager
 
 Private mScopeName                                  As String
 Private mOrderManager                               As OrderManager
@@ -220,9 +220,9 @@ If InStr(1, pValue, " ") <> 0 Then pValue = """" & pValue & """"
 gGenerateSwitch = SwitchPrefix & pName & IIf(pValue = "", " ", ValueSeparator & pValue & " ")
 End Function
 
-Public Function gGetContractName(ByVal pcontract As IContract) As String
-AssertArgument Not pcontract Is Nothing
-gGetContractName = pcontract.Specifier.LocalSymbol & "@" & pcontract.Specifier.Exchange
+Public Function gGetContractName(ByVal pContract As IContract) As String
+AssertArgument Not pContract Is Nothing
+gGetContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
 End Function
 
 Public Sub gHandleFatalError(ev As ErrorEventData)
@@ -359,6 +359,7 @@ mGroups.Initialise mContractStore, _
                     mOrderManager, _
                     mScopeName, _
                     mOrderSubmitterFactory
+Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 
 Set gPlaceOrdersTask = New PlaceOrdersTask
 gPlaceOrdersTask.Initialise mGroups
@@ -411,7 +412,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getPrompt() As String
-If mCurrentGroup.CurrentContractProcessor Is Nothing Then
+If mCurrentGroup Is Nothing Then
+ElseIf mCurrentGroup.CurrentContractProcessor Is Nothing Then
     getPrompt = mCurrentGroup.GroupName & DefaultPrompt
 Else
     getPrompt = mCurrentGroup.GroupName & "!" & _
@@ -1507,7 +1509,6 @@ On Error GoTo Err
 
 If mScopeName = "" Then Exit Sub
 
-Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 mRecoveryFileDir = ApplicationSettingsFolder
 If mClp.SwitchValue(RecoveryFileDirSwitch) <> "" Then mRecoveryFileDir = mClp.SwitchValue(RecoveryFileDirSwitch)
 
@@ -1693,6 +1694,7 @@ Set lTwsClient = GetClient(server, _
 
 Set mContractStore = lTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(lTwsClient.GetMarketDataFactory)
+
 mMarketDataManager.LoadFromConfig gGetMarketDataSourcesConfig(mConfigStore)
 
 Set mOrderRecoveryAgent = lTwsClient

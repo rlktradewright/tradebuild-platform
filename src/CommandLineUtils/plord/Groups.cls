@@ -124,7 +124,7 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pContractStore As IContractStore, _
-                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pMarketDataManager As RealTimeDataManager, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)

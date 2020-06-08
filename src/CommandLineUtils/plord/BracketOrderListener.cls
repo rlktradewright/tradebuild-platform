@@ -206,7 +206,7 @@ Private Function filledString( _
                 ByVal pOrder As Iorder, _
                 ByVal pcontract As IContract) As String
 filledString = pOrder.QuantityFilled & _
-                " at " & formatprice(pOrder.LastFillPrice, _
+                " at " & FormatPrice(pOrder.LastFillPrice, _
                                     pcontract.Specifier.SecType, _
                                     pcontract.TickSize) & _
                 "; remaining " & _

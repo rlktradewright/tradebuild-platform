@@ -99,7 +99,7 @@ End Sub
 Friend Sub FetchQuote( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pContractStore As IContractStore, _
-                ByVal pMarketDataManager As IMarketDataManager)
+                ByVal pMarketDataManager As RealTimeDataManager)
 Const ProcName As String = "FetchQuote"
 On Error GoTo Err
 
@@ -108,7 +108,7 @@ Set mSelfRef = Me
 Dim lContractFuture As IFuture
 Set lContractFuture = FetchContract(pContractSpec, pContractStore)
 
-Set mDataSource = pMarketDataManager.CreateMarketDataSource(lContractFuture, False)
+Set mDataSource = pMarketDataManager.CreateSnapshotMarketDataSource(lContractFuture, False)
 mDataSource.AddGenericTickListener Me
 mDataSource.StartMarketData
 
