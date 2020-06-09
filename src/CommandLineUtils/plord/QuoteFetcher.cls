@@ -50,6 +50,11 @@ Private mSelfRef                                    As Object
 
 Private mDataSource                                 As IMarketDataSource
 
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mContractSpec                               As IContractSpecifier
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -67,14 +72,31 @@ Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-If mDataSource.HasCurrentTick(TickTypeAsk) And _
-    mDataSource.HasCurrentTick(TickTypeBid) And _
-    mDataSource.HasCurrentTick(TickTypeTrade) Then
-    Dim lContract As IContract: Set lContract = mDataSource.ContractFuture.Value
-    gWriteLineToConsole lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange & _
-                        ": " & _
+Select Case ev.Tick.TickType
+Case TickTypeBid
+Case TickTypeAsk
+Case TickTypeTrade
+Case TickTypeVolume
+Case Else
+    Exit Sub
+End Select
+
+Static sContract As IContract
+If sContract Is Nothing Then Set sContract = mDataSource.ContractFuture.Value
+
+
+If Not (mDataSource.HasCurrentTick(TickTypeAsk) And _
+    mDataSource.HasCurrentTick(TickTypeBid)) Then
+ElseIf sContract.Specifier.SecType <> SecTypeCash And _
+        Not (mDataSource.HasCurrentTick(TickTypeTrade) And _
+            mDataSource.HasCurrentTick(TickTypeVolume)) Then
+Else
+    gWriteLineToConsole gPadStringRight(sContract.Specifier.LocalSymbol & _
+                                        "@" & sContract.Specifier.Exchange, _
+                                        20) & _
                         GetCurrentTickSummary(mDataSource)
     mDataSource.RemoveGenericTickListener Me
+    mDataSource.Finish
     Set mSelfRef = Nothing
 End If
 
@@ -85,8 +107,28 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' ???? Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsFaulted Then
+    gWriteErrorLine ev.Future.ErrorMessage, True
+    Set mSelfRef = Nothing
+ElseIf ev.Future.IsCancelled Then
+    gWriteErrorLine "Contract fetch cancelled", True
+    Set mSelfRef = Nothing
+ElseIf ev.Future.IsAvailable Then
+    ' nothing to do
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -104,11 +146,15 @@ Const ProcName As String = "FetchQuote"
 On Error GoTo Err
 
 Set mSelfRef = Me
+Set mContractSpec = pContractSpec
 
+Set mFutureWaiter = New FutureWaiter
 Dim lContractFuture As IFuture
 Set lContractFuture = FetchContract(pContractSpec, pContractStore)
+mFutureWaiter.Add lContractFuture
 
-Set mDataSource = pMarketDataManager.CreateSnapshotMarketDataSource(lContractFuture, False)
+Set mDataSource = pMarketDataManager.CreateSnapshotMarketDataSource(lContractFuture, False, pRefreshInterval:=5)
+
 mDataSource.AddGenericTickListener Me
 mDataSource.StartMarketData
 
