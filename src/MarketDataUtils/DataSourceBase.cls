@@ -103,6 +103,10 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mIsSnapshot                                 As Boolean
 Private mSnapshotRefreshInterval                    As Long
+Private WithEvents mSnapshotRefreshTLI              As TimerListItem
+Attribute mSnapshotRefreshTLI.VB_VarHelpID = -1
+
+Private mTimerList                                  As TimerList
 
 '@================================================================================
 ' Class Event Handlers
@@ -118,7 +122,7 @@ mDataSources.Initialise Me
 
 Set mPriorityTickListeners = New Listeners
 
-initialiseTicks
+initialiseTicks True
 
 Exit Sub
 
@@ -229,10 +233,24 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
 
 ElseIf TypeOf ev.Future.Value Is Clock Then
-    Dim lClock As Clock
-    Set lClock = ev.Future.Value
-    mSessionBuilder.SetSessionCurrentTime lClock.Timestamp
+    processClockFuture ev.Future.Value
 End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mSnapshotRefreshTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mSnapshotRefreshTLI_StateChange"
+On Error GoTo Err
+
+If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
+
+Set mSnapshotRefreshTLI = Nothing
+initialiseTicks False
+RequestMarketData
 
 Exit Sub
 
@@ -338,6 +356,7 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
+If Not mSnapshotRefreshTLI Is Nothing Then mSnapshotRefreshTLI.Cancel
 If Not mDataTickStream Is Nothing Then
     mDataTickStream.Finish
     Set mDataTickStream = Nothing
@@ -512,7 +531,11 @@ End If
 Set mVolumeAdjuster = New VolumeAdjuster
 mVolumeAdjuster.Initialise mSessionBuilder.Session, mNoVolumeAdjustments, mNoImpliedTrades
 
-mFutureWaiter.Add pClockFuture
+If pClockFuture.IsAvailable Then
+    processClockFuture pClockFuture
+Else
+    mFutureWaiter.Add pClockFuture
+End If
 
 mStreamId = pStreamId
 mOptions = pOptions
@@ -562,6 +585,24 @@ Set lData.DataSource = pDataSource
 Set lData.Listener = pListener
 
 DeferAction Me, lData
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processClockFuture(ByVal pClockFuture As IFuture)
+Const ProcName As String = "processClockFuture"
+On Error GoTo Err
+
+Dim lClock As Clock: Set lClock = pClockFuture.Value
+mSessionBuilder.SetSessionCurrentTime lClock.Timestamp
+If lClock.IsSimulated Then
+    Set mTimerList = GetSimulatedTimerList(lClock)
+Else
+    Set mTimerList = GetGlobalTimerList
+End If
 
 Exit Sub
 
@@ -625,10 +666,14 @@ On Error GoTo Err
 If mDataTickStream Is Nothing Then Exit Sub
 If mNumberOfMarketDataSubscriptions <> 0 Then Exit Sub
 
+If Not mSnapshotRefreshTLI Is Nothing Then
+    mSnapshotRefreshTLI.Cancel
+    Set mSnapshotRefreshTLI = Nothing
+End If
 mDataTickStream.RemoveGenericTickListener Me
 mDataTickStream.Finish
 Set mDataTickStream = Nothing
-initialiseTicks
+initialiseTicks True
 
 Exit Sub
 
@@ -808,7 +853,7 @@ Private Function getDataManager() As MarketDataManager
 Set getDataManager = mMarketDataManagerRef.Target
 End Function
 
-Private Sub initialiseTicks()
+Private Sub initialiseTicks(ByVal pIncludeVolume As Boolean)
 mAskTick.Initialise TickTypeAsk
 mBidTick.Initialise TickTypeBid
 mTradeTick.Initialise TickTypeTrade
@@ -818,8 +863,10 @@ mHighTick.Initialise TickTypeHighPrice
 mLowTick.Initialise TickTypeLowPrice
 mCloseTick.Initialise TickTypeClosePrice
 
-mVolumeTick.Initialise TickTypeVolume
-mOpenInterestTick.Initialise TickTypeOpenInterest
+If pIncludeVolume Then
+    mVolumeTick.Initialise TickTypeVolume
+    mOpenInterestTick.Initialise TickTypeOpenInterest
+End If
 End Sub
 
 Private Sub NotifyMarketDataError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
@@ -946,6 +993,11 @@ If mNumberOfMarketDataSubscriptions <> 1 Then Exit Sub
 
 If mIsSnapshot Then
     Set mDataTickStream = getDataManager.RequestMarketDataSnapshot(Me)
+    If mSnapshotRefreshInterval <> 0 Then
+        If mSnapshotRefreshTLI Is Nothing Then
+            Set mSnapshotRefreshTLI = mTimerList.Add(Empty, mSnapshotRefreshInterval, ExpiryTimeUnitSeconds)
+        End If
+    End If
 Else
     Set mDataTickStream = getDataManager.RequestMarketData(Me)
 End If

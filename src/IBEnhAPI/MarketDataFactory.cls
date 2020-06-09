@@ -132,6 +132,7 @@ If tickerHasBeenStopped(pTickerId) Then Exit Sub
 
 Dim lIndex As Long
 lIndex = getIndexFromTickerId(pTickerId)
+releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lIndex
 
 Exit Sub
 

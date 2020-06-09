@@ -65,11 +65,12 @@ Dim lSectype As SecurityTypes: lSectype = lContract.Specifier.SecType
 Dim lTickSize As Double: lTickSize = lContract.TickSize
 
 Dim lTick As GenericTick
-
-s = "B=" & formatPriceTick(pDataSource, TickTypeBid, lSectype, lTickSize)
-s = s & ";A=" & formatPriceTick(pDataSource, TickTypeAsk, lSectype, lTickSize)
-s = s & ";T=" & formatPriceTick(pDataSource, TickTypeTrade, lSectype, lTickSize)
-s = s & ";V=" & formatSizeTick(pDataSource, TickTypeVolume)
+s = gPadStringRight("B=" & formatPriceTick(pDataSource, TickTypeBid, lSectype, lTickSize), 17)
+s = s & gPadStringRight("A=" & formatPriceTick(pDataSource, TickTypeAsk, lSectype, lTickSize), 17)
+If lSectype <> SecTypeCash Then
+    s = s & gPadStringRight("T=" & formatPriceTick(pDataSource, TickTypeTrade, lSectype, lTickSize), 17)
+    s = s & "V=" & formatSizeTick(pDataSource, TickTypeVolume)
+End If
 
 gGetCurrentTickSummary = s
 
@@ -95,6 +96,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gPadStringleft(ByRef pInput As String, ByVal pLength As Long) As String
+Dim lInput As String: lInput = Right$(pInput, pLength)
+gPadStringleft = Space$(pLength - Len(lInput)) & lInput
+End Function
+
+Public Function gPadStringRight(ByRef pInput As String, ByVal pLength As Long) As String
+Dim lInput As String: lInput = Left$(pInput, pLength)
+gPadStringRight = lInput & Space$(pLength - Len(lInput))
+End Function
+
 Public Sub gReleaseHandle(ByVal pHandle As Long)
 Const ProcName As String = "gReleaseHandle"
 On Error GoTo Err
@@ -111,6 +122,26 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function formatBigInteger(ByVal n As Long) As String
+Dim s As String
+If n < 9950 Then
+    s = CStr(n)
+ElseIf n < 99500 Then
+    s = Format((n / 1000), "0.0") & "K"
+ElseIf n < 999500 Then
+    s = Format((n / 1000), "0") & "K"
+ElseIf n < 99950000 Then
+    s = Format((n / 1000000), "0.0") & "M"
+ElseIf n < 999500000 Then
+    s = Format((n / 1000000), "0") & "M"
+Else
+    s = Format((n / 1000000000), "0.0") & "G"
+End If
+
+
+formatBigInteger = s
+End Function
+
 Private Function formatPriceTick( _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pTickType As TickTypes, _
@@ -126,7 +157,8 @@ Dim lTick As GenericTick
 If pDataSource.HasCurrentTick(pTickType) Then
     lTick = pDataSource.CurrentTick(pTickType)
     s = s & FormatPrice(lTick.Price, pSecType, pTickSize)
-    s = s & "(" & lTick.Size
+    s = s & "("
+    s = s & formatBigInteger(lTick.Size)
     s = s & ")"
 Else
     s = s & "n/a"
@@ -147,7 +179,7 @@ Const ProcName As String = "formatSizeTick"
 On Error GoTo Err
 
 If pDataSource.HasCurrentTick(pTickType) Then
-    formatSizeTick = pDataSource.CurrentTick(pTickType).Size
+    formatSizeTick = formatBigInteger(pDataSource.CurrentTick(pTickType).Size)
 Else
     formatSizeTick = "n/a"
 End If
