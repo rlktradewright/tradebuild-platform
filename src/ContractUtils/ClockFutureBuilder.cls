@@ -79,8 +79,7 @@ Private Sub mFutureBuilder_Cancelled(ev As CancelledEventData)
 Const ProcName As String = "mFutureBuilder_Cancelled"
 On Error GoTo Err
 
-mFutureWaiter.Clear
-mFutureBuilder.Cancel
+mFutureWaiter.Cancel
 
 Exit Sub
 
@@ -97,10 +96,10 @@ Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsCancelled Then
-    mFutureBuilder.Cancel
+    If Future.IsPending Then mFutureBuilder.Cancel
 ElseIf ev.Future.IsFaulted Then
-    mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-Else
+    If Future.IsPending Then mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+ElseIf ev.Future.IsAvailable Then
     setupClock ev.Future.Value
 End If
 
