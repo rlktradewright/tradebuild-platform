@@ -1046,9 +1046,9 @@ addExchangeCode "PSE"
 addExchangeCode "PSX"
 addExchangeCode "PURE"
 
-addExchangeCode "RDBK"
-
 addExchangeCode "QBALGO"
+
+addExchangeCode "RDBK"
 
 addExchangeCode "SBF"
 addExchangeCode "SEHK"
