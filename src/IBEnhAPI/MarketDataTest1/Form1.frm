@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#366.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   9585
@@ -365,7 +365,7 @@ Implements ITwsConnectionStateListener
 
 Private Const ModuleName                            As String = "Form1"
 
-Private Const ClientId                              As Long = 1132256741
+Private Const ClientId                              As Long = 132256741
 Private Const Server                                As String = "Essy"
 
 Private Const DataSourceKey0                        As String = "Source0"
