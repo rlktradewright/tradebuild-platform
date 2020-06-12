@@ -269,6 +269,16 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Function gPadStringleft(ByRef pInput As String, ByVal pLength As Long) As String
+Dim lInput As String: lInput = Right$(pInput, pLength)
+gPadStringleft = Space$(pLength - Len(lInput)) & lInput
+End Function
+
+Public Function gPadStringRight(ByRef pInput As String, ByVal pLength As Long) As String
+Dim lInput As String: lInput = Left$(pInput, pLength)
+gPadStringRight = lInput & Space$(pLength - Len(lInput))
+End Function
+
 Public Sub gSetValidNextCommands(ParamArray values() As Variant)
 ReDim lCommandLists(UBound(values)) As CommandList
 Dim i As Long
@@ -476,8 +486,8 @@ For Each lRes In mGroups
         lContractName = lContractProcessor.ContractName
     End If
     gWriteLineToConsole IIf(lRes Is mCurrentGroup, "* ", "  ") & _
-                        padStringRight(lGroupName, 20) & _
-                        padStringRight(lContractName, 25), _
+                        gPadStringRight(lGroupName, 20) & _
+                        gPadStringRight(lContractName, 25), _
                         True
 Next
 
@@ -495,13 +505,13 @@ Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
-    gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(gGetContractName(lContract), 30) & _
-                        " Size=" & padStringleft(lPM.PositionSize & _
+    gWriteLineToConsole gPadStringRight(lPM.GroupName, 15) & " " & _
+                        gPadStringRight(gGetContractName(lContract), 30) & _
+                        " Size=" & gPadStringleft(lPM.PositionSize & _
                                                 "(" & lPM.PendingBuyPositionSize & _
                                                 "/" & _
                                                 lPM.PendingSellPositionSize & ")", 10) & _
-                        " Profit=" & padStringleft(Format(lPM.Profit, "0.00"), 9), _
+                        " Profit=" & gPadStringleft(Format(lPM.Profit, "0.00"), 9), _
                         True
 Next
 
@@ -519,17 +529,17 @@ Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
-    gWriteLineToConsole padStringRight(lPM.GroupName, 15) & " " & _
-                        padStringRight(gGetContractName(lContract), 30), _
+    gWriteLineToConsole gPadStringRight(lPM.GroupName, 15) & " " & _
+                        gPadStringRight(gGetContractName(lContract), 30), _
                         True
     
     Dim lTrade As Execution
     For Each lTrade In lPM.Executions
         gWriteLineToConsole "  " & FormatTimestamp(lTrade.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & " " & _
-                        padStringRight(IIf(lTrade.Action = OrderActionBuy, "BUY", "SELL"), 5) & _
-                        padStringleft(lTrade.Quantity, 5) & _
-                        padStringleft(FormatPrice(lTrade.Price, lContract.Specifier.SecType, lContract.TickSize), 9) & _
-                        padStringRight(" " & lTrade.FillingExchange, 10) & _
+                        gPadStringRight(IIf(lTrade.Action = OrderActionBuy, "BUY", "SELL"), 5) & _
+                        gPadStringleft(lTrade.Quantity, 5) & _
+                        gPadStringleft(FormatPrice(lTrade.Price, lContract.Specifier.SecType, lContract.TickSize), 9) & _
+                        gPadStringRight(" " & lTrade.FillingExchange, 10) & _
                         " " & lTrade.TimezoneName, _
         True
     Next
@@ -564,16 +574,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Public Function padStringRight(ByVal pInput As String, ByVal pLength As Long) As String
-pInput = Left$(pInput, pLength)
-padStringRight = pInput & Space$(pLength - Len(pInput))
-End Function
-
-Public Function padStringleft(ByVal pInput As String, ByVal pLength As Long) As String
-pInput = Right$(pInput, pLength)
-padStringleft = Space$(pLength - Len(pInput)) & pInput
-End Function
 
 Private Function parseContractSpec( _
                 ByVal pClp As CommandLineParser, _
