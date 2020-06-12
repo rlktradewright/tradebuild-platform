@@ -899,7 +899,7 @@ On Error GoTo Err
 Select Case pTimeZoneId
 Case ""
     gTwsTimezoneNameToStandardTimeZoneName = ""
-Case "AET"
+Case "AET", "AEST (Australian Eastern Standard Time (New South Wales))"
     gTwsTimezoneNameToStandardTimeZoneName = "AUS Eastern Standard Time"
 Case "Asia/Hong_Kong"
     gTwsTimezoneNameToStandardTimeZoneName = "China Standard Time"

@@ -290,6 +290,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "ALERT", _
             "ALLOC", _
             "ALGO", _
+            "ALGOCLS", _
             "AVGCOST", _
             "AUC", _
             "BASKET", _
