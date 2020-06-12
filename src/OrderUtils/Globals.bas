@@ -88,6 +88,11 @@ Public Const ProviderPropertyOCAGroup               As String = "OCA group"
 ' Properties
 '@================================================================================
 
+Public Function gGetContractName( _
+                ByVal pContractSpec As IContractSpecifier) As String
+gGetContractName = pContractSpec.LocalSymbol & "@" & pContractSpec.Exchange
+End Function
+
 Public Property Get gEntryOrderTypes() As OrderTypes()
 Static s() As OrderTypes
 Static sInitialised As Boolean
@@ -837,7 +842,7 @@ End If
 
 gLogOrder IIf(pIsSimulated, "(simulated) ", "") & _
             pMessage & vbCrLf & _
-            "    Contract: " & pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange & _
+            "    Contract: " & gGetContractName(pContract.Specifier) & _
             IIf(pKey <> "", vbCrLf & "    Bracket id: " & pKey, "") & _
             lTickPart, _
         pIsSimulated, _

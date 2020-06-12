@@ -1677,7 +1677,7 @@ If mContractSpecifier Is Nothing Then
 ElseIf pLog Then
     gLogOrderDetail _
             mSummary.GroupName & "," & _
-            mContractSpecifier.LocalSymbol & "@" & mContractSpecifier.Exchange & "," & _
+            gGetContractName(mContractSpecifier) & "," & _
             lExec.Quantity & "," & _
             lExec.Price & "," & _
             gOrderActionToString(lExec.Action) & "," & _

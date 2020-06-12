@@ -1911,7 +1911,7 @@ If mSummary.Contract Is Nothing Then mSummary.Contract = lContract
 mTickValue = lContract.TickValue
 mTickSize = lContract.TickSize
 mCurrencyCode = lContract.Specifier.CurrencyCode
-mContractName = lContract.Specifier.LocalSymbol & "@" & lContract.Specifier.Exchange
+mContractName = gGetContractName(lContract.Specifier)
 
 Exit Sub
 

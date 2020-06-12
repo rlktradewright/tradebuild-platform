@@ -435,7 +435,7 @@ For Each oc In mOrderContexts
                 lExec.FillTime = mClock.Timestamp
                 lExec.Id = "MarkToMarket:" & GenerateGUIDString
                 lExec.Price = lTradePrice
-                lExec.SecurityName = mContract.Specifier.LocalSymbol & "@" & mContract.Specifier.Exchange
+                lExec.SecurityName = gGetContractName(mContract.Specifier)
                 lExec.TimezoneName = mContract.TimezoneName
                 
                 lBracketOrder.NotifyCloseout lExec

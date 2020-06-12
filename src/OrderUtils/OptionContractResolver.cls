@@ -179,7 +179,7 @@ If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
     If ev.Tick.TickType <> TickTypeTrade Then Exit Sub
     
     gLogContractResolution "Underlying contract: " & _
-                            getContractName(mUnderlyingContract) & _
+                            gGetContractName(mUnderlyingContract.Specifier) & _
                             "; price is: " & ev.Tick.Price
     
     ' now we want to find an option contract with the specified expiration (which
@@ -212,7 +212,7 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     Dim lContractValue As Long
     lContractValue = CLng(ev.Tick.Price * lCandidateContract.Specifier.Multiplier)
     gLogContractResolution "Contract: " & _
-                            getContractName(lCandidateContract) & _
+                            gGetContractName(lCandidateContract.Specifier) & _
                             "; strike: " & _
                             lCandidateContract.Specifier.Strike & _
                             "; value: " & lContractValue
@@ -231,7 +231,7 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
         If Not mTargetContract Is Nothing Then
             ' we've found the target contract
             gLogContractResolution "Target contract: " & _
-                                    getContractName(mTargetContract) & _
+                                    gGetContractName(mTargetContract.Specifier) & _
                                     "; strike: " & _
                                     mTargetContract.Specifier.Strike & _
                                     "; value: " & mTargetContractValue
@@ -579,11 +579,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getContractName( _
-                ByVal pContract As IContract) As String
-getContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
-End Function
-
 Private Function getMarketData(ByVal pContract As IContract) As IMarketDataSource
 Const ProcName As String = "getMarketData"
 On Error GoTo Err
@@ -637,7 +632,7 @@ If mContractSpec.Right = OptCall Then
 Else
     lStrike = -Int(-mHeuristicStrike / pRoundTo) * pRoundTo
 End If
-gLogContractResolution getContractName(mUnderlyingContract) & ": initial strike price is: " & lStrike
+gLogContractResolution gGetContractName(mUnderlyingContract.Specifier) & ": initial strike price is: " & lStrike
 
 updateInitialStrike = lStrike
 

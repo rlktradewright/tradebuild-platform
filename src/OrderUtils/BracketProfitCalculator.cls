@@ -569,7 +569,7 @@ gLogBracketOrderProfileObject profile, mBracketOrder.IsSimulated, Me
 
 gLogBracketOrderProfileString _
             mBracketOrder.GroupName & "," & _
-            sContractSpec.LocalSymbol & "@" & sContractSpec.Exchange & "," & _
+            gGetContractName(sContractSpec) & "," & _
             FormatTimestamp(mBracketOrder.StartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             FormatTimestamp(mBracketOrder.EndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             mBracketOrder.Description & "," & _
