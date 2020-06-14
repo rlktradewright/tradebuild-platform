@@ -154,12 +154,12 @@ Else
     
     mForm.Left = -lFrameWidth
     mForm.Top = -lFrameHeight
-    mForm.Width = Screen.Width / 2 + 2 * lFrameWidth
     
     Dim workarea As GDI_RECT
     SystemParametersInfo SPI_GETWORKAREA, 0, VarPtr(workarea), 0
     
     mForm.Height = workarea.Bottom * Screen.TwipsPerPixelY + 2 * lFrameHeight
+    mForm.Width = workarea.Right * Screen.TwipsPerPixelX / 2 + 2 * lFrameWidth
     
     Dim failpoint As String
     
@@ -380,8 +380,13 @@ If pClp.Switch("tws") Then lPermittedSPRoles = lPermittedSPRoles + SPRoleRealtim
 
 Set mTB = CreateTradeBuildAPI(, lPermittedSPRoles)
 
+If Not (pClp.Switch("tws") Or pClp.Switch("db")) Then
+    MsgBox "Neither /tws nor /db supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+    Exit Function
+End If
+
 If pClp.Switch("tws") Then
-    If Not setupTwsServiceProviders(pClp.switchValue("tws"), pLiveTrades) Then
+    If Not setupTwsServiceProviders(pClp.switchValue("tws"), pLiveTrades, Not pClp.Switch("db")) Then
         MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Function
     End If
@@ -392,9 +397,6 @@ If pClp.Switch("db") Then
         MsgBox "Error setting up database service providers - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Function
     End If
-Else
-    MsgBox "/db not supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
-    Exit Function
 End If
 
 If Not setupSimulateOrderServiceProviders(pLiveTrades) Then
@@ -539,6 +541,7 @@ End Function
 
 Private Function setupTwsServiceProviders( _
                 ByVal switchValue As String, _
+                ByVal pNoDB As Boolean, _
                 ByVal pAllowLiveTrades As Boolean) As Boolean
 On Error GoTo Err
 
@@ -568,7 +571,7 @@ End If
 If ClientId = "" Then
     ClientId = "215339864"
 ElseIf Not IsInteger(ClientId, 0) Then
-        LogMessage "Error: ClientId must be an integer >= 0"
+        LogMessage "Error: ClientId must be an integer >= 0 and <= 999999999"
         setupTwsServiceProviders = False
 End If
     
@@ -576,8 +579,7 @@ If setupTwsServiceProviders Then
     mTB.ServiceProviders.Add _
                         ProgId:="IBTWSSP27.RealtimeDataServiceProvider", _
                         Enabled:=True, _
-                        ParamString:="Role=PRIMARY" & _
-                                    ";Server=" & Server & _
+                        ParamString:="Server=" & Server & _
                                     ";Port=" & Port & _
                                     ";Client Id=" & ClientId & _
                                     ";Provider Key=IB;Keep Connection=True", _
@@ -592,6 +594,26 @@ If setupTwsServiceProviders Then
                                         ";Client Id=" & ClientId & _
                                         ";Provider Key=IB;Keep Connection=True", _
                             Description:="Live order submission"
+    End If
+    If pNoDB Then
+        mTB.ServiceProviders.Add _
+                            ProgId:="IBTWSSP27.ContractInfoServiceProvider", _
+                            Enabled:=True, _
+                            ParamString:="Role=PRIMARY" & _
+                                        ";Server=" & Server & _
+                                        ";Port=" & Port & _
+                                        ";Client Id=" & ClientId & _
+                                        ";Provider Key=IB;Keep Connection=True", _
+                            Description:="Primary contract data"
+    
+        mTB.ServiceProviders.Add _
+                            ProgId:="IBTWSSP27.HistDataServiceProvider", _
+                            Enabled:=True, _
+                            ParamString:="Server=" & Server & _
+                                        ";Port=" & Port & _
+                                        ";Client Id=" & ClientId & _
+                                        ";Provider Key=IB;Keep Connection=True", _
+                            Description:="Historical bar data retrieval"
     End If
 End If
 
