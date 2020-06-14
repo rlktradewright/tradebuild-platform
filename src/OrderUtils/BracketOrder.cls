@@ -172,8 +172,6 @@ Private mNumberOfOrders                             As Long
 Private WithEvents mStateTimeoutTLI                 As TimerListItem
 Attribute mStateTimeoutTLI.VB_VarHelpID = -1
 
-Private mTimezoneName                               As String
-
 Private WithEvents mRolloverTLI                     As TimerListItem
 Attribute mRolloverTLI.VB_VarHelpID = -1
 
@@ -3990,8 +3988,9 @@ On Error GoTo Err
 ' implements IExecutionReport
 
 If mSummary.Size = 0 Then
-    mSummary.StartTime = pExec.FillTime
-    mTimezoneName = pExec.TimezoneName
+    mSummary.StartTime = ConvertDateTzToTz(pExec.FillTime, _
+                                            GetTimeZone(pExec.TimezoneName), _
+                                            GetTimeZone(mContract.TimezoneName))
 End If
 
 If pExec.Action = OrderActionBuy Then
@@ -4011,7 +4010,9 @@ If Size = 0 Then
         mSummary.RolloverSpecification = Nothing
         mSummary.RolloverDate = 0
     End If
-    mSummary.EndTime = pExec.FillTime
+    mSummary.EndTime = ConvertDateTzToTz(pExec.FillTime, _
+                                        GetTimeZone(pExec.TimezoneName), _
+                                        GetTimeZone(mContract.TimezoneName))
 ElseIf (Not mSummary.RolloverSpecification Is Nothing) And _
         mRolloverTLI Is Nothing _
 Then
