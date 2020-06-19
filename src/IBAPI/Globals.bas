@@ -503,10 +503,14 @@ Const ProcName As String = "gInputMessageIdToString"
 On Error GoTo Err
 
 Select Case msgId
-Case TICK_PRICE
-    gInputMessageIdToString = "TICK_PRICE"
 Case TICK_SIZE
     gInputMessageIdToString = "TICK_SIZE"
+Case TICK_STRING
+    gInputMessageIdToString = "TICK_STRING"
+Case MARKET_DEPTH
+    gInputMessageIdToString = "MARKET_DEPTH"
+Case TICK_PRICE
+    gInputMessageIdToString = "TICK_PRICE"
 Case ORDER_STATUS
     gInputMessageIdToString = "ORDER_STATUS"
 Case ERR_MSG
@@ -525,8 +529,6 @@ Case CONTRACT_DATA
     gInputMessageIdToString = "CONTRACT_DATA"
 Case EXECUTION_DATA
     gInputMessageIdToString = "EXECUTION_DATA"
-Case MARKET_DEPTH
-    gInputMessageIdToString = "MARKET_DEPTH"
 Case MARKET_DEPTH_L2
     gInputMessageIdToString = "MARKET_DEPTH_L2"
 Case NEWS_BULLETINS
@@ -547,8 +549,6 @@ Case TICK_OPTION_COMPUTATION
     gInputMessageIdToString = "TICK_OPTION_COMPUTATION"
 Case TICK_GENERIC
     gInputMessageIdToString = "TICK_GENERIC"
-Case TICK_STRING
-    gInputMessageIdToString = "TICK_STRING"
 Case TICK_EFP
     gInputMessageIdToString = "TICK_EFP"
 Case CURRENT_TIME

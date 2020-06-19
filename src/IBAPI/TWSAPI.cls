@@ -171,9 +171,9 @@ Const ProcName As String = "mPerformanceTLIPeriod_StateChange"
 On Error GoTo Err
 
 If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
-If Not mPerformanceLogger.IsLoggable(LogLevelMediumDetail) Then Exit Sub
+If Not mPerformanceLogger.IsLoggable(LogLevelNormal) Then Exit Sub
 
-mPerformanceLogger.Log LogLevelMediumDetail, "Socket message statistics:" & vbCrLf & mStatsRecorder.GenerateStats
+mPerformanceLogger.Log LogLevelNormal, "Socket message statistics:" & vbCrLf & mStatsRecorder.GenerateStats
 startPerformanceTLIPeriod
 
 Exit Sub
@@ -2015,7 +2015,7 @@ Const ProcName As String = "startPerformanceLogging"
 On Error GoTo Err
 
 If Not mLogApiMessageStats Then Exit Sub
-If Not gLogger.IsLoggable(LogLevelDetail) Then Exit Sub
+If Not gLogger.IsLoggable(LogLevelNormal) Then Exit Sub
 startPerformanceTLISecond
 startPerformanceTLIPeriod
 
