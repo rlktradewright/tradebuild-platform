@@ -117,7 +117,7 @@ Public Sub NotifyTickRequestParams( _
                 ByVal pTickerId As Long, _
                 ByVal pMinTick As Double, _
                 ByVal pBboExchange As String, _
-                ByVal pSnapshotPermissions As Integer)
+                ByVal pSnapshotPermissions As Long)
 
 End Sub
 

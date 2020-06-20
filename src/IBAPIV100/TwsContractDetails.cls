@@ -62,13 +62,13 @@ Private mLiquidHours                                As String
 
 Private mEvRule                                     As String
 Private mEvMultiplier                               As Double
-Public MDSizeMultiplier                             As Integer
-Public AggGroup                                     As Integer
+Public MDSizeMultiplier                             As Long
+Public AggGroup                                     As Long
 Public UnderSymbol                                  As String
 Public UnderSecType                                 As TwsSecTypes
 Public MarketRuleIds                                As String
 Public RealExpirationDate                           As String
-Public LastTradeTime                                As String
+Public LastTradeTime                                As Date
 
 Private mSecIdList()                                As TwsTagValue  ' CUSIP/ISIN/etc.
 

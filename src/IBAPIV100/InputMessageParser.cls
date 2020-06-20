@@ -495,10 +495,17 @@ If (pVersion >= 3) Then lReqId = gGetCallersRequestIdFromTwsContractRequestId(mR
 
 lContract.Symbol = mReader.GetString("Symbol")
 lContract.Sectype = gTwsSecTypeFromString(mReader.GetString("Sec type"))
-lContract.Expiry = mReader.GetString("Expiry")
+
+Dim lExpiry As String: lExpiry = mReader.GetString("Expiry")
+If lExpiry <> "" Then
+    Dim ar() As String: ar = Split(lExpiry, " ")
+    If UBound(ar) >= 0 Then lContract.Expiry = ar(0)
+    If UBound(ar) >= 1 Then lContractDetails.LastTradeTime = CDate(ar(1))
+End If
+
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
-lContract.exchange = mReader.GetString("Exchange")
+lContract.Exchange = mReader.GetString("Exchange")
 lContract.CurrencyCode = mReader.GetString("Currency")
 lContract.LocalSymbol = mReader.GetString("Local Symbol")
 lContractDetails.MarketName = mReader.GetString("Market Name")
@@ -511,6 +518,10 @@ lContractDetails.MinTick = mReader.GetDouble("Minimum tick")
 ' something that reflects reality!
 If lContract.CurrencyCode = "GBP" And lContract.Sectype = TwsSecTypeStock And lContractDetails.MinTick < 0.0001 Then lContractDetails.MinTick = 0.0001
 
+If mServerVersion >= ApiServerVersions.MD_SIZE_MULTIPLIER Then
+    lContractDetails.MDSizeMultiplier = mReader.GetLong("MDSizeMultiplier")
+End If
+
 lContract.Multiplier = mReader.GetLong("Multiplier")
 If lContract.Multiplier = 0 Then lContract.Multiplier = 1
 
@@ -518,52 +529,39 @@ If lContract.Multiplier = 0 Then lContract.Multiplier = 1
 lContractDetails.OrderTypes = mReader.GetString("Order types")
 lContractDetails.ValidExchanges = mReader.GetString("Valid exchanges")
     
-If pVersion >= 2 Then
-    lContractDetails.PriceMagnifier = mReader.GetLong("Price magnifier")
-Else
-    If lContract.CurrencyCode = "GBP" Then
-        lContractDetails.PriceMagnifier = 100
-    Else
-        lContractDetails.PriceMagnifier = 1
-    End If
-End If
+lContractDetails.PriceMagnifier = mReader.GetLong("Price magnifier")
 
 lContractDetails.MinTick = lContractDetails.MinTick * lContractDetails.PriceMagnifier
     
-If pVersion >= 4 Then lContractDetails.UnderConId = mReader.GetLong("UnderConId")
+lContractDetails.UnderConId = mReader.GetLong("UnderConId")
 
-If pVersion >= 5 Then
-   lContractDetails.LongName = mReader.GetString("Long name")
-   lContract.PrimaryExch = mReader.GetString("Primary Exchange")
+lContractDetails.LongName = mReader.GetString("Long name")
+lContract.PrimaryExch = mReader.GetString("Primary Exchange")
+
+lContractDetails.ContractMonth = mReader.GetString("ContractMonth")
+lContractDetails.Industry = mReader.GetString("Industry")
+lContractDetails.Category = mReader.GetString("Category")
+lContractDetails.Subcategory = mReader.GetString("Subcategory")
+lContractDetails.TimeZoneId = mReader.GetString("TimeZoneId")
+lContractDetails.TradingHours = mReader.GetString("TradingHours")
+lContractDetails.LiquidHours = mReader.GetString("LiquidHours")
+
+lContractDetails.EvRule = mReader.GetString("EvRule")
+lContractDetails.EvMultiplier = mReader.GetDouble("EvMultiplier")
+
+Dim lSecIdListCount As Long: lSecIdListCount = mReader.GetLong("SecIdListCount")
+If lSecIdListCount > 0 Then
+    ReDim lSecIdList(lSecIdListCount - 1) As TwsTagValue
+    Dim i As Long
+    For i = 0 To lSecIdListCount - 1
+        lSecIdList(i).Tag = mReader.GetString("Tag")
+        lSecIdList(i).Value = mReader.GetString("Value")
+    Next
+    lContractDetails.SecIdList = lSecIdList
 End If
 
-If pVersion >= 6 Then
-    lContractDetails.ContractMonth = mReader.GetString("ContractMonth")
-    lContractDetails.Industry = mReader.GetString("Industry")
-    lContractDetails.Category = mReader.GetString("Category")
-    lContractDetails.Subcategory = mReader.GetString("Subcategory")
-    lContractDetails.TimeZoneId = mReader.GetString("TimeZoneId")
-    lContractDetails.TradingHours = mReader.GetString("TradingHours")
-    lContractDetails.LiquidHours = mReader.GetString("LiquidHours")
- End If
-
-If pVersion >= 8 Then
-    lContractDetails.EvRule = mReader.GetString("EvRule")
-    lContractDetails.EvMultiplier = mReader.GetDouble("EvMultiplier")
-End If
-
-If pVersion >= 7 Then
-    Dim lSecIdListCount As Long: lSecIdListCount = mReader.GetLong("SecIdListCount")
-    If lSecIdListCount > 0 Then
-        ReDim lSecIdList(lSecIdListCount - 1) As TwsTagValue
-        Dim i As Long
-        For i = 0 To lSecIdListCount - 1
-            lSecIdList(i).Tag = mReader.GetString("Tag")
-            lSecIdList(i).Value = mReader.GetString("Value")
-        Next
-        lContractDetails.SecIdList = lSecIdList
-    End If
-End If
+If mServerVersion >= ApiServerVersions.AGG_GROUP Then _
+    lContractDetails.AggGroup = mReader.GetLong("Agg Group")
 
 If mServerVersion >= ApiServerVersions.UNDERLYING_INFO Then
     lContractDetails.UnderSymbol = mReader.GetString("Under Symbol")
@@ -777,7 +775,7 @@ With lContract
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
     If pVersion >= 9 Then .Multiplier = mReader.GetLong("Multiplier")
     If .Multiplier = 0 Then .Multiplier = 1
-    .exchange = mReader.GetString("Exchange")
+    .Exchange = mReader.GetString("Exchange")
     .CurrencyCode = mReader.GetString("Currency")
     .LocalSymbol = mReader.GetString("Local Symbol")
     If pVersion >= 10 Then .TradingClass = mReader.GetString("TradingClass")
@@ -787,7 +785,7 @@ With lExecution
     .ExecId = mReader.GetString("Exec id")
     .Time = mReader.GetString("Exec Time")
     .AcctNumber = mReader.GetString("Account id")
-    .exchange = mReader.GetString("Exchange")
+    .Exchange = mReader.GetString("Exchange")
     .Side = mReader.GetString("Side")
     .Shares = mReader.GetLong("Shares")
     .Price = mReader.GetDouble("Price")
@@ -1128,7 +1126,7 @@ With lContract
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
     If pVersion >= 32 Then .Multiplier = mReader.GetLong("Multiplier")
     If .Multiplier = 0 Then .Multiplier = 1
-    .exchange = mReader.GetString("Exchange")
+    .Exchange = mReader.GetString("Exchange")
     .CurrencyCode = mReader.GetString("Currency")
     If pVersion >= 2 Then .LocalSymbol = mReader.GetString("Local Symbol")
     If pVersion >= 32 Then .TradingClass = mReader.GetString("Trading Class")
@@ -1229,7 +1227,7 @@ With lOrder
             lComboLeg.ConId = mReader.GetLong("ConId" & i)
             lComboLeg.Ratio = mReader.GetLong("Ratio" & i)
             lComboLeg.Action = mReader.GetString("Action" & i)
-            lComboLeg.exchange = mReader.GetString("Exchange" & i)
+            lComboLeg.Exchange = mReader.GetString("Exchange" & i)
             lComboLeg.OpenClose = mReader.GetLong("OpenClose" & i)
             lComboLeg.ShortSaleSlot = mReader.GetLong("ShortSaleSlot" & i)
             lComboLeg.DesignatedLocation = mReader.GetString("DesignatedLocation" & i)
@@ -1584,7 +1582,7 @@ lContract.Expiry = mReader.GetString("Expiry")
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
 lContract.Multiplier = mReader.GetLong("Multiplier")
-lContract.exchange = mReader.GetString("Exchange")
+lContract.Exchange = mReader.GetString("Exchange")
 lContract.CurrencyCode = mReader.GetString("Currency")
 lContract.LocalSymbol = mReader.GetString("LocalSymbol")
 lContract.TradingClass = mReader.GetString("Trading Class")
@@ -1699,7 +1697,7 @@ mReader.BeginCheckpointScope
             If mReader.GetStringCheckpointed(lStringValue, "Expiry") Then sContract.Expiry = lStringValue
             If mReader.GetDoubleCheckpointed(lDoubleValue, "Stirke") Then sContract.Strike = lDoubleValue
             If mReader.GetStringCheckpointed(lStringValue, "Right") Then sContract.OptRight = gTwsOptionRightFromString(lStringValue)
-            If mReader.GetStringCheckpointed(lStringValue, "Exchange") Then sContract.exchange = lStringValue
+            If mReader.GetStringCheckpointed(lStringValue, "Exchange") Then sContract.Exchange = lStringValue
             If mReader.GetStringCheckpointed(lStringValue, "Currency") Then sContract.CurrencyCode = lStringValue
             If mReader.GetStringCheckpointed(lStringValue, "Local Symbol") Then sContract.LocalSymbol = lStringValue
             
@@ -1872,9 +1870,9 @@ If pVersion >= 2 Then lSize = mReader.GetLong("Size")
 Dim lAttributes As TwsTickAttributes
 
 If pVersion >= 3 Then
-    Const CanAutoExecute As Integer = &H1
-    Const PastLimit As Integer = &H2
-    Const PreOpen As Integer = &H4
+    Const CanAutoExecute = &H1&
+    Const PastLimit = &H2&
+    Const PreOpen = &H4&
 
     Dim lAttrMask As Long: lAttrMask = mReader.GetLong("Attr Mask")
     Dim lCanAutoExecute As Boolean: lCanAutoExecute = (lAttrMask = 1)

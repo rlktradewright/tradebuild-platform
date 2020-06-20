@@ -453,7 +453,7 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 3
 
 mWriter.AddMessageId REQ_CALC_IMPLIED_VOLAT
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
 mWriter.AddContract pContract
 mWriter.AddDouble pOptionPrice, "OptionPrice"
@@ -483,7 +483,7 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 3
 
 mWriter.AddMessageId REQ_CALC_OPTION_PRICE
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
 mWriter.AddContract pContract
 
@@ -511,7 +511,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_ACCOUNT_SUMMARY
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -524,12 +524,12 @@ Public Sub CancelAccountUpdatesMulti(ByVal pRequestId As Long)
 Const ProcName As String = "CancelAccountUpdatesMulti"
 On Error GoTo Err
 
-Const VERSION As Integer = 1
+Const VERSION = 1
 
 If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 
 mWriter.AddMessageId TwsSocketOutMsgTypes.CancelAccountUpdatesMulti
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 
 mWriter.AddLong pRequestId, "RequestId"
 
@@ -550,7 +550,7 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_CALC_IMPLIED_VOLAT
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
 mWriter.Send
 
@@ -569,7 +569,7 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_CALC_OPTION_PRICE
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
 mWriter.Send
 
@@ -588,7 +588,7 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_FUNDAMENTAL_DATA
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
 mWriter.Send
 
@@ -643,7 +643,7 @@ If mConnectionState = TwsConnConnected Then
     Const VERSION As Long = 1
 
     mWriter.AddMessageId CANCEL_HISTORICAL_DATA
-    mWriter.AddString VERSION, "Version"
+    mWriter.AddLong VERSION, "Version"
     mWriter.AddString gGetTwsHistRequestIdFromCallersRequestId(pRequestId), "Request id"
     mWriter.Send
 End If
@@ -663,7 +663,7 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 2
 
 mWriter.AddMessageId CANCEL_MKT_DATA
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddString gGetTwsMarketDataRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send
 
@@ -682,7 +682,7 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_MKT_DEPTH
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddString gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send
 
@@ -701,7 +701,7 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_NEWS_BULLETINS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -718,7 +718,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 mWriter.AddMessageId CANCEL_ORDER
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pOrderId, "Order id"
 mWriter.Send True
 
@@ -771,7 +771,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_POSITIONS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -790,7 +790,7 @@ AssertArgument ServerVersion > ApiServerVersions.MODELS_SUPPORT, "CancelPosition
 Const VERSION = 1
 
 mWriter.AddMessageId TwsSocketOutMsgTypes.CancelPositionsMulti
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pRequestId, "Requst Id)"
 mWriter.Send
 
@@ -809,7 +809,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_REAL_TIME_BARS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddString gGetTwsHistRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send True
 
@@ -828,7 +828,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_SCANNER_SUBSCRIPTION
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pTickerId, "Ticker Id"
 mWriter.Send True
 
@@ -921,7 +921,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 2
 
 mWriter.AddMessageId EXERCISE_OPTIONS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pTickerId, "TickerId"
 
 mWriter.AddString pContract.ConId, "ConId"
@@ -1276,7 +1276,7 @@ Const VERSION = 1
 Assert mServerVersion >= 13, "Server version does not support ReplaceFA", ErrorCodes.ErrUnsupportedOperationException
 
 mWriter.AddMessageId REPLACE_FA
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong DataType, "Data type"
 mWriter.AddString xml, "XML"
 
@@ -1302,7 +1302,7 @@ Const VERSION = 1
 gLog "Requesting account summary: requester id=" & pReqId, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_ACCOUNT_SUMMARY
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
 mWriter.AddString pGroup, "Group"
 mWriter.AddString pTags, "Tags"
@@ -1325,7 +1325,7 @@ Const VERSION = 2
 gLog "Requesting account updates", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_ACCT_DATA
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddBoolean subscribe, "Subscribe"
 
 mWriter.AddString acctCode, "Account code"
@@ -1349,7 +1349,7 @@ Const VERSION = 1
 gLog "Requesting all open orders", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_ALL_OPEN_ORDERS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -1369,7 +1369,7 @@ Const VERSION = 1
 gLog "Requesting auto open orders", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_AUTO_OPEN_ORDERS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddBoolean autoBind, "Autobind"
 mWriter.Send
 
@@ -1398,10 +1398,10 @@ lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
 gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_CONTRACT_DATA
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 
 mWriter.AddLong lApiId, "Request id"
-mWriter.AddContract pContract, "Contract"
+mWriter.AddContract pContract
 mWriter.AddBoolean True, "Include expired"
 mWriter.AddString pSecIdType, "SecIdType"
 mWriter.AddString pSecId, "SecId"
@@ -1423,7 +1423,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 3
 
 mWriter.AddMessageId REQ_CURRENT_TIME
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -1448,7 +1448,7 @@ lApiId = gGetTwsExecutionsRequestIdFromCallersRequestId(pRequestId)
 gLog "Requesting executions: requester id=" & pRequestId & "; api id=" & lApiId, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_EXECUTIONS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 
 mWriter.AddLong lApiId, "ReqId"
 
@@ -1487,7 +1487,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId REQ_FA
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong DataType, "Data type"
 
 mWriter.Send
@@ -1512,7 +1512,7 @@ Const VERSION = 3
 gLog "Requesting fundamental data: requester id=" & pReqId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_FUNDAMENTAL_DATA
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
 
 mWriter.AddString pContract.ConId, "ConId"
@@ -1543,7 +1543,7 @@ Const VERSION = 1
 gLog "Requesting global cancel", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_GLOBAL_CANCEL
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -1558,8 +1558,6 @@ Public Sub RequestHistoricalData( _
                 Optional ByVal pKeepUpToDate As Boolean)
 Const ProcName As String = "RequestHistoricalData"
 On Error GoTo Err
-
-Const VERSION = 6
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
@@ -1577,20 +1575,19 @@ gLog "Requesting historical data for: " & UCase$(pRequest.Contract.LocalSymbol) 
             ModuleName, ProcName
 
 mWriter.AddMessageId REQ_HISTORICAL_DATA
-mWriter.AddString VERSION, "Version"
 mWriter.AddLong lApiId, "Request id"
 mWriter.AddContract pRequest.Contract
 
 Dim lExpired  As Boolean
 lExpired = gContractHasExpired(pRequest.Contract)
-mWriter.AddString IIf(lExpired, 1, 0), "Include expired"   ' can't include expired for non-expiring contracts
+mWriter.AddBoolean lExpired, "Include expired"   ' can't include expired for non-expiring contracts
 
-mWriter.AddLong pRequest.EndDateTime, "End date"
-mWriter.AddLong pRequest.BarSizeSetting, "Bar Size"
+mWriter.AddString pRequest.EndDateTime, "End date"
+mWriter.AddString pRequest.BarSizeSetting, "Bar Size"
 
-mWriter.AddLong pRequest.Duration, "Duration"
-mWriter.AddString IIf(pRequest.MainSessionOnly, 1, 0), "Use RTH"
-mWriter.AddLong pRequest.WhatToShow, "What to show"
+mWriter.AddString pRequest.Duration, "Duration"
+mWriter.AddBoolean pRequest.MainSessionOnly, "Use RTH"
+mWriter.AddString pRequest.WhatToShow, "What to show"
 
 mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
 
@@ -1629,7 +1626,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId REQ_MANAGED_ACCTS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -1662,7 +1659,7 @@ gLog "Requesting market data" & _
         ModuleName, ProcName
 
 mWriter.AddMessageId REQ_MKT_DATA
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong lApiId, "Ticker id"
 mWriter.AddContract pContract
 With pContract
@@ -1717,7 +1714,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId REQ_MARKET_DATA_TYPE
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pMarketDataType, "MarketDataType"
 mWriter.Send
 
@@ -1744,7 +1741,7 @@ lApiId = gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId)
 gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_MKT_DEPTH
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong lApiId, "Request id"
 
 mWriter.AddContract pContract, pIgnorePrimaryExchange:=True
@@ -1786,7 +1783,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId REQ_NEWS_BULLETINS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddBoolean allMsgs, "All messages"
 mWriter.Send
 
@@ -1807,7 +1804,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 gLog "Requesting open orders", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_OPEN_ORDERS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send True
 
 Exit Sub
@@ -1858,7 +1855,7 @@ Const VERSION = 1
 gLog "Requesting positions", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_POSITIONS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -1886,7 +1883,7 @@ lApiId = gGetTwsHistRequestIdFromCallersRequestId(pTickerId)
 gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_REAL_TIME_BARS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong lApiId, "TickerId"
 
 mWriter.AddContract pContract
@@ -1913,7 +1910,7 @@ Const VERSION = 1
 gLog "Requesting scanner parameters", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_SCANNER_PARAMETERS
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.Send
 
 Exit Sub
@@ -1933,7 +1930,7 @@ Const VERSION = 4
 gLog "Requesting scanner subscription: requester id=" & pTickerId, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_SCANNER_SUBSCRIPTION
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pTickerId, "Ticker Id"
 mWriter.AddLongMax pSubscription.NumberOfRows, "NumberOfRows"
 mWriter.AddString pSubscription.Instrument, "Instrument"
@@ -1993,7 +1990,7 @@ On Error GoTo Err
 Const VERSION = 1
 
 mWriter.AddMessageId SET_SERVER_LOGLEVEL
-mWriter.AddString VERSION, "Version"
+mWriter.AddLong VERSION, "Version"
 mWriter.AddLong mLogLevel, "Loglevel"
 mWriter.Send
 

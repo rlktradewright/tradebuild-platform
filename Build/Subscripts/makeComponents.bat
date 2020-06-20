@@ -106,6 +106,8 @@ set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 if exist %BIN-PATH%\IBApi27.dll del %BIN-PATH%\IBApi27.dll
 call makedll.bat IBAPI IBAPI /T:DLL /B:%BINARY_COMPAT% /C
 if errorlevel 1 pause
+call makedll.bat IBAPIV100 IBAPIV100 /T:DLL /B:%BINARY_COMPAT% /C
+if errorlevel 1 pause
 call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat IBTwsSP IBTwsSP /T:DLL /B:%BINARY_COMPAT%

@@ -286,7 +286,7 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Private Sub StartAPI(ByVal pClientId As Long, pOptionalCapabilities As String)
-Const VERSION As Integer = 2
+Const VERSION = 2
 
 mWriter.AddMessageId TwsSocketOutMsgTypes.StartAPI
 mWriter.AddString VERSION, "Version"
