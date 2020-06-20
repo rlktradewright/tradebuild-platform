@@ -121,7 +121,8 @@ Static sPrevNotifiedPrice As Double
 If pPrice = sPrevNotifiedPrice Then Exit Sub
 
 sPrevNotifiedPrice = pPrice
-getRequester.NotifyTickPrice pRequesterId, TwsTickLast, pPrice, 0, False
+Dim t As TwsTickAttributes
+getRequester.NotifyTickPrice pRequesterId, TwsTickLast, pPrice, 0, t
 
 Exit Sub
 

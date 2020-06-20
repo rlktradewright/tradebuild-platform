@@ -141,7 +141,6 @@ With gContractSpecToTwsContract
         .Exchange = lExchange
     End If
     .Expiry = IIf(Len(pContractSpecifier.Expiry) >= 6, pContractSpecifier.Expiry, "")
-    .IncludeExpired = True
     .LocalSymbol = pContractSpecifier.LocalSymbol
     .Multiplier = pContractSpecifier.Multiplier
     If .CurrencyCode = "GBP" And .Multiplier <> 1 Then .Multiplier = .Multiplier * 100
@@ -466,7 +465,7 @@ With pOrder
     If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
-    gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
+    gOrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)
@@ -757,8 +756,6 @@ With pTwsContract
                                                 gTwsOptionRightToOptionRight(.OptRight))
     Dim p As New Parameters
     p.SetParameterValue "ContractId", .ConId
-    p.SetParameterValue "SecId", .SecId
-    p.SetParameterValue "SecIdType", .SecIdType
     p.SetParameterValue "TradingClass", .TradingClass
     lContractSpec.ProviderProperties = p
 End With

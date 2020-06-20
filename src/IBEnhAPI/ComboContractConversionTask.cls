@@ -91,6 +91,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestIs As Long)
+
+End Sub
+
 Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
 Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
@@ -128,6 +132,14 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Long, pPriceIncrement() As IBAPIV100.TwsPriceIncrement)
+
+End Sub
+
+Private Sub IContractDetailsConsumer_NotifyOptionParameter(ByVal pRequestId As Long, ByVal pExchange As String, ByVal pUnderlyingContractId As Long, ByVal pTradingClass As String, ByVal pMultiplier As Long, pExpirations() As String, pStrikes() As Double)
+
 End Sub
 
 '@================================================================================
@@ -183,7 +195,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-AssertArgument pContractSpec.Sectype = SecTypeCombo, "Argument is not a combo contract specifier"
+AssertArgument pContractSpec.SecType = SecTypeCombo, "Argument is not a combo contract specifier"
 AssertArgument pContractSpec.ComboLegs.Count <> 0, "No combo legs specified"
 
 Set mContractRequester = pContractRequester
@@ -244,7 +256,7 @@ Dim lContract As TwsContract
 Set lContract = New TwsContract
 
 lContract.Symbol = mContractSpec.Symbol
-lContract.Sectype = TwsSecTypeCombo
+lContract.SecType = TwsSecTypeCombo
 lContract.Exchange = mContractSpec.Exchange
 lContract.CurrencyCode = mContractSpec.CurrencyCode
 

@@ -44,9 +44,9 @@ Public Enum ApiConnectionStates
 End Enum
 
 Public Enum ApiMessageLoggingOptions
-    ApiMessageLoggingOptionNone = IBAPI970.ApiMessageLoggingOptionNone
-    ApiMessageLoggingOptionDefault = IBAPI970.ApiMessageLoggingOptionDefault
-    ApiMessageLoggingOptionAlways = IBAPI970.ApiMessageLoggingOptionAlways
+    ApiMessageLoggingOptionNone = IBAPIV100.ApiMessageLoggingOptionNone
+    ApiMessageLoggingOptionDefault = IBAPIV100.ApiMessageLoggingOptionDefault
+    ApiMessageLoggingOptionAlways = IBAPIV100.ApiMessageLoggingOptionAlways
 End Enum
 
 ' These are defined indentically to those in IBAPI. This is so that users of this

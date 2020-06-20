@@ -177,12 +177,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
+
+End Sub
+
+Private Sub IMarketDataConsumer_NotifyTickGeneric(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pValue As Double)
+
+End Sub
+
+Private Sub IMarketDataConsumer_NotifyTickOptionComputation(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pImpliedVol As Double, ByVal pDelta As Double, ByVal pOptPrice As Double, ByVal pPvDividend As Double, ByVal pGamma As Double, ByVal pVega As Double, ByVal pTheta As Double, ByVal pUndPrice As Double)
+
+End Sub
+
 Private Sub IMarketDataConsumer_NotifyTickPrice( _
                 ByVal pTickerId As Long, _
                 ByVal pTickType As TwsTickTypes, _
                 ByVal pPrice As Double, _
                 ByVal pSize As Long, _
-                ByVal pCanAutoExecute As Boolean)
+                ByRef pAttributes As TwsTickAttributes)
 Const ProcName As String = "IMarketDataConsumer_NotifyTickPrice"
 On Error GoTo Err
 
@@ -251,15 +263,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
-
-End Sub
-
-Private Sub IMarketDataConsumer_NotifyTickGeneric(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pValue As Double)
-
-End Sub
-
-Private Sub IMarketDataConsumer_NotifyTickOptionComputation(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pImpliedVol As Double, ByVal pDelta As Double, ByVal pOptPrice As Double, ByVal pPvDividend As Double, ByVal pGamma As Double, ByVal pVega As Double, ByVal pTheta As Double, ByVal pUndPrice As Double)
+Private Sub IMarketDataConsumer_NotifyTickRequestParams( _
+                ByVal pTickerId As Long, _
+                ByVal pMinTick As Double, _
+                ByVal pBboExchange As String, _
+                ByVal pSnapshotPermissions As Long)
 
 End Sub
 
@@ -1239,7 +1247,8 @@ Else
     mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), _
                                 mMarketDataTable(pIndex).ContractDetails.Summary, _
                                 "", _
-                                mMarketDataTable(pIndex).IsSnapShot
+                                mMarketDataTable(pIndex).IsSnapShot, _
+                                False
 End If
 
 Exit Sub
