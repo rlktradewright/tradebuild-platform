@@ -240,23 +240,6 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Friend Sub GetMessageIDandVersion(ByVal pReader As BufferedReader, ByRef pMessageId As Long, ByRef pVersion As Long)
-Const ProcName As String = "GetMessageIDandVersion"
-On Error GoTo Err
-
-pReader.GetLongCheckpointed pMessageId, "Msg id"
-pVersion = 0
-If messageHasVersion(pMessageId) Then
-    pReader.GetLongCheckpointed pVersion, "Version"
-End If
-pReader.SetCurrentMessageIdAndVersion pMessageId, pVersion
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
 Friend Sub Begin( _
                 ByVal pServerVersion As Long, _
                 ByVal pReader As BufferedReader)
@@ -1980,13 +1963,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
-
-Private Function messageHasVersion(ByVal pMessageId As TwsSocketInMsgTypes) As Boolean
-If pMessageId = TwsSocketInMsgTypes.EXECUTION_DATA And mServerVersion >= ApiServerVersions.LAST_LIQUIDITY Then Exit Function
-If pMessageId = TwsSocketInMsgTypes.HISTORICAL_DATA And mServerVersion >= ApiServerVersions.SYNT_REALTIME_BARS Then Exit Function
-If pMessageId = TwsSocketInMsgTypes.ORDER_STATUS And mServerVersion >= ApiServerVersions.MARKET_CAP_PRICE Then Exit Function
-messageHasVersion = pMessageId <= TwsSocketInMsgTypes.MaxIdWithVersion
-End Function
 
 Private Sub processContractError(ByVal pRequestId As Long, _
                 ByVal pErrorCode As Long, _

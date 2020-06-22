@@ -315,7 +315,7 @@ Do While Not mReader.AtEnd
         mReader.DiscardMessageLength
         getPerformanceTimer.StartTiming
         
-        mInputMessageParser.GetMessageIDandVersion mReader, pMessageId, pVersion
+        getMessageIDandVersion mReader, pMessageId, pVersion
         
         mInputMessageParser.GetMessage pMessageId, pVersion
         updateStats pMessageId, getPerformanceTimer.ElapsedTimeMicroseconds
@@ -347,6 +347,23 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
+Private Sub getMessageIDandVersion(ByVal pReader As BufferedReader, ByRef pMessageId As Long, ByRef pVersion As Long)
+Const ProcName As String = "GetMessageIDandVersion"
+On Error GoTo Err
+
+pReader.GetLongCheckpointed pMessageId, "Msg id"
+pVersion = &H7FFFFFFF
+If messageHasVersion(pMessageId) Then
+    pReader.GetLongCheckpointed pVersion, "Version"
+End If
+pReader.SetCurrentMessageIdAndVersion pMessageId, pVersion
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
 Private Function getPerformanceTimer() As ElapsedTimer
 Static sPerformanceElapsedTimer As ElapsedTimer
 Const ProcName As String = "getPerformanceTimer"
@@ -359,6 +376,13 @@ Exit Function
 
 Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
+Private Function messageHasVersion(ByVal pMessageId As TwsSocketInMsgTypes) As Boolean
+If pMessageId = TwsSocketInMsgTypes.EXECUTION_DATA And mServerVersion >= ApiServerVersions.LAST_LIQUIDITY Then Exit Function
+If pMessageId = TwsSocketInMsgTypes.HISTORICAL_DATA And mServerVersion >= ApiServerVersions.SYNT_REALTIME_BARS Then Exit Function
+If pMessageId = TwsSocketInMsgTypes.ORDER_STATUS And mServerVersion >= ApiServerVersions.MARKET_CAP_PRICE Then Exit Function
+messageHasVersion = pMessageId <= TwsSocketInMsgTypes.MaxIdWithVersion
 End Function
 
 Private Sub updateStats(ByVal pMessageId As Long, ByVal pMessageElapsedTime As Single)
