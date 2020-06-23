@@ -133,6 +133,9 @@ End Sub
 Public Sub AddMarketDepthListener(ByVal pListener As IMarketDepthListener)
 End Sub
 
+Public Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
+End Sub
+
 Public Sub AddPriceChangeListener(ByVal pListener As IPriceChangeListener)
 End Sub
 
@@ -182,6 +185,9 @@ Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
 End Sub
 
 Public Sub RemoveMarketDepthListener(ByVal pListener As IMarketDepthListener)
+End Sub
+
+Public Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
 End Sub
 
 Public Sub RemovePriceChangeListener(ByVal pListener As IPriceChangeListener)

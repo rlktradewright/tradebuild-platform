@@ -65,6 +65,10 @@ Private mMarketDepthListeners                       As Listeners
 Private mCurrentMarketDepthListeners()              As Object
 Private mSomeCurrentMarketDepthListeners            As Boolean
 
+Private mOptionComputationListeners                As Listeners
+Private mCurrentOptionComputationListeners()       As Object
+Private mSomeCurrentOptionComputationListeners     As Boolean
+
 Private mPriceChangeListeners                       As Listeners
 Private mCurrentPriceChangeListeners()              As Object
 Private mSomeCurrentPriceChangeListeners            As Boolean
@@ -217,6 +221,18 @@ Const ProcName As String = "IMarketDataSource_AddMarketDepthListener"
 On Error GoTo Err
 
 AddMarketDepthListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IMarketDataSource_AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "IMarketDataSource_AddOptionComputationListener"
+On Error GoTo Err
+
+AddOptionComputationListener pListener
 
 Exit Sub
 
@@ -509,6 +525,18 @@ Const ProcName As String = "IMarketDataSource_RemoveMarketDepthListener"
 On Error GoTo Err
 
 RemoveMarketDepthListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IMarketDataSource_RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "IMarketDataSource_RemoveOptionComputationListener"
+On Error GoTo Err
+
+RemoveOptionComputationListener pListener
 
 Exit Sub
 
@@ -906,6 +934,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "Add"
+On Error GoTo Err
+
+mOptionComputationListeners.Add pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub AddPriceChangeListener(ByVal pListener As IPriceChangeListener)
 Const ProcName As String = "AddPriceChangeListener"
 On Error GoTo Err
@@ -1234,6 +1274,33 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub FireOptionComputation(ByRef pOptionComputation As OptionComputation)
+Const ProcName As String = "FireOptionComputation"
+On Error GoTo Err
+
+If Not mSubscribedToMarketData Then Exit Sub
+
+Dim ev As OptionComputationEventData
+Set ev.Source = Me
+ev.StreamId = mStreamId
+ev.Computation = pOptionComputation
+
+updateCurrentOptionComputationListeners
+If mSomeCurrentOptionComputationListeners Then
+    Dim lListener As IOptionComputationListener
+    Dim i As Long
+    For i = 0 To UBound(mCurrentOptionComputationListeners)
+        Set lListener = mCurrentOptionComputationListeners(i)
+        lListener.NotifyComputation ev
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub FireTick(ByRef pTick As GenericTick)
 Const ProcName As String = "FireTick"
 On Error GoTo Err
@@ -1521,6 +1588,18 @@ If IsFinished Then Exit Sub
 mMarketDepthListeners.Remove pListener
 
 unsubscribeIfNoMarketDepthListeners
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "RemoveOptionComputationListener"
+On Error GoTo Err
+
+mOptionComputationListeners.Remove pListener
 
 Exit Sub
 
@@ -1907,6 +1986,14 @@ Static sInit As Boolean
 If Not sInit Or Not mPriceChangeListeners.Valid Then
     sInit = True
     mSomeCurrentPriceChangeListeners = mPriceChangeListeners.GetCurrentListeners(mCurrentPriceChangeListeners)
+End If
+End Sub
+
+Private Sub updateCurrentOptionComputationListeners()
+Static sInit As Boolean
+If Not sInit Or Not mOptionComputationListeners.Valid Then
+    sInit = True
+    mSomeCurrentOptionComputationListeners = mOptionComputationListeners.GetCurrentListeners(mCurrentOptionComputationListeners)
 End If
 End Sub
 

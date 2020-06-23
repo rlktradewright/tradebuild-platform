@@ -55,11 +55,20 @@ Private mContractFuture                             As IFuture
 Private mClockFuture                                As IFuture
 
 Private mGenericTickListeners                       As New Listeners
+Private mOptionComputationListeners                 As New Listeners
 Private mStateChangeListeners                       As New Listeners
 
 Private mStreamId                                   As Long
 
 Private mState                                      As TickStreamStates
+
+Private mInitGenericTickListeners                   As Boolean
+Private mCurrentGenericTickListeners()              As Object
+Private mSomeGenericTickListeners                   As Boolean
+
+Private mInitOptionComputationListeners             As Boolean
+Private mCurrentOptionComputationListeners()        As Object
+Private mSomeOptionComputationListeners             As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -109,6 +118,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub ITickStream_AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "ITickStream_AddOptionComputationListener"
+On Error GoTo Err
+
+AddOptionComputationListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub ITickStream_AddStateChangeListener(ByVal pListener As IStateChangeListener)
 Const ProcName As String = "ITickStream_AddStateChangeListener"
 On Error GoTo Err
@@ -146,6 +167,18 @@ Const ProcName As String = "ITickStream_RemoveGenericTickListener"
 On Error GoTo Err
 
 RemoveGenericTickListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickStream_RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "ITickStream_RemoveOptionComputationListener"
+On Error GoTo Err
+
+RemoveOptionComputationListener pListener
 
 Exit Sub
 
@@ -234,6 +267,7 @@ RaiseEvent StateChange(ev)
 If mState = TickStreamStateFinished Then
     mStateChangeListeners.Clear
     mGenericTickListeners.Clear
+    mOptionComputationListeners.Clear
 End If
 
 Exit Property
@@ -259,6 +293,18 @@ Const ProcName As String = "AddGenericTickListener"
 On Error GoTo Err
 
 mGenericTickListeners.Add pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "AddOptionComputationListener"
+On Error GoTo Err
+
+mOptionComputationListeners.Add pListener
 
 Exit Sub
 
@@ -319,30 +365,64 @@ On Error GoTo Err
 If mState = TickStreamStateFinished Then Exit Sub
 mState = TickStreamStateFinished
 
-Dim ev As GenericTickEventData
-ev.StreamId = StreamId
-ev.Tick.Timestamp = MaxDate
-ev.Tick.TickType = -1
-Set ev.Source = Me
-
-Static sInit As Boolean
-Static sCurrentListeners() As Object
-Static sSomeListeners As Boolean
-
-If Not sInit Or Not mGenericTickListeners.Valid Then
-    sInit = True
-    sSomeListeners = mGenericTickListeners.GetCurrentListeners(sCurrentListeners)
-End If
-If sSomeListeners Then
+updateCurrentGenericTickListeners
+If mSomeGenericTickListeners Then
+    Dim ev As GenericTickEventData
+    ev.StreamId = StreamId
+    ev.Tick.Timestamp = MaxDate
+    ev.Tick.TickType = -1
+    Set ev.Source = Me
+    
     Dim lListener As IGenericTickListener
     Dim i As Long
-    For i = 0 To UBound(sCurrentListeners)
-        Set lListener = sCurrentListeners(i)
+    For i = 0 To UBound(mCurrentGenericTickListeners)
+        Set lListener = mCurrentGenericTickListeners(i)
         lListener.NoMoreTicks ev
     Next
 End If
 
+
+updateCurrentOptionComputationListeners
+If mSomeOptionComputationListeners Then
+    Dim ev1 As OptionComputationEventData
+    ev1.StreamId = StreamId
+    ev1.Computation.ComputationType = OptionComputationTypeNone
+    Set ev1.Source = Me
+    Dim lListener1 As IOptionComputationListener
+    For i = 0 To UBound(mCurrentOptionComputationListeners)
+        Set lListener1 = mCurrentOptionComputationListeners(i)
+        lListener1.NoMoreComputations ev1
+    Next
+End If
+
 State = TickStreamStateFinished
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyOptionComputation(ByRef pComputation As OptionComputation)
+Const ProcName As String = "NotifyOptionComputation"
+On Error GoTo Err
+
+If mState = TickStreamStateFinished Then Exit Sub
+updateCurrentOptionComputationListeners
+
+If Not mSomeOptionComputationListeners Then Exit Sub
+
+Dim ev As OptionComputationEventData
+ev.StreamId = StreamId
+ev.Computation = pComputation
+Set ev.Source = Me
+
+Dim lListener As IOptionComputationListener
+Dim i As Long
+For i = 0 To UBound(mCurrentOptionComputationListeners)
+    Set lListener = mCurrentOptionComputationListeners(i)
+    lListener.NotifyComputation ev
+Next
 
 Exit Sub
 
@@ -355,28 +435,21 @@ Const ProcName As String = "NotifyTick"
 On Error GoTo Err
 
 If mState = TickStreamStateFinished Then Exit Sub
+updateCurrentGenericTickListeners
+
+If Not mSomeGenericTickListeners Then Exit Sub
 
 Dim ev As GenericTickEventData
 ev.StreamId = StreamId
 ev.Tick = pTick
 Set ev.Source = Me
 
-Static sInit As Boolean
-Static sCurrentListeners() As Object
-Static sSomeListeners As Boolean
-
-If Not sInit Or Not mGenericTickListeners.Valid Then
-    sInit = True
-    sSomeListeners = mGenericTickListeners.GetCurrentListeners(sCurrentListeners)
-End If
-If sSomeListeners Then
-    Dim lListener As IGenericTickListener
-    Dim i As Long
-    For i = 0 To UBound(sCurrentListeners)
-        Set lListener = sCurrentListeners(i)
-        lListener.NotifyTick ev
-    Next
-End If
+Dim lListener As IGenericTickListener
+Dim i As Long
+For i = 0 To UBound(mCurrentGenericTickListeners)
+    Set lListener = mCurrentGenericTickListeners(i)
+    lListener.NotifyTick ev
+Next
 
 Exit Sub
 
@@ -389,6 +462,18 @@ Const ProcName As String = "RemoveGenericTickListener"
 On Error GoTo Err
 
 mGenericTickListeners.Remove pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "RemoveOptionComputationListener"
+On Error GoTo Err
+
+mOptionComputationListeners.Remove pListener
 
 Exit Sub
 
@@ -425,6 +510,16 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub updateCurrentGenericTickListeners()
+If Not mInitGenericTickListeners Or Not mGenericTickListeners.Valid Then
+    mInitGenericTickListeners = True
+    mSomeGenericTickListeners = mGenericTickListeners.GetCurrentListeners(mCurrentGenericTickListeners)
+End If
+End Sub
 
-
-
+Private Sub updateCurrentOptionComputationListeners()
+If Not mInitOptionComputationListeners Or Not mOptionComputationListeners.Valid Then
+    mInitOptionComputationListeners = True
+    mSomeOptionComputationListeners = mOptionComputationListeners.GetCurrentListeners(mCurrentOptionComputationListeners)
+End If
+End Sub

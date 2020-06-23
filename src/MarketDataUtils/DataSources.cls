@@ -231,6 +231,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub NotifyOptionComputation(ByRef pComputation As OptionComputation)
+Const ProcName As String = "NotifyOptionComputation"
+On Error GoTo Err
+
+updateCurrentDataSources
+
+If mSomeCurrentDataSources Then
+    Dim lDataSource As MarketDataSource
+    Dim i As Long
+    For i = 0 To UBound(mCurrentDataSources)
+        Set lDataSource = mCurrentDataSources(i)
+        lDataSource.FireOptionComputation pComputation
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub NotifyTick(ByRef pTick As GenericTick)
 Const ProcName As String = "NotifyTick"
 On Error GoTo Err

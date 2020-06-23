@@ -25,6 +25,7 @@ Option Explicit
 Implements IDeferredAction
 Implements IGenericTickListener
 Implements IMarketDataErrorListener
+Implements IOptionComputationListener
 
 '@================================================================================
 ' Events
@@ -97,6 +98,10 @@ Private mDepthTickStream                            As ITickStream
 Private mPriorityTickListeners                      As Listeners
 Private mCurrentPriorityTickListeners()             As Object
 Private mSomeCurrentPriorityTickListeners           As Boolean
+
+Private mPriorityOptionComputationListeners         As Listeners
+Private mCurrentPriorityOptionComputationListeners()             As Object
+Private mSomeCurrentPriorityOptionComputationListeners           As Boolean
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -213,6 +218,26 @@ Const ProcName As String = "IMarketDataIErrorListener_NotifyMarketDepthError"
 On Error GoTo Err
 
 NotifyMarketDepthError pErrorCode, pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IOptionComputationListener Interface Members
+'@================================================================================
+
+Private Sub IOptionComputationListener_NoMoreComputations(ev As OptionComputationEventData)
+
+End Sub
+
+Private Sub IOptionComputationListener_NotifyComputation(ev As OptionComputationEventData)
+Const ProcName As String = "IOptionComputationListener_NotifyComputation"
+On Error GoTo Err
+
+NotifyOptionComputation ev
 
 Exit Sub
 
@@ -809,6 +834,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub firePriorityOptionComputation(ByRef ev As OptionComputationEventData)
+Const ProcName As String = "firePriorityOptionComputation"
+On Error GoTo Err
+
+If mPriorityOptionComputationListeners.Count = 0 Then Exit Sub
+
+updatePriorityOptionComputationListeners
+
+If mSomeCurrentPriorityOptionComputationListeners Then
+    Dim lListener As IOptionComputationListener
+    Dim i As Long
+    For i = 0 To UBound(mCurrentPriorityOptionComputationListeners)
+        Set lListener = mCurrentPriorityOptionComputationListeners(i)
+        lListener.NotifyComputation ev
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub firePriorityTick(ByRef ev As GenericTickEventData)
 Const ProcName As String = "firePriorityTick"
 On Error GoTo Err
@@ -886,6 +934,22 @@ Const ProcName As String = "NotifyMarketDepthError"
 On Error GoTo Err
 
 mDataSources.NotifyMarketDepthError pErrorCode, pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub NotifyOptionComputation(ByRef ev As OptionComputationEventData)
+Const ProcName As String = "NotifyOptionComputation"
+On Error GoTo Err
+
+mTimestamp = ev.Computation.Timestamp
+
+mSessionBuilder.SetSessionCurrentTime mTimestamp
+
+mDataSources.NotifyOptionComputation ev.Computation
 
 Exit Sub
 
@@ -1002,6 +1066,7 @@ Else
     Set mDataTickStream = getDataManager.RequestMarketData(Me)
 End If
 mDataTickStream.AddGenericTickListener Me
+mDataTickStream.AddOptionComputationListener Me
 
 mDataTickStream.Start
 
@@ -1025,6 +1090,15 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub updatePriorityOptionComputationListeners()
+Static sInit As Boolean
+If Not sInit Or Not mPriorityOptionComputationListeners.Valid Then
+    sInit = True
+    mSomeCurrentPriorityOptionComputationListeners = _
+                    mPriorityOptionComputationListeners.GetCurrentListeners(mCurrentPriorityOptionComputationListeners)
+End If
 End Sub
 
 Private Sub updatePriorityTickListeners()

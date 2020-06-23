@@ -184,8 +184,61 @@ Private Sub IMarketDataConsumer_NotifyTickGeneric(ByVal pTickerId As Long, ByVal
 
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickOptionComputation(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pImpliedVol As Double, ByVal pDelta As Double, ByVal pOptPrice As Double, ByVal pPvDividend As Double, ByVal pGamma As Double, ByVal pVega As Double, ByVal pTheta As Double, ByVal pUndPrice As Double)
+Private Sub IMarketDataConsumer_NotifyTickOptionComputation( _
+                ByVal pTickerId As Long, _
+                ByVal pTickType As TwsTickTypes, _
+                ByVal pImpliedVolatility As Double, _
+                ByVal pDelta As Double, _
+                ByVal pOptPrice As Double, _
+                ByVal pPvDividend As Double, _
+                ByVal pGamma As Double, _
+                ByVal pVega As Double, _
+                ByVal pTheta As Double, _
+                ByVal pUnderlyingPrice As Double)
+Const ProcName As String = "IMarketDataConsumer_NotifyTickOptionComputation"
+On Error GoTo Err
 
+If tickerHasBeenStopped(pTickerId) Then Exit Sub
+
+Dim lIndex As Long
+lIndex = getIndexFromTickerId(pTickerId)
+
+Dim lComputation As OptionComputation
+
+With mMarketDataTable(lIndex)
+
+    .DataHasBeenReceived = True
+
+    lComputation.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .ConsumerTimeZone)
+    lComputation.Delta = pDelta
+    lComputation.Gamma = pGamma
+    lComputation.ImpliedVolatility = pImpliedVolatility
+    lComputation.OptionPrice = pOptPrice
+    lComputation.PvDividend = pPvDividend
+    lComputation.Theta = pTheta
+    lComputation.UnderlyingPrice = pUnderlyingPrice
+    lComputation.Vega = pVega
+    
+    Select Case pTickType
+    Case TwsTickTypes.TwsTickAskOption
+        lComputation.ComputationType = OptionComputationTypeAsk
+    Case TwsTickTypes.TwsTickBidOption
+        lComputation.ComputationType = OptionComputationTypeBid
+    Case TwsTickTypes.TwsTickLastOption
+        lComputation.ComputationType = OptionComputationTypeTrade
+    Case TwsTickTypes.TwsTickModelOption
+        lComputation.ComputationType = OptionComputationTypeModel
+    Case Else
+        Assert False, "Unexpected option computation type"
+    End Select
+End With
+
+FireOptionComputation lIndex, lComputation
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickPrice( _
@@ -886,6 +939,22 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub FireOptionComputation( _
+                ByVal pStreamId As Long, _
+                ByRef pComputation As OptionComputation)
+Const ProcName As String = "FireOptionComputation"
+On Error GoTo Err
+
+If mMarketDataTable(pStreamId).IsInUse Then
+    mMarketDataTable(pStreamId).TickStreamBuilder.NotifyOptionComputation pComputation
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub FireTick( _
                 ByVal pStreamId As Long, _

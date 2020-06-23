@@ -198,6 +198,10 @@ Private Sub IMarketDataSource_AddMarketDepthListener(ByVal pListener As IMarketD
 AddMarketDepthListener pListener
 End Sub
 
+Private Sub IMarketDataSource_AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
+AddOptionComputationListener pListener
+End Sub
+
 Private Sub IMarketDataSource_AddPriceChangeListener(ByVal pListener As IPriceChangeListener)
 AddPriceChangeListener pListener
 End Sub
@@ -336,6 +340,10 @@ End Sub
 
 Private Sub IMarketDataSource_RemoveMarketDepthListener(ByVal pListener As IMarketDepthListener)
 RemoveMarketDepthListener pListener
+End Sub
+
+Private Sub IMarketDataSource_RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
+RemoveOptionComputationListener pListener
 End Sub
 
 Private Sub IMarketDataSource_RemovePriceChangeListener(ByVal pListener As IPriceChangeListener)
@@ -1008,6 +1016,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "AddOptionComputationListener"
+On Error GoTo Err
+
+mDataSource.AddOptionComputationListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub AddPriceChangeListener( _
                 ByVal pListener As IPriceChangeListener)
 Const ProcName As String = "AddPriceChangeListener"
@@ -1363,6 +1383,18 @@ Const ProcName As String = "RemoveMarketDepthListener"
 On Error GoTo Err
 
 mDataSource.RemoveMarketDepthListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Const ProcName As String = "RemoveOptionComputationListener"
+On Error GoTo Err
+
+mDataSource.RemoveOptionComputationListener pListener
 
 Exit Sub
 

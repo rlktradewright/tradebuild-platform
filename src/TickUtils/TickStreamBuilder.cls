@@ -134,6 +134,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub NotifyOptionComputation(pComputation As OptionComputation)
+Const ProcName As String = "NotifyOptionComputation"
+On Error GoTo Err
+
+If mTickStream.State = TickStreamStateReady Then Exit Sub
+
+Assert mTickStream.State = TickStreamStateRunning, "Tick stream is not running"
+mTickStream.NotifyOptionComputation pComputation
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub NotifyStart()
 Const ProcName As String = "NotifyStart"
 On Error GoTo Err

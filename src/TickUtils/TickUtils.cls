@@ -320,6 +320,14 @@ Public Enum MarketDataSourceOptions
     MarketDataSourceOptUseFullSession = 8
 End Enum
 
+Public Enum OptionComputationTypes
+    OptionComputationTypeNone
+    OptionComputationTypeAsk
+    OptionComputationTypeBid
+    OptionComputationTypeTrade
+    OptionComputationTypeModel
+End Enum
+
 Public Enum MarketDataSourceStates
     MarketDataSourceStateCreated
     MarketDataSourceStateReady
@@ -363,6 +371,7 @@ Public Enum TickTypes
     TickTypeVolume
     TickTypeOpenInterest
     TickTypeOpenPrice
+    TickTypeOptionComputation
 End Enum
 
 Public Enum ValueChanges
@@ -376,7 +385,7 @@ End Enum
 '@================================================================================
 
 ''
-' Represents any sort of tick.
+' Represents any sort of simple tick.
 ' @param pTimestamp The time at which the tick occurred.
 ' @param TickType The type of tick.
 ' @param pPrice The tick price where relevant.
@@ -404,21 +413,40 @@ Public Type GenericTickEventData
 End Type
 
 Public Type MarketDepthEventData
-    Source          As Object
-    Type            As DOMSides
-    Price           As Double
-    Size            As Long
+    Source              As Object
+    Type                As DOMSides
+    Price               As Double
+    Size                As Long
+End Type
+
+Public Type OptionComputation
+    Timestamp           As Date
+    ComputationType     As OptionComputationTypes
+    ImpliedVolatility   As Double
+    Delta               As Double
+    OptionPrice         As Double
+    PvDividend          As Double
+    Gamma               As Double
+    Vega                As Double
+    Theta               As Double
+    UnderlyingPrice     As Double
+End Type
+
+Public Type OptionComputationEventData
+    Source              As Object
+    StreamId            As Long
+    Computation         As OptionComputation
 End Type
 
 Public Type PriceChange
-    Change          As Double
-    ChangeString    As String
-    ChangePercent   As Double
+    Change              As Double
+    ChangeString        As String
+    ChangePercent       As Double
 End Type
 
 Public Type PriceChangeEventData
-    Source          As Object
-    PriceChange     As PriceChange
+    Source              As Object
+    PriceChange         As PriceChange
 End Type
 
 Public Type Quote
@@ -432,18 +460,18 @@ Public Type Quote
 End Type
 
 Public Type QuoteEventData
-    Source          As Object
-    Quote           As Quote
+    Source              As Object
+    Quote               As Quote
 End Type
 
 Public Type RawMarketDepthEventData
-    Source          As Object
-    Position        As Long
-    MarketMaker     As String
-    Operation       As DOMOperations
-    Side            As DOMSides
-    Price           As Double
-    Size            As Long
+    Source              As Object
+    Position            As Long
+    MarketMaker         As String
+    Operation           As DOMOperations
+    Side                As DOMSides
+    Price               As Double
+    Size                As Long
 End Type
 
 '@================================================================================

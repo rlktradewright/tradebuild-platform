@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ITickStream"
+Attribute VB_Name = "IOptionComputationListener"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "ITickStream"
+Private Const ModuleName                            As String = "IOptionComputationListener"
 
 '@================================================================================
 ' Member variables
@@ -60,44 +60,14 @@ Private Const ModuleName                            As String = "ITickStream"
 ' Properties
 '@================================================================================
 
-Public Property Get ClockFuture() As IFuture
-End Property
-
-Public Property Get ContractFuture() As IFuture
-End Property
-
-Public Property Get State() As TickStreamStates
-End Property
-
-Public Property Get StreamId() As Long
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub AddGenericTickListener(ByVal pListener As IGenericTickListener)
+Public Sub NoMoreComputations(ByRef ev As OptionComputationEventData)
 End Sub
 
-Public Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
-End Sub
-
-Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
-
-Public Sub Finish()
-End Sub
-
-Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
-End Sub
-
-Public Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
-End Sub
-
-Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
-End Sub
-
-Public Sub Start()
+Public Sub NotifyComputation(ByRef ev As OptionComputationEventData)
 End Sub
 
 '@================================================================================
