@@ -965,6 +965,8 @@ End Function
 
 Public Function gTwsSecTypeFromString(ByVal Value As String) As TwsSecTypes
 Select Case UCase$(Value)
+Case ""
+    gTwsSecTypeFromString = TwsSecTypeNone
 Case "STOCK", "STK"
     gTwsSecTypeFromString = TwsSecTypeStock
 Case "FUTURE", "FUT"
