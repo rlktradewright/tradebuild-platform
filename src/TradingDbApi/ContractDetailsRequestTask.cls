@@ -371,7 +371,7 @@ Const ProcName As String = "requestContracts"
 On Error GoTo Err
 
 If gLogger.IsLoggable(LogLevelDetail) Then gLogger.Log "Request contract details for", ProcName, ModuleName, LogLevelDetail, pContractSpec.ToString
-mFutureWaiter.Add mTradingDB.FetchContractsAsync(pContractSpec, Me)
+mFutureWaiter.Add mTradingDB.FetchContractsAsync(pContractSpec, Me, mCookie)
 mNumOutstandingRequests = mNumOutstandingRequests + 1
 
 Exit Sub
