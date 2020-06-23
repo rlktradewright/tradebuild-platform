@@ -73,6 +73,9 @@ End Function
 Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
 End Function
 
+Public Function CreateSnapshotMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

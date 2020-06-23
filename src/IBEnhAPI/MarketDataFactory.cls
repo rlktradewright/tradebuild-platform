@@ -25,7 +25,6 @@ Option Explicit
 Implements IMarketDataConsumer
 Implements IMarketDepthConsumer
 Implements IMarketDataFactory
-Implements IMarketDataFactory10
 Implements ITwsConnectionStateListener
 Implements IStateChangeListener
 
@@ -384,43 +383,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get IMarketDataFactory_MaxStreamId() As Long
-IMarketDataFactory_MaxStreamId = IncarnationIncrement
-End Property
-
-'@================================================================================
-' IMarketDataFactory10 Interface Members
-'@================================================================================
-
-Private Function IMarketDataFactory10_CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
-Const ProcName As String = "IMarketDataFactory10_CreateMarketDataStream"
-On Error GoTo Err
-
-Set IMarketDataFactory10_CreateMarketDataStream = CreateMarketDataStream(pContractFuture, pErrorListener, pStreamId)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function IMarketDataFactory10_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
-Const ProcName As String = "IMarketDataFactory10_CreateMarketDepthStream"
-On Error GoTo Err
-
-Set IMarketDataFactory10_CreateMarketDepthStream = CreateMarketDepthStream(pContractFuture, pNumberOfRows, pErrorListener, pStreamId)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function IMarketDataFactory10_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TickUtils27.ITickStream
+Private Function IMarketDataFactory_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TickUtils27.ITickStream
 Const ProcName As String = "IMarketDataFactory10_CreateSnapshotMarketDataStream"
 On Error GoTo Err
 
-Set IMarketDataFactory10_CreateSnapshotMarketDataStream = CreateSnapshotMarketDataStream(pContractFuture, pErrorListener, pStreamId)
+Set IMarketDataFactory_CreateSnapshotMarketDataStream = CreateSnapshotMarketDataStream(pContractFuture, pErrorListener, pStreamId)
 
 Exit Function
 
@@ -428,8 +395,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get IMarketDataFactory10_MaxStreamId() As Long
-IMarketDataFactory10_MaxStreamId = IncarnationIncrement
+Private Property Get IMarketDataFactory_MaxStreamId() As Long
+IMarketDataFactory_MaxStreamId = IncarnationIncrement
 End Property
 
 '@================================================================================
@@ -923,7 +890,7 @@ End Function
 Private Sub FireTick( _
                 ByVal pStreamId As Long, _
                 ByRef pTick As GenericTick)
-Const ProcName As String = "fireTick"
+Const ProcName As String = "FireTick"
 On Error GoTo Err
 
 If pTick.TickType = TickTypeMarketDepth Or _

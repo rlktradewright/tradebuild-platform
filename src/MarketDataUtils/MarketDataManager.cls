@@ -55,7 +55,7 @@ Private Const ConfigSettingSnapshotRefreshInterval  As String = "&SnapshotRefres
 ' Member variables
 '@================================================================================
 
-Private mFactory                                    As IMarketDataFactory10
+Private mFactory                                    As IMarketDataFactory
 Attribute mFactory.VB_VarHelpID = -1
 
 Private mStudyLibManager                            As StudyLibraryManager
@@ -339,10 +339,7 @@ Friend Function RequestMarketDataSnapshot(ByVal pDataSourceBase As DataSourceBas
 Const ProcName As String = "RequestMarketData"
 On Error GoTo Err
 
-Assert TypeOf mFactory Is IMarketDataFactory10, "Market data snapshots not supported by the factory"
-
-Dim lFactory As IMarketDataFactory10: Set lFactory = mFactory
-Set RequestMarketDataSnapshot = lFactory.CreateSnapshotMarketDataStream( _
+Set RequestMarketDataSnapshot = mFactory.CreateSnapshotMarketDataStream( _
                                     pDataSourceBase.ContractFuture, _
                                     pDataSourceBase, _
                                     pDataSourceBase.StreamId)

@@ -100,16 +100,44 @@ End Property
 ' IMarketDataManager Interface Members
 '@================================================================================
 
+Private Property Get IMarketDataManager_Capabilities() As MarketDataManagerCapabilities
+IMarketDataManager_Capabilities = mMarketDataManager.Capabilities
+End Property
+
 Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pIsRecoverable As Boolean, _
-                Optional ByVal pkey As String, _
+                Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
-Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pkey, pUseLocalTimeForStudies, pStateChangeListener)
+Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pIsRecoverable As Boolean, _
+                Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRefreshInterval As Long = 0&) As IMarketDataSource
+Const ProcName As String = "IMarketDataManager_CreateSnapshotMarketDataSource"
+On Error GoTo Err
+
+IMarketDataManager_CreateSnapshotMarketDataSource = mMarketDataManager.CreateSnapshotMarketDataSource( _
+                                                        pContractFuture, _
+                                                        pIsRecoverable, _
+                                                        pKey, _
+                                                        pUseLocalTimeForStudies, _
+                                                        pStateChangeListener, _
+                                                        pRefreshInterval)
 
 Exit Function
 
@@ -133,11 +161,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function IMarketDataManager_GetMarketDataSource(ByVal pkey As String) As IMarketDataSource
+Private Function IMarketDataManager_GetMarketDataSource(ByVal pKey As String) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_GetMarketDataSource"
 On Error GoTo Err
 
-Set IMarketDataManager_GetMarketDataSource = GetTicker(pkey)
+Set IMarketDataManager_GetMarketDataSource = GetTicker(pKey)
 
 Exit Function
 
@@ -168,6 +196,10 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function IMarketDataManager_Supports(ByVal pCapability As MarketDataManagerCapabilities) As Boolean
+IMarketDataManager_Supports = mMarketDataManager.Supports(pCapability)
+End Function
 
 '@================================================================================
 ' mTickers Event Handlers
@@ -236,26 +268,26 @@ End Sub
 Public Function CreateTicker( _
                 ByVal pContractFuture As IFuture, _
                 Optional ByVal pIsRecoverable As Boolean = True, _
-                Optional ByVal pkey As String, _
+                Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener) As Ticker
 Const ProcName As String = "CreateTicker"
 On Error GoTo Err
 
-If pkey = "" Then pkey = GenerateGUIDString
+If pKey = "" Then pKey = GenerateGUIDString
 
-gLogger.Log "Creating Ticker with key: " & pkey, ProcName, ModuleName, LogLevelHighDetail
+gLogger.Log "Creating Ticker with key: " & pKey, ProcName, ModuleName, LogLevelHighDetail
 Set CreateTicker = New Ticker
 If Not pStateChangeListener Is Nothing Then CreateTicker.AddStateChangeListener pStateChangeListener
 
 Dim lDataSource As IMarketDataSource
-Set lDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, pIsRecoverable, pkey, pUseLocalTimeForStudies)
+Set lDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies)
 
 CreateTicker.Initialise lDataSource, mHistDataStore, Me, Nothing
                 
-If pIsRecoverable And Not mConfig Is Nothing Then addTickerToConfig pkey
+If pIsRecoverable And Not mConfig Is Nothing Then addTickerToConfig pKey
 
-mTickers.Add CreateTicker, pkey
+mTickers.Add CreateTicker, pKey
 
 Exit Function
 
@@ -290,11 +322,11 @@ Attribute GetEnumerator.VB_MemberFlags = "40"
 Set GetEnumerator = mTickers.Enumerator
 End Function
 
-Public Function GetTicker(ByVal pkey As String) As Ticker
+Public Function GetTicker(ByVal pKey As String) As Ticker
 Const ProcName As String = "GetTicker"
 On Error GoTo Err
 
-Set GetTicker = mTickers.Item(pkey)
+Set GetTicker = mTickers.Item(pKey)
 
 Exit Function
 

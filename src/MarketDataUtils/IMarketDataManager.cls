@@ -30,6 +30,11 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum MarketDataManagerCapabilities
+    MarketDataManagerSnapshots = 1
+    MarketDataManagerStreaming = 2
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -60,6 +65,9 @@ Private Const ModuleName                            As String = "IMarketDataMana
 ' Properties
 '@================================================================================
 
+Public Property Get Capabilities() As MarketDataManagerCapabilities
+End Property
+
 Public Property Get DataSources() As EnumerableCollection
 End Property
 
@@ -75,6 +83,15 @@ Public Function CreateMarketDataSource( _
                 Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
 End Function
 
+Public Function CreateSnapshotMarketDataSource( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pIsRecoverable As Boolean, _
+                Optional ByVal pKey As String, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean, _
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRefreshInterval As Long = 0) As IMarketDataSource
+End Function
+
 Public Sub Finish()
 End Sub
 
@@ -86,6 +103,9 @@ End Function
 
 Public Sub RemoveFromConfig()
 End Sub
+
+Public Function Supports(ByVal pCapability As MarketDataManagerCapabilities) As Boolean
+End Function
 
 '@================================================================================
 ' Helper Functions

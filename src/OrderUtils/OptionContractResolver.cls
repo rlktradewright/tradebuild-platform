@@ -584,10 +584,8 @@ Const ProcName As String = "getMarketData"
 On Error GoTo Err
 
 Dim lDataSource As IMarketDataSource
-If TypeOf mMarketDataManager Is IMarketDataManager10 Then
-    Dim lMarketDataManager As IMarketDataManager10
-    Set lMarketDataManager = mMarketDataManager
-    Set lDataSource = lMarketDataManager.CreateSnapshotMarketDataSource( _
+If mMarketDataManager.Supports(MarketDataManagerSnapshots) Then
+    Set lDataSource = mMarketDataManager.CreateSnapshotMarketDataSource( _
                                             CreateFuture(pContract), _
                                             False)
 Else
