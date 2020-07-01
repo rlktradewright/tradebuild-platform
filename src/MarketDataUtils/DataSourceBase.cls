@@ -172,11 +172,15 @@ Set lDataStream = ev.Source
 
 Assert lDataStream Is mDataTickStream Or lDataStream Is mDepthTickStream, "Invalid tick stream"
 
-If lDataStream Is mDataTickStream Then
+If lDataStream Is mDepthTickStream Then
+    mDataSources.NotifyMarketDepthStreamFinished
+ElseIf mIsSnapshot And _
+        mSnapshotRefreshInterval <> 0 And _
+        mSnapshotRefreshTLI Is Nothing Then
+        Set mSnapshotRefreshTLI = mTimerList.Add(Empty, mSnapshotRefreshInterval, ExpiryTimeUnitSeconds)
+Else
     fireNoMorePriorityTicks ev
     mDataSources.NotifyMarketDataStreamFinished
-Else
-    mDataSources.NotifyMarketDepthStreamFinished
 End If
 
 Exit Sub
@@ -1057,11 +1061,6 @@ If mNumberOfMarketDataSubscriptions <> 1 Then Exit Sub
 
 If mIsSnapshot Then
     Set mDataTickStream = getDataManager.RequestMarketDataSnapshot(Me)
-    If mSnapshotRefreshInterval <> 0 Then
-        If mSnapshotRefreshTLI Is Nothing Then
-            Set mSnapshotRefreshTLI = mTimerList.Add(Empty, mSnapshotRefreshInterval, ExpiryTimeUnitSeconds)
-        End If
-    End If
 Else
     Set mDataTickStream = getDataManager.RequestMarketData(Me)
 End If

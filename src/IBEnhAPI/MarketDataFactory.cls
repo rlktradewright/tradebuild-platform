@@ -42,7 +42,7 @@ Implements IStateChangeListener
 
 Private Type TickerTableEntry
     Next                    As Long
-    IsInUse                   As Boolean
+    IsInUse                 As Boolean
     IsSnapShot              As Boolean
     TickStreamBuilder       As TickStreamBuilder
     Incarnation             As Long
@@ -437,7 +437,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IMarketDataFactory_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TickUtils27.ITickStream
-Const ProcName As String = "IMarketDataFactory10_CreateSnapshotMarketDataStream"
+Const ProcName As String = "IMarketDataFactory_CreateSnapshotMarketDataStream"
 On Error GoTo Err
 
 Set IMarketDataFactory_CreateSnapshotMarketDataStream = CreateSnapshotMarketDataStream(pContractFuture, pErrorListener, pStreamId)
@@ -1229,7 +1229,7 @@ With pTable(pIndex)
     Set .ConsumerContract = Nothing
     Set .ConsumerTimeZone = Nothing
     .DataHasBeenReceived = False
-    
+    .TickStreamBuilder.Finish
     ' don't do this as it causes a failure if this is during a FireTick call
     'Set .TickStreamBuilder = Nothing
     

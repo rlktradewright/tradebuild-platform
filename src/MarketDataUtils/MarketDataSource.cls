@@ -140,6 +140,7 @@ Set mErrorListeners = New Listeners
 Set mGenericTickListeners = New Listeners
 Set mMarketDepthListeners = New Listeners
 Set mRawMarketDepthListeners = New Listeners
+Set mOptionComputationListeners = New Listeners
 Set mPriceChangeListeners = New Listeners
 Set mQuoteListeners = New Listeners
 Set mStateChangeListeners = New Listeners
@@ -1011,6 +1012,7 @@ setState MarketDataSourceStateFinished
 
 mGenericTickListeners.Clear
 mMarketDepthListeners.Clear
+mOptionComputationListeners.Clear
 mPriceChangeListeners.Clear
 mQuoteListeners.Clear
 mRawMarketDepthListeners.Clear
@@ -1934,7 +1936,11 @@ Const ProcName As String = "unsubscribeIfNoMarketDataListeners"
 On Error GoTo Err
 
 If mState = MarketDataSourceStateRunning Then
-    If mGenericTickListeners.Count = 0 And mQuoteListeners.Count = 0 And mPriceChangeListeners.Count = 0 Then StopMarketData
+    If mGenericTickListeners.Count = 0 And _
+        mQuoteListeners.Count = 0 And _
+        mPriceChangeListeners.Count = 0 And _
+        mOptionComputationListeners.Count = 0 _
+    Then StopMarketData
 End If
 
 Exit Sub

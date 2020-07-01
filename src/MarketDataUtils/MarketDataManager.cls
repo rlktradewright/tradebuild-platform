@@ -336,7 +336,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function RequestMarketDataSnapshot(ByVal pDataSourceBase As DataSourceBase) As ITickStream
-Const ProcName As String = "RequestMarketData"
+Const ProcName As String = "RequestMarketDataSnapshot"
 On Error GoTo Err
 
 Set RequestMarketDataSnapshot = mFactory.CreateSnapshotMarketDataStream( _
