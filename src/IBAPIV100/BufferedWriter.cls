@@ -56,7 +56,7 @@ Private mOutMessageBuilder                          As StringBuilder
 Private mApiMessageLogLevel                         As LogLevels
 Private mRawApiMessageLogLevel                      As LogLevels
 
-Private mPrefixBytes()                                   As Byte
+Private mPrefixBytes()                              As Byte
 Private mPrefixLength                               As Long
 '@================================================================================
 ' Class Event Handlers
@@ -66,7 +66,7 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-ReDim mOutputBuffer(1024) As Byte
+ReDim mOutputBuffer(1023) As Byte
 Set mOutMessageBuilder = CreateStringBuilder
 mOutMessageBuilder.Append "OUT: "
 
@@ -339,11 +339,12 @@ If mPrefixLength <> 0 Then
     mPrefixLength = 0
 End If
 
-mSocketHandler.SendLong gLongToNetworkLong(mLength)
+mSocketHandler.SendBytes gLongToNetworkBytes(mLength)
 
-ReDim Preserve mOutputBuffer(mLength - 1)
+ReDim Preserve mOutputBuffer(mOutputBufferIndex - 1) As Byte
 mSocketHandler.SendBytes mOutputBuffer
 
+ReDim mOutputBuffer(1023) As Byte
 mOutputBufferIndex = 0
 mLength = 0
 mOutMessageBuilder.Clear

@@ -654,13 +654,13 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Public Function gLongToNetworkLong(ByVal pNumber As Long) As Long
-Dim l As Long
-l = (pNumber And &HFF000000) / &H1000000
-l = l Or ((pNumber And &HFF0000) / &H100)
-l = l Or ((pNumber And &HFF00&) * &H100&)
-l = l Or ((pNumber And &HFF&) * &H1000000)
-gLongToNetworkLong = l
+Public Function gLongToNetworkBytes(ByVal pNumber As Long) As Byte()
+Dim b(3) As Byte
+b(0) = ((pNumber And &HFF000000) / &H1000000) And &HFF&
+b(1) = (pNumber And &HFF0000) / &H10000
+b(2) = (pNumber And &HFF00&) / &H100&
+b(3) = (pNumber And &HFF&)
+gLongToNetworkBytes = b
 End Function
 
 Public Function gOutputMessageIdToString( _
