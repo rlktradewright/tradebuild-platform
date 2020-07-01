@@ -990,7 +990,6 @@ Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
 Dim i As Long
-Dim lOrderComboLegsCount As Long
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
@@ -1028,7 +1027,7 @@ With pOrder
     mWriter.AddString .OcaGroup, "Oca Group"
     mWriter.AddString .Account, "Account"
     mWriter.AddString .OpenClose, "OpenClose"
-    mWriter.AddString .Origin, "Origin"
+    mWriter.AddLong .Origin, "Origin"
     mWriter.AddString .OrderRef, "Order ref"
     mWriter.AddBoolean .Transmit, "Transmit"
     mWriter.AddLong .ParentId, "Parent id"
@@ -1038,53 +1037,54 @@ With pOrder
     mWriter.AddString stopTriggerMethodToString(.TriggerMethod), "Trigger method"
     mWriter.AddBoolean .OutsideRth, "Outside RTH"
     mWriter.AddBoolean .Hidden, "Hidden"
-End With
 
-' send combo legs for BAG requests
-With pContract
-    If .Sectype = TwsSecTypeCombo Then
-        If .ComboLegs.Count = 0 Then
-            mWriter.AddLong 0, "Combo legs count"
+    ' send contract combo legs for BAG requests
+    If pContract.Sectype = TwsSecTypeCombo Then
+        With pContract
+            If .ComboLegs.Count = 0 Then
+                mWriter.AddLong 0, "Combo legs count"
+            Else
+                mWriter.AddLong .ComboLegs.Count, "Combo legs count"
+                Dim comboLeg As TwsComboLeg
+                For Each comboLeg In .ComboLegs
+                    With comboLeg
+                        mWriter.AddLong .ConId, "Leg " & i & " Con id"
+                        mWriter.AddLong .Ratio, "Leg " & i & " Ratio"
+                        mWriter.AddString gTwsOrderActionToString(.Action), "Leg " & i & " Action"
+                        mWriter.AddString .Exchange, "Leg " & i & " Exchange"
+                        mWriter.AddString legOpenCloseToString(.OpenClose), "Leg " & i & " Open/close"
+                    
+                        mWriter.AddLong comboLeg.ShortSaleSlot, "Short Sale Slot"
+                        mWriter.AddString comboLeg.DesignatedLocation, "Designated Location"
+                        mWriter.AddLong comboLeg.ExemptCode, "Exempt Code"
+                    End With
+                Next
+            End If
+        End With
+
+        ' Send order combo legs for BAG requests
+        Dim lOrderComboLegsCount As Long
+        On Error Resume Next
+        lOrderComboLegsCount = UBound(pOrder.ComboLegs) + 1
+        On Error GoTo Err
+        
+        If lOrderComboLegsCount = 0 Then
+            mWriter.AddLong 0, "Order Combo Legs Count"
         Else
-            mWriter.AddLong .ComboLegs.Count, "Combo legs count"
-            Dim comboLeg As TwsComboLeg
-            For Each comboLeg In .ComboLegs
-                With comboLeg
-                    mWriter.AddLong .ConId, "Leg " & i & " Con id"
-                    mWriter.AddLong .Ratio, "Leg " & i & " Ratio"
-                    mWriter.AddString gTwsOrderActionToString(.Action), "Leg " & i & " Action"
-                    mWriter.AddString .Exchange, "Leg " & i & " Exchange"
-                    mWriter.AddString legOpenCloseToString(.OpenClose), "Leg " & i & " Open/close"
-                
-                    mWriter.AddLong comboLeg.ShortSaleSlot, "Short Sale Slot"
-                    mWriter.AddString comboLeg.DesignatedLocation, "Designated Location"
-                    mWriter.AddLong comboLeg.ExemptCode, "Exempt Code"
-                End With
+            Dim lOrderComboLegs() As TwsOrderComboLeg
+            lOrderComboLegs = pOrder.ComboLegs
+            mWriter.AddLong lOrderComboLegsCount, "Order Combo Legs Count"
+    
+            For i = 0 To lOrderComboLegsCount - 1
+                Dim lOrderComboLeg  As TwsOrderComboLeg
+                Set lOrderComboLeg = lOrderComboLegs(i)
+                mWriter.AddDoubleMax lOrderComboLeg.Price, "Leg" & i & " Price"
             Next
         End If
+        
+        mWriter.AddTagValues pOrder.SmartComboRoutingParams, "Smart Combo Routing Params"
     End If
-End With
 
-' Send order combo legs for BAG requests
-If pContract.Sectype = TwsSecTypeCombo Then
-    If lOrderComboLegsCount = 0 Then
-        mWriter.AddLong 0, "Order Combo Legs Count"
-    Else
-        Dim lOrderComboLegs() As TwsOrderComboLeg
-        lOrderComboLegs = pOrder.ComboLegs
-        mWriter.AddLong lOrderComboLegsCount, "Order Combo Legs Count"
-
-        For i = 0 To lOrderComboLegsCount - 1
-            Dim lOrderComboLeg  As TwsOrderComboLeg
-            Set lOrderComboLeg = lOrderComboLegs(i)
-            mWriter.AddDoubleMax lOrderComboLeg.Price, "Leg" & i & " Price"
-        Next
-    End If
-    
-    mWriter.AddTagValues pOrder.SmartComboRoutingParams, "Smart Combo Routing Params"
-End If
-
-With pOrder
     mWriter.AddString "", "Shares Allocation"
     mWriter.AddDouble .DiscretionaryAmt, "Discretionary amount"
     mWriter.AddString .GoodAfterTime, "Good after Time"
@@ -1099,7 +1099,7 @@ With pOrder
 
     'institutional short sale slot fields.
     mWriter.AddLong .ShortSaleSlot, " Short Sale Slot"           ' 0 only for retail, 1 or 2 only for institution.
-    mWriter.AddLong .DesignatedLocation, "Designated Location"       ' only populate when shortSaleSlot = 2.
+    mWriter.AddString .DesignatedLocation, "Designated Location"       ' only populate when shortSaleSlot = 2.
     
     mWriter.AddLong .ExemptCode, "Exempt Code"
     
@@ -1132,16 +1132,13 @@ With pOrder
         mWriter.AddString .DeltaNeutralSettlingFirm, "Delta Neutral Settling Firm"
         mWriter.AddString .DeltaNeutralClearingAccount, "Delta Neutral Clearing Account"
         mWriter.AddString .DeltaNeutralClearingIntent, "Delta Neutral Clearing Intent"
-    End If
-
-    If .DeltaNeutralOrderType <> TwsOrderTypeNone Then
         mWriter.AddString .DeltaNeutralOpenClose, "Delta Neutral Open Close"
         mWriter.AddBoolean .DeltaNeutralShortSale, "Delta Neutral Short Sale"
         mWriter.AddLong .DeltaNeutralShortSaleSlot, "Delta Neutral Short Sale Slot"
         mWriter.AddString .DeltaNeutralDesignatedLocation, "Delta Neutral Designated Location"
     End If
     
-    mWriter.AddBoolean .ContinuousUpdate, "Continuous update"
+    mWriter.AddLong .ContinuousUpdate, "Continuous update"
     
     mWriter.AddLongMax .ReferencePriceType, "Reference price type"
     
@@ -1190,6 +1187,8 @@ With pOrder
         mWriter.AddTagValues .AlgoParams, "Algo params"
     End If
 
+    mWriter.AddString .AlgoId, "Algo Id"
+    
     mWriter.AddBoolean .WhatIf, "WhatIf"
     mWriter.AddTagValues .Options, "Misc options"
     mWriter.AddBoolean .Solicited, "Solicited"
@@ -1200,8 +1199,8 @@ With pOrder
         If .OrderType = TwsOrderTypes.TwsOrderTypePeggedToBenchmark Then
             mWriter.AddLong .ReferenceContractId, "ReferenceContractId"
             mWriter.AddBoolean .IsPeggedChangeAmountDecrease, "IsPeggedChangeAmountDecrease"
-            mWriter.AddDouble .PeggedChangeAmount, "PeggedChangeAmount"
-            mWriter.AddDouble .ReferenceChangeAmount, "ReferenceChangeAmount"
+            mWriter.AddDoubleMax .PeggedChangeAmount, "PeggedChangeAmount"
+            mWriter.AddDoubleMax .ReferenceChangeAmount, "ReferenceChangeAmount"
             mWriter.AddString .ReferenceExchange, "ReferenceExchange"
         End If
 
@@ -1219,11 +1218,11 @@ With pOrder
 '        End If
 
         mWriter.AddString gTwsOrderTypeToString(.AdjustedOrderType), "AdjustedOrderType"
-        mWriter.AddDouble .TriggerPrice, "TriggerPrice"
-        mWriter.AddDouble .LmtPriceOffset, "LmtPriceOffset"
-        mWriter.AddDouble .AdjustedStopPrice, "AdjustedStopPrice"
-        mWriter.AddDouble .AdjustedStopLimitPrice, "AdjustedStopLimitPrice"
-        mWriter.AddDouble .AdjustedTrailingAmount, "AdjustedTrailingAmount"
+        mWriter.AddDoubleMax .TriggerPrice, "TriggerPrice"
+        mWriter.AddDoubleMax .LmtPriceOffset, "LmtPriceOffset"
+        mWriter.AddDoubleMax .AdjustedStopPrice, "AdjustedStopPrice"
+        mWriter.AddDoubleMax .AdjustedStopLimitPrice, "AdjustedStopLimitPrice"
+        mWriter.AddDoubleMax .AdjustedTrailingAmount, "AdjustedTrailingAmount"
         mWriter.AddLong .AdjustableTrailingUnit, "AdjustableTrailingUnit"
     End If
 
