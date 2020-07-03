@@ -942,7 +942,7 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Dim lReqId As Long: lReqId = mReader.GetLong("ReqID")
+Dim lReqId As Long: lReqId = mReader.GetLong("Ticker id")
 Dim lMarketDataType As Long: lMarketDataType = mReader.GetLong("MarketDataType")
 
 mReader.EndLogMessage
@@ -1755,8 +1755,8 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Dim lTickerId As Long: lTickerId = mReader.GetLong("tickerId")
-Dim lTickType As Long: lTickType = mReader.GetLong("tickType")
+Dim lTickerId As Long: lTickerId = mReader.GetLong("Ticker id")
+Dim lTickType As Long: lTickType = mReader.GetLong("Tick type")
 Dim lValue As Double: lValue = mReader.GetDouble("Value")
 
 mReader.EndLogMessage
@@ -1775,8 +1775,8 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Dim lTickerId As Long: lTickerId = mReader.GetLong("tickerId")
-Dim lTickType As Long: lTickType = mReader.GetLong("tickType")
+Dim lTickerId As Long: lTickerId = mReader.GetLong("Ticker id")
+Dim lTickType As Long: lTickType = mReader.GetLong("Tick type")
 Dim lImpliedVol As Double: lImpliedVol = mReader.GetDouble("impliedVol")
 
 If lImpliedVol < 0 Then
@@ -1933,7 +1933,7 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Dim lReqId As Long: lReqId = mReader.GetLong("reqID")
+Dim lReqId As Long: lReqId = mReader.GetLong("Ticker id")
 mReader.EndLogMessage
 
 If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.EndTickSnapshot gGetCallersRequestIdFromTwsMarketDataRequestId(lReqId)
@@ -1950,8 +1950,8 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Dim lTickerId As Long: lTickerId = mReader.GetLong("tickerId")
-Dim lTickType As Long: lTickType = mReader.GetLong("tickType")
+Dim lTickerId As Long: lTickerId = mReader.GetLong("Ticker id")
+Dim lTickType As Long: lTickType = mReader.GetLong("Tick type")
 Dim lValue As String: lValue = mReader.GetString("Value")
 
 mReader.EndLogMessage

@@ -615,13 +615,13 @@ On Error GoTo Err
 
 Select Case msgId
 Case TICK_SIZE
-    gInputMessageIdToString = "Tick size"
+    gInputMessageIdToString = "TickSize"
 Case TICK_STRING
-    gInputMessageIdToString = "Tick string"
+    gInputMessageIdToString = "TickString"
 Case MARKET_DEPTH
-    gInputMessageIdToString = "Market depth"
+    gInputMessageIdToString = "MarketDepth"
 Case TICK_PRICE
-    gInputMessageIdToString = "Tick price"
+    gInputMessageIdToString = "TickPrice"
 Case Else
     Dim lName As String
     If mInputMessageIdMap.TryItem(msgId, lName) Then
