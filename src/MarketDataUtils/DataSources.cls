@@ -196,7 +196,7 @@ If mSomeCurrentDataSources Then
         Set lDataSource = mCurrentDataSources(i)
         If Not lDataSource.SubscribedToMarketDepth Then
             lDataSource.FireNoMoreTicks
-            lDataSource.Finish
+            If Not lDataSource.IsFinished Then lDataSource.Finish
         End If
     Next
 End If
@@ -220,7 +220,7 @@ If mSomeCurrentDataSources Then
         Set lDataSource = mCurrentDataSources(i)
         If Not lDataSource.SubscribedToMarketData Then
             lDataSource.FireNoMoreTicks
-            lDataSource.Finish
+            If Not lDataSource.IsFinished Then lDataSource.Finish
         End If
     Next
 End If

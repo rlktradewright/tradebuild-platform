@@ -1067,20 +1067,36 @@ Friend Sub FireNoMoreTicks()
 Const ProcName As String = "FireNoMoreTicks"
 On Error GoTo Err
 
-If mSubscribedToMarketDepth Or mSubscribedToMarketData Then Exit Sub
+If Not (mSubscribedToMarketDepth Or mSubscribedToMarketData) Then Exit Sub
 
-Dim ev As GenericTickEventData
-Set ev.Source = Me
-ev.StreamId = mStreamId
+Dim i As Long
 
 UpdateCurrentGenericTickListeners
-
 If mSomeCurrentGenericTickListeners Then
+    Dim ev As GenericTickEventData
+    Set ev.Source = Me
+    ev.StreamId = mStreamId
+    ev.Tick.Timestamp = MaxDate
+    ev.Tick.TickType = -1
+    
     Dim lListener As IGenericTickListener
-    Dim i As Long
     For i = 0 To UBound(mCurrentGenericTickListeners)
         Set lListener = mCurrentGenericTickListeners(i)
         lListener.NoMoreTicks ev
+    Next
+End If
+
+updateCurrentOptionComputationListeners
+If mSomeCurrentOptionComputationListeners Then
+    Dim ev1 As OptionComputationEventData
+    ev1.StreamId = mStreamId
+    ev1.Computation.ComputationType = OptionComputationTypeNone
+    Set ev1.Source = Me
+    
+    Dim lListener1 As IOptionComputationListener
+    For i = 0 To UBound(mCurrentOptionComputationListeners)
+        Set lListener1 = mCurrentOptionComputationListeners(i)
+        lListener1.NoMoreComputations ev1
     Next
 End If
 
