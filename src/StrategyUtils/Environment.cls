@@ -77,11 +77,17 @@ MinutesToEndOfTradingSession = (gTradingContext.Session.CurrentSessionEndTime - 
 End Property
 
 Public Property Get TickSize() As Double
-TickSize = getContract.TickSize
+If Not gInitialisationContext Is Nothing Then
+    TickSize = gInitialisationContext.PositionManager.OrderContexts.DefaultOrderContext.TickSize
+ElseIf Not gTradingContext Is Nothing Then
+    TickSize = gTradingContext.PositionManager.OrderContexts.DefaultOrderContext.TickSize
+Else
+    Assert False, "No contract available at this point"
+End If
 End Property
 
 Public Property Get TickValue() As Double
-TickValue = getContract.TickValue
+TickValue = TickSize * getContract.Specifier.Multiplier
 End Property
 
 Public Property Get Timestamp() As Date
@@ -171,7 +177,7 @@ If Not gInitialisationContext Is Nothing Then
 ElseIf Not gTradingContext Is Nothing Then
     Set getContract = gTradingContext.Contract
 Else
-    Assert False, "No contract identifier available at this point"
+    Assert False, "No contract available at this point"
 End If
 End Function
 

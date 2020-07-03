@@ -403,7 +403,7 @@ Set TemplateOrder = mTemplateOrder
 End Property
 
 Public Property Get TickSize() As Double
-Assert mTickSize <> 0#, "TickSize not yet available"
+Assert mTickSize > 0#, "TickSize not yet available"
 TickSize = mTickSize
 End Property
 
@@ -1335,6 +1335,7 @@ Friend Sub NotifyDataReadinessChanged()
 Const ProcName As String = "NotifyDataReadinessChanged"
 On Error GoTo Err
 
+IsReadyTickSize
 fireChange OrderContextReadyStateChanged
 
 Exit Sub
@@ -1413,7 +1414,7 @@ Const ProcName As String = "SetTickSize"
 On Error GoTo Err
 
 mTickSize = pTickSize
-If mTickSize <> 0# Then fireChange OrderContextReadyStateChanged
+If mTickSize > 0# Then fireChange OrderContextReadyStateChanged
 
 Exit Sub
 

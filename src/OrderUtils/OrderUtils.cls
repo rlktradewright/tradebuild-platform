@@ -308,8 +308,9 @@ Public Function GetOptionContract( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pAction As OrderActions, _
                 ByVal pContractStore As IContractStore, _
-                ByVal pMaxExpenditure As Long, _
-                ByVal pStrikeIncrement As Long, _
+                ByVal pSelectionMode As OptionStrikeSelectionModes, _
+                ByVal pParameter As Long, _
+                ByVal pOperator As OptionStrikeSelectionOperators, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 Optional ByVal pListener As IStateChangeListener) As IFuture
@@ -320,8 +321,9 @@ Set GetOptionContract = gGetOptionContract( _
                                 pContractSpec, _
                                 pAction, _
                                 pContractStore, _
-                                pMaxExpenditure, _
-                                pStrikeIncrement, _
+                                pSelectionMode, _
+                                pParameter, _
+                                pOperator, _
                                 pUnderlyingExchangeName, _
                                 pMarketDataManager, _
                                 pListener)

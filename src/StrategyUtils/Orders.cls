@@ -62,7 +62,7 @@ Private Const ModuleName                            As String = "Orders"
 
 Public Property Get AccountBalance() As Double
 ' dummy value at present, awaiting development of an Account Service Provider
-AccountBalance = 10000
+AccountBalance = 50000
 End Property
 
 Public Property Get ActiveBuySize() As Long
@@ -944,7 +944,7 @@ Else
     Assert lOrderContext.IsSimulated = pIsSimulated, "Order context has incorrect simulated property"
 End If
 
-canTradeContext = lOrderContext.IsReady
+canTradeContext = lOrderContext.IsReady And lOrderContext.IsReadyTickSize
 
 Exit Function
 

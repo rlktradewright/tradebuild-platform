@@ -762,8 +762,9 @@ Set findNextContractForOption = gGetOptionContract( _
                                     lNextContractSpec, _
                                     mBracketOrder.EntryOrder.Action, _
                                     mOrderManager.ContractStorePrimary, _
+                                    OptionStrikeSelectionModeExpenditure, _
                                     mMaxExpenditure, _
-                                    lStrikeIncrement, _
+                                    OptionStrikeSelectionOperatorLT, _
                                     mBracketOrder.RolloverSpecification.UnderlyingExchangeName, _
                                     mOrderManager.MarketDataManager, _
                                     Nothing)

@@ -216,9 +216,9 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsFaulted Then
+If Not ev.Future.IsAvailable Then
+ElseIf ev.Future.IsFaulted Then
     getStrategyHost.ContractInvalid ev.Future.ErrorMessage
-ElseIf Not ev.Future.IsAvailable Then
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
     
@@ -226,6 +226,19 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mTickerEv = mTicker
     
     If Not mStrategy Is Nothing Then setupLogging mContract.Specifier.LocalSymbol
+ElseIf TypeOf ev.Future.Value Is BoxedValue Then
+    Dim b As BoxedValue: Set b = ev.Future.Value
+    gLogger.Log "Trading context says: " & b.Value, ModuleName, ProcName
+    
+    initialiseStrategy
+    
+    initialisePositionManagementStrategyFactories
+    
+    setStrategyRunner mStrategy, mStrategyResourceContext
+    mStrategy.Start mTradingContext
+    gClearStrategyRunner
+
+    startReplayIfReady
 End If
 
 Exit Sub
@@ -442,13 +455,7 @@ mTicker.PositionManagerSimulated.AddChangeListener Me
 mTicker.PositionManagerSimulated.OrderContexts.AddCollectionChangeListener Me
 
 Set mTradingContext = New TradingContext
-mTradingContext.Initialise Me, mStrategy, mTicker, lAllowUnprotectedPositions
-
-setStrategyRunner mStrategy, mStrategyResourceContext
-mStrategy.Start mTradingContext
-gClearStrategyRunner
-
-startReplayIfReady
+mFutureWaiter.Add mTradingContext.Initialise(Me, mStrategy, mTicker, lAllowUnprotectedPositions)
 
 Exit Sub
 
@@ -604,9 +611,7 @@ Set mParams = pParams
 
 LogParameters mParams
 
-initialiseStrategy
-
-initialisePositionManagementStrategyFactories
+StartLiveData
 
 Exit Sub
 
@@ -769,6 +774,10 @@ Set lLogfile = CreateFileLogListener(lResultsPath & "Logs\" & _
                                     includeTimestamp:=False, _
                                     includeLogLevel:=False)
 GetLogger("defaultstrategyhost").AddLogListener lLogfile
+GetLogger("log").AddLogListener lLogfile
+GetLogger("tradebuild.log.orderutils.contractresolution").AddLogListener lLogfile
+GetLogger("position.order").AddLogListener lLogfile
+GetLogger("position.simulatedorder").AddLogListener lLogfile
 
 Set lLogfile = CreateFileLogListener(lResultsPath & "Orders\" & _
                                         mStrategy.Name & _

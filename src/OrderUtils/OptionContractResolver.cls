@@ -24,6 +24,7 @@ Option Explicit
 
 Implements IContractFetchListener
 Implements IGenericTickListener
+Implements IOptionComputationListener
 
 '@================================================================================
 ' Events
@@ -56,28 +57,26 @@ Private mDataSource                                 As IMarketDataSource
 
 Private mContractSpec                               As IContractSpecifier
 
+Private mAction                                     As OrderActions
+
 Private mHeuristicStrike                            As Double
 Private mInitialStrike                              As Double
 
-Private mTickType                                   As TickTypes
-
-Private mStrikeIncrement                            As Long
-
-Private mMaxExpenditure                             As Long
+Private mStrikeSelectionMode                        As OptionStrikeSelectionModes
+Private mSelectionParameter                         As Long
+Private mSelectionOperator                          As OptionStrikeSelectionOperators
 Private mUnderlyingExchangeName                     As String
+
+Private mStrikeSelectionValueName                   As String
 
 Private mState                                      As OptionContractResolverStates
 
 Private mUnderlyingContract                         As IContract
 
-Private mCandidateContracts                         As IContracts
-Private mCandidateContractsEn                       As Enumerator
-Private mCandidateContract                          As IContract
-
 Private mUnsortedOptionChainFetchComplete           As Boolean
 
 Private mTargetContract                             As IContract
-Private mTargetContractValue                        As Long
+Private mTargetContractSelectionParameter           As Long
 
 Private mFutureBuilder                              As New FutureBuilder
 
@@ -118,6 +117,9 @@ Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
+gLog "Market data snapshots outstanding for " & _
+        mContractsAwaitingMarketData & _
+        " contracts", ProcName, ModuleName, , LogLevelDetail
 mUnsortedOptionChainFetchComplete = True
 
 Exit Sub
@@ -145,15 +147,30 @@ Private Sub IContractFetchListener_NotifyContract( _
 Const ProcName As String = "IContractFetchListener_NotifyContract"
 On Error GoTo Err
 
-If mContractSpec.Right = OptCall Then
-    If pContract.Specifier.Strike < mInitialStrike Then Exit Sub
-Else
-    If pContract.Specifier.Strike > mInitialStrike Then Exit Sub
+If mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure Then
+    If mContractSpec.Right = OptCall Then
+        If pContract.Specifier.Strike < mInitialStrike Then Exit Sub
+    Else
+        If pContract.Specifier.Strike > mInitialStrike Then Exit Sub
+    End If
 End If
 
 Dim lDataSource As IMarketDataSource
 Set lDataSource = getMarketData(pContract)
 mContractsAwaitingMarketData = mContractsAwaitingMarketData + 1
+
+Select Case mStrikeSelectionMode
+Case OptionStrikeSelectionModeExpenditure
+    ' lDataSource.AddGenericTickListener Me
+    lDataSource.AddOptionComputationListener Me
+Case OptionStrikeSelectionModeDelta, _
+        OptionStrikeSelectionModeGamma, _
+        OptionStrikeSelectionModeTheta, _
+        OptionStrikeSelectionModeVega
+    lDataSource.AddOptionComputationListener Me
+Case Else
+    Assert False, "Unexpected strike selection mode: " & mStrikeSelectionMode
+End Select
 
 fireStateChange OptionContractResolverStateFindingRequiredContract
 
@@ -168,7 +185,24 @@ End Sub
 '@================================================================================
 
 Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NoMoreTicks"
+On Error GoTo Err
 
+Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
+lDataSource.Finish
+Set lDataSource = Nothing
+
+If mState = OptionContractResolverStateFindingRequiredContract Then
+    If allContractsChecked Then
+        processTargetContract
+        Set mSelfRef = Nothing
+    End If
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
@@ -189,9 +223,9 @@ If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
     ' to assume is 100)
     
     If mContractSpec.Right = OptCall Then
-        mHeuristicStrike = ev.Tick.Price - mMaxExpenditure / 100#
+        mHeuristicStrike = ev.Tick.Price - mSelectionParameter / 100#
     Else
-        mHeuristicStrike = ev.Tick.Price + mMaxExpenditure / 100#
+        mHeuristicStrike = ev.Tick.Price + mSelectionParameter / 100#
     End If
     mDataSource.Finish
     Set mDataSource = Nothing
@@ -200,7 +234,8 @@ If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
     fetchInitialContract
     fireStateChange OptionContractResolverStateFetchingInitialContract
 ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
-    If ev.Tick.TickType <> mTickType Then Exit Sub
+    Dim lTickType As TickTypes: lTickType = IIf(mAction = OrderActionBuy, TickTypeAsk, TickTypeBid)
+    If ev.Tick.TickType <> lTickType Then Exit Sub
     
     Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
     Dim lCandidateContract As IContract
@@ -211,39 +246,86 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     
     Dim lContractValue As Long
     lContractValue = CLng(ev.Tick.Price * lCandidateContract.Specifier.Multiplier)
-    gLogContractResolution "Contract: " & _
-                            gGetContractName(lCandidateContract.Specifier) & _
-                            "; strike: " & _
-                            lCandidateContract.Specifier.Strike & _
-                            "; value: " & lContractValue
+    logContractInfo lCandidateContract, "Contract", lContractValue
     
-    If lContractValue <= mMaxExpenditure And _
-        lContractValue > mTargetContractValue _
-    Then
-        Set mTargetContract = lCandidateContract
-        mTargetContractValue = lContractValue
-    End If
+    checkIfTargetContractFound lCandidateContract, lContractValue
     
-    mContractsAwaitingMarketData = mContractsAwaitingMarketData - 1
-    If mContractsAwaitingMarketData = 0 And _
-        mUnsortedOptionChainFetchComplete _
-    Then
-        If Not mTargetContract Is Nothing Then
-            ' we've found the target contract
-            gLogContractResolution "Target contract: " & _
-                                    gGetContractName(mTargetContract.Specifier) & _
-                                    "; strike: " & _
-                                    mTargetContract.Specifier.Strike & _
-                                    "; value: " & mTargetContractValue
-            
-            processTargetContract mTargetContract
-        Else
-            gLogContractResolution "No target contract found"
-            Set mSelfRef = Nothing
-        End If
+    If allContractsChecked Then
+        processTargetContract
+        Set mSelfRef = Nothing
     End If
 End If
 
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IOptionComputationListener Interface Members
+'@================================================================================
+
+Private Sub IOptionComputationListener_NoMoreComputations(ev As OptionComputationEventData)
+Const ProcName As String = "IOptionComputationListener_NoMoreComputations"
+On Error GoTo Err
+
+Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
+lDataSource.Finish
+Set lDataSource = Nothing
+
+If mState = OptionContractResolverStateFindingRequiredContract Then
+    If allContractsChecked Then
+        processTargetContract
+        Set mSelfRef = Nothing
+    End If
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IOptionComputationListener_NotifyComputation(ev As OptionComputationEventData)
+Const ProcName As String = "IOptionComputationListener_NotifyComputation"
+On Error GoTo Err
+
+If mState = OptionContractResolverStateFindingRequiredContract Then
+    If ev.Computation.ComputationType <> OptionComputationTypeModel Then Exit Sub
+    
+    Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
+    
+    Dim lCandidateContract As IContract
+    Set lCandidateContract = lDataSource.ContractFuture.Value
+        
+    lDataSource.Finish
+    Set lDataSource = Nothing
+    
+    Dim lValue As Long
+    Select Case mStrikeSelectionMode
+    Case OptionStrikeSelectionModeExpenditure
+        lValue = 100 * ev.Computation.OptionPrice
+    Case OptionStrikeSelectionModeDelta
+        lValue = 100 * ev.Computation.Delta
+    Case OptionStrikeSelectionModeGamma
+        lValue = 100 * ev.Computation.Gamma
+    Case OptionStrikeSelectionModeTheta
+        lValue = 100 * ev.Computation.Theta
+    Case OptionStrikeSelectionModeVega
+        lValue = 100 * ev.Computation.Vega
+    End Select
+    
+    If lValue <> 0 Then
+        logContractInfo lCandidateContract, "Contract", lValue
+        checkIfTargetContractFound lCandidateContract, lValue
+    End If
+    
+    If allContractsChecked Then
+        processTargetContract
+        Set mSelfRef = Nothing
+    End If
+End If
 Exit Sub
 
 Err:
@@ -275,6 +357,8 @@ Case OptionContractResolverStateFetchingUnderlyingContract
     Set mUnderlyingContract = ev.Future.Value
     
     Set mDataSource = getMarketData(mUnderlyingContract)
+    mDataSource.AddGenericTickListener Me
+
     fireStateChange OptionContractResolverStateWaitingForUnderlyingMarketPrice
 
 Case OptionContractResolverStateFetchingInitialContract
@@ -290,28 +374,33 @@ Case OptionContractResolverStateFetchingInitialContract
         fetchOptionChain lInitialContract
     End If
 Case OptionContractResolverStateFetchingCandidateContracts
-    Set mCandidateContracts = ev.Future.Value
-    Set mCandidateContractsEn = mCandidateContracts.Enumerator
+    Dim lCandidateContracts As IContracts
+    Set lCandidateContracts = ev.Future.Value
+    
+    Dim lCandidateContractsEn As Enumerator
+    Set lCandidateContractsEn = lCandidateContracts.Enumerator
+    
     ' find the starting contract, which is the one with the strike price
     ' returned in the initial contract
-    Do While mCandidateContractsEn.MoveNext
-        Set mCandidateContract = mCandidateContractsEn.Current
-        If mCandidateContract.Specifier.Strike = mInitialStrike Then Exit Do
+    Dim lCandidateContract As IContract
+    Do While lCandidateContractsEn.MoveNext
+        Set lCandidateContract = lCandidateContractsEn.Current
+        If lCandidateContract.Specifier.Strike = mInitialStrike Then Exit Do
     Loop
-    Assert Not mCandidateContract Is Nothing, "Contract missing"
+    Assert Not lCandidateContract Is Nothing, "Contract missing"
     
     Dim i As Long
-    For i = 1 To Abs(mStrikeIncrement)
-        If mCandidateContractsEn.MoveNext Then
-            Set mCandidateContract = mCandidateContractsEn.Current
+    For i = 1 To Abs(mSelectionParameter)
+        If lCandidateContractsEn.MoveNext Then
+            Set mTargetContract = lCandidateContractsEn.Current
         Else
-            gLog "Unable to find contract with strike increment " & mStrikeIncrement & _
-                    ": actual increment was " & CStr(Sgn(mStrikeIncrement) * (i - 1)), _
+            gLog "Unable to find contract with strike increment " & mSelectionParameter & _
+                    ": actual increment was " & CStr(Sgn(mSelectionParameter) * (i - 1)), _
                     ProcName, ModuleName
             Exit For
         End If
     Next
-    processTargetContract mCandidateContract
+    processTargetContract
 Case Else
     Assert False, "Unexpected state: " & mState
 End Select
@@ -329,14 +418,14 @@ End Sub
 Friend Property Get ContractName() As String
 With mContractSpec
     Dim lStrikeStr As String
-    If mMaxExpenditure = 0 Then
+    If mStrikeSelectionMode = OptionStrikeSelectionModeIncrement Then
         If .Strike <> 0 Then
             lStrikeStr = CStr(.Strike)
-            If mStrikeIncrement > 0 Then lStrikeStr = lStrikeStr & "+" & mStrikeIncrement
-            If mStrikeIncrement < 0 Then lStrikeStr = lStrikeStr & "-" & mStrikeIncrement
+            If mSelectionParameter > 0 Then lStrikeStr = lStrikeStr & "+" & mSelectionParameter
+            If mSelectionParameter < 0 Then lStrikeStr = lStrikeStr & "-" & mSelectionParameter
         End If
-    Else
-        lStrikeStr = mMaxExpenditure & "$" & _
+    ElseIf mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure Then
+        lStrikeStr = mSelectionParameter & "$" & _
                     IIf(mUnderlyingExchangeName <> "", "," & mUnderlyingExchangeName, "")
     End If
     
@@ -381,38 +470,59 @@ Friend Function ResolveContract( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pAction As OrderActions, _
                 ByVal pContractStore As IContractStore, _
-                ByVal pMaxExpenditure As Long, _
-                ByVal pStrikeIncrement As Long, _
+                ByVal pSelectionMode As OptionStrikeSelectionModes, _
+                ByVal pParameter As Long, _
+                ByVal pOperator As OptionStrikeSelectionOperators, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pListener As IStateChangeListener) As IFuture
 Const ProcName As String = "ResolveContract"
 On Error GoTo Err
 
+mStrikeSelectionMode = pSelectionMode
+mStrikeSelectionValueName = getValueName
+mSelectionParameter = pParameter
+mSelectionOperator = pOperator
+
 AssertArgument pContractSpec.SecType = SecTypeOption Or _
                 pContractSpec.SecType = SecTypeFuturesOption, _
                 "pContractSpec must refer to an Option or Future Option"
-AssertArgument (Not (pMaxExpenditure <> 0 And pStrikeIncrement <> 0)) And _
-                (pMaxExpenditure >= 0 Or pStrikeIncrement <> 0), _
-                "Either pMaxExpenditure must be > 0  or pStrikeIncrement must be <> 0, but not both"
-If pStrikeIncrement <> 0 Then AssertArgument pContractSpec.Strike <> 0, _
-                                            "If pStrikeIncrement <> 0 then a non-zero strike price must be supplied in the contract specifier"
+
+Select Case mStrikeSelectionMode
+Case OptionStrikeSelectionModeIncrement
+    AssertArgument pContractSpec.Strike <> 0, _
+        "For strike selection via increment a non-zero strike price must be supplied in the contract specifier"
+Case OptionStrikeSelectionModeExpenditure
+    AssertArgument IsInteger(mSelectionParameter, 10, 10000), _
+                "For strike selection via expenditure, parameter must be > 10 and <= 10000"
+Case OptionStrikeSelectionModeDelta, _
+        OptionStrikeSelectionModeGamma, _
+        OptionStrikeSelectionModeTheta, _
+        OptionStrikeSelectionModeVega
+    AssertArgument IsInteger(mSelectionParameter, 0, 99), _
+        "For strike selection via greek, parameter must be > 0 and < 100"
+Case Else
+    Assert False, "Unexpected strike selection mode " & mStrikeSelectionMode
+End Select
 
 Set mSelfRef = Me
 
 Set mContractSpec = pContractSpec
-mTickType = IIf(pAction = OrderActionBuy, TickTypeAsk, TickTypeBid)
+mAction = pAction
 Set mContractStore = pContractStore
 Set mMarketDataManager = pMarketDataManager
-mMaxExpenditure = pMaxExpenditure
-mStrikeIncrement = pStrikeIncrement
 mUnderlyingExchangeName = pUnderlyingExchangeName
 If mUnderlyingExchangeName = "" Then mUnderlyingExchangeName = "SMARTUS"
 Set mListener = pListener
 
 Set mFutureWaiter = New FutureWaiter
 
-If mMaxExpenditure <> 0 Then
+Select Case mStrikeSelectionMode
+Case OptionStrikeSelectionModeExpenditure, _
+        OptionStrikeSelectionModeDelta, _
+        OptionStrikeSelectionModeGamma, _
+        OptionStrikeSelectionModeTheta, _
+        OptionStrikeSelectionModeVega
     ' we first need to find the underlying contract
     fireStateChange OptionContractResolverStateFetchingUnderlyingContract
     Dim lUnderlyingContractSpec As IContractSpecifier
@@ -428,14 +538,17 @@ If mMaxExpenditure <> 0 Then
                                                     OptNone)
     End With
     mFutureWaiter.Add FetchContract(lUnderlyingContractSpec, mContractStore)
-Else
+Case OptionStrikeSelectionModeIncrement
     ' we need to find the contract for the next expiry with strike at or next
     ' above the supplied strike
     mHeuristicStrike = mContractSpec.Strike
     mInitialStrike = updateInitialStrike(1#)
     fetchInitialContract
     fireStateChange OptionContractResolverStateFetchingInitialContract
-End If
+Case Else
+    Assert False, "Unexpected strike selection mode " & mStrikeSelectionMode
+End Select
+
 Set ResolveContract = mFutureBuilder.Future
 
 Exit Function
@@ -447,6 +560,46 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function allContractsChecked() As Boolean
+Const ProcName As String = "allContractsChecked"
+On Error GoTo Err
+
+mContractsAwaitingMarketData = mContractsAwaitingMarketData - 1
+gLog "Snapshots remaining: " & mContractsAwaitingMarketData, ProcName, ModuleName, , LogLevelDetail
+allContractsChecked = (mContractsAwaitingMarketData = 0 And _
+                        mUnsortedOptionChainFetchComplete)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub checkIfTargetContractFound( _
+                ByVal pCandidateContract As IContract, _
+                ByVal pCurrentSelectionParameter As Long)
+Const ProcName As String = "checkIfTargetContractFound"
+On Error GoTo Err
+
+If isSelectionConditionSatisfied(pCurrentSelectionParameter) Then
+    If mTargetContract Is Nothing Then
+        Set mTargetContract = pCandidateContract
+        mTargetContractSelectionParameter = pCurrentSelectionParameter
+    ElseIf IIf(mAction = OrderActionBuy, _
+                pCandidateContract.Specifier.Strike < mTargetContract.Specifier.Strike, _
+                pCandidateContract.Specifier.Strike > mTargetContract.Specifier.Strike) _
+    Then
+        Set mTargetContract = pCandidateContract
+        mTargetContractSelectionParameter = pCurrentSelectionParameter
+    End If
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub fetchInitialContract()
 Const ProcName As String = "fetchInitialContract"
@@ -511,10 +664,10 @@ On Error GoTo Err
 ' know the interval between strikes. So fetch the chain
 ' for that expiry.
 '
-' If we're using max expenditure, we have to examine all
-' the options in the chain, so we do an unsorted fetch
-' using a fetch listener to action the contracts as they
-' are retrieved.
+' If we're using max expenditure or greeks, we have to
+' examine all the options in the chain, so we do an
+' unsorted fetch using a fetch listener to action the
+' contracts as they are retrieved.
 '
 ' Otherwise we do a sorted fetch, ordered by strike
 ' (ascending for call, descending for put).
@@ -532,24 +685,31 @@ With pInitialContract.Specifier
                                                 .Right)
 End With
 
-If mMaxExpenditure <> 0 Then
-    FetchContracts lCandidateChainContractSpec, _
-                    mContractStore, _
-                    pListener:=Me
-Else
+Select Case mStrikeSelectionMode
+Case OptionStrikeSelectionModeIncrement
     ReDim lSortkeys(0) As ContractSortKeyIds
     lSortkeys(0) = ContractSortKeyStrike
     
     Dim lSortAscending As Boolean
     lSortAscending = IIf(mContractSpec.Right = OptCall, _
-                        IIf(mStrikeIncrement > 0, True, False), _
-                        IIf(mStrikeIncrement > 0, False, True))
+                        IIf(mSelectionParameter > 0, True, False), _
+                        IIf(mSelectionParameter > 0, False, True))
     mFutureWaiter.Add FetchContractsSorted( _
                             lCandidateChainContractSpec, _
                             mContractStore, _
                             lSortkeys, _
                             Not lSortAscending)
-End If
+Case OptionStrikeSelectionModeExpenditure, _
+        OptionStrikeSelectionModeDelta, _
+        OptionStrikeSelectionModeGamma, _
+        OptionStrikeSelectionModeTheta, _
+        OptionStrikeSelectionModeVega
+    FetchContracts lCandidateChainContractSpec, _
+                    mContractStore, _
+                    pListener:=Me
+Case Else
+    Assert False, "Unexpected strike selection mode " & mStrikeSelectionMode
+End Select
 
 fireStateChange OptionContractResolverStateFetchingCandidateContracts
 
@@ -593,7 +753,7 @@ Else
                                             CreateFuture(pContract), _
                                             False)
 End If
-lDataSource.AddGenericTickListener Me
+
 lDataSource.StartMarketData
 
 Set getMarketData = lDataSource
@@ -604,14 +764,64 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub processTargetContract(ByVal pContract As IContract)
+Private Function getValueName() As String
+Select Case mStrikeSelectionMode
+Case OptionStrikeSelectionModeExpenditure
+    getValueName = "value"
+Case OptionStrikeSelectionModeDelta
+    getValueName = "delta"
+Case OptionStrikeSelectionModeGamma
+    getValueName = "gamma"
+Case OptionStrikeSelectionModeTheta
+    getValueName = "theta"
+Case OptionStrikeSelectionModeVega
+    getValueName = "vega"
+End Select
+End Function
+
+Private Function isSelectionConditionSatisfied( _
+                ByVal pCurrentSelectionParameter As Long) As Boolean
+Select Case mSelectionOperator
+Case OptionStrikeSelectionOperatorLT
+    isSelectionConditionSatisfied = (pCurrentSelectionParameter < mSelectionParameter)
+Case OptionStrikeSelectionOperatorLE, _
+        OptionStrikeSelectionOperatorNone
+    isSelectionConditionSatisfied = (pCurrentSelectionParameter <= mSelectionParameter)
+Case OptionStrikeSelectionOperatorGT
+    isSelectionConditionSatisfied = (pCurrentSelectionParameter > mSelectionParameter)
+Case OptionStrikeSelectionOperatorGE
+    isSelectionConditionSatisfied = (pCurrentSelectionParameter >= mSelectionParameter)
+Case Else
+    Assert False, "Unexpected selection operator " & mSelectionOperator
+End Select
+End Function
+
+Private Sub logContractInfo( _
+                ByVal pContract As IContract, _
+                ByVal pText As String, _
+                ByVal pValue As Long)
+gLogContractResolution pText & ": " & _
+                        gGetContractName(pContract.Specifier) & _
+                        "; strike: " & _
+                        pContract.Specifier.Strike & _
+                        "; " & mStrikeSelectionValueName & _
+                        ": " & pValue
+End Sub
+
+Private Sub processTargetContract()
 Const ProcName As String = "processTargetContract"
 On Error GoTo Err
 
-gLogContractResolution "Contract is: " & pContract.Specifier.ToString
-mFutureBuilder.Value = pContract
-mFutureBuilder.Complete
-fireStateChange OptionContractResolverStateGotTargetContract
+If Not mTargetContract Is Nothing Then
+    ' we've found the target contract
+    logContractInfo mTargetContract, "Target contract", mTargetContractSelectionParameter
+    gLogContractResolution "Contract is: " & mTargetContract.Specifier.ToString
+    mFutureBuilder.Value = mTargetContract
+    mFutureBuilder.Complete
+    fireStateChange OptionContractResolverStateGotTargetContract
+Else
+    gLogContractResolution "No target contract found"
+End If
 
 Exit Sub
 

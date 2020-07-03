@@ -268,8 +268,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
 ElseIf TypeOf ev.Future.Value Is BoxedValue Then
     Set mTickSizeFuture = Nothing
     Dim lBoxedValue As BoxedValue: Set lBoxedValue = ev.Future.Value
-    mTickSize = lBoxedValue.Value
-    If mTickSize <> 0# Then SetTickSize
+    SetTickSize lBoxedValue.Value
 End If
 
 Exit Sub
@@ -586,8 +585,7 @@ Else
             End If
             IsReadyTickSize = False
         Case SecTypeFuture
-            mTickSize = mContract.TickSize
-            SetTickSize
+            SetTickSize mContract.TickSize
             IsReadyTickSize = True
         Case SecTypeOption, _
                 SecTypeFuturesOption
@@ -597,14 +595,12 @@ Else
             End If
             IsReadyTickSize = False
         Case SecTypeCash
-            mTickSize = mContract.TickSize
-            SetTickSize
+            SetTickSize mContract.TickSize
             IsReadyTickSize = True
         Case SecTypeCombo
             Assert False, "Combo orders not supported"
         Case SecTypeIndex
-            mTickSize = mContract.TickSize
-            SetTickSize
+            SetTickSize mContract.TickSize
             IsReadyTickSize = True
         End Select
     End If
@@ -753,10 +749,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub SetTickSize()
+Private Sub SetTickSize(ByVal pTickSize As Double)
 Const ProcName As String = "SetTickSize"
 On Error GoTo Err
 
+If pTickSize <= 0 Then Exit Sub
+
+gLog IIf(IsSimulated, "(simulated)", "") & _
+    "Tick size for " & _
+    gGetContractName(mContract.Specifier) & _
+    " is " & _
+    pTickSize, _
+    ProcName, _
+    ModuleName
+
+mTickSize = pTickSize
 Dim lOrderContext As OrderContext
 For Each lOrderContext In mOrderContexts
     lOrderContext.SetTickSize mTickSize

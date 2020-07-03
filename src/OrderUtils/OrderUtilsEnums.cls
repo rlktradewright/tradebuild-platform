@@ -92,6 +92,24 @@ Public Enum OptionContractResolverStates
     OptionContractResolverStateGotTargetContract
 End Enum
 
+Public Enum OptionStrikeSelectionModes
+    OptionStrikeSelectionModeNone
+    OptionStrikeSelectionModeIncrement
+    OptionStrikeSelectionModeExpenditure
+    OptionStrikeSelectionModeDelta
+    OptionStrikeSelectionModeGamma
+    OptionStrikeSelectionModeTheta
+    OptionStrikeSelectionModeVega
+End Enum
+
+Public Enum OptionStrikeSelectionOperators
+    OptionStrikeSelectionOperatorNone
+    OptionStrikeSelectionOperatorLT
+    OptionStrikeSelectionOperatorLE
+    OptionStrikeSelectionOperatorGT
+    OptionStrikeSelectionOperatorGE
+End Enum
+
 Public Enum OrderAttributes
     OrderAttOpenClose = 1
     OrderAttOrigin = 2

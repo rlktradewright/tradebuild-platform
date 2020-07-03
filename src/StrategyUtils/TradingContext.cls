@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IChangeListener
 Implements IGenericTickListener
 
 '@================================================================================
@@ -75,7 +76,11 @@ Private mPositionMgmgtResourceContexts              As Collection
 
 Private mClock                                      As Clock
 
+Private mReadyForTicks                              As Boolean
+
 Private mCurrentTick                                As GenericTick
+
+Private mFutureBuilder                              As New FutureBuilder
 
 '@================================================================================
 ' Class Event Handlers
@@ -98,6 +103,24 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' IChangeListener Interface Members
+'@================================================================================
+
+Private Sub IChangeListener_Change(ev As ChangeEventData)
+If ev.ChangeType = OrderContextChangeTypes.OrderContextReadyStateChanged Then
+    Dim lOrderContext As OrderContext
+    Set lOrderContext = ev.Source
+    If lOrderContext.IsReadyTickSize Then
+        lOrderContext.RemoveChangeListener Me
+        mTicker.StopMarketData
+        mReadyForTicks = True
+        mFutureBuilder.Value = CreateBoxedValue("READY!")
+        mFutureBuilder.Complete
+    End If
+End If
+End Sub
+
+'@================================================================================
 ' IGenericTickListener_NotifyTick Interface Members
 '@================================================================================
 
@@ -109,15 +132,13 @@ Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-mTickNumber = mTickNumber + 1
-
 Static sGotFirstAsk As Boolean
 Static sGotFirstBid As Boolean
    
 If ev.Tick.TickType = TickTypeAsk Then sGotFirstAsk = True
 If ev.Tick.TickType = TickTypeBid Then sGotFirstBid = True
 
-If Not (sGotFirstAsk And sGotFirstBid) Then Exit Sub
+If Not (sGotFirstAsk And sGotFirstBid And mReadyForTicks) Then Exit Sub
 
 Select Case ev.Tick.TickType
 Case TickTypes.TickTypeAsk, _
@@ -128,6 +149,7 @@ Case Else
     Exit Sub
 End Select
 
+mTickNumber = mTickNumber + 1
 mCurrentTick = ev.Tick
 
 Dim lPMStrategy As IPositionMgmtStrategy
@@ -432,11 +454,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub Initialise( _
+Friend Function Initialise( _
                 ByVal pStrategyRunner As StrategyRunner, _
                 ByVal pStrategy As IStrategy, _
                 ByVal pTicker As Ticker, _
-                ByVal pAllowUnprotectedPositions As Boolean)
+                ByVal pAllowUnprotectedPositions As Boolean) As IFuture
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -455,6 +477,7 @@ Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
 
 Set mOrderContextBuy = mPositionManager.OrderContexts.Add("BUY")
 If Not pAllowUnprotectedPositions Then mOrderContextBuy.PreventUnprotectedPositions = True
+mOrderContextBuy.AddChangeListener Me
 
 Set mOrderContextSell = mPositionManager.OrderContexts.Add("SELL")
 If Not pAllowUnprotectedPositions Then mOrderContextSell.PreventUnprotectedPositions = True
@@ -462,11 +485,13 @@ If Not pAllowUnprotectedPositions Then mOrderContextSell.PreventUnprotectedPosit
 Set mOrderContextBuySimulated = mPositionManagerSimulated.OrderContexts.Add("BUY")
 Set mOrderContextSellSimulated = mPositionManagerSimulated.OrderContexts.Add("SELL")
 
-Exit Sub
+Set Initialise = mFutureBuilder.Future
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Public Sub LogTradeReason(ByVal pReason As String, Optional ByVal pLogLevel As LogLevels = LogLevels.LogLevelNormal)
 If pReason = "" Then Exit Sub
