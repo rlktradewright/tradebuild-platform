@@ -657,7 +657,7 @@ Private Sub PlaceBuyOrders()
 Const ProcName As String = "PlaceBuyOrders"
 On Error GoTo Err
 
-If Not CanTrade Then
+If Not (CanTrade And CanTradeSimulated) Then
     LogTradeMessage "PlaceBuyOrders: can't trade"
     Exit Sub
 End If
@@ -711,7 +711,7 @@ Private Sub PlaceSellOrders()
 Const ProcName As String = "PlaceSellOrders"
 On Error GoTo Err
 
-If Not CanTrade Then
+If Not (CanTrade And CanTradeSimulated) Then
     LogTradeMessage "PlaceSellOrders: can't trade"
     Exit Sub
 End If
@@ -867,6 +867,9 @@ On Error GoTo Err
 
 If IsEndOfSession Then Exit Sub
 If IsInEstablishedPosition Then Exit Sub
+
+If PendingBuySize <> 0 Or PendingSimulatedBuySize <> 0 Then Exit Sub
+If PendingSellSize <> 0 Or PendingSimulatedSellSize <> 0 Then Exit Sub
 
 InitialiseTickProcessing
 
