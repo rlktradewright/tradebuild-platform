@@ -218,8 +218,10 @@ Else
         mInMessageBuilder.Append gInputMessageIdToString(mMessageId)
         mInMessageBuilder.Append ")="
         mInMessageBuilder.Append mMessageId
-        mInMessageBuilder.Append ";Version="
-        mInMessageBuilder.Append mVersion
+        If mVersion <> &H7FFFFFFF Then
+            mInMessageBuilder.Append ";Version="
+            mInMessageBuilder.Append mVersion
+        End If
         mInMessageBuilder.Append ";"
     End If
 End If

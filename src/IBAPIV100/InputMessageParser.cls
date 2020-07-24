@@ -230,6 +230,8 @@ Case TwsSocketInMsgTypes.MarketRule
     getMarketRule
 Case TwsSocketInMsgTypes.OptionParameter
     getOptionParameter
+Case TwsSocketInMsgTypes.OptionParameterEnd
+    getOptionParameterEnd
 Case Else
     Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid message code from Tws"
 End Select
@@ -1182,7 +1184,7 @@ With lOrder
     .DeltaNeutralOrderType = gTwsOrderTypeFromString(lDeltaNeutralOrderType)
     .DeltaNeutralAuxPrice = mReader.GetDoubleMax("DeltaNeutralAuxPrice")
     
-    If .DeltaNeutralOrderType <> TwsOrderTypeNone Then
+    If lDeltaNeutralOrderType <> "" Then
         .DeltaNeutralConId = mReader.GetLong("DeltaNeutralConId")
         .DeltaNeutralSettlingFirm = mReader.GetString("DeltaNeutralSettlingFirm")
         .DeltaNeutralClearingAccount = mReader.GetString("DeltaNeutralClearingAccount")
@@ -1395,7 +1397,7 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Dim lRequestId As Long: lRequestId = mReader.GetLong("Request id")
+Dim lRequestId As Long: lRequestId = gGetCallersRequestIdFromTwsContractRequestId(mReader.GetLong("Request id"))
 Dim lExchange  As String: lExchange = mReader.GetString("Exchange")
 Dim lUnderlyingConId As Long: lUnderlyingConId = mReader.GetLong("Und con id")
 Dim lTradingClass As String: lTradingClass = mReader.GetString("Trading Class")
@@ -1406,14 +1408,14 @@ Dim lExpsCount: lExpsCount = mReader.GetLong("Expirations Count")
 ReDim lExpirations(lExpsCount - 1) As String
 
 Dim i As Long
-For i = 1 To lExpsCount
+For i = 0 To lExpsCount - 1
     lExpirations(i) = mReader.GetString("Expiration")
 Next
 
 Dim lStrikesCount: lStrikesCount = mReader.GetLong("Strikes Count")
 ReDim lStrikes(lStrikesCount - 1) As Double
 
-For i = 1 To lStrikesCount
+For i = 0 To lStrikesCount - 1
     lStrikes(i) = mReader.GetDouble("Strike")
 Next
 
