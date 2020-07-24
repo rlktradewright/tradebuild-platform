@@ -1802,6 +1802,9 @@ port = lClp.Arg(1)
 Dim clientId As String
 clientId = lClp.Arg(2)
 
+Dim connectionRetryInterval As String
+connectionRetryInterval = lClp.Arg(3)
+
 On Error GoTo Err
 
 If port = "" Then
@@ -1818,14 +1821,31 @@ ElseIf Not IsInteger(clientId, 0, 999999999) Then
     setupTwsProviders = False
 End If
 
+If connectionRetryInterval = "" Then
+ElseIf Not IsInteger(connectionRetryInterval, 0, 3600) Then
+    gWriteErrorLine "Error: connection retry interval must be an integer >= 0 and <= 3600"
+    setupTwsProviders = False
+End If
+
 Dim lTwsClient As Client
-Set lTwsClient = GetClient( _
-                        server, _
-                        CLng(port), _
-                        CLng(clientId), _
-                        pLogApiMessages:=pLogApiMessages, _
-                        pLogRawApiMessages:=pLogRawApiMessages, _
-                        pLogApiMessageStats:=pLogApiMessageStats)
+If connectionRetryInterval = "" Then
+    Set lTwsClient = GetClient( _
+                            server, _
+                            CLng(port), _
+                            CLng(clientId), _
+                            pLogApiMessages:=pLogApiMessages, _
+                            pLogRawApiMessages:=pLogRawApiMessages, _
+                            pLogApiMessageStats:=pLogApiMessageStats)
+Else
+    Set lTwsClient = GetClient( _
+                            server, _
+                            CLng(port), _
+                            CLng(clientId), _
+                            pConnectionRetryIntervalSecs:=CLng(connectionRetryInterval), _
+                            pLogApiMessages:=pLogApiMessages, _
+                            pLogRawApiMessages:=pLogRawApiMessages, _
+                            pLogApiMessageStats:=pLogApiMessageStats)
+End If
 Set mTWSConnectionMonitor = New TWSConnectionMonitor
 lTwsClient.AddTwsConnectionStateListener mTWSConnectionMonitor
 
