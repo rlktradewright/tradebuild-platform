@@ -376,6 +376,8 @@ Set mClock = mTicker.ClockFuture.Value
 
 If mTicker.IsTickReplay Then mInitialTimestamp = mClock.Timestamp
 
+mTicker.StopMarketData
+
 Exit Sub
 
 Err:

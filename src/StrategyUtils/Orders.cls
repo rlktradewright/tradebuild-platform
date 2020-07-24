@@ -580,7 +580,7 @@ Public Sub CloseAllPositions()
 Const ProcName As String = "CloseAllPositions"
 On Error GoTo Err
 
-gTradingContext.PositionManager.ClosePositions False
+gTradingContext.PositionManager.ClosePositions CloseoutModeMarket
 
 Exit Sub
 

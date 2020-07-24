@@ -231,7 +231,7 @@ ElseIf TypeOf ev.Future.Value Is BoxedValue Then
     gLogger.Log "Trading context says: " & b.Value, ModuleName, ProcName
     
     initialiseStrategy
-    
+
     initialisePositionManagementStrategyFactories
     
     setStrategyRunner mStrategy, mStrategyResourceContext
@@ -444,8 +444,8 @@ Const ProcName As String = "InitialisationCompleted"
 On Error GoTo Err
 
 mInitialisationCompleted = True
-Dim lAllowUnprotectedPositions As Boolean
-lAllowUnprotectedPositions = mInitialisationContext.AllowUnprotectedPositions
+mTradingContext.AllowUnprotectedPositions = mInitialisationContext.AllowUnprotectedPositions
+
 Set mInitialisationContext = Nothing
 
 mTicker.PositionManager.AddChangeListener Me
@@ -453,9 +453,6 @@ mTicker.PositionManager.OrderContexts.AddCollectionChangeListener Me
 
 mTicker.PositionManagerSimulated.AddChangeListener Me
 mTicker.PositionManagerSimulated.OrderContexts.AddCollectionChangeListener Me
-
-Set mTradingContext = New TradingContext
-mFutureWaiter.Add mTradingContext.Initialise(Me, mStrategy, mTicker, lAllowUnprotectedPositions)
 
 Exit Sub
 
@@ -612,6 +609,8 @@ Set mParams = pParams
 LogParameters mParams
 
 StartLiveData
+Set mTradingContext = New TradingContext
+mFutureWaiter.Add mTradingContext.Initialise(Me, mStrategy, mTicker)
 
 Exit Sub
 

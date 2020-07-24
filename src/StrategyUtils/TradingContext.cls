@@ -112,10 +112,7 @@ If ev.ChangeType = OrderContextChangeTypes.OrderContextReadyStateChanged Then
     Set lOrderContext = ev.Source
     If lOrderContext.IsReadyTickSize Then
         lOrderContext.RemoveChangeListener Me
-        mTicker.StopMarketData
-        mReadyForTicks = True
-        mFutureBuilder.Value = CreateBoxedValue("READY!")
-        mFutureBuilder.Complete
+        setReady
     End If
 End If
 End Sub
@@ -191,6 +188,11 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Let AllowUnprotectedPositions(ByVal Value As Boolean)
+mOrderContextBuy.PreventUnprotectedPositions = Not Value
+mOrderContextSell.PreventUnprotectedPositions = Not Value
+End Property
 
 Public Property Get AskQuote() As Quote
 Const ProcName As String = "AskQuote"
@@ -457,8 +459,7 @@ End Function
 Friend Function Initialise( _
                 ByVal pStrategyRunner As StrategyRunner, _
                 ByVal pStrategy As IStrategy, _
-                ByVal pTicker As Ticker, _
-                ByVal pAllowUnprotectedPositions As Boolean) As IFuture
+                ByVal pTicker As Ticker) As IFuture
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -476,11 +477,13 @@ Set mBracketOrders = mPositionManager.BracketOrders
 Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
 
 Set mOrderContextBuy = mPositionManager.OrderContexts.Add("BUY")
-If Not pAllowUnprotectedPositions Then mOrderContextBuy.PreventUnprotectedPositions = True
-mOrderContextBuy.AddChangeListener Me
+If Not mOrderContextBuy.IsReadyTickSize Then
+    mOrderContextBuy.AddChangeListener Me
+Else
+    setReady
+End If
 
 Set mOrderContextSell = mPositionManager.OrderContexts.Add("SELL")
-If Not pAllowUnprotectedPositions Then mOrderContextSell.PreventUnprotectedPositions = True
 
 Set mOrderContextBuySimulated = mPositionManagerSimulated.OrderContexts.Add("BUY")
 Set mOrderContextSellSimulated = mPositionManagerSimulated.OrderContexts.Add("SELL")
@@ -537,5 +540,17 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub setReady()
+Const ProcName As String = "setReady"
+On Error GoTo Err
 
+mReadyForTicks = True
+mFutureBuilder.Value = CreateBoxedValue("READY!")
+mFutureBuilder.Complete
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
