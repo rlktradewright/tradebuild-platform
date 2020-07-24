@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IContractStore"
+Attribute VB_Name = "Expiries"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,15 +38,18 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IContractStore"
+Private Const ModuleName                            As String = "Expiries"
 
-'@================================================================================
-' Member variables
-'@================================================================================
+Private mExpiries()                                 As Date
+Private mExpiriesNextIndex                          As Long
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+ReDim mExpiries(15) As Date
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -60,39 +63,57 @@ Private Const ModuleName                            As String = "IContractStore"
 ' Properties
 '@================================================================================
 
+Public Property Get Count() As Long
+Count = mExpiriesNextIndex
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function FetchContracts( _
-                ByVal pContractSpecifier As IContractSpecifier, _
-                Optional ByVal pListener As IContractFetchListener, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+Friend Sub Add(ByVal pExpiry As String)
+Const ProcName As String = "Add"
+On Error GoTo Err
 
-Public Function FetchOptionExpiries( _
-                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
-                ByVal pExchange As String, _
-                Optional ByVal pStrike As Double = 0#, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+If mExpiriesNextIndex > UBound(mExpiries) Then
+    ReDim Preserve mExpiries((UBound(mExpiries) + 1) * 2 - 1) As Date
+End If
 
-Public Function FetchOptionStrikes( _
-                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
-                ByVal pExchange As String, _
-                Optional ByVal pExpiry As String, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+Dim lExpiry As Date: lExpiry = CDate(Left$(pExpiry, 4) & "-" & _
+                                    Mid$(pExpiry, 5, 2) & "-" & _
+                                    Right$(pExpiry, 2))
+If mExpiriesNextIndex <> 0 Then AssertArgument lExpiry > mExpiries(mExpiriesNextIndex - 1), "Expiries must be added in ascending order"
+mExpiries(mExpiriesNextIndex) = lExpiry
 
-Public Sub Finish()
+mExpiriesNextIndex = mExpiriesNextIndex + 1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
+Public Function Item(ByVal pIndex As Long) As Date
+Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
+Assert pIndex >= 0 And pIndex < mExpiriesNextIndex, _
+        "pIndex invalid", _
+        VBErrorCodes.VbErrSubscriptOutOfRange
+Item = mExpiries(pIndex)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 
 

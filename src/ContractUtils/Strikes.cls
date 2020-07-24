@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IContractStore"
+Attribute VB_Name = "Strikes"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,15 +38,22 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IContractStore"
+Private Const ModuleName                            As String = "Strikes"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
+Private mStrikes()                                  As Double
+Private mStrikesNextIndex                           As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+ReDim mStrikes(15) As Double
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -60,34 +67,46 @@ Private Const ModuleName                            As String = "IContractStore"
 ' Properties
 '@================================================================================
 
+Public Property Get Count() As Long
+Count = mStrikesNextIndex
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function FetchContracts( _
-                ByVal pContractSpecifier As IContractSpecifier, _
-                Optional ByVal pListener As IContractFetchListener, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+Friend Sub Add(ByVal pStrike As Double)
+Const ProcName As String = "Add"
+On Error GoTo Err
 
-Public Function FetchOptionExpiries( _
-                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
-                ByVal pExchange As String, _
-                Optional ByVal pStrike As Double = 0#, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+If mStrikesNextIndex <> 0 Then AssertArgument pStrike > mStrikes(mStrikesNextIndex - 1), "Strikes must be added in ascending order"
+If mStrikesNextIndex > UBound(mStrikes) Then
+    ReDim Preserve mStrikes((UBound(mStrikes) + 1) * 2 - 1) As Double
+End If
+mStrikes(mStrikesNextIndex) = pStrike
+mStrikesNextIndex = mStrikesNextIndex + 1
 
-Public Function FetchOptionStrikes( _
-                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
-                ByVal pExchange As String, _
-                Optional ByVal pExpiry As String, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+Exit Sub
 
-Public Sub Finish()
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
+Public Function Item(ByVal pIndex As Long) As Double
+Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
+Assert pIndex >= 0 And pIndex < mStrikesNextIndex, _
+        "pIndex invalid", _
+        VBErrorCodes.VbErrSubscriptOutOfRange
+
+Item = mStrikes(pIndex)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

@@ -246,7 +246,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' mContractFutureBuilder Handlers
+' mContractFutureBuilder Event Handlers
 '@================================================================================
 
 Private Sub mContractFutureBuilder_Cancelled(ev As CancelledEventData)
@@ -266,7 +266,7 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mContractsFutureBuilder Handlers
+' mContractsFutureBuilder Event Handlers
 '@================================================================================
 
 Private Sub mContractsFutureBuilder_Cancelled(ev As CancelledEventData)
@@ -284,7 +284,7 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mFutureWaiter Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)

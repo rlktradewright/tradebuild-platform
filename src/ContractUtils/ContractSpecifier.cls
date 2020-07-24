@@ -208,7 +208,9 @@ Public Property Get Key() As String
 Const ProcName As String = "Key"
 On Error GoTo Err
 
-Key = gGetContractSpecKey(Me)
+Static sKey As String
+If sKey = "" Then sKey = gGetContractSpecKey(Me)
+Key = sKey
 
 Exit Property
 

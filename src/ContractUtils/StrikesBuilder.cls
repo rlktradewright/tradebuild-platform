@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IContractStore"
+Attribute VB_Name = "StrikesBuilder"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -38,11 +38,13 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IContractStore"
+Private Const ModuleName                            As String = "StrikesBuilder"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mStrikes                                    As New Strikes
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,35 +62,25 @@ Private Const ModuleName                            As String = "IContractStore"
 ' Properties
 '@================================================================================
 
+Public Property Get Strikes() As Strikes
+Set Strikes = mStrikes
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function FetchContracts( _
-                ByVal pContractSpecifier As IContractSpecifier, _
-                Optional ByVal pListener As IContractFetchListener, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+Public Sub Add(ByVal pStrike As Double)
+Const ProcName As String = "Add"
+On Error GoTo Err
 
-Public Function FetchOptionExpiries( _
-                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
-                ByVal pExchange As String, _
-                Optional ByVal pStrike As Double = 0#, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+mStrikes.Add pStrike
 
-Public Function FetchOptionStrikes( _
-                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
-                ByVal pExchange As String, _
-                Optional ByVal pExpiry As String, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
+Exit Sub
 
-Public Sub Finish()
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Public Function Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
-End Function
 
 '@================================================================================
 ' Helper Functions

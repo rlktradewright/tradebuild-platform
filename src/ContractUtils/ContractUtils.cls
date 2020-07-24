@@ -49,6 +49,8 @@ End Enum
 Public Enum ContractStoreCapabilities
     'ContractStoreCanStore = 1
     ContractStoreCanQuery = 2
+    ContractStoreOptionExpiries = 4
+    ContractStoreOptionStrikes = 8
 End Enum
 
 Public Enum OptionRights
@@ -599,6 +601,68 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function FetchOptionExpiries( _
+                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
+                ByVal pExchange As String, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pStrike As Double = 0#, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pPriority As TaskPriorities = TaskPriorities.PriorityNormal, _
+                Optional ByVal pTaskName As String, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchOptionExpiries"
+On Error GoTo Err
+
+AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
+AssertArgument pPrimaryContractStore.Supports(ContractStoreOptionExpiries), "This Contract Store does not support Option Expiry retrieval"
+If Not pSecondaryContractStore Is Nothing Then _
+    AssertArgument pSecondaryContractStore.Supports(ContractStoreOptionExpiries), "This Contract Store does not support Option Expiry retrieval"
+
+If IsMissing(pCookie) Then pCookie = GenerateGUIDString
+
+Dim t As New ContractExpsFetchTask
+t.Initialise pUnderlyingContractSpecifier, pExchange, pPrimaryContractStore, pStrike, pSecondaryContractStore, pCookie
+StartTask t, pPriority, pTaskName
+
+Set FetchOptionExpiries = t.ExpiriesFuture
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function FetchOptionStrikes( _
+                ByVal pUnderlyingContractSpecifier, _
+                ByVal pExchange As String, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pExpiry As String, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pPriority As TaskPriorities = TaskPriorities.PriorityNormal, _
+                Optional ByVal pTaskName As String, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchOptionStrikes"
+On Error GoTo Err
+
+AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
+AssertArgument pPrimaryContractStore.Supports(ContractStoreOptionStrikes), "This Contract Store does not support Option Strike retrieval"
+If Not pSecondaryContractStore Is Nothing Then _
+    AssertArgument pSecondaryContractStore.Supports(ContractStoreOptionStrikes), "This Contract Store does not support Option Strike retrieval"
+
+If IsMissing(pCookie) Then pCookie = GenerateGUIDString
+
+Dim t As New ContractStrikesFetchTsk
+t.Initialise pUnderlyingContractSpecifier, pExchange, pPrimaryContractStore, pExpiry, pSecondaryContractStore, pCookie
+StartTask t, pPriority, pTaskName
+
+Set FetchOptionStrikes = t.StrikesFuture
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function FormatPrice( _
                 ByVal pPrice As Double, _
                 ByVal pSecType As SecurityTypes, _
@@ -810,6 +874,22 @@ Const ProcName As String = "OptionRightToString"
 On Error GoTo Err
 
 OptionRightToString = gOptionRightToString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function ParseOffsetExpiry( _
+                ByVal Value As String, _
+                ByRef pExpiryOffset As Long, _
+                ByRef pDaysBeforeExpiryToSwitch As Long) As Boolean
+                
+Const ProcName As String = "ParseOffsetExpiry"
+On Error GoTo Err
+
+ParseOffsetExpiry = gParseOffsetExpiry(Value, pExpiryOffset, pDaysBeforeExpiryToSwitch)
 
 Exit Function
 
