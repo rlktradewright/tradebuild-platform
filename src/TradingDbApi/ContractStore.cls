@@ -75,6 +75,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As ContractUtils27.IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
+Const ProcName As String = "IContractStore_FetchOptionExpiries"
+On Error GoTo Err
+
+Assert False, "Not supported", ErrorCodes.ErrUnsupportedOperationException
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IContractStore_FetchOptionStrikes(ByVal pUnderlyingContractSpecifier As ContractUtils27.IContractSpecifier, ByVal pExchange As String, Optional ByVal pExpiry As String, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
+Const ProcName As String = "IContractStore_FetchOptionStrikes"
+On Error GoTo Err
+
+Assert False, "Not supported", ErrorCodes.ErrUnsupportedOperationException
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub IContractStore_Finish()
 Const ProcName As String = "IContractStore_Finish"
 On Error GoTo Err
