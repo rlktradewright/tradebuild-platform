@@ -22,6 +22,7 @@ Name="BarFormatters27"
 HelpContextID="0"
 Description="TradeWright Bar Formatters v2.7"
 CompatibleMode="2"
+VersionCompatible32="1"
 CompatibleEXE32="..\..\Compat\TradeWright.TradeBuild.Platform\BarFormatters27.dll"
 MajorVer=2
 MinorVer=7

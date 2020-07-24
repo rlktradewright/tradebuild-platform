@@ -1,7 +1,7 @@
 Type=Control
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\System32\stdole2.tlb#OLE Automation
 Reference=*\G{047FE23B-9E6E-4747-9687-ED3C7A5D4204}#1.0#0#..\..\..\tradewright-common\Bin\TradeWright.Common\TWWin32API.tlb#TradeWright Win32 API TypeLib v2.0
-Reference=*\G{84EF934D-EBFF-4233-A499-48E77ACC10E2}#1c.0#0#C:\Program Files\TradeWright Software Systems\TradeWright Utilities Sample Apps v4.0.121\Bin\TradeWright.Common\ExtProps40.dll#TradeWright Extended Properties Service Version 4.0
+Reference=*\G{84EF934D-EBFF-4233-A499-48E77ACC10E2}#1c.0#0#..\..\..\tradewright-common\Bin\TradeWright.Common\ExtProps40.dll#TradeWright Extended Properties Service Version 4.0
 Reference=*\G{35397E37-23B7-4B20-AC05-27DED8253B14}#8.0#0#..\..\Bin\TradeWright.TradeBuild.Platform\SessionUtils27.dll#TradeWright Session Utilities v2.7
 Reference=*\G{8622E2E9-D418-4A94-A1C5-9E0EA38DABCD}#6e.0#0#..\..\Bin\TradeWright.TradeBuild.Platform\BarUtils27.dll#TradeWright Bar Utilities v2.7
 Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#1b.2#0#..\..\..\tradewright-common\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
@@ -67,6 +67,7 @@ Name="ChartSkil27"
 HelpContextID="0"
 Description="TradeWright ChartSkil v2.7"
 CompatibleMode="2"
+VersionCompatible32="1"
 CompatibleEXE32="..\..\Compat\TradeWright.TradeBuild.Platform\ChartSkil27.ocx"
 MajorVer=2
 MinorVer=7
