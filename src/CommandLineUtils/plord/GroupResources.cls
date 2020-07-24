@@ -155,7 +155,9 @@ Friend Function AddContractProcessor( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pBatchOrders As Boolean, _
                 ByVal pStageOrders As Boolean, _
-                ByVal pMaxExpenditure As Long, _
+                ByVal pSelectionMode As OptionStrikeSelectionModes, _
+                ByVal pParameter As Long, _
+                ByVal pOperator As OptionStrikeSelectionOperators, _
                 ByVal pUnderlyingExchangeName As String) As ContractProcessor
 Const ProcName As String = "AddContractProcessor"
 On Error GoTo Err
@@ -166,7 +168,9 @@ Dim lContractResolver As New ContractResolver
 lContractResolver.Initialise pContractSpec, _
                             lContractProcessor, _
                             mContractStore, _
-                            pMaxExpenditure, _
+                            pSelectionMode, _
+                            pParameter, _
+                            pOperator, _
                             pUnderlyingExchangeName, _
                             mMarketDataManager
 

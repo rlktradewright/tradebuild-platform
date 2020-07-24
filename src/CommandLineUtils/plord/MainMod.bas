@@ -110,6 +110,14 @@ Private Const DefaultPrompt                         As String = ":"
 Private Const CloseoutMarket                        As String = "MKT"
 Private Const CloseoutLimit                         As String = "LMT"
 
+Private Const StrikeSelectionModeNone               As String = ""
+Private Const StrikeSelectionModeIncrement          As String = "I"
+Private Const StrikeSelectionModeExpenditure        As String = "$"
+Private Const StrikeSelectionModeDelta              As String = "D"
+Private Const StrikeSelectionModeGamma              As String = "G"
+Private Const StrikeSelectionModeTheta              As String = "T"
+Private Const StrikeSelectionModeVega               As String = "V"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -196,9 +204,12 @@ gErrorCount = mErrorCount
 End Property
 
 Public Property Get gRegExp() As RegExp
-Static lRegexp As RegExp
-If lRegexp Is Nothing Then Set lRegexp = New RegExp
-Set gRegExp = lRegexp
+Static sRegexp As RegExp
+If sRegexp Is Nothing Then
+    Set sRegexp = New RegExp
+    sRegexp.IgnoreCase = True
+End If
+Set gRegExp = sRegexp
 End Property
 
 '@================================================================================
@@ -220,9 +231,9 @@ If InStr(1, pValue, " ") <> 0 Then pValue = """" & pValue & """"
 gGenerateSwitch = SwitchPrefix & pName & IIf(pValue = "", " ", ValueSeparator & pValue & " ")
 End Function
 
-Public Function gGetContractName(ByVal pContract As IContract) As String
-AssertArgument Not pContract Is Nothing
-gGetContractName = pContract.Specifier.LocalSymbol & "@" & pContract.Specifier.Exchange
+Public Function gGetContractName(ByVal pcontract As IContract) As String
+AssertArgument Not pcontract Is Nothing
+gGetContractName = pcontract.Specifier.LocalSymbol & "@" & pcontract.Specifier.Exchange
 End Function
 
 Public Sub gHandleFatalError(ev As ErrorEventData)
@@ -287,6 +298,25 @@ For i = 0 To UBound(values)
 Next
 mNextCommands.SetValidNextCommandLists lCommandLists
 End Sub
+
+Public Function gStrikeSelectionModeToString(ByVal pMode As OptionStrikeSelectionModes) As String
+Select Case pMode
+Case OptionStrikeSelectionModeNone
+    gStrikeSelectionModeToString = StrikeSelectionModeNone
+Case OptionStrikeSelectionModeIncrement
+    gStrikeSelectionModeToString = StrikeSelectionModeIncrement
+Case OptionStrikeSelectionModeExpenditure
+    gStrikeSelectionModeToString = StrikeSelectionModeExpenditure
+Case OptionStrikeSelectionModeDelta
+    gStrikeSelectionModeToString = StrikeSelectionModeDelta
+Case OptionStrikeSelectionModeGamma
+    gStrikeSelectionModeToString = StrikeSelectionModeGamma
+Case OptionStrikeSelectionModeTheta
+    gStrikeSelectionModeToString = StrikeSelectionModeTheta
+Case OptionStrikeSelectionModeVega
+    gStrikeSelectionModeToString = StrikeSelectionModeVega
+End Select
+End Function
 
 Public Sub gWriteErrorLine( _
                 ByVal pMessage As String, _
@@ -577,7 +607,9 @@ End Sub
 
 Private Function parseContractSpec( _
                 ByVal pClp As CommandLineParser, _
-                ByRef pMaxExpenditure As Long, _
+                ByRef pStrikeSelectionMode As OptionStrikeSelectionModes, _
+                ByRef pParameter As Long, _
+                ByRef pOperator As OptionStrikeSelectionOperators, _
                 ByRef pUnderlyingExchange As String) As IContractSpecifier
 Const ProcName As String = "parseContractSpec"
 On Error GoTo Err
@@ -662,7 +694,7 @@ Dim Strike As Double
 If lStrike <> "" Then
     If IsNumeric(lStrike) Then
         Strike = CDbl(lStrike)
-    ElseIf parseStrikeExtension(lStrike, pMaxExpenditure, pUnderlyingExchange) Then
+    ElseIf parseStrikeExtension(lStrike, pStrikeSelectionMode, pParameter, pOperator, pUnderlyingExchange) Then
         Strike = 0#
     Else
         gWriteErrorLine "Invalid strike '" & lStrike & "'"
@@ -802,13 +834,14 @@ End Function
 
 Private Function parseStrikeExtension( _
                 ByVal pValue As String, _
-                ByRef pMaxExpenditure As Long, _
+                ByRef pStrikeSelectionMode As OptionStrikeSelectionModes, _
+                ByRef pParameter As Long, _
+                ByRef pOperator As OptionStrikeSelectionOperators, _
                 ByRef pUnderlyingExchange As String) As Boolean
 Const ProcName As String = "parseStrikeExtension"
 On Error GoTo Err
 
-Const MaxExpenditure As Long = 9999999
-Const StrikeFormat As String = "^(?:(?:([1-9]\d{1,6})\$(?:(?:;|,)([a-zA-Z0-9]+))?)?)?$"
+Const StrikeFormat As String = "^(?:(?:(<|<=|>|>=|)([1-9]\d{1,6})(\$|D|T|V|G)(?:(?:;|,)([a-zA-Z0-9]+))?)?)?$"
 
 gRegExp.Pattern = StrikeFormat
 
@@ -820,17 +853,58 @@ If lMatches.Count <> 1 Then Exit Function
 Dim lResult As Boolean: lResult = True
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
-Dim lMaxExpenditure As String
-lMaxExpenditure = lMatch.SubMatches(0)
-If lMaxExpenditure = "" Then
-    pMaxExpenditure = 0
-ElseIf IsInteger(lMaxExpenditure, 0, MaxExpenditure) Then
-    pMaxExpenditure = CInt(lMaxExpenditure)
+Dim lOperator As String: lOperator = lMatch.SubMatches(0)
+Select Case lOperator
+Case ""
+    pOperator = OptionStrikeSelectionOperatorNone
+Case "<"
+    pOperator = OptionStrikeSelectionOperatorLT
+Case "<="
+    pOperator = OptionStrikeSelectionOperatorLE
+Case ">"
+    pOperator = OptionStrikeSelectionOperatorGT
+Case ">="
+    pOperator = OptionStrikeSelectionOperatorGE
+End Select
+
+Dim lMinParameter As Long
+Dim lMaxParameter As Long
+Dim lSelectionMode As String: lSelectionMode = UCase$(lMatch.SubMatches(2))
+Select Case lSelectionMode
+Case "$"
+    pStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
+    lMinParameter = 10
+    lMaxParameter = 9999999
+Case "D"
+    pStrikeSelectionMode = OptionStrikeSelectionModeDelta
+    lMinParameter = 1
+    lMaxParameter = 99
+Case "G"
+    pStrikeSelectionMode = OptionStrikeSelectionModeGamma
+    lMinParameter = 1
+    lMaxParameter = 99
+Case "T"
+    pStrikeSelectionMode = OptionStrikeSelectionModeTheta
+    lMinParameter = 1
+    lMaxParameter = 99
+Case "V"
+    pStrikeSelectionMode = OptionStrikeSelectionModeVega
+    lMinParameter = 1
+    lMaxParameter = 99
+Case Else
+    pStrikeSelectionMode = OptionStrikeSelectionModeNone
+End Select
+
+Dim lParameter As String: lParameter = lMatch.SubMatches(1)
+If lParameter = "" Then
+    pParameter = 0
+ElseIf IsInteger(lParameter, lMinParameter, lMaxParameter) Then
+    pParameter = CLng(lParameter)
 Else
     lResult = False
 End If
 
-pUnderlyingExchange = lMatch.SubMatches(1)
+pUnderlyingExchange = lMatch.SubMatches(3)
 
 parseStrikeExtension = lResult
 
@@ -1041,7 +1115,9 @@ If Not IsInteger(lArg0, 1) Then
     Set pContractProcessor = mCurrentGroup.AddContractProcessor(lContractSpec, _
                                         mBatchOrders, _
                                         mStageOrders, _
+                                        OptionStrikeSelectionModeNone, _
                                         0, _
+                                        OptionStrikeSelectionOperatorNone, _
                                         "")
     
     pParams = Right$(pParams, Len(pParams) - Len(lArg0))
@@ -1230,12 +1306,19 @@ Dim lSpecString As String
 lSpecString = lClp.Arg(0)
 
 Dim lContractSpec As IContractSpecifier
-Dim lMaxExpenditure As Long
+Dim lStrikeSelectionMode As OptionStrikeSelectionModes
+Dim lParameter As Long
+Dim lOperator As OptionStrikeSelectionOperators
 Dim lUnderlyingExchange As String
+
 If lSpecString <> "" Then
     Set lContractSpec = CreateContractSpecifierFromString(lSpecString)
 Else
-    Set lContractSpec = parseContractSpec(lClp, lMaxExpenditure, lUnderlyingExchange)
+    Set lContractSpec = parseContractSpec(lClp, _
+                                        lStrikeSelectionMode, _
+                                        lParameter, _
+                                        lOperator, _
+                                        lUnderlyingExchange)
 End If
 
 If lContractSpec Is Nothing Then
@@ -1250,7 +1333,9 @@ End If
 mCurrentGroup.AddContractProcessor lContractSpec, _
                                     mBatchOrders, _
                                     mStageOrders, _
-                                    lMaxExpenditure, _
+                                    lStrikeSelectionMode, _
+                                    lParameter, _
+                                    lOperator, _
                                     lUnderlyingExchange
 
 gInputPaused = True
@@ -1426,9 +1511,15 @@ Else
     If lSpecString <> "" Then
         Set lContractSpec = CreateContractSpecifierFromString(lSpecString)
     Else
-        Dim lMaxExpenditure As Long
+        Dim lStrikeSelectionMode As OptionStrikeSelectionModes
+        Dim lParameter As Long
+        Dim lOperator As OptionStrikeSelectionOperators
         Dim lUnderlyingExchangeName As String
-        Set lContractSpec = parseContractSpec(lClp, lMaxExpenditure, lUnderlyingExchangeName)
+        Set lContractSpec = parseContractSpec(lClp, _
+                                            lStrikeSelectionMode, _
+                                            lParameter, _
+                                            lOperator, _
+                                            lUnderlyingExchangeName)
     End If
     If lContractSpec Is Nothing Then Exit Sub
     

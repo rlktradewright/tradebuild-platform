@@ -53,7 +53,9 @@ Private mContractStore                              As IContractStore
 
 Private mContractSpec                               As IContractSpecifier
 
-Private mMaxExpenditure                             As Long
+Private mSelectionMode                              As OptionStrikeSelectionModes
+Private mParameter                                  As Long
+Private mOperator                                   As OptionStrikeSelectionOperators
 Private mUnderlyingExchangeName                     As String
 
 Private mFutureBuilder                              As New FutureBuilder
@@ -133,10 +135,10 @@ End Property
 Friend Property Get ContractName() As String
 With mContractSpec
     Dim lStrikeStr As String
-    If mMaxExpenditure = 0 Then
+    If mSelectionMode = OptionStrikeSelectionModeNone Then
         If .Strike <> 0 Then lStrikeStr = CStr(.Strike)
     Else
-        lStrikeStr = mMaxExpenditure & "$" & _
+        lStrikeStr = mParameter & gStrikeSelectionModeToString(mSelectionMode) & _
                     IIf(mUnderlyingExchangeName <> "", "," & mUnderlyingExchangeName, "")
     End If
     
@@ -153,8 +155,16 @@ End With
 
 End Property
 
-Friend Property Get MaxExpenditure() As Long
-MaxExpenditure = mMaxExpenditure
+Friend Property Get StrikeSelectionMode() As OptionStrikeSelectionModes
+StrikeSelectionMode = mSelectionMode
+End Property
+
+Friend Property Get StrikeSelectionOperator() As OptionStrikeSelectionOperators
+StrikeSelectionOperator = mOperator
+End Property
+
+Friend Property Get StrikeSelectionParameter() As Long
+StrikeSelectionParameter = mParameter
 End Property
 
 Friend Property Get UnderlyingExchangeName() As String
@@ -182,7 +192,9 @@ Friend Sub Initialise( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pContractProcessor As ContractProcessor, _
                 ByVal pContractStore As IContractStore, _
-                ByVal pMaxExpenditure As Long, _
+                ByVal pSelectionMode As OptionStrikeSelectionModes, _
+                ByVal pParameter As Long, _
+                ByVal pOperator As OptionStrikeSelectionOperators, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pMarketDataManager As IMarketDataManager)
 Const ProcName As String = "Initialise"
@@ -192,25 +204,35 @@ Set mSelfRef = Me
 
 Set mContractSpec = pContractSpec
 Set mContractStore = pContractStore
-mMaxExpenditure = pMaxExpenditure
+mSelectionMode = pSelectionMode
+mParameter = pParameter
+mOperator = pOperator
 mUnderlyingExchangeName = pUnderlyingExchangeName
 
 Set mFutureWaiter = New FutureWaiter
 
-If pMaxExpenditure <> 0 Then
+Select Case mSelectionMode
+Case OptionStrikeSelectionModeNone
+    mFutureWaiter.Add FetchContract(pContractSpec, mContractStore)
+Case OptionStrikeSelectionModeExpenditure, _
+        OptionStrikeSelectionModeDelta, _
+        OptionStrikeSelectionModeGamma, _
+        OptionStrikeSelectionModeTheta, _
+        OptionStrikeSelectionModeVega
     gWriteLineToConsole "Resolving contract", True
     mFutureWaiter.Add GetOptionContract( _
                             pContractSpec, _
                             OrderActionBuy, _
                             pContractStore, _
-                            pMaxExpenditure, _
-                            0, _
+                            mSelectionMode, _
+                            mParameter, _
+                            mOperator, _
                             pUnderlyingExchangeName, _
                             pMarketDataManager, _
                             Me)
-Else
-    mFutureWaiter.Add FetchContract(pContractSpec, mContractStore)
-End If
+Case Else
+    Assert False, "Unexpected strike selection mode: " & pSelectionMode
+End Select
 
 Exit Sub
 

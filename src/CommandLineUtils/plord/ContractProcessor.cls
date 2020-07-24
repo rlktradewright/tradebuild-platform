@@ -67,7 +67,9 @@ Private mGroupName                                  As String
 Private mLatestBuyCommandParams                     As String
 Private mLatestSellCommandParams                    As String
 
-Private mMaxExpenditure                             As Long
+Private mSelectionMode                              As OptionStrikeSelectionModes
+Private mParameter                                  As Long
+Private mOperator                                   As OptionStrikeSelectionOperators
 Private mUnderlyingExchangeName                     As String
 
 Private mPendingCommands                            As SortedDictionary
@@ -175,7 +177,10 @@ On Error GoTo Err
 Set mContract = pcontract
 mGroupName = pGroupName
 
-mMaxExpenditure = mContractResolver.MaxExpenditure
+mSelectionMode = mContractResolver.StrikeSelectionMode
+mOperator = mContractResolver.StrikeSelectionOperator
+mParameter = mContractResolver.StrikeSelectionParameter
+
 mUnderlyingExchangeName = mContractResolver.UnderlyingExchangeName
 
 Set mDataSource = pMarketDataManager.CreateMarketDataSource(CreateFuture(pcontract), False)
@@ -1357,7 +1362,7 @@ Else
             pStrikeValue = 0
         ElseIf lAmount = "<" Then
             pStrikeMode = RolloverStrikeModePreviousAmount
-            pStrikeValue = mMaxExpenditure
+            pStrikeValue = mParameter
         ElseIf lProfitPercentage <> 0 Then
             pStrikeMode = RolloverStrikeModeCurrentProfit
             pStrikeValue = CLng(lProfitPercentage)
