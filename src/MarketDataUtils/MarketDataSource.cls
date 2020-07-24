@@ -1711,7 +1711,9 @@ On Error GoTo Err
 checkNotFinished
 Assert Not mIsMarketDataRequested, "Market data already started"
 mIsMarketDataRequested = True
-If Not (State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunning) Then Exit Sub
+If Not (State = MarketDataSourceStateReady Or _
+        State = MarketDataSourceStateRunning Or _
+        State = MarketDataSourceStateStopped) Then Exit Sub
 subscribeToMarketData
 storeSettings
 
