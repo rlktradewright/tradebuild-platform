@@ -47,8 +47,10 @@ Private Const ModuleName                            As String = "ContractDetails
 '@================================================================================
 
 Private mContractRequester                          As ContractDetailsRequester
-Private mContractCache                              As TwsContractCache
+Private mContractCache                              As ContractCache
 Private mContractsFutures                           As New EnumerableCollection
+Private mStrikesFutures                             As New EnumerableCollection
+Private mExpiriesFutures                            As New EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
@@ -66,6 +68,38 @@ Const ProcName As String = "IContractStore_FetchContracts"
 On Error GoTo Err
 
 Set IContractStore_FetchContracts = FetchContracts(pContractSpecifier, pListener, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IContractStore_FetchOptionExpiries( _
+                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
+                ByVal pExchange As String, _
+                Optional ByVal pStrike As Double = 0#, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "IContractStore_FetchOptionExpiries"
+On Error GoTo Err
+
+Set IContractStore_FetchOptionExpiries = FetchOptionExpiries(pUnderlyingContractSpecifier, pExchange, pStrike, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IContractStore_FetchOptionStrikes( _
+                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
+                ByVal pExchange As String, _
+                Optional ByVal pExpiry As String, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "IContractStore_FetchOptionStrikes"
+On Error GoTo Err
+
+Set IContractStore_FetchOptionStrikes = FetchOptionStrikes(pUnderlyingContractSpecifier, pExchange, pExpiry, pCookie)
 
 Exit Function
 
@@ -117,12 +151,52 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function FetchOptionExpiries( _
+                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
+                ByVal pExchange As String, _
+                Optional ByVal pStrike As Double = 0#, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchOptionExpiries"
+On Error GoTo Err
+
+Set FetchOptionExpiries = gFetchOptionExpiries(mContractRequester, mContractCache, pUnderlyingContractSpecifier, pExchange, pStrike, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function FetchOptionStrikes( _
+                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
+                ByVal pExchange As String, _
+                Optional ByVal pExpiry As String, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchOptionStrikes"
+On Error GoTo Err
+
+Set FetchOptionStrikes = gFetchOptionStrikes(mContractRequester, mContractCache, pUnderlyingContractSpecifier, pExchange, pExpiry, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
 Dim f As IFuture
 For Each f In mContractsFutures
+    If f.IsPending Then f.Cancel
+Next
+
+For Each f In mExpiriesFutures
+    If f.IsPending Then f.Cancel
+Next
+
+For Each f In mStrikesFutures
     If f.IsPending Then f.Cancel
 Next
 
@@ -136,13 +210,16 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractCache As TwsContractCache)
+                ByVal pContractCache As ContractCache)
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 End Sub
 
 Public Function Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
-Const Capabilities As Long = ContractStoreCapabilities.ContractStoreCanQuery
+Const Capabilities As Long = ContractStoreCapabilities.ContractStoreCanQuery Or _
+                            ContractStoreCapabilities.ContractStoreOptionExpiries Or _
+                            ContractStoreCapabilities.ContractStoreOptionStrikes
+                            
 Supports = ((Capabilities And pCapabilities) = pCapabilities)
 End Function
 

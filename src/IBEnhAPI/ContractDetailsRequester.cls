@@ -34,6 +34,12 @@ Implements ITask
 ' Enums
 '@================================================================================
 
+Private Enum ContractInfoRequestTypes
+    ContractInfoRequestTypeNone
+    ContractInfoRequestTypeContractDetails
+    ContractInfoRequestTypeOptionParameters
+End Enum
+
 Private Enum States
     StateFree
     StateAllocated
@@ -50,7 +56,8 @@ End Enum
 Private Type ContractDetailsRequestTableEntry
     Index                   As Long ' of this entry
     State                   As States
-    Contract                As TwsContract
+    RequestType             As ContractInfoRequestTypes
+    ContractSpec            As IContractSpecifier
     Requester               As IContractDetailsConsumer
     NumberReturned          As Long
     PendingContracts        As EnumerableCollection
@@ -85,8 +92,6 @@ Private mTaskContext                                As TaskContext
 
 Private mConcurrentRequests                         As Long
 Private mMaxConcurrentRequests                      As Long
-
-Private mContractCache                              As TwsContractCache
 
 Private mIsTwsConnectedToIBServers                  As Boolean
 
@@ -127,17 +132,28 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestIs As Long)
+Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestId As Long)
+Const ProcName As String = "IContractDetailsConsumer_EndOptionParameters"
+On Error GoTo Err
 
+mRequests(pRequestId).Requester.EndOptionParameters pRequestId
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
+Private Sub IContractDetailsConsumer_NotifyContract( _
+                ByVal pRequestId As Long, _
+                pContractDetails As TwsContractDetails)
 Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
-If mRequests(pRequestId).NumberReturned = 0 Then
+If mRequests(pRequestId).State = StateRequestCancelling Then
+    ' ignore this contract
+ElseIf mRequests(pRequestId).NumberReturned = 0 Then
     mRequests(pRequestId).NumberReturned = 1
-    mContractCache.Add pContractDetails
     If mRequests(pRequestId).State <> StateRequestCancelling Then mRequests(pRequestId).Requester.NotifyContract pRequestId, pContractDetails
 Else
     mRequests(pRequestId).NumberReturned = mRequests(pRequestId).NumberReturned + 1
@@ -182,7 +198,24 @@ Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Lon
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyOptionParameter(ByVal pRequestId As Long, ByVal pExchange As String, ByVal pUnderlyingContractId As Long, ByVal pTradingClass As String, ByVal pMultiplier As Long, pExpirations() As String, pStrikes() As Double)
+Const ProcName As String = "IContractDetailsConsumer_NotifyOptionParameter"
+On Error GoTo Err
 
+If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+
+mRequests(pRequestId).Requester.NotifyOptionParameter _
+                pRequestId, _
+                pExchange, _
+                pUnderlyingContractId, _
+                pTradingClass, _
+                pMultiplier, _
+                pExpirations, _
+                pStrikes
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -254,7 +287,6 @@ If mFirstPendingContractsEntry <> NullIndex Then
         If en.MoveNext Then
             Dim lContractDetails As TwsContractDetails
             Set lContractDetails = en.Current
-            mContractCache.Add lContractDetails
             If .State <> StateRequestCancelling Then
                 .Requester.NotifyContract lPendingContractsEntryIndex, lContractDetails
             End If
@@ -323,13 +355,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pTwsAPI As TwsAPI, _
-                ByVal pContractCache As TwsContractCache)
+                ByVal pTwsAPI As TwsAPI)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mTwsAPI = pTwsAPI
-Set mContractCache = pContractCache
 
 mMaxConcurrentRequests = MaxConcurrentContractDetailsRequests
 
@@ -351,7 +381,8 @@ On Error GoTo Err
 
 Dim lIndex As Long
 lIndex = allocateEntry
-Set mRequests(lIndex).Contract = gContractSpecToTwsContract(pContractSpecifier)
+mRequests(lIndex).RequestType = ContractInfoRequestTypeContractDetails
+Set mRequests(lIndex).ContractSpec = pContractSpecifier
 Set mRequests(lIndex).Requester = pRequester
 
 queueEntry lIndex
@@ -359,6 +390,30 @@ queueEntry lIndex
 Schedule
 
 RequestContractDetails = lIndex
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function RequestOptionParameters( _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                ByVal pRequester As IContractDetailsConsumer) As Long
+Const ProcName As String = "RequestOptionParameters"
+On Error GoTo Err
+
+Dim lIndex As Long
+lIndex = allocateEntry
+mRequests(lIndex).RequestType = ContractInfoRequestTypeOptionParameters
+Set mRequests(lIndex).ContractSpec = pContractSpecifier
+Set mRequests(lIndex).Requester = pRequester
+
+queueEntry lIndex
+
+Schedule
+
+RequestOptionParameters = lIndex
 
 Exit Function
 
@@ -444,9 +499,20 @@ Dim lCurrIndex As Long
 Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
     lCurrIndex = lIndex
     lIndex = mRequests(lIndex).Next
-    If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for ", ModuleName, ProcName, mRequests(lCurrIndex).Contract.ToString, LogLevelDetail
-    mTwsAPI.RequestContractDetails lCurrIndex, mRequests(lCurrIndex).Contract
-        
+    If mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeContractDetails Then
+        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for ", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelDetail
+        mTwsAPI.RequestContractDetails lCurrIndex, _
+                                        gContractSpecToTwsContract(mRequests(lCurrIndex).ContractSpec)
+    Else
+        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting option parameters for ", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelDetail
+        mTwsAPI.RequestOptionParameters lCurrIndex, _
+                                        mRequests(lCurrIndex).ContractSpec.Symbol, _
+                                        IIf(mRequests(lCurrIndex).ContractSpec.SecType = TwsSecTypeFuture, _
+                                            mRequests(lCurrIndex).ContractSpec.Exchange, _
+                                            ""), _
+                                        mRequests(lCurrIndex).ContractSpec.SecType, _
+                                        mRequests(lCurrIndex).ContractSpec.ProviderProperties.GetParameterValue(ProviderPropertyContractID)
+    End If
     mConcurrentRequests = mConcurrentRequests + 1
         
     unqueueEntry lCurrIndex
@@ -482,7 +548,8 @@ On Error GoTo Err
 mRequests(pIndex).Next = mFirstFreeRequestsEntry
 mFirstFreeRequestsEntry = pIndex
 mRequests(pIndex).State = StateFree
-Set mRequests(pIndex).Contract = Nothing
+mRequests(pIndex).RequestType = ContractInfoRequestTypeNone
+Set mRequests(pIndex).ContractSpec = Nothing
 Set mRequests(pIndex).Requester = Nothing
 mRequests(pIndex).NumberReturned = 0
 Set mRequests(pIndex).PendingContracts = Nothing

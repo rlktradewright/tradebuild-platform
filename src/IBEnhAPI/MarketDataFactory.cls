@@ -101,7 +101,7 @@ Private mHistoricalDataRequester                    As HistDataRequester
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mContractCache                              As TwsContractCache
+Private mContractCache                              As ContractCache
 
 Private mIsTwsConnectedToIBServers                  As Boolean
 
@@ -844,7 +844,7 @@ Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pContractRequester As ContractDetailsRequester, _
                 ByVal pHistoricalDataRequester As HistDataRequester, _
-                ByVal pContractCache As TwsContractCache)
+                ByVal pContractCache As ContractCache)
 Set mTwsAPI = pTwsAPI
 Set mContractRequester = pContractRequester
 Set mHistoricalDataRequester = pHistoricalDataRequester

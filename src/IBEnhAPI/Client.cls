@@ -66,7 +66,7 @@ Private mTwsConnectionStateListeners                As Listeners
 Private mApiErrorListener                           As IErrorListener
 Private mApiNotificationListener                    As INotificationListener
 
-Private mContractCache                              As New TwsContractCache
+Private mContractCache                              As New ContractCache
 
 '@================================================================================
 ' Class Event Handlers
@@ -546,7 +546,7 @@ If Not mTwsAPI.ContractDetailsConsumer Is Nothing Then
     Set lContractDetailsRequester = mTwsAPI.ContractDetailsConsumer
 Else
     Set lContractDetailsRequester = New ContractDetailsRequester
-    lContractDetailsRequester.Initialise mTwsAPI, mContractCache
+    lContractDetailsRequester.Initialise mTwsAPI
     mTwsAPI.ContractDetailsConsumer = lContractDetailsRequester
     AddTwsConnectionStateListener lContractDetailsRequester
 End If

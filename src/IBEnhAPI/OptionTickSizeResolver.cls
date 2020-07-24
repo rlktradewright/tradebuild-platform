@@ -137,17 +137,17 @@ If lState = TimerListItemStateExpired Then
     
     mTaskContext.Finish Nothing, False
     
-    Dim lTickSize As Double
-    If mExamplePrice < 3# Then
-        lTickSize = mTickSize
-    ElseIf mTickSize = 0.05 Then
-        lTickSize = 0.01
-    ElseIf mTickSize = 0.1 Then
-        lTickSize = 0.05
-    Else
-        Assert False, "Unexpected tick size"
-    End If
-    mFutureBuilder.Value = CreateBoxedValue(lTickSize)
+'    Dim lTickSize As Double
+'    If mExamplePrice < 3# Then
+'        lTickSize = mTickSize
+'    ElseIf mTickSize = 0.05 Then
+'        lTickSize = 0.01
+'    ElseIf mTickSize = 0.1 Then
+'        lTickSize = 0.05
+'    Else
+'        Assert False, "Unexpected tick size: " & mTickSize
+'    End If
+    mFutureBuilder.Value = CreateBoxedValue(mTickSize)
     mFutureBuilder.Complete
 End If
 

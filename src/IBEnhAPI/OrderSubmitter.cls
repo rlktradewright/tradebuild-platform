@@ -59,7 +59,7 @@ Private mOrderPlacer                                As OrderPlacer
 Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
 Private mContractRequester                          As ContractDetailsRequester
-Private mContractCache                              As TwsContractCache
+Private mContractCache                              As ContractCache
 
 Private mState                                      As OrderSubmitterStates
 Private mStateChangeListeners                       As Listeners
@@ -761,7 +761,7 @@ Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pOrderPlacer As OrderPlacer, _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractCache As TwsContractCache, _
+                ByVal pContractCache As ContractCache, _
                 ByVal pDataSource As IMarketDataSource)
 Const ProcName As String = "Initialise"
 On Error GoTo Err

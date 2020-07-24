@@ -128,7 +128,7 @@ Private mCookie                                     As Variant
 Private WithEvents mFutureBuilder                   As FutureBuilder
 Attribute mFutureBuilder.VB_VarHelpID = -1
 
-Private mContractCache                              As TwsContractCache
+Private mContractCache                              As ContractCache
 
 Private mTotalTwsBarsProcessed                      As Long
 
@@ -402,7 +402,7 @@ Friend Sub Initialise( _
                 ByVal pFetcher As HistoricalDataFetcher, _
                 ByVal pHistDataRequester As HistDataRequester, _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractCache As TwsContractCache, _
+                ByVal pContractCache As ContractCache, _
                 ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
 On Error GoTo Err

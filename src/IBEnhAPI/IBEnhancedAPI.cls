@@ -64,7 +64,8 @@ End Enum
 '@================================================================================
 
 Public Type ContractCacheEntry
-    ContractDetails         As TwsContractDetails
+    Contract                As IContract
+    TwsContractDetails      As TwsContractDetails
     CacheDate               As Date
 End Type
 

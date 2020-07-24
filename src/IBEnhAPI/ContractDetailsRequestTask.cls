@@ -50,6 +50,10 @@ Private Const ModuleName                            As String = "ContractDetails
 Private mContractSpecifier                          As IContractSpecifier
 Private mContractRequester                          As ContractDetailsRequester
 
+Private mFirstContract                              As IContract
+Private mFirstTwsContract                           As TwsContractDetails
+Private mNumberOfContracts                          As Long
+
 Private mTaskContext                                As TaskContext
 
 Private mContractsBuilder                           As ContractsBuilder
@@ -79,7 +83,7 @@ Private mReturnTwsContracts                         As Boolean
 
 Private mTwsContracts                               As EnumerableCollection
 
-Private mContractCache                              As TwsContractCache
+Private mContractCache                              As ContractCache
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -124,7 +128,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestIs As Long)
+Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestId As Long)
 
 End Sub
 
@@ -132,7 +136,8 @@ Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pC
 Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
-processContract pContractDetails
+processTwsContract pContractDetails
+mNumberOfContracts = mNumberOfContracts + 1
 
 Exit Sub
 
@@ -213,13 +218,26 @@ If mContractSpecifier.SecType = SecTypeNone Then
     Else
         requestContractsForNonSMART
     End If
-Else
+ElseIf mReturnTwsContracts Then
     Dim lTwsContract As TwsContractDetails
-    Set lTwsContract = mContractCache.Item(mContractSpecifier)
+    Set lTwsContract = mContractCache.GetTwsContractDetails(mContractSpecifier)
     
     If Not lTwsContract Is Nothing Then
         gLogger.Log "TwsContractDetails retrieved from cache for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
-        processContract lTwsContract
+        processCachedTwsContract lTwsContract
+        processEnd
+        mTaskContext.Suspend -1
+        Exit Sub
+    End If
+    
+    mRequestId = requestContracts(mContractSpecifier)
+Else
+    Dim lContract As IContract
+    Set lContract = mContractCache.GetContract(mContractSpecifier)
+    
+    If Not lContract Is Nothing Then
+        gLogger.Log "ContractDetails retrieved from cache for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        processCachedContract lContract
         processEnd
         mTaskContext.Suspend -1
         Exit Sub
@@ -291,7 +309,7 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractCache As TwsContractCache, _
+                ByVal pContractCache As ContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
                 ByVal pCookie As Variant, _
@@ -370,26 +388,62 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processContract(ByVal pContractDetails As TwsContractDetails)
-Const ProcName As String = "processContract"
+Private Sub processCachedContract(ByVal pContract As IContract)
+Const ProcName As String = "processCachedContract"
 On Error GoTo Err
 
 If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
 
-If IsValidExchangeCode(pContractDetails.Summary.Exchange) Then
-    If mReturnTwsContracts Then
-        mTwsContracts.Add pContractDetails
-    Else
-        Dim lContract As IContract
-        Set lContract = gTwsContractDetailsToContract(pContractDetails)
-        
-        If Not mContractsBuilder.Contracts.Contains(lContract.Specifier) Then
-            mContractsBuilder.Add lContract
-            If Not mListener Is Nothing Then mListener.NotifyContract mCookie, lContract
-        End If
-    End If
-Else
+If Not mContractsBuilder.Contracts.Contains(pContract.Specifier) Then
+    mContractsBuilder.Add pContract
+    If Not mListener Is Nothing Then mListener.NotifyContract mCookie, pContract
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processCachedTwsContract( _
+                ByVal pContractDetails As TwsContractDetails)
+Const ProcName As String = "processCachedTwsContract"
+On Error GoTo Err
+
+If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
+
+mTwsContracts.Add pContractDetails
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processTwsContract( _
+                ByVal pContractDetails As TwsContractDetails)
+Const ProcName As String = "processTwsContract"
+On Error GoTo Err
+
+If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
+
+If Not IsValidExchangeCode(pContractDetails.Summary.Exchange) Then
     gLog "Unknown Exchange code received from Tws", pMsgQualifier:=pContractDetails.Summary.Exchange, pModName:=ModuleName, pProcName:=ProcName
+    Exit Sub
+End If
+    
+Dim lContract As IContract
+Set lContract = gTwsContractDetailsToContract(pContractDetails)
+mContractCache.AddContract lContract, pContractDetails
+
+If mFirstContract Is Nothing Then Set mFirstContract = lContract
+If mFirstTwsContract Is Nothing Then Set mFirstTwsContract = pContractDetails
+
+If mReturnTwsContracts Then
+    mTwsContracts.Add pContractDetails
+ElseIf Not mContractsBuilder.Contracts.Contains(lContract.Specifier) Then
+    mContractsBuilder.Add lContract
+    If Not mListener Is Nothing Then mListener.NotifyContract mCookie, lContract
 End If
 
 Exit Sub
@@ -403,6 +457,12 @@ Const ProcName As String = "processEnd"
 On Error GoTo Err
 
 If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
+
+If mNumberOfContracts = 1 Then
+    If mContractSpecifier.Key <> mFirstContract.Specifier.Key Then
+        mContractCache.AddContractWithPartialKey mFirstContract, mFirstTwsContract, mContractSpecifier.Key
+    End If
+End If
 
 mFutureWaiter.Add mContractsFutureBuilder.Future
 If mReturnTwsContracts Then

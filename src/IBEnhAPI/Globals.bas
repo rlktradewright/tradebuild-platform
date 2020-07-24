@@ -47,7 +47,9 @@ Private Const PrimaryExchangeNASDAQ             As String = "NASDAQ"
 Private Const PrimaryExchangeNYSE               As String = "NYSE"
 Private Const PrimaryExchangeVENTURE            As String = "VENTURE"
 
+Public Const ProviderPropertyContractID         As String = "Contract id"
 Public Const ProviderPropertyOCAGroup           As String = "OCA group"
+Public Const ProviderPropertyTradingClass       As String = "Trading class"
 
 '================================================================================
 ' Enums
@@ -64,6 +66,12 @@ Public Enum MarketDataReestablishmentModes
     ' request market data for all tickers
     All
     
+End Enum
+
+Public Enum OptionParameterTypes
+    OptionParameterTypeNone
+    OptionParameterTypeExpiries
+    OptionParameterTypeStrikes
 End Enum
 
 '================================================================================
@@ -109,6 +117,9 @@ Dim lTwsComboLeg As TwsComboLeg
 Set gContractSpecToTwsContract = New TwsContract
 
 With gContractSpecToTwsContract
+    If Not pContractSpecifier.ProviderProperties Is Nothing Then
+        .ConId = pContractSpecifier.ProviderProperties.GetParameterValue(ProviderPropertyContractID, "0")
+    End If
     .CurrencyCode = pContractSpecifier.CurrencyCode
     Dim lExchange As String: lExchange = UCase$(pContractSpecifier.Exchange)
     If lExchange = ExchangeSmartAUS Then
@@ -170,7 +181,7 @@ End Function
 Public Function gContractFutureToTwsContractDetails( _
                 ByVal pContractRequester As ContractDetailsRequester, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pContractCache As TwsContractCache) As IFuture
+                ByVal pContractCache As ContractCache) As IFuture
 Const ProcName As String = "gContractFutureToTwsContractDetails"
 On Error GoTo Err
 
@@ -212,7 +223,7 @@ End Function
 
 Public Function gFetchContracts( _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractCache As TwsContractCache, _
+                ByVal pContractCache As ContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
                 ByVal pCookie As Variant, _
@@ -228,6 +239,70 @@ If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching contract details for",
 StartTask lFetchTask, PriorityLow
 
 Set gFetchContracts = lFetchTask.ContractsFuture
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gFetchOptionExpiries( _
+                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractCache As ContractCache, _
+                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
+                ByVal pExchange As String, _
+                Optional ByVal pStrike As Double = 0#, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "gFetchOptionExpiries"
+On Error GoTo Err
+
+Dim lFetchTask As New OptionParametersRequestTask
+lFetchTask.Initialise pContractRequester, pContractCache, pUnderlyingContractSpecifier, OptionParameterTypeExpiries, pExchange, "", pStrike, pCookie
+If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching option expiries for", ModuleName, ProcName, pUnderlyingContractSpecifier.ToString, LogLevelDetail
+
+StartTask lFetchTask, PriorityLow
+
+Set gFetchOptionExpiries = lFetchTask.Future
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gFetchOptionStrikes( _
+                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractCache As ContractCache, _
+                ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
+                ByVal pExchange As String, _
+                Optional ByVal pExpiry As String, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "gFetchOptionStrikes"
+On Error GoTo Err
+
+Dim lFetchTask As New OptionParametersRequestTask
+lFetchTask.Initialise pContractRequester, pContractCache, pUnderlyingContractSpecifier, OptionParameterTypeStrikes, pExchange, pExpiry, 0#, pCookie
+If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching option strikes for", ModuleName, ProcName, pUnderlyingContractSpecifier.ToString, LogLevelDetail
+
+StartTask lFetchTask, PriorityLow
+
+Set gFetchOptionStrikes = lFetchTask.Future
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gGenerateTwsContractKey( _
+                ByVal pContractDetails As TwsContractDetails) As String
+Const ProcName As String = "gGenerateTwsContractKey"
+On Error GoTo Err
+
+Dim lSpec As IContractSpecifier
+Set lSpec = gTwsContractToContractSpecifier(pContractDetails.Summary, pContractDetails.PriceMagnifier)
+
+gGenerateTwsContractKey = lSpec.Key
 
 Exit Function
 
@@ -465,7 +540,7 @@ With pOrder
     If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
-    gOrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
+    gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)
@@ -755,8 +830,8 @@ With pTwsContract
                                                 .Strike, _
                                                 gTwsOptionRightToOptionRight(.OptRight))
     Dim p As New Parameters
-    p.SetParameterValue "ContractId", .ConId
-    p.SetParameterValue "TradingClass", .TradingClass
+    p.SetParameterValue ProviderPropertyContractID, .ConId
+    p.SetParameterValue ProviderPropertyTradingClass, .TradingClass
     lContractSpec.ProviderProperties = p
 End With
 

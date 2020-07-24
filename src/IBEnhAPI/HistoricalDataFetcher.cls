@@ -54,7 +54,7 @@ Private mTimePeriodValidator                        As New TimePeriodValidator
 
 Private mTaskControllers                            As New EnumerableCollection
 
-Private mContractCache                              As TwsContractCache
+Private mContractCache                              As ContractCache
 
 '@================================================================================
 ' Class Event Handlers
@@ -203,7 +203,7 @@ End Function
 Friend Sub Initialise( _
                 ByVal pHistDataRequester As HistDataRequester, _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractCache As TwsContractCache)
+                ByVal pContractCache As ContractCache)
 Set mHistDataRequester = pHistDataRequester
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache

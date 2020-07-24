@@ -59,7 +59,7 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mFutureBuilder                              As New FutureBuilder
 
-Private mContractCache                              As TwsContractCache
+Private mContractCache                              As ContractCache
 
 '@================================================================================
 ' Class Event Handlers
@@ -140,7 +140,7 @@ If mContractSpec Is Nothing Then
     Exit Sub
 End If
 
-Set mContractDetails = mContractCache.Item(mContractSpec)
+Set mContractDetails = mContractCache.GetTwsContractDetails(mContractSpec)
 
 If Not mContractDetails Is Nothing Then
     gLogger.Log "TwsContractDetails retrieved from cache for IContract: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
@@ -207,7 +207,7 @@ End Property
 Friend Sub Initialise( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractCache As TwsContractCache, _
+                ByVal pContractCache As ContractCache, _
                 ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
