@@ -363,7 +363,6 @@ Const ProcName As String = "NoMoreTicks"
 On Error GoTo Err
 
 If mState = TickStreamStateFinished Then Exit Sub
-mState = TickStreamStateFinished
 
 updateCurrentGenericTickListeners
 If mSomeGenericTickListeners Then
@@ -407,10 +406,15 @@ Friend Sub NotifyOptionComputation(ByRef pComputation As OptionComputation)
 Const ProcName As String = "NotifyOptionComputation"
 On Error GoTo Err
 
-If mState = TickStreamStateFinished Then Exit Sub
+If mState = TickStreamStateFinished Then
+    Exit Sub
+End If
+
 updateCurrentOptionComputationListeners
 
-If Not mSomeOptionComputationListeners Then Exit Sub
+If Not mSomeOptionComputationListeners Then
+    Exit Sub
+End If
 
 Dim ev As OptionComputationEventData
 ev.StreamId = StreamId
