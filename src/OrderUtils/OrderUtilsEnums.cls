@@ -90,6 +90,8 @@ Public Enum OptionContractResolverStates
     OptionContractResolverStateFetchingCandidateContracts
     OptionContractResolverStateFindingRequiredContract
     OptionContractResolverStateGotTargetContract
+    OptionContractResolverStateFetchingStrikes
+    OptionContractResolverStateFetchingExpiries
 End Enum
 
 Public Enum OptionStrikeSelectionModes

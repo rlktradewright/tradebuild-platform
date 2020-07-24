@@ -1750,18 +1750,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function isFlat() As Boolean
-Const ProcName As String = "isFlat"
-On Error GoTo Err
-
-isFlat = (PositionSize = 0 And PendingPositionSize = 0)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Function needExistingBracketOrders() As Boolean
 Const ProcName As String = "needExistingBracketOrders"
 On Error GoTo Err

@@ -68,8 +68,6 @@ Private mIsSimulated                As Boolean
 
 Private mNeedsRecovery              As Boolean
 
-Private mBrokerData                 As Variant
-
 Private mIsInitialised              As Boolean
 
 Private mRecoverableObjectListeners As New Listeners

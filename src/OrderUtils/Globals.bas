@@ -1414,26 +1414,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub notifyCollectionMember( _
-                ByVal pItem As Variant, _
-                ByVal pSource As Object, _
-                ByVal pListener As ICollectionChangeListener)
-Dim ev As CollectionChangeEventData
-Const ProcName As String = "notifyCollectionMember"
-On Error GoTo Err
-
-Set ev.Source = pSource
-ev.changeType = CollItemAdded
-
-gSetVariant ev.AffectedItem, pItem
-pListener.Change ev
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 
 
 

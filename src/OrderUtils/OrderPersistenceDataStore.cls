@@ -42,8 +42,6 @@ Implements IOrderPersistenceDataStore
 
 Private Const ModuleName                            As String = "OrderPersistenceDataStore"
 
-Private Const OrderInfoSession                      As String = "SESSION"
-
 '@================================================================================
 ' Member variables
 '@================================================================================

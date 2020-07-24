@@ -47,11 +47,8 @@ Private Const ModuleName                            As String = "MarketSimulator
 ' Member variables
 '@================================================================================
 
-Private mContractSpec                               As IContractSpecifier
 Private mBid                                        As Double
-Private mBidSize                                    As Long
 Private mAsk                                        As Double
-Private mAskSize                                    As Long
 Private mActiveOrders                               As New EnumerableCollection
 Private mPendingOrders                              As New EnumerableCollection
 Private mSimulateExchangeDelays                     As Boolean

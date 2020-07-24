@@ -86,7 +86,7 @@ Set lOrderContext = ev.Source
 If ev.changeType = OrderContextChangeTypes.OrderContextActiveStateChanged And _
     (Not lOrderContext.IsActive) _
 Then
-    handleInactiveOrderContext lOrderContext
+    handleInactiveOrderContext
     lOrderContext.RemoveChangeListener Me
 End If
 
@@ -387,7 +387,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub handleInactiveOrderContext(ByVal pOrderContext As OrderContext)
+Private Sub handleInactiveOrderContext()
 Const ProcName As String = "handleInactiveOrderContext"
 On Error GoTo Err
 
