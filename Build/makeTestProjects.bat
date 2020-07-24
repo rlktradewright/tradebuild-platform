@@ -14,7 +14,7 @@ echo =================================
 echo Making test projects
 echo .
 
-pushd %TB-PLATFORM-PROJECTS-PATH%\src\IBAPI
+pushd %TB-PLATFORM-PROJECTS-PATH%\src\IBAPIV100
 
 call makeExe.bat IBAPILoadTester IBAPILoadTester /M:E %DEP%
 if errorlevel 1 pause

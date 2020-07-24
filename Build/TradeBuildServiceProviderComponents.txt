@@ -1,4 +1,4 @@
-..\bin\TradeWright.TradeBuild.ServiceProviders\IBAPI27.dll
+..\bin\TradeWright.TradeBuild.ServiceProviders\IBAPIV10027.dll
 ..\bin\TradeWright.TradeBuild.ServiceProviders\IBEnhAPI27.dll
 ..\bin\TradeWright.TradeBuild.ServiceProviders\IBTwsSP27.dll
 

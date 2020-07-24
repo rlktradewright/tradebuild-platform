@@ -120,9 +120,13 @@ call :TlbImp TBDataCollector27
 
 set SOURCE=%TRADEBUILD%\TradeWright.TradeBuild.ServiceProviders
 
-call :TlbImp IBAPI27
+call :TlbImp IBAPIV10027
+call :TlbImp IBENHAPI27
+call :TlbImp IBTWSSP27
 call :TlbImp TradingDO27
 call :TlbImp TradingDbApi27
+call :TlbImp TBInfoBase27
+call :TlbImp TickfileSP27
 
 exit /B 0
 
