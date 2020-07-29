@@ -141,7 +141,49 @@ On Error GoTo Err
 If mTickStream.State = TickStreamStateReady Then Exit Sub
 
 Assert mTickStream.State = TickStreamStateRunning, "Tick stream is not running"
+
+If pComputation.ComputationType = OptionComputationTypeModel Then
+    Dim lTick As GenericTick
+    lTick.Timestamp = pComputation.Timestamp
+    
+    lTick.TickType = TickTypeOptionModelPrice
+    lTick.Price = pComputation.OptionPrice
+    mTickStream.NotifyTick lTick
+
+    lTick.TickType = TickTypeOptionModelImpliedVolatility
+    lTick.Price = pComputation.ImpliedVolatility
+    mTickStream.NotifyTick lTick
+
+    lTick.TickType = TickTypeOptionModelDelta
+    lTick.Price = pComputation.Delta
+    mTickStream.NotifyTick lTick
+
+    lTick.TickType = TickTypeOptionModelGamma
+    lTick.Price = pComputation.Gamma
+    mTickStream.NotifyTick lTick
+
+    lTick.TickType = TickTypeOptionModelVega
+    lTick.Price = pComputation.Vega
+    mTickStream.NotifyTick lTick
+
+    lTick.TickType = TickTypeOptionModelTheta
+    lTick.Price = pComputation.Theta
+    mTickStream.NotifyTick lTick
+
+    lTick.TickType = TickTypeOptionModelUnderlyingPrice
+    lTick.Price = pComputation.UnderlyingPrice
+    mTickStream.NotifyTick lTick
+
+End If
+
 mTickStream.NotifyOptionComputation pComputation
+
+    
+    
+    
+    
+    
+    
 
 Exit Sub
 

@@ -171,40 +171,15 @@ Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-Static sReceivedBid As Boolean
-Static sReceivedAsk As Boolean
-Static sReceivedTrade As Boolean
-
-Static sIsInitialised As Boolean
-If Not sIsInitialised Then
-    sIsInitialised = True
-    If mDataSource.HasCurrentTick(TickTypeAsk) Then sReceivedAsk = True
-    If mDataSource.HasCurrentTick(TickTypeBid) Then sReceivedBid = True
-    If mDataSource.HasCurrentTick(TickTypeTrade) Then sReceivedTrade = True
-End If
-
-If ev.Tick.TickType = TickTypeAsk Then
-    If sReceivedAsk Then Exit Sub
-    sReceivedAsk = True
-ElseIf ev.Tick.TickType = TickTypeBid Then
-    If sReceivedBid Then Exit Sub
-    sReceivedBid = True
-ElseIf ev.Tick.TickType = TickTypeTrade Then
-    If sReceivedTrade Then Exit Sub
-    sReceivedTrade = True
-Else
-    Exit Sub
+If IsDataSourceReady(mDataSource) Then
+    mDataSource.RemoveGenericTickListener Me
+    mDataSourceIsReady = True
 End If
 
 Dim lOrderContext As OrderContext
-If sReceivedAsk And sReceivedBid And sReceivedTrade Then
-    mDataSource.RemoveGenericTickListener Me
-    
-    mDataSourceIsReady = True
-    For Each lOrderContext In mOrderContexts
-        lOrderContext.IsDataSourceReady = mDataSourceIsReady
-    Next
-End If
+For Each lOrderContext In mOrderContexts
+    lOrderContext.IsDataSourceReady = mDataSourceIsReady
+Next
 
 For Each lOrderContext In mOrderContexts
     lOrderContext.NotifyDataReadinessChanged
@@ -517,23 +492,12 @@ mGroupName = pGroupName
 mRecoveryContextName = pRecoveryContextName
 
 mIsSimulated = pIsSimulated
+
 Set mContractFuture = pContractFuture
 mFutureWaiter.Add mContractFuture
+
 Set mDataSource = pDataSource
-If mDataSource Is Nothing Then
-    mDataSourceIsReady = True
-ElseIf Not mDataSource.State = MarketDataSourceStateRunning Then
-    mDataSourceIsReady = False
-    mDataSource.AddGenericTickListener Me
-ElseIf mDataSource.HasCurrentTick(TickTypeAsk) And _
-        mDataSource.HasCurrentTick(TickTypeBid) And _
-        mDataSource.HasCurrentTick(TickTypeTrade) _
-Then
-    mDataSourceIsReady = True
-Else
-    mDataSourceIsReady = False
-    mDataSource.AddGenericTickListener Me
-End If
+If Not IsDataSourceReady(mDataSource) Then mDataSource.AddGenericTickListener Me
 
 Set mOrderSubmitter = pOrderSubmitter
 Set pOrderAuthoriser = pOrderAuthoriser
@@ -554,16 +518,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function GetTickSize(pDummyOrder As IOrder) As IFuture
-Const ProcName As String = "getTickSize"
-On Error GoTo Err
-
-Set GetTickSize = mOrderSubmitter.GetTickSize(pDummyOrder)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Function IsGettingTickSize() As Boolean
+IsGettingTickSize = Not (mTickSizeFuture Is Nothing)
 End Function
 
 Friend Function IsReadyTickSize( _
@@ -742,6 +698,36 @@ Const ProcName As String = "getEnumerator"
 On Error GoTo Err
 
 Set getEnumerator = mOrderContexts.Enumerator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IsDataSourceReady( _
+                ByVal pDataSource As IMarketDataSource) As Boolean
+Const ProcName As String = "IsDataSourceReady"
+On Error GoTo Err
+
+If pDataSource Is Nothing Then
+    IsDataSourceReady = True
+ElseIf Not pDataSource.State = MarketDataSourceStateRunning Then
+    IsDataSourceReady = False
+ElseIf mContract Is Nothing Then
+    IsDataSourceReady = False
+ElseIf Not (pDataSource.HasCurrentTick(TickTypeAsk) And _
+            pDataSource.HasCurrentTick(TickTypeBid) And _
+            pDataSource.HasCurrentTick(TickTypeTrade)) _
+Then
+    IsDataSourceReady = False
+ElseIf mContract.Specifier.SecType = SecTypeOption Or _
+        mContract.Specifier.SecType = SecTypeFuturesOption _
+Then
+    IsDataSourceReady = pDataSource.HasCurrentTick(TickTypeOptionModelPrice)
+Else
+    IsDataSourceReady = True
+End If
 
 Exit Function
 

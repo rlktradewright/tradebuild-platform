@@ -215,10 +215,7 @@ Select Case mSelectionMode
 Case OptionStrikeSelectionModeNone
     mFutureWaiter.Add FetchContract(pContractSpec, mContractStore)
 Case OptionStrikeSelectionModeExpenditure, _
-        OptionStrikeSelectionModeDelta, _
-        OptionStrikeSelectionModeGamma, _
-        OptionStrikeSelectionModeTheta, _
-        OptionStrikeSelectionModeVega
+        OptionStrikeSelectionModeDelta
     gWriteLineToConsole "Resolving contract", True
     mFutureWaiter.Add GetOptionContract( _
                             pContractSpec, _

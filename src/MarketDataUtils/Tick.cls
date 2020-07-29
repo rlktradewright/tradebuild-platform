@@ -170,6 +170,13 @@ Case TickTypeTrade
 Case TickTypeVolume
 Case TickTypeOpenInterest
 Case TickTypeOpenPrice
+Case TickTypeOptionModelPrice
+Case TickTypeOptionModelImpliedVolatility
+Case TickTypeOptionModelDelta
+Case TickTypeOptionModelGamma
+Case TickTypeOptionModelVega
+Case TickTypeOptionModelTheta
+Case TickTypeOptionModelUnderlyingPrice
 Case Else
     AssertArgument False, "Invalid tick type"
 End Select

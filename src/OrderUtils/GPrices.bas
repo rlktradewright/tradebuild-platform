@@ -34,6 +34,7 @@ Public Const BidAskPriceDesignator                  As String = "BIDASK"
 Public Const LastPriceDesignator                    As String = "LAST"
 Public Const EntryPriceDesignator                   As String = "ENTRY"
 Public Const MidPriceDesignator                     As String = "MID"
+Public Const ModelPriceDesignator                   As String = "MODEL"
 
 Public Const TickOffsetDesignator                   As String = "T"
 Public Const PercentOffsetDesignator                As String = "%"
@@ -93,7 +94,7 @@ gRegExp.Global = False
 gRegExp.IgnoreCase = True
 
 Dim p As String
-p = "(?:^(?:(ASK|BID|BIDASK|LAST|ENTRY|MID|(?:[-+]?\d{1,6}(?:.\d{1,6})?))?)(?:\[(?:([-+]?\d{1,6}(?:.\d{1,6})?))([T%S]?)\])?$)"
+p = "(?:^(?:(ASK|BID|BIDASK|LAST|ENTRY|MID|MODEL|(?:[-+]?\d{1,6}(?:.\d{1,6})?))?)(?:\[(?:([-+]?\d{1,6}(?:.\d{1,6})?))([T%S]?)\])?$)"
 
 gRegExp.Pattern = p
 
@@ -124,6 +125,8 @@ Case BidAskPriceDesignator
     lPriceType = PriceValueTypeBidOrAsk
 Case LastPriceDesignator
     lPriceType = PriceValueTypeLast
+Case ModelPriceDesignator
+    lPriceType = PriceValueTypeModel
 Case EntryPriceDesignator
     lPriceType = PriceValueTypeEntry
 Case MidPriceDesignator
@@ -273,17 +276,19 @@ Case PriceValueTypeValue
         s = FormatPrice(pPrice, pContract.Specifier.SecType, pContract.TickSize)
     End If
 Case PriceValueTypeAsk
-    s = "ASK"
+    s = AskPriceDesignator
 Case PriceValueTypeBid
-    s = "BID"
+    s = BidPriceDesignator
 Case PriceValueTypeLast
-    s = "LAST"
+    s = LastPriceDesignator
+Case PriceValueTypeModel
+    s = ModelPriceDesignator
 Case PriceValueTypeEntry
-    s = "ENTRY"
+    s = EntryPriceDesignator
 Case PriceValueTypeMid
-    s = "MID"
+    s = MidPriceDesignator
 Case PriceValueTypeBidOrAsk
-    s = "BIDASK"
+    s = BidAskPriceDesignator
 Case Else
     AssertArgument False, "Invalid price value type"
 End Select

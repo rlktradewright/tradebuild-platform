@@ -566,6 +566,9 @@ If mDataSource.HasCurrentTick(TickTypeAsk) Then lAskPrice = getCurrentPrice(Tick
 Dim lTradePrice As Double: lTradePrice = MaxDouble
 If mDataSource.HasCurrentTick(TickTypeTrade) Then lTradePrice = getCurrentPrice(TickTypeTrade)
 
+Dim lOptionModelPrice As Double: lOptionModelPrice = MaxDouble
+If mDataSource.HasCurrentTick(TickTypeOptionModelPrice) Then lOptionModelPrice = getCurrentPrice(TickTypeOptionModelPrice)
+
 CalculateOffsettedPrice = gCalculateOffsettedPrice( _
                                 pPriceSpec, _
                                 pSectype, _
@@ -573,7 +576,8 @@ CalculateOffsettedPrice = gCalculateOffsettedPrice( _
                                 mTickSize, _
                                 lBidPrice, _
                                 lAskPrice, _
-                                lTradePrice)
+                                lTradePrice, _
+                                lOptionModelPrice)
 
 Exit Function
 
@@ -1186,6 +1190,8 @@ Case PriceValueTypeBid
     If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Function
 Case PriceValueTypeLast
     If Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
+Case PriceValueTypeModel
+    If Not mDataSource.HasCurrentTick(TickTypeOptionModelPrice) Then Exit Function
 Case PriceValueTypeMid, _
         PriceValueTypeBidOrAsk
     If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
@@ -1211,10 +1217,12 @@ If mTickSize <> -1# Then
     IsReadyTickSize = True
 ElseIf Not IsProviderReady Then
     IsReadyTickSize = False
+ElseIf getOrderContexts.IsGettingTickSize Then
+    IsReadyTickSize = False
 ElseIf mContract.Specifier.SecType = SecTypeOption Or _
         mContract.Specifier.SecType = SecTypeFuturesOption Then
     Dim lDummyOptionOrder As IOrder
-    Set lDummyOptionOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeAsk), gNewPriceSpecifier, True)
+    Set lDummyOptionOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeModel), gNewPriceSpecifier, True)
     IsReadyTickSize = getOrderContexts.IsReadyTickSize(lDummyOptionOrder)
 Else
     IsReadyTickSize = getOrderContexts.IsReadyTickSize(Nothing)

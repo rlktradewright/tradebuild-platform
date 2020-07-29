@@ -114,9 +114,6 @@ Private Const StrikeSelectionModeNone               As String = ""
 Private Const StrikeSelectionModeIncrement          As String = "I"
 Private Const StrikeSelectionModeExpenditure        As String = "$"
 Private Const StrikeSelectionModeDelta              As String = "D"
-Private Const StrikeSelectionModeGamma              As String = "G"
-Private Const StrikeSelectionModeTheta              As String = "T"
-Private Const StrikeSelectionModeVega               As String = "V"
 
 '@================================================================================
 ' Member variables
@@ -309,12 +306,6 @@ Case OptionStrikeSelectionModeExpenditure
     gStrikeSelectionModeToString = StrikeSelectionModeExpenditure
 Case OptionStrikeSelectionModeDelta
     gStrikeSelectionModeToString = StrikeSelectionModeDelta
-Case OptionStrikeSelectionModeGamma
-    gStrikeSelectionModeToString = StrikeSelectionModeGamma
-Case OptionStrikeSelectionModeTheta
-    gStrikeSelectionModeToString = StrikeSelectionModeTheta
-Case OptionStrikeSelectionModeVega
-    gStrikeSelectionModeToString = StrikeSelectionModeVega
 End Select
 End Function
 
@@ -690,23 +681,26 @@ Else
     validParams = False
 End If
             
-Dim Strike As Double
-If lStrike <> "" Then
-    If IsNumeric(lStrike) Then
-        Strike = CDbl(lStrike)
-    ElseIf parseStrikeExtension(lStrike, pStrikeSelectionMode, pParameter, pOperator, pUnderlyingExchange) Then
-        Strike = 0#
-    Else
-        gWriteErrorLine "Invalid strike '" & lStrike & "'"
-        validParams = False
-    End If
-End If
-
 Dim optRight As OptionRights
 optRight = OptionRightFromString(lRight)
 If lRight <> "" And optRight = OptNone Then
     gWriteErrorLine "Invalid right '" & lRight & "'"
     validParams = False
+End If
+
+Dim Strike As Double
+If lStrike <> "" Then
+    If IsNumeric(lStrike) Then
+        Strike = CDbl(lStrike)
+    ElseIf optRight = OptNone Then
+        gWriteErrorLine "Right not specified"
+        validParams = False
+    ElseIf parseStrikeExtension(lStrike, optRight, pStrikeSelectionMode, pParameter, pOperator, pUnderlyingExchange) Then
+        Strike = 0#
+    Else
+        gWriteErrorLine "Invalid strike '" & lStrike & "'"
+        validParams = False
+    End If
 End If
 
         
@@ -834,6 +828,7 @@ End Function
 
 Private Function parseStrikeExtension( _
                 ByVal pValue As String, _
+                ByVal pOptRight As OptionRights, _
                 ByRef pStrikeSelectionMode As OptionStrikeSelectionModes, _
                 ByRef pParameter As Long, _
                 ByRef pOperator As OptionStrikeSelectionOperators, _
@@ -841,7 +836,7 @@ Private Function parseStrikeExtension( _
 Const ProcName As String = "parseStrikeExtension"
 On Error GoTo Err
 
-Const StrikeFormat As String = "^(?:(?:(<|<=|>|>=|)([1-9]\d{1,6})(\$|D|T|V|G)(?:(?:;|,)([a-zA-Z0-9]+))?)?)?$"
+Const StrikeFormat As String = "^(?:(?:(<|<=|>|>=|)(\-?[1-9]\d{1,6})(\$|D)(?:(?:;|,)([a-zA-Z0-9]+))?)?)?$"
 
 gRegExp.Pattern = StrikeFormat
 
@@ -871,26 +866,19 @@ Dim lMinParameter As Long
 Dim lMaxParameter As Long
 Dim lSelectionMode As String: lSelectionMode = UCase$(lMatch.SubMatches(2))
 Select Case lSelectionMode
-Case "$"
+Case StrikeSelectionModeExpenditure
     pStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
     lMinParameter = 10
     lMaxParameter = 9999999
-Case "D"
+Case StrikeSelectionModeDelta
     pStrikeSelectionMode = OptionStrikeSelectionModeDelta
-    lMinParameter = 1
-    lMaxParameter = 99
-Case "G"
-    pStrikeSelectionMode = OptionStrikeSelectionModeGamma
-    lMinParameter = 1
-    lMaxParameter = 99
-Case "T"
-    pStrikeSelectionMode = OptionStrikeSelectionModeTheta
-    lMinParameter = 1
-    lMaxParameter = 99
-Case "V"
-    pStrikeSelectionMode = OptionStrikeSelectionModeVega
-    lMinParameter = 1
-    lMaxParameter = 99
+    If pOptRight = OptCall Then
+        lMinParameter = 1
+        lMaxParameter = 100
+    Else
+        lMinParameter = -100
+        lMaxParameter = -1
+    End If
 Case Else
     pStrikeSelectionMode = OptionStrikeSelectionModeNone
 End Select

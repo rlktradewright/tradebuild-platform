@@ -76,6 +76,14 @@ Private mCloseTick                                  As New Tick
 Private mVolumeTick                                 As New Tick
 Private mOpenInterestTick                           As New Tick
 
+Private mOptionModelPriceTick                       As New Tick
+Private mOptionModelImpliedVolatilityTick           As New Tick
+Private mOptionModelDeltaTick                       As New Tick
+Private mOptionModelGammaTick                       As New Tick
+Private mOptionModelVegaTick                        As New Tick
+Private mOptionModelThetaTick                       As New Tick
+Private mOptionModelUnderlyingPriceTick             As New Tick
+
 Private mTimestamp                                  As Date
 
 Private mOptions                                    As MarketDataSourceOptions
@@ -418,9 +426,9 @@ Case TickTypeHighPrice
 Case TickTypeLowPrice
     GetCurrentTick = mLowTick.Tick
 Case TickTypeMarketDepth
-    AssertArgument False, "Invalid tick type in this context"
+    AssertArgument False, "Invalid tick type in this context: " & pTickType
 Case TickTypeMarketDepthReset
-    AssertArgument False, "Invalid tick type in this context"
+    AssertArgument False, "Invalid tick type in this context: " & pTickType
 Case TickTypeTrade
     GetCurrentTick = mTradeTick.Tick
 Case TickTypeVolume
@@ -429,8 +437,22 @@ Case TickTypeOpenInterest
     GetCurrentTick = mOpenInterestTick.Tick
 Case TickTypeOpenPrice
     GetCurrentTick = mOpenTick.Tick
+Case TickTypeOptionModelPrice
+    GetCurrentTick = mOptionModelPriceTick.Tick
+Case TickTypeOptionModelImpliedVolatility
+    GetCurrentTick = mOptionModelImpliedVolatilityTick.Tick
+Case TickTypeOptionModelDelta
+    GetCurrentTick = mOptionModelDeltaTick.Tick
+Case TickTypeOptionModelGamma
+    GetCurrentTick = mOptionModelGammaTick.Tick
+Case TickTypeOptionModelVega
+    GetCurrentTick = mOptionModelVegaTick.Tick
+Case TickTypeOptionModelTheta
+    GetCurrentTick = mOptionModelThetaTick.Tick
+Case TickTypeOptionModelUnderlyingPrice
+    GetCurrentTick = mOptionModelUnderlyingPriceTick.Tick
 Case Else
-    AssertArgument False, "Invalid tick type"
+    AssertArgument False, "Invalid tick type: " & pTickType
 End Select
 
 Exit Function
@@ -455,9 +477,9 @@ Case TickTypeHighPrice
 Case TickTypeLowPrice
     GetCurrentQuote = mLowTick.Quote
 Case TickTypeMarketDepth
-    AssertArgument False, "Invalid tick type in this context"
+    AssertArgument False, "Invalid tick type in this context: " & pTickType
 Case TickTypeMarketDepthReset
-    AssertArgument False, "Invalid tick type in this context"
+    AssertArgument False, "Invalid tick type in this context: " & pTickType
 Case TickTypeTrade
     GetCurrentQuote = mTradeTick.Quote
 Case TickTypeVolume
@@ -467,7 +489,7 @@ Case TickTypeOpenInterest
 Case TickTypeOpenPrice
     GetCurrentQuote = mOpenTick.Quote
 Case Else
-    AssertArgument False, "Invalid tick type"
+    AssertArgument False, "Invalid tick type: " & pTickType
 End Select
 
 Exit Function
@@ -521,6 +543,20 @@ Case TickTypeOpenInterest
     HasCurrentTick = mOpenInterestTick.IsLive
 Case TickTypeOpenPrice
     HasCurrentTick = mOpenTick.IsLive
+Case TickTypeOptionModelPrice
+    HasCurrentTick = mOptionModelPriceTick.IsLive
+Case TickTypeOptionModelImpliedVolatility
+    HasCurrentTick = mOptionModelImpliedVolatilityTick.IsLive
+Case TickTypeOptionModelDelta
+    HasCurrentTick = mOptionModelDeltaTick.IsLive
+Case TickTypeOptionModelGamma
+    HasCurrentTick = mOptionModelGammaTick.IsLive
+Case TickTypeOptionModelVega
+    HasCurrentTick = mOptionModelVegaTick.IsLive
+Case TickTypeOptionModelTheta
+    HasCurrentTick = mOptionModelThetaTick.IsLive
+Case TickTypeOptionModelUnderlyingPrice
+    HasCurrentTick = mOptionModelUnderlyingPriceTick.IsLive
 Case Else
     AssertArgument False, "Invalid tick type"
 End Select
@@ -809,6 +845,27 @@ FireTick pListener, mCloseTick, pDataSource
 If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
 FireTick pListener, mOpenInterestTick, pDataSource
 
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+FireTick pListener, mOptionModelPriceTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+FireTick pListener, mOptionModelImpliedVolatilityTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+FireTick pListener, mOptionModelDeltaTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+FireTick pListener, mOptionModelGammaTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+FireTick pListener, mOptionModelVegaTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+FireTick pListener, mOptionModelThetaTick, pDataSource
+
+If pDataSource.State <> MarketDataSourceStateRunning Then Exit Sub
+FireTick pListener, mOptionModelUnderlyingPriceTick, pDataSource
+
 Exit Sub
 
 Err:
@@ -919,6 +976,14 @@ If pIncludeVolume Then
     mVolumeTick.Initialise TickTypeVolume
     mOpenInterestTick.Initialise TickTypeOpenInterest
 End If
+
+mOptionModelPriceTick.Initialise TickTypeOptionModelPrice
+mOptionModelImpliedVolatilityTick.Initialise TickTypeOptionModelImpliedVolatility
+mOptionModelDeltaTick.Initialise TickTypeOptionModelDelta
+mOptionModelGammaTick.Initialise TickTypeOptionModelGamma
+mOptionModelVegaTick.Initialise TickTypeOptionModelVega
+mOptionModelThetaTick.Initialise TickTypeOptionModelTheta
+mOptionModelUnderlyingPriceTick.Initialise TickTypeOptionModelUnderlyingPrice
 End Sub
 
 Private Sub NotifyMarketDataError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
@@ -1043,8 +1108,36 @@ Case TickTypeOpenPrice
     mOpenTick.Tick = ev.Tick
     firePriorityTick ev
     mDataSources.NotifyTick ev.Tick
+Case TickTypeOptionModelPrice
+    mOptionModelPriceTick.Tick = ev.Tick
+    firePriorityTick ev
+    mDataSources.NotifyTick ev.Tick
+Case TickTypeOptionModelImpliedVolatility
+    mOptionModelImpliedVolatilityTick.Tick = ev.Tick
+    firePriorityTick ev
+    mDataSources.NotifyTick ev.Tick
+Case TickTypeOptionModelDelta
+    mOptionModelDeltaTick.Tick = ev.Tick
+    firePriorityTick ev
+    mDataSources.NotifyTick ev.Tick
+Case TickTypeOptionModelGamma
+    mOptionModelGammaTick.Tick = ev.Tick
+    firePriorityTick ev
+    mDataSources.NotifyTick ev.Tick
+Case TickTypeOptionModelVega
+    mOptionModelVegaTick.Tick = ev.Tick
+    firePriorityTick ev
+    mDataSources.NotifyTick ev.Tick
+Case TickTypeOptionModelTheta
+    mOptionModelThetaTick.Tick = ev.Tick
+    firePriorityTick ev
+    mDataSources.NotifyTick ev.Tick
+Case TickTypeOptionModelUnderlyingPrice
+    mOptionModelUnderlyingPriceTick.Tick = ev.Tick
+    firePriorityTick ev
+    mDataSources.NotifyTick ev.Tick
 Case Else
-    AssertArgument False, "Invalid tick type"
+    AssertArgument False, "Invalid tick type: " & ev.Tick.TickType
 End Select
 
 Exit Sub

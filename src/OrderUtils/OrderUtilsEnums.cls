@@ -99,9 +99,6 @@ Public Enum OptionStrikeSelectionModes
     OptionStrikeSelectionModeIncrement
     OptionStrikeSelectionModeExpenditure
     OptionStrikeSelectionModeDelta
-    OptionStrikeSelectionModeGamma
-    OptionStrikeSelectionModeTheta
-    OptionStrikeSelectionModeVega
 End Enum
 
 Public Enum OptionStrikeSelectionOperators
@@ -278,6 +275,7 @@ Public Enum PriceValueTypes
     PriceValueTypeEntry
     PriceValueTypeMid
     PriceValueTypeBidOrAsk
+    PriceValueTypeModel
 End Enum
 
 Public Enum ProfitChangeTypes

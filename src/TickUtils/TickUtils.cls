@@ -371,7 +371,13 @@ Public Enum TickTypes
     TickTypeVolume
     TickTypeOpenInterest
     TickTypeOpenPrice
-    TickTypeOptionComputation
+    TickTypeOptionModelPrice
+    TickTypeOptionModelImpliedVolatility
+    TickTypeOptionModelDelta
+    TickTypeOptionModelGamma
+    TickTypeOptionModelVega
+    TickTypeOptionModelTheta
+    TickTypeOptionModelUnderlyingPrice
 End Enum
 
 Public Enum ValueChanges

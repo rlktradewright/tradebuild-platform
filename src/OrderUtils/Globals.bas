@@ -258,7 +258,8 @@ Public Function gCalculateOffsettedPrice( _
                 ByVal pTickSize As Double, _
                 ByVal pBidPrice As Double, _
                 ByVal pAskPrice As Double, _
-                ByVal pTradePrice As Double) As Double
+                ByVal pTradePrice As Double, _
+                ByVal pOptionModelPrice As Double) As Double
 Const ProcName As String = "gCalculateOffsettedPrice"
 On Error GoTo Err
 
@@ -291,6 +292,9 @@ Case PriceValueTypeBid
 Case PriceValueTypeLast
     AssertArgument pTradePrice <> MaxDouble, "Trade price not available"
     lPrice = pTradePrice
+Case PriceValueTypeModel
+    AssertArgument pOptionModelPrice <> MaxDouble, "Model price not available"
+    lPrice = pOptionModelPrice
 Case PriceValueTypeEntry
     Assert False
 Case PriceValueTypeMid
