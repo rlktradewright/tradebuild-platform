@@ -62,6 +62,7 @@ Private mAction                                     As OrderActions
 Private mHeuristicStrike                            As Double
 Private mInitialStrike                              As Double
 Private mLastStrikeFetched                          As Double
+Private mReverseDirection                           As Boolean
 
 Private mStrikeSelectionMode                        As OptionStrikeSelectionModes
 Private mSelectionParameter                         As Long
@@ -171,10 +172,7 @@ mContractsAwaitingMarketData = mContractsAwaitingMarketData + 1
 Select Case mStrikeSelectionMode
 Case OptionStrikeSelectionModeExpenditure
     lDataSource.AddOptionComputationListener Me
-Case OptionStrikeSelectionModeDelta, _
-        OptionStrikeSelectionModeGamma, _
-        OptionStrikeSelectionModeTheta, _
-        OptionStrikeSelectionModeVega
+Case OptionStrikeSelectionModeDelta
     lDataSource.AddOptionComputationListener Me
 Case Else
     Assert False, "Unexpected strike selection mode: " & mStrikeSelectionMode
@@ -203,7 +201,10 @@ Set lDataSource = Nothing
 If mState = OptionContractResolverStateFindingRequiredContract Then
     If allContractsChecked Then
         If needMoreContracts Then
-            fetchCandidateContracts mLastStrikeFetched, calcNumberOfStrikesToFetch, mLastStrikeFetched
+            fetchCandidateContracts mLastStrikeFetched, _
+                                        calcNumberOfStrikesToFetch, _
+                                        True, _
+                                        mLastStrikeFetched
         Else
             processTargetContract
             Set mSelfRef = Nothing
@@ -268,7 +269,10 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     
     If allContractsChecked Then
         If needMoreContracts Then
-            fetchCandidateContracts mLastStrikeFetched, calcNumberOfStrikesToFetch, mLastStrikeFetched
+            fetchCandidateContracts mLastStrikeFetched, _
+                                    calcNumberOfStrikesToFetch, _
+                                    True, _
+                                    mLastStrikeFetched
         Else
             processTargetContract
             Set mSelfRef = Nothing
@@ -297,7 +301,10 @@ Set lDataSource = Nothing
 If mState = OptionContractResolverStateFindingRequiredContract Then
     If allContractsChecked Then
         If needMoreContracts Then
-            fetchCandidateContracts mLastStrikeFetched, calcNumberOfStrikesToFetch, mLastStrikeFetched
+            fetchCandidateContracts mLastStrikeFetched, _
+                                    calcNumberOfStrikesToFetch, _
+                                    True, _
+                                    mLastStrikeFetched
         Else
             processTargetContract
             Set mSelfRef = Nothing
@@ -332,12 +339,6 @@ If mState = OptionContractResolverStateFindingRequiredContract Then
         lValue = 100 * ev.Computation.OptionPrice
     Case OptionStrikeSelectionModeDelta
         lValue = 100 * ev.Computation.Delta
-    Case OptionStrikeSelectionModeGamma
-        lValue = 100 * ev.Computation.Gamma
-    Case OptionStrikeSelectionModeTheta
-        lValue = 100 * ev.Computation.Theta
-    Case OptionStrikeSelectionModeVega
-        lValue = 100 * ev.Computation.Vega
     End Select
     
     If lValue <> 0 Then
@@ -347,10 +348,25 @@ If mState = OptionContractResolverStateFindingRequiredContract Then
     
     If allContractsChecked Then
         If needMoreContracts Then
-            fetchCandidateContracts mLastStrikeFetched, calcNumberOfStrikesToFetch, mLastStrikeFetched
-        Else
+            fetchCandidateContracts mLastStrikeFetched, _
+                                    calcNumberOfStrikesToFetch, _
+                                    True, _
+                                    mLastStrikeFetched
+        ElseIf Not mTargetContract Is Nothing Then
             processTargetContract
             Set mSelfRef = Nothing
+        ElseIf mReverseDirection Then
+            processTargetContract
+            Set mSelfRef = Nothing
+        Else
+            ' the selection condition is not satsfied  -
+            ' this means we need to go the other way to find the desired strike
+            mReverseDirection = True
+            mLastStrikeFetched = 0
+            fetchCandidateContracts mInitialStrike, _
+                                    calcNumberOfStrikesToFetch, _
+                                    True, _
+                                    mLastStrikeFetched
         End If
     End If
 End If
@@ -426,7 +442,10 @@ Case OptionContractResolverStateFetchingStrikes
         fireStateChange OptionContractResolverStateFetchingExpiries
     Else
         mTargetExpiry = mContractSpec.Expiry
-        fetchCandidateContracts mInitialStrike, calcNumberOfStrikesToFetch, mLastStrikeFetched
+        fetchCandidateContracts mInitialStrike, _
+                                calcNumberOfStrikesToFetch, _
+                                False, _
+                                mLastStrikeFetched
     End If
 Case OptionContractResolverStateFetchingExpiries
     Dim lExpiries As Expiries: Set lExpiries = ev.Future.Value
@@ -443,7 +462,10 @@ Case OptionContractResolverStateFetchingExpiries
             Exit For
         End If
     Next
-    fetchCandidateContracts mInitialStrike, calcNumberOfStrikesToFetch, mLastStrikeFetched
+    fetchCandidateContracts mInitialStrike, _
+                            calcNumberOfStrikesToFetch, _
+                            False, _
+                            mLastStrikeFetched
 Case OptionContractResolverStateFindingRequiredContract
     mNumberOfCandidateContractsAwaited = mNumberOfCandidateContractsAwaited - 1
     
@@ -456,10 +478,7 @@ Case OptionContractResolverStateFindingRequiredContract
     Select Case mStrikeSelectionMode
     Case OptionStrikeSelectionModeExpenditure
         lDataSource.AddOptionComputationListener Me
-    Case OptionStrikeSelectionModeDelta, _
-            OptionStrikeSelectionModeGamma, _
-            OptionStrikeSelectionModeTheta, _
-            OptionStrikeSelectionModeVega
+    Case OptionStrikeSelectionModeDelta
         lDataSource.AddOptionComputationListener Me
     Case Else
         Assert False, "Unexpected strike selection mode: " & mStrikeSelectionMode
@@ -588,12 +607,17 @@ Case OptionStrikeSelectionModeIncrement
 Case OptionStrikeSelectionModeExpenditure
     AssertArgument IsInteger(mSelectionParameter, 10, 10000), _
                 "For strike selection via expenditure, parameter must be > 10 and <= 10000"
-Case OptionStrikeSelectionModeDelta, _
-        OptionStrikeSelectionModeGamma, _
-        OptionStrikeSelectionModeTheta, _
-        OptionStrikeSelectionModeVega
-    AssertArgument IsInteger(mSelectionParameter, 0, 99), _
-        "For strike selection via greek, parameter must be > 0 and < 100"
+    If mSelectionOperator = OptionStrikeSelectionOperatorNone Then mSelectionOperator = OptionStrikeSelectionOperatorLE
+Case OptionStrikeSelectionModeDelta
+    If pContractSpec.Right = OptCall Then
+        AssertArgument IsInteger(mSelectionParameter, 0, 100), _
+            "For strike selection via delta, parameter must be a positive integer between 0 and 100 for calls"
+        If mSelectionOperator = OptionStrikeSelectionOperatorNone Then mSelectionOperator = OptionStrikeSelectionOperatorLE
+    Else
+        AssertArgument IsInteger(mSelectionParameter, -100, 0), _
+            "For strike selection via delta, parameter must be a negative integer between -100 and 0 for puts"
+        If mSelectionOperator = OptionStrikeSelectionOperatorNone Then mSelectionOperator = OptionStrikeSelectionOperatorGE
+    End If
 Case Else
     Assert False, "Unexpected strike selection mode " & mStrikeSelectionMode
 End Select
@@ -612,10 +636,7 @@ Set mFutureWaiter = New FutureWaiter
 
 Select Case mStrikeSelectionMode
 Case OptionStrikeSelectionModeExpenditure, _
-        OptionStrikeSelectionModeDelta, _
-        OptionStrikeSelectionModeGamma, _
-        OptionStrikeSelectionModeTheta, _
-        OptionStrikeSelectionModeVega
+        OptionStrikeSelectionModeDelta
     ' we first need to find the underlying contract
     fireStateChange OptionContractResolverStateFetchingUnderlyingContract
     Dim lUnderlyingContractSpec As IContractSpecifier
@@ -687,15 +708,32 @@ If Not isSelectionConditionSatisfied(pCurrentSelectionParameter) Then Exit Sub
 If mTargetContract Is Nothing Then
     Set mTargetContract = pCandidateContract
     mTargetContractSelectionParameter = pCurrentSelectionParameter
-ElseIf IIf(mAction = OrderActionBuy And _
-            (mSelectionOperator = OptionStrikeSelectionOperatorLE Or _
-             mSelectionOperator = OptionStrikeSelectionOperatorLT Or _
-             mSelectionOperator = OptionStrikeSelectionOperatorNone), _
-            pCandidateContract.Specifier.Strike < mTargetContract.Specifier.Strike, _
-            pCandidateContract.Specifier.Strike > mTargetContract.Specifier.Strike) _
-Then
-    Set mTargetContract = pCandidateContract
-    mTargetContractSelectionParameter = pCurrentSelectionParameter
+ElseIf mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure Then
+    If (mContractSpec.Right = OptCall And _
+            ((lessOperator And _
+                pCandidateContract.Specifier.Strike < mTargetContract.Specifier.Strike) Or _
+             (greaterOperator And _
+                pCandidateContract.Specifier.Strike > mTargetContract.Specifier.Strike) _
+        )) Or _
+        (mContractSpec.Right = OptPut And _
+            ((lessOperator And _
+                pCandidateContract.Specifier.Strike > mTargetContract.Specifier.Strike) Or _
+             (greaterOperator And _
+                pCandidateContract.Specifier.Strike < mTargetContract.Specifier.Strike) _
+        )) _
+    Then
+        Set mTargetContract = pCandidateContract
+        mTargetContractSelectionParameter = pCurrentSelectionParameter
+    End If
+ElseIf mStrikeSelectionMode = OptionStrikeSelectionModeDelta Then
+    If (lessOperator And _
+        pCandidateContract.Specifier.Strike < mTargetContract.Specifier.Strike) Or _
+        (greaterOperator And _
+        pCandidateContract.Specifier.Strike > mTargetContract.Specifier.Strike) _
+    Then
+        Set mTargetContract = pCandidateContract
+        mTargetContractSelectionParameter = pCurrentSelectionParameter
+    End If
 End If
 
 Exit Sub
@@ -707,6 +745,7 @@ End Sub
 Private Sub fetchCandidateContracts( _
                 ByVal pStartStrike As Double, _
                 ByVal pNumberToFetch As Long, _
+                ByVal pStartAtNext As Boolean, _
                 ByRef pEndStrike As Double)
 Const ProcName As String = "fetchCandidateContracts"
 On Error GoTo Err
@@ -716,10 +755,20 @@ fireStateChange OptionContractResolverStateFindingRequiredContract
 Dim lAscending As Boolean
 If mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure Then
     lAscending = IIf(mContractSpec.Right = OptCall, True, False)
-ElseIf mStrikeSelectionMode = OptionStrikeSelectionModeDelta And mSelectionParameter >= 50 Then
-    lAscending = IIf(mContractSpec.Right = OptCall, False, True)
-ElseIf mStrikeSelectionMode = OptionStrikeSelectionModeDelta And mSelectionParameter < 50 Then
-    lAscending = IIf(mContractSpec.Right = OptCall, True, False)
+ElseIf mStrikeSelectionMode = OptionStrikeSelectionModeDelta And _
+        mContractSpec.Right = OptCall Then
+    If Not mReverseDirection Then
+        lAscending = IIf(mSelectionParameter >= 50, False, True)
+    Else
+        lAscending = IIf(mSelectionParameter >= 50, True, False)
+    End If
+ElseIf mStrikeSelectionMode = OptionStrikeSelectionModeDelta And _
+        mContractSpec.Right = OptPut Then
+    If Not mReverseDirection Then
+        lAscending = IIf(mSelectionParameter <= -50, True, False)
+    Else
+        lAscending = IIf(mSelectionParameter <= -50, False, True)
+    End If
 Else
     Assert False, "Notimplemented", ErrorCodes.ErrUnsupportedOperationException
 End If
@@ -739,8 +788,12 @@ End If
 
 Dim i As Long
 For i = lFrom To lTo Step lStep
-    If (lAscending And (mStrikes(i) >= pStartStrike)) Or _
-        (Not lAscending And (mStrikes(i) <= pStartStrike)) _
+    If (lAscending And (IIf(pStartAtNext, _
+                            mStrikes(i) > pStartStrike, _
+                            mStrikes(i) >= pStartStrike))) Or _
+        (Not lAscending And (IIf(pStartAtNext, _
+                                mStrikes(i) < pStartStrike, _
+                                mStrikes(i) <= pStartStrike))) _
     Then
         If i = 0 Or i = (mStrikes.Count - 1) Then
             pEndStrike = -1
@@ -970,13 +1023,12 @@ Case OptionStrikeSelectionModeExpenditure
     getValueName = "value"
 Case OptionStrikeSelectionModeDelta
     getValueName = "delta"
-Case OptionStrikeSelectionModeGamma
-    getValueName = "gamma"
-Case OptionStrikeSelectionModeTheta
-    getValueName = "theta"
-Case OptionStrikeSelectionModeVega
-    getValueName = "vega"
 End Select
+End Function
+
+Private Function greaterOperator() As Boolean
+greaterOperator = (mSelectionOperator = OptionStrikeSelectionOperatorGE Or _
+                mSelectionOperator = OptionStrikeSelectionOperatorGT)
 End Function
 
 Private Function isSelectionConditionSatisfied( _
@@ -984,8 +1036,7 @@ Private Function isSelectionConditionSatisfied( _
 Select Case mSelectionOperator
 Case OptionStrikeSelectionOperatorLT
     isSelectionConditionSatisfied = (pCurrentSelectionParameter < mSelectionParameter)
-Case OptionStrikeSelectionOperatorLE, _
-        OptionStrikeSelectionOperatorNone
+Case OptionStrikeSelectionOperatorLE
     isSelectionConditionSatisfied = (pCurrentSelectionParameter <= mSelectionParameter)
 Case OptionStrikeSelectionOperatorGT
     isSelectionConditionSatisfied = (pCurrentSelectionParameter > mSelectionParameter)
@@ -1009,7 +1060,21 @@ gLogContractResolution pText & ": " & _
 End Sub
 
 Private Function needMoreContracts() As Boolean
-needMoreContracts = (mTargetContract.Specifier.Strike = mLastStrikeFetched)
+If mLastStrikeFetched = -1 Then
+    needMoreContracts = False
+ElseIf Not mTargetContract Is Nothing Then
+    needMoreContracts = (mTargetContract.Specifier.Strike = mLastStrikeFetched)
+ElseIf mSelectionParameter > 0 And _
+        (mSelectionOperator = OptionStrikeSelectionOperatorGT Or _
+        mSelectionOperator = OptionStrikeSelectionOperatorGE) Then
+    needMoreContracts = True
+ElseIf mSelectionParameter < 0 And _
+        (mSelectionOperator = OptionStrikeSelectionOperatorLT Or _
+        mSelectionOperator = OptionStrikeSelectionOperatorLE) Then
+    needMoreContracts = True
+Else
+    needMoreContracts = False
+End If
 End Function
 
 Private Sub processTargetContract()
@@ -1034,6 +1099,11 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function lessOperator() As Boolean
+lessOperator = (mSelectionOperator = OptionStrikeSelectionOperatorLE Or _
+                mSelectionOperator = OptionStrikeSelectionOperatorLT)
+End Function
 
 'Private Function updateInitialStrike(ByVal pRoundTo As Double) As Double
 'Const ProcName As String = "updateInitialStrike"
