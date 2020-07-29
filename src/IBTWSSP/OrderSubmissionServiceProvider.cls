@@ -194,7 +194,7 @@ If mClient Is Nothing Then
                             mConnectionRetryIntervalSecs, _
                             ApiMessageLoggingOptionDefault, _
                             ApiMessageLoggingOptionDefault, _
-                            True, _
+                            False, _
                             , _
                             Me)
     mClient.SetTwsLogLevel mTwsLogLevel
@@ -220,7 +220,7 @@ If mClient Is Nothing Then
                             mConnectionRetryIntervalSecs, _
                             ApiMessageLoggingOptionDefault, _
                             ApiMessageLoggingOptionDefault, _
-                            True, _
+                            False, _
                             , _
                             Me)
     mClient.SetTwsLogLevel mTwsLogLevel
