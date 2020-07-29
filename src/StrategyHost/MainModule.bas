@@ -550,17 +550,11 @@ Set clp = CreateCommandLineParser(switchValue, ",")
 
 setupTwsServiceProviders = True
 
-On Error Resume Next
 Dim Server As String
 Server = clp.Arg(0)
 
 Dim Port As String
 Port = clp.Arg(1)
-
-Dim ClientId As String
-ClientId = clp.Arg(2)
-On Error GoTo Err
-
 If Port = "" Then
     Port = "7496"
 ElseIf Not IsInteger(Port, 1) Then
@@ -568,6 +562,8 @@ ElseIf Not IsInteger(Port, 1) Then
         setupTwsServiceProviders = False
 End If
     
+Dim ClientId As String
+ClientId = clp.Arg(2)
 If ClientId = "" Then
     ClientId = "215339864"
 ElseIf Not IsInteger(ClientId, 0) Then
