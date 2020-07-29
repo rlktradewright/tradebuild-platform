@@ -52,13 +52,17 @@ Set IContractStore_FetchContracts = mFutureBuilder.Future
 StartTask Me, PriorityNormal, , , pCookie
 End Function
 
+Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
+
+End Function
+
+Private Function IContractStore_FetchOptionStrikes(ByVal pUnderlyingContractSpecifier As IContractSpecifier, ByVal pExchange As String, Optional ByVal pExpiry As String, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
+
+End Function
+
 Private Sub IContractStore_Finish()
 
 End Sub
-
-Private Function IContractStore_StoreContract(ByVal pContract As IContract, Optional ByVal pCookie As Variant) As TaskController
-Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not supported"
-End Function
 
 Private Function IContractStore_Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not supported"
