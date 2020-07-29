@@ -90,6 +90,8 @@ Private Sub Form_Load()
     AddTest New TestSessionUtils
     
     AddTest New TestTickfileListGenerator
+    
+    AddTest New TestOrderUtils
         
     
 End Sub
