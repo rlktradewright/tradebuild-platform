@@ -16,7 +16,7 @@ Begin VB.Form MainForm
       Height          =   285
       Left            =   1800
       TabIndex        =   2
-      Text            =   "645326819"
+      Text            =   "341952037"
       Top             =   840
       Width           =   1095
    End
@@ -25,7 +25,7 @@ Begin VB.Form MainForm
       Height          =   285
       Left            =   1800
       TabIndex        =   1
-      Text            =   "7496"
+      Text            =   "7497"
       Top             =   480
       Width           =   1095
    End
@@ -483,7 +483,7 @@ End Sub
 
 Private Sub ConnectButton_Click()
 If ConnectButton.Caption = "Connect" Then
-    Set mIBAPI = GetAPI(ServerText, CLng(PortText), CLng(ClientIdText))
+    Set mIBAPI = GetAPI(ServerText, CLng(PortText), CLng(ClientIdText), , pLogApiMessageStats:=True)
     mIBAPI.ConnectionStatusConsumer = Me
     mIBAPI.ErrorAndNotificationConsumer = Me
     mIBAPI.MarketDataConsumer = Me
@@ -851,15 +851,16 @@ Set fs = New FileSystemObject
 Set inFile = fs.OpenTextFile(App.Path & "\Data\symbols.txt", ForReading)
 
 Do While Not inFile.AtEndOfStream
-    inBuff = inFile.ReadLine
+    inBuff = UCase$(inFile.ReadLine)
     lineNum = lineNum + 1
     
     'ignore comment lines
     Do While inBuff = "" Or Left$(inBuff, 2) = "//"
         If inFile.AtEndOfStream Then Exit Sub
         inBuff = inFile.ReadLine
-        lineNum = lineNum + 1
     Loop
+    
+    If inBuff = "EXIT" Then Exit Do
     
     inBuff = Replace(inBuff, " ", "")
     inBuff = Replace(inBuff, vbTab, "")
