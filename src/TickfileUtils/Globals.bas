@@ -121,6 +121,13 @@ Public Enum FileTickTypes
     MarketDepthReset
     OpenInterest
     SessionOpen
+    ModelPrice
+    ModelDelta
+    ModelGamma
+    ModelTheta
+    ModelVega
+    ModelImpliedVolatility
+    ModelUnderlyingPrice
     Unknown = -1
 End Enum
 
@@ -172,6 +179,13 @@ Public Const TICK_CLOSE                             As String = "C"
 Public Const TICK_VOLUME                            As String = "V"
 Public Const TICK_OPEN                              As String = "O"
 Public Const TICK_OPEN_INTEREST                     As String = "I"
+Public Const TICK_MODEL_PRICE                       As String = "MP"
+Public Const TICK_MODEL_DELTA                       As String = "MD"
+Public Const TICK_MODEL_GAMMA                       As String = "MG"
+Public Const TICK_MODEL_THETA                       As String = "MT"
+Public Const TICK_MODEL_VEGA                        As String = "MV"
+Public Const TICK_MODEL_IMPLIED_VOLATILITY          As String = "MI"
+Public Const TICK_MODEL_UNDERLYING_PRICE            As String = "MU"
 Public Const TICK_MARKET_DEPTH                      As String = "D"
 Public Const TICK_MARKET_DEPTH_RESET                As String = "R"
 

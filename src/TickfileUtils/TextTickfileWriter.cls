@@ -479,6 +479,20 @@ Case TickTypes.TickTypeTrade
     s = s & TICK_TRADE & "," & Format(pTick.Price, priceFormatString) & "," & pTick.Size
 Case TickTypes.TickTypeVolume
     s = s & TICK_VOLUME & "," & pTick.Size
+Case TickTypes.TickTypeOptionModelPrice
+    s = s & TICK_MODEL_PRICE & "," & Format(pTick.Price, priceFormatString)
+Case TickTypes.TickTypeOptionModelDelta
+    s = s & TICK_MODEL_DELTA & "," & Format(pTick.Price, "0.0000")
+Case TickTypes.TickTypeOptionModelGamma
+    s = s & TICK_MODEL_GAMMA & "," & Format(pTick.Price, "0.0000")
+Case TickTypes.TickTypeOptionModelTheta
+    s = s & TICK_MODEL_THETA & "," & Format(pTick.Price, "0.0000")
+Case TickTypes.TickTypeOptionModelVega
+    s = s & TICK_MODEL_VEGA & "," & Format(pTick.Price, "0.0000")
+Case TickTypes.TickTypeOptionModelImpliedVolatility
+    s = s & TICK_MODEL_IMPLIED_VOLATILITY & "," & Format(pTick.Price, "0.0000")
+Case TickTypes.TickTypeOptionModelUnderlyingPrice
+    s = s & TICK_MODEL_UNDERLYING_PRICE & "," & Format(pTick.Price, priceFormatString)
 End Select
 
 formatTradeBuildTickData = s

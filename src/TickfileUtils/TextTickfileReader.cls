@@ -632,6 +632,20 @@ With mRecordTable(mCurrentRecordIndex).Tick
         ev.Tick.TickType = TickTypeMarketDepthReset
     Case FileTickTypes.OpenInterest
         ev.Tick.TickType = TickTypeOpenInterest
+    Case FileTickTypes.ModelPrice
+        ev.Tick.TickType = TickTypeOptionModelPrice
+    Case FileTickTypes.ModelDelta
+        ev.Tick.TickType = TickTypeOptionModelDelta
+    Case FileTickTypes.ModelGamma
+        ev.Tick.TickType = TickTypeOptionModelGamma
+    Case FileTickTypes.ModelImpliedVolatility
+        ev.Tick.TickType = TickTypeOptionModelImpliedVolatility
+    Case FileTickTypes.ModelTheta
+        ev.Tick.TickType = TickTypeOptionModelTheta
+    Case FileTickTypes.ModelUnderlyingPrice
+        ev.Tick.TickType = TickTypeOptionModelUnderlyingPrice
+    Case FileTickTypes.ModelVega
+        ev.Tick.TickType = TickTypeOptionModelVega
     End Select
 End With
 mRecordTable(mCurrentRecordIndex).Processed = True

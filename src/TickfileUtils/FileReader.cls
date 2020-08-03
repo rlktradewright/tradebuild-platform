@@ -750,6 +750,27 @@ With lFileTicks(0)
     Case TICK_OPEN
         .TickType = FileTickTypes.SessionOpen
         .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
+    Case TICK_MODEL_PRICE
+        .TickType = FileTickTypes.ModelPrice
+        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
+    Case TICK_MODEL_DELTA
+        .TickType = FileTickTypes.ModelDelta
+        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
+    Case TICK_MODEL_GAMMA
+        .TickType = FileTickTypes.ModelGamma
+        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
+    Case TICK_MODEL_THETA
+        .TickType = FileTickTypes.ModelTheta
+        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
+    Case TICK_MODEL_VEGA
+        .TickType = FileTickTypes.ModelVega
+        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
+    Case TICK_MODEL_IMPLIED_VOLATILITY
+        .TickType = FileTickTypes.ModelImpliedVolatility
+        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
+    Case TICK_MODEL_UNDERLYING_PRICE
+        .TickType = FileTickTypes.ModelUnderlyingPrice
+        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
     End Select
 End With
 parseTradeBuildRecord = lFileTicks
