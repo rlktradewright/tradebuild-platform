@@ -18,7 +18,6 @@ Option Explicit
 '@================================================================================
 
 Implements IContractStore
-Implements ITask
 
 '@================================================================================
 ' Events
@@ -42,34 +41,100 @@ Private Const ModuleName                            As String = "MockContractSto
 ' Member variables
 '@================================================================================
 
-Private mTaskContext As TaskContext
-Private mFutureBuilder As FutureBuilder
-Private mListener As IContractFetchListener
-
-Private mContracts As IContracts
-
-Private mContractSpecifier As IContractSpecifier
-
-Private WithEvents mFutureWaiter As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
+Private mContracts                                  As IContracts
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
-
 Dim lContractsBuilder As New ContractsBuilder
 
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ESM3")
+lContractsBuilder.Add gCreateStockContract("MSFT")
 
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM03")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU4")
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00187500", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        187.5)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00190000", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        190#)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00192500", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        192.5)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00195000", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        195#)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00197500", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        197.5)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00200000", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        200#)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00202500", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        202.5)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00205000", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        205#)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00207500", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        207.5)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00210000", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        210#)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00212500", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        212.5)
+
+lContractsBuilder.Add gCreateOptionContract("MSFT", _
+                                        "MSFT  200731C00215000", _
+                                        "SMART", _
+                                        "20200731", _
+                                        OptCall, _
+                                        215#)
 
 Set mContracts = lContractsBuilder.Contracts
 End Sub
@@ -79,81 +144,36 @@ End Sub
 '@================================================================================
 
 Private Function IContractStore_FetchContracts(ByVal pContractSpecifier As IContractSpecifier, Optional ByVal pListener As IContractFetchListener, Optional ByVal pCookie As Variant) As IFuture
-Set mContractSpecifier = pContractSpecifier
-Set mListener = pListener
-Set mFutureBuilder = New FutureBuilder
-Set IContractStore_FetchContracts = mFutureBuilder.Future
-StartTask Me, PriorityNormal, , , pCookie
+Dim lContractFetchTask As MockContractFetchTask
+Set lContractFetchTask = New MockContractFetchTask
+lContractFetchTask.Initialise pContractSpecifier, mContracts, pListener
+Set IContractStore_FetchContracts = lContractFetchTask.ContractsFuture
+StartTask lContractFetchTask, PriorityNormal, , , pCookie
 End Function
 
-Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As ContractUtils27.IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
-
+Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As IFuture
+Set IContractStore_FetchOptionExpiries = gContract.gFetchOptionExpiries( _
+                                                        pUnderlyingContractSpecifier, _
+                                                        pExchange, _
+                                                        pStrike, _
+                                                        pCookie)
 End Function
 
-Private Function IContractStore_FetchOptionStrikes(ByVal pUnderlyingContractSpecifier As ContractUtils27.IContractSpecifier, ByVal pExchange As String, Optional ByVal pExpiry As String, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
-
+Private Function IContractStore_FetchOptionStrikes(ByVal pUnderlyingContractSpecifier As IContractSpecifier, ByVal pExchange As String, Optional ByVal pExpiry As String, Optional ByVal pCookie As Variant) As IFuture
+Set IContractStore_FetchOptionStrikes = gContract.gFetchOptionStrikes( _
+                                                        pUnderlyingContractSpecifier, _
+                                                        pExchange, _
+                                                        pExpiry, _
+                                                        pCookie)
 End Function
 
 Private Sub IContractStore_Finish()
-
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not supported"
 End Sub
 
 Private Function IContractStore_Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
-Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not supported"
+IContractStore_Supports = True
 End Function
-
-'@================================================================================
-' ITask Interface Members
-'@================================================================================
-
-Private Sub ITask_Cancel()
-
-End Sub
-
-Private Sub ITask_Run()
-Static sContractsBuilder As ContractsBuilder
-Static en As Enumerator
-
-If sContractsBuilder Is Nothing Then
-    Set sContractsBuilder = New ContractsBuilder
-    Set en = mContracts.Enumerator
-End If
-
-If en.MoveNext Then
-    Dim lContract As IContract
-    Set lContract = en.Current
-    If ContractSpecsCompatible(mContractSpecifier, lContract.Specifier) Then
-        sContractsBuilder.Add lContract
-        If Not mListener Is Nothing Then mListener.NotifyContract mTaskContext.Data, lContract
-    End If
-Else
-    mFutureWaiter.Add mFutureBuilder.Future
-    mFutureBuilder.Value = sContractsBuilder.Contracts
-    mFutureBuilder.Cookie = mTaskContext.Data
-    mFutureBuilder.Complete
-    Set en = Nothing
-    Set sContractsBuilder = Nothing
-    mTaskContext.Suspend -1
-End If
-
-End Sub
-
-Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
-Set mTaskContext = RHS
-End Property
-
-Private Property Get ITask_TaskName() As String
-
-End Property
-
-'@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As TWUtilities40.FutureWaitCompletedEventData)
-If Not mListener Is Nothing Then mListener.FetchCompleted mTaskContext.Data
-mTaskContext.Finish Empty, False
-End Sub
 
 '@================================================================================
 ' Properties
