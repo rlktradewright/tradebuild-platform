@@ -101,13 +101,13 @@ Public Function gContractSpecsCompatible( _
 Const ProcName As String = "gContractSpecsCompatible"
 On Error GoTo Err
 
-If pContractSpec1.LocalSymbol <> "" And pContractSpec1.LocalSymbol <> pContractSpec2.LocalSymbol Then Exit Function
-If pContractSpec1.Symbol <> "" And pContractSpec1.Symbol <> pContractSpec2.Symbol Then Exit Function
+If pContractSpec1.LocalSymbol <> "" And UCase$(pContractSpec1.LocalSymbol) <> UCase$(pContractSpec2.LocalSymbol) Then Exit Function
+If pContractSpec1.Symbol <> "" And UCase$(pContractSpec1.Symbol) <> UCase$(pContractSpec2.Symbol) Then Exit Function
 If pContractSpec1.SecType <> SecTypeNone And pContractSpec1.SecType <> pContractSpec2.SecType Then Exit Function
-If pContractSpec1.Exchange <> "" And pContractSpec1.Exchange <> pContractSpec2.Exchange Then Exit Function
+If pContractSpec1.Exchange <> "" And UCase$(pContractSpec1.Exchange) <> UCase$(pContractSpec2.Exchange) Then Exit Function
 If pContractSpec1.Expiry <> "" And pContractSpec1.Expiry <> Left$(pContractSpec2.Expiry, Len(pContractSpec1.Expiry)) Then Exit Function
 If pContractSpec1.Multiplier <> pContractSpec2.Multiplier Then Exit Function
-If pContractSpec1.CurrencyCode <> "" And pContractSpec1.CurrencyCode <> pContractSpec2.CurrencyCode Then Exit Function
+If pContractSpec1.CurrencyCode <> "" And UCase$(pContractSpec1.CurrencyCode) <> UCase$(pContractSpec2.CurrencyCode) Then Exit Function
 If pContractSpec1.Right <> OptNone And pContractSpec1.Right <> pContractSpec2.Right Then Exit Function
 If pContractSpec1.Strike <> 0# And pContractSpec1.Strike <> pContractSpec2.Strike Then Exit Function
 
