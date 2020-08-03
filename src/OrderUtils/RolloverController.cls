@@ -767,7 +767,8 @@ Set findNextContractForOption = gGetOptionContract( _
                                     OptionStrikeSelectionOperatorLT, _
                                     mBracketOrder.RolloverSpecification.UnderlyingExchangeName, _
                                     mOrderManager.MarketDataManager, _
-                                    Nothing)
+                                    Nothing, _
+                                    Globals.MinDate)
 
 Exit Function
 

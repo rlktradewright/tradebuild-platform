@@ -32,6 +32,8 @@ Private Const ModuleName                            As String = "Globals"
 Public Const MaxCurrency                            As Currency = 922337203685477.5807@
 Public Const MaxDoubleValue                         As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
+Public Const MinDate                                As Double = -657434#
+
 Private Const StrOrderTypeNone                      As String = ""
 Private Const StrOrderTypeMarket                    As String = "Market"
 Private Const StrOrderTypeMarketOnClose             As String = "Market on Close"
@@ -439,7 +441,8 @@ Public Function gGetOptionContract( _
                 ByVal pOperator As OptionStrikeSelectionOperators, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pListener As IStateChangeListener) As IFuture
+                ByVal pListener As IStateChangeListener, _
+                ByVal pReferenceDate As Date) As IFuture
 Const ProcName As String = "gGetOptionContract"
 On Error GoTo Err
 
@@ -453,7 +456,8 @@ Set gGetOptionContract = lContractResolver.ResolveContract( _
                                                 pOperator, _
                                                 pUnderlyingExchangeName, _
                                                 pMarketDataManager, _
-                                                pListener)
+                                                pListener, _
+                                                pReferenceDate)
 
 
 Exit Function

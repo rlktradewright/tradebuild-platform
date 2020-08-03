@@ -313,7 +313,8 @@ Public Function GetOptionContract( _
                 ByVal pOperator As OptionStrikeSelectionOperators, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pMarketDataManager As IMarketDataManager, _
-                Optional ByVal pListener As IStateChangeListener) As IFuture
+                Optional ByVal pListener As IStateChangeListener, _
+                Optional ByVal pReferenceDate As Date = Globals.MinDate) As IFuture
 Const ProcName As String = "GetOptionContract"
 On Error GoTo Err
 
@@ -326,7 +327,8 @@ Set GetOptionContract = gGetOptionContract( _
                                 pOperator, _
                                 pUnderlyingExchangeName, _
                                 pMarketDataManager, _
-                                pListener)
+                                pListener, _
+                                pReferenceDate)
 
 Exit Function
 
