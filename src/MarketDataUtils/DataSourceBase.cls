@@ -488,6 +488,20 @@ Case TickTypeOpenInterest
     GetCurrentQuote = mOpenInterestTick.Quote
 Case TickTypeOpenPrice
     GetCurrentQuote = mOpenTick.Quote
+Case TickTypeOptionModelPrice
+    GetCurrentQuote = mOptionModelPriceTick.Quote
+Case TickTypeOptionModelImpliedVolatility
+    GetCurrentQuote = mOptionModelImpliedVolatilityTick.Quote
+Case TickTypeOptionModelDelta
+    GetCurrentQuote = mOptionModelDeltaTick.Quote
+Case TickTypeOptionModelGamma
+    GetCurrentQuote = mOptionModelGammaTick.Quote
+Case TickTypeOptionModelVega
+    GetCurrentQuote = mOptionModelVegaTick.Quote
+Case TickTypeOptionModelTheta
+    GetCurrentQuote = mOptionModelThetaTick.Quote
+Case TickTypeOptionModelUnderlyingPrice
+    GetCurrentQuote = mOptionModelUnderlyingPriceTick.Quote
 Case Else
     AssertArgument False, "Invalid tick type: " & pTickType
 End Select
