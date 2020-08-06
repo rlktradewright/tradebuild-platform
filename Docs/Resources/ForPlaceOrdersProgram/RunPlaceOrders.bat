@@ -30,13 +30,14 @@ setlocal enableextensions enabledelayedexpansion
 ::                                                                             +
 ::=============================================================================+
 
-set TOPDIR=%SYSTEMDRIVE%\PlaceOrders2-7-236
+set TOPDIR=%SYSTEMDRIVE%\PlaceOrders
 
 set MONITOR=yes
 
 set TWSSERVER=
 set PORT=7497
 set CLIENTID=27236
+set CONNECTIONRETRYINTERVAL=
 
 set LOG=%TOPDIR%\Log\plord27.log
 set LOGLEVEL=N
@@ -99,6 +100,11 @@ set RECOVERYFILEDIR=%TOPDIR%\Recovery
 ::   999999999. Do not change this setting if you have created positions using
 ::   this program that have not yet been closed out: if you do, you will have
 ::   to close them out by other means (for example using TWS).
+::
+:: CONNECTIONRETRYINTERVAL
+::   This specifies how frequently the program will attempt to reconnection to
+::   TWS/Gateway after failing to connect, or losing the connection. The value
+::   is a number of seconds, with a default of 60.
 ::
 ::
 :: LOG

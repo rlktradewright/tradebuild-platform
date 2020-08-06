@@ -1743,10 +1743,6 @@ server = lClp.Arg(0)
 
 Dim port As String
 port = lClp.Arg(1)
-
-Dim clientId As String
-clientId = lClp.Arg(2)
-
 If port = "" Then
     port = 7496
 ElseIf Not IsInteger(port, 0) Then
@@ -1754,6 +1750,8 @@ ElseIf Not IsInteger(port, 0) Then
     setupTwsApi = False
 End If
     
+Dim clientId As String
+clientId = lClp.Arg(2)
 If clientId = "" Then
     clientId = DefaultClientId
 ElseIf Not IsInteger(clientId, 0, 999999999) Then
@@ -1763,13 +1761,35 @@ Else
     mClientId = CLng(clientId)
 End If
 
+Dim connectionRetryInterval As String
+connectionRetryInterval = lClp.Arg(3)
+If connectionRetryInterval = "" Then
+ElseIf Not IsInteger(connectionRetryInterval, 0, 3600) Then
+    gWriteErrorLine "Error: connection retry interval must be an integer >= 0 and <= 3600", True
+    setupTwsApi = False
+End If
+
+Dim lListener As New TwsConnectionListener
+
 Dim lTwsClient As Client
-Set lTwsClient = GetClient(server, _
-                        CLng(port), _
-                        mClientId, _
-                        pLogApiMessages:=pLogApiMessages, _
-                        pLogRawApiMessages:=pLogRawApiMessages, _
-                        pLogApiMessageStats:=pLogApiMessageStats)
+If connectionRetryInterval = "" Then
+    Set lTwsClient = GetClient(server, _
+                            CLng(port), _
+                            mClientId, _
+                            pLogApiMessages:=pLogApiMessages, _
+                            pLogRawApiMessages:=pLogRawApiMessages, _
+                            pLogApiMessageStats:=pLogApiMessageStats, _
+                            pConnectionStateListener:=lListener)
+Else
+    Set lTwsClient = GetClient(server, _
+                            CLng(port), _
+                            mClientId, _
+                            pConnectionRetryIntervalSecs:=CLng(connectionRetryInterval), _
+                            pLogApiMessages:=pLogApiMessages, _
+                            pLogRawApiMessages:=pLogRawApiMessages, _
+                            pLogApiMessageStats:=pLogApiMessageStats, _
+                            pConnectionStateListener:=lListener)
+End If
 
 Set mContractStore = lTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(lTwsClient.GetMarketDataFactory)

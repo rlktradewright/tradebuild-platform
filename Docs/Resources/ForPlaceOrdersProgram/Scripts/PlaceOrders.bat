@@ -33,11 +33,19 @@ if not defined PLORD_PORT (
 	)
 )
 
-if not defined PLORD_CLIENTID  (
+if not defined PLORD_CLIENTID (
 	if defined CLIENTID  (
 		set PLORD_CLIENTID=%CLIENTID%
 	) else (
 		set PLORD_CLIENTID=555
+	)
+)
+
+if not defined PLORD_CONNECTIONRETRYINTERVAL (
+	if defined CONNECTIONRETRYINTERVAL (
+		set PLORD_CONNECTIONRETRYINTERVAL=%CONNECTIONRETRYINTERVAL%
+	) else (
+		set PLORD_CONNECTIONRETRYINTERVAL=60
 	)
 )
 
@@ -214,12 +222,25 @@ if not defined APIMESSAGELOGGING (
 	set APIMESSAGELOGGING=NNN
 )
 
-set RUN_PLORD=plord27 -tws:%PLORD_TWSSERVER%,%PLORD_PORT%,%PLORD_CLIENTID% -resultsdir:%PLORD_RESULTSDIR% -log:%PLORD_LOG% -loglevel:%PLORD_LOGLEVEL% -monitor:%PLORD_MONITOR% -scopename:%PLORD_SCOPENAME% -recoveryfiledir:%PLORD_RECOVERYFILEDIR% -stageorders:%PLORD_STAGEORDERS% -batchorders:%PLORD_BATCHORDERS% %SIMULATE% -apimessagelogging:%APIMESSAGELOGGING%
+set RUN_PLORD=plord27 -tws:%PLORD_TWSSERVER%,%PLORD_PORT%,%PLORD_CLIENTID%,%PLORD_CONNECTIONRETRYINTERVAL% ^
+                      -resultsdir:%PLORD_RESULTSDIR% ^
+                      -log:%PLORD_LOG% ^
+                      -loglevel:%PLORD_LOGLEVEL% ^
+                      -monitor:%PLORD_MONITOR% ^
+                      -scopename:%PLORD_SCOPENAME% ^
+                      -recoveryfiledir:%PLORD_RECOVERYFILEDIR% ^
+                      -stageorders:%PLORD_STAGEORDERS% ^
+                      -batchorders:%PLORD_BATCHORDERS% ^
+                      %SIMULATE% ^
+                      -apimessagelogging:%APIMESSAGELOGGING%
 pushd %PLORD_TOPDIR%\bin
 if /I "%~1"=="/I" (
 	%RUN_PLORD%
 ) else if "%~1" == "" (
-	fileautoreader %PLORD_ORDERFILESDIR% %PLORD_FILEFILTER% %PLORD_ARCHIVEDIR% | %RUN_PLORD%
+	fileautoreader %PLORD_ORDERFILESDIR% ^
+                       %PLORD_FILEFILTER% ^
+                       %PLORD_ARCHIVEDIR% ^
+                       | %RUN_PLORD%
 ) else (
 	TYPE %PLORD_ORDERFILESDIR%\%~1 |  %RUN_PLORD%
 )
