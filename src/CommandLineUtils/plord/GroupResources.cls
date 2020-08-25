@@ -84,7 +84,12 @@ Set lNewContractProcessor = ev.ContinuationData
 
 If ev.Future.IsFaulted Then
     mContractProcessors.Remove lNewContractProcessor.Id
-ElseIf ev.Future.IsAvailable Then
+    Set mCurrentContractProcessor = Nothing
+ElseIf Not ev.Future.IsAvailable Then
+ElseIf ev.Future.Value Is Nothing Then
+    mContractProcessors.Remove lNewContractProcessor.Id
+    Set mCurrentContractProcessor = Nothing
+Else
     Dim lContract As IContract: Set lContract = ev.Future.Value
     
     Dim lExistingContractProcessor As ContractProcessor

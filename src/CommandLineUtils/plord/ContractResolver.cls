@@ -109,6 +109,8 @@ If ev.Future.IsCancelled Then
 End If
 
 If ev.Future.IsFaulted Then
+    mFutureBuilder.Value = Nothing
+    mFutureBuilder.Complete
     gWriteErrorLine ev.Future.ErrorMessage, True
     gInputPaused = False
     Set mSelfRef = Nothing
@@ -247,7 +249,11 @@ On Error GoTo Err
 
 mFutureBuilder.Value = pcontract
 mFutureBuilder.Complete
-gWriteLineToConsole "Contract is: " & gGetContractName(pcontract), True
+If pcontract Is Nothing Then
+    gWriteLineToConsole "Contract not found: " & mContractSpec.ToString, True
+Else
+    gWriteLineToConsole "Contract is: " & gGetContractName(pcontract), True
+End If
 
 Exit Sub
 
