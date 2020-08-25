@@ -1036,7 +1036,9 @@ addExchangeCode "NYSE"
 addExchangeCode "NYSENAT"
 
 addExchangeCode "OMS"
+addExchangeCode "OMXNO"
 addExchangeCode "ONE"
+addExchangeCode "OSE"
 addExchangeCode "OSE.JPN"
 
 addExchangeCode "PEARL"
