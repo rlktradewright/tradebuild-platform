@@ -178,6 +178,7 @@ Private mBatchOrders                                As Boolean
 
 Private mBracketOrderDefinitionInProgress           As Boolean
 
+Private mTwsClient                                  As Client
 Private mClientId                                   As Long
 
 '@================================================================================
@@ -229,8 +230,16 @@ gGenerateSwitch = SwitchPrefix & pName & IIf(pValue = "", " ", ValueSeparator & 
 End Function
 
 Public Function gGetContractName(ByVal pcontract As IContract) As String
-AssertArgument Not pcontract Is Nothing
+Const ProcName As String = "gGetContractName"
+On Error GoTo Err
+
+AssertArgument Not pcontract Is Nothing, "pcontract is Nothing"
 gGetContractName = pcontract.Specifier.LocalSymbol & "@" & pcontract.Specifier.Exchange
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gHandleFatalError(ev As ErrorEventData)
@@ -936,6 +945,13 @@ Loop
 
 If Not mOrderPersistenceDataStore Is Nothing Then mOrderPersistenceDataStore.Finish
 Set mOrderPersistenceDataStore = Nothing
+
+If Not mTwsClient Is Nothing Then
+    gWriteLineToConsole "Releasing API connection", True
+    mTwsClient.Finish
+    ' allow time for the socket connection to be nicely released
+    Wait 10
+End If
 
 gWriteLineToConsole "Exiting", True
 
@@ -1771,9 +1787,8 @@ End If
 
 Dim lListener As New TwsConnectionListener
 
-Dim lTwsClient As Client
 If connectionRetryInterval = "" Then
-    Set lTwsClient = GetClient(server, _
+    Set mTwsClient = GetClient(server, _
                             CLng(port), _
                             mClientId, _
                             pLogApiMessages:=pLogApiMessages, _
@@ -1781,7 +1796,7 @@ If connectionRetryInterval = "" Then
                             pLogApiMessageStats:=pLogApiMessageStats, _
                             pConnectionStateListener:=lListener)
 Else
-    Set lTwsClient = GetClient(server, _
+    Set mTwsClient = GetClient(server, _
                             CLng(port), _
                             mClientId, _
                             pConnectionRetryIntervalSecs:=CLng(connectionRetryInterval), _
@@ -1791,17 +1806,17 @@ Else
                             pConnectionStateListener:=lListener)
 End If
 
-Set mContractStore = lTwsClient.GetContractStore
-Set mMarketDataManager = CreateRealtimeDataManager(lTwsClient.GetMarketDataFactory)
+Set mContractStore = mTwsClient.GetContractStore
+Set mMarketDataManager = CreateRealtimeDataManager(mTwsClient.GetMarketDataFactory)
 
 mMarketDataManager.LoadFromConfig gGetMarketDataSourcesConfig(mConfigStore)
 
-Set mOrderRecoveryAgent = lTwsClient
+Set mOrderRecoveryAgent = mTwsClient
 
 If pSimulateOrders Then
     Set mOrderSubmitterFactory = New SimOrderSubmitterFactory
 Else
-    Set mOrderSubmitterFactory = lTwsClient
+    Set mOrderSubmitterFactory = mTwsClient
 End If
     
 Set mOrderManager = New OrderManager
