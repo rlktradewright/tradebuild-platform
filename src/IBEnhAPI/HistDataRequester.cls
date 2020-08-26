@@ -493,7 +493,7 @@ End Sub
 
 Friend Sub RequestRealtimeBars( _
                 ByVal pRequesterId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pRequester As RealtimeBarRequester)
 Const ProcName As String = "RequestRealtimeBars"
 On Error GoTo Err
@@ -504,7 +504,7 @@ lRegistrationId = RegisterHistoricalDataRequest(pRequester)
 mHistDataRequests(lRegistrationId).RequesterID = pRequesterId
 mHistDataRequests(lRegistrationId).RequestType = HistoricalDataRequestTypes.HistoricalDataRequestTypeRealtimeBars
 With mHistDataRequests(lRegistrationId).Request
-    Set .Contract = pContract
+    Set .ContractSpec = pContractSpec
     .WhatToShow = "TRADES"
 End With
 
@@ -880,7 +880,7 @@ If mHistDataRequests(pIndex).RequestType = HistoricalDataRequestTypes.Historical
     mTwsAPI.RequestHistoricalData pIndex, mHistDataRequests(pIndex).Request
     mHistDataRequests(pIndex).State = StateRequestInProgress
 Else
-    mTwsAPI.RequestRealtimeBars pIndex, mHistDataRequests(pIndex).Request.Contract, 5, "TRADES", False
+    mTwsAPI.RequestRealtimeBars pIndex, mHistDataRequests(pIndex).Request.ContractSpec, 5, "TRADES", False
 End If
 unqueueEntry pIndex
 

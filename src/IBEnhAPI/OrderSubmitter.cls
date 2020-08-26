@@ -58,7 +58,7 @@ Private mOrderPlacer                                As OrderPlacer
 
 Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
-Private mContractRequester                          As ContractDetailsRequester
+Private mContractRequester                          As ContractsTwsRequester
 Private mContractCache                              As ContractCache
 
 Private mState                                      As OrderSubmitterStates
@@ -148,7 +148,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As OrderUtils27.IOrder)
+Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As OrderUtils27.Iorder)
 Const ProcName As String = "IOrderSubmitter_CancelOrder"
 On Error GoTo Err
 
@@ -221,7 +221,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function IOrderSubmitter_GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+Private Function IOrderSubmitter_GetTickSize(ByVal pDummyOrder As Iorder) As IFuture
 Const ProcName As String = "IOrderSubmitter_GetTickSize"
 On Error GoTo Err
 
@@ -237,7 +237,7 @@ Private Function IOrderSubmitter_IsReadyForOrderType(ByVal pOrderType As OrderTy
 IOrderSubmitter_IsReadyForOrderType = IsReadyForOrderType(pOrderType)
 End Function
 
-Private Sub IOrderSubmitter_ModifyOrder(ByVal pOrder As IOrder)
+Private Sub IOrderSubmitter_ModifyOrder(ByVal pOrder As Iorder)
 Const ProcName As String = "IOrderSubmitter_ModifyOrder"
 On Error GoTo Err
 
@@ -265,7 +265,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_NotifyRecoveredOrder(ByVal pOrder As IOrder)
+Private Sub IOrderSubmitter_NotifyRecoveredOrder(ByVal pOrder As Iorder)
 Const ProcName As String = "IOrderSubmitter_NotifyRecoveredOrder"
 On Error GoTo Err
 
@@ -285,7 +285,7 @@ Private Property Get IOrderSubmitter_OrdersAreStaged() As Boolean
 IOrderSubmitter_OrdersAreStaged = OrdersAreStaged
 End Property
 
-Private Sub IOrderSubmitter_PlaceOrder(ByVal pOrder As IOrder)
+Private Sub IOrderSubmitter_PlaceOrder(ByVal pOrder As Iorder)
 Const ProcName As String = "IOrderSubmitter_PlaceOrder"
 On Error GoTo Err
 
@@ -516,7 +516,7 @@ Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Bool
 Const ProcName As String = "CancelBracketOrder"
 On Error GoTo Err
 
-Dim lEntryOrder As IOrder
+Dim lEntryOrder As Iorder
 Set lEntryOrder = pBracketOrder.EntryOrder
 
 Select Case lEntryOrder.Status
@@ -531,7 +531,7 @@ Case Else
     CancelBracketOrder = True
 End Select
 
-Dim lStopOrder As IOrder
+Dim lStopOrder As Iorder
 Set lStopOrder = pBracketOrder.StopLossOrder
 If Not lStopOrder Is Nothing Then
     Select Case lStopOrder.Status
@@ -551,7 +551,7 @@ If Not lStopOrder Is Nothing Then
     End Select
 End If
 
-Dim lTargetOrder As IOrder
+Dim lTargetOrder As Iorder
 Set lTargetOrder = pBracketOrder.TargetOrder
 If Not lTargetOrder Is Nothing Then
     Select Case lTargetOrder.Status
@@ -583,7 +583,7 @@ Public Sub CancelCloseoutOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "CancelCloseoutOrder"
 On Error GoTo Err
 
-Dim lCloseoutOrder As IOrder
+Dim lCloseoutOrder As Iorder
 Set lCloseoutOrder = pBracketOrder.CloseoutOrder
 
 Assert Not lCloseoutOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no closeout Order"
@@ -604,7 +604,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub CancelOrder(ByVal pOrder As IOrder)
+Public Sub CancelOrder(ByVal pOrder As Iorder)
 Const ProcName As String = "CancelOrder"
 On Error GoTo Err
 
@@ -620,7 +620,7 @@ Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "CancelStopOrder"
 On Error GoTo Err
 
-Dim lStopOrder As IOrder
+Dim lStopOrder As Iorder
 Set lStopOrder = pBracketOrder.StopLossOrder
 
 Assert Not lStopOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no stop Order"
@@ -645,7 +645,7 @@ Public Sub CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "CancelTargetOrder"
 On Error GoTo Err
 
-Dim lTargetOrder As IOrder
+Dim lTargetOrder As Iorder
 Set lTargetOrder = pBracketOrder.TargetOrder
 
 Assert Not lTargetOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no target Order"
@@ -677,7 +677,7 @@ If pBracketOrder.Contract.Specifier.SecType = SecTypeCombo Then
     lCookie.BracketOrder = pBracketOrder
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
-    execBracketOrder pBracketOrder, gContractSpecToTwsContract(pBracketOrder.Contract.Specifier)
+    execBracketOrder pBracketOrder, gContractSpecToTwsContractSpec(pBracketOrder.Contract.Specifier)
 End If
 
 Exit Sub
@@ -691,10 +691,9 @@ Public Function FetchPermittedOrderProperties( _
 Const ProcName As String = "FetchPermittedOrderAttributes"
 On Error GoTo Err
 
-Dim lFetchTask As New PermittedOrderPropsFetchTask
+Dim lFetchTask As New PermittedOrderPropsFetcher
 
 lFetchTask.Initialise pContractFuture, mContractRequester, mContractCache, pCookie
-StartTask lFetchTask, PriorityLow, , pCookie
 Set FetchPermittedOrderProperties = lFetchTask.Future
 
 Exit Function
@@ -703,7 +702,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+Public Function GetTickSize(ByVal pDummyOrder As Iorder) As IFuture
 Const ProcName As String = "GetTickSize"
 On Error GoTo Err
 
@@ -760,7 +759,7 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pOrderPlacer As OrderPlacer, _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pDataSource As IMarketDataSource)
 Const ProcName As String = "Initialise"
@@ -796,7 +795,7 @@ Case Else
 End Select
 End Function
 
-Public Sub ModifyOrder(ByVal pOrder As IOrder)
+Public Sub ModifyOrder(ByVal pOrder As Iorder)
 Const ProcName As String = "ModifyOrder"
 On Error GoTo Err
 
@@ -814,7 +813,7 @@ If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     lCookie.Transmit = True
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
-    placeAnOrder pOrder, gContractSpecToTwsContract(pOrder.ContractSpecifier), 0, True, 0, "", OrderModeEntry
+    placeAnOrder pOrder, gContractSpecToTwsContractSpec(pOrder.ContractSpecifier), 0, True, 0, "", OrderModeEntry
 End If
 
 Exit Sub
@@ -848,7 +847,7 @@ If pBracketOrder.Contract.Specifier.SecType = SecTypeCombo Then
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
     modifyABracketOrder pBracketOrder, _
-                        gContractSpecToTwsContract(pBracketOrder.Contract.Specifier), _
+                        gContractSpecToTwsContractSpec(pBracketOrder.Contract.Specifier), _
                         pEntryOrderChanged, _
                         pStopOrderChanged, _
                         pTargetOrderChanged, _
@@ -861,7 +860,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyAboutToPlaceOrder( _
-                ByVal pOrder As IOrder)
+                ByVal pOrder As Iorder)
 Const ProcName As String = "NotifyAboutToPlaceOrder"
 On Error GoTo Err
 
@@ -881,7 +880,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyError( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pErrorCode As Long, _
                 ByVal pErrorMsg As String)
 Const ProcName As String = "NotifyError"
@@ -926,7 +925,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyMessage( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pMessage As String)
 Const ProcName As String = "NotifyMessage"
 On Error GoTo Err
@@ -984,7 +983,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub NotifyRecoveredOrder(ByVal pOrder As IOrder)
+Public Sub NotifyRecoveredOrder(ByVal pOrder As Iorder)
 Const ProcName As String = "NotifyRecoveredOrder"
 On Error GoTo Err
 
@@ -996,7 +995,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub PlaceOrder(ByVal pOrder As IOrder)
+Public Sub PlaceOrder(ByVal pOrder As Iorder)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
@@ -1106,7 +1105,7 @@ End Sub
 '================================================================================
 
 Private Sub cancelAnOrder( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pOrderMode As String)
 Const ProcName As String = "cancelAnOrder"
 On Error GoTo Err
@@ -1130,12 +1129,12 @@ Private Sub execBracketOrder( _
 Const ProcName As String = "execBracketOrder"
 On Error GoTo Err
 
-Dim lEntryOrder As IOrder: Set lEntryOrder = pBracketOrder.EntryOrder
+Dim lEntryOrder As Iorder: Set lEntryOrder = pBracketOrder.EntryOrder
 
-Dim lStopLossOrder As IOrder: Set lStopLossOrder = pBracketOrder.StopLossOrder
+Dim lStopLossOrder As Iorder: Set lStopLossOrder = pBracketOrder.StopLossOrder
 Dim lStopLossOrderCanBePlaced As Boolean: lStopLossOrderCanBePlaced = orderCanBePlaced(lStopLossOrder)
 
-Dim lTargetOrder As IOrder: Set lTargetOrder = pBracketOrder.TargetOrder
+Dim lTargetOrder As Iorder: Set lTargetOrder = pBracketOrder.TargetOrder
 Dim lTargetOrderCanBePlaced As Boolean: lTargetOrderCanBePlaced = orderCanBePlaced(lTargetOrder)
 
 Dim lPlexId As Long
@@ -1258,7 +1257,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getOcaGroup(ByVal pOrder As IOrder) As String
+Private Function getOcaGroup(ByVal pOrder As Iorder) As String
 If pOrder Is Nothing Then Exit Function
 If pOrder.ProviderProperties Is Nothing Then Exit Function
 getOcaGroup = pOrder.ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
@@ -1268,7 +1267,7 @@ Private Function GetTickSizeForOptions( _
                 ByVal pResolver As OptionTickSizeResolver, _
                 ByVal pExamplePrice As Double, _
                 ByVal pPriceTickType As TickTypes, _
-                ByVal pDummyOrder As IOrder) As IFuture
+                ByVal pDummyOrder As Iorder) As IFuture
 Const ProcName As String = "GetTickSizeForOptions"
 On Error GoTo Err
 
@@ -1449,7 +1448,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub notifyOpenOrder(ByVal pOrder As IOrder)
+Private Sub notifyOpenOrder(ByVal pOrder As Iorder)
 Const ProcName As String = "notifyOpenOrder"
 On Error GoTo Err
 
@@ -1496,7 +1495,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub notifyStatus(ByVal pOrder As IOrder, ByVal pStatus As OrderStatuses)
+Private Sub notifyStatus(ByVal pOrder As Iorder, ByVal pStatus As OrderStatuses)
 Const ProcName As String = "notifyStatus"
 On Error GoTo Err
 
@@ -1512,7 +1511,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function orderCanBePlaced(ByVal pOrder As IOrder) As Boolean
+Private Function orderCanBePlaced(ByVal pOrder As Iorder) As Boolean
 If pOrder Is Nothing Then
     orderCanBePlaced = False
 ElseIf pOrder.LimitPriceSpec Is Nothing Then
@@ -1526,7 +1525,7 @@ End If
 End Function
 
 Private Sub placeAnOrder( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pContract As TwsContract, _
                 ByVal pLimitPriceOverride, _
                 ByVal pTransmit As Boolean, _
@@ -1561,7 +1560,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PlaceOrderEx( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pLimitPriceOverride, _
                 ByVal pTransmit As Boolean, _
                 ByVal pParentId As Long, _
@@ -1586,7 +1585,7 @@ If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     lCookie.Transmit = pTransmit
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
-    placeAnOrder pOrder, gContractSpecToTwsContract(pOrder.ContractSpecifier), pLimitPriceOverride, pTransmit, pParentId, pOcaGroup, pOrderMode
+    placeAnOrder pOrder, gContractSpecToTwsContractSpec(pOrder.ContractSpecifier), pLimitPriceOverride, pTransmit, pParentId, pOcaGroup, pOrderMode
 End If
 
 Exit Sub
@@ -1596,7 +1595,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOcaGroup( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pOcaGroup As String)
 Const ProcName As String = "setOcaGroup"
 On Error GoTo Err

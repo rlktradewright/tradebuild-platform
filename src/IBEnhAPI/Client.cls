@@ -349,13 +349,13 @@ Public Function GetContractStore() As IContractStore
 Const ProcName As String = "GetContractStore"
 On Error GoTo Err
 
-Static sContractDetailsFetcher As ContractDetailsFetcher
-If sContractDetailsFetcher Is Nothing Then
-    Set sContractDetailsFetcher = New ContractDetailsFetcher
-    sContractDetailsFetcher.Initialise getContractDetailsRequester, mContractCache
+Static sContractStore As ContractStore
+If sContractStore Is Nothing Then
+    Set sContractStore = New ContractStore
+    sContractStore.Initialise getContractDetailsRequester, mContractCache
 End If
 
-Set GetContractStore = sContractDetailsFetcher
+Set GetContractStore = sContractStore
 
 Exit Function
 
@@ -535,18 +535,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getContractDetailsRequester() As ContractDetailsRequester
+Private Function getContractDetailsRequester() As ContractsTwsRequester
 Const ProcName As String = "getContractDetailsRequester"
 On Error GoTo Err
 
-Dim lContractDetailsRequester As ContractDetailsRequester
+Dim lContractDetailsRequester As ContractsTwsRequester
 
 If Not mTwsAPI.ContractDetailsConsumer Is Nothing Then
-    Assert TypeOf mTwsAPI.ContractDetailsConsumer Is ContractDetailsRequester, "Tws is already configured with an incompatible IContractDetailsConsumer"
+    Assert TypeOf mTwsAPI.ContractDetailsConsumer Is ContractsTwsRequester, "Tws is already configured with an incompatible IContractDetailsConsumer"
     Set lContractDetailsRequester = mTwsAPI.ContractDetailsConsumer
 Else
-    Set lContractDetailsRequester = New ContractDetailsRequester
-    lContractDetailsRequester.Initialise mTwsAPI
+    Set lContractDetailsRequester = New ContractsTwsRequester
+    lContractDetailsRequester.Initialise mTwsAPI, mContractCache
     mTwsAPI.ContractDetailsConsumer = lContractDetailsRequester
     AddTwsConnectionStateListener lContractDetailsRequester
 End If

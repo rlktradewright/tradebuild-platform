@@ -107,16 +107,16 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function gContractSpecToTwsContract(ByVal pContractSpecifier As IContractSpecifier) As TwsContract
-Const ProcName As String = "gContractSpecToTwsContract"
+Public Function gContractSpecToTwsContractSpec(ByVal pContractSpecifier As IContractSpecifier) As TwsContractSpecifier
+Const ProcName As String = "gContractSpecToTwsContractSpec"
 On Error GoTo Err
 
 Dim lComboLeg As ComboLeg
 Dim lTwsComboLeg As TwsComboLeg
 
-Set gContractSpecToTwsContract = New TwsContract
+Set gContractSpecToTwsContractSpec = New TwsContractSpecifier
 
-With gContractSpecToTwsContract
+With gContractSpecToTwsContractSpec
     If Not pContractSpecifier.ProviderProperties Is Nothing Then
         .ConId = pContractSpecifier.ProviderProperties.GetParameterValue(ProviderPropertyContractID, "0")
     End If
@@ -178,16 +178,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gContractFutureToTwsContractDetails( _
-                ByVal pContractRequester As ContractDetailsRequester, _
+Public Function gContractFutureToTwsContractFuture( _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pContractCache As ContractCache) As IFuture
-Const ProcName As String = "gContractFutureToTwsContractDetails"
+Const ProcName As String = "gContractFutureToTwsContractFuture"
 On Error GoTo Err
 
 Dim lFutureBuilder As New TwsContractDtlsFutBldr
 lFutureBuilder.Initialise pContractRequester, pContractFuture, pContractCache
-Set gContractFutureToTwsContractDetails = lFutureBuilder.Future
+Set gContractFutureToTwsContractFuture = lFutureBuilder.Future
 
 Exit Function
 
@@ -195,25 +195,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gContractToTwsContractDetails(ByVal pContract As IContract) As TwsContractDetails
-Const ProcName As String = "gContractToTwsContractDetails"
+Public Function gContractToTwsContract(ByVal pContract As IContract) As TwsContract
+Const ProcName As String = "gContractToTwsContract"
 On Error GoTo Err
-
-Dim lContract As TwsContract
-Dim lContractDetails As TwsContractDetails
 
 Assert pContract.Specifier.SecType <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
 
-Set lContractDetails = New TwsContractDetails
-Set lContract = gContractSpecToTwsContract(pContract.Specifier)
+Dim lContract As New TwsContract
+Dim lContractSpec As TwsContractSpecifier
+Set lContractSpec = gContractSpecToTwsContractSpec(pContract.Specifier)
 
-With lContractDetails
-    .Summary = lContract
+With lContract
+    .Specifier = lContractSpec
     .MinTick = pContract.TickSize
     .TimeZoneId = gStandardTimezoneNameToTwsTimeZoneName(pContract.TimezoneName)
 End With
 
-Set gContractToTwsContractDetails = lContractDetails
+Set gContractToTwsContract = lContract
 
 Exit Function
 
@@ -222,7 +220,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gFetchContracts( _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
@@ -231,14 +229,12 @@ Public Function gFetchContracts( _
 Const ProcName As String = "gFetchContracts"
 On Error GoTo Err
 
-Dim lFetchTask As New ContractDetailsRequestTask
-
-lFetchTask.Initialise pContractRequester, pContractCache, pContractSpecifier, pListener, pCookie, pReturnTwsContracts
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching contract details for", ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
 
-StartTask lFetchTask, PriorityLow
+Dim lFetcher As New ContractsRequestManager
+lFetcher.Fetch pContractRequester, pContractCache, pContractSpecifier, pListener, pCookie, pReturnTwsContracts
 
-Set gFetchContracts = lFetchTask.ContractsFuture
+Set gFetchContracts = lFetcher.ContractsFuture
 
 Exit Function
 
@@ -247,7 +243,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gFetchOptionExpiries( _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
                 ByVal pExchange As String, _
@@ -271,7 +267,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gFetchOptionStrikes( _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
                 ByVal pExchange As String, _
@@ -295,12 +291,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gGenerateTwsContractKey( _
-                ByVal pContractDetails As TwsContractDetails) As String
+                ByVal pContract As TwsContract) As String
 Const ProcName As String = "gGenerateTwsContractKey"
 On Error GoTo Err
 
 Dim lSpec As IContractSpecifier
-Set lSpec = gTwsContractToContractSpecifier(pContractDetails.Summary, pContractDetails.PriceMagnifier)
+Set lSpec = gTwsContractSpecToContractSpecifier(pContract.Specifier, pContract.PriceMagnifier)
 
 gGenerateTwsContractKey = lSpec.Key
 
@@ -522,7 +518,7 @@ End Select
 End Function
 
 Public Function gOrderToTwsOrder( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pDataSource As IMarketDataSource) As TwsOrder
 Const ProcName As String = "gOrderToTwsOrder"
 On Error GoTo Err
@@ -540,7 +536,7 @@ With pOrder
     If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
-    gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
+    gOrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)
@@ -740,15 +736,15 @@ Case Else
 End Select
 End Function
                 
-Public Function gTwsContractDetailsToContract(ByVal pTwsContractDetails As TwsContractDetails) As IContract
-Const ProcName As String = "gTwsContractDetailsToContract"
+Public Function gTwsContractToContract(ByVal pTwsContract As TwsContract) As IContract
+Const ProcName As String = "gTwsContractToContract"
 On Error GoTo Err
 
 Dim lBuilder As ContractBuilder
 
-With pTwsContractDetails
-    Set lBuilder = CreateContractBuilder(gTwsContractToContractSpecifier(.Summary, .PriceMagnifier))
-    With .Summary
+With pTwsContract
+    Set lBuilder = CreateContractBuilder(gTwsContractSpecToContractSpecifier(.Specifier, .PriceMagnifier))
+    With .Specifier
         If .Expiry <> "" Then
             lBuilder.ExpiryDate = CDate(Left$(.Expiry, 4) & "/" & _
                                         Mid$(.Expiry, 5, 2) & "/" & _
@@ -800,7 +796,7 @@ With pTwsContractDetails
     lBuilder.ProviderProperties = lProviderProps
 End With
 
-Set gTwsContractDetailsToContract = lBuilder.Contract
+Set gTwsContractToContract = lBuilder.Contract
 
 Exit Function
 
@@ -808,14 +804,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gTwsContractToContractSpecifier( _
-                ByVal pTwsContract As TwsContract, _
+Public Function gTwsContractSpecToContractSpecifier( _
+                ByVal pTwsContractSpec As TwsContractSpecifier, _
                 ByVal pPriceMagnifier) As IContractSpecifier
-Const ProcName As String = "gTwsContractToContractSpecifier"
+Const ProcName As String = "gTwsContractSpecToContractSpecifier"
 On Error GoTo Err
 
 Dim lContractSpec As ContractSpecifier
-With pTwsContract
+With pTwsContractSpec
     Dim lExchange As String: lExchange = .Exchange
     If lExchange = ExchangeSmart And .PrimaryExch <> "" Then
         lExchange = ExchangeSmartQualified & .PrimaryExch
@@ -835,7 +831,7 @@ With pTwsContract
     lContractSpec.ProviderProperties = p
 End With
 
-Set gTwsContractToContractSpecifier = lContractSpec
+Set gTwsContractSpecToContractSpecifier = lContractSpec
 
 Exit Function
 

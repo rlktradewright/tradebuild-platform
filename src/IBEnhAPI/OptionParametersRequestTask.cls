@@ -48,7 +48,7 @@ Private Const ModuleName                            As String = "OptionParameter
 '@================================================================================
 
 Private mContractSpecifier                          As IContractSpecifier
-Private mContractRequester                          As ContractDetailsRequester
+Private mContractRequester                          As ContractsTwsRequester
 
 Private mTaskContext                                As TaskContext
 
@@ -81,7 +81,7 @@ End Sub
 ' IContractDetailsConsumer Interface Members
 '@================================================================================
 
-Private Sub IContractDetailsConsumer_EndContractDetails(ByVal pRequestId As Long)
+Private Sub IContractDetailsConsumer_EndContracts(ByVal pRequestId As Long)
 
 End Sub
 
@@ -112,7 +112,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As IBAPIV100.TwsContractDetails)
+Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, ByVal pTwsContract As TwsContract)
 
 End Sub
 
@@ -120,7 +120,7 @@ Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal
 Const ProcName As String = "IContractDetailsConsumer_NotifyError"
 On Error GoTo Err
 
-mContractRequester.cancelRequest mRequestId
+mContractRequester.CancelRequest mRequestId
 mTaskContext.Error pErrorCode, pErrorMsg
 
 mFutureBuilder.Fail pErrorCode, pErrorMsg, ""
@@ -224,7 +224,7 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pRequestType As OptionParameterTypes, _
@@ -258,7 +258,7 @@ Private Sub doCancel()
 Const ProcName As String = "doCancel"
 On Error GoTo Err
 
-mContractRequester.cancelRequest mRequestId
+mContractRequester.CancelRequest mRequestId
 
 mTaskContext.Finish Nothing, True
 

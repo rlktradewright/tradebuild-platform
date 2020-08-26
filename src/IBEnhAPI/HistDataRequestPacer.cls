@@ -162,7 +162,7 @@ Private Function contractAndTickTypeToString(ByRef pRequest As TwsHistoricalData
 Const ProcName As String = "contractAndTickTypeToString"
 On Error GoTo Err
 
-contractAndTickTypeToString = pRequest.Contract.ToString & vbNullChar & _
+contractAndTickTypeToString = pRequest.ContractSpec.ToString & vbNullChar & _
                                 pRequest.WhatToShow
 
 Exit Function
@@ -233,7 +233,7 @@ Const ProcName As String = "historicalDataRequestToString"
 On Error GoTo Err
 
 historicalDataRequestToString = pRequest.BarSizeSetting & vbNullChar & _
-                                pRequest.Contract.ToString & vbNullChar & _
+                                pRequest.ContractSpec.ToString & vbNullChar & _
                                 pRequest.Duration & vbNullChar & _
                                 pRequest.EndDateTime & vbNullChar & _
                                 pRequest.WhatToShow

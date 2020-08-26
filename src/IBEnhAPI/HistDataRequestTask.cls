@@ -63,7 +63,7 @@ Private Const TwsWhatToShowTrades                   As String = "TRADES"
 '@================================================================================
 
 Private mHistDataRequester                          As HistDataRequester
-Private mContractRequester                          As ContractDetailsRequester
+Private mContractRequester                          As ContractsTwsRequester
 
 Private mState                                      As States
 
@@ -114,7 +114,7 @@ Attribute mTargetBarsBuilder.VB_VarHelpID = -1
 Private mAccumulatedVolume                          As Long
 Private mCurrentBar                                 As Bar
 
-Private mTwsContractDetails                         As TwsContractDetails
+Private mTwsContract                                As TwsContract
 
 Private mListener                                   As IBarFetchListener
 Private mNotifyAtEnd                                As Boolean
@@ -318,9 +318,9 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
         mNotifyAtEnd = True
     End If
         
-    mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, CreateFuture(mTargetContract), mContractCache)
-ElseIf TypeOf ev.Future.Value Is TwsContractDetails Then
-    Set mTwsContractDetails = ev.Future.Value
+    mFutureWaiter.Add gContractFutureToTwsContractFuture(mContractRequester, CreateFuture(mTargetContract), mContractCache)
+ElseIf TypeOf ev.Future.Value Is TwsContract Then
+    Set mTwsContract = ev.Future.Value
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
     mState = RetrievingBars
     mTaskContext.Continue
@@ -401,7 +401,7 @@ Friend Sub Initialise( _
                 ByVal pListener As IBarFetchListener, _
                 ByVal pFetcher As HistoricalDataFetcher, _
                 ByVal pHistDataRequester As HistDataRequester, _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
@@ -640,7 +640,7 @@ Private Function generateTwsHistoricalDataRequest( _
 Const ProcName As String = "generateTwsHistoricalDataRequest"
 On Error GoTo Err
 
-Set pTwsRequest.Contract = mTwsContractDetails.Summary
+Set pTwsRequest.ContractSpec = mTwsContract.Specifier
 pTwsRequest.MainSessionOnly = Not mWorkingBarSpecifier.IncludeBarsOutsideSession
 
 ' Set the Tws bar Size and Duration to retrieve as many bars as possible in one

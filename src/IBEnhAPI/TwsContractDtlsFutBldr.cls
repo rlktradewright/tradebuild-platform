@@ -50,10 +50,10 @@ Attribute mFutureBuilder.VB_VarHelpID = -1
 Private WithEvents mTaskController                  As TaskController
 Attribute mTaskController.VB_VarHelpID = -1
 
-Private mContractRequester                          As ContractDetailsRequester
+Private mContractRequester                          As ContractsTwsRequester
 
 Private mContract                                   As IContract
-Private mTwsContract                                As TwsContractDetails
+Private mTwsContract                                As TwsContract
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -123,7 +123,7 @@ ElseIf TypeOf ev.Future.Value Is EnumerableCollection Then
     ElseIf lTwsContracts.Count > 1 Then
         mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract's specifier is not uniquely specified", ProjectName & "." & ModuleName & ":" & ProcName
     Else
-        gLogger.Log "TwsContractDetails retrieved for IContract: " & mContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+        gLogger.Log "TwsContract retrieved for IContract: " & mContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
         mFutureBuilder.Value = lTwsContracts.Item(1)
         mFutureBuilder.Complete
         Set mSelfRef = Nothing
@@ -189,7 +189,7 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pContractCache As ContractCache)
 Const ProcName As String = "Initialise"

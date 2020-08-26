@@ -48,7 +48,7 @@ Private Const ModuleName                            As String = "HistoricalDataF
 '@================================================================================
 
 Private mHistDataRequester                          As HistDataRequester
-Private mContractRequester                          As ContractDetailsRequester
+Private mContractRequester                          As ContractsTwsRequester
 
 Private mTimePeriodValidator                        As New TimePeriodValidator
 
@@ -202,7 +202,7 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pHistDataRequester As HistDataRequester, _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache)
 Set mHistDataRequester = pHistDataRequester
 Set mContractRequester = pContractRequester

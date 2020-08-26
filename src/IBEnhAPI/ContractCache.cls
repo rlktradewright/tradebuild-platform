@@ -48,17 +48,76 @@ Private mContracts                                  As New EnumerableCollection
 
 Private mOptionParameters                           As New EnumerableCollection
 
+Private mPriceIncrementRulesets                     As New EnumerableCollection
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+Dim lKey As String: lKey = CStr(ev.ContinuationData)
+
+If IsInteger(ev.ContinuationData) Then
+    Dim lRulesetEntry As PriceIncrementRulesetEntry
+    lRulesetEntry = mPriceIncrementRulesets.Item(lKey)
+    mPriceIncrementRulesets.Remove lKey
+    
+    If ev.Future.IsCancelled Or ev.Future.IsFaulted Then Exit Sub
+    
+    Set lRulesetEntry.RulesetFutureBuilder = Nothing
+    Set lRulesetEntry.Ruleset = ev.Future.Value
+    
+    lRulesetEntry.CacheDate = Now
+    
+    mPriceIncrementRulesets.Add lRulesetEntry, lKey
+    gLogger.Log "Added price increment ruleset " & _
+                lKey & _
+                " to cache", _
+                ProcName, ModuleName, LogLevelDetail
+Else
+    Dim lContractEntry As ContractCacheEntry
+    lContractEntry = mContracts.Item(lKey)
+    mContracts.Remove lKey
+    
+    If ev.Future.IsCancelled Or ev.Future.IsFaulted Then Exit Sub
+    
+    Set lContractEntry.ContractsFutureBuilder = Nothing
+    Set lContractEntry.Contracts = ev.Future.Value
+    
+    lContractEntry.CacheDate = Now
+    
+    mContracts.Add lContractEntry, lKey
+    gLogger.Log "Added " & _
+                lContractEntry.Contracts.Count & _
+                IIf(lContractEntry.Contracts.Count = 1, " contract", " contracts") & _
+                " to cache for key", _
+                ProcName, ModuleName, LogLevelDetail, _
+                lKey
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -69,22 +128,26 @@ Private mOptionParameters                           As New EnumerableCollection
 '@================================================================================
 
 Friend Sub AddContract( _
+                ByVal pKey As String, _
                 ByVal pContract As IContract, _
-                ByVal pTwsContractDetails As TwsContractDetails)
+                ByVal pTwsContract As TwsContract)
 Const ProcName As String = "AddContract"
 On Error GoTo Err
 
 If pContract.Specifier.SecType = SecTypeCombo Then Exit Sub
-If Not IsValidExchangeCode(pTwsContractDetails.Summary.Exchange) Then Exit Sub
+If Not IsValidExchangeCode(pTwsContract.Specifier.Exchange) Then Exit Sub
 
 Dim lEntry As ContractCacheEntry
-If tryGetCacheEntry(pContract.Specifier.Key, lEntry) Then Exit Sub
+If tryGetContractCacheEntry(pKey, lEntry) Then Exit Sub
 
 lEntry.CacheDate = Now
-Set lEntry.Contract = pContract
-Set lEntry.TwsContractDetails = pTwsContractDetails
-mContracts.Add lEntry, pContract.Specifier.Key
-gLogger.Log "Added contract to cache with key", ProcName, ModuleName, LogLevelDetail, pContract.Specifier.Key
+Dim lContractsBuilder As New ContractsBuilder
+lContractsBuilder.Add pContract
+Set lEntry.Contracts = lContractsBuilder.Contracts
+If lEntry.TwsContracts Is Nothing Then Set lEntry.TwsContracts = New EnumerableCollection
+lEntry.TwsContracts.Add pTwsContract
+mContracts.Add lEntry, pKey
+gLogger.Log "Added 1 contract to cache with key", ProcName, ModuleName, LogLevelDetail, pKey
 
 Exit Sub
 
@@ -92,24 +155,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub AddContractWithPartialKey( _
-                ByVal pContract As IContract, _
-                ByVal pTwsContractDetails As TwsContractDetails, _
-                ByVal pKey As String)
-Const ProcName As String = "AddContractWithPartialKey"
+Friend Sub AddContracts( _
+                ByVal pContracts As IContracts, _
+                ByVal pTwsContracts As EnumerableCollection, _
+                ByVal pRequestContractSpec As IContractSpecifier)
+Const ProcName As String = "AddContracts"
 On Error GoTo Err
 
-If pContract.Specifier.SecType = SecTypeCombo Then Exit Sub
-If Not IsValidExchangeCode(pTwsContractDetails.Summary.Exchange) Then Exit Sub
-
 Dim lEntry As ContractCacheEntry
-If tryGetCacheEntry(pKey, lEntry) Then Exit Sub
+If tryGetContractCacheEntry(pRequestContractSpec.Key, lEntry) Then mContracts.Remove pRequestContractSpec.Key
 
 lEntry.CacheDate = Now
-Set lEntry.Contract = pContract
-Set lEntry.TwsContractDetails = pTwsContractDetails
-mContracts.Add lEntry, pKey
-gLogger.Log "Added contract to cache with partial key", ProcName, ModuleName, LogLevelDetail, pKey
+Set lEntry.Contracts = pContracts
+Set lEntry.TwsContracts = pTwsContracts
+mContracts.Add lEntry, pRequestContractSpec.Key
+gLogger.Log "Added " & _
+            pContracts.Count & _
+            IIf(pContracts.Count = 1, " contract", " contracts") & _
+            " to cache for key", _
+            ProcName, ModuleName, LogLevelDetail, _
+            pRequestContractSpec.Key
 
 Exit Sub
 
@@ -163,6 +228,43 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub AddPriceIncrementRuleset( _
+                ByVal pRuleset As PriceIncrementRuleset)
+Const ProcName As String = "AddPriceIncrementRuleset"
+On Error GoTo Err
+
+Dim lEntry As PriceIncrementRulesetEntry
+If tryGetRulesetCacheEntry(CStr(pRuleset.RulesID), lEntry) Then Exit Sub
+
+lEntry.CacheDate = Now
+Set lEntry.Ruleset = pRuleset
+mPriceIncrementRulesets.Add lEntry, CStr(pRuleset.RulesID)
+
+gLogger.Log "Added price increment ruleset " & _
+            pRuleset.RulesID & _
+            " to cache", _
+            ProcName, ModuleName, LogLevelDetail
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Function ContainsContract( _
+                ByVal pKey As String) As Boolean
+Const ProcName As String = "ContainsContract"
+On Error GoTo Err
+
+Dim lEntry As ContractCacheEntry
+ContainsContract = tryGetContractCacheEntry(pKey, lEntry)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Friend Sub EndOptionParameters( _
                 ByVal pContractSpec As IContractSpecifier)
 Const ProcName As String = "EndOptionParameters"
@@ -178,16 +280,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function GetContract(ByVal pContractSpec As IContractSpecifier) As IContract
+Friend Function GetContracts( _
+                ByVal pContractSpec As IContractSpecifier) As IContracts
 Const ProcName As String = "GetContract"
 On Error GoTo Err
 
 If pContractSpec.SecType = SecTypeCombo Then Exit Function
 
 Dim lEntry As ContractCacheEntry
-If Not tryGetCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
+If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
 
-Set GetContract = lEntry.Contract
+If lEntry.Contracts Is Nothing Then
+Else
+    Set GetContracts = lEntry.Contracts
+    gLogger.Log "Retrieved " & _
+                lEntry.Contracts.Count & _
+                IIf(lEntry.Contracts.Count = 1, " contract", " contracts") & _
+                " from cache for key", _
+                ProcName, ModuleName, LogLevelDetail, _
+                pContractSpec.Key
+End If
 
 Exit Function
 
@@ -195,16 +307,93 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function GetTwsContractDetails(ByVal pContractSpec As IContractSpecifier) As TwsContractDetails
-Const ProcName As String = "GetTwsContractDetails"
+Friend Function GetContractsFutureBuilder( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByRef pContractsFutureBuilder As FutureBuilder, _
+                ByRef pTwsContracts As EnumerableCollection) As Boolean
+Const ProcName As String = "GetContractsFutureBuilder"
 On Error GoTo Err
 
 If pContractSpec.SecType = SecTypeCombo Then Exit Function
 
 Dim lEntry As ContractCacheEntry
-If Not tryGetCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
+If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then
+    Set pContractsFutureBuilder = Nothing
+    Set pTwsContracts = Nothing
+    GetContractsFutureBuilder = False
+Else
+    Set pContractsFutureBuilder = lEntry.ContractsFutureBuilder
+    Set pTwsContracts = lEntry.TwsContracts
+    GetContractsFutureBuilder = True
+End If
 
-Set GetTwsContractDetails = lEntry.TwsContractDetails
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function GetPriceIncrementRuleset( _
+                ByVal pRuleID As Long) As PriceIncrementRuleset
+Const ProcName As String = "GetPriceIncrementRuleset"
+On Error GoTo Err
+
+Dim lEntry As PriceIncrementRulesetEntry
+If Not tryGetRulesetCacheEntry(pRuleID, lEntry) Then Exit Function
+
+If Not lEntry.Ruleset Is Nothing Then Set GetPriceIncrementRuleset = lEntry.Ruleset
+
+gLogger.Log "Retrieved price increment ruleset " & _
+            pRuleID & _
+            " from cache", _
+            ProcName, ModuleName, LogLevelDetail
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function GetRulesetFutureBuilder( _
+                ByVal pRuleID As Long, _
+                ByRef pRulesetFutureBuilder As FutureBuilder) As Boolean
+Const ProcName As String = "GetRulesetFutureBuilder"
+On Error GoTo Err
+
+Dim lEntry As PriceIncrementRulesetEntry
+If Not tryGetRulesetCacheEntry(pRuleID, lEntry) Then
+    Set pRulesetFutureBuilder = Nothing
+    GetRulesetFutureBuilder = False
+Else
+    Set pRulesetFutureBuilder = lEntry.RulesetFutureBuilder
+    GetRulesetFutureBuilder = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function GetTwsContracts( _
+                ByVal pContractSpec As IContractSpecifier) As EnumerableCollection
+Const ProcName As String = "GetTwsContracts"
+On Error GoTo Err
+
+If pContractSpec.SecType = SecTypeCombo Then Exit Function
+
+Dim lEntry As ContractCacheEntry
+If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
+
+Set GetTwsContracts = lEntry.TwsContracts
+gLogger.Log "Retrieved " & _
+            lEntry.TwsContracts.Count & _
+            IIf(lEntry.TwsContracts.Count = 1, _
+                " TWS contract", _
+                " TWS contracts") & _
+            " from cache for key", _
+            ProcName, ModuleName, LogLevelDetail, _
+            pContractSpec.Key
 
 Exit Function
 
@@ -264,6 +453,52 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Sub SetContractsFutureBuilder( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pContractsFutureBuilder As FutureBuilder, _
+                ByVal pTwsContracts As EnumerableCollection)
+Const ProcName As String = "SetContractsFutureBuilder"
+On Error GoTo Err
+
+If pContractSpec.SecType = SecTypeCombo Then Exit Sub
+
+Dim lEntry As ContractCacheEntry
+Assert Not tryGetContractCacheEntry(pContractSpec.Key, lEntry), "Cache entry already exists for: " & pContractSpec.Key
+    
+Set lEntry.ContractsFutureBuilder = pContractsFutureBuilder
+Set lEntry.TwsContracts = pTwsContracts
+lEntry.CacheDate = Now
+mContracts.Add lEntry, pContractSpec.Key
+
+mFutureWaiter.Add pContractsFutureBuilder.Future, pContractSpec.Key
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetRulesetFutureBuilder( _
+                ByVal pRuleID As Long, _
+                ByVal pRulesetFutureBuilder As FutureBuilder)
+Const ProcName As String = "SetRulesetFutureBuilder"
+On Error GoTo Err
+
+Dim lEntry As PriceIncrementRulesetEntry
+Assert Not tryGetRulesetCacheEntry(pRuleID, lEntry), "Cache entry already exists for ruleset: " & pRuleID
+    
+Set lEntry.RulesetFutureBuilder = pRulesetFutureBuilder
+lEntry.CacheDate = Now
+mPriceIncrementRulesets.Add lEntry, CStr(pRuleID)
+
+mFutureWaiter.Add pRulesetFutureBuilder.Future, pRuleID
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -287,17 +522,36 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function tryGetCacheEntry( _
+Private Function tryGetContractCacheEntry( _
                 ByVal pKey As String, _
                 ByRef pCacheEntry As ContractCacheEntry) As Boolean
-Const ProcName As String = "tryGetCacheEntry"
+Const ProcName As String = "tryGetContractCacheEntry"
 On Error GoTo Err
 
 If Not mContracts.TryItem(pKey, pCacheEntry) Then
 ElseIf CLng(pCacheEntry.CacheDate) <> CLng(Now) Then
     mContracts.Remove pKey
 Else
-    tryGetCacheEntry = True
+    tryGetContractCacheEntry = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function tryGetRulesetCacheEntry( _
+                ByVal pRuleID As Long, _
+                ByRef pCacheEntry As PriceIncrementRulesetEntry) As Boolean
+Const ProcName As String = "tryGetRulesetCacheEntry"
+On Error GoTo Err
+
+If Not mPriceIncrementRulesets.TryItem(CStr(pRuleID), pCacheEntry) Then
+ElseIf CLng(pCacheEntry.CacheDate) <> CLng(Now) Then
+    mPriceIncrementRulesets.Remove CStr(pRuleID)
+Else
+    tryGetRulesetCacheEntry = True
 End If
 
 Exit Function

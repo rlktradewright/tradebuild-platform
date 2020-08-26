@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ContractDetailsRequestTask"
+Attribute VB_Name = "ContractsRequestManager"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -21,9 +21,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements IContractDetailsConsumer
-Implements ITask
 
 '@================================================================================
 ' Events
@@ -41,39 +38,26 @@ Implements ITask
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "ContractDetailsRequestTask"
+Private Const ModuleName                            As String = "ContractsRequestManager"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
 Private mContractSpecifier                          As IContractSpecifier
-Private mContractRequester                          As ContractDetailsRequester
-
-Private mFirstContract                              As IContract
-Private mFirstTwsContract                           As TwsContractDetails
-Private mNumberOfContracts                          As Long
-
-Private mTaskContext                                As TaskContext
+Private mContractRequester                          As ContractsTwsRequester
 
 Private mContractsBuilder                           As ContractsBuilder
+Private mCachedContracts                            As IContracts
 
 Private mNumOutstandingRequests                     As Long
 
-Private mRequestId                                  As Long
-Private mRequestId1                                 As Long
-Private mRequestId2                                 As Long
-Private mRequestId3                                 As Long
-Private mRequestId4                                 As Long
-Private mRequestId5                                 As Long
-Private mRequestId6                                 As Long
-Private mRequestId7                                 As Long
-Private mRequestId8                                 As Long
-Private mRequestId9                                 As Long
-Private mRequestId10                                As Long
+Private mFetchers                                   As EnumerableCollection
 
-Private WithEvents mContractsFutureBuilder          As FutureBuilder
-Attribute mContractsFutureBuilder.VB_VarHelpID = -1
+Private mResultContractsFutureBuilder               As FutureBuilder
+Attribute mResultContractsFutureBuilder.VB_VarHelpID = -1
+Private mCacheContractsFutureBuilder                As FutureBuilder
+Attribute mCacheContractsFutureBuilder.VB_VarHelpID = -1
 
 Private mListener                                   As IContractFetchListener
 
@@ -81,12 +65,14 @@ Private mCookie                                     As Variant
 
 Private mReturnTwsContracts                         As Boolean
 
-Private mTwsContracts                               As EnumerableCollection
+Private mTwsContracts               As EnumerableCollection
 
 Private mContractCache                              As ContractCache
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mSelfRef                                    As Object
 
 '@================================================================================
 ' Class Event Handlers
@@ -95,188 +81,15 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
 Set mContractsBuilder = New ContractsBuilder
-Set mContractsFutureBuilder = New FutureBuilder
+Set mResultContractsFutureBuilder = New FutureBuilder
+Set mCacheContractsFutureBuilder = New FutureBuilder
 Set mTwsContracts = New EnumerableCollection
-mRequestId = NullIndex
-mRequestId1 = NullIndex
-mRequestId2 = NullIndex
-mRequestId3 = NullIndex
-mRequestId4 = NullIndex
-mRequestId5 = NullIndex
-mRequestId6 = NullIndex
-mRequestId7 = NullIndex
-mRequestId8 = NullIndex
-mRequestId9 = NullIndex
-mRequestId10 = NullIndex
+Set mFetchers = New EnumerableCollection
 End Sub
 
 '@================================================================================
-' IContractDetailsConsumer Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-Private Sub IContractDetailsConsumer_EndContractDetails(ByVal pRequestId As Long)
-Const ProcName As String = "IContractDetailsConsumer_EndContractDetails"
-On Error GoTo Err
-
-requestCompleted pRequestId
-mNumOutstandingRequests = mNumOutstandingRequests - 1
-If mNumOutstandingRequests = 0 Then processEnd
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestId As Long)
-
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
-Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
-On Error GoTo Err
-
-processTwsContract pContractDetails
-mNumberOfContracts = mNumberOfContracts + 1
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
-Const ProcName As String = "IContractDetailsConsumer_NotifyError"
-On Error GoTo Err
-
-requestCompleted pRequestId
-mNumOutstandingRequests = mNumOutstandingRequests - 1
-
-If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
-
-If pErrorCode <> 200 Then
-    
-    cancelOutstandingRequests
-    mTaskContext.Error pErrorCode, pErrorMsg
-    
-    mContractsFutureBuilder.Fail pErrorCode, pErrorMsg, ""
-    If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorCode, pErrorMsg, ""
-
-ElseIf mNumOutstandingRequests = 0 Then
-    mFutureWaiter.Add mContractsFutureBuilder.Future
-    If mReturnTwsContracts Then
-        mContractsFutureBuilder.Value = mTwsContracts
-        mContractsFutureBuilder.Complete
-    Else
-        mContractsFutureBuilder.Value = mContractsBuilder.Contracts
-        mContractsFutureBuilder.Complete
-    End If
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Long, pPriceIncrement() As IBAPIV100.TwsPriceIncrement)
-
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyOptionParameter(ByVal pRequestId As Long, ByVal pExchange As String, ByVal pUnderlyingContractId As Long, ByVal pTradingClass As String, ByVal pMultiplier As Long, pExpirations() As String, pStrikes() As Double)
-
-End Sub
-
-'@================================================================================
-' ITask Interface Members
-'@================================================================================
-
-Private Sub ITask_Cancel()
-doCancel
-End Sub
-
-Private Sub ITask_Run()
-Const ProcName As String = "ITask_Run"
-On Error GoTo Err
-
-If mTaskContext.CancelPending Then
-    doCancel
-    Exit Sub
-End If
-
-If mContractSpecifier.SecType = SecTypeNone Then
-    ' no Sectype supplied, so we'll place a separate Request for each of the following:
-    '       Futures
-    '       Indexes
-    '       Stocks
-    '       Cash
-    ' but we don't include options in this mechanism because there can be thousands of
-    ' them
-
-    If gIsSmartExchange(mContractSpecifier.Exchange) Then
-        requestContractsForSMART
-    Else
-        requestContractsForNonSMART
-    End If
-ElseIf mReturnTwsContracts Then
-    Dim lTwsContract As TwsContractDetails
-    Set lTwsContract = mContractCache.GetTwsContractDetails(mContractSpecifier)
-    
-    If Not lTwsContract Is Nothing Then
-        gLogger.Log "TwsContractDetails retrieved from cache for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
-        processCachedTwsContract lTwsContract
-        processEnd
-        mTaskContext.Suspend -1
-        Exit Sub
-    End If
-    
-    mRequestId = requestContracts(mContractSpecifier)
-Else
-    Dim lContract As IContract
-    Set lContract = mContractCache.GetContract(mContractSpecifier)
-    
-    If Not lContract Is Nothing Then
-        gLogger.Log "ContractDetails retrieved from cache for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
-        processCachedContract lContract
-        processEnd
-        mTaskContext.Suspend -1
-        Exit Sub
-    End If
-    
-    mRequestId = requestContracts(mContractSpecifier)
-End If
-
-mTaskContext.Suspend -1
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
-Set mTaskContext = Value
-End Property
-
-Private Property Get ITask_TaskName() As String
-ITask_TaskName = mTaskContext.Name
-End Property
-
-'@================================================================================
-' mContractsFutureBuilder Event Handlers
-'@================================================================================
-
-Private Sub mContractsFutureBuilder_Cancelled(ev As CancelledEventData)
-Const ProcName As String = "mContractsFutureBuilder_Cancelled"
-On Error GoTo Err
-
-doCancel
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' mFutureWaiter Event Handlers
@@ -287,7 +100,7 @@ Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
-mTaskContext.Finish Empty, False
+Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -300,15 +113,15 @@ End Sub
 '@================================================================================
 
 Friend Property Get ContractsFuture() As IFuture
-Set ContractsFuture = mContractsFutureBuilder.Future
+Set ContractsFuture = mResultContractsFutureBuilder.Future
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
-                ByVal pContractRequester As ContractDetailsRequester, _
+Friend Sub Fetch( _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
@@ -317,15 +130,113 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+Set mSelfRef = Me
+
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
 Set mListener = pListener
 
 gSetVariant mCookie, pCookie
-mContractsFutureBuilder.Cookie = mCookie
+mResultContractsFutureBuilder.Cookie = mCookie
 
 mReturnTwsContracts = pReturnTwsContracts
+
+Set mCachedContracts = mContractCache.GetContracts(mContractSpecifier)
+If mCachedContracts Is Nothing Then
+ElseIf mCachedContracts.Count = 1 Then
+    If Not mListener Is Nothing Then mListener.NotifyContract mCookie, mCachedContracts.ItemAtIndex(1)
+    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+    If mReturnTwsContracts Then
+        mResultContractsFutureBuilder.Value = mContractCache.GetTwsContracts(mContractSpecifier)
+        mResultContractsFutureBuilder.Complete
+    Else
+        mResultContractsFutureBuilder.Value = mCachedContracts
+        mResultContractsFutureBuilder.Complete
+    End If
+    Exit Sub
+End If
+
+If mContractSpecifier.SecType <> SecTypeNone Then
+    requestContracts mContractSpecifier
+ElseIf Not mCachedContracts Is Nothing Then
+     requestContracts mContractSpecifier
+Else
+    mContractCache.SetContractsFutureBuilder mContractSpecifier, _
+                                            mCacheContractsFutureBuilder, _
+                                            mTwsContracts
+    requestContractsForUnspecifiedSectype
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyContract( _
+            ByVal pContract As IContract)
+Const ProcName As String = "NotifyContract"
+On Error GoTo Err
+
+If Not mContractsBuilder.Contracts.Contains(pContract.Specifier) Then
+    mContractsBuilder.Add pContract
+    If Not mListener Is Nothing Then mListener.NotifyContract mCookie, pContract
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyFetchCompleted( _
+                ByVal pFetcher As ContractsFetcher)
+Const ProcName As String = "NotifyFetchCompleted"
+On Error GoTo Err
+
+requestCompleted pFetcher
+If mNumOutstandingRequests = 0 Then processEnd
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyFetchError( _
+                ByVal pFetcher As ContractsFetcher, _
+                ByVal pErrorCode As Long, _
+                ByVal pErrorMsg As String)
+Const ProcName As String = "NotifyFetchError"
+On Error GoTo Err
+
+requestCompleted pFetcher
+
+If pErrorCode <> 200 Then
+    
+    cancelOutstandingRequests
+        
+    mResultContractsFutureBuilder.Fail pErrorCode, pErrorMsg, ""
+    mCacheContractsFutureBuilder.Fail pErrorCode, pErrorMsg, ""
+    If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorCode, pErrorMsg, ""
+    Set mSelfRef = Nothing
+ElseIf mNumOutstandingRequests = 0 Then
+    processEnd
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyTwsContract( _
+            ByVal pTwsContract As TwsContract)
+Const ProcName As String = "NotifyTwsContract"
+On Error GoTo Err
+
+mTwsContracts.Add pTwsContract
 
 Exit Sub
 
@@ -341,17 +252,13 @@ Private Sub cancelOutstandingRequests()
 Const ProcName As String = "cancelOutstandingRequests"
 On Error GoTo Err
 
-cancelRequest mRequestId
-cancelRequest mRequestId1
-cancelRequest mRequestId2
-cancelRequest mRequestId3
-cancelRequest mRequestId4
-cancelRequest mRequestId5
-cancelRequest mRequestId6
-cancelRequest mRequestId7
-cancelRequest mRequestId8
-cancelRequest mRequestId9
-cancelRequest mRequestId10
+Dim en As Enumerator: Set en = mFetchers.Enumerator
+Do While en.MoveNext
+    Dim lFetcher As ContractsFetcher
+    Set lFetcher = en.Current
+    lFetcher.Cancel
+Loop
+mFetchers.Clear
 
 Exit Sub
 
@@ -359,11 +266,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub cancelRequest(ByVal pRequestId As Long)
+Private Sub CancelRequest(ByVal pRequestId As Long)
 Const ProcName As String = "cancelRequest"
 On Error GoTo Err
 
-If pRequestId <> NullIndex Then mContractRequester.cancelRequest pRequestId
+If pRequestId <> NullIndex Then mContractRequester.CancelRequest pRequestId
 
 Exit Sub
 
@@ -377,74 +284,11 @@ On Error GoTo Err
 
 cancelOutstandingRequests
 
-mTaskContext.Finish Nothing, True
-
-mContractsFutureBuilder.Cancel
+mResultContractsFutureBuilder.Cancel
+mCacheContractsFutureBuilder.Cancel
 If Not mListener Is Nothing Then mListener.FetchCancelled mCookie
 
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processCachedContract(ByVal pContract As IContract)
-Const ProcName As String = "processCachedContract"
-On Error GoTo Err
-
-If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
-
-If Not mContractsBuilder.Contracts.Contains(pContract.Specifier) Then
-    mContractsBuilder.Add pContract
-    If Not mListener Is Nothing Then mListener.NotifyContract mCookie, pContract
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processCachedTwsContract( _
-                ByVal pContractDetails As TwsContractDetails)
-Const ProcName As String = "processCachedTwsContract"
-On Error GoTo Err
-
-If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
-
-mTwsContracts.Add pContractDetails
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processTwsContract( _
-                ByVal pContractDetails As TwsContractDetails)
-Const ProcName As String = "processTwsContract"
-On Error GoTo Err
-
-If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
-
-If Not IsValidExchangeCode(pContractDetails.Summary.Exchange) Then
-    gLog "Unknown Exchange code received from Tws", pMsgQualifier:=pContractDetails.Summary.Exchange, pModName:=ModuleName, pProcName:=ProcName
-    Exit Sub
-End If
-    
-Dim lContract As IContract
-Set lContract = gTwsContractDetailsToContract(pContractDetails)
-mContractCache.AddContract lContract, pContractDetails
-
-If mFirstContract Is Nothing Then Set mFirstContract = lContract
-If mFirstTwsContract Is Nothing Then Set mFirstTwsContract = pContractDetails
-
-If mReturnTwsContracts Then
-    mTwsContracts.Add pContractDetails
-ElseIf Not mContractsBuilder.Contracts.Contains(lContract.Specifier) Then
-    mContractsBuilder.Add lContract
-    If Not mListener Is Nothing Then mListener.NotifyContract mCookie, lContract
-End If
+Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -456,21 +300,23 @@ Private Sub processEnd()
 Const ProcName As String = "processEnd"
 On Error GoTo Err
 
-If mContractsFutureBuilder.Future.IsCancelled Then Exit Sub
-
-If mNumberOfContracts = 1 Then
-    If mContractSpecifier.Key <> mFirstContract.Specifier.Key Then
-        mContractCache.AddContractWithPartialKey mFirstContract, mFirstTwsContract, mContractSpecifier.Key
+If mResultContractsFutureBuilder.Future.IsPending Then
+    mFutureWaiter.Add mResultContractsFutureBuilder.Future
+    If mReturnTwsContracts Then
+        mResultContractsFutureBuilder.Value = mTwsContracts
+        mResultContractsFutureBuilder.Complete
+    Else
+        mResultContractsFutureBuilder.Value = mContractsBuilder.Contracts
+        mResultContractsFutureBuilder.Complete
     End If
 End If
 
-mFutureWaiter.Add mContractsFutureBuilder.Future
 If mReturnTwsContracts Then
-    mContractsFutureBuilder.Value = mTwsContracts
-    mContractsFutureBuilder.Complete
+    mCacheContractsFutureBuilder.Value = mTwsContracts
+    mCacheContractsFutureBuilder.Complete
 Else
-    mContractsFutureBuilder.Value = mContractsBuilder.Contracts
-    mContractsFutureBuilder.Complete
+    mCacheContractsFutureBuilder.Value = mContractsBuilder.Contracts
+    mCacheContractsFutureBuilder.Complete
 End If
 
 Exit Sub
@@ -479,19 +325,35 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function requestContracts(ByVal pContractSpec As IContractSpecifier) As Long
-Const ProcName As String = "requestContracts"
+Private Sub requestCompleted( _
+                ByVal pFetcher As ContractsFetcher)
+Const ProcName As String = "requestCompleted"
 On Error GoTo Err
 
-If gLogger.IsLoggable(LogLevelDetail) Then gLog "Request contract details for", ModuleName, ProcName, pContractSpec.ToString, LogLevelDetail
-requestContracts = mContractRequester.RequestContractDetails(pContractSpec, Me)
-mNumOutstandingRequests = mNumOutstandingRequests + 1
+mFetchers.Remove pFetcher
+mNumOutstandingRequests = mNumOutstandingRequests - 1
 
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
+
+Private Sub requestContracts(ByVal pContractSpec As IContractSpecifier)
+Const ProcName As String = "requestContracts"
+On Error GoTo Err
+
+Dim lFetcher As New ContractsFetcher
+mFetchers.Add lFetcher
+lFetcher.FetchContracts Me, mContractRequester, mContractCache, pContractSpec
+
+mNumOutstandingRequests = mNumOutstandingRequests + 1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub requestContractsForNonSMART()
 Const ProcName As String = "requestContractsForNonSMART"
@@ -509,9 +371,9 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
         If mContractSpecifier.Exchange = "" Or mContractSpecifier.Strike = 0# Or mContractSpecifier.Right = OptNone Then
             s = "Exchange, Strike and Right must be specified for offset options"
             If Not mListener Is Nothing Then mListener.FetchFailed mCookie, -1, s, ""
-            mTaskContext.Error -1, s
+            Set mSelfRef = Nothing
         Else
-            mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+            requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                             mContractSpecifier.Symbol, _
                                                             mContractSpecifier.Exchange, _
                                                             SecTypeOption, _
@@ -519,8 +381,8 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
                                                             "", _
                                                             mContractSpecifier.Multiplier, _
                                                             mContractSpecifier.Strike, _
-                                                            mContractSpecifier.Right))
-            mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                            mContractSpecifier.Right)
+            requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                             mContractSpecifier.Symbol, _
                                                             mContractSpecifier.Exchange, _
                                                             SecTypeFuturesOption, _
@@ -528,104 +390,104 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
                                                             "", _
                                                             mContractSpecifier.Multiplier, _
                                                             mContractSpecifier.Strike, _
-                                                            mContractSpecifier.Right))
+                                                            mContractSpecifier.Right)
         End If
     Else
-        mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+        requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Symbol, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
         
         If mContractSpecifier.LocalSymbol = "" Then _
-            mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.Symbol, _
+            requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                             "", _
                                                             mContractSpecifier.Exchange, _
                                                             SecTypeFuture, _
                                                             mContractSpecifier.CurrencyCode, _
                                                             "", _
-                                                            mContractSpecifier.Multiplier))
+                                                            mContractSpecifier.Multiplier)
     
         If mContractSpecifier.Symbol = "" Then _
-            mRequestId3 = requestContracts(CreateContractSpecifier("", _
+            requestContracts CreateContractSpecifier("", _
                                                             mContractSpecifier.LocalSymbol, _
                                                             mContractSpecifier.Exchange, _
                                                             SecTypeFuture, _
                                                             mContractSpecifier.CurrencyCode, _
                                                             "", _
-                                                            mContractSpecifier.Multiplier))
+                                                            mContractSpecifier.Multiplier)
     End If
 Else
     
-    mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuture, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier))
+                                                    mContractSpecifier.Multiplier)
     
     If mContractSpecifier.LocalSymbol = "" Then _
-        mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.Symbol, _
+        requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                         "", _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         mContractSpecifier.Expiry, _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
     
     If mContractSpecifier.Symbol = "" Then _
-        mRequestId3 = requestContracts(CreateContractSpecifier("", _
+        requestContracts CreateContractSpecifier("", _
                                                         mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         mContractSpecifier.Expiry, _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
     
-    mRequestId4 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeIndex, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier))
+                                                    mContractSpecifier.Multiplier)
     
-    mRequestId5 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier))
+                                                    mContractSpecifier.Multiplier)
     
     If mContractSpecifier.LocalSymbol = "" Then _
-        mRequestId6 = requestContracts(CreateContractSpecifier(mContractSpecifier.Symbol, _
+        requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                         "", _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeStock, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         mContractSpecifier.Expiry, _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
     
     If mContractSpecifier.Symbol = "" Then _
-        mRequestId7 = requestContracts(CreateContractSpecifier("", _
+        requestContracts CreateContractSpecifier("", _
                                                         mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeStock, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         mContractSpecifier.Expiry, _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
     
-    mRequestId8 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeCash, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier))
+                                                    mContractSpecifier.Multiplier)
 
     ' for Options and Future Options, one of the following sets of information must be specified, to
     ' avoid fetching the entire option chain:
@@ -638,7 +500,7 @@ Else
         mContractSpecifier.Exchange <> "" And mContractSpecifier.Strike <> 0# Or _
         mContractSpecifier.Expiry <> "" And mContractSpecifier.Strike <> 0# _
     Then
-        mRequestId9 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+        requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeOption, _
@@ -646,8 +508,8 @@ Else
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier, _
                                                     mContractSpecifier.Strike, _
-                                                    mContractSpecifier.Right))
-        mRequestId10 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                    mContractSpecifier.Right)
+        requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuturesOption, _
@@ -655,7 +517,7 @@ Else
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier, _
                                                     mContractSpecifier.Strike, _
-                                                    mContractSpecifier.Right))
+                                                    mContractSpecifier.Right)
     End If
 End If
 
@@ -678,51 +540,51 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
     If mContractSpecifier.Strike = 0# Or mContractSpecifier.Right = OptNone Then
         Dim s As String: s = "Strike and Right must be specified for offset options"
         If Not mListener Is Nothing Then mListener.FetchFailed mCookie, -1, s, ""
-        mTaskContext.Error -1, s
+        Set mSelfRef = Nothing
     Else
-        mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+        requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Symbol, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeOption, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
     
-        mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+        requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Symbol, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuturesOption, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
     End If
 Else
-    mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     "", _
-                                                    mContractSpecifier.Multiplier))
+                                                    mContractSpecifier.Multiplier)
     
     If mContractSpecifier.LocalSymbol = "" Then
-        mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.Symbol, _
+        requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                         "", _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeStock, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
     End If
 
     If mContractSpecifier.Symbol = "" Then
-        mRequestId3 = requestContracts(CreateContractSpecifier("", _
+        requestContracts CreateContractSpecifier("", _
                                                         mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeStock, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier))
+                                                        mContractSpecifier.Multiplier)
     End If
 
     ' for Options and Future Options, one of the following sets of information must be specified, to
@@ -736,7 +598,7 @@ Else
         mContractSpecifier.Strike <> 0# Or _
         mContractSpecifier.Expiry <> "" And mContractSpecifier.Strike <> 0# _
     Then
-        mRequestId4 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+        requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeOption, _
@@ -744,8 +606,8 @@ Else
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier, _
                                                     mContractSpecifier.Strike, _
-                                                    mContractSpecifier.Right))
-        mRequestId5 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+                                                    mContractSpecifier.Right)
+        requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuturesOption, _
@@ -753,7 +615,7 @@ Else
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier, _
                                                     mContractSpecifier.Strike, _
-                                                    mContractSpecifier.Right))
+                                                    mContractSpecifier.Right)
     End If
 End If
 
@@ -763,14 +625,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub requestCompleted(ByVal pRequestId As Long)
-If pRequestId = mRequestId Then mRequestId = NullIndex
-If pRequestId = mRequestId1 Then mRequestId1 = NullIndex
-If pRequestId = mRequestId2 Then mRequestId2 = NullIndex
-If pRequestId = mRequestId3 Then mRequestId3 = NullIndex
-If pRequestId = mRequestId4 Then mRequestId4 = NullIndex
-If pRequestId = mRequestId5 Then mRequestId5 = NullIndex
-If pRequestId = mRequestId6 Then mRequestId6 = NullIndex
-If pRequestId = mRequestId7 Then mRequestId7 = NullIndex
+Private Sub requestContractsForUnspecifiedSectype()
+Const ProcName As String = "requestContractsForUnspecifiedSectype"
+On Error GoTo Err
+
+' no Sectype supplied, so we'll place a separate request for each of the following:
+'       Futures
+'       Indexes
+'       Stocks
+'       Cash
+' but we don't include options in this mechanism because there can be thousands of
+' them
+
+If gIsSmartExchange(mContractSpecifier.Exchange) Then
+    requestContractsForSMART
+Else
+    requestContractsForNonSMART
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

@@ -51,7 +51,7 @@ Private mTaskContext                                As TaskContext
 
 Private mContractSpec                               As IContractSpecifier
 
-Private mContractRequester                          As ContractDetailsRequester
+Private mContractRequester                          As ContractsTwsRequester
 
 Private mRequestIds()                               As Long
 
@@ -72,8 +72,8 @@ Private mTimezoneId                                 As String
 ' IContractDetailsConsumer Interface Members
 '@================================================================================
 
-Private Sub IContractDetailsConsumer_EndContractDetails(ByVal pRequestId As Long)
-Const ProcName As String = "IContractDetailsConsumer_EndContractDetails"
+Private Sub IContractDetailsConsumer_EndContracts(ByVal pRequestId As Long)
+Const ProcName As String = "IContractDetailsConsumer_EndContracts"
 On Error GoTo Err
 
 mRequestsOutstanding = mRequestsOutstanding - 1
@@ -81,7 +81,7 @@ If mRequestsOutstanding = 0 Then
     If mErrorCode <> 0 Then
         mTaskContext.Error mErrorCode, mErrorMsg
     Else
-        mTaskContext.Finish generateTwsContractDetails, False
+        mTaskContext.Finish generateTwsContract, False
     End If
 End If
 
@@ -95,7 +95,7 @@ Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestIs As Lon
 
 End Sub
 
-Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
+Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, ByVal pTwsContract As TwsContract)
 Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
@@ -105,8 +105,8 @@ If alreadyGotContract(pRequestId) Then
     mErrorCode = 200
     mErrorMsg = "Contract not uniquely specified for leg " & CStr(getLegIndexFromRequestId(pRequestId) + 1)
 Else
-    mLegs.Add createTwsComboLeg(pContractDetails, mContractSpec.ComboLegs(getLegIndexFromRequestId(pRequestId) + 1)), CStr(pRequestId)
-    If mTimezoneId = "" And pContractDetails.TimeZoneId <> "" Then mTimezoneId = pContractDetails.TimeZoneId
+    mLegs.Add createTwsComboLeg(pTwsContract, mContractSpec.ComboLegs(getLegIndexFromRequestId(pRequestId) + 1)), CStr(pRequestId)
+    If mTimezoneId = "" And pTwsContract.TimeZoneId <> "" Then mTimezoneId = pTwsContract.TimeZoneId
 End If
 
 Exit Sub
@@ -190,7 +190,7 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractSpec As IContractSpecifier)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -226,16 +226,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function createTwsComboLeg( _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pComboLeg As ComboLeg) As TwsComboLeg
 Const ProcName As String = "createTwsComboLeg"
 On Error GoTo Err
 
 Set createTwsComboLeg = New TwsComboLeg
 
-createTwsComboLeg.ConId = pContract.ConId
+createTwsComboLeg.ConId = pContractSpec.ConId
 createTwsComboLeg.Action = IIf(pComboLeg.IsBuyLeg, TwsOrderActionBuy, TwsOrderActionSell)
-createTwsComboLeg.Exchange = pContract.Exchange
+createTwsComboLeg.Exchange = pContractSpec.Exchange
 createTwsComboLeg.Ratio = pComboLeg.Ratio
 createTwsComboLeg.OpenClose = TwsLegOpenCloseSame
 createTwsComboLeg.ShortSaleSlot = TwsShortSaleSlotNotApplicable
@@ -246,27 +246,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function generateTwsContractDetails() As TwsContractDetails
-Const ProcName As String = "generateTwsContractDetails"
+Private Function generateTwsContract() As TwsContract
+Const ProcName As String = "generateTwsContract"
 On Error GoTo Err
 
 Dim i As Long
-Dim lContract As TwsContract
+Dim lContractSpec As TwsContractSpecifier
 
-Set lContract = New TwsContract
+Set lContractSpec = New TwsContract
 
-lContract.Symbol = mContractSpec.Symbol
-lContract.SecType = TwsSecTypeCombo
-lContract.Exchange = mContractSpec.Exchange
-lContract.CurrencyCode = mContractSpec.CurrencyCode
+lContractSpec.Symbol = mContractSpec.Symbol
+lContractSpec.SecType = TwsSecTypeCombo
+lContractSpec.Exchange = mContractSpec.Exchange
+lContractSpec.CurrencyCode = mContractSpec.CurrencyCode
 
 For i = 0 To UBound(mRequestIds)
-    lContract.ComboLegs.Add mLegs(CStr(mRequestIds(i)))
+    lContractSpec.ComboLegs.Add mLegs(CStr(mRequestIds(i)))
 Next
 
-Set generateTwsContractDetails = New TwsContractDetails
-generateTwsContractDetails.Summary = lContract
-generateTwsContractDetails.TimeZoneId = mTimezoneId
+Set generateTwsContract = New TwsContract
+generateTwsContract.Specifier = lContractSpec
+generateTwsContract.TimeZoneId = mTimezoneId
 
 Exit Function
 

@@ -149,7 +149,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderInfoConsumer_NotifyExecution(ByVal pReqId As Long, ByVal pContract As TwsContract, ByVal pExecution As TwsExecution)
+Private Sub IOrderInfoConsumer_NotifyExecution(ByVal pReqId As Long, ByVal pContractSpec As TwsContractSpecifier, ByVal pExecution As TwsExecution)
 Const ProcName As String = "IOrderInfoConsumer_NotifyExecution"
 On Error GoTo Err
 
@@ -160,7 +160,7 @@ Static sExecutions As New EnumerableCollection
     sExecutions.Add pExecution, pExecution.ExecId
 'End If
 
-Dim lOrder As IOrder
+Dim lOrder As Iorder
 Dim lorderId As String
 If isKnownOrder(pExecution.OrderId) Then
     Set lOrder = GetOrder(pExecution.OrderId)
@@ -168,7 +168,7 @@ If isKnownOrder(pExecution.OrderId) Then
 End If
 
 Dim lExecReport As New Execution
-lExecReport.SecurityName = pContract.LocalSymbol & "." & pContract.Exchange
+lExecReport.SecurityName = pContractSpec.LocalSymbol & "." & pContractSpec.Exchange
 lExecReport.AccountIdentifier = pExecution.AcctNumber
 lExecReport.Action = IIf(pExecution.Side = "BOT", OrderActionBuy, OrderActionSell)
 lExecReport.Id = pExecution.ExecId
@@ -246,7 +246,7 @@ With lOrderReport
     
     .Hidden = pOrder.Hidden
     .Id = lorderId
-    .IgnoreRegularTradingHours = pOrder.OutsideRth
+    .IgnoreRegularTradingHours = pOrder.OutsideRTH
     .LimitPrice = pOrder.LmtPrice
     .Message = pOrderState.WarningText
     .MinimumQuantity = pOrder.MinQty
@@ -379,7 +379,7 @@ End Sub
 
 Friend Sub CancelOrder( _
                 ByVal pOrderSubmitter As OrderSubmitter, _
-                ByVal pOrder As IOrder)
+                ByVal pOrder As Iorder)
 Const ProcName As String = "CancelOrder"
 On Error GoTo Err
 
@@ -418,7 +418,7 @@ End Sub
 
 Friend Sub NotifyRecoveredOrder( _
                 ByVal pOrderSubmitter As OrderSubmitter, _
-                ByVal pOrder As IOrder)
+                ByVal pOrder As Iorder)
 Const ProcName As String = "NotifyRecoveredOrder"
 On Error GoTo Err
 
@@ -432,7 +432,7 @@ End Sub
 
 Friend Sub PlaceOrder( _
                 ByVal pOrderSubmitter As OrderSubmitter, _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pContract As TwsContract, _
                 ByVal pLimitPriceOverride, _
                 ByVal pTransmit As Boolean, _
@@ -534,7 +534,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function GetOrder(ByVal pBrokerId As String) As IOrder
+Private Function GetOrder(ByVal pBrokerId As String) As Iorder
 Const ProcName As String = "getOrder"
 On Error GoTo Err
 
@@ -577,7 +577,7 @@ Const ProcName As String = "notifyStatus"
 On Error GoTo Err
 
 Dim lStatusReport As New OrderStatusReport
-Dim lOrder As IOrder
+Dim lOrder As Iorder
 
 If pStatus = OrderStatuses.OrderStatusCancelled Then
     mKnownOrders.Cancel pBrokerId, mTwsAPI.ClientId
@@ -625,7 +625,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub queueOrder( _
-                ByVal pOrder As IOrder, _
+                ByVal pOrder As Iorder, _
                 ByVal pContract As TwsContract)
 Const ProcName As String = "queueOrder"
 On Error GoTo Err

@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "PermittedOrderPropsFetchTask"
+Attribute VB_Name = "PermittedOrderPropsFetcher"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -21,9 +21,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements IContractDetailsConsumer
-Implements ITask
 
 '@================================================================================
 ' Events
@@ -41,18 +38,14 @@ Implements ITask
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "PermittedOrderPropsFetchTask"
+Private Const ModuleName                            As String = "PermittedOrderPropsFetcher"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mContractRequester                          As ContractDetailsRequester
+Private mContractRequester                          As ContractsTwsRequester
 Private mContractSpec                               As IContractSpecifier
-
-Private mContractDetails                            As TwsContractDetails
-
-Private mTaskContext                                As TaskContext
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -69,102 +62,6 @@ Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
 End Sub
 
-'================================================================================
-' IContractDetailsConsumer Interface Members
-'================================================================================
-
-Private Sub IContractDetailsConsumer_EndContractDetails(ByVal pRequestId As Long)
-Const ProcName As String = "IContractDetailsConsumer_EndContractDetails"
-On Error GoTo Err
-
-processEnd
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestIs As Long)
-
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
-Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
-On Error GoTo Err
-
-Assert Not pContractDetails Is Nothing, "Contract not uniquely specified"
-Set mContractDetails = pContractDetails
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
-Const ProcName As String = "IContractDetailsConsumer_NotifyError"
-On Error GoTo Err
-
-mTaskContext.Error pErrorCode, pErrorMsg
-mFutureBuilder.Fail pErrorCode, pErrorMsg, ""
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Long, pPriceIncrement() As IBAPIV100.TwsPriceIncrement)
-
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyOptionParameter(ByVal pRequestId As Long, ByVal pExchange As String, ByVal pUnderlyingContractId As Long, ByVal pTradingClass As String, ByVal pMultiplier As Long, pExpirations() As String, pStrikes() As Double)
-
-End Sub
-
-'@================================================================================
-' ITask Interface Members
-'@================================================================================
-
-Private Sub ITask_Cancel()
-
-End Sub
-
-Private Sub ITask_Run()
-Const ProcName As String = "ITask_Run"
-On Error GoTo Err
-
-If mContractSpec Is Nothing Then
-    mTaskContext.Suspend -1
-    Exit Sub
-End If
-
-Set mContractDetails = mContractCache.GetTwsContractDetails(mContractSpec)
-
-If Not mContractDetails Is Nothing Then
-    gLogger.Log "TwsContractDetails retrieved from cache for IContract: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
-    processEnd
-    Exit Sub
-End If
-
-mContractRequester.RequestContractDetails mContractSpec, Me
-mTaskContext.Suspend -1
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
-Set mTaskContext = Value
-End Property
-
-Private Property Get ITask_TaskName() As String
-ITask_TaskName = mTaskContext.Name
-End Property
-
 '@================================================================================
 ' mFutureWaiter Event Handlers
 '@================================================================================
@@ -174,16 +71,25 @@ Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsCancelled Then
-    mTaskContext.Finish Empty, True
     mFutureBuilder.Cancel
 ElseIf ev.Future.IsFaulted Then
-    mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
-Else
+ElseIf TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
     Set mContractSpec = lContract.Specifier
-    mTaskContext.Continue
+    mFutureWaiter.Add gFetchContracts(mContractRequester, _
+                                        mContractCache, _
+                                        mContractSpec, _
+                                        Nothing, _
+                                        ev.Future.Cookie, _
+                                        True)
+ElseIf TypeOf ev.Future.Value Is EnumerableCollection Then
+    Dim lContracts As EnumerableCollection
+    Set lContracts = ev.Future.Value
+    Assert Not lContracts Is Nothing, "Failed to retrieve TWS contract details"
+    Assert lContracts.Count = 1, "Contract not uniquely specified"
+    processTwsContract lContracts.Item(1)
 End If
 
 Exit Sub
@@ -206,7 +112,7 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pContractFuture As IFuture, _
-                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
@@ -228,14 +134,13 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub processEnd()
-Const ProcName As String = "processEnd"
+Private Sub processTwsContract( _
+                ByVal pTwsContract As TwsContract)
+Const ProcName As String = "processTwsContract"
 On Error GoTo Err
 
-Assert Not mContractDetails Is Nothing, "Failed to retrieve contract details"
-
 Dim lOrderTypesStr() As String
-lOrderTypesStr = Split(mContractDetails.OrderTypes, ",")
+lOrderTypesStr = Split(pTwsContract.OrderTypes, ",")
 
 Dim lPermittedOrderAttributes As OrderAttributes
 lPermittedOrderAttributes = OrderAttributes.OrderAttBlockOrder
@@ -380,7 +285,6 @@ lPermittedOrderProps.PermittedOrderTifs = lPermittedOrderTifs
 lPermittedOrderProps.PermittedOrderTypes = lPermittedOrderTypes
 lPermittedOrderProps.PermittedStopTriggerMethods = lPermittedStopTriggerMethods
 
-mTaskContext.Finish lPermittedOrderProps, False
 mFutureBuilder.Value = lPermittedOrderProps
 mFutureBuilder.Complete
 

@@ -64,16 +64,23 @@ End Enum
 '@================================================================================
 
 Public Type ContractCacheEntry
-    Contract                As IContract
-    TwsContractDetails      As TwsContractDetails
-    CacheDate               As Date
+    ContractsFutureBuilder          As FutureBuilder
+    Contracts                       As IContracts
+    TwsContracts                    As EnumerableCollection
+    CacheDate                       As Date
 End Type
 
 Public Type OrderIdMapEntry
-    Order                   As IOrder
+    Order                   As Iorder
     OrderSubmitter          As OrderSubmitter
     Cancelled               As Boolean
     ParentId                As Long
+End Type
+
+Public Type PriceIncrementRulesetEntry
+    RulesetFutureBuilder    As FutureBuilder
+    Ruleset                 As PriceIncrementRuleset
+    CacheDate               As Date
 End Type
 
 '@================================================================================
