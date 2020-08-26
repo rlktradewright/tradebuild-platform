@@ -542,11 +542,13 @@ gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelDetail
 
 If mTwsAPI.ConnectionState <> TwsConnConnected Then
     gLog "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelDetail
+    mTaskContext.Suspend -1
     Exit Sub
 End If
 
 If Not mIsTwsConnectedToIBServers Then
     gLog "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelDetail
+    mTaskContext.Suspend -1
     Exit Sub
 End If
 
