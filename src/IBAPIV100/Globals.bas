@@ -408,16 +408,16 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Public Function gContractHasExpired(ByVal pContract As TwsContract) As Boolean
-If pContract.Sectype = TwsSecTypeCash Or _
-    pContract.Sectype = TwsSecTypeIndex Or _
-    pContract.Sectype = TwsSecTypeStock _
+Public Function gContractHasExpired(ByVal pContractSpec As TwsContractSpecifier) As Boolean
+If pContractSpec.Sectype = TwsSecTypeCash Or _
+    pContractSpec.Sectype = TwsSecTypeIndex Or _
+    pContractSpec.Sectype = TwsSecTypeStock _
 Then
     gContractHasExpired = False
     Exit Function
 End If
     
-gContractHasExpired = contractExpiryToDate(pContract) < Now
+gContractHasExpired = contractExpiryToDate(pContractSpec) < Now
 End Function
 
 Public Function gFormatBuffer( _
@@ -1128,14 +1128,14 @@ End Sub
 '================================================================================
 
 Private Function contractExpiryToDate( _
-                ByVal pContract As TwsContract) As Date
+                ByVal pContractSpec As TwsContractSpecifier) As Date
 Const ProcName As String = "contractExpiryToDate"
 On Error GoTo Err
 
-If Len(pContract.Expiry) = 8 Then
-    contractExpiryToDate = CDate(Left$(pContract.Expiry, 4) & "/" & Mid$(pContract.Expiry, 5, 2) & "/" & Right$(pContract.Expiry, 2))
-ElseIf Len(pContract.Expiry) = 6 Then
-    contractExpiryToDate = CDate(Left$(pContract.Expiry, 4) & "/" & Mid$(pContract.Expiry, 5, 2) & "/" & "01")
+If Len(pContractSpec.Expiry) = 8 Then
+    contractExpiryToDate = CDate(Left$(pContractSpec.Expiry, 4) & "/" & Mid$(pContractSpec.Expiry, 5, 2) & "/" & Right$(pContractSpec.Expiry, 2))
+ElseIf Len(pContractSpec.Expiry) = 6 Then
+    contractExpiryToDate = CDate(Left$(pContractSpec.Expiry, 4) & "/" & Mid$(pContractSpec.Expiry, 5, 2) & "/" & "01")
 End If
 
 Exit Function

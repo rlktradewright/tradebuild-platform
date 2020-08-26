@@ -123,12 +123,12 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub AddContract( _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 Optional pIgnorePrimaryExchange As Boolean = False)
 Const ProcName As String = "AddContract"
 On Error GoTo Err
 
-With pContract
+With pContractSpec
     AddString .ConId, "ConId"
     AddString UCase$(.Symbol), "Symbol"
     AddString gTwsSecTypeToShortString(.Sectype), "Sec type"

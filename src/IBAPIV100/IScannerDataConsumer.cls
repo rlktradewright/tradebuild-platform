@@ -70,7 +70,7 @@ End Sub
 Public Sub NotifyScannerData( _
                 ByVal pRequestId As Long, _
                 ByVal pRank As Long, _
-                ByVal pContractDetails As TwsContractDetails, _
+                ByVal pContract As TwsContract, _
                 ByVal pDistance As String, _
                 ByVal pBenchmark As String, _
                 ByVal pProjection As String, _

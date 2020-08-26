@@ -329,7 +329,7 @@ End Enum
 '@================================================================================
 
 Public Type TwsHistoricalDataRequest
-    Contract                As TwsContract
+    ContractSpec            As TwsContractSpecifier
     EndDateTime             As String
     BarSizeSetting          As String
     Duration                As String

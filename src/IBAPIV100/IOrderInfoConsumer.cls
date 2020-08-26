@@ -80,14 +80,14 @@ End Sub
 
 Public Sub NotifyExecution( _
                 ByVal pReqId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pExecution As TwsExecution)
 
 End Sub
 
 Public Sub NotifyOpenOrder( _
                 ByVal pOrderId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContract, _
                 ByVal pOrder As TwsOrder, _
                 ByVal pOrderState As TwsOrderState)
 

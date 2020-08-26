@@ -442,7 +442,7 @@ End Property
 
 Public Sub CalculateImpliedVolatility( _
         ByVal pReqId As Long, _
-        ByVal pContract As TwsContract, _
+        ByVal pContractSpec As TwsContractSpecifier, _
         ByVal pOptionPrice As Double, _
         ByVal pUnderPrice As Double)
 Const ProcName As String = "CalculateImpliedVolatility"
@@ -455,7 +455,7 @@ Const VERSION = 3
 mWriter.AddMessageId REQ_CALC_IMPLIED_VOLAT
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
-mWriter.AddContract pContract
+mWriter.AddContract pContractSpec
 mWriter.AddDouble pOptionPrice, "OptionPrice"
 mWriter.AddDouble pUnderPrice, "UnderPrice"
 
@@ -472,7 +472,7 @@ End Sub
 
 Public Sub CalculateOptionPrice( _
         ByVal pReqId As Long, _
-        ByVal pContract As TwsContract, _
+        ByVal pContractSpec As TwsContractSpecifier, _
         ByVal pVolatility As Double, _
         ByVal pUnderPrice As Double)
 Const ProcName As String = "CalculateOptionPrice"
@@ -485,7 +485,7 @@ Const VERSION = 3
 mWriter.AddMessageId REQ_CALC_OPTION_PRICE
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
-mWriter.AddContract pContract
+mWriter.AddContract pContractSpec
 
 mWriter.AddDouble pVolatility, "Volatility"
 mWriter.AddDouble pUnderPrice, "UnderPrice"
@@ -908,7 +908,7 @@ End Sub
 
 Public Sub ExerciseOptions( _
                 ByVal pTickerId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pExerciseAction As Long, _
                 ByVal pExerciseQuantity As Long, _
                 ByVal pAccount As String, _
@@ -924,18 +924,7 @@ mWriter.AddMessageId EXERCISE_OPTIONS
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pTickerId, "TickerId"
 
-mWriter.AddString pContract.ConId, "ConId"
-
-mWriter.AddString pContract.Symbol, "Symbol"
-mWriter.AddString gTwsSecTypeToShortString(pContract.Sectype), "Sectype"
-mWriter.AddString pContract.Expiry, "Expiry"
-mWriter.AddString pContract.Strike, "Strike"
-mWriter.AddString gTwsOptionRightToString(pContract.OptRight), "Right"
-mWriter.AddString IIf(pContract.Multiplier = 1, "", pContract.Multiplier), "Multiplier"
-mWriter.AddString pContract.Exchange, "Exchange"
-mWriter.AddString pContract.CurrencyCode, "Currency"
-mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
-mWriter.AddString pContract.TradingClass, "TradingClass"
+mWriter.AddContract pContractSpec, True
 
 mWriter.AddLong pExerciseAction, "ExerciseAction"
 mWriter.AddLong pExerciseQuantity, "ExerciseQuantity"
@@ -983,7 +972,7 @@ End Sub
 
 Public Sub PlaceOrder( _
                 ByVal pOrder As TwsOrder, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 Optional ByVal pSecIdType As String, _
                 Optional ByVal pSecId As String)
 Const ProcName As String = "PlaceOrder"
@@ -1007,7 +996,7 @@ If pOrder.OrderId > mInMessageHandler.NextOrderId Then mInMessageHandler.NextOrd
 
 mWriter.AddLong pOrder.OrderId, "Order id"
 
-mWriter.AddContract pContract
+mWriter.AddContract pContractSpec
 
 mWriter.AddString pSecIdType, "Sec id type"
 mWriter.AddString pSecId, "Sec id"
@@ -1039,8 +1028,8 @@ With pOrder
     mWriter.AddBoolean .Hidden, "Hidden"
 
     ' send contract combo legs for BAG requests
-    If pContract.Sectype = TwsSecTypeCombo Then
-        With pContract
+    If pContractSpec.Sectype = TwsSecTypeCombo Then
+        With pContractSpec
             If .ComboLegs.Count = 0 Then
                 mWriter.AddLong 0, "Combo legs count"
             Else
@@ -1173,11 +1162,11 @@ With pOrder
 
     mWriter.AddBoolean .NotHeld, "Not held"
 
-    If pContract.DeltaNeutralContract.ConId <> 0 Then
+    If pContractSpec.DeltaNeutralContract.ConId <> 0 Then
         mWriter.AddBoolean True, "Delta Neutral"
-        mWriter.AddLong pContract.DeltaNeutralContract.ConId, "Delta Neutral conid"
-        mWriter.AddDouble pContract.DeltaNeutralContract.Delta, "Delta Neutral delta"
-        mWriter.AddDouble pContract.DeltaNeutralContract.Price, "Delta Neutral price"
+        mWriter.AddLong pContractSpec.DeltaNeutralContract.ConId, "Delta Neutral conid"
+        mWriter.AddDouble pContractSpec.DeltaNeutralContract.Delta, "Delta Neutral delta"
+        mWriter.AddDouble pContractSpec.DeltaNeutralContract.Price, "Delta Neutral price"
     Else
         mWriter.AddBoolean False, "Delta Neutral"
     End If
@@ -1380,7 +1369,7 @@ End Sub
 
 Public Sub RequestContractDetails( _
                 ByVal pRequestId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 Optional ByVal pSecIdType As String, _
                 Optional ByVal pSecId As String)
 Const ProcName As String = "RequestContractDetails"
@@ -1389,18 +1378,18 @@ On Error GoTo Err
 Const VERSION = 8
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument pContract.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
+AssertArgument pContractSpec.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
 
 Dim lApiId As Long
 lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
 
-gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
+gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_CONTRACT_DATA
 mWriter.AddLong VERSION, "Version"
 
 mWriter.AddLong lApiId, "Request id"
-mWriter.AddContract pContract
+mWriter.AddContract pContractSpec
 mWriter.AddBoolean True, "Include expired"
 mWriter.AddString pSecIdType, "SecIdType"
 mWriter.AddString pSecId, "SecId"
@@ -1499,7 +1488,7 @@ End Sub
 
 Public Sub RequestFundamentalData( _
                 ByVal pReqId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pReportType As String)
 Const ProcName As String = "RequestFundamentalData"
 On Error GoTo Err
@@ -1508,19 +1497,19 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 3
 
-gLog "Requesting fundamental data: requester id=" & pReqId & "; contract=" & pContract.ToString, ModuleName, ProcName
+gLog "Requesting fundamental data: requester id=" & pReqId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_FUNDAMENTAL_DATA
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pReqId, "ReqId"
 
-mWriter.AddString pContract.ConId, "ConId"
-mWriter.AddString pContract.Symbol, "Symbol"
-mWriter.AddString gTwsSecTypeToShortString(pContract.Sectype), "Sectype"
-mWriter.AddString pContract.Exchange, "Exchange"
-mWriter.AddString pContract.PrimaryExch, "PrimaryExch"
-mWriter.AddString pContract.CurrencyCode, "Currency"
-mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
+mWriter.AddString pContractSpec.ConId, "ConId"
+mWriter.AddString pContractSpec.Symbol, "Symbol"
+mWriter.AddString gTwsSecTypeToShortString(pContractSpec.Sectype), "Sectype"
+mWriter.AddString pContractSpec.Exchange, "Exchange"
+mWriter.AddString pContractSpec.PrimaryExch, "PrimaryExch"
+mWriter.AddString pContractSpec.CurrencyCode, "Currency"
+mWriter.AddString UCase$(pContractSpec.LocalSymbol), "LocalSymbol"
 mWriter.AddString UCase$(pReportType), "ReportType"
 mWriter.AddString "0", "Options count"
 mWriter.Send
@@ -1563,7 +1552,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Dim lApiId As Long
 lApiId = gGetTwsHistRequestIdFromCallersRequestId(pRequestId)
 
-gLog "Requesting historical data for: " & UCase$(pRequest.Contract.LocalSymbol) & _
+gLog "Requesting historical data for: " & UCase$(pRequest.ContractSpec.LocalSymbol) & _
             "; requester id=" & pRequestId & _
             "; api id=" & lApiId & _
             "; barsize=" & pRequest.BarSizeSetting & _
@@ -1575,10 +1564,10 @@ gLog "Requesting historical data for: " & UCase$(pRequest.Contract.LocalSymbol) 
 
 mWriter.AddMessageId REQ_HISTORICAL_DATA
 mWriter.AddLong lApiId, "Request id"
-mWriter.AddContract pRequest.Contract
+mWriter.AddContract pRequest.ContractSpec
 
 Dim lExpired  As Boolean
-lExpired = gContractHasExpired(pRequest.Contract)
+lExpired = gContractHasExpired(pRequest.ContractSpec)
 mWriter.AddBoolean lExpired, "Include expired"   ' can't include expired for non-expiring contracts
 
 mWriter.AddString pRequest.EndDateTime, "End date"
@@ -1590,11 +1579,11 @@ mWriter.AddString pRequest.WhatToShow, "What to show"
 
 mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
 
-If pRequest.Contract.Sectype = TwsSecTypeCombo Then
-    mWriter.AddLong pRequest.Contract.ComboLegs.Count, "Combo legs count"
+If pRequest.ContractSpec.Sectype = TwsSecTypeCombo Then
+    mWriter.AddLong pRequest.ContractSpec.ComboLegs.Count, "Combo legs count"
     Dim lComboLeg As TwsComboLeg
     Dim i As Long
-    For Each lComboLeg In pRequest.Contract.ComboLegs
+    For Each lComboLeg In pRequest.ContractSpec.ComboLegs
         With lComboLeg
             i = i + 1
             mWriter.AddString .ConId, "ConId" & i
@@ -1636,7 +1625,7 @@ End Sub
 
 Public Sub RequestMarketData( _
                 ByVal pTickerId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pGenericTicks As String, _
                 ByVal pSnapshot As Boolean, _
                 ByVal pRegulatorySnapshot As Boolean)
@@ -1654,14 +1643,14 @@ gLog "Requesting market data" & _
         IIf(pSnapshot, " (snapshot)", "") & _
         ": requester id=" & pTickerId & _
         "; api id=" & lApiId & _
-        "; contract=" & pContract.ToString, _
+        "; contract=" & pContractSpec.ToString, _
         ModuleName, ProcName
 
 mWriter.AddMessageId REQ_MKT_DATA
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong lApiId, "Ticker id"
-mWriter.AddContract pContract
-With pContract
+mWriter.AddContract pContractSpec
+With pContractSpec
     ' Add combo legs for BAG requests
     If .Sectype = TwsSecTypes.TwsSecTypeCombo Then
         mWriter.AddString .ComboLegs.Count, "Combolegs count"
@@ -1725,7 +1714,7 @@ End Sub
 
 Public Sub RequestMarketDepth( _
                 ByVal pTickerId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 Optional ByVal pNumberOfRows As Long = 20)
 Const ProcName As String = "RequestMarketDepth"
 On Error GoTo Err
@@ -1737,13 +1726,13 @@ Const VERSION = 5
 Dim lApiId As Long
 lApiId = gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId)
 
-gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
+gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_MKT_DEPTH
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong lApiId, "Request id"
 
-mWriter.AddContract pContract, pIgnorePrimaryExchange:=True
+mWriter.AddContract pContractSpec, pIgnorePrimaryExchange:=True
 mWriter.AddLong pNumberOfRows, "Num rows"
 mWriter.AddString "", "Options"
 
@@ -1761,6 +1750,8 @@ On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Assert ServerVersion >= ApiServerVersions.MARKET_RULES, "Market rule requests not supported"
+
+gLog "Requesting market rule: id=" & pMarketRuleId, ModuleName, ProcName
 
 mWriter.AddMessageId TwsSocketOutMsgTypes.RequestMarketRule
 mWriter.AddLong pMarketRuleId, "Market Rule ID"
@@ -1865,7 +1856,7 @@ End Sub
 
 Public Sub RequestRealTimeBars( _
                 ByVal pTickerId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pBarSize As Long, _
                 ByVal pWhatToShow As String, _
                 ByVal pUseRTH As Boolean)
@@ -1879,13 +1870,13 @@ Const VERSION = 3
 Dim lApiId As Long
 lApiId = gGetTwsHistRequestIdFromCallersRequestId(pTickerId)
 
-gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
+gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_REAL_TIME_BARS
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong lApiId, "TickerId"
 
-mWriter.AddContract pContract
+mWriter.AddContract pContractSpec
 mWriter.AddLong pBarSize, "BarSize"   ' this parameter is not currently used
 mWriter.AddString pWhatToShow, "WhatToShow"
 mWriter.AddBoolean pUseRTH, "UseRTH"

@@ -64,13 +64,13 @@ Private Const ModuleName                            As String = "IContractDetail
 ' Methods
 '@================================================================================
 
-Public Sub EndContractDetails(ByVal pRequestId As Long)
+Public Sub EndContracts(ByVal pRequestId As Long)
 End Sub
 
 Public Sub EndOptionParameters(ByVal pRequestIs As Long)
 End Sub
 
-Public Sub NotifyContract(ByVal pRequestId As Long, ByRef pContractDetails As TwsContractDetails)
+Public Sub NotifyContract(ByVal pRequestId As Long, ByVal pTwsContract As TwsContract)
 End Sub
 
 Public Sub NotifyError( _
