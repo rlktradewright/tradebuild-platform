@@ -986,8 +986,8 @@ addExchangeCode "EMERALD"
 addExchangeCode "EUREX"
 addExchangeCode "EUREXUS"
 
-addExchangeCode "FTA"
 addExchangeCode "FOXRIVER"
+addExchangeCode "FTA"
 addExchangeCode "FWB"
 
 addExchangeCode "GEMINI"
@@ -1078,9 +1078,12 @@ addExchangeCode "TSE.JPN"
 addExchangeCode "VALUE"
 addExchangeCode "VENTURE"
 addExchangeCode "VIRTX"
+addExchangeCode "VSE"
 addExchangeCode "VWAP"
 
 ReDim Preserve mExchangeCodes(mMaxExchangeCodesIndex) As String
+SortStrings mExchangeCodes
+
 mExchangeCodesInitialised = True
 
 Exit Sub
