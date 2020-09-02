@@ -1680,7 +1680,7 @@ mReader.BeginCheckpointScope
             If mReader.GetStringCheckpointed(lStringValue, "Symbol") Then sContractSpec.Symbol = lStringValue
             If mReader.GetStringCheckpointed(lStringValue, "Sec type") Then sContractSpec.Sectype = gTwsSecTypeFromString(lStringValue)
             If mReader.GetStringCheckpointed(lStringValue, "Expiry") Then sContractSpec.Expiry = lStringValue
-            If mReader.GetDoubleCheckpointed(lDoubleValue, "Stirke") Then sContractSpec.Strike = lDoubleValue
+            If mReader.GetDoubleCheckpointed(lDoubleValue, "Strike") Then sContractSpec.Strike = lDoubleValue
             If mReader.GetStringCheckpointed(lStringValue, "Right") Then sContractSpec.OptRight = gTwsOptionRightFromString(lStringValue)
             If mReader.GetStringCheckpointed(lStringValue, "Exchange") Then sContractSpec.Exchange = lStringValue
             If mReader.GetStringCheckpointed(lStringValue, "Currency") Then sContractSpec.CurrencyCode = lStringValue
