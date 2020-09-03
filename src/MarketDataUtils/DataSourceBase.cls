@@ -585,7 +585,6 @@ Friend Sub Initialise( _
                 ByVal pMarketDataManager As MarketDataManager, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pClockFuture As IFuture, _
-                ByVal pIsTickReplay As Boolean, _
                 ByVal pStreamId As Long, _
                 ByVal pOptions As MarketDataSourceOptions, _
                 ByVal pNumberOfMarketDepthRows As Long, _
@@ -900,29 +899,6 @@ If mSomeCurrentPriorityTickListeners Then
     For i = 0 To UBound(mCurrentPriorityTickListeners)
         Set lListener = mCurrentPriorityTickListeners(i)
         lListener.NoMoreTicks ev
-    Next
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub firePriorityOptionComputation(ByRef ev As OptionComputationEventData)
-Const ProcName As String = "firePriorityOptionComputation"
-On Error GoTo Err
-
-If mPriorityOptionComputationListeners.Count = 0 Then Exit Sub
-
-updatePriorityOptionComputationListeners
-
-If mSomeCurrentPriorityOptionComputationListeners Then
-    Dim lListener As IOptionComputationListener
-    Dim i As Long
-    For i = 0 To UBound(mCurrentPriorityOptionComputationListeners)
-        Set lListener = mCurrentPriorityOptionComputationListeners(i)
-        lListener.NotifyComputation ev
     Next
 End If
 

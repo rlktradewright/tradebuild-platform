@@ -69,6 +69,9 @@ s = gPadStringRight("B=" & formatPriceTick(pDataSource, TickTypeBid, lSectype, l
 s = s & gPadStringRight("A=" & formatPriceTick(pDataSource, TickTypeAsk, lSectype, lTickSize), 17)
 If lSectype <> SecTypeCash Then
     s = s & gPadStringRight("T=" & formatPriceTick(pDataSource, TickTypeTrade, lSectype, lTickSize), 17)
+    If lSectype = SecTypeOption Or lSectype = SecTypeFuturesOption Then
+        s = s & gPadStringRight("M=" & formatPriceTick(pDataSource, TickTypeOptionModelPrice, lSectype, lTickSize), 17)
+    End If
     s = s & "V=" & formatSizeTick(pDataSource, TickTypeVolume)
 End If
 
@@ -157,9 +160,11 @@ Dim lTick As GenericTick
 If pDataSource.HasCurrentTick(pTickType) Then
     lTick = pDataSource.CurrentTick(pTickType)
     s = s & FormatPrice(lTick.Price, pSecType, pTickSize)
-    s = s & "("
-    s = s & formatBigInteger(lTick.Size)
-    s = s & ")"
+    If lTick.Size <> 0 Then
+        s = s & "("
+        s = s & formatBigInteger(lTick.Size)
+        s = s & ")"
+    End If
 Else
     s = s & "n/a"
 End If

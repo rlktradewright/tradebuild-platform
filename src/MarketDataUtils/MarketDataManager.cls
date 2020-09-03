@@ -202,7 +202,7 @@ If lDataSourceBase Is Nothing Then
     Set lDataSourceBase = New DataSourceBase
     Set mDataSourceBaseTable(lIndex).DataSourceBase = lDataSourceBase
     
-    lDataSourceBase.Initialise Me, pContractFuture, pClockFuture, pTickfileStreamId <> NullIndex, lIndex, mOptions, mNumberOfMarketDepthRows, pIsSnapshot, pRefreshInterval
+    lDataSourceBase.Initialise Me, pContractFuture, pClockFuture, lIndex, mOptions, mNumberOfMarketDepthRows, pIsSnapshot, pRefreshInterval
 End If
 
 Set GetDataSourceBase = lDataSourceBase

@@ -42,12 +42,6 @@ Implements IMarketDataManager
 
 Private Const ModuleName                            As String = "RealtimeDataManager"
 
-Private Const ConfigSectionMarketDataSource         As String = "MarketDataSource"
-
-Private Const ConfigSettingOptions                  As String = "&Options"
-Private Const ConfigSettingKey                      As String = "&Key"
-Private Const ConfigSettingNumberOfMarketDepthRows  As String = "&NumberOfMarketDepthRows"
-
 Private Const MyCapabilities                        As Long = MarketDataManagerCapabilities.MarketDataManagerStreaming + _
                                                                 MarketDataManagerCapabilities.MarketDataManagerSnapshots
 
