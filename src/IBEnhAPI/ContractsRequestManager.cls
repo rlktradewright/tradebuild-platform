@@ -54,7 +54,7 @@ Private mNumOutstandingRequests                     As Long
 
 Private mFetchers                                   As EnumerableCollection
 
-Private mResultContractsFutureBuilder               As FutureBuilder
+Private WithEvents mResultContractsFutureBuilder    As FutureBuilder
 Attribute mResultContractsFutureBuilder.VB_VarHelpID = -1
 Private mCacheContractsFutureBuilder                As FutureBuilder
 Attribute mCacheContractsFutureBuilder.VB_VarHelpID = -1
@@ -65,7 +65,7 @@ Private mCookie                                     As Variant
 
 Private mReturnTwsContracts                         As Boolean
 
-Private mTwsContracts               As EnumerableCollection
+Private mTwsContracts                               As EnumerableCollection
 
 Private mContractCache                              As ContractCache
 
@@ -101,6 +101,22 @@ On Error GoTo Err
 
 If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
 Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mResultContractsFutureBuilder Event Handlers
+'@================================================================================
+
+Private Sub mResultContractsFutureBuilder_Cancelled(ev As CancelledEventData)
+Const ProcName As String = "mResultContractsFutureBuilder_Cancelled"
+On Error GoTo Err
+
+doCancel
 
 Exit Sub
 
@@ -259,18 +275,6 @@ Do While en.MoveNext
     lFetcher.Cancel
 Loop
 mFetchers.Clear
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub CancelRequest(ByVal pRequestId As Long)
-Const ProcName As String = "cancelRequest"
-On Error GoTo Err
-
-If pRequestId <> NullIndex Then mContractRequester.CancelRequest pRequestId
 
 Exit Sub
 

@@ -488,7 +488,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function IOrderSubmitter_GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+Private Function IOrderSubmitter_GetTickSize() As IFuture
 Set IOrderSubmitter_GetTickSize = CreateFuture(CreateBoxedValue(mContract.TickSize))
 End Function
 

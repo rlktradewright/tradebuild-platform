@@ -101,7 +101,7 @@ End Sub
 Friend Function GetIncrement( _
                 ByVal pPrice As Double) As Double
 Dim i As Long
-For i = 0 To mNextRulesIndex
+For i = 0 To mNextRulesIndex - 1
     If pPrice >= mRules(i).PriceBandLow Then
         GetIncrement = mRules(i).Increment
     Else

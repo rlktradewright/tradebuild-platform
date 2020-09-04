@@ -70,6 +70,12 @@ Public Type ContractCacheEntry
     CacheDate                       As Date
 End Type
 
+Public Type MarketRuleRequestEntry
+    RulesetFutureBuilder    As FutureBuilder
+    PriceMagnifier          As Long
+    RulesetID               As Long
+End Type
+
 Public Type OrderIdMapEntry
     Order                   As Iorder
     OrderSubmitter          As OrderSubmitter
@@ -77,7 +83,7 @@ Public Type OrderIdMapEntry
     ParentId                As Long
 End Type
 
-Public Type PriceIncrementRulesetEntry
+Public Type PriceIncrementRulesetCacheEntry
     RulesetFutureBuilder    As FutureBuilder
     Ruleset                 As PriceIncrementRuleset
     CacheDate               As Date

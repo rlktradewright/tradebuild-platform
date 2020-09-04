@@ -54,6 +54,8 @@ Private mFutureBuilder                              As New FutureBuilder
 
 Private mContractCache                              As ContractCache
 
+Private mSelfRef                                    As Object
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -90,6 +92,7 @@ ElseIf TypeOf ev.Future.Value Is EnumerableCollection Then
     Assert Not lContracts Is Nothing, "Failed to retrieve TWS contract details"
     Assert lContracts.Count = 1, "Contract not uniquely specified"
     processTwsContract lContracts.Item(1)
+    Set mSelfRef = Nothing
 End If
 
 Exit Sub
@@ -122,6 +125,7 @@ mFutureWaiter.Add pContractFuture
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 mFutureBuilder.Cookie = pCookie
+Set mSelfRef = Me
 
 Exit Sub
 
@@ -212,6 +216,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "AUC", _
             "BASKET", _
             "BENCHPX", _
+            "CASHQTY", _
             "COND", _
             "CONDORDER", _
             "CONSCOST", _

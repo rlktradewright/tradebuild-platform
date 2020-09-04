@@ -358,26 +358,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub processPriceIncrementRulesets( _
-                ByVal pTwsContract As TwsContract)
-Const ProcName As String = "processPriceIncrementRulesets"
+Private Sub processPriceIncrementRuleset( _
+                ByVal pContract As IContract)
+Const ProcName As String = "processPriceIncrementRuleset"
 On Error GoTo Err
 
-Dim lExchanges() As String
-lExchanges = Split(pTwsContract.ValidExchanges)
-
-Dim i As Long
-For i = 0 To UBound(lExchanges)
-    If pTwsContract.Specifier.Exchange = lExchanges(i) Then Exit For
-Next
-
-Dim lRulesetIds() As String
-lRulesetIds = Split(pTwsContract.MarketRuleIds, ",")
-
 Dim lRulesetID As Long
-lRulesetID = lRulesetIds(i)
+lRulesetID = CLng(pContract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
 
-mContractRequester.RequestPriceIncrementRuleset lRulesetID
+Dim lPriceMagnifier As Long
+lPriceMagnifier = CLng(pContract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
+
+mContractRequester.RequestPriceIncrementRuleset lRulesetID, lPriceMagnifier
 
 Exit Sub
 
@@ -406,7 +398,7 @@ If Not mContractsBuilder.Contracts.Contains(lContract.Specifier) Then
 End If
 
 addCacheEntries lContract, pTwsContract
-processPriceIncrementRulesets pTwsContract
+processPriceIncrementRuleset lContract
 
 mRequestManager.NotifyContract lContract
 mRequestManager.NotifyTwsContract pTwsContract

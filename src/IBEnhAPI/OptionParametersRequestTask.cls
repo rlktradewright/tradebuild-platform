@@ -56,9 +56,6 @@ Private mContractCache                              As ContractCache
 
 Private mCookie                                     As Variant
 
-Private mExpiriesBuilder                            As New ExpiriesBuilder
-Private mStrikesBuilder                             As New StrikesBuilder
-
 Private mRequestType                                As OptionParameterTypes
 Private mRequestId                                  As Long
 

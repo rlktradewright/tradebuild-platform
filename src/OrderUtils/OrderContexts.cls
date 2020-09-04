@@ -522,8 +522,7 @@ Friend Function IsGettingTickSize() As Boolean
 IsGettingTickSize = Not (mTickSizeFuture Is Nothing)
 End Function
 
-Friend Function IsReadyTickSize( _
-                ByVal pDummyOptionOrder As IOrder) As Boolean
+Friend Function IsReadyTickSize() As Boolean
 Const ProcName As String = "IsReadyTickSize"
 On Error GoTo Err
 
@@ -532,33 +531,14 @@ If mTickSize <> -1# Then
 Else
     If Not mTickSizeFuture Is Nothing Then
         IsReadyTickSize = False
+    ElseIf mContract.Specifier.SecType = SecTypeCombo Then
+        Assert False, "Combo orders not supported"
+    ElseIf dataSourceHasPrice And IsProviderReady Then
+        Set mTickSizeFuture = mOrderSubmitter.GetTickSize
+        mFutureWaiter.Add mTickSizeFuture
+        IsReadyTickSize = False
     Else
-        Select Case mContract.Specifier.SecType
-        Case SecTypeStock
-            If dataSourceHasPrice And IsProviderReady Then
-                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(Nothing)
-                mFutureWaiter.Add mTickSizeFuture
-            End If
-            IsReadyTickSize = False
-        Case SecTypeFuture
-            SetTickSize mContract.TickSize
-            IsReadyTickSize = True
-        Case SecTypeOption, _
-                SecTypeFuturesOption
-            If dataSourceHasPrice And IsProviderReady Then
-                Set mTickSizeFuture = mOrderSubmitter.GetTickSize(pDummyOptionOrder)
-                mFutureWaiter.Add mTickSizeFuture
-            End If
-            IsReadyTickSize = False
-        Case SecTypeCash
-            SetTickSize mContract.TickSize
-            IsReadyTickSize = True
-        Case SecTypeCombo
-            Assert False, "Combo orders not supported"
-        Case SecTypeIndex
-            SetTickSize mContract.TickSize
-            IsReadyTickSize = True
-        End Select
+        IsReadyTickSize = False
     End If
 End If
 

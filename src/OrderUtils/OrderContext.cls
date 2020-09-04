@@ -1219,13 +1219,8 @@ ElseIf Not IsProviderReady Then
     IsReadyTickSize = False
 ElseIf getOrderContexts.IsGettingTickSize Then
     IsReadyTickSize = False
-ElseIf mContract.Specifier.SecType = SecTypeOption Or _
-        mContract.Specifier.SecType = SecTypeFuturesOption Then
-    Dim lDummyOptionOrder As IOrder
-    Set lDummyOptionOrder = CreateEntryOrder(OrderTypeLimit, gNewPriceSpecifier(, PriceValueTypeModel), gNewPriceSpecifier, True)
-    IsReadyTickSize = getOrderContexts.IsReadyTickSize(lDummyOptionOrder)
 Else
-    IsReadyTickSize = getOrderContexts.IsReadyTickSize(Nothing)
+    IsReadyTickSize = getOrderContexts.IsReadyTickSize
 End If
 
 Exit Function

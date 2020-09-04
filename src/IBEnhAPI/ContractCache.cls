@@ -76,7 +76,7 @@ On Error GoTo Err
 Dim lKey As String: lKey = CStr(ev.ContinuationData)
 
 If IsInteger(ev.ContinuationData) Then
-    Dim lRulesetEntry As PriceIncrementRulesetEntry
+    Dim lRulesetEntry As PriceIncrementRulesetCacheEntry
     lRulesetEntry = mPriceIncrementRulesets.Item(lKey)
     mPriceIncrementRulesets.Remove lKey
     
@@ -233,7 +233,7 @@ Friend Sub AddPriceIncrementRuleset( _
 Const ProcName As String = "AddPriceIncrementRuleset"
 On Error GoTo Err
 
-Dim lEntry As PriceIncrementRulesetEntry
+Dim lEntry As PriceIncrementRulesetCacheEntry
 If tryGetRulesetCacheEntry(CStr(pRuleset.RulesID), lEntry) Then Exit Sub
 
 lEntry.CacheDate = Now
@@ -338,7 +338,7 @@ Friend Function GetPriceIncrementRuleset( _
 Const ProcName As String = "GetPriceIncrementRuleset"
 On Error GoTo Err
 
-Dim lEntry As PriceIncrementRulesetEntry
+Dim lEntry As PriceIncrementRulesetCacheEntry
 If Not tryGetRulesetCacheEntry(pRuleID, lEntry) Then Exit Function
 
 If Not lEntry.Ruleset Is Nothing Then Set GetPriceIncrementRuleset = lEntry.Ruleset
@@ -360,7 +360,7 @@ Friend Function GetRulesetFutureBuilder( _
 Const ProcName As String = "GetRulesetFutureBuilder"
 On Error GoTo Err
 
-Dim lEntry As PriceIncrementRulesetEntry
+Dim lEntry As PriceIncrementRulesetCacheEntry
 If Not tryGetRulesetCacheEntry(pRuleID, lEntry) Then
     Set pRulesetFutureBuilder = Nothing
     GetRulesetFutureBuilder = False
@@ -484,7 +484,7 @@ Friend Sub SetRulesetFutureBuilder( _
 Const ProcName As String = "SetRulesetFutureBuilder"
 On Error GoTo Err
 
-Dim lEntry As PriceIncrementRulesetEntry
+Dim lEntry As PriceIncrementRulesetCacheEntry
 Assert Not tryGetRulesetCacheEntry(pRuleID, lEntry), "Cache entry already exists for ruleset: " & pRuleID
     
 Set lEntry.RulesetFutureBuilder = pRulesetFutureBuilder
@@ -543,7 +543,7 @@ End Function
 
 Private Function tryGetRulesetCacheEntry( _
                 ByVal pRuleID As Long, _
-                ByRef pCacheEntry As PriceIncrementRulesetEntry) As Boolean
+                ByRef pCacheEntry As PriceIncrementRulesetCacheEntry) As Boolean
 Const ProcName As String = "tryGetRulesetCacheEntry"
 On Error GoTo Err
 

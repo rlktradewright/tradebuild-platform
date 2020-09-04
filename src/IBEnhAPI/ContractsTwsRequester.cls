@@ -87,8 +87,8 @@ Private mFirstFreeRequestsEntry                     As Long
 Private mFirstRequestEntry                          As Long
 Private mLastRequestEntry                           As Long
 
-Private mFirstPendingContractEntry                 As Long
-Private mLastPendingContractEntry                  As Long
+Private mFirstPendingContractEntry                  As Long
+Private mLastPendingContractEntry                   As Long
 
 Private mTaskContext                                As TaskContext
 
@@ -97,7 +97,7 @@ Private mMaxConcurrentRequests                      As Long
 
 Private mIsTwsConnectedToIBServers                  As Boolean
 
-Private mRulesetFutureBuilders                      As EnumerableCollection
+Private mRulesetRequests                            As EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
@@ -110,7 +110,7 @@ mFirstRequestEntry = NullIndex
 mLastRequestEntry = NullIndex
 mFirstPendingContractEntry = NullIndex
 mLastPendingContractEntry = NullIndex
-Set mRulesetFutureBuilders = New EnumerableCollection
+Set mRulesetRequests = New EnumerableCollection
 End Sub
 
 '@================================================================================
@@ -202,6 +202,9 @@ Private Sub IContractDetailsConsumer_NotifyMarketRule( _
 Const ProcName As String = "IContractDetailsConsumer_NotifyMarketRule"
 On Error GoTo Err
 
+Dim lRequestEntry As MarketRuleRequestEntry
+lRequestEntry = mRulesetRequests.Item(CStr(pMarketRuleId))
+
 Dim lRuleset As New PriceIncrementRuleset
 lRuleset.Initialise pMarketRuleId
 
@@ -209,15 +212,16 @@ Dim i As Long
 For i = 0 To UBound(pPriceIncrements)
     Dim lPriceIncrement As TwsPriceIncrement
     lPriceIncrement = pPriceIncrements(i)
-    lRuleset.Add lPriceIncrement.LowEdge, lPriceIncrement.Increment
+    lRuleset.Add lPriceIncrement.LowEdge * lRequestEntry.PriceMagnifier, _
+                    lPriceIncrement.Increment * lRequestEntry.PriceMagnifier
 Next
 
 Dim lFutureBuilder As FutureBuilder
-Set lFutureBuilder = mRulesetFutureBuilders.Item(CStr(pMarketRuleId))
+Set lFutureBuilder = lRequestEntry.RulesetFutureBuilder
 lFutureBuilder.Value = lRuleset
 lFutureBuilder.Complete
 
-mRulesetFutureBuilders.Remove CStr(pMarketRuleId)
+mRulesetRequests.Remove CStr(pMarketRuleId)
 
 Exit Sub
 
@@ -454,7 +458,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub RequestPriceIncrementRuleset( _
-                ByVal pRulesetID As Long)
+                ByVal pRulesetID As Long, _
+                ByVal pPriceMagnifier As Long)
 Const ProcName As String = "RequestPriceIncrementRuleset"
 On Error GoTo Err
 
@@ -465,10 +470,13 @@ Else
     If mContractCache.GetRulesetFutureBuilder(pRulesetID, lRulesetFutureBuilder) Then
         ' the ruleset is currently being fetched from the API
     Else
-        Set lRulesetFutureBuilder = New FutureBuilder
-        mRulesetFutureBuilders.Add lRulesetFutureBuilder, CStr(pRulesetID)
-        mContractCache.SetRulesetFutureBuilder pRulesetID, lRulesetFutureBuilder
-        mTwsAPI.RequestMarketRule pRulesetID
+        Dim lRequestEntry As MarketRuleRequestEntry
+        Set lRequestEntry.RulesetFutureBuilder = New FutureBuilder
+        lRequestEntry.PriceMagnifier = pPriceMagnifier
+        lRequestEntry.RulesetID = pRulesetID
+        mRulesetRequests.Add lRequestEntry, CStr(Abs(pRulesetID))
+        mContractCache.SetRulesetFutureBuilder pRulesetID, lRequestEntry.RulesetFutureBuilder
+        mTwsAPI.RequestMarketRule Abs(pRulesetID)
     End If
 End If
 

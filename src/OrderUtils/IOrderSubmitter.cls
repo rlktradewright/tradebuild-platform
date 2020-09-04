@@ -100,7 +100,7 @@ End Sub
 Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
 End Sub
 
-Public Function GetTickSize(ByVal pDummyOrder As IOrder) As IFuture
+Public Function GetTickSize() As IFuture
 End Function
 
 Public Function FetchPermittedOrderProperties( _

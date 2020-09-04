@@ -772,8 +772,9 @@ With pTwsContract
     lProviderProps.SetParameterValue "Industry", .Industry
     lProviderProps.SetParameterValue "LiquidHours", .LiquidHours
     lProviderProps.SetParameterValue "MarketName", .MarketName
+    lProviderProps.SetParameterValue "MarketRuleID", getMarketRuleID(pTwsContract)
     lProviderProps.SetParameterValue "OrderTypes", .OrderTypes
-    lProviderProps.SetParameterValue "TradingHours", .TradingHours
+    lProviderProps.SetParameterValue "PriceMagnifier", .PriceMagnifier
     
     Dim ar() As TwsTagValue: ar = .SecIdList
     Dim u As Long: u = -1
@@ -1023,6 +1024,34 @@ ElseIf pDataSource.HasCurrentTick( _
 End If
 
 getMarketPrice = lMarketPrice
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getMarketRuleID( _
+                ByVal pTwsContract As TwsContract) As Long
+Const ProcName As String = "getMarketRuleID"
+On Error GoTo Err
+
+Dim lExchanges() As String
+lExchanges = Split(pTwsContract.ValidExchanges, ",")
+
+Dim i As Long
+For i = 0 To UBound(lExchanges)
+    If pTwsContract.Specifier.Exchange = lExchanges(i) Then Exit For
+Next
+
+Dim lMarketRuleIds() As String
+lMarketRuleIds = Split(pTwsContract.MarketRuleIds, ",")
+
+If pTwsContract.PriceMagnifier = 1 Then
+    getMarketRuleID = lMarketRuleIds(i)
+Else
+    getMarketRuleID = -lMarketRuleIds(i)
+End If
 
 Exit Function
 
