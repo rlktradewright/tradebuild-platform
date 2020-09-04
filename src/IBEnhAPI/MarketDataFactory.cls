@@ -812,11 +812,12 @@ Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal 
 Const ProcName As String = "CreateMarketDepthStream"
 On Error GoTo Err
 
-Set CreateMarketDepthStream = doCreateMarketDataStream( _
-                                        pContractFuture, _
-                                        False, _
-                                        pErrorListener, _
-                                        pStreamId)
+Set CreateMarketDepthStream = doCreateMarketDepthStream( _
+                                    pContractFuture, _
+                                    pNumberOfRows, _
+                                    pErrorListener, _
+                                    pStreamId)
+
 
 Exit Function
 
@@ -940,6 +941,28 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function doCreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
+Const ProcName As String = "doCreateMarketDepthStream"
+On Error GoTo Err
+
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
+AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
+
+pStreamId = getTableEntry(mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, pStreamId, pContractFuture, False, pErrorListener)
+mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
+
+gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
+
+prepareTickStream mMarketDepthTable, pContractFuture, pStreamId, True
+Set doCreateMarketDepthStream = mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream
+
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub FireOptionComputation( _
                 ByVal pStreamId As Long, _
                 ByRef pComputation As OptionComputation)
@@ -986,18 +1009,6 @@ End Function
 
 Private Function getIndexFromMarketDepthId(ByVal pMarketDepthId As Long) As Long
 getIndexFromMarketDepthId = pMarketDepthId Mod IncarnationIncrement
-End Function
-
-Private Function getTheTimezone(ByVal pTimeZoneId As String) As TimeZone
-Const ProcName As String = "getTheTimezone"
-On Error GoTo Err
-
-Set getTheTimezone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(pTimeZoneId))
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getMarketDepthIdFromIndex(ByVal pIndex As Long) As Long
