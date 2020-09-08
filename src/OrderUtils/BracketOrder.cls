@@ -65,38 +65,6 @@ Private Const ModuleName                As String = "BracketOrder"
 ' Enums
 '@================================================================================
 
-'Public Enum BracketOrderStates
-'
-'    ' This state indicates that the bracket order has been created but none of
-'    ' the orders have yet been placed.
-'    BracketOrderStateCreated = 1
-'
-'    ' This state indicates that all the orders in the bracket order have been placed.
-'    BracketOrderStateSubmitted
-'
-'    ' This state indicates that the bracket order is in the process of being
-'    ' cancelled.
-'    BracketOrderStateCancelling
-'
-'    ' This state indicates that the bracket order is being closed out.
-'    ' (When an bracket order has been closed out, there are no outstanding
-'    ' orders and no net Size - note that this may require a closeout
-'    ' order to be placed to negate any existing Size.)
-'    BracketOrderStateClosingOut
-'
-'    ' This state indicates that all orders have been completed.
-'    BracketOrderStateClosed
-'
-'    ' This state indicates that a cancellation notification for either
-'    ' the stop-loss order or the target order, when both exist, has been received.
-'    ' We don't know whether the order was cancelled because the user/broker
-'    ' cancelled it, or because the other order was filled. So in this
-'    ' state we wait for the other order to be either cancelled or
-'    ' filled or for a timeout to elapse.
-'    BracketOrderStateAwaitingOtherOrderCancel
-'
-'End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
