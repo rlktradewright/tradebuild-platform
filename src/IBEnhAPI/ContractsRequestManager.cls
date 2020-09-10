@@ -49,6 +49,7 @@ Private mContractRequester                          As ContractsTwsRequester
 
 Private mContractsBuilder                           As ContractsBuilder
 Private mCachedContracts                            As IContracts
+Private mCachedTwsContracts                         As EnumerableCollection
 
 Private mNumOutstandingRequests                     As Long
 
@@ -158,13 +159,15 @@ mResultContractsFutureBuilder.Cookie = mCookie
 
 mReturnTwsContracts = pReturnTwsContracts
 
-Set mCachedContracts = mContractCache.GetContracts(mContractSpecifier)
-If mCachedContracts Is Nothing Then
-ElseIf mCachedContracts.Count = 1 Then
+If Not mContractCache.GetContracts(mContractSpecifier, mCachedContracts, mTwsContracts) Then
+ElseIf mCachedContracts.Count <> 1 Then
+    ' the required contracts are in the cache but there are more than 1 of them,
+    ' so use a ContractsFetcher to retrieve them and play them back to the listener
+Else
     If Not mListener Is Nothing Then mListener.NotifyContract mCookie, mCachedContracts.ItemAtIndex(1)
     If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
     If mReturnTwsContracts Then
-        mResultContractsFutureBuilder.Value = mContractCache.GetTwsContracts(mContractSpecifier)
+        mResultContractsFutureBuilder.Value = mTwsContracts
         mResultContractsFutureBuilder.Complete
     Else
         mResultContractsFutureBuilder.Value = mCachedContracts

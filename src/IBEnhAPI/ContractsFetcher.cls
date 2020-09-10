@@ -240,9 +240,10 @@ Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
 
-If fetchCachedTwsContracts(mContractSpecifier) Or _
-    fetchCachedContracts(mContractSpecifier) _
-Then
+If mContractCache.GetContracts( _
+                        mContractSpecifier, _
+                        mCachedContracts, _
+                        mCachedTwsContracts) Then
     StartTask Me, PriorityNormal
 Else
     fetchContractsFromIBApi mContractSpecifier
@@ -300,40 +301,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function fetchCachedContracts( _
-                ByVal pContractSpec As IContractSpecifier) As Boolean
-On Error GoTo Err
-Const ProcName As String = "fetchCachedContracts"
-
-Set mCachedContracts = mContractCache.GetContracts(pContractSpec)
-
-If mCachedContracts Is Nothing Then Exit Function
-    
-fetchCachedContracts = True
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function fetchCachedTwsContracts( _
-                pContractSpec As IContractSpecifier) As Boolean
-Const ProcName As String = "fetchCachedTwsContracts"
-On Error GoTo Err
-
-Set mCachedTwsContracts = mContractCache.GetTwsContracts(pContractSpec)
-
-If mCachedTwsContracts Is Nothing Then Exit Function
-
-fetchCachedTwsContracts = True
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Sub fetchContractsFromIBApi( _
                 ByVal pContractSpec As IContractSpecifier)

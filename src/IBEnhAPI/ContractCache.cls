@@ -281,7 +281,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function GetContracts( _
-                ByVal pContractSpec As IContractSpecifier) As IContracts
+                ByVal pContractSpec As IContractSpecifier, _
+                ByRef pContracts As IContracts, _
+                ByRef pTwsContracts As EnumerableCollection) As Boolean
 Const ProcName As String = "GetContract"
 On Error GoTo Err
 
@@ -290,9 +292,11 @@ If pContractSpec.SecType = SecTypeCombo Then Exit Function
 Dim lEntry As ContractCacheEntry
 If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
 
-If lEntry.Contracts Is Nothing Then
+If Not lEntry.ContractsFutureBuilder Is Nothing Then
 Else
-    Set GetContracts = lEntry.Contracts
+    GetContracts = True
+    Set pContracts = lEntry.Contracts
+    Set pTwsContracts = lEntry.TwsContracts
     gLogger.Log "Retrieved " & _
                 lEntry.Contracts.Count & _
                 IIf(lEntry.Contracts.Count = 1, " contract", " contracts") & _
@@ -368,32 +372,6 @@ Else
     Set pRulesetFutureBuilder = lEntry.RulesetFutureBuilder
     GetRulesetFutureBuilder = True
 End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Friend Function GetTwsContracts( _
-                ByVal pContractSpec As IContractSpecifier) As EnumerableCollection
-Const ProcName As String = "GetTwsContracts"
-On Error GoTo Err
-
-If pContractSpec.SecType = SecTypeCombo Then Exit Function
-
-Dim lEntry As ContractCacheEntry
-If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
-
-Set GetTwsContracts = lEntry.TwsContracts
-gLogger.Log "Retrieved " & _
-            lEntry.TwsContracts.Count & _
-            IIf(lEntry.TwsContracts.Count = 1, _
-                " TWS contract", _
-                " TWS contracts") & _
-            " from cache for key", _
-            ProcName, ModuleName, LogLevelDetail, _
-            pContractSpec.Key
 
 Exit Function
 
