@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -793,6 +793,7 @@ On Error GoTo Err
 RaiseEvent KeyPress(KeyAscii)
 
 If isAlphaNumeric(KeyAscii) Or _
+    KeyAscii = Asc(":") Or _
     KeyAscii = Asc("@") Or _
     KeyAscii = Asc("/") _
     Then processAlphaNumericKey KeyAscii
