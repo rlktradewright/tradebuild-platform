@@ -266,25 +266,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function gGetSplashScreen() As Form
-Const ProcName As String = "gGetSplashScreen"
-On Error GoTo Err
-
-If mSplash Is Nothing Then Set mSplash = New fSplash
-mSplash.Show vbModeless
-mSplash.Initialise
-mSplash.Refresh
-SetWindowLong mSplash.hWnd, GWL_EXSTYLE, GetWindowLong(mSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
-SetWindowPos mSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
-
-Set gGetSplashScreen = mSplash
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
@@ -321,7 +302,7 @@ Const ProcName As String = "gLoadMainForm"
 On Error GoTo Err
 
 Do
-    gGetSplashScreen
+    createSplashScreen
     
     Dim lMainForm As New fTradeSkilDemo
     
@@ -506,7 +487,7 @@ End If
 Set mConfigChangeMonitor = New ConfigChangeMonitor
 mConfigChangeMonitor.Initialise mConfigStore
 
-gGetSplashScreen
+createSplashScreen
 loadChartStyles mConfigStore
 ensureBuiltInChartStylesExist
     
@@ -634,6 +615,23 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub createSplashScreen()
+Const ProcName As String = "createSplashScreen"
+On Error GoTo Err
+
+If mSplash Is Nothing Then Set mSplash = New fSplash
+mSplash.Show vbModeless
+mSplash.Initialise
+mSplash.Refresh
+SetWindowLong mSplash.hWnd, GWL_EXSTYLE, GetWindowLong(mSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
+SetWindowPos mSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE Or SWP_NOMOVE Or SWP_NOSIZE
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub ensureBuiltInChartStylesExist()
 Const ProcName As String = "ensureBuiltInChartStylesExist"

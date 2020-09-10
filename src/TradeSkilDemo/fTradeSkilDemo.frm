@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#358.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#371.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -1198,7 +1198,7 @@ LogMessage "Loading configuration: applying theme"
 ApplyTheme mAppInstanceConfig.GetSetting(ConfigSettingCurrentTheme, "Black")
 
 LogMessage "Loading configuration: showing main form"
-Me.Show vbModeless, gSplashScreen
+Me.Show vbModeless
 
 LogMessage "Loading configuration: showing charts"
 mChartForms.ShowCharts gMainForm

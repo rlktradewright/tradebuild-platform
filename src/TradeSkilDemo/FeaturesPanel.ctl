@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#366.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#371.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
@@ -428,7 +428,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   94240771
+            Format          =   134807555
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -482,7 +482,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   94240771
+            Format          =   134807555
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -1516,12 +1516,18 @@ If mReplayController Is Nothing Then
     Set mReplayController = lTickfileDataManager.ReplayController
     
     Dim lTickers As Tickers
-    Set lTickers = CreateTickers(lTickfileDataManager, mTradeBuildAPI.StudyLibraryManager, mTradeBuildAPI.HistoricalDataStoreInput, lOrderManager, , mTradeBuildAPI.OrderSubmitterFactorySimulated)
+    Set lTickers = CreateTickers(lTickfileDataManager, _
+                                mTradeBuildAPI.HistoricalDataStoreInput, _
+                                lOrderManager, _
+                                , _
+                                mTradeBuildAPI.OrderSubmitterFactorySimulated)
     
     Dim i As Long
     For i = 1 To TickfileOrganiser1.TickfileCount
         Dim lTicker As Ticker
-        Set lTicker = lTickers.CreateTicker(mReplayController.TickStream(i - 1).ContractFuture, False)
+        Set lTicker = lTickers.CreateTicker( _
+                            mReplayController.TickStream(i - 1).ContractFuture, _
+                            False)
         mTickerGrid.AddTickerFromDataSource lTicker
     Next
     

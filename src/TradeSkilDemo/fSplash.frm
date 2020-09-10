@@ -151,7 +151,7 @@ LogText.SelStart = Len(LogText.Text)
 LogText.SelLength = 0
 If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
 LogText.SelText = formatLogRecord(Logrec)
-LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
+LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 1
 
 Exit Sub
 
