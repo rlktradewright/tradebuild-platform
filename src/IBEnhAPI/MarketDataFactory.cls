@@ -98,8 +98,10 @@ Private mMarketDepthTableNextIndex                  As Long
 Private mContractRequester                          As ContractsTwsRequester
 Private mHistoricalDataRequester                    As HistDataRequester
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
+Private WithEvents mTicksFutureWaiter               As FutureWaiter
+Attribute mTicksFutureWaiter.VB_VarHelpID = -1
+Private WithEvents mDepthFutureWaiter               As FutureWaiter
+Attribute mDepthFutureWaiter.VB_VarHelpID = -1
 
 Private mContractCache                              As ContractCache
 
@@ -116,7 +118,8 @@ mMarketDataTableFirstFreeIndex = NullIndex
 ReDim mMarketDepthTable(3) As TickerTableEntry
 mMarketDepthTableFirstFreeIndex = NullIndex
 
-Set mFutureWaiter = New FutureWaiter
+Set mTicksFutureWaiter = New FutureWaiter
+Set mDepthFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
@@ -637,11 +640,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mFutureWaiter Event Handlers
+' mTicksFutureWaiter Event Handlers
 '@================================================================================
 
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
+Private Sub mTicksFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mTicksFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsCancelled Then Exit Sub
@@ -649,23 +652,40 @@ If ev.Future.IsCancelled Then Exit Sub
 Dim lStreamId As Long
 lStreamId = ev.ContinuationData
 
-If lStreamId < MarketDepthIdOffset Then
-    If Not mMarketDataTable(lStreamId).IsInUse Then Exit Sub
-    If ev.Future.IsFaulted Then
-        mMarketDataTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
-        releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId
-    ElseIf handleCompletedFuture(ev.Future, mMarketDataTable, lStreamId) Then
-        reqMarketData lStreamId
-    End If
-Else
-    lStreamId = lStreamId - MarketDepthIdOffset
-    If Not mMarketDepthTable(lStreamId).IsInUse Then Exit Sub
-    If ev.Future.IsFaulted Then
-        mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
-        releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId
-    ElseIf handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId) Then
-        reqMarketDepth lStreamId
-    End If
+If Not mMarketDataTable(lStreamId).IsInUse Then Exit Sub
+If ev.Future.IsFaulted Then
+    mMarketDataTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
+    releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId
+ElseIf handleCompletedFuture(ev.Future, mMarketDataTable, lStreamId) Then
+    reqMarketData lStreamId
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mDepthFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mDepthFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mDepthFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsCancelled Then Exit Sub
+
+Dim lStreamId As Long
+lStreamId = ev.ContinuationData
+
+lStreamId = lStreamId - MarketDepthIdOffset
+If Not mMarketDepthTable(lStreamId).IsInUse Then Exit Sub
+If ev.Future.IsFaulted Then
+    mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
+    releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId
+ElseIf handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId) Then
+    reqMarketDepth lStreamId
 End If
 
 Exit Sub
@@ -921,14 +941,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function doCreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pIsSnapshot As Boolean, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
+Private Function doCreateMarketDataStream( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pIsSnapshot As Boolean, _
+                ByVal pErrorListener As IMarketDataErrorListener, _
+                Optional ByVal pStreamId As Long = -1&) As ITickStream
 Const ProcName As String = "doCreateMarketDataStream"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
 
-pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, pStreamId, pContractFuture, pIsSnapshot, pErrorListener)
+pStreamId = getTableEntry( _
+                mMarketDataTable, _
+                mMarketDataTableNextIndex, _
+                mMarketDataTableFirstFreeIndex, _
+                pStreamId, _
+                pContractFuture, _
+                pIsSnapshot, _
+                pErrorListener)
 
 gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
 
@@ -941,14 +972,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function doCreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
+Private Function doCreateMarketDepthStream( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pNumberOfRows As Long, _
+                ByVal pErrorListener As IMarketDataErrorListener, _
+                Optional ByVal pStreamId As Long = -1&) As ITickStream
 Const ProcName As String = "doCreateMarketDepthStream"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
 
-pStreamId = getTableEntry(mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, pStreamId, pContractFuture, False, pErrorListener)
+pStreamId = getTableEntry( _
+                mMarketDepthTable, _
+                mMarketDepthTableNextIndex, _
+                mMarketDepthTableFirstFreeIndex, _
+                pStreamId, _
+                pContractFuture, _
+                False, _
+                pErrorListener)
 mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
 
 gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
@@ -1171,9 +1213,15 @@ Private Sub prepareTickStream( _
                 ByVal pIsMarketDepth As Boolean)
 Dim lContinuationData As Long
 lContinuationData = pStreamId + IIf(pIsMarketDepth, MarketDepthIdOffset, 0)
-mFutureWaiter.Add pContractFuture, lContinuationData
-mFutureWaiter.Add gContractFutureToTwsContractFuture(mContractRequester, pContractFuture, mContractCache), lContinuationData
-mFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, lContinuationData
+Dim lFutureWaiter As FutureWaiter
+If pIsMarketDepth Then
+    Set lFutureWaiter = mDepthFutureWaiter
+Else
+    Set lFutureWaiter = mTicksFutureWaiter
+End If
+lFutureWaiter.Add pContractFuture, lContinuationData
+lFutureWaiter.Add gContractFutureToTwsContractFuture(mContractRequester, pContractFuture, mContractCache), lContinuationData
+lFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, lContinuationData
 End Sub
 
 Private Sub reEstablishData( _
