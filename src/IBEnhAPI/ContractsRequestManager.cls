@@ -255,7 +255,9 @@ Friend Sub NotifyTwsContract( _
 Const ProcName As String = "NotifyTwsContract"
 On Error GoTo Err
 
-mTwsContracts.Add pTwsContract
+If Not mTwsContracts.Contains(pTwsContract) Then
+    mTwsContracts.Add pTwsContract
+End If
 
 Exit Sub
 
