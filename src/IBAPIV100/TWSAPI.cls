@@ -1821,6 +1821,15 @@ mWriter.AddMessageId TwsSocketOutMsgTypes.RequestOptionParameters
 Dim lApiId As Long
 lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
 
+gLog "Requesting option parameters: " & _
+        "requester id=" & pRequestId & _
+        "; api id=" & lApiId & _
+        "; symbol=" & pUnderlyingSymbol & _
+        "; exchange=" & pExchange & _
+        "; underlying sectype=" & gTwsSecTypeToShortString(pUnderlyingSecType) & _
+        "; underlying conid=" & pUnderlyingConId, _
+        ModuleName, ProcName
+
 mWriter.AddLong lApiId, "Request Id"
 mWriter.AddString pUnderlyingSymbol, "Underlying Symbol"
 mWriter.AddString pExchange, "Exchange"
