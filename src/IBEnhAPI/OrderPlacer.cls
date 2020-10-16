@@ -212,7 +212,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderInfoConsumer_NotifyOpenOrder(ByVal pBrokerId As Long, ByVal pContract As TwsContract, ByVal pOrder As TwsOrder, ByVal pOrderState As TwsOrderState)
+Private Sub IOrderInfoConsumer_NotifyOpenOrder(ByVal pBrokerId As Long, ByVal pContractSpec As TwsContractSpecifier, ByVal pOrder As TwsOrder, ByVal pOrderState As TwsOrderState)
 Const ProcName As String = "IOrderInfoConsumer_NotifyOpenOrder"
 On Error GoTo Err
 
@@ -379,7 +379,7 @@ End Sub
 
 Friend Sub CancelOrder( _
                 ByVal pOrderSubmitter As OrderSubmitter, _
-                ByVal pOrder As Iorder)
+                ByVal pOrder As IOrder)
 Const ProcName As String = "CancelOrder"
 On Error GoTo Err
 
@@ -418,7 +418,7 @@ End Sub
 
 Friend Sub NotifyRecoveredOrder( _
                 ByVal pOrderSubmitter As OrderSubmitter, _
-                ByVal pOrder As Iorder)
+                ByVal pOrder As IOrder)
 Const ProcName As String = "NotifyRecoveredOrder"
 On Error GoTo Err
 
@@ -432,8 +432,8 @@ End Sub
 
 Friend Sub PlaceOrder( _
                 ByVal pOrderSubmitter As OrderSubmitter, _
-                ByVal pOrder As Iorder, _
-                ByVal pContract As TwsContract, _
+                ByVal pOrder As IOrder, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pLimitPriceOverride, _
                 ByVal pTransmit As Boolean, _
                 ByVal pParentId As Long, _
@@ -457,9 +457,9 @@ If mTwsAPI.ConnectionState = TwsConnConnected Then
     If mStartOrderRecoveryFrom = 0# Then
         mStartOrderRecoveryFrom = GetTimestamp
     End If
-    mTwsAPI.PlaceOrder lOrder, pContract
+    mTwsAPI.PlaceOrder lOrder, pContractSpec
 Else
-    queueOrder lOrder, pContract
+    queueOrder lOrder, pContractSpec
 End If
 
 Exit Sub
@@ -534,7 +534,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function GetOrder(ByVal pBrokerId As String) As Iorder
+Private Function GetOrder(ByVal pBrokerId As String) As IOrder
 Const ProcName As String = "getOrder"
 On Error GoTo Err
 
@@ -577,7 +577,7 @@ Const ProcName As String = "notifyStatus"
 On Error GoTo Err
 
 Dim lStatusReport As New OrderStatusReport
-Dim lOrder As Iorder
+Dim lOrder As IOrder
 
 If pStatus = OrderStatuses.OrderStatusCancelled Then
     mKnownOrders.Cancel pBrokerId, mTwsAPI.ClientId
@@ -614,7 +614,7 @@ Do While en.MoveNext
     If mStartOrderRecoveryFrom = 0# Then
         mStartOrderRecoveryFrom = GetTimestamp
     End If
-    mTwsAPI.PlaceOrder lEntry.Order, lEntry.Contract
+    mTwsAPI.PlaceOrder lEntry.Order, lEntry.ContractSpecifier
     en.Remove
 Loop
 
@@ -625,15 +625,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub queueOrder( _
-                ByVal pOrder As Iorder, _
-                ByVal pContract As TwsContract)
+                ByVal pOrder As IOrder, _
+                ByVal pContractSpec As TwsContractSpecifier)
 Const ProcName As String = "queueOrder"
 On Error GoTo Err
 
 Dim e As New OrderQueueEntry
 e.Order = pOrder
-e.Contract = pContract
-mQueuedOrders.Add pOrder
+e.ContractSpecifier = pContractSpec
+mQueuedOrders.Add e
 
 Exit Sub
 

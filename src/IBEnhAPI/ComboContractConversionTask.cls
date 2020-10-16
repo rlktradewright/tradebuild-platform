@@ -105,7 +105,7 @@ If alreadyGotContract(pRequestId) Then
     mErrorCode = 200
     mErrorMsg = "Contract not uniquely specified for leg " & CStr(getLegIndexFromRequestId(pRequestId) + 1)
 Else
-    mLegs.Add createTwsComboLeg(pTwsContract, mContractSpec.ComboLegs(getLegIndexFromRequestId(pRequestId) + 1)), CStr(pRequestId)
+    mLegs.Add createTwsComboLeg(pTwsContract.Specifier, mContractSpec.ComboLegs(getLegIndexFromRequestId(pRequestId) + 1)), CStr(pRequestId)
     If mTimezoneId = "" And pTwsContract.TimeZoneId <> "" Then mTimezoneId = pTwsContract.TimeZoneId
 End If
 

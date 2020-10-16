@@ -518,7 +518,7 @@ End Select
 End Function
 
 Public Function gOrderToTwsOrder( _
-                ByVal pOrder As Iorder, _
+                ByVal pOrder As IOrder, _
                 ByVal pDataSource As IMarketDataSource) As TwsOrder
 Const ProcName As String = "gOrderToTwsOrder"
 On Error GoTo Err
@@ -776,18 +776,14 @@ With pTwsContract
     lProviderProps.SetParameterValue "OrderTypes", .OrderTypes
     lProviderProps.SetParameterValue "PriceMagnifier", .PriceMagnifier
     
-    Dim ar() As TwsTagValue: ar = .SecIdList
-    Dim u As Long: u = -1
-    On Error Resume Next
-    u = UBound(ar)
-    On Error GoTo Err
-    
-    Dim i As Long
     Dim s As String
-    For i = 0 To u
-        s = s & IIf(i <> 0, ";", "")
-        s = s & ar(i).Tag & ":" & ar(i).Value
-    Next
+    If Not .SecIdList Is Nothing Then
+        Dim lParam As Parameter
+        For Each lParam In .SecIdList
+            s = s & IIf(s <> "", ";", "")
+            s = s & lParam.Name & ":" & lParam.Value
+        Next
+    End If
     lProviderProps.SetParameterValue "SecIdList", s
     
     lProviderProps.SetParameterValue "Subcategory", .Subcategory
@@ -1035,6 +1031,8 @@ Private Function getMarketRuleID( _
                 ByVal pTwsContract As TwsContract) As Long
 Const ProcName As String = "getMarketRuleID"
 On Error GoTo Err
+
+If pTwsContract.ValidExchanges = "" Then Exit Function
 
 Dim lExchanges() As String
 lExchanges = Split(pTwsContract.ValidExchanges, ",")

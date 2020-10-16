@@ -45,7 +45,7 @@ Private Const ModuleName                            As String = "OrderQueueEntry
 '@================================================================================
 
 Private mOrder                                      As TwsOrder
-Private mContract                                   As TwsContract
+Private mContractSpec                               As TwsContractSpecifier
 
 '@================================================================================
 ' Class Event Handlers

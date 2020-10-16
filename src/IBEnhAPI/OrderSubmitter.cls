@@ -443,7 +443,7 @@ Else
             execBracketOrder lDeferredAction.BracketOrder, lContract
         End If
     Else
-        placeAnOrder lDeferredAction.Order, lContract, 0, lDeferredAction.Transmit, lDeferredAction.ParentId, lDeferredAction.OcaGroup, lDeferredAction.OrderMode
+        placeAnOrder lDeferredAction.Order, lContract.Specifier, 0, lDeferredAction.Transmit, lDeferredAction.ParentId, lDeferredAction.OcaGroup, lDeferredAction.OrderMode
     End If
 End If
 
@@ -1157,7 +1157,7 @@ End Sub
 
 Private Sub execBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
-                ByVal pContract As TwsContract)
+                ByVal pContractSpec As TwsContractSpecifier)
 Const ProcName As String = "execBracketOrder"
 On Error GoTo Err
 
@@ -1179,18 +1179,18 @@ If Not lEntryOrder Is Nothing Then
     If lStopLossOrderCanBePlaced Then Transmit = False
     If lTargetOrderCanBePlaced Then Transmit = False
     lEntryOrder.BrokerId = lPlexId + EntryOrderIdIncrement
-    placeAnOrder lEntryOrder, pContract, 0, Transmit, 0, "", OrderModeEntry
+    placeAnOrder lEntryOrder, pContractSpec, 0, Transmit, 0, "", OrderModeEntry
     
     If lStopLossOrderCanBePlaced Then
         Transmit = True
         If lTargetOrderCanBePlaced Then Transmit = False
         lStopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
-        placeAnOrder lStopLossOrder, pContract, 0, Transmit, lEntryOrder.BrokerId, "", OrderModeStopLoss
+        placeAnOrder lStopLossOrder, pContractSpec, 0, Transmit, lEntryOrder.BrokerId, "", OrderModeStopLoss
     End If
     
     If lTargetOrderCanBePlaced Then
         lTargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
-        placeAnOrder lTargetOrder, pContract, 0, True, lEntryOrder.BrokerId, "", OrderModeTarget
+        placeAnOrder lTargetOrder, pContractSpec, 0, True, lEntryOrder.BrokerId, "", OrderModeTarget
     End If
     
 Else
@@ -1321,7 +1321,7 @@ End Sub
 
 Private Sub modifyABracketOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pEntryOrderChanged As Boolean, _
                 ByVal pStopOrderChanged As Boolean, _
                 ByVal pTargetOrderChanged As Boolean, _
@@ -1344,7 +1344,7 @@ If lOCAGroup = "" Then
 End If
 
 If pEntryOrderChanged Then
-    placeAnOrder pBracketOrder.EntryOrder, pContract, 0, True, 0, "", OrderModeEntry
+    placeAnOrder pBracketOrder.EntryOrder, pContractSpec, 0, True, 0, "", OrderModeEntry
 End If
 
 Dim lPlexId As Long
@@ -1353,21 +1353,21 @@ If pStopOrderChanged Then
         lPlexId = getNextBracketId
         pBracketOrder.StopLossOrder.BrokerId = lPlexId + StopLossOrderIdIncrement
     End If
-    placeAnOrder pBracketOrder.StopLossOrder, pContract, 0, True, lParentId, lOCAGroup, OrderModeStopLoss
+    placeAnOrder pBracketOrder.StopLossOrder, pContractSpec, 0, True, lParentId, lOCAGroup, OrderModeStopLoss
 End If
 If pTargetOrderChanged Then
     If pBracketOrder.TargetOrder.BrokerId = "" Then
         If lPlexId = 0 Then lPlexId = getNextBracketId
         pBracketOrder.TargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
     End If
-    placeAnOrder pBracketOrder.TargetOrder, pContract, 0, True, lParentId, lOCAGroup, OrderModeTarget
+    placeAnOrder pBracketOrder.TargetOrder, pContractSpec, 0, True, lParentId, lOCAGroup, OrderModeTarget
 End If
 If pCloseoutOrderChanged Then
     If pBracketOrder.CloseoutOrder.BrokerId = "" Then
         If lPlexId = 0 Then lPlexId = getNextBracketId
         pBracketOrder.CloseoutOrder.BrokerId = getNextBracketId + CloseoutOrderIdIncrement
     End If
-    placeAnOrder pBracketOrder.CloseoutOrder, pContract, 0, True, 0, "", OrderModeCloseout
+    placeAnOrder pBracketOrder.CloseoutOrder, pContractSpec, 0, True, 0, "", OrderModeCloseout
 End If
 
 Exit Sub
@@ -1453,7 +1453,7 @@ End Function
 
 Private Sub placeAnOrder( _
                 ByVal pOrder As IOrder, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pLimitPriceOverride, _
                 ByVal pTransmit As Boolean, _
                 ByVal pParentId As Long, _
@@ -1473,7 +1473,7 @@ Assert pOrder.OrderType <> OrderTypeNone, "Order has no order type"
 Assert pOrder.Quantity <> 0, "Order has zero quantity"
 
 NotifyAboutToPlaceOrder pOrder
-mOrderPlacer.PlaceOrder Me, pOrder, pContract, pLimitPriceOverride, IIf(mStageOrders, False, pTransmit), pParentId, pOcaGroup, mDataSource
+mOrderPlacer.PlaceOrder Me, pOrder, pContractSpec, pLimitPriceOverride, IIf(mStageOrders, False, pTransmit), pParentId, pOcaGroup, mDataSource
 
 If pOrder.Status = OrderStatusCreated Then
     notifyOpenOrder pOrder
