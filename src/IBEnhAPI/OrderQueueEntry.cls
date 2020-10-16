@@ -71,12 +71,12 @@ Friend Property Get Order() As TwsOrder
 Set Order = mOrder
 End Property
 
-Friend Property Let Contract(ByVal Value As TwsContract)
-Set mContract = Value
+Friend Property Let ContractSpecifier(ByVal Value As TwsContractSpecifier)
+Set mContractSpec = Value
 End Property
 
-Friend Property Get Contract() As TwsContract
-Set Contract = mContract
+Friend Property Get ContractSpecifier() As TwsContractSpecifier
+Set ContractSpecifier = mContractSpec
 End Property
 
 
