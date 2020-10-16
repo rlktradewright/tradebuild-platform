@@ -58,15 +58,18 @@ Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange( _
                 ByVal pSource As Object, _
                 ByVal pState As ApiConnectionStates, _
                 ByVal pMessage As String)
+Dim lTimestamp As String
+lTimestamp = FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  "
+
 Select Case pState
 Case ApiConnNotConnected
-    gWriteLineToConsole "Disconnected from TWS: " & pMessage, True
+    gWriteLineToConsole lTimestamp & "Disconnected from TWS: " & pMessage, True
 Case ApiConnConnecting
-    gWriteLineToConsole "Connecting to TWS: " & pMessage, True
+    gWriteLineToConsole lTimestamp & "Connecting to TWS: " & pMessage, True
 Case ApiConnConnected
-    gWriteLineToConsole "Connected to TWS: " & pMessage, True
+    gWriteLineToConsole lTimestamp & "Connected to TWS: " & pMessage, True
 Case ApiConnFailed
-    gWriteLineToConsole "Failed connecting to TWS: " & pMessage, True
+    gWriteLineToConsole lTimestamp & "Failed connecting to TWS: " & pMessage, True
 End Select
 End Sub
 
