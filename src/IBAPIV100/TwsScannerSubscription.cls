@@ -62,7 +62,7 @@ Public MaturityDateAbove                            As String
 Public MaturityDateBelow                            As String
 Public CouponRateAbove                              As Double
 Public CouponRateBelow                              As Double
-Public ExcludeConvertible                           As String
+Public ExcludeConvertible                           As Boolean
 Public ScannerSettingPairs                          As String
 Public StockTypeFilter                              As String
 

@@ -405,6 +405,19 @@ Checkpoint
 GetLongMaxCheckpointed = True
 End Function
 
+Friend Function GetParameters( _
+                ByVal pCount As Long, _
+                ByRef pFieldName As String) As Parameters
+Dim lParams As Parameters: Set lParams = New Parameters
+Dim i As Long
+
+For i = 1 To pCount
+    lParams.SetParameterValue GetString(pFieldName & ".Name" & i), _
+                            GetString(pFieldName & ".Value" & i)
+Next
+Set GetParameters = lParams
+End Function
+
 Friend Function GetRawMessage() As Byte()
 GetRawMessage = MidB(mBuffer, mMessageStartIndex + 1, mInputParseIndex - mMessageStartIndex)
 End Function

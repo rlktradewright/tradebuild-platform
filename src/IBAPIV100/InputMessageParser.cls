@@ -421,15 +421,10 @@ If pVersion >= 6 Then
     mReader.GetDouble "EvMultiplier"
 End If
 If pVersion >= 5 Then
-    Dim lSecIdListCount As Long: lSecIdListCount = mReader.GetLong("SecIdListCount")
-    If lSecIdListCount > 0 Then
-        ReDim lSecIdList(lSecIdListCount - 1) As TwsTagValue
-        Dim i As Long
-        For i = 0 To lSecIdListCount - 1
-            lSecIdList(i).Tag = mReader.GetString("Tag")
-            lSecIdList(i).Value = mReader.GetString("Value")
-        Next
-    End If
+    Dim lSecIdList As Parameters
+    Set lSecIdList = mReader.GetParameters( _
+                                mReader.GetLong("SecIdListCount"), _
+                                "SecIdList")
 End If
 
 mReader.EndLogMessage
@@ -534,16 +529,9 @@ lContract.LiquidHours = mReader.GetString("LiquidHours")
 lContract.EvRule = mReader.GetString("EvRule")
 lContract.EvMultiplier = mReader.GetDouble("EvMultiplier")
 
-Dim lSecIdListCount As Long: lSecIdListCount = mReader.GetLong("SecIdListCount")
-If lSecIdListCount > 0 Then
-    ReDim lSecIdList(lSecIdListCount - 1) As TwsTagValue
-    Dim i As Long
-    For i = 0 To lSecIdListCount - 1
-        lSecIdList(i).Tag = mReader.GetString("Tag")
-        lSecIdList(i).Value = mReader.GetString("Value")
-    Next
-    lContract.SecIdList = lSecIdList
-End If
+lContract.SecIdList = mReader.GetParameters( _
+                                mReader.GetLong("SecIdListCount"), _
+                                "SecIdList")
 
 If mServerVersion >= ApiServerVersions.AGG_GROUP Then _
     lContract.AggGroup = mReader.GetLong("Agg Group")
@@ -1094,7 +1082,7 @@ mReader.BeginLogMessage True
 
 Dim i As Long
 
-Dim lContract As New TwsContractSpecifier
+Dim lContractSpec As New TwsContractSpecifier
 Dim lOrder As New TwsOrder
 Dim lOrderState As New TwsOrderState
 
@@ -1102,7 +1090,7 @@ Dim lOrderState As New TwsOrderState
 lOrder.OrderId = mReader.GetLong("Id")
 
 ' read contract fields
-With lContract
+With lContractSpec
     .ConId = mReader.GetLong("conId")
     .Symbol = mReader.GetString("Symbol")
     .Sectype = gTwsSecTypeFromString(mReader.GetString("Sec type"))
@@ -1203,7 +1191,7 @@ With lOrder
     
     .BasisPoints = mReader.GetDoubleMax("BasisPoints")
     .BasisPointsType = mReader.GetLongMax("BasisPointsType")
-    lContract.ComboLegsDescription = mReader.GetString("ComboLegsDescrip")
+    lContractSpec.ComboLegsDescription = mReader.GetString("ComboLegsDescrip")
 
     Dim lComboLegsCount As Long: lComboLegsCount = mReader.GetLong("ComboLegsCount")
     If lComboLegsCount > 0 Then
@@ -1218,7 +1206,7 @@ With lOrder
             lComboLeg.DesignatedLocation = mReader.GetString("DesignatedLocation" & i)
             lComboLeg.ExemptCode = mReader.GetLong("ExemptCode" & i)
 
-            lContract.ComboLegs.Add (lComboLeg)
+            lContractSpec.ComboLegs.Add (lComboLeg)
         Next
     End If
 
@@ -1232,15 +1220,9 @@ With lOrder
         .ComboLegs = lOrderComboLegs
     End If
 
-    Dim lSmartComboRoutingParamsCount As Long: lSmartComboRoutingParamsCount = mReader.GetLong("SmartComboRoutingParamsCount")
-    If lSmartComboRoutingParamsCount > 0 Then
-        ReDim lSmartComboRoutingParams(lSmartComboRoutingParamsCount - 1) As TwsTagValue
-        For i = 0 To lSmartComboRoutingParamsCount - 1
-            lSmartComboRoutingParams(i).Tag = mReader.GetString("Tag" & (i + 1))
-            lSmartComboRoutingParams(i).Value = mReader.GetString("Value" & (i + 1))
-        Next
-        .SmartComboRoutingParams = lSmartComboRoutingParams
-    End If
+    .SmartComboRoutingParams = mReader.GetParameters( _
+                                            mReader.GetLong("SmartComboRoutingParamsCount"), _
+                                            "SmartComboRoutingParams")
 
     .ScaleInitLevelSize = mReader.GetLongMax("Scale Init Level Size")
     .ScaleSubsLevelSize = mReader.GetLongMax("Scale Subs Level Size")
@@ -1271,20 +1253,14 @@ With lOrder
         lDeltaNeutralContract.ConId = mReader.GetLong("Delta neutral ConId")
         lDeltaNeutralContract.Delta = mReader.GetDouble("Delta neutral Delta")
         lDeltaNeutralContract.Price = mReader.GetDouble("Delta neutral Price")
-        lContract.DeltaNeutralContract = lDeltaNeutralContract
+        lContractSpec.DeltaNeutralContract = lDeltaNeutralContract
     End If
     
     .AlgoStrategy = mReader.GetString("Algo strategy")
     If .AlgoStrategy <> "" Then
-        Dim algoParamsCount As Long: algoParamsCount = mReader.GetLong("Algo params count")
-        If algoParamsCount > 0 Then
-            ReDim lAlgoParams(algoParamsCount - 1) As TwsTagValue
-            For i = 0 To algoParamsCount - 1
-                lAlgoParams(i).Tag = mReader.GetString("Tag" & (i + 1))
-                lAlgoParams(i).Value = mReader.GetString("Value" & (i + 1))
-            Next
-            .AlgoParams = lAlgoParams
-        End If
+        Set .AlgoParams = mReader.GetParameters( _
+                                        mReader.GetLong("Algo params count"), _
+                                        "Algo params")
     End If
     
     .Solicited = mReader.GetBoolean("Solicited")
@@ -1369,7 +1345,7 @@ End With
 
 mReader.EndLogMessage
 
-If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyOpenOrder lOrder.OrderId, lContract, lOrder, lOrderState
+If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyOpenOrder lOrder.OrderId, lContractSpec, lOrder, lOrderState
 
 Exit Sub
 

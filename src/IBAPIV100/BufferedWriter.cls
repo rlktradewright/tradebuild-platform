@@ -261,28 +261,21 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub AddTagValues( _
-                ByRef data() As TwsTagValue, _
+                ByVal data As Parameters, _
                 ByRef fieldName As String)
 Const ProcName As String = "AddTagValues"
 On Error GoTo Err
 
-Dim lCount As Long
+Dim s As String
 
-On Error Resume Next
-lCount = UBound(data) + 1
-On Error GoTo Err
- 
-AddLong lCount, fieldName & " count"
-If lCount > 0 Then
-    Dim lTagValues() As TwsTagValue
-    lTagValues = data
-    
-    Dim i As Long
-    For i = 0 To lCount - 1
-        AddString lTagValues(i).Tag, "Tag" & i
-        AddString lTagValues(i).Value, "value" & i
+If Not data Is Nothing Then
+    Dim lParam As Parameter
+    For Each lParam In data
+        s = s & lParam.Name & "=" & lParam.Value & ";"
     Next
 End If
+
+AddString s, fieldName
 
 Exit Sub
 

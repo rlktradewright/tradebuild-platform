@@ -169,7 +169,7 @@ Public ClearingIntent                               As String ' "" (Default), "I
 
 ' ALGO ORDERS ONLY
 Public AlgoStrategy                                 As String
-Private mAlgoParams()                               As TwsTagValue
+Private mAlgoParams                                 As Parameters
 
 ' What-if
 Public WhatIf                                       As Boolean
@@ -180,12 +180,12 @@ Public AlgoId                                       As String
 Public NotHeld                                      As Boolean
 
 ' Smart combo routing params
-Private mSmartComboRoutingParams()                  As TwsTagValue
+Private mSmartComboRoutingParams                    As Parameters
 
 ' order combo legs
 Private mComboLegs()                                As TwsOrderComboLeg
 
-Private mOptions()                                  As TwsTagValue
+Private mOptions                                    As Parameters
 
 Public Solicited As Boolean
 Public ModelCode As String
@@ -879,12 +879,12 @@ End Sub
 'AlgoStrategy = mAlgoStrategy
 'End Property
 '
-Public Property Let AlgoParams(ByRef Value() As TwsTagValue)
-mAlgoParams = Value
+Public Property Let AlgoParams(ByVal Value As Parameters)
+Set mAlgoParams = Value
 End Property
 
-Public Property Get AlgoParams() As TwsTagValue()
-AlgoParams = mAlgoParams
+Public Property Get AlgoParams() As Parameters
+Set AlgoParams = mAlgoParams
 End Property
 
 'Public Property Let WhatIf(ByVal Value As Boolean)
@@ -911,20 +911,20 @@ Public Property Get ComboLegs() As TwsOrderComboLeg()
 ComboLegs = mComboLegs
 End Property
 
-Public Property Let Options(ByRef Value() As TwsTagValue)
-mOptions = Value
+Public Property Let Options(ByVal Value As Parameters)
+Set mOptions = Value
 End Property
 
-Public Property Get Options() As TwsTagValue()
-Options = mOptions
+Public Property Get Options() As Parameters
+Set Options = mOptions
 End Property
 
-Public Property Let SmartComboRoutingParams(ByRef Value() As TwsTagValue)
-mSmartComboRoutingParams = Value
+Public Property Let SmartComboRoutingParams(ByVal Value As Parameters)
+Set mSmartComboRoutingParams = Value
 End Property
 
-Public Property Get SmartComboRoutingParams() As TwsTagValue()
-SmartComboRoutingParams = mSmartComboRoutingParams
+Public Property Get SmartComboRoutingParams() As Parameters
+Set SmartComboRoutingParams = mSmartComboRoutingParams
 End Property
 
 '@================================================================================

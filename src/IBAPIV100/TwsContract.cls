@@ -70,11 +70,15 @@ Public MarketRuleIds                                As String
 Public RealExpirationDate                           As String
 Public LastTradeTime                                As Date
 
-Private mSecIdList()                                As TwsTagValue  ' CUSIP/ISIN/etc.
+Private mSecIdList                                  As Parameters  ' CUSIP/ISIN/etc.
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+PriceMagnifier = 1
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -176,12 +180,12 @@ Public Property Get PriceMagnifier() As Long
 PriceMagnifier = mPriceMagnifier
 End Property
 
-Public Property Let SecIdList(ByRef Value() As TwsTagValue)
-mSecIdList = Value
+Public Property Let SecIdList(ByVal Value As Parameters)
+Set mSecIdList = Value
 End Property
 
-Public Property Get SecIdList() As TwsTagValue()
-SecIdList = mSecIdList
+Public Property Get SecIdList() As Parameters
+Set SecIdList = mSecIdList
 End Property
 
 Public Property Let Specifier(ByVal Value As TwsContractSpecifier)

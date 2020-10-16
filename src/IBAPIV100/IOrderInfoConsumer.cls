@@ -87,7 +87,7 @@ End Sub
 
 Public Sub NotifyOpenOrder( _
                 ByVal pOrderId As Long, _
-                ByVal pContractSpec As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pOrder As TwsOrder, _
                 ByVal pOrderState As TwsOrderState)
 

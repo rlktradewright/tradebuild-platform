@@ -365,11 +365,6 @@ Public Type TwsRealtimeBar
     WAP                     As Double
 End Type
 
-Public Type TwsTagValue
-    Tag                     As String
-    Value                   As String
-End Type
-
 Public Type TwsTickAttributes
     CanAutoExecute          As Boolean
     PastLimit               As Boolean

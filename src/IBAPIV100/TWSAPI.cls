@@ -1918,7 +1918,11 @@ Err:
 gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub RequestScannerSubscription(ByVal pTickerId As Long, ByVal pSubscription As TwsScannerSubscription)
+Public Sub RequestScannerSubscription( _
+                ByVal pRequestId As Long, _
+                ByVal pSubscription As TwsScannerSubscription, _
+                ByVal pSubscriptionOptions As Parameters, _
+                ByVal pFilterOptions As Parameters)
 Const ProcName As String = "RequestScannerSubscription"
 On Error GoTo Err
 
@@ -1929,8 +1933,8 @@ Const VERSION = 4
 gLog "Requesting scanner subscription: requester id=" & pTickerId, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_SCANNER_SUBSCRIPTION
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pTickerId, "Ticker Id"
+If mServerVersion < SCANNER_GENERIC_OPTS Then mWriter.AddLong VERSION, "Version"
+mWriter.AddLong lApiId, "Request Id"
 mWriter.AddLongMax pSubscription.NumberOfRows, "NumberOfRows"
 mWriter.AddString pSubscription.Instrument, "Instrument"
 mWriter.AddString pSubscription.LocationCode, "LocationCode"
@@ -1948,11 +1952,16 @@ mWriter.AddString pSubscription.MaturityDateAbove, "MaturityDateAbove"
 mWriter.AddString pSubscription.MaturityDateBelow, "MaturityDateBelow"
 mWriter.AddDoubleMax pSubscription.CouponRateAbove, "CouponRateAbove"
 mWriter.AddDoubleMax pSubscription.CouponRateBelow, "CouponRateBelow"
-mWriter.AddString pSubscription.ExcludeConvertible, "ExcludeConvertible"
+mWriter.AddBoolean pSubscription.ExcludeConvertible, "ExcludeConvertible"
 mWriter.AddLongMax pSubscription.AverageOptionVolumeAbove, "AverageOptionVolumeAbove"
-mWriter.AddString pSubscription.ScannerSettingPairs, "ScannerSettingPairs"
+mWriter.AddString pSubscription.ScannerSettingPairs, "SettingPairs"
 mWriter.AddString pSubscription.StockTypeFilter, "StockTypeFilter"
-If ServerVersion >= ApiServerVersions.SCANNER_GENERIC_OPTS Then mWriter.AddString "", "FilterOptions"
+
+If ServerVersion >= ApiServerVersions.SCANNER_GENERIC_OPTS Then
+    mWriter.AddTagValues pFilterOptions, "FilterOptions"
+End If
+
+mWriter.AddTagValues pSubscriptionOptions, "SubscriptionOptions"
 
 mWriter.Send
 
