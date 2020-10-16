@@ -60,6 +60,7 @@ Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
 Private mContractRequester                          As ContractsTwsRequester
 Private mContractCache                              As ContractCache
+Private mContractStore                              As IContractStore
 
 Private mState                                      As OrderSubmitterStates
 Private mStateChangeListeners                       As Listeners
@@ -72,6 +73,8 @@ Private mStageOrders                                As Boolean
 Private mIsTwsConnectedToIBServers                  As Boolean
 
 Private mDataSource                                 As IMarketDataSource
+
+Private mTicksizeRequestPending                     As Boolean
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -89,6 +92,7 @@ Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
 Set mStateChangeListeners = New Listeners
 Set mOrderSubmissionListeners = New Listeners
+Set mTicksizeFutureBuilder = New FutureBuilder
 End Sub
 
 Private Sub Class_Terminate()
@@ -459,9 +463,23 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    Set mContract = ev.Future.Value
+    Dim lContract As IContract: Set lContract = ev.Future.Value
+    If lContract.Specifier.ProviderProperties Is Nothing Then
+        ' contract details were probably from a config entry somewhere,
+        ' so get the real thing from TWS
+        mFutureWaiter.Add mContractStore.FetchContracts(lContract.Specifier)
+        gLog "Getting contract details from TWSAPI", ModuleName, ProcName
+    ElseIf mContract.ProviderProperties.GetParameterValue("MarketRuleID", "0") = "0" Then
+        ' ditto
+        mFutureWaiter.Add mContractStore.FetchContracts(lContract.Specifier)
+        gLog "Getting contract details from TWSAPI", ModuleName, ProcName
+    Else
+        Set mContract = lContract
+        If mTicksizeRequestPending Then doGetTickSize
+    End If
 ElseIf TypeOf ev.Future.Value Is PriceIncrementRuleset Then
-    mRulesetFutureBuilder.Value = CreateBoxedValue(getTickSizeFromRuleset(ev.Future.Value))
+    mTicksizeFutureBuilder.Value = CreateBoxedValue(getTickSizeFromRuleset(ev.Future.Value))
+    mTicksizeFutureBuilder.Complete
 End If
 
 Exit Sub
@@ -708,42 +726,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetTickSize() As IFuture
-Const ProcName As String = "GetTickSize"
-On Error GoTo Err
-
-Dim lTicksize As Double
-
-Dim lRulesetID As Long
-lRulesetID = CLng(mContract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
-
-Dim lPriceMagnifier As Long
-lPriceMagnifier = CLng(mContract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
-
-Dim lRuleset As PriceIncrementRuleset
-Set lRuleset = mContractCache.GetPriceIncrementRuleset(lRulesetID)
-
-If Not lRuleset Is Nothing Then
-    lTicksize = getTickSizeFromRuleset(lRuleset)
-    Set GetTickSize = CreateFuture(CreateBoxedValue(lTicksize))
-ElseIf mContractCache.GetRulesetFutureBuilder(lRulesetID, mRulesetFutureBuilder) Then
-    ' ruleset is being fetched
-    mFutureWaiter.Add mRulesetFutureBuilder
-    GetTickSize = mTicksizeFutureBuilder.Future
-Else
-    Set mRulesetFutureBuilder = New FutureBuilder
-    mContractCache.SetRulesetFutureBuilder lRulesetID, mRulesetFutureBuilder
-    mFutureWaiter.Add mRulesetFutureBuilder
-    mContractRequester.RequestPriceIncrementRuleset lRulesetID, lPriceMagnifier
-    GetTickSize = mTicksizeFutureBuilder.Future
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
@@ -757,9 +739,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function GetTickSize() As IFuture
+Const ProcName As String = "GetTickSize"
+On Error GoTo Err
+
+Set GetTickSize = mTicksizeFutureBuilder.Future
+
+If mContract Is Nothing Then
+    mTicksizeRequestPending = True
+Else
+    doGetTickSize
+End If
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pOrderPlacer As OrderPlacer, _
+                ByVal pContractStore As IContractStore, _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pDataSource As IMarketDataSource)
@@ -773,6 +773,7 @@ If mTwsAPI.ConnectionState = TwsConnConnected Then
 Else
     setState OrderSubmitterStateNotReady
 End If
+Set mContractStore = pContractStore
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mDataSource = pDataSource
@@ -1113,6 +1114,40 @@ logMessage "Cancel " & pOrderMode & " Order: " & _
             ProcName
 
 mOrderPlacer.CancelOrder Me, pOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub doGetTickSize()
+Const ProcName As String = "doGetTickSize"
+On Error GoTo Err
+
+Dim lRulesetID As Long
+lRulesetID = CLng(mContract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
+gLog "lRulesetID=" & lRulesetID, ModuleName, ProcName
+
+Dim lPriceMagnifier As Long
+lPriceMagnifier = CLng(mContract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
+gLog "lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName
+
+Dim lRuleset As PriceIncrementRuleset
+Set lRuleset = mContractCache.GetPriceIncrementRuleset(lRulesetID)
+
+If Not lRuleset Is Nothing Then
+    mTicksizeFutureBuilder.Value = CreateBoxedValue(getTickSizeFromRuleset(lRuleset))
+    mTicksizeFutureBuilder.Complete
+ElseIf mContractCache.GetRulesetFutureBuilder(lRulesetID, mRulesetFutureBuilder) Then
+    ' ruleset is being fetched
+    mFutureWaiter.Add mRulesetFutureBuilder.Future
+Else
+    Set mRulesetFutureBuilder = New FutureBuilder
+    mContractCache.SetRulesetFutureBuilder lRulesetID, mRulesetFutureBuilder
+    mFutureWaiter.Add mRulesetFutureBuilder.Future
+    mContractRequester.RequestPriceIncrementRuleset lRulesetID, lPriceMagnifier
+End If
 
 Exit Sub
 

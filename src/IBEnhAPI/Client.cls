@@ -416,7 +416,12 @@ On Error GoTo Err
 Dim lOrderSubmitter As OrderSubmitter
 
 Set lOrderSubmitter = New OrderSubmitter
-lOrderSubmitter.Initialise mTwsAPI, getOrderPlacer, getContractDetailsRequester, mContractCache, pDataSource
+lOrderSubmitter.Initialise mTwsAPI, _
+                            getOrderPlacer, _
+                            GetContractStore, _
+                            getContractDetailsRequester, _
+                            mContractCache, _
+                            pDataSource
 
 AddTwsConnectionStateListener lOrderSubmitter
 Set CreateOrderSubmitter = lOrderSubmitter
