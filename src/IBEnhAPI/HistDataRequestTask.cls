@@ -118,7 +118,6 @@ Private mTwsContract                                As TwsContract
 
 Private mListener                                   As IBarFetchListener
 Private mNotifyAtEnd                                As Boolean
-Private mFetcher                                    As HistoricalDataFetcher
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -399,7 +398,6 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pBarSpecifierFuture As IFuture, _
                 ByVal pListener As IBarFetchListener, _
-                ByVal pFetcher As HistoricalDataFetcher, _
                 ByVal pHistDataRequester As HistDataRequester, _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
@@ -408,7 +406,6 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mListener = pListener
-Set mFetcher = pFetcher
 Set mHistDataRequester = pHistDataRequester
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache

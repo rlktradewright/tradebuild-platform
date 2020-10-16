@@ -160,7 +160,7 @@ Static sExecutions As New EnumerableCollection
     sExecutions.Add pExecution, pExecution.ExecId
 'End If
 
-Dim lOrder As Iorder
+Dim lOrder As IOrder
 Dim lorderId As String
 If isKnownOrder(pExecution.OrderId) Then
     Set lOrder = GetOrder(pExecution.OrderId)

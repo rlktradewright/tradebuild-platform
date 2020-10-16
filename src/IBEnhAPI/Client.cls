@@ -367,14 +367,14 @@ Public Function GetHistoricalDataStore() As IHistoricalDataStore
 Const ProcName As String = "GetHistoricalDataStore"
 On Error GoTo Err
 
-Static sHistoricalDataFetcher As HistoricalDataFetcher
+Static sHistoricalDataStore As HistoricalDataStore
 
 If sHistoricalDataFetcher Is Nothing Then
     Set sHistoricalDataFetcher = New HistoricalDataFetcher
     sHistoricalDataFetcher.Initialise getHistDataRequester, getContractDetailsRequester, mContractCache
 End If
 
-Set GetHistoricalDataStore = sHistoricalDataFetcher
+Set GetHistoricalDataStore = sHistoricalDataStore
 
 
 Exit Function
