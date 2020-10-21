@@ -33,6 +33,9 @@ if errorlevel 1 pause
 call makeExe.bat gcd gcd /CONSOLE /NOV6CC /M:E %DEP%
 if errorlevel 1 pause
 
+call makeExe.bat gsd gsd /CONSOLE /NOV6CC /M:E %DEP%
+if errorlevel 1 pause
+
 call makeExe.bat gtd gtd /CONSOLE /NOV6CC /M:E %DEP%
 if errorlevel 1 pause
 
