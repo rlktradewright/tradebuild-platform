@@ -186,8 +186,16 @@ Private Property Get IContracts_SortAscending() As Boolean
 IContracts_SortAscending = SortAscending
 End Property
 
-Private Property Let IContracts_SortKeys(Value() As ContractSortKeyIds)
-SortKeys = Value
+Private Property Let IContracts_SortKeys(ByRef Value() As ContractSortKeyIds)
+Const ProcName As String = "IContracts_SortKeys"
+On Error GoTo Err
+
+setSortKeys Value, False
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IContracts_SortKeys() As ContractSortKeyIds()
