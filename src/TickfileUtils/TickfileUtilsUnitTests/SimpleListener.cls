@@ -98,6 +98,7 @@ Private Sub ITestListener_TestCompleted(ByVal Result As SimplyVBUnitLib.TestResu
     ElseIf Result.IsError Then
         WriteLine "---> Error    : "
         WriteLine "     Cause    : " & Result.ToString
+        WriteLine "     Source   : " & Replace$(Result.Source, vbCrLf, vbCrLf & String$(16, " "))
         WriteLine
     End If
 End Sub

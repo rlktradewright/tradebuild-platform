@@ -1,7 +1,7 @@
 Type=OleDll
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\System32\stdole2.tlb#OLE Automation
 Reference=*\G{C38FF823-ABCF-46B2-B936-C657C244A4D0}#2.2#0#..\..\..\..\SimplyVBUnit\Framework\Framework\SimplyVBUnitLib.dll#SimplyVBUnit Framework v2.1
-Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#1a.0#0#C:\Program Files\TradeWright Software Systems\TradeWright Utilities Sample Apps v4.0.121\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
+Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#1a.0#0#..\..\..\..\tradewright-common\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
 Reference=*\G{35397E37-23B7-4B20-AC05-27DED8253B14}#172.1#0#..\..\..\Bin\TradeWright.TradeBuild.Platform\SessionUtils27.dll#TradeWright Session Utilities v2.7
 Class=TestSessionUtils; TestSessionUtils.cls
 Startup="(None)"
