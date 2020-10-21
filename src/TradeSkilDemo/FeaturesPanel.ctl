@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#371.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#373.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
@@ -24,7 +24,6 @@ Begin VB.UserControl FeaturesPanel
       _ExtentY        =   15928
       _Version        =   393216
       Tabs            =   5
-      Tab             =   1
       TabsPerRow      =   5
       TabHeight       =   2
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -38,13 +37,13 @@ Begin VB.UserControl FeaturesPanel
       EndProperty
       TabCaption(0)   =   "Tab 0"
       TabPicture(0)   =   "FeaturesPanel.ctx":0000
-      Tab(0).ControlEnabled=   0   'False
+      Tab(0).ControlEnabled=   -1  'True
       Tab(0).Control(0)=   "TickersPicture"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).ControlCount=   1
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "FeaturesPanel.ctx":001C
-      Tab(1).ControlEnabled=   -1  'True
+      Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LiveChartPicture"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
@@ -428,7 +427,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   134807555
+            Format          =   133496835
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -482,7 +481,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   134807555
+            Format          =   133496835
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -552,7 +551,7 @@ Begin VB.UserControl FeaturesPanel
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   9015
-         Left            =   0
+         Left            =   -75000
          ScaleHeight     =   9015
          ScaleWidth      =   4125
          TabIndex        =   11
@@ -660,7 +659,7 @@ Begin VB.UserControl FeaturesPanel
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   9015
-         Left            =   -75000
+         Left            =   0
          ScaleHeight     =   9015
          ScaleWidth      =   4125
          TabIndex        =   7
