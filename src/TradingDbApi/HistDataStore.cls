@@ -71,6 +71,18 @@ End Sub
 ' IHistoricalDataStore Interface Members
 '@================================================================================
 
+Private Sub IHistoricalDataStore_CancelScanRefresh(ByVal pRefreshCookie As String)
+Const ProcName As String = "IHistoricalDataStore_CancelScanRefresh"
+On Error GoTo Err
+
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Property Get IHistoricalDataStore_Capabilities() As HistDataStoreCapabilities
 IHistoricalDataStore_Capabilities = Capabilities
 End Property
@@ -115,6 +127,34 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function IHistoricalDataStore_RefreshScanData(ByVal pRefreshCookie As String) As IFuture
+Const ProcName As String = "IHistoricalDataStore_RefreshScanData"
+On Error GoTo Err
+
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IHistoricalDataStore_ScanMarket( _
+                ByVal pScanName As String, _
+                ByVal pScanParameters As Parameters, _
+                Optional ByVal pOptions As Parameters, Optional ByVal pFilters As TWUtilities40.Parameters, Optional ByVal pAutoRefresh As Boolean, _
+                Optional ByVal pRefreshCookie As String) As IFuture
+Const ProcName As String = "IHistoricalDataStore_ScanMarket"
+On Error GoTo Err
+
+Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function IHistoricalDataStore_Supports(ByVal pCapability As HistDataStoreCapabilities) As Boolean
 IHistoricalDataStore_Supports = Supports(pCapability)
