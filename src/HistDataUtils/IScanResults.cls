@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IHistoricalDataStore"
+Attribute VB_Name = "IScanResults"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -30,16 +30,6 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum HistDataStoreCapabilities
-    HistDataStoreCapabilityNone = 0
-    HistDataStoreCapabilityWriteTradeBars = 1
-    HistDataStoreCapabilityWriteBidAndAskBars = 2
-    HistDataStoreCapabilityFetchTradeBars = 4
-    HistDataStoreCapabilityFetchBidAndAskBars = 8
-    HistDataStoreCapabilityWriteAsync = 16
-    HistDataStoreCapabilityMarketScan = 32
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -48,7 +38,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IHistoricalDataStore"
+Private Const ModuleName                            As String = "IScanResults"
 
 '@================================================================================
 ' Member variables
@@ -70,58 +60,23 @@ Private Const ModuleName                            As String = "IHistoricalData
 ' Properties
 '@================================================================================
 
-Public Property Get Capabilities() As HistDataStoreCapabilities
-End Property
-
-Public Property Get TimePeriodValidator() As ITimePeriodValidator
-End Property
-
-Public Property Get WriterTimeframes() As TimePeriod()
+Public Property Get Enumerator() As Enumerator
+Attribute Enumerator.VB_UserMemId = -4
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub CancelScanRefresh( _
-                ByVal pRefreshCookie As String)
-End Sub
-
-Public Function CreateBarWriter( _
-                ByVal pOutputMonitor As IBarOutputMonitor, _
-                ByVal pContractFuture As IFuture) As IBarWriter
+Public Function Count() As Long
 End Function
 
-Public Function FetchBars( _
-                ByVal pBarDataSpecifierFuture As IFuture, _
-                Optional ByVal pListener As IBarFetchListener, _
-                Optional ByVal pCookie As Variant) As IFuture
-End Function
-
-Public Sub Finish()
-End Sub
-
-Public Function RefreshScanData( _
-                ByVal pRefreshCookie As String) As IFuture
-End Function
-
-Public Function ScanMarket( _
-                ByVal pScanName As String, _
-                ByVal pScanParameters As Parameters, _
-                Optional ByVal pOptions As Parameters, _
-                Optional ByVal pFilters As Parameters, _
-                Optional ByVal pAutoRefresh As Boolean, _
-                Optional ByVal pRefreshCookie As String) As IFuture
-End Function
-
-Public Function Supports(ByVal pCapability As HistDataStoreCapabilities) As Boolean
+Public Function Item(ByVal pIndex As Long) As IScanResult
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-
 
 
 
