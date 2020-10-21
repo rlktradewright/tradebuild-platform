@@ -661,7 +661,18 @@ Case IdTypeOrder
     If sLostConnectionToIb And lErrorCode = 200 Then Exit Sub
     If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyError id, lErrorCode, lErrorMsg
     Exit Sub
+Case IdTypeScanner
+    Const HistMarketDataServiceErrorMessagePrefix As String = "Historical Market Data Service error message:"
+    If lErrorCode = 162 Then
+        Dim l As Long: l = InStr(1, lErrorMsg, HistMarketDataServiceErrorMessagePrefix)
+        If l <> 0 Then
+            lErrorMsg = Mid$(lErrorMsg, l + Len(HistMarketDataServiceErrorMessagePrefix))
+        End If
+    End If
+    If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.NotifyError gGetCallersRequestIdFromTwsScannerRequestId(id), lErrorCode, lErrorMsg
+    Exit Sub
 End Select
+
 
 Select Case lErrorCode
 Case 316
@@ -1635,7 +1646,9 @@ Static sProjection As String
 Static sLegs As String
 
 mReader.BeginCheckpointScope
-    mReader.GetLongCheckpointed sRequestId, "Request Id"
+    Dim lRequestId As Long
+    mReader.GetLongCheckpointed lRequestId, "Request Id"
+    sRequestId = gGetCallersRequestIdFromTwsScannerRequestId(lRequestId)
     mReader.GetLongCheckpointed sNumberOfElements, "Number of elements"
     
     Dim i As Long
@@ -1694,6 +1707,8 @@ mReader.BeginLogMessage
 Dim xml  As String: xml = mReader.GetString("XML")
 
 mReader.EndLogMessage
+
+If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.NotifyScannerParameters xml
 
 Exit Sub
 

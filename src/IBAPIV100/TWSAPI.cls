@@ -819,7 +819,7 @@ Err:
 gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub CancelScannerSubscription(ByVal pTickerId As Long)
+Public Sub CancelScannerSubscription(ByVal pRequestId As Long)
 Const ProcName As String = "CancelScannerSubscription"
 On Error GoTo Err
 
@@ -829,7 +829,10 @@ Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_SCANNER_SUBSCRIPTION
 mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pTickerId, "Ticker Id"
+
+Dim lApiId As Long
+lApiId = gGetTwsScannerRequestIdFromCallersRequestId(pRequestId)
+mWriter.AddLong lApiId, "Request Id"
 mWriter.Send True
 
 Exit Sub
@@ -1930,7 +1933,12 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 4
 
-gLog "Requesting scanner subscription: requester id=" & pTickerId, ModuleName, ProcName
+Dim lApiId As Long
+lApiId = gGetTwsScannerRequestIdFromCallersRequestId(pRequestId)
+
+gLog "Requesting scanner subscription: requester id=" & pRequestId & _
+        "; api id=" & lApiId, _
+        ModuleName, ProcName
 
 mWriter.AddMessageId REQ_SCANNER_SUBSCRIPTION
 If mServerVersion < SCANNER_GENERIC_OPTS Then mWriter.AddLong VERSION, "Version"

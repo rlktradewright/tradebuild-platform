@@ -67,6 +67,12 @@ Private Const ModuleName                            As String = "IScannerDataCon
 Public Sub EndScannerData(ByVal pRequestId As Long)
 End Sub
 
+Public Sub NotifyError( _
+                ByVal pRequestId As Long, _
+                ByVal pErrorCode As Long, _
+                ByVal pErrorMsg As String)
+End Sub
+
 Public Sub NotifyScannerData( _
                 ByVal pRequestId As Long, _
                 ByVal pRank As Long, _

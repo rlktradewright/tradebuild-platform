@@ -29,13 +29,15 @@ Public Const TwsLogLevelWarningString           As String = "Warning"
 
 Public Const BaseMarketDataRequestId            As Long = 0
 Public Const BaseMarketDepthRequestId           As Long = &H400000
-Public Const BaseHistoricalDataRequestId        As Long = &H800000
-Public Const BaseExecutionsRequestId            As Long = &H810000
-Public Const BaseContractRequestId              As Long = &H1000000
+Public Const BaseScannerRequestId               As Long = &H410000
+Public Const BaseHistoricalDataRequestId        As Long = &H420000
+Public Const BaseExecutionsRequestId            As Long = &H430000
+Public Const BaseContractRequestId              As Long = &H4400000
 Public Const BaseOrderId                        As Long = &H10000000
 
 Public Const MaxCallersMarketDataRequestId      As Long = BaseMarketDepthRequestId - 1
-Public Const MaxCallersMarketDepthRequestId     As Long = BaseHistoricalDataRequestId - BaseMarketDepthRequestId - 1
+Public Const MaxCallersMarketDepthRequestId     As Long = BaseScannerRequestId - BaseMarketDepthRequestId - 1
+Public Const MaxCallersScannerRequestId         As Long = BaseHistoricalDataRequestId - BaseScannerRequestId - 1
 Public Const MaxCallersHistoricalDataRequestId  As Long = BaseExecutionsRequestId - BaseHistoricalDataRequestId - 1
 Public Const MaxCallersExecutionsRequestId      As Long = BaseContractRequestId - BaseExecutionsRequestId - 1
 Public Const MaxCallersContractRequestId        As Long = BaseOrderId - BaseContractRequestId - 1
@@ -108,6 +110,7 @@ Public Enum IdTypes
     IdTypeOrder
     IdTypeContractData
     IdTypeExecution
+    IdTypeScanner
 End Enum
 
 Public Enum TwsSocketInMsgTypes
@@ -327,6 +330,10 @@ Public Function gGetCallersRequestIdFromTwsMarketDepthRequestId(ByVal pId As Lon
 gGetCallersRequestIdFromTwsMarketDepthRequestId = pId - BaseMarketDepthRequestId
 End Function
 
+Public Function gGetCallersRequestIdFromTwsScannerRequestId(ByVal pId As Long) As Long
+gGetCallersRequestIdFromTwsScannerRequestId = pId - BaseScannerRequestId
+End Function
+
 Public Function gGetIdType( _
                 ByVal id As Long) As IdTypes
 Const ProcName As String = "ggGetIdType"
@@ -340,6 +347,8 @@ ElseIf id >= BaseExecutionsRequestId Then
     gGetIdType = IdTypeExecution
 ElseIf id >= BaseHistoricalDataRequestId Then
     gGetIdType = IdTypeHistoricalData
+ElseIf id >= BaseScannerRequestId Then
+    gGetIdType = IdTypeScanner
 ElseIf id >= BaseMarketDepthRequestId Then
     gGetIdType = IdTypeMarketDepth
 ElseIf id >= 0 Then
@@ -377,6 +386,11 @@ End Function
 Public Function gGetTwsMarketDepthRequestIdFromCallersRequestId(ByVal pId As Long) As Long
 AssertArgument pId <= MaxCallersMarketDepthRequestId, "Max request id is " & MaxCallersMarketDepthRequestId
 gGetTwsMarketDepthRequestIdFromCallersRequestId = pId + BaseMarketDepthRequestId
+End Function
+
+Public Function gGetTwsScannerRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+AssertArgument pId <= MaxCallersScannerRequestId, "Max request id is " & MaxCallersScannerRequestId
+gGetTwsScannerRequestIdFromCallersRequestId = pId + BaseScannerRequestId
 End Function
 
 Public Property Get gLogger() As FormattingLogger
