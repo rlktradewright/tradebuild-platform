@@ -24,13 +24,13 @@ GBP		,CASH	,	,IDEALPRO	,USD
 USD		,CASH	,	,IDEALPRO	,JPY
 
 // Futures
-ES		,FUT	,202009	,GLOBEX		,		,		,		,true
-YM		,FUT	,202009	,ECBOT		,		,		,		,true
-Z		,FUT	,202009	,ICEEU		,		,		,		,true
-GBL		,FUT	,202009	,DTB
-DAX		,FUT	,202009	,DTB		,EUR		,		,25
-ESTX50		,FUT	,202009	,DTB
-EUR		,FUT	,202009	,GLOBEX
+ES		,FUT	,202012	,GLOBEX		,		,		,		,true
+YM		,FUT	,202012	,ECBOT		,		,		,		,true
+Z		,FUT	,202012	,ICEEU		,		,		,		,true
+GBL		,FUT	,202012	,DTB
+DAX		,FUT	,202012	,DTB		,EUR		,		,25
+ESTX50		,FUT	,202012	,DTB
+EUR		,FUT	,202012	,GLOBEX
 
 //////////////////////////////////////////////////
 EXIT
