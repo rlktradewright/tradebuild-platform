@@ -475,7 +475,7 @@ For Each lMatch In lMatches
     Case LocalSymbolVariable
         r = lContractSpec.LocalSymbol
     Case SecTypeVariable
-        r = SecTypeToShortString(lContractSpec.Symbol)
+        r = SecTypeToShortString(lContractSpec.SecType)
     Case ExchangeVariable
         r = lContractSpec.Exchange
     Case ExpiryVariable
@@ -487,7 +487,7 @@ For Each lMatch In lMatches
     Case StrikeVariable
         r = lContractSpec.Strike
     Case RightVariable
-        r = OptionRightToString(lContractSpec.Symbol)
+        r = OptionRightToString(lContractSpec.Right)
     Case TodayVariable
         r = FormatTimestamp(todayDate, mTimestampDateOnlyFormat)
     Case YesterdayVariable
@@ -721,7 +721,7 @@ End Function
 
 Private Function isValidSubstitutionVariable(ByVal pString As String) As Boolean
 isValidSubstitutionVariable = BinarySearchStrings( _
-                                pString, _
+                                UCase$(pString), _
                                 mSubstitutionVariables, _
                                 0, _
                                 mMaxSubstitutionVariablesIndex + 1) >= 0
