@@ -814,7 +814,7 @@ Private Sub startTicker(ByVal symbol As String, _
                 Optional ByVal primaryExchange As String, _
                 Optional ByVal multiplier As String, _
                 Optional marketDepth As String)
-Dim lContract As New TwsContract
+Dim lContract As New TwsContractSpecifier
 With lContract
     .symbol = symbol
     .sectype = TwsSecTypeFromString(sectype)
