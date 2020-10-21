@@ -369,9 +369,9 @@ On Error GoTo Err
 
 Static sHistoricalDataStore As HistoricalDataStore
 
-If sHistoricalDataFetcher Is Nothing Then
-    Set sHistoricalDataFetcher = New HistoricalDataFetcher
-    sHistoricalDataFetcher.Initialise getHistDataRequester, getContractDetailsRequester, mContractCache
+If sHistoricalDataStore Is Nothing Then
+    Set sHistoricalDataStore = New HistoricalDataStore
+    sHistoricalDataStore.Initialise getHistDataRequester, getContractDetailsRequester, mContractCache, getScanRequester
 End If
 
 Set GetHistoricalDataStore = sHistoricalDataStore
@@ -603,6 +603,29 @@ If sOrderPlacer Is Nothing Then
 End If
 
 Set getOrderPlacer = sOrderPlacer
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getScanRequester() As ScanRequester
+Const ProcName As String = "getScanRequester"
+On Error GoTo Err
+
+Dim lScanRequester As ScanRequester
+
+If Not mTwsAPI.ScannerDataConsumer Is Nothing Then
+    Assert TypeOf mTwsAPI.ScannerDataConsumer Is ScanRequester, "Tws is already configured with an incompatible IScannerDataConsumer"
+    Set lScanRequester = mTwsAPI.ScannerDataConsumer
+Else
+    Set lScanRequester = New ScanRequester
+    lScanRequester.Initialise mTwsAPI
+    mTwsAPI.ScannerDataConsumer = lScanRequester
+End If
+
+Set getScanRequester = lScanRequester
 
 Exit Function
 

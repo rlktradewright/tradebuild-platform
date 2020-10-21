@@ -89,6 +89,14 @@ Public Type PriceIncrementRulesetCacheEntry
     CacheDate               As Date
 End Type
 
+Public Type ScanRequest
+    RequestID               As Long
+    Cookie                  As String
+    FutureBuilder           As FutureBuilder
+    Results                 As ScanResults
+    AutoRefresh             As Boolean
+End Type
+
 '@================================================================================
 ' Member variables
 '@================================================================================
