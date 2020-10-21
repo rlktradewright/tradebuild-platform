@@ -5,9 +5,8 @@ line utility program.
 
 RunPlaceOrders.bat command file and subscripts
 
-FileAutoReader program
-
 Sample Worksheet for Placing Orders via Excel
+  _Note that this worksheet needs maintenance and doesn't work with the current TradeBuild version_
 
 
 

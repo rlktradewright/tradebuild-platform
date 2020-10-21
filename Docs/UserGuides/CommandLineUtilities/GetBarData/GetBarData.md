@@ -245,6 +245,8 @@ This command specifies the start date-time for the data. You must supply either 
 number of required bars, or both. If you use this command without a parameter, the from date is reset to
 'no date'.
 
+The time supplied must be in the timezone of the relevant exchange.
+
 For example:
 
 `from 2019/12/15 19:25`
@@ -257,6 +259,8 @@ Pretty much any common date format can be used.
 This command specifies the end date-time for the data. You can use the special parameter `LATEST` to return
 data right up to the current time, and this is also the initial setting if you don't use this command. If
 you use this command without a parameter, the to date is reset to 'no date'.
+
+The time supplied must be in the timezone of the relevant exchange.
 
 For example:
 
