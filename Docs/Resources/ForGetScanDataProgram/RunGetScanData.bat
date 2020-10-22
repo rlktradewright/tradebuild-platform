@@ -7,15 +7,15 @@ setlocal enableextensions enabledelayedexpansion
 ::   data from IBKR's Trader Workstation or Gateway.                           + 
 ::                                                                             +
 ::   If the first argument is /I, the program is run in interactive mode,      +
-::   meaning that you must type commnds manually. Any other arguments are      +
+::   meaning that you must type commands manually. Any other arguments are     +
 ::   ignored.                                                                  +
 ::                                                                             +
 ::   If the first argument is a filename, the program reads the file from      +
-::   the commandfiles directory and actions it. Any other arguments are        +
+::   the INPUTFILES directory and actions it. Any other arguments are          +
 ::   ignored.                                                                  +
 ::                                                                             +
-::   If there are no arguments, the program monitors the commandfiles          +
-::   directory and actions any commandfiles that are subsequently placed in it.+
+::   If there are no arguments, the program monitors the INPUTFILES            +
+::   directory and actions any files that are subsequently placed in it.       +
 ::                                                                             +
 ::   You may wish to change some of the settings below, but it should work     +
 ::   well without changes if TWS is running on this computer, and the          +
@@ -56,7 +56,7 @@ set BIN=
 ::
 ::
 :: TOPDIR	
-::   Set this to the root folder for use of the GetBarData program.
+::   Set this to the root folder for use of the GetScanData program.
 ::
 ::
 :: TWSSERVER
@@ -127,7 +127,7 @@ set BIN=
 ::   is not necessarily a complete record of all order files processed.
 ::
 :: OUTPUTDIR
-::   Set this to the path for the  folder where downloaded historical data files
+::   Set this to the path for the folder where scan results files
 ::   are to be stored (unless otherwise specified by commands). You can include
 ::   a filename and both the path and filename can include substitution
 ::   variables.
