@@ -299,36 +299,40 @@ Public Function gCreateContractSpecifierFromString(ByVal pSpecString As String) 
 Const ProcName As String = "gCreateContractSpecifierFromString"
 On Error GoTo Err
 
-Dim lIndex As Long
-Dim lLocalSymbolStartIndex As Long
+Const ContractSpecRegex As String = "^(STK|FUT|OPT|FOP|CASH|COMBO|INDEX)\:([a-zA-Z0-9][ a-zA-Z0-9\-]+)(?:@([a-zA-Z]+))?(?:\(([a-zA-Z]+)\))?$"
+gRegExp.Pattern = ContractSpecRegex
+gRegExp.IgnoreCase = True
 
-lIndex = InStr(1, pSpecString, ":")
-AssertArgument lIndex <> 1, "Contract specifier cannot start with :"
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(pSpecString)
+
+AssertArgument lMatches.Count = 1, "The contract must be specified: <sectype>:<localsymbol>[@<exchange>][(<currency>)], eg STK:MSFT@SMART(USD)"
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
 Dim lSecType As SecurityTypes
-If lIndex = 0 Then
-    lLocalSymbolStartIndex = 1
-Else
-    lLocalSymbolStartIndex = lIndex + 1
-    Dim lSecTypeStr As String
-    lSecTypeStr = Left$(pSpecString, lIndex - 1)
-    lSecType = gSecTypeFromString(lSecTypeStr)
-    AssertArgument lSecType <> SecTypeNone, "'" & lSecTypeStr & "' is not a valid security type"
-End If
-
-lIndex = InStr(1, pSpecString, "@")
-AssertArgument lIndex <> 1, "Contract specifier symbol cannot start with @"
+lSecType = gSecTypeFromString(lMatch.SubMatches(0))
+AssertArgument lSecType <> SecTypeNone, "A valid security type must be supplied"
 
 Dim lLocalSymbol As String
+lLocalSymbol = lMatch.SubMatches(1)
+
 Dim lExchange As String
+lExchange = lMatch.SubMatches(2)
 
-If lIndex = 0 Then
-    lLocalSymbol = Right$(pSpecString, Len(pSpecString) - lLocalSymbolStartIndex + 1)
-Else
-    lLocalSymbol = Mid$(pSpecString, lLocalSymbolStartIndex, lIndex - lLocalSymbolStartIndex)
-    lExchange = Right$(pSpecString, Len(pSpecString) - lIndex)
-End If
+Dim lCurrency As String
+lCurrency = lMatch.SubMatches(3)
 
-Set gCreateContractSpecifierFromString = gCreateContractSpecifier(lLocalSymbol, "", lExchange, lSecType, "", "", 1#, 0#, OptNone)
+Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
+                                                lLocalSymbol, _
+                                                "", _
+                                                lExchange, _
+                                                lSecType, _
+                                                lCurrency, _
+                                                "", _
+                                                1#, _
+                                                0#, _
+                                                OptNone)
 
 Exit Function
 
