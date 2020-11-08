@@ -210,8 +210,11 @@ End Function
 
 Public Function gGetContractName(ByVal pContractSpec As IContractSpecifier) As String
 AssertArgument Not pContractSpec Is Nothing
-gGetContractName = pContractSpec.LocalSymbol & _
-                    IIf(pContractSpec.Exchange <> "", "@" & pContractSpec.Exchange, "")
+With pContractSpec
+    gGetContractName = .LocalSymbol & _
+                        IIf(.Exchange <> "", "@" & .Exchange, "") & _
+                        IIf(.CurrencyCode <> "", "(" & .CurrencyCode & ")", "")
+End With
 End Function
 
 Public Sub gHandleFatalError(ev As ErrorEventData)
