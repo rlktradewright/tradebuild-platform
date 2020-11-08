@@ -103,7 +103,7 @@ set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 
 :: temporary fix for refusal of VB6 to compile this module if
 :: the output dll exists
-if exist %BIN-PATH%\IBApi27.dll del %BIN-PATH%\IBApi27.dll
+if exist %BIN-PATH%\IBApiV10027.dll del %BIN-PATH%\IBApiV10027.dll
 call makedll.bat IBAPIV100 IBAPIV100 /T:DLL /B:%BINARY_COMPAT% /C
 if errorlevel 1 pause
 call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
