@@ -133,8 +133,6 @@ Private mTotalTwsBarsProcessed                      As Long
 
 Private mElapsedTimer                               As New ElapsedTimer
 
-Private mTimePeriod1Day                             As TimePeriod
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -144,7 +142,6 @@ ReDim mTWSBarsCollections(3) As EnumerableCollection
 mRequesterID = NullIndex
 Set mFutureWaiter = New FutureWaiter
 Set mFutureBuilder = New FutureBuilder
-Set mTimePeriod1Day = GetTimePeriod(1, TimePeriodDay)
 End Sub
 
 '@================================================================================
@@ -286,15 +283,9 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
     Set mTargetSessionBuilder = createNewSessionBuilder
     Set mTargetSession = mTargetSessionBuilder.Session
     
-    failpoint = "Set from date"
-    If mTargetBarSpecifier.FromDate = 0 Then
-        mIsFromDateCalculated = True
-        mTargetBarSpecifier.FromDate = getFromDate( _
-                                            mTargetBarSpecifier.BarTimePeriod, _
-                                            mTargetBarSpecifier.ToDate, _
-                                            mTargetBarSpecifier.MaxNumberOfBars)
-    End If
-    
+    failpoint = "Set dates and number of bars"
+    setDatesAndNumberOfBars
+        
     failpoint = "Set timespan data"
     setTimespanData
     
@@ -1038,7 +1029,7 @@ End Function
 Private Function getFromDate( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pToDate As Date, _
-                ByVal pMaxNumberOfBars) As Date
+                ByVal pMaxNumberOfBars As Long) As Date
 Const ProcName As String = "getFromDate"
 On Error GoTo Err
 
@@ -1083,15 +1074,13 @@ On Error GoTo Err
 Dim lTimestamp As Date
 lTimestamp = convertTwsDateStringToTimestamp(pBar.Timestamp)
 
-If lTimestamp - Int(lTimestamp) = 0# Then
+If pBarTimePeriod.Units = TimePeriodDay Then
     If mSessionStartTime < mSessionEndTime Then
         lTimestamp = Int(lTimestamp) + mSessionStartTime
     Else
         lTimestamp = Int(lTimestamp) - 1 + mSessionStartTime
     End If
-End If
-
-If pBarTimePeriod.Units = TimePeriodWeek Or _
+ElseIf pBarTimePeriod.Units = TimePeriodWeek Or _
     pBarTimePeriod.Units = TimePeriodMonth Or _
     pBarTimePeriod.Units = TimePeriodYear _
 Then
@@ -1099,6 +1088,34 @@ Then
 End If
 
 getTimestampFromTwsBar = lTimestamp
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getToDate( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pFromDate As Date, _
+                ByVal pMaxNumberOfBars As Long) As Date
+Const ProcName As String = "getToDate"
+On Error GoTo Err
+
+If isBarFixedDuration(pTimePeriod) Then
+    getToDate = OffsetBarStartTime( _
+                            pFromDate, _
+                            pTimePeriod, _
+                            pMaxNumberOfBars, _
+                            mSessionStartTime, _
+                            mSessionEndTime)
+Else
+    getToDate = GetOffsetSessionTimes( _
+                            pFromDate, _
+                            1, _
+                            mSessionStartTime, _
+                            mSessionEndTime).EndTime
+End If
 
 Exit Function
 
@@ -1368,6 +1385,61 @@ If mFutureBuilder.Future.IsPending Then
     mFutureBuilder.Value = mTargetBarsBuilder.Bars
     mFutureBuilder.Complete
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setDatesAndNumberOfBars()
+Const ProcName As String = "setDatesAndNumberOfBars"
+On Error GoTo Err
+
+' FromDate=0            Y   Y   Y   _   N   N   N
+' ToDate=0              Y   Y   N   N   Y   Y   N
+' MaxNumberOfBars=0     Y   N   Y   N   Y   N   Y
+'
+'CalcFromDate           -   -   -   -   X   -   -
+'CalcToDate             -   -   X   -   -   -   -
+'CalcNumBars            -   X   -   -   -   -   -
+'Err                    -   -   -   X   -   X   X
+
+With mTargetBarSpecifier
+    If .ToDate = MaxDate Then
+        .ToDate = getToDate( _
+                        .BarTimePeriod, _
+                        Now, _
+                        1)
+    End If
+    
+    Assert (.ToDate <> 0 And .MaxNumberOfBars <> 0) Or _
+            (.FromDate <> 0 And .ToDate <> 0) Or _
+            (.FromDate <> 0 And .MaxNumberOfBars <> 0), _
+            "Either FromDate and ToDate, or " & _
+            "FromDate and MaNumberOfBars, or " & _
+            "ToDate and MaNumberOfBars must be non-zero"
+
+    If .FromDate <> 0 And .ToDate <> 0 Then
+        .MaxNumberOfBars = MaxNumberOfBarsInTimespan( _
+                                    .BarTimePeriod, _
+                                    .FromDate, _
+                                    .ToDate, _
+                                    mSessionStartTime, _
+                                    mSessionEndTime)
+    ElseIf .FromDate <> 0 And .MaxNumberOfBars <> 0 Then
+        .ToDate = getToDate( _
+                        .BarTimePeriod, _
+                        .FromDate, _
+                        .MaxNumberOfBars)
+    ElseIf .ToDate <> 0 And .MaxNumberOfBars <> 0 Then
+        mIsFromDateCalculated = True
+        .FromDate = getFromDate( _
+                        .BarTimePeriod, _
+                        .ToDate, _
+                        .MaxNumberOfBars)
+    End If
+End With
 
 Exit Sub
 

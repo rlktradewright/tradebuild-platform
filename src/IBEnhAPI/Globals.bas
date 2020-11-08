@@ -357,7 +357,6 @@ Dim lNumberOfSessionTimesProcessed As Long
 Dim lSessionDate As Date
 Dim i As Long
 For i = 0 To UBound(lSessionTimesAr)
-    If i > UBound(lSessionTimesAr) Then Exit For
     Dim l As Variant: l = lSessionTimesAr(i)
     If getSessionTimesForDay(lRegExp, l, lSessionTimes, lSessionDate) Then
         If gGetSessionTimes.StartTime = 0 Or lSessionTimes.StartTime < gGetSessionTimes.StartTime Then
