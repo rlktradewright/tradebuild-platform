@@ -386,7 +386,7 @@ If Not (pClp.Switch("tws") Or pClp.Switch("db")) Then
 End If
 
 If pClp.Switch("tws") Then
-    If Not setupTwsServiceProviders(pClp.switchValue("tws"), pLiveTrades, Not pClp.Switch("db")) Then
+    If Not setupTwsServiceProviders(pClp.switchValue("tws"), Not pClp.Switch("db"), pLiveTrades) Then
         MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Function
     End If
