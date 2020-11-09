@@ -469,7 +469,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
         ' so get the real thing from TWS
         mFutureWaiter.Add mContractStore.FetchContracts(lContract.Specifier)
         gLog "Getting contract details from TWSAPI", ModuleName, ProcName
-    ElseIf mContract.ProviderProperties.GetParameterValue("MarketRuleID", "0") = "0" Then
+    ElseIf lContract.ProviderProperties.GetParameterValue("MarketRuleID", "0") = "0" Then
         ' ditto
         mFutureWaiter.Add mContractStore.FetchContracts(lContract.Specifier)
         gLog "Getting contract details from TWSAPI", ModuleName, ProcName
