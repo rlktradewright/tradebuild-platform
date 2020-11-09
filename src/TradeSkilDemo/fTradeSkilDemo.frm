@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#371.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#373.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -607,7 +607,11 @@ mContractsFutureWaiter.Add FetchContracts(CreateContractSpecifierFromString(pSym
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gModelessMsgBox Err.Description, MsgBoxExclamation, mTheme, "Attention"
+Else
+    gNotifyUnhandledError ProcName, ModuleName
+End If
 End Sub
 
 '================================================================================
