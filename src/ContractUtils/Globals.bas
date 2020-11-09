@@ -299,20 +299,24 @@ Public Function gCreateContractSpecifierFromString(ByVal pSpecString As String) 
 Const ProcName As String = "gCreateContractSpecifierFromString"
 On Error GoTo Err
 
-Const ContractSpecRegex As String = "^(STK|FUT|OPT|FOP|CASH|COMBO|INDEX)\:([a-zA-Z0-9][ a-zA-Z0-9\-]+)(?:@([a-zA-Z]+))?(?:\(([a-zA-Z]+)\))?$"
+Const ContractSpecRegex As String = "^(?:([a-zA-Z])+\:)?([a-zA-Z0-9][ a-zA-Z0-9\-]+)(?:@([a-zA-Z]+))?(?:\(([a-zA-Z]+)\))?$"
 gRegExp.Pattern = ContractSpecRegex
 gRegExp.IgnoreCase = True
 
 Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(pSpecString)
 
-AssertArgument lMatches.Count = 1, "The contract must be specified: <sectype>:<localsymbol>[@<exchange>][(<currency>)], eg STK:MSFT@SMART(USD)"
+AssertArgument lMatches.Count = 1, "Invalid contract specifier: <sectype>:<localsymbol>[@<exchange>][(<currency>)], eg STK:MSFT@SMART(USD)"
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
+Dim lSecTypeStr As String: lSecTypeStr = lMatch.SubMatches(0)
 Dim lSecType As SecurityTypes
-lSecType = gSecTypeFromString(lMatch.SubMatches(0))
-AssertArgument lSecType <> SecTypeNone, "A valid security type must be supplied"
+
+If lSecTypeStr <> "" Then
+    lSecType = gSecTypeFromString(lMatch.SubMatches(0))
+    AssertArgument lSecType <> SecTypeNone, "A valid security type must be supplied"
+End If
 
 Dim lLocalSymbol As String
 lLocalSymbol = lMatch.SubMatches(1)
