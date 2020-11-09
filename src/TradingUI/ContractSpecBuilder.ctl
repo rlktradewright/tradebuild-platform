@@ -771,7 +771,7 @@ End If
 LocalSymbolText = Value.LocalSymbol
 SymbolText = Value.Symbol
 ExchangeCombo = Value.Exchange
-TypeCombo = SecTypeToString(Value.secType)
+TypeCombo = SecTypeToString(Value.SecType)
 CurrencyCombo = Value.CurrencyCode
 ExpiryText = Value.Expiry
 MultiplierText = IIf(Value.Multiplier = 1, "", CStr(Value.Multiplier))

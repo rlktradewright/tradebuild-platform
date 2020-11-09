@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -66,8 +66,8 @@ Event SelectionCleared()
 '@================================================================================
 
 Private Enum ContractsGridColumns
-    secType
-    LocalSymbol = secType
+    SecType
+    LocalSymbol = SecType
     Exchange
     Expiry = Exchange
     CurrencyCode
@@ -819,13 +819,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function isFullHeadingSecType( _
-                ByVal secType As SecurityTypes) As Boolean
+                ByVal SecType As SecurityTypes) As Boolean
 Const ProcName As String = "isFullHeadingSecType"
 On Error GoTo Err
 
-If secType = SecTypeFuture Or _
-    secType = SecTypeFuturesOption Or _
-    secType = SecTypeOption _
+If SecType = SecTypeFuture Or _
+    SecType = SecTypeFuturesOption Or _
+    SecType = SecTypeOption _
 Then
     isFullHeadingSecType = True
 End If
@@ -837,12 +837,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isHeadingWithoutExchangeSecType( _
-                ByVal secType As SecurityTypes)
+                ByVal SecType As SecurityTypes)
 Const ProcName As String = "isHeadingWithoutExchangeSecType"
 On Error GoTo Err
 
-If secType = SecTypeStock Or _
-    secType = SecTypeIndex _
+If SecType = SecTypeStock Or _
+    SecType = SecTypeIndex _
 Then
     isHeadingWithoutExchangeSecType = True
 End If
@@ -854,13 +854,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isHeadingWithoutCurrencySecType( _
-                ByVal secType As SecurityTypes)
+                ByVal SecType As SecurityTypes)
 Const ProcName As String = "isHeadingWithoutCurrencySecType"
 On Error GoTo Err
 
-If secType = SecTypeStock Or _
-    secType = SecTypeCash Or _
-    secType = SecTypeIndex _
+If SecType = SecTypeStock Or _
+    SecType = SecTypeCash Or _
+    SecType = SecTypeIndex _
 Then
     isHeadingWithoutCurrencySecType = True
 End If
@@ -890,10 +890,10 @@ Private Function needFullHeadingRow( _
 Const ProcName As String = "needFullHeadingRow"
 On Error GoTo Err
 
-If (contractSpec.secType <> mCurrSectype Or _
+If (contractSpec.SecType <> mCurrSectype Or _
     contractSpec.CurrencyCode <> mCurrCurrency Or _
     contractSpec.Exchange <> mCurrExchange) And _
-    isFullHeadingSecType(contractSpec.secType) _
+    isFullHeadingSecType(contractSpec.SecType) _
 Then
     needFullHeadingRow = True
 End If
@@ -928,10 +928,10 @@ Private Function needHeadingRowWithoutExchange( _
 Const ProcName As String = "needHeadingRowWithoutExchange"
 On Error GoTo Err
 
-If (contractSpec.secType <> mCurrSectype Or _
+If (contractSpec.SecType <> mCurrSectype Or _
     contractSpec.CurrencyCode <> mCurrCurrency) And _
-    isHeadingWithoutExchangeSecType(contractSpec.secType) And _
-    (Not isHeadingWithoutExchangeSecType(contractSpec.secType)) _
+    isHeadingWithoutExchangeSecType(contractSpec.SecType) And _
+    (Not isHeadingWithoutExchangeSecType(contractSpec.SecType)) _
 Then
     needHeadingRowWithoutExchange = True
 End If
@@ -947,10 +947,10 @@ Private Function needHeadingRowWithoutCurrency( _
 Const ProcName As String = "needHeadingRowWithoutCurrency"
 On Error GoTo Err
 
-If (contractSpec.secType <> mCurrSectype Or _
+If (contractSpec.SecType <> mCurrSectype Or _
     contractSpec.Exchange <> mCurrExchange) And _
-    isHeadingWithoutCurrencySecType(contractSpec.secType) And _
-    (Not isHeadingWithoutExchangeSecType(contractSpec.secType)) _
+    isHeadingWithoutCurrencySecType(contractSpec.SecType) And _
+    (Not isHeadingWithoutExchangeSecType(contractSpec.SecType)) _
 Then
     needHeadingRowWithoutCurrency = True
 End If
@@ -966,9 +966,9 @@ Private Function needHeadingRowWithSectypeOnly( _
 Const ProcName As String = "needHeadingRowWithSectypeOnly"
 On Error GoTo Err
 
-If contractSpec.secType <> mCurrSectype And _
-    isHeadingWithoutExchangeSecType(contractSpec.secType) And _
-    isHeadingWithoutCurrencySecType(contractSpec.secType) _
+If contractSpec.SecType <> mCurrSectype And _
+    isHeadingWithoutExchangeSecType(contractSpec.SecType) And _
+    isHeadingWithoutCurrencySecType(contractSpec.SecType) _
 Then
     needHeadingRowWithSectypeOnly = True
 End If
@@ -1026,7 +1026,7 @@ If IncludeHistoricalContracts Or Not IsContractExpired(lContract) Then
     
     writeRow lContract
     
-    mCurrSectype = lContractSpec.secType
+    mCurrSectype = lContractSpec.SecType
     mCurrCurrency = lContractSpec.CurrencyCode
     mCurrExchange = lContractSpec.Exchange
     
@@ -1073,7 +1073,7 @@ TWGrid1.FocusRect = TwGridFocusNone
 TWGrid1.PopupScrollbars = True
 TWGrid1.AllowUserResizing = TwGridResizeColumns
 
-setupGridColumn 0, ContractsGridColumns.secType, ContractsGridColumnWidths.SecTypeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
+setupGridColumn 0, ContractsGridColumns.SecType, ContractsGridColumnWidths.SecTypeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupGridColumn 0, ContractsGridColumns.Exchange, ContractsGridColumnWidths.ExchangeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupGridColumn 0, ContractsGridColumns.CurrencyCode, ContractsGridColumnWidths.CurrencyWidth, True, TWControls40.AlignmentSettings.TwGridAlignCenterCenter
 setupGridColumn 0, ContractsGridColumns.OptionRight, ContractsGridColumnWidths.OptionRightWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
@@ -1145,14 +1145,14 @@ Const ProcName As String = "writeHeadingRow"
 On Error GoTo Err
 
 Dim excludeExchange As Boolean
-If isHeadingWithoutExchangeSecType(contractSpec.secType) Then excludeExchange = True
+If isHeadingWithoutExchangeSecType(contractSpec.SecType) Then excludeExchange = True
 
 Dim excludeCurrency As Boolean
-If isHeadingWithoutCurrencySecType(contractSpec.secType) Then excludeCurrency = True
+If isHeadingWithoutCurrencySecType(contractSpec.SecType) Then excludeCurrency = True
 
 TWGrid1.col = 0
 TWGrid1.ColSel = ContractsGridColumns.MaxColumn
-Select Case contractSpec.secType
+Select Case contractSpec.SecType
     Case SecTypeStock
         TWGrid1.CellBackColor = &H359F51
     Case SecTypeFuture
@@ -1171,8 +1171,8 @@ End Select
 TWGrid1.CellFontBold = True
 TWGrid1.CellForeColor = vbWhite
 
-TWGrid1.col = ContractsGridColumns.secType
-TWGrid1.Text = SecTypeToString(contractSpec.secType)
+TWGrid1.col = ContractsGridColumns.SecType
+TWGrid1.Text = SecTypeToString(contractSpec.SecType)
         
 If Not excludeCurrency Then
     TWGrid1.col = ContractsGridColumns.CurrencyCode
@@ -1205,13 +1205,13 @@ With pContract.Specifier
     TWGrid1.col = ContractsGridColumns.LocalSymbol
     TWGrid1.Text = .LocalSymbol
     
-    If isFullHeadingSecType(.secType) Then
+    If isFullHeadingSecType(.SecType) Then
     Else
-        If isHeadingWithoutExchangeSecType(.secType) Then
+        If isHeadingWithoutExchangeSecType(.SecType) Then
             TWGrid1.col = ContractsGridColumns.Exchange
             TWGrid1.Text = .Exchange
         End If
-        If isHeadingWithoutCurrencySecType(.secType) Then
+        If isHeadingWithoutCurrencySecType(.SecType) Then
             TWGrid1.col = ContractsGridColumns.CurrencyCode
             TWGrid1.Text = .CurrencyCode
         End If
@@ -1220,7 +1220,7 @@ With pContract.Specifier
     TWGrid1.col = ContractsGridColumns.Description
     TWGrid1.Text = pContract.Description
     
-    Select Case .secType
+    Select Case .SecType
         Case SecTypeFuture
             TWGrid1.col = ContractsGridColumns.Expiry
             TWGrid1.Text = FormatDateTime(pContract.ExpiryDate, vbShortDate)
@@ -1232,7 +1232,7 @@ With pContract.Specifier
             TWGrid1.Text = OptionRightToString(.Right)
             
             TWGrid1.col = ContractsGridColumns.Strike
-            TWGrid1.Text = FormatPrice(.Strike, .secType, pContract.TickSize)
+            TWGrid1.Text = FormatPrice(.Strike, .SecType, pContract.TickSize)
             TWGrid1.CellAlignment = TwGridAlignRightCenter
         'Case SecTypeCombo
     End Select

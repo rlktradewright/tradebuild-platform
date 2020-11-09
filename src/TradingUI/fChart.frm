@@ -642,7 +642,7 @@ On Error GoTo Err
 If Not ev.Future.IsAvailable Then Exit Sub
 Dim lContract As IContract
 Set lContract = ev.Future.Value
-mSecType = lContract.Specifier.secType
+mSecType = lContract.Specifier.SecType
 mSymbol = lContract.Specifier.LocalSymbol
 mTickSize = lContract.TickSize
 setCaption

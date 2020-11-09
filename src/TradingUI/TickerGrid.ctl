@@ -144,7 +144,7 @@ Private Enum TickerGridColumns
     OpenInterest = 16
     Description = 17
     Symbol = 18
-    secType = 19
+    SecType = 19
     Expiry = 20
     Exchange = 21
     OptionRight = 22
@@ -3016,7 +3016,7 @@ setColumnWidth TickerGridColumns.ClosePrice, TickerGridColumnWidths.CloseWidth, 
 setColumnWidth TickerGridColumns.OpenInterest, TickerGridColumnWidths.OpenInterestWidth, False
 setColumnWidth TickerGridColumns.Description, TickerGridColumnWidths.DescriptionWidth, True
 setColumnWidth TickerGridColumns.Symbol, TickerGridColumnWidths.SymbolWidth, True
-setColumnWidth TickerGridColumns.secType, TickerGridColumnWidths.SecTypeWidth, True
+setColumnWidth TickerGridColumns.SecType, TickerGridColumnWidths.SecTypeWidth, True
 setColumnWidth TickerGridColumns.Expiry, TickerGridColumnWidths.ExpiryWidth, True
 setColumnWidth TickerGridColumns.Exchange, TickerGridColumnWidths.ExchangeWidth, True
 setColumnWidth TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRightWidth, True
@@ -3090,7 +3090,7 @@ TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.Description)) = pContra
 TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.Exchange)) = pContract.Specifier.Exchange
 TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.Expiry)) = IIf(pContract.ExpiryDate = 0, "", pContract.ExpiryDate)
 TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.OptionRight)) = OptionRightToString(pContract.Specifier.Right)
-TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.secType)) = SecTypeToString(pContract.Specifier.secType)
+TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.SecType)) = SecTypeToString(pContract.Specifier.SecType)
 TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.Strike)) = pContract.Specifier.Strike
 TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.Symbol)) = pContract.Specifier.Symbol
 TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.TickerName)) = pContract.Specifier.LocalSymbol
@@ -3184,7 +3184,7 @@ setupTickerGridColumn TickerGridColumns.ClosePrice, TickerGridColumnWidths.Close
 setupTickerGridColumn TickerGridColumns.OpenInterest, TickerGridColumnWidths.OpenInterestWidth, False, TWControls40.AlignmentSettings.TwGridAlignCenterCenter
 setupTickerGridColumn TickerGridColumns.Description, TickerGridColumnWidths.DescriptionWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridColumns.Symbol, TickerGridColumnWidths.SymbolWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
-setupTickerGridColumn TickerGridColumns.secType, TickerGridColumnWidths.SecTypeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn TickerGridColumns.SecType, TickerGridColumnWidths.SecTypeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridColumns.Expiry, TickerGridColumnWidths.ExpiryWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridColumns.Exchange, TickerGridColumnWidths.ExchangeWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRightWidth, True, TWControls40.AlignmentSettings.TwGridAlignLeftCenter
@@ -3224,7 +3224,7 @@ setupTickerGridHeader TickerGridColumns.ClosePrice, "Close"
 setupTickerGridHeader TickerGridColumns.OpenInterest, "Open interest"
 setupTickerGridHeader TickerGridColumns.Description, "Description"
 setupTickerGridHeader TickerGridColumns.Symbol, "Symbol"
-setupTickerGridHeader TickerGridColumns.secType, "Sec Type"
+setupTickerGridHeader TickerGridColumns.SecType, "Sec Type"
 setupTickerGridHeader TickerGridColumns.Expiry, "Expiry"
 setupTickerGridHeader TickerGridColumns.Exchange, "Exchange"
 setupTickerGridHeader TickerGridColumns.OptionRight, "Right"
@@ -3494,7 +3494,7 @@ TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.Exchange)
 TickerGrid.InvertCellColors
 TickerGrid.EndCellEdit
 
-TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.secType)
+TickerGrid.BeginCellEdit pRow, mColumnMap(TickerGridColumns.SecType)
 TickerGrid.InvertCellColors
 TickerGrid.EndCellEdit
 

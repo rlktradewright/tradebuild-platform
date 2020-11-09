@@ -1380,7 +1380,7 @@ End If
 Dim max As Long
 Dim min As Long
 
-Select Case mContract.Specifier.secType
+Select Case mContract.Specifier.SecType
 Case SecTypeStock
     min = 10
     max = 100000
@@ -2639,7 +2639,7 @@ Private Function priceFromString( _
 Const ProcName As String = "priceFromString"
 On Error GoTo Err
 
-priceFromString = ParsePrice(pPriceString, mContract.Specifier.secType, mContract.TickSize, pPrice)
+priceFromString = ParsePrice(pPriceString, mContract.Specifier.SecType, mContract.TickSize, pPrice)
 
 Exit Function
 
@@ -2651,7 +2651,7 @@ Private Function priceToString(ByVal pPrice As Double) As String
 Const ProcName As String = "priceToString"
 On Error GoTo Err
 
-priceToString = FormatPrice(pPrice, mContract.Specifier.secType, mContract.TickSize)
+priceToString = FormatPrice(pPrice, mContract.Specifier.SecType, mContract.TickSize)
 
 Exit Function
 
@@ -2818,26 +2818,26 @@ Case BracketIndexes.BracketEntryOrder
     If mEntryLimitPriceSpec Is Nothing Then CurrentLimitPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mEntryLimitPriceSpec, _
-                                                    mContract.Specifier.secType, _
+                                                    mContract.Specifier.SecType, _
                                                     lOrderAction)
 Case BracketIndexes.BracketStopLossOrder
     If mStopLossLimitPriceSpec Is Nothing Then CurrentLimitPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mStopLossLimitPriceSpec, _
-                                                    mContract.Specifier.secType, _
+                                                    mContract.Specifier.SecType, _
                                                     lOrderAction)
 Case BracketIndexes.BracketTargetOrder
     If mTargetLimitPriceSpec Is Nothing Then CurrentLimitPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mTargetLimitPriceSpec, _
-                                                    mContract.Specifier.secType, _
+                                                    mContract.Specifier.SecType, _
                                                     lOrderAction)
 End Select
 
 CurrentLimitPriceLabel(pIndex) = IIf(lPrice = MaxDouble, _
                                     "N/A", _
                                     FormatPrice(lPrice, _
-                                                mContract.Specifier.secType, _
+                                                mContract.Specifier.SecType, _
                                                 mContract.TickSize))
 
 Exit Sub
@@ -2867,26 +2867,26 @@ Case BracketIndexes.BracketEntryOrder
     If mEntryTriggerPriceSpec Is Nothing Then CurrentTriggerPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mEntryTriggerPriceSpec, _
-                                                    mContract.Specifier.secType, _
+                                                    mContract.Specifier.SecType, _
                                                     lOrderAction)
 Case BracketIndexes.BracketStopLossOrder
     If mStopLossTriggerPriceSpec Is Nothing Then CurrentTriggerPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mStopLossTriggerPriceSpec, _
-                                                    mContract.Specifier.secType, _
+                                                    mContract.Specifier.SecType, _
                                                     lOrderAction)
 Case BracketIndexes.BracketTargetOrder
     If mTargetTriggerPriceSpec Is Nothing Then CurrentTriggerPriceLabel(pIndex) = "": Exit Sub
     lPrice = mActiveOrderContext.CalculateOffsettedPrice( _
                                                     mTargetTriggerPriceSpec, _
-                                                    mContract.Specifier.secType, _
+                                                    mContract.Specifier.SecType, _
                                                     lOrderAction)
 End Select
 
 CurrentTriggerPriceLabel(pIndex) = IIf(lPrice = MaxDouble, _
                                     "N/A", _
                                     FormatPrice(lPrice, _
-                                                mContract.Specifier.secType, _
+                                                mContract.Specifier.SecType, _
                                                 mContract.TickSize))
 
 Exit Sub
@@ -3175,7 +3175,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setQuantity(ByVal pIndex As Long)
-Select Case mContract.Specifier.secType
+Select Case mContract.Specifier.SecType
 Case SecTypeStock
     QuantityText(pIndex) = 100
 Case SecTypeFuture

@@ -798,7 +798,7 @@ On Error GoTo Err
 
 Set mContract = mDataSource.ContractFuture.Value
 mTickSize = mContract.TickSize
-mSecType = mContract.Specifier.secType
+mSecType = mContract.Specifier.SecType
 
 If mDataSource.CurrentQuote(TickTypeTrade).Price <> 0# Then
     setInitialPrice mDataSource.CurrentQuote(TickTypeTrade).Price

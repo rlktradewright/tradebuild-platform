@@ -681,7 +681,7 @@ Screen.MousePointer = vbHourglass
 
 Dim contractSpec As IContractSpecifier
 Set contractSpec = ContractSpecBuilder1.ContractSpecifier
-mSecType = contractSpec.secType
+mSecType = contractSpec.SecType
 
 Set mFutureWaiter = New FutureWaiter
 mFutureWaiter.Add FetchContracts(contractSpec, mPrimaryContractStore, mSecondaryContractStore)

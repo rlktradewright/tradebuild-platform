@@ -1388,7 +1388,7 @@ End Sub
 Private Sub setContractProperties(ByVal pContract As IContract)
 If Not pContract Is Nothing Then
     mLocalSymbol = pContract.Specifier.LocalSymbol
-    mSecType = pContract.Specifier.secType
+    mSecType = pContract.Specifier.SecType
     mExchange = pContract.Specifier.Exchange
     mTickSize = pContract.TickSize
     If mChartSpec.IncludeBarsOutsideSession Then

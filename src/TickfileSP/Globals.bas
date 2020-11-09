@@ -98,18 +98,18 @@ Public Enum TickFileVersions
 End Enum
 
 Public Enum FileTickTypes
-    bid = 1
-    bidSize
-    ask
+    Bid = 1
+    BidSize
+    Ask
     AskSize
     Last
-    lastSize
+    LastSize
     High
     Low
     PrevClose
     Volume
     LastSizeCorrection
-    marketDepth
+    MarketDepth
     MarketDepthReset
     OpenInterest
     SessionOpen
@@ -120,11 +120,11 @@ Public Enum ESignalTickFileFields
     TickType
     TimestampDate
     TimestampTime
-    lastPrice
-    lastSize
-    bidPrice = lastPrice
+    LastPrice
+    LastSize
+    BidPrice = LastPrice
     AskPrice
-    bidSize
+    BidSize
     AskSize
 End Enum
 
