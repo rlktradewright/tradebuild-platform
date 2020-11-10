@@ -299,7 +299,7 @@ Public Function gCreateContractSpecifierFromString(ByVal pSpecString As String) 
 Const ProcName As String = "gCreateContractSpecifierFromString"
 On Error GoTo Err
 
-Const ContractSpecRegex As String = "^(?:([a-zA-Z])+\:)?([a-zA-Z0-9][ a-zA-Z0-9\-]+)(?:@([a-zA-Z]+))?(?:\(([a-zA-Z]+)\))?$"
+Const ContractSpecRegex As String = "^(?:([a-zA-Z]+)\:)?([a-zA-Z0-9][ a-zA-Z0-9\-]+)(?:@([a-zA-Z]+))?(?:\(([a-zA-Z]+)\))?$"
 gRegExp.Pattern = ContractSpecRegex
 gRegExp.IgnoreCase = True
 
