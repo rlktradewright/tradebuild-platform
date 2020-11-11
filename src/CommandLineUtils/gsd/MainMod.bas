@@ -32,23 +32,23 @@ Private Const ModuleName                            As String = "MainMod"
 Private Const DefaultClientId                       As Long = 323115649
 
 Private Const AsyncCommand                          As String = "ASYNC"
+Private Const EchoCommand                           As String = "ECHO"
 Private Const ExitCommand                           As String = "EXIT"
 Private Const HelpCommand                           As String = "HELP"
 Private Const Help1Command                          As String = "?"
 Private Const InFileCommand                         As String = "INFILE"
 Private Const OutpuPathCommand                      As String = "OUTPUTPATH"
 Private Const ScanCommand                           As String = "SCAN"
+Private Const ScanEchoCommand                       As String = "SCANECHO"
+Private Const ResultFormatCommand                   As String = "RESULTFORMAT"
+Private Const EchoResultFormatCommand               As String = "ECHORESULTFORMAT"
 Private Const SetParamCommand                       As String = "SETPARAM"
 Private Const DateTimeFormatCommand                 As String = "DATETIMEFORMAT"
 
 Private Const SwitchApiMessageLogging               As String = "APIMESSAGELOGGING"
 Private Const SwitchCommandSeparator                As String = "SEP"
-Private Const SwitchOutputPath                      As String = "outputpath"
+Private Const SwitchOutputPath                      As String = "OUTPUTPATH"
 Private Const SwitchTws                             As String = "TWS"
-
-
-Private Const FilenameCharsPattern                  As String = "^[^/\*\?""<>|]*$"
-Private Const OutputPathPattern                     As String = "(?:{(\$\w*)})"
 
 Private Const NowVariable                           As String = "$NOW"
 Private Const ParametersVariable                    As String = "$PARAMETERS"
@@ -93,6 +93,7 @@ Private Const BenchmarkVariable                     As String = "$BENCHMARK"
 Private Const DistanceVariable                      As String = "$DISTANCE"
 Private Const LegsVariable                          As String = "$LEGS"
 Private Const ProjectionVariable                    As String = "$PROJECTION"
+Private Const NewlineVariable                       As String = "$NEWLINE"
 
 Private Const DateFormatRawParameter                As String = "RAW"
 Private Const DateFormatISOParameter                As String = "ISO"
@@ -100,6 +101,11 @@ Private Const DateFormatLocalParameter              As String = "LOCAL"
 
 Private Const AppendOperator                        As String = ">>"
 Private Const OverwriteOperator                     As String = ">"
+
+Private Const FilenameCharsPattern                  As String = "^[^/\*\?""<>|]*$"
+Private Const SubstitutionVariablePattern           As String = "(?:{(\$\w*)})"
+
+Private Const DefaultResultFormat                   As String = "{" & SecTypeAbbrvVariable & "}:{" & ContractVariable & "}"
 
 '@================================================================================
 ' Member variables
@@ -139,6 +145,9 @@ Private mTimestampDateOnlyFormat                    As TimestampFormats
 Private mTimestampTimeOnlyFormat                    As TimestampFormats
 
 Private mScanResultFormat                           As String
+Private mScanEchoResultFormat                       As String
+
+Private mEchoToStdOut                               As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -335,7 +344,7 @@ On Error GoTo Err
 Dim lRegExp As RegExp: Set lRegExp = gRegExp
 lRegExp.IgnoreCase = True
 
-lRegExp.Pattern = OutputPathPattern
+lRegExp.Pattern = SubstitutionVariablePattern
 lRegExp.Global = True
 
 Dim lMatches As MatchCollection
@@ -429,7 +438,7 @@ On Error GoTo Err
 Dim lRegExp As RegExp: Set lRegExp = gRegExp
 lRegExp.IgnoreCase = True
 
-lRegExp.Pattern = OutputPathPattern
+lRegExp.Pattern = SubstitutionVariablePattern
 lRegExp.Global = True
 
 Dim lMatches As MatchCollection
@@ -482,6 +491,8 @@ For Each lMatch In lMatches
         r = pScanResult.Attributes.GetParameterValue("Legs", "")
     Case ProjectionVariable
         r = pScanResult.Attributes.GetParameterValue("Projection", "")
+    Case NewlineVariable
+        r = vbCrLf
     Case Default
         Assert False, "Unexpected substitution variable: " & lVariable
     End Select
@@ -541,8 +552,6 @@ SetupDefaultLogging Command, True, True
 logProgramId
 
 setupSubstitutionVariables
-
-mScanResultFormat = "{" & SecTypeAbbrvVariable & "}:{" & ContractVariable & "}"
 
 mTimestampFormat = TimestampDateAndTimeISO8601
 mTimestampDateOnlyFormat = TimestampDateOnlyISO8601
@@ -649,18 +658,6 @@ Next
 escapeNonFilenameChars = ar
 End Function
 
-Private Function getInputLine() As String
-Const ProcName As String = "getInputLine"
-On Error GoTo Err
-
-getInputLine = Trim$(gCon.ReadLine(":"))
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Function getScanParameterVariable( _
                 ByVal pVariableName As String, _
                 ByVal pProcessor As ScanProcessor) As String
@@ -683,20 +680,7 @@ If Not lRegExp.Test(pPath) Then
     Exit Function
 End If
 
-lRegExp.Pattern = OutputPathPattern
-lRegExp.Global = True
-
-Dim lMatches As MatchCollection
-Set lMatches = lRegExp.Execute(pPath)
-
-Dim lMatch As Match
-For Each lMatch In lMatches
-    Dim lVariable As String: lVariable = lMatch.SubMatches(0)
-    If Not isValidFilenameSubstitutionVariable(lVariable) Then
-        gWriteErrorLine lVariable & " is not a valid substitution variable"
-        isValidPath = False
-    End If
-Next
+isValidPath = isValidSubstitutableString(pPath, mFilenameSubstitutionVariables, mMaxFilenameVariablesIndex)
 
 Exit Function
 
@@ -704,20 +688,48 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function isValidFilenameSubstitutionVariable(ByVal pString As String) As Boolean
-isValidFilenameSubstitutionVariable = BinarySearchStrings( _
+Private Function isValidSubstitutionVariable( _
+                ByVal pString As String, _
+                ByRef pSubstitutionVariables() As String, _
+                ByVal pMaxVariablesIndex As Long) As Boolean
+isValidSubstitutionVariable = BinarySearchStrings( _
                                 UCase$(pString), _
-                                mFilenameSubstitutionVariables, _
+                                pSubstitutionVariables, _
                                 0, _
-                                mMaxFilenameVariablesIndex + 1) >= 0
+                                pMaxVariablesIndex + 1) >= 0
 End Function
 
-Private Function isValidResultSubstitutionVariable(ByVal pString As String) As Boolean
-isValidResultSubstitutionVariable = BinarySearchStrings( _
-                                UCase$(pString), _
-                                mResultSubstitutionVariables, _
-                                0, _
-                                mMaxResultVariablesIndex + 1) >= 0
+Private Function isValidSubstitutableString( _
+                ByVal pInput As String, _
+                ByRef pSubstitutionVariables() As String, _
+                ByVal pMaxVariablesIndex As Long) As Boolean
+Const ProcName As String = "isValidSubstitutableString"
+On Error GoTo Err
+
+isValidSubstitutableString = True
+
+Dim lRegExp As RegExp: Set lRegExp = gRegExp
+lRegExp.IgnoreCase = True
+
+lRegExp.Pattern = SubstitutionVariablePattern
+lRegExp.Global = True
+
+Dim lMatches As MatchCollection
+Set lMatches = lRegExp.Execute(pInput)
+
+Dim lMatch As Match
+For Each lMatch In lMatches
+    Dim lVariable As String: lVariable = lMatch.SubMatches(0)
+    If Not isValidSubstitutionVariable(lVariable, pSubstitutionVariables, pMaxVariablesIndex) Then
+        gWriteErrorLine lVariable & " is not a valid substitution variable"
+        isValidSubstitutableString = False
+    End If
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logProgramId()
@@ -799,6 +811,8 @@ params = Trim$(Right$(pCommandString, Len(pCommandString) - Len(lCommand)))
 Select Case lCommand
 Case ScanCommand
     processScanCommand params
+Case ScanEchoCommand
+    processScanEchoCommand params
 Case SetParamCommand
     processSetParamCommand params
 Case HelpCommand, Help1Command
@@ -811,6 +825,12 @@ Case DateTimeFormatCommand
     processDateTimeFormatCommand params
 Case InFileCommand
     processInfileCommand params
+Case EchoCommand
+    processEchoCommand params
+Case ResultFormatCommand
+    processResultFormatCommand params
+Case EchoResultFormatCommand
+    processEchoResultFormatCommand params
 Case Else
     gCon.WriteErrorLine "Invalid command '" & lCommand & "'"
 End Select
@@ -900,6 +920,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processEchoCommand(ByVal params As String)
+Const ProcName As String = "processEchoCommand"
+On Error GoTo Err
+
+gWriteLineToStdOut params
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processEchoResultFormatCommand(pParams As String)
+If isValidSubstitutableString( _
+                pParams, _
+                mResultSubstitutionVariables, _
+                mMaxResultVariablesIndex) Then mScanEchoResultFormat = pParams
+End Sub
+
 Private Sub processInfileCommand( _
                 ByVal params As String)
 Const ProcName As String = "processInfileCommand"
@@ -950,6 +989,13 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processResultFormatCommand(pParams As String)
+If isValidSubstitutableString( _
+                pParams, _
+                mResultSubstitutionVariables, _
+                mMaxResultVariablesIndex) Then mScanResultFormat = pParams
 End Sub
 
 Private Sub processScanCommand(ByVal pParams As String)
@@ -1034,6 +1080,9 @@ mProcessors.Add lScanProcessor
 'mScanParams.SetParameterValue "ScannerSettingPairs", "Annual,true"
 'mScanParams.SetParameterValue "LocationCode", "STK.ARCA"
 
+If mScanResultFormat = "" Then mScanResultFormat = DefaultResultFormat
+If mScanEchoResultFormat = "" Then mScanEchoResultFormat = DefaultResultFormat
+
 lScanProcessor.Scan mHistDataStore, _
                     lScanCode, _
                     mScanParams, _
@@ -1041,14 +1090,21 @@ lScanProcessor.Scan mHistDataStore, _
                     Nothing, _
                     False, _
                     mScanResultFormat, _
+                    mScanEchoResultFormat, _
                     mOutputPath, _
                     lPathAndFilename, _
-                    lAppend
+                    lAppend, _
+                    mEchoToStdOut
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processScanEchoCommand(ByVal pParams As String)
+mEchoToStdOut = True
+processScanCommand pParams
 End Sub
 
 Private Sub processSetParamCommand( _
@@ -1074,7 +1130,9 @@ Do
     If lInputString = gCon.EofString Or UCase$(lInputString) = ExitCommand Then Exit Do
         
     If lInputString = "" Then
-        ' ignore blank lines
+        ' ignore blank lines, but echo them to StdOut when
+        ' piping to another program
+        If gCon.StdOutType = FileTypePipe Then gCon.WriteLine ""
     ElseIf Left$(lInputString, 1) = "#" Then
         LogMessage "con: " & lInputString
         ' ignore comments
@@ -1145,6 +1203,7 @@ addResultSubstitutionVariable BenchmarkVariable
 addResultSubstitutionVariable DistanceVariable
 addResultSubstitutionVariable LegsVariable
 addResultSubstitutionVariable ProjectionVariable
+addResultSubstitutionVariable NewlineVariable
 
 SortStrings mResultSubstitutionVariables, EndIndex:=mMaxResultVariablesIndex
 End Sub
@@ -1175,7 +1234,7 @@ End If
 Dim clientId As String
 clientId = lClp.Arg(2)
 If clientId = "" Then
-    clientId = DefaultClientId
+    mClientId = DefaultClientId
 ElseIf Not IsInteger(clientId, 0, 999999999) Then
     gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999"
     setupTwsApi = False
@@ -1237,7 +1296,6 @@ gWriteLineToConsole "       [-scan:scanname]"
 gWriteLineToConsole "       [-resultsdir:<resultspath>] [-log:<logfilepath>]"
 gWriteLineToConsole "       [-loglevel:[ I | N | D | M | H }]"
 gWriteLineToConsole "       [-apimessagelogging:[D|A|N][D|A|N][Y|N]]"
-gWriteLineToConsole "       [-scopename:<scope>] [-recoveryfiledir:<recoverypath>]"
 gWriteLineToConsole ""
 gWriteLineToConsole "  where"
 gWriteLineToConsole ""
@@ -1251,8 +1309,6 @@ gWriteLineToConsole "                    (defaults to the logfile path)"
 gWriteLineToConsole "    logfilepath ::= path to the folder where the program logfile is to be"
 gWriteLineToConsole "                    created"
 gWriteLineToConsole "    scanname       ::= name of the market scan to run"
-gWriteLineToConsole "    recoverypath ::= path to the folder in which order recovery files are to"
-gWriteLineToConsole "                     be created(defaults to the logfile path)"
 gWriteLineToConsole ""
 End Sub
 

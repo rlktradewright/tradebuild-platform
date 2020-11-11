@@ -11,11 +11,12 @@ setlocal enableextensions enabledelayedexpansion
 ::   ignored.                                                                  +
 ::                                                                             +
 ::   If the first argument is a filename, the program reads the file from      +
-::   the INPUTFILES directory and actions it. Any other arguments are          +
-::   ignored.                                                                  +
+::   the directory specified by the INPUTFILESDIR setting (see below) and      +
+::   actions it. Any other arguments are ignored.                              +
 ::                                                                             +
-::   If there are no arguments, the program monitors the INPUTFILES            +
-::   directory and actions any files that are subsequently placed in it.       +
+::   If there are no arguments, the program monitors the INPUTFILESDIR         +
+::   directory and actions any commandfiles that are subsequently placed in    +
+::   it.                                                                       +
 ::                                                                             +
 ::   You may wish to change some of the settings below, but it should work     +
 ::   well without changes if TWS is running on this computer, and the          +
@@ -43,9 +44,12 @@ set APIMESSAGELOGGING=NNN
 set FILEFILTER=gsd*.txt
 set INPUTFILESDIR=%TOPDIR%\InputFiles
 set ARCHIVEDIR=%TOPDIR%\Archive
-set OUTPUTDIR=%TOPDIR%\ScanData\Scan-{$scancode}\scan {$timestamp}.txt
+set OUTPUTDIR=%TOPDIR%\ScanData\Scan-{$scancode}\scan {$today}.txt
 
 set BIN=
+
+set PIPELINE=
+
 
 
 ::              PLEASE DON'T CHANGE ANYTHING BELOW THIS LINE !!
@@ -127,15 +131,37 @@ set BIN=
 ::   is not necessarily a complete record of all order files processed.
 ::
 :: OUTPUTDIR
-::   Set this to the path for the folder where scan results files
-::   are to be stored (unless otherwise specified by commands). You can include
-::   a filename and both the path and filename can include substitution
+::   Set this to the path for the folder where scan results files are to be
+::   stored (unless otherwise specified by commands). You can include a
+::   filename and both the path and filename can include substitution
 ::   variables.
 ::
 :: BIN
 ::   Set this to the folder that contains the TradeBuild Platform programs.
-::   If you installed TradeBuild Platform using the .msi installer using the 
+::   If you installed TradeBuild Platform using the .msi installer with the 
 ::   default installation location, there should be no reason to set this value.
+::
+::
+:: PIPELINE
+::   Set this to a command into which will be piped any output from the GSD27
+::   program resulting from use of a SCANECHO command. Typical use is to pipe
+::   the output to the GBD27 program to download historical bars for the
+::   contracts returned by the scan(s).
+::
+::   Note that the ECHO command in GSD72 can be used to run commands in the
+::   target program: in the case of the target program being GBD27, the ECHO
+::   command could be used to set the required timefrae, start and end times,
+::   number of bars, and so on.
+::
+::   Note also that the ECHORESULTFORMAT command in GSD27 can be used to control
+::   the format of the output from SCANECHO commands, such that this output
+::   forms one or more valid commands for the target program.
+::
+::   For example, a typical value of this setting for piping into the GBD27 program
+::   could be:
+::
+::   set PIPELINE=GBD27 -fromtws:"%TWSSERVER%,%PORT%" -log:%TOPDIR%\Log\gbd27.log
+::
 ::
 ::
 ::

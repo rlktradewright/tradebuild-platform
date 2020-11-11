@@ -19,7 +19,7 @@ if not defined GSD_CLIENTID  (
 	if defined CLIENTID  (
 		set GSD_CLIENTID=%CLIENTID%
 	) else (
-		set GSD_CLIENTID=777
+		set GSD_CLIENTID=
 	)
 )
 
@@ -67,11 +67,13 @@ if %GSD_PORT% GTR 65535 (
 	exit /B 1
 )
 
-if %GSD_CLIENTID% LSS 1 (
+if "%GSD_CLIENTID%"=="" (
+	echo. > nul
+) else if 0%GSD_CLIENTID% LSS 1 (
 	echo GSD_CLIENTID=%GSD_CLIENTID% is invalid: it must be between 1 and 999999999
 	exit /B 1
 )
-if %GSD_CLIENTID% GTR 999999999 (
+if 0%GSD_CLIENTID% GTR 999999999 (
 	echo GSD_CLIENTID=%GSD_CLIENTID% is invalid: it must be between 1 and 999999999
 	exit /B 1
 )
@@ -101,13 +103,31 @@ if not defined APIMESSAGELOGGING (
 	set APIMESSAGELOGGING=NNN
 )
 
-set RUN_GSD=GSD27 -tws:"%GSD_TWSSERVER%,%GSD_PORT%,%GSD_CLIENTID%" -OUTPUTPATH:"%GSD_OUTPUTDIR%" -log:"%GSD_LOG%" -loglevel:%GSD_LOGLEVEL% -apimessagelogging:%APIMESSAGELOGGING%
+set RUN_GSD=GSD27 -tws:"%GSD_TWSSERVER%,%GSD_PORT%,%GSD_CLIENTID%" ^
+-outputpath:"%GSD_OUTPUTDIR%" ^
+-log:"%GSD_LOG%" ^
+-loglevel:%GSD_LOGLEVEL% ^
+-apimessagelogging:%APIMESSAGELOGGING%
+
 pushd "%GSD_BIN%"
-if /I "%~1"=="/I" (
-	%RUN_GSD%
-) else if "%~1" == "" (
-	fileautoreader "%GSD_INPUTFILESDIR%" "%GSD_FILEFILTER%" "%GSD_ARCHIVEDIR%" | %RUN_GSD%
-) else (
-	TYPE "%GSD_INPUTFILESDIR%\%~1" |  %RUN_GSD%
+if not defined PIPELINE (
+	if /I "%~1"=="/I" (
+		%RUN_GSD%
+	) else if "%~1" == "" (
+		fileautoreader "%GSD_INPUTFILESDIR%" "%GSD_FILEFILTER%" "%GSD_ARCHIVEDIR%" | %RUN_GSD%
+	) else (
+		TYPE "%GSD_INPUTFILESDIR%\%~1" |  %RUN_GSD%
+	)
+	popd
+	exit /B 0
 )
+
+if /I "%~1"=="/I" (
+	%RUN_GSD% | %PIPELINE%
+) else if "%~1" == "" (
+	fileautoreader "%GSD_INPUTFILESDIR%" "%GSD_FILEFILTER%" "%GSD_ARCHIVEDIR%" | %RUN_GSD%  | %PIPELINE%
+) else (
+	TYPE "%GSD_INPUTFILESDIR%\%~1" |  %RUN_GSD% | %PIPELINE%
+)
+
 popd

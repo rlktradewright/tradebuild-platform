@@ -115,7 +115,7 @@ Private Const DefaultClientId                       As Long = 205644991
 Private Const Time235900                            As Double = 0.99930556712963
 
 Private Const FilenameCharsPattern                  As String = "^[^/\*\?""<>|]*$"
-Private Const OutputPathPattern                     As String = "(?:{(\$\w*)})"
+Private Const SubstitutionVariablePattern           As String = "(?:{(\$\w*)})"
 
 '@================================================================================
 ' Member variables
@@ -450,7 +450,7 @@ Set lContractSpec = pProcessor.ContractSpec
 Dim lRegExp As RegExp: Set lRegExp = gRegExp
 lRegExp.IgnoreCase = True
 
-lRegExp.Pattern = OutputPathPattern
+lRegExp.Pattern = SubstitutionVariablePattern
 lRegExp.Global = True
 
 Dim lMatches As MatchCollection
@@ -698,7 +698,7 @@ If Not lRegExp.Test(pPath) Then
     Exit Function
 End If
 
-lRegExp.Pattern = OutputPathPattern
+lRegExp.Pattern = SubstitutionVariablePattern
 lRegExp.Global = True
 
 Dim lMatches As MatchCollection
@@ -1414,7 +1414,9 @@ Do
         mLineNumber = mLineNumber + 1
         
         If lInputString = "" Then
-            ' ignore blank lines
+            ' ignore blank lines, but echo them to StdOut when
+            ' piping to another program
+            If gCon.StdOutType = FileTypePipe Then gCon.WriteLine ""
         ElseIf Left$(lInputString, 1) = "#" Then
             LogMessage "con: " & lInputString
             ' ignore comments

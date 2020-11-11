@@ -7,15 +7,16 @@ setlocal enableextensions enabledelayedexpansion
 ::   data from IBKR's Trader Workstation or Gateway.                           + 
 ::                                                                             +
 ::   If the first argument is /I, the program is run in interactive mode,      +
-::   meaning that you must type commnds manually. Any other arguments are      +
+::   meaning that you must type commands manually. Any other arguments are     +
 ::   ignored.                                                                  +
 ::                                                                             +
 ::   If the first argument is a filename, the program reads the file from      +
-::   the INPUTFILES directory and actions it. Any other arguments are          +
-::   ignored.                                                                  +
+::   the directory specified by the INPUTFILESDIR setting (see below) and      +
+::   actions it. Any other arguments are ignored.                              +
 ::                                                                             +
-::   If there are no arguments, the program monitors the INPUTFILES            +
-::   directory and actions any files that are subsequently placed in it.       +
+::   If there are no arguments, the program monitors the INPUTFILESDIR         +
+::   directory and actions any commandfiles that are subsequently placed in    +
+::   it.                                                                       +
 ::                                                                             +
 ::   You may wish to change some of the settings below, but it should work     +
 ::   well without changes if TWS is running on this computer, and the          +
@@ -134,7 +135,7 @@ set BIN=
 ::
 :: BIN
 ::   Set this to the folder that contains the TradeBuild Platform programs.
-::   If you installed TradeBuild Platform using the .msi installer using the 
+::   If you installed TradeBuild Platform using the .msi installer with the 
 ::   default installation location, there should be no reason to set this value.
 ::
 ::

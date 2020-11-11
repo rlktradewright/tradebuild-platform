@@ -51,10 +51,13 @@ Private mScanName                                   As String
 Private mScanParameters                             As Parameters
 
 Private mScanResultFormat                           As String
+Private mScanEchoResultFormat                       As String
 
 Private mOutputPath                                 As String
 Private mOutputFilename                             As String
 Private mAppend                                     As Boolean
+
+Private mEchoToStdOut                               As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -102,11 +105,8 @@ Else
         
     Dim lScanResult As IScanResult
     For Each lScanResult In lScanResults
-        If lStream Is Nothing Then
-            gWriteLineToStdOut formatScanResult(lScanResult)
-        Else
-            lStream.WriteLine formatScanResult(lScanResult)
-        End If
+        If lStream Is Nothing Or mEchoToStdOut Then gWriteLineToStdOut formatScanResult(lScanResult, True)
+        If Not lStream Is Nothing Then lStream.WriteLine formatScanResult(lScanResult, False)
     Next
 End If
 
@@ -142,18 +142,24 @@ Friend Sub Scan( _
                 ByVal pFilters As Parameters, _
                 ByVal pAutoRefresh As Boolean, _
                 ByVal pScanResultFormat As String, _
+                ByVal pScanEchoResultFormat As String, _
                 ByVal pOutputPath As String, _
                 ByVal pOutputFilename As String, _
-                ByVal pAppend As Boolean)
+                ByVal pAppend As Boolean, _
+                ByVal pEchoToStdOut As Boolean)
 Const ProcName As String = "Scan"
 On Error GoTo Err
 
 mScanName = pScanName
 Set mScanParameters = pScanParameters
 mScanResultFormat = pScanResultFormat
+mScanEchoResultFormat = pScanEchoResultFormat
 
 mOutputPath = pOutputPath
 mOutputFilename = pOutputFilename
+
+mAppend = pAppend
+mEchoToStdOut = pEchoToStdOut
 
 Set mFutureWaiter = New FutureWaiter
 mFutureWaiter.Add pHistDataStore.ScanMarket( _
@@ -175,12 +181,13 @@ End Sub
 '@================================================================================
 
 Private Function formatScanResult( _
-                ByVal pScanResult As IScanResult) As String
+                ByVal pScanResult As IScanResult, _
+                ByVal pUseEchoFormat As Boolean) As String
 Const ProcName As String = "formatScanResult"
 On Error GoTo Err
 
 formatScanResult = gPerformResultVariableSubstitution( _
-                        mScanResultFormat, _
+                        IIf(pUseEchoFormat, mScanEchoResultFormat, mScanResultFormat), _
                         pScanResult)
 
 Exit Function
