@@ -531,12 +531,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_2C418D1F4E0045C5A014FF02FD73CFC5"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_2D9EFF332147FC74042FC2DA8290BCC0"
         "OwnerKey" = "8:_EC45378A134444408F6E9664A2C49534"
         "MsmSig" = "8:_UNDEFINED"
@@ -1540,6 +1534,12 @@
         "Entry"
         {
         "MsmKey" = "8:_99E90B177F3E4B278FC2B65E4A659EDD"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_9A3BD9AB9B284C7691DEF7DD6574D270"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -4311,7 +4311,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.244.msi"
+        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.245.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -10280,15 +10280,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{A428C5B2-44CC-4964-80CD-B33F9FE1A662}"
-        "PackageCode" = "8:{86DC069C-D2C4-4C71-8C67-DBBA40299F3C}"
-        "UpgradeCode" = "8:{4E270319-B7DC-407F-9826-A16FF5AB08A7}"
+        "ProductCode" = "8:{7A5D2D2E-D82C-4914-AD31-F0629F97E8BF}"
+        "PackageCode" = "8:{25100682-8AD6-45D9-A011-AED2ADAF8692}"
+        "UpgradeCode" = "8:{E468A18D-FBDF-40C8-BCC2-77899A116238}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.7.244"
+        "ProductVersion" = "8:2.7.245"
         "Manufacturer" = "8:TradeWright Software Systems"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -10296,7 +10296,7 @@
         "Subject" = "8:"
         "ARPCONTACT" = "8:Richard L King"
         "Keywords" = "8:"
-        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.244"
+        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.245"
         "ARPURLINFOABOUT" = "8:"
         "ARPPRODUCTICON" = "8:"
         "ARPIconIndex" = "3:0"
@@ -10947,11 +10947,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_2C418D1F4E0045C5A014FF02FD73CFC5"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_9A3BD9AB9B284C7691DEF7DD6574D270"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.244.msm"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.245.msm"
                 "Properties"
                 {
                     "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
