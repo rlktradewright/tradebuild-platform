@@ -125,7 +125,6 @@ Private mScanParams                                 As Parameters
 Private mProcessors                                 As New EnumerableCollection
 
 Private mTwsClient                                  As Client
-Private mClientId                                   As Long
 Private mProviderReady                              As Boolean
 
 Private mAsync                                      As Boolean
@@ -1222,24 +1221,26 @@ Set lClp = CreateCommandLineParser(SwitchValue, ",")
 Dim server As String
 server = lClp.Arg(0)
 
-Dim port As String
-port = lClp.Arg(1)
-If port = "" Then
+Dim portStr As String: portStr = lClp.Arg(1)
+Dim port As Long
+If portStr = "" Then
     port = 7496
-ElseIf Not IsInteger(port, 0) Then
+ElseIf Not IsInteger(portStr, 0) Then
     gWriteErrorLine "port must be an integer > 0"
     setupTwsApi = False
+Else
+    port = CLng(portStr)
 End If
     
-Dim clientId As String
-clientId = lClp.Arg(2)
-If clientId = "" Then
-    mClientId = DefaultClientId
-ElseIf Not IsInteger(clientId, 0, 999999999) Then
+Dim clientIdStr As String: clientIdStr = lClp.Arg(2)
+Dim clientID As Long
+If clientIdStr = "" Then
+    clientID = DefaultClientId
+ElseIf Not IsInteger(clientIdStr, 0, 999999999) Then
     gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999"
     setupTwsApi = False
 Else
-    mClientId = CLng(clientId)
+    clientID = CLng(clientIdStr)
 End If
 
 Dim connectionRetryInterval As String
@@ -1250,20 +1251,22 @@ ElseIf Not IsInteger(connectionRetryInterval, 0, 3600) Then
     setupTwsApi = False
 End If
 
+If Not setupTwsApi Then Exit Function
+
 Dim lListener As New TWSConnectionMonitor
 
 If connectionRetryInterval = "" Then
     Set mTwsClient = GetClient(server, _
-                            CLng(port), _
-                            mClientId, _
+                            port, _
+                            clientID, _
                             pLogApiMessages:=pLogApiMessages, _
                             pLogRawApiMessages:=pLogRawApiMessages, _
                             pLogApiMessageStats:=pLogApiMessageStats, _
                             pConnectionStateListener:=lListener)
 Else
     Set mTwsClient = GetClient(server, _
-                            CLng(port), _
-                            mClientId, _
+                            port, _
+                            clientID, _
                             pConnectionRetryIntervalSecs:=CLng(connectionRetryInterval), _
                             pLogApiMessages:=pLogApiMessages, _
                             pLogRawApiMessages:=pLogRawApiMessages, _
