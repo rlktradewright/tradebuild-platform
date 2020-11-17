@@ -223,20 +223,20 @@ With lSubscription
     .NumberOfRows = pParameters.GetParameterValue("NumberOfRows", CStr(&H7FFFFFFF))
     .Instrument = UCase$(pParameters.GetParameterValue("Instrument", ""))
     .LocationCode = UCase$(pParameters.GetParameterValue("LocationCode", ""))
-    updateDoubleFromParameters .AbovePrice, pParameters, "AbovePrice", MaxDouble
-    updateDoubleFromParameters .BelowPrice, pParameters, "BelowPrice", MaxDouble
+    .AbovePrice = updateDoubleFromParameters(.AbovePrice, pParameters, "AbovePrice", MaxDouble)
+    .BelowPrice = updateDoubleFromParameters(.BelowPrice, pParameters, "BelowPrice", MaxDouble)
     .AboveVolume = pParameters.GetParameterValue("AboveVolume", CStr(&H7FFFFFFF))
     .AverageOptionVolumeAbove = pParameters.GetParameterValue("AverageOptionVolumeAbove", CStr(&H7FFFFFFF))
-    updateDoubleFromParameters .MarketCapAbove, pParameters, "MarketCapAbove", MaxDouble
-    updateDoubleFromParameters .MarketCapBelow, pParameters, "MarketCapBelow", MaxDouble
+    .MarketCapAbove = updateDoubleFromParameters(.MarketCapAbove, pParameters, "MarketCapAbove", MaxDouble)
+    .MarketCapBelow = updateDoubleFromParameters(.MarketCapBelow, pParameters, "MarketCapBelow", MaxDouble)
     .MoodyRatingAbove = UCase$(pParameters.GetParameterValue("MoodyRatingAbove", ""))
     .MoodyRatingBelow = UCase$(pParameters.GetParameterValue("MoodyRatingBelow", ""))
     .SpRatingAbove = UCase$(pParameters.GetParameterValue("SpRatingAbove", ""))
     .SpRatingBelow = UCase$(pParameters.GetParameterValue("SpRatingBelow", ""))
     .MaturityDateAbove = pParameters.GetParameterValue("MaturityDateAbove", "")
     .MaturityDateBelow = pParameters.GetParameterValue("MaturityDateBelow", "")
-    updateDoubleFromParameters .CouponRateAbove, pParameters, "CouponRateAbove", MaxDouble
-    updateDoubleFromParameters .CouponRateBelow, pParameters, "CouponRateBelow", MaxDouble
+    .CouponRateAbove = updateDoubleFromParameters(.CouponRateAbove, pParameters, "CouponRateAbove", MaxDouble)
+    .CouponRateBelow = updateDoubleFromParameters(.CouponRateBelow, pParameters, "CouponRateBelow", MaxDouble)
     .ExcludeConvertible = pParameters.GetParameterValue("ExcludeConvertible", "False")
     .ScannerSettingPairs = UCase$(pParameters.GetParameterValue("ScannerSettingPairs", ""))
     .StockTypeFilter = UCase$(pParameters.GetParameterValue("StockTypeFilter", ""))
@@ -273,24 +273,24 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Sub updateDoubleFromParameters( _
-                ByRef pTarget As Double, _
+Private Function updateDoubleFromParameters( _
+                ByVal pCurrentValue As Double, _
                 ByVal pParams As Parameters, _
                 ByVal pParamName As String, _
-                ByVal pDefault As Double)
+                ByVal pDefault As Double) As Double
 Const ProcName As String = "updateDoubleFromParameters"
 On Error GoTo Err
 
 If pParams.GetParameterValue(pParamName, "") <> "" Then
-    pTarget = CDbl(pParams.GetParameterValue(pParamName))
+    updateDoubleFromParameters = CDbl(pParams.GetParameterValue(pParamName))
 Else
-    pTarget = pDefault
+    updateDoubleFromParameters = pDefault
 End If
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 
