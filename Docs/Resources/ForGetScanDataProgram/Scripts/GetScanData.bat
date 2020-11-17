@@ -66,18 +66,20 @@ if %GSD_PORT% GTR 65535 (
 	echo GSD_PORT=%GSD_PORT% is invalid: it must be between 1024 and 65535
 	exit /B 1
 )
-
-if "%GSD_CLIENTID%"=="" (
+ECHO ON 
+if "%GSD_CLIENTID%0"=="0" (
 	echo. > nul
-) else if 0%GSD_CLIENTID% LSS 1 (
+) else if %GSD_CLIENTID%0 LSS 10 (
 	echo GSD_CLIENTID=%GSD_CLIENTID% is invalid: it must be between 1 and 999999999
 	exit /B 1
 )
-if 0%GSD_CLIENTID% GTR 999999999 (
+if "1%GSD_CLIENTID%"=="1" (
+	echo. > nul
+) else if 1%GSD_CLIENTID% GTR 1999999999 (
 	echo GSD_CLIENTID=%GSD_CLIENTID% is invalid: it must be between 1 and 999999999
 	exit /B 1
 )
-
+ECHO OFF
 if /I "%GSD_LOGLEVEL%"=="N" (
 	echo. > nul
 ) else if /I "%GSD_LOGLEVEL%"=="D" (
