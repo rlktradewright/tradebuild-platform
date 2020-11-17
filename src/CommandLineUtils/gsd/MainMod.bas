@@ -1215,6 +1215,8 @@ Private Function setupTwsApi( _
 Const ProcName As String = "setupTwsApi"
 On Error GoTo Err
 
+setupTwsApi = True
+
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(SwitchValue, ",")
 
