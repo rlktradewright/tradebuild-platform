@@ -927,12 +927,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_582FF58E8A844833A5E0CE74D01CFB4F"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_5B893CB2E05F38B3C8F9AD40C4C26D59"
         "OwnerKey" = "8:_F150A60F9D7D42BCA6C234AF0F1CE8DF"
         "MsmSig" = "8:_UNDEFINED"
@@ -2248,6 +2242,12 @@
         "Entry"
         {
         "MsmKey" = "8:_CED00A5C13E84BC3B6177498105090F6"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_CF6DE9E3C5EC4E68B0E587F42D141BE8"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -4299,7 +4299,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.246.msi"
+        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.247.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -10263,15 +10263,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{66283111-88BE-4C45-8EFB-31EE37EE4F16}"
-        "PackageCode" = "8:{D324F1FD-B0F7-4180-AC60-5019AF71E92B}"
+        "ProductCode" = "8:{75E0A7BD-8BE8-416A-BC56-3B4D97F474F4}"
+        "PackageCode" = "8:{633BE30E-A2C6-4F3E-B862-7B81AE7B6CA1}"
         "UpgradeCode" = "8:{E468A18D-FBDF-40C8-BCC2-77899A116238}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.7.246"
+        "ProductVersion" = "8:2.7.247"
         "Manufacturer" = "8:TradeWright Software Systems"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -10279,7 +10279,7 @@
         "Subject" = "8:"
         "ARPCONTACT" = "8:Richard L King"
         "Keywords" = "8:"
-        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.246"
+        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.247"
         "ARPURLINFOABOUT" = "8:"
         "ARPPRODUCTICON" = "8:"
         "ARPIconIndex" = "3:0"
@@ -10930,16 +10930,16 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_582FF58E8A844833A5E0CE74D01CFB4F"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_9FE6139182DD4565BA6F5BCBD77AD6A7"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.246.msm"
+            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-122.msm"
                 "Properties"
                 {
-                    "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
                     {
-                    "Name" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
                     "DisplayName" = "8:Module Retargetable Folder"
                     "Description" = "8:"
                     "Type" = "3:32769"
@@ -10955,16 +10955,16 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_9FE6139182DD4565BA6F5BCBD77AD6A7"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_CF6DE9E3C5EC4E68B0E587F42D141BE8"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-122.msm"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.247.msm"
                 "Properties"
                 {
-                    "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
+                    "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
                     {
-                    "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
+                    "Name" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
                     "DisplayName" = "8:Module Retargetable Folder"
                     "Description" = "8:"
                     "Type" = "3:32769"
