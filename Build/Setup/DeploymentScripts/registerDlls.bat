@@ -95,7 +95,7 @@ if errorlevel 1 goto :err
 call registerComponent.bat TradingDBApi dll
 if errorlevel 1 goto :err
 
-call registerComponent.bat IBAPI dll
+call registerComponent.bat IBAPIV100 dll
 if errorlevel 1 goto :err
 
 call registerComponent.bat IBEnhAPI dll
