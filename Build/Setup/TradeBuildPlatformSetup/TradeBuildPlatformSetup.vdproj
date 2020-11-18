@@ -10263,7 +10263,7 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{DAC6C450-3F67-4D2E-BDB3-B20BC038A40C}"
+        "ProductCode" = "8:{66283111-88BE-4C45-8EFB-31EE37EE4F16}"
         "PackageCode" = "8:{D324F1FD-B0F7-4180-AC60-5019AF71E92B}"
         "UpgradeCode" = "8:{E468A18D-FBDF-40C8-BCC2-77899A116238}"
         "AspNetVersion" = "8:4.0.30319.0"

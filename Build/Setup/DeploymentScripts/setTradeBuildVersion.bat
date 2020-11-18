@@ -1,1 +1,1 @@
-call setversion.bat 2 7 246
+call setversion.bat 2 7 247
