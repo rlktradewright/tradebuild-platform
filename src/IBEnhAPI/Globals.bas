@@ -960,23 +960,95 @@ Public Function gTwsTimezoneNameToStandardTimeZoneName(ByVal pTimeZoneId As Stri
 Const ProcName As String = "gTwsTimezoneNameToStandardTimeZoneName"
 On Error GoTo Err
 
+' Some of this list of timezone names comes from the Requesting Contract
+' Details section of IBKR's API documentation at:
+'
+' https://interactivebrokers.github.io/tws-api/contract_details.html
+'
+' Other names have been collected over the years as IBKR has changed them (but
+' are probably no longer likely to be encountered).
+'
+'Africa/Johannesburg
+'
+'Asia/Calcutta
+'
+'Australia/NSW
+'
+'Europe/Budapest
+'Europe/Helsinki
+'Europe/Moscow
+'Europe/Riga
+'Europe/Tallinn
+'Europe/Warsaw
+'Europe/Vilnius
+'
+'GB-Eire
+'
+'GMT
+'
+'Hongkong
+'
+'Israel
+'
+'Japan
+'
+'MET
+'
+'US/Central
+'US/Eastern
+'US/Pacific
+
+
 Select Case pTimeZoneId
 Case ""
     gTwsTimezoneNameToStandardTimeZoneName = ""
-Case "AET", "AEST (Australian Eastern Standard Time (New South Wales))"
+Case "Australia/NSW", _
+        "AET", _
+        "AEST (Australian Eastern Standard Time (New South Wales))"
     gTwsTimezoneNameToStandardTimeZoneName = "AUS Eastern Standard Time"
-Case "Asia/Hong_Kong"
-    gTwsTimezoneNameToStandardTimeZoneName = "China Standard Time"
-Case "CST", "CTT", "CST (Central Standard Time)"
+Case "Europe/Budapest", _
+        "Europe/Warsaw", _
+        "MET", _
+        "MET (Middle Europe Time)"
+    gTwsTimezoneNameToStandardTimeZoneName = "Central Europe Standard Time"
+Case "CST", _
+        "CTT", _
+        "CST (Central Standard Time)", _
+        "US/Central"
     gTwsTimezoneNameToStandardTimeZoneName = "Central Standard Time"
-Case "GMT", "GB", "GMT (Greenwich Mean Time)", "BST (British Summer Time)"
-    gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
-Case "EST", "EST5EDT", "EST (Eastern Standard Time)"
+Case "Asia/Hong_Kong", _
+        "Hongkong"
+    gTwsTimezoneNameToStandardTimeZoneName = "China Standard Time"
+Case "Europe/Helsinki", _
+        "Europe/Riga", _
+        "Europe/Tallinn", _
+        "Europe/Vilnius"
+    gTwsTimezoneNameToStandardTimeZoneName = "E. Europe Standard Time"
+Case "EST", _
+        "EST5EDT", _
+        "EST (Eastern Standard Time)", _
+        "US/Eastern"
     gTwsTimezoneNameToStandardTimeZoneName = "Eastern Standard Time"
-Case "PST", "Pacific/Pitcairn"
+Case "GB", _
+        "GB-Eire", _
+        "GMT", _
+        "GMT (Greenwich Mean Time)", _
+        "BST (British Summer Time)"
+    gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
+Case "Asia/Calcutta"
+    gTwsTimezoneNameToStandardTimeZoneName = "India Standard Time"
+Case "Israel"
+    gTwsTimezoneNameToStandardTimeZoneName = "Middle East Standard Time"
+Case "PST", _
+        "US/Pacific", _
+        "Pacific/Pitcairn"
     gTwsTimezoneNameToStandardTimeZoneName = "Pacific Standard Time"
-Case "MET", "MET (Middle Europe Time)"
-    gTwsTimezoneNameToStandardTimeZoneName = "Romance Standard Time"
+Case "Europe/Moscow"
+    gTwsTimezoneNameToStandardTimeZoneName = "Russian Standard Time"
+Case "Africa/Johannesburg"
+    gTwsTimezoneNameToStandardTimeZoneName = "South Africa Standard Time"
+Case "Japan"
+    gTwsTimezoneNameToStandardTimeZoneName = "Tokyo Standard Time"
 Case Else
     gLog "Unrecognised timezone: " & pTimeZoneId, ModuleName, ProcName, , LogLevelSevere
     gTwsTimezoneNameToStandardTimeZoneName = ""
