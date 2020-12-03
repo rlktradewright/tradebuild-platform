@@ -72,6 +72,9 @@ End Property
 Public Property Get NumberOfBarsOutput() As Long
 End Property
 
+Public Property Get NumberOfBarsRequested() As Long
+End Property
+
 Public Property Get Timeframe() As TimePeriod
 End Property
 

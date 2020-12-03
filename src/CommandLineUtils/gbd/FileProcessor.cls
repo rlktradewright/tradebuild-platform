@@ -134,6 +134,10 @@ Private Property Get IProcessor_NumberOfBarsOutput() As Long
 IProcessor_NumberOfBarsOutput = mNumberOfBarsOutput
 End Property
 
+Private Property Get IProcessor_NumberOfBarsRequested() As Long
+IProcessor_NumberOfBarsRequested = mNumber
+End Property
+
 Private Property Get IProcessor_Timeframe() As TimePeriod
 IProcessor_Timeframe = mTimePeriod
 End Property

@@ -100,6 +100,8 @@ Private Const ToDateVariable                        As String = "$TODATE"
 Private Const ToDateTimeVariable                    As String = "$TODATETIME"
 Private Const ToTimeVariable                        As String = "$TOTIME"
 Private Const TimeframeVariable                     As String = "$TIMEFRAME"
+Private Const NumberRequestedVariable               As String = "$NUMBERREQUESTED"
+Private Const NumberReturnedVariable                As String = "$NUMBERRETURNED"
 
 
 Private Const SwitchCommandSeparator                As String = "SEP"
@@ -518,6 +520,10 @@ For Each lMatch In lMatches
         End If
     Case TimeframeVariable
         r = pProcessor.Timeframe.ToShortString
+    Case NumberRequestedVariable
+        r = pProcessor.NumberOfBarsRequested
+    Case NumberReturnedVariable
+        r = pProcessor.NumberOfBarsOutput
     Case Default
         Assert False, "Unexpected substitution variable: " & lVariable
     End Select
@@ -1778,6 +1784,9 @@ addSubstitutionVariable FromDateTimeVariable
 addSubstitutionVariable ToDateVariable
 addSubstitutionVariable ToTimeVariable
 addSubstitutionVariable ToDateTimeVariable
+addSubstitutionVariable TimeframeVariable
+addSubstitutionVariable NumberRequestedVariable
+addSubstitutionVariable NumberReturnedVariable
 
 SortStrings mSubstitutionVariables, EndIndex:=mMaxSubstitutionVariablesIndex
 End Sub
