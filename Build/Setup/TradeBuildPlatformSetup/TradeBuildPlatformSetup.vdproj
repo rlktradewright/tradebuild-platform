@@ -1659,6 +1659,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_B13A9103898030A1F14E0CFA88638E53"
+        "OwnerKey" = "8:_C1634A1E95894F718A642833C3BD0317"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_B1E5B7739379447C95DC14FC0130BA9E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -2050,6 +2056,12 @@
         "Entry"
         {
         "MsmKey" = "8:_C0AEB264E7124D2692C23E9FC6E7853F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C1634A1E95894F718A642833C3BD0317"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -3611,6 +3623,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_FED2A3C2ACE14220801F5BCE41C05877"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_C1634A1E95894F718A642833C3BD0317"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -8238,6 +8256,37 @@
                     }
                 }
             "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.ComInterop\\Interop.SpriteControlLib40.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C1634A1E95894F718A642833C3BD0317"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Scripting, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_C1634A1E95894F718A642833C3BD0317"
+                    {
+                    "Name" = "8:Scripting.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.ComInterop\\Scripting.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
