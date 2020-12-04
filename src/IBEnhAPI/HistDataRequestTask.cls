@@ -940,15 +940,8 @@ Case TimePeriodUnits.TimePeriodDay
         lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodDay)
     End If
 Case TimePeriodUnits.TimePeriodHour
-    If pTargetBarSpecifier.IncludeBarsOutsideSession Then
-        If pTargetBarSpecifier.BarTimePeriod.Length > 1 Then
-            lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
-            lBarSpec.BarTimePeriod = GetTimePeriod(1, TimePeriodUnits.TimePeriodHour)
-        End If
-    Else
-        lBarSpec.BarTimePeriod = GetTimePeriod(15, TimePeriodUnits.TimePeriodMinute)
-        lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * 4
-    End If
+    lBarSpec.BarTimePeriod = GetTimePeriod(15, TimePeriodUnits.TimePeriodMinute)
+    lBarSpec.MaxNumberOfBars = 4 * lMaxNumberOfBars * pTargetBarSpecifier.BarTimePeriod.Length
 Case TimePeriodUnits.TimePeriodMinute
     If pTargetBarSpecifier.BarTimePeriod.Length Mod 30 = 0 Then
         lBarSpec.MaxNumberOfBars = lMaxNumberOfBars * (pTargetBarSpecifier.BarTimePeriod.Length / 30)
