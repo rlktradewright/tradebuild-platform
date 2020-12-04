@@ -64,12 +64,12 @@ End Sub
 ' XXXX Interface Members
 '@================================================================================
 
-Private Sub IScannerDataConsumer_EndScannerData(ByVal pRequestid As Long)
+Private Sub IScannerDataConsumer_EndScannerData(ByVal pRequestId As Long)
 Const ProcName As String = "IScannerDataConsumer_EndScannerData"
 On Error GoTo Err
 
 Dim lRequest As ScanRequest
-lRequest = mRequests.Item(CStr(pRequestid))
+lRequest = mRequests.Item(CStr(pRequestId))
 
 lRequest.FutureBuilder.Value = lRequest.Results
 lRequest.FutureBuilder.Complete
@@ -78,7 +78,7 @@ If lRequest.AutoRefresh Then
     Set lRequest.FutureBuilder = New FutureBuilder
 Else
     mTwsAPI.CancelScannerSubscription lRequest.RequestID
-    mRequests.Remove CStr(pRequestid)
+    mRequests.Remove CStr(pRequestId)
 End If
 
 Exit Sub
@@ -88,7 +88,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IScannerDataConsumer_NotifyError( _
-                ByVal pRequestid As Long, _
+                ByVal pRequestId As Long, _
                 ByVal pErrorCode As Long, _
                 ByVal pErrorMsg As String)
 Const ProcName As String = "IScannerDataConsumer_NotifyError"
@@ -97,7 +97,7 @@ On Error GoTo Err
 Dim lRequest As ScanRequest
 ' ignore "API scanner subscription cancelled" messages which arrive
 ' after the requester has finished
-If Not mRequests.TryItem(CStr(pRequestid), lRequest) Then Exit Sub
+If Not mRequests.TryItem(CStr(pRequestId), lRequest) Then Exit Sub
 
 If pErrorCode = 165 Then
     ' 165 = no items retrieved
@@ -106,7 +106,7 @@ If pErrorCode = 165 Then
 End If
 
 lRequest.FutureBuilder.Fail pErrorCode, pErrorMsg, ProcName
-mRequests.Remove CStr(pRequestid)
+mRequests.Remove CStr(pRequestId)
 
 
 Exit Sub
@@ -116,7 +116,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IScannerDataConsumer_NotifyScannerData( _
-                ByVal pRequestid As Long, _
+                ByVal pRequestId As Long, _
                 ByVal pRank As Long, _
                 ByVal pContract As TwsContract, _
                 ByVal pDistance As String, _
@@ -135,7 +135,7 @@ lResult.AddAttribute "Legs", pLegs
 lResult.AddAttribute "Projection", pProjection
 
 Dim lRequest As ScanRequest
-lRequest = mRequests.Item(CStr(pRequestid))
+lRequest = mRequests.Item(CStr(pRequestId))
 lRequest.Results.Add lResult
 
 Exit Sub
