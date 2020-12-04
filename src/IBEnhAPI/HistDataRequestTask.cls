@@ -1479,6 +1479,7 @@ End Sub
 Private Sub setSessionTimes()
 If mTargetBarSpecifier.CustomSessionStartTime <> 0 Then
     mSessionStartTime = mTargetBarSpecifier.CustomSessionStartTime
+    mTargetBarSpecifier.IncludeBarsOutsideSession = True
 ElseIf mTargetBarSpecifier.IncludeBarsOutsideSession Then
     mSessionStartTime = mTargetContract.FullSessionStartTime
 Else
@@ -1486,6 +1487,7 @@ Else
 End If
 If mTargetBarSpecifier.CustomSessionEndTime <> 0 Then
     mSessionEndTime = mTargetBarSpecifier.CustomSessionEndTime
+    mTargetBarSpecifier.IncludeBarsOutsideSession = True
 ElseIf mTargetBarSpecifier.IncludeBarsOutsideSession Then
     mSessionEndTime = mTargetContract.FullSessionEndTime
 Else
