@@ -1230,8 +1230,14 @@ lValue.Value = pValue
 mTargetBarsBuilder.NotifyValue lValue
 pNumberOfPricesNotified = pNumberOfPricesNotified + 1
 
-mTargetBarsBuilder.IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, pTickVolumePerNotify, pTickVolume)
-lValue.Value = mAccumulatedVolume + IIf(pNumberOfPricesNotified < pNumberOfPrices, pNumberOfPricesNotified * pVolumePerNotify, pVolume)
+mTargetBarsBuilder.IncrementTickVolume _
+                        IIf(pNumberOfPricesNotified < pNumberOfPrices, _
+                            pTickVolumePerNotify, _
+                            pTickVolume - pNumberOfPricesNotified - (pNumberOfPricesNotified - 1) * pTickVolumePerNotify)
+lValue.Value = mAccumulatedVolume + _
+                IIf(pNumberOfPricesNotified < pNumberOfPrices, _
+                    pNumberOfPricesNotified * pVolumePerNotify, _
+                    pVolume)
 mTargetBarsBuilder.NotifyVolume lValue
 
 Exit Sub
