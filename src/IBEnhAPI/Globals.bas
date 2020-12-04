@@ -999,56 +999,56 @@ On Error GoTo Err
 'US/Pacific
 
 
-Select Case pTimeZoneId
+Select Case UCase$(pTimeZoneId)
 Case ""
     gTwsTimezoneNameToStandardTimeZoneName = ""
-Case "Australia/NSW", _
+Case "AUSTRALIA/NSW", _
         "AET", _
-        "AEST (Australian Eastern Standard Time (New South Wales))"
-    gTwsTimezoneNameToStandardTimeZoneName = "AUS Eastern Standard Time"
-Case "Europe/Budapest", _
-        "Europe/Warsaw", _
+        "AEST (AUSTRALIAN EASTERN STANDARD TIME (NEW SOUTH WALES))"
+    gTwsTimezoneNameToStandardTimeZoneName = "AUS EASTERN STANDARD TIME"
+Case "EUROPE/BUDAPEST", _
+        "EUROPE/WARSAW", _
         "MET", _
-        "MET (Middle Europe Time)"
-    gTwsTimezoneNameToStandardTimeZoneName = "Central Europe Standard Time"
+        "MET (MIDDLE EUROPE TIME)"
+    gTwsTimezoneNameToStandardTimeZoneName = "CENTRAL EUROPE STANDARD TIME"
 Case "CST", _
         "CTT", _
-        "CST (Central Standard Time)", _
-        "US/Central"
-    gTwsTimezoneNameToStandardTimeZoneName = "Central Standard Time"
-Case "Asia/Hong_Kong", _
-        "Hongkong"
-    gTwsTimezoneNameToStandardTimeZoneName = "China Standard Time"
-Case "Europe/Helsinki", _
-        "Europe/Riga", _
-        "Europe/Tallinn", _
-        "Europe/Vilnius"
-    gTwsTimezoneNameToStandardTimeZoneName = "E. Europe Standard Time"
+        "CST (CENTRAL STANDARD TIME)", _
+        "US/CENTRAL"
+    gTwsTimezoneNameToStandardTimeZoneName = "CENTRAL STANDARD TIME"
+Case "ASIA/HONG_KONG", _
+        "HONGKONG"
+    gTwsTimezoneNameToStandardTimeZoneName = "CHINA STANDARD TIME"
+Case "EUROPE/HELSINKI", _
+        "EUROPE/RIGA", _
+        "EUROPE/TALLINN", _
+        "EUROPE/VILNIUS"
+    gTwsTimezoneNameToStandardTimeZoneName = "E. EUROPE STANDARD TIME"
 Case "EST", _
         "EST5EDT", _
-        "EST (Eastern Standard Time)", _
-        "US/Eastern"
-    gTwsTimezoneNameToStandardTimeZoneName = "Eastern Standard Time"
+        "EST (EASTERN STANDARD TIME)", _
+        "US/EASTERN"
+    gTwsTimezoneNameToStandardTimeZoneName = "EASTERN STANDARD TIME"
 Case "GB", _
-        "GB-Eire", _
+        "GB-EIRE", _
         "GMT", _
-        "GMT (Greenwich Mean Time)", _
-        "BST (British Summer Time)"
-    gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
-Case "Asia/Calcutta"
-    gTwsTimezoneNameToStandardTimeZoneName = "India Standard Time"
-Case "Israel"
-    gTwsTimezoneNameToStandardTimeZoneName = "Middle East Standard Time"
+        "GMT (GREENWICH MEAN TIME)", _
+        "BST (BRITISH SUMMER TIME)"
+    gTwsTimezoneNameToStandardTimeZoneName = "GMT STANDARD TIME"
+Case "ASIA/CALCUTTA"
+    gTwsTimezoneNameToStandardTimeZoneName = "INDIA STANDARD TIME"
+Case "ISRAEL"
+    gTwsTimezoneNameToStandardTimeZoneName = "MIDDLE EAST STANDARD TIME"
 Case "PST", _
-        "US/Pacific", _
-        "Pacific/Pitcairn"
-    gTwsTimezoneNameToStandardTimeZoneName = "Pacific Standard Time"
-Case "Europe/Moscow"
-    gTwsTimezoneNameToStandardTimeZoneName = "Russian Standard Time"
-Case "Africa/Johannesburg"
-    gTwsTimezoneNameToStandardTimeZoneName = "South Africa Standard Time"
-Case "Japan"
-    gTwsTimezoneNameToStandardTimeZoneName = "Tokyo Standard Time"
+        "US/PACIFIC", _
+        "PACIFIC/PITCAIRN"
+    gTwsTimezoneNameToStandardTimeZoneName = "PACIFIC STANDARD TIME"
+Case "EUROPE/MOSCOW"
+    gTwsTimezoneNameToStandardTimeZoneName = "RUSSIAN STANDARD TIME"
+Case "AFRICA/JOHANNESBURG"
+    gTwsTimezoneNameToStandardTimeZoneName = "SOUTH AFRICA STANDARD TIME"
+Case "JAPAN"
+    gTwsTimezoneNameToStandardTimeZoneName = "TOKYO STANDARD TIME"
 Case Else
     gLog "Unrecognised timezone: " & pTimeZoneId, ModuleName, ProcName, , LogLevelSevere
     gTwsTimezoneNameToStandardTimeZoneName = ""
