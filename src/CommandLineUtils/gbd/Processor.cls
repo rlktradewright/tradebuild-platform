@@ -260,11 +260,11 @@ Dim lTo As String: lTo = IIf(mToDate = MaxDate, _
 If mEntireSession Then s = s & "Sessions "
 
 If mFromDate <> 0 And mToDate <> 0 Then
-    s = s & lFrom & " to " & lTo
+    s = s & lFrom & " To " & lTo
 ElseIf mFromDate <> 0 Then
-    s = s & " From " & lFrom
+    s = s & "From " & lFrom
 ElseIf mToDate <> 0 Then
-    s = s & " To " & lTo
+    s = s & "To " & lTo
 End If
 IProcessor_DataSourceName = s & "]"
 End Property
