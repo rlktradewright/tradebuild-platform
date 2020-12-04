@@ -92,10 +92,17 @@ Private Sub IContractDetailsConsumer_EndContracts(ByVal pRequestId As Long)
 Const ProcName As String = "IContractDetailsConsumer_EndContracts"
 On Error GoTo Err
 
+If mTwsRequestId = NullIndex Then
+    ' there must have been a cancellation before the EndContracts
+    ' notification was received
+    Exit Sub
+End If
+
 mRequestManager.NotifyFetchCompleted Me
 mContractsFutureBuilder.Value = mContractsBuilder.Contracts
 mContractsFutureBuilder.Complete
 Set mRequestManager = Nothing
+mTwsRequestId = NullIndex
 
 Exit Sub
 
@@ -127,6 +134,8 @@ If pErrorCode = 200 Then
     mContractsFutureBuilder.Value = mContractsBuilder.Contracts
     mContractsFutureBuilder.Complete
 End If
+
+mTwsRequestId = NullIndex
 
 mRequestManager.NotifyFetchError Me, pErrorCode, pErrorMsg
 
@@ -223,8 +232,20 @@ End Sub
 '@================================================================================
 
 Friend Sub Cancel()
+Const ProcName As String = "Cancel"
+On Error GoTo Err
+
 mCancelled = True
-If mTwsRequestId <> NullIndex Then mContractRequester.CancelRequest mTwsRequestId
+If mTwsRequestId <> NullIndex Then
+    gLogger.Log "RequestId = " & mTwsRequestId, ProcName, ModuleName
+    mContractRequester.CancelRequest mTwsRequestId
+    mTwsRequestId = NullIndex
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FetchContracts( _
