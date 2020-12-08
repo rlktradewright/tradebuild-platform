@@ -685,6 +685,7 @@ ElseIf TypeOf ev.Future.Value Is StudyManager Then
     ' which only occurs during processContractAvailable()
     Set mStudyBase = New StudyBaseForTickDataInput
     mStudyBase.Initialise ev.Future.Value, mContractFuture
+    setReady
 End If
 
 Exit Sub
