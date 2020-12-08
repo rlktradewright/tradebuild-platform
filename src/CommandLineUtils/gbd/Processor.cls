@@ -70,6 +70,7 @@ Private mSessionStartTime                           As Date
 Private mSessionEndTime                             As Date
 Private mEntireSession                              As Boolean
 Private mNormaliseDailyBarTimestamps                As Boolean
+Private mIncludeMillisecs                           As Boolean
 
 Private mOutputPath                                 As String
 Private mOutputFilename                             As String
@@ -184,9 +185,9 @@ End If
     
 mNumberOfBarsOutput = mNumberOfBarsOutput + 1
 If sStream Is Nothing Then
-    gOutputBarToConsole pBar, mSecType, mTickSize
+    gOutputBarToConsole pBar, mTimePeriod, mNormaliseDailyBarTimestamps, mIncludeMillisecs, mSecType, mTickSize
 Else
-    gOutputBarToTextStream pBar, mSecType, mTickSize, sStream
+    gOutputBarToTextStream pBar, mTimePeriod, mNormaliseDailyBarTimestamps, mIncludeMillisecs, mSecType, mTickSize, sStream
 End If
 
 Exit Sub
@@ -421,7 +422,8 @@ Friend Sub Initialise( _
                 ByVal pSessionStartTime As Date, _
                 ByVal pSessionEndTime As Date, _
                 ByVal pEntireSession As Boolean, _
-                ByVal pNormaliseDailyBarTimestamps As Boolean)
+                ByVal pNormaliseDailyBarTimestamps As Boolean, _
+                ByVal pIncludeMillisecs As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -437,6 +439,7 @@ mSessionStartTime = pSessionStartTime
 mSessionEndTime = pSessionEndTime
 mEntireSession = pEntireSession
 mNormaliseDailyBarTimestamps = pNormaliseDailyBarTimestamps
+mIncludeMillisecs = pIncludeMillisecs
 
 Exit Sub
 

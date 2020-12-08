@@ -80,6 +80,7 @@ Private mAppend                                     As Boolean
 Private mStream                                     As TextStream
 
 Private mNumberOfBarsOutput                         As Long
+Private mIncludeMillisecs                           As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -321,7 +322,8 @@ Friend Sub Initialise( _
                 ByVal pNumber As Long, _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pSessionOnly As Boolean, _
-                ByVal pEntireSession As Boolean)
+                ByVal pEntireSession As Boolean, _
+                ByVal pIncludeMillisecs As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -335,6 +337,7 @@ mTickfileSpec.FromDate = pFromDate
 mTickfileSpec.ToDate = pToDate
 mTickfileSpec.UseFullSession = Not mSessionOnly
 mTickfileSpec.EntireSession = pEntireSession
+mIncludeMillisecs = pIncludeMillisecs
 
 Set mTimePeriod = pTimePeriod
 
@@ -368,9 +371,9 @@ On Error GoTo Err
 
 mNumberOfBarsOutput = mNumberOfBarsOutput + 1
 If mStream Is Nothing Then
-    gOutputBarToConsole pBar, mSecType, mTickSize
+    gOutputBarToConsole pBar, mTimePeriod, True, mIncludeMillisecs, mSecType, mTickSize
 Else
-    gOutputBarToTextStream pBar, mSecType, mTickSize, mStream
+    gOutputBarToTextStream pBar, mTimePeriod, True, mIncludeMillisecs, mSecType, mTickSize, mStream
 End If
 
 Exit Sub

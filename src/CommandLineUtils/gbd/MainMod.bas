@@ -407,6 +407,9 @@ End Sub
 
 Public Sub gOutputBarToConsole( _
                 ByVal pBar As Bar, _
+                ByVal pTimeframe As TimePeriod, _
+                ByVal pNormaliseDailyBarTimestamps As Boolean, _
+                ByVal pIncludeMillisecs As Boolean, _
                 ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double)
 Const ProcName As String = "gOutputBarToConsole"
@@ -414,7 +417,7 @@ On Error GoTo Err
 
 If pBar Is Nothing Then Exit Sub
 
-gCon.WriteLine formatBar(pBar, pSecType, pTickSize)
+gCon.WriteLine formatBar(pBar, pTimeframe, pNormaliseDailyBarTimestamps, pSecType, pTickSize, pIncludeMillisecs)
 
 Exit Sub
 
@@ -424,6 +427,9 @@ End Sub
 
 Public Sub gOutputBarToTextStream( _
                 ByVal pBar As Bar, _
+                ByVal pTimeframe As TimePeriod, _
+                ByVal pNormaliseDailyBarTimestamps As Boolean, _
+                ByVal pIncludeMillisecs As Boolean, _
                 ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double, _
                 ByVal pStream As TextStream)
@@ -432,7 +438,7 @@ On Error GoTo Err
 
 If pBar Is Nothing Then Exit Sub
 
-pStream.WriteLine formatBar(pBar, pSecType, pTickSize)
+pStream.WriteLine formatBar(pBar, pTimeframe, pNormaliseDailyBarTimestamps, pSecType, pTickSize, pIncludeMillisecs)
 
 Exit Sub
 
@@ -735,8 +741,11 @@ End Function
 
 Private Function formatBar( _
                 ByVal pBar As Bar, _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pNormaliseDailyBarTimestamps As Boolean, _
                 ByVal pSecType As SecurityTypes, _
-                ByVal pTickSize As Double) As String
+                ByVal pTickSize As Double, _
+                ByVal pIncludeMillisecs As Boolean) As String
 Const ProcName As String = "formatBar"
 On Error GoTo Err
 
@@ -744,15 +753,15 @@ If pBar Is Nothing Then Exit Function
 
 ReDim lTexts(7) As String
 
-If Not mNormaliseDailyBarTimestamps Then
-    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not mIncludeMillisecs And TimestampNoMillisecs))
-ElseIf mTimePeriod.Units = TimePeriodDay Or _
-        mTimePeriod.Units = TimePeriodWeek Or _
-        mTimePeriod.Units = TimePeriodMonth Or _
-        mTimePeriod.Units = TimePeriodYear Then
+If Not pNormaliseDailyBarTimestamps Then
+    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not pIncludeMillisecs And TimestampNoMillisecs))
+ElseIf pTimePeriod.Units = TimePeriodDay Or _
+        pTimePeriod.Units = TimePeriodWeek Or _
+        pTimePeriod.Units = TimePeriodMonth Or _
+        pTimePeriod.Units = TimePeriodYear Then
     lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampDateOnlyFormat)
 Else
-    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not mIncludeMillisecs And TimestampNoMillisecs))
+    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not pIncludeMillisecs And TimestampNoMillisecs))
 End If
 
 lTexts(1) = FormatPrice(pBar.OpenValue, pSecType, pTickSize)
@@ -1376,7 +1385,7 @@ Else
         Dim lProcess As IProcessor
         If mDataSource = FromFile Then
             Dim lFileProcessor As New FileProcessor
-            lFileProcessor.Initialise mTickfileName, mFrom, mTo, mNumber, mTimePeriod, mSessionOnly, mEntireSession
+            lFileProcessor.Initialise mTickfileName, mFrom, mTo, mNumber, mTimePeriod, mSessionOnly, mEntireSession, mIncludeMillisecs
             Set lProcess = lFileProcessor
         Else
             Dim lProcessor As New Processor
@@ -1391,7 +1400,8 @@ Else
                                 mSessionStartTime, _
                                 mSessionEndTime, _
                                 mEntireSession, _
-                                mNormaliseDailyBarTimestamps
+                                mNormaliseDailyBarTimestamps, _
+                                mIncludeMillisecs
             Set lProcess = lProcessor
         End If
         
