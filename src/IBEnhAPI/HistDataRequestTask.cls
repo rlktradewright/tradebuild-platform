@@ -164,6 +164,7 @@ If mTaskContext.CancelPending Then
 End If
 
 If mState = Starting Then
+    gLog "HistDataRequestTask starting", ModuleName, ProcName, , LogLevelDetail
     mTaskContext.Suspend -1
     Exit Sub
 End If
@@ -175,6 +176,7 @@ If mState = ConvertingComboContract Then
 
 ElseIf mState = RetrievingBars Then
     If needMoreBars Then
+        gLog "More bars needed", ModuleName, ProcName, , LogLevelDetail
         Dim lRequest As TwsHistoricalDataRequest
         prepareForRetrieval
         If generateTwsHistoricalDataRequest(lRequest, mWorkingBarSpecifier, mSessionStartTime, mSessionEndTime) Then
@@ -185,6 +187,7 @@ ElseIf mState = RetrievingBars Then
             mState = DataRetrieved
         End If
     Else
+        gLog "No more bars needed", ModuleName, ProcName, , LogLevelDetail
         mState = DataRetrieved
     End If
 
@@ -270,6 +273,8 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
     doFail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
+    gLog "BarDataSpecifier is available", ModuleName, ProcName, , LogLevelDetail
+
     failpoint = "Get contract"
     If Not mListener Is Nothing Then mListener.FetchStarted mCookie
     Set mTargetBarSpecifier = ev.Future.Value
@@ -308,8 +313,10 @@ ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
         mNotifyAtEnd = True
     End If
         
+    gLog "Getting TwsContract", ModuleName, ProcName, , LogLevelDetail
     mFutureWaiter.Add gContractFutureToTwsContractFuture(mContractRequester, CreateFuture(mTargetContract), mContractCache)
 ElseIf TypeOf ev.Future.Value Is TwsContract Then
+    gLog "Got TwsContract", ModuleName, ProcName, , LogLevelDetail
     Set mTwsContract = ev.Future.Value
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
     mState = RetrievingBars
@@ -396,6 +403,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+gLog "Initialising HistDataRequestTask", ModuleName, ProcName, , LogLevelDetail
+
 Set mListener = pListener
 Set mHistDataRequester = pHistDataRequester
 Set mContractRequester = pContractRequester
@@ -441,7 +450,7 @@ Friend Sub NotifyError(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
 
-logMessage "Error " & pErrorCode & " from Tws: " & pErrorMsg, ProcName
+gLog "Error " & pErrorCode & " from Tws: " & pErrorMsg, ModuleName, ProcName
 
 If mState = RetrievingBars And isBarFixedDuration(mTargetBarSpecifier.BarTimePeriod) And mTotalBarsRetrieved <> 0 Then
     mState = DataRetrieved
@@ -529,7 +538,7 @@ Private Sub doCancel()
 Const ProcName As String = "doCancel"
 On Error GoTo Err
 
-logMessage "Fetch cancelled", ProcName
+gLog "Fetch cancelled", ModuleName, ProcName
 mState = Cancelling
 mHistDataRequester.CancelHistoricalDataRequest mRequesterID
 If mFutureBuilder.Future.IsPending Then mFutureBuilder.Cancel
@@ -909,6 +918,16 @@ Case Else
 End Select
 
 If Left$(pTwsRequest.Duration, 2) = "0 " Then pTwsRequest.Duration = ""
+
+With pTwsRequest
+    gLog "Hist data request: size=" & .BarSizeSetting & _
+            "; duration=" & .Duration & _
+            "; end=" & .EndDateTime & _
+            "; what to show=" & .WhatToShow & _
+            "; session only=" & .MainSessionOnly, _
+            ModuleName, ProcName, , LogLevelDetail
+End With
+
 generateTwsHistoricalDataRequest = (pTwsRequest.Duration <> "")
 
 Exit Function
@@ -1145,14 +1164,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Private Sub logMessage( _
-                ByRef pMsg As String, _
-                ByRef pProcName As String, _
-                Optional ByRef pMsgQualifier As String = vbNullString, _
-                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
-End Sub
 
 Private Function needMoreBars() As Boolean
 Const ProcName As String = "needMoreBars"
