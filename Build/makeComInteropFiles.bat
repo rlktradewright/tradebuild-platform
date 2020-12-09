@@ -68,6 +68,8 @@ set SOURCE=%TWUTILITIES%
 call %BUILD%\Setup\DeploymentScripts\setTradeWrightCommonVersion.bat
 ::set ASM_VERSION=/asmversion:%VB6-BUILD-MAJOR%.%VB6-BUILD-MINOR%.0.%VB6-BUILD-REVISION%
 
+call :TlbTlb TWWin32API
+
 call :TlbImp TWUtilities40
 call :TlbImp ExtProps40
 call :TlbImp ExtEvents40
@@ -154,3 +156,12 @@ aximp "%SOURCE%\%1.ocx" /out:Interop.Ax%1.dll /rcw:Interop.%1.dll /nologo
 if errorlevel 1 goto :Err
 echo.
 goto :EOF
+
+:TlbTlb
+echo =================================
+tlbimp "%SOURCE%\%1.tlb" /out:Interop.%1.dll /namespace:%1 /nologo /silence:3011 /silence:3008 %ASM_VERSION% %REFERENCE%
+if errorlevel 1 goto :Err
+set REFERENCE=%REFERENCE% /reference:Interop.%1.dll
+echo.
+goto :EOF
+

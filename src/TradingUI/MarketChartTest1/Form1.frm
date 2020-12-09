@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#366.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#373.0#0"; "TradingUI27.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
@@ -70,7 +70,7 @@ Begin VB.Form Form1
    End
    Begin TradingUI27.ChartStylePicker ChartStylePicker1 
       Height          =   330
-      Left            =   7680
+      Left            =   7800
       TabIndex        =   5
       Top             =   120
       Width           =   1455
