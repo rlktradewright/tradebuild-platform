@@ -237,7 +237,6 @@ On Error GoTo Err
 
 mCancelled = True
 If mTwsRequestId <> NullIndex Then
-    gLogger.Log "RequestId = " & mTwsRequestId, ProcName, ModuleName
     mContractRequester.CancelRequest mTwsRequestId
     mTwsRequestId = NullIndex
 End If

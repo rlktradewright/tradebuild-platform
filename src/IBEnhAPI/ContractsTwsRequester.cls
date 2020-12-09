@@ -165,7 +165,7 @@ Else
     mRequests(pRequestId).NumberReturned = mRequests(pRequestId).NumberReturned + 1
     If mRequests(pRequestId).PendingContracts Is Nothing Then
         Set mRequests(pRequestId).PendingContracts = New EnumerableCollection
-        queueEntry pRequestId, mFirstPendingContractEntry, mLastPendingContractEntry
+        addEntryToPendingContractQueue pRequestId
     End If
     mRequests(pRequestId).PendingContracts.Add pTwsContract
     mTaskContext.Continue
@@ -314,25 +314,30 @@ If mFirstPendingContractEntry <> NullIndex Then
     lIndex = mFirstPendingContractEntry
     
     With mRequests(lIndex)
-        Dim en As Enumerator: Set en = .PendingContracts.Enumerator
-        If en.MoveNext Then
-            Dim lTwsContract As TwsContract
-            Set lTwsContract = en.Current
-            If .State <> StateRequestCancelling Then
-                .Requester.NotifyContract lIndex, lTwsContract
-            End If
-            en.Remove
-        End If
-        If .PendingContracts.Count = 0 And _
-            .State = StateRequestCompleted _
-        Then
-            If .State <> StateRequestCancelling Then
-                .Requester.EndContracts lIndex
-            End If
+        If .State = StateRequestCancelling Then
+            .PendingContracts.ClearAsync
             unqueueEntry lIndex, _
                         mFirstPendingContractEntry, _
                         mLastPendingContractEntry
             releaseEntry lIndex
+        Else
+            Dim en As Enumerator: Set en = .PendingContracts.Enumerator
+            If en.MoveNext Then
+                Dim lTwsContract As TwsContract
+                Set lTwsContract = en.Current
+                If .State <> StateRequestCancelling Then
+                    .Requester.NotifyContract lIndex, lTwsContract
+                End If
+                en.Remove
+            Else
+                If .State = StateRequestCompleted Then
+                    .Requester.EndContracts lIndex
+                End If
+                unqueueEntry lIndex, _
+                            mFirstPendingContractEntry, _
+                            mLastPendingContractEntry
+                releaseEntry lIndex
+            End If
         End If
     End With
 End If
@@ -420,7 +425,7 @@ mRequests(lIndex).RequestType = ContractInfoRequestTypeContracts
 Set mRequests(lIndex).ContractSpec = pContractSpecifier
 Set mRequests(lIndex).Requester = pRequester
 
-queueEntry lIndex, mFirstRequestEntry, mLastRequestEntry
+addEntryToRequestQueue lIndex
 gLog "Queued request for", ModuleName, ProcName, pContractSpecifier.Key, LogLevelDetail
 
 Schedule
@@ -445,7 +450,7 @@ mRequests(lIndex).RequestType = ContractInfoRequestTypeOptionParameters
 Set mRequests(lIndex).ContractSpec = pContractSpecifier
 Set mRequests(lIndex).Requester = pRequester
 
-queueEntry lIndex, mFirstRequestEntry, mLastRequestEntry
+addEntryToRequestQueue lIndex
 
 Schedule
 
@@ -501,6 +506,34 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub addEntryToPendingContractQueue( _
+                ByVal pIndex As Long)
+Const ProcName As String = "addEntryToPendingContractQueue"
+On Error GoTo Err
+
+' NB: don't change the state of the entry
+queueEntry pIndex, mFirstPendingContractEntry, mLastPendingContractEntry
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub addEntryToRequestQueue( _
+                ByVal pIndex As Long)
+Const ProcName As String = "addEntryToRequestQueue"
+On Error GoTo Err
+
+queueEntry pIndex, mFirstRequestEntry, mLastRequestEntry
+mRequests(pIndex).State = StateRequestQueued
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function allocateEntry() As Long
 Const ProcName As String = "allocateEntry"
@@ -601,7 +634,6 @@ Private Sub queueEntry( _
 Const ProcName As String = "queueEntry"
 On Error GoTo Err
 
-mRequests(pIndex).State = StateRequestQueued
 If pFirstIndex = NullIndex Then pFirstIndex = pIndex
 If pLastIndex <> NullIndex Then mRequests(pLastIndex).Next = pIndex
 pLastIndex = pIndex
