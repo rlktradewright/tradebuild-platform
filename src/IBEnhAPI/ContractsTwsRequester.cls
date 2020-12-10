@@ -156,11 +156,11 @@ Private Sub IContractDetailsConsumer_NotifyContract( _
 Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
-If mRequests(pRequestId).State = StateRequestCancelling Then
-    ' ignore this contract
-ElseIf mRequests(pRequestId).NumberReturned = 0 Then
+If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+
+If mRequests(pRequestId).NumberReturned = 0 Then
     mRequests(pRequestId).NumberReturned = 1
-    If mRequests(pRequestId).State <> StateRequestCancelling Then mRequests(pRequestId).Requester.NotifyContract pRequestId, pTwsContract
+    mRequests(pRequestId).Requester.NotifyContract pRequestId, pTwsContract
 Else
     mRequests(pRequestId).NumberReturned = mRequests(pRequestId).NumberReturned + 1
     If mRequests(pRequestId).PendingContracts Is Nothing Then
@@ -332,11 +332,11 @@ If mFirstPendingContractEntry <> NullIndex Then
             Else
                 If .State = StateRequestCompleted Then
                     .Requester.EndContracts lIndex
+                    unqueueEntry lIndex, _
+                                mFirstPendingContractEntry, _
+                                mLastPendingContractEntry
+                    releaseEntry lIndex
                 End If
-                unqueueEntry lIndex, _
-                            mFirstPendingContractEntry, _
-                            mLastPendingContractEntry
-                releaseEntry lIndex
             End If
         End If
     End With
