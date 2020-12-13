@@ -12,6 +12,8 @@ if /I "%1"=="P" (
 	call makeComponents.bat P
 ) else if /I "%1"=="PP" (
 	call makeComponents.bat PP
+) else if /I "%1"=="V" (
+	call makeComponents.bat V
 ) else (
 	call makeComponents.bat B
 )
