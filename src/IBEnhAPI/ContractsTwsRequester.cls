@@ -185,7 +185,7 @@ If mRequests(pRequestId).State <> StateRequestCancelling Then mRequests(pRequest
 CompleteRequest
 
 If mRequests(pRequestId).NumberReturned > 1 Then
-    unqueueEntry pRequestId, mFirstRequestEntry, mLastRequestEntry
+    removeEntryFromRequestQueue pRequestId
 End If
 
 releaseEntry pRequestId
@@ -316,9 +316,7 @@ If mFirstPendingContractEntry <> NullIndex Then
     With mRequests(lIndex)
         If .State = StateRequestCancelling Then
             .PendingContracts.ClearAsync
-            unqueueEntry lIndex, _
-                        mFirstPendingContractEntry, _
-                        mLastPendingContractEntry
+            removeEntryFromPendingContractQueue lIndex
             releaseEntry lIndex
         Else
             Dim en As Enumerator: Set en = .PendingContracts.Enumerator
@@ -332,9 +330,7 @@ If mFirstPendingContractEntry <> NullIndex Then
             Else
                 If .State = StateRequestCompleted Then
                     .Requester.EndContracts lIndex
-                    unqueueEntry lIndex, _
-                                mFirstPendingContractEntry, _
-                                mLastPendingContractEntry
+                    removeEntryFromPendingContractQueue lIndex
                     releaseEntry lIndex
                 End If
             End If
@@ -378,7 +374,7 @@ Case StateFree
 Case StateAllocated
     releaseEntry pRequestId
 Case StateRequestQueued
-    unqueueEntry pRequestId, mFirstRequestEntry, mLastRequestEntry
+    removeEntryFromRequestQueue pRequestId
     releaseEntry pRequestId
 Case StateRequestInProgress
     mRequests(pRequestId).State = StateRequestCancelling
@@ -617,7 +613,7 @@ Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
     End If
     mConcurrentRequests = mConcurrentRequests + 1
         
-    unqueueEntry lCurrIndex, mFirstRequestEntry, mLastRequestEntry
+    removeEntryFromRequestQueue lCurrIndex
     mRequests(lCurrIndex).State = StateRequestInProgress
 Loop
 
@@ -663,6 +659,32 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub removeEntryFromPendingContractQueue( _
+                ByVal pIndex As Long)
+Const ProcName As String = "removeEntryFromPendingContractQueue"
+On Error GoTo Err
+
+unqueueEntry pIndex, mFirstPendingContractEntry, mLastPendingContractEntry
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub removeEntryFromRequestQueue( _
+                ByVal pIndex As Long)
+Const ProcName As String = "addEntryToRequestQueue"
+On Error GoTo Err
+
+unqueueEntry pIndex, mFirstRequestEntry, mLastRequestEntry
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub unqueueEntry( _
                 ByVal pIndex As Long, _
