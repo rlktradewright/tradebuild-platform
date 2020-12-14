@@ -22,10 +22,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IBracketOrderErrorListener
-Implements IBracketOrderMsgListener
-Implements IChangeListener
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -48,96 +44,117 @@ Private Const ModuleName                            As String = "BracketOrderLis
 ' Member variables
 '@================================================================================
 
+Private WithEvents mBracketOrderListener            As OrderUtils27.BracketOrderListener
+Attribute mBracketOrderListener.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Set mBracketOrderListener = New OrderUtils27.BracketOrderListener
+End Sub
+
 '@================================================================================
-' IBracketOrderErrorListener Interface Members
+' XXXX Interface Members
 '@================================================================================
 
-Private Sub IBracketOrderErrorListener_NotifyBracketOrderError(ev As BracketOrderErrorEventData)
-Const ProcName As String = "IBracketOrderErrorListener_NotifyBracketOrderError"
+'@================================================================================
+' mBracketOrderListener Event Handlers
+'@================================================================================
+
+Private Sub mBracketOrderListener_BracketOrderAdded(ev As StateChangeEventData)
+Const ProcName As String = "mBracketOrderListener_BracketOrderAdded"
 On Error GoTo Err
 
-Dim lOrder As Iorder: Set lOrder = ev.AffectedOrder
+Dim lBO As IBracketOrder: Set lBO = ev.Source
+Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
+gWriteLineToStdOut lTime & _
+                    lBO.Key & _
+                    ": bracket order state is: " & _
+                    BracketOrderStateToString(lBO.State) & _
+                    generateRolloverClause(lBO)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mBracketOrderListener_NotifyBracketOrderError(ev As BracketOrderErrorEventData)
+Const ProcName As String = "mBracketOrderListener_NotifyBracketOrderError"
+On Error GoTo Err
+
+Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
 gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage), True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-'@================================================================================
-' IBracketOrderMsgListener Interface Members
-'@================================================================================
-
-Private Sub IBracketOrderMsgListener_NotifyBracketOrderMessage(ev As BracketOrderMessageEventData)
-Const ProcName As String = "IBracketOrderMsgListener_NotifyBracketOrderMessage"
+Private Sub mBracketOrderListener_NotifyBracketOrderMessage(ev As BracketOrderMessageEventData)
+Const ProcName As String = "mBracketOrderListener_NotifyBracketOrderMessage"
 On Error GoTo Err
 
-Dim lOrder As Iorder: Set lOrder = ev.AffectedOrder
+Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
 gWriteLineToConsole generateMessage(lOrder, lOrder.Message), True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-'@================================================================================
-' IChangeListener Interface Members
-'@================================================================================
-
-Private Sub IChangeListener_Change(ev As ChangeEventData)
-Const ProcName As String = "IChangeListener_Change"
+Private Sub mBracketOrderListener_Change(ev As ChangeEventData)
+Const ProcName As String = "mBracketOrderListener_Change"
 On Error GoTo Err
 
 Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
 
 Dim lChangeType As BracketOrderChangeTypes: lChangeType = ev.ChangeType
-Dim lBo As BracketOrder: Set lBo = ev.Source
+Dim lBO As BracketOrder: Set lBO = ev.Source
 
-Dim lRolloverClause As String: lRolloverClause = generateRolloverClause(lBo)
+Dim lRolloverClause As String: lRolloverClause = generateRolloverClause(lBO)
 
-Dim s As String: s = lTime & lBo.Key & ": "
+Dim s As String: s = lTime & lBO.Key & ": "
 Dim s1 As String
 
 Select Case lChangeType
 Case BracketOrderCompleted
     s1 = "bracket order completed"
-    If Not lBo.HasRolloverSpecification Then Remove lBo
+    If Not lBO.HasRolloverSpecification Then mBracketOrderListener.Remove lBO
 Case BracketOrderSelfCancelled
     s1 = "bracket order cancelled"
-    Remove lBo
+    mBracketOrderListener.Remove lBO
 Case BracketOrderEntryOrderChanged
 
 Case BracketOrderEntryOrderFilled
     s1 = "entry order filled " & _
-        filledString(lBo.EntryOrder, lBo.Contract)
+        filledString(lBO.EntryOrder, lBO.Contract)
 Case BracketOrderStopLossOrderChanged
 
 Case BracketOrderStopLossOrderFilled
     s1 = "stop-loss order filled " & _
-        filledString(lBo.StopLossOrder, lBo.Contract)
+        filledString(lBO.StopLossOrder, lBO.Contract)
 Case BracketOrderTargetOrderChanged
 
 Case BracketOrderTargetOrderFilled
     s1 = "target order filled " & _
-        filledString(lBo.TargetOrder, lBo.Contract)
+        filledString(lBO.TargetOrder, lBO.Contract)
 Case BracketOrderCloseoutOrderCreated
     s = s & "closeout order created"
 Case BracketOrderCloseoutOrderChanged
 
 Case BracketOrderCloseoutOrderFilled
     s1 = "closeout order filled " & _
-        filledString(lBo.CloseoutOrder, lBo.Contract)
+        filledString(lBO.CloseoutOrder, lBO.Contract)
 Case BracketOrderSizeChanged
 
 Case BracketOrderStateChanged
     s1 = "bracket order state changed: " & _
-        BracketOrderStateToString(lBo.State) & _
+        BracketOrderStateToString(lBO.State) & _
         lRolloverClause
 Case BracketOrderChangesPending
 
@@ -151,12 +168,12 @@ Case BracketOrderRolloverInitiated
     s1 = "bracket order rollover initiated"
 Case BracketOrderRolloverGotContract
     s1 = "bracket order rolling over to next contract: " & _
-        gGetContractName(lBo.NextContract)
+        gGetContractName(lBO.NextContract)
 Case BracketOrderRolloverCompleted
     s1 = "new bracket order is: " & _
-        lBo.NextBracketOrder.Key
-    Add lBo.NextBracketOrder
-    Remove lBo
+        lBO.NextBracketOrder.Key
+    Add lBO.NextBracketOrder
+    mBracketOrderListener.Remove lBO
 End Select
 
 If s1 <> "" Then gWriteLineToStdOut s & s1
@@ -164,7 +181,7 @@ If s1 <> "" Then gWriteLineToStdOut s & s1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -175,27 +192,24 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Get Base() As OrderUtils27.BracketOrderListener
+Set Base = mBracketOrderListener
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Friend Sub Add(ByVal pBO As IBracketOrder)
-pBO.AddBracketOrderErrorListener Me
-pBO.AddBracketOrderMessageListener Me
-pBO.AddChangeListener Me
+Const ProcName As String = "Add"
+On Error GoTo Err
 
-Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
-gWriteLineToStdOut lTime & _
-                    pBO.Key & _
-                    ": bracket order state is: " & _
-                    BracketOrderStateToString(pBO.State) & _
-                    generateRolloverClause(pBO)
-End Sub
+mBracketOrderListener.Add pBO
 
-Friend Sub Remove(ByVal pBO As IBracketOrder)
-pBO.RemoveBracketOrderErrorListener Me
-pBO.RemoveBracketOrderMessageListener Me
-pBO.RemoveChangeListener Me
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -203,7 +217,7 @@ End Sub
 '@================================================================================
 
 Private Function filledString( _
-                ByVal pOrder As Iorder, _
+                ByVal pOrder As IOrder, _
                 ByVal pcontract As IContract) As String
 filledString = pOrder.QuantityFilled & _
                 " at " & FormatPrice(pOrder.LastFillPrice, _
@@ -214,18 +228,19 @@ filledString = pOrder.QuantityFilled & _
 End Function
 
 Private Function generateMessage( _
-                ByVal pOrder As Iorder, _
+                ByVal pOrder As IOrder, _
                 ByVal pMessage As String) As String
 Const ProcName As String = "generateMessage"
 On Error GoTo Err
 
+Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
 Dim s As String
-s = pOrder.GroupName & ": " & _
+s = lTime & pOrder.GroupName & ": " & _
     "(" & pOrder.ContractSpecifier.LocalSymbol & "@" & pOrder.ContractSpecifier.Exchange & ")" & _
     " " & OrderActionToString(pOrder.Action) & _
     " " & pOrder.Quantity & _
     " " & OrderTypeToShortString(pOrder.OrderType) & _
-    ": " & pOrder.ErrorMessage
+    ": " & pMessage
 
 generateMessage = s
 

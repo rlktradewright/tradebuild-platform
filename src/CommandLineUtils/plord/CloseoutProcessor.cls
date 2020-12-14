@@ -156,7 +156,12 @@ Friend Sub CloseoutGroup(ByVal pGroupName As String)
 Const ProcName As String = "CloseoutGroup"
 On Error GoTo Err
 
-mFutureWaiter.Add mOrderManager.CloseGroupPositions(pGroupName, mCloseoutMode, mPriceSpec)
+mFutureWaiter.Add mOrderManager.CloseGroupPositions( _
+                                    pGroupName, _
+                                    mCloseoutMode, _
+                                    mPriceSpec, _
+                                    , _
+                                    gBracketOrderListener.Base)
 
 Exit Sub
 

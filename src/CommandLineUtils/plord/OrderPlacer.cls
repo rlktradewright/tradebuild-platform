@@ -93,11 +93,11 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pBracketOrderSpec As BracketOrderSpecification, _
-                ByVal pContract As IContract, _
+                ByVal pcontract As IContract, _
                 ByVal pOrderContext As OrderContext, _
                 ByVal pStageOrders As Boolean)
 Set mBracketOrderSpec = pBracketOrderSpec
-Set mContract = pContract
+Set mContract = pcontract
 Set mOrderContext = pOrderContext
 mStageOrders = pStageOrders
 
@@ -137,7 +137,7 @@ End If
 
 mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
 
-Dim lBo As IBracketOrder
+Dim lBO As IBracketOrder
 
 With mBracketOrderSpec
     Dim lEntryOrder As IOrder
@@ -166,7 +166,7 @@ With mBracketOrderSpec
     End If
 
 
-    Set lBo = mOrderContext.CreateBracketOrder( _
+    Set lBO = mOrderContext.CreateBracketOrder( _
                     .Action, _
                     .Quantity, _
                     lEntryOrder, _
@@ -174,36 +174,36 @@ With mBracketOrderSpec
                     lTargetOrder _
                     )
     
-    gBracketOrderListener.Add lBo
+    gBracketOrderListener.Add lBO
     
-    lBo.CancelAfter = .CancelAfter
-    lBo.CancelPrice = .CancelPrice
-    lBo.Description = .Description
-    lBo.EntryOrder.TimeInForce = .EntryTIF
-    lBo.EntryReason = .EntryReason
-    If Not lBo.StopLossOrder Is Nothing Then
-        lBo.StopLossOrder.TimeInForce = .StopLossTIF
-        lBo.StopReason = .StopLossReason
+    lBO.CancelAfter = .CancelAfter
+    lBO.CancelPrice = .CancelPrice
+    lBO.Description = .Description
+    lBO.EntryOrder.TimeInForce = .EntryTIF
+    lBO.EntryReason = .EntryReason
+    If Not lBO.StopLossOrder Is Nothing Then
+        lBO.StopLossOrder.TimeInForce = .StopLossTIF
+        lBO.StopReason = .StopLossReason
     End If
-    If Not lBo.TargetOrder Is Nothing Then
-        lBo.TargetOrder.TimeInForce = .TargetTIF
-        lBo.TargetReason = .TargetReason
+    If Not lBO.TargetOrder Is Nothing Then
+        lBO.TargetOrder.TimeInForce = .TargetTIF
+        lBO.TargetReason = .TargetReason
     End If
     If .GoodAfterTime <> 0 Then
-        lBo.EntryOrder.GoodAfterTime = .GoodAfterTime
-        lBo.EntryOrder.GoodAfterTimeTZ = .TimezoneName
+        lBO.EntryOrder.GoodAfterTime = .GoodAfterTime
+        lBO.EntryOrder.GoodAfterTimeTZ = .TimezoneName
     End If
     If .GoodTillDate <> 0 Then
-        lBo.EntryOrder.GoodTillDate = .GoodTillDate
-        lBo.EntryOrder.GoodTillDateTZ = .TimezoneName
+        lBO.EntryOrder.GoodTillDate = .GoodTillDate
+        lBO.EntryOrder.GoodTillDateTZ = .TimezoneName
     End If
-    If Not .RolloverSpec Is Nothing Then lBo.RolloverSpecification = .RolloverSpec
+    If Not .RolloverSpec Is Nothing Then lBO.RolloverSpecification = .RolloverSpec
 End With
 
-gWriteLineToStdOut lBo.Key & ": bracket order placed"
+gWriteLineToStdOut lBO.Key & ": bracket order placed"
 
-mOrderContext.ExecuteBracketOrder lBo
-CreateBracketProfitCalculator lBo, mOrderContext.DataSource
+mOrderContext.ExecuteBracketOrder lBO
+CreateBracketProfitCalculator lBO, mOrderContext.DataSource
 
 gNumberOfOrdersPlaced = gNumberOfOrdersPlaced + 1
 
@@ -220,22 +220,25 @@ End Function
 '@================================================================================
 
 Private Function isReadyForOrder() As Boolean
+isReadyForOrder = False
 With mOrderContext
-    If Not .IsReady Then Exit Function
+    If Not .IsReady Then
     
-    If Not .IsReadyTickSize() Then Exit Function
+    ElseIf Not .IsReadyTickSize() Then
     
-    If Not .IsReadyForOrderType(mBracketOrderSpec.EntryType) Then Exit Function
-    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then Exit Function
-    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then Exit Function
-    If Not .IsReadyForOrderType(mBracketOrderSpec.StopLossType) Then Exit Function
-    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossLimitPriceSpec) Then Exit Function
-    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossTriggerPriceSpec) Then Exit Function
-    If Not .IsReadyForOrderType(mBracketOrderSpec.TargetType) Then Exit Function
-    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetLimitPriceSpec) Then Exit Function
-    If Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetTriggerPriceSpec) Then Exit Function
+    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.EntryType) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then
+    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.StopLossType) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossLimitPriceSpec) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossTriggerPriceSpec) Then
+    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.TargetType) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetLimitPriceSpec) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetTriggerPriceSpec) Then
+    Else
+        isReadyForOrder = True
+    End If
 End With
-isReadyForOrder = True
 End Function
 
 Private Sub writeContractSpecToStdOut()
