@@ -528,18 +528,16 @@ On Error GoTo Err
 
 If mTickSize <> -1# Then
     IsReadyTickSize = True
+ElseIf Not mTickSizeFuture Is Nothing Then
+    IsReadyTickSize = False
+ElseIf mContract.Specifier.SecType = SecTypeCombo Then
+    Assert False, "Combo orders not supported"
+ElseIf dataSourceHasPrice And IsProviderReady Then
+    Set mTickSizeFuture = mOrderSubmitter.GetTickSize
+    mFutureWaiter.Add mTickSizeFuture
+    IsReadyTickSize = False
 Else
-    If Not mTickSizeFuture Is Nothing Then
-        IsReadyTickSize = False
-    ElseIf mContract.Specifier.SecType = SecTypeCombo Then
-        Assert False, "Combo orders not supported"
-    ElseIf dataSourceHasPrice And IsProviderReady Then
-        Set mTickSizeFuture = mOrderSubmitter.GetTickSize
-        mFutureWaiter.Add mTickSizeFuture
-        IsReadyTickSize = False
-    Else
-        IsReadyTickSize = False
-    End If
+    IsReadyTickSize = False
 End If
 
 Exit Function

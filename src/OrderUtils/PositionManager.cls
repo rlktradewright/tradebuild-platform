@@ -1128,15 +1128,15 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ClosePositions( _
+Public Function ClosePositions( _
                 Optional ByVal pCloseoutMode As CloseoutModes = CloseoutModeMarket, _
-                Optional ByVal pPriceSpec As PriceSpecifier)
+                Optional ByVal pPriceSpec As PriceSpecifier) As IFuture
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
 checkInitialised
 
-If mClosingPosition Then Exit Sub
+If mClosingPosition Then Exit Function
 
 mPositionCloseErrorMessage = ""
 mClosingPosition = True
@@ -1144,11 +1144,13 @@ mClosingPosition = True
 Set mPositionCloser = New PositionCloser
 mPositionCloser.ClosePositions Me, pCloseoutMode, pPriceSpec
 
-Exit Sub
+Set ClosePositions = mPositionCloser.BracketOrderFuture
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Friend Sub CompleteRecoveryInitialisation( _
                 ByVal pOrderSubmitter As IOrderSubmitter, _

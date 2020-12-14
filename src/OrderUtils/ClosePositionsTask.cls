@@ -60,12 +60,21 @@ Private mEnSimulated                                As Enumerator
 
 Private mGroupName                                  As String
 
-Private mCloseoutMode                              As CloseoutModes
+Private mCloseoutMode                               As CloseoutModes
 Private mPriceSpec                                  As PriceSpecifier
+
+Private mBracketOrderListener                       As BracketOrderListener
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
+End Sub
 
 '@================================================================================
 ' IChangeListener Interface Members
@@ -179,8 +188,20 @@ ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+mBracketOrderListener.Add ev.Future.Value
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -199,7 +220,8 @@ Friend Sub Initialise( _
                 ByVal pCloseoutMode As CloseoutModes, _
                 Optional ByVal pPriceSpec As PriceSpecifier, _
                 Optional ByVal pGroupName As String, _
-                Optional ByVal pTypes As PositionTypes = PositionTypeLive)
+                Optional ByVal pTypes As PositionTypes = PositionTypeLive, _
+                Optional ByVal pBracketOrderListener As BracketOrderListener)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -208,6 +230,7 @@ mCloseoutMode = pCloseoutMode
 Set mPriceSpec = pPriceSpec
 If (pTypes And PositionTypeLive) = PositionTypeLive Then Set mEnLive = pOrderManager.PositionManagersLive.Enumerator
 If (pTypes And PositionTypeSimulated) = PositionTypeSimulated Then Set mEnSimulated = pOrderManager.PositionManagersSimulated.Enumerator
+Set mBracketOrderListener = pBracketOrderListener
 
 Exit Sub
 
@@ -237,7 +260,7 @@ End If
 If pm.ProviderIsReady Then
     mNumberRemaining = mNumberRemaining + 1
     pm.AddChangeListener Me
-    pm.ClosePositions mCloseoutMode, mPriceSpec
+    mFutureWaiter.Add pm.ClosePositions(mCloseoutMode, mPriceSpec)
 Else
     If pm.IsSimulated Then
         mClosePositionsResult.NumberOfSimulatedPositionsNotClosed = mClosePositionsResult.NumberOfSimulatedPositionsNotClosed + 1

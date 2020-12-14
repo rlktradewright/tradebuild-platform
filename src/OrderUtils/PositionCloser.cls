@@ -69,6 +69,8 @@ Private mLastExecutionReport                        As IExecutionReport
 Private mCloseoutMode                               As CloseoutModes
 Private mPriceSpec                                  As PriceSpecifier
 
+Private mBracketOrderFutureBuilder                  As New FutureBuilder
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -216,6 +218,11 @@ If mBalancingBracketOrder Is Nothing Then
     placeBalancingOrder
 ElseIf mBalancingOrderContext.IsReadyForBracketOrder(mBalancingBracketOrder) Then
     mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
+Else
+    gLog mBalancingBracketOrder.Key & _
+            ": Balancing order context: " & _
+            mBalancingOrderContext.NotReadyMessage, _
+            ProcName, ModuleName
 End If
 
 Exit Sub
@@ -227,6 +234,11 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Get BracketOrderFuture() As IFuture
+Set BracketOrderFuture = mBracketOrderFutureBuilder.Future
+End Property
+
 
 '@================================================================================
 ' Methods
@@ -469,8 +481,16 @@ ElseIf mCloseoutMode = CloseoutModeLimit Then
 Else
 End If
 
+mBracketOrderFutureBuilder.Value = mBalancingBracketOrder
+mBracketOrderFutureBuilder.Complete
+
 If mBalancingOrderContext.IsReadyForBracketOrder(mBalancingBracketOrder) Then
     mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
+Else
+    gLog mBalancingBracketOrder.Key & _
+            ": Balancing order context: " & _
+            mBalancingOrderContext.NotReadyMessage, _
+            ProcName, ModuleName
 End If
 
 Exit Sub

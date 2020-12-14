@@ -62,6 +62,8 @@ Private mMarketDataManager                          As IMarketDataManager
 
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 
+Private mBracketOrderListener                       As BracketOrderListener
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -159,14 +161,17 @@ Public Function CloseGroupPositions( _
                 ByVal pGroupName As String, _
                 ByVal pCloseoutMode As CloseoutModes, _
                 Optional ByVal pPriceSpec As PriceSpecifier, _
-                Optional ByVal pTypes As PositionTypes = PositionTypeLive) As IFuture
+                Optional ByVal pTypes As PositionTypes = PositionTypeLive, _
+                Optional ByVal pBracketOrderListener As BracketOrderListener) As IFuture
 Const ProcName As String = "CloseGroupPositions"
 On Error GoTo Err
 
 AssertArgument pGroupName <> "", "Group name must be supplied"
 
+Set mBracketOrderListener = pBracketOrderListener
+
 Dim t As New ClosePositionsTask
-t.Initialise Me, pCloseoutMode, pPriceSpec, pGroupName, pTypes
+t.Initialise Me, pCloseoutMode, pPriceSpec, pGroupName, pTypes, pBracketOrderListener
 Set CloseGroupPositions = t.Future
 
 StartTask t, PriorityNormal
@@ -337,14 +342,14 @@ Public Function GetPositionManagersForGroup( _
 Const ProcName As String = "GetPositionManagersForGroup"
 On Error GoTo Err
 
-Dim lPms As New PositionManagers
+Dim lPMS As New PositionManagers
 Dim lPm As PositionManager
 
 For Each lPm In mPositionManagersLive
-    If UCase$(lPm.GroupName) = UCase$(pGroupName) Then lPms.Add lPm
+    If UCase$(lPm.GroupName) = UCase$(pGroupName) Then lPMS.Add lPm
 Next
 
-Set GetPositionManagersForGroup = lPms
+Set GetPositionManagersForGroup = lPMS
 
 Exit Function
 

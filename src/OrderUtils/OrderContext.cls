@@ -101,6 +101,8 @@ Private mOrderContextsRef                       As WeakReference
 
 Private mTickSize                               As Double
 
+Private mNotReadyMessage                        As String
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -269,7 +271,22 @@ IsProviderReady = mProviderIsReady
 End Property
 
 Public Property Get IsReady() As Boolean
-IsReady = (mProviderIsReady And mEnabled And Not mContract Is Nothing And Not mTimerList Is Nothing)
+If Not mProviderIsReady Then
+    mNotReadyMessage = "Not ready to submit orders"
+    Exit Function
+ElseIf Not mEnabled Then
+    mNotReadyMessage = "Not ready - order submission disabled"
+    Exit Function
+ElseIf mContract Is Nothing Then
+    mNotReadyMessage = "Not ready - contract not yet resolved"
+    Exit Function
+ElseIf mTimerList Is Nothing Then
+    mNotReadyMessage = "Not ready - awaiting clock info"
+    Exit Function
+Else
+    mNotReadyMessage = ""
+    IsReady = True
+End If
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -278,6 +295,10 @@ End Property
 
 Friend Property Get Name() As String
 Name = mName
+End Property
+
+Public Property Get NotReadyMessage() As String
+NotReadyMessage = mNotReadyMessage
 End Property
 
 Friend Property Get OrderManager() As OrderManager
@@ -1136,20 +1157,14 @@ If Not IsReady Then Exit Function
 
 If Not IsReadyTickSize() Then Exit Function
 
-If Not IsReadyForOrderType(pBracketOrder.EntryOrder.OrderType) Then Exit Function
-If Not IsReadyForPriceSpecifier(pBracketOrder.EntryOrder.LimitPriceSpec) Then Exit Function
-If Not IsReadyForPriceSpecifier(pBracketOrder.EntryOrder.TriggerPriceSpec) Then Exit Function
+If Not isReadyForOrder(pBracketOrder.EntryOrder) Then Exit Function
 
 If Not pBracketOrder.StopLossOrder Is Nothing Then
-    If Not IsReadyForOrderType(pBracketOrder.StopLossOrder.OrderType) Then Exit Function
-    If Not IsReadyForPriceSpecifier(pBracketOrder.StopLossOrder.LimitPriceSpec) Then Exit Function
-    If Not IsReadyForPriceSpecifier(pBracketOrder.StopLossOrder.TriggerPriceSpec) Then Exit Function
+    If Not isReadyForOrder(pBracketOrder.StopLossOrder) Then Exit Function
 End If
 
 If Not pBracketOrder.TargetOrder Is Nothing Then
-    If Not IsReadyForOrderType(pBracketOrder.TargetOrder.OrderType) Then Exit Function
-    If Not IsReadyForPriceSpecifier(pBracketOrder.TargetOrder.LimitPriceSpec) Then Exit Function
-    If Not IsReadyForPriceSpecifier(pBracketOrder.TargetOrder.TriggerPriceSpec) Then Exit Function
+    If Not isReadyForOrder(pBracketOrder.TargetOrder) Then Exit Function
 End If
 
 IsReadyForBracketOrder = True
@@ -1160,11 +1175,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
+Public Function IsReadyForOrderType( _
+                ByVal pOrderType As OrderTypes) As Boolean
 Const ProcName As String = "IsReadyForOrderType"
 On Error GoTo Err
 
 IsReadyForOrderType = mOrderSubmitter.IsReadyForOrderType(pOrderType)
+If IsReadyForOrderType Then
+    mNotReadyMessage = ""
+Else
+    mNotReadyMessage = "Not ready for order type : " & gOrderTypeToShortString(pOrderType)
+End If
 
 Exit Function
 
@@ -1176,6 +1197,8 @@ Public Function IsReadyForPriceSpecifier(ByVal pPriceSpec As PriceSpecifier) As 
 Const ProcName As String = "IsReadyForPriceSpecifier"
 On Error GoTo Err
 
+mNotReadyMessage = ""
+
 If pPriceSpec Is Nothing Then
     IsReadyForPriceSpecifier = True
     Exit Function
@@ -1185,23 +1208,49 @@ IsReadyForPriceSpecifier = False
 
 Select Case pPriceSpec.PriceType
 Case PriceValueTypeAsk
-    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
+    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then
+        mNotReadyMessage = "Not ready for ask price"
+        Exit Function
+    End If
 Case PriceValueTypeBid
-    If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Function
+    If Not mDataSource.HasCurrentTick(TickTypeBid) Then
+        mNotReadyMessage = "Not ready for bid price"
+        Exit Function
+    End If
 Case PriceValueTypeLast
-    If Not mDataSource.HasCurrentTick(TickTypeTrade) Then Exit Function
+    If Not mDataSource.HasCurrentTick(TickTypeTrade) Then
+        mNotReadyMessage = "Not ready for last price"
+        Exit Function
+    End If
 Case PriceValueTypeModel
-    If Not mDataSource.HasCurrentTick(TickTypeOptionModelPrice) Then Exit Function
+    If Not mDataSource.HasCurrentTick(TickTypeOptionModelPrice) Then
+        mNotReadyMessage = "Not ready for option model price"
+        Exit Function
+    End If
 Case PriceValueTypeMid, _
         PriceValueTypeBidOrAsk
-    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then Exit Function
-    If Not mDataSource.HasCurrentTick(TickTypeBid) Then Exit Function
+    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then
+        mNotReadyMessage = "Not ready for ask price"
+        Exit Function
+    ElseIf Not mDataSource.HasCurrentTick(TickTypeBid) Then
+        mNotReadyMessage = "Not ready for ask price"
+        Exit Function
+    End If
 Case PriceValueTypeEntry
 End Select
 
-IsReadyForPriceSpecifier = pPriceSpec.OffsetType <> PriceOffsetTypeBidAskPercent Or _
-                    (mDataSource.HasCurrentTick(TickTypeAsk) And _
-                    mDataSource.HasCurrentTick(TickTypeBid))
+If pPriceSpec.OffsetType = PriceOffsetTypeBidAskPercent Then
+    If Not mDataSource.HasCurrentTick(TickTypeAsk) Then
+        mNotReadyMessage = "Not ready for ask price"
+        Exit Function
+    End If
+    If Not mDataSource.HasCurrentTick(TickTypeBid) Then
+        mNotReadyMessage = "Not ready for bid price"
+        Exit Function
+    End If
+End If
+
+IsReadyForPriceSpecifier = True
 
 Exit Function
 
@@ -1214,13 +1263,19 @@ Const ProcName As String = "IsReadyTickSize"
 On Error GoTo Err
 
 If mTickSize <> -1# Then
+    mNotReadyMessage = ""
     IsReadyTickSize = True
 ElseIf Not IsProviderReady Then
+    mNotReadyMessage = "Not ready to submit orders"
     IsReadyTickSize = False
 ElseIf getOrderContexts.IsGettingTickSize Then
+    mNotReadyMessage = "Not ready: determining minimum price variation"
+    IsReadyTickSize = False
+ElseIf getOrderContexts.IsReadyTickSize Then
+    mNotReadyMessage = "Not ready: determining minimum price variation"
     IsReadyTickSize = False
 Else
-    IsReadyTickSize = getOrderContexts.IsReadyTickSize
+    IsReadyTickSize = True
 End If
 
 Exit Function
@@ -1568,6 +1623,23 @@ If mDataSource Is Nothing Then
 Else
     isDataSourceRunning = (mDataSource.State = MarketDataSourceStateRunning)
 End If
+End Function
+
+Private Function isReadyForOrder( _
+                ByVal pOrder As IOrder) As Boolean
+Const ProcName As String = "isReadyForOrder"
+On Error GoTo Err
+
+If Not IsReadyForOrderType(pOrder.OrderType) Then Exit Function
+If Not IsReadyForPriceSpecifier(pOrder.LimitPriceSpec) Then Exit Function
+If Not IsReadyForPriceSpecifier(pOrder.TriggerPriceSpec) Then Exit Function
+
+isReadyForOrder = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setContract(ByVal pContract As IContract)

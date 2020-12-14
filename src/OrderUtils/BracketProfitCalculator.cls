@@ -372,7 +372,7 @@ Dim lNotifyMaxProfit As Boolean
 If lProfit > mMaxProfit Then
     mMaxProfit = lProfit
     lNotifyMaxProfit = True
-    gLog "Max profit increased: " & mMaxProfit & "; Tick=" & GenericTickToString(mCurrentTick), ProcName, ModuleName, , LogLevels.LogLevelDetail
+    gLog mBracketOrder.Key & ": Max profit increased: " & mMaxProfit & "; Tick=" & GenericTickToString(mCurrentTick), ProcName, ModuleName, , LogLevels.LogLevelDetail
 End If
 
 Dim lNotifyMaxLoss As Boolean

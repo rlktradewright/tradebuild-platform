@@ -76,6 +76,7 @@ Class=OrderUtilsEnums; OrderUtilsEnums.cls
 Module=GPrices; GPrices.bas
 Class=CloseoutSpecifier; CloseoutSpecifier.cls
 Class=OptionContractResolver; OptionContractResolver.cls
+Class=BracketOrderListener; BracketOrderListener.cls
 Startup="(None)"
 HelpFile=""
 Title="OrderUtils"

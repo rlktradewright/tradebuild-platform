@@ -176,7 +176,11 @@ Case RolloverControllerStateWaitingForOrderContext
 Case RolloverControllerStateCreatingNextBracketOrder
     Set mNextBracketOrder = createNextBracketOrder(mUseMarketEntry)
     If Not mNextOrderContext.IsReadyForBracketOrder(mNextBracketOrder) Then
-        gLog mBracketOrder.Key & ": Waiting for next order context: " & mNextContract.Specifier.ToString, ProcName, ModuleName
+        gLog mBracketOrder.Key & _
+                ": Waiting for next order context: " & _
+                mNextOrderContext.NotReadyMessage & ": " & _
+                mNextContract.Specifier.ToString, _
+                ProcName, ModuleName
         setState RolloverControllerStateWaitingForOrderContext
         mTaskContext.Suspend -1
     Else
@@ -352,6 +356,12 @@ If mNextBracketOrder Is Nothing Then
 ElseIf mNextOrderContext.IsReadyForBracketOrder(mNextBracketOrder) Then
     setState RolloverControllerStateExecutingNextBracketOrder
     mTaskContext.Continue
+Else
+    gLog mBracketOrder.Key & _
+            ": Waiting for next order context: " & _
+            mNextOrderContext.NotReadyMessage & ": " & _
+            mNextContract.Specifier.ToString, _
+            ProcName, ModuleName
 End If
 
 Exit Sub

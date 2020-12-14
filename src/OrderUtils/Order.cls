@@ -548,7 +548,7 @@ Private Sub IOrder_NotifyMessage(ByVal pMessage As String)
 Const ProcName As String = "IOrder_NotifyMessage"
 On Error GoTo Err
 
-
+NotifyMessage pMessage
 
 Exit Sub
 
