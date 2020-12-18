@@ -311,11 +311,28 @@ Set lInstr = gDb.InstrumentFactory.LoadByQuery("INSTRUMENTCLASSID=" & gInstrumen
                                             "(STRIKEPRICE IS NULL OR STRIKEPRICE=" & strike & ") AND " & _
                                             "(OPTRIGHT IS NULL OR OPTRIGHT=" & optRight & ")")
 If lInstr Is Nothing Then
-    Set lInstr = gDb.InstrumentFactory.MakeNew
-ElseIf Not gUpdate Then
-    gCon.WriteErrorLine "Line " & lineNumber & ": Already exists: " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
-    Exit Sub
-Else
+    ' cater for an item with the wrong expiry date already present
+    Set lInstr = gDb.InstrumentFactory.LoadByQuery("INSTRUMENTCLASSID=" & gInstrumentClass.Id & " AND " & _
+                                            "SYMBOL='" & symbol & "' AND " & _
+                                            "SHORTNAME='" & shortname & "' AND " & _
+                                            "(EXPIRYDATE IS NULL OR EXPIRYDATE<>'" & Format(expiryDate, "mm/dd/yyyy") & "')")
+    If Not lInstr Is Nothing Then
+        gCon.WriteErrorLine "Line " & lineNumber & _
+                            ": Already exists with incorrect expiry " & _
+                            Format(lInstr.expiryDate, "yyyymmdd") & _
+                            ": will fix: " & _
+                            gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
+        update = True
+    Else
+        Set lInstr = gDb.InstrumentFactory.MakeNew
+    End If
+End If
+
+If Not lInstr Is Nothing Then
+    If Not (gUpdate Or update) Then
+        gCon.WriteErrorLine "Line " & lineNumber & ": Already exists: " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
+        Exit Sub
+    End If
     update = True
 End If
 
