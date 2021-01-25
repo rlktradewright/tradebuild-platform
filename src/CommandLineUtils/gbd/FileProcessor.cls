@@ -82,6 +82,8 @@ Private mStream                                     As TextStream
 Private mNumberOfBarsOutput                         As Long
 Private mIncludeMillisecs                           As Boolean
 
+Private mEchoToStdOut                               As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -240,6 +242,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     mTickSize = mContract.TickSize
 
     If mOutputPath = "" And mOutputFilename = "" Then
+    ElseIf UCase$(mOutputFilename) = "CON" Then
     Else
         Dim lMessage As String
         Set mStream = gCreateOutputStream( _
@@ -299,7 +302,7 @@ Private Sub mReplayController_ReplayProgress(ByVal pTickfileTimestamp As Date, B
 Const ProcName As String = "mReplayController_ReplayProgress"
 On Error GoTo Err
 
-gCon.WriteLineToConsole "Processing tickfile: events processed=" & pEventsPlayed & "; percent complete=" & Format(pPercentComplete, "0.0")
+gWriteLineToConsole "Processing tickfile: events processed=" & pEventsPlayed & "; percent complete=" & Format(pPercentComplete, "0.0")
 
 Exit Sub
 
@@ -323,7 +326,8 @@ Friend Sub Initialise( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pSessionOnly As Boolean, _
                 ByVal pEntireSession As Boolean, _
-                ByVal pIncludeMillisecs As Boolean)
+                ByVal pIncludeMillisecs As Boolean, _
+                ByVal pEchoToStdOut As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -338,6 +342,7 @@ mTickfileSpec.ToDate = pToDate
 mTickfileSpec.UseFullSession = Not mSessionOnly
 mTickfileSpec.EntireSession = pEntireSession
 mIncludeMillisecs = pIncludeMillisecs
+mEchoToStdOut = pEchoToStdOut
 
 Set mTimePeriod = pTimePeriod
 
@@ -370,10 +375,10 @@ Const ProcName As String = "outputBar"
 On Error GoTo Err
 
 mNumberOfBarsOutput = mNumberOfBarsOutput + 1
-If mStream Is Nothing Then
-    gOutputBarToConsole pBar, mTimePeriod, True, mIncludeMillisecs, mSecType, mTickSize
+If mStream Is Nothing Or mEchoToStdOut Then
+    gOutputBarToStdOut mEchoToStdOut, Me, pBar, mTimePeriod, mNumberOfBarsOutput, True, mIncludeMillisecs, mSecType, mTickSize
 Else
-    gOutputBarToTextStream pBar, mTimePeriod, True, mIncludeMillisecs, mSecType, mTickSize, mStream
+    gOutputBarToTextStream Me, pBar, mTimePeriod, mNumberOfBarsOutput, True, mIncludeMillisecs, mSecType, mTickSize, mStream
 End If
 
 Exit Sub

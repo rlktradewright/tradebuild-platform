@@ -58,6 +58,10 @@ Private Const EntireSessionCommand                  As String = "ENTIRESESSION"
 Private Const ExitCommand                           As String = "EXIT"
 Private Const DateTimeFormatCommand                 As String = "DATETIMEFORMAT"
 Private Const InFileCommand                         As String = "INFILE"
+Private Const EchoCommand                           As String = "ECHO"
+Private Const StartEchoCommand                      As String = "STARTECHO"
+Private Const ResultFormatCommand                   As String = "RESULTFORMAT"
+Private Const EchoResultFormatCommand               As String = "ECHORESULTFORMAT"
 
 Private Const LatestParameter                       As String = "LATEST"
 Private Const TodayParameter                        As String = "TODAY"
@@ -85,6 +89,7 @@ Private Const ContractVariable                      As String = "$CONTRACT"
 Private Const SymbolVariable                        As String = "$SYMBOL"
 Private Const LocalSymbolVariable                   As String = "$LOCALSYMBOL"
 Private Const SecTypeVariable                       As String = "$SECTYPE"
+Private Const SecTypeAbbrvVariable                  As String = "$SECTYPEABBRV"
 Private Const ExchangeVariable                      As String = "$EXCHANGE"
 Private Const ExpiryVariable                        As String = "$EXPIRY"
 Private Const CurrencyVariable                      As String = "$CURRENCY"
@@ -102,6 +107,16 @@ Private Const ToTimeVariable                        As String = "$TOTIME"
 Private Const TimeframeVariable                     As String = "$TIMEFRAME"
 Private Const NumberRequestedVariable               As String = "$NUMBERREQUESTED"
 Private Const NumberReturnedVariable                As String = "$NUMBERRETURNED"
+Private Const NewlineVariable                       As String = "$NEWLINE"
+
+Private Const BarNumberVariable                     As String = "$BARNUMBER"
+Private Const TimestampVariable                     As String = "$TIMESTAMP"
+Private Const OpenVariable                          As String = "$OPEN"
+Private Const HighVariable                          As String = "$HIGH"
+Private Const LowVariable                           As String = "$LOW"
+Private Const CloseVariable                         As String = "$CLOSE"
+Private Const VolumeVariable                        As String = "$VOLUME"
+Private Const TickVolumeVariable                    As String = "$TICKVOLUME"
 
 
 Private Const SwitchCommandSeparator                As String = "SEP"
@@ -118,6 +133,14 @@ Private Const Time235900                            As Double = 0.99930556712963
 
 Private Const FilenameCharsPattern                  As String = "^[^/\*\?""<>|]*$"
 Private Const SubstitutionVariablePattern           As String = "(?:{(\$\w*)})"
+
+Private Const DefaultResultFormat                   As String = "{" & TimestampVariable & "}," & _
+                                                                "{" & OpenVariable & "}," & _
+                                                                "{" & HighVariable & "}," & _
+                                                                "{" & LowVariable & "}," & _
+                                                                "{" & CloseVariable & "}," & _
+                                                                "{" & VolumeVariable & "}," & _
+                                                                "{" & TickVolumeVariable & "}"
 
 '@================================================================================
 ' Member variables
@@ -167,12 +190,22 @@ Private mProviderReady                              As Boolean
 
 Private mOutputPath                                 As String
 
-Private mSubstitutionVariables()                    As String
-Private mMaxSubstitutionVariablesIndex              As Long
+Private mFilenameSubstitutionVariables()            As String
+Private mMaxFilenameVariablesIndex                  As Long
+
+Private mResultSubstitutionVariables()              As String
+Private mMaxResultVariablesIndex                    As Long
 
 Private mTimestampFormat                            As TimestampFormats
 Private mTimestampDateOnlyFormat                    As TimestampFormats
 Private mTimestampTimeOnlyFormat                    As TimestampFormats
+
+Private mErorStringBuilder                          As StringBuilder
+
+Private mStartResultFormat                           As String
+Private mStartEchoResultFormat                       As String
+
+Private mEchoToStdOut                               As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -221,8 +254,8 @@ Public Function gCreateOutputStream( _
 Const ProcName As String = "gCreateOutputStream"
 On Error GoTo Err
 
-pOutputPath = gPerformVariableSubstitution(pOutputPath, pProcessor)
-pOutputFilename = gPerformVariableSubstitution(pOutputFilename, pProcessor)
+pOutputPath = gPerformFilenameVariableSubstitution(pOutputPath, pProcessor)
+pOutputFilename = gPerformFilenameVariableSubstitution(pOutputFilename, pProcessor)
 Dim lFilename As String
 lFilename = gFileSystemObject.BuildPath(pOutputPath, pOutputFilename)
 Set gCreateOutputStream = CreateWriteableTextFile( _
@@ -251,12 +284,12 @@ End Function
 Public Sub gHandleFatalError(ev As ErrorEventData)
 On Error Resume Next    ' ignore any further errors that might arise
 
-gCon.WriteErrorString "Error "
-gCon.WriteErrorString CStr(ev.ErrorCode)
-gCon.WriteErrorString ": "
-gCon.WriteErrorLine ev.ErrorMessage
-gCon.WriteErrorLine "At:"
-gCon.WriteErrorLine ev.ErrorSource
+gWriteErrorString "Error "
+gWriteErrorString CStr(ev.ErrorCode)
+gWriteErrorString ": "
+gWriteErrorLine ev.ErrorMessage
+gWriteErrorLine "At:"
+gWriteErrorLine ev.ErrorSource
 End Sub
 
 Public Sub gHandleUnexpectedError( _
@@ -405,19 +438,22 @@ gWriteLineToConsole "Connection from TWS to IB servers recovered"
 mProviderReady = True
 End Sub
 
-Public Sub gOutputBarToConsole( _
+Public Sub gOutputBarToStdOut( _
+                ByVal pUseEchoResultFormat As Boolean, _
+                ByVal pProcessor As IProcessor, _
                 ByVal pBar As Bar, _
                 ByVal pTimeframe As TimePeriod, _
+                ByVal pBarnumber As Long, _
                 ByVal pNormaliseDailyBarTimestamps As Boolean, _
                 ByVal pIncludeMillisecs As Boolean, _
                 ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double)
-Const ProcName As String = "gOutputBarToConsole"
+Const ProcName As String = "gOutputBarToStdOut"
 On Error GoTo Err
 
 If pBar Is Nothing Then Exit Sub
 
-gCon.WriteLine formatBar(pBar, pTimeframe, pNormaliseDailyBarTimestamps, pSecType, pTickSize, pIncludeMillisecs)
+gWriteLineToStdOut formatBar(pUseEchoResultFormat, pProcessor, pBar, pBarnumber, pTimeframe, pNormaliseDailyBarTimestamps, pSecType, pTickSize, pIncludeMillisecs)
 
 Exit Sub
 
@@ -426,19 +462,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gOutputBarToTextStream( _
+                ByVal pProcessor As IProcessor, _
                 ByVal pBar As Bar, _
                 ByVal pTimeframe As TimePeriod, _
+                ByVal pBarnumber As Long, _
                 ByVal pNormaliseDailyBarTimestamps As Boolean, _
                 ByVal pIncludeMillisecs As Boolean, _
                 ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double, _
                 ByVal pStream As TextStream)
-Const ProcName As String = "gOutputBarToConsole"
+Const ProcName As String = "gOutputBarToStdOut"
 On Error GoTo Err
 
 If pBar Is Nothing Then Exit Sub
 
-pStream.WriteLine formatBar(pBar, pTimeframe, pNormaliseDailyBarTimestamps, pSecType, pTickSize, pIncludeMillisecs)
+pStream.WriteLine formatBar(False, pProcessor, pBar, pBarnumber, pTimeframe, pNormaliseDailyBarTimestamps, pSecType, pTickSize, pIncludeMillisecs)
 
 Exit Sub
 
@@ -446,10 +484,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function gPerformVariableSubstitution( _
+Public Function gPerformFilenameVariableSubstitution( _
                 ByVal pString As String, _
                 ByVal pProcessor As IProcessor) As String
-Const ProcName As String = "gPerformVariableSubstitution"
+Const ProcName As String = "gPerformFilenameVariableSubstitution"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
@@ -483,6 +521,8 @@ For Each lMatch In lMatches
     Case LocalSymbolVariable
         r = lContractSpec.LocalSymbol
     Case SecTypeVariable
+        r = SecTypeToString(lContractSpec.SecType)
+    Case SecTypeAbbrvVariable
         r = SecTypeToShortString(lContractSpec.SecType)
     Case ExchangeVariable
         r = lContractSpec.Exchange
@@ -536,7 +576,137 @@ For Each lMatch In lMatches
     s = s & escapeNonFilenameChars(r)
 Next
 
-gPerformVariableSubstitution = s & Right$(pString, Len(pString) - lCurrPosn + 1)
+gPerformFilenameVariableSubstitution = s & Right$(pString, Len(pString) - lCurrPosn + 1)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gPerformResultVariableSubstitution( _
+                ByVal pProcessor As IProcessor, _
+                ByVal pString As String, _
+                ByVal pBar As Bar, _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pBarnumber As Long, _
+                ByVal pNormaliseDailyBarTimestamps As Boolean, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double, _
+                ByVal pIncludeMillisecs As Boolean) As String
+Const ProcName As String = "gPerformResultVariableSubstitution"
+On Error GoTo Err
+
+Dim lContractSpec As IContractSpecifier
+Set lContractSpec = pProcessor.ContractSpec
+
+Dim lRegExp As RegExp: Set lRegExp = gRegExp
+lRegExp.IgnoreCase = True
+
+lRegExp.Pattern = SubstitutionVariablePattern
+lRegExp.Global = True
+
+Dim lMatches As MatchCollection
+Set lMatches = lRegExp.Execute(pString)
+
+Dim s As String
+Dim lCurrPosn As Long: lCurrPosn = 1
+
+Dim lMatch As Match
+For Each lMatch In lMatches
+    s = s & Mid$(pString, lCurrPosn, lMatch.FirstIndex - lCurrPosn + 1)
+    lCurrPosn = lMatch.FirstIndex + lMatch.Length + 1
+    
+    Dim r As String
+    
+    Dim lVariable As String: lVariable = UCase$(lMatch.SubMatches(0))
+    Select Case lVariable
+    Case BarNumberVariable
+        r = CStr(pBarnumber)
+    Case TimestampVariable
+        If Not pNormaliseDailyBarTimestamps Then
+            r = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not pIncludeMillisecs And TimestampNoMillisecs))
+        ElseIf pTimePeriod.Units = TimePeriodDay Or _
+                pTimePeriod.Units = TimePeriodWeek Or _
+                pTimePeriod.Units = TimePeriodMonth Or _
+                pTimePeriod.Units = TimePeriodYear Then
+            r = FormatTimestamp(pBar.TimeStamp, mTimestampDateOnlyFormat)
+        Else
+            r = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not pIncludeMillisecs And TimestampNoMillisecs))
+        End If
+    Case OpenVariable
+        r = FormatPrice(pBar.OpenValue, pSecType, pTickSize)
+    Case HighVariable
+        r = FormatPrice(pBar.HighValue, pSecType, pTickSize)
+    Case LowVariable
+        r = FormatPrice(pBar.LowValue, pSecType, pTickSize)
+    Case CloseVariable
+        r = FormatPrice(pBar.CloseValue, pSecType, pTickSize)
+    Case VolumeVariable
+        r = CStr(pBar.Volume)
+    Case TickVolumeVariable
+        r = CStr(pBar.TickVolume)
+    Case ContractVariable
+        r = gGetContractName(lContractSpec)
+    Case SymbolVariable
+        r = lContractSpec.Symbol
+    Case LocalSymbolVariable
+        r = lContractSpec.LocalSymbol
+    Case SecTypeVariable
+        r = SecTypeToString(lContractSpec.SecType)
+    Case SecTypeAbbrvVariable
+        r = SecTypeToShortString(lContractSpec.SecType)
+    Case ExchangeVariable
+        r = lContractSpec.Exchange
+    Case ExpiryVariable
+        r = lContractSpec.Expiry
+    Case CurrencyVariable
+        r = lContractSpec.CurrencyCode
+    Case MultiplierVariable
+        r = lContractSpec.Multiplier
+    Case StrikeVariable
+        r = lContractSpec.Strike
+    Case RightVariable
+        r = OptionRightToString(lContractSpec.Right)
+    Case FromDateVariable
+        r = FormatTimestamp(pProcessor.FromDate, mTimestampDateOnlyFormat)
+    Case FromDateTimeVariable
+        r = FormatTimestamp(pProcessor.FromDate, mTimestampFormat + TimestampNoMillisecs)
+    Case FromTimeVariable
+        r = FormatTimestamp(pProcessor.FromDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs)
+    Case ToDateVariable
+        If pProcessor.ToDate = MaxDate Then
+            r = LatestParameter
+        Else
+            r = FormatTimestamp(pProcessor.ToDate, mTimestampDateOnlyFormat)
+        End If
+    Case ToDateTimeVariable
+        If pProcessor.ToDate = MaxDate Then
+            r = LatestParameter
+        Else
+            r = FormatTimestamp(pProcessor.ToDate, mTimestampFormat + TimestampNoMillisecs)
+        End If
+    Case ToTimeVariable
+        If pProcessor.ToDate = MaxDate Then
+            r = LatestParameter
+        Else
+            r = FormatTimestamp(pProcessor.ToDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs)
+        End If
+    Case TimeframeVariable
+        r = pProcessor.Timeframe.ToShortString
+    Case NumberRequestedVariable
+        r = pProcessor.NumberOfBarsRequested
+    Case NumberReturnedVariable
+        r = pProcessor.NumberOfBarsOutput
+    Case NewlineVariable
+        r = vbCrLf
+    Case Default
+        Assert False, "Unexpected substitution variable: " & lVariable
+    End Select
+    s = s & r
+Next
+
+gPerformResultVariableSubstitution = s & Right$(pString, Len(pString) - lCurrPosn + 1)
 
 Exit Function
 
@@ -548,7 +718,16 @@ Public Sub gWriteErrorLine( _
                 ByVal pMessage As String)
 Dim s As String: s = "Line " & mLineNumber & ": " & pMessage
 gCon.WriteErrorLine s
-LogMessage s
+mErorStringBuilder.Append s
+LogMessage "StdErr: " & mErorStringBuilder.ToString
+mErorStringBuilder.Clear
+End Sub
+
+Public Sub gWriteErrorString( _
+                ByVal pMessage As String)
+Dim s As String: s = "Line " & mLineNumber & ": " & pMessage
+gCon.WriteErrorString s
+mErorStringBuilder.Append s
 End Sub
 
 Public Sub gWriteLineToConsole( _
@@ -557,10 +736,17 @@ gCon.WriteLineToConsole pMessage
 LogMessage pMessage
 End Sub
 
+Public Sub gWriteLineToStdOut(ByVal pMessage As String)
+Const ProcName As String = "gWriteLineToStdOut"
+
+If pMessage <> "" Then LogMessage "StdOut: " & pMessage
+gCon.WriteLine pMessage
+End Sub
+
 Public Sub Main()
 On Error GoTo Err
 
-InitialiseTWUtilities
+Set mErorStringBuilder = CreateStringBuilder
 
 Set mFatalErrorHandler = New FatalErrorHandler
 ApplicationGroupName = "TradeWright"
@@ -638,9 +824,9 @@ Exit Sub
 
 Err:
 If Not gCon Is Nothing Then
-    gCon.WriteErrorLine Err.Description
-    gCon.WriteErrorLine "At:"
-    gCon.WriteErrorLine Err.Source
+    gWriteErrorLine Err.Description
+    gWriteErrorLine "At:"
+    gWriteErrorLine Err.Source
 End If
 
 TerminateTWUtilities
@@ -650,15 +836,31 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub addSubstitutionVariable(ByVal pVariable As String)
-Const ProcName As String = "addSubstitutionVariable"
+Private Sub addFilenameSubstitutionVariable(ByVal pVariable As String)
+Const ProcName As String = "addFilenameSubstitutionVariable"
 On Error GoTo Err
 
-mMaxSubstitutionVariablesIndex = mMaxSubstitutionVariablesIndex + 1
-If mMaxSubstitutionVariablesIndex > UBound(mSubstitutionVariables) Then
-    ReDim Preserve mSubstitutionVariables(2 * (UBound(mSubstitutionVariables) + 1) - 1) As String
+mMaxFilenameVariablesIndex = mMaxFilenameVariablesIndex + 1
+If mMaxFilenameVariablesIndex > UBound(mFilenameSubstitutionVariables) Then
+    ReDim Preserve mFilenameSubstitutionVariables(2 * (UBound(mFilenameSubstitutionVariables) + 1) - 1) As String
 End If
-mSubstitutionVariables(mMaxSubstitutionVariablesIndex) = UCase$(pVariable)
+mFilenameSubstitutionVariables(mMaxFilenameVariablesIndex) = UCase$(pVariable)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub addResultSubstitutionVariable(ByVal pVariable As String)
+Const ProcName As String = "addResultSubstitutionVariable"
+On Error GoTo Err
+
+mMaxResultVariablesIndex = mMaxResultVariablesIndex + 1
+If mMaxResultVariablesIndex > UBound(mResultSubstitutionVariables) Then
+    ReDim Preserve mResultSubstitutionVariables(2 * (UBound(mResultSubstitutionVariables) + 1) - 1) As String
+End If
+mResultSubstitutionVariables(mMaxResultVariablesIndex) = UCase$(pVariable)
 
 Exit Sub
 
@@ -719,7 +921,7 @@ Set lMatches = lRegExp.Execute(pPath)
 Dim lMatch As Match
 For Each lMatch In lMatches
     Dim lVariable As String: lVariable = lMatch.SubMatches(0)
-    If Not isValidSubstitutionVariable(lVariable) Then
+    If Not isValidSubstitutionVariable(lVariable, mFilenameSubstitutionVariables, mMaxFilenameVariablesIndex) Then
         gWriteErrorLine lVariable & " is not a valid substitution variable"
         isValidPath = False
     End If
@@ -731,16 +933,55 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function isValidSubstitutionVariable(ByVal pString As String) As Boolean
+Private Function isValidSubstitutableString( _
+                ByVal pInput As String, _
+                ByRef pSubstitutionVariables() As String, _
+                ByVal pMaxVariablesIndex As Long) As Boolean
+Const ProcName As String = "isValidSubstitutableString"
+On Error GoTo Err
+
+isValidSubstitutableString = True
+
+Dim lRegExp As RegExp: Set lRegExp = gRegExp
+lRegExp.IgnoreCase = True
+
+lRegExp.Pattern = SubstitutionVariablePattern
+lRegExp.Global = True
+
+Dim lMatches As MatchCollection
+Set lMatches = lRegExp.Execute(pInput)
+
+Dim lMatch As Match
+For Each lMatch In lMatches
+    Dim lVariable As String: lVariable = lMatch.SubMatches(0)
+    If Not isValidSubstitutionVariable(lVariable, pSubstitutionVariables, pMaxVariablesIndex) Then
+        gWriteErrorLine lVariable & " is not a valid substitution variable"
+        isValidSubstitutableString = False
+    End If
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isValidSubstitutionVariable( _
+                ByVal pString As String, _
+                ByRef pSubstitutionVariables() As String, _
+                ByVal pMaxVariablesIndex As Long) As Boolean
 isValidSubstitutionVariable = BinarySearchStrings( _
                                 UCase$(pString), _
-                                mSubstitutionVariables, _
+                                pSubstitutionVariables, _
                                 0, _
-                                mMaxSubstitutionVariablesIndex + 1) >= 0
+                                pMaxVariablesIndex + 1) >= 0
 End Function
 
 Private Function formatBar( _
+                ByVal pUseEchoResultFormat As Boolean, _
+                ByVal pProcessor As IProcessor, _
                 ByVal pBar As Bar, _
+                ByVal pBarnumber As Long, _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pNormaliseDailyBarTimestamps As Boolean, _
                 ByVal pSecType As SecurityTypes, _
@@ -751,28 +992,18 @@ On Error GoTo Err
 
 If pBar Is Nothing Then Exit Function
 
-ReDim lTexts(7) As String
-
-If Not pNormaliseDailyBarTimestamps Then
-    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not pIncludeMillisecs And TimestampNoMillisecs))
-ElseIf pTimePeriod.Units = TimePeriodDay Or _
-        pTimePeriod.Units = TimePeriodWeek Or _
-        pTimePeriod.Units = TimePeriodMonth Or _
-        pTimePeriod.Units = TimePeriodYear Then
-    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampDateOnlyFormat)
-Else
-    lTexts(0) = FormatTimestamp(pBar.TimeStamp, mTimestampFormat Or (Not pIncludeMillisecs And TimestampNoMillisecs))
-End If
-
-lTexts(1) = FormatPrice(pBar.OpenValue, pSecType, pTickSize)
-lTexts(2) = FormatPrice(pBar.HighValue, pSecType, pTickSize)
-lTexts(3) = FormatPrice(pBar.LowValue, pSecType, pTickSize)
-lTexts(4) = FormatPrice(pBar.CloseValue, pSecType, pTickSize)
-lTexts(5) = pBar.Volume
-lTexts(6) = pBar.TickVolume
-lTexts(7) = pBar.OpenInterest
-
-formatBar = Join(lTexts, ",")
+Dim lResultFormat As String
+lResultFormat = IIf(pUseEchoResultFormat, mStartEchoResultFormat, mStartResultFormat)
+formatBar = gPerformResultVariableSubstitution( _
+                        pProcessor, _
+                        lResultFormat, _
+                        pBar, _
+                        pTimePeriod, _
+                        pBarnumber, _
+                        pNormaliseDailyBarTimestamps, _
+                        pSecType, _
+                        pTickSize, _
+                        pIncludeMillisecs)
 
 Exit Function
 
@@ -876,8 +1107,16 @@ Case DateTimeFormatCommand
     processDateTimeFormatCommand params
 Case InFileCommand
     processInfileCommand params
+Case EchoCommand
+    processEchoCommand params
+Case StartEchoCommand
+    processStartEchoCommand params
+Case ResultFormatCommand
+    processResultFormatCommand params
+Case EchoResultFormatCommand
+    processEchoResultFormatCommand params
 Case Else
-    gCon.WriteErrorLine "Invalid lCommand '" & lCommand & "'"
+    gWriteErrorLine "Invalid lCommand '" & lCommand & "'"
 End Select
 
 Exit Sub
@@ -963,7 +1202,9 @@ Then
     Exit Sub
 End If
 
-If lClp.NumberOfArgs > 1 Then
+If TryCreateContractSpecifierFromString(params, mContractSpec) Then
+
+ElseIf lClp.NumberOfArgs > 1 Then
      Set mContractSpec = processPositionalContractString(lClp)
 ElseIf lClp.NumberOfArgs = 1 Then
     Set mContractSpec = CreateContractSpecifierFromString(lClp.Arg(0))
@@ -1027,6 +1268,25 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processEchoCommand(ByVal params As String)
+Const ProcName As String = "processEchoCommand"
+On Error GoTo Err
+
+gWriteLineToStdOut params
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processEchoResultFormatCommand(pParams As String)
+If isValidSubstitutableString( _
+                pParams, _
+                mResultSubstitutionVariables, _
+                mMaxResultVariablesIndex) Then mStartEchoResultFormat = pParams
 End Sub
 
 Private Sub processEntireSessionCommand(ByVal pParams As String)
@@ -1267,6 +1527,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub processResultFormatCommand(pParams As String)
+If isValidSubstitutableString( _
+                pParams, _
+                mResultSubstitutionVariables, _
+                mMaxResultVariablesIndex) Then mStartResultFormat = pParams
+End Sub
+
 Private Sub processSessCommand()
 mSessionOnly = True
 End Sub
@@ -1361,31 +1628,42 @@ Else
     
     Dim lPathAndFilename As String
     
+    Dim lOutputToFiles As Boolean
     Dim lAppend As Boolean
     If lClp.NumberOfArgs = 0 Then
+        lOutputToFiles = False
         lAppend = False
     ElseIf lClp.NumberOfArgs = 2 Then
         lPathAndFilename = lClp.Arg(1)
         If lClp.Arg(0) = AppendOperator Then
+            lOutputToFiles = True
             lAppend = True
         ElseIf lClp.Arg(0) = OverwriteOperator Then
+            lOutputToFiles = True
             lAppend = False
         Else
             gWriteErrorLine "First argument must be '>' or '>>'"
         End If
     ElseIf lClp.Arg(0) = AppendOperator Then
+        lOutputToFiles = True
         lAppend = True
     ElseIf lClp.Arg(0) = OverwriteOperator Then
+        lOutputToFiles = True
         lAppend = False
     Else
+        lOutputToFiles = True
+        lAppend = False
         lPathAndFilename = lClp.Arg(0)
     End If
 
     If isValidPath(lPathAndFilename) Then
+        If mStartResultFormat = "" Then mStartResultFormat = DefaultResultFormat
+        If mStartEchoResultFormat = "" Then mStartEchoResultFormat = DefaultResultFormat
+        
         Dim lProcess As IProcessor
         If mDataSource = FromFile Then
             Dim lFileProcessor As New FileProcessor
-            lFileProcessor.Initialise mTickfileName, mFrom, mTo, mNumber, mTimePeriod, mSessionOnly, mEntireSession, mIncludeMillisecs
+            lFileProcessor.Initialise mTickfileName, mFrom, mTo, mNumber, mTimePeriod, mSessionOnly, mEntireSession, mIncludeMillisecs, mEchoToStdOut
             Set lProcess = lFileProcessor
         Else
             Dim lProcessor As New Processor
@@ -1401,12 +1679,13 @@ Else
                                 mSessionEndTime, _
                                 mEntireSession, _
                                 mNormaliseDailyBarTimestamps, _
-                                mIncludeMillisecs
+                                mIncludeMillisecs, _
+                                mEchoToStdOut
             Set lProcess = lProcessor
         End If
         
         mProcessors.Add lProcess
-        lProcess.StartData mOutputPath, lPathAndFilename, lAppend
+        lProcess.StartData IIf(lOutputToFiles, mOutputPath, ""), lPathAndFilename, lAppend
         If Not mAsync Then Set mCurrentProcessor = lProcess
     End If
 End If
@@ -1415,6 +1694,12 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processStartEchoCommand( _
+                ByVal params As String)
+mEchoToStdOut = True
+processStartCommand params
 End Sub
 
 Private Sub processStdInComands()
@@ -1432,7 +1717,7 @@ Do
         If lInputString = "" Then
             ' ignore blank lines, but echo them to StdOut when
             ' piping to another program
-            If gCon.StdOutType = FileTypePipe Then gCon.WriteLine ""
+            If gCon.StdOutType = FileTypePipe Then gWriteLineToStdOut ""
         ElseIf Left$(lInputString, 1) = "#" Then
             LogMessage "con: " & lInputString
             ' ignore comments
@@ -1548,7 +1833,7 @@ Dim lRight As String: lRight = pClp.switchValue(RightSwitch)
 Dim lSectype As SecurityTypes
 lSectype = SecTypeFromString(lSectypeStr)
 If lSectypeStr <> "" And lSectype = SecTypeNone Then
-    gCon.WriteErrorLine "Line " & mLineNumber & "Invalid Sectype '" & lSectypeStr & "'"
+    gWriteErrorLine "Line " & mLineNumber & "Invalid Sectype '" & lSectypeStr & "'"
     validParams = False
 End If
 
@@ -1558,16 +1843,16 @@ If lExpiry <> "" Then
         lExpiry = Format(CDate(lExpiry), "yyyymmdd")
     ElseIf Len(lExpiry) = 6 Then
         If Not IsDate(Left$(lExpiry, 4) & "/" & Right$(lExpiry, 2) & "/01") Then
-            gCon.WriteErrorLine "Line " & mLineNumber & "Invalid Expiry '" & lExpiry & "'"
+            gWriteErrorLine "Line " & mLineNumber & "Invalid Expiry '" & lExpiry & "'"
             validParams = False
         End If
     ElseIf Len(lExpiry) = 8 Then
         If Not IsDate(Left$(lExpiry, 4) & "/" & Mid$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
-            gCon.WriteErrorLine "Line " & mLineNumber & "Invalid Expiry '" & lExpiry & "'"
+            gWriteErrorLine "Line " & mLineNumber & "Invalid Expiry '" & lExpiry & "'"
             validParams = False
         End If
     Else
-        gCon.WriteErrorLine "Line " & mLineNumber & "Invalid Expiry '" & lExpiry & "'"
+        gWriteErrorLine "Line " & mLineNumber & "Invalid Expiry '" & lExpiry & "'"
         validParams = False
     End If
 End If
@@ -1578,7 +1863,7 @@ If lMultiplier = "" Then
 ElseIf IsNumeric(lMultiplier) Then
     Multiplier = CDbl(lMultiplier)
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & "Invalid multiplier '" & lMultiplier & "'"
+    gWriteErrorLine "Line " & mLineNumber & "Invalid multiplier '" & lMultiplier & "'"
     validParams = False
 End If
             
@@ -1587,7 +1872,7 @@ If lStrike <> "" Then
     If IsNumeric(lStrike) Then
         Strike = CDbl(lStrike)
     Else
-        gCon.WriteErrorLine "Line " & mLineNumber & "Invalid strike '" & lStrike & "'"
+        gWriteErrorLine "Line " & mLineNumber & "Invalid strike '" & lStrike & "'"
         validParams = False
     End If
 End If
@@ -1595,7 +1880,7 @@ End If
 Dim optRight As OptionRights
 optRight = OptionRightFromString(lRight)
 If lRight <> "" And optRight = OptNone Then
-    gCon.WriteErrorLine "Line " & mLineNumber & "Invalid right '" & lRight & "'"
+    gWriteErrorLine "Line " & mLineNumber & "Invalid right '" & lRight & "'"
     validParams = False
 End If
 
@@ -1616,7 +1901,7 @@ Exit Function
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gCon.WriteErrorLine "Line " & mLineNumber & Err.Description
+    gWriteErrorLine "Line " & mLineNumber & Err.Description
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -1661,7 +1946,7 @@ Set mTimePeriod = GetTimePeriod(lBarLength, lBarUnits)
 
 If mDataSource <> FromFile Then
     If Not mHistDataStore.TimePeriodValidator.IsValidTimePeriod(mTimePeriod) Then
-        gCon.WriteErrorLine ("Unsupported time period: " & mTimePeriod.ToString)
+        gWriteErrorLine ("Unsupported time period: " & mTimePeriod.ToString)
         Exit Sub
     End If
 End If
@@ -1773,32 +2058,69 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setupSubstitutionVariables()
-ReDim mSubstitutionVariables(15) As String
-mMaxSubstitutionVariablesIndex = -1
+ReDim mFilenameSubstitutionVariables(15) As String
+mMaxFilenameVariablesIndex = -1
 
-addSubstitutionVariable ContractVariable
-addSubstitutionVariable SymbolVariable
-addSubstitutionVariable LocalSymbolVariable
-addSubstitutionVariable SecTypeVariable
-addSubstitutionVariable ExchangeVariable
-addSubstitutionVariable ExpiryVariable
-addSubstitutionVariable CurrencyVariable
-addSubstitutionVariable MultiplierVariable
-addSubstitutionVariable StrikeVariable
-addSubstitutionVariable RightVariable
-addSubstitutionVariable TodayVariable
-addSubstitutionVariable YesterdayVariable
-addSubstitutionVariable FromDateVariable
-addSubstitutionVariable FromTimeVariable
-addSubstitutionVariable FromDateTimeVariable
-addSubstitutionVariable ToDateVariable
-addSubstitutionVariable ToTimeVariable
-addSubstitutionVariable ToDateTimeVariable
-addSubstitutionVariable TimeframeVariable
-addSubstitutionVariable NumberRequestedVariable
-addSubstitutionVariable NumberReturnedVariable
+addFilenameSubstitutionVariable ContractVariable
+addFilenameSubstitutionVariable SymbolVariable
+addFilenameSubstitutionVariable LocalSymbolVariable
+addFilenameSubstitutionVariable SecTypeVariable
+addFilenameSubstitutionVariable SecTypeAbbrvVariable
+addFilenameSubstitutionVariable ExchangeVariable
+addFilenameSubstitutionVariable ExpiryVariable
+addFilenameSubstitutionVariable CurrencyVariable
+addFilenameSubstitutionVariable MultiplierVariable
+addFilenameSubstitutionVariable StrikeVariable
+addFilenameSubstitutionVariable RightVariable
+addFilenameSubstitutionVariable TodayVariable
+addFilenameSubstitutionVariable YesterdayVariable
+addFilenameSubstitutionVariable FromDateVariable
+addFilenameSubstitutionVariable FromTimeVariable
+addFilenameSubstitutionVariable FromDateTimeVariable
+addFilenameSubstitutionVariable ToDateVariable
+addFilenameSubstitutionVariable ToTimeVariable
+addFilenameSubstitutionVariable ToDateTimeVariable
+addFilenameSubstitutionVariable TimeframeVariable
+addFilenameSubstitutionVariable NumberRequestedVariable
+addFilenameSubstitutionVariable NumberReturnedVariable
 
-SortStrings mSubstitutionVariables, EndIndex:=mMaxSubstitutionVariablesIndex
+SortStrings mFilenameSubstitutionVariables, EndIndex:=mMaxFilenameVariablesIndex
+
+
+ReDim mResultSubstitutionVariables(15) As String
+mMaxResultVariablesIndex = -1
+
+addResultSubstitutionVariable BarNumberVariable
+addResultSubstitutionVariable TimestampVariable
+addResultSubstitutionVariable OpenVariable
+addResultSubstitutionVariable HighVariable
+addResultSubstitutionVariable LowVariable
+addResultSubstitutionVariable CloseVariable
+addResultSubstitutionVariable VolumeVariable
+addResultSubstitutionVariable TickVolumeVariable
+addResultSubstitutionVariable ContractVariable
+addResultSubstitutionVariable SymbolVariable
+addResultSubstitutionVariable LocalSymbolVariable
+addResultSubstitutionVariable SecTypeVariable
+addResultSubstitutionVariable SecTypeAbbrvVariable
+addResultSubstitutionVariable ExchangeVariable
+addResultSubstitutionVariable ExpiryVariable
+addResultSubstitutionVariable CurrencyVariable
+addResultSubstitutionVariable MultiplierVariable
+addResultSubstitutionVariable StrikeVariable
+addResultSubstitutionVariable RightVariable
+addResultSubstitutionVariable FromDateVariable
+addResultSubstitutionVariable FromDateTimeVariable
+addResultSubstitutionVariable FromTimeVariable
+addResultSubstitutionVariable ToDateVariable
+addResultSubstitutionVariable ToDateTimeVariable
+addResultSubstitutionVariable ToTimeVariable
+addResultSubstitutionVariable TimeframeVariable
+addResultSubstitutionVariable NumberRequestedVariable
+addResultSubstitutionVariable NumberReturnedVariable
+addResultSubstitutionVariable NewlineVariable
+
+SortStrings mResultSubstitutionVariables, EndIndex:=mMaxResultVariablesIndex
 End Sub
 
 Private Function setupTwsProviders( _

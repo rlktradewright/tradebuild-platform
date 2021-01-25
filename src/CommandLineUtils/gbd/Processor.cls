@@ -77,6 +77,8 @@ Private mOutputFilename                             As String
 Private mAppend                                     As Boolean
 
 Private mNumberOfBarsOutput                         As Long
+
+Private mEchoToStdOut                               As Boolean
                 
 '@================================================================================
 ' Class Event Handlers
@@ -167,6 +169,7 @@ If mFromDate = 0 Then mFromDate = pBar.TimeStamp
 Static sStream As TextStream
 
 If mOutputPath = "" And mOutputFilename = "" Then
+ElseIf UCase$(mOutputFilename) = "CON" Then
 ElseIf sStream Is Nothing Then
     Dim lMessage As String
     Set sStream = gCreateOutputStream( _
@@ -184,10 +187,11 @@ ElseIf sStream Is Nothing Then
 End If
     
 mNumberOfBarsOutput = mNumberOfBarsOutput + 1
-If sStream Is Nothing Then
-    gOutputBarToConsole pBar, mTimePeriod, mNormaliseDailyBarTimestamps, mIncludeMillisecs, mSecType, mTickSize
-Else
-    gOutputBarToTextStream pBar, mTimePeriod, mNormaliseDailyBarTimestamps, mIncludeMillisecs, mSecType, mTickSize, sStream
+If sStream Is Nothing Or mEchoToStdOut Then
+    gOutputBarToStdOut mEchoToStdOut, Me, pBar, mTimePeriod, mNumberOfBarsOutput, mNormaliseDailyBarTimestamps, mIncludeMillisecs, mSecType, mTickSize
+End If
+If Not sStream Is Nothing Then
+    gOutputBarToTextStream Me, pBar, mTimePeriod, mNumberOfBarsOutput, mNormaliseDailyBarTimestamps, mIncludeMillisecs, mSecType, mTickSize, sStream
 End If
 
 Exit Sub
@@ -210,7 +214,7 @@ On Error GoTo Err
 
 Static formatter As ILogFormatter
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter
-gCon.WriteLineToConsole formatter.FormatRecord(Logrec)
+gWriteLineToConsole formatter.FormatRecord(Logrec)
 
 Exit Sub
 
@@ -423,7 +427,8 @@ Friend Sub Initialise( _
                 ByVal pSessionEndTime As Date, _
                 ByVal pEntireSession As Boolean, _
                 ByVal pNormaliseDailyBarTimestamps As Boolean, _
-                ByVal pIncludeMillisecs As Boolean)
+                ByVal pIncludeMillisecs As Boolean, _
+                ByVal pEchoToStdOut As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -440,6 +445,7 @@ mSessionEndTime = pSessionEndTime
 mEntireSession = pEntireSession
 mNormaliseDailyBarTimestamps = pNormaliseDailyBarTimestamps
 mIncludeMillisecs = pIncludeMillisecs
+mEchoToStdOut = pEchoToStdOut
 
 Exit Sub
 
