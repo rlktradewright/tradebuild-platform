@@ -105,6 +105,8 @@ If sSomeListeners Then
     For i = 0 To UBound(sCurrentListeners)
         Set lListener = sCurrentListeners(i)
         lListener.NotifyAPIConnectionStateChange Me, pState, pMessage
+        gLog "Notified API connection state change: " & mServer & "; " & mPort & "; " & mClientId, _
+            ModuleName, ProcName, , LogLevelDetail
     Next
 End If
 
@@ -468,7 +470,11 @@ mTwsAPI.ErrorAndNotificationConsumer = Me
 Set mApiErrorListener = pApiErrorListener
 Set mApiNotificationListener = pApiNotificationListener
 
-If Not pDeferConnection Then mTwsAPI.Connect
+If Not pDeferConnection Then
+    gLog "API client connecting: " & mServer & "; " & mPort & "; " & mClientId, _
+            ModuleName, ProcName, , LogLevelDetail
+    mTwsAPI.Connect
+End If
 
 Exit Sub
 

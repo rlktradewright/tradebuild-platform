@@ -192,6 +192,8 @@ ElseIf mState = RetrievingBars Then
     End If
 
 ElseIf mState = DataRetrieved Then
+    gLog "Total bars retrieved: " & mTotalBarsRetrieved & _
+            " for: " & mTargetContract.Specifier.LocalSymbol & "@" & mTargetContract.Specifier.Exchange, ModuleName, ProcName, , LogLevelDetail
     If Not mListener Is Nothing Then mListener.FetchDataRetrieved mCookie
     
     mCurrTWSBarsCollectionIndex = mTWSBarsCollectionsIndex - 1
@@ -213,14 +215,19 @@ ElseIf mState = ProcessingBars Then
             mTaskContext.Suspend -1
         End If
     Else
-        If mTWSBarsEn Is Nothing Then Set mTWSBarsEn = mTWSBarsCollections(mCurrTWSBarsCollectionIndex).Enumerator
-        
+        If mTWSBarsEn Is Nothing Then
+            gLog "Starting bar processing", ModuleName, ProcName, , LogLevelDetail
+            Set mTWSBarsEn = mTWSBarsCollections(mCurrTWSBarsCollectionIndex).Enumerator
+        End If
         If mTWSBarsEn.MoveNext Then
             Dim lTWSBar As TwsBar
             lTWSBar = mTWSBarsEn.Current
             processBar lTWSBar
             mTWSBarsEn.Remove
             mTotalTwsBarsProcessed = mTotalTwsBarsProcessed + 1
+            If mTotalTwsBarsProcessed Mod 10 = 0 Then
+                gLog "Number of source bars processed: " & mTotalTwsBarsProcessed, ModuleName, ProcName, , LogLevelHigh
+            End If
         Else
             Set mTWSBarsEn = Nothing
             Set mTWSBarsCollections(mCurrTWSBarsCollectionIndex) = Nothing
@@ -376,11 +383,15 @@ Friend Sub EndHistData()
 Const ProcName As String = "EndHistData"
 On Error GoTo Err
 
+gLog "Retrieved " & mNumberOfBarsInMessage & " bars for: " & _
+        mTargetContract.Specifier.LocalSymbol & "@" & mTargetContract.Specifier.Exchange, _
+        ModuleName, _
+        ProcName, _
+        pLogLevel:=LogLevelDetail
+
 Select Case mState
 Case RetrievingBars
     EndRequest
-Case ProcessingBars
-    mTaskContext.Continue
 Case Cancelling
     mTaskContext.Continue
 Case Else
@@ -431,6 +442,11 @@ If mTWSBarsCollections(mTWSBarsCollectionsIndex) Is Nothing Then Set mTWSBarsCol
 Dim lTimestamp As Date
 lTimestamp = getTimestampFromTwsBar(pBar, mWorkingBarSpecifier.BarTimePeriod)
 If mFirstBarTimeInMessage = 0 Then mFirstBarTimeInMessage = lTimestamp
+
+If gLogger.IsLoggable(LogLevelHighDetail) Then
+    gLog "Bar time: " & FormatTimestamp(lTimestamp, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs), _
+        ModuleName, ProcName, , LogLevelHighDetail
+End If
 
 If Not notifyTimestamp(lTimestamp, _
                     mWorkingBarSpecifier.BarTimePeriod, _
@@ -565,6 +581,7 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
 Private Sub EndRequest()
 Const ProcName As String = "EndRequest"
 On Error GoTo Err
