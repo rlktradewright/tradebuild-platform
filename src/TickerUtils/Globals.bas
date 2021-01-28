@@ -33,8 +33,6 @@ Private Const ModuleName                            As String = "Globals"
 ' Member variables
 '@================================================================================
 
-Private mListenersCollection                        As New EnumerableCollection
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -60,75 +58,6 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
-
-'Public Sub gAddListener( _
-'                ByVal pEventName As String, _
-'                ByVal pSource As Object, _
-'                ByVal pListener As Object)
-'Const ProcName As String = "gAddListener"
-'On Error GoTo Err
-'
-'Dim lKey As String
-'lKey = generateKey(pEventName, pSource)
-'
-'Dim lListeners As Listeners
-'
-'If mListenersCollection.Contains(lKey) Then
-'    Set lListeners = mListenersCollection(lKey)
-'Else
-'    Set lListeners = New Listeners
-'    mListenersCollection.Add lListeners, lKey
-'End If
-'
-'lListeners.Add pListener
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
-'
-'Public Function gGetListeners( _
-'                ByVal pEventName As String, _
-'                ByVal pSource As Object) As Listeners
-'Const ProcName As String = "gGetListeners"
-'On Error GoTo Err
-'
-'Static sEmptyListeners As New Listeners
-'
-'Set gGetListeners = mListenersCollection(generateKey(pEventName, pSource))
-'If Not gGetListeners Is Nothing Then Exit Function
-'Set gGetListeners = sEmptyListeners
-'
-'Exit Function
-'
-'Err:
-'If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Resume Next
-'gHandleUnexpectedError ProcName, ModuleName
-'End Function
-'
-'Public Sub gRemoveListener( _
-'                ByVal pEventName As String, _
-'                ByVal pSource As Object, _
-'                ByVal pListener As Object)
-'Const ProcName As String = "gRemoveListener"
-'On Error GoTo Err
-'
-'Dim lKey As String
-'lKey = generateKey(pEventName, pSource)
-'
-'If mListenersCollection.Contains(lKey) Then
-'    Dim lListeners As Listeners
-'    Set lListeners = mListenersCollection.Item(lKey)
-'    lListeners.Remove pListener
-'    If lListeners.Count = 0 Then mListenersCollection.Remove lKey
-'End If
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
 
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
@@ -164,8 +93,5 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function generateKey(ByVal pEventName As String, ByVal pSource As Object) As String
-generateKey = pEventName & "$" & GetObjectKey(pSource)
-End Function
 
 
