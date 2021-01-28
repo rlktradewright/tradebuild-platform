@@ -258,11 +258,11 @@ Dim ar() As String
 ar = Value
 gThreeQuarterThirtySecondIndicators = ar
 End Property
-                
+
 Public Property Get ThreeQuarterThirtySecondIndicators() As String()
 ThreeQuarterThirtySecondIndicators = gThreeQuarterThirtySecondIndicators
 End Property
-                
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -761,8 +761,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsContractSpecOffsetExpiry( _
-                ByVal pContractSpec As IContractSpecifier) As Boolean
-IsContractSpecOffsetExpiry = gIsOffsetExpiry(pContractSpec.Expiry)
+                ByVal pContractSpec As IContractSpecifier, _
+                Optional ByRef pErrorMessage) As Boolean
+Dim lErrorMessage As String
+IsContractSpecOffsetExpiry = gIsOffsetExpiry(pContractSpec.Expiry, lErrorMessage)
+If Not IsMissing(pErrorMessage) Then pErrorMessage = lErrorMessage
 End Function
 
 Public Function IsValidCurrencyCode(ByVal CurrencyCode As String) As Boolean
@@ -790,11 +793,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidExpiry( _
-                ByVal Value As String) As Boolean
+                ByVal Value As String, _
+                Optional ByRef pErrorMessage As String) As Boolean
 Const ProcName As String = "IsValidExpiry"
 On Error GoTo Err
 
-IsValidExpiry = gIsValidExpiry(Value)
+IsValidExpiry = gIsValidExpiry(Value, pErrorMessage)
 
 Exit Function
 
@@ -881,21 +885,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function ParseOffsetExpiry( _
+Public Sub ParseOffsetExpiry( _
                 ByVal Value As String, _
                 ByRef pExpiryOffset As Long, _
-                ByRef pDaysBeforeExpiryToSwitch As Long) As Boolean
+                ByRef pDaysBeforeExpiryToSwitch As Long)
                 
 Const ProcName As String = "ParseOffsetExpiry"
 On Error GoTo Err
 
-ParseOffsetExpiry = gParseOffsetExpiry(Value, pExpiryOffset, pDaysBeforeExpiryToSwitch)
+gParseOffsetExpiry Value, pExpiryOffset, pDaysBeforeExpiryToSwitch
 
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 Public Function ParsePrice( _
                 ByVal pPriceString As String, _
@@ -1045,6 +1049,49 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function TryCreateContractSpecifierFromString( _
+                ByVal SpecString As String, _
+                ByRef ContractSpec As IContractSpecifier, _
+                Optional ByRef ErrorMessage As String) As Boolean
+Const ProcName As String = "CreateContractSpecifierFromString"
+On Error GoTo Err
+
+
+Set ContractSpec = gCreateContractSpecifierFromString(SpecString)
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    ErrorMessage = Err.Description
+    TryCreateContractSpecifierFromString = False
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
+End Function
+
+Public Function TryParseOffsetExpiry( _
+                ByVal Value As String, _
+                ByRef pExpiryOffset As Long, _
+                ByRef pDaysBeforeExpiryToSwitch As Long, _
+                Optional ByRef pErrorMessage As String) As Boolean
+Const ProcName As String = "TryParseOffsetExpiry"
+On Error GoTo Err
+
+gParseOffsetExpiry Value, pExpiryOffset, pDaysBeforeExpiryToSwitch
+TryParseOffsetExpiry = True
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    pErrorMessage = Err.Description
+    TryParseOffsetExpiry = False
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Function
 
 '@================================================================================

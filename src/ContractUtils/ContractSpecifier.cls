@@ -190,7 +190,8 @@ Const ProcName As String = "Expiry"
 On Error GoTo Err
 
 If Value = "" Then Exit Property
-AssertArgument gIsValidExpiry(Value), "Invalid Expiry"
+Dim lErrorMessage As String
+AssertArgument gIsValidExpiry(Value, lErrorMessage), "Invalid Expiry"
 
 mExpiry = Value
 
@@ -331,7 +332,9 @@ On Error GoTo Err
 
 AssertArgument LocalSymbol <> "" Or Symbol <> "", "Symbol must be supplied if LocalSymbol is not supplied"
 AssertArgument Exchange = "" Or gIsValidExchangeSpecifier(Exchange), "'" & Exchange & "' is not a valid Exchange specifier"
-If Expiry <> "" Then AssertArgument gIsValidExpiry(Expiry), "'" & Expiry & "' is not a valid Expiry format"
+Dim lErrorMessage As String
+If Not gIsValidExpiry(Expiry, lErrorMessage) Then _
+    AssertArgument False, "'" & Expiry & "' is not a valid Expiry format: " & lErrorMessage
 
 Select Case SecType
 Case 0  ' ie not supplied

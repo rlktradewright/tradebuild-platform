@@ -299,14 +299,41 @@ Public Function gCreateContractSpecifierFromString(ByVal pSpecString As String) 
 Const ProcName As String = "gCreateContractSpecifierFromString"
 On Error GoTo Err
 
-Const ContractSpecRegex As String = "^(?:([a-zA-Z]+)\:)?([a-zA-Z0-9][ a-zA-Z0-9\-]*)(?:@([a-zA-Z]+))?(?:\(([a-zA-Z]+)\))?$"
+Const SecTypeRegEx As String = "(?:([a-zA-Z]+)\:)?"
+Const SymbolRegEx As String = "([a-zA-Z0-9][ a-zA-Z0-9\-]*(?:\.[a-zA-Z0-9]?)?)"
+Const DateExpiryRegEx As String = "((?:20\d\d)(?:[0|1]\d)(?:[0|1|2|3]\d)?)?"
+Const RelativeExpiryRegEx As String = "(\d\d?(?:\[\d\d?d\])?)?"
+Const ExpiryRegEx As String = "(?:\(" & _
+                                DateExpiryRegEx & _
+                                RelativeExpiryRegEx & _
+                                "\))?"
+Const ExchangeRegEx As String = "(?:@([a-zA-Z]+(?:/[a-zA-Z]+)?))?"
+Const CurrencyRegEx As String = "(?:\(([a-zA-Z]+)\))?"
+
+Const ContractSpecRegex As String = "^" & _
+SecTypeRegEx & _
+SymbolRegEx & _
+ExpiryRegEx & _
+ExchangeRegEx & _
+CurrencyRegEx & _
+"$"
+
+
 gRegExp.Pattern = ContractSpecRegex
 gRegExp.IgnoreCase = True
 
 Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(pSpecString)
 
-AssertArgument lMatches.Count = 1, "Invalid contract specifier: <sectype>:<localsymbol>[@<exchange>][(<currency>)], eg STK:MSFT@SMART(USD)"
+AssertArgument lMatches.Count = 1, "Invalid contract specifier: <sectype>:<symbol>[expiry][@<exchange>][(<currency>)]" & vbCrLf & _
+                                    "Expiry can be: " & vbCrLf & _
+                                    "yyyymm" & vbCrLf & _
+                                    "yyyymmdd" & vbCrLf & _
+                                    "<offset>[<qualifier>d]  for example 0[2d]" & vbCrLf & _
+                                    "examples: STK:MSFT@SMART(USD)" & vbCrLf & _
+                                    "          FUT:ESZ0@GLOBEX" & vbCrLf & _
+                                    "          FUT:ES(0[2d])@GLOBEX" & vbCrLf & _
+                                    "          FUT:ES(202012)@GLOBEX"
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
@@ -318,25 +345,62 @@ If lSecTypeStr <> "" Then
     AssertArgument lSecType <> SecTypeNone, "A valid security type must be supplied"
 End If
 
-Dim lLocalSymbol As String
-lLocalSymbol = lMatch.SubMatches(1)
+Dim lSymbolOrLocalSymbol As String
+lSymbolOrLocalSymbol = lMatch.SubMatches(1)
+
+Dim lDateExpiry As String
+lDateExpiry = lMatch.SubMatches(2)
+
+Dim lRelativeExpiry As String
+lRelativeExpiry = lMatch.SubMatches(3)
+
+AssertArgument lDateExpiry = "" Or lRelativeExpiry = "", "Supplying both date-based and relative expiry is not permitted"
 
 Dim lExchange As String
-lExchange = lMatch.SubMatches(2)
+lExchange = lMatch.SubMatches(4)
 
 Dim lCurrency As String
-lCurrency = lMatch.SubMatches(3)
+lCurrency = lMatch.SubMatches(5)
 
-Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
-                                                lLocalSymbol, _
-                                                "", _
-                                                lExchange, _
-                                                lSecType, _
-                                                lCurrency, _
-                                                "", _
-                                                1#, _
-                                                0#, _
-                                                OptNone)
+If (lSecType = SecTypeFuture Or _
+    lSecType = SecTypeFuturesOption Or _
+    lSecType = SecTypeOption) _
+Then
+    If lDateExpiry = "" And lRelativeExpiry = "" Then
+        Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
+                                                        lSymbolOrLocalSymbol, _
+                                                        "", _
+                                                        lExchange, _
+                                                        lSecType, _
+                                                        lCurrency, _
+                                                        "", _
+                                                        1#, _
+                                                        0#, _
+                                                        OptNone)
+    Else
+        Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
+                                                        "", _
+                                                        lSymbolOrLocalSymbol, _
+                                                        lExchange, _
+                                                        lSecType, _
+                                                        lCurrency, _
+                                                        lDateExpiry & lRelativeExpiry, _
+                                                        1#, _
+                                                        0#, _
+                                                        OptNone)
+    End If
+Else
+    Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
+                                                    "", _
+                                                    lSymbolOrLocalSymbol, _
+                                                    lExchange, _
+                                                    lSecType, _
+                                                    lCurrency, _
+                                                    lDateExpiry & lRelativeExpiry, _
+                                                    1#, _
+                                                    0#, _
+                                                    OptNone)
+End If
 
 Exit Function
 
@@ -577,18 +641,44 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gIsOffsetExpiry( _
-                ByVal Value As String) As Boolean
+                ByVal Value As String, _
+                Optional ByRef ErrorMessage As String) As Boolean
+Const ProcName As String = "gIsOffsetExpiry"
+On Error GoTo Err
+
+If Value = "" Then
+    gIsOffsetExpiry = False
+    Exit Function
+End If
+
 Dim l1 As Long
 Dim l2 As Long
-gIsOffsetExpiry = gParseOffsetExpiry(Value, l1, l2)
+gParseOffsetExpiry Value, l1, l2
+gIsOffsetExpiry = True
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    ErrorMessage = Err.Description
+    gIsOffsetExpiry = False
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Function
 
 Public Function gIsValidExpiry( _
-                ByVal Value As String) As Boolean
+                ByVal Value As String, _
+                ByRef ErrorMessage As String) As Boolean
 Const ProcName As String = "gIsValidExpiry"
 On Error GoTo Err
 
-If gIsOffsetExpiry(Value) Then
+If Value = "" Then
+    gIsValidExpiry = True
+    Exit Function
+End If
+
+If gIsOffsetExpiry(Value, ErrorMessage) Then
     gIsValidExpiry = True
     Exit Function
 End If
@@ -719,10 +809,13 @@ Case OptPut
 End Select
 End Function
 
-Public Function gParseOffsetExpiry( _
+Public Sub gParseOffsetExpiry( _
                 ByVal Value As String, _
                 ByRef pExpiryOffset As Long, _
-                ByRef pDaysBeforeExpiryToSwitch As Long) As Boolean
+                ByRef pDaysBeforeExpiryToSwitch As Long)
+Const ProcName As String = "gParseOffsetExpiry"
+On Error GoTo Err
+
 Const OffsetExpiryFormat As String = "^(\d\d?)(?:\[(\d\d?)d\])?$"
 
 gRegExp.Pattern = OffsetExpiryFormat
@@ -731,9 +824,8 @@ gRegExp.IgnoreCase = True
 Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(Trim$(Value))
 
-If lMatches.Count <> 1 Then Exit Function
+AssertArgument lMatches.Count = 1, "Expiry syntax invalid"
 
-Dim lResult As Boolean: lResult = True
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
 Dim lOffsetStr As String
@@ -743,7 +835,7 @@ If lOffsetStr = "" Then
 ElseIf IsInteger(lOffsetStr, 0, MaxContractExpiryOffset) Then
     pExpiryOffset = CInt(lOffsetStr)
 Else
-    lResult = False
+    AssertArgument False, "Expiry offset must be >= 0 and <= " & MaxContractExpiryOffset
 End If
 
 Dim lDaysBeforeExpiryStr As String
@@ -753,11 +845,14 @@ If lDaysBeforeExpiryStr = "" Then
 ElseIf IsInteger(lDaysBeforeExpiryStr, 0, MaxContractDaysBeforeExpiryToSwitch) Then
     pDaysBeforeExpiryToSwitch = CInt(lDaysBeforeExpiryStr)
 Else
-    lResult = False
+    AssertArgument False, "Expiry modifier must be >= 0 and <= " & MaxContractDaysBeforeExpiryToSwitch
 End If
 
-gParseOffsetExpiry = lResult
-End Function
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Property Get gRegExp() As RegExp
 Const ProcName As String = "gRegExp"
