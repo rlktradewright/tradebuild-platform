@@ -1090,7 +1090,7 @@ Private Sub setupGridColumn( _
                 ByVal columnNumber As Long, _
                 ByVal columnWidth As Single, _
                 ByVal isLetters As Boolean, _
-                ByVal align As TWControls40.AlignmentSettings)
+                ByVal Align As TWControls40.AlignmentSettings)
 Const ProcName As String = "setupGridColumn"
 On Error GoTo Err
 
@@ -1113,7 +1113,7 @@ With TWGrid1
     
     .ColWidth(columnNumber) = lColumnWidth
     
-    .ColAlignment(columnNumber) = align
+    .ColAlignment(columnNumber) = Align
 End With
 
 Exit Sub

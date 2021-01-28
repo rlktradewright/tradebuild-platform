@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#307.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#315.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -170,6 +170,8 @@ Private mTheme                                          As ITheme
 
 Private mIsRaw                                          As Boolean
 
+Private mIsStarted                                      As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -184,9 +186,17 @@ mMinimumTicksHeight = 10
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+On Error GoTo Err
+
 mPrevWidth = UserControl.Width
 Chart1.Height = UserControl.Height
 mPrevHeight = UserControl.Height
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_Terminate()
@@ -310,7 +320,6 @@ lState = ev.State
 Select Case lState
 Case TimeframeStateFetching
     mLoadingText.Text = LoadingTextFetching
-    setState ChartStateFetching
     showLoadingText
 Case TimeframeStateLoading
     mLoadingText.Text = LoadingTextLoading
@@ -1046,7 +1055,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ShowChart( _
+Public Sub SetupChart( _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pChartSpec As ChartSpecifier, _
@@ -1057,7 +1066,7 @@ Public Sub ShowChart( _
                 Optional ByVal pBarFormatterLibraryName As String, _
                 Optional ByVal pExcludeCurrentBar As Boolean, _
                 Optional ByVal pTitle As String)
-Const ProcName As String = "ShowChart"
+Const ProcName As String = "SetupChart"
 On Error GoTo Err
 
 AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManager must be supplied"
@@ -1065,6 +1074,8 @@ AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is N
 AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "pBarFormatterLibraryName and pBarFormatterFactoryName must both be blank or non-blank"
 
 Assert Not mIsRaw, "Already initialised as raw"
+
+mDeferStart = True
 
 If Not mTimeframes Is Nothing Then
     mInitialised = False
@@ -1092,16 +1103,55 @@ gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
 Chart1.DisableDrawing
 
 initialiseChart mChartSpec.IncludeBarsOutsideSession
-Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
 
+If Not mTimeframes.ContractFuture Is Nothing Then
+    mFutureWaiter.Add mTimeframes.ContractFuture
+Else
+    setContractProperties Nothing
+End If
+
+storeSettings
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ShowChart( _
+                ByVal pTimeframes As Timeframes, _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pChartSpec As ChartSpecifier, _
+                ByVal pChartStyle As ChartStyle, _
+                Optional ByVal pUpdatePerTick As Boolean = True, _
+                Optional ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                Optional ByVal pBarFormatterFactoryName As String, _
+                Optional ByVal pBarFormatterLibraryName As String, _
+                Optional ByVal pExcludeCurrentBar As Boolean, _
+                Optional ByVal pTitle As String)
+Const ProcName As String = "ShowChart"
+On Error GoTo Err
+
+SetupChart pTimeframes, _
+            pTimePeriod, _
+            pChartSpec, _
+            pChartStyle, _
+            pUpdatePerTick, _
+            pBarFormatterLibManager, _
+            pBarFormatterFactoryName, _
+            pBarFormatterLibraryName, _
+            pExcludeCurrentBar, _
+            pTitle
+
+mDeferStart = False
+
+Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
 If Not mTimeframes.ContractFuture Is Nothing Then
     mFutureWaiter.Add mTimeframes.ContractFuture
 Else
     setContractProperties Nothing
     prepareChart
 End If
-
-storeSettings
 
 Exit Sub
 
@@ -1182,7 +1232,7 @@ Public Sub Start()
 Const ProcName As String = "Start"
 On Error GoTo Err
 
-Assert mLoadedFromConfig And mState = ChartStates.ChartStateCreated, "Start method only permitted for charts loaded from configuration and with state ChartStateCreated"
+Assert mDeferStart And mState = ChartStates.ChartStateCreated, "Start method only permitted for charts with deferred start and with state ChartStateCreated"
 
 If Not mReadyForDeferredStart Then
     mDeferredStartRequested = True
@@ -1243,6 +1293,8 @@ Const ProcName As String = "createTimeframe"
 On Error GoTo Err
 
 gLogger.Log "Creating timeframe", ProcName, ModuleName
+
+setState ChartStateFetching
 
 If pChartSpec.toTime <> CDate(0) Then
     Set createTimeframe = pTimeframes.AddHistorical(pTimePeriod, _
@@ -1335,6 +1387,7 @@ If mSecType = SecTypeNone Then
 ElseIf mSecType <> SecurityTypes.SecTypeCash _
     And mSecType <> SecurityTypes.SecTypeIndex _
 Then
+    gLogger.Log "Creating/modifying volume region", ProcName, ModuleName, LogLevelHighDetail
     If Chart1.Regions.Contains(ChartRegionNameVolume) Then
         Set mVolumeRegion = Chart1.Regions.Item(ChartRegionNameVolume)
     Else
@@ -1446,7 +1499,7 @@ lText.Box = True
 lText.BoxFillColor = vbWhite
 lText.BoxFillStyle = FillStyles.FillSolid
 lText.Position = NewPoint(50, 50, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsRelative)
-lText.align = TextAlignModes.AlignBoxCentreCentre
+lText.Align = TextAlignModes.AlignBoxCentreCentre
 lText.FixedX = True
 lText.FixedY = True
 

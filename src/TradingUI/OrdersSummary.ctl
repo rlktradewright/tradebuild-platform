@@ -2146,7 +2146,7 @@ Private Sub setupBracketOrderGridColumn( _
                 ByVal columnWidth As Single, _
                 ByVal columnHeader As String, _
                 ByVal isLetters As Boolean, _
-                ByVal align As MSFlexGridLib.AlignmentSettings)
+                ByVal Align As MSFlexGridLib.AlignmentSettings)
 Const ProcName As String = "setupBracketOrderGridColumn"
 On Error GoTo Err
 
@@ -2172,7 +2172,7 @@ With BracketOrderGrid
         .ColWidth(columnNumber) = lColumnWidth
     End If
     
-    .ColAlignment(columnNumber) = align
+    .ColAlignment(columnNumber) = Align
     .TextMatrix(rowNumber, columnNumber) = columnHeader
 End With
 

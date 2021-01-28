@@ -3311,7 +3311,7 @@ Private Sub setupTickerGridColumn( _
                 ByVal columnNumber As Long, _
                 ByVal columnWidth As Long, _
                 ByVal isLetters As Boolean, _
-                ByVal align As TWControls40.AlignmentSettings)
+                ByVal Align As TWControls40.AlignmentSettings)
 Const ProcName As String = "setupTickerGridColumn"
 On Error GoTo Err
 
@@ -3328,7 +3328,7 @@ With TickerGrid
     
     setColumnWidth columnNumber, columnWidth, isLetters
     
-    .ColAlignment(columnNumber) = align
+    .ColAlignment(columnNumber) = Align
     .ColAlignmentFixed(columnNumber) = TwGridAlignCenterCenter
 End With
 

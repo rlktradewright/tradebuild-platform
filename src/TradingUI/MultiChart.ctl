@@ -2,70 +2,20 @@ VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
 Begin VB.UserControl MultiChart 
    Alignable       =   -1  'True
-   BackColor       =   &H000000FF&
+   BackColor       =   &H0000FF00&
    ClientHeight    =   7710
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   9480
    ScaleHeight     =   7710
    ScaleWidth      =   9480
-   Begin VB.PictureBox ChartSelectorPicture 
-      Appearance      =   0  'Flat
-      BackColor       =   &H00000080&
-      BorderStyle     =   0  'None
-      ForeColor       =   &H0000FFFF&
-      Height          =   135
-      Left            =   240
-      ScaleHeight     =   135
-      ScaleWidth      =   135
-      TabIndex        =   4
-      Top             =   7080
-      Visible         =   0   'False
-      Width           =   135
-   End
-   Begin MSComctlLib.ImageList ChartSelectorImageList 
-      Left            =   720
-      Top             =   6000
-      _ExtentX        =   1005
-      _ExtentY        =   1005
-      BackColor       =   -2147483643
-      MaskColor       =   12632256
-      UseMaskColor    =   0   'False
-      _Version        =   393216
-   End
-   Begin MSComctlLib.Toolbar ChartSelectorToolbar 
-      Align           =   2  'Align Bottom
-      Height          =   540
-      Left            =   0
-      TabIndex        =   3
-      Top             =   7170
-      Width           =   9480
-      _ExtentX        =   16722
-      _ExtentY        =   953
-      ButtonWidth     =   609
-      ButtonHeight    =   953
-      AllowCustomize  =   0   'False
-      Style           =   1
-      _Version        =   393216
-   End
-   Begin TradingUI27.MarketChart TBChart 
-      Align           =   1  'Align Top
-      Height          =   5895
-      Index           =   0
-      Left            =   0
-      TabIndex        =   2
-      Top             =   0
-      Width           =   9480
-      _ExtentX        =   16722
-      _ExtentY        =   10398
-   End
    Begin MSComctlLib.Toolbar ControlToolbar 
       Height          =   330
-      Left            =   6360
+      Left            =   5880
       TabIndex        =   0
-      Top             =   6240
-      Width           =   2520
-      _ExtentX        =   4445
+      Top             =   6120
+      Width           =   2760
+      _ExtentX        =   4868
       _ExtentY        =   582
       ButtonWidth     =   609
       ButtonHeight    =   582
@@ -136,6 +86,55 @@ Begin VB.UserControl MultiChart
          EndProperty
       EndProperty
    End
+   Begin VB.PictureBox ChartSelectorPicture 
+      Appearance      =   0  'Flat
+      BackColor       =   &H00000080&
+      BorderStyle     =   0  'None
+      ForeColor       =   &H0000FFFF&
+      Height          =   135
+      Left            =   240
+      ScaleHeight     =   135
+      ScaleWidth      =   135
+      TabIndex        =   4
+      Top             =   7080
+      Visible         =   0   'False
+      Width           =   135
+   End
+   Begin MSComctlLib.ImageList ChartSelectorImageList 
+      Left            =   720
+      Top             =   6000
+      _ExtentX        =   1005
+      _ExtentY        =   1005
+      BackColor       =   -2147483643
+      MaskColor       =   12632256
+      UseMaskColor    =   0   'False
+      _Version        =   393216
+   End
+   Begin MSComctlLib.Toolbar ChartSelectorToolbar 
+      Align           =   2  'Align Bottom
+      Height          =   540
+      Left            =   0
+      TabIndex        =   3
+      Top             =   7170
+      Width           =   9480
+      _ExtentX        =   16722
+      _ExtentY        =   953
+      ButtonWidth     =   609
+      ButtonHeight    =   953
+      Style           =   1
+      _Version        =   393216
+   End
+   Begin TradingUI27.MarketChart TBChart 
+      Align           =   1  'Align Top
+      Height          =   7170
+      Index           =   0
+      Left            =   0
+      TabIndex        =   2
+      Top             =   0
+      Width           =   9480
+      _ExtentX        =   16722
+      _ExtentY        =   12647
+   End
 End
 Attribute VB_Name = "MultiChart"
 Attribute VB_GlobalNameSpace = False
@@ -153,6 +152,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IDeferredAction
 Implements IThemeable
 
 '@================================================================================
@@ -214,6 +214,9 @@ Private mTheme                              As ITheme
 
 Private mIsRaw                              As Boolean
 
+Private WithEvents mResizeTimer             As IntervalTimer
+Attribute mResizeTimer.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -231,13 +234,50 @@ hideTimeframeSelector
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+On Error GoTo Err
+
 resize
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_Terminate()
 Const ProcName As String = "UserControl_Terminate"
 gLogger.Log "MultiChart terminated", ProcName, ModuleName, LogLevelDetail
 Debug.Print "MultiChart terminated"
+End Sub
+
+'@================================================================================
+' IDeferredAction Interface Members
+'@================================================================================
+
+''
+' Brief description
+'
+' @remarks
+'
+' @return
+'
+' @param name
+'
+' @see
+'
+'@/
+'
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
+On Error GoTo Err
+
+resize
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -636,7 +676,8 @@ Public Function Add( _
                 Optional ByVal pTitle As String, _
                 Optional ByVal pUpdatePerTick As Boolean = True, _
                 Optional ByVal pInitialNumberOfBars As Long = -1, _
-                Optional ByVal pIncludeBarsOutsideSession As Boolean = False) As Long
+                Optional ByVal pIncludeBarsOutsideSession As Boolean = False, _
+                Optional ByVal pDelayShow As Boolean) As Long
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -659,16 +700,26 @@ Set lButton = addChartSelectorButton(pPeriodLength)
 ' the ChartStates.ChartStateRunning event
 fireChange MultiChartAdd
 
-lChart.ShowChart mTimeframes, pPeriodLength, lChartSpec, mStyle, pUpdatePerTick, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
+If pDelayShow Then
+    lChart.SetupChart mTimeframes, pPeriodLength, lChartSpec, mStyle, pUpdatePerTick, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
+    resize
+Else
+    lChart.ShowChart mTimeframes, pPeriodLength, lChartSpec, mStyle, pUpdatePerTick, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
+End If
 
 If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
 End If
 
-If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
-lButton.Value = tbrPressed
-mCurrentIndex = switchToChart(lButton.Index)
-Add = mCurrentIndex
+If Not pDelayShow Then
+    If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
+    lButton.Value = tbrPressed
+    
+    mCurrentIndex = switchToChart(lButton.Index)
+    Add = mCurrentIndex
+Else
+    Add = lButton.Index
+End If
 
 fireChange MultiChartSelectionChanged
 
@@ -1083,6 +1134,13 @@ Private Function addChartSelectorButton( _
 Const ProcName As String = "addChartSelectorButton"
 On Error GoTo Err
 
+If ChartSelectorToolbar.Buttons.Count = 0 Then
+    ' adding the first button causes the Toolbar to be resized, but this
+    ' happens asynchronously after the current event handler exit,
+    ' so do a deferred resize to take account of this
+    DeferAction Me
+End If
+
 If pPeriodLength Is Nothing Then
     Set addChartSelectorButton = ChartSelectorToolbar.Buttons.Add(, , "")
 Else
@@ -1156,7 +1214,6 @@ ChartSelectorToolbar.Buttons.Remove Index
 If ChartSelectorToolbar.Buttons.Count = 0 Then
     ControlToolbar.Buttons("remove").Enabled = False
     TBChart(0).Visible = True
-    TBChart(0).Top = 0
     TBChart(0).Height = ChartSelectorToolbar.Top
 End If
 
@@ -1290,9 +1347,8 @@ Const ProcName As String = "loadChartControl"
 On Error GoTo Err
 
 Load TBChart(TBChart.UBound + 1)
-TBChart(TBChart.UBound).align = vbAlignTop
-TBChart(TBChart.UBound).Top = 0
 TBChart(TBChart.UBound).Height = ChartSelectorToolbar.Top
+resize
 mCount = mCount + 1
 Set loadChartControl = TBChart(TBChart.UBound).object
 
@@ -1327,19 +1383,15 @@ On Error GoTo Err
 
 If UserControl.Height < 2000 Then UserControl.Height = 2000
 
-ChartSelectorToolbar.Top = UserControl.Height - ChartSelectorToolbar.Height
-
 ControlToolbar.Left = UserControl.Width - ControlToolbar.Width
 ControlToolbar.Top = UserControl.Height - ControlToolbar.Height
+
 ControlToolbar.ZOrder 0
 
-Dim lChartHeight As Long
-lChartHeight = UserControl.Height - IIf(ChartSelectorToolbar.Height > ControlToolbar.Height, ChartSelectorToolbar.Height, ControlToolbar.Height)
-
-If Count > 0 Then
-    TBChart(getChartControlIndexFromIndex(mCurrentIndex)).Height = lChartHeight
+If Count > 0 And mCurrentIndex > 0 Then
+    TBChart(getChartControlIndexFromIndex(mCurrentIndex)).Height = ChartSelectorToolbar.Top
 Else
-    TBChart(0).Height = lChartHeight
+    TBChart(0).Height = ChartSelectorToolbar.Top
 End If
 
 Exit Sub
@@ -1359,7 +1411,7 @@ If Index = 0 Then Exit Function
 
 Set lChart = getChartFromIndex(Index)
 
-If lChart.LoadedFromConfig And lChart.State = ChartStates.ChartStateCreated Then lChart.Start
+If lChart.State = ChartStates.ChartStateCreated Then lChart.Start
 
 If lChart.State = ChartStateRunning Then
     gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
@@ -1370,8 +1422,7 @@ Else
 End If
 
 TBChart(getChartControlIndexFromIndex(Index)).Visible = True
-TBChart(getChartControlIndexFromIndex(Index)).Top = 0
-TBChart(getChartControlIndexFromIndex(Index)).Height = UserControl.Height - IIf(ChartSelectorToolbar.Height > ControlToolbar.Height, ChartSelectorToolbar.Height, ControlToolbar.Height)
+TBChart(getChartControlIndexFromIndex(Index)).Height = ChartSelectorToolbar.Top
 
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, Index
 
