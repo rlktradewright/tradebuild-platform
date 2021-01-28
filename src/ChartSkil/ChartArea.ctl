@@ -2,8 +2,7 @@ VERSION 5.00
 Begin VB.UserControl Chart 
    Alignable       =   -1  'True
    AutoRedraw      =   -1  'True
-   BackColor       =   &H00FFFFFF&
-   BackStyle       =   0  'Transparent
+   BackColor       =   &H00FF0000&
    ClientHeight    =   7575
    ClientLeft      =   0
    ClientTop       =   0
@@ -451,7 +450,7 @@ Debug.Print "ChartSkil chart terminated"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -1775,6 +1774,7 @@ On Error GoTo Err
 
 setProperty GChart.gXAxisVisibleProperty, Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingXAxisVisible, Value
+mRegions.ResizeY False
 PropertyChanged PropNameXAxisVisible
 
 Exit Property
@@ -2757,6 +2757,7 @@ On Error GoTo Err
 
 If Not mInitialised Then Exit Sub
 
+gLogger.Log "UserControl height: " & UserControl.Height, ProcName, ModuleName
 resizeBackground
 
 If resizeWidth Then

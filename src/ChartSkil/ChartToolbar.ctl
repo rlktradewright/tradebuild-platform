@@ -368,17 +368,12 @@ addButtonToToolbar ChartNavCommandThinnerBars
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_Resize()
 UserControl.Height = Toolbar1.Height
 UserControl.Width = Toolbar1.Width
-End Sub
-
-Private Sub UserControl_Terminate()
-gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Class_Terminate", pModName:=ModuleName, pMsg:="ChartToolbar terminated"
-Debug.Print "ChartToolbar terminated"
 End Sub
 
 '@================================================================================
