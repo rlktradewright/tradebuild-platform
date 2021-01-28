@@ -137,7 +137,15 @@ End Sub
 '@================================================================================
 
 Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NoMoreTicks"
+On Error GoTo Err
 
+fireNoMoreTicks ev
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
