@@ -367,7 +367,7 @@ Case OptionContractResolverStateFetchingStrikes
     
     
     ' now we know the strike, we need to determine the expiry
-    If ParseOffsetExpiry(mContractSpec.Expiry, mExpiryOffset, mDaysBeforeExpiryToSwitch) Then
+    If TryParseOffsetExpiry(mContractSpec.Expiry, mExpiryOffset, mDaysBeforeExpiryToSwitch) Then
         mFutureWaiter.Add FetchOptionExpiries(mUnderlyingContract.Specifier, mContractSpec.Exchange, mContractStore)
         fireStateChange OptionContractResolverStateFetchingExpiries
     Else

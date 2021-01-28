@@ -411,9 +411,9 @@ Add.Initialise Me, pName, mOrderManager, mRecoveryContextName, mGroupName, mIsSi
 mOrderContexts.Add Add, pName
 Add.PermittedOrderProperties = mPermittedOrderProperties
 Add.Enabled = mEnabled
+Add.SetTickSize mTickSize
 Add.IsProviderReady = IsProviderReady
 Add.IsDataSourceReady = mDataSourceIsReady
-Add.SetTickSize mTickSize
 
 Exit Function
 
@@ -637,9 +637,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function dataSourceHasPrice() As Boolean
-dataSourceHasPrice = (mDataSource.HasCurrentTick(TickTypeBid) Or _
+If mDataSource.State <> MarketDataSourceStateRunning Then
+    dataSourceHasPrice = False
+Else
+    dataSourceHasPrice = (mDataSource.HasCurrentTick(TickTypeBid) Or _
                         mDataSource.HasCurrentTick(TickTypeAsk) Or _
                         mDataSource.HasCurrentTick(TickTypeTrade))
+End If
 End Function
 
 Private Sub fireCollectionChanged(ev As CollectionChangeEventData)

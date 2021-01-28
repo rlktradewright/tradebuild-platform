@@ -1085,7 +1085,6 @@ Set mBracketOrderRecoveryController = pBracketOrderRecoveryController
 Set mContractFuture = pContractFuture
 If mContractFuture.IsAvailable Then
     setContract mContractFuture.Value
-    IsReadyTickSize
 Else
     mFutureWaiter.Add mContractFuture
 End If
@@ -1271,11 +1270,11 @@ ElseIf Not IsProviderReady Then
 ElseIf getOrderContexts.IsGettingTickSize Then
     mNotReadyMessage = "Not ready: determining minimum price variation"
     IsReadyTickSize = False
-ElseIf getOrderContexts.IsReadyTickSize Then
+ElseIf Not getOrderContexts.IsReadyTickSize Then
     mNotReadyMessage = "Not ready: determining minimum price variation"
     IsReadyTickSize = False
 Else
-    IsReadyTickSize = True
+    Assert False, "unexpected order context state"
 End If
 
 Exit Function
