@@ -1070,15 +1070,6 @@ If Not isValidPath(lPathAndFilename) Then Exit Sub
 Dim lScanProcessor As ScanProcessor: Set lScanProcessor = New ScanProcessor
 mProcessors.Add lScanProcessor
 
-
-
-'mScanParams.SetParameterValue "NumberOfRows", "10"
-'mScanParams.SetParameterValue "Instrument", "STK"
-'mScanParams.SetParameterValue "AbovePrice", "3.0"
-'mScanParams.SetParameterValue "MarketCapAbove", "100000000"
-'mScanParams.SetParameterValue "ScannerSettingPairs", "Annual,true"
-'mScanParams.SetParameterValue "LocationCode", "STK.ARCA"
-
 If mScanResultFormat = "" Then mScanResultFormat = DefaultResultFormat
 If mScanEchoResultFormat = "" Then mScanEchoResultFormat = DefaultResultFormat
 
