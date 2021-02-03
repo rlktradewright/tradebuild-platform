@@ -1398,7 +1398,7 @@ Public Property Let HorizontalScrollBarVisible(ByVal Value As Boolean)
 Const ProcName As String = "HorizontalScrollBarVisible"
 On Error GoTo Err
 
-gLogger.Log mChartID & " HorizontalScrollBarVisible = " & Value, ProcName, ModuleName
+gLogger.Log mChartID & " HorizontalScrollBarVisible = " & Value, ProcName, ModuleName, LogLevelMediumDetail
 setProperty GChart.gHorizontalScrollBarVisibleProperty, Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHorizontalScrollBarVisible, Value
 PropertyChanged PropNameHorizontalScrollBarVisible
@@ -1626,7 +1626,7 @@ On Error GoTo Err
 
 Set mStyle = Value
 If mStyle Is Nothing Then Set mStyle = gChartStylesManager.DefaultStyle
-gLogger.Log mChartID & " Using chart style", ProcName, ModuleName, , mStyle.Name
+gLogger.Log mChartID & " Using chart style", ProcName, ModuleName, LogLevelMediumDetail, mStyle.Name
 mEPhost.Style = mStyle.ExtendedPropertyHost
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingStyle, mStyle.Name
 
@@ -1865,7 +1865,7 @@ Public Function ClearChart()
 Const ProcName As String = "ClearChart"
 On Error GoTo Err
 
-gLogger.Log mChartID & " Clearing chart", ProcName, ModuleName
+gLogger.Log mChartID & " Clearing chart", ProcName, ModuleName, LogLevelMediumDetail
 DisableDrawing
 ChartRegionPicture(0).Visible = True
 
@@ -1878,7 +1878,7 @@ RaiseEvent ChartCleared
 mController.fireChartCleared
 Debug.Print "Chart cleared"
 
-gLogger.Log mChartID & " Chart cleared", ProcName, ModuleName
+gLogger.Log mChartID & " Chart cleared", ProcName, ModuleName, LogLevelMediumDetail
 Exit Function
 
 Err:
@@ -2516,7 +2516,7 @@ Private Sub finishBackgroundCanvas()
 Const ProcName As String = "finishBackgroundCanvas"
 On Error GoTo Err
 
-gLogger.Log mChartID & " Finish background canvas", ProcName, ModuleName, LogLevelHighDetail
+gLogger.Log mChartID & " Finish background canvas", ProcName, ModuleName, LogLevelMediumDetail
 If Not mBackGroundViewport Is Nothing Then mBackGroundViewport.Finish
 Set mBackGroundViewport = Nothing
 
@@ -2556,7 +2556,7 @@ Private Sub Initialise()
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLogger.Log mChartID & " Initialising chart", ProcName, ModuleName
+gLogger.Log mChartID & " Initialising chart", ProcName, ModuleName, LogLevelMediumDetail
 
 Set mPeriods = New Periods
 mPeriods.Chart = Me
@@ -2587,7 +2587,7 @@ HScroll.Value = 0
 Resize True, True
 
 mInitialised = True
-gLogger.Log mChartID & " Chart initialised", ProcName, ModuleName
+gLogger.Log mChartID & " Chart initialised", ProcName, ModuleName, LogLevelMediumDetail
 
 Exit Sub
 
@@ -2757,7 +2757,6 @@ On Error GoTo Err
 
 If Not mInitialised Then Exit Sub
 
-gLogger.Log "UserControl height: " & UserControl.Height, ProcName, ModuleName
 resizeBackground
 
 If resizeWidth Then
@@ -2968,14 +2967,14 @@ Dim lChange As Boolean
 
 If suppress Then
     mSuppressDrawingCount = mSuppressDrawingCount + 1
-    gLogger.Log mChartID & " Suppress drawing (true): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelHighDetail
+    gLogger.Log mChartID & " Suppress drawing (true): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelMediumDetail
     If mSuppressDrawingCount = 1 Then lChange = True
 ElseIf mSuppressDrawingCount = 0 Then
-    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelHighDetail
+    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelMediumDetail
     lChange = False
 Else
     mSuppressDrawingCount = mSuppressDrawingCount - 1
-    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelHighDetail
+    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelMediumDetail
     If mSuppressDrawingCount = 0 Then
         Resize True, True
         lChange = True

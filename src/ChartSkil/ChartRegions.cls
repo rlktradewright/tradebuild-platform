@@ -284,13 +284,13 @@ lregion.MinimumPercentHeight = MinimumPercentHeight
 lregion.PercentHeight = PercentHeight
 
 If Style Is Nothing Then
-    gLogger.Log "Style applied", ProcName, ModuleName, , "none"
+    gLogger.Log "Style applied", ProcName, ModuleName, LogLevelMediumDetail, "none"
 Else
-    gLogger.Log "Style applied", ProcName, ModuleName, , Style.Name
+    gLogger.Log "Style applied", ProcName, ModuleName, LogLevelMediumDetail, Style.Name
 End If
 lregion.Style = Style
 
-gLogger.Log "Base style applied", ProcName, ModuleName, , mDefaultDataRegionStyle.Name
+gLogger.Log "Base style applied", ProcName, ModuleName, LogLevelMediumDetail, mDefaultDataRegionStyle.Name
 lregion.BaseStyle = mDefaultDataRegionStyle
 
 Set mRegions(mRegionsIndex).Region = lregion
