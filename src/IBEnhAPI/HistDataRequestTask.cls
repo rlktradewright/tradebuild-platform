@@ -226,7 +226,7 @@ ElseIf mState = ProcessingBars Then
             mTWSBarsEn.Remove
             mTotalTwsBarsProcessed = mTotalTwsBarsProcessed + 1
             If mTotalTwsBarsProcessed Mod 10 = 0 Then
-                gLog "Number of source bars processed: " & mTotalTwsBarsProcessed, ModuleName, ProcName, , LogLevelHigh
+                gLog "Number of source bars processed: " & mTotalTwsBarsProcessed, ModuleName, ProcName, , LogLevelHighDetail
             End If
         Else
             Set mTWSBarsEn = Nothing
