@@ -1394,7 +1394,7 @@ If IsInteger(params, 1) Then
 ElseIf params = "-1" Or UCase$(params) = "ALL" Then
     mNumber = &H7FFFFFFF
 Else
-    gWriteErrorLine "Invalid number '" & params & "'" & ": must be an integer > 0 or -1 or 'ALL'"
+    gWriteErrorLine "Invalid number '" & params & "': must be an integer > 0 or -1 or 'ALL'"
 End If
 
 If mDataSource = FromFile Then gWriteLineToConsole "number command is ignored for tickfile input"
@@ -1563,12 +1563,12 @@ If pParams = "" Then
 ElseIf IsDate(pParams) Then
     Dim lSessionTime: lSessionTime = CDate(pParams)
     If CDbl(lSessionTime) > Time235900 Or CDbl(lSessionTime) < 0# Then
-        gWriteErrorLine "Invalid session start time '" & pParams & "': the value must be a time between 00:00 and 23:59"
+        gWriteErrorLine "Invalid session end time '" & pParams & "': the value must be a time between 00:00 and 23:59"
     Else
         mSessionEndTime = lSessionTime
     End If
 Else
-    gWriteErrorLine "Invalid session start time '" & pParams & "' is not a date/time"
+    gWriteErrorLine "Invalid session end time '" & pParams & "' is not a date/time"
 End If
 
 Exit Sub
