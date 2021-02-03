@@ -1405,16 +1405,15 @@ Private Function ShowChart( _
 Const ProcName As String = "ShowChart"
 On Error GoTo Err
 
-Dim lChart As MarketChart
-
 If Index = 0 Then Exit Function
 
+Dim lChart As MarketChart
 Set lChart = getChartFromIndex(Index)
 
 If lChart.State = ChartStates.ChartStateCreated Then lChart.Start
 
 If lChart.State = ChartStateRunning Then
-    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelHighDetail
+    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelDetail
     lChart.EnableDrawing
     ControlToolbar.Buttons("change").Enabled = True
 Else
