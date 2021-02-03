@@ -693,10 +693,14 @@ If lSize = 0 Then Exit Sub
 LogTradeMessage "PlaceBuyOrders"
 SetPrimaryBracketOrder Buy( _
                             Number:=lSize, _
-                            EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
+                            EntryOrder:=DeclareEntryOrder( _
+                                                        EntryOrderTypeStopLimit, _
                                                         LimitPrice:=lTriggerPrice, _
                                                         TriggerPrice:=lTriggerPrice), _
-                            StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
+                            StopLossOrder:=DeclareStopLossOrder( _
+                                                        StopLossOrderTypeStop, _
+                                                        TriggerPrice:=lStopPrice, _
+                                                        TimeInForce:=OrderTIFs.OrderTIFGoodTillCancelled), _
                             CancelPrice:=lCancelPrice, _
                             CancelAfter:=300, _
                             NotifyCompletion:=True)
@@ -747,10 +751,14 @@ If lSize = 0 Then Exit Sub
 LogTradeMessage "PlaceSellOrders"
 SetPrimaryBracketOrder Sell( _
                             Number:=lSize, _
-                            EntryOrder:=DeclareEntryOrder(EntryOrderTypeStopLimit, _
+                            EntryOrder:=DeclareEntryOrder( _
+                                                        EntryOrderTypeStopLimit, _
                                                         LimitPrice:=lTriggerPrice, _
                                                         TriggerPrice:=lTriggerPrice), _
-                            StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
+                            StopLossOrder:=DeclareStopLossOrder( _
+                                                        StopLossOrderTypeStop, _
+                                                        TriggerPrice:=lStopPrice, _
+                                                        TimeInForce:=OrderTIFGoodTillCancelled), _
                             CancelPrice:=lCancelPrice, _
                             CancelAfter:=300, _
                             NotifyCompletion:=True)
