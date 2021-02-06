@@ -352,7 +352,7 @@ Private Sub TBChart_StateChange(Index As Integer, ev As TWUtilities40.StateChang
 Const ProcName As String = "TBChart_StateChange"
 On Error GoTo Err
 
-Index = getIndexFromChartControlIndex(Index)
+Index = getButtonIndexFromChartControlIndex(Index)
 
 If Index = mCurrentIndex And ev.State = ChartStates.ChartStateRunning Then
     ControlToolbar.Buttons("change").Enabled = True
@@ -371,7 +371,7 @@ Const ProcName As String = "TBChart_TimePeriodChange"
 On Error GoTo Err
 
 Dim lButtonInfo As TWChartButtonInfo
-With ChartSelectorToolbar.Buttons(getIndexFromChartControlIndex(Index))
+With ChartSelectorToolbar.Buttons(getButtonIndexFromChartControlIndex(Index))
     lButtonInfo = .Tag
     lButtonInfo.Caption = TBChart(Index).TimePeriod.ToShortString
     lButtonInfo.ToolTipText = generateTooltipText(TBChart(Index).TimePeriod)
@@ -423,7 +423,7 @@ Const ProcName As String = "BaseChartController"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-Set BaseChartController = getChartFromIndex(Index).BaseChartController
+Set BaseChartController = getChartFromButtonIndex(Index).BaseChartController
 
 Exit Property
 
@@ -439,7 +439,7 @@ Const ProcName As String = "Chart"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-Set Chart = getChartFromIndex(Index)
+Set Chart = getChartFromButtonIndex(Index)
 
 Exit Property
 
@@ -453,7 +453,7 @@ Const ProcName As String = "ChartManager"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-Set ChartManager = getChartFromIndex(Index).ChartManager
+Set ChartManager = getChartFromButtonIndex(Index).ChartManager
 
 Exit Property
 
@@ -530,7 +530,7 @@ Const ProcName As String = "LoadingText"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-Set LoadingText = getChartFromIndex(Index).LoadingText
+Set LoadingText = getChartFromButtonIndex(Index).LoadingText
 
 Exit Property
 
@@ -548,7 +548,7 @@ Const ProcName As String = "PriceRegion"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-Set PriceRegion = getChartFromIndex(Index).PriceRegion
+Set PriceRegion = getChartFromButtonIndex(Index).PriceRegion
 
 Exit Property
 
@@ -589,7 +589,7 @@ Const ProcName As String = "State"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-State = getChartFromIndex(Index).State
+State = getChartFromButtonIndex(Index).State
 
 Exit Property
 
@@ -629,7 +629,7 @@ Const ProcName As String = "Timeframe"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-Set Timeframe = getChartFromIndex(Index).Timeframe
+Set Timeframe = getChartFromButtonIndex(Index).Timeframe
 
 Exit Property
 
@@ -643,7 +643,7 @@ Const ProcName As String = "TimePeriod"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-Set TimePeriod = getChartFromIndex(Index).TimePeriod
+Set TimePeriod = getChartFromButtonIndex(Index).TimePeriod
 
 Exit Property
 
@@ -657,7 +657,7 @@ Const ProcName As String = "VolumeRegion"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-Set VolumeRegion = getChartFromIndex(Index).VolumeRegion
+Set VolumeRegion = getChartFromButtonIndex(Index).VolumeRegion
 
 Exit Property
 
@@ -688,13 +688,16 @@ Set lChartSpec = CreateChartSpecifier( _
                         IIf(pInitialNumberOfBars = -1, mSpec.InitialNumberOfBars, pInitialNumberOfBars), _
                         IIf(pIncludeBarsOutsideSession, True, mSpec.IncludeBarsOutsideSession), _
                         mSpec.FromTime, _
-                        mSpec.toTime)
+                        mSpec.ToTime, _
+                        mSpec.CustomSessionStartTime, _
+                        mSpec.CustomSessionEndTime)
 
 Dim lChart As MarketChart
 Set lChart = loadChartControl
 
 Dim lButton As MSComctlLib.Button
 Set lButton = addChartSelectorButton(pPeriodLength)
+gLogger.Log "Added button with index " & lButton.Index, ProcName, ModuleName
 
 ' we notify the add before calling lChart.ShowChart so that it's before
 ' the ChartStates.ChartStateRunning event
@@ -830,7 +833,7 @@ On Error GoTo Err
 
 Dim Index As Long
 Index = checkIndex(-1)
-TBChart(getChartControlIndexFromIndex(Index)).SetFocus
+TBChart(getChartControlIndexFromButtonIndex(Index)).SetFocus
 
 Exit Sub
 
@@ -864,7 +867,7 @@ On Error GoTo Err
 
 Dim i As Long
 For i = 1 To mCount
-    getChartFromIndex(i).Finish
+    getChartFromButtonIndex(i).Finish
     unloadChartControl i
 Next
 TBChart(0).Finish
@@ -903,7 +906,7 @@ Else
 End If
 
 TBChart(0).ChartBackColor = pBackColor
-mIsHistoric = (mSpec.toTime <> 0)
+mIsHistoric = (mSpec.ToTime <> 0)
 
 Set mBarFormatterLibManager = pBarFormatterLibManager
 mBarFormatterFactoryName = pBarFormatterFactoryName
@@ -988,7 +991,7 @@ End If
 mBarFormatterFactoryName = mConfig.GetSetting(ConfigSettingBarFormatterFactoryName, "")
 mBarFormatterLibraryName = mConfig.GetSetting(ConfigSettingBarFormatterLibraryName, "")
 
-mIsHistoric = (mSpec.toTime <> 0)
+mIsHistoric = (mSpec.ToTime <> 0)
 
 Dim lCurrentChartIndex As Long
 lCurrentChartIndex = CLng(mConfig.GetSetting(ConfigSettingCurrentChart, "1"))
@@ -1100,7 +1103,7 @@ Const ProcName As String = "SetStudyManager"
 On Error GoTo Err
 
 Index = checkIndex(Index)
-getChartFromIndex(Index).StudyManager = Value
+getChartFromButtonIndex(Index).StudyManager = Value
 
 Exit Sub
 
@@ -1115,7 +1118,7 @@ On Error GoTo Err
 Dim i As Long
 For i = 1 To ChartSelectorToolbar.Buttons.Count
     Dim lChart As MarketChart
-    Set lChart = TBChart(getChartControlIndexFromIndex(i)).object
+    Set lChart = TBChart(getChartControlIndexFromButtonIndex(i)).object
     lChart.UpdateLastBar
 Next
 
@@ -1206,7 +1209,7 @@ Const ProcName As String = "closeChart"
 On Error GoTo Err
 
 Dim lChart As MarketChart
-Set lChart = getChartFromIndex(Index)
+Set lChart = getChartFromButtonIndex(Index)
 lChart.RemoveFromConfig
 lChart.Finish
 unloadChartControl Index
@@ -1261,43 +1264,43 @@ Private Function generateTooltipText(ByVal pPeriodLength As TimePeriod) As Strin
 generateTooltipText = "Switch to " & pPeriodLength.ToString & " chart"
 End Function
 
-Private Function getChartControlIndexFromIndex(Index) As Long
-Const ProcName As String = "getChartControlIndexFromIndex"
-On Error GoTo Err
-
-Dim l As TWChartButtonInfo
-l = ChartSelectorToolbar.Buttons(Index).Tag
-getChartControlIndexFromIndex = l.ChartIndex
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function getChartFromIndex(Index) As MarketChart
-Const ProcName As String = "getChartFromIndex"
-On Error GoTo Err
-
-Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(Index)).object
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function getIndexFromChartControlIndex(Index) As Long
-Const ProcName As String = "getIndexFromChartControlIndex"
+Private Function getButtonIndexFromChartControlIndex(Index) As Long
+Const ProcName As String = "getButtonIndexFromChartControlIndex"
 On Error GoTo Err
 
 Dim i As Long
 For i = 1 To ChartSelectorToolbar.Buttons.Count
-    If getChartControlIndexFromIndex(i) = Index Then
-        getIndexFromChartControlIndex = i
+    If getChartControlIndexFromButtonIndex(i) = Index Then
+        getButtonIndexFromChartControlIndex = i
         Exit For
     End If
 Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getChartControlIndexFromButtonIndex(Index) As Long
+Const ProcName As String = "getChartControlIndexFromButtonIndex"
+On Error GoTo Err
+
+Dim l As TWChartButtonInfo
+l = ChartSelectorToolbar.Buttons(Index).Tag
+getChartControlIndexFromButtonIndex = l.ChartIndex
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getChartFromButtonIndex(Index) As MarketChart
+Const ProcName As String = "getChartFromButtonIndex"
+On Error GoTo Err
+
+Set getChartFromButtonIndex = TBChart(getChartControlIndexFromButtonIndex(Index)).object
 
 Exit Function
 
@@ -1310,15 +1313,16 @@ Private Sub hideChart( _
 Const ProcName As String = "hideChart"
 On Error GoTo Err
 
-Dim lChart As MarketChart
-
 If Index = 0 Or Index > Count Then Exit Sub
-Set lChart = getChartFromIndex(Index)
-If lChart.State = ChartStateRunning Then
-    gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
-    lChart.DisableDrawing
-End If
-TBChart(getChartControlIndexFromIndex(Index)).Visible = False
+
+gLogger.Log "Hiding chart " & Index, ProcName, ModuleName
+
+Dim lChart As MarketChart: Set lChart = getChartFromButtonIndex(Index)
+
+gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
+lChart.DisableDrawing
+
+TBChart(getChartControlIndexFromButtonIndex(Index)).Visible = False
 
 Exit Sub
 
@@ -1389,7 +1393,7 @@ ControlToolbar.Top = UserControl.Height - ControlToolbar.Height
 ControlToolbar.ZOrder 0
 
 If Count > 0 And mCurrentIndex > 0 Then
-    TBChart(getChartControlIndexFromIndex(mCurrentIndex)).Height = ChartSelectorToolbar.Top
+    TBChart(getChartControlIndexFromButtonIndex(mCurrentIndex)).Height = ChartSelectorToolbar.Top
 Else
     TBChart(0).Height = ChartSelectorToolbar.Top
 End If
@@ -1407,8 +1411,9 @@ On Error GoTo Err
 
 If Index = 0 Then Exit Function
 
-Dim lChart As MarketChart
-Set lChart = getChartFromIndex(Index)
+gLogger.Log "Showing chart " & Index, ProcName, ModuleName
+
+Dim lChart As MarketChart: Set lChart = getChartFromButtonIndex(Index)
 
 If lChart.State = ChartStates.ChartStateCreated Then lChart.Start
 
@@ -1420,8 +1425,8 @@ Else
     ControlToolbar.Buttons("change").Enabled = False
 End If
 
-TBChart(getChartControlIndexFromIndex(Index)).Visible = True
-TBChart(getChartControlIndexFromIndex(Index)).Height = ChartSelectorToolbar.Top
+TBChart(getChartControlIndexFromButtonIndex(Index)).Visible = True
+TBChart(getChartControlIndexFromButtonIndex(Index)).Height = ChartSelectorToolbar.Top
 
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, Index
 
@@ -1487,11 +1492,17 @@ Private Function switchToChart( _
 Const ProcName As String = "switchToChart"
 On Error GoTo Err
 
-If Index = mCurrentIndex Then Exit Function
+switchToChart = Index
 
+If Index = mCurrentIndex Then
+    gLogger.Log "Chart " & Index & " already selected", ProcName, ModuleName
+    Exit Function
+End If
+
+gLogger.Log "Selecting chart " & Index, ProcName, ModuleName
+gLogger.Log "Hide chart " & mCurrentIndex, ProcName, ModuleName
 hideChart mCurrentIndex
 ShowChart Index
-switchToChart = Index
 
 Exit Function
 
@@ -1503,7 +1514,7 @@ Private Sub unloadChartControl(ByVal Index As Long)
 Const ProcName As String = "unloadChartControl"
 On Error GoTo Err
 
-Unload TBChart(getChartControlIndexFromIndex(Index))
+Unload TBChart(getChartControlIndexFromButtonIndex(Index))
 mCount = mCount - 1
 
 Exit Sub

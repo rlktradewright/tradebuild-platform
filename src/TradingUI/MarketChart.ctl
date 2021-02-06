@@ -957,6 +957,8 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
+gLogger.Log "Finishing chart", ProcName, ModuleName
+
 If Not mManager Is Nothing Then mManager.Finish
 
 Set mManager = Nothing
@@ -1292,18 +1294,20 @@ Private Function createTimeframe( _
 Const ProcName As String = "createTimeframe"
 On Error GoTo Err
 
-gLogger.Log "Creating timeframe", ProcName, ModuleName
+gLogger.Log "Creating timeframe: " & pTimePeriod.ToShortString, ProcName, ModuleName
 
 setState ChartStateFetching
 
-If pChartSpec.toTime <> CDate(0) Then
+If pChartSpec.ToTime <> CDate(0) Then
     Set createTimeframe = pTimeframes.AddHistorical(pTimePeriod, _
                                 "", _
                                 pChartSpec.InitialNumberOfBars, _
                                 pChartSpec.FromTime, _
-                                pChartSpec.toTime, _
+                                pChartSpec.ToTime, _
                                 , _
-                                pChartSpec.IncludeBarsOutsideSession)
+                                pChartSpec.IncludeBarsOutsideSession, _
+                                pChartSpec.CustomSessionStartTime, _
+                                pChartSpec.CustomSessionEndTime)
 Else
     Set createTimeframe = pTimeframes.Add(pTimePeriod, _
                                 "", _
@@ -1311,7 +1315,9 @@ Else
                                 pChartSpec.FromTime, _
                                 , _
                                 pChartSpec.IncludeBarsOutsideSession, _
-                                pExcludeCurrentBar)
+                                pExcludeCurrentBar, _
+                                pChartSpec.CustomSessionStartTime, _
+                                pChartSpec.CustomSessionEndTime)
 End If
 
 Exit Function
@@ -1446,14 +1452,10 @@ If Not pContract Is Nothing Then
     mTickSize = pContract.TickSize
     If mChartSpec.IncludeBarsOutsideSession Then
         mSessionEndTime = pContract.FullSessionEndTime
-        Chart1.SessionEndTime = mSessionEndTime
         mSessionStartTime = pContract.FullSessionStartTime
-        Chart1.SessionStartTime = mSessionStartTime
     Else
         mSessionEndTime = pContract.SessionEndTime
-        Chart1.SessionEndTime = mSessionEndTime
         mSessionStartTime = pContract.SessionStartTime
-        Chart1.SessionStartTime = mSessionStartTime
     End If
 Else
     mLocalSymbol = ""
@@ -1461,10 +1463,12 @@ Else
     mExchange = ""
     mTickSize = 0.001
     mSessionEndTime = CDate("00:00")
-    Chart1.SessionEndTime = mSessionEndTime
     mSessionStartTime = CDate("00:00")
-    Chart1.SessionStartTime = mSessionStartTime
 End If
+    If mChartSpec.CustomSessionStartTime <> 0 Then mSessionStartTime = mChartSpec.CustomSessionStartTime
+    If mChartSpec.CustomSessionEndTime <> 0 Then mSessionEndTime = mChartSpec.CustomSessionEndTime
+    Chart1.SessionStartTime = mSessionStartTime
+    Chart1.SessionEndTime = mSessionEndTime
 End Sub
 
 Private Sub setState(ByVal Value As ChartStates)

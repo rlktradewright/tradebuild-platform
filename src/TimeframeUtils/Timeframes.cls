@@ -60,6 +60,8 @@ Private Type TimeframeTableEntry
     ToTime                  As Date
     IncludeBarsOutsideSession   As Boolean
     ExcludeCurrentbar       As Boolean
+    CustomSessionStartTime  As Date
+    CustomSessionEndTime    As Date
 End Type
 
 '@================================================================================
@@ -125,10 +127,12 @@ Public Function Add( _
                 ByVal BarTimePeriod As TimePeriod, _
                 ByRef Key As String, _
                 ByVal NumberOfBarsToFetch As Long, _
-                Optional ByVal pFromTime As Date, _
-                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal FromTime As Date, _
+                Optional ByVal StateChangeListener As IStateChangeListener, _
                 Optional ByVal IncludeBarsOutsideSession As Boolean, _
-                Optional ByVal ExcludeCurrentbar As Boolean) As Timeframe
+                Optional ByVal ExcludeCurrentbar As Boolean, _
+                Optional ByVal CustomSessionStartTime As Date, _
+                Optional ByVal CustomSessionEndTime As Date) As Timeframe
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -151,11 +155,13 @@ End Select
 Set Add = addTimeframe(BarTimePeriod, _
                     Key, _
                     NumberOfBarsToFetch, _
-                    pFromTime, _
+                    FromTime, _
                     MaxDate, _
-                    pStateChangeListener, _
+                    StateChangeListener, _
                     IncludeBarsOutsideSession, _
-                    ExcludeCurrentbar)
+                    ExcludeCurrentbar, _
+                    CustomSessionStartTime, _
+                    CustomSessionEndTime)
 
 Exit Function
 
@@ -208,8 +214,10 @@ Public Function AddHistorical( _
                 ByVal NumberOfBarsToFetch As Long, _
                 Optional ByVal FromTime As Date, _
                 Optional ByVal ToTime As Date, _
-                Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal IncludeBarsOutsideSession As Boolean) As Timeframe
+                Optional ByVal StateChangeListener As IStateChangeListener, _
+                Optional ByVal IncludeBarsOutsideSession As Boolean, _
+                Optional ByVal CustomSessionStartTime As Date, _
+                Optional ByVal CustomSessionEndTime As Date) As Timeframe
 Const ProcName As String = "AddHistorical"
 On Error GoTo Err
 
@@ -235,9 +243,11 @@ Set AddHistorical = addTimeframe(BarTimePeriod, _
                     NumberOfBarsToFetch, _
                     FromTime, _
                     ToTime, _
-                    pStateChangeListener, _
+                    StateChangeListener, _
                     IncludeBarsOutsideSession, _
-                    False)
+                    False, _
+                    CustomSessionStartTime, _
+                    CustomSessionEndTime)
 
 Exit Function
 
@@ -362,9 +372,11 @@ Private Function addTimeframe( _
                 ByVal NumberOfBarsToFetch As Long, _
                 ByVal FromTime As Date, _
                 ByVal ToTime As Date, _
-                ByVal pStateChangeListener As IStateChangeListener, _
+                ByVal StateChangeListener As IStateChangeListener, _
                 ByVal IncludeBarsOutsideSession As Boolean, _
-                ByVal ExcludeCurrentbar As Boolean) As Timeframe
+                ByVal ExcludeCurrentbar As Boolean, _
+                ByVal CustomSessionStartTime As Date, _
+                ByVal CustomSessionEndTime As Date) As Timeframe
 Const ProcName As String = "addTimeframe"
 On Error GoTo Err
 
@@ -373,7 +385,9 @@ timeframeIndex = getTimeframeIndex(BarTimePeriod, _
                                 NumberOfBarsToFetch, _
                                 FromTime, _
                                 ToTime, _
-                                IncludeBarsOutsideSession)
+                                IncludeBarsOutsideSession, _
+                                CustomSessionStartTime, _
+                                CustomSessionEndTime)
 If timeframeIndex >= 0 Then
     Set addTimeframe = mTimeframeTable(timeframeIndex).TheTimeFrame
     Exit Function
@@ -387,6 +401,8 @@ tte.NumberOfBarsToFetch = NumberOfBarsToFetch
 tte.FromTime = FromTime
 tte.ToTime = ToTime
 tte.IncludeBarsOutsideSession = IncludeBarsOutsideSession
+tte.CustomSessionStartTime = CustomSessionStartTime
+tte.CustomSessionEndTime = CustomSessionEndTime
 
 If Key <> "" Then
     tte.Key = Key
@@ -396,7 +412,9 @@ Else
                         FromTime, _
                         ToTime, _
                         IncludeBarsOutsideSession, _
-                        ExcludeCurrentbar)
+                        ExcludeCurrentbar, _
+                        CustomSessionStartTime, _
+                        CustomSessionEndTime)
 End If
 tte.TheTimeFrame.Initialise mStudyBase, _
                             mContractFuture, _
@@ -407,10 +425,12 @@ tte.TheTimeFrame.Initialise mStudyBase, _
                             mBarType, _
                             FromTime, _
                             ToTime, _
-                            pStateChangeListener, _
+                            StateChangeListener, _
                             IncludeBarsOutsideSession, _
                             ExcludeCurrentbar, _
-                            mClockFuture
+                            mClockFuture, _
+                            CustomSessionStartTime, _
+                            CustomSessionEndTime
 
 If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
     ReDim Preserve mTimeframeTable(2 * (UBound(mTimeframeTable) + 1) - 1) As TimeframeTableEntry
@@ -481,7 +501,9 @@ Private Function generateKey( _
                 ByVal FromTime As Date, _
                 ByVal ToTime As Date, _
                 ByVal IncludeBarsOutsideSession As Boolean, _
-                ByVal ExcludeCurrentbar As Boolean) As String
+                ByVal ExcludeCurrentbar As Boolean, _
+                ByVal CustomSessionStartTime As Date, _
+                ByVal CustomSessionEndTime As Date) As String
 Const ProcName As String = "generateKey"
 On Error GoTo Err
 
@@ -490,6 +512,10 @@ generateKey = BarTimePeriod.ToString & _
             IIf(FromTime <> 0, "," & Format(FromTime, "yyyymmddhhnnss"), "") & _
             IIf(ToTime <> 0, "," & Format(ToTime, "yyyymmddhhnnss"), "") & _
             ")" & _
+            IIf(CustomSessionStartTime <> 0 Or CustomSessionEndTime <> 0, _
+                "[" & Format(CustomSessionStartTime, "hh:mm") & _
+                "-" & Format(CustomSessionEndTime, "hh:mm") & "]", _
+                "") & _
             IIf(IncludeBarsOutsideSession, "I", "") & _
             IIf(ExcludeCurrentbar, "X", "")
 
@@ -504,7 +530,9 @@ Private Function getTimeframeIndex( _
                 ByVal NumberOfBarsToFetch As Long, _
                 ByVal FromTime As Date, _
                 ByVal ToTime As Date, _
-                ByRef IncludeBarsOutsideSession As Boolean) As Long
+                ByVal IncludeBarsOutsideSession As Boolean, _
+                ByVal CustomSessionStartTime As Date, _
+                ByVal CustomSessionEndTime As Date) As Long
 Const ProcName As String = "getTimeframeIndex"
 On Error GoTo Err
 
@@ -516,7 +544,9 @@ For i = 0 To mNextTimeframeTableIndex - 1
         mTimeframeTable(i).IncludeBarsOutsideSession = IncludeBarsOutsideSession And _
         mTimeframeTable(i).NumberOfBarsToFetch = NumberOfBarsToFetch And _
         mTimeframeTable(i).FromTime = FromTime And _
-        mTimeframeTable(i).ToTime = ToTime _
+        mTimeframeTable(i).ToTime = ToTime And _
+        mTimeframeTable(i).CustomSessionStartTime = CustomSessionStartTime And _
+        mTimeframeTable(i).CustomSessionEndTime = CustomSessionEndTime _
     Then
         getTimeframeIndex = i
         Exit Function

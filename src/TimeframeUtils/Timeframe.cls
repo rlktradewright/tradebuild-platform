@@ -93,6 +93,9 @@ Private WithEvents mBarFetchListener        As BarFetchListener
 Attribute mBarFetchListener.VB_VarHelpID = -1
 Private mMaxNumberOfBars                    As Long
 
+Private mCustomSessionEndTime               As Date
+Private mCustomSessionStartTime             As Date
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -132,7 +135,10 @@ Else
                                                                 mBarType, _
                                                                 mClockFuture, _
                                                                 mExcludeCurrentbar, _
-                                                                mIncludeBarsOutsideSession), _
+                                                                mIncludeBarsOutsideSession, _
+                                                                , _
+                                                                mCustomSessionStartTime, _
+                                                                mCustomSessionEndTime), _
                                                     mBarFetchListener)
     mFutureWaiter.Add mInitialBarsFuture
 End If
@@ -323,7 +329,9 @@ Friend Sub Initialise( _
                 ByVal pStateChangeListener As IStateChangeListener, _
                 ByVal pIncludeBarsOutsideSession As Boolean, _
                 ByVal pExcludeCurrentbar As Boolean, _
-                ByVal pClockFuture As IFuture)
+                ByVal pClockFuture As IFuture, _
+                ByVal pCustomSessionStartTime As Date, _
+                ByVal pCustomSessionEndTime As Date)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -341,6 +349,8 @@ mToTime = pToTime
 mIncludeBarsOutsideSession = pIncludeBarsOutsideSession
 mExcludeCurrentbar = pExcludeCurrentbar
 Set mClockFuture = pClockFuture
+mCustomSessionEndTime = pCustomSessionEndTime
+mCustomSessionStartTime = pCustomSessionStartTime
 
 If mToTime <> MaxDate Then mIsHistorical = True
 

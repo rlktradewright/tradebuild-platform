@@ -194,7 +194,9 @@ Public Function CreateChartSpecifier( _
                 Optional ByVal pInitialNumberOfBars As Long = 200, _
                 Optional ByVal pIncludeBarsOutsideSession As Boolean = False, _
                 Optional ByVal pFromTime As Date, _
-                Optional ByVal pTotime As Date) As ChartSpecifier
+                Optional ByVal pToTime As Date, _
+                Optional ByVal pCustomSessionStartTime As Date, _
+                Optional ByVal pCustomSessionEndTime As Date) As ChartSpecifier
 Const ProcName As String = "CreateChartSpecifier"
 On Error GoTo Err
 
@@ -202,7 +204,9 @@ Set CreateChartSpecifier = New ChartSpecifier
 CreateChartSpecifier.Initialise pInitialNumberOfBars, _
                 pIncludeBarsOutsideSession, _
                 pFromTime, _
-                pTotime
+                pToTime, _
+                pCustomSessionStartTime, _
+                pCustomSessionEndTime
 
 Exit Function
 
