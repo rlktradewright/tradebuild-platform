@@ -213,14 +213,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function doFetchBars( _
-                ByVal rsFetcher As RecordsetFetcher, _
+                ByVal pRsFetcher As RecordsetFetcher, _
                 ByVal pInstrumentID As Long, _
                 ByRef pReqDetails As BarRequestDetails, _
                 ByVal pBarType As Long) As Recordset
 Const ProcName As String = "doFetchBars"
 On Error GoTo Err
 
-Set doFetchBars = rsFetcher.FetchRecordset( _
+Set doFetchBars = pRsFetcher.FetchRecordset( _
                         gSetupFetchBarsCommand( _
                                         pInstrumentID, _
                                         pBarType, _
@@ -235,18 +235,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function doFetchTicks( _
-                ByVal rsFetcher As RecordsetFetcher, _
+                ByVal pRsFetcher As RecordsetFetcher, _
                 ByVal pInstrumentID As Long, _
-                ByVal fromTime As Date, _
-                ByVal toTime As Date, _
+                ByVal pFromTime As Date, _
+                ByVal pToTime As Date, _
                 ByRef pSessionTimes As SessionTimes) As Recordset
 Const ProcName As String = "doFetchTicks"
 On Error GoTo Err
 
-Set doFetchTicks = rsFetcher.FetchRecordset( _
+Set doFetchTicks = pRsFetcher.FetchRecordset( _
                                     gSetupFetchTicksCommand(pInstrumentID, _
-                                                    fromTime, _
-                                                    toTime, _
+                                                    pFromTime, _
+                                                    pToTime, _
                                                     pSessionTimes), _
                                     adCmdStoredProc, _
                                         adOpenStatic)

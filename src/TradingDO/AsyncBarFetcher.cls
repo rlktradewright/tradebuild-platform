@@ -323,16 +323,16 @@ End Function
 Private Function doFetchTicksAsync( _
                 ByVal rsFetcher As RecordsetFetcher, _
                 ByVal pInstrumentID As Long, _
-                ByVal fromTime As Date, _
-                ByVal toTime As Date, _
+                ByVal pFromTime As Date, _
+                ByVal pToTime As Date, _
                 ByRef pSessionTimes As SessionTimes) As IFuture
 Const ProcName As String = "doFetchTicksAsync"
 On Error GoTo Err
 
 Set doFetchTicksAsync = rsFetcher.FetchRecordsetAsync( _
                                     gSetupFetchTicksCommand(pInstrumentID, _
-                                                    fromTime, _
-                                                    toTime, _
+                                                    pFromTime, _
+                                                    pToTime, _
                                                     pSessionTimes), _
                                     adCmdStoredProc, _
                                     adOpenStatic)
