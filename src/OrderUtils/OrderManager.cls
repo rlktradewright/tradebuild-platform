@@ -220,7 +220,7 @@ Friend Function CreateOrderContextsEx( _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
                 ByVal pAccumulatedOrders As Orders, _
                 ByVal pSimulatedClockFuture As IFuture) As OrderContexts
-Const ProcName As String = "CreateOrderContexts"
+Const ProcName As String = "CreateOrderContextsEx"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
