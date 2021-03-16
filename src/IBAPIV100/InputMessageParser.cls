@@ -292,7 +292,7 @@ accountName = mReader.GetString("Account name")
 
 mReader.EndLogMessage
 
-If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.EndAcccountValue accountName
+If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.EndAccountValue accountName
 
 Exit Sub
 

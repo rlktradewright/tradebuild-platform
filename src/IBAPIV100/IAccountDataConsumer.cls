@@ -67,7 +67,7 @@ Private Const ModuleName                            As String = "IAccountDataCon
 Public Sub EndAccountSummary(ByVal pRequestId As Long)
 End Sub
 
-Public Sub EndAcccountValue(ByVal pAccountName As String)
+Public Sub EndAccountValue(ByVal pAccountName As String)
 End Sub
 
 Public Sub EndPosition()
