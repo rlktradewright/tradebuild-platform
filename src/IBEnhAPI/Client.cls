@@ -347,6 +347,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function GetAccountDataProvider() As IAccountDataProvider
+Const ProcName As String = "GetAccountDataProvider"
+On Error GoTo Err
+
+Static sAccountDataProvider As AccountDataProvider
+If sAccountDataProvider Is Nothing Then
+    Set sAccountDataProvider = New AccountDataProvider
+    sAccountDataProvider.Initialise mTwsAPI
+End If
+
+AddTwsConnectionStateListener sAccountDataProvider
+Set GetAccountDataProvider = sAccountDataProvider
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function GetContractStore() As IContractStore
 Const ProcName As String = "GetContractStore"
 On Error GoTo Err
