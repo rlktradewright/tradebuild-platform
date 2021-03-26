@@ -80,6 +80,8 @@ Private Const ModuleName                            As String = "MarketDataUtils
 
 Public Function CreateRealtimeDataManager( _
                 ByVal pMarketDataFactory As IMarketDataFactory, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
                 Optional ByVal pStudyLibManager As StudyLibraryManager, _
                 Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
                 Optional ByVal pDefaultStateChangeListener As IStateChangeListener, _
@@ -90,7 +92,13 @@ On Error GoTo Err
 AssertArgument Not pMarketDataFactory Is Nothing, "pMarketDataFactory is Nothing"
 
 Dim rtm As New RealTimeDataManager
-rtm.Initialise pMarketDataFactory, pStudyLibManager, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows
+rtm.Initialise pMarketDataFactory, _
+                pPrimaryContractStore, _
+                pSecondaryContractStore, _
+                pStudyLibManager, _
+                pOptions, _
+                pDefaultStateChangeListener, _
+                pNumberOfMarketDepthRows
 Set CreateRealtimeDataManager = rtm
 
 Exit Function

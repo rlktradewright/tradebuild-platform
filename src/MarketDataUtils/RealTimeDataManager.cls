@@ -72,11 +72,18 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
-Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener)
+Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource( _
+                                                    pContractFuture, _
+                                                    pIsRecoverable, _
+                                                    pKey, _
+                                                    pUseLocalTimeForStudies, _
+                                                    pStateChangeListener, _
+                                                    pRecoveryContractSpec)
 
 Exit Function
 
@@ -90,17 +97,19 @@ Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRefreshInterval As Long = 0&) As IMarketDataSource
+                Optional ByVal pRefreshInterval As Long = 0&, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager10_CreateSnapshotMarketDataSource"
 On Error GoTo Err
 
 Set IMarketDataManager_CreateSnapshotMarketDataSource = CreateSnapshotMarketDataSource( _
-                                                                pContractFuture, _
-                                                                pIsRecoverable, _
-                                                                pKey, _
-                                                                pUseLocalTimeForStudies, _
-                                                                pStateChangeListener, _
-                                                                pRefreshInterval)
+                                                    pContractFuture, _
+                                                    pIsRecoverable, _
+                                                    pKey, _
+                                                    pUseLocalTimeForStudies, _
+                                                    pStateChangeListener, _
+                                                    pRefreshInterval, _
+                                                    pRecoveryContractSpec)
 
 Exit Function
 
@@ -136,7 +145,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IMarketDataManager_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Private Sub IMarketDataManager_LoadFromConfig( _
+                ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "IMarketDataManager_LoadFromConfig"
 On Error GoTo Err
 
@@ -181,7 +191,8 @@ Public Function CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
@@ -190,12 +201,14 @@ If pStateChangeListener Is Nothing Then Set pStateChangeListener = mDefaultState
 Set CreateMarketDataSource = mDataManager.CreateMarketDataSource( _
                                                 pContractFuture, _
                                                 CreateClockFuture(pContractFuture), _
-                                                pKey, pStateChangeListener, _
+                                                pKey, _
+                                                pStateChangeListener, _
                                                 pIsRecoverable, _
                                                 pUseLocalTimeForStudies, _
                                                 NullIndex, _
                                                 False, _
-                                                0)
+                                                0, _
+                                                pRecoveryContractSpec)
 
 Exit Function
 
@@ -209,7 +222,8 @@ Public Function CreateSnapshotMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRefreshInterval As Long = 0&) As IMarketDataSource
+                Optional ByVal pRefreshInterval As Long = 0&, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "CreateSnapshotMarketDataSource"
 On Error GoTo Err
 
@@ -218,12 +232,14 @@ If pStateChangeListener Is Nothing Then Set pStateChangeListener = mDefaultState
 Set CreateSnapshotMarketDataSource = mDataManager.CreateMarketDataSource( _
                                                 pContractFuture, _
                                                 CreateClockFuture(pContractFuture), _
-                                                pKey, pStateChangeListener, _
+                                                pKey, _
+                                                pStateChangeListener, _
                                                 pIsRecoverable, _
                                                 pUseLocalTimeForStudies, _
                                                 NullIndex, _
                                                 True, _
-                                                pRefreshInterval)
+                                                pRefreshInterval, _
+                                                pRecoveryContractSpec)
 
 Exit Function
 
@@ -257,6 +273,8 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pFactory As IMarketDataFactory, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByVal pSecondaryContractStore As IContractStore, _
                 ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pOptions As MarketDataSourceOptions, _
                 ByVal pDefaultStateChangeListener As IStateChangeListener, _
@@ -267,7 +285,12 @@ On Error GoTo Err
 Set mDefaultStateChangeListener = pDefaultStateChangeListener
 
 Set mDataManager = New MarketDataManager
-mDataManager.Initialise pFactory, pStudyLibManager, pOptions, pNumberOfMarketDepthRows
+mDataManager.Initialise pFactory, _
+                        pPrimaryContractStore, _
+                        pSecondaryContractStore, _
+                        pStudyLibManager, _
+                        pOptions, _
+                        pNumberOfMarketDepthRows
 
 Exit Sub
 
@@ -275,7 +298,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Public Sub LoadFromConfig( _
+                ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 

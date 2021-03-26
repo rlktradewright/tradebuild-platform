@@ -59,6 +59,8 @@ Private mFactory                                    As IMarketDataFactory
 Attribute mFactory.VB_VarHelpID = -1
 
 Private mStudyLibManager                            As StudyLibraryManager
+Private mPrimaryContractStore                       As IContractStore
+Private mSecondaryContractStore                     As IContractStore
 
 Private mDataSourceBaseTable()                      As DataSourceBaseTableEntry
 Private mNextUnusedTableIndex                       As Long
@@ -110,11 +112,14 @@ Friend Function CreateMarketDataSource( _
                 ByVal pUseLocalTimeForStudies As Boolean, _
                 ByVal pTickfileStreamId As Long, _
                 ByVal pIsSnapshot As Boolean, _
-                ByVal pRefreshInterval) As IMarketDataSource
+                ByVal pRefreshInterval As Long, _
+                ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture cannot be Nothing"
+AssertArgument pIsRecoverable Or pRecoveryContractSpec Is Nothing, _
+                "Non-recoverable data source cannot have a recovery contract spec"
 
 If pKey = "" Then pKey = GenerateGUIDString
 
@@ -124,12 +129,21 @@ Dim lDataSource As New MarketDataSource
 If Not pStateChangeListener Is Nothing Then lDataSource.AddStateChangeListener pStateChangeListener
 
 Dim lConfig As ConfigurationSection
-If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStudies, pIsSnapshot, pRefreshInterval)
+If pIsRecoverable Then Set lConfig = getConfigSection(pKey, pUseLocalTimeForStudies, pIsSnapshot, pRefreshInterval, pRecoveryContractSpec)
 
 Dim lStudyManagerFuture As IFuture
 If Not mStudyLibManager Is Nothing Then Set lStudyManagerFuture = mStudyLibManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies)
 
-lDataSource.Initialise Me, pKey, pContractFuture, pClockFuture, lStudyManagerFuture, lConfig, pTickfileStreamId, pIsSnapshot, pRefreshInterval
+lDataSource.Initialise Me, _
+                        pKey, _
+                        pContractFuture, _
+                        pClockFuture, _
+                        lStudyManagerFuture, _
+                        lConfig, _
+                        pTickfileStreamId, _
+                        pIsSnapshot, _
+                        pRefreshInterval, _
+                        pRecoveryContractSpec
 
 mDataSources.Add lDataSource, pKey
 
@@ -215,6 +229,8 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pFactory As IMarketDataFactory, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByVal pSecondaryContractStore As IContractStore, _
                 ByVal pStudyLibManager As StudyLibraryManager, _
                 ByVal pOptions As MarketDataSourceOptions, _
                 ByVal pNumberOfMarketDepthRows As Long)
@@ -222,6 +238,8 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mFactory = pFactory
+Set mPrimaryContractStore = pPrimaryContractStore
+Set mSecondaryContractStore = pSecondaryContractStore
 Set mStudyLibManager = pStudyLibManager
 mOptions = pOptions
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
@@ -232,7 +250,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Friend Sub LoadFromConfig( _
+                ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
@@ -252,8 +271,27 @@ For Each lCs In mConfig
     If lContractConfig Is Nothing Then
         lRemovableCSs.Add lCs
     Else
+        Dim lRecoveryContractSpecConfig As ConfigurationSection
+        Set lRecoveryContractSpecConfig = lCs.GetConfigurationSection(ConfigSectionRecoveryContractSpec)
+        
         Dim lContractFuture As IFuture
-        Set lContractFuture = CreateFuture(LoadContractFromConfig(lContractConfig))
+        
+        Dim lRecoveryContractSpec As IContractSpecifier: Set lRecoveryContractSpec = Nothing
+        If Not lRecoveryContractSpecConfig Is Nothing Then
+            Set lRecoveryContractSpec = LoadContractSpecFromConfig(lRecoveryContractSpecConfig)
+            Set lContractFuture = FetchContract( _
+                                    lRecoveryContractSpec, _
+                                    mPrimaryContractStore, _
+                                    mSecondaryContractStore)
+        Else
+            Dim lContractSpec As IContractSpecifier
+            Set lContractSpec = LoadContractFromConfig(lContractConfig).Specifier
+            Set lContractFuture = FetchContract( _
+                                    lContractSpec, _
+                                    mPrimaryContractStore, _
+                                    mSecondaryContractStore)
+        End If
+        
         CreateMarketDataSource lContractFuture, _
                                 CreateClockFuture(lContractFuture), _
                                 lCs.InstanceQualifier, _
@@ -262,7 +300,9 @@ For Each lCs In mConfig
                                 lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False"), _
                                 NullIndex, _
                                 lCs.GetSetting(ConfigSettingIsSnapshot, "False"), _
-                                lCs.GetSetting(ConfigSettingSnapshotRefreshInterval, "0")
+                                lCs.GetSetting(ConfigSettingSnapshotRefreshInterval, "0"), _
+                                lRecoveryContractSpec
+                                
     End If
 Next
 
@@ -451,7 +491,8 @@ Private Function getConfigSection( _
                 ByVal pKey As String, _
                 ByVal pUseLocalTimeForStudies As Boolean, _
                 ByVal pIsSnapshot As Boolean, _
-                ByVal pRefreshInterval) As ConfigurationSection
+                ByVal pRefreshInterval, _
+                ByVal pRecoveryContractSpec As IContractSpecifier) As ConfigurationSection
 Const ProcName As String = "getConfigSection"
 On Error GoTo Err
 
@@ -462,6 +503,10 @@ Set lConfig = mConfig.AddConfigurationSection(ConfigSectionMarketDataSource & "(
 lConfig.SetSetting ConfigSettingUseLocalTimeForStudies, pUseLocalTimeForStudies
 lConfig.SetSetting ConfigSettingIsSnapshot, pIsSnapshot
 lConfig.SetSetting ConfigSettingSnapshotRefreshInterval, pRefreshInterval
+
+If Not pRecoveryContractSpec Is Nothing Then
+    SaveContractSpecToConfig pRecoveryContractSpec, lConfig.AddConfigurationSection(ConfigSectionRecoveryContractSpec)
+End If
 
 Set getConfigSection = lConfig
 

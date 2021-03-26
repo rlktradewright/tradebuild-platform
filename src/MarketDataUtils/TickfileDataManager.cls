@@ -141,7 +141,8 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
@@ -159,7 +160,8 @@ Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRefreshInterval As Long = 0&) As IMarketDataSource
+                Optional ByVal pRefreshInterval As Long = 0&, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager10_CreateSnapshotMarketDataSource"
 On Error GoTo Err
 
@@ -199,7 +201,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IMarketDataManager_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Private Sub IMarketDataManager_LoadFromConfig( _
+                ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "IMarketDataManager_LoadFromConfig"
 On Error GoTo Err
 
@@ -269,12 +272,14 @@ Public Function CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture cannot be Nothing"
 AssertArgument Not pIsRecoverable, "Recoverable tickfile-based market data sources not supported"
+AssertArgument pRecoveryContractSpec Is Nothing, "Recovery contract spec not relevant for tickfile-based market data sources"
 
 If pStateChangeListener Is Nothing Then Set pStateChangeListener = mDefaultStateChangeListener
 
@@ -284,7 +289,17 @@ Dim lTickStream As ITickStream
 Set lTickStream = mTickStreams(GetObjectKey(pContractFuture))
 
 Dim lDataSource As New MarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, lTickStream.ClockFuture, pKey, pStateChangeListener, False, pUseLocalTimeForStudies, lTickStream.StreamId, False, 0)
+Set lDataSource = mDataManager.CreateMarketDataSource( _
+                                    pContractFuture, _
+                                    lTickStream.ClockFuture, _
+                                    pKey, _
+                                    pStateChangeListener, _
+                                    False, _
+                                    pUseLocalTimeForStudies, _
+                                    lTickStream.StreamId, _
+                                    False, _
+                                    0, _
+                                    Nothing)
 
 Set CreateMarketDataSource = lDataSource
 
@@ -343,7 +358,12 @@ Set mDefaultStateChangeListener = pDefaultStateChangeListener
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 
 Set mDataManager = New MarketDataManager
-mDataManager.Initialise Me, pStudyLibManager, pOptions, pNumberOfMarketDepthRows
+mDataManager.Initialise Me, _
+                        pPrimaryContractStore, _
+                        pSecondaryContractStore, _
+                        pStudyLibManager, _
+                        pOptions, _
+                        pNumberOfMarketDepthRows
 
 Set mReplayController = CreateTickfileReplayController(pTickfileStore, mPrimaryContractStore, mSecondaryContractStore, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
 
