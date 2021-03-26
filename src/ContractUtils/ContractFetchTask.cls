@@ -53,6 +53,7 @@ Private Const CookieTargetContractFetch             As String = "Target"
 Private mPrimaryContractStore                       As IContractStore
 Private mSecondaryContractStore                     As IContractStore
 
+Private mInitialContractSpec                        As IContractSpecifier
 Private mContractSpec                               As IContractSpecifier
 
 Private mTaskContext                                As TaskContext
@@ -352,16 +353,19 @@ Set mListener = pListener
 mSingleContractOnly = pSingleContractOnly
 createFutureBuilder
 
+Set mInitialContractSpec = pContractSpec
+mContractsBuilder.ContractSpecifier = mInitialContractSpec
+
 If Not gIsOffsetExpiry(pContractSpec.Expiry) Then
     mMyCookie = CookieTargetContractFetch
-    Set mContractSpec = pContractSpec
+    Set mContractSpec = mInitialContractSpec
 Else
     mIsOffsetExpiry = True
     mMyCookie = CookieSampleContractFetch
-    gParseOffsetExpiry pContractSpec.Expiry, _
+    gParseOffsetExpiry mInitialContractSpec.Expiry, _
                     mExpiryOffset, _
                     mDaysBeforeExpiryToSwitch
-    With pContractSpec
+    With mInitialContractSpec
         Set mContractSpec = gCreateContractSpecifier(.LocalSymbol, _
                                                     .Symbol, _
                                                     .Exchange, _
@@ -503,6 +507,7 @@ End With
 
 mMyCookie = CookieTargetContractFetch
 Set mContractsBuilder = New ContractsBuilder
+mContractsBuilder.ContractSpecifier = mInitialContractSpec
 ReDim lSortkeys(0) As ContractSortKeyIds
 lSortkeys(0) = ContractSortKeyExpiry
 mContractsBuilder.SortKeys = lSortkeys
@@ -523,6 +528,7 @@ If mExpiryOffset <> -1 Then
     Dim lAllContracts As IContracts: Set lAllContracts = mContractsBuilder.Contracts
     
     Set mContractsBuilder = New ContractsBuilder
+    mContractsBuilder.ContractSpecifier = mInitialContractSpec
     Dim lContract As IContract
     Dim lIndex As Long: lIndex = -1
     For Each lContract In lAllContracts

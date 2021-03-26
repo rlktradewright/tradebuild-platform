@@ -58,6 +58,8 @@ Private Const ModuleName                As String = "Contracts"
 ' Member variables
 '@================================================================================
 
+Private mContractSpecifier              As IContractSpecifier
+
 Private mContracts                      As SortedDictionary
 
 Private mChangeListeners                As New Listeners
@@ -113,6 +115,10 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Property Get IContracts_ContractSpecifier() As IContractSpecifier
+Set IContracts_ContractSpecifier = ContractSpecifier
+End Property
 
 Private Property Get IContracts_Count() As Long
 Const ProcName As String = "IContracts_Count"
@@ -229,6 +235,14 @@ End Function
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Let ContractSpecifier(ByVal Value As IContractSpecifier)
+Set mContractSpecifier = Value
+End Property
+
+Public Property Get ContractSpecifier() As IContractSpecifier
+Set ContractSpecifier = mContractSpecifier
+End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"

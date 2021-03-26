@@ -66,6 +66,9 @@ Private Const ModuleName                    As String = "IContractsBuilder"
 Public Property Get Contracts() As IContracts
 End Property
 
+Public Property Let ContractSpecifier(ByVal Value As IContractSpecifier)
+End Property
+
 Public Property Let SortAscending(ByVal Value As Boolean)
 End Property
 

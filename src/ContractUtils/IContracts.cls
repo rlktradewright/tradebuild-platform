@@ -60,6 +60,9 @@ Private Const ModuleName                            As String = "IContracts"
 ' Properties
 '@================================================================================
 
+Public Property Get ContractSpecifier() As IContractSpecifier
+End Property
+
 Public Property Get Count() As Long
 End Property
 

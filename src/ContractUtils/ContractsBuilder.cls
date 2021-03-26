@@ -75,6 +75,10 @@ Private Property Get IContractsBuilder_Contracts() As IContracts
 Set IContractsBuilder_Contracts = Contracts
 End Property
 
+Private Property Let IContractsBuilder_ContractSpecifier(ByVal Value As IContractSpecifier)
+ContractSpecifier = Value
+End Property
+
 Private Property Let IContractsBuilder_SortAscending(ByVal Value As Boolean)
 SortAscending = Value
 End Property
@@ -98,6 +102,10 @@ End Property
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Let ContractSpecifier(ByVal Value As IContractSpecifier)
+mContracts.ContractSpecifier = Value
+End Property
 
 Public Property Get Contracts() As Contracts
 Set Contracts = mContracts
