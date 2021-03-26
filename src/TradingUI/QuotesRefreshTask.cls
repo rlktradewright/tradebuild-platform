@@ -87,7 +87,7 @@ End If
 
 Dim lTicker As IMarketDataSource
 Set lTicker = mTickersEn.Current
-lTicker.RefreshQuotes mListener
+If lTicker.State = MarketDataSourceStateRunning Then lTicker.RefreshQuotes mListener
 
 Exit Sub
 

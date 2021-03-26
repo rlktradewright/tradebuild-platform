@@ -2067,7 +2067,13 @@ For Each lTickerConfig In mTickersConfigSection
     
     If Not lTicker.IsMarketDataRequested Then lTicker.StartMarketData
     
-    gLogger.Log "Started Ticker " & gGetContractFromContractFuture(lTicker.ContractFuture).Specifier.ToString, ProcName, ModuleName, LogLevelNormal
+    If lTicker.ContractFuture.IsAvailable Then
+        gLogger.Log "Started Ticker: " & gGetContractFromContractFuture(lTicker.ContractFuture).Specifier.ToString, ProcName, ModuleName, LogLevelNormal
+    ElseIf Not lTicker.RecoveryContractSpec Is Nothing Then
+        gLogger.Log "Started Ticker: " & lTicker.RecoveryContractSpec.ToString, ProcName, ModuleName, LogLevelNormal
+    Else
+        gLogger.Log "Started Ticker: ???", ProcName, ModuleName, LogLevelNormal
+    End If
 Next
 mIteratingTickersConfig = False
 
@@ -2200,13 +2206,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function StartTickerFromContract(ByVal pContract As IContract, Optional ByVal pGridRow As Long) As IMarketDataSource
+Public Function StartTickerFromContract( _
+                ByVal pContract As IContract, _
+                Optional ByVal pGridRow As Long, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "StartTickerFromContract"
 On Error GoTo Err
 
 AssertArgument Not IsContractExpired(pContract), "Contract has expired"
 
-Set StartTickerFromContract = StartTickerFromContractFuture(CreateFuture(pContract), pGridRow)
+Set StartTickerFromContract = StartTickerFromContractFuture( _
+                                        CreateFuture(pContract), _
+                                        pGridRow, _
+                                        pRecoveryContractSpec)
 
 Exit Function
 
@@ -2214,12 +2226,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function StartTickerFromContractFuture(ByVal pContractFuture As IFuture, Optional ByVal pGridRow As Long) As IMarketDataSource
+Public Function StartTickerFromContractFuture( _
+                ByVal pContractFuture As IFuture, _
+                Optional ByVal pGridRow As Long, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "StartTickerFromContractFuture"
 On Error GoTo Err
 
 Dim lTicker As IMarketDataSource
-Set lTicker = mMarketDataManager.CreateMarketDataSource(pContractFuture, True)
+Set lTicker = mMarketDataManager.CreateMarketDataSource( _
+                                    pContractFuture, _
+                                    True, _
+                                    pRecoveryContractSpec:=pRecoveryContractSpec)
 
 addTickerToGrid lTicker, pGridRow
 processTickerState lTicker
@@ -2847,7 +2865,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub RefreshPriceChange()
-Const ProcName As String = "refreshPriceChange"
+Const ProcName As String = "RefreshPriceChange"
 On Error GoTo Err
 
 If Not mRefreshPriceChangeTC Is Nothing Then Exit Sub
@@ -2866,7 +2884,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub RefreshQuotes()
-Const ProcName As String = "refreshQuotes"
+Const ProcName As String = "RefreshQuotes"
 On Error GoTo Err
 
 If Not mRefreshQuotesTC Is Nothing Then Exit Sub

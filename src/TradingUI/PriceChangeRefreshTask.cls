@@ -86,7 +86,7 @@ End If
 
 Dim lTicker As IMarketDataSource
 Set lTicker = mTickersEn.Current
-lTicker.RefreshPriceChange mListener
+If lTicker.State = MarketDataSourceStateRunning Then lTicker.RefreshPriceChange mListener
 
 Exit Sub
 
