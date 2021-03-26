@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Ticker Grid Test1"
    ClientHeight    =   10065
@@ -116,6 +116,8 @@ Private mClientId                                   As Long
 Private mDataClient                                 As Client
 Private mContractClient                             As Client
 
+Private mTickersStarted                             As Boolean
+
 Private mMarketDataManager                          As IMarketDataManager
 Private mContractStore                              As IContractStore
 
@@ -182,14 +184,10 @@ mDataClient.SetTwsLogLevel TwsLogLevelDetail
 Set mContractClient = GetClient("Essy", 7497, mClientId + 1, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
 
 Set mContractStore = mContractClient.GetContractStore
-Set mMarketDataManager = CreateRealtimeDataManager(mDataClient.GetMarketDataFactory)
+Set mMarketDataManager = CreateRealtimeDataManager(mDataClient.GetMarketDataFactory, mDataClient.GetContractStore)
 
 ContractSearch.Initialise mContractStore, Nothing
 ContractSearch.IncludeHistoricalContracts = False
-
-mMarketDataManager.LoadFromConfig mMarketDataManagerConfig
-
-TickerGrid.Initialise mMarketDataManager, mTickerGridConfig
 
 Exit Sub
 
@@ -238,6 +236,12 @@ Case ApiConnConnecting
     LogMessage "Connecting to TWS: " & pMessage
 Case ApiConnConnected
     LogMessage "Connected to TWS: " & pMessage
+    
+    If Not mTickersStarted Then
+        mTickersStarted = True
+        mMarketDataManager.LoadFromConfig mMarketDataManagerConfig
+        TickerGrid.Initialise mMarketDataManager, mTickerGridConfig
+    End If
 Case ApiConnFailed
     LogMessage "Failed to connect to TWS: " & pMessage
 End Select

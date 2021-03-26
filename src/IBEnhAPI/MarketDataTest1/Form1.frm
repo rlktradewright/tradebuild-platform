@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#366.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   9585
@@ -414,7 +414,7 @@ Set mFutureWaiter = New FutureWaiter
 
 Set mClient = GetClient(Server, 7497, ClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me, , Me, Me)
 
-Set mDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory)
+Set mDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory, Nothing)
 Set mContractStore = mClient.GetContractStore
 
 End Sub

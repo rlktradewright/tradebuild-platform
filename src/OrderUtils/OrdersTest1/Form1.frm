@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#362.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
@@ -215,7 +215,7 @@ Set mClient = GetClient(TwsHost, ApiPort, ClientId, , , ApiMessageLoggingOptionA
 mClient.SetTwsLogLevel TwsLogLevelDetail
 
 Set mContractStore = mClient.GetContractStore
-Set mMarketDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory)
+Set mMarketDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory, Nothing)
 
 Set mOrderSubmitterFactorySimulated = New SimOrderSubmitterFactory
 
