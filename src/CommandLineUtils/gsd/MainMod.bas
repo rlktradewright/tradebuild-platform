@@ -430,7 +430,8 @@ End Function
 
 Public Function gPerformResultVariableSubstitution( _
                 ByVal pString As String, _
-                ByVal pScanResult As IScanResult) As String
+                ByVal pScanResult As IScanResult, _
+                ByVal pProcessor As ScanProcessor) As String
 Const ProcName As String = "gPerformResultVariableSubstitution"
 On Error GoTo Err
 
@@ -458,6 +459,8 @@ For Each lMatch In lMatches
     
     Dim lVariable As String: lVariable = UCase$(lMatch.SubMatches(0))
     Select Case lVariable
+    Case ScancodeVariable
+        r = pProcessor.ScanName
     Case ContractVariable
         r = gGetContractName(lContractSpec)
     Case SymbolVariable
@@ -586,6 +589,8 @@ If Not setupTwsApi(mClp.SwitchValue(SwitchTws), _
 End If
 
 process
+
+TerminateTWUtilities
 
 Exit Sub
 
@@ -1177,6 +1182,7 @@ SortStrings mFilenameSubstitutionVariables, EndIndex:=mMaxFilenameVariablesIndex
 ReDim mResultSubstitutionVariables(15) As String
 mMaxResultVariablesIndex = -1
 
+addResultSubstitutionVariable ScancodeVariable
 addResultSubstitutionVariable ContractVariable
 addResultSubstitutionVariable SymbolVariable
 addResultSubstitutionVariable LocalSymbolVariable

@@ -188,7 +188,8 @@ On Error GoTo Err
 
 formatScanResult = gPerformResultVariableSubstitution( _
                         IIf(pUseEchoFormat, mScanEchoResultFormat, mScanResultFormat), _
-                        pScanResult)
+                        pScanResult, _
+                        Me)
 
 Exit Function
 
