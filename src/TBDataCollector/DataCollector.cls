@@ -381,7 +381,7 @@ On Error GoTo Err
 
 processConfig
 
-TaskSummaryLoggingIntervalSecs = 5
+TaskSummaryLoggingIntervalSecs = 60
 
 If Not mStartCollectionTimer Is Nothing Then
     ' startCollection may have been called as a result of user action, so
