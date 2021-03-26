@@ -109,11 +109,12 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
-Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener)
+Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener, pRecoveryContractSpec)
 
 Exit Function
 
@@ -127,7 +128,8 @@ Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRefreshInterval As Long = 0&) As IMarketDataSource
+                Optional ByVal pRefreshInterval As Long = 0&, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateSnapshotMarketDataSource"
 On Error GoTo Err
 
@@ -173,7 +175,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IMarketDataManager_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Private Sub IMarketDataManager_LoadFromConfig( _
+                ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "IMarketDataManager_LoadFromConfig"
 On Error GoTo Err
 
@@ -270,7 +273,8 @@ Public Function CreateTicker( _
                 Optional ByVal pIsRecoverable As Boolean = True, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As IStateChangeListener) As Ticker
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As Ticker
 Const ProcName As String = "CreateTicker"
 On Error GoTo Err
 
@@ -281,7 +285,13 @@ Set CreateTicker = New Ticker
 If Not pStateChangeListener Is Nothing Then CreateTicker.AddStateChangeListener pStateChangeListener
 
 Dim lDataSource As IMarketDataSource
-Set lDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies)
+Set lDataSource = mMarketDataManager.CreateMarketDataSource( _
+                                        pContractFuture, _
+                                        pIsRecoverable, _
+                                        pKey, _
+                                        pUseLocalTimeForStudies, _
+                                        Nothing, _
+                                        pRecoveryContractSpec)
 
 CreateTicker.Initialise lDataSource, mHistDataStore, Me, Nothing
                 
@@ -363,7 +373,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Public Sub LoadFromConfig( _
+                ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
