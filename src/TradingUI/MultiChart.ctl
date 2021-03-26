@@ -1088,6 +1088,7 @@ AssertArgument Index <= Count And Index >= 1, "Index must not be less than 1 or 
 
 ChartSelectorToolbar.Buttons.Item(Index).Value = tbrPressed
 mCurrentIndex = switchToChart(Index)
+resize
 fireChange MultiChartSelectionChanged
 
 Exit Sub
@@ -1323,6 +1324,7 @@ gLogger.Log "DisableDrawing", ProcName, ModuleName, LogLevelHighDetail
 lChart.DisableDrawing
 
 TBChart(getChartControlIndexFromButtonIndex(Index)).Visible = False
+TBChart(getChartControlIndexFromButtonIndex(Index)).Align = vbAlignNone
 
 Exit Sub
 
@@ -1352,7 +1354,7 @@ On Error GoTo Err
 
 Load TBChart(TBChart.UBound + 1)
 TBChart(TBChart.UBound).Height = ChartSelectorToolbar.Top
-resize
+'resize
 mCount = mCount + 1
 Set loadChartControl = TBChart(TBChart.UBound).object
 
@@ -1425,8 +1427,9 @@ Else
     ControlToolbar.Buttons("change").Enabled = False
 End If
 
-TBChart(getChartControlIndexFromButtonIndex(Index)).Visible = True
+TBChart(getChartControlIndexFromButtonIndex(Index)).Align = AlignConstants.vbAlignTop
 TBChart(getChartControlIndexFromButtonIndex(Index)).Height = ChartSelectorToolbar.Top
+TBChart(getChartControlIndexFromButtonIndex(Index)).Visible = True
 
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, Index
 

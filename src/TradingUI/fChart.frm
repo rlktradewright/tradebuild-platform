@@ -546,7 +546,7 @@ Case MultiChartAdd
     lTitle.Position = NewPoint(0.1, 0.1, CoordsDistance, CoordsCounterDistance)
     lTitle.FixedX = True
     lTitle.FixedY = True
-    lTitle.align = TextAlignModes.AlignTopLeft
+    lTitle.Align = TextAlignModes.AlignTopLeft
     lTitle.IncludeInAutoscale = False
     lTitle.PaddingX = 0#
     lTitle.Color = &H808080
@@ -597,7 +597,7 @@ Case ChartStateFetching
     LoadingText.Color = vbYellow
     LoadingText.Font.Size = 16
     LoadingText.Font.Italic = True
-    LoadingText.align = AlignBottomCentre
+    LoadingText.Align = AlignBottomCentre
     LoadingText.Position = NewPoint(50, 0.2, CoordsRelative, CoordsDistance)
     LoadingText.Text = "Fetching historical data"
 Case ChartStateLoading
