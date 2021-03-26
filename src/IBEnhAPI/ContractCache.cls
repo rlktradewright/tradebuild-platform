@@ -143,6 +143,7 @@ If tryGetContractCacheEntry(pKey, lEntry) Then Exit Sub
 lEntry.CacheDate = Now
 Dim lContractsBuilder As New ContractsBuilder
 lContractsBuilder.Add pContract
+lContractsBuilder.ContractSpecifier = pContract.Specifier
 Set lEntry.Contracts = lContractsBuilder.Contracts
 If lEntry.TwsContracts Is Nothing Then Set lEntry.TwsContracts = New EnumerableCollection
 lEntry.TwsContracts.Add pTwsContract

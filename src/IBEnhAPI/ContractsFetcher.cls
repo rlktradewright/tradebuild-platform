@@ -259,6 +259,7 @@ Set mRequestManager = pRequestManager
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
+mContractsBuilder.ContractSpecifier = pContractSpecifier
 
 If mContractCache.GetContracts( _
                         mContractSpecifier, _

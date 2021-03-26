@@ -144,7 +144,7 @@ Friend Sub Fetch( _
                 ByVal pListener As IContractFetchListener, _
                 ByVal pCookie As Variant, _
                 ByVal pReturnTwsContracts As Boolean)
-Const ProcName As String = "Initialise"
+Const ProcName As String = "Fetch"
 On Error GoTo Err
 
 Set mSelfRef = Me
@@ -153,6 +153,8 @@ Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
 Set mListener = pListener
+
+mContractsBuilder.ContractSpecifier = pContractSpecifier
 
 gSetVariant mCookie, pCookie
 mResultContractsFutureBuilder.Cookie = mCookie
