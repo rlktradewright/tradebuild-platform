@@ -259,6 +259,7 @@ Set instruments = Me.InstrumentFactory.QueryObjectsBySpec(contractSpec)
 
 Dim builder As ContractsBuilder
 Set builder = New ContractsBuilder
+builder.ContractSpecifier = contractSpec
 
 Dim instrument As BusinessDataObject
 For Each instrument In instruments

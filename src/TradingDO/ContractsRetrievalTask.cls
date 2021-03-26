@@ -244,6 +244,7 @@ Const ProcName As String = "Initialise"
 Set mDB = db
 Set mListener = pListener
 Set mContractSpec = Specifier
+mBuilder.ContractSpecifier = Specifier
 mFutureBuilder.cookie = pCookie
 End Sub
 

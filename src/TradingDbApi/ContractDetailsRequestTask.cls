@@ -318,6 +318,8 @@ End If
 Set mContractSpecifier = pContractSpecifier
 Set mListener = pListener
 
+mContractsBuilder.ContractSpecifier = mContractSpecifier
+
 gSetVariant mCookie, pCookie
 
 Exit Sub
