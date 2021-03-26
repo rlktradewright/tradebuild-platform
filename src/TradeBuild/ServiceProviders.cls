@@ -812,7 +812,14 @@ Dim lMarketDataFactory As IMarketDataFactory
 Set lMarketDataFactory = GetMarketDataFactory
 If lMarketDataFactory Is Nothing Then Exit Function
 
-Set createMarketDataManager = CreateRealtimeDataManager(GetMarketDataFactory, pStudyLibraryManager, tb.MarketDataSourceOptions, tb.DefaultStateChangeListener, tb.NumberOfMarketDepthRows)
+Set createMarketDataManager = CreateRealtimeDataManager( _
+                                    GetMarketDataFactory, _
+                                    ContractStorePrimary, _
+                                    ContractStoreSecondary, _
+                                    pStudyLibraryManager, _
+                                    tb.MarketDataSourceOptions, _
+                                    tb.DefaultStateChangeListener, _
+                                    tb.NumberOfMarketDepthRows)
 
 Exit Function
 
