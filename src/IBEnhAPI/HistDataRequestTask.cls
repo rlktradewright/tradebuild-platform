@@ -102,7 +102,6 @@ Private mFirstBarTimeInMessage                      As Date
 Private mNumberOfBarsInMessage                      As Long
 
 Private mLatestRetrievalStartDate                   As Date
-Private mAllowMoreBars                              As Boolean
 
 Private mRequesterID                                As Long
 
@@ -225,9 +224,17 @@ ElseIf mState = ProcessingBars Then
             processBar lTWSBar
             mTWSBarsEn.Remove
             mTotalTwsBarsProcessed = mTotalTwsBarsProcessed + 1
-            If mTotalTwsBarsProcessed Mod 10 = 0 Then
-                gLog "Number of source bars processed: " & mTotalTwsBarsProcessed, ModuleName, ProcName, , LogLevelHighDetail
-            End If
+
+'           leave the following code in for future debugging use
+'            If mTotalTwsBarsProcessed Mod 100 = 0 Then
+'                If gLogger.IsLoggable(LogLevelHighDetail) Then
+'                    gLog "Number of source bars processed: " & mTotalTwsBarsProcessed, _
+'                    ModuleName, _
+'                    ProcName, _
+'                    , _
+'                    LogLevelHighDetail
+'                End If
+'            End If
         Else
             Set mTWSBarsEn = Nothing
             Set mTWSBarsCollections(mCurrTWSBarsCollectionIndex) = Nothing
@@ -443,10 +450,11 @@ Dim lTimestamp As Date
 lTimestamp = getTimestampFromTwsBar(pBar, mWorkingBarSpecifier.BarTimePeriod)
 If mFirstBarTimeInMessage = 0 Then mFirstBarTimeInMessage = lTimestamp
 
-If gLogger.IsLoggable(LogLevelHighDetail) Then
-    gLog "Bar time: " & FormatTimestamp(lTimestamp, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs), _
-        ModuleName, ProcName, , LogLevelHighDetail
-End If
+' leave the following code in for future debugging use
+'If gLogger.IsLoggable(LogLevelHighDetail) Then
+'    gLog "Bar time: " & FormatTimestamp(lTimestamp, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs), _
+'        ModuleName, ProcName, , LogLevelHighDetail
+'End If
 
 If Not notifyTimestamp(lTimestamp, _
                     mWorkingBarSpecifier.BarTimePeriod, _
@@ -701,6 +709,7 @@ pTwsRequest.MainSessionOnly = Not mWorkingBarSpecifier.IncludeBarsOutsideSession
 '                   50 D
 '                   10 W
 '                   3 M
+'                   1 Y
 '   1 hour          86400 S
 '                   50 D
 '                   10 W
@@ -739,7 +748,6 @@ pTwsRequest.MainSessionOnly = Not mWorkingBarSpecifier.IncludeBarsOutsideSession
 
 
 pTwsRequest.EndDateTime = generateRequestEndTime(pWorkingBarSpecifier, pSessionStartTime, pSessionEndTime)
-mAllowMoreBars = False
 
 With pWorkingBarSpecifier
     Dim numBarsInsession As Long
@@ -805,7 +813,6 @@ With pWorkingBarSpecifier
                 pTwsRequest.Duration = (-Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
             Else
                 pTwsRequest.Duration = "20 D"
-                mAllowMoreBars = True
             End If
         Case 10
             pTwsRequest.BarSizeSetting = "10 mins"
@@ -838,10 +845,12 @@ With pWorkingBarSpecifier
             pTwsRequest.BarSizeSetting = "30 mins"
             If mFromSessionTimes.StartTime = mToSessionTimes.StartTime Then
                 pTwsRequest.Duration = (.MaxNumberOfBars * 1800) & " S"
-            ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 50 Then
+            ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 60 Then
                 pTwsRequest.Duration = (-Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
+            ElseIf -Int(-.MaxNumberOfBars / numBarsInsession / 23) <= 12 Then
+                pTwsRequest.Duration = (-Int(-.MaxNumberOfBars / numBarsInsession / 23)) & " M"
             Else
-                pTwsRequest.Duration = "50 D"
+                pTwsRequest.Duration = "1 Y"
             End If
         End Select
     Case TimePeriodUnits.TimePeriodMonth
@@ -1164,12 +1173,12 @@ Case Else
 End Select
 End Function
 
-Private Function isInScope(ByVal pTimestamp As Date, ByVal pSession As Session) As Boolean
+Private Function isInScope(ByVal pTimeStamp As Date, ByVal pSession As Session) As Boolean
 Const ProcName As String = "isInScope"
 On Error GoTo Err
 
 'If mTargetBarSpecifier.IncludeBarsOutsideSession Or
-If pSession.IsTimeInSession(pTimestamp) _
+If pSession.IsTimeInSession(pTimeStamp) _
 Then
     isInScope = True
 Else
@@ -1198,12 +1207,12 @@ Then
     Exit Function
 End If
 
-If mLatestRetrievalStartDate <= mTargetBarSpecifier.FromDate Then
+If mFirstBarTimeInMessage <= mTargetBarSpecifier.FromDate Then
     needMoreBars = False
     Exit Function
 End If
-
-If Not mIsFromDateCalculated And Not mAllowMoreBars Then
+    
+If mLatestRetrievalStartDate <= mTargetBarSpecifier.FromDate Then
     needMoreBars = False
     Exit Function
 End If
@@ -1222,19 +1231,19 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function normaliseTime( _
-                ByVal pTimestamp As Date, _
+                ByVal pTimeStamp As Date, _
                 ByVal pSessionStartTime As Date, _
                 ByVal pSessionEndTime As Date, _
                 ByVal pIncludeBarsOutsideSession As Boolean) As Date
 If pIncludeBarsOutsideSession Then
-    normaliseTime = pTimestamp
+    normaliseTime = pTimeStamp
 Else
     Dim lSesstimes As SessionTimes
-    lSesstimes = GetSessionTimes(pTimestamp, pSessionStartTime, pSessionEndTime)
-    If pTimestamp > lSesstimes.EndTime Then
+    lSesstimes = GetSessionTimes(pTimeStamp, pSessionStartTime, pSessionEndTime)
+    If pTimeStamp > lSesstimes.EndTime Then
         normaliseTime = lSesstimes.EndTime
     Else
-        normaliseTime = pTimestamp
+        normaliseTime = pTimeStamp
     End If
 End If
 End Function
@@ -1243,7 +1252,7 @@ Private Sub notifyBarValue( _
                 ByVal pValue As Double, _
                 ByVal pNumberOfPrices As Long, _
                 ByRef pNumberOfPricesNotified As Long, _
-                ByVal pTimestamp As Date, _
+                ByVal pTimeStamp As Date, _
                 ByVal pTickVolumePerNotify As Long, _
                 ByVal pTickVolume As Long, _
                 ByVal pVolumePerNotify As Long, _
@@ -1252,7 +1261,7 @@ Const ProcName As String = "notifyBarValue"
 On Error GoTo Err
 
 Dim lValue As SValue
-lValue.Timestamp = pTimestamp
+lValue.Timestamp = pTimeStamp
 
 lValue.Value = pValue
 mTargetBarsBuilder.NotifyValue lValue
@@ -1275,7 +1284,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function notifyTimestamp( _
-                ByVal pTimestamp As Date, _
+                ByVal pTimeStamp As Date, _
                 ByVal pBarTimePeriod As TimePeriod, _
                 ByVal pFromDate As Date, _
                 ByVal pSessionBuilder As SessionBuilder) As Boolean
@@ -1288,16 +1297,16 @@ If pBarTimePeriod.Units = TimePeriodWeek Or _
     pBarTimePeriod.Units = TimePeriodMonth Or _
     pBarTimePeriod.Units = TimePeriodYear _
 Then
-    notifyTimestamp = pTimestamp >= Int(pFromDate)
+    notifyTimestamp = pTimeStamp >= Int(pFromDate)
 Else
     Dim lChange As SessionEventData
-    lChange = pSessionBuilder.SetSessionCurrentTime(pTimestamp)
+    lChange = pSessionBuilder.SetSessionCurrentTime(pTimeStamp)
     If lChange.ChangeType = SessionChangeStart Then mAccumulatedVolume = 0
     
-    If Not mIsFromDateCalculated And pTimestamp < pFromDate Then
+    If Not mIsFromDateCalculated And pTimeStamp < pFromDate Then
         notifyTimestamp = False
     Else
-        notifyTimestamp = isInScope(pTimestamp, pSessionBuilder.Session)
+        notifyTimestamp = isInScope(pTimeStamp, pSessionBuilder.Session)
     End If
 End If
 
@@ -1423,14 +1432,14 @@ Private Sub setDatesAndNumberOfBars()
 Const ProcName As String = "setDatesAndNumberOfBars"
 On Error GoTo Err
 
-' FromDate=0            Y   Y   Y   _   N   N   N
-' ToDate=0              Y   Y   N   N   Y   Y   N
-' MaxNumberOfBars=0     Y   N   Y   N   Y   N   Y
+' FromDate <> 0            Y   Y   Y   _   N   N   N
+' ToDate <> 0              Y   Y   N   N   Y   Y   N
+' MaxNumberOfBars <> 0     Y   N   Y   N   Y   N   Y
 '
-'CalcFromDate           -   -   -   -   X   -   -
-'CalcToDate             -   -   X   -   -   -   -
-'CalcNumBars            -   X   -   -   -   -   -
-'Err                    -   -   -   X   -   X   X
+'CalcFromDate              -   -   -   -   X   -   -
+'CalcToDate                -   -   X   -   -   -   -
+'CalcNumBars               -   X   -   -   -   -   -
+'Err                       -   -   -   X   -   X   X
 
 With mTargetBarSpecifier
     If .ToDate = MaxDate Then
