@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#373.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#377.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -602,7 +602,12 @@ Private Sub TickerGrid1_TickerSymbolEntered(ByVal pSymbol As String, ByVal pPref
 Const ProcName As String = "TickerGrid1_TickerSymbolEntered"
 On Error GoTo Err
 
-mContractsFutureWaiter.Add FetchContracts(CreateContractSpecifierFromString(pSymbol), mTradeBuildAPI.ContractStorePrimary, mTradeBuildAPI.ContractStoreSecondary), pPreferredRow
+mContractsFutureWaiter.Add FetchContracts( _
+                                CreateContractSpecifierFromString(pSymbol), _
+                                mTradeBuildAPI.ContractStorePrimary, _
+                                mTradeBuildAPI.ContractStoreSecondary, _
+                                pCookie:=pSymbol), _
+                            pPreferredRow
 
 Exit Sub
 
@@ -647,7 +652,10 @@ If lContracts.Count = 1 Then
     If IsContractExpired(lContracts.ItemAtIndex(1)) Then
         gModelessMsgBox "Contract has expired", MsgBoxExclamation, mTheme, "Attention"
     Else
-        TickerGrid1.StartTickerFromContract lContracts.ItemAtIndex(1), CLng(ev.ContinuationData)
+        TickerGrid1.StartTickerFromContract _
+                            lContracts.ItemAtIndex(1), _
+                            CLng(ev.ContinuationData), _
+                            lContracts.ContractSpecifier
     End If
 Else
     If mFeaturesPanelHidden Then showFeaturesPanel
