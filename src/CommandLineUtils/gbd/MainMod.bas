@@ -1707,7 +1707,7 @@ Const ProcName As String = "processStdInComands"
 On Error GoTo Err
 
 Do
-    If mProviderReady Then
+    If mProviderReady And (mAsync Or mCurrentProcessor Is Nothing) Then
         Dim lInputString As String
         lInputString = Trim$(gCon.ReadLine(":"))
         If lInputString = gCon.EofString Or UCase$(lInputString) = ExitCommand Then Exit Do
