@@ -453,7 +453,17 @@ On Error GoTo Err
 
 If pBar Is Nothing Then Exit Sub
 
-gWriteLineToStdOut formatBar(pUseEchoResultFormat, pProcessor, pBar, pBarnumber, pTimeframe, pNormaliseDailyBarTimestamps, pSecType, pTickSize, pIncludeMillisecs)
+gWriteLineToStdOut formatBar( _
+                        pUseEchoResultFormat, _
+                        pProcessor, _
+                        pBar, _
+                        pBarnumber, _
+                        pTimeframe, _
+                        pNormaliseDailyBarTimestamps, _
+                        pSecType, _
+                        pTickSize, _
+                        pIncludeMillisecs), _
+                    True
 
 Exit Sub
 
@@ -736,10 +746,13 @@ gCon.WriteLineToConsole pMessage
 LogMessage pMessage
 End Sub
 
-Public Sub gWriteLineToStdOut(ByVal pMessage As String)
+Public Sub gWriteLineToStdOut( _
+                ByVal pMessage As String, _
+                Optional ByVal pDontLogit As Boolean)
 Const ProcName As String = "gWriteLineToStdOut"
 
-If pMessage <> "" Then LogMessage "StdOut: " & pMessage
+If pMessage = "" Then Exit Sub
+If Not pDontLogit Then LogMessage "StdOut: " & pMessage
 gCon.WriteLine pMessage
 End Sub
 
