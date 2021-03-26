@@ -229,10 +229,10 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
+Dim lOrderContext As OrderContext
 If TypeOf ev.Future.Value Is IPermittedOrderProperties Then
     Set mPermittedOrderProperties = ev.Future.Value
     
-    Dim lOrderContext As OrderContext
     For Each lOrderContext In mOrderContexts
         lOrderContext.PermittedOrderProperties = mPermittedOrderProperties
         lOrderContext.IsProviderReady = IsProviderReady
@@ -500,7 +500,7 @@ Set mDataSource = pDataSource
 If Not IsDataSourceReady(mDataSource) Then mDataSource.AddGenericTickListener Me
 
 Set mOrderSubmitter = pOrderSubmitter
-Set pOrderAuthoriser = pOrderAuthoriser
+Set mOrderAuthoriser = pOrderAuthoriser
 Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
 Set mAccumulatedOrders = pAccumulatedOrders
 Set mSimulatedClockFuture = pSimulatedClockFuture

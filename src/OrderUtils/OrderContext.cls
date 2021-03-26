@@ -907,17 +907,26 @@ If pCheckMoneyManagement And Not mIsSimulated Then
     If Not mOrderAuthoriser Is Nothing Then
         Dim msg As String
         If Not mOrderAuthoriser.AllowOrder( _
-                                IIf(pBracketOrder.EntryOrder.Action = OrderActionBuy, True, False), _
+                                pBracketOrder, _
+                                mTimerList.Clock.Timestamp, _
                                 lNewQuantity, _
-                                pBracketOrder.Risk, _
                                 msg) _
         Then
             gLogBracketOrderMessage "Rejected by money management: " & msg, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
+            pBracketOrder.Cancel
             Set pBracketOrder = Nothing
             Exit Sub
         End If
     End If
     If lNewQuantity <> lOrigQuantity Then
+        gLogBracketOrderMessage "Order quantity adjusted by money management: " & _
+                                "was " & lOrigQuantity & _
+                                "; now " & lNewQuantity, _
+                                mDataSource, _
+                                mContract, _
+                                pBracketOrder.Key, _
+                                mIsSimulated, _
+                                Me
         pBracketOrder.SetNewEntryQuantity lNewQuantity
         pBracketOrder.Update
     End If
@@ -1076,7 +1085,7 @@ mGroupName = pGroupName
 mIsSimulated = pIsSimulated
 Set mDataSource = pDataSource
 Set mOrderSubmitter = pOrderSubmitter
-Set pOrderAuthoriser = pOrderAuthoriser
+Set mOrderAuthoriser = pOrderAuthoriser
 Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
 Set mAccumulatedOrders = pAccumulatedOrders
 

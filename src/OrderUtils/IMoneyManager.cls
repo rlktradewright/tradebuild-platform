@@ -60,44 +60,27 @@ Private Const ModuleName                            As String = "IMoneyManager"
 ' Properties
 '@================================================================================
 
-Public Property Get DefaultParameters() As Parameters
-End Property
-
-Public Property Let Parameters(ByVal Value As Parameters)
-End Property
-
-Public Property Get Parameters() As Parameters
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function AllowOrder(ByVal pCurrentSize As Long, _
-                            ByVal pPendingSize As Long, _
-                            ByVal pOrderLong As Boolean, _
-                            ByRef pOrderSize As Long, _
-                            ByRef pRisk As Currency, _
-                            ByVal pDayProfit As Currency, _
-                            ByVal pDayDrawdown As Currency, _
-                            ByVal pTradeProfit As Currency, _
-                            ByVal pTradeDrawdown As Currency, _
-                            ByVal pTimestamp As Date, _
-                            ByRef pMessage As String, _
-                            ByRef pSessionMustBeEnded As Boolean) As Boolean
+Public Function AllowOrder( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pPositionManager As PositionManager, _
+                ByVal pTimestamp As Date, _
+                ByRef pNewOrderSize As Long, _
+                ByRef pMessage As String, _
+                ByRef pSessionMustBeEnded As Boolean) As Boolean
 End Function
 
-Public Function CloseAll(ByVal pDayProfit As Currency, _
-                        ByVal pDayDrawdown As Currency, _
-                        ByVal pTradeProfit As Currency, _
-                        ByVal pTradeDrawdown As Currency, _
-                        ByVal pTimestamp As Date, _
-                        ByRef pMessage As String, _
-                        ByRef pSessionMustBeEnded As Boolean) As Boolean
+Public Function CloseAll( _
+                ByVal pPositionManager As PositionManager, _
+                ByVal pTimestamp As Date, _
+                ByRef pMessage As String, _
+                ByRef pSessionMustBeEnded As Boolean) As Boolean
 End Function
 
 Public Sub NotifyPositionFlat()
-
 End Sub
 
 '@================================================================================

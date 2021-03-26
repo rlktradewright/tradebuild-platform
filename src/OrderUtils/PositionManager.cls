@@ -218,9 +218,9 @@ End Sub
 '@================================================================================
 
 Private Function IOrderAuthoriser_AllowOrder( _
-                ByVal pIsLongOrder As Boolean, _
-                ByRef pOrderSize As Long, _
-                ByRef pRisk As Currency, _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pTimestamp As Date, _
+                ByRef pNewOrderSize As Long, _
                 ByRef pMessage As String) As Boolean
 Const ProcName As String = "IOrderAuthoriser_AllowOrder"
 On Error GoTo Err
@@ -234,16 +234,10 @@ If mClosingPosition Then
 End If
 
 If Not mMoneyManager Is Nothing Then
-    IOrderAuthoriser_AllowOrder = mMoneyManager.AllowOrder(PositionSize, _
-                                        PendingPositionSize, _
-                                        pIsLongOrder, _
-                                        pOrderSize, _
-                                        pRisk + Risk, _
-                                        mSessionProfit, _
-                                        mMaxSessionProfit - mSessionProfit, _
-                                        mProfitThisTrade, _
-                                        mMaxProfitThisTrade - mProfitThisTrade, _
+    IOrderAuthoriser_AllowOrder = mMoneyManager.AllowOrder(pBracketOrder, _
+                                        Me, _
                                         mSession.SessionCurrentTime, _
+                                        pNewOrderSize, _
                                         pMessage, _
                                         mEndingSession)
 Else
@@ -1249,7 +1243,7 @@ mSummary.Name = pName
 mSummary.GroupName = pGroupName
 mSummary.IsSimulated = pIsSimulated
 
-PreInitialise pOrderManager
+PreInitialise pOrderManager, pMoneyManager
 
 Set mDataSource = pDataSource
 mDataSource.AddGenericTickListener Me
@@ -1272,8 +1266,6 @@ Else
     mSessionFuture.AddStateChangeListener Me
 End If
     
-Set mMoneyManager = pMoneyManager
-
 init
 
 If Not mSession Is Nothing Then checkSetupNewSession
@@ -1287,8 +1279,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PreInitialise( _
-                ByVal pOrderManager As OrderManager)
+                ByVal pOrderManager As OrderManager, _
+                ByVal pMoneyManager As IMoneyManager)
 Set mOrderManager = pOrderManager
+Set mMoneyManager = pMoneyManager
 End Sub
 
 Public Sub Purge()
@@ -1454,13 +1448,10 @@ If mMoneyManager Is Nothing Then Exit Sub
 
 Dim msg As String
 Dim lEndSession As Boolean
-If mMoneyManager.CloseAll(mSessionProfit, _
-                            mMaxSessionProfit - mSessionProfit, _
-                            mProfitThisTrade, _
-                            mMaxProfitThisTrade - mProfitThisTrade, _
-                            mSession.SessionCurrentTime, _
-                            msg, _
-                            lEndSession) _
+If mMoneyManager.CloseAll(Me, _
+                        mSession.SessionCurrentTime, _
+                        msg, _
+                        lEndSession) _
 Then
     If Not mClosingPosition Then
         gLogMoneyManagement "Close all positions: " & msg, mSummary.IsSimulated, Me

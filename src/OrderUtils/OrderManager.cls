@@ -363,11 +363,22 @@ Public Function RecoverOrdersFromPreviousSession( _
                 ByVal pRecoveryAgent As IOrderRecoveryAgent, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
+                Optional ByVal pMoneyManager As IMoneyManager, _
                 Optional ByVal pCookie As Variant) As TaskController
 Const ProcName As String = "RecoverOrdersFromPreviousSession"
 On Error GoTo Err
 
-Set RecoverOrdersFromPreviousSession = getBracketOrderRecoveryController(pScopeName).RecoverOrders(Me, mPositionManagersLive, pScopeName, pDataStore, pRecoveryAgent, pMarketDataManager, pOrderSubmitterFactory, pCookie)
+Set RecoverOrdersFromPreviousSession = _
+                getBracketOrderRecoveryController(pScopeName).RecoverOrders( _
+                        Me, _
+                        mPositionManagersLive, _
+                        pScopeName, _
+                        pDataStore, _
+                        pRecoveryAgent, _
+                        pMarketDataManager, _
+                        pOrderSubmitterFactory, _
+                        pMoneyManager, _
+                        pCookie)
 
 Exit Function
 

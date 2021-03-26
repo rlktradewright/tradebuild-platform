@@ -94,6 +94,8 @@ Private mInMemoryStore                              As New InMemoryStore
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
+Private mMoneyManager                               As IMoneyManager
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -493,6 +495,7 @@ Friend Function RecoverOrders( _
                 ByVal pRecoveryAgent As IOrderRecoveryAgent, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
+                Optional ByVal pMoneyManager As IMoneyManager, _
                 Optional ByVal pCookie As Variant) As TaskController
 Const ProcName As String = "RecoverOrders"
 On Error GoTo Err
@@ -512,6 +515,7 @@ mScopeName = pScopeName
 Set mDataStore = pDataStore
 Set mMarketDataManager = pMarketDataManager
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
+Set mMoneyManager = pMoneyManager
 Set mRecoveryAgent = pRecoveryAgent
 
 Set RecoverOrders = StartTask(Me, PriorityNormal, , pCookie)
@@ -555,7 +559,7 @@ Set lSummary = pOpItem.Data
 If mPositionManagers.Contains(lSummary.Name) Then Exit Sub
 
 Dim lPm As New PositionManager
-lPm.PreInitialise mOrderManager
+lPm.PreInitialise mOrderManager, mMoneyManager
 
 Dim lRecoverable As IRecoverable
 Set lRecoverable = lPm

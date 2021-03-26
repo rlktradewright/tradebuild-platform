@@ -64,10 +64,11 @@ Private Const ModuleName                            As String = "IOrderAuthorise
 ' Methods
 '@================================================================================
 
-Public Function AllowOrder(ByVal pIsLongOrder As Boolean, _
-                            ByRef pOrderSize As Long, _
-                            ByRef pRisk As Currency, _
-                            ByRef pMessage As String) As Boolean
+Public Function AllowOrder( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pTimestamp As Date, _
+                ByRef pNewOrderSize As Long, _
+                ByRef pMessage As String) As Boolean
 End Function
 
 '@================================================================================

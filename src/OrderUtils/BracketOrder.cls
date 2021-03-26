@@ -1581,6 +1581,8 @@ Public Property Let CancelAfter(ByVal Value As Long)
 Const ProcName As String = "CancelAfter"
 On Error GoTo Err
 
+If State = BracketOrderStateClosed Then Exit Property
+
 Assert State = BracketOrderStateCreated, Key & " CancelAfter cannot be set after execution"
 Assert mSummary.CancelTime = 0, "CancelTime is already set"
 
@@ -1595,6 +1597,8 @@ End Property
 Public Property Let CancelPrice(ByVal Value As Double)
 Const ProcName As String = "CancelPrice"
 On Error GoTo Err
+
+If State = BracketOrderStateClosed Then Exit Property
 
 Assert State = BracketOrderStateCreated, Key & " CancelPrice cannot be set after execution"
 
@@ -1613,6 +1617,8 @@ End Property
 Public Property Let CancelTime(ByVal Value As Date)
 Const ProcName As String = "CancelTime"
 On Error GoTo Err
+
+If State = BracketOrderStateClosed Then Exit Property
 
 Assert State = BracketOrderStateCreated, Key & " CancelTime cannot be set after execution"
 Assert mCancelAfter = 0, "CancelAfter is already set"
@@ -2055,6 +2061,7 @@ AssertArgument pNewPriceSpec.IsValid, Key & " New price specifier is invalid"
 Select Case mStateEngine.State
 Case BracketOrderStates.BracketOrderStateCancelling
     Exit Sub
+Case BracketOrderStates.BracketOrderStateCreated
 Case BracketOrderStates.BracketOrderStateSubmitted
 Case Else
     Assert False, Key & " Action not allowed in state " & mStateEngine.State
@@ -2090,6 +2097,7 @@ Assert Not pOrder Is Nothing, Key & " Order is Nothing"
 Select Case mStateEngine.State
 Case BracketOrderStates.BracketOrderStateCancelling
     Exit Sub
+Case BracketOrderStates.BracketOrderStateCreated
 Case BracketOrderStates.BracketOrderStateSubmitted
 Case Else
     Assert False, Key & " Action not allowed in state " & mStateEngine.State
