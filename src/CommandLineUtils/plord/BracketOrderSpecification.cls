@@ -49,6 +49,8 @@ Private Const ModuleName                            As String = "BracketOrderSpe
 Public Contract                                     As IContract
 Public Action                                       As OrderActions
 Public Quantity                                     As Long
+Public MaxOrderCost                                 As Double
+Public LotSize                                       As Long
 Public EntryType                                    As OrderTypes
 Public EntryLimitPriceSpec                          As PriceSpecifier
 Public EntryTriggerPriceSpec                        As PriceSpecifier
@@ -151,7 +153,12 @@ s = s & " "
 
 s = s & OrderActionToString(Action)
 s = s & " "
-s = s & CStr(Quantity)
+If MaxOrderCost = 0 Then
+    s = s & CStr(Quantity)
+Else
+    s = s & CStr(MaxOrderCost) & MaxOrderCostSuffix
+End If
+If LotSize <> 0 Then s = s & "(" & LotSize & ")"
 s = s & " "
 
 If CancelAfter <> 0 Then s = s & gGenerateSwitch(CancelAfterSwitch, CStr(CancelAfter))

@@ -54,6 +54,8 @@ Private mStageOrders                                As Boolean
 
 Private mTimezone                                   As TimeZone
 
+Private mMoneyManager                               As MoneyManager
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -95,11 +97,13 @@ Friend Sub Initialise( _
                 ByVal pBracketOrderSpec As BracketOrderSpecification, _
                 ByVal pcontract As IContract, _
                 ByVal pOrderContext As OrderContext, _
-                ByVal pStageOrders As Boolean)
+                ByVal pStageOrders As Boolean, _
+                ByVal pMoneyManager As MoneyManager)
 Set mBracketOrderSpec = pBracketOrderSpec
 Set mContract = pcontract
 Set mOrderContext = pOrderContext
 mStageOrders = pStageOrders
+Set mMoneyManager = pMoneyManager
 
 Set mTimezone = GetTimeZone(mContract.TimezoneName)
 End Sub
@@ -116,23 +120,31 @@ On Error GoTo Err
 Static sAttempts As Long
 
 If sAttempts = 0 Then
-    gWriteLineToStdOut "TIME " & FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), TimestampDateAndTimeISO8601)
-    writeContractSpecToStdOut
-    gWriteLineToStdOut mBracketOrderSpec.ToString
+    gWriteLineToConsole _
+                "TIME " & _
+                FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), _
+                                TimestampDateAndTimeISO8601), _
+                True
+    writeContractSpecToConsole
+    gWriteLineToConsole mBracketOrderSpec.ToString, True
 End If
 sAttempts = sAttempts + 1
 
 If Not isReadyForOrder Then
     Set mOrderContextEv = mOrderContext
-    gWriteLineToStdOut "Order is pending, waiting for the provider to be ready"
+    gWriteLineToConsole "Order is pending, waiting for the provider to be ready", True
     Exit Function
 End If
 
 If sAttempts > 1 Then
-    gWriteLineToStdOut "Provider is now ready"
-    gWriteLineToStdOut "TIME " & FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), TimestampDateAndTimeISO8601)
-    writeContractSpecToStdOut
-    gWriteLineToStdOut mBracketOrderSpec.ToString
+    gWriteLineToConsole "Provider is now ready", True
+    gWriteLineToConsole _
+                "TIME " & _
+                FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), _
+                                TimestampDateAndTimeISO8601), _
+                True
+    writeContractSpecToConsole
+    gWriteLineToConsole mBracketOrderSpec.ToString, True
 End If
 
 mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
@@ -200,12 +212,12 @@ With mBracketOrderSpec
     If Not .RolloverSpec Is Nothing Then lBO.RolloverSpecification = .RolloverSpec
 End With
 
-gWriteLineToStdOut lBO.Key & ": bracket order placed"
+gWriteLineToConsole lBO.Key & ": bracket order ready to be placed", True
 
-mOrderContext.ExecuteBracketOrder lBO
-CreateBracketProfitCalculator lBO, mOrderContext.DataSource
-
-gNumberOfOrdersPlaced = gNumberOfOrdersPlaced + 1
+mMoneyManager.MaxOrderCost = mBracketOrderSpec.MaxOrderCost
+mMoneyManager.LotSize = mBracketOrderSpec.LotSize
+mOrderContext.ExecuteBracketOrder lBO, True
+If lBO.State = BracketOrderStateSubmitted Then CreateBracketProfitCalculator lBO, mOrderContext.DataSource
 
 PlaceOrder = True
 
@@ -241,8 +253,8 @@ With mOrderContext
 End With
 End Function
 
-Private Sub writeContractSpecToStdOut()
-Const ProcName As String = "writeContractSpecToStdOut"
+Private Sub writeContractSpecToConsole()
+Const ProcName As String = "writeContractSpecToConsole"
 On Error GoTo Err
 
 Dim s As String
@@ -258,7 +270,7 @@ If mContract.Specifier.Right <> OptNone Then
     s = s & gGenerateSwitch(RightSwitch, OptionRightToString(mContract.Specifier.Right))
     s = s & gGenerateSwitch(StrikeSwitch, mContract.Specifier.Strike)
 End If
-gWriteLineToStdOut s
+gWriteLineToConsole s, True
 
 Exit Sub
 

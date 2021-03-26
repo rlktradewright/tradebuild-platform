@@ -83,17 +83,17 @@ End If
 
 Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
-    Dim lBo As IBracketOrder
-    For Each lBo In lPM.BracketOrders
-        If lBo.State = BracketOrderStateSubmitted Or _
-            (lBo.State = BracketOrderStateClosed And lBo.Size <> 0) Then
-            CreateBracketProfitCalculator lBo, lPM.DataSource
+    Dim lBO As IBracketOrder
+    For Each lBO In lPM.BracketOrders
+        If lBO.State = BracketOrderStateSubmitted Or _
+            (lBO.State = BracketOrderStateClosed And lBO.Size <> 0) Then
+            CreateBracketProfitCalculator lBO, lPM.DataSource
         End If
-        If Not lBo.RolloverSpecification Is Nothing And _
-            (lBo.CumBuyPrice <> 0 Or _
-            lBo.CumSellPrice <> 0) _
+        If Not lBO.RolloverSpecification Is Nothing And _
+            (lBO.CumBuyPrice <> 0 Or _
+            lBO.CumSellPrice <> 0) _
         Then
-            gBracketOrderListener.Add lBo
+            gBracketOrderListener.Add lBO
         End If
     Next
 Next
@@ -146,7 +146,8 @@ Friend Sub RecoverOrders( _
                 ByVal pRecoveryAgent As IOrderRecoveryAgent, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
-                ByVal pGroups As Groups)
+                ByVal pGroups As Groups, _
+                ByVal pMoneyManager As MoneyManager)
 Const ProcName As String = "RecoverOrdersFromPreviousSession"
 On Error GoTo Err
 
@@ -156,7 +157,8 @@ Set mTaskController = mOrderManager.RecoverOrdersFromPreviousSession(pScopeName,
                                                                     pDataStore, _
                                                                     pRecoveryAgent, _
                                                                     pMarketDataManager, _
-                                                                    pOrderSubmitterFactory)
+                                                                    pOrderSubmitterFactory, _
+                                                                    pMoneyManager)
 gInputPaused = True
 Set mSelfRef = Me
 

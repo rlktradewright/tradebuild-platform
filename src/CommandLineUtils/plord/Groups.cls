@@ -52,6 +52,7 @@ Private mMarketDataManager                          As IMarketDataManager
 Private mOrderManager                               As OrderManager
 Private mScopeName                                  As String
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
+Private mMoneyManager                               As MoneyManager
 
 '@================================================================================
 ' Class Event Handlers
@@ -98,7 +99,8 @@ lResources.Initialise pGroupName, _
                         mMarketDataManager, _
                         mOrderManager, _
                         mScopeName, _
-                        mOrderSubmitterFactory
+                        mOrderSubmitterFactory, _
+                        mMoneyManager
 
 mDict.Add lResources, UCase$(pGroupName)
 
@@ -127,12 +129,14 @@ Friend Sub Initialise( _
                 ByVal pMarketDataManager As RealTimeDataManager, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
+                ByVal pMoneyManager As MoneyManager)
 Set mContractStore = pContractStore
 Set mMarketDataManager = pMarketDataManager
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
+Set mMoneyManager = pMoneyManager
 End Sub
 
 Friend Function Item(ByVal pGroupName As String) As GroupResources

@@ -69,11 +69,12 @@ On Error GoTo Err
 
 Dim lBO As IBracketOrder: Set lBO = ev.Source
 Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
-gWriteLineToStdOut lTime & _
+gWriteLineToConsole lTime & _
                     lBO.Key & _
                     ": bracket order state is: " & _
                     BracketOrderStateToString(lBO.State) & _
-                    generateRolloverClause(lBO)
+                    generateRolloverClause(lBO), _
+                    True
 
 Exit Sub
 
@@ -176,7 +177,7 @@ Case BracketOrderRolloverCompleted
     mBracketOrderListener.Remove lBO
 End Select
 
-If s1 <> "" Then gWriteLineToStdOut s & s1
+If s1 <> "" Then gWriteLineToConsole s & s1, True
 
 Exit Sub
 

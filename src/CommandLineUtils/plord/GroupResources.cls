@@ -57,6 +57,7 @@ Private mContractStore                              As IContractStore
 Private mOrderManager                               As OrderManager
 Private mScopeName                                  As String
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
+Private mMoneyManager                               As MoneyManager
 
 Private mMarketDataManager                          As IMarketDataManager
 
@@ -117,7 +118,8 @@ Else
                                         mOrderManager, _
                                         mScopeName, _
                                         mGroupName, _
-                                        mOrderSubmitterFactory
+                                        mOrderSubmitterFactory, _
+                                        mMoneyManager
     
     End If
 End If
@@ -199,13 +201,15 @@ Friend Sub Initialise( _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
+                ByVal pMoneyManager As MoneyManager)
 mGroupName = pGroupName
 Set mContractStore = pContractStore
 Set mMarketDataManager = pMarketDataManager
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
+Set mMoneyManager = pMoneyManager
 End Sub
 
 Friend Sub Purge()

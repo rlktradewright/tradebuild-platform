@@ -170,7 +170,8 @@ Friend Sub Activate( _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
                 ByVal pGroupName As String, _
-                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory)
+                ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
+                ByVal pMoneyManager As MoneyManager)
 Const ProcName As String = "Activate"
 On Error GoTo Err
 
@@ -191,14 +192,16 @@ If pScopeName = "" Then
                                 pName, _
                                 mDataSource, _
                                 pOrderSubmitterFactory, _
-                                pGroupName)
+                                pGroupName, _
+                                pMoneyManager:=pMoneyManager)
 Else
     Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
                                 pName, _
                                 mDataSource, _
                                 pOrderSubmitterFactory, _
                                 pScopeName, _
-                                mGroupName)
+                                mGroupName, _
+                                pMoneyManager:=pMoneyManager)
 End If
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
 
@@ -302,21 +305,15 @@ mBOSpec.EntryTIF = OrderTIFDay
 mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
 mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
 
-Dim lClp As CommandLineParser
-Set lClp = CreateCommandLineParser(pParams, " ")
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams, " ")
 
 If lClp.NumberOfArgs <> 2 Then gWriteErrorLine "There must be only two arguments, action (BUY or SELL) and size. Additionally there can be several attributes beginnig with ""/"""
 
 mBOSpec.Action = getOrderAction(lClp.Arg(0))
 If mBOSpec.Action = OrderActionNone Then gWriteErrorLine "Order action must be BUY or SELL"
 
-Dim lQuantity As String: lQuantity = lClp.Arg(1)
-If lQuantity = "" Then
-    gWriteErrorLine ("Quantity is missing")
-ElseIf Not IsInteger(lQuantity, 1) Then
-    gWriteErrorLine ("Quantity must be an integer > 0")
-Else
-    mBOSpec.Quantity = CInt(lQuantity)
+If Not setQuantity(lClp.Arg(1)) Then
+    gWriteErrorLine "Invalid quantity", True
 End If
 
 Dim lSwitchName As String
@@ -1161,15 +1158,8 @@ mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
 
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 
-Dim lQuantity As String: lQuantity = lClp.Arg(0)
-If lQuantity = "" Then
-    processBuyOrSellCommand = False
-    gWriteErrorLine "Quantity is missing", True
-ElseIf Not IsInteger(lQuantity, 1) Then
-    processBuyOrSellCommand = False
-    gWriteErrorLine "Quantity must be an integer > 0", True
-Else
-    mBOSpec.Quantity = CInt(lQuantity)
+If Not setQuantity(lClp.Arg(0)) Then
+    gWriteErrorLine "Invalid quantity", True
 End If
 
 Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(1)
@@ -1390,6 +1380,44 @@ Else
     processRolloverTime = CDate(pValue)
     If CDbl(processRolloverTime) >= 1 Then gWriteErrorLine "Time must be hh:mm[:ss]"
 End If
+End Function
+
+Private Function setQuantity( _
+                ByVal pValue As String) As Boolean
+Const ProcName As String = "setQuantity"
+On Error GoTo Err
+
+Const QuantityFormat As String = "^([1-9]\d*)(?:(\$)(?:\(([1-9]\d*)\))?)?$"
+
+gRegExp.Pattern = QuantityFormat
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(Trim$(pValue))
+
+If lMatches.Count <> 1 Then Exit Function
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+If lMatch.SubMatches(1) = MaxOrderCostSuffix Then
+    mBOSpec.Quantity = 1
+    mBOSpec.MaxOrderCost = lMatch.SubMatches(0)
+Else
+    mBOSpec.Quantity = lMatch.SubMatches(0)
+    mBOSpec.MaxOrderCost = 0
+End If
+
+If lMatch.SubMatches(2) <> "" Then
+    mBOSpec.LotSize = CLng(lMatch.SubMatches(2))
+Else
+    mBOSpec.LotSize = 0
+End If
+
+setQuantity = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub validateRolloverCloseOrEntry( _

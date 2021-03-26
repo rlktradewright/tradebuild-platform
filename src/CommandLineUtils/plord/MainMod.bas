@@ -94,6 +94,8 @@ Private Const No                                    As String = "NO"
 Public Const TickOffsetDesignator                   As String = "T"
 Public Const PercentOffsetDesignator                As String = "%"
 
+Public Const MaxOrderCostSuffix                     As String = "$"
+
 ' Legacy pseudo-order types from early versions
 Public Const AskPseudoOrderType                     As String = "ASK"
 Public Const BidPseudoOrderType                     As String = "BID"
@@ -126,8 +128,6 @@ Public gLogToConsole                                As Boolean
 ' This flag is set when various asynchronous operations are being performed, and
 ' we' don't want any further user input until we know whether it has succeeded.
 Public gInputPaused                                 As Boolean
-
-Public gNumberOfOrdersPlaced                        As Long
 
 Public gPlaceOrdersTask                             As PlaceOrdersTask
 
@@ -180,6 +180,8 @@ Private mBracketOrderDefinitionInProgress           As Boolean
 
 Private mTwsClient                                  As Client
 Private mClientId                                   As Long
+
+Private mMoneyManager                               As New MoneyManager
 
 '@================================================================================
 ' Class Event Handlers
@@ -398,14 +400,17 @@ mGroups.Initialise mContractStore, _
                     mMarketDataManager, _
                     mOrderManager, _
                     mScopeName, _
-                    mOrderSubmitterFactory
+                    mOrderSubmitterFactory, _
+                    mMoneyManager
 Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 
 Set gPlaceOrdersTask = New PlaceOrdersTask
-gPlaceOrdersTask.Initialise mGroups
+gPlaceOrdersTask.Initialise mGroups, mMoneyManager
 StartTask gPlaceOrdersTask, PriorityNormal
 
 process
+
+TerminateTWUtilities
 
 Exit Sub
 
@@ -571,7 +576,7 @@ For Each lPM In mOrderManager.PositionManagersLive
                         gPadStringleft(FormatPrice(lTrade.Price, lContract.Specifier.SecType, lContract.TickSize), 9) & _
                         gPadStringRight(" " & lTrade.FillingExchange, 10) & _
                         " " & lTrade.TimezoneName, _
-        True
+                        True
     Next
 Next
 
@@ -1027,7 +1032,6 @@ ElseIf lCommand Is gCommands.EndBracketCommand Then
         mErrorCount = 0
     End If
 ElseIf lCommand Is gCommands.EndOrdersCommand Then
-    gWriteLineToStdOut lCommandName
     processEndOrdersCommand
 ElseIf lCommand Is gCommands.ResetCommand Then
     processResetCommand
@@ -1109,7 +1113,7 @@ On Error GoTo Err
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 Dim lArg0 As String: lArg0 = lClp.Arg(0)
 
-If Not IsInteger(lArg0, 1) Then
+If Not IsNumeric(Left$(lArg0, 1)) Then
     ' the first arg is a contract spec
     Dim lContractSpec As IContractSpecifier
     Set lContractSpec = CreateContractSpecifierFromString(lArg0)
@@ -1140,7 +1144,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description, True
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Sub
 
 Private Sub ProcessSellCommand( _
@@ -1460,13 +1468,13 @@ On Error GoTo Err
 Dim lRes As GroupResources
 
 If pParams = "" Then
-    gWriteLineToConsole "Purging " & mCurrentGroup.GroupName
+    gWriteLineToConsole "Purging " & mCurrentGroup.GroupName, True
     mCurrentGroup.Purge
     mGroups.Remove mCurrentGroup.GroupName
     Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 ElseIf UCase$(pParams) = AllGroups Then
     For Each lRes In mGroups
-        gWriteLineToConsole "Purging " & lRes.GroupName
+        gWriteLineToConsole "Purging " & lRes.GroupName, True
         lRes.Purge
     Next
     mGroups.Clear
@@ -1476,7 +1484,7 @@ ElseIf isGroupValid(pParams) Then
         gWriteErrorLine "No such group", True
         Exit Sub
     End If
-    gWriteLineToConsole "Purging " & lRes.GroupName
+    gWriteLineToConsole "Purging " & lRes.GroupName, True
     lRes.Purge
     mGroups.Remove pParams
     Set mCurrentGroup = mGroups.Add(DefaultGroupName)
@@ -1610,7 +1618,7 @@ If mClp.SwitchValue(RecoveryFileDirSwitch) <> "" Then mRecoveryFileDir = mClp.Sw
 If mOrderPersistenceDataStore Is Nothing Then Set mOrderPersistenceDataStore = CreateOrderPersistenceDataStore(mRecoveryFileDir)
 
 Dim lOrderRecoverer As New OrderRecoverer
-lOrderRecoverer.RecoverOrders mOrderManager, mScopeName, mOrderPersistenceDataStore, mOrderRecoveryAgent, mMarketDataManager, mOrderSubmitterFactory, mGroups
+lOrderRecoverer.RecoverOrders mOrderManager, mScopeName, mOrderPersistenceDataStore, mOrderRecoveryAgent, mMarketDataManager, mOrderSubmitterFactory, mGroups, mMoneyManager
 
 Exit Sub
 
@@ -1807,7 +1815,7 @@ Else
 End If
 
 Set mContractStore = mTwsClient.GetContractStore
-Set mMarketDataManager = CreateRealtimeDataManager(mTwsClient.GetMarketDataFactory)
+Set mMarketDataManager = CreateRealtimeDataManager(mTwsClient.GetMarketDataFactory, mTwsClient.GetContractStore)
 
 mMarketDataManager.LoadFromConfig gGetMarketDataSourcesConfig(mConfigStore)
 

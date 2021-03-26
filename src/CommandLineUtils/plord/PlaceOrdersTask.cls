@@ -63,6 +63,8 @@ Private mListTailIndex                              As Long
 
 Private mGroups                                     As Groups
 
+Private mMoneyManager                               As MoneyManager
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -156,7 +158,7 @@ Next
 
 mTaskContext.Continue
 
-gWriteLineToStdOut gCommands.StageOrdersCommand.Name & " " & IIf(pStageOrders, "YES", "NO")
+gWriteLineToConsole gCommands.StageOrdersCommand.Name & " " & IIf(pStageOrders, "YES", "NO")
 
 Exit Sub
 
@@ -179,8 +181,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pGroups As Groups)
+                ByVal pGroups As Groups, _
+                ByVal pMoneyManager As MoneyManager)
 Set mGroups = pGroups
+Set mMoneyManager = pMoneyManager
 End Sub
 
 Friend Sub RemoveOrderPlacer(ByVal pOrderPlacer As OrderPlacer)
@@ -213,7 +217,7 @@ For Each lBOS In pContractProcessor.BracketOrders
     Dim lOrderPlacer As OrderPlacer
     Set lOrderPlacer = New OrderPlacer
     mGroups.Item(pContractProcessor.GroupName).OrderPlacers.Add lOrderPlacer
-    lOrderPlacer.Initialise lBOS, pContractProcessor.Contract, pContractProcessor.OrderContext, pStageOrders
+    lOrderPlacer.Initialise lBOS, pContractProcessor.Contract, pContractProcessor.OrderContext, pStageOrders, mMoneyManager
     Set mOrderPlacers(allocateEntry).OrderPlacer = lOrderPlacer
 Next
 pContractProcessor.ClearOrders
