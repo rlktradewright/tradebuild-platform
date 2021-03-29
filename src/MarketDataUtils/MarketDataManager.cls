@@ -290,6 +290,7 @@ For Each lCs In mConfig
                                     lContractSpec, _
                                     mPrimaryContractStore, _
                                     mSecondaryContractStore)
+            Set lRecoveryContractSpec = lContractSpec
         End If
         
         CreateMarketDataSource lContractFuture, _
