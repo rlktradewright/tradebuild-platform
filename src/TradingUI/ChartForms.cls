@@ -314,10 +314,6 @@ End If
 
 If lTicker Is Nothing Then
     CreateChartFromConfig = False
-ElseIf Not (lTicker.State = MarketDataSourceStateReady Or _
-        lTicker.State = MarketDataSourceStatePaused Or _
-        lTicker.State = MarketDataSourceStateRunning) Then
-    CreateChartFromConfig = False
 Else
     CreateChartFromConfig = AddFromConfig(lTicker, _
                     lTicker.Timeframes, _

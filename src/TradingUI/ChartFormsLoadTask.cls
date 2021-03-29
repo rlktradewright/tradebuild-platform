@@ -22,7 +22,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IStateChangeListener
 Implements ITask
 
 '@================================================================================
@@ -70,32 +69,20 @@ Private mHistDataStore                              As IHistoricalDataStore
 Private mIsHistorical                               As Boolean
 Private mState                                      As LoadStates
 
-Private mNumTickersAwaited                          As Long
+Private mNumChartsLoading                           As Long
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mLoadEn                                     As Enumerator
+Private mRemovableCSs                               As New EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
-'@================================================================================
-' IStateChangeListener Interface Members
-'@================================================================================
-
-Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "IStateChangeListener_Change"
-On Error GoTo Err
-
-If ev.State = MarketDataSourceStates.MarketDataSourceStateReady Or _
-    ev.State = MarketDataSourceStates.MarketDataSourceStateRunning Or _
-    ev.State = MarketDataSourceStates.MarketDataSourceStateError _
-Then
-    mNumTickersAwaited = mNumTickersAwaited - 1
-    If mNumTickersAwaited = 0 Then mTaskContext.Continue
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
@@ -110,41 +97,42 @@ Private Sub ITask_run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-Static sRemovableCSs As New EnumerableCollection
 Static en As Enumerator
 
 Dim lChartConfig As ConfigurationSection
 
-If mState = LoadStateWaitingForTickersToBeReady Then
-    Dim lTicker As Ticker
-    For Each lTicker In mTickers
-        If lTicker.State = MarketDataSourceStates.MarketDataSourceStateCreated Then
-            mNumTickersAwaited = mNumTickersAwaited + 1
-            lTicker.AddStateChangeListener Me
-        End If
-    Next
-    If mNumTickersAwaited <> 0 Then mTaskContext.Suspend -1
-    mState = LoadStateLoadingCharts
-ElseIf mState = LoadStateLoadingCharts Then
-    If en Is Nothing Then Set en = mConfig.ChildEnumerator
+If mState = LoadStateLoadingCharts Then
+    If mLoadEn Is Nothing Then Set mLoadEn = mConfig.ChildEnumerator
 
-    If en.MoveNext Then
-        Set lChartConfig = en.Current
+    If mLoadEn.MoveNext Then
+        Set lChartConfig = mLoadEn.Current
+        
         If mIsHistorical Then
-            If Not mChartForms.CreateHistoricalChartFromConfig(lChartConfig, mStudyLibraryManager, mHistDataStore, mBarFormatterLibManager) Then sRemovableCSs.Add lChartConfig
+            If Not mChartForms.CreateHistoricalChartFromConfig( _
+                                                lChartConfig, _
+                                                mStudyLibraryManager, _
+                                                mHistDataStore, _
+                                                mBarFormatterLibManager) _
+            Then mRemovableCSs.Add lChartConfig
         Else
-            If Not mChartForms.CreateChartFromConfig(lChartConfig, mTickers, mBarFormatterLibManager, mTimePeriodValidator) Then sRemovableCSs.Add lChartConfig
+            Dim lChartLoader As ChartLoader: Set lChartLoader = New ChartLoader
+            mFutureWaiter.Add lChartLoader.LoadChart( _
+                                                lChartConfig, _
+                                                mChartForms, _
+                                                mTickers, _
+                                                mBarFormatterLibManager, _
+                                                mTimePeriodValidator, _
+                                                mOwner, _
+                                                mTheme)
+            mNumChartsLoading = mNumChartsLoading + 1
         End If
     Else
-        Set en = Nothing
-        If mIsHistorical Then
-            mState = LoadStateShowingCharts
-        Else
-            mState = LoadStateDeletingUnwantedCharts
-        End If
+        Set mLoadEn = Nothing
+        mState = LoadStateDeletingUnwantedCharts
+        If Not mIsHistorical Then mTaskContext.Suspend -1
     End If
 ElseIf mState = LoadStateDeletingUnwantedCharts Then
-    If en Is Nothing Then Set en = sRemovableCSs.Enumerator
+    If en Is Nothing Then Set en = mRemovableCSs.Enumerator
     If en.MoveNext Then
         Set lChartConfig = en.Current
         lChartConfig.Remove
@@ -189,8 +177,27 @@ Private Property Get ITask_TaskName() As String
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsAvailable Then
+    If ev.Future.Value Is Nothing Then
+    ElseIf TypeOf ev.Future.Value Is ConfigurationSection Then
+        mRemovableCSs.Add ev.Future.Value
+    End If
+    mNumChartsLoading = mNumChartsLoading - 1
+    If mNumChartsLoading = 0 And mLoadEn Is Nothing Then mTaskContext.Continue
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -220,7 +227,7 @@ Set mTimePeriodValidator = pTimePeriodValidator
 gSetVariant mOwner, pOwner
 Set mTheme = pTheme
 
-mState = LoadStateWaitingForTickersToBeReady
+mState = LoadStateLoadingCharts
 
 Exit Sub
 
