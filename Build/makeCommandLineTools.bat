@@ -60,5 +60,11 @@ if errorlevel 1 pause
 call makeExe.bat uxd uxd /CONSOLE /NOV6CC /M:E %DEP% /V
 if errorlevel 1 pause
 
+:: temporary solution to building the Chart program
+pushd Chart
+msbuild Chart.sln -t:Rebuild -p:Configuration=Debug -verbosity:m
+if errorlevel 1 pause
+popd
+
 popd
 
