@@ -1,0 +1,297 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{239A7D12-CC7F-4C61-A6F1-C8CECD3F3717}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>TradeWright.TradeBuild.Applications.Chart</RootNamespace>
+    <AssemblyName>Chart</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\Bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
+  <PropertyGroup />
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Interop.AxChartSkil27">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.AxChartSkil27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.AxTradingUI27">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.AxTradingUI27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.BarFormatters27">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.BarFormatters27.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.BarUtils27, Version=495.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.BarUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.ChartSkil27, Version=315.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ChartSkil27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.ChartUtils27, Version=312.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ChartUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.ContractUtils27, Version=499.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ContractUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.ExtProps40, Version=28.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ExtProps40.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.HistDataUtils27, Version=373.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.HistDataUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.IBENHAPI27">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.IBENHAPI27.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.MarketDataUtils27">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.MarketDataUtils27.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.OrderUtils27, Version=33.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.OrderUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.SessionUtils27, Version=435.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.SessionUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.StudyUtils27, Version=481.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.StudyUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.TickerUtils27, Version=302.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickerUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.TickfileUtils27, Version=157.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickfileUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.TickUtils27, Version=508.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.TimeframeUtils27, Version=386.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TimeframeUtils27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.TradingUI27, Version=373.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TradingUI27.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.TWUtilities40, Version=27.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TWUtilities40.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.TWWin32API">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TWWin32API.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Scripting, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Scripting.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="TradeWright.TabControlExtra, Version=2.0.1.0, Culture=neutral, PublicKeyToken=f4d0df7e5886cbe9, processorArchitecture=MSIL">
+      <HintPath>packages\TradeWright.TabControlExtra.2.0.1\lib\net45\TradeWright.TabControlExtra.dll</HintPath>
+    </Reference>
+    <Reference Include="VBA, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\VBA.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VBRUN, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\VBRUN.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ApiClientManager.cs" />
+    <Compile Include="ChartApp.cs" />
+    <Compile Include="ChartStyles.cs" />
+    <Compile Include="ChartStylesOrganizer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ChartStylesOrganizer.Designer.cs">
+      <DependentUpon>ChartStylesOrganizer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommandProcessor.cs" />
+    <Compile Include="ConsoleHandler1.cs" />
+    <Compile Include="FChart.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FChart.Designer.cs">
+      <DependentUpon>FChart.cs</DependentUpon>
+    </Compile>
+    <Compile Include="G.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ShowChartProcessor.cs" />
+    <EmbeddedResource Include="ChartStylesOrganizer.resx">
+      <DependentUpon>ChartStylesOrganizer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FChart.resx">
+      <DependentUpon>FChart.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="app.manifest">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="stdole">
+      <Guid>{00020430-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.7.2 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>link /EDIT /SUBSYSTEM:CONSOLE E:\projects\tradebuild-platform\Bin\chart.exe</PostBuildEvent>
+  </PropertyGroup>
+</Project>
