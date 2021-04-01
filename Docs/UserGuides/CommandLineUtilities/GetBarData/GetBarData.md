@@ -2,25 +2,27 @@
 
 ## 1. Introduction
 
-The GetBarData program  is a Windows command-line utility that retrieves historical bar data either from TWS,
+The GetBarData program is a Windows command-line utility that retrieves historical bar data either from TWS,
 or from the TradeBuild historical database, or from files.
 
 ## 2. How to Install
 
-Go to the Release page at https://github.com/rlktradewright/tradebuild-platform/releases, and download and run
-the TradeBuild-2.7.235.msi installer file. This will take you through a straightforward install process, which
-will result in the whole TradeBuild platform being installed on your computer, at
-C:\Program Files (x86)\TradeWright Software Systems\TradeBuild Platform 2.7.
+Go to the Releases page at https://github.com/rlktradewright/tradebuild-platform/releases, and download and run
+the TradeBuild-2.7.nnn.msi installer file under the 'Latest release' item (nnn is the version number). This will
+take you through a straightforward install process, which will install the whole TradeBuild platform on your
+computer, at C:\Program Files (x86)\TradeWright Software Systems\TradeBuild Platform 2.7.
 
-That folder contains a number of files that you don't need to do anything with unless you intend to develop
-your own programs that use TradeBuild, and that is way out of scope of this email. In particular, note that
-it is not necessary to do any dll registration.
+The installation folder contains a number of files that you don't need to do anything with unless you intend to
+develop your own programs that use TradeBuild, which is out of scope of this User Guide. In particular, note that
+it is not necessary to do any dll registration, or build anything: the installer includes digitally signed
+compiled versions of all the TradeBuild programs.
 
-Installation adds a new folder to your Start menu, called TradeBuild Platform 2.7.  This lists four programs,
+Installation also adds a new folder to your Start menu, called TradeBuild Platform 2.7.  This lists four programs,
 none of which are relevant to this topic.
 
-Should you want to uninstall TradeBuild at some point, just go to Control Panel > Programs and Features in
-the usual way and find the `TradeBuild Platform 2.7` entry: then right click and select Uninstall.
+Should you want to uninstall TradeBuild at some point, you can do this via the Apps section in Windows
+10 Settings in the usual way. Alternatively go to Control Panel > Programs and Features and find the
+`TradeBuild Platform 2.7` entry: then right click and select Uninstall.
 
 
 ## 2. How to Run the Historical Data Downloader program
@@ -32,7 +34,7 @@ must be in the form of the commands detailed in section 4 below.
 To run the program, start a Command Prompt (or Powershell) session in this folder (or you can add this folder
 to your path in the usual way).
 
-The program can take historical data from three sources: TWS, text files (where the data has been collected
+The program can take historical data from three sources: the TWS API, text files (where the data has been collected
 by the TradeBuild DataCollector program) or the TradeBuild Database (also containing data collected by the
 DataCollector).
 
@@ -124,7 +126,7 @@ The commands are:
 | nonsess       | Specifies that you want bars outside the main trading session     |
 | sess          | Specifies that you only want bars during the main trading session |
 | sessiononly   | Specifies whether you only want bars during the main trading session |
-| sessionstarttime | Allows you to specify the session start... and end times       |
+| sessionstarttime | Allows you to specify the session start...                     |
 | sessionendtime   | ...and end times                                               |
 | millisecs        | Specifies that milliseconds are to be included in the bar timestamps         |
 | nomillisecs      | Specifies that milliseconds are not to be included in the bar timestamps     |
