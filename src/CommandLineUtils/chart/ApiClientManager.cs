@@ -121,7 +121,7 @@ namespace TradeWright.TradeBuild.Applications.Chart
                     TW.LogMessage($"Connection to TWS failed: {pMessage}");
                     mConsoleHandler.WriteLineToConsole($"Connection to TWS failed: {pMessage}", true);
                     IsReady = false;
-                    break;
+                    return;
             }
 
             if (mTaskCompletionSource != null)
