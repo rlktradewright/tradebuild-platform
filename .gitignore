@@ -18,6 +18,8 @@
 *.vbg
 *.lnk
 
+*.exe.config
+
 Build/signAll.bat
 Build/signInstaller.bat
 Build/Subscripts/signModule.bat
