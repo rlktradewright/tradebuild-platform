@@ -736,9 +736,7 @@ Private Sub addStudyConfig( _
 Const ProcName As String = "addStudyConfig"
 On Error GoTo Err
 
-If studyConfig.InstanceFullyQualifiedName = "" Then
-    studyConfig.InstanceFullyQualifiedName = generateInstanceFullyQualifiedName(studyConfig.Study)
-End If
+studyConfig.InstanceFullyQualifiedName = generateInstanceFullyQualifiedName(studyConfig.Study)
 
 mAllStudyConfigs.Add studyConfig, studyConfig.Study.ID
 mInstanceFullyQualifiedNames.Add studyConfig.InstanceFullyQualifiedName, studyConfig.InstanceFullyQualifiedName
