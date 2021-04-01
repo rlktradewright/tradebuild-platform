@@ -3,10 +3,9 @@
 :: builds all the dll and ocx projects
 ::
 :: Parameters:
-::   %1 Binary compatibility setting- 'P'  (project)
-::                                    'PP' (project and leave at project)  
-::                                    'B'  (binary)
-::
+::   %1 Binary compatibility setting - 'P'  (project)
+::                                     'PP' (project and leave at project)  
+::                                     'B'  (binary)
 
 set BINARY_COMPAT=B
 if "%1" == "P" set BINARY_COMPAT=P
@@ -25,7 +24,9 @@ echo.
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
 call makedll.bat SessionUtils SessionUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
-call makedll.bat ContractUtils ContractUtils /T:DLL /B:%BINARY_COMPAT% /c
+call makedll.bat ContractUtils ContractUtils /T:DLL /B:%BINARY_COMPAT%
+if errorlevel 1 pause
+call makedll.bat AccountUtils AccountUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat BarUtils BarUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
@@ -61,7 +62,7 @@ if errorlevel 1 pause
 call makedll.bat WorkspaceUtils WorkspaceUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
-call makedll.bat ChartSkil ChartSkil /T:OCX /B:%BINARY_COMPAT% /c
+call makedll.bat ChartSkil ChartSkil /T:OCX /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat BarFormatters BarFormatters /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
@@ -104,7 +105,7 @@ set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 :: temporary fix for refusal of VB6 to compile this module if
 :: the output dll exists
 if exist %BIN-PATH%\IBApiV10027.dll del %BIN-PATH%\IBApiV10027.dll
-call makedll.bat IBAPIV100 IBAPIV100 /T:DLL /B:%BINARY_COMPAT% /C
+call makedll.bat IBAPIV100 IBAPIV100 /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause

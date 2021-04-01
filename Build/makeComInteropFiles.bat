@@ -90,6 +90,7 @@ call %BUILD%\Setup\DeploymentScripts\setTradeBuildVersion.bat
 
 call :TlbImp SessionUtils27
 call :TlbImp ContractUtils27
+call :TlbImp AccountUtils27
 call :TlbImp BarUtils27
 call :TlbImp TickUtils27
 call :TlbImp StudyUtils27

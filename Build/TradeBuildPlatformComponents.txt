@@ -1,5 +1,6 @@
 ..\bin\TradeWright.TradeBuild.Platform\SessionUtils27.dll
 ..\bin\TradeWright.TradeBuild.Platform\ContractUtils27.dll
+..\bin\TradeWright.TradeBuild.Platform\AccountUtils27.dll
 ..\bin\TradeWright.TradeBuild.Platform\BarUtils27.dll
 ..\bin\TradeWright.TradeBuild.Platform\TickUtils27.dll
 ..\bin\TradeWright.TradeBuild.Platform\StudyUtils27.dll

@@ -28,7 +28,7 @@ if errorlevel 1 pause
 regsvr32 -S TABCTL32.OCX
 if errorlevel 1 pause
 
-regsvr32 -S TLBINF32.OCX
+regsvr32 -S TLBINF32.DLL
 if errorlevel 1 pause
 
 popd

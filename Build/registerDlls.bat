@@ -17,6 +17,9 @@ if errorlevel 1 goto :err
 call registerComponent.bat ContractUtils dll
 if errorlevel 1 goto :err
 
+call registerComponent.bat AccountUtils dll
+if errorlevel 1 goto :err
+
 call registerComponent.bat BarUtils dll
 if errorlevel 1 goto :err
 
