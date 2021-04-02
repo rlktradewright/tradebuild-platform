@@ -1,4 +1,6 @@
 *.manifest
+!*app.manifest
+
 *.dll
 *.exe
 *.exp
