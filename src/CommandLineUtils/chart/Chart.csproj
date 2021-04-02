@@ -292,6 +292,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>link /EDIT /SUBSYSTEM:CONSOLE E:\projects\tradebuild-platform\Bin\chart.exe</PostBuildEvent>
+    <PostBuildEvent>link /EDIT /SUBSYSTEM:CONSOLE $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
 </Project>
