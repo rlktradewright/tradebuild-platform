@@ -129,7 +129,7 @@ If mState = LoadStateLoadingCharts Then
     Else
         Set mLoadEn = Nothing
         mState = LoadStateDeletingUnwantedCharts
-        If Not mIsHistorical Then mTaskContext.Suspend -1
+        If mNumChartsLoading <> 0 Then mTaskContext.Suspend -1
     End If
 ElseIf mState = LoadStateDeletingUnwantedCharts Then
     If en Is Nothing Then Set en = mRemovableCSs.Enumerator
