@@ -1,7 +1,7 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\System32\stdole2.tlb#OLE Automation
-Reference=*\G{60CDFD60-27FE-4FFF-BA0D-FC61228B61C5}#1.0#0#..\..\..\Bin\TradeWright.TradeBuild.ServiceProviders\TradingDO27.dll#TradeWright TradeBuild Trading Data Objects v2.7
-Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#d.1#0#..\..\..\..\tradewright-common\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#STDOLE2.TLB#OLE AUTOMATION
+Reference=*\G{60CDFD60-27FE-4FFF-BA0D-FC61228B61C5}#1.0#0#TRADINGDO27.DLL#TRADEWRIGHT TRADEBUILD TRADING DATA OBJECTS V2.7
+Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#d.1#0#TWUTILITIES40.DLL#TRADEWRIGHT UTILITY SERVICES V4.0
 Module=MainMod; MainMod.bas
 Startup="Sub Main"
 HelpFile=""

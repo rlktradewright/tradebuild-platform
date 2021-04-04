@@ -42,19 +42,19 @@ greatly simplifies the task of getting it started.
 
 blah blah blah
 
-### # Interactive Usage
+#### Interactive Usage
 
 blah blah blah
 
-### # FileReader Program Usage
+#### FileReader Program Usage
 
 blah blah blah
 
-### # Excel Usage
+#### Excel Usage
 
 blah blah blah
 
-### # API Usage
+#### API Usage
 
 blah blah blah
 
@@ -113,7 +113,7 @@ The following is a summary of all the commands currently defined:
 | ------------- | ------------------------------------------------------------ |
 |  #            | Starts a comment line                                        |            
 |  ?            | Outputs a list of commands that are currently valid          |
-|  BATCHORDERS  | Specifies whether bracket orders should be accumulated and only submitted when an ENDORDERS command is received                                                  |
+|  BATCHORDERS  | Specifies whether bracket orders should be accumulated and only submitted when an ENDORDERS command is received |
 |  BRACKET      | Starts a bracket order specification                         |
 |  BUY          | Specifies a single buy order                                 |
 |  B            | Repeats the previous BUY command                             |
@@ -126,13 +126,14 @@ The following is a summary of all the commands currently defined:
 |  GROUP        | Defines a new group or switches to an existing group         |
 |  HELP         | Outputs the syntax summary                                   |
 |  LIST         | List current groups, positions or trades                     |
-|  PURGE        | Removes all knowledge of a group, without affecting any orders that have been defined and submitted in that group                                                    |
+|  PURGE        | Removes all knowledge of a group, without affecting any orders that have been defined and submitted in that group |
 |  QUIT         | Aborts the current bracket order definition                  |
 |  QUOTE        | Displays bid, ask and last prices and sizes for the current or a specified contract |
-|  RESET        | Cancels any bracket orders that have not yet been submitted, and any bracket order specifications that have not been completed                                    |
+|  RESET        | Cancels any bracket orders that have not yet been submitted, and any bracket order specifications that have not been completed |
+|  ROLLOVER     | Specifies that a futures, option or futures option position established by a bracket order is to be automatically rolled over to the next contract expiry |
 |  SELL         | Specifies a single sell order                                |
 |  S            | Repeats the previous SELL command                            |
-|  STAGEORDERS  | Specifies that orders are to be sent to TWS but not transmitted to the broker for execution (manual intervention in TWS is required)                             |
+|  STAGEORDERS  | Specifies that orders are to be sent to TWS but not transmitted to the broker for execution (manual intervention in TWS is required) |
 |  STOPLOSS     | Specifies the stop-loss order of a bracket order             |
 |  TARGET       | Specifies the target order of a bracket order                |
 
@@ -294,6 +295,8 @@ contract. There are two types of order recognised by the program:
   orders. When filled they increase or decrease the current position for the 
   relevant contract in the group via which the order was placed. 
 
+  You create single orders with the BUY and SELL commands.
+
 * Bracket orders: these consist of an entry order that is used to increase or 
   decrease the current position for the relevant contract in the group via which 
   the order was placed, together with optional stop-loss and target orders that 
@@ -301,6 +304,19 @@ contract. There are two types of order recognised by the program:
   stop-loss and target orders are only activated when the entry order receives 
   its first fill. Once either of the stop-loss or target orders is filled, the 
   other is cancelled.
+
+  You create bracket orders starting with a BRACKET command, and ending with an 
+  ENDBRACKET command. Between these you can use ENTRY, STOPLOSS, TARGET and 
+  ROLLOVER commands: the ENTRY command is mandatory, but the commands between 
+  BRACKET and ENDBRACKET can be in any order.
+
+  If you use the same command more than once within a bracket order definition,
+  only the latest one is relevant: this enables you to correct mistakes.
+
+  If you make a mistake that results in an error message, then the ENBRACKET
+  command wil inform you that the bracket order cannot be actioned, and you 
+  will have to reinput the definition. You can use the QUIT command to discard 
+  the definition before you get as far as the ENDBRACKET command.
 
 Note that as a matter of implementation convenience, single orders are actually 
 implemented as bracket orders with an entry order but without the associated 
@@ -315,42 +331,45 @@ currently defined groups.
 
 Entry orders (and single orders) may use the following order types:
 
-Limit
-Limit If Touched
-Limit On Close
-Limit On Open
-Market
-Market If Touched
-Market On Close
-Market On Open
-Market To Limit
-Stop
-Stop Limit
-Trail
-Trail Limit
+Limit  
+Limit If Touched  
+Limit On Close  
+Limit On Open  
+Market  
+Market If Touched  
+Market On Close  
+Market On Open  
+Market To Limit  
+Stop  
+Stop Limit  
+Trail  
+Trail Limit  
 
 ###  Order Types for Stop-Loss Orders
 
 Stop-loss orders may use the following order types:
 
-Stop
-Stop Limit
-Trail
-Trail Limit
+Stop  
+Stop Limit  
+Trail  
+Trail Limit  
 
 ###  Order Types for Target Orders
 
 Target orders may use the following order types:
 
-Limit
-Limit If Touched
-Limit On Close
-Limit On Open
-Market If Touched
-Market On Close
-Market On Open
+Limit  
+Limit If Touched  
+Limit On Close  
+Limit On Open  
+Market If Touched  
+Market On Close  
+Market On Open  
 
 ## 7. Order Pricing
+
+Most order types require one or more prices that goven the operation of the
+order. These prices are defined using price specifications.
 
 Price specifications have two parts: a base price and an optional offset. The 
 offset adds or subtracts an amount from the base price to yield the actual price 
@@ -358,7 +377,8 @@ with which the order is submitted.
 
 Note that a price is considered to be 'more aggressive' than another price if it 
 has a greater likelihood of being filled, and 'less aggressive' if it has a 
-lesser likelihood of being filled. 
+lesser likelihood of being filled. Thus for a 'buy' order, a higher price is more 
+aggressive than a lower price, and conversely for a 'sell' order.
 
 Price specifications are not processed until immediately before an order is 
 actually placed with the broker.
@@ -369,8 +389,7 @@ be available for a period after market open): in these circumstances, the
 order will be held until the required information becomes available.
 
 Where the price yielded by a price specification is not an exact multiple of a 
-tick, it is rounded to the nearest more aggressive price for a buy, or to the 
-nearest less aggressive price for a sell.
+tick, it is rounded to the nearest more aggressive price.
 
 ###  Base Price
 
@@ -452,7 +471,7 @@ If no qualifier is specified, the offset is simply the numeric value.
 
 This section provides the detailed syntax and effect of every command.
 
-</br></br>
+<br/><br/>
 ### # Command
 
 Starts a comment line. 
@@ -461,7 +480,7 @@ This is a special command that does not have the normal command syntax.
 Anything after the initial '#' is ignored, except that the complete command
 is output to the console and recorded in the various program logs.
 
-</br></br>
+<br/><br/>
 ### ? Command
 
 Outputs a list of commands that are currently valid.
@@ -470,7 +489,7 @@ Positional aruments: None
 
 Tagged arguments: None
 
-</br></br>
+<br/><br/>
 ### BATCHORDERS Command
 
 Specifies whether bracket orders should be accumulated and only submitted when 
@@ -490,7 +509,7 @@ Positional aruments:
 
 Tagged arguments: None
 
-</br></br>
+<br/><br/>
 ### BRACKET Command
 
 Starts a bracket order specification.
@@ -528,7 +547,7 @@ Tagged arguments:
 | /goodtilldate  | \<datetime\>    | The bracket order will be cancelled if the entry order is still unfilled at the specified date and time |
 | /timezone      | \<timezonename\> | Specifies the timezone for the date/times in the /goodaftertime and /goodtilldate attributes |
 
-</br></br>
+<br/><br/>
 ### BUY Command
 
 Specifies a single buy order. The order specification is processed immediately, regardless of whether bracket order batching has been set ON with the [BATCHORDERS](BATCHORDERS]) command.
@@ -633,7 +652,7 @@ Tagged arguments:
 | /ignorerth     | n/a             | The order will be actioned if placed outside Regular Trading Hours. Otherwise it will be held up at the IBKR servers until market open |
 | /timezone      | \<timezonename\> | Specifies the timezone for the date/times in the /goodaftertime and /goodtilldate attributes |
 
-</br></br>
+<br/><br/>
 ### B Command
 
 Repeats the previous BUY command. This command is intended for interactive use 
@@ -642,8 +661,8 @@ during scalping, for example to rapidly repeat a buy order 1 tick above the curr
 Positional aruments: None
 
 Tagged arguments: None
-</br></br>
 
+<br/><br/>
 ### CLOSEOUT Command
 
 Closes all positions and pending positions in one or all groups.
@@ -884,6 +903,14 @@ GROUP \<groupname\> [\<contractspec\>]
 
 Outputs the syntax summary.
 
+Syntax summary:
+
+HELP
+
+Positional arguments: None
+
+Tagged arguments: None
+
 <br/><br/>
 ### LIST Command
 
@@ -911,6 +938,12 @@ contract.
 
 Cancels any bracket orders that have not yet been submitted, and any bracket 
 order specifications that have not been completed.
+
+<br/><br/>
+### ROLLOVER Command
+
+Specifies that a futures, option or futures option position established by a 
+bracket order is to be automatically rolled over to the next contract expiry. 
 
 <br/><br/>
 ### SELL Command

@@ -1,10 +1,10 @@
 Type=OleDll
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\System32\stdole2.tlb#OLE Automation
-Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#2.0#0#..\..\..\tradewright-common\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
-Reference=*\G{8622E2E9-D418-4A94-A1C5-9E0EA38DABCD}#5f.0#0#..\..\Bin\TradeWright.TradeBuild.Platform\BarUtils27.dll#TradeWright Bar Utilities v2.7
-Reference=*\G{35397E37-23B7-4B20-AC05-27DED8253B14}#5.0#0#..\..\Bin\TradeWright.TradeBuild.Platform\SessionUtils27.dll#TradeWright Session Utilities v2.7
-Reference=*\G{6FA5621C-ACAE-42B7-BA00-CFEA7C03952A}#18a.0#0#..\..\Bin\TradeWright.TradeBuild.Platform\TickUtils27.dll#TradeWright Tick Data Utilities v2.7
-Reference=*\G{E02A555E-D592-4AA4-A2F1-21831599F39B}#1ed.1#0#..\..\Bin\TradeWright.TradeBuild.Platform\ContractUtils27.dll#TradeWright Contract Utilities v2.7
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#STDOLE2.TLB#OLE AUTOMATION
+Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#2.0#0#TWUTILITIES40.DLL#TRADEWRIGHT UTILITY SERVICES V4.0
+Reference=*\G{8622E2E9-D418-4A94-A1C5-9E0EA38DABCD}#5f.0#0#BARUTILS27.DLL#TRADEWRIGHT BAR UTILITIES V2.7
+Reference=*\G{35397E37-23B7-4B20-AC05-27DED8253B14}#5.0#0#SESSIONUTILS27.DLL#TRADEWRIGHT SESSION UTILITIES V2.7
+Reference=*\G{6FA5621C-ACAE-42B7-BA00-CFEA7C03952A}#18a.0#0#TICKUTILS27.DLL#TRADEWRIGHT TICK DATA UTILITIES V2.7
+Reference=*\G{E02A555E-D592-4AA4-A2F1-21831599F39B}#1ed.1#0#CONTRACTUTILS27.DLL#TRADEWRIGHT CONTRACT UTILITIES V2.7
 Class=IStudy; IStudy.cls
 Class=StudyValueDefinition; StudyValueDefinition.cls
 Class=StudyValueListeners; StudyValueListeners.cls
