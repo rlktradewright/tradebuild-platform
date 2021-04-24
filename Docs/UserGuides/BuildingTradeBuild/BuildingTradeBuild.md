@@ -9,6 +9,15 @@ It is quite a detailed procedure, but it only needs to be done once.
 
 Visual Basic 6 must be installed.
 
+You must install the Microsoft Visual Basic 6.0 Service Pack 6 Security Rollup Update,
+published on 21 March 2021. To check whether you already have this installed, examine
+the 'Apps & features' page in the Windows Settings app in Windows 10 (or use the
+'Programs and Features' applet in the Control Panel): the relevant entry is entitled
+'Cumulative Update for Microsoft Visual Basic 6.0 SP6 (KB3096896)'. If not already
+installed, you can download it from here:
+
+https://www.microsoft.com/en-us/download/details.aspx?id=50722
+
 Visual Studio 2017 or later must be installed (earlier versions will probably be
 fine, but haven't been tested). The free Community editions are fine.
 
@@ -31,7 +40,7 @@ consistency with these instructions this should be at `C:\Projects`.
 2. Build the SetProjectComp tool using Visual Studio 2017 (or later) from the
    SetProjectComp.sln solution file in the `src\SetProjectComp folder`. Copy the
    generated SetProjectComp.exe file to the Tools folder of the vb6-build
-   project.
+   project. NB: this is a .Net program, so you can't build it with VB6.
 
 3. Edit the system PATH variable to include the SCRIPTS and TOOLS folders in the
    vb6-build project.
@@ -47,7 +56,8 @@ consistency with these instructions this should be at `C:\Projects`.
 6. Build the manifest-generator solution using Visual Studio 2017 (or later)
    from the ManifestUtilities.sln solution file in the root folder. Copy the
    GenerateManifest.exe, ManifestUtilities.dll and Utils.dll files to the Tools
-   folder of the vb6-build project.
+   folder of the vb6-build project. NB: this is a .Net solution, so you can't
+   build it with VB6.
 
 
 ## 4. Setup the TradeBuild Project
@@ -57,16 +67,15 @@ consistency with these instructions this should be at `C:\Projects`.
 
    https://github.com/rlktradewright/tradebuild-platform
 
-2. Install TradeBuild using the .msi installer file from the latest Release on
-   GitHub. By default, the files will be installed to:
+2. Create a user environment variable called `TB-PLATFORM-PROJECTS-DRIVE`, and
+   set it to the drive letter that contains your Projects folder (in this
+   example set it to `C:`).
 
-   `C:\Program Files (x86)\TradeWright Software Systems\TradeBuild Platform 2.7`
+3. Create a user environment variable called `TB-PLATFORM-PROJECTS-PATH`, and
+   set it to the path to your clone of the TradeBuild repository (in this
+   example set it to `\Projects\tradebuild-platform`).
 
-   Note that you only need to install TradeBuild to give you initial versions to
-   control binary compatibility during the first build process. Once you have
-   successfully built TradeBuild, you can uninstall it again.
-
-3. Create a folder called Bin directly below the folder you cloned the
+4. Create a folder called Bin directly below the folder you cloned the
    repository to, for example:
 
    `C:\Projects\tradebuild-platform\Bin`
@@ -74,7 +83,7 @@ consistency with these instructions this should be at `C:\Projects`.
    This folder will be the root of a set of subfolders where the compiled
    TradeBuild components will be stored.
 
-4. Create a folder called Compat directly below the folder you cloned the
+5. Create a folder called Compat directly below the folder you cloned the
    repository to, for example:
 
    `C:\Projects\tradebuild-platform\Compat`
@@ -83,38 +92,30 @@ consistency with these instructions this should be at `C:\Projects`.
    folder, which will contain compiled TradeBuild components used for
    controlling binary compatibility.
 
-5. Copy the  
+6. Install TradeBuild using the .msi installer file from the latest Release on
+   GitHub. By default, the files will be installed to:
+
+   `C:\Program Files (x86)\TradeWright Software Systems\TradeBuild Platform nnn`
+   
+   where nnn is the version number. In the following, this folder is referrred
+   to as the 'TradeBuild installation folder'.
+
+   Note that you only need to install TradeBuild to give you initial versions to
+   control binary compatibility during the first build process. Once you have
+   successfully built TradeBuild, you can uninstall it again.
+
+7. Copy the following folder from the TradeBuild installation folder to the
+   Bin folder you just created:
+
+   `TradeWright.Common`
+
+8. Copy the following folders from the TradeBuild installation folder to the
+   Compat folder:
+
    `TradeWright.TradeBuild.Platform`
-   and  
    `TradeWright.TradeBuild.ServiceProviders`
-   folders from
-   `C:\Program Files (x86)\TradeWright Software Systems\TradeBuild Platform 2.7\Bin`
-   to the Compat folder you just created.
 
-6. Install the TradeWright Common project using the .msi installer from the
-   latest Release on GitHub at https://github.com/rlktradewright/tradewright-common.
-   This provides a set of utility libraries that TradeBuild makes extensive use
-   of (it is a separate project because the facilities it provides are useful
-   in a wide range of scenarios other than trading-related software).
-
-   By default, the files will be installed to:
-
-   `C:\Program Files\TradeWright Software Systems\TradeWright Utilities Sample Apps v4.0.nnn`
-
-   where `nnn` is the last part of the version number.
-
-7. Copy the TradeWright.Common folder from the Bin subfolder of the TradeWright
-   Common installation folder to the TradeBuild Bin folder
-   (ie to `C:\Projects\tradebuild-platform\Bin`). We want all the TradeWright
-   Common binaries to be in this folder so that the registration-free COM
-   mechanisms used by TradeBuild can locate them at runtime without them having
-   to be registered in the Windows Registry.
-
-8. Register the TradeWright common .dll's and .ocx's. We need to do this only so
-   that TradeBuild components that use the TradeWright Common user controls can
-   be opened in Visual Basic 6 (note that Visual Basic 6 cannot use components
-   via registration-free COM). For ease, we register the files in the
-   TradeWright Common installation folders.
+9. Register the TradeWright common .dll's and .ocx's:
 
    * Open a Visual Studio 2017 developer command prompt as Administrator 
      to ensure that the regsvr32exe program is on the path). The easiest way to
@@ -122,19 +123,8 @@ consistency with these instructions this should be at `C:\Projects`.
 	 Start menu, right-click the Developer Command Prompt item, and select
 	 `More > Run as Administrator`.
 	
-   * Set the current directory to the TradeWright Common installation folder:
-	
-     `cd  "C:\Program Files\TradeWright Software Systems\TradeWright Utilities Sample Apps v4.0.nnn"`
-	
-   * Run the registerdlls.bat command file.
-
-9. Create a user environment variable called `TB-PLATFORM-PROJECTS-DRIVE`, and
-   set it to the drive letter that contains your Projects folder (in this
-   example set it to `C:`).
-
-10. Create a user environment variable called `TB-PLATFORM-PROJECTS-PATH`, and
-   set it to the path to your clone of the TradeBuild repository (in this
-   example set it to `\Projects\tradebuild-platform`).
+   * run the
+   `registerTradeWrightCommonDlls.bat` command file in the Build folder.
 
 
 
@@ -142,7 +132,7 @@ consistency with these instructions this should be at `C:\Projects`.
 
 1. You are now ready to do the first build of the TradeBuild project.
 
-2. Start a Visual Studio 2017 developer command prompt as Administrator(as
+2. Start a Visual Studio 2017 developer command prompt as Administrator (as
    described earlier).
 
 3. Set the current directory to the Build folder:
@@ -162,7 +152,5 @@ consistency with these instructions this should be at `C:\Projects`.
 
 7. Once you have successfully built TradeBuild, you can uninstall the version
    created by the .msi installer, as none of that installation is now in use.
-   But do not uninstall the TradeWright Common installation, as it is still used
-   in building the TradeBuild platform libraries.
 
 
