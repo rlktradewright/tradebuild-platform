@@ -6,7 +6,7 @@ path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\Subscripts;%P
 
 set BIN-PATH=%TB-PLATFORM-PROJECTS-PATH%\Bin
 
-call setMyVersion.bat
+call setTradeBuildVersion
 
 if /I "%1"=="P" (
 	call makeComponents.bat P

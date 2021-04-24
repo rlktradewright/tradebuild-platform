@@ -6,10 +6,13 @@
 ::   Note that these interop DLLs are included in the TradeBuild Platform      +
 ::   install, so you should not need to run this file in normal circumstances. +
 ::                                                                             +
-::   Before running this file, the TradeBuild components must be registered    +
-::   using the registerDlls.bat command file. If you need to use any of the    +
-::   TradeBuild ActiveX controls in your .Net program, they will need to       +
-::   remain registered to be used with the forms designer.                     +
+::   Before running this file, the TradeBuild components must be registered.   +
+::   If you have compiled these components, they will already be registered.   +
+::   If not, you can use the registerDlls.bat command file.                    +
+::                                                                             +
+::   If you need to use any of the TradeBuild ActiveX controls in your .Net    +
+::   program, they will need to remain registered to be used with the forms    +
+::   designer.                                                                 +
 ::                                                                             +
 ::   If you don't need to use the TrdeBuild ActiveX controls in your .Net      +
 ::   programs, and if you use registration-free COM to access the TradeBuild   +
@@ -29,18 +32,12 @@ echo =================================
 echo Generating COM interop files
 echo.
 
-set BUILD=%CD%\Build
-set TRADEBUILD=%CD%\Bin
-if not exist "%TRADEBUILD%\TradeWright.TradeBuild.Platform" (
-	echo You are not currently in the correct folder.
-	echo.
-	echo You must run this command from the folder above the Bin folder
-	echo containing the TradeBuild executables.
-	goto :Err
-)
+%TB-PLATFORM-PROJECTS-DRIVE%
+set BUILD=%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build
+set BIN=%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Bin
 
-set COMINTEROP=%TRADEBUILD%\TradeWright.TradeBuild.ComInterop
-set TWUTILITIES=%TRADEBUILD%\TradeWright.Common
+set COMINTEROP=%BIN%\TradeWright.TradeBuild.ComInterop
+set TWUTILITIES=%BIN%\TradeWright.Common
 set TWWIN32API=%TWUTILITIES%\twwin32api.tlb
 
 if exist %COMINTEROP% (
@@ -49,9 +46,13 @@ if exist %COMINTEROP% (
 	mkdir %COMINTEROP%
 )
 
-cd %COMINTEROP%
+pushd %COMINTEROP%
 
-set SOURCE=%TRADEBUILD%\TradeWright.TradeBuild.ExternalComponents
+if "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
+	set SOURCE=%SystemRoot%\SysWOW64
+) else (
+	set SOURCE=%SystemRoot%\System32
+)
 
 call :AxImp COMCT332
 call :AxImp COMDLG32
@@ -61,12 +62,10 @@ call :AxImp MSDATGRD
 call :AxImp MSFLXGRD
 call :AxImp MSWINSCK
 call :AxImp TABCTL32
+call :TlbImp TlbInf32
 
 
 set SOURCE=%TWUTILITIES%
-
-call %BUILD%\Setup\DeploymentScripts\setTradeWrightCommonVersion.bat
-::set ASM_VERSION=/asmversion:%VB6-BUILD-MAJOR%.%VB6-BUILD-MINOR%.0.%VB6-BUILD-REVISION%
 
 call :TlbTlb TWWin32API
 
@@ -83,10 +82,7 @@ call :TlbImp GraphObjUtils40
 call :TlbImp GraphObj40
 call :TlbImp SpriteControlLib40
 
-set SOURCE=%TRADEBUILD%\TradeWright.TradeBuild.Platform
-
-call %BUILD%\Setup\DeploymentScripts\setTradeBuildVersion.bat
-::set ASM_VERSION=/asmversion:%VB6-BUILD-MAJOR%.%VB6-BUILD-MINOR%.0.%VB6-BUILD-REVISION%
+set SOURCE=%BIN%\TradeWright.TradeBuild.Platform
 
 call :TlbImp SessionUtils27
 call :TlbImp ContractUtils27
@@ -121,7 +117,7 @@ call :AxImp TradeBuildUI27
 
 call :TlbImp TBDataCollector27
 
-set SOURCE=%TRADEBUILD%\TradeWright.TradeBuild.ServiceProviders
+set SOURCE=%BIN%\TradeWright.TradeBuild.ServiceProviders
 
 call :TlbImp IBAPIV10027
 call :TlbImp IBENHAPI27
@@ -131,21 +127,23 @@ call :TlbImp TradingDbApi27
 call :TlbImp TBInfoBase27
 call :TlbImp TickfileSP27
 
+popd
 exit /B 0
 
 :Err
+popd
 exit /B 1
 
 :TlbImp
 echo =================================
-tlbimp "%SOURCE%\%1.dll" /out:Interop.%1.dll /tlbreference:"%TWWIN32API%" /namespace:%1 /nologo /silence:3011 /silence:3008 %ASM_VERSION% %REFERENCE%
+tlbimp "%SOURCE%\%1.dll" /out:Interop.%1.dll /tlbreference:"%TWWIN32API%" /namespace:%1 /nologo /silence:3011 /silence:3008 /silence:3012 %REFERENCE%
 if errorlevel 1 goto :Err
 set REFERENCE=%REFERENCE% /reference:Interop.%1.dll
 echo.
 goto :EOF
 
 :TlbImpAx
-tlbimp "%SOURCE%\%1.ocx" /out:Interop.%1.dll /tlbreference:"%TWWIN32API%" /namespace:%1 /nologo /silence:3011 /silence:3008 %ASM_VERSION% %REFERENCE%
+tlbimp "%SOURCE%\%1.ocx" /out:Interop.%1.dll /tlbreference:"%TWWIN32API%" /namespace:%1 /nologo /silence:3011 /silence:3008 /silence:3012 %REFERENCE%
 if errorlevel 1 goto :Err
 set REFERENCE=%REFERENCE% /reference:Interop.%1.dll
 goto :EOF
@@ -160,7 +158,7 @@ goto :EOF
 
 :TlbTlb
 echo =================================
-tlbimp "%SOURCE%\%1.tlb" /out:Interop.%1.dll /namespace:%1 /nologo /silence:3011 /silence:3008 %ASM_VERSION% %REFERENCE%
+tlbimp "%SOURCE%\%1.tlb" /out:Interop.%1.dll /namespace:%1 /nologo /silence:3011 /silence:3008 %REFERENCE%
 if errorlevel 1 goto :Err
 set REFERENCE=%REFERENCE% /reference:Interop.%1.dll
 echo.

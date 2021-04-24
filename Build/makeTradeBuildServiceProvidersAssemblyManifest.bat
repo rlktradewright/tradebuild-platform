@@ -8,7 +8,7 @@ echo .
 %TB-PLATFORM-PROJECTS-DRIVE%
 path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\Subscripts;%PATH%
 
-call setMyVersion.bat
+call setTradeBuildVersion
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\Build
 generateManifest /Ass:TradeWright.TradeBuild.ServiceProviders,%VB6-BUILD-MAJOR%.%VB6-BUILD-MINOR%.0.%VB6-BUILD-REVISION%,"TradeBuild Service Providers",TradeBuildServiceProviderComponents.txt ^

@@ -15,10 +15,7 @@ call makeCommandLineTools.bat
 
 call makeTradeBuildExternalComponentsAssemblyManifest.bat
 
-pushd ..
-::note we have to be in the tradebuild-platform folder to run makeComInteropFiles
-call Build\makeComInteropFiles.bat
-popd
+call makeComInteropFiles.bat
 
 echo =================================
 echo Make all completed

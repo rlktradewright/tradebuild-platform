@@ -12,7 +12,7 @@ setlocal
 %TB-PLATFORM-PROJECTS-DRIVE%
 path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\Subscripts;%PATH%
 
-call setMyVersion.bat
+call setTradeBuildVersion
 
 set BINARY_COMPAT=B
 if "%1" == "P" set BINARY_COMPAT=P
