@@ -328,7 +328,7 @@ Friend Sub FromXML(ByVal contractXML As String)
 Const ProcName As String = "FromXML"
 On Error GoTo Err
 
-Dim XMLdoc As DOMDocument30
+Dim XMLdoc As DOMDocument60
 Dim contractEl As IXMLDOMElement
 Dim specifierEl As IXMLDOMElement
 Dim specifierObj As ContractSpecifier
@@ -341,7 +341,7 @@ Dim comboSpecifierEl As IXMLDOMElement
 Dim comboSpecifierObj As ContractSpecifier
 Dim comboLegsObj As ComboLegs
 
-Set XMLdoc = New DOMDocument30
+Set XMLdoc = New DOMDocument60
 XMLdoc.loadXML contractXML
 Assert XMLdoc.parseError.errorCode = 0, "Contract XML cannot be parsed"
 

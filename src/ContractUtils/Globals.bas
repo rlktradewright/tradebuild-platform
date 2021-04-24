@@ -217,7 +217,7 @@ Public Function gContractToXML(ByVal pContract As IContract) As String
 Const ProcName As String = "gContractToXML"
 On Error GoTo Err
 
-Dim XMLdoc As DOMDocument30: Set XMLdoc = New DOMDocument30
+Dim XMLdoc As DOMDocument60: Set XMLdoc = New DOMDocument60
 Dim lContractElement As IXMLDOMElement: Set lContractElement = XMLdoc.createElement("contract")
 Set XMLdoc.documentElement = lContractElement
 lContractElement.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
