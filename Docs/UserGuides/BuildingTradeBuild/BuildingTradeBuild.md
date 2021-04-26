@@ -114,8 +114,9 @@ consistency with these instructions this should be at `C:\Projects`.
 
    `TradeWright.TradeBuild.Platform`
    `TradeWright.TradeBuild.ServiceProviders`
+   `TradeWright.TradeBuild.ExternalComponents`
 
-9. Register the TradeWright common .dll's and .ocx's:
+9. Register the TradeWright Common components and the External components:
 
    * Open a Visual Studio 2017 developer command prompt as Administrator 
      to ensure that the regsvr32exe program is on the path). The easiest way to
@@ -124,8 +125,10 @@ consistency with these instructions this should be at `C:\Projects`.
 	 `More > Run as Administrator`.
 	
    * run the
-   `registerTradeWrightCommonDlls.bat` command file in the Build folder.
+   `registerTradeWrightCommonComponents.bat` command file in the Build folder.
 
+   * run the
+   `registerExternalComponents.bat` command file in the Build folder.
 
 
 ## 5. Build TradeBuild for the First Time
