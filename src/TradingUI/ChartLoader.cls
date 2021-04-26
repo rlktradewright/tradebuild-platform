@@ -159,7 +159,7 @@ End If
 
 If Not (lTicker.State = MarketDataSourceStateReady Or _
         lTicker.State = MarketDataSourceStatePaused Or _
-        lTicker.State = MarketDataSourceStateRunnin) Then
+        lTicker.State = MarketDataSourceStateRunning) Then
     lTicker.AddStateChangeListener Me
     Exit Function
 End If
