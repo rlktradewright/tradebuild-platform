@@ -83,6 +83,11 @@ Then
         mFutureBuilder.Value = Nothing
         mFutureBuilder.Complete
     End If
+ElseIf (ev.State = MarketDataSourceStateError Or _
+        ev.State = MarketDataSourceStateFinished Or _
+        ev.State = MarketDataSourceStateStopped) Then
+    mFutureBuilder.Value = Nothing
+    mFutureBuilder.Complete
 End If
 
 Dim lTicker As Ticker: Set lTicker = ev.Source
@@ -144,9 +149,17 @@ If lTicker Is Nothing Then
     Exit Function
 End If
 
+If (lTicker.State = MarketDataSourceStateError Or _
+        lTicker.State = MarketDataSourceStateFinished Or _
+        lTicker.State = MarketDataSourceStateStopped) Then
+    mFutureBuilder.Value = mChartConfig
+    mFutureBuilder.Complete
+    Exit Function
+End If
+
 If Not (lTicker.State = MarketDataSourceStateReady Or _
         lTicker.State = MarketDataSourceStatePaused Or _
-        lTicker.State = MarketDataSourceStateRunning) Then
+        lTicker.State = MarketDataSourceStateRunnin) Then
     lTicker.AddStateChangeListener Me
     Exit Function
 End If
