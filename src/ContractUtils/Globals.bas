@@ -300,7 +300,7 @@ Const ProcName As String = "gCreateContractSpecifierFromString"
 On Error GoTo Err
 
 Const SecTypeRegEx As String = "(?:([a-zA-Z]+)\:)?"
-Const SymbolRegEx As String = "([a-zA-Z0-9][ a-zA-Z0-9\-]*(?:\.[a-zA-Z0-9]?)?)"
+Const SymbolRegEx As String = "([a-zA-Z0-9]+(?:(?: *|-|\.)[a-zA-Z0-9]+)*(?:\.[a-zA-Z0-9]?)?)"
 Const DateExpiryRegEx As String = "((?:20\d\d)(?:[0|1]\d)(?:[0|1|2|3]\d)?)?"
 Const RelativeExpiryRegEx As String = "(\d\d?(?:\[\d\d?d\])?)?"
 Const ExpiryRegEx As String = "(?:\(" & _
