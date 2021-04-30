@@ -793,6 +793,7 @@ On Error GoTo Err
 RaiseEvent KeyPress(KeyAscii)
 
 If isAlphaNumeric(KeyAscii) Or _
+    KeyAscii = Asc(".") Or _
     KeyAscii = Asc(":") Or _
     KeyAscii = Asc("@") Or _
     KeyAscii = Asc("/") Or _
