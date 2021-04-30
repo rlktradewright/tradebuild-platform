@@ -1016,6 +1016,7 @@ On Error GoTo Err
 
 checkNotFinished
 
+If State = MarketDataSourceStateCreated Then Exit Sub
 If State = MarketDataSourceStateError Then Exit Sub
 
 DataSourceBase.RemoveMarketDataSource Me
