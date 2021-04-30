@@ -142,7 +142,7 @@ Private mFinished                                   As Boolean
 Public Property Get gAppTitle() As String
 gAppTitle = AppName & _
                 " v" & _
-                App.Major & "." & App.Minor
+                App.Major & "." & App.Minor & App.Revision
 End Property
 
 Public Property Get gCommandLineParser() As CommandLineParser
@@ -472,7 +472,7 @@ If showCommandLineOptions() Then Exit Sub
 Set mFatalErrorHandler = New FatalErrorHandler
 
 ApplicationGroupName = "TradeWright"
-ApplicationName = gAppTitle
+ApplicationName = AppName
 SetupDefaultLogging Command
 
 TaskQuantumMillisecs = 32
