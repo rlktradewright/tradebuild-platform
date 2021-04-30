@@ -178,7 +178,9 @@ Else
     Exit Sub
 End If
 
-If mContractSpecifier.SecType <> SecTypeNone Then
+If mContractSpecifier.Sectype = SecTypeCash Then
+    requestContractsForCash
+ElseIf mContractSpecifier.Sectype <> SecTypeNone Then
     requestContracts mContractSpecifier
 ElseIf Not mCachedContracts Is Nothing Then
      requestContracts mContractSpecifier
@@ -366,6 +368,46 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub requestContractsForCash()
+Const ProcName As String = "requestContractsForCash"
+On Error GoTo Err
+
+requestContracts CreateContractSpecifier( _
+                                        mContractSpecifier.LocalSymbol, _
+                                        mContractSpecifier.Symbol, _
+                                        mContractSpecifier.Exchange, _
+                                        SecTypeCash, _
+                                        mContractSpecifier.CurrencyCode, _
+                                        "", _
+                                        mContractSpecifier.Multiplier)
+If mContractSpecifier.LocalSymbol = "" Then
+    requestContracts CreateContractSpecifier( _
+                                        mContractSpecifier.Symbol, _
+                                        "", _
+                                        mContractSpecifier.Exchange, _
+                                        SecTypeCash, _
+                                        mContractSpecifier.CurrencyCode, _
+                                        "", _
+                                        mContractSpecifier.Multiplier)
+End If
+
+If mContractSpecifier.Symbol = "" Then
+    requestContracts CreateContractSpecifier( _
+                                        "", _
+                                        mContractSpecifier.LocalSymbol, _
+                                        mContractSpecifier.Exchange, _
+                                        SecTypeCash, _
+                                        mContractSpecifier.CurrencyCode, _
+                                        "", _
+                                        mContractSpecifier.Multiplier)
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName & "(LocalSymbol=" & mContractSpecifier.LocalSymbol & "; Symbol=" & mContractSpecifier.Symbol & ")", ModuleName
+End Sub
+
 Private Sub requestContractsForNonSMART()
 Const ProcName As String = "requestContractsForNonSMART"
 On Error GoTo Err
@@ -463,15 +505,33 @@ Else
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeIndex, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry, _
+                                                    "", _
                                                     mContractSpecifier.Multiplier)
+    
+    If mContractSpecifier.LocalSymbol = "" Then _
+        requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
+                                                        "", _
+                                                        mContractSpecifier.Exchange, _
+                                                        SecTypeIndex, _
+                                                        mContractSpecifier.CurrencyCode, _
+                                                        "", _
+                                                        mContractSpecifier.Multiplier)
+    
+    If mContractSpecifier.Symbol = "" Then _
+        requestContracts CreateContractSpecifier("", _
+                                                        mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.Exchange, _
+                                                        SecTypeIndex, _
+                                                        mContractSpecifier.CurrencyCode, _
+                                                        "", _
+                                                        mContractSpecifier.Multiplier)
     
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry, _
+                                                    "", _
                                                     mContractSpecifier.Multiplier)
     
     If mContractSpecifier.LocalSymbol = "" Then _
@@ -480,7 +540,7 @@ Else
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeStock, _
                                                         mContractSpecifier.CurrencyCode, _
-                                                        mContractSpecifier.Expiry, _
+                                                        "", _
                                                         mContractSpecifier.Multiplier)
     
     If mContractSpecifier.Symbol = "" Then _
@@ -489,7 +549,7 @@ Else
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeStock, _
                                                         mContractSpecifier.CurrencyCode, _
-                                                        mContractSpecifier.Expiry, _
+                                                        "", _
                                                         mContractSpecifier.Multiplier)
     
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
@@ -497,9 +557,27 @@ Else
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeCash, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry, _
+                                                    "", _
                                                     mContractSpecifier.Multiplier)
 
+    If mContractSpecifier.LocalSymbol = "" Then _
+        requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
+                                                        "", _
+                                                        mContractSpecifier.Exchange, _
+                                                        SecTypeCash, _
+                                                        mContractSpecifier.CurrencyCode, _
+                                                        "", _
+                                                        mContractSpecifier.Multiplier)
+    
+    If mContractSpecifier.Symbol = "" Then _
+        requestContracts CreateContractSpecifier("", _
+                                                        mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.Exchange, _
+                                                        SecTypeCash, _
+                                                        mContractSpecifier.CurrencyCode, _
+                                                        "", _
+                                                        mContractSpecifier.Multiplier)
+    
     ' for Options and Future Options, one of the following sets of information must be specified, to
     ' avoid fetching the entire option chain:
     '     - localsymbol and exchange (should return 0 or 1 contract)
