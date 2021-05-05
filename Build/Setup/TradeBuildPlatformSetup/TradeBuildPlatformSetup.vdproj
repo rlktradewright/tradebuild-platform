@@ -1929,6 +1929,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_908B8C0304DE46238BE82F9F9201A5A3"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_91EB9EE4C794459B85D825AEBBF6B788"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -2398,12 +2404,6 @@
         "Entry"
         {
         "MsmKey" = "8:_C991B8AE142A49F5A3E599F06D9F6534"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_C9EC875D62FC49DCAFC2AF1F1C52BE1E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -3628,6 +3628,12 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_908B8C0304DE46238BE82F9F9201A5A3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_634003DE3ECC483B810598A3D9A2046B"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -4351,12 +4357,6 @@
         "OwnerKey" = "8:_09A9A9AF87683BA2823F3D25175CFB76"
         "MsmSig" = "8:_UNDEFINED"
         }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_C9EC875D62FC49DCAFC2AF1F1C52BE1E"
-        "MsmSig" = "8:_UNDEFINED"
-        }
     }
     "Configurations"
     {
@@ -4365,7 +4365,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.252.msi"
+        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.253.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -6876,7 +6876,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Chart, Version=2.7.0.251, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Chart, Version=2.7.0.253, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_723FD58125624424AB2685557D3B43CC"
@@ -10457,15 +10457,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{5777F039-30F8-4ED0-827D-75F52AE7B848}"
-        "PackageCode" = "8:{96480928-CA15-473E-8810-2ACBF691568B}"
-        "UpgradeCode" = "8:{E468A18D-FBDF-40C8-BCC2-77899A116238}"
+        "ProductCode" = "8:{F69642E5-0DFC-44AA-BCE7-82D2A2046C60}"
+        "PackageCode" = "8:{A5ECE768-630D-4DD9-92B6-DED21340E79B}"
+        "UpgradeCode" = "8:{96BD3E71-2EE9-4FE8-8ACB-F99D99DAF1FA}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.7.252"
+        "ProductVersion" = "8:2.7.253"
         "Manufacturer" = "8:TradeWright Software Systems"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -10473,7 +10473,7 @@
         "Subject" = "8:"
         "ARPCONTACT" = "8:Richard L King"
         "Keywords" = "8:"
-        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.252"
+        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.253"
         "ARPURLINFOABOUT" = "8:"
         "ARPPRODUCTICON" = "8:"
         "ARPIconIndex" = "3:0"
@@ -11124,36 +11124,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_A8B4AD7C19BC4BB1BB5A29BC72C6D40D"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_908B8C0304DE46238BE82F9F9201A5A3"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-124.msm"
-                "Properties"
-                {
-                    "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
-                    {
-                    "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
-                    "DisplayName" = "8:Module Retargetable Folder"
-                    "Description" = "8:"
-                    "Type" = "3:32769"
-                    "ContextData" = "8:_RetargetableFolder"
-                    "Attributes" = "3:6"
-                    "Setting" = "3:1"
-                    "UsePlugInResources" = "11:FALSE"
-                    }
-                }
-            "LanguageId" = "3:1033"
-            "Exclude" = "11:FALSE"
-            "Folder" = "8:"
-            "Feature" = "8:"
-            "IsolateTo" = "8:"
-            }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_C9EC875D62FC49DCAFC2AF1F1C52BE1E"
-            {
-            "UseDynamicProperties" = "11:TRUE"
-            "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.252.msm"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.253.msm"
                 "Properties"
                 {
                     "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
@@ -11179,6 +11154,31 @@
                     "Value" = "8:_7CF5BC0D7A684FDF8594B8B7AABB9DAE.4EB5B2E27A794B3384350D2FB58C0123"
                     "DefaultValue" = "8:_7CF5BC0D7A684FDF8594B8B7AABB9DAE.4EB5B2E27A794B3384350D2FB58C0123"
                     "ParentName" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "UsePlugInResources" = "11:FALSE"
+                    }
+                }
+            "LanguageId" = "3:1033"
+            "Exclude" = "11:FALSE"
+            "Folder" = "8:"
+            "Feature" = "8:"
+            "IsolateTo" = "8:"
+            }
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_A8B4AD7C19BC4BB1BB5A29BC72C6D40D"
+            {
+            "UseDynamicProperties" = "11:TRUE"
+            "IsDependency" = "11:FALSE"
+            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-124.msm"
+                "Properties"
+                {
+                    "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
+                    {
+                    "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
+                    "DisplayName" = "8:Module Retargetable Folder"
+                    "Description" = "8:"
+                    "Type" = "3:32769"
+                    "ContextData" = "8:_RetargetableFolder"
+                    "Attributes" = "3:6"
+                    "Setting" = "3:1"
                     "UsePlugInResources" = "11:FALSE"
                     }
                 }
