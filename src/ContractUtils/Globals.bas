@@ -653,18 +653,12 @@ End If
 
 Dim l1 As Long
 Dim l2 As Long
-gParseOffsetExpiry Value, l1, l2
-gIsOffsetExpiry = True
+gIsOffsetExpiry = gParseOffsetExpiry(Value, l1, l2, ErrorMessage)
 
 Exit Function
 
 Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    ErrorMessage = Err.Description
-    gIsOffsetExpiry = False
-Else
-    gHandleUnexpectedError ProcName, ModuleName
-End If
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gIsValidExpiry( _
@@ -809,10 +803,11 @@ Case OptPut
 End Select
 End Function
 
-Public Sub gParseOffsetExpiry( _
+Public Function gParseOffsetExpiry( _
                 ByVal Value As String, _
                 ByRef pExpiryOffset As Long, _
-                ByRef pDaysBeforeExpiryToSwitch As Long)
+                ByRef pDaysBeforeExpiryToSwitch As Long, _
+                ByRef pMessage As String) As Boolean
 Const ProcName As String = "gParseOffsetExpiry"
 On Error GoTo Err
 
@@ -824,7 +819,11 @@ gRegExp.IgnoreCase = True
 Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(Trim$(Value))
 
-AssertArgument lMatches.Count = 1, "Expiry syntax invalid"
+If Not lMatches.Count = 1 Then
+    pMessage = "Expiry syntax invalid"
+    gParseOffsetExpiry = False
+    Exit Function
+End If
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
@@ -835,7 +834,9 @@ If lOffsetStr = "" Then
 ElseIf IsInteger(lOffsetStr, 0, MaxContractExpiryOffset) Then
     pExpiryOffset = CInt(lOffsetStr)
 Else
-    AssertArgument False, "Expiry offset must be >= 0 and <= " & MaxContractExpiryOffset
+    pMessage = "Expiry offset must be >= 0 and <= " & MaxContractExpiryOffset
+    gParseOffsetExpiry = False
+    Exit Function
 End If
 
 Dim lDaysBeforeExpiryStr As String
@@ -845,14 +846,18 @@ If lDaysBeforeExpiryStr = "" Then
 ElseIf IsInteger(lDaysBeforeExpiryStr, 0, MaxContractDaysBeforeExpiryToSwitch) Then
     pDaysBeforeExpiryToSwitch = CInt(lDaysBeforeExpiryStr)
 Else
-    AssertArgument False, "Expiry modifier must be >= 0 and <= " & MaxContractDaysBeforeExpiryToSwitch
+    pMessage = "Expiry modifier must be >= 0 and <= " & MaxContractDaysBeforeExpiryToSwitch
+    gParseOffsetExpiry = False
+    Exit Function
 End If
 
-Exit Sub
+gParseOffsetExpiry = True
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Public Property Get gRegExp() As RegExp
 Const ProcName As String = "gRegExp"

@@ -362,9 +362,13 @@ If Not gIsOffsetExpiry(pContractSpec.Expiry) Then
 Else
     mIsOffsetExpiry = True
     mMyCookie = CookieSampleContractFetch
-    gParseOffsetExpiry mInitialContractSpec.Expiry, _
+    Dim lErrorMessage As String
+    Assert gParseOffsetExpiry( _
+                    mInitialContractSpec.Expiry, _
                     mExpiryOffset, _
-                    mDaysBeforeExpiryToSwitch
+                    mDaysBeforeExpiryToSwitch, _
+                    lErrorMessage), _
+            lErrorMessage
     With mInitialContractSpec
         Set mContractSpec = gCreateContractSpecifier(.LocalSymbol, _
                                                     .Symbol, _

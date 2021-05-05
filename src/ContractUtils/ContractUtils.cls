@@ -893,7 +893,14 @@ Public Sub ParseOffsetExpiry( _
 Const ProcName As String = "ParseOffsetExpiry"
 On Error GoTo Err
 
-gParseOffsetExpiry Value, pExpiryOffset, pDaysBeforeExpiryToSwitch
+Dim lErrorMessage As String
+If Not gParseOffsetExpiry(Value, _
+                            pExpiryOffset, _
+                            pDaysBeforeExpiryToSwitch, _
+                            lErrorMessage) _
+Then
+    AssertArgument False, lErrorMessage
+End If
 
 Exit Sub
 
@@ -1080,18 +1087,15 @@ Public Function TryParseOffsetExpiry( _
 Const ProcName As String = "TryParseOffsetExpiry"
 On Error GoTo Err
 
-gParseOffsetExpiry Value, pExpiryOffset, pDaysBeforeExpiryToSwitch
-TryParseOffsetExpiry = True
-
+TryParseOffsetExpiry = gParseOffsetExpiry(Value, _
+                                    pExpiryOffset, _
+                                    pDaysBeforeExpiryToSwitch, _
+                                    pErrorMessage)
+                                    
 Exit Function
 
 Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    pErrorMessage = Err.Description
-    TryParseOffsetExpiry = False
-Else
-    gHandleUnexpectedError ProcName, ModuleName
-End If
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
