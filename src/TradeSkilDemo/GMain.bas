@@ -21,8 +21,6 @@ Option Explicit
 Public Const ProjectName                            As String = "TradeSkilDemo27"
 Private Const ModuleName                            As String = "GMain"
 
-Public Const AppName                                As String = "TradeSkil Demo Edition"
-
 Public Const ConfigFileVersion                      As String = "1.3"
 
 Public Const ConfigSectionApplication               As String = "Application"
@@ -140,7 +138,7 @@ Private mFinished                                   As Boolean
 '@================================================================================
 
 Public Property Get gAppTitle() As String
-gAppTitle = AppName & _
+gAppTitle = App.ProductName & _
                 " v" & _
                 App.Major & "." & App.Minor & App.Revision
 End Property
@@ -472,7 +470,7 @@ If showCommandLineOptions() Then Exit Sub
 Set mFatalErrorHandler = New FatalErrorHandler
 
 ApplicationGroupName = "TradeWright"
-ApplicationName = AppName
+ApplicationName = App.ProductName
 SetupDefaultLogging Command
 
 TaskQuantumMillisecs = 32
