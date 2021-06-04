@@ -302,7 +302,8 @@ If Not validInput Then
     Exit Sub
 End If
     
-Dim update As Boolean
+Dim added As Boolean
+Dim expiryAdjusted As Boolean
 
 Dim lInstr As Instrument
 Set lInstr = gDb.InstrumentFactory.LoadByQuery("INSTRUMENTCLASSID=" & gInstrumentClass.Id & " AND " & _
@@ -322,18 +323,18 @@ If lInstr Is Nothing Then
                             Format(lInstr.expiryDate, "yyyymmdd") & _
                             ": will fix: " & _
                             gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
-        update = True
+        expiryAdjusted = True
     Else
         Set lInstr = gDb.InstrumentFactory.MakeNew
+        added = True
     End If
 End If
 
 If Not lInstr Is Nothing Then
-    If Not (gUpdate Or update) Then
+    If Not (gUpdate Or expiryAdjusted Or added) Then
         gCon.WriteErrorLine "Line " & lineNumber & ": Already exists: " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
         Exit Sub
     End If
-    update = True
 End If
 
 lInstr.InstrumentClass = gInstrumentClass
@@ -370,11 +371,16 @@ End If
 
 If lInstr.IsValid Then
     lInstr.ApplyEdit
-    If update Then
-        gCon.WriteLineToConsole "Updated: " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
+    
+    Dim updateMode As String
+    If expiryAdjusted Then
+        updateMode = "Expiry adjusted"
+    ElseIf added Then
+        updateMode = "Added"
     Else
-        gCon.WriteLineToConsole "Added:   " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
+        updateMode = "Updated"
     End If
+    gCon.WriteLineToConsole updateMode & ": " & gInstrumentClass.ExchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
 Else
     Dim lErr As ErrorItem
     For Each lErr In lInstr.ErrorList
