@@ -418,9 +418,10 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
     
     ' only Futures, Options and future options can specify expiry in this format
     
-    ' for options and future options, the exchange, strike and right must be specified, since we're targetting
-    ' a single contract
+    ' for options and future options, the exchange, strike and right must be specified,
+    ' since we're targetting a single contract
     If mContractSpecifier.Strike <> 0# Or mContractSpecifier.Right <> OptNone Then
+        ' we're not looking for a future
         If mContractSpecifier.Exchange = "" Or mContractSpecifier.Strike = 0# Or mContractSpecifier.Right = OptNone Then
             s = "Exchange, Strike and Right must be specified for offset options"
             If Not mListener Is Nothing Then mListener.FetchFailed mCookie, -1, s, ""
@@ -627,6 +628,7 @@ If IsContractSpecOffsetExpiry(mContractSpecifier) Then
     ' for options, the strike and right must be specified, since we're targetting
     ' a single contract
     If mContractSpecifier.Strike = 0# Or mContractSpecifier.Right = OptNone Then
+        ' we're not looking for a future
         Dim s As String: s = "Strike and Right must be specified for offset options"
         If Not mListener Is Nothing Then mListener.FetchFailed mCookie, -1, s, ""
         Set mSelfRef = Nothing
@@ -724,7 +726,8 @@ On Error GoTo Err
 '       Stocks
 '       Cash
 ' but we don't include options in this mechanism because there can be thousands of
-' them
+' them, nor warrants because they are hardly used so it's not worth making an extra
+' request every time.
 
 If gIsSmartExchange(mContractSpecifier.Exchange) Then
     requestContractsForSMART

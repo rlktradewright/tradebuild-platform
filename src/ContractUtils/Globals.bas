@@ -364,7 +364,8 @@ lCurrency = lMatch.SubMatches(5)
 
 If (lSecType = SecTypeFuture Or _
     lSecType = SecTypeFuturesOption Or _
-    lSecType = SecTypeOption) _
+    lSecType = SecTypeOption Or _
+    lSecType = SecTypeWarrant) _
 Then
     If lDateExpiry = "" And lRelativeExpiry = "" Then
         Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
@@ -575,7 +576,7 @@ Const ProcName As String = "gIsContractExpired"
 On Error GoTo Err
 
 Select Case pContract.Specifier.SecType
-Case SecTypeFuture, SecTypeOption, SecTypeFuturesOption
+Case SecTypeFuture, SecTypeOption, SecTypeFuturesOption, SecTypeWarrant
     If Int(pContract.ExpiryDate) < Int(Now) Then gIsContractExpired = True
 End Select
 
@@ -776,6 +777,7 @@ Case SecTypeFuturesOption
 Case SecTypeCash
 Case SecTypeCombo
 Case SecTypeIndex
+Case SecTypeWarrant
 Case Else
     gIsValidSecType = False
 End Select
@@ -935,6 +937,8 @@ Case "COMBO", "CMB"
     gSecTypeFromString = SecTypeCombo
 Case "INDEX", "IND"
     gSecTypeFromString = SecTypeIndex
+Case "WARRANT", "WAR"
+    gSecTypeFromString = SecTypeWarrant
 Case Else
     gSecTypeFromString = SecTypeNone
 End Select
@@ -956,6 +960,8 @@ Case SecTypeCombo
     gSecTypeToString = "Combo"
 Case SecTypeIndex
     gSecTypeToString = "Index"
+Case SecTypeWarrant
+    gSecTypeToString = "Warrant"
 End Select
 End Function
 
@@ -975,6 +981,8 @@ Case SecTypeCombo
     gSecTypeToShortString = "CMB"
 Case SecTypeIndex
     gSecTypeToShortString = "IND"
+Case SecTypeWarrant
+    gSecTypeToShortString = "WAR"
 End Select
 End Function
 

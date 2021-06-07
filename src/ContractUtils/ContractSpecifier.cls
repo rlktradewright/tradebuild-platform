@@ -340,7 +340,7 @@ Select Case SecType
 Case 0  ' ie not supplied
 Case SecTypeStock
 Case SecTypeFuture
-Case SecTypeOption, SecTypeFuturesOption
+Case SecTypeOption, SecTypeFuturesOption, SecTypeWarrant
     AssertArgument Strike >= 0, "Strike must be >= 0"
     Select Case Right
     Case OptCall

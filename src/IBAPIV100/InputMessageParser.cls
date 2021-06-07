@@ -389,7 +389,7 @@ mReader.BeginLogMessage
 Dim lRequestId As Long
 If (pVersion >= 3) Then lRequestId = mReader.GetLong("Req Id")
 mReader.GetString "Symbol"
-mReader.GetString "Sectype"
+mReader.GetString "SecType"
 mReader.GetString "Cusip"
 mReader.GetDouble "Coupon"
 mReader.GetString "Maturity"
@@ -474,7 +474,7 @@ lContract.Specifier = lContractSpec
 If (pVersion >= 3) Then lReqId = gGetCallersRequestIdFromTwsContractRequestId(mReader.GetLong("Req Id"))
 
 lContractSpec.Symbol = mReader.GetString("Symbol")
-lContractSpec.Sectype = gTwsSecTypeFromString(mReader.GetString("Sec type"))
+lContractSpec.SecType = gTwsSecTypeFromString(mReader.GetString("Sec type"))
 
 Dim lExpiry As String: lExpiry = mReader.GetString("Expiry")
 If lExpiry <> "" Then
@@ -496,7 +496,7 @@ lContract.MinTick = mReader.GetDouble("Minimum tick")
 ' note that IB gives very small tick sizes for some UK stocks, eg 0.000001 for VOD and TSCO
 ' (possibly all FTSE 100 stocks). This causes us tick encoding problems, so we up it to
 ' something that reflects reality!
-If lContractSpec.CurrencyCode = "GBP" And lContractSpec.Sectype = TwsSecTypeStock And lContract.MinTick < 0.0001 Then lContract.MinTick = 0.0001
+If lContractSpec.CurrencyCode = "GBP" And lContractSpec.SecType = TwsSecTypeStock And lContract.MinTick < 0.0001 Then lContract.MinTick = 0.0001
 
 If mServerVersion >= ApiServerVersions.MD_SIZE_MULTIPLIER Then
     lContract.MDSizeMultiplier = mReader.GetLong("MDSizeMultiplier")
@@ -753,7 +753,7 @@ Dim lContract As New TwsContractSpecifier
 With lContract
     If (pVersion >= 5) Then .ConId = mReader.GetLong("Con Id")
     .Symbol = mReader.GetString("Symbol")
-    .Sectype = gTwsSecTypeFromString(mReader.GetString("Sec type"))
+    .SecType = gTwsSecTypeFromString(mReader.GetString("Sec type"))
     .Expiry = mReader.GetString("Expiry")
     .Strike = mReader.GetDouble("Strike")
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
@@ -1104,7 +1104,7 @@ lOrder.OrderId = mReader.GetLong("Id")
 With lContractSpec
     .ConId = mReader.GetLong("conId")
     .Symbol = mReader.GetString("Symbol")
-    .Sectype = gTwsSecTypeFromString(mReader.GetString("Sec type"))
+    .SecType = gTwsSecTypeFromString(mReader.GetString("Sec type"))
     .Expiry = mReader.GetString("Expiry")
     .Strike = mReader.GetDouble("Strike")
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
@@ -1501,7 +1501,7 @@ Dim lContract As New TwsContractSpecifier
 lContract.ConId = mReader.GetLong("Contract id")
 
 lContract.Symbol = mReader.GetString("Symbol")
-lContract.Sectype = gTwsSecTypeFromString(mReader.GetString("Sec type"))
+lContract.SecType = gTwsSecTypeFromString(mReader.GetString("Sec type"))
 lContract.Expiry = mReader.GetString("Expiry")
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
@@ -1549,7 +1549,7 @@ Dim lAccount As String: lAccount = mReader.GetString("Account")
 Dim lContract As New TwsContractSpecifier
 lContract.ConId = mReader.GetLong("Contract id")
 lContract.Symbol = mReader.GetString("Symbol")
-lContract.Sectype = gTwsSecTypeFromString(mReader.GetString("SecType"))
+lContract.SecType = gTwsSecTypeFromString(mReader.GetString("SecType"))
 lContract.Expiry = mReader.GetString("Expiry")
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
@@ -1667,7 +1667,7 @@ mReader.BeginCheckpointScope
             If (pVersion >= 3) Then If mReader.GetLongCheckpointed(lLongValue, "ConId") Then sContractSpec.ConId = lLongValue
             
             If mReader.GetStringCheckpointed(lStringValue, "Symbol") Then sContractSpec.Symbol = lStringValue
-            If mReader.GetStringCheckpointed(lStringValue, "Sec type") Then sContractSpec.Sectype = gTwsSecTypeFromString(lStringValue)
+            If mReader.GetStringCheckpointed(lStringValue, "Sec type") Then sContractSpec.SecType = gTwsSecTypeFromString(lStringValue)
             If mReader.GetStringCheckpointed(lStringValue, "Expiry") Then sContractSpec.Expiry = lStringValue
             If mReader.GetDoubleCheckpointed(lDoubleValue, "Strike") Then sContractSpec.Strike = lDoubleValue
             If mReader.GetStringCheckpointed(lStringValue, "Right") Then sContractSpec.OptRight = gTwsOptionRightFromString(lStringValue)

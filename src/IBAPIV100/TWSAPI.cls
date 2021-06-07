@@ -1031,7 +1031,7 @@ With pOrder
     mWriter.AddBoolean .Hidden, "Hidden"
 
     ' send contract combo legs for BAG requests
-    If pContractSpec.Sectype = TwsSecTypeCombo Then
+    If pContractSpec.SecType = TwsSecTypeCombo Then
         With pContractSpec
             If .ComboLegs.Count = 0 Then
                 mWriter.AddLong 0, "Combo legs count"
@@ -1381,7 +1381,7 @@ On Error GoTo Err
 Const VERSION = 8
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument pContractSpec.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
+AssertArgument pContractSpec.SecType <> TwsSecTypeCombo, "Combo contracts are not supported"
 
 Dim lApiId As Long
 lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
@@ -1456,7 +1456,7 @@ With theFilter
     Dim lFromTime As Date: lFromTime = ConvertDateLocalToUTC(.Time)
     mWriter.AddString IIf(CLng(lFromTime) <> 0, Format(lFromTime, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
     mWriter.AddString .Symbol, "Symbol"
-    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString gTwsSecTypeToShortString(.SecType), "Sec type"
     mWriter.AddString .Exchange, "Exchange"
     mWriter.AddString gTwsOrderActionToString(.Action), "Action"
 End With
@@ -1508,7 +1508,7 @@ mWriter.AddLong pReqId, "ReqId"
 
 mWriter.AddString pContractSpec.ConId, "ConId"
 mWriter.AddString pContractSpec.Symbol, "Symbol"
-mWriter.AddString gTwsSecTypeToShortString(pContractSpec.Sectype), "Sectype"
+mWriter.AddString gTwsSecTypeToShortString(pContractSpec.SecType), "SecType"
 mWriter.AddString pContractSpec.Exchange, "Exchange"
 mWriter.AddString pContractSpec.PrimaryExch, "PrimaryExch"
 mWriter.AddString pContractSpec.CurrencyCode, "Currency"
@@ -1582,7 +1582,7 @@ mWriter.AddString pRequest.WhatToShow, "What to show"
 
 mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
 
-If pRequest.ContractSpec.Sectype = TwsSecTypeCombo Then
+If pRequest.ContractSpec.SecType = TwsSecTypeCombo Then
     mWriter.AddLong pRequest.ContractSpec.ComboLegs.Count, "Combo legs count"
     Dim lComboLeg As TwsComboLeg
     Dim i As Long
@@ -1655,7 +1655,7 @@ mWriter.AddLong lApiId, "Ticker id"
 mWriter.AddContract pContractSpec
 With pContractSpec
     ' Add combo legs for BAG requests
-    If .Sectype = TwsSecTypes.TwsSecTypeCombo Then
+    If .SecType = TwsSecTypes.TwsSecTypeCombo Then
         mWriter.AddString .ComboLegs.Count, "Combolegs count"
         Dim comboLeg As TwsComboLeg
         Dim i As Long

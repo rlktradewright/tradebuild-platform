@@ -678,6 +678,8 @@ Case SecurityTypes.SecTypeCombo
     gSecTypeToTwsSecType = TwsSecTypeCombo
 Case SecurityTypes.SecTypeIndex
     gSecTypeToTwsSecType = TwsSecTypeIndex
+Case SecurityTypes.SecTypeWarrant
+    gSecTypeToTwsSecType = TwsSecTypeWarrant
 Case Else
     AssertArgument False, "Value is not a valid Security Type"
 End Select
@@ -930,6 +932,8 @@ Case TwsSecTypeCombo
     gTwsSecTypeToSecType = SecurityTypes.SecTypeCombo
 Case TwsSecTypeIndex
     gTwsSecTypeToSecType = SecurityTypes.SecTypeIndex
+Case TwsSecTypeWarrant
+    gTwsSecTypeToSecType = SecurityTypes.SecTypeWarrant
 Case Else
     AssertArgument False, "Value is not a valid Security Type"
 End Select

@@ -995,6 +995,8 @@ Case "BAG", "COMBO", "CMB"
     gTwsSecTypeFromString = TwsSecTypeCombo
 Case "INDEX", "IND"
     gTwsSecTypeFromString = TwsSecTypeIndex
+Case "WARRANT", "WAR"
+    gTwsSecTypeFromString = TwsSecTypeWarrant
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Security Type"
 End Select
@@ -1018,6 +1020,8 @@ Case TwsSecTypeIndex
     gTwsSecTypeToString = "Index"
 Case TwsSecTypeNone
     gTwsSecTypeToString = ""
+Case TwsSecTypeWarrant
+    gTwsSecTypeToString = "Warrant"
 Case Else
     gTwsSecTypeToString = InvalidEnumValue
 End Select
@@ -1041,6 +1045,8 @@ Case TwsSecTypeIndex
     gTwsSecTypeToShortString = "IND"
 Case TwsSecTypeNone
     gTwsSecTypeToShortString = ""
+Case TwsSecTypeWarrant
+    gTwsSecTypeToShortString = "WAR"
 Case Else
     gTwsSecTypeToShortString = InvalidEnumValue
 End Select

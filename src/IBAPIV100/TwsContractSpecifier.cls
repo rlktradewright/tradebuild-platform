@@ -164,12 +164,12 @@ Public Property Get PrimaryExch() As String
 PrimaryExch = mPrimaryExch
 End Property
 
-Public Property Let Sectype(ByVal Value As TwsSecTypes)
+Public Property Let SecType(ByVal Value As TwsSecTypes)
 mSecType = Value
 End Property
 
-Public Property Get Sectype() As TwsSecTypes
-Sectype = mSecType
+Public Property Get SecType() As TwsSecTypes
+SecType = mSecType
 End Property
 
 Public Property Let Strike(ByVal Value As Double)

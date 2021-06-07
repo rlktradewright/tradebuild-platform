@@ -68,6 +68,7 @@ Public Enum SecurityTypes
     SecTypeCash
     SecTypeCombo
     SecTypeIndex
+    SecTypeWarrant
 End Enum
 
 '@================================================================================

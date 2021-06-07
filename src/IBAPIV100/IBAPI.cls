@@ -212,6 +212,7 @@ Public Enum TwsSecTypes
     TwsSecTypeCash
     TwsSecTypeCombo
     TwsSecTypeIndex
+    TwsSecTypeWarrant
 End Enum
 
 Public Enum TwsShortSaleSlotCodes
