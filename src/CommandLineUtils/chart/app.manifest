@@ -8,17 +8,17 @@
   </dependency>
   <dependency>
     <dependentAssembly>
-      <assemblyIdentity name="TradeWright.TradeBuild.Platform" processorArchitecture="X86" type="win32" version="2.7.0.253"></assemblyIdentity>
+      <assemblyIdentity name="TradeWright.TradeBuild.Platform" processorArchitecture="X86" type="win32" version="2.7.0.254"></assemblyIdentity>
     </dependentAssembly>
   </dependency>
   <dependency>
     <dependentAssembly>
-      <assemblyIdentity name="TradeWright.TradeBuild.ServiceProviders" processorArchitecture="X86" type="win32" version="2.7.0.253"></assemblyIdentity>
+      <assemblyIdentity name="TradeWright.TradeBuild.ServiceProviders" processorArchitecture="X86" type="win32" version="2.7.0.254"></assemblyIdentity>
     </dependentAssembly>
   </dependency>
   <dependency>
     <dependentAssembly>
-      <assemblyIdentity name="TradeWright.TradeBuild.ExternalComponents" processorArchitecture="X86" type="win32" version="2.7.0.253"></assemblyIdentity>
+      <assemblyIdentity name="TradeWright.TradeBuild.ExternalComponents" processorArchitecture="X86" type="win32" version="2.7.0.254"></assemblyIdentity>
     </dependentAssembly>
   </dependency>
 </assembly>
