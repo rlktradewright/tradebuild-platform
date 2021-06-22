@@ -71,7 +71,7 @@ Private mCurrentBarNumber           As Long
 
 Private mBarTimePeriod              As TimePeriod
 
-Private mChangeListeners            As Collection
+Private mChangeListeners            As Listeners
 
 Private mUpdateSequence             As Long
 
@@ -85,7 +85,7 @@ Private mNormaliseDailyTimestamps           As Boolean
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mChangeListeners = New Collection
+Set mChangeListeners = New Listeners
 End Sub
 
 Private Sub Class_Terminate()
@@ -682,7 +682,7 @@ Public Sub AddCollectionChangeListener( _
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
-mChangeListeners.Add listener, CStr(ObjPtr(listener))
+mChangeListeners.Add listener
 
 Exit Sub
 
@@ -747,7 +747,7 @@ Public Sub RemoveCollectionChangeListener( _
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
-mChangeListeners.Remove CStr(ObjPtr(listener))
+mChangeListeners.Remove listener
 
 Exit Sub
 
@@ -774,12 +774,22 @@ Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
 
-Dim i As Long
-For i = 1 To mChangeListeners.Count
-    Dim listener As ICollectionChangeListener
-    Set listener = mChangeListeners(i)
-    listener.change ev
-Next
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
+
+If Not sInit Or Not mChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+If sSomeListeners Then
+    Dim lListener As ICollectionChangeListener
+    Dim i As Long
+    For i = 0 To UBound(sCurrentListeners)
+        Set lListener = sCurrentListeners(i)
+        lListener.change ev
+    Next
+End If
 
 RaiseEvent CollectionChanged(ev)
 
