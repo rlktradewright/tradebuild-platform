@@ -211,7 +211,7 @@ End Function
 Public Function CreateBarsBuilderWithInitialBars( _
                 ByVal pBars As Bars, _
                 ByVal pSession As Session, _
-                Optional ByVal pTickSize As Double) As IFuture
+                Optional ByVal pTickSize As Double) As BarsBuilder
 Const ProcName As String = "CreateBarsBuilderWithInitialBars"
 On Error GoTo Err
 
@@ -264,12 +264,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateVolumeParser( _
-                ByVal pSessionFuture As IFuture) As VolumeParser
+                ByVal pSession As Session) As VolumeParser
 Const ProcName As String = "CreateVolumeParser"
 On Error GoTo Err
 
 Set CreateVolumeParser = New VolumeParser
-CreateVolumeParser.Initialise pSessionFuture
+CreateVolumeParser.Initialise pSession
 
 Exit Function
 
