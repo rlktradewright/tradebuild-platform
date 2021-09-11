@@ -134,7 +134,7 @@ If tickerHasBeenStopped(pTickerId) Then Exit Sub
 
 Dim lIndex As Long
 lIndex = getIndexFromTickerId(pTickerId)
-releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lIndex
+releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lIndex, False
 
 Exit Sub
 
@@ -171,7 +171,7 @@ Case 10197  ' No markety data lumps during competing live session
 End Select
 
 mMarketDataTable(lIndex).ErrorListener.NotifyMarketDataError lIndex, pErrorCode, pErrorMsg
-releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lIndex
+releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lIndex, False
 
 Exit Sub
 
@@ -477,7 +477,7 @@ Case 317
 End Select
 
 mMarketDepthTable(lIndex).ErrorListener.NotifyMarketDepthError lIndex, pErrorCode, pErrorMsg
-releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lIndex
+releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lIndex, True
 
 Exit Sub
 
@@ -655,7 +655,7 @@ lStreamId = ev.ContinuationData
 If Not mMarketDataTable(lStreamId).IsInUse Then Exit Sub
 If ev.Future.IsFaulted Then
     mMarketDataTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
-    releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId
+    releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId, False
 ElseIf handleCompletedFuture(ev.Future, mMarketDataTable, lStreamId) Then
     reqMarketData lStreamId
 End If
@@ -683,7 +683,7 @@ lStreamId = lStreamId - MarketDepthIdOffset
 If Not mMarketDepthTable(lStreamId).IsInUse Then Exit Sub
 If ev.Future.IsFaulted Then
     mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
-    releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId
+    releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId, True
 ElseIf handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId) Then
     reqMarketDepth lStreamId
 End If
@@ -790,7 +790,7 @@ Const ProcName As String = "CancelMarketData"
 On Error GoTo Err
 
 cancelMarketDataEx pStreamId
-releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, pStreamId
+releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, pStreamId, False
 
 Exit Sub
 
@@ -804,7 +804,7 @@ Const ProcName As String = "CancelMarketDepth"
 On Error GoTo Err
 
 cancelMarketDepthEx pStreamId
-releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, pStreamId
+releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, pStreamId, True
 
 Exit Sub
 
@@ -1139,12 +1139,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 
-Private Function incrementIncarnation(ByVal pIndex As Long, ByVal pIncarnation As Long) As Long
+Private Function incrementIncarnation( _
+                ByVal pIndex As Long, _
+                ByVal pIncarnation As Long, _
+                ByVal pIsMarketDepth As Boolean) As Long
 Dim lIncarnation As Long
 lIncarnation = pIncarnation + IncarnationIncrement
-If pIndex + lIncarnation > mTwsAPI.MaxMarketDataRequestId Or _
-    pIndex + lIncarnation > mTwsAPI.MaxMarketDepthRequestId _
-Then lIncarnation = 0
+If pIsMarketDepth Then
+    If pIndex + lIncarnation > mTwsAPI.MaxMarketDepthRequestId Then lIncarnation = 0
+Else
+    If pIndex + lIncarnation > mTwsAPI.MaxMarketDataRequestId Then lIncarnation = 0
+End If
 incrementIncarnation = lIncarnation
 End Function
 
@@ -1241,14 +1246,14 @@ For i = 0 To UBound(pTickers)
             ' in the following, incrementing the ticker id will avoid potential
             ' problems with duplicate or unknown ticker id errors
             If pMode = MarketDataReestablishmentModes.NewTickersOnly And Not .DataHasBeenReceived Then
-                .Incarnation = incrementIncarnation(i, .Incarnation)
+                .Incarnation = incrementIncarnation(i, .Incarnation, pIsMarketDepth)
                 reqData i, pIsMarketDepth
             ElseIf pMode = MarketDataReestablishmentModes.Cancel Then
                 cancelMarketDataEx i
-                .Incarnation = incrementIncarnation(i, .Incarnation)
+                .Incarnation = incrementIncarnation(i, .Incarnation, pIsMarketDepth)
                 reqData i, pIsMarketDepth
             ElseIf pMode = MarketDataReestablishmentModes.All Then
-                .Incarnation = incrementIncarnation(i, .Incarnation)
+                .Incarnation = incrementIncarnation(i, .Incarnation, pIsMarketDepth)
                 reqData i, pIsMarketDepth
             End If
         End If
@@ -1275,13 +1280,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub releaseTableEntry(ByRef pTable() As TickerTableEntry, ByRef pFirstFreeTableIndex As Long, ByVal pIndex As Long)
+Private Sub releaseTableEntry( _
+                ByRef pTable() As TickerTableEntry, _
+                ByRef pFirstFreeTableIndex As Long, _
+                ByVal pIndex As Long, _
+                ByVal pIsMarketDepth As Boolean)
 Const ProcName As String = "releaseTableEntry"
 On Error GoTo Err
 
 With pTable(pIndex)
     .IsInUse = False
-    .Incarnation = incrementIncarnation(pIndex, .Incarnation)
+    .Incarnation = incrementIncarnation(pIndex, .Incarnation, pIsMarketDepth)
     .IsSnapShot = False
     Set .TwsContract = Nothing
     Set .ContractFuture = Nothing
