@@ -455,7 +455,7 @@ Assert.AreEqual "2020-04-05 16:30:00.000", _
 End Sub
 
 Public Sub BarEndTime_OneWeek_0500()
-Assert.AreEqual "2020-04-06 00:00:00.000", _
+Assert.AreEqual "2020-04-06 08:00:00.000", _
                 FormatTimestamp( _
                     BarEndTime(CDate("2020-04-01 16:29:00"), _
                                 GetTimePeriod(1, TimePeriodWeek), _
@@ -465,7 +465,7 @@ Assert.AreEqual "2020-04-06 00:00:00.000", _
 End Sub
 
 Public Sub BarEndTime_OneWeek_0600()
-Assert.AreEqual "2020-01-06 00:00:00.000", _
+Assert.AreEqual "2020-01-06 08:00:00.000", _
                 FormatTimestamp( _
                     BarEndTime(CDate("2019-12-30 16:29:00"), _
                                 GetTimePeriod(1, TimePeriodWeek), _
@@ -475,7 +475,7 @@ Assert.AreEqual "2020-01-06 00:00:00.000", _
 End Sub
 
 Public Sub BarEndTime_OneWeek_0700()
-Assert.AreEqual "2018-01-01 00:00:00.000", _
+Assert.AreEqual "2018-01-01 08:00:00.000", _
                 FormatTimestamp( _
                     BarEndTime(CDate("2017-12-30 16:29:00"), _
                                 GetTimePeriod(1, TimePeriodWeek), _
@@ -535,7 +535,7 @@ End Sub
 
 
 Public Sub BarEndTime_OneMonth_0100()
-Assert.AreEqual "2020-04-01 00:00:00.000", _
+Assert.AreEqual "2020-04-01 08:00:00.000", _
                 FormatTimestamp( _
                     BarEndTime(CDate("2020-03-15 11:57:00"), _
                                 GetTimePeriod(1, TimePeriodMonth), _
@@ -555,7 +555,7 @@ Assert.AreEqual "2020-03-31 16:30:00.000", _
 End Sub
 
 Public Sub BarEndTime_OneMonth_0300()
-Assert.AreEqual "2020-04-01 00:00:00.000", _
+Assert.AreEqual "2020-04-01 08:00:00.000", _
                 FormatTimestamp( _
                     BarEndTime(CDate("2020-03-01 08:00:00"), _
                                 GetTimePeriod(1, TimePeriodMonth), _
@@ -970,6 +970,26 @@ End Sub
 
 
 
+Public Sub BarStartTime_OneWeek_1100()
+Assert.AreEqual "2016-01-11 08:00:00.000", _
+                FormatTimestamp( _
+                    BarStartTime(CDate("15/1/16 11:57:00"), _
+                                GetTimePeriod(1, TimePeriodWeek), _
+                                CDate("08:00"), _
+                                CDate("17:00")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+Public Sub BarStartTime_OneWeek_1200()
+Assert.AreEqual "2016-01-11 08:00:00.000", _
+                FormatTimestamp( _
+                    BarStartTime(CDate("14/1/16 18:00:00"), _
+                                GetTimePeriod(1, TimePeriodWeek), _
+                                CDate("08:00"), _
+                                CDate("17:00")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
 
 
 
@@ -1006,11 +1026,23 @@ Assert.AreEqual "2016-01-03 16:30:00.000", _
 End Sub
 
 
+Public Sub OffsetBarStartTime_ThreeWeek_0100()
+Assert.AreEqual "2020-12-14 08:00:00.000", _
+                FormatTimestamp( _
+                    OffsetBarStartTime(CDate("29/01/21 17:45:00"), _
+                                GetTimePeriod(3, TimePeriodWeek), _
+                                -2, _
+                                CDate("08:00"), _
+                                CDate("17:30")), _
+                    TimestampFormats.TimestampDateAndTimeISO8601)
+End Sub
+
+
 
 
 
 Public Sub BarStartTime_OneMonth_0100()
-Assert.AreEqual "2020-03-01 00:00:00.000", _
+Assert.AreEqual "2020-03-01 08:00:00.000", _
                 FormatTimestamp( _
                     BarStartTime(CDate("2020-03-15 11:57:00"), _
                                 GetTimePeriod(1, TimePeriodMonth), _
