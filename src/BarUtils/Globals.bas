@@ -97,7 +97,8 @@ Case TimePeriodMonth
     End If
     Dim lBarEnd As Date
     lBarEnd = Int(MonthStartDateFromMonthNumber(lMonth + BarTimePeriod.Length, gCentiSecondsToDate(startTimeSecs)))
-    If SessionStartTime > SessionEndTime Then lBarEnd = lBarEnd - 1 + SessionStartTime
+    If SessionStartTime > SessionEndTime Then lBarEnd = lBarEnd - 1
+    lBarEnd = lBarEnd + SessionStartTime
     gBarEndTime = gDateToCentiSeconds(lBarEnd)
 Case TimePeriodYear
     gBarEndTime = gDateToCentiSeconds(DateAdd("yyyy", BarTimePeriod.Length, gCentiSecondsToDate(startTimeSecs)))
@@ -193,11 +194,7 @@ Case TimePeriodWeek
     End If
     gBarStartTime = gDateToCentiSeconds(WeekStartDateFromWeekNumber(1 + BarTimePeriod.Length * Int((weekNum - 1) / BarTimePeriod.Length), _
                                         dayNum) + SessionStartTime)
-    If sessionSpansMidnight Then
-        gBarStartTime = gBarStartTime - OneDay
-    Else
-        gBarStartTime = Int(gBarStartTime / OneDay) * OneDay
-    End If
+    If sessionSpansMidnight Then gBarStartTime = gBarStartTime - OneDay
 Case TimePeriodMonth
     If sessionSpansMidnight And timeSecs >= sessionStartSecs Then dayNum = dayNum + 1
     Dim monthNum As Long: monthNum = Month(dayNum)
@@ -205,11 +202,7 @@ Case TimePeriodMonth
                                             1 + BarTimePeriod.Length * Int((monthNum - 1) / BarTimePeriod.Length), _
                                             dayNum) + _
                                         SessionStartTime)
-    If sessionSpansMidnight Then
-        gBarStartTime = gBarStartTime - OneDay
-    Else
-        gBarStartTime = Int(gBarStartTime / OneDay) * OneDay
-    End If
+    If sessionSpansMidnight Then gBarStartTime = gBarStartTime - OneDay
 Case TimePeriodYear
     gBarStartTime = gDateToCentiSeconds(CDate(DateSerial(1900 + BarTimePeriod.Length * Int((Year(Timestamp) - 1900) / BarTimePeriod.Length), 1, 1)))
 Case TimePeriodVolume, _
@@ -684,43 +677,10 @@ datumBarStart = gCentiSecondsToDate(gBarStartTime(Timestamp, BarTimePeriod, Sess
 Dim datumWeekNumber As Long
 datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
 
-Dim yearStart As Date
-yearStart = DateAdd("d", 1 - DatePart("y", datumBarStart), datumBarStart)
-
-Dim yearEnd As Date
-yearEnd = DateAdd("yyyy", 1, yearStart - 1)
-
-Dim yearEndWeekNumber As Long
-yearEndWeekNumber = DatePart("ww", yearEnd, vbMonday, vbFirstFullWeek)
-
 Dim proposedWeekNumber As Long
 proposedWeekNumber = datumWeekNumber + offset * BarTimePeriod.Length
 
-Do While proposedWeekNumber < 1 Or proposedWeekNumber > yearEndWeekNumber
-    If proposedWeekNumber < 1 Then
-        offset = offset + Int(datumWeekNumber / BarTimePeriod.Length) + 1
-        yearEnd = yearStart - 1
-        yearStart = DateAdd("yyyy", -1, yearStart)
-        yearEndWeekNumber = DatePart("ww", yearEnd, vbMonday, vbFirstFullWeek)
-        datumBarStart = gCentiSecondsToDate(gBarStartTime(yearEnd, GetTimePeriod(BarTimePeriod.Length, TimePeriodWeek), SessionStartTime, SessionEndTime))
-        datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
-        
-        proposedWeekNumber = datumWeekNumber + offset * BarTimePeriod.Length
-        
-    ElseIf proposedWeekNumber > yearEndWeekNumber Then
-        offset = offset - Int(yearEndWeekNumber - datumWeekNumber) / BarTimePeriod.Length - 1
-        yearStart = yearEnd + 1
-        yearEnd = DateAdd("yyyy", 1, yearEnd)
-        yearEndWeekNumber = DatePart("ww", yearEnd, vbMonday, vbFirstFullWeek)
-        datumWeekNumber = 1
-        
-        proposedWeekNumber = datumWeekNumber + offset * BarTimePeriod.Length
-        
-    End If
-    
-Loop
-
-calcOffsetWeeklyBarStartTime = WeekStartDateFromWeekNumber(proposedWeekNumber, yearStart)
+calcOffsetWeeklyBarStartTime = WeekStartDateFromWeekNumber(proposedWeekNumber, datumBarStart)
 
 Exit Function
 
