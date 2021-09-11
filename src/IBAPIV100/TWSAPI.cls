@@ -369,23 +369,23 @@ Set MarketDepthConsumer = mInMessageHandler.MarketDepthConsumer
 End Property
 
 Public Property Get MaxContractRequestId() As Long
-MaxContractRequestId = BaseOrderId - BaseContractRequestId - 1
+MaxContractRequestId = MaxCallersContractRequestId
 End Property
 
 Public Property Get MaxExecutionsRequestId() As Long
-MaxExecutionsRequestId = BaseContractRequestId - BaseExecutionsRequestId - 1
+MaxExecutionsRequestId = MaxCallersExecutionsRequestId
 End Property
 
 Public Property Get MaxHistoricalDataRequestId() As Long
-MaxHistoricalDataRequestId = BaseExecutionsRequestId - BaseHistoricalDataRequestId - 1
+MaxHistoricalDataRequestId = MaxCallersHistoricalDataRequestId
 End Property
 
 Public Property Get MaxMarketDataRequestId() As Long
-MaxMarketDataRequestId = BaseMarketDepthRequestId - 1
+MaxMarketDataRequestId = MaxCallersMarketDataRequestId
 End Property
 
 Public Property Get MaxMarketDepthRequestId() As Long
-MaxMarketDepthRequestId = BaseHistoricalDataRequestId - BaseMarketDepthRequestId - 1
+MaxMarketDepthRequestId = MaxCallersMarketDepthRequestId
 End Property
 
 Public Property Get MaxOrderId() As Long
