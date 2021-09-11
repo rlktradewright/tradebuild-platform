@@ -138,6 +138,10 @@ Private Property Let IMarketDataSource_PriorityTickListener(ByVal Value As IGene
 Assert False, ErrorCodes.ErrUnsupportedOperationException, "Not implemented"
 End Property
 
+Private Property Get IMarketDataSource_RecoveryContractSpec() As ContractUtils27.IContractSpecifier
+Assert False, ErrorCodes.ErrUnsupportedOperationException, "Not implemented"
+End Property
+
 Private Property Get IMarketDataSource_SessionFuture() As IFuture
 Assert False, ErrorCodes.ErrUnsupportedOperationException, "Not implemented"
 End Property

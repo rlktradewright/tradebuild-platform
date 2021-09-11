@@ -77,7 +77,8 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 ByVal pIsRecoverable As Boolean, _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
-                Optional ByVal pStateChangeListener As IStateChangeListener) As IMarketDataSource
+                Optional ByVal pStateChangeListener As IStateChangeListener, _
+                Optional ByVal pRecoveryContractSpec As ContractUtils27.IContractSpecifier) As MktDataUtils27.IMarketDataSource
 Assert False, ErrorCodes.ErrUnsupportedOperationException, "Not implemented"
 End Function
 
@@ -87,7 +88,8 @@ Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRefreshInterval As Long = 0&) As IMarketDataSource
+                Optional ByVal pRefreshInterval As Long = 0&, _
+                Optional ByVal pRecoveryContractSpec As ContractUtils27.IContractSpecifier) As IMarketDataSource
 Dim lDataSource As New MockDataSource
 lDataSource.Initialise pContractFuture, Me, getNextStreamId
 mRefreshInterval = pRefreshInterval
@@ -169,7 +171,7 @@ Const OneMilliSec As Double = 1# / 86400# / 1000#
 Dim lTimestamp1 As Date: lTimestamp1 = CDate("2020-07-29 14:43:15")
 Dim lTimestamp2 As Date: lTimestamp2 = CDate("2020-07-29 14:43:16")
 
-Select Case pContractSpec.localSymbol
+Select Case pContractSpec.LocalSymbol
 Case "MSFT"
     addTick pDataSource, lTimestamp1, TickTypeAsk, 202.65
     addTick pDataSource, lTimestamp1 + 2# * OneMilliSec, TickTypeBid, 202.62
