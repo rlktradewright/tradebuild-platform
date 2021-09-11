@@ -29,7 +29,7 @@ Option Explicit
 
 
 ' This program uses the excellent SimplyVBUnit VB6 unit testing framework by
-' Kelly Ethridge (see http://simplyvbunit.sourceforge.net).
+' Kelly Ethridge (see https://github.com/kellyethridge/SimplyVBUnit).
 
 
 
