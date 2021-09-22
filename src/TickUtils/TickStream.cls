@@ -300,7 +300,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Public Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
 Const ProcName As String = "AddOptionComputationListener"
 On Error GoTo Err
 
@@ -473,7 +473,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
+Public Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
 Const ProcName As String = "RemoveOptionComputationListener"
 On Error GoTo Err
 
