@@ -338,7 +338,7 @@ If mFirstPendingContractEntry <> NullIndex Then
     End With
 End If
  
-If mFirstRequestEntry = NullIndex And _
+If (mFirstRequestEntry = NullIndex Or mConcurrentRequests = mMaxConcurrentRequests) And _
     mFirstPendingContractEntry = NullIndex _
 Then mTaskContext.Suspend -1
 
