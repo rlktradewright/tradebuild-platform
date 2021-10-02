@@ -1267,7 +1267,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub reEstablishTickers(ByVal pMode As MarketDataReestablishmentModes)
+Private Sub reEstablishTickers(ByVal pMode As MarketDataReestablishmentModes)
 Const ProcName As String = "reEstablishTickers"
 On Error GoTo Err
 
