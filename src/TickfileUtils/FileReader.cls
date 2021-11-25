@@ -744,6 +744,11 @@ With lFileTicks(0)
     Case TICK_VOLUME
         .TickType = FileTickTypes.Volume
         .TickSize = pDataFields(TickfileFieldsV3.Volume)
+        If .TickSize >= 1000000000 Then
+            ' ignore spurious very large volumes returned by TWS for some
+            ' futures between 15/06/2021 and 07/10/2021
+            .TickSize = 0
+        End If
     Case TICK_OPEN_INTEREST
         .TickType = FileTickTypes.OpenInterest
         .TickSize = pDataFields(TickfileFieldsV3.OpenInterest)
