@@ -117,6 +117,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function IsMinimumPriceVariationSet() As Boolean
+IsMinimumPriceVariationSet = (mTickStream.GetMinimumPriceVariation <> 0)
+End Function
+
 Friend Sub Initialise( _
                 ByVal pStreamId As Long, _
                 ByVal pContractFuture As IFuture, _
@@ -178,13 +182,6 @@ End If
 
 mTickStream.NotifyOptionComputation pComputation
 
-    
-    
-    
-    
-    
-    
-
 Exit Sub
 
 Err:
@@ -224,6 +221,21 @@ Const ProcName As String = "RemoveStateChangeListener"
 On Error GoTo Err
 
 mStateChangeListeners.Remove pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetMinimumPriceVariation(ByVal Value As Double)
+Const ProcName As String = "SetMinimumPriceVariation"
+On Error GoTo Err
+
+Assert mTickStream.GetMinimumPriceVariation = 0#, "MinimumPriceVariation has already been set"
+Assert Value > 0, "MinimumPriceVariation must be > 0"
+
+mTickStream.SetMinimumPriceVariation Value
 
 Exit Sub
 

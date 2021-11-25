@@ -70,6 +70,8 @@ Private mInitOptionComputationListeners             As Boolean
 Private mCurrentOptionComputationListeners()        As Object
 Private mSomeOptionComputationListeners             As Boolean
 
+Private mMinimumPriceVariation                      As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -162,6 +164,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Property Get ITickStream_MinimumPriceVariation() As Double
+ITickStream_MinimumPriceVariation = MinimumPriceVariation
+End Property
+
 Private Sub ITickStream_RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
 Const ProcName As String = "ITickStream_RemoveGenericTickListener"
 On Error GoTo Err
@@ -232,6 +238,19 @@ End Property
 
 Public Property Get ContractFuture() As IFuture
 Set ContractFuture = mContractFuture
+End Property
+
+Public Property Get MinimumPriceVariation() As Double
+Const ProcName As String = "MinimumPriceVariation"
+On Error GoTo Err
+
+MinimumPriceVariation = GetMinimumPriceVariation
+Assert MinimumPriceVariation > 0, "MinimumPriceVariation has not been set"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let State(ByVal Value As TickStreamStates)
@@ -337,6 +356,10 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function GetMinimumPriceVariation() As Double
+GetMinimumPriceVariation = mMinimumPriceVariation
+End Function
 
 Friend Sub Initialise( _
                 ByVal pBuilder As TickStreamBuilder, _
@@ -495,6 +518,10 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetMinimumPriceVariation(ByVal Value As Double)
+mMinimumPriceVariation = Value
 End Sub
 
 Public Sub Start()

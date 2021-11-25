@@ -128,6 +128,17 @@ Private mDontSetReady                               As Boolean
 Private mIsSnapshot                                 As Boolean
 Private mSnapshotRefreshInterval                    As Long
 
+Private mNeedContract                               As Boolean
+Private mGotContract                                As Boolean
+
+Private mNeedClock                                  As Boolean
+Private mGotClock                                   As Boolean
+
+Private mNeedStudyManager                           As Boolean
+Private mGotStudyManager                            As Boolean
+
+
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -642,26 +653,11 @@ End Property
 ' mFutureWaiter Event Handlers
 '@================================================================================
 
-Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
-On Error GoTo Err
-
-If Not mDontSetReady Then setReady
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsPending Then Exit Sub
-
-Static sGotContract As Boolean
-Static sGotClock As Boolean
 
 If ev.Future.IsFaulted Then
     SetError ev.Future.ErrorNumber, ev.ContinuationData & " creation failed: " & ev.Future.ErrorMessage
@@ -670,27 +666,28 @@ ElseIf ev.Future.IsCancelled Then
     SetError ErrorCodes.ErrIllegalStateException, ev.ContinuationData & " creation cancelled"
     mFutureWaiter.Cancel
 ElseIf TypeOf ev.Future.Value Is IContract Then
+    Debug.Print "Contract available for MarketDataSource with key: " & mKey
     gLogger.Log "Contract available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
-    sGotContract = True
-    If sGotClock Then
-        If Not processContractAvailable Then mDontSetReady = True
-    End If
+    mGotContract = True
+    processContractAvailable
+    If checkReady Then setReady
 ElseIf TypeOf ev.Future.Value Is Clock Then
+    Debug.Print "Clock available for MarketDataSource with key: "
     gLogger.Log "Clock available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
-    sGotClock = True
+    mGotClock = True
     mClockFutureBuilder.Value = ev.Future.Value
     mClockFutureBuilder.Complete
-    If sGotContract Then
-        If Not processContractAvailable Then mDontSetReady = True
-    End If
+    If checkReady Then setReady
 ElseIf TypeOf ev.Future.Value Is StudyManager Then
+    Debug.Print "StudyManager available for MarketDataSource with key: " & Key
     gLogger.Log "StudyManager available for MarketDataSource with key: " & Key, ProcName, ModuleName, LogLevelHighDetail
     ' note that this will always be after the other futures have become
     ' available because it depends on the session future being available,
     ' which only occurs during processContractAvailable()
+    mGotStudyManager = True
     Set mStudyBase = New StudyBaseForTickDataInput
     mStudyBase.Initialise ev.Future.Value, mContractFuture
-    setReady
+    If checkReady Then setReady
 End If
 
 Exit Sub
@@ -1404,12 +1401,27 @@ If mContractFuture.IsAvailable And pClockFuture.IsAvailable Then
     If pStudyManagerFuture Is Nothing Then
         setReady
     Else
+        Debug.Print "    mFutureWaiter.Add pStudyManagerFuture"
+        gLogger.Log "Waiting for study manager for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+        mNeedStudyManager = True
         mFutureWaiter.Add pStudyManagerFuture
     End If
 Else
+    Debug.Print "    mFutureWaiter.Add pClockFuture"
+    gLogger.Log "Waiting for clock for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    mNeedClock = True
     mFutureWaiter.Add pClockFuture
+    
+    Debug.Print "    mFutureWaiter.Add mContractFuture"
+    gLogger.Log "Waiting for contract for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mFutureWaiter.Add mContractFuture
-    If Not pStudyManagerFuture Is Nothing Then mFutureWaiter.Add pStudyManagerFuture
+    
+    If Not pStudyManagerFuture Is Nothing Then
+        Debug.Print "    mFutureWaiter.Add pStudyManagerFuture"
+        gLogger.Log "Waiting for study manager for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+        mNeedStudyManager = True
+        mFutureWaiter.Add pStudyManagerFuture
+    End If
 End If
 
 Exit Sub
@@ -1812,6 +1824,13 @@ Private Sub checkNotFinished()
 Assert Not IsFinished, "Object has been Finished"
 End Sub
 
+Private Function checkReady() As Boolean
+If mNeedClock And Not mGotClock Then Exit Function
+If mNeedContract And Not mGotContract Then Exit Function
+If mNeedStudyManager And Not mGotStudyManager Then Exit Function
+checkReady = True
+End Function
+
 Private Function DataSourceBase() As DataSourceBase
 Set DataSourceBase = mDataSourceBaseRef.Target
 End Function
@@ -1884,9 +1903,7 @@ Private Sub setReady()
 Const ProcName As String = "setReady"
 On Error GoTo Err
 
-If Not ContractFuture.IsAvailable Then Exit Sub
-
-If State <> MarketDataSourceStateCreated Then Exit Sub
+Assert State = MarketDataSourceStateCreated, "invalid state"
 
 gLogger.Log "MarketDataSource is ready: key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
 setState MarketDataSourceStateReady

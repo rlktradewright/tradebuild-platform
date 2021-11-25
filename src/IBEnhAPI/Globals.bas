@@ -232,9 +232,13 @@ On Error GoTo Err
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching contract details for", ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
 
 Dim lFetcher As New ContractsRequestManager
-lFetcher.Fetch pContractRequester, pContractCache, pContractSpecifier, pListener, pCookie, pReturnTwsContracts
-
-Set gFetchContracts = lFetcher.ContractsFuture
+Set gFetchContracts = lFetcher.Fetch( _
+                                pContractRequester, _
+                                pContractCache, _
+                                pContractSpecifier, _
+                                pListener, _
+                                pCookie, _
+                                pReturnTwsContracts)
 
 Exit Function
 

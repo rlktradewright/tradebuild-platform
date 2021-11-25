@@ -346,12 +346,13 @@ On Error GoTo Err
 Dim lEntry As PriceIncrementRulesetCacheEntry
 If Not tryGetRulesetCacheEntry(pRuleID, lEntry) Then Exit Function
 
-If Not lEntry.Ruleset Is Nothing Then Set GetPriceIncrementRuleset = lEntry.Ruleset
-
-gLogger.Log "Retrieved price increment ruleset " & _
-            pRuleID & _
-            " from cache", _
-            ProcName, ModuleName, LogLevelDetail
+If Not lEntry.Ruleset Is Nothing Then
+    Set GetPriceIncrementRuleset = lEntry.Ruleset
+    gLogger.Log "Retrieved price increment ruleset " & _
+                pRuleID & _
+                " from cache", _
+                ProcName, ModuleName, LogLevelDetail
+End If
 
 Exit Function
 
@@ -528,6 +529,8 @@ On Error GoTo Err
 
 If Not mPriceIncrementRulesets.TryItem(CStr(pRuleID), pCacheEntry) Then
 ElseIf CLng(pCacheEntry.CacheDate) <> CLng(Now) Then
+    Dim lCacheEntry As PriceIncrementRulesetCacheEntry
+    pCacheEntry = lCacheEntry
     mPriceIncrementRulesets.Remove CStr(pRuleID)
 Else
     tryGetRulesetCacheEntry = True

@@ -270,7 +270,7 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
 
 ElseIf TypeOf ev.Future.Value Is Clock Then
-    processClockFuture ev.Future.Value
+    processClockFuture ev.Future
 End If
 
 Exit Sub

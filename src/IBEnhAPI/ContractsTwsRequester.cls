@@ -458,34 +458,39 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub RequestPriceIncrementRuleset( _
+Friend Function RequestPriceIncrementRuleset( _
                 ByVal pRulesetID As Long, _
-                ByVal pPriceMagnifier As Long)
+                ByVal pPriceMagnifier As Long) As IFuture
 Const ProcName As String = "RequestPriceIncrementRuleset"
 On Error GoTo Err
 
-If Not mContractCache.GetPriceIncrementRuleset(pRulesetID) Is Nothing Then
+Dim lRuleset As PriceIncrementRuleset
+Set lRuleset = mContractCache.GetPriceIncrementRuleset(pRulesetID)
+If Not lRuleset Is Nothing Then
     ' we've already cached the ruleset
+    Set RequestPriceIncrementRuleset = CreateFuture(lRuleset)
 Else
     Dim lRulesetFutureBuilder As FutureBuilder
     If mContractCache.GetRulesetFutureBuilder(pRulesetID, lRulesetFutureBuilder) Then
         ' the ruleset is currently being fetched from the API
     Else
         Dim lRequestEntry As MarketRuleRequestEntry
-        Set lRequestEntry.RulesetFutureBuilder = New FutureBuilder
+        Set lRulesetFutureBuilder = New FutureBuilder
+        Set lRequestEntry.RulesetFutureBuilder = lRulesetFutureBuilder
         lRequestEntry.PriceMagnifier = pPriceMagnifier
         lRequestEntry.RulesetID = pRulesetID
         mRulesetRequests.Add lRequestEntry, CStr(Abs(pRulesetID))
         mContractCache.SetRulesetFutureBuilder pRulesetID, lRequestEntry.RulesetFutureBuilder
         mTwsAPI.RequestMarketRule Abs(pRulesetID)
     End If
+    Set RequestPriceIncrementRuleset = lRulesetFutureBuilder.Future
 End If
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Friend Sub Schedule()
 Const ProcName As String = "Schedule"

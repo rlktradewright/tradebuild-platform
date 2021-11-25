@@ -53,8 +53,6 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mIsSimulated                                As Boolean
 Private mClockRate                                  As Single
 
-Private mClock                                      As Clock
-
 Private mSelfRef                                    As Object
 
 '@================================================================================
@@ -100,6 +98,8 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
     If Future.IsPending Then mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf ev.Future.IsAvailable Then
+    Dim lContract As IContract: Set lContract = ev.Future.Value
+    gLogger.Log "Contract available for clock: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelHighDetail
     setupClock ev.Future.Value
 End If
 

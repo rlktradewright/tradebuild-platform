@@ -47,18 +47,13 @@ Private Const ModuleName                            As String = "ContractsReques
 Private mContractSpecifier                          As IContractSpecifier
 Private mContractRequester                          As ContractsTwsRequester
 
-Private mContractsBuilder                           As ContractsBuilder
-Private mCachedContracts                            As IContracts
-Private mCachedTwsContracts                         As EnumerableCollection
-
 Private mNumOutstandingRequests                     As Long
 
 Private mFetchers                                   As EnumerableCollection
 
-Private WithEvents mResultContractsFutureBuilder    As FutureBuilder
-Attribute mResultContractsFutureBuilder.VB_VarHelpID = -1
-Private mCacheContractsFutureBuilder                As FutureBuilder
-Attribute mCacheContractsFutureBuilder.VB_VarHelpID = -1
+Private mResultsContractsFutureBuilder              As New FutureBuilder
+Attribute mResultsContractsFutureBuilder.VB_VarHelpID = -1
+Private mResultsContractsBuilder                    As New ContractsBuilder
 
 Private mListener                                   As IContractFetchListener
 
@@ -81,10 +76,8 @@ Private mSelfRef                                    As Object
 
 Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
-Set mContractsBuilder = New ContractsBuilder
-Set mResultContractsFutureBuilder = New FutureBuilder
-Set mCacheContractsFutureBuilder = New FutureBuilder
 Set mTwsContracts = New EnumerableCollection
+Set mResultsContractsFutureBuilder = New FutureBuilder
 Set mFetchers = New EnumerableCollection
 End Sub
 
@@ -110,11 +103,11 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mResultContractsFutureBuilder Event Handlers
+' mResultsContractsFutureBuilder Event Handlers
 '@================================================================================
 
-Private Sub mResultContractsFutureBuilder_Cancelled(ev As CancelledEventData)
-Const ProcName As String = "mResultContractsFutureBuilder_Cancelled"
+Private Sub mResultsContractsFutureBuilder_Cancelled(ev As CancelledEventData)
+Const ProcName As String = "mResultsContractsFutureBuilder_Cancelled"
 On Error GoTo Err
 
 doCancel
@@ -129,21 +122,17 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get ContractsFuture() As IFuture
-Set ContractsFuture = mResultContractsFutureBuilder.Future
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub Fetch( _
+Friend Function Fetch( _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
                 ByVal pCookie As Variant, _
-                ByVal pReturnTwsContracts As Boolean)
+                ByVal pReturnTwsContracts As Boolean) As IFuture
 Const ProcName As String = "Fetch"
 On Error GoTo Err
 
@@ -153,57 +142,69 @@ Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
 Set mListener = pListener
+mResultsContractsFutureBuilder.Cookie = pCookie
 
-mContractsBuilder.ContractSpecifier = pContractSpecifier
+mResultsContractsBuilder.ContractSpecifier = pContractSpecifier
 
 gSetVariant mCookie, pCookie
-mResultContractsFutureBuilder.Cookie = mCookie
 
 mReturnTwsContracts = pReturnTwsContracts
 
-If Not mContractCache.GetContracts(mContractSpecifier, mCachedContracts, mTwsContracts) Then
-ElseIf mCachedContracts.Count <> 1 Then
-    ' the required contracts are in the cache but there are more than 1 of them,
-    ' so use a ContractsFetcher to retrieve them and play them back to the listener
-Else
-    If Not mListener Is Nothing Then mListener.NotifyContract mCookie, mCachedContracts.ItemAtIndex(1)
-    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+Dim lCachedContracts As IContracts
+Dim lCachedTwsContracts As EnumerableCollection
+
+If Not mContractCache.GetContracts( _
+                mContractSpecifier, _
+                lCachedContracts, _
+                lCachedTwsContracts) Then
+    ' the required contracts are not already in the cache
+    Select Case mContractSpecifier.SecType
+    Case SecTypeNone
+        requestContractsForUnspecifiedSectype
+    Case SecTypeCash
+        requestContractsForCash
+    Case Else
+        requestContracts mContractSpecifier
+    End Select
+    mFutureWaiter.Add mResultsContractsFutureBuilder.Future
+    Set Fetch = mResultsContractsFutureBuilder.Future
+
+ElseIf lCachedContracts.Count = 1 Then
+    ' there is only one contract for this specifier, already in the cache. So notify
+    ' it to the listener and return the relevant result
     If mReturnTwsContracts Then
-        mResultContractsFutureBuilder.Value = mTwsContracts
-        mResultContractsFutureBuilder.Complete
+        Set Fetch = CreateFuture(lCachedTwsContracts, mCookie)
     Else
-        mResultContractsFutureBuilder.Value = mCachedContracts
-        mResultContractsFutureBuilder.Complete
+        If Not mListener Is Nothing Then mListener.NotifyContract mCookie, lCachedContracts.ItemAtIndex(1)
+        Set Fetch = CreateFuture(lCachedContracts, mCookie)
     End If
-    Exit Sub
-End If
-
-If mContractSpecifier.Sectype = SecTypeCash Then
-    requestContractsForCash
-ElseIf mContractSpecifier.Sectype <> SecTypeNone Then
-    requestContracts mContractSpecifier
-ElseIf Not mCachedContracts Is Nothing Then
-     requestContracts mContractSpecifier
+    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
 Else
-    mContractCache.SetContractsFutureBuilder mContractSpecifier, _
-                                            mCacheContractsFutureBuilder, _
-                                            mTwsContracts
-    requestContractsForUnspecifiedSectype
+    ' the required contracts are in the cache but there are more than 1 of them
+    
+    If mReturnTwsContracts Then
+        Set Fetch = CreateFuture(lCachedTwsContracts, mCookie)
+    Else
+        ' so just play them back to the listener
+        replayCachedContracts lCachedContracts, lCachedTwsContracts
+        Set Fetch = CreateFuture(lCachedContracts, mCookie)
+        mFutureWaiter.Add Fetch
+    End If
 End If
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Friend Sub NotifyContract( _
             ByVal pContract As IContract)
 Const ProcName As String = "NotifyContract"
 On Error GoTo Err
 
-If Not mContractsBuilder.Contracts.Contains(pContract.Specifier) Then
-    mContractsBuilder.Add pContract
+If Not mResultsContractsBuilder.Contracts.Contains(pContract.Specifier) Then
+    mResultsContractsBuilder.Add pContract
     If Not mListener Is Nothing Then mListener.NotifyContract mCookie, pContract
 End If
 
@@ -240,8 +241,7 @@ If pErrorCode <> 200 Then
     
     cancelOutstandingRequests
         
-    mResultContractsFutureBuilder.Fail pErrorCode, pErrorMsg, ""
-    mCacheContractsFutureBuilder.Fail pErrorCode, pErrorMsg, ""
+    mResultsContractsFutureBuilder.Fail pErrorCode, pErrorMsg, ""
     If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorCode, pErrorMsg, ""
     Set mSelfRef = Nothing
 ElseIf mNumOutstandingRequests = 0 Then
@@ -297,8 +297,7 @@ On Error GoTo Err
 
 cancelOutstandingRequests
 
-mResultContractsFutureBuilder.Cancel
-mCacheContractsFutureBuilder.Cancel
+mResultsContractsFutureBuilder.Cancel
 If Not mListener Is Nothing Then mListener.FetchCancelled mCookie
 
 Set mSelfRef = Nothing
@@ -313,24 +312,31 @@ Private Sub processEnd()
 Const ProcName As String = "processEnd"
 On Error GoTo Err
 
-If mResultContractsFutureBuilder.Future.IsPending Then
-    mFutureWaiter.Add mResultContractsFutureBuilder.Future
-    If mReturnTwsContracts Then
-        mResultContractsFutureBuilder.Value = mTwsContracts
-        mResultContractsFutureBuilder.Complete
-    Else
-        mResultContractsFutureBuilder.Value = mContractsBuilder.Contracts
-        mResultContractsFutureBuilder.Complete
-    End If
+If mReturnTwsContracts Then
+    mResultsContractsFutureBuilder.Value = mTwsContracts
+    mResultsContractsFutureBuilder.Complete
+Else
+    mResultsContractsFutureBuilder.Value = mResultsContractsBuilder.Contracts
+    mResultsContractsFutureBuilder.Complete
 End If
 
-If mReturnTwsContracts Then
-    mCacheContractsFutureBuilder.Value = mTwsContracts
-    mCacheContractsFutureBuilder.Complete
-Else
-    mCacheContractsFutureBuilder.Value = mContractsBuilder.Contracts
-    mCacheContractsFutureBuilder.Complete
-End If
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub replayCachedContracts( _
+                pCachedContracts As IContracts, _
+                pCachedTwsContracts As EnumerableCollection)
+Const ProcName As String = "replayCachedContracts"
+On Error GoTo Err
+
+Dim lFetcher As New ContractsFetcher
+mFetchers.Add lFetcher
+lFetcher.ReplayContracts Me, pCachedContracts, pCachedTwsContracts
+
+mNumOutstandingRequests = mNumOutstandingRequests + 1
 
 Exit Sub
 
@@ -358,7 +364,13 @@ On Error GoTo Err
 
 Dim lFetcher As New ContractsFetcher
 mFetchers.Add lFetcher
-lFetcher.FetchContracts Me, mContractRequester, mContractCache, pContractSpec
+
+lFetcher.FetchContracts Me, _
+                        mContractRequester, _
+                        mContractCache, _
+                        pContractSpec, _
+                        mReturnTwsContracts, _
+                        mCookie
 
 mNumOutstandingRequests = mNumOutstandingRequests + 1
 

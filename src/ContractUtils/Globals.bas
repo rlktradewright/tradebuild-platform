@@ -91,6 +91,13 @@ Private mCurrencyDescriptors()                          As CurrencyDescriptor
 ' Properties
 '@================================================================================
 
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("contractutils", ProjectName)
+Set gLogger = sLogger
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

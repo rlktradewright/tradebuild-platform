@@ -66,6 +66,9 @@ End Property
 Public Property Get ContractFuture() As IFuture
 End Property
 
+Public Property Get MinimumPriceVariation() As Double
+End Property
+
 Public Property Get State() As TickStreamStates
 End Property
 

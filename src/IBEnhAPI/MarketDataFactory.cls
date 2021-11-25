@@ -266,6 +266,9 @@ With mMarketDataTable(lIndex)
 
     .DataHasBeenReceived = True
 
+    Dim lTickSizeNotSet As Boolean
+    lTickSizeNotSet = Not .TickStreamBuilder.IsMinimumPriceVariationSet
+    
     lTick.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .ConsumerTimeZone)
     
     Select Case pTickType
@@ -276,6 +279,7 @@ With mMarketDataTable(lIndex)
         If lTick.Size = 0 And .PrevBidSize <> MaxLong Then lTick.Size = .PrevBidSize
         .PrevBid = lTick.Price
         If lTick.Size <> 0 Then .PrevBidSize = lTick.Size
+        If lTickSizeNotSet Then setTickSize lIndex, lTick.Price
     Case TwsTickTypes.TwsTickAsk
         .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .ConsumerContract)
         If Not .PrevAskValid Then Exit Sub
@@ -283,6 +287,7 @@ With mMarketDataTable(lIndex)
         If lTick.Size = 0 And .PrevAskSize <> MaxLong Then lTick.Size = .PrevAskSize
         .PrevAsk = lTick.Price
         If lTick.Size <> 0 Then .PrevAskSize = lTick.Size
+        If lTickSizeNotSet Then setTickSize lIndex, lTick.Price
     Case TwsTickTypes.TwsTickLast
         .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .ConsumerContract)
         If Not .PrevTradeValid Then Exit Sub
@@ -290,6 +295,7 @@ With mMarketDataTable(lIndex)
         If lTick.Size = 0 And .PrevTradeSize <> MaxLong Then lTick.Size = .PrevTradeSize
         .PrevTrade = lTick.Price
         If lTick.Size <> 0 Then .PrevTradeSize = lTick.Size
+        If lTickSizeNotSet Then setTickSize lIndex, lTick.Price
     Case TwsTickTypes.TwsTickHigh
         If Not validPrice(lTick.Price, .PrevHigh, "high", .ConsumerContract) Then Exit Sub
         lTick.TickType = TickTypeHighPrice
@@ -386,6 +392,8 @@ With mMarketDataTable(lIndex)
         .PrevTradeSize = pSize
     
     Case TwsTickTypes.TwsTickVolume
+        ' discard rogue sizes from IB
+        If pSize > 1000000000 Then Exit Sub
         lTick.TickType = TickTypeVolume
         lTick.Size = pSize
         .PrevVolume = pSize
@@ -1031,11 +1039,15 @@ If pTick.TickType = TickTypeMarketDepth Or _
     pTick.TickType = TickTypeMarketDepthReset _
 Then
     If mMarketDepthTable(pStreamId).IsInUse Then
-        mMarketDepthTable(pStreamId).TickStreamBuilder.NotifyTick pTick
+        If mMarketDepthTable(pStreamId).TickStreamBuilder.IsMinimumPriceVariationSet Then
+            mMarketDepthTable(pStreamId).TickStreamBuilder.NotifyTick pTick
+        End If
     End If
 Else
     If mMarketDataTable(pStreamId).IsInUse Then
-        mMarketDataTable(pStreamId).TickStreamBuilder.NotifyTick pTick
+        If mMarketDataTable(pStreamId).TickStreamBuilder.IsMinimumPriceVariationSet Then
+            mMarketDataTable(pStreamId).TickStreamBuilder.NotifyTick pTick
+        End If
     End If
 End If
 
@@ -1397,6 +1409,35 @@ For i = 0 To UBound(mMarketDepthTable)
         End If
     End With
 Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setTickSize( _
+                    ByVal pStreamId As Long, _
+                    ByVal pPrice As Double)
+Const ProcName As String = "setTickSize"
+On Error GoTo Err
+
+Dim lRulesetID As Long
+lRulesetID = CLng(mMarketDataTable(pStreamId).ConsumerContract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
+gLog "lRulesetID=" & lRulesetID, ModuleName, ProcName
+
+Dim lPriceMagnifier As Long
+lPriceMagnifier = CLng(mMarketDataTable(pStreamId).ConsumerContract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
+gLog "lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName
+
+Dim lRulesetFuture As IFuture
+Set lRulesetFuture = mContractRequester.RequestPriceIncrementRuleset(lRulesetID, lPriceMagnifier)
+
+Assert lRulesetFuture.IsAvailable, "Ruleset future is not available"
+Dim lRuleset As PriceIncrementRuleset
+Set lRuleset = lRulesetFuture.Value
+
+mMarketDataTable(pStreamId).TickStreamBuilder.SetMinimumPriceVariation lRuleset.GetIncrement(pPrice)
 
 Exit Sub
 
