@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Public Const ProjectName                        As String = "IBAPI973"
+Public Const ProjectName                        As String = "IBAPIV100"
 Private Const ModuleName                        As String = "Globals"
 
 Public Const InvalidEnumValue                   As String = "*ERR*"
@@ -153,45 +153,45 @@ Public Enum TwsSocketInMsgTypes
     POSITION_END = 62
     ACCOUNT_SUMMARY = 63
     ACCOUNT_SUMMARY_END = 64
-    VerifyMessageApi = 65
-    VerifyCompleted = 66
-    DisplayGroupList = 67
-    DisplayGroupUpdated = 68
-    VerifyAndAuthMessageApi = 69
-    VerifyAndAuthCompleted = 70
-    PositionMulti = 71
-    PositionMultiEnd = 72
-    AccountUpdateMulti = 73
-    AccountUpdateMultiEnd = 74
+    VERIFYMESSAGEAPI = 65
+    VERIFYCOMPLETED = 66
+    DISPLAYGROUPLIST = 67
+    DISPLAYGROUPUPDATED = 68
+    VERIFYANDAUTHMESSAGEAPI = 69
+    VERIFYANDAUTHCOMPLETED = 70
+    POSITIONMULTI = 71
+    POSITIONMULTIEND = 72
+    ACCOUNTUPDATEMULTI = 73
+    ACCOUNTUPDATEMULTIEND = 74
 
     ' Messages from here on don't have a version number
-    MaxIdWithVersion = AccountUpdateMultiEnd
+    MaxIdWithVersion = ACCOUNTUPDATEMULTIEND
 
-    OptionParameter = 75
-    OptionParameterEnd = 76
-    SoftDollarTiers = 77
-    FamilyCodes = 78
-    SymbolSamples = 79
-    MarketDepthExchanges = 80
-    TickRequestParams = 81
-    SmartComponents = 82
-    NewsArticle = 83
-    TickNews = 84
-    NewsProviders = 85
-    HistoricalNews = 86
-    HistoricalNewsEnd = 87
-    HeadTimestamp = 88
-    HistogramData = 89
-    HistoricalDataUpdate = 90
-    RerouteMarketData = 91
-    RerouteMarketDepth = 92
-    MarketRule = 93
+    OPTIONPARAMETER = 75
+    OPTIONPARAMETEREND = 76
+    SOFTDOLLARTIERS = 77
+    FAMILYCODES = 78
+    SYMBOLSAMPLES = 79
+    MARKETDEPTHEXCHANGES = 80
+    TICKREQUESTPARAMS = 81
+    SMARTCOMPONENTS = 82
+    NEWSARTICLE = 83
+    TICKNEWS = 84
+    NEWSPROVIDERS = 85
+    HISTORICALNEWS = 86
+    HISTORICALNEWSEND = 87
+    HEADTIMESTAMP = 88
+    HISTOGRAMDATA = 89
+    HISTORICALDATAUPDATE = 90
+    REROUTEMARKETDATA = 91
+    REROUTEMARKETDEPTH = 92
+    MARKETRULE = 93
     PNL = 94
-    PnLSingle = 95
-    HistoricalTickMidpoint = 96
-    HistoricalTickBidAsk = 97
-    HistoricalTickLast = 98
-    TickByTick = 99
+    PNLSINGLE = 95
+    HISTORICALTICKMIDPOINT = 96
+    HISTORICALTICKBIDASK = 97
+    HISTORICALTICKLAST = 98
+    TICKBYTICK = 99
 
     ' Max for API 973.07
 
@@ -423,9 +423,9 @@ gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function gContractHasExpired(ByVal pContractSpec As TwsContractSpecifier) As Boolean
-If pContractSpec.Sectype = TwsSecTypeCash Or _
-    pContractSpec.Sectype = TwsSecTypeIndex Or _
-    pContractSpec.Sectype = TwsSecTypeStock _
+If pContractSpec.SecType = TwsSecTypeCash Or _
+    pContractSpec.SecType = TwsSecTypeIndex Or _
+    pContractSpec.SecType = TwsSecTypeStock _
 Then
     gContractHasExpired = False
     Exit Function
@@ -1177,80 +1177,80 @@ mOutputMessageIdMap.Add pMessageName, pMessageId
 End Sub
 
 Private Sub setupInputMessageIdMap()
-addInputMessageIdMapEntry TICK_PRICE, "TickPrice"
-addInputMessageIdMapEntry TICK_SIZE, "TickSize"
-addInputMessageIdMapEntry ORDER_STATUS, "OrderStatus"
-addInputMessageIdMapEntry ERR_MSG, "ErrorMessage"
-addInputMessageIdMapEntry OPEN_ORDER, "OpenOrder"
-addInputMessageIdMapEntry ACCT_VALUE, "AccountValue"
-addInputMessageIdMapEntry PORTFOLIO_VALUE, "PortfolioValue"
-addInputMessageIdMapEntry ACCT_UPDATE_TIME, "AccountUpdateTime"
-addInputMessageIdMapEntry NEXT_VALID_ID, "NextValidId"
-addInputMessageIdMapEntry CONTRACT_DATA, "ContractData"
-addInputMessageIdMapEntry EXECUTION_DATA, "ExecutionData"
-addInputMessageIdMapEntry MARKET_DEPTH, "MarketDepth"
-addInputMessageIdMapEntry MARKET_DEPTH_L2, "MarketDepthL2"
-addInputMessageIdMapEntry NEWS_BULLETINS, "NewBulletin"
-addInputMessageIdMapEntry MANAGED_ACCTS, "ManagedAccounts"
-addInputMessageIdMapEntry RECEIVE_FA, "ReceiveFA"
-addInputMessageIdMapEntry HISTORICAL_DATA, "HistoricalData"
-addInputMessageIdMapEntry BOND_CONTRACT_DATA, "BondContractData"
-addInputMessageIdMapEntry SCANNER_PARAMETERS, "ScannerParameters"
-addInputMessageIdMapEntry SCANNER_DATA, "ScannerData"
-addInputMessageIdMapEntry TICK_OPTION_COMPUTATION, "OptionComputation"
-addInputMessageIdMapEntry TICK_GENERIC, "Generic"
-addInputMessageIdMapEntry TICK_STRING, "String"
+addInputMessageIdMapEntry TICK_PRICE, "TICKPRICE"
+addInputMessageIdMapEntry TICK_SIZE, "TICKSIZE"
+addInputMessageIdMapEntry ORDER_STATUS, "ORDERSTATUS"
+addInputMessageIdMapEntry ERR_MSG, "ERRORMESSAGE"
+addInputMessageIdMapEntry OPEN_ORDER, "OPENORDER"
+addInputMessageIdMapEntry ACCT_VALUE, "ACCOUNTVALUE"
+addInputMessageIdMapEntry PORTFOLIO_VALUE, "PORTFOLIOVALUE"
+addInputMessageIdMapEntry ACCT_UPDATE_TIME, "ACCOUNTUPDATETIME"
+addInputMessageIdMapEntry NEXT_VALID_ID, "NEXTVALIDID"
+addInputMessageIdMapEntry CONTRACT_DATA, "CONTRACTDATA"
+addInputMessageIdMapEntry EXECUTION_DATA, "EXECUTIONDATA"
+addInputMessageIdMapEntry MARKET_DEPTH, "MARKETDEPTH"
+addInputMessageIdMapEntry MARKET_DEPTH_L2, "MARKETDEPTHL2"
+addInputMessageIdMapEntry NEWS_BULLETINS, "NEWBULLETIN"
+addInputMessageIdMapEntry MANAGED_ACCTS, "MANAGEDACCOUNTS"
+addInputMessageIdMapEntry RECEIVE_FA, "RECEIVEFA"
+addInputMessageIdMapEntry HISTORICAL_DATA, "HISTORICALDATA"
+addInputMessageIdMapEntry BOND_CONTRACT_DATA, "BONDCONTRACTDATA"
+addInputMessageIdMapEntry SCANNER_PARAMETERS, "SCANNERPARAMETERS"
+addInputMessageIdMapEntry SCANNER_DATA, "SCANNERDATA"
+addInputMessageIdMapEntry TICK_OPTION_COMPUTATION, "OPTIONCOMPUTATION"
+addInputMessageIdMapEntry TICK_GENERIC, "GENERIC"
+addInputMessageIdMapEntry TICK_STRING, "STRING"
 addInputMessageIdMapEntry TICK_EFP, "EFP"
-addInputMessageIdMapEntry CURRENT_TIME, "CurrentTime"
-addInputMessageIdMapEntry REAL_TIME_BARS, "RealTimeBar"
-addInputMessageIdMapEntry FUNDAMENTAL_DATA, "FundamentalData"
-addInputMessageIdMapEntry CONTRACT_DATA_END, "ContractDataEnd"
-addInputMessageIdMapEntry OPEN_ORDER_END, "OpenOrderEnd"
-addInputMessageIdMapEntry ACCT_DOWNLOAD_END, "AccountDownloadEnd"
-addInputMessageIdMapEntry EXECUTION_DATA_END, "ExecutionDataEnd"
-addInputMessageIdMapEntry DELTA_NEUTRAL_VALIDATION, "DeltaNeutralValidn"
-addInputMessageIdMapEntry TICK_SNAPSHOT_END, "TicksnapshotEnd"
-addInputMessageIdMapEntry MARKET_DATA_TYPE, "MarketDatatype"
-addInputMessageIdMapEntry COMMISSION_REPORT, "Commissionreport"
-addInputMessageIdMapEntry POSITION, "Position"
-addInputMessageIdMapEntry POSITION_END, "PositionEnd"
-addInputMessageIdMapEntry ACCOUNT_SUMMARY, "AccountSummary"
-addInputMessageIdMapEntry ACCOUNT_SUMMARY_END, "AccountSummaryEnd"
-addInputMessageIdMapEntry VerifyMessageApi, "VerifyMessageApi"
-addInputMessageIdMapEntry VerifyCompleted, "VerifyCompleted"
-addInputMessageIdMapEntry DisplayGroupList, "DisplayGroupList"
-addInputMessageIdMapEntry DisplayGroupUpdated, "DisplayGroupUpd"
-addInputMessageIdMapEntry VerifyAndAuthMessageApi, "Verify/AuthMessageApi"
-addInputMessageIdMapEntry VerifyAndAuthCompleted, "Verify/AuthCompleted"
-addInputMessageIdMapEntry PositionMulti, "PositionMulti"
-addInputMessageIdMapEntry PositionMultiEnd, "PositionMultiEnd"
-addInputMessageIdMapEntry AccountUpdateMulti, "AccountUpdateMulti"
-addInputMessageIdMapEntry AccountUpdateMultiEnd, "AccountUpdateMultiEnd"
-addInputMessageIdMapEntry OptionParameter, "OptionParameter"
-addInputMessageIdMapEntry OptionParameterEnd, "OptionParameterEnd"
-addInputMessageIdMapEntry SoftDollarTiers, "SoftDollarTiers"
-addInputMessageIdMapEntry FamilyCodes, "FamilyCodes"
-addInputMessageIdMapEntry SymbolSamples, "SymbolSamples"
-addInputMessageIdMapEntry MarketDepthExchanges, "MarketDepthExchanges"
-addInputMessageIdMapEntry TickRequestParams, "TickRequestParams"
-addInputMessageIdMapEntry SmartComponents, "SmartComponents"
-addInputMessageIdMapEntry NewsArticle, "NewsArticle"
-addInputMessageIdMapEntry TickNews, "TickNews"
-addInputMessageIdMapEntry NewsProviders, "NewsProviders"
-addInputMessageIdMapEntry HistoricalNews, "HistoricalNews"
-addInputMessageIdMapEntry HistoricalNewsEnd, "HistoricalNewsEnd"
-addInputMessageIdMapEntry HeadTimestamp, "HeadTimestamp"
-addInputMessageIdMapEntry HistogramData, "HistogramData"
-addInputMessageIdMapEntry HistoricalDataUpdate, "HistoricalDataUpdate"
-addInputMessageIdMapEntry RerouteMarketData, "RerouteMarketData"
-addInputMessageIdMapEntry RerouteMarketDepth, "RerouteMarketDepth"
-addInputMessageIdMapEntry MarketRule, "MarketRule"
+addInputMessageIdMapEntry CURRENT_TIME, "CURRENTTIME"
+addInputMessageIdMapEntry REAL_TIME_BARS, "REALTIMEBAR"
+addInputMessageIdMapEntry FUNDAMENTAL_DATA, "FUNDAMENTALDATA"
+addInputMessageIdMapEntry CONTRACT_DATA_END, "CONTRACTDATAEND"
+addInputMessageIdMapEntry OPEN_ORDER_END, "OPENORDEREND"
+addInputMessageIdMapEntry ACCT_DOWNLOAD_END, "ACCOUNTDOWNLOADEND"
+addInputMessageIdMapEntry EXECUTION_DATA_END, "EXECUTIONDATAEND"
+addInputMessageIdMapEntry DELTA_NEUTRAL_VALIDATION, "DELTANEUTRALVALIDN"
+addInputMessageIdMapEntry TICK_SNAPSHOT_END, "TICKSNAPSHOTEND"
+addInputMessageIdMapEntry MARKET_DATA_TYPE, "MARKETDATATYPE"
+addInputMessageIdMapEntry COMMISSION_REPORT, "COMMISSIONREPORT"
+addInputMessageIdMapEntry POSITION, "POSITION"
+addInputMessageIdMapEntry POSITION_END, "POSITIONEND"
+addInputMessageIdMapEntry ACCOUNT_SUMMARY, "ACCOUNTSUMMARY"
+addInputMessageIdMapEntry ACCOUNT_SUMMARY_END, "ACCOUNTSUMMARYEND"
+addInputMessageIdMapEntry VERIFYMESSAGEAPI, "VERIFYMESSAGEAPI"
+addInputMessageIdMapEntry VERIFYCOMPLETED, "VERIFYCOMPLETED"
+addInputMessageIdMapEntry DISPLAYGROUPLIST, "DISPLAYGROUPLIST"
+addInputMessageIdMapEntry DISPLAYGROUPUPDATED, "DISPLAYGROUPUPD"
+addInputMessageIdMapEntry VERIFYANDAUTHMESSAGEAPI, "VERIFY/AUTHMESSAGEAPI"
+addInputMessageIdMapEntry VERIFYANDAUTHCOMPLETED, "VERIFY/AUTHCOMPLETED"
+addInputMessageIdMapEntry POSITIONMULTI, "POSITIONMULTI"
+addInputMessageIdMapEntry POSITIONMULTIEND, "POSITIONMULTIEND"
+addInputMessageIdMapEntry ACCOUNTUPDATEMULTI, "ACCOUNTUPDATEMULTI"
+addInputMessageIdMapEntry ACCOUNTUPDATEMULTIEND, "ACCOUNTUPDATEMULTIEND"
+addInputMessageIdMapEntry OPTIONPARAMETER, "OPTIONPARAMETER"
+addInputMessageIdMapEntry OPTIONPARAMETEREND, "OPTIONPARAMETEREND"
+addInputMessageIdMapEntry SOFTDOLLARTIERS, "SOFTDOLLARTIERS"
+addInputMessageIdMapEntry FAMILYCODES, "FAMILYCODES"
+addInputMessageIdMapEntry SYMBOLSAMPLES, "SYMBOLSAMPLES"
+addInputMessageIdMapEntry MARKETDEPTHEXCHANGES, "MARKETDEPTHEXCHANGES"
+addInputMessageIdMapEntry TICKREQUESTPARAMS, "TICKREQUESTPARAMS"
+addInputMessageIdMapEntry SMARTCOMPONENTS, "SMARTCOMPONENTS"
+addInputMessageIdMapEntry NEWSARTICLE, "NEWSARTICLE"
+addInputMessageIdMapEntry TICKNEWS, "TICKNEWS"
+addInputMessageIdMapEntry NEWSPROVIDERS, "NEWSPROVIDERS"
+addInputMessageIdMapEntry HISTORICALNEWS, "HISTORICALNEWS"
+addInputMessageIdMapEntry HISTORICALNEWSEND, "HISTORICALNEWSEND"
+addInputMessageIdMapEntry HEADTIMESTAMP, "HEADTIMESTAMP"
+addInputMessageIdMapEntry HISTOGRAMDATA, "HISTOGRAMDATA"
+addInputMessageIdMapEntry HISTORICALDATAUPDATE, "HISTORICALDATAUPDATE"
+addInputMessageIdMapEntry REROUTEMARKETDATA, "REROUTEMARKETDATA"
+addInputMessageIdMapEntry REROUTEMARKETDEPTH, "REROUTEMARKETDEPTH"
+addInputMessageIdMapEntry MARKETRULE, "MARKETRULE"
 addInputMessageIdMapEntry TwsSocketInMsgTypes.PNL, "PNL"
-addInputMessageIdMapEntry PnLSingle, "PnLSingle"
-addInputMessageIdMapEntry HistoricalTickMidpoint, "HistoricalTickMidpoint"
-addInputMessageIdMapEntry HistoricalTickBidAsk, "HistoricalTickBidAsk"
-addInputMessageIdMapEntry HistoricalTickLast, "HistoricalTickLast"
-addInputMessageIdMapEntry TickByTick, "TickByTick"
+addInputMessageIdMapEntry PNLSINGLE, "PNLSINGLE"
+addInputMessageIdMapEntry HISTORICALTICKMIDPOINT, "HISTORICALTICKMIDPOINT"
+addInputMessageIdMapEntry HISTORICALTICKBIDASK, "HISTORICALTICKBIDASK"
+addInputMessageIdMapEntry HISTORICALTICKLAST, "HISTORICALTICKLAST"
+addInputMessageIdMapEntry TICKBYTICK, "TICKBYTICK"
 End Sub
 
 Private Sub setupOutputMessageIdMap()
