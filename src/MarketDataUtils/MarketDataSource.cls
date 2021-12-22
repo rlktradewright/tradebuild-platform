@@ -1828,6 +1828,7 @@ Private Function checkReady() As Boolean
 If mNeedClock And Not mGotClock Then Exit Function
 If mNeedContract And Not mGotContract Then Exit Function
 If mNeedStudyManager And Not mGotStudyManager Then Exit Function
+If State = MarketDataSourceStateError Then Exit Function
 checkReady = True
 End Function
 
