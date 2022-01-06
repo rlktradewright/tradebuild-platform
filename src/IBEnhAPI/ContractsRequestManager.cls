@@ -271,6 +271,7 @@ Friend Sub NotifyFetchError( _
 Const ProcName As String = "NotifyFetchError"
 On Error GoTo Err
 
+mNumOutstandingRequests = mNumOutstandingRequests - 1
 requestCompleted pFetcher
 
 If pErrorCode <> 200 Then
