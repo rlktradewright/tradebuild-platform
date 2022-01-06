@@ -150,6 +150,10 @@ Static sCurrentBarNumber As Long
 
 setSessionTime pTimestamp
 
+' ignore bars containing spurious large volumes collected from
+' TWS for some futures during June - October 2021
+If pVolume > 1000000000 Then Exit Sub
+
 Dim lBarEndTime As Date
 lBarEndTime = BarEndTime(pTimestamp, mTargetBarsBuilder.BarTimePeriod, mSessionTimes.StartTime, mSessionTimes.EndTime)
 If lBarEndTime > sCurrentBarEndTime Then
