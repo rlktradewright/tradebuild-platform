@@ -36,7 +36,7 @@ set MONITOR=yes
 
 set TWSSERVER=
 set PORT=7497
-set CLIENTID=27236
+set CLIENTID=
 set CONNECTIONRETRYINTERVAL=
 
 set LOG=%TOPDIR%\Log\plord27.log
@@ -55,6 +55,8 @@ set SIMULATEORDERS=no
 
 set SCOPENAME=%CLIENTID%
 set RECOVERYFILEDIR=%TOPDIR%\Recovery
+
+set BIN=
 
 
 ::              PLEASE DON'T CHANGE ANYTHING BELOW THIS LINE !!
@@ -97,9 +99,13 @@ set RECOVERYFILEDIR=%TOPDIR%\Recovery
 ::   same clientID that's used by any other API program). Note that if you need
 ::   to run two instances of this program at the same time, they must have
 ::   different clientIDs. The value must be a positive integer between 1 and
-::   999999999. Do not change this setting if you have created positions using
+::   999999999. 
+::
+::   If you don't supply a value, 555 will be used.
+::
+::   Do not change this setting if you have created positions using
 ::   this program that have not yet been closed out: if you do, you will have
-::   to close them out by other means (for example using TWS).
+::   to close them out by other means (for example using TWS). 
 ::
 :: CONNECTIONRETRYINTERVAL
 ::   This specifies how frequently the program will attempt to reconnection to
@@ -182,9 +188,15 @@ set RECOVERYFILEDIR=%TOPDIR%\Recovery
 ::   change this setting if you have created positions using this program, 
 ::   until they have all been closed out.
 ::
+:: BIN
+::   Set this to the folder that contains the TradeBuild Platform programs, if
+::   they are not in the default installation location. If you installed
+::   TradeBuild Platform using the .msi installer with the default installation
+::   location, there is no need to set this value.
+::
 ::
 ::
 ::   End of Notes
 ::==============================================================================
 
-%TOPDIR%\CommandFiles\Scripts\PlaceOrders.bat %~1
+%TOPDIR%\Scripts\PlaceOrders.bat %~1

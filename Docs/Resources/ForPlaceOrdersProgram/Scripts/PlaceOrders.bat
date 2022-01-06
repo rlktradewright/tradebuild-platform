@@ -129,10 +129,20 @@ if not defined PLORD_RECOVERYFILEDIR (
 	)
 )
 
+if not defined PLORD_BIN (
+	if defined BIN (
+		set PLORD_BIN=%BIN%
+	) else (
+		if defined PROGRAMFILES^(X86^) (
+			set PLORD_BIN="%PROGRAMFILES(X86)%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin"
+		) else (
+			set PLORD_BIN="%PROGRAMFILES%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin"
+		)
+	)
+)
 
-
-if not exist %PLORD_TOPDIR%\bin (
-	echo %PLORD_TOPDIR%\bin does not exist
+if not exist %PLORD_BIN% (
+	echo %PLORD_BIN% does not exist
 	exit /B 1
 )
 
@@ -233,7 +243,7 @@ set RUN_PLORD=plord27 -tws:%PLORD_TWSSERVER%,%PLORD_PORT%,%PLORD_CLIENTID%,%PLOR
                       -batchorders:%PLORD_BATCHORDERS% ^
                       %SIMULATE% ^
                       -apimessagelogging:%APIMESSAGELOGGING%
-pushd %PLORD_TOPDIR%\bin
+pushd %PLORD_BIN%
 if /I "%~1"=="/I" (
 	%RUN_PLORD%
 ) else if "%~1" == "" (
