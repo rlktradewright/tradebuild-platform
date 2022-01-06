@@ -345,7 +345,11 @@ Set XMLdoc = New DOMDocument60
 XMLdoc.loadXML contractXML
 Assert XMLdoc.parseError.errorCode = 0, "Contract XML cannot be parsed"
 
-Set contractEl = XMLdoc.selectSingleNode("contract")
+' Need to set a namespace with a prefix for MSXML6:
+' see https://www.vbforums.com/showthread.php?638520-RESOLVED-DOMDocument-vs-DOMDocument60-and-selectSingleNode
+XMLdoc.setProperty "SelectionNamespaces", "xmlns:pr=""urn:tradewright.com:tradebuild"""
+
+Set contractEl = XMLdoc.selectSingleNode("pr:contract")
 TickSize = contractEl.getAttribute("minimumtick")
 If IsNull(contractEl.getAttribute("sessionstarttime")) Then
     mSessionStartTime = "00:00:00"
@@ -357,20 +361,20 @@ If IsNull(contractEl.getAttribute("sessionendtime")) Then
 Else
     mSessionEndTime = contractEl.getAttribute("sessionendtime")
 End If
-If IsNull(contractEl.getAttribute("fullSessionstarttime")) Then
+If IsNull(contractEl.getAttribute("fullsessionstarttime")) Then
     mFullSessionStartTime = "00:00:00"
 Else
-    mFullSessionStartTime = contractEl.getAttribute("fullSessionstarttime")
+    mFullSessionStartTime = contractEl.getAttribute("fullsessionstarttime")
 End If
-If IsNull(contractEl.getAttribute("fullSessionendtime")) Then
+If IsNull(contractEl.getAttribute("fullsessionendtime")) Then
     mFullSessionEndTime = "00:00:00"
 Else
-    mFullSessionEndTime = contractEl.getAttribute("fullSessionendtime")
+    mFullSessionEndTime = contractEl.getAttribute("fullsessionendtime")
 End If
-If IsNull(contractEl.getAttribute("description")) Then
+If IsNull(contractEl.getAttribute("Description")) Then
     mDescription = ""
 Else
-    mDescription = contractEl.getAttribute("description")
+    mDescription = contractEl.getAttribute("Description")
 End If
 If IsNull(contractEl.getAttribute("numberofdecimals")) Then
     mNumberOfDecimals = 4
@@ -383,7 +387,7 @@ Else
     mTimezoneName = contractEl.getAttribute("timezonename")
 End If
 
-Set specifierEl = contractEl.selectSingleNode("specifier")
+Set specifierEl = contractEl.selectSingleNode("pr:specifier")
 Set specifierObj = New ContractSpecifier
 Me.Specifier = specifierObj
 With specifierObj
@@ -404,8 +408,8 @@ With specifierObj
                 specifierEl.getAttribute("strike"), _
                 specifierEl.getAttribute("right")
     
-    Set comboLegsEl = specifierEl.selectSingleNode("combolegs")
-    Set nodeList = comboLegsEl.selectNodes("comboleg")
+    Set comboLegsEl = specifierEl.selectSingleNode("pr:combolegs")
+    Set nodeList = comboLegsEl.selectNodes("pr:comboleg")
     If nodeList.length <> 0 Then .ComboLegs = New ComboLegs
     For Each comboLegEl In nodeList
         Set comboLegObj = New ComboLeg
