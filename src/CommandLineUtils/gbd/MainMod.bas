@@ -200,7 +200,7 @@ Private mTimestampFormat                            As TimestampFormats
 Private mTimestampDateOnlyFormat                    As TimestampFormats
 Private mTimestampTimeOnlyFormat                    As TimestampFormats
 
-Private mErorStringBuilder                          As StringBuilder
+Private mErrorStringBuilder                          As StringBuilder
 
 Private mStartResultFormat                           As String
 Private mStartEchoResultFormat                       As String
@@ -287,9 +287,14 @@ On Error Resume Next    ' ignore any further errors that might arise
 gWriteErrorString "Error "
 gWriteErrorString CStr(ev.ErrorCode)
 gWriteErrorString ": "
-gWriteErrorLine ev.ErrorMessage
-gWriteErrorLine "At:"
-gWriteErrorLine ev.ErrorSource
+gWriteErrorString ev.ErrorMessage
+gWriteErrorString vbCrLf
+gWriteErrorString "At:"
+gWriteErrorString vbCrLf
+gWriteErrorString ev.ErrorSource
+gWriteErrorLine "Program exiting"
+Set mCurrentProcessor = Nothing
+EndProcess 1
 End Sub
 
 Public Sub gHandleUnexpectedError( _
@@ -726,18 +731,16 @@ End Function
 
 Public Sub gWriteErrorLine( _
                 ByVal pMessage As String)
-Dim s As String: s = "Line " & mLineNumber & ": " & pMessage
+mErrorStringBuilder.Append pMessage
+Dim s As String: s = "Line " & mLineNumber & ": " & mErrorStringBuilder.ToString
 gCon.WriteErrorLine s
-mErorStringBuilder.Append s
-LogMessage "StdErr: " & mErorStringBuilder.ToString
-mErorStringBuilder.Clear
+LogMessage "StdErr: " & s
+mErrorStringBuilder.Clear
 End Sub
 
 Public Sub gWriteErrorString( _
                 ByVal pMessage As String)
-Dim s As String: s = "Line " & mLineNumber & ": " & pMessage
-gCon.WriteErrorString s
-mErorStringBuilder.Append s
+mErrorStringBuilder.Append pMessage
 End Sub
 
 Public Sub gWriteLineToConsole( _
@@ -759,7 +762,7 @@ End Sub
 Public Sub Main()
 On Error GoTo Err
 
-Set mErorStringBuilder = CreateStringBuilder
+Set mErrorStringBuilder = CreateStringBuilder
 
 Set mFatalErrorHandler = New FatalErrorHandler
 ApplicationGroupName = "TradeWright"
@@ -1719,22 +1722,29 @@ Private Sub processStdInComands()
 Const ProcName As String = "processStdInComands"
 On Error GoTo Err
 
+Static sPreviousLineBlank As Boolean
+
 Do
     If mProviderReady And (mAsync Or mCurrentProcessor Is Nothing) Then
         Dim lInputString As String
         lInputString = Trim$(gCon.ReadLine(":"))
         If lInputString = gCon.EofString Or UCase$(lInputString) = ExitCommand Then Exit Do
         
-        mLineNumber = mLineNumber + 1
-        
         If lInputString = "" Then
+            If Not sPreviousLineBlank Then mLineNumber = mLineNumber + 1
+            sPreviousLineBlank = True
+                
             ' ignore blank lines, but echo them to StdOut when
             ' piping to another program
             If gCon.StdOutType = FileTypePipe Then gWriteLineToStdOut ""
         ElseIf Left$(lInputString, 1) = "#" Then
+            sPreviousLineBlank = False
+            mLineNumber = mLineNumber + 1
             LogMessage "con: " & lInputString
             ' ignore comments
         Else
+            sPreviousLineBlank = False
+            mLineNumber = mLineNumber + 1
             LogMessage "con: " & lInputString
             processCommand lInputString
         End If
