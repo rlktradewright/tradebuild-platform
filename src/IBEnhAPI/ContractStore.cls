@@ -67,8 +67,37 @@ Private Function IContractStore_FetchContracts( _
 Const ProcName As String = "IContractStore_FetchContracts"
 On Error GoTo Err
 
-Set IContractStore_FetchContracts = gFetchContracts(mContractRequester, mContractCache, pContractSpecifier, pListener, pCookie, False)
+Set IContractStore_FetchContracts = gFetchContracts( _
+                                                mContractRequester, _
+                                                mContractCache, _
+                                                pContractSpecifier, _
+                                                pListener, _
+                                                pCookie, _
+                                                False)
 mContractsFutures.Add IContractStore_FetchContracts
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IContractStore_FetchContractsSorted( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                Optional ByVal pSortDescending As Boolean = False, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "IContractStore_FetchContractsSorted"
+On Error GoTo Err
+
+Set IContractStore_FetchContractsSorted = gFetchContractsSorted( _
+                                                mContractRequester, _
+                                                mContractCache, _
+                                                pContractSpec, _
+                                                pSortkeys, _
+                                                pSortDescending, _
+                                                pCookie, _
+                                                False)
 
 Exit Function
 

@@ -318,10 +318,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get IMarketDataSource_RecoveryContractSpec() As ContractUtils27.IContractSpecifier
-Set IMarketDataSource_RecoveryContractSpec = RecoveryContractSpec
-End Property
-
 Private Sub IMarketDataSource_Refresh()
 Refresh
 End Sub
@@ -882,10 +878,6 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get RecoveryContractSpec() As ContractUtils27.IContractSpecifier
-Set RecoveryContractSpec = mDataSource.RecoveryContractSpec
 End Property
 
 Public Property Get SessionFuture() As IFuture

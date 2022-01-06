@@ -246,6 +246,34 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gFetchContractsSorted( _
+                ByVal pContractRequester As ContractsTwsRequester, _
+                ByVal pContractCache As ContractCache, _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                ByVal pSortDescending As Boolean, _
+                ByVal pCookie As Variant, _
+                ByVal pReturnTwsContracts As Boolean) As IFuture
+Const ProcName As String = "gFetchContractsSorted"
+On Error GoTo Err
+
+If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching sorted contract details for", ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
+
+Dim lFetcher As New ContractsRequestManager
+Set gFetchContractsSorted = lFetcher.Fetch( _
+                                pContractRequester, _
+                                pContractCache, _
+                                pContractSpecifier, _
+                                Nothing, _
+                                pCookie, _
+                                pReturnTwsContracts)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gFetchOptionExpiries( _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _

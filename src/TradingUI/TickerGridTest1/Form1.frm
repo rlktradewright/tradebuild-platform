@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#375.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Ticker Grid Test1"
    ClientHeight    =   10065
@@ -126,8 +126,6 @@ Private mNoLogfile                                  As Boolean
 Private WithEvents mContractSelectionHelper         As ContractSelectionHelper
 Attribute mContractSelectionHelper.VB_VarHelpID = -1
 
-Private mPreferredGridRow                           As Long
-
 Private WithEvents mConfigStore                     As ConfigurationStore
 Attribute mConfigStore.VB_VarHelpID = -1
 Private mMarketDataManagerConfig                    As ConfigurationSection
@@ -149,6 +147,7 @@ InitialiseTWUtilities
 
 ApplicationGroupName = "TradeWright"
 ApplicationName = "TickerGridTest1"
+DefaultLogLevel = LogLevelHighDetail
 SetupDefaultLogging Command
 
 Set mConfigStore = getConfigStore
@@ -298,11 +297,19 @@ Private Sub ContractSearch_Action()
 Const ProcName As String = "ContractSearch_Action"
 On Error GoTo Err
 
-Dim lContract As IContract
-
-For Each lContract In ContractSearch.SelectedContracts
-    TickerGrid.StartTickerFromContract lContract
-Next
+If ContractSearch.SelectedContracts.Count = 1 And _
+    IsContractSpecOffsetExpiry(ContractSearch.ContractSpecifier) _
+Then
+    TickerGrid.StartTickerFromContract _
+                    ContractSearch.SelectedContracts.ItemAtIndex(1), _
+                    0, _
+                    ContractSearch.ContractSpecifier.Expiry
+Else
+    Dim lContract As IContract
+    For Each lContract In ContractSearch.SelectedContracts
+        TickerGrid.StartTickerFromContract lContract
+    Next
+End If
 
 Exit Sub
 
@@ -326,15 +333,19 @@ Private Sub TickerGrid_TickerSymbolEntered(ByVal pSymbol As String, ByVal pPrefe
 Const ProcName As String = "TickerGrid_TickerSymbolEntered"
 On Error GoTo Err
 
-mPreferredGridRow = pPreferredRow
 Set mContractSelectionHelper = CreateContractSelectionHelper( _
-                                        CreateContractSpecifier(Symbol:=pSymbol), _
+                                        CreateContractSpecifierFromString(pSymbol), _
+                                        pPreferredRow, _
                                         mContractStore)
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    ModelessMsgBox Err.Description, MsgBoxExclamation, "Attention", Me
+Else
+    gNotifyUnhandledError ProcName, ModuleName
+End If
 End Sub
 
 '@================================================================================
@@ -388,7 +399,10 @@ On Error GoTo Err
 If mContractSelectionHelper.Contracts.Count = 0 Then
     LogMessage "Invalid symbol"
 Else
-    TickerGrid.StartTickerFromContract mContractSelectionHelper.Contracts.ItemAtIndex(1), mPreferredGridRow
+    TickerGrid.StartTickerFromContract _
+                    mContractSelectionHelper.Contracts.ItemAtIndex(1), _
+                    mContractSelectionHelper.PreferredTickerGridRow, _
+                    mContractSelectionHelper.ContractSpecifier.Expiry
 End If
 
 Exit Sub
@@ -411,11 +425,21 @@ Dim lContracts As IContracts
 Set lContracts = f.SelectedContracts
 If lContracts.Count = 0 Then Exit Sub
 
-Dim lContract As IContract
-For Each lContract In lContracts
-    TickerGrid.StartTickerFromContract lContract, mPreferredGridRow
-    mPreferredGridRow = mPreferredGridRow + 1
-Next
+If lContracts.Count = 1 And _
+    IsContractSpecOffsetExpiry(mContractSelectionHelper.ContractSpecifier) _
+Then
+    TickerGrid.StartTickerFromContract _
+                    lContracts.ItemAtIndex(1), _
+                    mContractSelectionHelper.PreferredTickerGridRow, _
+                    mContractSelectionHelper.ContractSpecifier.Expiry
+Else
+    Dim lPreferredGridRow As Long: lPreferredGridRow = mContractSelectionHelper.PreferredTickerGridRow
+    Dim lContract As IContract
+    For Each lContract In lContracts
+        TickerGrid.StartTickerFromContract lContract, lPreferredGridRow
+        lPreferredGridRow = lPreferredGridRow + 1
+    Next
+End If
 
 Exit Sub
 
@@ -434,9 +458,6 @@ If Not mContractClient Is Nothing Then mContractClient.Finish
 
 handleFatalError
 
-' Tell TWUtilities that we've now handled this unhandled error. Not actually
-' needed here because HandleFatalError never returns anyway
-UnhandledErrorHandler.Handled = True
 End Sub
 
 '@================================================================================
@@ -482,8 +503,8 @@ End Function
 Private Sub handleFatalError()
 On Error Resume Next    ' ignore any further errors that might arise
 
-If Not mDataClient Is Nothing Then mDataClient.Finish
-If Not mContractClient Is Nothing Then mContractClient.Finish
+'If Not mDataClient Is Nothing Then mDataClient.Finish
+'If Not mContractClient Is Nothing Then mContractClient.Finish
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _
@@ -491,7 +512,7 @@ MsgBox "A fatal error has occurred. The program will close when you click the OK
         "to support@tradewright.com", _
         vbCritical, _
         "Fatal error"
-
+'
 ' At this point, we don't know what state things are in, so it's not feasible to return to
 ' the caller. All we can do is terminate abruptly.
 '
@@ -503,11 +524,11 @@ MsgBox "A fatal error has occurred. The program will close when you click the OK
 ' EndProcess method kills the entire development environment as well which can have undesirable
 ' side effects if other components are also loaded.
 
-If mIsInDev Then
-    End
-Else
-    EndProcess
-End If
+'If mIsInDev Then
+'    End
+'Else
+'    EndProcess
+'End If
 
 End Sub
 

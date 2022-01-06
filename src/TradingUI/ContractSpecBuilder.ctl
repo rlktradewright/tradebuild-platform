@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    ClientHeight    =   3585
    ClientLeft      =   0
@@ -788,14 +788,26 @@ Public Property Get ContractSpecifier() As IContractSpecifier
 Const ProcName As String = "contractSpecifier"
 On Error GoTo Err
 
-Dim lMultiplier As Double
-If MultiplierText.Text = "" Then
-    lMultiplier = 1#
+If SymbolText.Text <> "" And _
+    LocalSymbolText = "" And _
+    ExchangeCombo.Text = "" And _
+    TypeCombo.Text = "" And _
+    CurrencyCombo.Text = "" And _
+    ExpiryText = "" And _
+    MultiplierText.Text = "" And _
+    StrikePriceText.Text = "" And _
+    RightCombo.Text = "" _
+Then
+    Set ContractSpecifier = CreateContractSpecifierFromString(SymbolText)
 Else
-    lMultiplier = CDbl(MultiplierText.Text)
-End If
+    Dim lMultiplier As Double
+    If MultiplierText.Text = "" Then
+        lMultiplier = 1#
+    Else
+        lMultiplier = CDbl(MultiplierText.Text)
+    End If
     
-Set ContractSpecifier = CreateContractSpecifier( _
+    Set ContractSpecifier = CreateContractSpecifier( _
                                 LocalSymbolText, _
                                 SymbolText, _
                                 ExchangeCombo, _
@@ -805,6 +817,7 @@ Set ContractSpecifier = CreateContractSpecifier( _
                                 lMultiplier, _
                                 IIf(StrikePriceText = "", 0, StrikePriceText), _
                                 OptionRightFromString(RightCombo))
+End If
 
 Exit Property
 
@@ -943,6 +956,31 @@ Const ProcName As String = "checkIfValid"
 On Error GoTo Err
 
 mReady = False
+
+If SymbolText.Text <> "" And _
+    LocalSymbolText = "" And _
+    ExchangeCombo.Text = "" And _
+    TypeCombo.Text = "" And _
+    CurrencyCombo.Text = "" And _
+    ExpiryText = "" And _
+    MultiplierText.Text = "" And _
+    StrikePriceText.Text = "" And _
+    RightCombo.Text = "" _
+Then
+    On Error Resume Next
+    Set ContractSpecifier = CreateContractSpecifierFromString(SymbolText)
+    If Err.Number = ErrorCodes.ErrIllegalArgumentException Or _
+        ContractSpecifier Is Nothing _
+    Then
+        mReady = False
+        RaiseEvent NotReady
+    Else
+        mReady = True
+        RaiseEvent Ready
+    End If
+    Exit Sub
+End If
+
 If LocalSymbolText = "" And SymbolText = "" Then
     RaiseEvent NotReady
     Exit Sub

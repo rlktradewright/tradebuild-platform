@@ -142,7 +142,7 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
@@ -161,7 +161,7 @@ Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
                 Optional ByVal pRefreshInterval As Long = 0&, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager10_CreateSnapshotMarketDataSource"
 On Error GoTo Err
 
@@ -299,7 +299,7 @@ Set lDataSource = mDataManager.CreateMarketDataSource( _
                                     lTickStream.StreamId, _
                                     False, _
                                     0, _
-                                    Nothing)
+                                    "")
 
 Set CreateMarketDataSource = lDataSource
 

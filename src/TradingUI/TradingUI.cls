@@ -124,12 +124,18 @@ Private Const ModuleName                            As String = "TradingUI"
 
 Public Function CreateContractSelectionHelper( _
                 ByVal pContractSpec As IContractSpecifier, _
-                ByVal pContractStore As IContractStore) As ContractSelectionHelper
+                ByVal pPreferredTickerGridRow As Long, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore) As ContractSelectionHelper
 Const ProcName As String = "CreateContractSelectionHelper"
 On Error GoTo Err
 
 Set CreateContractSelectionHelper = New ContractSelectionHelper
-CreateContractSelectionHelper.Initialise pContractSpec, pContractStore
+CreateContractSelectionHelper.Initialise _
+                        pContractSpec, _
+                        pPreferredTickerGridRow, _
+                        pPrimaryContractStore, _
+                        pSecondaryContractStore
 
 Exit Function
 

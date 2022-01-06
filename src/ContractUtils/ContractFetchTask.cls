@@ -43,15 +43,13 @@ Implements ITask
 
 Private Const ModuleName                            As String = "ContractFetchTask"
 
-Private Const CookieSampleContractFetch             As String = "Sample"
-Private Const CookieTargetContractFetch             As String = "Target"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
 
 Private mPrimaryContractStore                       As IContractStore
 Private mSecondaryContractStore                     As IContractStore
+Private mCurrentContractStore                       As IContractStore
 
 Private mInitialContractSpec                        As IContractSpecifier
 Private mContractSpec                               As IContractSpecifier
@@ -67,7 +65,8 @@ Attribute mContractFutureBuilder.VB_VarHelpID = -1
 
 Private mSingleContractOnly                         As Boolean
 
-Private mGotSampleContract                          As Boolean
+Private mGotAllSampleContracts                      As Boolean
+Private mOffsetContractsOutstanding                 As Long
 
 Private mListener                                   As IContractFetchListener
 
@@ -80,10 +79,21 @@ Private mContractsBuilder                           As New ContractsBuilder
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+Private WithEvents mOffsetContractFutureWaiter      As FutureWaiter
+Attribute mOffsetContractFutureWaiter.VB_VarHelpID = -1
+Private WithEvents mSortedContractsFutureWaiter     As FutureWaiter
+Attribute mSortedContractsFutureWaiter.VB_VarHelpID = -1
 
 Private mIsOffsetExpiry                             As Boolean
 Private mExpiryOffset                               As Long
 Private mDaysBeforeExpiryToSwitch                   As Long
+
+Private mSorted                                     As Boolean
+
+Private mSortKeys()                                 As ContractSortKeyIds
+Private mSortAscending                              As Boolean
+
+Private mSelfRef                                    As Object
 
 '@================================================================================
 ' Class Event Handlers
@@ -104,8 +114,6 @@ Private Sub IContractFetchListener_FetchCancelled(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCancelled"
 On Error GoTo Err
 
-If Not futureIsPending Then Exit Sub
-
 If mSingleContractOnly Then
     mContractFutureBuilder.Cancel
 Else
@@ -125,14 +133,13 @@ Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
-If Not futureIsPending Then Exit Sub
-If pCookie = CookieSampleContractFetch Then
-    If mGotSampleContract Then Exit Sub
-ElseIf mIsOffsetExpiry Then
-    processOffsetContracts
+If Not mIsOffsetExpiry Then
+    completeContractProcessing
+ElseIf mOffsetContractsOutstanding = 0 Then
+    completeContractProcessing
+Else
+    mGotAllSampleContracts = True
 End If
-
-completeContractProcessing
 
 Exit Sub
 
@@ -143,8 +150,6 @@ End Sub
 Private Sub IContractFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
 Const ProcName As String = "IContractFetchListener_FetchFailed"
 On Error GoTo Err
-
-If Not futureIsPending Then Exit Sub
 
 If mSingleContractOnly Then
     mContractFutureBuilder.Fail pErrorCode, pErrorMessage, pErrorSource
@@ -165,26 +170,15 @@ Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVa
 Const ProcName As String = "IContractFetchListener_NotifyContract"
 On Error GoTo Err
 
-If Not futureIsPending Then Exit Sub
-
-If pCookie = CookieSampleContractFetch Then
-    If Not mGotSampleContract Then
-        mGotSampleContract = True
-        processSampleContract pContract
-    End If
-ElseIf mIsOffsetExpiry Then
-    mContractsBuilder.Add pContract
+If mIsOffsetExpiry Then
+    Dim lResolver As New OffsetContractResolver
+    mOffsetContractFutureWaiter.Add lResolver.Resolve(pContract, _
+                                        mExpiryOffset, _
+                                        mDaysBeforeExpiryToSwitch, _
+                                        mCurrentContractStore)
+    mOffsetContractsOutstanding = mOffsetContractsOutstanding + 1
 Else
-    If mContractsBuilder.Contracts.Count = 1 And mSingleContractOnly Then
-        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract is not uniquely specified", ""
-        mFetchFuture.Cancel
-        mTaskContext.Finish Empty, False
-        Exit Sub
-    End If
-    
-    mContractsBuilder.Add pContract
-    
-    If Not mListener Is Nothing Then mListener.NotifyContract mCallerCookie, pContract
+    processContract pContract
 End If
 
 Exit Sub
@@ -205,14 +199,25 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-Dim lContractStore As IContractStore
-Set lContractStore = mPrimaryContractStore
-If lContractStore Is Nothing Then
-    Set lContractStore = mSecondaryContractStore
+Set mCurrentContractStore = mPrimaryContractStore
+If mCurrentContractStore Is Nothing Then
+    Set mCurrentContractStore = mSecondaryContractStore
     mUsedSecondaryContractStore = True
 End If
 
-Set mFetchFuture = lContractStore.FetchContracts(mContractSpec, Me, mMyCookie)
+If mSorted And Not mIsOffsetExpiry Then
+    Set mFetchFuture = mCurrentContractStore.FetchContractsSorted( _
+                                                    mContractSpec, _
+                                                    mSortKeys, _
+                                                    mSortAscending, _
+                                                    mMyCookie)
+    mSortedContractsFutureWaiter.Add mFetchFuture
+Else
+    Set mFetchFuture = mCurrentContractStore.FetchContracts( _
+                                                    mContractSpec, _
+                                                    Me, _
+                                                    mMyCookie)
+End If
 
 mTaskContext.suspend -1
 
@@ -260,6 +265,8 @@ End If
 If Not mListener Is Nothing Then mListener.FetchCancelled mContractFutureBuilder.Cookie
 mTaskContext.Finish Empty, True
 
+Set mSelfRef = Nothing
+
 Exit Sub
 
 Err:
@@ -278,6 +285,8 @@ If Not mFetchFuture Is Nothing Then mFetchFuture.Cancel
 If Not mListener Is Nothing Then mListener.FetchCancelled mContractsFutureBuilder.Cookie
 mTaskContext.Finish Empty, True
 
+Set mSelfRef = Nothing
+
 Exit Sub
 
 Err:
@@ -294,6 +303,65 @@ On Error GoTo Err
 
 If Not mListener Is Nothing Then mListener.FetchCompleted ev.ContinuationData
 mTaskContext.Finish Empty, False
+
+Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mOffsetContractFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mOffsetContractFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mOffsetContractFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsCancelled Then
+
+ElseIf ev.Future.IsFaulted Then
+
+Else
+    Dim lContract As IContract: Set lContract = ev.Future.Value
+    gLogger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+    processContract lContract
+    mOffsetContractsOutstanding = mOffsetContractsOutstanding - 1
+    If mOffsetContractsOutstanding = 0 And mGotAllSampleContracts Then
+        completeContractProcessing
+    End If
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mSortedContractsFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mSortedContractsFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mSortedContractsFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsCancelled Then
+
+ElseIf ev.Future.IsFaulted Then
+
+Else
+    Dim lContracts As IContracts
+    Set lContracts = ev.Future.Value
+
+    mFutureWaiter.Add mContractsFutureBuilder.Future, mCallerCookie
+    mContractsFutureBuilder.Value = lContracts
+    mContractsFutureBuilder.Complete
+    
+    gLogger.Log "Sorted contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+End If
 
 Exit Sub
 
@@ -343,6 +411,8 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+Set mSelfRef = Me
+
 Set mPrimaryContractStore = pPrimaryContractStore
 Set mSecondaryContractStore = pSecondaryContractStore
 
@@ -357,11 +427,11 @@ Set mInitialContractSpec = pContractSpec
 mContractsBuilder.ContractSpecifier = mInitialContractSpec
 
 If Not gIsOffsetExpiry(pContractSpec.Expiry) Then
-    mMyCookie = CookieTargetContractFetch
     Set mContractSpec = mInitialContractSpec
 Else
+    gLogger.Log "Contract has offset expiry: " & pContractSpec.Expiry, ProcName, ModuleName, LogLevelDetail
+    Set mOffsetContractFutureWaiter = New FutureWaiter
     mIsOffsetExpiry = True
-    mMyCookie = CookieSampleContractFetch
     Dim lErrorMessage As String
     Assert gParseOffsetExpiry( _
                     mInitialContractSpec.Expiry, _
@@ -375,10 +445,11 @@ Else
                                                     .Exchange, _
                                                     .SecType, _
                                                     .CurrencyCode, _
-                                                    "", _
+                                                    gGetNextQuarterExpiry, _
                                                     .Multiplier, _
                                                     .Strike, _
                                                     .Right)
+        gLogger.Log "Fetch sample contract(s) for: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
     End With
 End If
 
@@ -393,11 +464,12 @@ Friend Sub InitialiseSorted( _
                 ByVal pPrimaryContractStore As IContractStore, _
                 ByVal pSecondaryContractStore As IContractStore, _
                 ByVal pCookie As Variant, _
-                ByVal pListener As IContractFetchListener, _
                 ByRef pSortkeys() As ContractSortKeyIds, _
                 ByVal pSortDescending As Boolean)
 Const ProcName As String = "InitialiseSorted"
 On Error GoTo Err
+
+mSorted = True
 
 Dim n As Long: n = -1
 On Error Resume Next
@@ -405,16 +477,16 @@ On Error Resume Next
 On Error GoTo Err
 AssertArgument n >= 0, "Empty sort keys"
 
-Dim ar() As ContractSortKeyIds: ar = pSortkeys
+mSortKeys = pSortkeys
+mSortAscending = Not pSortDescending
 
-mContractsBuilder.SortKeys = ar
-mContractsBuilder.SortAscending = Not pSortDescending
+Set mSortedContractsFutureWaiter = New FutureWaiter
 
 Initialise pContractSpec, _
     pPrimaryContractStore, _
     pSecondaryContractStore, _
     pCookie, _
-    pListener, _
+    Nothing, _
     False
 
 Exit Sub
@@ -433,7 +505,7 @@ On Error GoTo Err
 
 Dim lContracts As IContracts
 Set lContracts = mContractsBuilder.Contracts
-If lContracts.Count = 0 And Not mUsedSecondaryContractStore Then If trySecondaryContractSP Then Exit Sub
+If lContracts.Count = 0 And Not mUsedSecondaryContractStore Then If trySecondaryContractStore Then Exit Sub
 
 If mSingleContractOnly Then
     mFutureWaiter.Add mContractFutureBuilder.Future, mCallerCookie
@@ -448,6 +520,10 @@ Else
     mContractsFutureBuilder.Value = lContracts
     mContractsFutureBuilder.Complete
 End If
+
+gLogger.Log "Contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+
+Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -489,87 +565,39 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub processSampleContract(ByVal pFirstContract As IContract)
-
-Const ProcName As String = "processSampleContract"
+Private Sub processContract(ByVal pContract As IContract)
+Const ProcName As String = "processContract"
 On Error GoTo Err
 
-' we've now got a contract that meets the specified
-' contract spec. Now we need to find all the contracts that do
-' so (apart from the expiry date)
-With pFirstContract.Specifier
-    Set mContractSpec = gCreateContractSpecifier("", _
-                                                .Symbol, _
-                                                .Exchange, _
-                                                .SecType, _
-                                                .CurrencyCode, _
-                                                "", _
-                                                .Multiplier, _
-                                                .Strike, _
-                                                .Right)
-End With
-
-mMyCookie = CookieTargetContractFetch
-Set mContractsBuilder = New ContractsBuilder
-mContractsBuilder.ContractSpecifier = mInitialContractSpec
-ReDim lSortkeys(0) As ContractSortKeyIds
-lSortkeys(0) = ContractSortKeyExpiry
-mContractsBuilder.SortKeys = lSortkeys
-
-mTaskContext.Continue
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processOffsetContracts()
-Const ProcName As String = "processOffsetContracts"
-On Error GoTo Err
-
-If mExpiryOffset <> -1 Then
-    Dim lAllContracts As IContracts: Set lAllContracts = mContractsBuilder.Contracts
-    
-    Set mContractsBuilder = New ContractsBuilder
-    mContractsBuilder.ContractSpecifier = mInitialContractSpec
-    Dim lContract As IContract
-    Dim lIndex As Long: lIndex = -1
-    For Each lContract In lAllContracts
-        If gIsContractExpired(lContract) Then
-            lIndex = -1
-        Else
-            lIndex = lIndex + 1
-        End If
-        If lIndex < mExpiryOffset Then
-        ElseIf GetOffsetSessionTimes( _
-                            lContract.ExpiryDate, _
-                            -mDaysBeforeExpiryToSwitch).StartTime >= Int(CDbl(Now)) _
-        Then
-            ' we've found the contract we're after
-            mContractsBuilder.Add lContract
-            If Not mListener Is Nothing Then mListener.NotifyContract mCallerCookie, lContract
-            Exit For
-        End If
-    Next
+If mContractsBuilder.Contracts.Count = 1 And mSingleContractOnly Then
+    mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract is not uniquely specified", ""
+    mFetchFuture.Cancel
+    mTaskContext.Finish Empty, False
+    Set mSelfRef = Nothing
+    Exit Sub
 End If
 
+mContractsBuilder.Add pContract
+
+If Not mListener Is Nothing Then mListener.NotifyContract mCallerCookie, pContract
+
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function trySecondaryContractSP() As Boolean
-Const ProcName As String = "trySecondaryContractSP"
+Private Function trySecondaryContractStore() As Boolean
+Const ProcName As String = "trySecondaryContractStore"
 On Error GoTo Err
 
 mUsedSecondaryContractStore = True
 If mSecondaryContractStore Is Nothing Then
-    trySecondaryContractSP = False
+    trySecondaryContractStore = False
 Else
-    Set mFetchFuture = mSecondaryContractStore.FetchContracts(mContractSpec, Me, mMyCookie)
-    trySecondaryContractSP = True
+    Set mCurrentContractStore = mSecondaryContractStore
+    Set mFetchFuture = mCurrentContractStore.FetchContracts(mContractSpec, Me, mMyCookie)
+    trySecondaryContractStore = True
 End If
 
 Exit Function

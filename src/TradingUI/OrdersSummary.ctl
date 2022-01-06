@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "Msflxgrd.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.UserControl OrdersSummary 
    Alignable       =   -1  'True
    ClientHeight    =   4245
@@ -1026,7 +1026,6 @@ End Sub
 
 Private Function addBracketOrderEntryToBracketOrderGrid( _
                 ByVal pSymbol As String, _
-                ByVal pBracketOrderGridMappingIndex As Long, _
                 ByVal pPositionManagerGridMappingIndex As Long, _
                 ByVal pRowData As Long) As Long
 Const ProcName As String = "addBracketOrderEntryToBracketOrderGrid"
@@ -1466,7 +1465,6 @@ With mBracketOrderGridMappingTable(lIndex)
     lPositionManagerGridMappingIndex = mPositionManagerGridMappingTable(findPositionManagerGridMappingIndex(pPositionManager)).GridIndex
     .GridIndex = addBracketOrderEntryToBracketOrderGrid( _
                             pBracketOrder.Contract.Specifier.LocalSymbol, _
-                            lIndex, _
                             lPositionManagerGridMappingIndex, _
                             generateRowData(lPositionManagerGridMappingIndex, lIndex, BracketOrderRoleNone))
     GridColumn(.GridIndex, BracketCreationTime) = formattedTime(pBracketOrder.CreationTime)

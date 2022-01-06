@@ -32,7 +32,6 @@ Private Const ModuleName                            As String = "Globals"
 Public Const NullIndex                              As Long = -1
 
 Public Const ConfigSectionContract                  As String = "Contract"
-Public Const ConfigSectionRecoveryContractSpec       As String = "RecoveryContractSpec"
 
 '@================================================================================
 ' Member variables

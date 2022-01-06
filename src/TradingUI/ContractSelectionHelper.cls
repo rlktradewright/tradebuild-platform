@@ -23,7 +23,6 @@ Option Explicit
 '@================================================================================
 
 Implements IDeferredAction
-Implements IStateChangeListener
 
 '@================================================================================
 ' Events
@@ -52,14 +51,13 @@ Private Const ModuleName                            As String = "ContractSelecti
 ' Member variables
 '@================================================================================
 
-Private mContractStore                              As IContractStore
-
-Private mContractSpec                               As IContractSpecifier
-
 Private mReady                                      As Boolean
 
-Private mContractsFuture                            As IFuture
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mContracts                                  As IContracts
+Private mContractSpec                               As IContractSpecifier
+Private mPreferredTickerGridRow                     As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -82,28 +80,30 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' IStateChangeListener Interface Members
+' mFutureWaiter Event Handlers
 '@================================================================================
 
-Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "IStateChangeListener_Change"
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If mContractsFuture.IsCancelled Then
+If ev.Future.IsCancelled Then
     RaiseEvent Cancelled
-ElseIf mContractsFuture.IsFaulted Then
+ElseIf ev.Future.IsFaulted Then
     Dim lEv As ErrorEventData
     Set lEv.Source = Me
-    lEv.ErrorCode = mContractsFuture.ErrorNumber
-    lEv.ErrorMessage = mContractsFuture.ErrorMessage
-    lEv.ErrorSource = mContractsFuture.ErrorSource
+    lEv.ErrorCode = ev.Future.ErrorNumber
+    lEv.ErrorMessage = ev.Future.ErrorMessage
+    lEv.ErrorSource = ev.Future.ErrorSource
     RaiseEvent Error(lEv)
 Else
-    Set mContracts = mContractsFuture.Value
+    Set mContracts = ev.Future.Value
     mReady = True
     If mContracts.Count > 1 Then
-        DeferAction Me, pMayYield:=True
+        gLogger.Log "Fetched " & mContracts.Count & " contracts: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+        DeferAction Me
     Else
+        gLogger.Log "Fetched 1 contract: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
         RaiseEvent Ready
     End If
 End If
@@ -111,12 +111,8 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
-
-'@================================================================================
-' XXXX Event Handlers
-'@================================================================================
 
 '@================================================================================
 ' Properties
@@ -135,6 +131,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get ContractSpecifier() As IContractSpecifier
+Set ContractSpecifier = mContractSpec
+End Property
+
+Public Property Get PreferredTickerGridRow() As Long
+PreferredTickerGridRow = mPreferredTickerGridRow
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -143,7 +147,7 @@ Public Sub Cancel()
 Const ProcName As String = "Cancel"
 On Error GoTo Err
 
-If Not mContractsFuture Is Nothing Then mContractsFuture.Cancel
+If Not mFutureWaiter Is Nothing Then mFutureWaiter.Cancel
 
 Exit Sub
 
@@ -153,15 +157,18 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pContractSpec As IContractSpecifier, _
-                ByVal pContractStore As IContractStore)
+                ByVal pPreferredTickerGridRow As Long, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByVal pSecondaryContractStore As IContractStore)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+Set mFutureWaiter = New FutureWaiter
 Set mContractSpec = pContractSpec
-Set mContractStore = pContractStore
+mPreferredTickerGridRow = pPreferredTickerGridRow
 
-Set mContractsFuture = mContractStore.FetchContracts(mContractSpec)
-mContractsFuture.AddStateChangeListener Me
+gLogger.Log "Fetching contracts: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+mFutureWaiter.Add FetchContracts(mContractSpec, pPrimaryContractStore, pSecondaryContractStore)
 
 Exit Sub
 

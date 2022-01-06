@@ -70,6 +70,13 @@ Public Function FetchContracts( _
                 Optional ByVal pCookie As Variant) As IFuture
 End Function
 
+Public Function FetchContractsSorted( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                Optional ByVal pSortDescending As Boolean = False, _
+                Optional ByVal pCookie As Variant) As IFuture
+End Function
+
 Public Function FetchOptionExpiries( _
                 ByVal pUnderlyingContractSpecifier As IContractSpecifier, _
                 ByVal pExchange As String, _

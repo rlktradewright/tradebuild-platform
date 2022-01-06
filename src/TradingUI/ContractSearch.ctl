@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSearch 
    ClientHeight    =   3870
    ClientLeft      =   0
@@ -175,6 +175,8 @@ Private mCancelInitiatedByUser                      As Boolean
 Private mSingleContracts                            As IContracts
 
 Private mHistoricalContractsFound                   As Boolean
+
+Private mContractSpec                               As IContractSpecifier
 
 '@================================================================================
 ' Class Event Handlers
@@ -360,7 +362,8 @@ If ContractSelector1.Visible Then
 Else
     Set mSingleContracts = Nothing
     mHistoricalContractsFound = False
-    mFutureWaiter.Add FetchContracts(ContractSpecBuilder1.ContractSpecifier, mContractStorePrimary, mContractStoreSecondary, Me)
+    Set mContractSpec = ContractSpecBuilder1.ContractSpecifier
+    mFutureWaiter.Add FetchContracts(mContractSpec, mContractStorePrimary, mContractStoreSecondary, Me)
     mLoadingContracts = True
     UserControl.MousePointer = MousePointerConstants.vbHourglass
     MessageLabel.Caption = "Searching..."
@@ -536,6 +539,10 @@ End Property
 Public Property Get BackColor() As OLE_COLOR
 Attribute BackColor.VB_UserMemId = -501
 BackColor = UserControl.BackColor
+End Property
+
+Public Property Get ContractSpecifier() As IContractSpecifier
+Set ContractSpecifier = mContractSpec
 End Property
 
 Public Property Get Cookie() As Variant

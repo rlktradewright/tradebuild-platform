@@ -530,15 +530,14 @@ Public Function FetchContract( _
 Const ProcName As String = "FetchContract"
 On Error GoTo Err
 
-AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
-
-If IsEmpty(pCookie) Then pCookie = GenerateGUIDString
-
-Dim t As New ContractFetchTask
-t.Initialise pContractSpec, pPrimaryContractStore, pSecondaryContractStore, pCookie, Nothing, True
-StartTask t, pPriority, pTaskName
-
-Set FetchContract = t.ContractFuture
+Set FetchContract = gFetchContracts(pContractSpec, _
+                                True, _
+                                pPrimaryContractStore, _
+                                pSecondaryContractStore, _
+                                Nothing, _
+                                pPriority, _
+                                pTaskName, _
+                                pCookie)
 
 Exit Function
 
@@ -557,15 +556,14 @@ Public Function FetchContracts( _
 Const ProcName As String = "FetchContracts"
 On Error GoTo Err
 
-AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
-
-If IsEmpty(pCookie) Then pCookie = GenerateGUIDString
-
-Dim t As New ContractFetchTask
-t.Initialise pContractSpec, pPrimaryContractStore, pSecondaryContractStore, pCookie, pListener, False
-StartTask t, pPriority, pTaskName
-
-Set FetchContracts = t.ContractsFuture
+Set FetchContracts = gFetchContracts(pContractSpec, _
+                                False, _
+                                pPrimaryContractStore, _
+                                pSecondaryContractStore, _
+                                pListener, _
+                                pPriority, _
+                                pTaskName, _
+                                pCookie)
 
 Exit Function
 
@@ -579,22 +577,21 @@ Public Function FetchContractsSorted( _
                 ByRef pSortkeys() As ContractSortKeyIds, _
                 Optional ByVal pSortDescending As Boolean = False, _
                 Optional ByVal pSecondaryContractStore As IContractStore, _
-                Optional ByVal pListener As IContractFetchListener, _
                 Optional ByVal pPriority As TaskPriorities = TaskPriorities.PriorityNormal, _
                 Optional ByVal pTaskName As String, _
                 Optional ByVal pCookie As Variant) As IFuture
 Const ProcName As String = "FetchContractsSorted"
 On Error GoTo Err
 
-AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
-
-If IsEmpty(pCookie) Then pCookie = GenerateGUIDString
-
-Dim t As New ContractFetchTask
-t.InitialiseSorted pContractSpec, pPrimaryContractStore, pSecondaryContractStore, pCookie, pListener, pSortkeys, pSortDescending
-StartTask t, pPriority, pTaskName
-
-Set FetchContractsSorted = t.ContractsFuture
+Set FetchContractsSorted = gFetchContractsSorted( _
+                                pContractSpec, _
+                                pPrimaryContractStore, _
+                                pSortkeys, _
+                                pSortDescending, _
+                                pSecondaryContractStore, _
+                                pPriority, _
+                                pTaskName, _
+                                pCookie)
 
 Exit Function
 

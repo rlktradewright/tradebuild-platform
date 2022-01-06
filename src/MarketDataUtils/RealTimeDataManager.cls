@@ -73,7 +73,7 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
@@ -83,7 +83,7 @@ Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource( _
                                                     pKey, _
                                                     pUseLocalTimeForStudies, _
                                                     pStateChangeListener, _
-                                                    pRecoveryContractSpec)
+                                                    pOffsetExpiry)
 
 Exit Function
 
@@ -98,7 +98,7 @@ Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
                 Optional ByVal pRefreshInterval As Long = 0&, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager10_CreateSnapshotMarketDataSource"
 On Error GoTo Err
 
@@ -109,7 +109,7 @@ Set IMarketDataManager_CreateSnapshotMarketDataSource = CreateSnapshotMarketData
                                                     pUseLocalTimeForStudies, _
                                                     pStateChangeListener, _
                                                     pRefreshInterval, _
-                                                    pRecoveryContractSpec)
+                                                    pOffsetExpiry)
 
 Exit Function
 
@@ -192,7 +192,7 @@ Public Function CreateMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
@@ -208,7 +208,7 @@ Set CreateMarketDataSource = mDataManager.CreateMarketDataSource( _
                                                 NullIndex, _
                                                 False, _
                                                 0, _
-                                                pRecoveryContractSpec)
+                                                pOffsetExpiry)
 
 Exit Function
 
@@ -223,7 +223,7 @@ Public Function CreateSnapshotMarketDataSource( _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
                 Optional ByVal pRefreshInterval As Long = 0&, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "CreateSnapshotMarketDataSource"
 On Error GoTo Err
 
@@ -239,7 +239,7 @@ Set CreateSnapshotMarketDataSource = mDataManager.CreateMarketDataSource( _
                                                 NullIndex, _
                                                 True, _
                                                 pRefreshInterval, _
-                                                pRecoveryContractSpec)
+                                                pOffsetExpiry)
 
 Exit Function
 

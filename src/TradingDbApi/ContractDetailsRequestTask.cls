@@ -328,6 +328,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub InitialiseSorted( _
+                ByVal pTradingDBFuture As IFuture, _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                ByVal pSortDescending As Boolean, _
+                ByVal pCookie As Variant)
+Const ProcName As String = "InitialiseSorted"
+On Error GoTo Err
+
+mContractsBuilder.SortKeys = pSortkeys
+mContractsBuilder.SortAscending = Not pSortDescending
+Initialise pTradingDBFuture, pContractSpecifier, Nothing, pCookie
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================

@@ -34,6 +34,8 @@ Private Const ModuleName                            As String = "GClient"
 
 Private mClientCollection                           As New EnumerableCollection
 
+Private mContractCache                              As New ContractCache
+
 ''@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -49,6 +51,10 @@ Private mClientCollection                           As New EnumerableCollection
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get gContractCache() As ContractCache
+Set gContractCache = mContractCache
+End Property
 
 '@================================================================================
 ' Methods

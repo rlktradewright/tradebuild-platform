@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#377.0#0"; "TradingUI27.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#375.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -190,10 +190,11 @@ Private mAppInstanceConfig                          As ConfigurationSection
 
 Private WithEvents mOrderRecoveryFutureWaiter       As FutureWaiter
 Attribute mOrderRecoveryFutureWaiter.VB_VarHelpID = -1
-Private WithEvents mContractsFutureWaiter           As FutureWaiter
-Attribute mContractsFutureWaiter.VB_VarHelpID = -1
 Private WithEvents mChartsCreationFutureWaiter      As FutureWaiter
 Attribute mChartsCreationFutureWaiter.VB_VarHelpID = -1
+
+Private WithEvents mContractSelectionHelper         As ContractSelectionHelper
+Attribute mContractSelectionHelper.VB_VarHelpID = -1
 
 Private mChartForms                                 As New ChartForms
 
@@ -217,7 +218,6 @@ Private mFinishing                                  As Boolean
 Private Sub Form_Initialize()
 InitialiseCommonControls
 Set mOrderRecoveryFutureWaiter = New FutureWaiter
-Set mContractsFutureWaiter = New FutureWaiter
 Set mChartsCreationFutureWaiter = New FutureWaiter
 End Sub
 
@@ -602,12 +602,11 @@ Private Sub TickerGrid1_TickerSymbolEntered(ByVal pSymbol As String, ByVal pPref
 Const ProcName As String = "TickerGrid1_TickerSymbolEntered"
 On Error GoTo Err
 
-mContractsFutureWaiter.Add FetchContracts( _
-                                CreateContractSpecifierFromString(pSymbol), _
-                                mTradeBuildAPI.ContractStorePrimary, _
-                                mTradeBuildAPI.ContractStoreSecondary, _
-                                pCookie:=pSymbol), _
-                            pPreferredRow
+Set mContractSelectionHelper = CreateContractSelectionHelper( _
+                                        CreateContractSpecifierFromString(pSymbol), _
+                                        pPreferredRow, _
+                                        mTradeBuildAPI.ContractStorePrimary, _
+                                        mTradeBuildAPI.ContractStoreSecondary)
 
 Exit Sub
 
@@ -636,34 +635,65 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mContractsFutureWaiter Event Handlers
+' mContractSelectionHelper Event Handlers
 '================================================================================
 
-Private Sub mContractsFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mContractsFutureWaiter_WaitCompleted"
+Private Sub mContractSelectionHelper_Cancelled()
+Const ProcName As String = "mContractSelectionHelper_Cancelled"
 On Error GoTo Err
 
-If Not ev.Future.IsAvailable Then Exit Sub
+LogMessage "Contract search cancelled"
 
-Dim lContracts As IContracts
-Set lContracts = ev.Future.Value
+Exit Sub
 
-If lContracts.Count = 1 Then
-    If IsContractExpired(lContracts.ItemAtIndex(1)) Then
-        gModelessMsgBox "Contract has expired", MsgBoxExclamation, mTheme, "Attention"
-    Else
-        TickerGrid1.StartTickerFromContract _
-                            lContracts.ItemAtIndex(1), _
-                            CLng(ev.ContinuationData), _
-                            lContracts.ContractSpecifier
-    End If
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mContractSelectionHelper_Error(ev As ErrorEventData)
+Const ProcName As String = "mContractSelectionHelper_Error"
+On Error GoTo Err
+
+Err.Raise ev.ErrorCode, ev.Source, ev.ErrorMessage
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mContractSelectionHelper_Ready()
+Const ProcName As String = "mContractSelectionHelper_Ready"
+On Error GoTo Err
+
+If mContractSelectionHelper.Contracts.Count = 0 Then
+    LogMessage "Invalid symbol"
 Else
-    If mFeaturesPanelHidden Then showFeaturesPanel
-    FeaturesPanel.ShowTickersPane
-    FeaturesPanel.LoadLiveContractsForUserChoice lContracts, CLng(ev.ContinuationData)
-    mFeaturesPanelForm.ShowTickersPane
-    mFeaturesPanelForm.LoadLiveContractsForUserChoice lContracts, CLng(ev.ContinuationData)
+    TickerGrid1.StartTickerFromContract _
+                    mContractSelectionHelper.Contracts.ItemAtIndex(1), _
+                    mContractSelectionHelper.PreferredTickerGridRow, _
+                    mContractSelectionHelper.ContractSpecifier.Expiry
 End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mContractSelectionHelper_ShowContractSelector()
+Const ProcName As String = "mContractSelectionHelper_ShowContractSelector"
+On Error GoTo Err
+
+If mFeaturesPanelHidden Then showFeaturesPanel
+FeaturesPanel.ShowTickersPane
+FeaturesPanel.LoadLiveContractsForUserChoice _
+                mContractSelectionHelper.Contracts, _
+                mContractSelectionHelper.PreferredTickerGridRow
+mFeaturesPanelForm.ShowTickersPane
+mFeaturesPanelForm.LoadLiveContractsForUserChoice _
+                mContractSelectionHelper.Contracts, _
+                mContractSelectionHelper.PreferredTickerGridRow
 
 Exit Sub
 

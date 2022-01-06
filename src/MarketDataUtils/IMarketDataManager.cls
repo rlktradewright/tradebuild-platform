@@ -81,7 +81,7 @@ Public Function CreateMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 End Function
 
 Public Function CreateSnapshotMarketDataSource( _
@@ -91,7 +91,7 @@ Public Function CreateSnapshotMarketDataSource( _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
                 Optional ByVal pRefreshInterval As Long = 0, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 End Function
 
 Public Sub Finish()

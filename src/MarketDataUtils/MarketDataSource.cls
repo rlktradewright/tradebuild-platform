@@ -54,7 +54,6 @@ Private mMarketDataManagerRef                       As WeakReference
 Private mDataSourceBaseRef                          As WeakReference
 
 Private mContractFuture                             As IFuture
-Private mRecoveryContractSpec                       As IContractSpecifier
 
 Private mStudyBase                                  As StudyBaseForTickDataInput
 
@@ -449,10 +448,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get IMarketDataSource_RecoveryContractSpec() As IContractSpecifier
-Set IMarketDataSource_RecoveryContractSpec = mRecoveryContractSpec
-End Property
-
 Private Sub IMarketDataSource_Refresh()
 Const ProcName As String = "IMarketDataSource_Refresh"
 On Error GoTo Err
@@ -823,10 +818,6 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get RecoveryContractSpec() As IContractSpecifier
-Set RecoveryContractSpec = mRecoveryContractSpec
 End Property
 
 Public Property Get SessionFuture() As IFuture
@@ -1373,8 +1364,7 @@ Friend Sub Initialise( _
                 ByVal pConfig As ConfigurationSection, _
                 ByVal pTickfileStreamId As Long, _
                 ByVal pIsSnapshot As Boolean, _
-                ByVal pSnapshotRefreshInterval As Long, _
-                ByVal pRecoveryContractSpec As IContractSpecifier)
+                ByVal pSnapshotRefreshInterval As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -1388,7 +1378,6 @@ Set mConfig = pConfig
 mTickfileStreamId = pTickfileStreamId
 mIsSnapshot = pIsSnapshot
 mSnapshotRefreshInterval = pSnapshotRefreshInterval
-Set mRecoveryContractSpec = pRecoveryContractSpec
 
 setState MarketDataSourceStateCreated
 

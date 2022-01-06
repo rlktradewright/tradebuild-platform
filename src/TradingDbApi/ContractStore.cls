@@ -75,6 +75,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function IContractStore_FetchContractsSorted( _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                Optional ByVal pSortDescending As Boolean = False, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "IContractStore_FetchContractsSorted"
+On Error GoTo Err
+
+Set IContractStore_FetchContractsSorted = FetchContractsSorted( _
+                                                pContractSpecifier, _
+                                                pSortkeys, _
+                                                pSortDescending, _
+                                                pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As ContractUtils27.IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
 Const ProcName As String = "IContractStore_FetchOptionExpiries"
 On Error GoTo Err
@@ -146,6 +166,32 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Public Function FetchContractsSorted( _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                Optional ByVal pSortDescending As Boolean = False, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "IContractStore_FetchContractsSorted"
+On Error GoTo Err
+
+Dim lContractDtlsRequestTask As New ContractDtlsRequestTask
+lContractDtlsRequestTask.InitialiseSorted mTradingDBFuture, _
+                                            pContractSpecifier, _
+                                            pSortkeys, _
+                                            pSortDescending, _
+                                            pCookie
+StartTask lContractDtlsRequestTask, PriorityNormal, , pCookie
+
+Set FetchContractsSorted = lContractDtlsRequestTask.ContractsFuture
+mFutureWaiter.Add FetchContractsSorted
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 
 Public Function Finish()
 Const ProcName As String = "Finish"

@@ -99,7 +99,7 @@ ElseIf ev.Future.IsFaulted Then
     If Future.IsPending Then mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf ev.Future.IsAvailable Then
     Dim lContract As IContract: Set lContract = ev.Future.Value
-    gLogger.Log "Contract available for clock: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelHighDetail
+    gLogger.Log "Contract available for clock: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
     setupClock ev.Future.Value
 End If
 

@@ -66,8 +66,6 @@ Private mTwsConnectionStateListeners                As Listeners
 Private mApiErrorListener                           As IErrorListener
 Private mApiNotificationListener                    As INotificationListener
 
-Private mContractCache                              As New ContractCache
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -373,7 +371,7 @@ On Error GoTo Err
 Static sContractStore As ContractStore
 If sContractStore Is Nothing Then
     Set sContractStore = New ContractStore
-    sContractStore.Initialise getContractDetailsRequester, mContractCache
+    sContractStore.Initialise getContractDetailsRequester, gContractCache
 End If
 
 Set GetContractStore = sContractStore
@@ -392,7 +390,7 @@ Static sHistoricalDataStore As HistoricalDataStore
 
 If sHistoricalDataStore Is Nothing Then
     Set sHistoricalDataStore = New HistoricalDataStore
-    sHistoricalDataStore.Initialise getHistDataRequester, getContractDetailsRequester, mContractCache, getScanRequester
+    sHistoricalDataStore.Initialise getHistDataRequester, getContractDetailsRequester, gContractCache, getScanRequester
 End If
 
 Set GetHistoricalDataStore = sHistoricalDataStore
@@ -415,7 +413,7 @@ If Not mTwsAPI.MarketDataConsumer Is Nothing Then
     Set lMarketDataFactory = mTwsAPI.MarketDataConsumer
 Else
     Set lMarketDataFactory = New MarketDataFactory
-    lMarketDataFactory.Initialise mTwsAPI, getContractDetailsRequester, getHistDataRequester, mContractCache
+    lMarketDataFactory.Initialise mTwsAPI, getContractDetailsRequester, getHistDataRequester, gContractCache
     mTwsAPI.MarketDataConsumer = lMarketDataFactory
     mTwsAPI.MarketDepthConsumer = lMarketDataFactory
     
@@ -441,7 +439,7 @@ lOrderSubmitter.Initialise mTwsAPI, _
                             getOrderPlacer, _
                             GetContractStore, _
                             getContractDetailsRequester, _
-                            mContractCache, _
+                            gContractCache, _
                             pDataSource
 
 AddTwsConnectionStateListener lOrderSubmitter
@@ -576,7 +574,7 @@ If Not mTwsAPI.ContractDetailsConsumer Is Nothing Then
     Set lContractDetailsRequester = mTwsAPI.ContractDetailsConsumer
 Else
     Set lContractDetailsRequester = New ContractsTwsRequester
-    lContractDetailsRequester.Initialise mTwsAPI, mContractCache
+    lContractDetailsRequester.Initialise mTwsAPI, gContractCache
     mTwsAPI.ContractDetailsConsumer = lContractDetailsRequester
     AddTwsConnectionStateListener lContractDetailsRequester
 End If

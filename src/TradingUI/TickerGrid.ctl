@@ -2072,8 +2072,6 @@ For Each lTickerConfig In mTickersConfigSection
     
     If lTicker.ContractFuture.IsAvailable Then
         gLogger.Log "Started Ticker: " & gGetContractFromContractFuture(lTicker.ContractFuture).Specifier.ToString, ProcName, ModuleName, LogLevelNormal
-    ElseIf Not lTicker.RecoveryContractSpec Is Nothing Then
-        gLogger.Log "Started Ticker: " & lTicker.RecoveryContractSpec.ToString, ProcName, ModuleName, LogLevelNormal
     Else
         gLogger.Log "Started Ticker: ???", ProcName, ModuleName, LogLevelNormal
     End If
@@ -2212,16 +2210,14 @@ End Sub
 Public Function StartTickerFromContract( _
                 ByVal pContract As IContract, _
                 Optional ByVal pGridRow As Long, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "StartTickerFromContract"
 On Error GoTo Err
-
-AssertArgument Not IsContractExpired(pContract), "Contract has expired"
 
 Set StartTickerFromContract = StartTickerFromContractFuture( _
                                         CreateFuture(pContract), _
                                         pGridRow, _
-                                        pRecoveryContractSpec)
+                                        pOffsetExpiry)
 
 Exit Function
 
@@ -2232,7 +2228,7 @@ End Function
 Public Function StartTickerFromContractFuture( _
                 ByVal pContractFuture As IFuture, _
                 Optional ByVal pGridRow As Long, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "StartTickerFromContractFuture"
 On Error GoTo Err
 
@@ -2240,7 +2236,7 @@ Dim lTicker As IMarketDataSource
 Set lTicker = mMarketDataManager.CreateMarketDataSource( _
                                     pContractFuture, _
                                     True, _
-                                    pRecoveryContractSpec:=pRecoveryContractSpec)
+                                    pOffsetExpiry:=pOffsetExpiry)
 
 addTickerToGrid lTicker, pGridRow
 processTickerState lTicker

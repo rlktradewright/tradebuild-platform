@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#170.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#375.0#0"; "TradingUI27.ocx"
 Begin VB.Form fContractSelector 
    Caption         =   "Form2"
    ClientHeight    =   6510
@@ -58,7 +58,6 @@ Private Const ModuleName                            As String = "fContractSelect
 ' Member variables
 '@================================================================================
 
-Private mContracts                                  As IContracts
 Private mContractStore                              As IContractStore
 Private mAllowMultipleSelection                     As Boolean
 
@@ -93,19 +92,6 @@ End Sub
 ' XXXX Event Handlers
 '@================================================================================
 
-Private Sub Form_Load()
-Const ProcName As String = "Form_Load"
-On Error GoTo Err
-
-ContractSearch1.Initialise mContractStore, Nothing
-ContractSearch1.AllowMultipleSelection = mAllowMultipleSelection
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 '@================================================================================
 ' Properties
 '@================================================================================
@@ -135,7 +121,10 @@ On Error GoTo Err
 
 Set mContractStore = pContractStore
 mAllowMultipleSelection = pAllowMultipleSelection
-Set mContracts = pContracts
+
+ContractSearch1.Initialise pContractStore, Nothing
+ContractSearch1.AllowMultipleSelection = pAllowMultipleSelection
+ContractSearch1.LoadContracts pContracts
 
 Exit Sub
 

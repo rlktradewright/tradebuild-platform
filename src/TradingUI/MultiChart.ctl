@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
 Begin VB.UserControl MultiChart 
    Alignable       =   -1  'True
    BackColor       =   &H0000FF00&
@@ -213,9 +213,6 @@ Private mExcludeCurrentBar                  As Boolean
 Private mTheme                              As ITheme
 
 Private mIsRaw                              As Boolean
-
-Private WithEvents mResizeTimer             As IntervalTimer
-Attribute mResizeTimer.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers

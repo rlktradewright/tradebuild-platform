@@ -110,11 +110,11 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
 On Error GoTo Err
 
-Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener, pRecoveryContractSpec)
+Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pKey, pUseLocalTimeForStudies, pStateChangeListener, pOffsetExpiry)
 
 Exit Function
 
@@ -129,7 +129,7 @@ Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
                 Optional ByVal pRefreshInterval As Long = 0&, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Const ProcName As String = "IMarketDataManager_CreateSnapshotMarketDataSource"
 On Error GoTo Err
 
@@ -139,7 +139,7 @@ IMarketDataManager_CreateSnapshotMarketDataSource = mMarketDataManager.CreateSna
                                                         pKey, _
                                                         pUseLocalTimeForStudies, _
                                                         pStateChangeListener, _
-                                                        pRefreshInterval)
+                                                        pOffsetExpiry)
 
 Exit Function
 
@@ -274,7 +274,7 @@ Public Function CreateTicker( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRecoveryContractSpec As IContractSpecifier) As Ticker
+                Optional ByVal pOffsetExpiry As String) As Ticker
 Const ProcName As String = "CreateTicker"
 On Error GoTo Err
 
@@ -291,7 +291,7 @@ Set lDataSource = mMarketDataManager.CreateMarketDataSource( _
                                         pKey, _
                                         pUseLocalTimeForStudies, _
                                         Nothing, _
-                                        pRecoveryContractSpec)
+                                        pOffsetExpiry)
 
 CreateTicker.Initialise lDataSource, mHistDataStore, Me, Nothing
                 

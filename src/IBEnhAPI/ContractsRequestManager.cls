@@ -51,7 +51,7 @@ Private mNumOutstandingRequests                     As Long
 
 Private mFetchers                                   As EnumerableCollection
 
-Private mResultsContractsFutureBuilder              As New FutureBuilder
+Private WithEvents mResultsContractsFutureBuilder   As FutureBuilder
 Attribute mResultsContractsFutureBuilder.VB_VarHelpID = -1
 Private mResultsContractsBuilder                    As New ContractsBuilder
 
@@ -79,6 +79,7 @@ Set mFutureWaiter = New FutureWaiter
 Set mTwsContracts = New EnumerableCollection
 Set mResultsContractsFutureBuilder = New FutureBuilder
 Set mFetchers = New EnumerableCollection
+Set mSelfRef = Me
 End Sub
 
 '@================================================================================
@@ -136,8 +137,6 @@ Friend Function Fetch( _
 Const ProcName As String = "Fetch"
 On Error GoTo Err
 
-Set mSelfRef = Me
-
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
@@ -160,10 +159,13 @@ If Not mContractCache.GetContracts( _
     ' the required contracts are not already in the cache
     Select Case mContractSpecifier.SecType
     Case SecTypeNone
+        gLogger.Log "Call requestContractsForUnspecifiedSectype for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         requestContractsForUnspecifiedSectype
     Case SecTypeCash
+        gLogger.Log "Call requestContractsForCash for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         requestContractsForCash
     Case Else
+        gLogger.Log "Call requestContracts for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         requestContracts mContractSpecifier
     End Select
     mFutureWaiter.Add mResultsContractsFutureBuilder.Future
@@ -172,6 +174,7 @@ If Not mContractCache.GetContracts( _
 ElseIf lCachedContracts.Count = 1 Then
     ' there is only one contract for this specifier, already in the cache. So notify
     ' it to the listener and return the relevant result
+    gLogger.Log "One contract in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
     If mReturnTwsContracts Then
         Set Fetch = CreateFuture(lCachedTwsContracts, mCookie)
     Else
@@ -179,18 +182,48 @@ ElseIf lCachedContracts.Count = 1 Then
         Set Fetch = CreateFuture(lCachedContracts, mCookie)
     End If
     If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+    Set mSelfRef = Nothing
 Else
     ' the required contracts are in the cache but there are more than 1 of them
     
     If mReturnTwsContracts Then
+        gLogger.Log lCachedTwsContracts.Count & " tws contracts in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         Set Fetch = CreateFuture(lCachedTwsContracts, mCookie)
     Else
+        gLogger.Log lCachedContracts.Count & " contracts in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         ' so just play them back to the listener
         replayCachedContracts lCachedContracts, lCachedTwsContracts
-        Set Fetch = CreateFuture(lCachedContracts, mCookie)
-        mFutureWaiter.Add Fetch
+        mFutureWaiter.Add mResultsContractsFutureBuilder.Future
+        Set Fetch = mResultsContractsFutureBuilder.Future
     End If
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function FetchSorted( _
+                ByVal pContractRequester As ContractsTwsRequester, _
+                ByVal pContractCache As ContractCache, _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                ByVal pSortDescending As Boolean, _
+                ByVal pCookie As Variant, _
+                ByVal pReturnTwsContracts As Boolean) As IFuture
+Const ProcName As String = "FetchSorted"
+On Error GoTo Err
+
+mResultsContractsBuilder.SortKeys = pSortkeys
+mResultsContractsBuilder.SortAscending = Not pSortDescending
+
+Set FetchSorted = Fetch(pContractRequester, _
+                    pContractCache, _
+                    pContractSpecifier, _
+                    Nothing, _
+                    pCookie, _
+                    pReturnTwsContracts)
 
 Exit Function
 
@@ -219,8 +252,11 @@ Friend Sub NotifyFetchCompleted( _
 Const ProcName As String = "NotifyFetchCompleted"
 On Error GoTo Err
 
-requestCompleted pFetcher
+mNumOutstandingRequests = mNumOutstandingRequests - 1
+gLogger.Log "Fetch completed: mNumOutstandingRequests=" & mNumOutstandingRequests, ProcName, ModuleName, LogLevelDetail
+
 If mNumOutstandingRequests = 0 Then processEnd
+requestCompleted pFetcher
 
 Exit Sub
 
@@ -350,7 +386,6 @@ Const ProcName As String = "requestCompleted"
 On Error GoTo Err
 
 mFetchers.Remove pFetcher
-mNumOutstandingRequests = mNumOutstandingRequests - 1
 
 Exit Sub
 

@@ -416,6 +416,71 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gFetchContracts( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pSingleContractOnly As Boolean, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pListener As IContractFetchListener, _
+                Optional ByVal pPriority As TaskPriorities = TaskPriorities.PriorityNormal, _
+                Optional ByVal pTaskName As String, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "gFetchContracts"
+On Error GoTo Err
+
+AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
+
+If IsEmpty(pCookie) Then pCookie = GenerateGUIDString
+
+Dim t As New ContractFetchTask
+t.Initialise pContractSpec, pPrimaryContractStore, pSecondaryContractStore, pCookie, pListener, pSingleContractOnly
+StartTask t, pPriority, pTaskName
+
+If pSingleContractOnly Then
+    Set gFetchContracts = t.ContractFuture
+Else
+    Set gFetchContracts = t.ContractsFuture
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gFetchContractsSorted( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByRef pSortkeys() As ContractSortKeyIds, _
+                Optional ByVal pSortDescending As Boolean = False, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pPriority As TaskPriorities = TaskPriorities.PriorityNormal, _
+                Optional ByVal pTaskName As String, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchContractsSorted"
+On Error GoTo Err
+
+AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
+
+If IsEmpty(pCookie) Then pCookie = GenerateGUIDString
+
+Dim t As New ContractFetchTask
+t.InitialiseSorted pContractSpec, _
+                    pPrimaryContractStore, _
+                    pSecondaryContractStore, _
+                    pCookie, _
+                    pSortkeys, _
+                    pSortDescending
+StartTask t, pPriority, pTaskName
+
+Set gFetchContractsSorted = t.ContractsFuture
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gGetContractSpecKey(ByVal pSpec As IContractSpecifier) As String
 Const ProcName As String = "gGetContractSpecKey"
 On Error GoTo Err
@@ -487,6 +552,16 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gGetNextQuarterExpiry() As String
+Dim year As Long: year = DatePart("yyyy", Now)
+Dim nextQuarter As Long: nextQuarter = (Int((DatePart("m", Now) + 2) / 3) + 1) * 3
+If nextQuarter > 12 Then
+    year = year + 1
+    nextQuarter = nextQuarter - 12
+End If
+gGetNextQuarterExpiry = CStr(year) & Format(nextQuarter, "00")
 End Function
 
 Public Sub gHandleUnexpectedError( _
@@ -696,14 +771,14 @@ ElseIf Len(Value) = 8 Then
 End If
 
 If d <> 0 Then
-    If d >= CDate((Year(Now) - 20) & "/01/01") And d <= CDate((Year(Now) + 10) & "/12/31") Then
+    If d >= CDate((year(Now) - 20) & "/01/01") And d <= CDate((year(Now) + 10) & "/12/31") Then
         gIsValidExpiry = True
         Exit Function
     End If
 End If
 
 If Len(Value) = 6 Then
-    If IsInteger(Value, (Year(Now) - 20) * 100 + 1, (Year(Now) + 10) * 100 + 12) Then
+    If IsInteger(Value, (year(Now) - 20) * 100 + 1, (year(Now) + 10) * 100 + 12) Then
         If Right$(Value, 2) <= 12 Then
             gIsValidExpiry = True
             Exit Function

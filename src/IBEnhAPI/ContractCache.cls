@@ -148,7 +148,7 @@ Set lEntry.Contracts = lContractsBuilder.Contracts
 If lEntry.TwsContracts Is Nothing Then Set lEntry.TwsContracts = New EnumerableCollection
 lEntry.TwsContracts.Add pTwsContract
 mContracts.Add lEntry, pKey
-gLogger.Log "Added 1 contract to cache with key", ProcName, ModuleName, LogLevelDetail, pKey
+gLogger.Log "Added 1 contract to cache with key: " & pKey, ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
 

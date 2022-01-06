@@ -108,9 +108,6 @@ End Property
 Public Property Get PriceChange() As PriceChange
 End Property
 
-Public Property Get RecoveryContractSpec() As IContractSpecifier
-End Property
-
 Public Property Get SessionFuture() As IFuture
 End Property
 
