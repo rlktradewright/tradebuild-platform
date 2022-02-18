@@ -479,7 +479,7 @@ With mContractSpec
                     IIf(.Expiry <> "", ";" & .Expiry, "") & _
                     IIf(lStrikeStr <> "", ";" & lStrikeStr, "") & _
                     IIf(.Right <> OptNone, ";" & OptionRightToString(.Right), "") & _
-                    IIf(.Multiplier <> 1, ";" & .Multiplier, "")
+                    IIf(.Multiplier <> 0, ";" & .Multiplier, "")
 End With
 
 End Property

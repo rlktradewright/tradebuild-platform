@@ -822,9 +822,7 @@ With lContract
     .exchange = exchange
     .currencyCode = currencyCode
     If multiplier = "" Then
-        .multiplier = 1
-    ElseIf CInt(multiplier) = 0 Then
-        .multiplier = 1
+        .multiplier = 0
     Else
         .multiplier = CInt(multiplier)
     End If

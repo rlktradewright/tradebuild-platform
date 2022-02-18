@@ -774,7 +774,7 @@ ExchangeCombo = Value.Exchange
 TypeCombo = SecTypeToString(Value.SecType)
 CurrencyCombo = Value.CurrencyCode
 ExpiryText = Value.Expiry
-MultiplierText = IIf(Value.Multiplier = 1, "", CStr(Value.Multiplier))
+MultiplierText = IIf(Value.Multiplier = 0, "", CStr(Value.Multiplier))
 StrikePriceText = Value.Strike
 RightCombo = OptionRightToString(Value.Right)
 
@@ -802,7 +802,7 @@ Then
 Else
     Dim lMultiplier As Double
     If MultiplierText.Text = "" Then
-        lMultiplier = 1#
+        lMultiplier = 0
     Else
         lMultiplier = CDbl(MultiplierText.Text)
     End If

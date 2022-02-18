@@ -154,7 +154,7 @@ With gContractSpecToTwsContractSpec
     .Expiry = IIf(Len(pContractSpecifier.Expiry) >= 6, pContractSpecifier.Expiry, "")
     .LocalSymbol = pContractSpecifier.LocalSymbol
     .Multiplier = pContractSpecifier.Multiplier
-    If .CurrencyCode = "GBP" And .Multiplier <> 1 Then .Multiplier = .Multiplier * 100
+    If .CurrencyCode = "GBP" Then .Multiplier = .Multiplier * 100
     .OptRight = gOptionRightToTwsOptRight(pContractSpecifier.Right)
     .SecType = gSecTypeToTwsSecType(pContractSpecifier.SecType)
     .Strike = pContractSpecifier.Strike

@@ -57,7 +57,7 @@ Public Const ConfigSettingTimezoneName                  As String = "&Timezone"
 
 Public Const DefaultDaysBeforeExpiryToSwitch            As Long = 0
 Public Const DefaultExpiry                              As String = "1899-12-30"
-Public Const DefaultMultiplier                          As Double = 1#
+Public Const DefaultMultiplier                          As Double = 0#
 Public Const DefaultTickSize                            As Double = 0.01
 Public Const DefaultTimezoneName                        As String = "Eastern Standard Time"
 
@@ -382,7 +382,7 @@ Then
                                                         lSecType, _
                                                         lCurrency, _
                                                         "", _
-                                                        1#, _
+                                                        0#, _
                                                         0#, _
                                                         OptNone)
     Else
@@ -393,7 +393,7 @@ Then
                                                         lSecType, _
                                                         lCurrency, _
                                                         lDateExpiry & lRelativeExpiry, _
-                                                        1#, _
+                                                        0#, _
                                                         0#, _
                                                         OptNone)
     End If
@@ -405,7 +405,7 @@ Else
                                                     lSecType, _
                                                     lCurrency, _
                                                     lDateExpiry & lRelativeExpiry, _
-                                                    1#, _
+                                                    0#, _
                                                     0#, _
                                                     OptNone)
 End If

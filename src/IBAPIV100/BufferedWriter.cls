@@ -131,11 +131,11 @@ On Error GoTo Err
 With pContractSpec
     AddString .ConId, "ConId"
     AddString UCase$(.Symbol), "Symbol"
-    AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    AddString gTwsSecTypeToShortString(.SecType), "Sec type"
     AddString .Expiry, "Expiry"
     AddString .Strike, "Strike"
     AddString gTwsOptionRightToString(.OptRight), "Right"
-    AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    AddString IIf(.Multiplier = 0, "", CStr(.Multiplier)), "Multiplier"
     AddString .Exchange, "Exchange"
     If Not pIgnorePrimaryExchange Then AddString .PrimaryExch, "Primary Exchange"
     AddString .CurrencyCode, "Currency"

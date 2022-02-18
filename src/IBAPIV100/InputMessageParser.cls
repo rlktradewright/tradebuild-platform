@@ -503,8 +503,6 @@ If mServerVersion >= ApiServerVersions.MD_SIZE_MULTIPLIER Then
 End If
 
 lContractSpec.Multiplier = mReader.GetLong("Multiplier")
-If lContractSpec.Multiplier = 0 Then lContractSpec.Multiplier = 1
-
 
 lContract.OrderTypes = mReader.GetString("Order types")
 lContract.ValidExchanges = mReader.GetString("Valid exchanges")
@@ -758,7 +756,6 @@ With lContract
     .Strike = mReader.GetDouble("Strike")
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
     If pVersion >= 9 Then .Multiplier = mReader.GetLong("Multiplier")
-    If .Multiplier = 0 Then .Multiplier = 1
     .Exchange = mReader.GetString("Exchange")
     .CurrencyCode = mReader.GetString("Currency")
     .LocalSymbol = mReader.GetString("Local Symbol")
@@ -1109,7 +1106,6 @@ With lContractSpec
     .Strike = mReader.GetDouble("Strike")
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
     If pVersion >= 32 Then .Multiplier = mReader.GetLong("Multiplier")
-    If .Multiplier = 0 Then .Multiplier = 1
     .Exchange = mReader.GetString("Exchange")
     .CurrencyCode = mReader.GetString("Currency")
     If pVersion >= 2 Then .LocalSymbol = mReader.GetString("Local Symbol")
@@ -1507,7 +1503,6 @@ lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
 
 lContract.Multiplier = mReader.GetLong("Multiplier")
-If lContract.Multiplier = 0 Then lContract.Multiplier = 1
 lContract.PrimaryExch = mReader.GetString("Primary exchg")
 
 lContract.CurrencyCode = mReader.GetString("Currency")
@@ -1558,8 +1553,6 @@ lContract.Exchange = mReader.GetString("Exchange")
 lContract.CurrencyCode = mReader.GetString("Currency")
 lContract.LocalSymbol = mReader.GetString("LocalSymbol")
 lContract.TradingClass = mReader.GetString("Trading Class")
-
-If lContract.Multiplier = 0 Then lContract.Multiplier = 1
 
 Dim lPosition As Double
 If mServerVersion >= ApiServerVersions.FRACTIONAL_POSITIONS Then

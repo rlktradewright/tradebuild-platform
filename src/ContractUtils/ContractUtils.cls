@@ -403,7 +403,7 @@ Public Function CreateContractSpecifier( _
                 Optional ByVal SecType As SecurityTypes = SecTypeNone, _
                 Optional ByVal CurrencyCode As String, _
                 Optional ByVal Expiry As String, _
-                Optional ByVal Multiplier As Double = 1#, _
+                Optional ByVal Multiplier As Double = 0#, _
                 Optional ByVal Strike As Double, _
                 Optional ByVal Right As OptionRights = OptNone) As IContractSpecifier
 Const ProcName As String = "CreateContractSpecifier"

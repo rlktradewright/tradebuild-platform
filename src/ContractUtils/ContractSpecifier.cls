@@ -434,7 +434,7 @@ ToString = ToString & IIf(mExchange <> "", "exchange=" & mExchange & "; ", "")
 ToString = ToString & IIf(mSecType <> 0, "sectype=" & gSecTypeToString(mSecType) & "; ", "")
 ToString = ToString & IIf(mExpiry <> "", "expiry=" & mExpiry & "; ", "")
 ToString = ToString & IIf(mCurrency <> "", "currencycode=" & mCurrency & "; ", "")
-ToString = ToString & IIf(mMultiplier <> 1, "multiplier=" & mMultiplier & "; ", "")
+ToString = ToString & IIf(mMultiplier <> 0, "multiplier=" & mMultiplier & "; ", "")
 Select Case mRight
 Case OptCall, OptPut
     ToString = ToString & "right=" & gOptionRightToString(mRight) & "; "
