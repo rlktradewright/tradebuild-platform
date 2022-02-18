@@ -346,7 +346,9 @@ On Error GoTo Err
 
 pPriceString = Trim$(pPriceString)
 
-If pTickSize = OneThirtySecond Then
+If pTickSize = -1 Then
+    gParsePrice = gParsePriceGeneric(pPriceString, pPrice)
+ElseIf pTickSize = OneThirtySecond Then
     gParsePrice = gParsePriceAs32nds(pPriceString, pPrice)
 ElseIf pTickSize = OneSixtyFourth Then
     If pSecType = SecTypeFuture Then
@@ -495,6 +497,28 @@ If IsMatched(pPriceString, getParsePriceAsDecimalsPattern(pTickSize)) Then
     ' must be a period here)
     pPrice = Val(pPriceString)
     gParsePriceAsDecimals = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gParsePriceGeneric( _
+                ByVal pPriceString As String, _
+                ByRef pPrice As Double) As Boolean
+Const ProcName As String = "gParsePriceAsDecimals"
+On Error GoTo Err
+
+gParsePriceGeneric = True
+If gParsePriceAs32nds(pPriceString, pPrice) Then
+ElseIf gParsePriceAs32ndsAndFractions(pPriceString, pPrice) Then
+ElseIf gParsePriceAs64ths(pPriceString, pPrice) Then
+ElseIf gParsePriceAs64thsAndFractions(pPriceString, pPrice) Then
+ElseIf gParsePriceAsDecimals(pPriceString, 0.00000001, pPrice) Then
+Else
+    gParsePriceGeneric = False
 End If
 
 Exit Function

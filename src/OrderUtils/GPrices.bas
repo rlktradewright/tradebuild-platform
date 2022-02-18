@@ -66,26 +66,28 @@ Public Const BidAskSpreadPercentOffsetDesignator    As String = "S"
 
 Public Function gNewPriceSpecifier( _
                 Optional ByVal pPrice As Double = MaxDoubleValue, _
+                Optional ByVal pPriceString As String = "", _
                 Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
                 Optional ByVal pOffset As Double = 0#, _
                 Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone, _
+                Optional ByVal pTickSize As Double, _
                 Optional ByVal pUseCloseoutSemantics As Boolean = False) As PriceSpecifier
 Dim p As New PriceSpecifier
-p.Initialise pPrice, pPriceType, pOffset, pOffsetType, pUseCloseoutSemantics
+p.Initialise pPrice, pPriceString, pPriceType, pOffset, pOffsetType, pTickSize, pUseCloseoutSemantics
 Set gNewPriceSpecifier = p
 End Function
 
 Public Function gParsePriceAndOffset( _
                 ByRef pPriceSpec As PriceSpecifier, _
                 ByVal pValue As String, _
-                ByVal pSectype As SecurityTypes, _
+                ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double, _
                 ByVal pUseCloseoutSemantics As Boolean) As Boolean
 Const ProcName As String = "gParsePrice"
 On Error GoTo Err
 
 If pValue = "" Then
-    Set pPriceSpec = gNewPriceSpecifier(MaxDoubleValue, PriceValueTypeNone, 0, PriceOffsetTypeNone)
+    Set pPriceSpec = gNewPriceSpecifier(MaxDoubleValue, "", PriceValueTypeNone, 0, PriceOffsetTypeNone)
     gParsePriceAndOffset = True
     Exit Function
 End If
@@ -133,7 +135,7 @@ Case MidPriceDesignator
     lPriceType = PriceValueTypeMid
 Case Else
     lPriceType = PriceValueTypeValue
-    If Not ParsePrice(lPricePart, pSectype, pTickSize, lPrice) Then
+    If Not parseprice(lPricePart, pSecType, pTickSize, lPrice) Then
         gParsePriceAndOffset = False
         Exit Function
     End If
@@ -154,7 +156,13 @@ Case BidAskSpreadPercentOffsetDesignator
     lOffsetType = PriceOffsetTypeBidAskPercent
 End Select
 
-Set pPriceSpec = gNewPriceSpecifier(lPrice, lPriceType, lOffset, lOffsetType, pUseCloseoutSemantics)
+Set pPriceSpec = gNewPriceSpecifier(lPrice, _
+                                    pValue, _
+                                    lPriceType, _
+                                    lOffset, _
+                                    lOffsetType, _
+                                    pTickSize, _
+                                    pUseCloseoutSemantics)
 
 gParsePriceAndOffset = True
 

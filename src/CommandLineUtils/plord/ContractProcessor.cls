@@ -795,16 +795,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getOrderAction(ByVal pInput As String) As OrderActions
-On Error Resume Next
-If pInput = "" Then
-    getOrderAction = OrderActionNone
-Else
-    getOrderAction = OrderActionFromString(pInput)
-End If
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then getOrderAction = OrderActionNone
-End Function
-
 Private Function getEntryOrderType(ByVal pInput As String) As OrderTypes
 Const ProcName As String = "getEntryOrderType"
 On Error GoTo Err
@@ -826,6 +816,28 @@ If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
+End Function
+
+Private Function getOrderAction(ByVal pInput As String) As OrderActions
+On Error Resume Next
+If pInput = "" Then
+    getOrderAction = OrderActionNone
+Else
+    getOrderAction = OrderActionFromString(pInput)
+End If
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then getOrderAction = OrderActionNone
+End Function
+
+Private Function getPriceString(ByVal pClp As CommandLineParser) As String
+Const ProcName As String = "getPriceString"
+On Error GoTo Err
+
+getPriceString = pClp.SwitchValue(PriceSwitch)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getStopLossOrderType(ByVal pInput As String) As OrderTypes
@@ -880,18 +892,6 @@ Else
 End If
 End Function
 
-Private Function getPriceString(ByVal pClp As CommandLineParser) As String
-Const ProcName As String = "getPriceString"
-On Error GoTo Err
-
-getPriceString = pClp.SwitchValue(PriceSwitch)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Function getTriggerPriceString(ByVal pClp As CommandLineParser) As String
 Const ProcName As String = "getTriggerPriceString"
 On Error GoTo Err
@@ -903,6 +903,72 @@ ElseIf pClp.Switch(TriggerPriceSwitch1) Then
     s = pClp.SwitchValue(TriggerPriceSwitch1)
 End If
 getTriggerPriceString = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function notifyUnexpectedPrice( _
+                ByVal pPriceString As String, _
+                ByVal pPriceName As String) As Boolean
+If pPriceString <> "" Then
+    gWriteErrorLine pPriceName & " price must not be specified for this order type"
+    notifyUnexpectedPrice = True
+Else
+    notifyUnexpectedPrice = False
+End If
+End Function
+
+Private Sub parseOffset( _
+                ByVal pValue As String, _
+                ByVal pPriceSpec As PriceSpecifier)
+pValue = UCase$(pValue)
+If pValue = "" Then
+    pPriceSpec.Offset = 0#
+    pPriceSpec.OffsetType = PriceOffsetTypeNone
+ElseIf Right$(Trim$(pValue), 1) = TickOffsetDesignator Then
+    Dim numTicks As String
+    numTicks = Left$(pValue, Len(pValue) - 1)
+    If Not IsInteger(numTicks) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
+    pPriceSpec.Offset = CLng(numTicks)
+    pPriceSpec.OffsetType = PriceOffsetTypeNumberOfTicks
+ElseIf Right$(Trim$(pValue), 1) = PercentOffsetDesignator Then
+    ' Note that for legacy purposes, "%" was used for the bid/ask spread
+    ' percent designator
+    Dim numPercent As String
+    numPercent = Left$(pValue, Len(pValue) - 1)
+    If Not IsInteger(numPercent) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
+    pPriceSpec.Offset = CLng(numPercent)
+    pPriceSpec.OffsetType = PriceOffsetTypeBidAskPercent
+Else
+    pPriceSpec.Offset = CDbl(pValue)
+    pPriceSpec.OffsetType = PriceOffsetTypeIncrement
+End If
+End Sub
+
+Private Function parseOrderPrice( _
+                ByVal pPriceStr As String, _
+                ByVal pPriceName As String, _
+                ByRef pPriceSpec As PriceSpecifier) As Boolean
+Const ProcName As String = "parseOrderPrice"
+On Error GoTo Err
+
+If pPriceStr = "" Then
+    parseOrderPrice = False
+    gWriteErrorLine pPriceName & " price must be specified for this order type"
+ElseIf Not IsNumeric(pPriceStr) Then
+    parseOrderPrice = False
+    gWriteErrorLine pPriceName & " price is invalid: " & pPriceStr
+ElseIf mOrderContext.ParsePriceAndOffset(pPriceSpec, pPriceStr) And _
+    pPriceSpec.IsValid _
+Then
+    parseOrderPrice = True
+Else
+    parseOrderPrice = False
+    gWriteErrorLine pPriceName & " price is not valid for this tick size: " & pPriceStr
+End If
 
 Exit Function
 
@@ -929,15 +995,18 @@ Case OrderTypeMarket, _
         OrderTypeMarketOnClose, _
         OrderTypeMarketOnOpen, _
         OrderTypeMarketToLimit
-    ' nothing to do
+    If notifyUnexpectedPrice(pPrice1, "limit") Then parseOrderPrices = False
+    If notifyUnexpectedPrice(pPrice2, "trigger") Then parseOrderPrices = False
 Case OrderTypeMarketIfTouched, _
         OrderTypeStop, _
         OrderTypeTrail
-    If Not parseOrderPrice(pPrice1, "Trigger", pTriggerPriceSpec) Then parseOrderPrices = False
+    If Not parseOrderPrice(pPrice1, "trigger", pTriggerPriceSpec) Then parseOrderPrices = False
+    If notifyUnexpectedPrice(pPrice2, "second") Then parseOrderPrices = False
 Case OrderTypeLimit, _
         OrderTypeLimitOnOpen, _
         OrderTypeLimitOnClose
-    If Not parseOrderPrice(pPrice1, "Limit", pLimitPriceSpec) Then parseOrderPrices = False
+    If Not parseOrderPrice(pPrice1, "limit", pLimitPriceSpec) Then parseOrderPrices = False
+    If notifyUnexpectedPrice(pPrice2, "trigger") Then parseOrderPrices = False
 Case OrderTypeLimitIfTouched, _
         OrderTypeStopLimit, _
         OrderTypeTrailLimit
@@ -1092,55 +1161,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub parseOffset( _
-                ByVal pValue As String, _
-                ByVal pPriceSpec As PriceSpecifier)
-pValue = UCase$(pValue)
-If pValue = "" Then
-    pPriceSpec.Offset = 0#
-    pPriceSpec.OffsetType = PriceOffsetTypeNone
-ElseIf Right$(Trim$(pValue), 1) = TickOffsetDesignator Then
-    Dim numTicks As String
-    numTicks = Left$(pValue, Len(pValue) - 1)
-    If Not IsInteger(numTicks) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
-    pPriceSpec.Offset = CLng(numTicks)
-    pPriceSpec.OffsetType = PriceOffsetTypeNumberOfTicks
-ElseIf Right$(Trim$(pValue), 1) = PercentOffsetDesignator Then
-    ' Note that for legacy purposes, "%" was used for the bid/ask spread
-    ' percent designator
-    Dim numPercent As String
-    numPercent = Left$(pValue, Len(pValue) - 1)
-    If Not IsInteger(numPercent) Then Err.Raise ErrorCodes.ErrIllegalArgumentException
-    pPriceSpec.Offset = CLng(numPercent)
-    pPriceSpec.OffsetType = PriceOffsetTypeBidAskPercent
-Else
-    pPriceSpec.Offset = CDbl(pValue)
-    pPriceSpec.OffsetType = PriceOffsetTypeIncrement
-End If
-End Sub
-
-Private Function parseOrderPrice( _
-                ByVal pPriceStr As String, _
-                ByVal pPriceName As String, _
-                ByRef pTriggerPriceSpec As PriceSpecifier) As Boolean
-Const ProcName As String = "parseOrderPrice"
-On Error GoTo Err
-
-If mOrderContext.ParsePriceAndOffset(pTriggerPriceSpec, pPriceStr) And _
-    pTriggerPriceSpec.IsValid _
-Then
-    parseOrderPrice = True
-Else
-    parseOrderPrice = False
-    gWriteErrorLine pPriceName & " price must be specified for this order type"
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Function processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _
                 ByVal pParams As String) As Boolean
@@ -1164,9 +1184,10 @@ End If
 
 Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(1)
 Dim lPriceOrOffset As String: lPriceOrOffset = lClp.Arg(2)
+Dim lTriggerPrice As String: lTriggerPrice = lClp.Arg(3)
 
 If Not parsePseudoOrder(lOrderTypeStr, lPriceOrOffset) Then
-    mBOSpec.EntryType = getEntryOrderType(lClp.Arg(1))
+    mBOSpec.EntryType = getEntryOrderType(lOrderTypeStr)
     
     If Not IsEntryOrderType(mBOSpec.EntryType) Then
         mBOSpec.EntryType = OrderTypeNone
@@ -1178,7 +1199,7 @@ If Not parsePseudoOrder(lOrderTypeStr, lPriceOrOffset) Then
         
         processBuyOrSellCommand = parseOrderPrices( _
                                         lPriceOrOffset, _
-                                        lClp.Arg(3), _
+                                        lTriggerPrice, _
                                         mBOSpec.EntryType, _
                                         lLimitPriceSpec, _
                                         lTriggerPriceSpec)

@@ -255,7 +255,7 @@ End Function
 
 Public Function gCalculateOffsettedPrice( _
                 ByVal pPriceSpec As PriceSpecifier, _
-                ByVal pSectype As SecurityTypes, _
+                ByVal pSecType As SecurityTypes, _
                 ByVal pOrderAction As OrderActions, _
                 ByVal pTickSize As Double, _
                 ByVal pBidPrice As Double, _
@@ -269,6 +269,10 @@ If pPriceSpec.PriceType = PriceValueTypeEntry Or _
         pPriceSpec.PriceType = PriceValueTypeNone Then
     gCalculateOffsettedPrice = MaxDoubleValue
     Exit Function
+End If
+
+If pPriceSpec.PriceType = PriceValueTypeValue Then
+    pPriceSpec.CheckPriceValid pTickSize, pSecType
 End If
 
 Dim lRoundingMode As TickRoundingModes
@@ -313,14 +317,6 @@ Case PriceValueTypeBidOrAsk
     End If
 End Select
 
-Dim lEffectiveTickSize As Double: lEffectiveTickSize = pTickSize
-If pSectype <> SecTypeOption Or lPrice < 3# Then
-ElseIf pTickSize = 0.01 Then
-    lEffectiveTickSize = 0.05
-Else
-    lEffectiveTickSize = 0.1
-End If
-
 Dim lResult As Double
 
 Select Case pPriceSpec.OffsetType
@@ -330,7 +326,7 @@ Case PriceOffsetTypeNone
 Case PriceOffsetTypeIncrement
     lOffset = pPriceSpec.Offset
 Case PriceOffsetTypeNumberOfTicks
-    lOffset = pPriceSpec.Offset * lEffectiveTickSize
+    lOffset = pPriceSpec.Offset * pTickSize
 Case PriceOffsetTypeBidAskPercent
     AssertArgument pAskPrice <> MaxDouble, "Ask price not available"
     AssertArgument pBidPrice <> MaxDouble, "Bid price not available"
@@ -351,7 +347,7 @@ End If
 
 gCalculateOffsettedPrice = gRoundToTickBoundary( _
                                         lResult, _
-                                        lEffectiveTickSize, _
+                                        pTickSize, _
                                         lRoundingMode)
 
 Exit Function
@@ -521,6 +517,14 @@ End Function
 
 Public Function gGetSignedQuantity(ByVal pExec As IExecutionReport) As Long
 gGetSignedQuantity = IIf(pExec.Action = OrderActionBuy, pExec.Quantity, -pExec.Quantity)
+End Function
+
+Public Function gGetSourceDesignator( _
+                ByRef pModuleName As String, _
+                ByRef pProcedureName As String) As String
+gGetSourceDesignator = "[" & ProjectName & "." & _
+            pModuleName & ":" & _
+            pProcedureName & "]"
 End Function
 
 Public Sub gHandleUnexpectedError( _

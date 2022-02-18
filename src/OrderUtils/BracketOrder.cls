@@ -3879,6 +3879,7 @@ If pRole = BracketOrderRoleStopLoss Then
     If pOrder.LimitPriceSpec Is Nothing Then
     ElseIf pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewStopLossLimitPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
+                                                    "", _
                                                     PriceValueTypeValue, _
                                                     pOrder.LimitPriceSpec.Offset, _
                                                     pOrder.LimitPriceSpec.OffsetType)
@@ -3886,6 +3887,7 @@ If pRole = BracketOrderRoleStopLoss Then
     If pOrder.TriggerPriceSpec Is Nothing Then
     ElseIf pOrder.TriggerPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewStopLossTriggerPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
+                                                    "", _
                                                     PriceValueTypeValue, _
                                                     pOrder.TriggerPriceSpec.Offset, _
                                                     pOrder.TriggerPriceSpec.OffsetType)
@@ -3894,6 +3896,7 @@ Else
     If pOrder.LimitPriceSpec Is Nothing Then
     ElseIf pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewTargetLimitPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
+                                                    "", _
                                                     PriceValueTypeValue, _
                                                     pOrder.LimitPriceSpec.Offset, _
                                                     pOrder.LimitPriceSpec.OffsetType)
@@ -3901,6 +3904,7 @@ Else
     If pOrder.TriggerPriceSpec Is Nothing Then
     ElseIf pOrder.TriggerPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewTargetTriggerPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
+                                                    "", _
                                                     PriceValueTypeValue, _
                                                     pOrder.TriggerPriceSpec.Offset, _
                                                     pOrder.TriggerPriceSpec.OffsetType)

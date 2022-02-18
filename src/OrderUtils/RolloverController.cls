@@ -492,10 +492,12 @@ With mBracketOrder
         Set lStopLossOrder = mNextOrderContext.CreateStopLossOrder( _
                                         .StopLossOrder.OrderType, _
                                         gNewPriceSpecifier(.StopLossOrder.LimitPriceSpec.Price, _
+                                                            "", _
                                                             .StopLossOrder.LimitPriceSpec.PriceType, _
                                                             .StopLossOrder.LimitPriceSpec.Offset, _
                                                             .StopLossOrder.LimitPriceSpec.OffsetType), _
                                         gNewPriceSpecifier(.StopLossOrder.TriggerPriceSpec.Price, _
+                                                            "", _
                                                             .StopLossOrder.TriggerPriceSpec.PriceType, _
                                                             .StopLossOrder.TriggerPriceSpec.Offset, _
                                                             .StopLossOrder.TriggerPriceSpec.OffsetType), _
@@ -505,10 +507,12 @@ With mBracketOrder
         Set lTargetOrder = mNextOrderContext.CreateTargetOrder( _
                                         .TargetOrder.OrderType, _
                                         gNewPriceSpecifier(.TargetOrder.LimitPriceSpec.Price, _
+                                                            "", _
                                                             .TargetOrder.LimitPriceSpec.PriceType, _
                                                             .TargetOrder.LimitPriceSpec.Offset, _
                                                             .TargetOrder.LimitPriceSpec.OffsetType), _
                                         gNewPriceSpecifier(.TargetOrder.TriggerPriceSpec.Price, _
+                                                            "", _
                                                             .TargetOrder.TriggerPriceSpec.PriceType, _
                                                             .TargetOrder.TriggerPriceSpec.Offset, _
                                                             .TargetOrder.TriggerPriceSpec.OffsetType), _

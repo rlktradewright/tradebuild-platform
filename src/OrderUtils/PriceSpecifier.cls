@@ -45,11 +45,14 @@ Private Const ModuleName                            As String = "PriceSpecifier"
 ' Member variables
 '@================================================================================
 
+Private mInitialised                                As Boolean
 Private mPrice                                      As Double
+Private mPriceString                                As String
 Private mPriceType                                  As PriceValueTypes
 Private mOffset                                     As Double
 Private mOffsetType                                 As PriceOffsetTypes
 Private mUseCloseoutSemantics                       As Boolean
+Private mTickSize                                   As Double
 
 '@================================================================================
 ' Class Event Handlers
@@ -76,7 +79,13 @@ IsValid = mPriceType <> PriceValueTypeNone
 End Property
 
 Public Property Let Price(ByVal Value As Double)
+Assert Not mInitialised, "Already set via initialiser"
 mPrice = Value
+End Property
+
+Public Property Let PriceString(ByVal Value As String)
+Assert Not mInitialised, "Already set via initialiser"
+mPriceString = Value
 End Property
 
 Public Property Get Price() As Double
@@ -84,6 +93,7 @@ Price = mPrice
 End Property
 
 Public Property Let PriceType(ByVal Value As PriceValueTypes)
+Assert Not mInitialised, "Already set via initialiser"
 mPriceType = Value
 End Property
 
@@ -92,6 +102,7 @@ PriceType = mPriceType
 End Property
 
 Public Property Let Offset(ByVal Value As Double)
+Assert Not mInitialised, "Already set via initialiser"
 mOffset = Value
 End Property
 
@@ -100,6 +111,7 @@ Offset = mOffset
 End Property
 
 Public Property Let OffsetType(ByVal Value As PriceOffsetTypes)
+Assert Not mInitialised, "Already set via initialiser"
 mOffsetType = Value
 End Property
 
@@ -108,6 +120,7 @@ OffsetType = mOffsetType
 End Property
 
 Public Property Let UseCloseoutSemantics(ByVal Value As Boolean)
+Assert Not mInitialised, "Already set via initialiser"
 mUseCloseoutSemantics = Value
 End Property
 
@@ -118,6 +131,28 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub CheckPriceValid( _
+                ByVal pTickSize As Double, _
+                ByVal pSecType As SecurityTypes)
+Const ProcName As String = "CheckPriceValid"
+On Error GoTo Err
+
+If mPriceType = PriceValueTypeValue And _
+    mTickSize = -1 _
+Then
+    ' we only get here if this PriceSpecifier was set before the
+    ' minimum tick had been determined
+    mTickSize = pTickSize
+    Dim lPrice As Double
+    AssertArgument parseprice(mPriceString, pSecType, mTickSize, lPrice), "Price not valid for this tick size"
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Function Equals(ByVal pObj As Object) As Boolean
 If pObj Is Nothing Then Exit Function
@@ -134,14 +169,19 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pPrice As Double, _
+                ByVal pPriceString As String, _
                 ByVal pPriceType As PriceValueTypes, _
                 ByVal pOffset As Double, _
                 ByVal pOffsetType As PriceOffsetTypes, _
+                ByVal pTickSize As Double, _
                 ByVal pUseCloseoutSemantics As Boolean)
+mInitialised = True
 mPrice = pPrice
+mPriceString = pPriceString
 mPriceType = pPriceType
 mOffset = pOffset
 mOffsetType = pOffsetType
+mTickSize = pTickSize
 mUseCloseoutSemantics = pUseCloseoutSemantics
 End Sub
 
@@ -165,7 +205,7 @@ jb.EncodeNameAndValue "Price", mPrice, MaxDouble
 jb.EncodeNameAndValue "Offset", mOffset, 0#
 jb.EncodeNameAndValue "PriceType", mPriceType, PriceValueTypes.PriceValueTypeNone
 jb.EncodeNameAndValue "OffsetType", mOffsetType, PriceOffsetTypes.PriceOffsetTypeNone
-
+jb.EncodeNameAndValue "PriceString", mPriceString
 jb.EndObject
 
 ToJSON = jb.JSONString

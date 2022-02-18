@@ -180,6 +180,7 @@ End Function
 
 Public Function NewPriceSpecifier( _
                 Optional ByVal pPrice As Double = MaxDoubleValue, _
+                Optional ByVal pPriceString As String = "", _
                 Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
                 Optional ByVal pOffset As Double = 0#, _
                 Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone) As PriceSpecifier
@@ -399,13 +400,13 @@ End Function
 Public Function ParsePriceAndOffset( _
                 ByRef pPriceSpec As PriceSpecifier, _
                 ByVal pValue As String, _
-                ByVal pSectype As SecurityTypes, _
+                ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double, _
                 Optional ByVal pUseCloseoutSemantics As Boolean = False) As Boolean
 Const ProcName As String = "gParsePriceAndOffset"
 On Error GoTo Err
 
-ParsePriceAndOffset = gParsePriceAndOffset(pPriceSpec, pValue, pSectype, pTickSize, pUseCloseoutSemantics)
+ParsePriceAndOffset = gParsePriceAndOffset(pPriceSpec, pValue, pSecType, pTickSize, pUseCloseoutSemantics)
 
 Exit Function
 
