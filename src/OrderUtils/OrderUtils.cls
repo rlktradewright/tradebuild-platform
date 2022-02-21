@@ -402,11 +402,12 @@ Public Function ParsePriceAndOffset( _
                 ByVal pValue As String, _
                 ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double, _
+                ByRef pMessage As String, _
                 Optional ByVal pUseCloseoutSemantics As Boolean = False) As Boolean
 Const ProcName As String = "gParsePriceAndOffset"
 On Error GoTo Err
 
-ParsePriceAndOffset = gParsePriceAndOffset(pPriceSpec, pValue, pSecType, pTickSize, pUseCloseoutSemantics)
+ParsePriceAndOffset = gParsePriceAndOffset(pPriceSpec, pValue, pSecType, pTickSize, pUseCloseoutSemantics, pMessage)
 
 Exit Function
 

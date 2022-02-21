@@ -473,7 +473,8 @@ Const ProcName As String = "AdjustStop"
 On Error GoTo Err
 
 Dim lPriceSpec As PriceSpecifier
-Assert parsePriceString(Price, lPriceSpec)
+Dim lMessage As String
+Assert parsePriceString(Price, lPriceSpec, lMessage), lMessage
 getBracketOrder(BracketOrder).AdjustStop lPriceSpec, Quantity
 
 Exit Sub
@@ -680,7 +681,8 @@ Const ProcName As String = "SetNewEntryLimitPrice"
 On Error GoTo Err
 
 Dim lPriceSpec As PriceSpecifier
-Assert parsePriceString(Price, lPriceSpec)
+Dim lMessage As String
+Assert parsePriceString(Price, lPriceSpec, lMessage), lMessage
 getBracketOrder(BracketOrder).SetNewEntryLimitPrice lPriceSpec
 
 Exit Sub
@@ -696,7 +698,8 @@ Const ProcName As String = "SetNewEntryTriggerPrice"
 On Error GoTo Err
 
 Dim lPriceSpec As PriceSpecifier
-Assert parsePriceString(Price, lPriceSpec)
+Dim lMessage As String
+Assert parsePriceString(Price, lPriceSpec, lMessage), lMessage
 getBracketOrder(BracketOrder).SetNewEntryTriggerPrice lPriceSpec
 
 Exit Sub
@@ -726,7 +729,8 @@ Const ProcName As String = "SetNewStopLossLimitPrice"
 On Error GoTo Err
 
 Dim lPriceSpec As PriceSpecifier
-Assert parsePriceString(Price, lPriceSpec)
+Dim lMessage As String
+Assert parsePriceString(Price, lPriceSpec, lMessage), lMessage
 getBracketOrder(BracketOrder).SetNewStopLossLimitPrice lPriceSpec
 
 Exit Sub
@@ -743,7 +747,8 @@ Const ProcName As String = "SetNewStopLossTriggerPrice"
 On Error GoTo Err
 
 Dim lPriceSpec As PriceSpecifier
-Assert parsePriceString(Price, lPriceSpec)
+Dim lMessage As String
+Assert parsePriceString(Price, lPriceSpec, lMessage), lMessage
 getBracketOrder(BracketOrder).SetNewStopLossTriggerPrice lPriceSpec
 
 Exit Sub
@@ -759,7 +764,8 @@ Const ProcName As String = "SetNewTargetLimitPrice"
 On Error GoTo Err
 
 Dim lPriceSpec As PriceSpecifier
-Assert parsePriceString(Price, lPriceSpec)
+Dim lMessage As String
+Assert parsePriceString(Price, lPriceSpec, lMessage), lMessage
 getBracketOrder(BracketOrder).SetNewTargetLimitPrice lPriceSpec
 
 Exit Sub
@@ -775,7 +781,8 @@ Const ProcName As String = "SetNewTargetTriggerPrice "
 On Error GoTo Err
 
 Dim lPriceSpec As PriceSpecifier
-Assert parsePriceString(Price, lPriceSpec)
+Dim lMessage As String
+Assert parsePriceString(Price, lPriceSpec, lMessage), lMessage
 getBracketOrder(BracketOrder).SetNewTargetTriggerPrice lPriceSpec
 
 Exit Sub
@@ -1033,12 +1040,13 @@ End Function
 
 Private Function parsePriceString( _
                 ByVal pPriceString As String, _
-                ByRef pPriceSpec As PriceSpecifier) As Boolean
+                ByRef pPriceSpec As PriceSpecifier, _
+                ByRef pMessage As String) As Boolean
 Const ProcName As String = "parsePriceString"
 On Error GoTo Err
 
 Dim lOrderContext As OrderContext: Set lOrderContext = gTradingContext.DefaultBuyOrderContext
-parsePriceString = lOrderContext.ParsePriceAndOffset(pPriceSpec, pPriceString)
+parsePriceString = lOrderContext.ParsePriceAndOffset(pPriceSpec, pPriceString, pMessage)
 
 Exit Function
 

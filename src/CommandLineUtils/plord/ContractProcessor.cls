@@ -955,19 +955,18 @@ Private Function parseOrderPrice( _
 Const ProcName As String = "parseOrderPrice"
 On Error GoTo Err
 
+Dim lMessage As String
+
 If pPriceStr = "" Then
     parseOrderPrice = False
     gWriteErrorLine pPriceName & " price must be specified for this order type"
-ElseIf Not IsNumeric(pPriceStr) Then
-    parseOrderPrice = False
-    gWriteErrorLine pPriceName & " price is invalid: " & pPriceStr
-ElseIf mOrderContext.ParsePriceAndOffset(pPriceSpec, pPriceStr) And _
+ElseIf mOrderContext.ParsePriceAndOffset(pPriceSpec, pPriceStr, lMessage) And _
     pPriceSpec.IsValid _
 Then
     parseOrderPrice = True
 Else
     parseOrderPrice = False
-    gWriteErrorLine pPriceName & " price is not valid for this tick size: " & pPriceStr
+    gWriteErrorLine pPriceName & " " & lMessage & ": " & pPriceStr
 End If
 
 Exit Function

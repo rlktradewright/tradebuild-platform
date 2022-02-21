@@ -1429,6 +1429,7 @@ End Sub
 Public Function ParsePriceAndOffset( _
                 ByRef pPriceSpec As PriceSpecifier, _
                 ByVal pPriceString As String, _
+                ByRef pMessage As String, _
                 Optional ByVal pUseCloseoutSemantics As Boolean = False) As Boolean
 Const ProcName As String = "ParsePriceAndOffset"
 On Error GoTo Err
@@ -1438,7 +1439,8 @@ ParsePriceAndOffset = gParsePriceAndOffset( _
                                 pPriceString, _
                                 mContract.Specifier.SecType, _
                                 mTickSize, _
-                                pUseCloseoutSemantics)
+                                pUseCloseoutSemantics, _
+                                pMessage)
 
 Exit Function
 

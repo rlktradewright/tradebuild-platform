@@ -82,7 +82,8 @@ Public Function gParsePriceAndOffset( _
                 ByVal pValue As String, _
                 ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double, _
-                ByVal pUseCloseoutSemantics As Boolean) As Boolean
+                ByVal pUseCloseoutSemantics As Boolean, _
+                ByRef pMessage As String) As Boolean
 Const ProcName As String = "gParsePrice"
 On Error GoTo Err
 
@@ -104,6 +105,7 @@ Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(Trim$(pValue))
 
 If lMatches.Count <> 1 Then
+    pMessage = "price syntax is invalid"
     gParsePriceAndOffset = False
     Exit Function
 End If
@@ -136,6 +138,7 @@ Case MidPriceDesignator
 Case Else
     lPriceType = PriceValueTypeValue
     If Not parseprice(lPricePart, pSecType, pTickSize, lPrice) Then
+        pMessage = "price is not valid for this tick size"
         gParsePriceAndOffset = False
         Exit Function
     End If
