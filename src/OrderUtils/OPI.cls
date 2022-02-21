@@ -136,9 +136,10 @@ On Error GoTo Err
 
 mToString = pValue
 
-Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pValue, ",")
+Dim s() As String: s = Split(pValue, ",")
 
-Dim lTimestampString As String: lTimestampString = lClp.Arg(0)
+Dim lTimestampString As String: lTimestampString = s(0)
+
 Dim index As Long: index = InStrRev(lTimestampString, ".")
 If index = 0 Then
     mTimestamp = CDate(lTimestampString)
@@ -147,11 +148,17 @@ Else
                        CDbl(Mid$(lTimestampString, index + 1)) / 86400000
 End If
 
-mRecoveryContextName = lClp.Arg(1)
-mItemType = lClp.Arg(2)
+mRecoveryContextName = s(1)
+
+mItemType = s(2)
 
 If mItemType = OrderInfoData Then
-    ParseJSON lClp.Arg(3), mData
+    Dim lData As String
+    Dim lStartPos As Long
+    lStartPos = InStr(1, pValue, mItemType) + Len(mItemType) + 2
+    lData = Mid$(pValue, lStartPos, Len(pValue) - lStartPos)
+    gLog lData, ProcName, ModuleName
+    ParseJSON lData, mData
     If TypeOf mData Is PMS Then
         Dim lPMS As PMS: Set lPMS = mData
         lPMS.Diff.UpdateHost lPMS
