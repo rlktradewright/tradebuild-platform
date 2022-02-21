@@ -103,12 +103,9 @@ If mTwsRequestId = NullIndex Then
     Exit Sub
 End If
 
-If mReturnTwsContracts Then
-    mRequestManager.NotifyFetchCompleted Me
-Else
-    mFinishedRetrieval = True
-    mTaskContext.Continue
-End If
+mFinishedRetrieval = True
+mTaskContext.Continue
+
 Exit Sub
 
 Err:
@@ -420,7 +417,7 @@ mContractCache.SetContractsFutureBuilder pContractSpec, mContractsForCachingFutu
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Request contract details for", ModuleName, ProcName, pContractSpec.ToString, LogLevelDetail
 mTwsRequestId = mContractRequester.RequestContractDetails(pContractSpec, Me)
 
-If Not mReturnTwsContracts Then StartTask Me, PriorityNormal
+StartTask Me, PriorityNormal
 
 Exit Sub
 
