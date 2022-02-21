@@ -201,8 +201,10 @@ On Error GoTo Err
 
 Select Case ev.State
 Case OrderSubmitterStateNotReady
+    gLog "OrderSubmitter is not ready", ProcName, ModuleName, , LogLevelDetail
     mProviderIsReady = False
 Case OrderSubmitterStateReady
+    gLog "OrderSubmitter is ready", ProcName, ModuleName, , LogLevelDetail
     mProviderIsReady = True
 End Select
 
@@ -229,17 +231,15 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
-Dim lOrderContext As OrderContext
 If TypeOf ev.Future.Value Is IPermittedOrderProperties Then
+    gLog "Got permitted properties", ProcName, ModuleName, , LogLevelDetail
     Set mPermittedOrderProperties = ev.Future.Value
-    
-    For Each lOrderContext In mOrderContexts
-        lOrderContext.PermittedOrderProperties = mPermittedOrderProperties
-        lOrderContext.IsProviderReady = IsProviderReady
-    Next
+    If Not mContract Is Nothing Then processPermittedOrderProperties
 ElseIf TypeOf ev.Future.Value Is IContract Then
+    gLog "Got contract", ProcName, ModuleName, , LogLevelDetail
     Set mContract = ev.Future.Value
     mSecType = mContract.Specifier.SecType
+    If Not mPermittedOrderProperties Is Nothing Then processPermittedOrderProperties
 ElseIf TypeOf ev.Future.Value Is BoxedValue Then
     Set mTickSizeFuture = Nothing
     Dim lBoxedValue As BoxedValue: Set lBoxedValue = ev.Future.Value
@@ -494,7 +494,12 @@ mRecoveryContextName = pRecoveryContextName
 mIsSimulated = pIsSimulated
 
 Set mContractFuture = pContractFuture
-mFutureWaiter.Add mContractFuture
+If mContractFuture.IsAvailable Then
+    Set mContract = mContractFuture.Value
+    mSecType = mContract.Specifier.SecType
+Else
+    mFutureWaiter.Add mContractFuture
+End If
 
 Set mDataSource = pDataSource
 If Not IsDataSourceReady(mDataSource) Then mDataSource.AddGenericTickListener Me
@@ -716,6 +721,22 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub processPermittedOrderProperties()
+Const ProcName As String = "processPermittedOrderProperties"
+On Error GoTo Err
+
+Dim lOrderContext As OrderContext
+For Each lOrderContext In mOrderContexts
+    lOrderContext.PermittedOrderProperties = mPermittedOrderProperties
+    lOrderContext.IsProviderReady = IsProviderReady
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub SetTickSize(ByVal pTickSize As Double)
 Const ProcName As String = "SetTickSize"
