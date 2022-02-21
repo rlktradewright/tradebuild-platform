@@ -194,9 +194,11 @@ On Error GoTo Err
 Dim lParametersStore As OptionParametersStore
 Dim lKey As String: lKey = generateOptionParametersKey(pContractSpec.Key, pExchange)
 If mOptionParameters.TryItem(lKey, lParametersStore) Then
-    If CLng(lParametersStore.CacheDate) <> CLng(Now) Then
+    If lParametersStore.IsExpired Then
         mOptionParameters.Remove lKey
         Set lParametersStore = Nothing
+    ElseIf lParametersStore.IsComplete Then
+        Exit Sub
     End If
 End If
 
@@ -509,7 +511,7 @@ Const ProcName As String = "tryGetContractCacheEntry"
 On Error GoTo Err
 
 If Not mContracts.TryItem(pKey, pCacheEntry) Then
-ElseIf CLng(pCacheEntry.CacheDate) <> CLng(Now) Then
+ElseIf gIsCacheEntryExpired(pCacheEntry.CacheDate) Then
     mContracts.Remove pKey
 Else
     tryGetContractCacheEntry = True
@@ -528,7 +530,7 @@ Const ProcName As String = "tryGetRulesetCacheEntry"
 On Error GoTo Err
 
 If Not mPriceIncrementRulesets.TryItem(CStr(pRuleID), pCacheEntry) Then
-ElseIf CLng(pCacheEntry.CacheDate) <> CLng(Now) Then
+ElseIf gIsCacheEntryExpired(pCacheEntry.CacheDate) Then
     Dim lCacheEntry As PriceIncrementRulesetCacheEntry
     pCacheEntry = lCacheEntry
     mPriceIncrementRulesets.Remove CStr(pRuleID)

@@ -67,7 +67,7 @@ Private mStrikesIndex                               As SortedDictionary
 'Private mParameters()                               As ParameterEntry
 'Private mParametersNextIndex                        As Long
 
-Private mComplete                                   As Boolean
+Private mIsComplete                                   As Boolean
 
 Private mCacheDate                                  As Date
 
@@ -94,8 +94,12 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get CacheDate() As Date
-CacheDate = mCacheDate
+Friend Property Get IsComplete() As Boolean
+IsComplete = mIsComplete
+End Property
+
+Friend Property Get IsExpired() As Boolean
+IsExpired = gIsCacheEntryExpired(mCacheDate)
 End Property
 
 '@================================================================================
@@ -107,7 +111,7 @@ Friend Sub AddExpiry( _
 Const ProcName As String = "AddExpiry"
 On Error GoTo Err
 
-Assert Not mComplete, "Parameters store already complete"
+Assert Not mIsComplete, "Parameters store already complete"
 
 mExpiriesBuilder.Add pExpiry
 
@@ -123,7 +127,7 @@ Friend Sub AddParameter( _
 Const ProcName As String = "AddParameter"
 On Error GoTo Err
 
-Assert Not mComplete, "Parameters store already complete"
+Assert Not mIsComplete, "Parameters store already complete"
 
 Dim lStrikeIndexEntry As IndexEntry
 getIndexEntry mStrikesIndex, pStrike, lStrikeIndexEntry, True
@@ -146,7 +150,7 @@ Friend Sub AddStrike( _
 Const ProcName As String = "AddStrike"
 On Error GoTo Err
 
-Assert Not mComplete, "Parameters store already complete"
+Assert Not mIsComplete, "Parameters store already complete"
 
 mStrikesBuilder.Add pStrike
 
@@ -157,14 +161,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Complete()
-mComplete = True
+mIsComplete = True
 End Sub
 
 Friend Function GetExpiries() As Expiries
 Const ProcName As String = "GetExpiries"
 On Error GoTo Err
 
-Assert mComplete, "Parameters store not complete"
+Assert mIsComplete, "Parameters store not complete"
 
 Set GetExpiries = mExpiriesBuilder.Expiries
 
@@ -178,7 +182,7 @@ Friend Function GetExpiriesForStrike(ByVal pStrike As Double) As Expiries
 Const ProcName As String = "GetExpiriesForStrike"
 On Error GoTo Err
 
-Assert mComplete, "Parameters store not complete"
+Assert mIsComplete, "Parameters store not complete"
 
 Dim lStrikeIndexEntry As IndexEntry
 getIndexEntry mStrikesIndex, pStrike, lStrikeIndexEntry, True
@@ -194,7 +198,7 @@ Friend Function GetStrikes() As Strikes
 Const ProcName As String = "GetStrikes"
 On Error GoTo Err
 
-Assert mComplete, "Parameters store not complete"
+Assert mIsComplete, "Parameters store not complete"
 
 Set GetStrikes = mStrikesBuilder.Strikes
 
@@ -209,7 +213,7 @@ Friend Function GetStrikesForExpiry(ByVal pExpiry As String) As Enumerator
 Const ProcName As String = "GetStrikesForExpiry"
 On Error GoTo Err
 
-Assert mComplete, "Parameters store not complete"
+Assert mIsComplete, "Parameters store not complete"
 
 Dim lIndexEntry As IndexEntry
 getIndexEntry mExpiriesIndex, pExpiry, lIndexEntry, False

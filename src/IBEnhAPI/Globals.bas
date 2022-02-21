@@ -406,7 +406,10 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Function
 
+Public Function gIsCacheEntryExpired(ByVal pCacheDate As Date) As Boolean
+gIsCacheEntryExpired = Int(pCacheDate) <> Int(Now)
 End Function
 
 Public Function gIsSmartExchange(ByVal pExchange As String) As Boolean
