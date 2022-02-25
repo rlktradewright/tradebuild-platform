@@ -499,6 +499,8 @@ jb.EncodeNameAndValue "TickSize", mTickSize, DefaultTickSize
 
 jb.EncodeNameAndValue "TimezoneName", mTimezoneName, DefaultTimezoneName
 
+jb.EncodeNameAndValue "ProviderProperties", mProviderProperties, Nothing
+
 jb.EndObject
 
 ToJSON = jb.JSONString

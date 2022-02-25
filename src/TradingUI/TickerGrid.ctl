@@ -567,8 +567,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IQuoteListener_bid(ev As QuoteEventData)
-Const ProcName As String = "IQuoteListener_bid"
+Private Sub IQuoteListener_Bid(ev As QuoteEventData)
+Const ProcName As String = "IQuoteListener_Bid"
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.Bid)
@@ -580,8 +580,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IQuoteListener_high(ev As QuoteEventData)
-Const ProcName As String = "IQuoteListener_high"
+Private Sub IQuoteListener_High(ev As QuoteEventData)
+Const ProcName As String = "IQuoteListener_High"
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.HighPrice)
@@ -604,8 +604,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IQuoteListener_openInterest(ev As QuoteEventData)
-Const ProcName As String = "IQuoteListener_openInterest"
+Private Sub IQuoteListener_OpenInterest(ev As QuoteEventData)
+Const ProcName As String = "IQuoteListener_OpenInterest"
 On Error GoTo Err
 
 displaySize ev, mColumnMap(TickerGridColumns.OpenInterest)
@@ -616,8 +616,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IQuoteListener_previousClose(ev As QuoteEventData)
-Const ProcName As String = "IQuoteListener_previousClose"
+Private Sub IQuoteListener_PreviousClose(ev As QuoteEventData)
+Const ProcName As String = "IQuoteListener_PreviousClose"
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.ClosePrice)
@@ -628,8 +628,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IQuoteListener_sessionOpen(ev As QuoteEventData)
-Const ProcName As String = "IQuoteListener_sessionOpen"
+Private Sub IQuoteListener_SessionOpen(ev As QuoteEventData)
+Const ProcName As String = "IQuoteListener_SessionOpen"
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.OpenPrice)
@@ -640,8 +640,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IQuoteListener_trade(ev As QuoteEventData)
-Const ProcName As String = "IQuoteListener_trade"
+Private Sub IQuoteListener_Trade(ev As QuoteEventData)
+Const ProcName As String = "IQuoteListener_Trade"
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.Trade)
@@ -653,8 +653,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IQuoteListener_volume(ev As QuoteEventData)
-Const ProcName As String = "IQuoteListener_volume"
+Private Sub IQuoteListener_Volume(ev As QuoteEventData)
+Const ProcName As String = "IQuoteListener_Volume"
 On Error GoTo Err
 
 displaySize ev, mColumnMap(TickerGridColumns.Volume)
@@ -800,7 +800,9 @@ If isAlphaNumeric(KeyAscii) Or _
     KeyAscii = Asc("(") Or _
     KeyAscii = Asc(")") Or _
     KeyAscii = Asc("[") Or _
-    KeyAscii = Asc("]") _
+    KeyAscii = Asc("]") Or _
+    KeyAscii = Asc("*") Or _
+    KeyAscii = Asc("=") _
     Then processAlphaNumericKey KeyAscii
 
 Exit Sub
@@ -2207,6 +2209,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub SetRowError(ByVal pRow As Long, ByVal pErrorMessage As String)
+Const ProcName As String = "SetRowError"
+On Error GoTo Err
+
+If pRow < 0 Then Exit Sub
+
+Dim i As Long
+For i = 1 To TickerGrid.Cols - 1
+    TickerGrid.BeginCellEdit pRow, i
+    TickerGrid.CellBackColor = CErroredRowBackColor
+    TickerGrid.CellForeColor = CErroredRowForeColor
+    TickerGrid.CellFontBold = True
+    TickerGrid.EndCellEdit
+Next
+
+TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.ErrorText)) = pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Function StartTickerFromContract( _
                 ByVal pContract As IContract, _
                 Optional ByVal pGridRow As Long, _
@@ -2788,7 +2813,10 @@ On Error GoTo Err
 
 Dim lSymbol As String
 lSymbol = getTickerNameColumnValue(mTickerSymbolRow)
-If lSymbol <> "" Then RaiseEvent TickerSymbolEntered(lSymbol, mTickerSymbolRow)
+If lSymbol <> "" Then
+    gLogger.Log "Ticker symbol entered: " & lSymbol, ProcName, ModuleName, LogLevelDetail
+    RaiseEvent TickerSymbolEntered(lSymbol, mTickerSymbolRow)
+End If
 stopEnteringTickerSymbol
 
 Exit Sub
@@ -2850,7 +2878,7 @@ Case MarketDataSourceStates.MarketDataSourceStateError
             setFieldsHaveBeenSet lIndex
         End If
     End If
-    setRowError lRow, pDataSource.ErrorMessage
+    SetRowError lRow, pDataSource.ErrorMessage
 Case MarketDataSourceStates.MarketDataSourceStateStopped, MarketDataSourceStates.MarketDataSourceStateFinished
     ' if the DataSource was stopped by the application via a call to IMarketDataSource.Finish (rather
     ' than via this control), the entry will still be in the grid so Remove it
@@ -3070,29 +3098,6 @@ For i = 1 To TickerGrid.Cols - 1
 Next
 
 TickerGrid.RowData(pRow) = 0
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setRowError(ByVal pRow As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "setRowError"
-On Error GoTo Err
-
-If pRow < 0 Then Exit Sub
-
-Dim i As Long
-For i = 1 To TickerGrid.Cols - 1
-    TickerGrid.BeginCellEdit pRow, i
-    TickerGrid.CellBackColor = CErroredRowBackColor
-    TickerGrid.CellForeColor = CErroredRowForeColor
-    TickerGrid.CellFontBold = True
-    TickerGrid.EndCellEdit
-Next
-
-TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.ErrorText)) = pErrorMessage
 
 Exit Sub
 

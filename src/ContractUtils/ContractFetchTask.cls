@@ -67,6 +67,7 @@ Private mSingleContractOnly                         As Boolean
 
 Private mGotAllSampleContracts                      As Boolean
 Private mOffsetContractsOutstanding                 As Long
+Private mOffsetContractErrorMessage                 As String
 
 Private mListener                                   As IContractFetchListener
 
@@ -132,6 +133,8 @@ End Sub
 Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
+
+gLogger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mIsOffsetExpiry=" & mIsOffsetExpiry, ProcName, ModuleName, LogLevelDetail
 
 If Not mIsOffsetExpiry Then
     completeContractProcessing
@@ -301,9 +304,19 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If Not mListener Is Nothing Then mListener.FetchCompleted ev.ContinuationData
-mTaskContext.Finish Empty, False
+If ev.Future.IsCancelled Then
+    Assert False, "Unexpected cancellation"
+ElseIf ev.Future.IsFaulted Then
+    If Not mListener Is Nothing Then mListener.FetchFailed _
+                                            ev.ContinuationData, _
+                                            ev.Future.ErrorNumber, _
+                                            ev.Future.ErrorMessage, _
+                                            ev.Future.ErrorSource
+Else
+    If Not mListener Is Nothing Then mListener.FetchCompleted ev.ContinuationData
+End If
 
+mTaskContext.Finish Empty, False
 Set mSelfRef = Nothing
 
 Exit Sub
@@ -320,18 +333,31 @@ Private Sub mOffsetContractFutureWaiter_WaitCompleted(ev As FutureWaitCompletedE
 Const ProcName As String = "mOffsetContractFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
+Dim lContract As IContract
+
 If ev.Future.IsCancelled Then
-
+    Exit Sub
 ElseIf ev.Future.IsFaulted Then
-
-Else
-    Dim lContract As IContract: Set lContract = ev.Future.Value
-    gLogger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
-    processContract lContract
-    mOffsetContractsOutstanding = mOffsetContractsOutstanding - 1
-    If mOffsetContractsOutstanding = 0 And mGotAllSampleContracts Then
-        completeContractProcessing
+    If ev.Future.ErrorNumber = ErrorCodes.ErrIllegalArgumentException Then
+        gLogger.Log ev.Future.ErrorMessage, ProcName, ModuleName, LogLevelDetail
+        mOffsetContractErrorMessage = ev.Future.ErrorMessage
+    Else
+        mOffsetContractFutureWaiter.Clear
+        mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
+        Exit Sub
     End If
+Else
+    Set lContract = ev.Future.Value
+    gLogger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+End If
+
+mOffsetContractsOutstanding = mOffsetContractsOutstanding - 1
+gLogger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mGotAllSampleContracts=" & mGotAllSampleContracts, ProcName, ModuleName, LogLevelDetail
+
+If Not lContract Is Nothing Then processContract lContract
+'If mOffsetContractsOutstanding = 0 Then Stop
+If mOffsetContractsOutstanding = 0 And mGotAllSampleContracts Then
+    completeContractProcessing
 End If
 
 Exit Sub
@@ -503,22 +529,33 @@ Private Sub completeContractProcessing()
 Const ProcName As String = "completeContractProcessing"
 On Error GoTo Err
 
-Dim lContracts As IContracts
-Set lContracts = mContractsBuilder.Contracts
-If lContracts.Count = 0 And Not mUsedSecondaryContractStore Then If trySecondaryContractStore Then Exit Sub
+Dim lContracts As IContracts: Set lContracts = mContractsBuilder.Contracts
+
+If lContracts.Count = 0 And _
+    mOffsetContractErrorMessage = "" And _
+    Not mUsedSecondaryContractStore _
+Then
+    If trySecondaryContractStore Then Exit Sub
+End If
 
 If mSingleContractOnly Then
     mFutureWaiter.Add mContractFutureBuilder.Future, mCallerCookie
-    If lContracts.Count = 0 Then
-        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "No such contract", ""
-    Else
+    If lContracts.Count = 1 Then
         mContractFutureBuilder.Value = lContracts.ItemAtIndex(1)
         mContractFutureBuilder.Complete
+    ElseIf mOffsetContractErrorMessage <> "" Then
+        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, mOffsetContractErrorMessage, ""
+    Else
+        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "No such contract", ""
     End If
 Else
     mFutureWaiter.Add mContractsFutureBuilder.Future, mCallerCookie
-    mContractsFutureBuilder.Value = lContracts
-    mContractsFutureBuilder.Complete
+    If mOffsetContractErrorMessage <> "" And lContracts.Count = 0 Then
+        mContractsFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, mOffsetContractErrorMessage, ""
+    Else
+        mContractsFutureBuilder.Value = lContracts
+        mContractsFutureBuilder.Complete
+    End If
 End If
 
 gLogger.Log "Contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail

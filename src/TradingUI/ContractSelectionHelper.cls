@@ -90,12 +90,16 @@ On Error GoTo Err
 If ev.Future.IsCancelled Then
     RaiseEvent Cancelled
 ElseIf ev.Future.IsFaulted Then
-    Dim lEv As ErrorEventData
-    Set lEv.Source = Me
-    lEv.ErrorCode = ev.Future.ErrorNumber
-    lEv.ErrorMessage = ev.Future.ErrorMessage
-    lEv.ErrorSource = ev.Future.ErrorSource
-    RaiseEvent Error(lEv)
+    If ev.Future.ErrorNumber = ErrIllegalArgumentException Then
+        Dim lEv As ErrorEventData
+        Set lEv.Source = Me
+        lEv.ErrorCode = ev.Future.ErrorNumber
+        lEv.ErrorMessage = ev.Future.ErrorMessage
+        lEv.ErrorSource = ev.Future.ErrorSource
+        RaiseEvent Error(lEv)
+    Else
+        Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
+    End If
 Else
     Set mContracts = ev.Future.Value
     mReady = True

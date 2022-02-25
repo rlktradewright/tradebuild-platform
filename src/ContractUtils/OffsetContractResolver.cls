@@ -95,12 +95,19 @@ Else
                             -mDaysBeforeExpiryToSwitch).StartTime >= Int(CDbl(Now)) _
         Then
             ' we've found the contract we're after
-            gLogger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
-            mFutureBuilder.Value = lContract
-            mFutureBuilder.Complete
             Exit For
         End If
     Next
+            
+    If Not lContract Is Nothing Then
+        gLogger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+        mFutureBuilder.Value = lContract
+        mFutureBuilder.Complete
+    Else
+        Dim s As String: s = "Can't find contract with offset " & mExpiryOffset & ": " & mContractSpec.ToString
+        gLogger.Log s, ProcName, ModuleName, LogLevelDetail
+        mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, s, ""
+    End If
 End If
 
 Set mSelfRef = Nothing

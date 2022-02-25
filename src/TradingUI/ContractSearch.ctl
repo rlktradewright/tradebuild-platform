@@ -305,6 +305,7 @@ End If
 
 If mContractsBuilder Is Nothing Then
     Set mContractsBuilder = New ContractsBuilder
+    mContractsBuilder.ContractSpecifier = mContractSpec
     mContractsBuilder.Contracts.SortKeys = mSortKeys
     ActionButton.Enabled = False
     ClearButton.Visible = True
@@ -782,6 +783,7 @@ On Error GoTo Err
 
 AssertArgument Not pContracts Is Nothing, "pContracts is Nothing"
 
+Set mContractSpec = pContracts.ContractSpecifier
 If pContracts.Count = 1 Then Exit Sub   ' to prevent Action event firing
 
 ActionButton.Enabled = True

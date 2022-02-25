@@ -79,7 +79,6 @@ Set mFutureWaiter = New FutureWaiter
 Set mTwsContracts = New EnumerableCollection
 Set mResultsContractsFutureBuilder = New FutureBuilder
 Set mFetchers = New EnumerableCollection
-Set mSelfRef = Me
 End Sub
 
 '@================================================================================
@@ -94,7 +93,15 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+If ev.Future.IsCancelled Then
+
+ElseIf ev.Future.IsFaulted Then
+
+Else
+    gLogger.Log "Contracts future available for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+End If
+
 Set mSelfRef = Nothing
 
 Exit Sub
@@ -137,6 +144,8 @@ Friend Function Fetch( _
 Const ProcName As String = "Fetch"
 On Error GoTo Err
 
+Set mSelfRef = Me
+
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
@@ -149,6 +158,8 @@ gSetVariant mCookie, pCookie
 
 mReturnTwsContracts = pReturnTwsContracts
 
+gLogger.Log "Fetch " & IIf(mReturnTwsContracts, "TWS ", "") & "contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+
 Dim lCachedContracts As IContracts
 Dim lCachedTwsContracts As EnumerableCollection
 
@@ -159,13 +170,10 @@ If Not mContractCache.GetContracts( _
     ' the required contracts are not already in the cache
     Select Case mContractSpecifier.SecType
     Case SecTypeNone
-        gLogger.Log "Call requestContractsForUnspecifiedSectype for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         requestContractsForUnspecifiedSectype
     Case SecTypeCash
-        gLogger.Log "Call requestContractsForCash for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         requestContractsForCash
     Case Else
-        gLogger.Log "Call requestContracts for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         requestContracts mContractSpecifier
     End Select
     mFutureWaiter.Add mResultsContractsFutureBuilder.Future
@@ -350,9 +358,15 @@ Const ProcName As String = "processEnd"
 On Error GoTo Err
 
 If mReturnTwsContracts Then
+    gLogger.Log "Retrieved " & _
+                mTwsContracts.Count & _
+                " TWS contracts for: " & mContractSpecifier.ToString, _
+                ProcName, ModuleName, LogLevelDetail
     mResultsContractsFutureBuilder.Value = mTwsContracts
     mResultsContractsFutureBuilder.Complete
 Else
+    gLogger.Log "Retrieved " & mResultsContractsBuilder.Contracts.Count & " contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+
     mResultsContractsFutureBuilder.Value = mResultsContractsBuilder.Contracts
     mResultsContractsFutureBuilder.Complete
 End If

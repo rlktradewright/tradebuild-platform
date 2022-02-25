@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#375.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Ticker Grid Test1"
    ClientHeight    =   10065
@@ -186,6 +186,7 @@ Set mContractStore = mContractClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(mDataClient.GetMarketDataFactory, mDataClient.GetContractStore)
 
 ContractSearch.Initialise mContractStore, Nothing
+ContractSearch.AllowMultipleSelection = True
 ContractSearch.IncludeHistoricalContracts = False
 
 Exit Sub
@@ -297,13 +298,21 @@ Private Sub ContractSearch_Action()
 Const ProcName As String = "ContractSearch_Action"
 On Error GoTo Err
 
-If ContractSearch.SelectedContracts.Count = 1 And _
-    IsContractSpecOffsetExpiry(ContractSearch.ContractSpecifier) _
-Then
+Dim lPreferredRow As Long
+lPreferredRow = CLng(ContractSearch.Cookie)
+
+If ContractSearch.SelectedContracts.Count = 1 Then
+    Dim lExpiry As String
+    Dim lContractSpec As IContractSpecifier
+    lContractSpec = ContractSearch.ContractSpecifier
+    If lContractSpec Is Nothing Then
+    ElseIf IsContractSpecOffsetExpiry(lContractSpec) Then
+        lExpiry = lContractSpec.Expiry
+    End If
     TickerGrid.StartTickerFromContract _
                     ContractSearch.SelectedContracts.ItemAtIndex(1), _
-                    0, _
-                    ContractSearch.ContractSpecifier.Expiry
+                    lPreferredRow, _
+                    lExpiry
 Else
     Dim lContract As IContract
     For Each lContract In ContractSearch.SelectedContracts
@@ -322,6 +331,21 @@ Const ProcName As String = "TickerGrid_Error"
 On Error GoTo Err
 
 LogMessage "Error: " & ev.ErrorMessage
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub TickerGrid_KeyUp(KeyCode As Integer, Shift As Integer)
+Const ProcName As String = "TickerGrid_KeyUp"
+On Error GoTo Err
+
+Select Case KeyCode
+Case vbKeyDelete
+    StopSelectedTickers
+End Select
 
 Exit Sub
 
@@ -384,7 +408,8 @@ Private Sub mContractSelectionHelper_Error(ev As ErrorEventData)
 Const ProcName As String = "mContractSelectionHelper_Error"
 On Error GoTo Err
 
-Err.Raise ev.ErrorCode, ev.Source, ev.ErrorMessage
+TickerGrid.SetRowError mContractSelectionHelper.PreferredTickerGridRow, _
+                        ev.ErrorMessage
 
 Exit Sub
 
@@ -415,31 +440,35 @@ Private Sub mContractSelectionHelper_ShowContractSelector()
 Const ProcName As String = "mContractSelectionHelper_ShowContractSelector"
 On Error GoTo Err
 
-Dim f As fContractSelector
+ContractSearch.LoadContracts mContractSelectionHelper.Contracts, _
+                            mContractSelectionHelper.PreferredTickerGridRow
 
-Set f = New fContractSelector
-f.Initialise mContractSelectionHelper.Contracts, mContractStore, True
-f.Show vbModal, Me
-
-Dim lContracts As IContracts
-Set lContracts = f.SelectedContracts
-If lContracts.Count = 0 Then Exit Sub
-
-If lContracts.Count = 1 And _
-    IsContractSpecOffsetExpiry(mContractSelectionHelper.ContractSpecifier) _
-Then
-    TickerGrid.StartTickerFromContract _
-                    lContracts.ItemAtIndex(1), _
-                    mContractSelectionHelper.PreferredTickerGridRow, _
-                    mContractSelectionHelper.ContractSpecifier.Expiry
-Else
-    Dim lPreferredGridRow As Long: lPreferredGridRow = mContractSelectionHelper.PreferredTickerGridRow
-    Dim lContract As IContract
-    For Each lContract In lContracts
-        TickerGrid.StartTickerFromContract lContract, lPreferredGridRow
-        lPreferredGridRow = lPreferredGridRow + 1
-    Next
-End If
+'Dim f As fContractSelector
+'
+'Set f = New fContractSelector
+'f.Initialise mContractSelectionHelper.Contracts, mContractStore, True
+'f.Show vbModal, Me
+'
+'Dim lContracts As IContracts
+'Set lContracts = f.SelectedContracts
+'If lContracts Is Nothing Then Exit Sub
+'If lContracts.Count = 0 Then Exit Sub
+'
+'If lContracts.Count = 1 And _
+'    IsContractSpecOffsetExpiry(mContractSelectionHelper.ContractSpecifier) _
+'Then
+'    TickerGrid.StartTickerFromContract _
+'                    lContracts.ItemAtIndex(1), _
+'                    mContractSelectionHelper.PreferredTickerGridRow, _
+'                    mContractSelectionHelper.ContractSpecifier.Expiry
+'Else
+'    Dim lPreferredGridRow As Long: lPreferredGridRow = mContractSelectionHelper.PreferredTickerGridRow
+'    Dim lContract As IContract
+'    For Each lContract In lContracts
+'        TickerGrid.StartTickerFromContract lContract, lPreferredGridRow
+'        lPreferredGridRow = lPreferredGridRow + 1
+'    Next
+'End If
 
 Exit Sub
 
@@ -536,6 +565,27 @@ Private Function inDev() As Boolean
 mIsInDev = True
 inDev = True
 End Function
+
+Private Sub StopSelectedTickers()
+Const ProcName As String = "StopSelectedTickers"
+On Error GoTo Err
+
+Dim lTickers As SelectedTickers
+Set lTickers = TickerGrid.SelectedTickers
+
+TickerGrid.StopSelectedTickers
+
+Dim lTicker As IMarketDataSource
+For Each lTicker In lTickers
+    lTicker.Finish
+Next
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 
 
 

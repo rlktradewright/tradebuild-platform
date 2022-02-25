@@ -229,7 +229,10 @@ Public Function gFetchContracts( _
 Const ProcName As String = "gFetchContracts"
 On Error GoTo Err
 
-If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching contract details for", ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
+If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching " & _
+                                                IIf(pReturnTwsContracts, "TWS", "") & _
+                                                " contract details for", _
+                                                ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
 
 Dim lFetcher As New ContractsRequestManager
 Set gFetchContracts = lFetcher.Fetch( _
