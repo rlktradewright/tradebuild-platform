@@ -1390,23 +1390,19 @@ If mContractFuture.IsAvailable And pClockFuture.IsAvailable Then
     If pStudyManagerFuture Is Nothing Then
         setReady
     Else
-        Debug.Print "    mFutureWaiter.Add pStudyManagerFuture"
         gLogger.Log "Waiting for study manager for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
         mNeedStudyManager = True
         mFutureWaiter.Add pStudyManagerFuture
     End If
 Else
-    Debug.Print "    mFutureWaiter.Add pClockFuture"
     gLogger.Log "Waiting for clock for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mNeedClock = True
     mFutureWaiter.Add pClockFuture
     
-    Debug.Print "    mFutureWaiter.Add mContractFuture"
     gLogger.Log "Waiting for contract for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mFutureWaiter.Add mContractFuture
     
     If Not pStudyManagerFuture Is Nothing Then
-        Debug.Print "    mFutureWaiter.Add pStudyManagerFuture"
         gLogger.Log "Waiting for study manager for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
         mNeedStudyManager = True
         mFutureWaiter.Add pStudyManagerFuture

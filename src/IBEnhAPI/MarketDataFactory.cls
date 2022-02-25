@@ -1424,11 +1424,11 @@ On Error GoTo Err
 
 Dim lRulesetID As Long
 lRulesetID = CLng(mMarketDataTable(pStreamId).ConsumerContract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
-gLog "lRulesetID=" & lRulesetID, ModuleName, ProcName
+gLog "lRulesetID=" & lRulesetID, ModuleName, ProcName, , LogLevelDetail
 
 Dim lPriceMagnifier As Long
 lPriceMagnifier = CLng(mMarketDataTable(pStreamId).ConsumerContract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
-gLog "lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName
+gLog "lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName, , LogLevelDetail
 
 Dim lRulesetFuture As IFuture
 Set lRulesetFuture = mContractRequester.RequestPriceIncrementRuleset(lRulesetID, lPriceMagnifier)
