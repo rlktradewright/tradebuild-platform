@@ -308,6 +308,7 @@ On Error GoTo Err
 
 Const SecTypeRegEx As String = "(?:([a-zA-Z]+)\:)?"
 Const SymbolRegEx As String = "([a-zA-Z0-9]+(?:(?: *|-|\.)[a-zA-Z0-9]+)*(?:\.[a-zA-Z0-9]?)?)"
+Const OptionSpecRegex As String = "(?:=((?:C(?:all)?)|(?:P(?:ut)?))?((?:\d+(?:\.\d{1,2})?))?)?"
 Const DateExpiryRegEx As String = "((?:20\d\d)(?:[0|1]\d)(?:[0|1|2|3]\d)?)?"
 Const RelativeExpiryRegEx As String = "(\d\d?(?:\[\d\d?d\])?)?"
 Const ExpiryRegEx As String = "(?:\(" & _
@@ -315,14 +316,17 @@ Const ExpiryRegEx As String = "(?:\(" & _
                                 RelativeExpiryRegEx & _
                                 "\))?"
 Const ExchangeRegEx As String = "(?:@([a-zA-Z]+(?:/[a-zA-Z]+)?))?"
-Const CurrencyRegEx As String = "(?:\(([a-zA-Z]+)\))?"
+Const CurrencyRegEx As String = "(?:(?:\$)([a-zA-Z]+))?"
+Const MultiplierRegex As String = "(?:(?:\*)(\d+(?:\.\d{1,6})?))?"
 
 Const ContractSpecRegex As String = "^" & _
 SecTypeRegEx & _
 SymbolRegEx & _
+OptionSpecRegex & _
 ExpiryRegEx & _
 ExchangeRegEx & _
 CurrencyRegEx & _
+MultiplierRegex & _
 "$"
 
 
@@ -332,15 +336,19 @@ gRegExp.IgnoreCase = True
 Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(pSpecString)
 
-AssertArgument lMatches.Count = 1, "Invalid contract specifier: <sectype>:<symbol>[expiry][@<exchange>][(<currency>)]" & vbCrLf & _
+AssertArgument lMatches.Count = 1, "Invalid contract specifier: [<sectype>:]<symbol>[=<optionspec>][expiry]" & vbCrLf & _
+                                   "                            [@<exchange>][$<currency>][*<multiplier>]" & vbCrLf & _
                                     "Expiry can be: " & vbCrLf & _
-                                    "yyyymm" & vbCrLf & _
-                                    "yyyymmdd" & vbCrLf & _
-                                    "<offset>[<qualifier>d]  for example 0[2d]" & vbCrLf & _
-                                    "examples: STK:MSFT@SMART(USD)" & vbCrLf & _
+                                    "    yyyymm" & vbCrLf & _
+                                    "    yyyymmdd" & vbCrLf & _
+                                    "    <offset>[<qualifier>d]  for example 0[2d]" & vbCrLf & _
+                                    "Option spec: [C[all]|P[ut]][strike]" & vbCrLf & _
+                                    "examples: STK:MSFT@SMART$USD" & vbCrLf & _
                                     "          FUT:ESZ0@GLOBEX" & vbCrLf & _
                                     "          FUT:ES(0[2d])@GLOBEX" & vbCrLf & _
-                                    "          FUT:ES(202012)@GLOBEX"
+                                    "          FUT:ES(202012)@GLOBEX" & vbCrLf & _
+                                    "          FUT:DAX@DTB*25" & vbCrLf & _
+                                    "          OPT:MSFT=Call285@CBOE"
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
@@ -348,26 +356,46 @@ Dim lSecTypeStr As String: lSecTypeStr = lMatch.SubMatches(0)
 Dim lSecType As SecurityTypes
 
 If lSecTypeStr <> "" Then
-    lSecType = gSecTypeFromString(lMatch.SubMatches(0))
+    lSecType = gSecTypeFromString(lSecTypeStr)
     AssertArgument lSecType <> SecTypeNone, "A valid security type must be supplied"
 End If
 
 Dim lSymbolOrLocalSymbol As String
 lSymbolOrLocalSymbol = lMatch.SubMatches(1)
 
+Dim lCallPutStr As String: lCallPutStr = lMatch.SubMatches(2)
+Dim lCallPut As OptionRights
+If lCallPutStr <> "" Then
+    If lSecType = SecTypeNone Then
+        lSecType = SecTypeOption
+    Else
+        AssertArgument lSecType = SecTypeOption Or lSecType = SecTypeFuturesOption, _
+                        "C(all) or P(ut) can only be supplied for options or futures options"
+    End If
+    lCallPut = gOptionRightFromString(lCallPutStr)
+End If
+
+Dim lStrike As String
+lStrike = lMatch.SubMatches(3)
+If lStrike = "" Then lStrike = "0"
+
 Dim lDateExpiry As String
-lDateExpiry = lMatch.SubMatches(2)
+lDateExpiry = lMatch.SubMatches(4)
 
 Dim lRelativeExpiry As String
-lRelativeExpiry = lMatch.SubMatches(3)
+lRelativeExpiry = lMatch.SubMatches(5)
 
 AssertArgument lDateExpiry = "" Or lRelativeExpiry = "", "Supplying both date-based and relative expiry is not permitted"
 
 Dim lExchange As String
-lExchange = lMatch.SubMatches(4)
+lExchange = lMatch.SubMatches(6)
 
 Dim lCurrency As String
-lCurrency = lMatch.SubMatches(5)
+lCurrency = lMatch.SubMatches(7)
+
+Dim lMultiplier As String
+lMultiplier = lMatch.SubMatches(8)
+If lMultiplier = "" Then lMultiplier = "0"
 
 If (lSecType = SecTypeFuture Or _
     lSecType = SecTypeFuturesOption Or _
@@ -382,9 +410,9 @@ Then
                                                         lSecType, _
                                                         lCurrency, _
                                                         "", _
-                                                        0#, _
-                                                        0#, _
-                                                        OptNone)
+                                                        CDbl(lMultiplier), _
+                                                        CDbl(lStrike), _
+                                                        lCallPut)
     Else
         Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
                                                         "", _
@@ -393,9 +421,9 @@ Then
                                                         lSecType, _
                                                         lCurrency, _
                                                         lDateExpiry & lRelativeExpiry, _
-                                                        0#, _
-                                                        0#, _
-                                                        OptNone)
+                                                        CDbl(lMultiplier), _
+                                                        CDbl(lStrike), _
+                                                        lCallPut)
     End If
 Else
     Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
@@ -405,9 +433,9 @@ Else
                                                     lSecType, _
                                                     lCurrency, _
                                                     lDateExpiry & lRelativeExpiry, _
-                                                    0#, _
-                                                    0#, _
-                                                    OptNone)
+                                                    CDbl(lMultiplier), _
+                                                    CDbl(lStrike), _
+                                                    lCallPut)
 End If
 
 Exit Function
@@ -1150,6 +1178,7 @@ mMaxExchangeCodesIndex = -1
 
 addExchangeCode "ACE"
 addExchangeCode "AEB"
+addExchangeCode "AEQLIT"
 addExchangeCode "AMEX"
 addExchangeCode "ARCA"
 addExchangeCode "ASX"
