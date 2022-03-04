@@ -1,5 +1,6 @@
 @echo off
 setlocal enableextensions enabledelayedexpansion
+set ERROR=0
 
 if not defined GSD_TOPDIR if defined TOPDIR set GSD_TOPDIR=%TOPDIR%
 if not defined GSD_TOPDIR set GSD_TOPDIR=%SYSTEMDRIVE%\GetScanData
@@ -9,35 +10,31 @@ if not defined GSD_TWSSERVER set GSD_TWSSERVER=127.0.0.1
 
 if not defined GSD_PORT (
 	if defined PORT (
+		call "%SCRIPTS%\ValidateNumber.bat" PORT %PORT% 1024 65535
+		if !ERROR! NEQ 0 goto :err
 		set GSD_PORT=%PORT%
-	) else (
-		set GSD_PORT=7497
 	)
+) else (
+	call "%SCRIPTS%\ValidateNumber.bat" GSD_PORT %GSD_PORT% 1024 65535
+	if !ERROR! NEQ 0 goto :err
 )
+if not defined GSD_PORT set GSD_PORT=7496
 
-if not defined GSD_CLIENTID  (
-	if defined CLIENTID  (
+if not defined GSD_CLIENTID (
+	if defined CLIENTID (
+		call "%SCRIPTS%\ValidateNumber.bat" CLIENTID %CLIENTID% 1 999999999
+		if !ERROR! NEQ 0 goto :err
 		set GSD_CLIENTID=%CLIENTID%
-	) else (
-		set GSD_CLIENTID=
 	)
+) else (
+	call "%SCRIPTS%\ValidateNumber.bat" GSD_CLIENTID %GSD_CLIENTID% 1 999999999
+	if !ERROR! NEQ 0 goto :err
 )
+if not defined GSD_LOG if defined LOG set GSD_LOG=%LOG%
+if not defined GSD_LOG set GSD_LOG=%GSD_TOPDIR%\Log\gsd27.log
 
-if not defined GSD_LOG (
-	if defined LOG (
-		set GSD_LOG=%LOG%
-	) else (
-		set GSD_LOG=%GSD_TOPDIR%\Log\gsd27.log
-	)
-)
-
-if not defined GSD_LOGLEVEL (
-	if defined LOGLEVEL (
-		set GSD_LOGLEVEL=%LOGLEVEL%
-	) else (
-		set GSD_LOGLEVEL=N
-	)
-)
+if not defined GSD_LOGLEVEL if defined LOGLEVEL set GSD_LOGLEVEL=%LOGLEVEL%
+if not defined GSD_LOGLEVEL set GSD_LOGLEVEL=N
 
 if not defined GSD_FILEFILTER if defined FILEFILTER set GSD_FILEFILTER=%FILEFILTER%
 if not defined GSD_FILEFILTER set GSD_FILEFILTER=gsd*.txt
@@ -51,34 +48,15 @@ if not defined GSD_ARCHIVEDIR set GSD_ARCHIVEDIR=%GSD_TOPDIR%\Archive
 if not defined GSD_OUTPUTDIR if defined OUTPUTDIR set GSD_OUTPUTDIR=%OUTPUTDIR%
 if not defined GSD_OUTPUTDIR set GSD_OUTPUTDIR=%GSD_TOPDIR%\ScanData
 
-if not defined GSD_BIN if defined BIN set GSD_BIN=%BIN%
+if not defined GBD_BIN if defined INSTALLFOLDER set GBD_BIN=%INSTALLFOLDER%\BIN
 if not defined GSD_BIN if defined PROGRAMFILES^(X86^) set GSD_BIN=%PROGRAMFILES(X86)%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin
 if not defined GSD_BIN set GSD_BIN=%PROGRAMFILES%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin
 
-if not exist "%GSD_BIN%" echo %GSD_BIN% does not exist
-if not exist "%GSD_BIN%" exit /B 1
-
-if %GSD_PORT% LSS 1024 (
-	echo GSD_PORT=%GSD_PORT% is invalid: it must be between 1024 and 65535
-	exit /B 1
-)
-if %GSD_PORT% GTR 65535 (
-	echo GSD_PORT=%GSD_PORT% is invalid: it must be between 1024 and 65535
-	exit /B 1
+if not exist "%GSD_BIN%" (
+	set "ERRORMESSAGE=%GSD_BIN% does not exist"
+	goto :err
 )
 
-if "%GSD_CLIENTID%0"=="0" (
-	echo. > nul
-) else if %GSD_CLIENTID%0 LSS 10 (
-	echo GSD_CLIENTID=%GSD_CLIENTID% is invalid: it must be between 1 and 999999999
-	exit /B 1
-)
-if "1%GSD_CLIENTID%"=="1" (
-	echo. > nul
-) else if 1%GSD_CLIENTID% GTR 1999999999 (
-	echo GSD_CLIENTID=%GSD_CLIENTID% is invalid: it must be between 1 and 999999999
-	exit /B 1
-)
 
 if /I "%GSD_LOGLEVEL%"=="N" (
 	echo. > nul
@@ -133,3 +111,9 @@ if /I "%~1"=="/I" (
 )
 
 popd
+
+exit /B 0
+
+:err
+echo %ERRORMESSAGE%
+exit /B 1

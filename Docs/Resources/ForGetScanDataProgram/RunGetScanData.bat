@@ -31,7 +31,7 @@ setlocal enableextensions enabledelayedexpansion
 ::                                                                             +
 ::=============================================================================+
 
-set TOPDIR=%SYSTEMDRIVE%\GetScanData
+set TOPDIR=%~dp0
 
 set TWSSERVER=
 set PORT=7497
@@ -46,7 +46,7 @@ set INPUTFILESDIR=%TOPDIR%\InputFiles
 set ARCHIVEDIR=%TOPDIR%\Archive
 set OUTPUTDIR=%TOPDIR%\ScanData\Scan-{$scancode}\scan {$today}.txt
 
-set BIN=
+set INSTALLFOLDER=
 
 set PIPELINE=
 
@@ -136,10 +136,10 @@ set PIPELINE=
 ::   filename and both the path and filename can include substitution
 ::   variables.
 ::
-:: BIN
-::   Set this to the folder that contains the TradeBuild Platform programs.
+:: INSTALLFOLDER
+::   Set this to the folder where you installed the TradeBuild Platform.
 ::   If you installed TradeBuild Platform using the .msi installer with the 
-::   default installation location, there should be no reason to set this value.
+::   default installation location, you do not need to set this value.
 ::
 ::
 :: PIPELINE
@@ -169,4 +169,11 @@ set PIPELINE=
 ::   End of Notes
 ::==============================================================================
 
-Scripts\GetScanData.bat %~1
+if "%INSTALLFOLDER%" NEQ "" (
+	set "SCRIPTS=%INSTALLFOLDER%\Scripts"
+) else if defined PROGRAMFILES^(X86^) (
+	set "SCRIPTS=%PROGRAMFILES(X86)%\TradeWright Software Systems\TradeBuild Platform 2.7\Scripts"
+) else (
+	set "SCRIPTS=%PROGRAMFILES%\TradeWright Software Systems\TradeBuild Platform 2.7\Scripts"
+)
+"%SCRIPTS%\GetScanData.bat" %~1

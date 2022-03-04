@@ -30,7 +30,7 @@ setlocal enableextensions enabledelayedexpansion
 ::                                                                             +
 ::=============================================================================+
 
-set TOPDIR=%SYSTEMDRIVE%\PlaceOrders
+set TOPDIR=%~dp0
 
 set MONITOR=yes
 
@@ -56,7 +56,7 @@ set SIMULATEORDERS=no
 set SCOPENAME=%CLIENTID%
 set RECOVERYFILEDIR=%TOPDIR%\Recovery
 
-set BIN=
+set INSTALLFOLDER=
 
 
 ::              PLEASE DON'T CHANGE ANYTHING BELOW THIS LINE !!
@@ -188,15 +188,21 @@ set BIN=
 ::   change this setting if you have created positions using this program, 
 ::   until they have all been closed out.
 ::
-:: BIN
-::   Set this to the folder that contains the TradeBuild Platform programs, if
-::   they are not in the default installation location. If you installed
-::   TradeBuild Platform using the .msi installer with the default installation
-::   location, there is no need to set this value.
+:: INSTALLFOLDER
+::   Set this to the folder where you installed the TradeBuild Platform.
+::   If you installed TradeBuild Platform using the .msi installer with the 
+::   default installation location, you do not need to set this value.
 ::
 ::
 ::
 ::   End of Notes
 ::==============================================================================
 
-%TOPDIR%\Scripts\PlaceOrders.bat %~1
+if "%INSTALLFOLDER%" NEQ "" (
+	set "SCRIPTS=%INSTALLFOLDER%\Scripts"
+) else if defined PROGRAMFILES^(X86^) (
+	set "SCRIPTS=%PROGRAMFILES(X86)%\TradeWright Software Systems\TradeBuild Platform 2.7\Scripts"
+) else (
+	set "SCRIPTS=%PROGRAMFILES%\TradeWright Software Systems\TradeBuild Platform 2.7\Scripts"
+)
+"%SCRIPTS%\PlaceOrders.bat" %~1
