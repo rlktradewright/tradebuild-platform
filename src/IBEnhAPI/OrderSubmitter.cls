@@ -23,6 +23,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements IGenericTickListener
 Implements IOrderSubmitter
 Implements ITwsConnectionStateListener
 Implements ITaskCompletionListener
@@ -84,6 +85,8 @@ Private mContract                                   As IContract
 Private mRulesetFutureBuilder                       As FutureBuilder
 Private mTicksizeFutureBuilder                      As FutureBuilder
 
+Private mRuleset                                    As PriceIncrementRuleset
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -95,9 +98,28 @@ Set mOrderSubmissionListeners = New Listeners
 Set mTicksizeFutureBuilder = New FutureBuilder
 End Sub
 
-Private Sub Class_Terminate()
-Finish
-Debug.Print "OrderSubmitter terminated"
+'================================================================================
+' IOrderSubmitter Interface Members
+'================================================================================
+
+Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
+End Sub
+
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
+On Error GoTo Err
+
+Dim lPrice As Double: lPrice = getAPrice
+If lPrice = 0 Then Exit Sub
+
+mTicksizeFutureBuilder.Value = CreateBoxedValue(mRuleset.GetIncrement(lPrice))
+mTicksizeFutureBuilder.Complete
+mDataSource.RemoveGenericTickListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -478,8 +500,8 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
         If mTicksizeRequestPending Then doGetTickSize
     End If
 ElseIf TypeOf ev.Future.Value Is PriceIncrementRuleset Then
-    mTicksizeFutureBuilder.Value = CreateBoxedValue(getTickSizeFromRuleset(ev.Future.Value))
-    mTicksizeFutureBuilder.Complete
+    Set mRuleset = ev.Future.Value
+    processRuleset
 End If
 
 Exit Sub
@@ -1137,10 +1159,8 @@ Dim lRulesetFuture As IFuture
 Set lRulesetFuture = mContractRequester.RequestPriceIncrementRuleset(lRulesetID, lPriceMagnifier)
 
 If lRulesetFuture.IsAvailable Then
-    Dim lRuleset As PriceIncrementRuleset
-    Set lRuleset = lRulesetFuture.Value
-    mTicksizeFutureBuilder.Value = CreateBoxedValue(getTickSizeFromRuleset(lRuleset))
-    mTicksizeFutureBuilder.Complete
+    Set mRuleset = lRulesetFuture.Value
+    processRuleset
 Else
     mFutureWaiter.Add lRulesetFuture
 End If
@@ -1230,22 +1250,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getAPrice(ByRef pTickType As TickTypes) As Double
+Private Function getAPrice() As Double
 Const ProcName As String = "getCurrentPrice"
 On Error GoTo Err
 
 Assert mDataSource.State = MarketDataSourceStateRunning, "Data source is not running"
 If mDataSource.HasCurrentTick(TickTypeTrade) Then
-    pTickType = TickTypeTrade
     getAPrice = mDataSource.CurrentTick(TickTypeTrade).Price
 ElseIf mDataSource.HasCurrentTick(TickTypeAsk) Then
-    pTickType = TickTypeAsk
     getAPrice = mDataSource.CurrentTick(TickTypeAsk).Price
 ElseIf mDataSource.HasCurrentTick(TickTypeBid) Then
-    pTickType = TickTypeBid
     getAPrice = mDataSource.CurrentTick(TickTypeBid).Price
 Else
-    Assert False, "No price available"
+    getAPrice = 0
 End If
 
 Exit Function
@@ -1297,7 +1314,7 @@ Const ProcName As String = "getTickSizeFromRuleset"
 On Error GoTo Err
 
 Dim lTickType As TickTypes
-Dim lPrice As Double: lPrice = getAPrice(lTickType)
+Dim lPrice As Double: lPrice = getAPrice()
 
 getTickSizeFromRuleset = pRuleset.GetIncrement(lPrice)
 
@@ -1509,6 +1526,30 @@ If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
     placeAnOrder pOrder, gContractSpecToTwsContractSpec(pOrder.ContractSpecifier), pLimitPriceOverride, pTransmit, pParentId, pOcaGroup, pOrderMode
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processRuleset()
+Const ProcName As String = "processRuleset"
+On Error GoTo Err
+
+Dim lTickSize As Double: lTickSize = mRuleset.GetIncrement(0)
+If lTickSize <> 0 Then
+    mTicksizeFutureBuilder.Value = CreateBoxedValue(lTickSize)
+    mTicksizeFutureBuilder.Complete
+Else
+    Dim lPrice As Double: lPrice = getAPrice
+    If lPrice <> 0 Then
+        mTicksizeFutureBuilder.Value = CreateBoxedValue(mRuleset.GetIncrement(lPrice))
+        mTicksizeFutureBuilder.Complete
+    Else
+        mDataSource.AddGenericTickListener Me
+    End If
 End If
 
 Exit Sub

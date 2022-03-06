@@ -537,7 +537,8 @@ ElseIf Not mTickSizeFuture Is Nothing Then
     IsReadyTickSize = False
 ElseIf mContract.Specifier.SecType = SecTypeCombo Then
     Assert False, "Combo orders not supported"
-ElseIf dataSourceHasPrice And IsProviderReady Then
+'ElseIf dataSourceHasPrice And IsProviderReady Then
+ElseIf IsProviderReady Then
     Set mTickSizeFuture = mOrderSubmitter.GetTickSize
     mFutureWaiter.Add mTickSizeFuture
     IsReadyTickSize = False
@@ -641,15 +642,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function dataSourceHasPrice() As Boolean
-If mDataSource.State <> MarketDataSourceStateRunning Then
-    dataSourceHasPrice = False
-Else
-    dataSourceHasPrice = (mDataSource.HasCurrentTick(TickTypeBid) Or _
-                        mDataSource.HasCurrentTick(TickTypeAsk) Or _
-                        mDataSource.HasCurrentTick(TickTypeTrade))
-End If
-End Function
+'Private Function dataSourceHasPrice() As Boolean
+'If mDataSource.State <> MarketDataSourceStateRunning Then
+'    dataSourceHasPrice = False
+'Else
+'    dataSourceHasPrice = (mDataSource.HasCurrentTick(TickTypeBid) Or _
+'                        mDataSource.HasCurrentTick(TickTypeAsk) Or _
+'                        mDataSource.HasCurrentTick(TickTypeTrade))
+'End If
+'End Function
 
 Private Sub fireCollectionChanged(ev As CollectionChangeEventData)
 Const ProcName As String = "fireCollectionChanged"
