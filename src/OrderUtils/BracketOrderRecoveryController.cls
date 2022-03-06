@@ -596,7 +596,7 @@ For Each lBor In mBracketOrderRecoverers
 Next
 Set mBracketOrderRecoverers = Nothing
 
-Dim lPMsToRemove As New EnumerableCollection
+Dim lPMsToFinish As New EnumerableCollection
 Dim en As Enumerator
 Set en = mPositionManagers.Enumerator
 Do While en.MoveNext
@@ -608,15 +608,17 @@ Do While en.MoveNext
     Set pm = en.Current
     
     If IsContractExpired(pm.ContractFuture.Value) Then
-        lPMsToRemove.Add pm
-    Else
-        If pm.IsFinished Then lPMsToRemove.Add pm
+        lPMsToFinish.Add pm
+    ElseIf pm.PendingPositionSize = 0 And pm.PositionSize = 0 Then
+        lPMsToFinish.Add pm
     End If
 Loop
 
 Dim lPm As PositionManager
-For Each lPm In lPMsToRemove
-    mPositionManagers.Remove lPm
+For Each lPm In lPMsToFinish
+    ' note that calling Finish removes the PositionManager from the
+    ' PositionManagers collection
+    lPm.Finish
 Next
 
 mTaskContext.Finish mPositionManagers, False

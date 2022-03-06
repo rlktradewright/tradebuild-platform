@@ -1514,6 +1514,7 @@ Const ProcName As String = "doFinish"
 On Error GoTo Err
 
 mDataSource.RemoveGenericTickListener Me
+mDataSource.StopMarketData
 Set mDataSource = Nothing
 Set mSession = Nothing
 
