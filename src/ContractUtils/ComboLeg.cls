@@ -180,14 +180,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
-
 Const ProcName As String = "ToString"
 
 On Error GoTo Err
 
-ToString = "action=" & IIf(mIsBuyLeg, "BUY", "SELL") & "; " & _
-            "ratio=" & mRatio & "; " & _
-            "contractSpec=(" & mContractSpec.ToString & "); "
+ToString = IIf(mIsBuyLeg, "BUY", "SELL") & ";" & _
+            mRatio & ";" & _
+            "(" & mContractSpec.ToString & ")"
 
 Exit Function
 

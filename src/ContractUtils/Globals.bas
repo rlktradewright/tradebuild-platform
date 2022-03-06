@@ -306,7 +306,8 @@ Public Function gCreateContractSpecifierFromString(ByVal pSpecString As String) 
 Const ProcName As String = "gCreateContractSpecifierFromString"
 On Error GoTo Err
 
-Const SecTypeRegEx As String = "(?:([a-zA-Z]+)\:)?"
+Const LocalSymbolRegex As String = "(?:\[([a-zA-Z0-9]+(?:(?: *|-|\.)[a-zA-Z0-9]+)*(?:\.[a-zA-Z0-9]?)?)\])?"
+Const SecTypeRegEx As String = "(?:([a-zA-Z]+)[\:|#])?"
 Const SymbolRegEx As String = "([a-zA-Z0-9]+(?:(?: *|-|\.)[a-zA-Z0-9]+)*(?:\.[a-zA-Z0-9]?)?)"
 Const OptionSpecRegex As String = "(?:=((?:C(?:all)?)|(?:P(?:ut)?))?((?:\d+(?:\.\d{1,2})?))?)?"
 Const DateExpiryRegEx As String = "((?:20\d\d)(?:[0|1]\d)(?:[0|1|2|3]\d)?)?"
@@ -316,10 +317,11 @@ Const ExpiryRegEx As String = "(?:\(" & _
                                 RelativeExpiryRegEx & _
                                 "\))?"
 Const ExchangeRegEx As String = "(?:@([a-zA-Z]+(?:/[a-zA-Z]+)?))?"
-Const CurrencyRegEx As String = "(?:(?:\$)([a-zA-Z]+))?"
+Const CurrencyRegEx As String = "(?:(?:(?:\$)([a-zA-Z]+))|(\(([a-zA-Z]+)\)))?"
 Const MultiplierRegex As String = "(?:(?:\*)(\d+(?:\.\d{1,6})?))?"
 
 Const ContractSpecRegex As String = "^" & _
+LocalSymbolRegex & _
 SecTypeRegEx & _
 SymbolRegEx & _
 OptionSpecRegex & _
@@ -337,12 +339,15 @@ Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(pSpecString)
 
 AssertArgument lMatches.Count = 1, "Invalid contract specifier: [<sectype>:]<symbol>[=<optionspec>][expiry]" & vbCrLf & _
-                                   "                            [@<exchange>][$<currency>][*<multiplier>]" & vbCrLf & _
+                                   "                            [@<exchange>][(<currency>)][*<multiplier>]" & vbCrLf & _
                                     "Expiry can be: " & vbCrLf & _
                                     "    yyyymm" & vbCrLf & _
                                     "    yyyymmdd" & vbCrLf & _
                                     "    <offset>[<qualifier>d]  for example 0[2d]" & vbCrLf & _
                                     "Option spec: [C[all]|P[ut]][strike]" & vbCrLf & _
+                                    "" & _
+                                    "NB: you can use $<currency> instead of (<currency>) if you prefer." & _
+                                    "" & _
                                     "examples: STK:MSFT@SMART$USD" & vbCrLf & _
                                     "          FUT:ESZ0@GLOBEX" & vbCrLf & _
                                     "          FUT:ES(0[2d])@GLOBEX" & vbCrLf & _
@@ -352,7 +357,9 @@ AssertArgument lMatches.Count = 1, "Invalid contract specifier: [<sectype>:]<sym
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
-Dim lSecTypeStr As String: lSecTypeStr = lMatch.SubMatches(0)
+Dim lLocalSymbol As String: lLocalSymbol = lMatch.SubMatches(0)
+
+Dim lSecTypeStr As String: lSecTypeStr = lMatch.SubMatches(1)
 Dim lSecType As SecurityTypes
 
 If lSecTypeStr <> "" Then
@@ -361,9 +368,9 @@ If lSecTypeStr <> "" Then
 End If
 
 Dim lSymbolOrLocalSymbol As String
-lSymbolOrLocalSymbol = lMatch.SubMatches(1)
+lSymbolOrLocalSymbol = lMatch.SubMatches(2)
 
-Dim lCallPutStr As String: lCallPutStr = lMatch.SubMatches(2)
+Dim lCallPutStr As String: lCallPutStr = lMatch.SubMatches(3)
 Dim lCallPut As OptionRights
 If lCallPutStr <> "" Then
     If lSecType = SecTypeNone Then
@@ -376,25 +383,26 @@ If lCallPutStr <> "" Then
 End If
 
 Dim lStrike As String
-lStrike = lMatch.SubMatches(3)
+lStrike = lMatch.SubMatches(4)
 If lStrike = "" Then lStrike = "0"
 
 Dim lDateExpiry As String
-lDateExpiry = lMatch.SubMatches(4)
+lDateExpiry = lMatch.SubMatches(5)
 
 Dim lRelativeExpiry As String
-lRelativeExpiry = lMatch.SubMatches(5)
+lRelativeExpiry = lMatch.SubMatches(6)
 
 AssertArgument lDateExpiry = "" Or lRelativeExpiry = "", "Supplying both date-based and relative expiry is not permitted"
 
 Dim lExchange As String
-lExchange = lMatch.SubMatches(6)
+lExchange = lMatch.SubMatches(7)
 
 Dim lCurrency As String
-lCurrency = lMatch.SubMatches(7)
+lCurrency = lMatch.SubMatches(8)
+If lCurrency = "" Then lCurrency = lMatch.SubMatches(9)
 
 Dim lMultiplier As String
-lMultiplier = lMatch.SubMatches(8)
+lMultiplier = lMatch.SubMatches(10)
 If lMultiplier = "" Then lMultiplier = "0"
 
 If (lSecType = SecTypeFuture Or _
@@ -404,7 +412,9 @@ If (lSecType = SecTypeFuture Or _
 Then
     If lDateExpiry = "" And lRelativeExpiry = "" Then
         Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
-                                                        lSymbolOrLocalSymbol, _
+                                                        IIf(lLocalSymbol <> "", _
+                                                            lLocalSymbol, _
+                                                            lSymbolOrLocalSymbol), _
                                                         "", _
                                                         lExchange, _
                                                         lSecType, _
@@ -415,7 +425,7 @@ Then
                                                         lCallPut)
     Else
         Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
-                                                        "", _
+                                                        lLocalSymbol, _
                                                         lSymbolOrLocalSymbol, _
                                                         lExchange, _
                                                         lSecType, _
@@ -427,7 +437,7 @@ Then
     End If
 Else
     Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
-                                                    "", _
+                                                    lLocalSymbol, _
                                                     lSymbolOrLocalSymbol, _
                                                     lExchange, _
                                                     lSecType, _
@@ -901,6 +911,17 @@ Case "CALL", "C"
     gOptionRightFromString = OptCall
 Case "PUT", "P"
     gOptionRightFromString = OptPut
+End Select
+End Function
+
+Public Function gOptionRightToShortString(ByVal Value As OptionRights) As String
+Select Case Value
+Case OptNone
+    gOptionRightToShortString = ""
+Case OptCall
+    gOptionRightToShortString = "C"
+Case OptPut
+    gOptionRightToShortString = "P"
 End Select
 End Function
 

@@ -428,26 +428,28 @@ On Error GoTo Err
 Dim comboLegObj As ComboLeg
 Dim i As Long
 
-ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & "; ", "")
-ToString = ToString & IIf(mSymbol <> "", "symbol=" & mSymbol & "; ", "")
-ToString = ToString & IIf(mExchange <> "", "exchange=" & mExchange & "; ", "")
-ToString = ToString & IIf(mSecType <> 0, "sectype=" & gSecTypeToString(mSecType) & "; ", "")
-ToString = ToString & IIf(mExpiry <> "", "expiry=" & mExpiry & "; ", "")
-ToString = ToString & IIf(mCurrency <> "", "currencycode=" & mCurrency & "; ", "")
-ToString = ToString & IIf(mMultiplier <> 0, "multiplier=" & mMultiplier & "; ", "")
+ToString = IIf(mLocalSymbol <> "", "[" & mLocalSymbol & "]", "")
+ToString = ToString & IIf(mSecType <> 0, gSecTypeToShortString(mSecType) & "#", "")
+ToString = ToString & mSymbol
 Select Case mRight
 Case OptCall, OptPut
-    ToString = ToString & "right=" & gOptionRightToString(mRight) & "; "
-    ToString = ToString & "strike=" & mStrike & "; "
+    ToString = ToString & "=" & gOptionRightToString(mRight)
 End Select
+ToString = ToString & IIf(mStrike <> 0, Format(mStrike, "0.00"), "")
+ToString = ToString & IIf(mExpiry <> "", "(" & mExpiry & ")", "")
+ToString = ToString & IIf(mExchange <> "", "@" & mExchange, "")
+ToString = ToString & IIf(mCurrency <> "", "$" & mCurrency, "")
+ToString = ToString & IIf(mMultiplier <> 0, "'" & mMultiplier, "")
 
 i = 0
 If Not mComboLegs Is Nothing Then
+    ToString = ToString & "{"
     For Each comboLegObj In mComboLegs
+        If i > 0 Then ToString = ToString & ","
         i = i + 1
-        ToString = ToString & "Combo leg" & i & ":" & "; " & _
-                    comboLegObj.ToString
+        ToString = ToString & comboLegObj.ToString
     Next
+    ToString = ToString & "}"
 End If
 
 Exit Function
