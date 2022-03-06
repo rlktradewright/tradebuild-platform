@@ -78,7 +78,7 @@ Private Function IMarketDataManager_CreateMarketDataSource( _
                 Optional ByVal pKey As String, _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
-                Optional ByVal pRecoveryContractSpec As ContractUtils27.IContractSpecifier) As MktDataUtils27.IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Assert False, ErrorCodes.ErrUnsupportedOperationException, "Not implemented"
 End Function
 
@@ -89,7 +89,7 @@ Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
                 Optional ByVal pUseLocalTimeForStudies As Boolean, _
                 Optional ByVal pStateChangeListener As IStateChangeListener, _
                 Optional ByVal pRefreshInterval As Long = 0&, _
-                Optional ByVal pRecoveryContractSpec As ContractUtils27.IContractSpecifier) As IMarketDataSource
+                Optional ByVal pOffsetExpiry As String) As IMarketDataSource
 Dim lDataSource As New MockDataSource
 lDataSource.Initialise pContractFuture, Me, getNextStreamId
 mRefreshInterval = pRefreshInterval
