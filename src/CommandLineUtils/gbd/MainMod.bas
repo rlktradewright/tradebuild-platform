@@ -1132,7 +1132,7 @@ Case ResultFormatCommand
 Case EchoResultFormatCommand
     processEchoResultFormatCommand params
 Case Else
-    gWriteErrorLine "Invalid lCommand '" & lCommand & "'"
+    gWriteErrorLine "Invalid command '" & lCommand & "'"
 End Select
 
 Exit Sub
@@ -2156,6 +2156,8 @@ On Error GoTo Err
 
 On Error Resume Next
 
+setupTwsProviders = True
+
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(switchValue, ",")
 
@@ -2193,6 +2195,8 @@ ElseIf Not IsInteger(connectionRetryInterval, 0, 3600) Then
     setupTwsProviders = False
 End If
 
+If Not setupTwsProviders Then Exit Function
+
 Dim lTwsClient As Client
 If connectionRetryInterval = "" Then
     Set lTwsClient = GetClient( _
@@ -2220,8 +2224,6 @@ lTwsClient.DisableHistoricalDataRequestPacing
 
 Set mContractStore = lTwsClient.GetContractStore
     
-setupTwsProviders = True
-
 Exit Function
 
 Err:

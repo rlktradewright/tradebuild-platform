@@ -1759,6 +1759,8 @@ Private Function setupTwsApi( _
 Const ProcName As String = "setupTwsApi"
 On Error GoTo Err
 
+setupTwsApi = True
+
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(SwitchValue, ",")
 
@@ -1769,8 +1771,8 @@ Dim port As String
 port = lClp.Arg(1)
 If port = "" Then
     port = 7496
-ElseIf Not IsInteger(port, 0) Then
-    gWriteErrorLine "port must be an integer > 0", True
+ElseIf Not IsInteger(port, 1024) Then
+    gWriteErrorLine "port must be an integer > 1024 and <= 65535", True
     setupTwsApi = False
 End If
     
@@ -1792,6 +1794,8 @@ ElseIf Not IsInteger(connectionRetryInterval, 0, 3600) Then
     gWriteErrorLine "Error: connection retry interval must be an integer >= 0 and <= 3600", True
     setupTwsApi = False
 End If
+
+If Not setupTwsApi Then Exit Function
 
 Dim lListener As New TwsConnectionListener
 
@@ -1831,8 +1835,6 @@ Set mOrderManager = New OrderManager
 mOrderManager.ContractStorePrimary = mContractStore
 mOrderManager.MarketDataManager = mMarketDataManager
 mOrderManager.OrderSubmitterFactory = mOrderSubmitterFactory
-
-setupTwsApi = True
 
 Exit Function
 
