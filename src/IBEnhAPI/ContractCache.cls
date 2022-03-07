@@ -530,10 +530,14 @@ Const ProcName As String = "tryGetRulesetCacheEntry"
 On Error GoTo Err
 
 If Not mPriceIncrementRulesets.TryItem(CStr(pRuleID), pCacheEntry) Then
-ElseIf gIsCacheEntryExpired(pCacheEntry.CacheDate) Then
-    Dim lCacheEntry As PriceIncrementRulesetCacheEntry
-    pCacheEntry = lCacheEntry
-    mPriceIncrementRulesets.Remove CStr(pRuleID)
+
+' don't check for ruleset expiry to avoid problems where a ticker is
+' started before midnight but the first tick doesn't arrive till after
+' midnight
+'ElseIf gIsCacheEntryExpired(pCacheEntry.CacheDate) Then
+'    Dim lCacheEntry As PriceIncrementRulesetCacheEntry
+'    pCacheEntry = lCacheEntry
+'    mPriceIncrementRulesets.Remove CStr(pRuleID)
 Else
     tryGetRulesetCacheEntry = True
 End If
