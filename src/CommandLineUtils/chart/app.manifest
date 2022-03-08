@@ -3,22 +3,22 @@
   <assemblyIdentity version="2.7.0.252" name="Chart" processorArchitecture="X86" type="win32" />
   <dependency>
     <dependentAssembly>
-      <assemblyIdentity name="TradeWright.Common" processorArchitecture="X86" type="win32" version="4.0.0.124"></assemblyIdentity>
+      <assemblyIdentity name="TradeWright.Common" processorArchitecture="X86" type="win32" version="4.0.0.125"></assemblyIdentity>
     </dependentAssembly>
   </dependency>
   <dependency>
     <dependentAssembly>
-      <assemblyIdentity name="TradeWright.TradeBuild.Platform" processorArchitecture="X86" type="win32" version="2.7.0.254"></assemblyIdentity>
+      <assemblyIdentity name="TradeWright.TradeBuild.Platform" processorArchitecture="X86" type="win32" version="2.7.0.255"></assemblyIdentity>
     </dependentAssembly>
   </dependency>
   <dependency>
     <dependentAssembly>
-      <assemblyIdentity name="TradeWright.TradeBuild.ServiceProviders" processorArchitecture="X86" type="win32" version="2.7.0.254"></assemblyIdentity>
+      <assemblyIdentity name="TradeWright.TradeBuild.ServiceProviders" processorArchitecture="X86" type="win32" version="2.7.0.255"></assemblyIdentity>
     </dependentAssembly>
   </dependency>
   <dependency>
     <dependentAssembly>
-      <assemblyIdentity name="TradeWright.TradeBuild.ExternalComponents" processorArchitecture="X86" type="win32" version="2.7.0.254"></assemblyIdentity>
+      <assemblyIdentity name="TradeWright.TradeBuild.ExternalComponents" processorArchitecture="X86" type="win32" version="2.7.0.255"></assemblyIdentity>
     </dependentAssembly>
   </dependency>
 </assembly>

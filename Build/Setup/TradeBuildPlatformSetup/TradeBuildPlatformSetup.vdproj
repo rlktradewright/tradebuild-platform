@@ -705,6 +705,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_363D065249D344A7BA01E20138581AEF"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_379596CBC0D246EEB789C3368E50C026"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -1041,12 +1047,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_48D094EF544844EC8FAD9C217C3BAB29"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_4957CE751F28A14986004B498DD41448"
         "OwnerKey" = "8:_7EC40D8079DA41A9851801310A3678C1"
         "MsmSig" = "8:_UNDEFINED"
@@ -1337,6 +1337,12 @@
         {
         "MsmKey" = "8:_5E03E05DEA205244BCA78F44FD965C41"
         "OwnerKey" = "8:_86F946BE5E794D4CE9DAB739AAF295F0"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_60A80CD8EF8A45D0B90C730CB637C25A"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1659,12 +1665,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7B49E32BEAF84B81AECBA594D91D99AC"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_7D1FA456F409E1A449EA1637C8258B90"
         "OwnerKey" = "8:_3D28341F82754D08A174F5B8171F4501"
         "MsmSig" = "8:_UNDEFINED"
@@ -1714,6 +1714,12 @@
         "Entry"
         {
         "MsmKey" = "8:_7D6D48DC0A1341B1ABD6A58D9935A77F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7E34E423492E4340B6CAC6817E1DACD9"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -1965,12 +1971,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_9AAFE13E63AD4E8DB1FCE062CFCEA2A0"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_9D46D5E08BFD48B3ABABDDF7ACA06189"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -2039,12 +2039,6 @@
         {
         "MsmKey" = "8:_A83A3711CAC90472BA656E567092FBF7"
         "OwnerKey" = "8:_FD3A12ACE0FC443C9832AB26ABA27101"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_A8B4AD7C19BC4BB1BB5A29BC72C6D40D"
-        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -2764,7 +2758,7 @@
         "Entry"
         {
         "MsmKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
-        "OwnerKey" = "8:_12020532536E4C758851C4C2B8ABF6F5"
+        "OwnerKey" = "8:_2CF5D1C17636827C518E7F28DB36ED75"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -2902,12 +2896,6 @@
         "Entry"
         {
         "MsmKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
-        "OwnerKey" = "8:_F4C3DFAD2EC25186CD8B5ED909BEF20A"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
         "OwnerKey" = "8:_3D28341F82754D08A174F5B8171F4501"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -2939,12 +2927,6 @@
         {
         "MsmKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
         "OwnerKey" = "8:_507902C353632809F550306679F25E53"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
-        "OwnerKey" = "8:_2CF5D1C17636827C518E7F28DB36ED75"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -3454,6 +3436,12 @@
         "Entry"
         {
         "MsmKey" = "8:_F634C47CF2E239E7DD92CD8A5FF3CA82"
+        "OwnerKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F634C47CF2E239E7DD92CD8A5FF3CA82"
         "OwnerKey" = "8:_2020C60799F1B6609AF15E6CE5DC820C"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -3461,12 +3449,6 @@
         {
         "MsmKey" = "8:_F634C47CF2E239E7DD92CD8A5FF3CA82"
         "OwnerKey" = "8:_34AC23D0BD4E53C28EDD6D19A5BF2361"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_F634C47CF2E239E7DD92CD8A5FF3CA82"
-        "OwnerKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -3502,6 +3484,12 @@
         "Entry"
         {
         "MsmKey" = "8:_FA49597258C748DDAD8D687B0DECE25C"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FB1F1AB9876A42D9BB663F153F529C87"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -4252,6 +4240,12 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_2020C60799F1B6609AF15E6CE5DC820C"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -4259,12 +4253,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_34AC23D0BD4E53C28EDD6D19A5BF2361"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_EE7B87A765B7157756B0CE57A81AE6CE"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -4329,7 +4317,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.254.msi"
+        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.255.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -4430,11 +4418,11 @@
                 {
                     "_0091289BC68E21BEE3A683888362131B"
                     {
-                    "Name" = "8:Interop.LayeredGraphics40.DLL"
+                    "Name" = "8:Interop.LayeredGraphics40.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.LayeredGraphics40.DLL"
+            "SourcePath" = "8:Interop.LayeredGraphics40.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -4552,11 +4540,11 @@
                 {
                     "_09A9A9AF87683BA2823F3D25175CFB76"
                     {
-                    "Name" = "8:Interop.TWWin32API.DLL"
+                    "Name" = "8:Interop.TWWin32API.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TWWin32API.DLL"
+            "SourcePath" = "8:Interop.TWWin32API.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -4579,7 +4567,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\IBAPILoadTester27.exe"
             "TargetName" = "8:IBAPILoadTester27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -4630,14 +4618,14 @@
             "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\ForGetBarDataProgram\\RunGetBarData.bat"
             "TargetName" = "8:RunGetBarData.bat"
             "Tag" = "8:"
-            "Folder" = "8:_4340150DFFB54D53A2ABADA6DFBD126C"
+            "Folder" = "8:_1764218C528746F5BD2DF275974694C1"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
             "ReadOnly" = "11:FALSE"
             "Hidden" = "11:FALSE"
             "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
+            "Permanent" = "11:TRUE"
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
@@ -4649,7 +4637,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.ChartSkil27, Version=316.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.ChartSkil27, Version=317.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_0EF851B267A74C04AC6DEDB514A97C53"
@@ -4681,7 +4669,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\uccd27.exe"
             "TargetName" = "8:uccd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -4700,7 +4688,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TickerUtils27, Version=303.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TickerUtils27, Version=305.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_12020532536E4C758851C4C2B8ABF6F5"
@@ -4732,7 +4720,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\TickfileManager27.exe"
             "TargetName" = "8:TickfileManager27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -4756,11 +4744,11 @@
                 {
                     "_149CD16904A1C3A061B449857D0D361C"
                     {
-                    "Name" = "8:Interop.MSWINSCK.DLL"
+                    "Name" = "8:Interop.MSWINSCK.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.MSWINSCK.DLL"
+            "SourcePath" = "8:Interop.MSWINSCK.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -4782,7 +4770,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.MarketDataUtils27, Version=398.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.MarketDataUtils27, Version=399.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_15806B850C1B47239510750F5339B200"
@@ -4834,7 +4822,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\ucd27.exe"
             "TargetName" = "8:ucd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -4893,7 +4881,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.CommonStudiesLib27, Version=274.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.CommonStudiesLib27, Version=275.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_1CA9466661F4476CBBF2B7713C158A53"
@@ -4929,11 +4917,11 @@
                 {
                     "_1CC2E140FFA8715AAB884BB0E3EDC42B"
                     {
-                    "Name" = "8:VBRUN.DLL"
+                    "Name" = "8:VBRUN.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:VBRUN.DLL"
+            "SourcePath" = "8:VBRUN.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -4975,7 +4963,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.ContractUtils27, Version=500.1.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.ContractUtils27, Version=501.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_1D841A084EBE4BABA8CA8775FCFE30A0"
@@ -5026,16 +5014,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.BarUtils27, Version=496.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.BarUtils27, Version=497.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_2020C60799F1B6609AF15E6CE5DC820C"
                     {
-                    "Name" = "8:Interop.BarUtils27.DLL"
+                    "Name" = "8:Interop.BarUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.BarUtils27.DLL"
+            "SourcePath" = "8:Interop.BarUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5057,16 +5045,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.OrderUtils27, Version=34.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.OrderUtils27, Version=37.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_2476BEA20B0523000E4C6D1F5535DE01"
                     {
-                    "Name" = "8:Interop.OrderUtils27.DLL"
+                    "Name" = "8:Interop.OrderUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.OrderUtils27.DLL"
+            "SourcePath" = "8:Interop.OrderUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5113,11 +5101,11 @@
                 {
                     "_27B5A0DBAA10E83CA14654BFC6C98497"
                     {
-                    "Name" = "8:Interop.TABCTL32.DLL"
+                    "Name" = "8:Interop.TABCTL32.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TABCTL32.DLL"
+            "SourcePath" = "8:Interop.TABCTL32.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5159,16 +5147,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradeBuildUI27, Version=194.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradeBuildUI27, Version=196.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_29539E4AFC4BB75E84D975BFC5343B19"
                     {
-                    "Name" = "8:Interop.TradeBuildUI27.DLL"
+                    "Name" = "8:Interop.TradeBuildUI27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TradeBuildUI27.DLL"
+            "SourcePath" = "8:Interop.TradeBuildUI27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5191,7 +5179,7 @@
             "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\ForGetBarDataProgram\\Scripts\\README.txt"
             "TargetName" = "8:README.txt"
             "Tag" = "8:"
-            "Folder" = "8:_F46C1CDCDF684E4E99DC29343AC35146"
+            "Folder" = "8:_5FE692CB05E54ABB94DCECD19110BF4F"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5215,11 +5203,11 @@
                 {
                     "_2AD3BF8E9578FCFA575EC7F88244E0B8"
                     {
-                    "Name" = "8:Interop.MSFLXGRD.DLL"
+                    "Name" = "8:Interop.MSFLXGRD.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.MSFLXGRD.DLL"
+            "SourcePath" = "8:Interop.MSFLXGRD.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5241,16 +5229,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.HistDataUtils27, Version=374.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.HistDataUtils27, Version=375.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_2CF5D1C17636827C518E7F28DB36ED75"
                     {
-                    "Name" = "8:Interop.HistDataUtils27.DLL"
+                    "Name" = "8:Interop.HistDataUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.HistDataUtils27.DLL"
+            "SourcePath" = "8:Interop.HistDataUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5273,14 +5261,14 @@
             "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\ForPlaceOrdersProgram\\RunPlaceOrders.bat"
             "TargetName" = "8:RunPlaceOrders.bat"
             "Tag" = "8:"
-            "Folder" = "8:_168DAA3E4B564E60A57454C119036A92"
+            "Folder" = "8:_DDB756CCC33A403CADBD96FE60DEE99E"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
             "ReadOnly" = "11:FALSE"
             "Hidden" = "11:FALSE"
             "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
+            "Permanent" = "11:TRUE"
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
@@ -5292,16 +5280,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.SessionUtils27, Version=436.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.SessionUtils27, Version=437.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_34AC23D0BD4E53C28EDD6D19A5BF2361"
                     {
-                    "Name" = "8:Interop.SessionUtils27.DLL"
+                    "Name" = "8:Interop.SessionUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.SessionUtils27.DLL"
+            "SourcePath" = "8:Interop.SessionUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5344,7 +5332,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\plord27.exe"
             "TargetName" = "8:plord27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5384,7 +5372,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\gbd27.exe"
             "TargetName" = "8:gbd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5403,16 +5391,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.ChartSkil27, Version=316.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.ChartSkil27, Version=317.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_3B4FDFD94EB76962E6F052983AA72012"
                     {
-                    "Name" = "8:Interop.ChartSkil27.DLL"
+                    "Name" = "8:Interop.ChartSkil27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.ChartSkil27.DLL"
+            "SourcePath" = "8:Interop.ChartSkil27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5435,7 +5423,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\gsd27.exe"
             "TargetName" = "8:gsd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5455,7 +5443,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\Data\\symbols.txt"
             "TargetName" = "8:symbols.txt"
             "Tag" = "8:"
-            "Folder" = "8:_9F2A439A13B048CEBF9EA3546F4F695D"
+            "Folder" = "8:_424A2E05325F47DCB5D5E6623A90D95F"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5474,7 +5462,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradeBuild27, Version=71.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradeBuild27, Version=73.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_3D28341F82754D08A174F5B8171F4501"
@@ -5546,7 +5534,7 @@
             "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\ForGetScanDataProgram\\Scripts\\GetScanData.bat"
             "TargetName" = "8:GetScanData.bat"
             "Tag" = "8:"
-            "Folder" = "8:_D5D5627613FB45DB8C9D657098ADA1D8"
+            "Folder" = "8:_5FE692CB05E54ABB94DCECD19110BF4F"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5570,11 +5558,11 @@
                 {
                     "_4289A8DAD562DDB5E0575EA98AF89087"
                     {
-                    "Name" = "8:Scripting.DLL"
+                    "Name" = "8:Scripting.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Scripting.DLL"
+            "SourcePath" = "8:Scripting.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5596,16 +5584,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TickUtils27, Version=509.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TickUtils27, Version=510.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_46B9AB25E88B006A18399D5A1A6FD7F7"
                     {
-                    "Name" = "8:Interop.TickUtils27.DLL"
+                    "Name" = "8:Interop.TickUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TickUtils27.DLL"
+            "SourcePath" = "8:Interop.TickUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5687,7 +5675,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.HistDataUtils27, Version=374.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.HistDataUtils27, Version=375.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_48203F5550974D949EB80439C0694BFE"
@@ -5700,26 +5688,6 @@
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_48D094EF544844EC8FAD9C217C3BAB29"
-            {
-            "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\ForPlaceOrdersProgram\\Scripts\\README.txt"
-            "TargetName" = "8:README.txt"
-            "Tag" = "8:"
-            "Folder" = "8:_E8FFC8BABDAD4D1D801D61EF6052D08D"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5759,7 +5727,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\StudyTester27.exe"
             "TargetName" = "8:StudyTester27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5810,7 +5778,7 @@
             "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\ForPlaceOrdersProgram\\Scripts\\PlaceOrders.bat"
             "TargetName" = "8:PlaceOrders.bat"
             "Tag" = "8:"
-            "Folder" = "8:_E8FFC8BABDAD4D1D801D61EF6052D08D"
+            "Folder" = "8:_5FE692CB05E54ABB94DCECD19110BF4F"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5830,7 +5798,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\gcd27.exe"
             "TargetName" = "8:gcd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5880,16 +5848,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.StudyUtils27, Version=482.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.StudyUtils27, Version=483.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_507902C353632809F550306679F25E53"
                     {
-                    "Name" = "8:Interop.StudyUtils27.DLL"
+                    "Name" = "8:Interop.StudyUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.StudyUtils27.DLL"
+            "SourcePath" = "8:Interop.StudyUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -5942,7 +5910,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.AxChartSkil27, Version=316.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.AxChartSkil27, Version=317.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_5160D795E1524C90A7BDA87FC9FB7553"
@@ -5974,7 +5942,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\uxd27.exe"
             "TargetName" = "8:uxd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -5993,16 +5961,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.StrategyUtils27, Version=127.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.StrategyUtils27, Version=129.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_51F78119D153601D0D81F719A56031A8"
                     {
-                    "Name" = "8:Interop.StrategyUtils27.DLL"
+                    "Name" = "8:Interop.StrategyUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.StrategyUtils27.DLL"
+            "SourcePath" = "8:Interop.StrategyUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -6080,11 +6048,11 @@
                 {
                     "_55A4A05D3D66527856F22D7479970A99"
                     {
-                    "Name" = "8:Interop.GraphObjUtils40.DLL"
+                    "Name" = "8:Interop.GraphObjUtils40.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.GraphObjUtils40.DLL"
+            "SourcePath" = "8:Interop.GraphObjUtils40.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -6106,7 +6074,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TickfileUtils27, Version=158.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TickfileUtils27, Version=159.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_562546D68F244E48B25F41BC1CBBCB93"
@@ -6138,14 +6106,14 @@
             "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\ForGetScanDataProgram\\RunGetScanData.bat"
             "TargetName" = "8:RunGetScanData.bat"
             "Tag" = "8:"
-            "Folder" = "8:_7812C787E54B4EEE87D8350AB5D2D197"
+            "Folder" = "8:_D7BD3148F2664E228A40B04640C362E4"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
             "ReadOnly" = "11:FALSE"
             "Hidden" = "11:FALSE"
             "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
+            "Permanent" = "11:TRUE"
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
@@ -6197,7 +6165,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.StudiesUI27, Version=287.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.StudiesUI27, Version=288.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_5C10AD5AFCF14A7C91E8B84B7387CC4E"
@@ -6249,7 +6217,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\TradeSkilDemo27.exe"
             "TargetName" = "8:TradeSkilDemo27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -6284,12 +6252,32 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_60A80CD8EF8A45D0B90C730CB637C25A"
+            {
+            "SourcePath" = "8:License.rtf"
+            "TargetName" = "8:License.rtf"
+            "Tag" = "8:"
+            "Folder" = "8:_CB0CE4A2F9D740678B2BDA62CA0787CF"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_60BEDE76551B43AA98D006909555103D"
             {
             "SourcePath" = "8:..\\..\\..\\Bin\\ltz27.exe"
             "TargetName" = "8:ltz27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -6380,7 +6368,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TabControlExtra.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -6404,14 +6392,14 @@
                 {
                     "_63CB9179A244FF2CB3238A7AA1B61015"
                     {
-                    "Name" = "8:TradeWright.TabControlExtra.DLL"
+                    "Name" = "8:TradeWright.TabControlExtra.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:TradeWright.TabControlExtra.DLL"
+            "SourcePath" = "8:TradeWright.TabControlExtra.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -6430,7 +6418,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.SessionUtils27, Version=436.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.SessionUtils27, Version=437.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_66BF3AAE104F4AC7BF4732B93AE060C5"
@@ -6461,16 +6449,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.MarketDataUtils27, Version=398.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.MarketDataUtils27, Version=399.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_673A6C06060355E48B665336CC65BFE1"
                     {
-                    "Name" = "8:Interop.MarketDataUtils27.DLL"
+                    "Name" = "8:Interop.MarketDataUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.MarketDataUtils27.DLL"
+            "SourcePath" = "8:Interop.MarketDataUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -6532,16 +6520,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TimeframeUtils27, Version=387.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TimeframeUtils27, Version=388.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_6CA3A2E7AF99EFAE4E42793807BEC77C"
                     {
-                    "Name" = "8:Interop.TimeframeUtils27.DLL"
+                    "Name" = "8:Interop.TimeframeUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TimeframeUtils27.DLL"
+            "SourcePath" = "8:Interop.TimeframeUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -6563,7 +6551,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradingDO27, Version=381.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradingDO27, Version=382.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_6CF8A85641F142A5AE23C09C227D29F6"
@@ -6645,7 +6633,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.AccountUtils27, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.AccountUtils27, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_6F4086B7C55E4FFCA8F0FB2E6593F4A0"
@@ -6778,7 +6766,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TimeframeUtils27, Version=387.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TimeframeUtils27, Version=388.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_71B4C9135EA9400CAF2A32CE17B430EC"
@@ -6809,7 +6797,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Chart, Version=2.7.0.253, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Chart, Version=2.7.0.254, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_723FD58125624424AB2685557D3B43CC"
@@ -6821,7 +6809,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\Chart.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -6942,16 +6930,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.BarFormatters27, Version=314.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.BarFormatters27, Version=315.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_7D1FA456F409E1A449EA1637C8258B90"
                     {
-                    "Name" = "8:Interop.BarFormatters27.DLL"
+                    "Name" = "8:Interop.BarFormatters27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.BarFormatters27.DLL"
+            "SourcePath" = "8:Interop.BarFormatters27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -6973,7 +6961,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.BarFormatters27, Version=314.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.BarFormatters27, Version=315.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_7D6D48DC0A1341B1ABD6A58D9935A77F"
@@ -6986,6 +6974,26 @@
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7E34E423492E4340B6CAC6817E1DACD9"
+            {
+            "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\CommonScripts\\ValidateNumber.bat"
+            "TargetName" = "8:ValidateNumber.bat"
+            "Tag" = "8:"
+            "Folder" = "8:_5FE692CB05E54ABB94DCECD19110BF4F"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -7040,11 +7048,11 @@
                 {
                     "_7F76C16383D4D6CFEAEE6EAF1BCA2A88"
                     {
-                    "Name" = "8:ADODB.DLL"
+                    "Name" = "8:ADODB.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:ADODB.DLL"
+            "SourcePath" = "8:ADODB.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -7071,11 +7079,11 @@
                 {
                     "_8002E645834AD9FBD844EC878189CFCD"
                     {
-                    "Name" = "8:Interop.COMDLG32.DLL"
+                    "Name" = "8:Interop.COMDLG32.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.COMDLG32.DLL"
+            "SourcePath" = "8:Interop.COMDLG32.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -7097,7 +7105,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.IBTWSSP27, Version=279.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.IBTWSSP27, Version=281.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_80DF803EA8144D4F8E6F805D8C223030"
@@ -7148,7 +7156,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.StudyUtils27, Version=482.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.StudyUtils27, Version=483.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_83313CBAF91F414DA72762EDF999C77E"
@@ -7255,11 +7263,11 @@
                 {
                     "_86F946BE5E794D4CE9DAB739AAF295F0"
                     {
-                    "Name" = "8:Interop.COMCT332.DLL"
+                    "Name" = "8:Interop.COMCT332.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.COMCT332.DLL"
+            "SourcePath" = "8:Interop.COMCT332.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -7313,7 +7321,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\FileAutoReader.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -7332,7 +7340,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TickUtils27, Version=509.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TickUtils27, Version=510.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_8890DEC596594D9794870081B328BCDE"
@@ -7363,16 +7371,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.IBAPIV10027, Version=13.1.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.IBAPIV10027, Version=14.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_89B8D779655EFE87374ADB9FB4B3E913"
                     {
-                    "Name" = "8:Interop.IBAPIV10027.DLL"
+                    "Name" = "8:Interop.IBAPIV10027.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.IBAPIV10027.DLL"
+            "SourcePath" = "8:Interop.IBAPIV10027.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -7426,7 +7434,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\StrategyHost27.exe"
             "TargetName" = "8:StrategyHost27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -7445,16 +7453,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradeBuild27, Version=71.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradeBuild27, Version=73.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_8C0146EE0B2F34B7342977B6FA7773B9"
                     {
-                    "Name" = "8:Interop.TradeBuild27.DLL"
+                    "Name" = "8:Interop.TradeBuild27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TradeBuild27.DLL"
+            "SourcePath" = "8:Interop.TradeBuild27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -7507,16 +7515,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.CommonStudiesLib27, Version=274.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.CommonStudiesLib27, Version=275.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_8D72F39798FA432A5CA1A888271872C6"
                     {
-                    "Name" = "8:Interop.CommonStudiesLib27.DLL"
+                    "Name" = "8:Interop.CommonStudiesLib27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.CommonStudiesLib27.DLL"
+            "SourcePath" = "8:Interop.CommonStudiesLib27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -7558,7 +7566,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.AxTradeBuildUI27, Version=194.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.AxTradeBuildUI27, Version=196.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_91EB9EE4C794459B85D825AEBBF6B788"
@@ -7640,7 +7648,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradingDbApi27, Version=253.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradingDbApi27, Version=254.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_9658753590D5448ABF9D71650FF60AD1"
@@ -7671,7 +7679,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.ChartUtils27, Version=313.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.ChartUtils27, Version=314.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_97E6CFA89A6C4A78B2304C128F773B11"
@@ -7722,7 +7730,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TWUtilities40, Version=27.6.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TWUtilities40, Version=27.8.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_99E90B177F3E4B278FC2B65E4A659EDD"
@@ -7749,37 +7757,11 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9AAFE13E63AD4E8DB1FCE062CFCEA2A0"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TWWin32API, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                }
-            "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.ComInterop\\TWWin32API.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9D46D5E08BFD48B3ABABDDF7ACA06189"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TBDataCollector27, Version=181.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TBDataCollector27, Version=183.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_9D46D5E08BFD48B3ABABDDF7ACA06189"
@@ -7811,7 +7793,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\DataCollector27.exe"
             "TargetName" = "8:DataCollector27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -7830,16 +7812,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradingDO27, Version=381.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradingDO27, Version=382.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_9FA0D95FE7606EEF7A49C28CE3DC228C"
                     {
-                    "Name" = "8:Interop.TradingDO27.DLL"
+                    "Name" = "8:Interop.TradingDO27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TradingDO27.DLL"
+            "SourcePath" = "8:Interop.TradingDO27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -7861,7 +7843,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.ConfigUtils27, Version=231.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.ConfigUtils27, Version=233.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_A17201620C5D4BB7B270C3C9FA04D05D"
@@ -7977,11 +7959,11 @@
                 {
                     "_A83A3711CAC90472BA656E567092FBF7"
                     {
-                    "Name" = "8:Interop.ExtEvents40.DLL"
+                    "Name" = "8:Interop.ExtEvents40.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.ExtEvents40.DLL"
+            "SourcePath" = "8:Interop.ExtEvents40.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8099,11 +8081,11 @@
                 {
                     "_B065066ABDB869BBFD10A761B2FFD801"
                     {
-                    "Name" = "8:MSDATASRC.DLL"
+                    "Name" = "8:MSDATASRC.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:MSDATASRC.DLL"
+            "SourcePath" = "8:MSDATASRC.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8126,7 +8108,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\ChartDemo27.exe"
             "TargetName" = "8:ChartDemo27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -8145,7 +8127,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.WorkspaceUtils27, Version=120.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.WorkspaceUtils27, Version=122.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_B3D0260F40074B17B6BC1832440EDD82"
@@ -8181,11 +8163,11 @@
                 {
                     "_B5D5D413D8EBB40CC45E109F4376A424"
                     {
-                    "Name" = "8:Interop.GraphicsUtils40.DLL"
+                    "Name" = "8:Interop.GraphicsUtils40.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.GraphicsUtils40.DLL"
+            "SourcePath" = "8:Interop.GraphicsUtils40.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8278,7 +8260,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.AxTradingUI27, Version=374.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.AxTradingUI27, Version=376.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_BB4AF24A2FB2473BAC4B9084A966D862"
@@ -8314,11 +8296,11 @@
                 {
                     "_BB8584131229A3D1434B2D8C6CF37A6F"
                     {
-                    "Name" = "8:Interop.MSCOMCT2.DLL"
+                    "Name" = "8:Interop.MSCOMCT2.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.MSCOMCT2.DLL"
+            "SourcePath" = "8:Interop.MSCOMCT2.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8340,7 +8322,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TickfileSP27, Version=199.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TickfileSP27, Version=201.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_BC170278CE524DE792E6F581CA06A1F0"
@@ -8484,7 +8466,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.OrderUtils27, Version=34.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.OrderUtils27, Version=37.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_C2C1755729D8477B9417AAB0ABC57B39"
@@ -8515,16 +8497,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.IBENHAPI27, Version=276.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.IBENHAPI27, Version=278.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_C42BFB84CAEC4590903161BDC017B2AF"
                     {
-                    "Name" = "8:Interop.IBENHAPI27.DLL"
+                    "Name" = "8:Interop.IBENHAPI27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.IBENHAPI27.DLL"
+            "SourcePath" = "8:Interop.IBENHAPI27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8547,7 +8529,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\gxd27.exe"
             "TargetName" = "8:gxd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -8591,11 +8573,11 @@
                 {
                     "_C61FB9DF9A5A4755FCF8E7FD830E65CE"
                     {
-                    "Name" = "8:VBA.DLL"
+                    "Name" = "8:VBA.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:VBA.DLL"
+            "SourcePath" = "8:VBA.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8617,16 +8599,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.ChartUtils27, Version=313.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.ChartUtils27, Version=314.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_C67422E4FEA52F45583C48C3C5042487"
                     {
-                    "Name" = "8:Interop.ChartUtils27.DLL"
+                    "Name" = "8:Interop.ChartUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.ChartUtils27.DLL"
+            "SourcePath" = "8:Interop.ChartUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8668,7 +8650,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.IBENHAPI27, Version=276.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.IBENHAPI27, Version=278.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_C7E88B82E7EE49C0811C8A364B7D3945"
@@ -8704,11 +8686,11 @@
                 {
                     "_C7F624043D543D7FF3A601068C108EF8"
                     {
-                    "Name" = "8:Interop.BusObjUtils40.DLL"
+                    "Name" = "8:Interop.BusObjUtils40.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.BusObjUtils40.DLL"
+            "SourcePath" = "8:Interop.BusObjUtils40.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8766,11 +8748,11 @@
                 {
                     "_CBC4BA385E01B5AE66DC096F778BA25B"
                     {
-                    "Name" = "8:Interop.mscomctl.DLL"
+                    "Name" = "8:Interop.mscomctl.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.mscomctl.DLL"
+            "SourcePath" = "8:Interop.mscomctl.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8823,16 +8805,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.StudiesUI27, Version=287.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.StudiesUI27, Version=288.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_CD1091E6485C0C2CE2B0E3F60CC74A1D"
                     {
-                    "Name" = "8:Interop.StudiesUI27.DLL"
+                    "Name" = "8:Interop.StudiesUI27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.StudiesUI27.DLL"
+            "SourcePath" = "8:Interop.StudiesUI27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -8930,11 +8912,11 @@
                 {
                     "_D5237F442F6AE8C58C0B893666E69D2D"
                     {
-                    "Name" = "8:Interop.MSDATGRD.DLL"
+                    "Name" = "8:Interop.MSDATGRD.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.MSDATGRD.DLL"
+            "SourcePath" = "8:Interop.MSDATGRD.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9007,16 +8989,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TickfileUtils27, Version=158.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TickfileUtils27, Version=159.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_D7052E91D09B6FD332512079364F58A2"
                     {
-                    "Name" = "8:Interop.TickfileUtils27.DLL"
+                    "Name" = "8:Interop.TickfileUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TickfileUtils27.DLL"
+            "SourcePath" = "8:Interop.TickfileUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9039,7 +9021,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\gccd27.exe"
             "TargetName" = "8:gccd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -9099,7 +9081,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\Chart.exe.config"
             "TargetName" = "8:Chart.exe.config"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -9178,16 +9160,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.WorkspaceUtils27, Version=120.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.WorkspaceUtils27, Version=122.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_E108B744271130A98FC72423F4DADF36"
                     {
-                    "Name" = "8:Interop.WorkspaceUtils27.DLL"
+                    "Name" = "8:Interop.WorkspaceUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.WorkspaceUtils27.DLL"
+            "SourcePath" = "8:Interop.WorkspaceUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9209,7 +9191,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.IBAPIV10027, Version=13.1.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.IBAPIV10027, Version=14.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_E1F387E1F8F74088B66F788C1FB0C80D"
@@ -9311,16 +9293,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.AccountUtils27, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.AccountUtils27, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_E4696B2E7983E9057803DE246D769815"
                     {
-                    "Name" = "8:Interop.AccountUtils27.DLL"
+                    "Name" = "8:Interop.AccountUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.AccountUtils27.DLL"
+            "SourcePath" = "8:Interop.AccountUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9343,7 +9325,7 @@
             "SourcePath" = "8:..\\..\\..\\Docs\\Resources\\ForGetBarDataProgram\\Scripts\\GetBarData.bat"
             "TargetName" = "8:GetBarData.bat"
             "Tag" = "8:"
-            "Folder" = "8:_F46C1CDCDF684E4E99DC29343AC35146"
+            "Folder" = "8:_5FE692CB05E54ABB94DCECD19110BF4F"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -9363,7 +9345,7 @@
             "SourcePath" = "8:..\\..\\..\\Bin\\gtd27.exe"
             "TargetName" = "8:gtd27.exe"
             "Tag" = "8:"
-            "Folder" = "8:_293DAEDC986744879AB25F57D3F6FC00"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -9422,16 +9404,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradingUI27, Version=374.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradingUI27, Version=376.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_EA4C45C4DDED3E94EC6FEAF1FE7B8FCD"
                     {
-                    "Name" = "8:Interop.TradingUI27.DLL"
+                    "Name" = "8:Interop.TradingUI27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TradingUI27.DLL"
+            "SourcePath" = "8:Interop.TradingUI27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9489,11 +9471,11 @@
                 {
                     "_ECB4F48FD5BC09C28130729C79EFD54E"
                     {
-                    "Name" = "8:Interop.TWControls40.DLL"
+                    "Name" = "8:Interop.TWControls40.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TWControls40.DLL"
+            "SourcePath" = "8:Interop.TWControls40.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9546,7 +9528,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.ChartTools27, Version=312.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.ChartTools27, Version=313.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_EDF3318CE85D48FA8B0FDC44848469D7"
@@ -9577,16 +9559,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.ContractUtils27, Version=500.1.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.ContractUtils27, Version=501.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_EE7B87A765B7157756B0CE57A81AE6CE"
                     {
-                    "Name" = "8:Interop.ContractUtils27.DLL"
+                    "Name" = "8:Interop.ContractUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.ContractUtils27.DLL"
+            "SourcePath" = "8:Interop.ContractUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9670,7 +9652,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.StrategyUtils27, Version=127.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.StrategyUtils27, Version=129.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_F1175D2B3D704958BDBED1C89DB8F1DD"
@@ -9721,7 +9703,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.Strategies27, Version=115.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.Strategies27, Version=117.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_F150A60F9D7D42BCA6C234AF0F1CE8DF"
@@ -9752,16 +9734,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TickerUtils27, Version=303.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TickerUtils27, Version=305.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_F4C3DFAD2EC25186CD8B5ED909BEF20A"
                     {
-                    "Name" = "8:Interop.TickerUtils27.DLL"
+                    "Name" = "8:Interop.TickerUtils27.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TickerUtils27.DLL"
+            "SourcePath" = "8:Interop.TickerUtils27.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9783,16 +9765,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TWUtilities40, Version=27.6.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TWUtilities40, Version=27.8.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_F634C47CF2E239E7DD92CD8A5FF3CA82"
                     {
-                    "Name" = "8:Interop.TWUtilities40.DLL"
+                    "Name" = "8:Interop.TWUtilities40.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.TWUtilities40.DLL"
+            "SourcePath" = "8:Interop.TWUtilities40.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -9865,7 +9847,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.BarUtils27, Version=496.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.BarUtils27, Version=497.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_FA0C417FC2E34F0190A7CB74A9B1E52B"
@@ -9896,7 +9878,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.AxStudiesUI27, Version=287.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.AxStudiesUI27, Version=288.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_FA49597258C748DDAD8D687B0DECE25C"
@@ -9927,7 +9909,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradeBuildUI27, Version=194.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradeBuildUI27, Version=196.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_FB887960473543DBA84F6764293B780C"
@@ -10009,7 +9991,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TBInfoBase27, Version=201.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TBInfoBase27, Version=203.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_FD63DFDF2FEE4659A461694B789175F2"
@@ -10060,7 +10042,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradingUI27, Version=374.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradingUI27, Version=376.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_FED2A3C2ACE14220801F5BCE41C05877"
@@ -10116,11 +10098,11 @@
                 {
                     "_FFCDF37057D73A49C8DF4958492F7723"
                     {
-                    "Name" = "8:Interop.ExtProps40.DLL"
+                    "Name" = "8:Interop.ExtProps40.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Interop.ExtProps40.DLL"
+            "SourcePath" = "8:Interop.ExtProps40.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
@@ -10144,6 +10126,62 @@
         }
         "Folder"
         {
+            "{1525181F-901A-416C-8A58-119130FE478E}:_3B0CAF428B9F43AB8A5E7E632739433D"
+            {
+            "Name" = "8:#1912"
+            "AlwaysCreate" = "11:FALSE"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Property" = "8:ProgramFilesFolder"
+                "Folders"
+                {
+                }
+            }
+            "{994432C3-9487-495D-8656-3E829A8DBDDE}:_4C0C24C2F58C49B5A543BEE876F8C2DD"
+            {
+            "DefaultLocation" = "8:[WindowsVolume]\\[ProductName]"
+            "Name" = "8:[ProductName]"
+            "AlwaysCreate" = "11:FALSE"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Property" = "8:NEWPROPERTY1"
+                "Folders"
+                {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_1764218C528746F5BD2DF275974694C1"
+                    {
+                    "Name" = "8:GetBarData"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_BA0259B596FE483998D888902725C7E1"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_D7BD3148F2664E228A40B04640C362E4"
+                    {
+                    "Name" = "8:GetScanData"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_CAD713C36F6F4E8D80DF587F31B8DC1E"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_DDB756CCC33A403CADBD96FE60DEE99E"
+                    {
+                    "Name" = "8:PlaceOrders"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_140C00F086134CC48DF95BABD6B7D2CA"
+                        "Folders"
+                        {
+                        }
+                    }
+                }
+            }
             "{1525181F-901A-416C-8A58-119130FE478E}:_94F6F259899A46AD882EFC6BA797A6CD"
             {
             "Name" = "8:#1915"
@@ -10188,7 +10226,7 @@
                 {
                     "{9EF0B969-E518-4E46-987F-47570745A589}:_362F7686C02D47F48A2A7E872D022267"
                     {
-                    "Name" = "8:TradeBuild Platform v2.7"
+                    "Name" = "8:[ProductName]"
                     "AlwaysCreate" = "11:FALSE"
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
@@ -10201,15 +10239,37 @@
             }
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_CB0CE4A2F9D740678B2BDA62CA0787CF"
             {
-            "DefaultLocation" = "8:[ProgramFilesFolder][Manufacturer]\\[ProductName]"
+            "DefaultLocation" = "8:[ProgramFilesFolder]\\[Manufacturer]\\[ProductName]"
             "Name" = "8:#1925"
-            "AlwaysCreate" = "11:FALSE"
+            "AlwaysCreate" = "11:TRUE"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_293DAEDC986744879AB25F57D3F6FC00"
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_424A2E05325F47DCB5D5E6623A90D95F"
+                    {
+                    "Name" = "8:Data"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_57D46C4D66C044068341A13291A1E1E5"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_5FE692CB05E54ABB94DCECD19110BF4F"
+                    {
+                    "Name" = "8:Scripts"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_55B7B8BE83184EA1AEF5F133232CDF71"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_84F57BA502FB43D9B1DDA9163E971E81"
                     {
                     "Name" = "8:Bin"
                     "AlwaysCreate" = "11:FALSE"
@@ -10218,83 +10278,6 @@
                     "Property" = "8:_0C4116AD7A5D441ABBFBA84711677A4E"
                         "Folders"
                         {
-                            "{9EF0B969-E518-4E46-987F-47570745A589}:_0E5595F64A0346EEA4636FB46ED04B32"
-                            {
-                            "Name" = "8:Scripts"
-                            "AlwaysCreate" = "11:FALSE"
-                            "Condition" = "8:"
-                            "Transitive" = "11:FALSE"
-                            "Property" = "8:_0B513BAA5A6048D7A978864C10BF9C93"
-                                "Folders"
-                                {
-                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_168DAA3E4B564E60A57454C119036A92"
-                                    {
-                                    "Name" = "8:PlaceOrders"
-                                    "AlwaysCreate" = "11:FALSE"
-                                    "Condition" = "8:"
-                                    "Transitive" = "11:FALSE"
-                                    "Property" = "8:_52A612CB3C314A1F96456AD7B6927345"
-                                        "Folders"
-                                        {
-                                            "{9EF0B969-E518-4E46-987F-47570745A589}:_E8FFC8BABDAD4D1D801D61EF6052D08D"
-                                            {
-                                            "Name" = "8:Scripts"
-                                            "AlwaysCreate" = "11:FALSE"
-                                            "Condition" = "8:"
-                                            "Transitive" = "11:FALSE"
-                                            "Property" = "8:_6F8FEFC07D4B409EB61858425EB14445"
-                                                "Folders"
-                                                {
-                                                }
-                                            }
-                                        }
-                                    }
-                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_4340150DFFB54D53A2ABADA6DFBD126C"
-                                    {
-                                    "Name" = "8:GetBarData"
-                                    "AlwaysCreate" = "11:FALSE"
-                                    "Condition" = "8:"
-                                    "Transitive" = "11:FALSE"
-                                    "Property" = "8:_122784E387DA4EA7953245AB400F66DD"
-                                        "Folders"
-                                        {
-                                            "{9EF0B969-E518-4E46-987F-47570745A589}:_F46C1CDCDF684E4E99DC29343AC35146"
-                                            {
-                                            "Name" = "8:Scripts"
-                                            "AlwaysCreate" = "11:FALSE"
-                                            "Condition" = "8:"
-                                            "Transitive" = "11:FALSE"
-                                            "Property" = "8:_8BEA2DE1ABE347E6B056551F19C82B25"
-                                                "Folders"
-                                                {
-                                                }
-                                            }
-                                        }
-                                    }
-                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_7812C787E54B4EEE87D8350AB5D2D197"
-                                    {
-                                    "Name" = "8:GetScanData"
-                                    "AlwaysCreate" = "11:FALSE"
-                                    "Condition" = "8:"
-                                    "Transitive" = "11:FALSE"
-                                    "Property" = "8:_DA4535EC471E49D092015E7F6FC96666"
-                                        "Folders"
-                                        {
-                                            "{9EF0B969-E518-4E46-987F-47570745A589}:_D5D5627613FB45DB8C9D657098ADA1D8"
-                                            {
-                                            "Name" = "8:Scripts"
-                                            "AlwaysCreate" = "11:FALSE"
-                                            "Condition" = "8:"
-                                            "Transitive" = "11:FALSE"
-                                            "Property" = "8:_BE1A88B4D93445FFB61AC1935CA1DEB8"
-                                                "Folders"
-                                                {
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                             "{9EF0B969-E518-4E46-987F-47570745A589}:_23C7A4A5769F461691533D7AAF23E45D"
                             {
                             "Name" = "8:TradeWright.TradeBuild.ComInterop"
@@ -10317,17 +10300,6 @@
                                 {
                                 }
                             }
-                            "{9EF0B969-E518-4E46-987F-47570745A589}:_9F2A439A13B048CEBF9EA3546F4F695D"
-                            {
-                            "Name" = "8:Data"
-                            "AlwaysCreate" = "11:FALSE"
-                            "Condition" = "8:"
-                            "Transitive" = "11:FALSE"
-                            "Property" = "8:_57D46C4D66C044068341A13291A1E1E5"
-                                "Folders"
-                                {
-                                }
-                            }
                         }
                     }
                 }
@@ -10339,17 +10311,6 @@
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Property" = "8:DesktopFolder"
-                "Folders"
-                {
-                }
-            }
-            "{1525181F-901A-416C-8A58-119130FE478E}:_F665826AF67941398760BC5714815FFB"
-            {
-            "Name" = "8:#1912"
-            "AlwaysCreate" = "11:FALSE"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Property" = "8:ProgramFilesFolder"
                 "Folders"
                 {
                 }
@@ -10370,15 +10331,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{88526BFE-F47A-4E9B-B232-CB543D082A7F}"
-        "PackageCode" = "8:{8C84671C-0370-4F72-9C2E-C22373BDFADB}"
+        "ProductCode" = "8:{F2768522-BA25-487A-B66D-DAF2A5B78B2C}"
+        "PackageCode" = "8:{9C20D095-5335-455E-9957-6A4AC0DC2B8E}"
         "UpgradeCode" = "8:{96BD3E71-2EE9-4FE8-8ACB-F99D99DAF1FA}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.7.254"
+        "ProductVersion" = "8:2.7.255"
         "Manufacturer" = "8:TradeWright Software Systems"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -10386,7 +10347,7 @@
         "Subject" = "8:"
         "ARPCONTACT" = "8:Richard L King"
         "Keywords" = "8:"
-        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.254"
+        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.255"
         "ARPURLINFOABOUT" = "8:"
         "ARPPRODUCTICON" = "8:"
         "ARPIconIndex" = "3:0"
@@ -10695,7 +10656,7 @@
                             "ContextData" = "8:"
                             "Attributes" = "3:0"
                             "Setting" = "3:2"
-                            "Value" = "8:_471DD0C4A1A0470DAD51716E650A123D"
+                            "Value" = "8:_60A80CD8EF8A45D0B90C730CB637C25A"
                             "UsePlugInResources" = "11:TRUE"
                             }
                             "Sunken"
@@ -11037,11 +10998,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_7B49E32BEAF84B81AECBA594D91D99AC"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_363D065249D344A7BA01E20138581AEF"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.254.msm"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.255.msm"
                 "Properties"
                 {
                     "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
@@ -11062,11 +11023,11 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_A8B4AD7C19BC4BB1BB5A29BC72C6D40D"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_FB1F1AB9876A42D9BB663F153F529C87"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-124.msm"
+            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-125.msm"
                 "Properties"
                 {
                     "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
