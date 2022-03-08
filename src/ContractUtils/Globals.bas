@@ -318,7 +318,7 @@ Const ExpiryRegEx As String = "(?:\(" & _
                                 "\))?"
 Const ExchangeRegEx As String = "(?:@([a-zA-Z]+(?:/[a-zA-Z]+)?))?"
 Const CurrencyRegEx As String = "(?:(?:(?:\$)([a-zA-Z]+))|(\(([a-zA-Z]+)\)))?"
-Const MultiplierRegex As String = "(?:(?:\*)(\d+(?:\.\d{1,6})?))?"
+Const MultiplierRegex As String = "(?:(?:[\*|'])(\d+(?:\.\d{1,6})?))?"
 
 Const ContractSpecRegex As String = "^" & _
 LocalSymbolRegex & _
