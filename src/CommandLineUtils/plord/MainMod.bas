@@ -650,7 +650,7 @@ If lExpiry = "" Then lExpiry = pClp.SwitchValue(ExpirySwitch1)
 
 Dim lMultiplier As String: lMultiplier = pClp.SwitchValue(MultiplierSwitch)
 If lMultiplier = "" Then lMultiplier = pClp.SwitchValue(MultiplierSwitch1)
-If lMultiplier = "" Then lMultiplier = "1.0"
+If lMultiplier = "" Then lMultiplier = "0.0"
 
 Dim lStrike As String: lStrike = pClp.SwitchValue(StrikeSwitch)
 If lStrike = "" Then lStrike = pClp.SwitchValue(StrikeSwitch1)
@@ -687,7 +687,7 @@ End If
             
 Dim Multiplier As Double
 If lMultiplier = "" Then
-    Multiplier = 1#
+    Multiplier = 0#
 ElseIf IsNumeric(lMultiplier) Then
     Multiplier = CDbl(lMultiplier)
 Else

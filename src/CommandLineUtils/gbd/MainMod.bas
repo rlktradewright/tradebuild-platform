@@ -1499,7 +1499,7 @@ End If
             
 Dim lMultiplier As Double
 If lMultiplierStr = "" Then
-    lMultiplier = 1#
+    lMultiplier = 0#
 ElseIf IsNumeric(lMultiplierStr) Then
     lMultiplier = CDbl(lMultiplierStr)
 Else
@@ -1882,7 +1882,7 @@ End If
             
 Dim Multiplier As Double
 If lMultiplier = "" Then
-    Multiplier = 1#
+    Multiplier = 0#
 ElseIf IsNumeric(lMultiplier) Then
     Multiplier = CDbl(lMultiplier)
 Else

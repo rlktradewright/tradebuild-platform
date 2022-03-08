@@ -198,7 +198,7 @@ End If
 
 Dim multiplier As Double
 If multiplierStr = "" Then
-    multiplier = 1#
+    multiplier = 0#
 ElseIf IsNumeric(multiplierStr) Then
     multiplier = CDbl(multiplierStr)
 Else
