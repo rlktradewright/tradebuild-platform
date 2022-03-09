@@ -157,11 +157,16 @@ set PIPELINE=
 ::   the format of the output from SCANECHO commands, such that this output
 ::   forms one or more valid commands for the target program.
 ::
-::   For example, a typical value of this setting for piping into the GBD27 program
-::   could be:
+::   For example, a typical value of this setting for piping into the GBD27
+::   program could be:
 ::
-::   set PIPELINE=GBD27 -fromtws:"%TWSSERVER%,%PORT%" -log:%TOPDIR%\Log\gbd27.log
 ::
+::   set PIPELINE=GBD27 -fromtws:"%TWSSERVER%,%PORT%" -log:"%TOPDIR%\Log\gbd27.log"
+::
+::
+::   This would generate historical bar data for all the contracts listed in
+::   the scan output. 'ECHO' commands to GSD could be used to control the ouput
+;;   from the GBD27 program.
 ::
 ::
 ::
