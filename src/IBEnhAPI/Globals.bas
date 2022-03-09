@@ -29,7 +29,7 @@ Private Const ExchangeSmartNASDAQ               As String = "SMARTNASDAQ"
 Private Const ExchangeSmartNYSE                 As String = "SMARTNYSE"
 Private Const ExchangeSmartUK                   As String = "SMARTUK"
 Private Const ExchangeSmartUS                   As String = "SMARTUS"
-Private Const ExchangeSmartQualified            As String = "SMART/"
+Private Const ExchangeSmartQualified            As String = "SMART-"
 
 Public Const OrderModeEntry                     As String = "entry"
 Public Const OrderModeStopLoss                  As String = "stop loss"
@@ -573,7 +573,7 @@ With pOrder
     If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
-    gOrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
+    gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)

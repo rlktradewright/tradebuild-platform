@@ -316,8 +316,8 @@ Const ExpiryRegEx As String = "(?:\(" & _
                                 DateExpiryRegEx & _
                                 RelativeExpiryRegEx & _
                                 "\))?"
-Const ExchangeRegEx As String = "(?:@([a-zA-Z]+(?:/[a-zA-Z]+)?))?"
-Const CurrencyRegEx As String = "(?:(?:(?:\$)([a-zA-Z]+))|(\(([a-zA-Z]+)\)))?"
+Const ExchangeRegEx As String = "(?:@([a-zA-Z]+(?:\-[a-zA-Z]+)?))?"
+Const CurrencyRegEx As String = "(?:(?:(?:\$)([a-zA-Z]+))|(?:\(([a-zA-Z]+)\)))?"
 Const MultiplierRegex As String = "(?:(?:[\*|'])(\d+(?:\.\d{1,6})?))?"
 
 Const ContractSpecRegex As String = "^" & _
@@ -345,14 +345,14 @@ AssertArgument lMatches.Count = 1, "Invalid contract specifier: [<sectype>:]<sym
                                     "    yyyymmdd" & vbCrLf & _
                                     "    <offset>[<qualifier>d]  for example 0[2d]" & vbCrLf & _
                                     "Option spec: [C[all]|P[ut]][strike]" & vbCrLf & _
-                                    "" & _
+                                    "" & vbCrLf & _
                                     "NB: you can use $<currency> instead of (<currency>) if you prefer." & _
-                                    "" & _
+                                    "" & vbCrLf & _
                                     "examples: STK:MSFT@SMART$USD" & vbCrLf & _
                                     "          FUT:ESZ0@GLOBEX" & vbCrLf & _
                                     "          FUT:ES(0[2d])@GLOBEX" & vbCrLf & _
                                     "          FUT:ES(202012)@GLOBEX" & vbCrLf & _
-                                    "          FUT:DAX@DTB*25" & vbCrLf & _
+                                    "          FUT:DAX(1)@DTB*25" & vbCrLf & _
                                     "          OPT:MSFT=Call285@CBOE"
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
@@ -745,7 +745,7 @@ On Error GoTo Err
 
 pExchangeSpec = UCase$(pExchangeSpec)
 
-Const ExchangeSmartQualified As String = "SMART/"
+Const ExchangeSmartQualified As String = "SMART-"
 If InStr(1, pExchangeSpec, ExchangeSmartQualified) <> 1 Then
     gIsValidExchangeSpecifier = gIsValidExchangeCode(pExchangeSpec)
     Exit Function
