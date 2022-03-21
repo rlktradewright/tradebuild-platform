@@ -52,6 +52,7 @@ Private Type TickerTableEntry
     ConsumerTimeZone        As TimeZone
     ErrorListener           As IMarketDataErrorListener
     DataHasBeenReceived     As Boolean
+    TickSizeHasBeenSet      As Boolean
     PrevBid                 As Double
     PrevBidValid            As Boolean
     PrevBidSize             As Long
@@ -266,9 +267,6 @@ With mMarketDataTable(lIndex)
 
     .DataHasBeenReceived = True
 
-    Dim lTickSizeNotSet As Boolean
-    lTickSizeNotSet = Not .TickStreamBuilder.IsMinimumPriceVariationSet
-    
     lTick.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .ConsumerTimeZone)
     
     Select Case pTickType
@@ -279,23 +277,31 @@ With mMarketDataTable(lIndex)
         If lTick.Size = 0 And .PrevBidSize <> MaxLong Then lTick.Size = .PrevBidSize
         .PrevBid = lTick.Price
         If lTick.Size <> 0 Then .PrevBidSize = lTick.Size
-        If lTickSizeNotSet Then setTickSize lIndex, lTick.Price
+        If Not .TickSizeHasBeenSet Then
+            setTickSize lIndex, lTick.Price
+            .TickSizeHasBeenSet = True
+        End If
     Case TwsTickTypes.TwsTickAsk
         .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .ConsumerContract)
         If Not .PrevAskValid Then Exit Sub
         lTick.TickType = TickTypeAsk
         If lTick.Size = 0 And .PrevAskSize <> MaxLong Then lTick.Size = .PrevAskSize
         .PrevAsk = lTick.Price
-        If lTick.Size <> 0 Then .PrevAskSize = lTick.Size
-        If lTickSizeNotSet Then setTickSize lIndex, lTick.Price
-    Case TwsTickTypes.TwsTickLast
+        If Not .TickSizeHasBeenSet Then
+            setTickSize lIndex, lTick.Price
+            .TickSizeHasBeenSet = True
+        End If
+Case TwsTickTypes.TwsTickLast
         .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .ConsumerContract)
         If Not .PrevTradeValid Then Exit Sub
         lTick.TickType = TickTypeTrade
         If lTick.Size = 0 And .PrevTradeSize <> MaxLong Then lTick.Size = .PrevTradeSize
         .PrevTrade = lTick.Price
         If lTick.Size <> 0 Then .PrevTradeSize = lTick.Size
-        If lTickSizeNotSet Then setTickSize lIndex, lTick.Price
+        If Not .TickSizeHasBeenSet Then
+            setTickSize lIndex, lTick.Price
+            .TickSizeHasBeenSet = True
+        End If
     Case TwsTickTypes.TwsTickHigh
         If Not validPrice(lTick.Price, .PrevHigh, "high", .ConsumerContract) Then Exit Sub
         lTick.TickType = TickTypeHighPrice
@@ -524,6 +530,11 @@ With mMarketDataTable(lIndex)
 
     lTick.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .ConsumerTimeZone)
     
+    If .TickSizeHasBeenSet Then
+    ElseIf lTick.Position = 0 Then
+        setTickSize lIndex, lTick.Price
+        .TickSizeHasBeenSet = True
+    End If
 End With
 
 FireTick lIndex, lTick
@@ -1039,13 +1050,13 @@ If pTick.TickType = TickTypeMarketDepth Or _
     pTick.TickType = TickTypeMarketDepthReset _
 Then
     If mMarketDepthTable(pStreamId).IsInUse Then
-        If mMarketDepthTable(pStreamId).TickStreamBuilder.IsMinimumPriceVariationSet Then
+        If mMarketDepthTable(pStreamId).TickSizeHasBeenSet Then
             mMarketDepthTable(pStreamId).TickStreamBuilder.NotifyTick pTick
         End If
     End If
 Else
     If mMarketDataTable(pStreamId).IsInUse Then
-        If mMarketDataTable(pStreamId).TickStreamBuilder.IsMinimumPriceVariationSet Then
+        If mMarketDataTable(pStreamId).TickSizeHasBeenSet Then
             mMarketDataTable(pStreamId).TickStreamBuilder.NotifyTick pTick
         End If
     End If
