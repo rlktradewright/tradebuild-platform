@@ -88,7 +88,10 @@ IContractsBuilder_SortAscending = SortAscending
 End Property
 
 Private Property Let IContractsBuilder_SortKeys(ByRef Value() As ContractSortKeyIds)
-SortKeys = Value
+Dim ar() As ContractSortKeyIds
+ar = Value
+
+SortKeys = ar
 End Property
 
 Private Property Get IContractsBuilder_SortKeys() As ContractSortKeyIds()

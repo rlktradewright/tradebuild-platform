@@ -263,11 +263,12 @@ On Error GoTo Err
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching sorted contract details for", ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
 
 Dim lFetcher As New ContractsRequestManager
-Set gFetchContractsSorted = lFetcher.Fetch( _
+Set gFetchContractsSorted = lFetcher.FetchSorted( _
                                 pContractRequester, _
                                 pContractCache, _
                                 pContractSpecifier, _
-                                Nothing, _
+                                pSortkeys, _
+                                pSortDescending, _
                                 pCookie, _
                                 pReturnTwsContracts)
 

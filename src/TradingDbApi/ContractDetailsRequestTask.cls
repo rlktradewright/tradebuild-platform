@@ -337,7 +337,10 @@ Friend Sub InitialiseSorted( _
 Const ProcName As String = "InitialiseSorted"
 On Error GoTo Err
 
-mContractsBuilder.SortKeys = pSortkeys
+Dim ar() As ContractSortKeyIds
+ar = pSortkeys
+
+mContractsBuilder.SortKeys = ar
 mContractsBuilder.SortAscending = Not pSortDescending
 Initialise pTradingDBFuture, pContractSpecifier, Nothing, pCookie
 

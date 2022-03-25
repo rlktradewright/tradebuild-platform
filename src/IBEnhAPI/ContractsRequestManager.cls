@@ -223,7 +223,9 @@ Friend Function FetchSorted( _
 Const ProcName As String = "FetchSorted"
 On Error GoTo Err
 
-mResultsContractsBuilder.SortKeys = pSortkeys
+Dim ar() As ContractSortKeyIds
+ar = pSortkeys
+mResultsContractsBuilder.SortKeys = ar
 mResultsContractsBuilder.SortAscending = Not pSortDescending
 
 Set FetchSorted = Fetch(pContractRequester, _

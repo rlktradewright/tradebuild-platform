@@ -92,7 +92,7 @@ Private mDaysBeforeExpiryToSwitch                   As Long
 Private mSorted                                     As Boolean
 
 Private mSortKeys()                                 As ContractSortKeyIds
-Private mSortAscending                              As Boolean
+Private mSortDescending                             As Boolean
 
 Private mSelfRef                                    As Object
 
@@ -212,7 +212,7 @@ If mSorted And Not mIsOffsetExpiry Then
     Set mFetchFuture = mCurrentContractStore.FetchContractsSorted( _
                                                     mContractSpec, _
                                                     mSortKeys, _
-                                                    mSortAscending, _
+                                                    mSortDescending, _
                                                     mMyCookie)
     mSortedContractsFutureWaiter.Add mFetchFuture
 Else
@@ -504,7 +504,7 @@ On Error GoTo Err
 AssertArgument n >= 0, "Empty sort keys"
 
 mSortKeys = pSortkeys
-mSortAscending = Not pSortDescending
+mSortDescending = pSortDescending
 
 Set mSortedContractsFutureWaiter = New FutureWaiter
 
