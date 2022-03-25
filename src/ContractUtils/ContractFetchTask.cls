@@ -354,9 +354,10 @@ End If
 mOffsetContractsOutstanding = mOffsetContractsOutstanding - 1
 gLogger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mGotAllSampleContracts=" & mGotAllSampleContracts, ProcName, ModuleName, LogLevelDetail
 
-If Not lContract Is Nothing Then processContract lContract
-'If mOffsetContractsOutstanding = 0 Then Stop
-If mOffsetContractsOutstanding = 0 And mGotAllSampleContracts Then
+If lContract Is Nothing Then
+ElseIf Not processContract(lContract) Then
+ElseIf mOffsetContractsOutstanding <> 0 Then
+ElseIf mGotAllSampleContracts Then
     completeContractProcessing
 End If
 
@@ -540,11 +541,11 @@ End If
 
 If mSingleContractOnly Then
     mFutureWaiter.Add mContractFutureBuilder.Future, mCallerCookie
-    If lContracts.Count = 1 Then
+    If mOffsetContractErrorMessage <> "" Then
+        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, mOffsetContractErrorMessage, ""
+    ElseIf lContracts.Count = 1 Then
         mContractFutureBuilder.Value = lContracts.ItemAtIndex(1)
         mContractFutureBuilder.Complete
-    ElseIf mOffsetContractErrorMessage <> "" Then
-        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, mOffsetContractErrorMessage, ""
     Else
         mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "No such contract", ""
     End If
@@ -602,7 +603,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub processContract(ByVal pContract As IContract)
+Private Function processContract(ByVal pContract As IContract) As Boolean
 Const ProcName As String = "processContract"
 On Error GoTo Err
 
@@ -611,18 +612,21 @@ If mContractsBuilder.Contracts.Count = 1 And mSingleContractOnly Then
     mFetchFuture.Cancel
     mTaskContext.Finish Empty, False
     Set mSelfRef = Nothing
-    Exit Sub
+    processContract = False
+    Exit Function
 End If
 
 mContractsBuilder.Add pContract
 
 If Not mListener Is Nothing Then mListener.NotifyContract mCallerCookie, pContract
 
-Exit Sub
+processContract = True
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Function trySecondaryContractStore() As Boolean
 Const ProcName As String = "trySecondaryContractStore"
