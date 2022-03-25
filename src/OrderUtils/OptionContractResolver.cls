@@ -583,7 +583,7 @@ Case OptionStrikeSelectionModeExpenditure, _
                                                     SecTypeStock, _
                                                     .CurrencyCode, _
                                                     "", _
-                                                    1, _
+                                                    0, _
                                                     0#, _
                                                     OptNone)
     End With
@@ -752,7 +752,7 @@ For i = lFrom To lTo Step lStep
                                                         .SecType, _
                                                         .CurrencyCode, _
                                                         mTargetExpiry, _
-                                                        1, _
+                                                        0, _
                                                         mStrikes(i), _
                                                         .Right)
         End With
@@ -782,7 +782,7 @@ End Sub
 '                                                .SecType, _
 '                                                .CurrencyCode, _
 '                                                .Expiry, _
-'                                                1, _
+'                                                0, _
 '                                                mInitialStrike, _
 '                                                .Right)
 'End With
