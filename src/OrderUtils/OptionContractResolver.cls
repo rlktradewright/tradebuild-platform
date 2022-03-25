@@ -166,7 +166,7 @@ If mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure Then
 End If
 
 Dim lDataSource As IMarketDataSource
-Set lDataSource = getMarketData(pContract)
+Set lDataSource = getMarketData(pContract, 15)
 mContractsAwaitingMarketData = mContractsAwaitingMarketData + 1
 
 Select Case mStrikeSelectionMode
@@ -402,7 +402,7 @@ Case OptionContractResolverStateFindingRequiredContract
     Dim lContract As IContract: Set lContract = ev.Future.Value
 
     Dim lDataSource As IMarketDataSource
-    Set lDataSource = getMarketData(lContract)
+    Set lDataSource = getMarketData(lContract, 15)
     mContractsAwaitingMarketData = mContractsAwaitingMarketData + 1
     
     Select Case mStrikeSelectionMode
