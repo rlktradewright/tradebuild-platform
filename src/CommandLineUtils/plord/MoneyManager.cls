@@ -74,19 +74,40 @@ End If
 
 Dim lContract As IContract: Set lContract = pPositionManager.ContractFuture.Value
 
-Dim lPrice As Double: lPrice = IIf(pBracketOrder.LongPosition, _
-                                pPositionManager.DataSource.CurrentTick(TickTypeAsk).Price, _
-                                pPositionManager.DataSource.CurrentTick(TickTypeBid).Price)
+Dim lPrice As Double
 
-pNewOrderSize = Int(mMaxOrderCost / (lContract.Specifier.Multiplier * lPrice))
-If mLotSize <> 0 Then pNewOrderSize = mLotSize * Int(pNewOrderSize / mLotSize)
-
-If pNewOrderSize > 0 Then
-    pMessage = "Order quantity set to " & pNewOrderSize
-    IMoneyManager_AllowOrder = True
+If pBracketOrder.LongPosition Then
+    If pPositionManager.DataSource.HasCurrentTick(TickTypeAsk) Then
+        lPrice = pPositionManager.DataSource.CurrentTick(TickTypeAsk).Price
+    ElseIf pPositionManager.DataSource.HasCurrentTick(TickTypeTrade) Then
+        lPrice = pPositionManager.DataSource.CurrentTick(TickTypeTrade).Price
+    ElseIf pPositionManager.DataSource.HasCurrentTick(TickTypeBid) Then
+        lPrice = pPositionManager.DataSource.CurrentTick(TickTypeBid).Price
+    End If
 Else
-    pMessage = "Order quantity reduced to 0 due to lack of funds"
+    If pPositionManager.DataSource.HasCurrentTick(TickTypeBid) Then
+        lPrice = pPositionManager.DataSource.CurrentTick(TickTypeBid).Price
+    ElseIf pPositionManager.DataSource.HasCurrentTick(TickTypeTrade) Then
+        lPrice = pPositionManager.DataSource.CurrentTick(TickTypeTrade).Price
+    ElseIf pPositionManager.DataSource.HasCurrentTick(TickTypeAsk) Then
+        lPrice = pPositionManager.DataSource.CurrentTick(TickTypeAsk).Price
+    End If
+End If
+
+If lPrice = 0 Then
+    pMessage = "No price currently available to size order"
     IMoneyManager_AllowOrder = False
+Else
+    pNewOrderSize = Int(mMaxOrderCost / (lContract.Specifier.Multiplier * lPrice))
+    If mLotSize <> 0 Then pNewOrderSize = mLotSize * Int(pNewOrderSize / mLotSize)
+    
+    If pNewOrderSize > 0 Then
+        pMessage = "Order quantity set to " & pNewOrderSize
+        IMoneyManager_AllowOrder = True
+    Else
+        pMessage = "Order quantity reduced to 0 due to lack of funds"
+        IMoneyManager_AllowOrder = False
+    End If
 End If
 
 If pMessage <> "" Then gWriteLineToConsole pBracketOrder.Key & ":" & pMessage, True
