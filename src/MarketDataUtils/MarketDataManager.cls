@@ -510,10 +510,10 @@ If mConfig Is Nothing Then Exit Function
 
 Dim lConfig As ConfigurationSection
 Set lConfig = mConfig.AddConfigurationSection(ConfigSectionMarketDataSource & "(" & pKey & ")")
-lConfig.SetSetting ConfigSettingUseLocalTimeForStudies, pUseLocalTimeForStudies
-lConfig.SetSetting ConfigSettingIsSnapshot, pIsSnapshot
-lConfig.SetSetting ConfigSettingSnapshotRefreshInterval, pRefreshInterval
 If pOffsetExpiry <> "" Then lConfig.SetSetting ConfigSettingOffsetExpiry, pOffsetExpiry
+If pIsSnapshot Then lConfig.SetSetting ConfigSettingIsSnapshot, pIsSnapshot
+If pRefreshInterval <> 0 Then lConfig.SetSetting ConfigSettingSnapshotRefreshInterval, pRefreshInterval
+If pUseLocalTimeForStudies Then lConfig.SetSetting ConfigSettingUseLocalTimeForStudies, pUseLocalTimeForStudies
 
 Set getConfigSection = lConfig
 
