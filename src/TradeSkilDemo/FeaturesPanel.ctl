@@ -1367,7 +1367,7 @@ lPreferredRow = CLng(LiveContractSearch.Cookie)
 If LiveContractSearch.SelectedContracts.Count = 1 Then
     Dim lExpiry As String
     Dim lContractSpec As IContractSpecifier
-    lContractSpec = LiveContractSearch.ContractSpecifier
+    Set lContractSpec = LiveContractSearch.ContractSpecifier
     If lContractSpec Is Nothing Then
     ElseIf IsContractSpecOffsetExpiry(lContractSpec) Then
         lExpiry = lContractSpec.Expiry
