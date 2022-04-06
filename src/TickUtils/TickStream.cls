@@ -529,6 +529,8 @@ Const ProcName As String = "Start"
 On Error GoTo Err
 
 Assert mState = TickStreamStateReady, "Tick stream is already started or is finished"
+
+State = TickStreamStateRunning
 mBuilder.NotifyStart
 
 Exit Sub

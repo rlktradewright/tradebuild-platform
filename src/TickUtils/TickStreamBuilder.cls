@@ -193,7 +193,6 @@ Const ProcName As String = "NotifyStart"
 On Error GoTo Err
 
 fireStateChange TickStreamStateRunning
-mTickStream.State = TickStreamStateRunning
 
 Exit Sub
 
