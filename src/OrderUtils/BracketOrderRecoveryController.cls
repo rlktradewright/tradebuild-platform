@@ -399,7 +399,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+mTaskContext.Error Err.Number, Err.Description, Err.Source
 Exit Sub
 
 ErrWithRestoreData:
