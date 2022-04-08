@@ -183,6 +183,8 @@ Private mClientId                                   As Long
 
 Private mMoneyManager                               As New MoneyManager
 
+Private mTerminateRequested                         As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -320,6 +322,12 @@ Case OptionStrikeSelectionModeDelta
 End Select
 End Function
 
+Public Sub gTerminate( _
+                ByVal pMessage As String)
+gWriteLineToConsole pMessage, True
+mTerminateRequested = True
+End Sub
+
 Public Sub gWriteErrorLine( _
                 ByVal pMessage As String, _
                 Optional ByVal pDontIncrementErrorCount As Boolean = False)
@@ -426,11 +434,15 @@ Private Function getInputLine() As String
 Const ProcName As String = "getInputLine"
 On Error GoTo Err
 
-Do While gInputPaused
+Do While gInputPaused And Not mTerminateRequested
     Wait 20
 Loop
-getInputLine = Trim$(gCon.ReadLine(getPrompt))
-If getInputLine <> "" Then setupResultsLogging mClp
+If mTerminateRequested Then
+    getInputLine = gCon.EofString
+Else
+    getInputLine = Trim$(gCon.ReadLine(getPrompt))
+    If getInputLine <> "" Then setupResultsLogging mClp
+End If
 
 Exit Function
 
@@ -947,6 +959,8 @@ Do While inString <> gCon.EofString
     
     inString = getInputLine
 Loop
+
+If mTerminateRequested Then Exit Sub
 
 If Not mOrderPersistenceDataStore Is Nothing Then mOrderPersistenceDataStore.Finish
 Set mOrderPersistenceDataStore = Nothing

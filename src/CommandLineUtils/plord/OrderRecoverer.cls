@@ -70,16 +70,26 @@ On Error GoTo Err
 
 gInputPaused = False
 If ev.Cancelled Then
-    gWriteErrorLine "order recovery was cancelled", True
-ElseIf ev.ErrorNumber <> 0 Then
-    gWriteErrorLine "order recovery received error (" & ev.ErrorNumber & ") " & _
+    gTerminate "Order recovery was cancelled - the program cannot continue."
+    Exit Sub
+End If
+
+If ev.ErrorNumber <> 0 Then
+    gTerminate "Order recovery encountered an error (" & ev.ErrorNumber & ") " & _
                         ev.ErrorMessage & vbCrLf & _
                         "At:" & vbCrLf & _
-                        ev.ErrorSource, _
-                    True
-Else
-    LogMessage "Order recovery completed"
+                        ev.ErrorSource & vbCrLf & _
+                        ">>>>>>>                               <<<<<<<" & vbCrLf & _
+                        ">>>>>>>   The program cannot continue <<<<<<<" & vbCrLf & _
+                        ">>>>>>>                               <<<<<<<" & vbCrLf & _
+                        vbCrLf & _
+                        "You will need to delete the recovery file to enable the program to" & vbCrLf & _
+                        "start properly. Make sure you manually manage any outstanding positions." & vbCrLf & _
+                        vbCrLf
+    Exit Sub
 End If
+
+LogMessage "Order recovery completed"
 
 Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
