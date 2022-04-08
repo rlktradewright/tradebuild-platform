@@ -67,7 +67,7 @@ if not defined PLORD_SCOPENAME set PLORD_SCOPENAME=%PLORD_CLIENTID%
 if not defined PLORD_RECOVERYFILEDIR if defined RECOVERYFILEDIR set PLORD_RECOVERYFILEDIR=%RECOVERYFILEDIR%
 if not defined PLORD_RECOVERYFILEDIR set PLORD_RECOVERYFILEDIR=%PLORD_TOPDIR%\Recovery
 
-if not defined PLORD_BIN if defined BIN set PLORD_BIN=%BIN%\Bin
+if not defined PLORD_BIN if defined INSTALLFOLDER set PLORD_BIN=%INSTALLFOLDER%\Bin
 if not defined PLORD_BIN if defined PROGRAMFILES^(X86^) set PLORD_BIN=%PROGRAMFILES(X86)%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin
 if not defined PLORD_BIN set PLORD_BIN=%PROGRAMFILES%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin
 
@@ -161,9 +161,13 @@ set RUN_PLORD=plord27 -tws:"%PLORD_TWSSERVER%,%PLORD_PORT%,%PLORD_CLIENTID%,%PLO
 -apimessagelogging:%APIMESSAGELOGGING%
 
 pushd %PLORD_BIN%
+
 if /I "%~1"=="/I" (
 	%RUN_PLORD%
 ) else if "%~1" == "" (
+	if "%PLORD_ARCHIVEDIR%"=="" set "PLORD_ARCHIVEDIR=%PLORD_TOPDIR%\Archive"
+	if not exist "%PLORD_ARCHIVEDIR%" mkdir "%PLORD_ARCHIVEDIR%"
+
 	fileautoreader "%PLORD_ORDERFILESDIR%" ^
                        "%PLORD_FILEFILTER%" ^
                        "%PLORD_ARCHIVEDIR%" ^
