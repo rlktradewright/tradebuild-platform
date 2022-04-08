@@ -192,9 +192,7 @@ Const ProcName As String = "RemoveOrderPlacer"
 On Error GoTo Err
 
 Dim lIndex As Long: lIndex = findEntryIndex(pOrderPlacer)
-If lIndex <> NullIndex Then
-    releaseEntry findEntryIndex(pOrderPlacer)
-End If
+If lIndex <> NullIndex Then releaseEntry lIndex
 
 Exit Sub
 
@@ -258,12 +256,12 @@ If mFirstFreeIndex <> NullIndex Then
 End If
 
 If mNextUnusedIndex > UBound(mOrderPlacers) Then
-    ReDim Preserve mOrderPlacers(1 To 2 * UBound(mOrderPlacers)) As OrderPlacersEntry
-Else
     allocateEntryIndex = mNextUnusedIndex
     mNextUnusedIndex = mNextUnusedIndex + 1
     Exit Function
 End If
+    
+ReDim Preserve mOrderPlacers(2 * (UBound(mOrderPlacers) + 1) - 1) As OrderPlacersEntry
 
 allocateEntryIndex = mNextUnusedIndex
 mNextUnusedIndex = mNextUnusedIndex + 1
@@ -296,7 +294,19 @@ Private Sub releaseEntry( _
 Const ProcName As String = "releaseEntry"
 On Error GoTo Err
 
-If pIndex = mListHeadIndex Then mListHeadIndex = mOrderPlacers(pIndex).Next
+If pIndex = mListHeadIndex Then
+    mListHeadIndex = mOrderPlacers(pIndex).Next
+Else
+    Dim lIndex As Long: lIndex = mListHeadIndex
+    
+    Do While lIndex <> NullIndex
+        If mOrderPlacers(lIndex).Next = pIndex Then
+            mOrderPlacers(lIndex).Next = mOrderPlacers(pIndex).Next
+            Exit Do
+        End If
+        lIndex = mOrderPlacers(lIndex).Next
+    Loop
+End If
 
 With mOrderPlacers(pIndex)
     Set .OrderPlacer = Nothing
