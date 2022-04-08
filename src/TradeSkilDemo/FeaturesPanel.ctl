@@ -45,7 +45,6 @@ Begin VB.UserControl FeaturesPanel
       TabPicture(1)   =   "FeaturesPanel.ctx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LiveChartPicture"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "FeaturesPanel.ctx":0038
@@ -427,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   135397379
+            Format          =   102563843
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -481,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   135397379
+            Format          =   102563843
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -1364,14 +1363,16 @@ On Error GoTo Err
 Dim lPreferredRow As Long
 lPreferredRow = CLng(LiveContractSearch.Cookie)
 
+Dim lExpiry As String
+
+Dim lContractSpec As IContractSpecifier
+Set lContractSpec = LiveContractSearch.ContractSpecifier
+If lContractSpec Is Nothing Then
+ElseIf IsContractSpecOffsetExpiry(lContractSpec) Then
+    lExpiry = lContractSpec.Expiry
+End If
+
 If LiveContractSearch.SelectedContracts.Count = 1 Then
-    Dim lExpiry As String
-    Dim lContractSpec As IContractSpecifier
-    Set lContractSpec = LiveContractSearch.ContractSpecifier
-    If lContractSpec Is Nothing Then
-    ElseIf IsContractSpecOffsetExpiry(lContractSpec) Then
-        lExpiry = lContractSpec.Expiry
-    End If
     mTickerGrid.StartTickerFromContract _
                     LiveContractSearch.SelectedContracts.ItemAtIndex(1), _
                     lPreferredRow, _
@@ -1379,7 +1380,10 @@ If LiveContractSearch.SelectedContracts.Count = 1 Then
 Else
     Dim lContract As IContract
     For Each lContract In LiveContractSearch.SelectedContracts
-        mTickerGrid.StartTickerFromContract lContract, lPreferredRow
+        mTickerGrid.StartTickerFromContract _
+                    lContract, _
+                    lPreferredRow, _
+                    lExpiry
         If lPreferredRow <> 0 Then lPreferredRow = lPreferredRow + 1
     Next
 End If

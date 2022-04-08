@@ -301,14 +301,15 @@ On Error GoTo Err
 Dim lPreferredRow As Long
 lPreferredRow = CLng(ContractSearch.Cookie)
 
+Dim lExpiry As String
+Dim lContractSpec As IContractSpecifier
+Set lContractSpec = ContractSearch.ContractSpecifier
+If lContractSpec Is Nothing Then
+ElseIf IsContractSpecOffsetExpiry(lContractSpec) Then
+    lExpiry = lContractSpec.Expiry
+End If
+
 If ContractSearch.SelectedContracts.Count = 1 Then
-    Dim lExpiry As String
-    Dim lContractSpec As IContractSpecifier
-    lContractSpec = ContractSearch.ContractSpecifier
-    If lContractSpec Is Nothing Then
-    ElseIf IsContractSpecOffsetExpiry(lContractSpec) Then
-        lExpiry = lContractSpec.Expiry
-    End If
     TickerGrid.StartTickerFromContract _
                     ContractSearch.SelectedContracts.ItemAtIndex(1), _
                     lPreferredRow, _
@@ -316,7 +317,11 @@ If ContractSearch.SelectedContracts.Count = 1 Then
 Else
     Dim lContract As IContract
     For Each lContract In ContractSearch.SelectedContracts
-        TickerGrid.StartTickerFromContract lContract
+        TickerGrid.StartTickerFromContract _
+                    lContract, _
+                    lPreferredRow, _
+                    lExpiry
+                    
     Next
 End If
 
