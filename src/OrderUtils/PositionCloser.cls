@@ -57,6 +57,7 @@ Private WithEvents mBalancingOrderContext           As OrderContext
 Attribute mBalancingOrderContext.VB_VarHelpID = -1
 Private WithEvents mBalancingBracketOrder           As BracketOrder
 Attribute mBalancingBracketOrder.VB_VarHelpID = -1
+Private mBalancingBracketOrderPlaced                As Boolean
 
 Private mOrderContextsWasEnabled                    As Boolean
 
@@ -71,6 +72,8 @@ Private mPriceSpec                                  As PriceSpecifier
 
 Private mBracketOrderFutureBuilder                  As New FutureBuilder
 
+Private mNumberOfActiveOrderContexts                As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -83,14 +86,22 @@ Private Sub IChangeListener_Change(ev As ChangeEventData)
 Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
+If ev.changeType <> OrderContextChangeTypes.OrderContextActiveStateChanged Then Exit Sub
+
 Dim lOrderContext As OrderContext
 Set lOrderContext = ev.Source
-If ev.changeType = OrderContextChangeTypes.OrderContextActiveStateChanged And _
-    (Not lOrderContext.IsActive) _
-Then
-    handleInactiveOrderContext
-    lOrderContext.RemoveChangeListener Me
-End If
+
+If lOrderContext.IsActive Then Exit Sub
+
+mNumberOfActiveOrderContexts = mNumberOfActiveOrderContexts - 1
+lOrderContext.RemoveChangeListener Me
+
+If mNumberOfActiveOrderContexts = 0 Then Assert Not mOrderContexts.HasActiveBracketOrders, _
+                                                "Order context still has active bracket orders"
+
+' If we get here, all bracket orders must be closed.
+
+ensureAllBracketOrdersClosedOut
 
 Exit Sub
 
@@ -214,10 +225,13 @@ Const ProcName As String = "mBalancingOrderContext_Change"
 On Error GoTo Err
 
 If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
+If mBalancingBracketOrderPlaced Then Exit Sub
+
 If mBalancingBracketOrder Is Nothing Then
     placeBalancingOrder
 ElseIf mBalancingOrderContext.IsReadyForBracketOrder(mBalancingBracketOrder) Then
     mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
+    mBalancingBracketOrderPlaced = True
 Else
     gLog mBalancingBracketOrder.Key & _
             ": Balancing order context: " & _
@@ -292,6 +306,7 @@ For Each lOrderContext In mOrderContexts
     If lOrderContext.Cancel Then
         cancelOrders = True
         lOrderContext.AddChangeListener Me
+        mNumberOfActiveOrderContexts = mNumberOfActiveOrderContexts + 1
     End If
 Next
 
@@ -383,8 +398,8 @@ Private Sub ensureAllBracketOrdersClosedOut()
 Const ProcName As String = "ensureAllBracketOrdersClosedOut"
 On Error GoTo Err
 
+Set mBalancingOrderContext = mOrderContexts.BalancingOrderContext
 If mPositionManager.PositionSize <> 0 Then
-    Set mBalancingOrderContext = mOrderContexts.BalancingOrderContext
     placeBalancingOrder
 Else
     ' we have some bracket orders that net out to no position
@@ -392,22 +407,6 @@ Else
     ' to market
     markToMarket
 End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub handleInactiveOrderContext()
-Const ProcName As String = "handleInactiveOrderContext"
-On Error GoTo Err
-
-If mOrderContexts.HasActiveBracketOrders Then Exit Sub
-
-' If we get here, all bracket orders must be closed.
-
-ensureAllBracketOrdersClosedOut
 
 Exit Sub
 
@@ -486,6 +485,7 @@ mBracketOrderFutureBuilder.Complete
 
 If mBalancingOrderContext.IsReadyForBracketOrder(mBalancingBracketOrder) Then
     mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
+    mBalancingBracketOrderPlaced = True
 Else
     gLog mBalancingBracketOrder.Key & _
             ": Balancing order context: " & _

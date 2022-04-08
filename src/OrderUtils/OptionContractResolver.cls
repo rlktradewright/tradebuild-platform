@@ -363,7 +363,8 @@ Case OptionContractResolverStateFetchingStrikes
     Else
         mInitialStrike = findStrike(mStrikes, mHeuristicStrike, IIf(mContractSpec.Right = OptCall, False, True))
     End If
-    gLogContractResolution gGetContractName(mUnderlyingContract.Specifier) & ": initial strike price is: " & mInitialStrike
+    gLogContractResolution gGetContractName(mUnderlyingContract.Specifier) & _
+                            ": initial strike price is: " & mInitialStrike
     
     
     ' now we know the strike, we need to determine the expiry
